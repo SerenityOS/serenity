@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <max.wipfli@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,25 +10,122 @@
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
 
-TEST_CASE(basic)
+TEST_CASE(relative_path)
 {
-    LexicalPath path("/abc/def/ghi.txt");
-    EXPECT_EQ(path.basename(), "ghi.txt");
-    EXPECT_EQ(path.title(), "ghi");
-    EXPECT_EQ(path.extension(), "txt");
-    EXPECT_EQ(path.parts().size(), 3u);
-    EXPECT_EQ(path.parts(), Vector<String>({ "abc", "def", "ghi.txt" }));
-    EXPECT_EQ(path.string(), "/abc/def/ghi.txt");
-    EXPECT_EQ(LexicalPath(".").string(), ".");
-    EXPECT_EQ(LexicalPath("..").string(), "..");
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/tmp"), "abc.txt");
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/tmp/"), "abc.txt");
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/"), "tmp/abc.txt");
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/usr"), "/tmp/abc.txt");
+
+    EXPECT_EQ(LexicalPath::relative_path("/tmp/foo.txt", "tmp"), String {});
+    EXPECT_EQ(LexicalPath::relative_path("tmp/foo.txt", "/tmp"), String {});
 }
 
-TEST_CASE(dotdot_coalescing)
+TEST_CASE(regular_absolute_path)
 {
-    EXPECT_EQ(LexicalPath("/home/user/../../not/home").string(), "/not/home");
-    EXPECT_EQ(LexicalPath("/../../../../").string(), "/");
-    EXPECT_EQ(LexicalPath("./../../../../").string(), "../../../..");
-    EXPECT_EQ(LexicalPath("../../../../../").string(), "../../../../..");
+    LexicalPath path("/home/anon/foo.txt");
+    EXPECT_EQ(path.string(), "/home/anon/foo.txt");
+    EXPECT_EQ(path.dirname(), "/home/anon");
+    EXPECT_EQ(path.basename(), "foo.txt");
+    EXPECT_EQ(path.title(), "foo");
+    EXPECT_EQ(path.extension(), "txt");
+    EXPECT(path.has_extension(".txt"));
+    EXPECT(path.has_extension("txt"));
+    EXPECT(!path.has_extension("txxt"));
+    EXPECT_EQ(path.parts_view().size(), 3u);
+    EXPECT_EQ(path.parts_view()[0], "home");
+    EXPECT_EQ(path.parts_view()[1], "anon");
+    EXPECT_EQ(path.parts_view()[2], "foo.txt");
+}
+
+TEST_CASE(regular_relative_path)
+{
+    LexicalPath path("anon/foo.txt");
+    EXPECT_EQ(path.dirname(), "anon");
+    EXPECT_EQ(path.basename(), "foo.txt");
+    EXPECT_EQ(path.parts_view().size(), 2u);
+    EXPECT_EQ(path.parts_view()[0], "anon");
+    EXPECT_EQ(path.parts_view()[1], "foo.txt");
+}
+
+TEST_CASE(single_dot)
+{
+    {
+        LexicalPath path("/home/./anon/foo.txt");
+        EXPECT_EQ(path.string(), "/home/anon/foo.txt");
+    }
+    {
+        LexicalPath path("./test.txt");
+        EXPECT_EQ(path.string(), "test.txt");
+    }
+    {
+        LexicalPath path("./../test.txt");
+        EXPECT_EQ(path.string(), "../test.txt");
+    }
+}
+
+TEST_CASE(relative_path_with_dotdot)
+{
+    LexicalPath path("anon/../../foo.txt");
+    EXPECT_EQ(path.string(), "../foo.txt");
+    EXPECT_EQ(path.dirname(), "..");
+    EXPECT_EQ(path.basename(), "foo.txt");
+    EXPECT_EQ(path.parts_view().size(), 2u);
+    EXPECT_EQ(path.parts_view()[0], "..");
+    EXPECT_EQ(path.parts_view()[1], "foo.txt");
+}
+
+TEST_CASE(absolute_path_with_dotdot)
+{
+    {
+        LexicalPath path("/test/../foo.txt");
+        EXPECT_EQ(path.string(), "/foo.txt");
+    }
+    {
+        LexicalPath path("/../../foo.txt");
+        EXPECT_EQ(path.string(), "/foo.txt");
+    }
+}
+
+TEST_CASE(more_dotdot_paths)
+{
+    EXPECT_EQ(LexicalPath::canonicalized_path("/home/user/../../not/home"), "/not/home");
+    EXPECT_EQ(LexicalPath::canonicalized_path("/../../../../"), "/");
+    EXPECT_EQ(LexicalPath::canonicalized_path("./../../../../"), "../../../..");
+    EXPECT_EQ(LexicalPath::canonicalized_path("../../../../../"), "../../../../..");
+}
+
+TEST_CASE(the_root_path)
+{
+    LexicalPath path("/");
+    EXPECT_EQ(path.dirname(), "/");
+    EXPECT_EQ(path.basename(), "/");
+    EXPECT_EQ(path.title(), "/");
+    EXPECT_EQ(path.parts_view().size(), 0u);
+}
+
+TEST_CASE(the_dot_path)
+{
+    LexicalPath path(".");
+    EXPECT_EQ(path.string(), ".");
+    EXPECT_EQ(path.dirname(), ".");
+    EXPECT_EQ(path.basename(), ".");
+    EXPECT_EQ(path.title(), ".");
+}
+
+TEST_CASE(double_slash)
+{
+    LexicalPath path("//home/anon/foo.txt");
+    EXPECT_EQ(path.string(), "/home/anon/foo.txt");
+}
+
+TEST_CASE(trailing_slash)
+{
+    LexicalPath path("/home/anon/");
+    EXPECT_EQ(path.string(), "/home/anon");
+    EXPECT_EQ(path.dirname(), "/home");
+    EXPECT_EQ(path.basename(), "anon");
+    EXPECT_EQ(path.parts_view().size(), 2u);
 }
 
 TEST_CASE(has_extension)
@@ -62,21 +160,16 @@ TEST_CASE(has_extension)
     }
 }
 
-TEST_CASE(relative_path)
+TEST_CASE(join)
 {
-    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/tmp"), "abc.txt");
-    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/tmp/"), "abc.txt");
-    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/"), "tmp/abc.txt");
-    EXPECT_EQ(LexicalPath::relative_path("/tmp/abc.txt", "/usr"), "/tmp/abc.txt");
-
-    EXPECT_EQ(LexicalPath::relative_path("/tmp/foo.txt", "tmp"), String {});
-    EXPECT_EQ(LexicalPath::relative_path("tmp/foo.txt", "/tmp"), String {});
+    EXPECT_EQ(LexicalPath::join("anon", "foo.txt").string(), "anon/foo.txt");
+    EXPECT_EQ(LexicalPath::join("/home", "anon/foo.txt").string(), "/home/anon/foo.txt");
+    EXPECT_EQ(LexicalPath::join("/", "foo.txt").string(), "/foo.txt");
 }
 
-TEST_CASE(dirname)
+TEST_CASE(append)
 {
-    EXPECT_EQ(LexicalPath(".").dirname(), ".");
-    EXPECT_EQ(LexicalPath("/").dirname(), "/");
-    EXPECT_EQ(LexicalPath("abc.txt").dirname(), ".");
-    EXPECT_EQ(LexicalPath("/abc.txt").dirname(), "/");
+    LexicalPath path("/home/anon");
+    path.append("foo.txt");
+    EXPECT_EQ(path.string(), "/home/anon/foo.txt");
 }
