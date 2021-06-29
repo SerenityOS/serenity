@@ -207,21 +207,23 @@ ByteBuffer CoreDump::create_notes_process_data() const
     process_data.append((void*)&info, sizeof(info));
 
     StringBuilder builder;
-    JsonObjectSerializer process_obj { builder };
-    process_obj.add("pid"sv, m_process->pid().value());
-    process_obj.add("termination_signal"sv, m_process->termination_signal());
-    process_obj.add("executable_path"sv, m_process->executable() ? m_process->executable()->absolute_path() : String::empty());
-
     {
-        auto arguments_array = process_obj.add_array("arguments"sv);
-        for (auto& argument : m_process->arguments())
-            arguments_array.add(argument);
-    }
+        JsonObjectSerializer process_obj { builder };
+        process_obj.add("pid"sv, m_process->pid().value());
+        process_obj.add("termination_signal"sv, m_process->termination_signal());
+        process_obj.add("executable_path"sv, m_process->executable() ? m_process->executable()->absolute_path() : String::empty());
 
-    {
-        auto environment_array = process_obj.add_array("environment"sv);
-        for (auto& variable : m_process->environment())
-            environment_array.add(variable);
+        {
+            auto arguments_array = process_obj.add_array("arguments"sv);
+            for (auto& argument : m_process->arguments())
+                arguments_array.add(argument);
+        }
+
+        {
+            auto environment_array = process_obj.add_array("environment"sv);
+            for (auto& variable : m_process->environment())
+                environment_array.add(variable);
+        }
     }
 
     builder.append(0);
@@ -287,9 +289,11 @@ ByteBuffer CoreDump::create_notes_metadata_data() const
     metadata_data.append((void*)&metadata, sizeof(metadata));
 
     StringBuilder builder;
-    JsonObjectSerializer metadata_obj { builder };
-    for (auto& it : m_process->coredump_metadata())
-        metadata_obj.add(it.key, it.value);
+    {
+        JsonObjectSerializer metadata_obj { builder };
+        for (auto& it : m_process->coredump_metadata())
+            metadata_obj.add(it.key, it.value);
+    }
     builder.append(0);
     metadata_data.append(builder.string_view().characters_without_null_termination(), builder.length());
 
