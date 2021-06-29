@@ -358,7 +358,7 @@ size_t String::count(const String& needle) const
 
 String String::reverse() const
 {
-    StringBuilder reversed_string;
+    StringBuilder reversed_string(length());
     for (size_t i = length(); i-- > 0;) {
         reversed_string.append(characters()[i]);
     }
