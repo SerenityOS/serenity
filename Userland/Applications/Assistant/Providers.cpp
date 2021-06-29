@@ -38,7 +38,7 @@ void AppProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<
             return;
 
         auto icon = GUI::FileIconProvider::icon_for_executable(app_file->executable());
-        results.append(adopt_ref(*new AppResult(icon.bitmap_for_size(16), app_file->name(), app_file, match_result.score)));
+        results.append(adopt_ref(*new AppResult(icon.bitmap_for_size(16), app_file->name(), {}, app_file, match_result.score)));
     });
 
     on_complete(results);
