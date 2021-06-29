@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <max.wipfli@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +16,6 @@ LexicalPath::LexicalPath(String s)
     : m_string(move(s))
 {
     canonicalize();
-    m_is_valid = true;
 }
 
 void LexicalPath::canonicalize()

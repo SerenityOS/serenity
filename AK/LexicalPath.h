@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <max.wipfli@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,7 +17,6 @@ public:
     LexicalPath() = default;
     explicit LexicalPath(String);
 
-    bool is_valid() const { return m_is_valid; }
     bool is_absolute() const { return m_is_absolute; }
     String const& string() const { return m_string; }
 
@@ -53,7 +53,6 @@ private:
     String m_basename;
     String m_title;
     String m_extension;
-    bool m_is_valid { false };
     bool m_is_absolute { false };
 };
 

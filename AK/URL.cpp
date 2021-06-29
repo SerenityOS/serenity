@@ -162,7 +162,7 @@ u16 URL::default_port_for_scheme(StringView const& scheme)
 URL URL::create_with_file_scheme(String const& path, String const& fragment, String const& hostname)
 {
     LexicalPath lexical_path(path);
-    if (!lexical_path.is_valid() || !lexical_path.is_absolute())
+    if (!lexical_path.is_absolute())
         return {};
 
     URL url;

@@ -182,18 +182,10 @@ Optional<String> NewProjectDialog::get_project_full_path()
     auto create_in = m_create_in_input->text();
     auto maybe_project_name = get_available_project_name();
 
-    if (!maybe_project_name.has_value()) {
-        return {};
-    }
-
-    auto project_name = maybe_project_name.value();
-    auto full_path = LexicalPath(String::formatted("{}/{}", create_in, project_name));
-
-    // Do not permit otherwise invalid paths.
-    if (!full_path.is_valid())
+    if (!maybe_project_name.has_value())
         return {};
 
-    return full_path.string();
+    return LexicalPath::join(create_in, *maybe_project_name).string();
 }
 
 void NewProjectDialog::do_create_project()

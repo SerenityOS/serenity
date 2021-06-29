@@ -74,13 +74,7 @@ static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, St
     // We trust that the kernel only sends the name when appropriate.
     if (event->name_length > 0) {
         String child_name { event->name, event->name_length - 1 };
-        auto lexical_path = LexicalPath::join(path, child_name);
-        if (!lexical_path.is_valid()) {
-            dbgln_if(FILE_WATCHER_DEBUG, "get_event_from_fd: Reading from wd {}: Invalid child name '{}'", fd, child_name);
-            return {};
-        }
-
-        result.event_path = lexical_path.string();
+        result.event_path = LexicalPath::join(path, child_name).string();
     } else {
         result.event_path = path;
     }
@@ -98,11 +92,6 @@ Result<bool, String> FileWatcherBase::add_watch(String path, FileWatcherEvent::T
         char* buf = getcwd(nullptr, 0);
         lexical_path = LexicalPath::join(String(buf), path);
         free(buf);
-    }
-
-    if (!lexical_path.is_valid()) {
-        dbgln_if(FILE_WATCHER_DEBUG, "add_watch: path '{}' invalid", path);
-        return false;
     }
 
     auto const& canonical_path = lexical_path.string();
@@ -143,11 +132,6 @@ Result<bool, String> FileWatcherBase::remove_watch(String path)
         char* buf = getcwd(nullptr, 0);
         lexical_path = LexicalPath::join(String(buf), path);
         free(buf);
-    }
-
-    if (!lexical_path.is_valid()) {
-        dbgln_if(FILE_WATCHER_DEBUG, "remove_watch: path '{}' invalid", path);
-        return false;
     }
 
     auto const& canonical_path = lexical_path.string();

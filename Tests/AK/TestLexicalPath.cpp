@@ -9,15 +9,9 @@
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
 
-TEST_CASE(construct)
-{
-    EXPECT_EQ(LexicalPath().is_valid(), false);
-}
-
 TEST_CASE(basic)
 {
     LexicalPath path("/abc/def/ghi.txt");
-    EXPECT_EQ(path.is_valid(), true);
     EXPECT_EQ(path.basename(), "ghi.txt");
     EXPECT_EQ(path.title(), "ghi");
     EXPECT_EQ(path.extension(), "txt");

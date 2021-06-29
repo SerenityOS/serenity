@@ -28,7 +28,6 @@ PropertiesWindow::PropertiesWindow(const String& path, bool disable_rename, Wind
     : Window(parent_window)
 {
     auto lexical_path = LexicalPath(path);
-    VERIFY(lexical_path.is_valid());
 
     auto& main_widget = set_main_widget<GUI::Widget>();
     main_widget.set_layout<GUI::VerticalBoxLayout>();
@@ -103,7 +102,6 @@ PropertiesWindow::PropertiesWindow(const String& path, bool disable_rename, Wind
             perror("readlink");
         } else {
             auto link_directory = LexicalPath(link_destination);
-            VERIFY(link_directory.is_valid());
             auto link_parent = URL::create_with_file_protocol(link_directory.dirname(), link_directory.basename());
             properties.append({ "Link target:", link_destination, Optional(link_parent) });
         }
