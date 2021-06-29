@@ -4,10 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonArraySerializer.h>
-#include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
-#include <AK/JsonValue.h>
 #include <AK/UBSanitizer.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
@@ -521,13 +518,15 @@ private:
             [&](Processor& proc) {
                 auto& info = proc.info();
                 auto obj = array.add_object();
-                JsonArray features;
-                for (auto& feature : info.features().split(' '))
-                    features.append(feature);
                 obj.add("processor", proc.get_id());
                 obj.add("cpuid", info.cpuid());
                 obj.add("family", info.display_family());
-                obj.add("features", features);
+
+                auto features_array = obj.add_array("features");
+                for (auto& feature : info.features().split(' '))
+                    features_array.add(feature);
+                features_array.finish();
+
                 obj.add("model", info.display_model());
                 obj.add("stepping", info.stepping());
                 obj.add("type", info.type());
