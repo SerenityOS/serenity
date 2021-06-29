@@ -283,7 +283,7 @@ private:
     Gfx::IntRect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
     void ensure_cursor_is_valid();
-    void flush_pending_change_notification_if_needed();
+    void rehighlight_if_needed();
 
     size_t visual_line_containing(size_t line_index, size_t column) const;
     void recompute_visual_lines(size_t line_index);
@@ -311,6 +311,7 @@ private:
     bool m_in_drag_select { false };
     bool m_ruler_visible { false };
     bool m_gutter_visible { false };
+    bool m_needs_rehighlight { false };
     bool m_has_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
     WrappingMode m_wrapping_mode { WrappingMode::NoWrap };
