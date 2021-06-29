@@ -30,7 +30,8 @@ public:
 
     bool has_extension(StringView const&) const;
 
-    void append(String const& component);
+    [[nodiscard]] LexicalPath append(StringView const&) const;
+    [[nodiscard]] LexicalPath parent() const;
 
     static String canonicalized_path(String);
     static String relative_path(String absolute_path, String const& prefix);
