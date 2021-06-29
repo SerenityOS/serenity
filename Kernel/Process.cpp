@@ -308,9 +308,25 @@ void signal_trampoline_dummy()
         "asm_signal_trampoline_end:\n"
         ".att_syntax" ::"i"(Syscall::SC_sigreturn));
 #elif ARCH(X86_64)
-    asm("asm_signal_trampoline:\n"
-        "cli;hlt\n"
-        "asm_signal_trampoline_end:\n");
+    // The trampoline preserves the current rax, pushes the signal code and
+    // then calls the signal handler. We do this because, when interrupting a
+    // blocking syscall, that syscall may return some special error code in eax;
+    // This error code would likely be overwritten by the signal handler, so it's
+    // necessary to preserve it here.
+    asm(
+        ".intel_syntax noprefix\n"
+        "asm_signal_trampoline:\n"
+        "push rbp\n"
+        "mov rbp, rsp\n"
+        "push rax\n"          // we have to store rax 'cause it might be the return value from a syscall
+        "sub rsp, 8\n"        // align the stack to 16 bytes
+        "mov rdi, [rbp+24]\n" // push the signal code
+        "call [rbp+16]\n"     // call the signal handler
+        "add rsp, 8\n"
+        "mov rax, %P0\n"
+        "int 0x82\n" // sigreturn syscall
+        "asm_signal_trampoline_end:\n"
+        ".att_syntax" ::"i"(Syscall::SC_sigreturn));
 #endif
 }
 

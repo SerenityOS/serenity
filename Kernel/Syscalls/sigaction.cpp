@@ -104,7 +104,28 @@ KResultOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& regist
     registers.userspace_esp = registers.esp;
     return smuggled_eax;
 #else
-    PANIC("sys$sigreturn() not implemented.");
+    //Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
+    FlatPtr* stack_ptr = (FlatPtr*)registers.userspace_rsp;
+    FlatPtr smuggled_rax = *stack_ptr;
+
+    //pop the stored rax, rbp, return address, handler and signal code
+    stack_ptr += 5;
+
+    Thread::current()->m_signal_mask = *stack_ptr;
+    stack_ptr++;
+
+    //pop rdi, rsi, rbp, rsp, rbx, rdx, rcx, rax, r8, r9, r10, r11, r12, r13, r14 and r15
+    memcpy(&registers.rdi, stack_ptr, 16 * sizeof(FlatPtr));
+    stack_ptr += 16;
+
+    registers.rip = *stack_ptr;
+    stack_ptr++;
+
+    registers.rflags = (registers.rflags & ~safe_eflags_mask) | (*stack_ptr & safe_eflags_mask);
+    stack_ptr++;
+
+    registers.userspace_rsp = registers.rsp;
+    return smuggled_rax;
 #endif
 }
 

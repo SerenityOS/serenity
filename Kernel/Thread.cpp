@@ -822,7 +822,11 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to EIP {:p}, ESP {:p}", ret_eip, old_esp);
 #elif ARCH(X86_64)
         FlatPtr* stack = &state.userspace_rsp;
-        TODO();
+        FlatPtr old_rsp = *stack;
+        FlatPtr ret_rip = state.rip;
+        FlatPtr ret_rflags = state.rflags;
+
+        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to RIP {:p}, RSP {:p}", ret_rip, old_rsp);
 #endif
 
 #if ARCH(I386)
@@ -843,10 +847,32 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         push_value_on_user_stack(stack, state.ebp);
         push_value_on_user_stack(stack, state.esi);
         push_value_on_user_stack(stack, state.edi);
-
 #else
-        // FIXME
-        PANIC("Thread:dispatch_signal() not implemented");
+        // Align the stack to 16 bytes.
+        // Note that we push 176 bytes (8 * 22) on to the stack,
+        // so we need to account for this here.
+        FlatPtr stack_alignment = (*stack - 112) % 16;
+        *stack -= stack_alignment;
+
+        push_value_on_user_stack(stack, ret_rflags);
+
+        push_value_on_user_stack(stack, ret_rip);
+        push_value_on_user_stack(stack, state.r15);
+        push_value_on_user_stack(stack, state.r14);
+        push_value_on_user_stack(stack, state.r13);
+        push_value_on_user_stack(stack, state.r12);
+        push_value_on_user_stack(stack, state.r11);
+        push_value_on_user_stack(stack, state.r10);
+        push_value_on_user_stack(stack, state.r9);
+        push_value_on_user_stack(stack, state.r8);
+        push_value_on_user_stack(stack, state.rax);
+        push_value_on_user_stack(stack, state.rcx);
+        push_value_on_user_stack(stack, state.rdx);
+        push_value_on_user_stack(stack, state.rbx);
+        push_value_on_user_stack(stack, old_rsp);
+        push_value_on_user_stack(stack, state.rbp);
+        push_value_on_user_stack(stack, state.rsi);
+        push_value_on_user_stack(stack, state.rdi);
 #endif
 
         // PUSH old_signal_mask
@@ -887,7 +913,7 @@ RegisterState& Thread::get_register_dump_from_stack()
 
     // We should *always* have a trap. If we don't we're probably a kernel
     // thread that hasn't been pre-empted. If we want to support this, we
-    // need to capture the registers probably into m_tss and return it
+    // need to capture the registers probably into m_regs and return it
     VERIFY(trap);
 
     while (trap) {
