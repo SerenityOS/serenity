@@ -14,7 +14,11 @@ asm(
     "interrupt_common_asm_entry: \n"
     // add the padding field in RegisterState
     "    subq $4, %rsp\n"
-    "    movl $0, 0(%rsp)\n"
+    "    pushq %rax\n"
+    "    movl 12(%rsp), %eax\n"
+    "    movl $0, 12(%rsp)\n"
+    "    movl %eax, 8(%rsp)\n"
+    "    popq %rax\n"
     // save all the other registers
     "    pushq %r15\n"
     "    pushq %r14\n"
