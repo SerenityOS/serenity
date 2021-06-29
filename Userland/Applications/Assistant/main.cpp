@@ -266,14 +266,11 @@ int main(int argc, char** argv)
             auto& match = results_container.add<Assistant::ResultRow>();
             match.set_image(result->bitmap());
             match.set_title(result->title());
+            match.set_subtitle(result->subtitle());
             match.on_selected = [result_copy = result]() {
                 result_copy->activate();
                 exit(0);
             };
-
-            if (result->kind() == Assistant::Result::Kind::Calculator) {
-                match.set_subtitle("'Enter' will copy to clipboard");
-            }
         }
 
         mark_selected_item();
