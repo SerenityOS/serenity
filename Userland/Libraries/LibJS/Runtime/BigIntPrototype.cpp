@@ -52,8 +52,17 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
     auto bigint_value = this_bigint_value(global_object, vm.this_value(global_object));
     if (vm.exception())
         return {};
-    // FIXME: Support radix argument
-    return js_string(vm, bigint_value.as_bigint().big_integer().to_base(10));
+    double radix = 10;
+    if (!vm.argument(0).is_undefined()) {
+        radix = vm.argument(0).to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
+        if (radix < 2 || radix > 36) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::InvalidRadix);
+            return {};
+        }
+    }
+    return js_string(vm, bigint_value.as_bigint().big_integer().to_base(radix));
 }
 
 // 21.2.3.2 BigInt.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring
