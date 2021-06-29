@@ -137,15 +137,14 @@ String LexicalPath::relative_path(String absolute_path, String const& prefix)
     return absolute_path.substring(prefix_length);
 }
 
-void LexicalPath::append(String const& component)
+LexicalPath LexicalPath::append(StringView const& value) const
 {
-    StringBuilder builder;
-    builder.append(m_string);
-    builder.append('/');
-    builder.append(component);
+    return LexicalPath::join(m_string, value);
+}
 
-    m_string = builder.to_string();
-    canonicalize();
+LexicalPath LexicalPath::parent() const
+{
+    return append("..");
 }
 
 }
