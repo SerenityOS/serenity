@@ -144,8 +144,8 @@ static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]
     push_on_new_stack(argv);
     push_on_new_stack(argv_entries.size());
 #else
-    regs.rdi = argv;
-    regs.rsi = argv_entries.size();
+    regs.rdi = argv_entries.size();
+    regs.rsi = argv;
     regs.rdx = envp;
 #endif
     push_on_new_stack(0); // return address
