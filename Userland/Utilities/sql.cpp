@@ -12,6 +12,8 @@
 #include <LibSQL/AST/Lexer.h>
 #include <LibSQL/AST/Parser.h>
 #include <LibSQL/AST/Token.h>
+#include <LibSQL/SQLClient.h>
+#include <unistd.h>
 
 namespace {
 
@@ -81,7 +83,7 @@ String read_next_piece()
         }
 
         s_repl_line_level = last_token_ended_statement ? 0 : (s_repl_line_level > 0 ? s_repl_line_level : 1);
-    } while (s_repl_line_level > 0);
+    } while ((s_repl_line_level > 0) || piece.is_empty());
 
     return piece.to_string();
 }
@@ -92,31 +94,6 @@ void handle_command(StringView command)
         s_keep_running = false;
     else
         outln("\033[33;1mUnrecognized command:\033[0m {}", command);
-}
-
-void handle_statement(StringView statement_string)
-{
-    auto parser = SQL::AST::Parser(SQL::AST::Lexer(statement_string));
-    [[maybe_unused]] auto statement = parser.next_statement();
-
-    if (parser.has_errors()) {
-        auto error = parser.errors()[0];
-        outln("\033[33;1mInvalid statement:\033[0m {}", error.to_string());
-    }
-}
-
-void repl()
-{
-    while (s_keep_running) {
-        String piece = read_next_piece();
-        if (piece.is_empty())
-            continue;
-
-        if (piece.starts_with('.'))
-            handle_command(piece);
-        else
-            handle_statement(piece);
-    }
 }
 
 }
@@ -174,8 +151,70 @@ int main()
         editor.set_prompt(prompt_for_level(open_indents));
     };
 
-    repl();
+    Core::EventLoop loop;
+    auto sql_client = SQL::SQLClient::construct();
+    int the_connection_id;
+
+    auto read_sql = [&]() {
+        do {
+            String piece = read_next_piece();
+            if (!s_keep_running)
+                break;
+            if (piece.is_empty())
+                continue;
+
+            if (piece.starts_with('.')) {
+                handle_command(piece);
+            } else {
+                auto statement_id = sql_client->sql_statement(the_connection_id, piece);
+                sql_client->async_statement_execute(statement_id);
+                return;
+            }
+        } while (s_keep_running);
+        sql_client->async_disconnect(the_connection_id);
+    };
+
+    sql_client->on_connected = [&](int connection_id) {
+        the_connection_id = connection_id;
+        read_sql();
+    };
+
+    sql_client->on_execution_success = [&](int, bool has_results, int updated, int created, int deleted) {
+        outln("{} row(s) updated, {} created, {} deleted", updated, created, deleted);
+        if (!has_results) {
+            read_sql();
+        }
+    };
+
+    sql_client->on_next_result = [&](int, Vector<String> const& row) {
+        StringBuilder builder;
+        builder.join(", ", row);
+        outln(builder.build());
+    };
+
+    sql_client->on_results_exhausted = [&](int, int total_rows) {
+        outln("{} row(s)", total_rows);
+        read_sql();
+    };
+
+    sql_client->on_connection_error = [&](int, int code, String const& message) {
+        outln("\033[33;1mConnection error:\033[0m {}", message);
+        loop.quit(code);
+    };
+
+    sql_client->on_execution_error = [&](int, int, String const& message) {
+        outln("\033[33;1mExecution error:\033[0m {}", message);
+        read_sql();
+    };
+
+    sql_client->on_disconnected = [&](int) {
+        loop.quit(0);
+    };
+
+    sql_client->connect(getlogin());
+    auto rc = loop.exec();
+
     s_editor->save_history(s_history_path);
 
-    return 0;
+    return rc;
 }
