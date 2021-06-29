@@ -733,7 +733,7 @@ String HackStudioWidget::get_project_executable_path() const
     // FIXME: Dumb heuristic ahead!
     // e.g /my/project => /my/project/project
     // TODO: Perhaps a Makefile rule for getting the value of $(PROGRAM) would be better?
-    return String::formatted("{}/{}", m_project->root_path(), LexicalPath(m_project->root_path()).basename());
+    return String::formatted("{}/{}", m_project->root_path(), LexicalPath::basename(m_project->root_path()));
 }
 
 void HackStudioWidget::build(TerminalWrapper& wrapper)

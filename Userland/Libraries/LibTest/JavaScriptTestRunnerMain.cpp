@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 {
     g_test_argc = argc;
     g_test_argv = argv;
-    auto program_name = LexicalPath { argv[0] }.basename();
+    auto program_name = LexicalPath::basename(argv[0]);
     g_program_name = program_name;
 
     struct sigaction act;

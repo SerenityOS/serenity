@@ -432,7 +432,7 @@ void Image::set_title(String title)
 void Image::set_path(String path)
 {
     m_path = move(path);
-    set_title(LexicalPath(m_path).basename());
+    set_title(LexicalPath::basename(m_path));
 }
 
 }

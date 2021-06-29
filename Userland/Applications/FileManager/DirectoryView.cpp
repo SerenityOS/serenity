@@ -55,7 +55,7 @@ static void run_file_operation([[maybe_unused]] FileOperation operation, const S
             perror("dup2");
             _exit(1);
         }
-        if (execlp("/bin/FileOperation", "/bin/FileOperation", "Copy", source.characters(), LexicalPath(destination).dirname().characters(), nullptr) < 0) {
+        if (execlp("/bin/FileOperation", "/bin/FileOperation", "Copy", source.characters(), LexicalPath::dirname(destination).characters(), nullptr) < 0) {
             perror("execlp");
             _exit(1);
         }
@@ -609,7 +609,7 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
     for (auto& url_to_copy : urls) {
         if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
             continue;
-        auto new_path = String::formatted("{}/{}", target_node.full_path(), LexicalPath(url_to_copy.path()).basename());
+        auto new_path = String::formatted("{}/{}", target_node.full_path(), LexicalPath::basename(url_to_copy.path()));
         if (url_to_copy.path() == new_path)
             continue;
 

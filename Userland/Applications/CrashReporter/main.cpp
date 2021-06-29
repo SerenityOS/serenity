@@ -204,7 +204,7 @@ int main(int argc, char** argv)
     auto& icon_image_widget = *widget.find_descendant_of_type_named<GUI::ImageWidget>("icon");
     icon_image_widget.set_bitmap(GUI::FileIconProvider::icon_for_executable(executable_path).bitmap_for_size(32));
 
-    auto app_name = LexicalPath(executable_path).basename();
+    auto app_name = LexicalPath::basename(executable_path);
     auto af = Desktop::AppFile::get_for_app(app_name);
     if (af->is_valid())
         app_name = af->name();

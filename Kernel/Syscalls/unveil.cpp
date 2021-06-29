@@ -91,7 +91,7 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
     if (!custody_or_error.is_error()) {
         new_unveiled_path = custody_or_error.value()->absolute_path();
     } else if (custody_or_error.error() == -ENOENT && parent_custody && (new_permissions & UnveilAccess::CreateOrRemove)) {
-        String basename = LexicalPath(path.view()).basename();
+        String basename = LexicalPath::basename(path.view());
         new_unveiled_path = String::formatted("{}/{}", parent_custody->absolute_path(), basename);
     } else {
         // FIXME Should this be EINVAL?

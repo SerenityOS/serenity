@@ -1064,7 +1064,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         // Then add them to the context menu.
         // FIXME: Adapt this code when we actually support calling LaunchServer with a specific handler in mind.
         for (auto& handler : handlers) {
-            auto af = Desktop::AppFile::get_for_app(LexicalPath(handler).basename());
+            auto af = Desktop::AppFile::get_for_app(LexicalPath::basename(handler));
             if (!af->is_valid())
                 continue;
             auto action = GUI::Action::create(String::formatted("&Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
@@ -1084,7 +1084,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
             // file://courage/home/anon/something -> /home/anon/something
             auto path = URL(m_context_menu_href).path();
             // /home/anon/something -> something
-            auto name = LexicalPath(path).basename();
+            auto name = LexicalPath::basename(path);
             GUI::Clipboard::the().set_plain_text(name);
         }));
         m_context_menu_for_hyperlink->add_separator();

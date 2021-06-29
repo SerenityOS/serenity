@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 
     String path_buffer;
     if (!path) {
-        path_buffer = LexicalPath(target).basename();
+        path_buffer = LexicalPath::basename(target);
         path = path_buffer.characters();
     }
 

@@ -653,7 +653,7 @@ void FileSystemModel::set_data(const ModelIndex& index, const Variant& data)
 {
     VERIFY(is_editable(index));
     Node& node = const_cast<Node&>(this->node(index));
-    auto dirname = LexicalPath(node.full_path()).dirname();
+    auto dirname = LexicalPath::dirname(node.full_path());
     auto new_full_path = String::formatted("{}/{}", dirname, data.to_string());
     int rc = rename(node.full_path().characters(), new_full_path.characters());
     if (rc < 0) {

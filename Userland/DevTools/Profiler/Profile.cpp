@@ -255,7 +255,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             auto sampled_process = adopt_own(*new Process {
                 .pid = event.pid,
                 .executable = event.executable,
-                .basename = LexicalPath(event.executable).basename(),
+                .basename = LexicalPath::basename(event.executable),
                 .start_valid = event.serial,
                 .end_valid = {},
             });
@@ -274,7 +274,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             auto sampled_process = adopt_own(*new Process {
                 .pid = event.pid,
                 .executable = event.executable,
-                .basename = LexicalPath(event.executable).basename(),
+                .basename = LexicalPath::basename(event.executable),
                 .start_valid = event.serial,
                 .end_valid = {},
             });
@@ -498,7 +498,7 @@ ProfileNode::ProfileNode(Process const& process, const String& object_name, Stri
     } else {
         object = object_name;
     }
-    m_object_name = LexicalPath(object).basename();
+    m_object_name = LexicalPath::basename(object);
 }
 
 }

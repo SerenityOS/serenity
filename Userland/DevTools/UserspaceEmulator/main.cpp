@@ -53,7 +53,7 @@ int main(int argc, char** argv, char** env)
 
     StringBuilder builder;
     builder.append("(UE) ");
-    builder.append(LexicalPath(arguments[0]).basename());
+    builder.append(LexicalPath::basename(arguments[0]));
     if (set_process_name(builder.string_view().characters_without_null_termination(), builder.string_view().length()) < 0) {
         perror("set_process_name");
         return 1;

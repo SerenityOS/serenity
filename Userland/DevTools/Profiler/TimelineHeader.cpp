@@ -26,7 +26,7 @@ TimelineHeader::TimelineHeader(Profile& profile, Process const& process)
     update_selection();
 
     m_icon = GUI::FileIconProvider::icon_for_executable(m_process.executable).bitmap_for_size(32);
-    m_text = String::formatted("{} ({})", LexicalPath(m_process.executable).basename(), m_process.pid);
+    m_text = String::formatted("{} ({})", LexicalPath::basename(m_process.executable), m_process.pid);
 }
 
 TimelineHeader::~TimelineHeader()

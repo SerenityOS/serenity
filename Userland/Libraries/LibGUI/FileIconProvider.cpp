@@ -222,7 +222,7 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
         if (raw_symlink_target.starts_with('/')) {
             target_path = raw_symlink_target;
         } else {
-            target_path = Core::File::real_path_for(String::formatted("{}/{}", LexicalPath(path).dirname(), raw_symlink_target));
+            target_path = Core::File::real_path_for(String::formatted("{}/{}", LexicalPath::dirname(path), raw_symlink_target));
         }
         auto target_icon = icon_for_path(target_path);
 

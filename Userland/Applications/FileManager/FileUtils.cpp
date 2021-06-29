@@ -47,7 +47,7 @@ void delete_paths(const Vector<String>& paths, bool should_confirm, GUI::Window*
 {
     String message;
     if (paths.size() == 1) {
-        message = String::formatted("Really delete {}?", LexicalPath(paths[0]).basename());
+        message = String::formatted("Really delete {}?", LexicalPath::basename(paths[0]));
     } else {
         message = String::formatted("Really delete {} files?", paths.size());
     }

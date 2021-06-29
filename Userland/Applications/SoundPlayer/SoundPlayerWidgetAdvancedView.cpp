@@ -300,7 +300,7 @@ void SoundPlayerWidgetAdvancedView::try_fill_missing_info(Vector<M3UEntry>& entr
         }
 
         if (!entry.extended_info->track_display_title.has_value())
-            entry.extended_info->track_display_title = LexicalPath(entry.path).title();
+            entry.extended_info->track_display_title = LexicalPath::title(entry.path);
         if (!entry.extended_info->track_length_in_seconds.has_value()) {
             if (auto reader = Audio::Loader::create(entry.path); !reader->has_error())
                 entry.extended_info->track_length_in_seconds = reader->total_samples() / reader->sample_rate();

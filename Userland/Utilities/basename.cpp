@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(suffix, "Suffix to strip from name", "suffix", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    auto result = LexicalPath(path).basename();
+    auto result = LexicalPath::basename(path);
 
     if (!suffix.is_null() && result.length() != suffix.length() && result.ends_with(suffix))
         result = result.substring(0, result.length() - suffix.length());

@@ -65,7 +65,7 @@ int main(int argc, char** argv)
                         out("\033]8;;{}\033\\", url.serialize());
                     }
 
-                    out("\033[34;1m{}:{}\033[0m", LexicalPath(source_position.file_path).basename(), source_position.line_number);
+                    out("\033[34;1m{}:{}\033[0m", LexicalPath::basename(source_position.file_path), source_position.line_number);
 
                     if (linked)
                         out("\033]8;;\033\\");

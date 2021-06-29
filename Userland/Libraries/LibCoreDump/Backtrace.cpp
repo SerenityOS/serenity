@@ -139,7 +139,7 @@ String Backtrace::Entry::to_string(bool color) const
     for (size_t i = 0; i < source_positions.size(); ++i) {
         auto& position = source_positions[i];
         auto fmt = color ? "\033[34;1m{}\033[0m:{}" : "{}:{}";
-        builder.appendff(fmt, LexicalPath(position.file_path).basename(), position.line_number);
+        builder.appendff(fmt, LexicalPath::basename(position.file_path), position.line_number);
         if (i != source_positions.size() - 1) {
             builder.append(" => ");
         }

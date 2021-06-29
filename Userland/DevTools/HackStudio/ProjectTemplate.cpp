@@ -38,7 +38,7 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(const String& manife
         || !config->has_key("HackStudioTemplate", "IconName32x"))
         return {};
 
-    auto id = LexicalPath(manifest_path).title();
+    auto id = LexicalPath::title(manifest_path);
     auto name = config->read_entry("HackStudioTemplate", "Name");
     auto description = config->read_entry("HackStudioTemplate", "Description");
     int priority = config->read_num_entry("HackStudioTemplate", "Priority", 0);
