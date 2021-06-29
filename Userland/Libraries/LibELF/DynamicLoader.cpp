@@ -320,7 +320,7 @@ void DynamicLoader::load_program_headers()
 
     for (auto& text_region : text_regions) {
         FlatPtr ph_text_base = text_region.desired_load_address().page_base().get();
-        FlatPtr ph_text_end = round_up_to_power_of_two(text_region.desired_load_address().offset(text_region.size_in_memory()).get(), PAGE_SIZE);
+        FlatPtr ph_text_end = ph_text_base + round_up_to_power_of_two(text_region.size_in_memory() + (size_t)(text_region.desired_load_address().as_ptr() - ph_text_base), PAGE_SIZE);
         size_t text_segment_size = ph_text_end - ph_text_base;
 
         auto text_segment_offset = ph_text_base - ph_load_base;
@@ -358,7 +358,7 @@ void DynamicLoader::load_program_headers()
 
     for (auto& data_region : data_regions) {
         FlatPtr ph_data_base = data_region.desired_load_address().page_base().get();
-        FlatPtr ph_data_end = round_up_to_power_of_two(data_region.desired_load_address().offset(data_region.size_in_memory()).get(), PAGE_SIZE);
+        FlatPtr ph_data_end = ph_data_base + round_up_to_power_of_two(data_region.size_in_memory() + (size_t)(data_region.desired_load_address().as_ptr() - ph_data_base), PAGE_SIZE);
         size_t data_segment_size = ph_data_end - ph_data_base;
 
         auto data_segment_offset = ph_data_base - ph_load_base;
@@ -384,6 +384,8 @@ void DynamicLoader::load_program_headers()
             data_segment_start = VirtualAddress { (u8*)reservation + data_region.desired_load_address().get() };
         else
             data_segment_start = data_region.desired_load_address();
+
+        VERIFY(data_segment_start.as_ptr() + data_region.size_in_memory() <= data_segment + data_segment_size);
 
         memcpy(data_segment_start.as_ptr(), (u8*)m_file_data + data_region.offset(), data_region.size_in_image());
     }
