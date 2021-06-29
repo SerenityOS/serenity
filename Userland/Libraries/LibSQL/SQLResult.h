@@ -40,17 +40,18 @@ constexpr char const* command_tag(SQLCommand command)
     }
 }
 
-#define ENUMERATE_SQL_ERRORS(S)                                 \
-    S(NoError, "No error")                                      \
-    S(DatabaseUnavailable, "Database Unavailable")              \
-    S(StatementUnavailable, "Statement with id {} Unavailable") \
-    S(SyntaxError, "Syntax Error")                              \
-    S(DatabaseDoesNotExist, "Database {} does not exist")       \
-    S(SchemaDoesNotExist, "Schema {} does not exist")           \
-    S(SchemaExists, "Schema {} already exist")                  \
-    S(TableDoesNotExist, "Table {} does not exist")             \
-    S(TableExists, "Table {} already exist")                    \
-    S(InvalidType, "Invalid type {}")
+#define ENUMERATE_SQL_ERRORS(S)                                   \
+    S(NoError, "No error")                                        \
+    S(DatabaseUnavailable, "Database Unavailable")                \
+    S(StatementUnavailable, "Statement with id '{}' Unavailable") \
+    S(SyntaxError, "Syntax Error")                                \
+    S(DatabaseDoesNotExist, "Database '{}' does not exist")       \
+    S(SchemaDoesNotExist, "Schema '{}' does not exist")           \
+    S(SchemaExists, "Schema '{}' already exist")                  \
+    S(TableDoesNotExist, "Table '{}' does not exist")             \
+    S(TableExists, "Table '{}' already exist")                    \
+    S(InvalidType, "Invalid type '{}'")                           \
+    S(InvalidDatabaseName, "Invalid database name '{}'")
 
 enum class SQLErrorCode {
 #undef __ENUMERATE_SQL_ERROR
@@ -120,6 +121,7 @@ private:
         , m_update_count(update_count)
         , m_insert_count(insert_count)
         , m_delete_count(delete_count)
+        , m_has_results(command == SQLCommand::Select)
     {
     }
 

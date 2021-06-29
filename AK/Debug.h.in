@@ -386,6 +386,10 @@
 #cmakedefine01 SQL_DEBUG
 #endif
 
+#ifndef SQLSERVER_DEBUG
+#cmakedefine01 SQLSERVER_DEBUG
+#endif
+
 #ifndef SYNTAX_HIGHLIGHTING_DEBUG
 #cmakedefine01 SYNTAX_HIGHLIGHTING_DEBUG
 #endif
