@@ -25,18 +25,18 @@ public:
     StringView const& extension() const { return m_extension; }
 
     Vector<StringView> const& parts_view() const { return m_parts; }
-    Vector<String> parts() const;
+    [[nodiscard]] Vector<String> parts() const;
 
     bool has_extension(StringView const&) const;
 
     [[nodiscard]] LexicalPath append(StringView const&) const;
     [[nodiscard]] LexicalPath parent() const;
 
-    static String canonicalized_path(String);
-    static String relative_path(String absolute_path, String const& prefix);
+    [[nodiscard]] static String canonicalized_path(String);
+    [[nodiscard]] static String relative_path(String absolute_path, String const& prefix);
 
     template<typename... S>
-    static LexicalPath join(String const& first, S&&... rest)
+    [[nodiscard]] static LexicalPath join(String const& first, S&&... rest)
     {
         StringBuilder builder;
         builder.append(first);
@@ -45,25 +45,25 @@ public:
         return LexicalPath { builder.to_string() };
     }
 
-    static String dirname(String path)
+    [[nodiscard]] static String dirname(String path)
     {
         auto lexical_path = LexicalPath(move(path));
         return lexical_path.dirname();
     }
 
-    static String basename(String path)
+    [[nodiscard]] static String basename(String path)
     {
         auto lexical_path = LexicalPath(move(path));
         return lexical_path.basename();
     }
 
-    static String title(String path)
+    [[nodiscard]] static String title(String path)
     {
         auto lexical_path = LexicalPath(move(path));
         return lexical_path.title();
     }
 
-    static String extension(String path)
+    [[nodiscard]] static String extension(String path)
     {
         auto lexical_path = LexicalPath(move(path));
         return lexical_path.extension();
