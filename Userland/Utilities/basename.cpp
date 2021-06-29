@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     auto result = LexicalPath::basename(path);
 
     if (!suffix.is_null() && result.length() != suffix.length() && result.ends_with(suffix))
-        result = result.substring(0, result.length() - suffix.length());
+        result = result.substring_view(0, result.length() - suffix.length());
 
     outln("{}", result);
     return 0;
