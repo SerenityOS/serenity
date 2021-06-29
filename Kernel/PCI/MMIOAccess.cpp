@@ -88,8 +88,10 @@ UNMAP_AFTER_INIT MMIOAccess::MMIOAccess(PhysicalAddress p_mcfg)
     // Note: we need to map this region before enumerating the hardware and adding
     // PCI::PhysicalID objects to the vector, because get_capabilities calls
     // PCI::read16 which will need this region to be mapped.
-    m_mapped_region = MM.allocate_kernel_region(determine_memory_mapped_bus_region(0, m_segments.get(0).value().get_start_bus()), MEMORY_RANGE_PER_BUS, "PCI ECAM", Region::Access::Read | Region::Access::Write);
-    dbgln("PCI ECAM Mapped region @ {}", m_mapped_region->vaddr());
+    u8 start_bus = m_segments.get(0).value().get_start_bus();
+    m_mapped_region = MM.allocate_kernel_region(determine_memory_mapped_bus_region(0, start_bus), MEMORY_RANGE_PER_BUS, "PCI ECAM", Region::Access::Read | Region::Access::Write);
+    m_mapped_bus = start_bus;
+    dbgln_if(PCI_DEBUG, "PCI: First PCI ECAM Mapped region for starting bus {} @ {} {}", start_bus, m_mapped_region->vaddr(), m_mapped_region->physical_page(0)->paddr());
 
     enumerate_hardware([&](const Address& address, ID id) {
         m_physical_ids.append({ address, id, get_capabilities(address) });
@@ -101,6 +103,8 @@ void MMIOAccess::map_bus_region(u32 segment, u8 bus)
     if (m_mapped_bus == bus)
         return;
     m_mapped_region = MM.allocate_kernel_region(determine_memory_mapped_bus_region(segment, bus), MEMORY_RANGE_PER_BUS, "PCI ECAM", Region::Access::Read | Region::Access::Write);
+    m_mapped_bus = bus;
+    dbgln_if(PCI_DEBUG, "PCI: New PCI ECAM Mapped region for bus {} @ {} {}", bus, m_mapped_region->vaddr(), m_mapped_region->physical_page(0)->paddr());
 }
 
 VirtualAddress MMIOAccess::get_device_configuration_space(Address address)
