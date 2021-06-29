@@ -44,6 +44,30 @@ public:
         return LexicalPath { builder.to_string() };
     }
 
+    static String dirname(String path)
+    {
+        auto lexical_path = LexicalPath(move(path));
+        return lexical_path.dirname();
+    }
+
+    static String basename(String path)
+    {
+        auto lexical_path = LexicalPath(move(path));
+        return lexical_path.basename();
+    }
+
+    static String title(String path)
+    {
+        auto lexical_path = LexicalPath(move(path));
+        return lexical_path.title();
+    }
+
+    static String extension(String path)
+    {
+        auto lexical_path = LexicalPath(move(path));
+        return lexical_path.extension();
+    }
+
 private:
     void canonicalize();
 

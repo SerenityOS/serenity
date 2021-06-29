@@ -300,7 +300,7 @@ Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File&
     } else {
         auto page = GUI::WizardPage::construct(
             "Export File Format",
-            String::formatted("Select the format you wish to export to '{}' as", LexicalPath { file.filename() }.basename()));
+            String::formatted("Select the format you wish to export to '{}' as", LexicalPath::basename(file.filename())));
 
         page->on_next_page = [] { return nullptr; };
 

@@ -332,7 +332,7 @@ Result<void, File::CopyError> File::copy_file(const String& dst_path, const stru
         if (errno != EISDIR)
             return CopyError { OSError(errno), false };
 
-        auto dst_dir_path = String::formatted("{}/{}", dst_path, LexicalPath(source.filename()).basename());
+        auto dst_dir_path = String::formatted("{}/{}", dst_path, LexicalPath::basename(source.filename()));
         dst_fd = creat(dst_dir_path.characters(), 0666);
         if (dst_fd < 0)
             return CopyError { OSError(errno), false };
