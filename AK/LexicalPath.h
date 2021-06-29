@@ -33,7 +33,7 @@ public:
     [[nodiscard]] LexicalPath parent() const;
 
     [[nodiscard]] static String canonicalized_path(String);
-    [[nodiscard]] static String relative_path(String absolute_path, String const& prefix);
+    [[nodiscard]] static String relative_path(StringView const& absolute_path, StringView const& prefix);
 
     template<typename... S>
     [[nodiscard]] static LexicalPath join(String const& first, S&&... rest)
