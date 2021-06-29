@@ -189,14 +189,14 @@ ModelIndex FileSystemModel::index(String path, int column) const
 
 FileSystemModel::Node const* FileSystemModel::node_for_path(String const& path) const
 {
-    LexicalPath lexical_path;
-    if (path == m_root_path) {
-        lexical_path = LexicalPath { "/" };
-    } else if (!m_root_path.is_empty() && path.starts_with(m_root_path)) {
-        lexical_path = LexicalPath { LexicalPath::relative_path(path, m_root_path) };
-    } else {
-        lexical_path = LexicalPath { move(path) };
-    }
+    String resolved_path;
+    if (path == m_root_path)
+        resolved_path = "/";
+    else if (!m_root_path.is_empty() && path.starts_with(m_root_path))
+        resolved_path = LexicalPath::relative_path(path, m_root_path);
+    else
+        resolved_path = path;
+    LexicalPath lexical_path(resolved_path);
 
     const Node* node = m_root->m_parent_of_root ? &m_root->children.first() : m_root;
     if (lexical_path.string() == "/")

@@ -14,7 +14,6 @@ namespace AK {
 
 class LexicalPath {
 public:
-    LexicalPath() = default;
     explicit LexicalPath(String);
 
     bool is_absolute() const { return !m_string.is_empty() && m_string[0] == '/'; }
