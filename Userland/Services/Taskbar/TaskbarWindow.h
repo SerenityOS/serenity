@@ -21,6 +21,7 @@ public:
 
 private:
     explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu);
+    static void show_desktop_button_clicked(unsigned);
     void create_quick_launch_bar();
     void on_screen_rects_change(const Vector<Gfx::IntRect, 4>&, size_t);
     NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
@@ -44,6 +45,7 @@ private:
     Gfx::IntSize m_applet_area_size;
     RefPtr<GUI::Frame> m_applet_area_container;
     RefPtr<GUI::Button> m_start_button;
+    RefPtr<GUI::Button> m_show_desktop_button;
 
     RefPtr<Desktop::AppFile> m_assistant_app_file;
 
