@@ -211,8 +211,7 @@ void TextEditor::doubleclick_event(MouseEvent& event)
     if (!current_line().can_select())
         return;
 
-    // NOTE: This ensures that spans are updated before we look at them.
-    flush_pending_change_notification_if_needed();
+    rehighlight_if_needed();
 
     m_triple_click_timer.start();
     m_in_drag_select = false;
@@ -397,8 +396,8 @@ Gfx::IntRect TextEditor::visible_text_rect_in_inner_coordinates() const
 void TextEditor::paint_event(PaintEvent& event)
 {
     Color widget_background_color = palette().color(is_enabled() ? background_role() : Gfx::ColorRole::Window);
-    // NOTE: This ensures that spans are updated before we look at them.
-    flush_pending_change_notification_if_needed();
+
+    rehighlight_if_needed();
 
     Frame::paint_event(event);
 
@@ -1404,16 +1403,13 @@ void TextEditor::did_change()
         if (m_autocomplete_timer)
             m_autocomplete_timer->stop();
     }
+    m_needs_rehighlight = true;
     if (!m_has_pending_change_notification) {
         m_has_pending_change_notification = true;
         deferred_invoke([this](auto&) {
-            if (!m_has_pending_change_notification)
-                return;
+            m_has_pending_change_notification = false;
             if (on_change)
                 on_change();
-            if (m_highlighter)
-                m_highlighter->rehighlight(palette());
-            m_has_pending_change_notification = false;
         });
     }
 }
@@ -1506,8 +1502,7 @@ void TextEditor::resize_event(ResizeEvent& event)
 void TextEditor::theme_change_event(ThemeChangeEvent& event)
 {
     AbstractScrollableWidget::theme_change_event(event);
-    if (m_highlighter)
-        m_highlighter->rehighlight(palette());
+    m_needs_rehighlight = true;
 }
 
 void TextEditor::set_selection(const TextRange& selection)
@@ -1765,15 +1760,13 @@ void TextEditor::set_document(TextDocument& document)
     m_document->register_client(*this);
 }
 
-void TextEditor::flush_pending_change_notification_if_needed()
+void TextEditor::rehighlight_if_needed()
 {
-    if (!m_has_pending_change_notification)
+    if (!m_needs_rehighlight)
         return;
-    if (on_change)
-        on_change();
     if (m_highlighter)
         m_highlighter->rehighlight(palette());
-    m_has_pending_change_notification = false;
+    m_needs_rehighlight = false;
 }
 
 const Syntax::Highlighter* TextEditor::syntax_highlighter() const
@@ -1788,7 +1781,7 @@ void TextEditor::set_syntax_highlighter(OwnPtr<Syntax::Highlighter> highlighter)
     m_highlighter = move(highlighter);
     if (m_highlighter) {
         m_highlighter->attach(*this);
-        m_highlighter->rehighlight(palette());
+        m_needs_rehighlight = true;
     } else
         document().set_spans({});
 }
