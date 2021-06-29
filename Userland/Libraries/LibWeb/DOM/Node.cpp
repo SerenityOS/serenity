@@ -615,7 +615,7 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
     else if (is_element()) {
         object.add("type", "element");
 
-        auto element = downcast<DOM::Element>(this);
+        auto element = static_cast<DOM::Element const*>(this);
         if (element->has_attributes()) {
             auto attributes = object.add_object("attributes");
             element->for_each_attribute([&attributes](auto& name, auto& value) {
@@ -625,7 +625,7 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
     } else if (is_text()) {
         object.add("type", "text");
 
-        auto text_node = downcast<DOM::Text>(this);
+        auto text_node = static_cast<DOM::Text const*>(this);
         object.add("text", text_node->data());
     }
 
