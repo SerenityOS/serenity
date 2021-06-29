@@ -269,7 +269,7 @@ void Launcher::for_each_handler_for_path(const String& path, Function<bool(const
     if ((st.st_mode & S_IFMT) == S_IFREG && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
         f(get_handler_for_executable(Handler::Type::Application, path));
 
-    auto extension = LexicalPath(path).extension().to_lowercase();
+    auto extension = LexicalPath::extension(path).to_lowercase();
 
     for_each_handler(extension, m_file_handlers, [&](const auto& handler) -> bool {
         if (handler.handler_type != Handler::Type::Default || handler.file_types.contains(extension))

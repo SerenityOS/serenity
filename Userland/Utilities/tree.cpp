@@ -36,7 +36,7 @@ static void print_directory_tree(const String& root_path, int depth, const Strin
         out("{}|-- ", root_indent_string);
     }
 
-    String root_dir_name = LexicalPath(root_path).basename();
+    String root_dir_name = LexicalPath::basename(root_path);
     out("\033[34;1m{}\033[0m\n", root_dir_name);
 
     if (depth >= max_depth) {

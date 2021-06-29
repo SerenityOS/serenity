@@ -36,7 +36,7 @@ GUI::Variant PlaylistModel::data(const GUI::ModelIndex& index, GUI::ModelRole ro
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {
         case 0:
-            return m_playlist_items[index.row()].extended_info->track_display_title.value_or(LexicalPath(m_playlist_items[index.row()].path).title());
+            return m_playlist_items[index.row()].extended_info->track_display_title.value_or(LexicalPath::title(m_playlist_items[index.row()].path));
         case 1:
             return format_duration(m_playlist_items[index.row()].extended_info->track_length_in_seconds.value_or(0));
         case 2:

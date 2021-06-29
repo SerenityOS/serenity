@@ -23,7 +23,7 @@ public:
 
     GUI::FileSystemModel& model() { return *m_model; }
     const GUI::FileSystemModel& model() const { return *m_model; }
-    String name() const { return LexicalPath(m_root_path).basename(); }
+    String name() const { return LexicalPath::basename(m_root_path); }
     String root_path() const { return m_root_path; }
 
     NonnullRefPtr<ProjectFile> get_file(const String& path) const;

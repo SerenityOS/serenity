@@ -77,7 +77,7 @@ Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(
 
 static String get_library_name(String path)
 {
-    return LexicalPath(move(path)).basename();
+    return LexicalPath::basename(move(path));
 }
 
 static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const String& filename, int fd)

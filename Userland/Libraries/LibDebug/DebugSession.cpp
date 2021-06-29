@@ -438,7 +438,7 @@ void DebugSession::update_loaded_libs()
 
         String lib_name = object_path.value();
         if (lib_name.ends_with(".so"))
-            lib_name = LexicalPath(object_path.value()).basename();
+            lib_name = LexicalPath::basename(object_path.value());
 
         // FIXME: DebugInfo currently cannot parse the debug information of libgcc_s.so
         if (lib_name == "libgcc_s.so")
