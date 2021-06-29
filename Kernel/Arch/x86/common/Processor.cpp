@@ -39,6 +39,7 @@ Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 
 extern "C" void thread_context_first_enter(void);
 extern "C" void exit_kernel_thread(void);
+extern "C" void do_assume_context(Thread* thread, u32 flags);
 
 // The compiler can't see the calls to these functions inside assembly.
 // Declare them, to avoid dead code warnings.
@@ -1233,4 +1234,20 @@ extern "C" FlatPtr do_init_context(Thread* thread, u32 flags)
 #endif
     return Processor::current().init_context(*thread, true);
 }
+
+void Processor::assume_context(Thread& thread, FlatPtr flags)
+{
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
+
+    VERIFY_INTERRUPTS_DISABLED();
+    Scheduler::prepare_after_exec();
+    // in_critical() should be 2 here. The critical section in Process::exec
+    // and then the scheduler lock
+    VERIFY(Processor::current().in_critical() == 2);
+
+    do_assume_context(&thread, flags);
+
+    VERIFY_NOT_REACHED();
+}
+
 }
