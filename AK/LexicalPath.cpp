@@ -14,24 +14,9 @@ namespace AK {
 
 char s_single_dot = '.';
 
-LexicalPath::LexicalPath(String s)
-    : m_string(move(s))
+LexicalPath::LexicalPath(String path)
+    : m_string(canonicalized_path(move(path)))
 {
-    canonicalize();
-}
-
-Vector<String> LexicalPath::parts() const
-{
-    Vector<String> vector;
-    vector.ensure_capacity(m_parts.size());
-    for (auto& part : m_parts)
-        vector.unchecked_append(part);
-    return vector;
-}
-
-void LexicalPath::canonicalize()
-{
-    // NOTE: We never allow an empty m_string, if it's empty, we just set it to '.'.
     if (m_string.is_empty()) {
         m_string = ".";
         m_dirname = m_string;
@@ -40,43 +25,6 @@ void LexicalPath::canonicalize()
         m_extension = {};
         m_parts.clear();
         return;
-    }
-
-    // NOTE: If there are no dots, no '//' and the path doesn't end with a slash, it is already canonical.
-    if (m_string.contains("."sv) || m_string.contains("//"sv) || m_string.ends_with('/')) {
-        auto parts = m_string.split_view('/');
-        size_t approximate_canonical_length = 0;
-        Vector<String> canonical_parts;
-
-        for (auto& part : parts) {
-            if (part == ".")
-                continue;
-            if (part == "..") {
-                if (canonical_parts.is_empty()) {
-                    if (is_absolute()) {
-                        // At the root, .. does nothing.
-                        continue;
-                    }
-                } else {
-                    if (canonical_parts.last() != "..") {
-                        // A .. and a previous non-.. part cancel each other.
-                        canonical_parts.take_last();
-                        continue;
-                    }
-                }
-            }
-            approximate_canonical_length += part.length() + 1;
-            canonical_parts.append(part);
-        }
-
-        if (canonical_parts.is_empty() && !is_absolute())
-            canonical_parts.append(".");
-
-        StringBuilder builder(approximate_canonical_length);
-        if (is_absolute())
-            builder.append('/');
-        builder.join('/', canonical_parts);
-        m_string = builder.to_string();
     }
 
     m_parts = m_string.split_view('/');
@@ -110,6 +58,15 @@ void LexicalPath::canonicalize()
     }
 }
 
+Vector<String> LexicalPath::parts() const
+{
+    Vector<String> vector;
+    vector.ensure_capacity(m_parts.size());
+    for (auto& part : m_parts)
+        vector.unchecked_append(part);
+    return vector;
+}
+
 bool LexicalPath::has_extension(StringView const& extension) const
 {
     return m_string.ends_with(extension, CaseSensitivity::CaseInsensitive);
@@ -117,7 +74,51 @@ bool LexicalPath::has_extension(StringView const& extension) const
 
 String LexicalPath::canonicalized_path(String path)
 {
-    return LexicalPath(move(path)).string();
+    if (path.is_null())
+        return {};
+
+    // NOTE: We never allow an empty m_string, if it's empty, we just set it to '.'.
+    if (path.is_empty())
+        return ".";
+
+    // NOTE: If there are no dots, no '//' and the path doesn't end with a slash, it is already canonical.
+    if (!path.contains("."sv) && !path.contains("//"sv) && !path.ends_with('/'))
+        return path;
+
+    auto is_absolute = path[0] == '/';
+    auto parts = path.split_view('/');
+    size_t approximate_canonical_length = 0;
+    Vector<String> canonical_parts;
+
+    for (auto& part : parts) {
+        if (part == ".")
+            continue;
+        if (part == "..") {
+            if (canonical_parts.is_empty()) {
+                if (is_absolute) {
+                    // At the root, .. does nothing.
+                    continue;
+                }
+            } else {
+                if (canonical_parts.last() != "..") {
+                    // A .. and a previous non-.. part cancel each other.
+                    canonical_parts.take_last();
+                    continue;
+                }
+            }
+        }
+        approximate_canonical_length += part.length() + 1;
+        canonical_parts.append(part);
+    }
+
+    if (canonical_parts.is_empty() && !is_absolute)
+        canonical_parts.append(".");
+
+    StringBuilder builder(approximate_canonical_length);
+    if (is_absolute)
+        builder.append('/');
+    builder.join('/', canonical_parts);
+    return builder.to_string();
 }
 
 String LexicalPath::relative_path(String absolute_path, String const& prefix)
