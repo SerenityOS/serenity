@@ -187,7 +187,7 @@ void do_paste(const String& target_directory, GUI::Window* window)
 void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* window)
 {
     auto path = selected_file_paths.first();
-    auto destination = String::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath { path }.basename());
+    auto destination = String::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath::basename(path));
     if (auto result = Core::File::link_file(destination, path); result.is_error()) {
         GUI::MessageBox::show(window, String::formatted("Could not create desktop shortcut:\n{}", result.error()), "File Manager",
             GUI::MessageBox::Type::Error);
@@ -736,7 +736,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 selected = directory_view.selected_file_paths();
             } else {
                 path = directories_model->full_path(tree_view.selection().first());
-                container_dir_path = LexicalPath(path).basename();
+                container_dir_path = LexicalPath::basename(path);
                 selected = tree_view_selected_file_paths();
             }
 
@@ -1115,7 +1115,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         for (auto& url_to_copy : urls) {
             if (!url_to_copy.is_valid() || url_to_copy.path() == directory)
                 continue;
-            auto new_path = String::formatted("{}/{}", directory, LexicalPath(url_to_copy.path()).basename());
+            auto new_path = String::formatted("{}/{}", directory, LexicalPath::basename(url_to_copy.path()));
             if (url_to_copy.path() == new_path)
                 continue;
 

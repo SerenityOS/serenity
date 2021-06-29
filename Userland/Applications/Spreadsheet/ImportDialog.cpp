@@ -252,7 +252,7 @@ Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(String
     } else {
         auto page = GUI::WizardPage::construct(
             "Import File Format",
-            String::formatted("Select the format you wish to import '{}' as", LexicalPath { file.filename() }.basename()));
+            String::formatted("Select the format you wish to import '{}' as", LexicalPath::basename(file.filename())));
 
         page->on_next_page = [] { return nullptr; };
 

@@ -426,7 +426,7 @@ String Emulator::create_backtrace_line(FlatPtr address)
 
     auto source_position = it->value.debug_info->get_source_position(address - region->base());
     if (source_position.has_value())
-        return String::formatted("=={{{}}}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), (void*)address, lib_name, symbol, LexicalPath(source_position.value().file_path).basename(), source_position.value().line_number);
+        return String::formatted("=={{{}}}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), (void*)address, lib_name, symbol, LexicalPath::basename(source_position.value().file_path), source_position.value().line_number);
 
     return line_without_source_info;
 }
@@ -464,7 +464,7 @@ String Emulator::create_instruction_line(FlatPtr address, X86::Instruction insn)
     if (!source_position.has_value())
         return minimal;
 
-    return String::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", (void*)address, insn.to_string(address), LexicalPath(source_position.value().file_path).basename(), source_position.value().line_number);
+    return String::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", (void*)address, insn.to_string(address), LexicalPath::basename(source_position.value().file_path), source_position.value().line_number);
 }
 
 static void emulator_signal_handler(int signum)
