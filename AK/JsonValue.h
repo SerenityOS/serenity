@@ -69,7 +69,7 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-    String as_string_or(const String& alternative)
+    String as_string_or(String const& alternative) const
     {
         if (is_string())
             return as_string();
