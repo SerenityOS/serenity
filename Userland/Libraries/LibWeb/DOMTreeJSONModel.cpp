@@ -66,7 +66,7 @@ GUI::ModelIndex DOMTreeJSONModel::parent_index(const GUI::ModelIndex& index) con
     if (grandparent_children.is_empty())
         return {};
 
-    for (int grandparent_child_index = 0; grandparent_child_index < grandparent_children.size(); ++grandparent_child_index) {
+    for (size_t grandparent_child_index = 0; grandparent_child_index < grandparent_children.size(); ++grandparent_child_index) {
         auto child = grandparent_children[grandparent_child_index].as_object();
         if (get_internal_id(child) == parent_node_internal_id)
             return create_index(grandparent_child_index, 0, (void*)(parent_node_internal_id));
@@ -134,7 +134,7 @@ GUI::Variant DOMTreeJSONModel::data(const GUI::ModelIndex& index, GUI::ModelRole
         builder.append(node_name.to_lowercase());
         if (node.has("attributes")) {
             auto attributes = node.get("attributes").as_object();
-            attributes.for_each_member([&builder](auto& name, JsonValue& value) {
+            attributes.for_each_member([&builder](auto& name, JsonValue const& value) {
                 builder.append(' ');
                 builder.append(name);
                 builder.append('=');
@@ -163,7 +163,7 @@ Optional<JsonObject> DOMTreeJSONModel::find_parent_of_child_with_internal_id(Jso
 {
     auto children = get_children(node);
 
-    for (int i = 0; i < children.size(); ++i) {
+    for (size_t i = 0; i < children.size(); ++i) {
         auto child = children[i].as_object();
         auto child_internal_id = get_internal_id(child);
         if (child_internal_id == internal_id)
@@ -188,7 +188,7 @@ Optional<JsonObject> DOMTreeJSONModel::find_child_with_internal_id(JsonObject no
     }
     auto children = get_children(node);
 
-    for (int i = 0; i < children.size(); ++i) {
+    for (size_t i = 0; i < children.size(); ++i) {
         auto child = children[i].as_object();
         auto maybe_node = find_child_with_internal_id(child, internal_id);
         if (maybe_node.has_value())
