@@ -21,4 +21,6 @@ exec $SERENITY_KERNEL_DEBUGGER \
     -ex "set arch $gdb_arch" \
     -ex 'target remote localhost:1234' \
     -ex "source $(dirname "$0")/serenity_gdb.py" \
+    -ex "layout asm" \
+    -ex "fs next" \
     "$@"
