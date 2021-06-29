@@ -408,12 +408,12 @@ const DescriptorTablePointer& Processor::get_gdtr()
 
 Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
 {
-    FlatPtr frame_ptr = 0, eip = 0;
+    FlatPtr frame_ptr = 0, ip = 0;
     Vector<FlatPtr, 32> stack_trace;
 
     auto walk_stack = [&](FlatPtr stack_ptr) {
         static constexpr size_t max_stack_frames = 4096;
-        stack_trace.append(eip);
+        stack_trace.append(ip);
         size_t count = 1;
         while (stack_ptr && stack_trace.size() < max_stack_frames) {
             FlatPtr retaddr;
@@ -440,7 +440,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     };
     auto capture_current_thread = [&]() {
         frame_ptr = (FlatPtr)__builtin_frame_address(0);
-        eip = (FlatPtr)__builtin_return_address(0);
+        ip = (FlatPtr)__builtin_return_address(0);
 
         walk_stack(frame_ptr);
     };
@@ -496,10 +496,15 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             // pushed the callee-saved registers, and the last of them happens
             // to be ebp.
             ProcessPagingScope paging_scope(thread.process());
-#if ARCH(I386)
             auto& regs = thread.regs();
-            u32* stack_top;
-            stack_top = reinterpret_cast<u32*>(regs.esp);
+            FlatPtr* stack_top;
+            FlatPtr sp;
+#if ARCH(I386)
+            sp = regs.esp;
+#else
+            sp = regs.rsp;
+#endif
+            stack_top = reinterpret_cast<FlatPtr*>(sp);
             if (is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
                 if (!copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]))
                     frame_ptr = 0;
@@ -508,9 +513,10 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
                 if (!safe_memcpy(&frame_ptr, &((FlatPtr*)stack_top)[0], sizeof(FlatPtr), fault_at))
                     frame_ptr = 0;
             }
-            eip = regs.eip;
+#if ARCH(I386)
+            ip = regs.eip;
 #else
-            TODO();
+            ip = regs.rip;
 #endif
             // TODO: We need to leave the scheduler lock here, but we also
             //       need to prevent the target thread from being run while
