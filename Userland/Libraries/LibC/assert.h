@@ -11,7 +11,7 @@
 __BEGIN_DECLS
 
 #ifdef DEBUG
-[[noreturn]] void __assertion_failed(const char* msg);
+__attribute__((noreturn)) void __assertion_failed(const char* msg);
 #    define __stringify_helper(x) #    x
 #    define __stringify(x) __stringify_helper(x)
 #    define assert(expr)                                                           \
@@ -24,7 +24,7 @@ __BEGIN_DECLS
 #    define VERIFY_NOT_REACHED() _abort()
 #endif
 
-[[noreturn]] void _abort();
+__attribute__((noreturn)) void _abort();
 
 #ifndef __cplusplus
 #    define static_assert _Static_assert

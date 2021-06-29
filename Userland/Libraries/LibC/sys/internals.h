@@ -21,8 +21,8 @@ extern bool __stdio_is_initialized;
 
 int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle);
 void __cxa_finalize(void* dso_handle);
-[[noreturn]] void __cxa_pure_virtual() __attribute__((weak));
-[[noreturn]] void __stack_chk_fail();
-[[noreturn]] void __stack_chk_fail_local();
+__attribute__((noreturn)) void __cxa_pure_virtual() __attribute__((weak));
+__attribute__((noreturn)) void __stack_chk_fail();
+__attribute__((noreturn)) void __stack_chk_fail_local();
 
 __END_DECLS
