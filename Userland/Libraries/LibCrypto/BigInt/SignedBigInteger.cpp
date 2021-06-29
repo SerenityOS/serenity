@@ -27,57 +27,30 @@ size_t SignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) cons
     return m_unsigned_data.export_data(bytes_view, remove_leading_zeros) + 1;
 }
 
-static bool parse_sign(StringView& str)
+SignedBigInteger SignedBigInteger::from_base(u16 N, StringView str)
 {
-    bool sign = false;
+    auto sign = false;
     if (str.length() > 1) {
         auto maybe_sign = str[0];
         if (maybe_sign == '-') {
-            str = str.substring_view(1, str.length() - 1);
+            str = str.substring_view(1);
             sign = true;
         }
         if (maybe_sign == '+')
-            str = str.substring_view(1, str.length() - 1);
+            str = str.substring_view(1);
     }
-    return sign;
-}
-
-SignedBigInteger SignedBigInteger::from_base10(StringView str)
-{
-    auto sign = parse_sign(str);
-    auto unsigned_data = UnsignedBigInteger::from_base10(str);
+    auto unsigned_data = UnsignedBigInteger::from_base(N, str);
     return { move(unsigned_data), sign };
 }
 
-SignedBigInteger SignedBigInteger::from_base2(StringView str)
-{
-    auto sign = parse_sign(str);
-    auto unsigned_data = UnsignedBigInteger::from_base2(str);
-    return { move(unsigned_data), sign };
-}
-
-SignedBigInteger SignedBigInteger::from_base8(StringView str)
-{
-    auto sign = parse_sign(str);
-    auto unsigned_data = UnsignedBigInteger::from_base8(str);
-    return { move(unsigned_data), sign };
-}
-
-SignedBigInteger SignedBigInteger::from_base16(StringView str)
-{
-    auto sign = parse_sign(str);
-    auto unsigned_data = UnsignedBigInteger::from_base16(str);
-    return { move(unsigned_data), sign };
-}
-
-String SignedBigInteger::to_base10() const
+String SignedBigInteger::to_base(u16 N) const
 {
     StringBuilder builder;
 
     if (m_sign)
         builder.append('-');
 
-    builder.append(m_unsigned_data.to_base10());
+    builder.append(m_unsigned_data.to_base(N));
 
     return builder.to_string();
 }

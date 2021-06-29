@@ -1850,14 +1850,14 @@ Value BigIntLiteral::execute(Interpreter& interpreter, GlobalObject&) const
     Crypto::SignedBigInteger integer;
     if (m_value[0] == '0' && m_value.length() >= 3) {
         if (m_value[1] == 'x' || m_value[1] == 'X') {
-            return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base16(m_value.substring(2, m_value.length() - 3)));
+            return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base(16, m_value.substring(2, m_value.length() - 3)));
         } else if (m_value[1] == 'o' || m_value[1] == 'O') {
-            return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base8(m_value.substring(2, m_value.length() - 3)));
+            return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base(8, m_value.substring(2, m_value.length() - 3)));
         } else if (m_value[1] == 'b' || m_value[1] == 'B') {
-            return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base2(m_value.substring(2, m_value.length() - 3)));
+            return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base(2, m_value.substring(2, m_value.length() - 3)));
         }
     }
-    return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
+    return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base(10, m_value.substring(0, m_value.length() - 1)));
 }
 
 Value BooleanLiteral::execute(Interpreter& interpreter, GlobalObject&) const

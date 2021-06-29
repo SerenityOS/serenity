@@ -62,11 +62,8 @@ public:
 
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
-    static SignedBigInteger from_base2(StringView str);
-    static SignedBigInteger from_base8(StringView str);
-    static SignedBigInteger from_base10(StringView str);
-    String to_base10() const;
-    static SignedBigInteger from_base16(StringView str);
+    static SignedBigInteger from_base(u16 N, StringView str);
+    String to_base(u16 N) const;
 
     u64 to_u64() const;
 
@@ -144,5 +141,5 @@ struct SignedDivisionResult {
 inline Crypto::SignedBigInteger
 operator""_sbigint(const char* string, size_t length)
 {
-    return Crypto::SignedBigInteger::from_base10({ string, length });
+    return Crypto::SignedBigInteger::from_base(10, { string, length });
 }
