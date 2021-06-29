@@ -26,10 +26,10 @@ static Vector<u32> supported_emoji_code_points()
         auto lexical_path = LexicalPath(filename);
         if (lexical_path.extension() != "png")
             continue;
-        auto basename = lexical_path.basename();
+        auto& basename = lexical_path.basename();
         if (!basename.starts_with("U+"))
             continue;
-        u32 code_point = strtoul(basename.characters() + 2, nullptr, 16);
+        u32 code_point = strtoul(basename.to_string().characters() + 2, nullptr, 16);
         code_points.append(code_point);
     }
     return code_points;

@@ -834,7 +834,7 @@ UnveilNode const& VFS::find_matching_unveiled_path(StringView path)
     auto& unveil_root = Process::current()->unveiled_paths();
 
     LexicalPath lexical_path { path };
-    auto& path_parts = lexical_path.parts();
+    auto& path_parts = lexical_path.parts_view();
     return unveil_root.traverse_until_last_accessible_node(path_parts.begin(), path_parts.end());
 }
 

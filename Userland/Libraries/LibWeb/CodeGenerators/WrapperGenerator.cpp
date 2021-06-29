@@ -402,7 +402,7 @@ int main(int argc, char** argv)
     }
 
     LexicalPath lexical_path(path);
-    auto namespace_ = lexical_path.parts().at(lexical_path.parts().size() - 2);
+    auto& namespace_ = lexical_path.parts_view().at(lexical_path.parts_view().size() - 2);
 
     auto data = file_or_error.value()->read_all();
     auto interface = IDL::parse_interface(path, data);
