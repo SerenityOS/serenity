@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,11 +8,9 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibWeb/CSS/Parser/StyleBlockRule.h>
+#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 
 namespace Web::CSS {
-
-class StyleComponentValueRule;
 
 class QualifiedStyleRule {
     friend class Parser;
@@ -22,7 +21,7 @@ public:
     String to_string() const;
 
 private:
-    Vector<String> m_prelude;
+    Vector<StyleComponentValueRule> m_prelude;
     StyleBlockRule m_block;
 };
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -104,7 +105,7 @@ String QualifiedStyleRule::to_string() const
 {
     StringBuilder builder;
 
-    append_raw(builder, " ", m_prelude);
+    append_with_to_string(builder, " ", m_prelude);
     builder.append(m_block.to_string());
 
     return builder.to_string();
