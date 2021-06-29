@@ -26,7 +26,10 @@ struct SpecificTable {
 
 static KeyTable s_keys;
 
-__thread SpecificTable t_specifics;
+#    ifndef X86_64_NO_TLS
+__thread
+#    endif
+    SpecificTable t_specifics;
 
 int __pthread_key_create(pthread_key_t* key, KeyDestructor destructor)
 {
