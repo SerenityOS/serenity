@@ -57,11 +57,11 @@ void rewinddir(DIR* dirp)
 struct [[gnu::packed]] sys_dirent {
     ino_t ino;
     u8 file_type;
-    size_t namelen;
+    u32 namelen;
     char name[];
     size_t total_size()
     {
-        return sizeof(ino_t) + sizeof(u8) + sizeof(size_t) + sizeof(char) * namelen;
+        return sizeof(ino_t) + sizeof(u8) + sizeof(u32) + sizeof(char) * namelen;
     }
 };
 
