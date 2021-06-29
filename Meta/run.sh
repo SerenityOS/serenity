@@ -76,9 +76,13 @@ else
     SERENITY_QEMU_DISPLAY_DEVICE="VGA,vgamem_mb=64 "
 fi
 
+if [ -z "$SERENITY_DISABLE_GDB_SOCKET" ]; then
+  SERENITY_EXTRA_QEMU_ARGS="$SERENITY_EXTRA_QEMU_ARGS -s"
+fi
+
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
--s -m $SERENITY_RAM_SIZE
+-m $SERENITY_RAM_SIZE
 -cpu $SERENITY_QEMU_CPU
 -d guest_errors
 -smp 2
@@ -101,7 +105,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 
 [ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
--s -m $SERENITY_RAM_SIZE
+-m $SERENITY_RAM_SIZE
 -cpu $SERENITY_QEMU_CPU
 -machine q35
 -d guest_errors
@@ -192,7 +196,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
     echo "Running QEMU in CI"
     "$SERENITY_QEMU_BIN" \
         $SERENITY_EXTRA_QEMU_ARGS \
-        -s -m $SERENITY_RAM_SIZE \
+        -m $SERENITY_RAM_SIZE \
         -cpu $SERENITY_QEMU_CPU \
         -d guest_errors \
         -smp 2 \
