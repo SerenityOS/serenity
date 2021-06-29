@@ -156,20 +156,20 @@ public:
         return *ptr;
     }
 
-    ALWAYS_INLINE T* ptr()
+    ALWAYS_INLINE RETURNS_NONNULL T* ptr()
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE const T* ptr() const
+    ALWAYS_INLINE RETURNS_NONNULL const T* ptr() const
     {
         return as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE T* operator->()
+    ALWAYS_INLINE RETURNS_NONNULL T* operator->()
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE const T* operator->() const
+    ALWAYS_INLINE RETURNS_NONNULL const T* operator->() const
     {
         return as_nonnull_ptr();
     }
@@ -183,11 +183,11 @@ public:
         return *as_nonnull_ptr();
     }
 
-    ALWAYS_INLINE operator T*()
+    ALWAYS_INLINE RETURNS_NONNULL operator T*()
     {
         return as_nonnull_ptr();
     }
-    ALWAYS_INLINE operator const T*() const
+    ALWAYS_INLINE RETURNS_NONNULL operator const T*() const
     {
         return as_nonnull_ptr();
     }
@@ -232,7 +232,7 @@ private:
         return (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
     }
 
-    ALWAYS_INLINE T* as_nonnull_ptr() const
+    ALWAYS_INLINE RETURNS_NONNULL T* as_nonnull_ptr() const
     {
         T* ptr = (T*)(m_bits.load(AK::MemoryOrder::memory_order_relaxed) & ~(FlatPtr)1);
         VERIFY(ptr);

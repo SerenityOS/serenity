@@ -40,6 +40,11 @@
 #endif
 #define FLATTEN __attribute__((flatten))
 
+#ifdef RETURNS_NONNULL
+#    undef RETURNS_NONNULL
+#endif
+#define RETURNS_NONNULL __attribute__((returns_nonnull))
+
 #ifdef NO_SANITIZE_ADDRESS
 #    undef NO_SANITIZE_ADDRESS
 #endif
