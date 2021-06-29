@@ -612,7 +612,7 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
     tls_descriptor.set_base(main_thread->thread_specific_data());
     tls_descriptor.set_limit(main_thread->thread_specific_region_size());
 #else
-    TODO();
+    dbgln("FIXME: Not setting FS_BASE for process.");
 #endif
 
     return m_master_tls_region.unsafe_ptr()->vaddr().get();
