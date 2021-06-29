@@ -98,17 +98,26 @@ public:
         return exchange(m_ptr, nullptr);
     }
 
-    T* ptr() { return m_ptr; }
-    const T* ptr() const { return m_ptr; }
+    ALWAYS_INLINE RETURNS_NONNULL T* ptr()
+    {
+        VERIFY(m_ptr);
+        return m_ptr;
+    }
 
-    T* operator->() { return m_ptr; }
-    const T* operator->() const { return m_ptr; }
+    ALWAYS_INLINE RETURNS_NONNULL const T* ptr() const
+    {
+        VERIFY(m_ptr);
+        return m_ptr;
+    }
 
-    T& operator*() { return *m_ptr; }
-    const T& operator*() const { return *m_ptr; }
+    ALWAYS_INLINE RETURNS_NONNULL T* operator->() { return ptr(); }
+    ALWAYS_INLINE RETURNS_NONNULL const T* operator->() const { return ptr(); }
 
-    operator const T*() const { return m_ptr; }
-    operator T*() { return m_ptr; }
+    ALWAYS_INLINE T& operator*() { return *ptr(); }
+    ALWAYS_INLINE const T& operator*() const { return *ptr(); }
+
+    ALWAYS_INLINE RETURNS_NONNULL operator const T*() const { return ptr(); }
+    ALWAYS_INLINE RETURNS_NONNULL operator T*() { return ptr(); }
 
     operator bool() const = delete;
     bool operator!() const = delete;
