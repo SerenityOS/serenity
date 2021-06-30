@@ -167,21 +167,30 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
     auto string = ak_string_from(vm, global_object);
     if (!string.has_value())
         return {};
-    if (!vm.argument_count())
-        return js_string(vm, String::empty());
-    auto count = vm.argument(0).to_integer_or_infinity(global_object);
+
+    auto n = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};
-    if (count < 0) {
+
+    if (n < 0) {
         vm.throw_exception<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "positive");
         return {};
     }
-    if (Value(count).is_infinity()) {
+
+    if (Value(n).is_positive_infinity()) {
         vm.throw_exception<RangeError>(global_object, ErrorType::StringRepeatCountMustBe, "finite");
         return {};
     }
+
+    if (n == 0)
+        return js_string(vm, String::empty());
+
+    // NOTE: This is an optimization, it is not required by the specification but it produces equivalent behaviour
+    if (string->is_empty())
+        return js_string(vm, String::empty());
+
     StringBuilder builder;
-    for (size_t i = 0; i < count; ++i)
+    for (size_t i = 0; i < n; ++i)
         builder.append(*string);
     return js_string(vm, builder.to_string());
 }
