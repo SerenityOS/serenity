@@ -36,16 +36,16 @@ public:
 private:
     explicit DOMTreeJSONModel(JsonObject);
 
-    Optional<JsonObject> find_parent_of_child_with_internal_id(size_t) const;
-    Optional<JsonObject> find_parent_of_child_with_internal_id(JsonObject, size_t) const;
+    JsonObject const* find_parent_of_child_with_internal_id(size_t) const;
+    JsonObject const* find_parent_of_child_with_internal_id(JsonObject const&, size_t) const;
 
-    Optional<JsonObject> find_child_with_internal_id(size_t) const;
-    Optional<JsonObject> find_child_with_internal_id(JsonObject, size_t) const;
+    JsonObject const* find_child_with_internal_id(size_t) const;
+    JsonObject const* find_child_with_internal_id(JsonObject const&, size_t) const;
 
-    JsonObject find_node(GUI::ModelIndex) const;
+    JsonObject const& find_node(GUI::ModelIndex const&) const;
 
     static size_t get_internal_id(const JsonObject& o);
-    static JsonArray get_children(const JsonObject& o);
+    static JsonArray const* get_children(const JsonObject& o);
 
     GUI::Icon m_document_icon;
     GUI::Icon m_element_icon;
