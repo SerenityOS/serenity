@@ -215,7 +215,7 @@ Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> DynamicLoader::load_stage_3
 
     if (m_relro_segment_size) {
         if (mprotect(m_relro_segment_address.as_ptr(), m_relro_segment_size, PROT_READ) < 0) {
-            return DlErrorMessage { String::formatted("mprotect .text: PROT_READ: {}", strerror(errno)) };
+            return DlErrorMessage { String::formatted("mprotect .relro: PROT_READ: {}", strerror(errno)) };
         }
 
 #if __serenity__
