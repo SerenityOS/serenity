@@ -321,10 +321,9 @@ void DynamicLoader::load_program_headers()
     for (auto& text_region : text_regions) {
         FlatPtr ph_text_base = text_region.desired_load_address().page_base().get();
         FlatPtr ph_text_end = ph_text_base + round_up_to_power_of_two(text_region.size_in_memory() + (size_t)(text_region.desired_load_address().as_ptr() - ph_text_base), PAGE_SIZE);
-        size_t text_segment_size = ph_text_end - ph_text_base;
 
-        auto text_segment_offset = ph_text_base - ph_load_base;
-        auto* text_segment_address = (u8*)reservation + text_segment_offset;
+        auto* text_segment_address = (u8*)reservation + ph_text_base;
+        size_t text_segment_size = ph_text_end - ph_text_base;
 
         // Now we can map the text segment at the reserved address.
         auto* text_segment_begin = (u8*)mmap_with_name(
@@ -359,10 +358,9 @@ void DynamicLoader::load_program_headers()
     for (auto& data_region : data_regions) {
         FlatPtr ph_data_base = data_region.desired_load_address().page_base().get();
         FlatPtr ph_data_end = ph_data_base + round_up_to_power_of_two(data_region.size_in_memory() + (size_t)(data_region.desired_load_address().as_ptr() - ph_data_base), PAGE_SIZE);
-        size_t data_segment_size = ph_data_end - ph_data_base;
 
-        auto data_segment_offset = ph_data_base - ph_load_base;
-        auto* data_segment_address = (u8*)reservation + data_segment_offset;
+        auto* data_segment_address = (u8*)reservation + ph_data_base;
+        size_t data_segment_size = ph_data_end - ph_data_base;
 
         // Finally, we make an anonymous mapping for the data segment. Contents are then copied from the file.
         auto* data_segment = (u8*)mmap_with_name(
