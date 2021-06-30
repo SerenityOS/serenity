@@ -39,11 +39,6 @@ private:
     JsonObject const* find_parent_of_child_with_internal_id(size_t) const;
     JsonObject const* find_parent_of_child_with_internal_id(JsonObject const&, size_t) const;
 
-    JsonObject const* find_child_with_internal_id(size_t) const;
-    JsonObject const* find_child_with_internal_id(JsonObject const&, size_t) const;
-
-    JsonObject const& find_node(GUI::ModelIndex const&) const;
-
     static size_t get_internal_id(const JsonObject& o);
     static JsonArray const* get_children(const JsonObject& o);
 
