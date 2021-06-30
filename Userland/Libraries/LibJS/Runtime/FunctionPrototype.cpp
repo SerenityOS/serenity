@@ -162,14 +162,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 // 20.2.3.6 Function.prototype [ @@hasInstance ] ( V ), https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::symbol_has_instance)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!this_object->is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
-        return {};
-    }
-    return ordinary_has_instance(global_object, vm.argument(0), this_object);
+    return ordinary_has_instance(global_object, vm.argument(0), vm.this_value(global_object));
 }
 
 }
