@@ -88,7 +88,7 @@ static void setup_serial_debug();
 // boot.S expects these functions to exactly have the following signatures.
 // We declare them here to ensure their signatures don't accidentally change.
 extern "C" void init_finished(u32 cpu) __attribute__((used));
-extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info);
+extern "C" [[noreturn]] void init_ap(FlatPtr cpu, Processor* processor_info);
 extern "C" [[noreturn]] void init();
 
 READONLY_AFTER_INIT VirtualConsole* tty0;
@@ -194,7 +194,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
 //
 // The purpose of init_ap() is to initialize APs for multi-tasking.
 //
-extern "C" [[noreturn]] UNMAP_AFTER_INIT void init_ap(u32 cpu, Processor* processor_info)
+extern "C" [[noreturn]] UNMAP_AFTER_INIT void init_ap(FlatPtr cpu, Processor* processor_info)
 {
     processor_info->early_initialize(cpu);
 
