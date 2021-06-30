@@ -11,9 +11,10 @@
 
 namespace JS {
 
-StringObject* StringObject::create(GlobalObject& global_object, PrimitiveString& primitive_string)
+// 10.4.3.4 StringCreate ( value, prototype ), https://tc39.es/ecma262/#sec-stringcreate
+StringObject* StringObject::create(GlobalObject& global_object, PrimitiveString& primitive_string, Object& prototype)
 {
-    return global_object.heap().allocate<StringObject>(global_object, primitive_string, *global_object.string_prototype());
+    return global_object.heap().allocate<StringObject>(global_object, primitive_string, prototype);
 }
 
 StringObject::StringObject(PrimitiveString& string, Object& prototype)
