@@ -860,12 +860,15 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::symbol_to_primitive)
 {
     auto this_value = vm.this_value(global_object);
     if (!this_value.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject);
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, this_value.to_string_without_side_effects());
         return {};
     }
-    auto hint = vm.argument(0).to_string(global_object);
-    if (vm.exception())
+    auto hint_value = vm.argument(0);
+    if (!hint_value.is_string()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::InvalidHint, hint_value.to_string_without_side_effects());
         return {};
+    }
+    auto& hint = hint_value.as_string().string();
     Value::PreferredType try_first;
     if (hint == "string" || hint == "default") {
         try_first = Value::PreferredType::String;
