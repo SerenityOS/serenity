@@ -17,25 +17,17 @@
 
 namespace CoreDump {
 
-// FIXME: This cache has to be invalidated when libraries/programs are re-compiled.
-// We can store the last-modified timestamp of the elf files in ELFObjectInfo to invalidate cache entries.
-static HashMap<String, NonnullOwnPtr<ELFObjectInfo>> s_debug_info_cache;
-
-static const ELFObjectInfo* object_info_for_region(const ELF::Core::MemoryRegionInfo& region)
+ELFObjectInfo const* Backtrace::object_info_for_region(ELF::Core::MemoryRegionInfo const& region)
 {
-    auto name = region.object_name();
+    auto path = region.object_name();
+    if (!path.starts_with('/') && path.ends_with(".so"sv))
+        path = LexicalPath::join("/usr/lib", path).string();
 
-    String path;
-    if (name.contains(".so"))
-        path = String::formatted("/usr/lib/{}", name);
-    else {
-        path = name;
-    }
+    auto maybe_ptr = m_debug_info_cache.get(path);
+    if (maybe_ptr.has_value())
+        return *maybe_ptr;
 
-    if (auto it = s_debug_info_cache.find(path); it != s_debug_info_cache.end())
-        return it->value.ptr();
-
-    if (!Core::File::exists(path.characters()))
+    if (!Core::File::exists(path))
         return nullptr;
 
     auto file_or_error = MappedFile::map(path);
@@ -49,7 +41,7 @@ static const ELFObjectInfo* object_info_for_region(const ELF::Core::MemoryRegion
 #endif
     auto info = make<ELFObjectInfo>(file_or_error.release_value(), make<Debug::DebugInfo>(move(image)));
     auto* info_ptr = info.ptr();
-    s_debug_info_cache.set(path, move(info));
+    m_debug_info_cache.set(path, move(info));
     return info_ptr;
 }
 
