@@ -30,6 +30,8 @@ CreateNewLayerDialog::CreateNewLayerDialog(Gfx::IntSize const& suggested_size, G
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     m_name_textbox = main_widget.add<GUI::TextBox>();
+    m_name_textbox->set_text("Layer");
+    m_name_textbox->select_all();
     m_name_textbox->on_change = [this] {
         m_layer_name = m_name_textbox->text();
     };
@@ -63,6 +65,10 @@ CreateNewLayerDialog::CreateNewLayerDialog(Gfx::IntSize const& suggested_size, G
 
     height_spinbox.on_change = [this](int value) {
         m_layer_size.set_height(value);
+    };
+
+    m_name_textbox->on_return_pressed = [this] {
+        done(ExecOK);
     };
 
     width_spinbox.set_range(1, 16384);
