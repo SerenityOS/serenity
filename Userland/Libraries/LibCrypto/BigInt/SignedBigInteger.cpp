@@ -156,8 +156,7 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const SignedBigInteger& ot
     auto result = bitwise_or(other.unsigned_value());
 
     // The sign bit will have to be OR'd manually.
-    if (other.is_negative())
-        result.negate();
+    result.m_sign = is_negative() || other.is_negative();
 
     return result;
 }
