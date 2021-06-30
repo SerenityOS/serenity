@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,6 +25,19 @@ public:
 
     explicit StyleComponentValueRule(ComponentType);
     ~StyleComponentValueRule();
+
+    bool is_block() const { return m_type == ComponentType::Block; }
+    StyleBlockRule const& block() const { return m_block; }
+
+    bool is_function() const { return m_type == ComponentType::Function; }
+    StyleFunctionRule const& function() const { return m_function; }
+
+    bool is(Token::TokenType type) const
+    {
+        return m_type == ComponentType::Token && m_token.is(type);
+    }
+    Token const& token() const { return m_token; }
+    operator Token() const { return m_token; }
 
     String to_string() const;
 
