@@ -10,9 +10,11 @@
 
 namespace WindowServer {
 
+class Compositor;
+
 class WindowStack {
 public:
-    WindowStack();
+    WindowStack(unsigned row, unsigned column);
     ~WindowStack();
 
     bool is_empty() const { return m_windows.is_empty(); }
@@ -25,11 +27,8 @@ public:
         No,
     };
     Window* window_at(Gfx::IntPoint const&, IncludeWindowFrame = IncludeWindowFrame::Yes) const;
+    Window* highlight_window() const;
 
-    template<typename Callback>
-    IterationDecision for_each_visible_window_from_back_to_front(Callback);
-    template<typename Callback>
-    IterationDecision for_each_visible_window_from_front_to_back(Callback);
     template<typename Callback>
     IterationDecision for_each_visible_window_of_type_from_front_to_back(WindowType, Callback, bool ignore_highlight = false);
     template<typename Callback>
@@ -42,26 +41,51 @@ public:
 
     Window::List& windows() { return m_windows; }
 
-    Window* highlight_window() { return m_highlight_window; }
-    Window const* highlight_window() const { return m_highlight_window; }
-    void set_highlight_window(Window*);
-
     Window* active_window() { return m_active_window; }
     Window const* active_window() const { return m_active_window; }
     void set_active_window(Window*);
 
+    Window* active_input_window() { return m_active_input_window; }
+    Window const* active_input_window() const { return m_active_input_window; }
+    void set_active_input_window(Window* window) { m_active_input_window = window; }
+
+    Window* active_input_tracking_window() { return m_active_input_tracking_window; }
+    Window const* active_input_tracking_window() const { return m_active_input_tracking_window; }
+    void set_active_input_tracking_window(Window* window) { m_active_input_tracking_window = window; }
+
     Optional<HitTestResult> hit_test(Gfx::IntPoint const&) const;
 
+    unsigned row() const { return m_row; }
+    unsigned column() const { return m_column; }
+
+    void set_transition_offset(Badge<Compositor>, Gfx::IntPoint const& transition_offset) { m_transition_offset = transition_offset; }
+    Gfx::IntPoint const& transition_offset() const { return m_transition_offset; }
+
+    void set_stationary_window_stack(WindowStack& window_stack) { m_stationary_window_stack = &window_stack; }
+    WindowStack& stationary_window_stack()
+    {
+        VERIFY(m_stationary_window_stack);
+        return *m_stationary_window_stack;
+    }
+
+    void set_all_occluded(bool);
+
 private:
-    WeakPtr<Window> m_highlight_window;
     WeakPtr<Window> m_active_window;
+    WeakPtr<Window> m_active_input_window;
+    WeakPtr<Window> m_active_input_tracking_window;
 
     Window::List m_windows;
+    unsigned m_row { 0 };
+    unsigned m_column { 0 };
+    Gfx::IntPoint m_transition_offset;
+    WindowStack* m_stationary_window_stack { nullptr };
 };
 
 template<typename Callback>
 inline IterationDecision WindowStack::for_each_visible_window_of_type_from_back_to_front(WindowType type, Callback callback, bool ignore_highlight)
 {
+    auto* highlight_window = this->highlight_window();
     bool do_highlight_window_at_end = false;
     for (auto& window : m_windows) {
         if (!window.is_visible())
@@ -70,7 +94,7 @@ inline IterationDecision WindowStack::for_each_visible_window_of_type_from_back_
             continue;
         if (window.type() != type)
             continue;
-        if (!ignore_highlight && m_highlight_window == &window) {
+        if (!ignore_highlight && highlight_window == &window) {
             do_highlight_window_at_end = true;
             continue;
         }
@@ -78,7 +102,7 @@ inline IterationDecision WindowStack::for_each_visible_window_of_type_from_back_
             return IterationDecision::Break;
     }
     if (do_highlight_window_at_end) {
-        if (callback(*m_highlight_window) == IterationDecision::Break)
+        if (callback(*highlight_window) == IterationDecision::Break)
             return IterationDecision::Break;
     }
     return IterationDecision::Continue;
@@ -87,8 +111,9 @@ inline IterationDecision WindowStack::for_each_visible_window_of_type_from_back_
 template<typename Callback>
 inline IterationDecision WindowStack::for_each_visible_window_of_type_from_front_to_back(WindowType type, Callback callback, bool ignore_highlight)
 {
-    if (!ignore_highlight && m_highlight_window && m_highlight_window->type() == type && m_highlight_window->is_visible()) {
-        if (callback(*m_highlight_window) == IterationDecision::Break)
+    auto* highlight_window = this->highlight_window();
+    if (!ignore_highlight && highlight_window && highlight_window->type() == type && highlight_window->is_visible()) {
+        if (callback(*highlight_window) == IterationDecision::Break)
             return IterationDecision::Break;
     }
 
@@ -101,7 +126,7 @@ inline IterationDecision WindowStack::for_each_visible_window_of_type_from_front
             continue;
         if (window.type() != type)
             continue;
-        if (!ignore_highlight && &window == m_highlight_window)
+        if (!ignore_highlight && &window == highlight_window)
             continue;
         if (callback(window) == IterationDecision::Break)
             return IterationDecision::Break;
@@ -121,54 +146,11 @@ inline void WindowStack::for_each_window(Callback callback)
 }
 
 template<typename Callback>
-inline IterationDecision WindowStack::for_each_visible_window_from_back_to_front(Callback callback)
-{
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Desktop, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Normal, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::ToolWindow, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Taskbar, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::AppletArea, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Notification, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Tooltip, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Menu, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    return for_each_visible_window_of_type_from_back_to_front(WindowType::WindowSwitcher, callback);
-}
-
-template<typename Callback>
-inline IterationDecision WindowStack::for_each_visible_window_from_front_to_back(Callback callback)
-{
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::WindowSwitcher, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Menu, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Tooltip, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Notification, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::AppletArea, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Taskbar, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::ToolWindow, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    return for_each_visible_window_of_type_from_front_to_back(WindowType::Desktop, callback);
-}
-
-template<typename Callback>
 inline IterationDecision WindowStack::for_each_window_of_type_from_front_to_back(WindowType type, Callback callback, bool ignore_highlight)
 {
-    if (!ignore_highlight && m_highlight_window && m_highlight_window->type() == type && m_highlight_window->is_visible()) {
-        if (callback(*m_highlight_window) == IterationDecision::Break)
+    auto* highlight_window = this->highlight_window();
+    if (!ignore_highlight && highlight_window && highlight_window->type() == type && highlight_window->is_visible()) {
+        if (callback(*highlight_window) == IterationDecision::Break)
             return IterationDecision::Break;
     }
 
@@ -177,7 +159,7 @@ inline IterationDecision WindowStack::for_each_window_of_type_from_front_to_back
         auto& window = *reverse_iterator;
         if (window.type() != type)
             continue;
-        if (!ignore_highlight && &window == m_highlight_window)
+        if (!ignore_highlight && &window == highlight_window)
             continue;
         if (callback(window) == IterationDecision::Break)
             return IterationDecision::Break;

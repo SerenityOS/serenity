@@ -17,6 +17,7 @@ namespace WindowServer {
 
 class Screen;
 class Window;
+class WindowStack;
 
 class Overlay {
     friend class Compositor;
@@ -27,6 +28,7 @@ public:
     enum class ZOrder {
         WindowGeometry,
         Dnd,
+        WindowStackSwitch,
         ScreenNumber,
     };
     [[nodiscard]] virtual ZOrder zorder() const = 0;
@@ -166,6 +168,26 @@ private:
     RefPtr<Gfx::Bitmap> m_bitmap;
     String m_text;
     Gfx::IntRect m_label_rect;
+};
+
+class WindowStackSwitchOverlay : public RectangularOverlay {
+public:
+    static constexpr int default_screen_rect_width = 40;
+    static constexpr int default_screen_rect_height = 30;
+    static constexpr int default_screen_rect_margin = 16;
+    static constexpr int default_screen_rect_padding = 8;
+
+    WindowStackSwitchOverlay(Screen&, WindowStack&);
+
+    virtual ZOrder zorder() const override { return ZOrder::WindowStackSwitch; }
+    virtual void render_overlay_bitmap(Gfx::Painter&) override;
+
+private:
+    Gfx::IntSize m_content_size;
+    const int m_rows;
+    const int m_columns;
+    const int m_target_row;
+    const int m_target_column;
 };
 
 }

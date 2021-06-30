@@ -5,10 +5,13 @@
  */
 
 #include "WindowStack.h"
+#include "WindowManager.h"
 
 namespace WindowServer {
 
-WindowStack::WindowStack()
+WindowStack::WindowStack(unsigned row, unsigned column)
+    : m_row(row)
+    , m_column(column)
 {
 }
 
@@ -28,6 +31,12 @@ void WindowStack::remove(Window& window)
     VERIFY(window.outer_stack() == this);
     m_windows.remove(window);
     window.set_outer_stack({}, nullptr);
+    if (m_active_window == &window)
+        m_active_window = nullptr;
+    if (m_active_input_window == &window)
+        m_active_input_window = nullptr;
+    if (m_active_input_tracking_window == &window)
+        m_active_input_tracking_window = nullptr;
 }
 
 void WindowStack::move_to_front(Window& window)
@@ -48,12 +57,11 @@ Window* WindowStack::window_at(Gfx::IntPoint const& position, IncludeWindowFrame
     return result->window;
 }
 
-void WindowStack::set_highlight_window(Window* window)
+Window* WindowStack::highlight_window() const
 {
-    if (!window)
-        m_highlight_window = nullptr;
-    else
-        m_highlight_window = window->make_weak_ptr<Window>();
+    if (auto* window = WindowManager::the().highlight_window(); window && window->outer_stack() == this)
+        return window;
+    return nullptr;
 }
 
 void WindowStack::set_active_window(Window* window)
@@ -64,15 +72,24 @@ void WindowStack::set_active_window(Window* window)
         m_active_window = window->make_weak_ptr<Window>();
 }
 
+void WindowStack::set_all_occluded(bool occluded)
+{
+    for (auto& window : m_windows) {
+        if (!WindowManager::is_stationary_window_type(window.type()))
+            window.set_occluded(occluded);
+    }
+}
+
 Optional<HitTestResult> WindowStack::hit_test(Gfx::IntPoint const& position) const
 {
     Optional<HitTestResult> result;
-    const_cast<WindowStack*>(this)->for_each_visible_window_from_front_to_back([&](Window& window) {
+    WindowManager::the().for_each_visible_window_from_front_to_back([&](Window& window) {
         result = window.hit_test(position);
         if (result.has_value())
             return IterationDecision::Break;
         return IterationDecision::Continue;
-    });
+    },
+        const_cast<WindowStack*>(this));
     return result;
 }
 
