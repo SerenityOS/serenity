@@ -78,6 +78,7 @@ public:
         // FIXME: We don't need this field on every single SimpleSelector, but it's also annoying to malloc it somewhere.
         // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
         NthChildPattern nth_child_pattern;
+        // FIXME: This wants to be a Selector, rather than parsing it each time it is used.
         String not_selector {};
     };
 

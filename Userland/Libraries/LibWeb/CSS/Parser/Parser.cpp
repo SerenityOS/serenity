@@ -90,60 +90,76 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleCompo
     Vector<CSS::Selector::ComplexSelector> selectors;
 
     size_t index = 0;
-    auto parse_simple_selector = [&]() -> Optional<CSS::Selector::SimpleSelector> {
-        if (index >= parts.size()) {
-            return {};
-        }
 
-        auto currentToken = parts.at(index).to_string();
+    auto parse_simple_selector = [&]() -> Optional<CSS::Selector::SimpleSelector> {
+        if (index >= parts.size())
+            return {};
+
+        auto current_value = parts.at(index);
+        index++;
+
         CSS::Selector::SimpleSelector::Type type;
-        if (currentToken == "*") {
+        String value;
+        // FIXME: Handle namespace prefixes.
+
+        if (current_value.is(Token::TokenType::Delim) && current_value.token().delim() == "*") {
+
+            // FIXME: Handle selectors like `*.foo`.
             type = CSS::Selector::SimpleSelector::Type::Universal;
-            index++;
             CSS::Selector::SimpleSelector result;
             result.type = type;
             return result;
         }
 
-        if (currentToken == ".") {
-            type = CSS::Selector::SimpleSelector::Type::Class;
-        } else if (currentToken == "#") {
+        if (current_value.is(Token::TokenType::Hash)) {
+            if (current_value.token().m_hash_type != Token::HashType::Id) {
+                dbgln("Selector contains hash token that is not an id: {}", current_value.to_string());
+                return {};
+            }
             type = CSS::Selector::SimpleSelector::Type::Id;
-        } else if (currentToken == "*") {
+            value = current_value.token().m_value.to_string();
+        } else if (current_value.is(Token::TokenType::Delim) && current_value.token().delim() == ".") {
+            if (index >= parts.size())
+                return {};
+
+            current_value = parts.at(index);
+            index++;
+
+            if (!current_value.is(Token::TokenType::Ident)) {
+                dbgln("Expected an ident after '.', got: {}", current_value.to_string());
+                return {};
+            }
+
+            type = CSS::Selector::SimpleSelector::Type::Class;
+            value = current_value.to_string();
+        } else if (current_value.is(Token::TokenType::Delim) && current_value.token().delim() == "*") {
             type = CSS::Selector::SimpleSelector::Type::Universal;
         } else {
             type = CSS::Selector::SimpleSelector::Type::TagName;
-        }
-
-        index++;
-        auto value = currentToken;
-
-        if (type == CSS::Selector::SimpleSelector::Type::TagName) {
-            value = value.to_lowercase();
+            value = current_value.to_string().to_lowercase();
         }
 
         CSS::Selector::SimpleSelector simple_selector;
         simple_selector.type = type;
         simple_selector.value = value;
 
-        if (index >= parts.size()) {
+        if (index >= parts.size())
             return simple_selector;
-        }
 
-        currentToken = parts.at(index).to_string();
-        if (currentToken.starts_with('[')) {
-            auto adjusted = currentToken.substring(1, currentToken.length() - 2);
+        current_value = parts.at(index);
+        index++;
 
-            // TODO: split on String :^)
-            Vector<String> attribute_parts = adjusted.split(',');
+        // FIXME: Attribute selectors want to be their own Selector::SimpleSelector::Type according to the spec.
+        if (current_value.is_block() && current_value.block().is_square()) {
+
+            Vector<String> attribute_parts = current_value.block().values();
 
             simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::HasAttribute;
             simple_selector.attribute_name = attribute_parts.first();
 
             size_t attribute_index = 1;
-            if (attribute_index >= attribute_parts.size()) {
+            if (attribute_index >= attribute_parts.size())
                 return simple_selector;
-            }
 
             if (attribute_parts.at(attribute_index) == " =") {
                 simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch;
@@ -164,64 +180,88 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleCompo
             return simple_selector;
         }
 
-        if (currentToken == ":") {
+        // FIXME: Pseudo-class selectors want to be their own Selector::SimpleSelector::Type according to the spec.
+        if (current_value.is(Token::TokenType::Colon)) {
             bool is_pseudo = false;
+
+            current_value = parts.at(index);
             index++;
-
-            if (index >= parts.size()) {
+            if (index >= parts.size())
                 return {};
-            }
 
-            currentToken = parts.at(index).to_string();
-            if (currentToken == ":") {
+            if (current_value.is(Token::TokenType::Colon)) {
                 is_pseudo = true;
+                current_value = parts.at(index);
                 index++;
+                if (index >= parts.size())
+                    return {};
             }
-
-            if (index >= parts.size()) {
-                return {};
-            }
-
-            currentToken = parts.at(index).to_string();
-            auto pseudo_name = currentToken;
-            index++;
 
             // Ignore for now, otherwise we produce a "false positive" selector
             // and apply styles to the element itself, not its pseudo element
-            if (is_pseudo) {
+            if (is_pseudo)
                 return {};
-            }
 
-            if (pseudo_name.equals_ignoring_case("link")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Link;
-            } else if (pseudo_name.equals_ignoring_case("visited")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Visited;
-            } else if (pseudo_name.equals_ignoring_case("active")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Active;
-            } else if (pseudo_name.equals_ignoring_case("hover")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Hover;
-            } else if (pseudo_name.equals_ignoring_case("focus")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Focus;
-            } else if (pseudo_name.equals_ignoring_case("first-child")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::FirstChild;
-            } else if (pseudo_name.equals_ignoring_case("last-child")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::LastChild;
-            } else if (pseudo_name.equals_ignoring_case("only-child")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::OnlyChild;
-            } else if (pseudo_name.equals_ignoring_case("empty")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Empty;
-            } else if (pseudo_name.equals_ignoring_case("root")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Root;
-            } else if (pseudo_name.equals_ignoring_case("first-of-type")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::FirstOfType;
-            } else if (pseudo_name.equals_ignoring_case("last-of-type")) {
-                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::LastOfType;
-            } else if (pseudo_name.equals_ignoring_case("before")) {
-                simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::Before;
-            } else if (pseudo_name.equals_ignoring_case("after")) {
-                simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::After;
+            current_value = parts.at(index);
+            index++;
+
+            if (current_value.is(Token::TokenType::Ident)) {
+                auto pseudo_name = current_value.token().ident();
+                if (pseudo_name.equals_ignoring_case("link")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Link;
+                } else if (pseudo_name.equals_ignoring_case("visited")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Visited;
+                } else if (pseudo_name.equals_ignoring_case("active")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Active;
+                } else if (pseudo_name.equals_ignoring_case("hover")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Hover;
+                } else if (pseudo_name.equals_ignoring_case("focus")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Focus;
+                } else if (pseudo_name.equals_ignoring_case("first-child")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::FirstChild;
+                } else if (pseudo_name.equals_ignoring_case("last-child")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::LastChild;
+                } else if (pseudo_name.equals_ignoring_case("only-child")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::OnlyChild;
+                } else if (pseudo_name.equals_ignoring_case("empty")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Empty;
+                } else if (pseudo_name.equals_ignoring_case("root")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Root;
+                } else if (pseudo_name.equals_ignoring_case("first-of-type")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::FirstOfType;
+                } else if (pseudo_name.equals_ignoring_case("last-of-type")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::LastOfType;
+                } else if (pseudo_name.equals_ignoring_case("before")) {
+                    simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::Before;
+                } else if (pseudo_name.equals_ignoring_case("after")) {
+                    simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::After;
+                } else if (pseudo_name.equals_ignoring_case("disabled")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Disabled;
+                } else if (pseudo_name.equals_ignoring_case("enabled")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Enabled;
+                } else if (pseudo_name.equals_ignoring_case("checked")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Checked;
+                } else {
+                    dbgln("Unknown pseudo class: '{}'", pseudo_name);
+                    return simple_selector;
+                }
+            } else if (current_value.is_function()) {
+                auto pseudo_function = current_value.function();
+                if (pseudo_function.name().equals_ignoring_case("nth-child")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::NthChild;
+                    simple_selector.nth_child_pattern = CSS::Selector::SimpleSelector::NthChildPattern::parse(pseudo_function.values_as_string());
+                } else if (pseudo_function.name().equals_ignoring_case("nth-last-child")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::NthLastChild;
+                    simple_selector.nth_child_pattern = CSS::Selector::SimpleSelector::NthChildPattern::parse(pseudo_function.values_as_string());
+                } else if (pseudo_function.name().equals_ignoring_case("not")) {
+                    simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Not;
+                    simple_selector.not_selector = pseudo_function.values_as_string();
+                } else {
+                    dbgln("Unknown pseudo class: '{}'()", pseudo_function.name());
+                    return simple_selector;
+                }
             } else {
-                dbgln("Unknown pseudo class: '{}'", pseudo_name);
+                dbgln("Unexpected Block in pseudo-class name, expected a function or identifier. '{}'", current_value.to_string());
                 return simple_selector;
             }
         }
@@ -232,30 +272,30 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleCompo
     auto parse_complex_selector = [&]() -> Optional<CSS::Selector::ComplexSelector> {
         auto relation = CSS::Selector::ComplexSelector::Relation::Descendant;
 
-        auto currentToken = parts.at(index).to_string();
-        if (is_combinator(currentToken)) {
-            if (currentToken == ">") {
-                relation = CSS::Selector::ComplexSelector::Relation::ImmediateChild;
+        auto current_value = parts.at(index);
+        if (current_value.is(Token::TokenType::Delim)) {
+            auto delim = current_value.token().delim();
+            if (is_combinator(delim)) {
+                if (delim == ">") {
+                    relation = CSS::Selector::ComplexSelector::Relation::ImmediateChild;
+                } else if (delim == "+") {
+                    relation = CSS::Selector::ComplexSelector::Relation::AdjacentSibling;
+                } else if (delim == "~") {
+                    relation = CSS::Selector::ComplexSelector::Relation::GeneralSibling;
+                } else if (delim == "||") {
+                    relation = CSS::Selector::ComplexSelector::Relation::Column;
+                }
+                index++;
             }
-            if (currentToken == "+") {
-                relation = CSS::Selector::ComplexSelector::Relation::AdjacentSibling;
-            }
-            if (currentToken == "~") {
-                relation = CSS::Selector::ComplexSelector::Relation::GeneralSibling;
-            }
-            if (currentToken == "||") {
-                relation = CSS::Selector::ComplexSelector::Relation::Column;
-            }
-            index++;
         }
 
         Vector<CSS::Selector::SimpleSelector> simple_selectors;
 
         for (;;) {
             auto component = parse_simple_selector();
-            if (!component.has_value()) {
+            if (!component.has_value())
                 break;
-            }
+
             simple_selectors.append(component.value());
         }
 
@@ -267,25 +307,21 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleCompo
 
     for (;;) {
         auto complex = parse_complex_selector();
-        if (complex.has_value()) {
+        if (complex.has_value())
             selectors.append(complex.value());
-        }
 
-        if (index >= parts.size()) {
+        if (index >= parts.size())
             break;
-        }
 
-        auto currentToken = parts.at(index).to_string();
-        if (currentToken != ",") {
+        auto current_value = parts.at(index);
+        if (current_value.is(Token::TokenType::Comma))
             break;
-        }
 
         index++;
     }
 
-    if (selectors.is_empty()) {
+    if (selectors.is_empty())
         return {};
-    }
 
     selectors.first().relation = CSS::Selector::ComplexSelector::Relation::None;
 
@@ -381,11 +417,6 @@ AtStyleRule Parser::consume_an_at_rule()
 
         reconsume_current_input_token();
         auto value = consume_a_component_value();
-        if (value.m_type == StyleComponentValueRule::ComponentType::Token) {
-            if (value.m_token.is_whitespace()) {
-                continue;
-            }
-        }
         rule.m_prelude.append(value);
     }
 }
@@ -411,11 +442,6 @@ Optional<QualifiedStyleRule> Parser::consume_a_qualified_rule()
 
         reconsume_current_input_token();
         auto value = consume_a_component_value();
-        if (value.m_type == StyleComponentValueRule::ComponentType::Token) {
-            if (value.m_token.is_whitespace()) {
-                continue;
-            }
-        }
         rule.m_prelude.append(value);
     }
 
@@ -751,5 +777,4 @@ Vector<StyleComponentValueRule> Parser::parse_as_list_of_comma_separated_compone
 
     return rules;
 }
-
 }
