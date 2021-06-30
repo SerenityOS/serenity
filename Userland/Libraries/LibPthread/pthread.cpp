@@ -47,7 +47,6 @@ static void* pthread_create_helper(void* (*routine)(void*), void* argument, void
     s_stack_size = stack_size;
     void* ret_val = routine(argument);
     pthread_exit(ret_val);
-    return nullptr;
 }
 
 static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argument, PthreadAttrImpl* thread_params)
