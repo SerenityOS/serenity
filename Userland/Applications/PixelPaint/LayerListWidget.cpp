@@ -17,6 +17,8 @@ namespace PixelPaint {
 
 LayerListWidget::LayerListWidget()
 {
+    set_should_hide_unnecessary_scrollbars(false);
+    horizontal_scrollbar().set_visible(false);
 }
 
 LayerListWidget::~LayerListWidget()
@@ -71,6 +73,8 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         auto& layer = m_image->layer(gadget.layer_index);
 
         auto adjusted_rect = gadget.rect;
+        adjusted_rect.translate_by(0, -vertical_scrollbar().value());
+        adjusted_rect.translate_by(frame_thickness(), frame_thickness());
 
         if (gadget.is_moving) {
             adjusted_rect.translate_by(0, gadget.movement_delta.y());
@@ -87,6 +91,7 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         Gfx::IntRect thumbnail_rect { adjusted_rect.x(), adjusted_rect.y(), adjusted_rect.height(), adjusted_rect.height() };
         thumbnail_rect.shrink(8, 8);
         painter.draw_scaled_bitmap(thumbnail_rect, layer.bitmap(), layer.bitmap().rect());
+        painter.draw_rect(thumbnail_rect, Color::Black);
 
         Gfx::IntRect text_rect { thumbnail_rect.right() + 10, adjusted_rect.y(), adjusted_rect.width(), adjusted_rect.height() };
         text_rect.intersect(adjusted_rect);
@@ -101,6 +106,8 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
 
     if (m_moving_gadget_index.has_value())
         paint_gadget(m_gadgets[m_moving_gadget_index.value()]);
+
+    Gfx::StylePainter::paint_frame(painter, rect(), palette(), Gfx::FrameShape::Box, Gfx::FrameShadow::Sunken, 2);
 }
 
 Optional<size_t> LayerListWidget::gadget_at(Gfx::IntPoint const& position)
@@ -118,14 +125,17 @@ void LayerListWidget::mousedown_event(GUI::MouseEvent& event)
         return;
     if (event.button() != GUI::MouseButton::Left)
         return;
-    auto gadget_index = gadget_at(event.position());
+
+    Gfx::IntPoint translated_event_point = { 0, vertical_scrollbar().value() + event.y() };
+
+    auto gadget_index = gadget_at(translated_event_point);
     if (!gadget_index.has_value()) {
         if (on_layer_select)
             on_layer_select(nullptr);
         return;
     }
     m_moving_gadget_index = gadget_index;
-    m_moving_event_origin = event.position();
+    m_moving_event_origin = translated_event_point;
     auto& gadget = m_gadgets[m_moving_gadget_index.value()];
     auto& layer = m_image->layer(gadget_index.value());
     set_selected_layer(&layer);
@@ -141,7 +151,9 @@ void LayerListWidget::mousemove_event(GUI::MouseEvent& event)
     if (!m_moving_gadget_index.has_value())
         return;
 
-    auto delta = event.position() - m_moving_event_origin;
+    Gfx::IntPoint translated_event_point = { 0, vertical_scrollbar().value() + event.y() };
+
+    auto delta = translated_event_point - m_moving_event_origin;
     auto& gadget = m_gadgets[m_moving_gadget_index.value()];
     VERIFY(gadget.is_moving);
     gadget.movement_delta = delta;
@@ -197,8 +209,8 @@ void LayerListWidget::image_did_modify_layer_stack()
     rebuild_gadgets();
 }
 
-static constexpr int gadget_height = 30;
-static constexpr int gadget_spacing = 1;
+static constexpr int gadget_height = 40;
+static constexpr int gadget_spacing = -1;
 static constexpr int vertical_step = gadget_height + gadget_spacing;
 
 size_t LayerListWidget::hole_index_during_move() const
@@ -245,11 +257,14 @@ void LayerListWidget::relayout_gadgets()
             continue;
         if (hole_index.has_value() && index == hole_index.value())
             y += vertical_step;
-        gadget.rect = { 0, y, width(), gadget_height };
+        gadget.rect = { 0, y, widget_inner_rect().width(), gadget_height };
         y += vertical_step;
         ++index;
     }
 
+    auto total_gadget_height = static_cast<int>(m_gadgets.size()) * vertical_step;
+    set_content_size({ widget_inner_rect().width(), total_gadget_height });
+    vertical_scrollbar().set_range(0, max(total_gadget_height - height(), 0));
     update();
 }
 
