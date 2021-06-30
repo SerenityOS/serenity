@@ -157,11 +157,6 @@ void DOMTreeJSONModel::update()
     did_update();
 }
 
-JsonObject const* DOMTreeJSONModel::find_parent_of_child_with_internal_id(size_t internal_id) const
-{
-    return find_parent_of_child_with_internal_id(m_dom_tree, internal_id);
-}
-
 JsonObject const* DOMTreeJSONModel::find_parent_of_child_with_internal_id(JsonObject const& node, size_t internal_id) const
 {
     auto const* children = get_children(node);
@@ -179,18 +174,6 @@ JsonObject const* DOMTreeJSONModel::find_parent_of_child_with_internal_id(JsonOb
             return maybe_node;
     }
 
-    return nullptr;
-}
-
-size_t DOMTreeJSONModel::get_internal_id(JsonObject const& o)
-{
-    return o.get("internal_id").as_u32();
-}
-
-JsonArray const* DOMTreeJSONModel::get_children(JsonObject const& o)
-{
-    if (auto const* maybe_children = o.get_ptr("children"); maybe_children)
-        return &maybe_children->as_array();
     return nullptr;
 }
 
