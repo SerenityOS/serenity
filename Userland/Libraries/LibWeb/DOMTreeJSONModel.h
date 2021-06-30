@@ -36,11 +36,24 @@ public:
 private:
     explicit DOMTreeJSONModel(JsonObject);
 
-    JsonObject const* find_parent_of_child_with_internal_id(size_t) const;
+    ALWAYS_INLINE JsonObject const* find_parent_of_child_with_internal_id(size_t internal_id) const
+    {
+        return find_parent_of_child_with_internal_id(m_dom_tree, internal_id);
+    }
+
     JsonObject const* find_parent_of_child_with_internal_id(JsonObject const&, size_t) const;
 
-    static size_t get_internal_id(const JsonObject& o);
-    static JsonArray const* get_children(const JsonObject& o);
+    ALWAYS_INLINE static size_t get_internal_id(const JsonObject& o)
+    {
+        return o.get("internal_id").as_u32();
+    }
+
+    ALWAYS_INLINE static JsonArray const* get_children(const JsonObject& o)
+    {
+        if (auto const* maybe_children = o.get_ptr("children"); maybe_children)
+            return &maybe_children->as_array();
+        return nullptr;
+    }
 
     GUI::Icon m_document_icon;
     GUI::Icon m_element_icon;
