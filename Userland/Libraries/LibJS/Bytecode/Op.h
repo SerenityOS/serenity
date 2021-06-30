@@ -484,6 +484,22 @@ private:
     Register m_arguments[];
 };
 
+class NewClass final : public Instruction {
+public:
+    explicit NewClass(ClassExpression const& class_expression)
+        : Instruction(Type::NewClass)
+        , m_class_expression(class_expression)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
+    ClassExpression const& m_class_expression;
+};
+
 class NewFunction final : public Instruction {
 public:
     explicit NewFunction(FunctionNode const& function_node)

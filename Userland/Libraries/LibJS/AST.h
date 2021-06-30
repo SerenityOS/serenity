@@ -851,6 +851,7 @@ public:
     }
 
     StringView name() const { return m_name; }
+    RefPtr<FunctionExpression> constructor() const { return m_constructor; }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
@@ -872,6 +873,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual void generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     NonnullRefPtr<ClassExpression> m_class_expression;

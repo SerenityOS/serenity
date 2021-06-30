@@ -452,6 +452,11 @@ void IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
         interpreter.accumulator() = iterator_value(interpreter.global_object(), *iterator_result);
 }
 
+void NewClass::execute_impl(Bytecode::Interpreter&) const
+{
+    TODO();
+}
+
 String Load::to_string_impl(Bytecode::Executable const&) const
 {
     return String::formatted("Load {}", m_src);
@@ -596,6 +601,11 @@ String Call::to_string_impl(Bytecode::Executable const&) const
 String NewFunction::to_string_impl(Bytecode::Executable const&) const
 {
     return "NewFunction";
+}
+
+String NewClass::to_string_impl(Bytecode::Executable const&) const
+{
+    return "NewClass";
 }
 
 String Return::to_string_impl(Bytecode::Executable const&) const
