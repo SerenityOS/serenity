@@ -43,9 +43,11 @@ public:
 
 private:
     void add_entry(const Reader&, FlatPtr eip);
+    ELFObjectInfo const* object_info_for_region(ELF::Core::MemoryRegionInfo const&);
 
     ELF::Core::ThreadInfo m_thread_info;
     Vector<Entry> m_entries;
+    HashMap<String, NonnullOwnPtr<ELFObjectInfo>> m_debug_info_cache;
 };
 
 }
