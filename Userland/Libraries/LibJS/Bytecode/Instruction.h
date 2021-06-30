@@ -72,7 +72,8 @@
     O(GetIterator)                   \
     O(IteratorNext)                  \
     O(IteratorResultDone)            \
-    O(IteratorResultValue)
+    O(IteratorResultValue)           \
+    O(NewClass)
 
 namespace JS::Bytecode {
 
