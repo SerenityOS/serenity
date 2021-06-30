@@ -38,13 +38,11 @@ asm(
     "    pushq %rdi\n"
     "    pushq %rsp \n" /* set TrapFrame::regs */
     "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n"
-    "    subq $0x8, %rsp\n" /* align stack */
-    "    lea 0x8(%rsp), %rdi \n"
+    "    movq %rsp, %rdi \n"
     "    cld\n"
     "    call enter_trap \n"
-    "    lea 0x8(%rsp), %rdi \n"
+    "    movq %rsp, %rdi \n"
     "    call handle_interrupt \n"
-    "    addq $0x8, %rsp\n" /* undo alignment */
     ".globl common_trap_exit \n"
     "common_trap_exit: \n"
     // another thread may have handled this trap at this point, so don't
