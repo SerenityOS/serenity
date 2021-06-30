@@ -14,7 +14,7 @@ class StringObject : public Object {
     JS_OBJECT(StringObject, Object);
 
 public:
-    static StringObject* create(GlobalObject&, PrimitiveString&);
+    static StringObject* create(GlobalObject&, PrimitiveString&, Object& prototype);
 
     StringObject(PrimitiveString&, Object& prototype);
     virtual void initialize(GlobalObject&) override;
