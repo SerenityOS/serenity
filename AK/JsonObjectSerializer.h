@@ -7,7 +7,10 @@
 #pragma once
 
 #include <AK/JsonArraySerializer.h>
-#include <AK/JsonValue.h>
+
+#ifndef KERNEL
+#    include <AK/JsonValue.h>
+#endif
 
 namespace AK {
 
@@ -29,11 +32,13 @@ public:
             finish();
     }
 
+#ifndef KERNEL
     void add(const StringView& key, const JsonValue& value)
     {
         begin_item(key);
         value.serialize(m_builder);
     }
+#endif
 
     void add(const StringView& key, const StringView& value)
     {
@@ -101,11 +106,13 @@ public:
         m_builder.appendff("{}", value);
     }
 
+#ifndef KERNEL
     void add(const StringView& key, double value)
     {
         begin_item(key);
         m_builder.appendff("{}", value);
     }
+#endif
 
     JsonArraySerializer<Builder> add_array(const StringView& key)
     {
