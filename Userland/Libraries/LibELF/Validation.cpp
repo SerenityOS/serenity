@@ -237,14 +237,18 @@ bool validate_program_headers(const ElfW(Ehdr) & elf_header, size_t file_size, c
         }
 
         if (elf_header.e_type != ET_CORE) {
+            if (program_header.p_type == PT_LOAD && program_header.p_align == 0) {
+                if (verbose)
+                    dbgln("Program header ({}) with p_type PT_LOAD missing p_align (p_align == 0)", header_index);
+                return false;
+            }
+
             if (program_header.p_type == PT_LOAD && program_header.p_align % (size_t)PAGE_SIZE != 0) {
                 if (verbose)
                     dbgln("Program header ({}) with p_type PT_LOAD has p_align ({}) not divisible by page size ({})", header_index, program_header.p_align, PAGE_SIZE);
                 return false;
             }
-        }
 
-        if (elf_header.e_type != ET_CORE) {
             if (program_header.p_type == PT_LOAD && program_header.p_vaddr % program_header.p_align != program_header.p_offset % program_header.p_align) {
                 if (verbose)
                     dbgln("Program header ({}) with p_type PT_LOAD has mis-aligned p_vaddr ({:x})", header_index, program_header.p_vaddr);
