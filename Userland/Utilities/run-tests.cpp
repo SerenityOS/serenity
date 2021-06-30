@@ -193,12 +193,15 @@ FileResult TestRunner::run_test_file(const String& test_path)
     int child_out_err_file = mkstemp(child_out_err_path);
     VERIFY(child_out_err_file >= 0);
 
+    String dirname = path_for_test.dirname();
+    String basename = path_for_test.basename();
+
     (void)posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDOUT_FILENO);
     (void)posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDERR_FILENO);
-    (void)posix_spawn_file_actions_addchdir(&file_actions, path_for_test.dirname().characters());
+    (void)posix_spawn_file_actions_addchdir(&file_actions, dirname.characters());
 
     Vector<const char*, 4> argv;
-    argv.append(path_for_test.basename().characters());
+    argv.append(basename.characters());
     auto extra_args = m_config->read_entry(path_for_test.basename(), "Arguments", "").split(' ');
     for (auto& arg : extra_args)
         argv.append(arg.characters());
@@ -242,7 +245,7 @@ FileResult TestRunner::run_test_file(const String& test_path)
 
 int main(int argc, char** argv)
 {
-    auto program_name = LexicalPath { argv[0] }.basename();
+    auto program_name = LexicalPath::basename(argv[0]);
 
 #ifdef SIGINFO
     signal(SIGINFO, [](int) {
