@@ -10,11 +10,13 @@
 #include "Browser.h"
 #include "BrowserWindow.h"
 #include "ConsoleWidget.h"
-#include "DownloadWidget.h"
 #include "InspectorWidget.h"
+#include <AK/LexicalPath.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/Browser/TabGML.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -55,14 +57,20 @@ URL url_from_user_input(const String& input)
     return URL(builder.build());
 }
 
-void Tab::start_download(const URL& url)
+void Tab::start_download(URL const& url)
 {
-    auto window = GUI::Window::construct(&this->window());
-    window->resize(300, 170);
-    window->set_title(String::formatted("0% of {}", url.basename()));
-    window->set_resizable(false);
-    window->set_main_widget<DownloadWidget>(url);
-    window->show();
+
+    auto filename = LexicalPath(url.basename());
+    auto title = filename.title();
+    auto extension = filename.extension();
+
+    if (title.is_empty())
+        title = "download";
+
+    if (extension.is_empty())
+        extension = "txt";
+
+    FileSystemAccessClient::Client::the().async_prompt_download_file(url, title, extension);
 }
 
 void Tab::view_source(const URL& url, const String& source)
@@ -206,7 +214,7 @@ Tab::Tab(BrowserWindow& window, Type type)
         GUI::Clipboard::the().set_plain_text(m_link_context_menu_url.to_string());
     }));
     m_link_context_menu->add_separator();
-    m_link_context_menu->add_action(GUI::Action::create("&Download", [this](auto&) {
+    m_link_context_menu->add_action(GUI::Action::create("&Download As...", [this](auto&) {
         start_download(m_link_context_menu_url);
     }));
 
@@ -231,7 +239,7 @@ Tab::Tab(BrowserWindow& window, Type type)
         GUI::Clipboard::the().set_plain_text(m_image_context_menu_url.to_string());
     }));
     m_image_context_menu->add_separator();
-    m_image_context_menu->add_action(GUI::Action::create("&Download", [this](auto&) {
+    m_image_context_menu->add_action(GUI::Action::create("&Download As...", [this](auto&) {
         start_download(m_image_context_menu_url);
     }));
 

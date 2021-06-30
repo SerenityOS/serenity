@@ -2,7 +2,7 @@ serenity_component(
     Browser
     RECOMMENDED
     TARGETS Browser
-    DEPENDS ImageDecoder RequestServer WebContent WebSocket
+    DEPENDS ImageDecoder WebContent WebSocket FileSystemAccessServer
 )
 
 compile_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)
@@ -16,7 +16,6 @@ set(SOURCES
     BrowserWindowGML.h
     ConsoleWidget.cpp
     CookieJar.cpp
-    DownloadWidget.cpp
     EditBookmarkGML.h
     History.cpp
     InspectorWidget.cpp
@@ -27,4 +26,4 @@ set(SOURCES
 )
 
 serenity_app(Browser ICON app-browser)
-target_link_libraries(Browser LibWeb LibProtocol LibGUI LibDesktop)
+target_link_libraries(Browser LibWeb LibProtocol LibGUI LibDesktop LibFileSystemAccessClient)

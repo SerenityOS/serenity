@@ -12,6 +12,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibHTTP/HttpJob.h>
+#include <LibIPC/ServerConnection.h>
 #include <LibWeb/Forward.h>
 
 namespace Web {
