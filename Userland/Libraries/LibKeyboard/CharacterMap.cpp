@@ -6,9 +6,9 @@
 
 #include "CharacterMap.h"
 #include <AK/StringBuilder.h>
-#include <LibKeyboard/CharacterMapFile.h>
 
 #ifndef KERNEL
+#    include <LibKeyboard/CharacterMapFile.h>
 #    include <serenity.h>
 #endif
 
