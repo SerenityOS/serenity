@@ -5,7 +5,6 @@
  */
 
 #include <AK/JsonArraySerializer.h>
-#include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
@@ -44,7 +43,7 @@ private:
                 address = 0xdeadc0de;
                 kernel_address_added = true;
             }
-            array.add(JsonValue(address));
+            array.add(address);
         }
 
         array.finish();

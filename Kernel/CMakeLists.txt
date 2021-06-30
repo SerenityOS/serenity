@@ -301,7 +301,6 @@ set(AK_SOURCES
     ../AK/FlyString.cpp
     ../AK/GenericLexer.cpp
     ../AK/Hex.cpp
-    ../AK/JsonValue.cpp
     ../AK/LexicalPath.cpp
     ../AK/String.cpp
     ../AK/StringBuilder.cpp
