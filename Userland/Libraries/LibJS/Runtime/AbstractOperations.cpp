@@ -110,9 +110,8 @@ GlobalObject* get_function_realm(GlobalObject& global_object, FunctionObject con
 {
     auto& vm = global_object.vm();
 
-    // FIXME: not sure how to do this currently.
-    // 2. If obj has a [[Realm]] internal slot, then
-    //     a. Return obj.[[Realm]].
+    if (function.realm())
+        return function.realm();
     if (is<BoundFunction>(function)) {
         auto& bound_function = static_cast<BoundFunction const&>(function);
         auto& target = bound_function.target_function();

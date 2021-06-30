@@ -47,6 +47,9 @@ public:
     // Used as the outer environment when evaluating the code of the function.
     virtual EnvironmentRecord* environment() { return nullptr; }
 
+    // [[Realm]]
+    virtual GlobalObject* realm() const { return nullptr; }
+
     enum class ThisMode : u8 {
         Lexical,
         Strict,

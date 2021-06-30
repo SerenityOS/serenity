@@ -29,6 +29,8 @@ public:
 
     virtual bool is_strict_mode() const override;
 
+    GlobalObject* realm() const override { return &global_object(); }
+
 protected:
     NativeFunction(FlyString name, Object& prototype);
     explicit NativeFunction(Object& prototype);
