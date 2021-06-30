@@ -7,12 +7,12 @@
 #pragma once
 
 #include "Image.h"
-#include <LibGUI/Widget.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 
 namespace PixelPaint {
 
 class LayerListWidget final
-    : public GUI::Widget
+    : public GUI::AbstractScrollableWidget
     , ImageClient {
     C_OBJECT(LayerListWidget);
 
