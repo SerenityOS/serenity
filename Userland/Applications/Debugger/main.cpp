@@ -38,9 +38,15 @@ static void handle_sigint(int)
 
 static void handle_print_registers(const PtraceRegisters& regs)
 {
+#if ARCH(I386)
     outln("eax={:08x} ebx={:08x} ecx={:08x} edx={:08x}", regs.eax, regs.ebx, regs.ecx, regs.edx);
     outln("esp={:08x} ebp={:08x} esi={:08x} edi={:08x}", regs.esp, regs.ebp, regs.esi, regs.edi);
     outln("eip={:08x} eflags={:08x}", regs.eip, regs.eflags);
+#else
+    outln("rax={:016x} rbx={:016x} rcx={:016x} rdx={:016x}", regs.rax, regs.rbx, regs.rcx, regs.rdx);
+    outln("rsp={:016x} rbp={:016x} rsi={:016x} rdi={:016x}", regs.rsp, regs.rbp, regs.rsi, regs.rdi);
+    outln("rip={:016x} rflags={:08x}", regs.rip, regs.rflags);
+#endif
 }
 
 static bool handle_disassemble_command(const String& command, void* first_instruction)
@@ -174,7 +180,7 @@ static bool handle_examine_command(const String& command)
     if (!(argument.starts_with("0x"))) {
         return false;
     }
-    u32 address = strtoul(argument.characters() + 2, nullptr, 16);
+    FlatPtr address = strtoul(argument.characters() + 2, nullptr, 16);
     auto res = g_debug_session->peek((u32*)address);
     if (!res.has_value()) {
         outln("Could not examine memory at address {:p}", address);
@@ -237,10 +243,15 @@ int main(int argc, char** argv)
 
         VERIFY(optional_regs.has_value());
         const PtraceRegisters& regs = optional_regs.value();
+#if ARCH(I686)
+        const FlatPtr ip = regs.eip;
+#else
+        const FlatPtr ip = regs.rip;
+#endif
 
-        auto symbol_at_ip = g_debug_session->symbolicate(regs.eip);
+        auto symbol_at_ip = g_debug_session->symbolicate(ip);
 
-        auto source_position = g_debug_session->get_source_position(regs.eip);
+        auto source_position = g_debug_session->get_source_position(ip);
 
         if (in_step_line) {
             bool no_source_info = !source_position.has_value();
@@ -254,9 +265,9 @@ int main(int argc, char** argv)
         }
 
         if (symbol_at_ip.has_value())
-            outln("Program is stopped at: {:p} ({}:{})", regs.eip, symbol_at_ip.value().library_name, symbol_at_ip.value().symbol);
+            outln("Program is stopped at: {:p} ({}:{})", ip, symbol_at_ip.value().library_name, symbol_at_ip.value().symbol);
         else
-            outln("Program is stopped at: {:p}", regs.eip);
+            outln("Program is stopped at: {:p}", ip);
 
         if (source_position.has_value()) {
             previous_source_position = source_position.value();
@@ -298,7 +309,7 @@ int main(int argc, char** argv)
                 success = true;
 
             } else if (command.starts_with("dis")) {
-                success = handle_disassemble_command(command, reinterpret_cast<void*>(regs.eip));
+                success = handle_disassemble_command(command, reinterpret_cast<void*>(ip));
 
             } else if (command.starts_with("bp")) {
                 success = handle_breakpoint_command(command);
