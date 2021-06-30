@@ -166,7 +166,7 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(const SignedBigInteger& o
     auto result = bitwise_and(other.unsigned_value());
 
     // The sign bit will have to be AND'd manually.
-    result.m_sign = is_negative() || other.is_negative();
+    result.m_sign = is_negative() && other.is_negative();
 
     return result;
 }
