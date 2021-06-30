@@ -93,6 +93,8 @@ HeaderView::VisibleSectionRange HeaderView::visible_section_range() const
     for (; range.end < section_count; ++range.end) {
         auto& section = section_data(range.end);
         int section_size = section.size;
+        if (orientation() == Gfx::Orientation::Horizontal)
+            section_size += m_table_view.horizontal_padding() * 2;
         if (offset + section_size < start) {
             if (section.visibility)
                 offset += section_size;
