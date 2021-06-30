@@ -193,9 +193,6 @@ FileResult TestRunner::run_test_file(const String& test_path)
     int child_out_err_file = mkstemp(child_out_err_path);
     VERIFY(child_out_err_file >= 0);
 
-    int ret = unlink(child_out_err_path);
-    VERIFY(ret == 0);
-
     (void)posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDOUT_FILENO);
     (void)posix_spawn_file_actions_adddup2(&file_actions, child_out_err_file, STDERR_FILENO);
     (void)posix_spawn_file_actions_addchdir(&file_actions, path_for_test.dirname().characters());
@@ -209,7 +206,7 @@ FileResult TestRunner::run_test_file(const String& test_path)
 
     pid_t child_pid = -1;
     // FIXME: Do we really want to copy test runner's entire env?
-    ret = posix_spawn(&child_pid, test_path.characters(), &file_actions, nullptr, const_cast<char* const*>(argv.data()), environ);
+    int ret = posix_spawn(&child_pid, test_path.characters(), &file_actions, nullptr, const_cast<char* const*>(argv.data()), environ);
     VERIFY(ret == 0);
     VERIFY(child_pid > 0);
 
@@ -234,6 +231,12 @@ FileResult TestRunner::run_test_file(const String& test_path)
             kill(child_pid, SIGCONT);
         }
     }
+
+    // Remove the child's stdout from /tmp. This does cause the temp file to be observable
+    // while the test is executing, but if it hangs that might even be a bonus :)
+    ret = unlink(child_out_err_path);
+    VERIFY(ret == 0);
+
     return FileResult { move(path_for_test), get_time_in_ms() - start_time, test_result, child_out_err_file };
 }
 
