@@ -243,7 +243,7 @@ int main(int argc, char** argv)
 
         VERIFY(optional_regs.has_value());
         const PtraceRegisters& regs = optional_regs.value();
-#if ARCH(I686)
+#if ARCH(I386)
         const FlatPtr ip = regs.eip;
 #else
         const FlatPtr ip = regs.rip;

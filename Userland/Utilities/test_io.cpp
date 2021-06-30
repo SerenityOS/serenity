@@ -15,20 +15,20 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
-#define EXPECT_ERROR_2(err, syscall, arg1, arg2)                                                                                                                   \
-    do {                                                                                                                                                           \
-        rc = syscall(arg1, arg2);                                                                                                                                  \
-        if (rc >= 0 || errno != err) {                                                                                                                             \
-            warnln(__FILE__ ":{}: Expected " #err ": " #syscall "({:p}, {:p}), got rc={}, errno={}", __LINE__, (const void*)(arg1), (const void*)arg2, rc, errno); \
-        }                                                                                                                                                          \
+#define EXPECT_ERROR_2(err, syscall, arg1, arg2)                                                                                   \
+    do {                                                                                                                           \
+        rc = syscall(arg1, arg2);                                                                                                  \
+        if (rc >= 0 || errno != err) {                                                                                             \
+            warnln(__FILE__ ":{}: Expected " #err ": " #syscall "({}, {}), got rc={}, errno={}", __LINE__, arg1, arg2, rc, errno); \
+        }                                                                                                                          \
     } while (0)
 
-#define EXPECT_ERROR_3(err, syscall, arg1, arg2, arg3)                                                                                                                                          \
-    do {                                                                                                                                                                                        \
-        rc = syscall(arg1, arg2, arg3);                                                                                                                                                         \
-        if (rc >= 0 || errno != err) {                                                                                                                                                          \
-            warnln(__FILE__ ":{}: Expected " #err ": " #syscall "({:p}, {:p}, {:p}), got rc={}, errno={}", __LINE__, (const void*)(arg1), (const void*)(arg2), (const void*)(arg3), rc, errno); \
-        }                                                                                                                                                                                       \
+#define EXPECT_ERROR_3(err, syscall, arg1, arg2, arg3)                                                                                       \
+    do {                                                                                                                                     \
+        rc = syscall(arg1, arg2, arg3);                                                                                                      \
+        if (rc >= 0 || errno != err) {                                                                                                       \
+            warnln(__FILE__ ":{}: Expected " #err ": " #syscall "({}, {}, {}), got rc={}, errno={}", __LINE__, arg1, arg2, arg3, rc, errno); \
+        }                                                                                                                                    \
     } while (0)
 
 static void test_read_from_directory()
