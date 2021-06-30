@@ -202,18 +202,21 @@ void WindowSwitcher::refresh()
     m_selected_index = 0;
     int window_count = 0;
     int longest_title_width = 0;
-    wm.window_stack().for_each_window_of_type_from_front_to_back(
-        WindowType::Normal, [&](Window& window) {
-            if (window.is_frameless())
+    wm.for_each_window_stack([&](auto& window_stack) {
+        window_stack.for_each_window_of_type_from_front_to_back(
+            WindowType::Normal, [&](Window& window) {
+                if (window.is_frameless())
+                    return IterationDecision::Continue;
+                ++window_count;
+                longest_title_width = max(longest_title_width, wm.font().width(window.computed_title()));
+                if (selected_window == &window)
+                    m_selected_index = m_windows.size();
+                m_windows.append(window);
                 return IterationDecision::Continue;
-            ++window_count;
-            longest_title_width = max(longest_title_width, wm.font().width(window.computed_title()));
-            if (selected_window == &window)
-                m_selected_index = m_windows.size();
-            m_windows.append(window);
-            return IterationDecision::Continue;
-        },
-        true);
+            },
+            true);
+        return IterationDecision::Continue;
+    });
     if (m_windows.is_empty()) {
         hide();
         return;

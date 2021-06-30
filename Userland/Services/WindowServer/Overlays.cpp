@@ -311,4 +311,40 @@ RefPtr<Gfx::Bitmap> DndOverlay::create_bitmap(int scale_factor)
     return new_bitmap;
 }
 
+void WindowStackSwitchOverlay::render_overlay_bitmap(Gfx::Painter& painter)
+{
+    // We should come up with a more elegant way to get the content rectangle
+    Gfx::IntRect content_rect({}, m_content_size);
+    content_rect.center_within({ {}, rect().size() });
+    auto active_color = WindowManager::the().palette().active_window_border1();
+    auto inactive_color = WindowManager::the().palette().inactive_window_border1();
+    for (int y = 0; y < m_rows; y++) {
+        for (int x = 0; x < m_columns; x++) {
+            Gfx::IntRect rect {
+                content_rect.left() + x * (default_screen_rect_width + default_screen_rect_padding),
+                content_rect.top() + y * (default_screen_rect_height + default_screen_rect_padding),
+                default_screen_rect_width,
+                default_screen_rect_height
+            };
+            bool is_target = y == m_target_row && x == m_target_column;
+            painter.fill_rect(rect, is_target ? active_color : inactive_color);
+        }
+    }
+}
+
+WindowStackSwitchOverlay::WindowStackSwitchOverlay(Screen& screen, WindowStack& target_window_stack)
+    : m_rows((int)WindowManager::the().window_stack_rows())
+    , m_columns((int)WindowManager::the().window_stack_columns())
+    , m_target_row((int)target_window_stack.row())
+    , m_target_column((int)target_window_stack.column())
+{
+    m_content_size = {
+        m_columns * (default_screen_rect_width + default_screen_rect_padding) - default_screen_rect_padding,
+        m_rows * (default_screen_rect_height + default_screen_rect_padding) - default_screen_rect_padding,
+    };
+    auto rect = calculate_frame_rect(Gfx::IntRect({}, m_content_size).inflated(2 * default_screen_rect_margin, 2 * default_screen_rect_margin));
+    rect.center_within(screen.rect());
+    set_rect(rect);
+}
+
 }

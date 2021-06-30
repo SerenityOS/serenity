@@ -123,12 +123,26 @@ void Compositor::init_bitmaps()
 void Compositor::did_construct_window_manager(Badge<WindowManager>)
 {
     auto& wm = WindowManager::the();
+
+    m_current_window_stack = &wm.current_window_stack();
+
     m_wallpaper_mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "center"));
     m_custom_background_color = Color::from_string(wm.config()->read_entry("Background", "Color", ""));
 
     invalidate_screen();
     invalidate_occlusions();
     compose();
+}
+
+Gfx::IntPoint Compositor::window_transition_offset(Window& window)
+{
+    if (WindowManager::is_stationary_window_type(window.type()))
+        return {};
+
+    if (window.is_moving_to_another_stack())
+        return {};
+
+    return window.outer_stack()->transition_offset();
 }
 
 void Compositor::compose()
@@ -158,33 +172,39 @@ void Compositor::compose()
 
     auto dirty_screen_rects = move(m_dirty_screen_rects);
 
+    bool window_stack_transition_in_progress = m_transitioning_to_window_stack != nullptr;
+
     // Mark window regions as dirty that need to be re-rendered
-    wm.window_stack().for_each_visible_window_from_back_to_front([&](Window& window) {
+    wm.for_each_visible_window_from_back_to_front([&](Window& window) {
+        auto transition_offset = window_transition_offset(window);
         auto frame_rect = window.frame().render_rect();
+        auto frame_rect_on_screen = frame_rect.translated(transition_offset);
         for (auto& dirty_rect : dirty_screen_rects.rects()) {
-            auto invalidate_rect = dirty_rect.intersected(frame_rect);
+            auto invalidate_rect = dirty_rect.intersected(frame_rect_on_screen);
             if (!invalidate_rect.is_empty()) {
                 auto inner_rect_offset = window.rect().location() - frame_rect.location();
-                invalidate_rect.translate_by(-(frame_rect.location() + inner_rect_offset));
+                invalidate_rect.translate_by(-(frame_rect.location() + inner_rect_offset + transition_offset));
                 window.invalidate_no_notify(invalidate_rect);
                 m_invalidated_window = true;
             }
         }
         window.prepare_dirty_rects();
+        if (window_stack_transition_in_progress)
+            window.dirty_rects().translate_by(transition_offset);
         return IterationDecision::Continue;
     });
 
     // Any windows above or below a given window that need to be re-rendered
     // also require us to re-render that window's intersecting area, regardless
     // of whether that window has any dirty rectangles
-    wm.window_stack().for_each_visible_window_from_back_to_front([&](Window& window) {
+    wm.for_each_visible_window_from_back_to_front([&](Window& window) {
         auto& transparency_rects = window.transparency_rects();
         if (transparency_rects.is_empty())
             return IterationDecision::Continue;
 
         auto frame_rect = window.frame().render_rect();
         auto& dirty_rects = window.dirty_rects();
-        wm.window_stack().for_each_visible_window_from_back_to_front([&](Window& w) {
+        wm.for_each_visible_window_from_back_to_front([&](Window& w) {
             if (&w == &window)
                 return IterationDecision::Continue;
             auto frame_rect2 = w.frame().render_rect();
@@ -311,8 +331,9 @@ void Compositor::compose()
             // This window doesn't intersect with any screens, so there's nothing to render
             return IterationDecision::Continue;
         }
-        auto frame_rect = window.frame().render_rect();
-        auto window_rect = window.rect();
+        auto transition_offset = window_transition_offset(window);
+        auto frame_rect = window.frame().render_rect().translated(transition_offset);
+        auto window_rect = window.rect().translated(transition_offset);
         auto frame_rects = frame_rect.shatter(window_rect);
 
         dbgln_if(COMPOSE_DEBUG, "  window {} frame rect: {}", window.title(), frame_rect);
@@ -323,8 +344,9 @@ void Compositor::compose()
                 rect.for_each_intersected(frame_rects, [&](const Gfx::IntRect& intersected_rect) {
                     Gfx::PainterStateSaver saver(painter);
                     painter.add_clip_rect(intersected_rect);
+                    painter.translate(transition_offset);
                     dbgln_if(COMPOSE_DEBUG, "    render frame: {}", intersected_rect);
-                    window.frame().paint(screen, painter, intersected_rect);
+                    window.frame().paint(screen, painter, intersected_rect.translated(-transition_offset));
                     return IterationDecision::Continue;
                 });
             }
@@ -481,7 +503,7 @@ void Compositor::compose()
             compose_window(*fullscreen_window);
             fullscreen_window->clear_dirty_rects();
         } else {
-            wm.window_stack().for_each_visible_window_from_back_to_front([&](Window& window) {
+            wm.for_each_visible_window_from_back_to_front([&](Window& window) {
                 compose_window(window);
                 window.clear_dirty_rects();
                 return IterationDecision::Continue;
@@ -899,11 +921,14 @@ void Compositor::decrement_show_screen_number(Badge<ClientConnection>)
     }
 }
 
-bool Compositor::any_opaque_window_above_this_one_contains_rect(const Window& a_window, const Gfx::IntRect& rect)
+bool Compositor::any_opaque_window_above_this_one_contains_rect(Window& a_window, const Gfx::IntRect& rect)
 {
+    auto* window_stack = a_window.outer_stack();
+    if (!window_stack)
+        return false;
     bool found_containing_window = false;
     bool checking = false;
-    WindowManager::the().window_stack().for_each_visible_window_from_back_to_front([&](Window& window) {
+    WindowManager::the().for_each_visible_window_from_back_to_front([&](Window& window) {
         if (&window == &a_window) {
             checking = true;
             return IterationDecision::Continue;
@@ -942,6 +967,7 @@ void Compositor::overlay_rects_changed()
     invalidate_occlusions();
     for (auto& rect : m_overlay_rects.rects())
         invalidate_screen(rect);
+    start_compose_async_timer();
 }
 
 void Compositor::recompute_overlay_rects()
@@ -973,17 +999,20 @@ void Compositor::recompute_overlay_rects()
 void Compositor::recompute_occlusions()
 {
     auto& wm = WindowManager::the();
-    wm.window_stack().for_each_visible_window_from_back_to_front([&](Window& window) {
-        if (wm.m_switcher.is_visible()) {
-            window.set_occluded(false);
-        } else {
+    bool is_switcher_visible = wm.m_switcher.is_visible();
+    wm.for_each_window_stack([&](WindowStack& window_stack) {
+        window_stack.set_all_occluded(!is_switcher_visible);
+        return IterationDecision::Continue;
+    });
+    if (!is_switcher_visible) {
+        wm.for_each_visible_window_from_back_to_front([&](Window& window) {
             if (any_opaque_window_above_this_one_contains_rect(window, window.frame().rect()))
                 window.set_occluded(true);
             else
                 window.set_occluded(false);
-        }
-        return IterationDecision::Continue;
-    });
+            return IterationDecision::Continue;
+        });
+    }
 
     if (m_overlay_rects_changed) {
         m_overlay_rects_changed = false;
@@ -996,11 +1025,12 @@ void Compositor::recompute_occlusions()
             dbgln("  overlay: {}", rect);
     }
 
+    bool window_stack_transition_in_progress = m_transitioning_to_window_stack != nullptr;
     auto& main_screen = Screen::main();
     if (auto* fullscreen_window = wm.active_fullscreen_window()) {
         // TODO: support fullscreen windows on all screens
         auto screen_rect = main_screen.rect();
-        WindowManager::the().window_stack().for_each_visible_window_from_front_to_back([&](Window& w) {
+        wm.for_each_visible_window_from_front_to_back([&](Window& w) {
             auto& visible_opaque = w.opaque_rects();
             auto& transparency_rects = w.transparency_rects();
             auto& transparency_wallpaper_rects = w.transparency_wallpaper_rects();
@@ -1029,7 +1059,7 @@ void Compositor::recompute_occlusions()
         Gfx::DisjointRectSet visible_rects;
         visible_rects.add_many(Screen::rects());
         bool have_transparent = false;
-        WindowManager::the().window_stack().for_each_visible_window_from_front_to_back([&](Window& w) {
+        wm.for_each_visible_window_from_front_to_back([&](Window& w) {
             w.transparency_wallpaper_rects().clear();
             auto& visible_opaque = w.opaque_rects();
             visible_opaque.clear();
@@ -1039,8 +1069,13 @@ void Compositor::recompute_occlusions()
             if (w.is_minimized())
                 return IterationDecision::Continue;
 
+            auto transition_offset = window_transition_offset(w);
             auto transparent_frame_render_rects = w.frame().transparent_render_rects();
             auto opaque_frame_render_rects = w.frame().opaque_render_rects();
+            if (window_stack_transition_in_progress) {
+                transparent_frame_render_rects.translate_by(transition_offset);
+                opaque_frame_render_rects.translate_by(transition_offset);
+            }
             Gfx::DisjointRectSet visible_opaque_rects;
             Screen::for_each([&](auto& screen) {
                 auto screen_rect = screen.rect();
@@ -1061,10 +1096,12 @@ void Compositor::recompute_occlusions()
             visible_opaque = visible_rects.intersected(visible_opaque_rects);
 
             auto render_rect = w.frame().render_rect();
-
+            auto render_rect_on_screen = render_rect;
+            if (window_stack_transition_in_progress)
+                render_rect_on_screen.translate_by(transition_offset);
             Gfx::DisjointRectSet opaque_covering;
             bool found_this_window = false;
-            WindowManager::the().window_stack().for_each_visible_window_from_back_to_front([&](Window& w2) {
+            wm.for_each_visible_window_from_back_to_front([&](Window& w2) {
                 if (!found_this_window) {
                     if (&w == &w2)
                         found_this_window = true;
@@ -1074,17 +1111,28 @@ void Compositor::recompute_occlusions()
                 if (w2.is_minimized())
                     return IterationDecision::Continue;
 
-                if (!render_rect.intersects(w2.frame().render_rect()))
+                auto w2_render_rect = w2.frame().render_rect();
+                auto w2_render_rect_on_screen = w2_render_rect;
+                auto w2_transition_offset = window_transition_offset(w2);
+                if (window_stack_transition_in_progress)
+                    w2_render_rect_on_screen.translate_by(w2_transition_offset);
+                if (!render_rect_on_screen.intersects(w2_render_rect_on_screen))
                     return IterationDecision::Continue;
 
-                auto opaque_rects = w2.frame().opaque_render_rects().intersected(render_rect);
-                auto transparent_rects = w2.frame().transparent_render_rects().intersected(render_rect);
+                auto opaque_rects = w2.frame().opaque_render_rects();
+                auto transparent_rects = w2.frame().transparent_render_rects();
+                if (window_stack_transition_in_progress) {
+                    auto transition_offset_2 = window_transition_offset(w2);
+                    opaque_rects.translate_by(transition_offset_2);
+                    transparent_rects.translate_by(transition_offset_2);
+                }
+                opaque_rects = opaque_rects.intersected(render_rect_on_screen);
+                transparent_rects = transparent_rects.intersected(render_rect_on_screen);
                 if (opaque_rects.is_empty() && transparent_rects.is_empty())
                     return IterationDecision::Continue;
-
                 for (auto& covering : opaque_rects.rects()) {
                     opaque_covering.add(covering);
-                    if (opaque_covering.contains(render_rect)) {
+                    if (opaque_covering.contains(render_rect_on_screen)) {
                         // This window (including frame) is entirely covered by another opaque window
                         visible_opaque.clear();
                         transparency_rects.clear();
@@ -1156,7 +1204,7 @@ void Compositor::recompute_occlusions()
 
         if (have_transparent) {
             // Determine what transparent window areas need to render the wallpaper first
-            WindowManager::the().window_stack().for_each_visible_window_from_back_to_front([&](Window& w) {
+            wm.for_each_visible_window_from_back_to_front([&](Window& w) {
                 auto& transparency_wallpaper_rects = w.transparency_wallpaper_rects();
                 if (w.is_minimized()) {
                     transparency_wallpaper_rects.clear();
@@ -1184,7 +1232,7 @@ void Compositor::recompute_occlusions()
             dbgln("  wallpaper opaque: {}", r);
     }
 
-    wm.window_stack().for_each_visible_window_from_back_to_front([&](Window& w) {
+    wm.for_each_visible_window_from_back_to_front([&](Window& w) {
         auto window_frame_rect = w.frame().render_rect();
         if (w.is_minimized() || window_frame_rect.is_empty() || w.screens().is_empty())
             return IterationDecision::Continue;
@@ -1235,6 +1283,150 @@ void Compositor::update_animations(Screen& screen, Gfx::DisjointRectSet& flush_r
     for (RefPtr<Animation> animation : m_animations) {
         animation->update({}, painter, screen, flush_rects);
     }
+}
+
+void Compositor::create_window_stack_switch_overlay(WindowStack& target_stack)
+{
+    if (m_stack_switch_overlay_timer) {
+        // Cancel any timer, we're going to delete the overlay
+        m_stack_switch_overlay_timer->stop();
+        m_stack_switch_overlay_timer = nullptr;
+    }
+    Screen::for_each([&](auto& screen) {
+        auto& screen_data = m_screen_data[screen.index()];
+        screen_data.m_window_stack_switch_overlay = nullptr; // delete it first
+        screen_data.m_window_stack_switch_overlay = create_overlay<WindowStackSwitchOverlay>(screen, target_stack);
+        screen_data.m_window_stack_switch_overlay->set_enabled(true);
+        return IterationDecision::Continue;
+    });
+}
+
+void Compositor::start_window_stack_switch_overlay_timer()
+{
+    if (m_stack_switch_overlay_timer) {
+        m_stack_switch_overlay_timer->stop();
+        m_stack_switch_overlay_timer = nullptr;
+    }
+    m_stack_switch_overlay_timer = Core::Timer::create_single_shot(
+        500,
+        [this] {
+            Screen::for_each([&](auto& screen) {
+                auto& screen_data = m_screen_data[screen.index()];
+                screen_data.m_window_stack_switch_overlay = nullptr;
+                return IterationDecision::Continue;
+            });
+        },
+        this);
+    m_stack_switch_overlay_timer->start();
+}
+
+void Compositor::finish_window_stack_switch()
+{
+    VERIFY(m_transitioning_to_window_stack);
+    VERIFY(m_current_window_stack);
+    VERIFY(m_transitioning_to_window_stack != m_current_window_stack);
+
+    m_current_window_stack->set_transition_offset({}, {});
+    m_transitioning_to_window_stack->set_transition_offset({}, {});
+
+    auto* previous_window_stack = m_current_window_stack;
+    m_current_window_stack = m_transitioning_to_window_stack;
+    m_transitioning_to_window_stack = nullptr;
+
+    m_window_stack_transition_animation = nullptr;
+
+    auto& wm = WindowManager::the();
+    if (!wm.m_switcher.is_visible())
+        previous_window_stack->set_all_occluded(true);
+    wm.did_switch_window_stack({}, *previous_window_stack, *m_current_window_stack);
+
+    invalidate_occlusions();
+
+    // Rather than invalidating the entire we could invalidate all render rectangles
+    // that are affected by the transition offset before and after changing it.
+    invalidate_screen();
+
+    start_window_stack_switch_overlay_timer();
+}
+
+void Compositor::switch_to_window_stack(WindowStack& new_window_stack)
+{
+    if (m_transitioning_to_window_stack) {
+        if (m_transitioning_to_window_stack == &new_window_stack)
+            return;
+        // A switch is in progress, but the user is impatient. Finish the transition instantly
+        finish_window_stack_switch();
+        VERIFY(!m_window_stack_transition_animation);
+        // Now switch to the next target as usual
+    }
+    VERIFY(m_current_window_stack);
+
+    if (&new_window_stack == m_current_window_stack) {
+        // So that the user knows which stack they're on, show the overlay briefly
+        create_window_stack_switch_overlay(*m_current_window_stack);
+        start_window_stack_switch_overlay_timer();
+        return;
+    }
+    VERIFY(!m_transitioning_to_window_stack);
+    m_transitioning_to_window_stack = &new_window_stack;
+
+    auto window_stack_size = Screen::bounding_rect().size();
+
+    int delta_x = 0;
+    if (new_window_stack.column() < m_current_window_stack->column())
+        delta_x = window_stack_size.width();
+    else if (new_window_stack.column() > m_current_window_stack->column())
+        delta_x = -window_stack_size.width();
+    int delta_y = 0;
+    if (new_window_stack.row() < m_current_window_stack->row())
+        delta_y = window_stack_size.height();
+    else if (new_window_stack.row() > m_current_window_stack->row()) {
+        delta_y = -window_stack_size.height();
+    }
+
+    m_transitioning_to_window_stack->set_transition_offset({}, { -delta_x, -delta_y });
+    m_current_window_stack->set_transition_offset({}, {});
+
+    create_window_stack_switch_overlay(*m_transitioning_to_window_stack);
+    // We start the timer when the animation ends!
+
+    VERIFY(!m_window_stack_transition_animation);
+    m_window_stack_transition_animation = Animation::create();
+    m_window_stack_transition_animation->set_duration(250);
+    m_window_stack_transition_animation->on_update = [this, delta_x, delta_y](float progress, Gfx::Painter&, Screen&, Gfx::DisjointRectSet&) {
+        VERIFY(m_transitioning_to_window_stack);
+        VERIFY(m_current_window_stack);
+
+        // Set transition offset for the window stack we're transitioning out of
+        auto previous_transition_offset_from = m_current_window_stack->transition_offset();
+        Gfx::IntPoint transition_offset_from { (float)delta_x * progress, (float)delta_y * progress };
+        if (previous_transition_offset_from == transition_offset_from)
+            return;
+
+        {
+            // we need to render both, the existing dirty rectangles as well as where we're shifting to
+            auto translated_dirty_rects = m_dirty_screen_rects.clone();
+            auto transition_delta = transition_offset_from - previous_transition_offset_from;
+            translated_dirty_rects.translate_by(transition_delta);
+            m_dirty_screen_rects.add(translated_dirty_rects.intersected(Screen::bounding_rect()));
+        }
+        m_current_window_stack->set_transition_offset({}, transition_offset_from);
+
+        // Set transition offset for the window stack we're transitioning to
+        Gfx::IntPoint transition_offset_to { (float)-delta_x * (1.0f - progress), (float)-delta_y * (1.0f - progress) };
+        m_transitioning_to_window_stack->set_transition_offset({}, transition_offset_to);
+
+        invalidate_occlusions();
+
+        // Rather than invalidating the entire we could invalidate all render rectangles
+        // that are affected by the transition offset before and after changing it.
+        invalidate_screen();
+    };
+
+    m_window_stack_transition_animation->on_stop = [this] {
+        finish_window_stack_switch();
+    };
+    m_window_stack_transition_animation->start();
 }
 
 }
