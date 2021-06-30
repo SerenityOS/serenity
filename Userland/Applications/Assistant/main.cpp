@@ -206,7 +206,7 @@ int main(int argc, char** argv)
 
     auto mark_selected_item = [&]() {
         for (size_t i = 0; i < app_state.visible_result_count; ++i) {
-            auto& row = dynamic_cast<Assistant::ResultRow&>(results_container.child_widgets()[i]);
+            auto& row = static_cast<Assistant::ResultRow&>(results_container.child_widgets()[i]);
             row.set_is_highlighted(i == app_state.selected_index);
         }
     };
