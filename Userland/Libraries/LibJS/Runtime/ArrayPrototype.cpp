@@ -159,11 +159,12 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
         return {};
     if (constructor.is_constructor()) {
         auto& constructor_function = constructor.as_function();
-        if (&constructor_function.global_object() != &global_object) {
-            auto* array_constructor = constructor_function.global_object().array_constructor();
-            if (&constructor_function == array_constructor) {
+        auto* constructor_realm = get_function_realm(global_object, constructor_function);
+        if (vm.exception())
+            return {};
+        if (constructor_realm != &global_object) {
+            if (&constructor_function == constructor_realm->array_constructor())
                 constructor = js_undefined();
-            }
         }
     }
 
