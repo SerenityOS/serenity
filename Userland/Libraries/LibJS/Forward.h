@@ -119,6 +119,7 @@ class BigInt;
 class BoundFunction;
 class Cell;
 class CellAllocator;
+class ClassExpression;
 class Console;
 class DeclarativeEnvironment;
 class DeferGC;

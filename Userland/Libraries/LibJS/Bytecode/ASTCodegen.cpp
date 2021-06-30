@@ -1300,4 +1300,10 @@ void SwitchStatement::generate_bytecode(Bytecode::Generator& generator) const
     generator.switch_to_basic_block(end_block);
 }
 
+void ClassDeclaration::generate_bytecode(Bytecode::Generator& generator) const
+{
+    generator.emit<Bytecode::Op::NewClass>(m_class_expression);
+    generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(m_class_expression.ptr()->name()));
+}
+
 }
