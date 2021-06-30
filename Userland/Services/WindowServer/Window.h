@@ -330,6 +330,9 @@ public:
         frame().window_was_constructed({});
     }
 
+    void set_moving_to_another_stack(bool value) { m_moving_to_another_stack = value; }
+    bool is_moving_to_another_stack() const { return m_moving_to_another_stack; }
+
 private:
     Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
@@ -382,6 +385,7 @@ private:
     bool m_invalidated_frame { true };
     bool m_hit_testing_enabled { true };
     bool m_modified { false };
+    bool m_moving_to_another_stack { false };
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };
