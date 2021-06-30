@@ -1198,7 +1198,7 @@ void TextEditor::timer_event(Core::TimerEvent&)
         update_cursor();
 }
 
-bool TextEditor::write_to_file(const String& path)
+bool TextEditor::write_to_file(String const& path)
 {
     int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
@@ -1206,6 +1206,11 @@ bool TextEditor::write_to_file(const String& path)
         return false;
     }
 
+    return write_to_file_and_close(fd);
+}
+
+bool TextEditor::write_to_file_and_close(int fd)
+{
     ScopeGuard fd_guard = [fd] { close(fd); };
 
     off_t file_size = 0;
