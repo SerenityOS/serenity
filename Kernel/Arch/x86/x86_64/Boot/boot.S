@@ -354,6 +354,12 @@ apic_ap_start32:
     movl (ap_cpu_init_cr3 - apic_ap_start)(%ebp), %eax
     movl %eax, %cr3
 
+    /* Enter Long-mode! ref(https://wiki.osdev.org/Setting_Up_Long_Mode)*/
+    mov $0xC0000080, %ecx           /* Set the C-register to 0xC0000080, which is the EFER MSR.*/
+    rdmsr                           /* Read from the model-specific register.*/
+    or $(1 << 8), %eax              /* Set the LM-bit which is the 9th bit (bit 8).*/
+    wrmsr                           /* Write to the model-specific register.*/
+
     /* enable PAE + PSE */
     movl %cr4, %eax
     orl $0x60, %eax
@@ -364,39 +370,48 @@ apic_ap_start32:
     orl $0x80000000, %eax
     movl %eax, %cr0
 
-    /* load a second temporary gdt that points above 3GB */
-    lgdt (ap_cpu_gdtr_initial2 - apic_ap_start + 0xc0008000)
+    /* load the temporary 64-bit gdt from boot that points above 3GB */
+    lgdt gdt64ptr
 
     /* jump above 3GB into our identity mapped area now */
-    ljmp $8, $(apic_ap_start32_2 - apic_ap_start + 0xc0008000)
-apic_ap_start32_2:
+    ljmpl $code64_sel, $(apic_ap_start64 - apic_ap_start + 0xc0008000)
+.code64
+apic_ap_start64:
+    mov $0, %ax
+    mov %ax, %ss
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+
     /* flush the TLB */
-    movl %cr3, %eax
-    movl %eax, %cr3
+    movq %cr3, %rax
+    movq %rax, %cr3
 
     movl $0xc0008000, %ebp
 
     /* now load the final gdt and idt from the identity mapped area */
-    movl (ap_cpu_gdtr - apic_ap_start)(%ebp), %eax
-    lgdt (%eax)
-    movl (ap_cpu_idtr - apic_ap_start)(%ebp), %eax
-    lidt (%eax)
+    movq (ap_cpu_gdtr - apic_ap_start)(%rbp), %rax
+    lgdt (%rax)
+    movq (ap_cpu_idtr - apic_ap_start)(%rbp), %rax
+    lidt (%rax)
 
     /* set same cr0 and cr4 values as the BSP */
-    movl (ap_cpu_init_cr0 - apic_ap_start)(%ebp), %eax
-    movl %eax, %cr0
-    movl (ap_cpu_init_cr4 - apic_ap_start)(%ebp), %eax
-    movl %eax, %cr4
+    movq (ap_cpu_init_cr0 - apic_ap_start)(%rbp), %rax
+    movq %rax, %cr0
+    movq (ap_cpu_init_cr4 - apic_ap_start)(%rbp), %rax
+    movq %rax, %cr4
 
     /* push the Processor pointer this CPU is going to use */
-    movl (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %eax
-    addl $0xc0000000, %eax
-    movl 0(%eax, %esi, 4), %eax
-    push %eax
+    movq (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %rax
+    movq $0xc0000000, %r8
+    addq %r8, %rax
+    movq 0(%rax, %rsi, 4), %rax
+    push %rax
 
     /* push the cpu id, 0 representing the bsp and call into c++ */
-    incl %esi
-    push %esi
+    incq %rsi
+    push %rsi
 
     xor %ebp, %ebp
     cld
@@ -404,8 +419,10 @@ apic_ap_start32_2:
     /* We are in identity mapped P0x8000 and the BSP will unload this code
        once all APs are initialized, so call init_ap but return to our
        infinite loop */
-    push $loop
-    ljmp $8, $init_ap
+    movabs $loop, %rax
+    pushq %rax
+    movabs $init_ap, %rax
+    jmp *(%rax)
 
 .align 4
 .global apic_ap_start_size
@@ -427,27 +444,24 @@ ap_cpu_gdt_end:
 ap_cpu_gdtr_initial:
     .2byte ap_cpu_gdt_end - ap_cpu_gdt - 1
     .4byte (ap_cpu_gdt - apic_ap_start) + 0x8000
-ap_cpu_gdtr_initial2:
-    .2byte ap_cpu_gdt_end - ap_cpu_gdt - 1
-    .4byte (ap_cpu_gdt - apic_ap_start) + 0xc0008000
 .global ap_cpu_gdtr
 ap_cpu_gdtr:
-    .4byte 0x0 /* will be set at runtime */
+    .8byte 0x0 /* will be set at runtime */
 .global ap_cpu_idtr
 ap_cpu_idtr:
-    .4byte 0x0 /* will be set at runtime */
+    .8byte 0x0 /* will be set at runtime */
 .global ap_cpu_init_cr0
 ap_cpu_init_cr0:
-    .4byte 0x0 /* will be set at runtime */
+    .8byte 0x0 /* will be set at runtime */
 .global ap_cpu_init_cr3
 ap_cpu_init_cr3:
-    .4byte 0x0 /* will be set at runtime */
+    .8byte 0x0 /* will be set at runtime */
 .global ap_cpu_init_cr4
 ap_cpu_init_cr4:
-    .4byte 0x0 /* will be set at runtime */
+    .8byte 0x0 /* will be set at runtime */
 .global ap_cpu_init_processor_info_array
 ap_cpu_init_processor_info_array:
-    .4byte 0x0 /* will be set at runtime */
+    .8byte 0x0 /* will be set at runtime */
 .global ap_cpu_init_stacks
 ap_cpu_init_stacks:
     /* array of allocated stack pointers */
