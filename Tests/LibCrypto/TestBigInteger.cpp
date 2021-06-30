@@ -443,6 +443,16 @@ TEST_CASE(test_bigint_bitwise_or_different_lengths)
     EXPECT_EQ(result, expected);
 }
 
+TEST_CASE(test_signed_bigint_bitwise_or)
+{
+    auto num1 = "-1234567"_sbigint;
+    auto num2 = "1234567"_sbigint;
+    EXPECT_EQ(num1.bitwise_or(num1), num1);
+    EXPECT_EQ(num1.bitwise_or(num2), num1);
+    EXPECT_EQ(num2.bitwise_or(num1), num1);
+    EXPECT_EQ(num2.bitwise_or(num2), num2);
+}
+
 TEST_CASE(test_bigint_bitwise_and)
 {
     auto num1 = "1234567"_bigint;
@@ -457,6 +467,16 @@ TEST_CASE(test_bigint_bitwise_and_different_lengths)
     EXPECT_EQ(num1.bitwise_and(num2), "1180290"_bigint);
 }
 
+TEST_CASE(test_signed_bigint_bitwise_and)
+{
+    auto num1 = "-1234567"_sbigint;
+    auto num2 = "1234567"_sbigint;
+    EXPECT_EQ(num1.bitwise_and(num1), num1);
+    EXPECT_EQ(num1.bitwise_and(num2), num2);
+    EXPECT_EQ(num2.bitwise_and(num1), num2);
+    EXPECT_EQ(num2.bitwise_and(num2), num2);
+}
+
 TEST_CASE(test_bigint_bitwise_xor)
 {
     auto num1 = "1234567"_bigint;
@@ -469,6 +489,16 @@ TEST_CASE(test_bigint_bitwise_xor_different_lengths)
     auto num1 = "1234567"_bigint;
     auto num2 = "123456789012345678901234567890"_bigint;
     EXPECT_EQ(num1.bitwise_xor(num2), "123456789012345678901233441877"_bigint);
+}
+
+TEST_CASE(test_signed_bigint_bitwise_xor)
+{
+    auto num1 = "-3"_sbigint;
+    auto num2 = "1"_sbigint;
+    EXPECT_EQ(num1.bitwise_xor(num1), "0"_sbigint);
+    EXPECT_EQ(num1.bitwise_xor(num2), "-2"_sbigint);
+    EXPECT_EQ(num2.bitwise_xor(num1), "-2"_sbigint);
+    EXPECT_EQ(num2.bitwise_xor(num2), "0"_sbigint);
 }
 
 TEST_CASE(test_signed_bigint_fibo500)
