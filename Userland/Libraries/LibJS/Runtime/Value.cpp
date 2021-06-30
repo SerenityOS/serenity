@@ -449,7 +449,7 @@ Object* Value::to_object(GlobalObject& global_object) const
     case Type::Double:
         return NumberObject::create(global_object, as_double());
     case Type::String:
-        return StringObject::create(global_object, *m_value.as_string);
+        return StringObject::create(global_object, *m_value.as_string, *global_object.string_prototype());
     case Type::Symbol:
         return SymbolObject::create(global_object, *m_value.as_symbol);
     case Type::BigInt:

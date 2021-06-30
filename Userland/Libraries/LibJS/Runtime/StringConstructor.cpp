@@ -54,16 +54,21 @@ Value StringConstructor::call()
 }
 
 // 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
-Value StringConstructor::construct(FunctionObject&)
+Value StringConstructor::construct(FunctionObject& new_target)
 {
-    PrimitiveString* primitive_string = nullptr;
-    if (!vm().argument_count())
-        primitive_string = js_string(vm(), "");
+    auto& vm = global_object().vm();
+
+    PrimitiveString* primitive_string;
+    if (!vm.argument_count())
+        primitive_string = js_string(vm, "");
     else
-        primitive_string = vm().argument(0).to_primitive_string(global_object());
+        primitive_string = vm.argument(0).to_primitive_string(global_object());
     if (!primitive_string)
         return {};
-    return StringObject::create(global_object(), *primitive_string);
+    auto* prototype = get_prototype_from_constructor(global_object(), new_target, &GlobalObject::string_prototype);
+    if (vm.exception())
+        return {};
+    return StringObject::create(global_object(), *primitive_string, *prototype);
 }
 
 // 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw
