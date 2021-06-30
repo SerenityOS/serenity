@@ -2,7 +2,7 @@ serenity_component(
     TextEditor
     RECOMMENDED
     TARGETS TextEditor
-    DEPENDS ImageDecoder RequestServer WebContent
+    DEPENDS ImageDecoder RequestServer WebContent FileSystemAccessServer
 )
 
 compile_gml(TextEditorWindow.gml TextEditorWindowGML.h text_editor_window_gml)

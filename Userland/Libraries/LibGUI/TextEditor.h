@@ -116,7 +116,8 @@ public:
     TextRange normalized_selection() const { return m_selection.normalized(); }
 
     void insert_at_cursor_or_replace_selection(const StringView&);
-    bool write_to_file(const String& path);
+    bool write_to_file(String const& path);
+    bool write_to_file_and_close(int fd);
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
     size_t number_of_selected_words() const;
