@@ -52,7 +52,8 @@ Device::~Device()
 
 String Device::absolute_path() const
 {
-    return String::formatted("device:{},{} ({})", m_major, m_minor, class_name());
+    // FIXME: Don't assume mount point for DevFs
+    return String::formatted("/dev/{}", device_name());
 }
 
 String Device::absolute_path(const FileDescription&) const
