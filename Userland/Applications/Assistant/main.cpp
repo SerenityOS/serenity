@@ -63,11 +63,16 @@ public:
     }
     void set_subtitle(String text)
     {
+        if (text.is_empty()) {
+            if (m_subtitle)
+                m_subtitle->remove_from_parent();
+            m_subtitle = nullptr;
+            return;
+        }
         if (!m_subtitle) {
             m_subtitle = m_label_container->add<GUI::Label>();
             m_subtitle->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         }
-
         m_subtitle->set_text(move(text));
     }
     void set_is_highlighted(bool value)
