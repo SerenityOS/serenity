@@ -109,6 +109,14 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     iretframe.rdx = regs.rdx;
     iretframe.rcx = regs.rcx;
     iretframe.rax = regs.rax;
+    iretframe.r8 = regs.r8;
+    iretframe.r9 = regs.r9;
+    iretframe.r10 = regs.r10;
+    iretframe.r11 = regs.r11;
+    iretframe.r12 = regs.r12;
+    iretframe.r13 = regs.r13;
+    iretframe.r14 = regs.r14;
+    iretframe.r15 = regs.r15;
     iretframe.rflags = regs.rflags;
     iretframe.rip = regs.rip;
     iretframe.cs = regs.cs;
