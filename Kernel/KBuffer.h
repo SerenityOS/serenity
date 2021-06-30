@@ -64,7 +64,7 @@ public:
         auto new_region = MM.allocate_kernel_region(page_round_up(new_capacity), m_region->name(), m_region->access(), m_allocation_strategy);
         if (!new_region)
             return false;
-        if (m_region && m_size > 0)
+        if (m_size > 0)
             memcpy(new_region->vaddr().as_ptr(), data(), min(m_region->size(), m_size));
         m_region = new_region.release_nonnull();
         return true;
