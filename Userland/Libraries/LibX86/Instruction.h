@@ -278,20 +278,20 @@ enum MMXRegisterIndex {
 class LogicalAddress {
 public:
     LogicalAddress() { }
-    LogicalAddress(u16 selector, u32 offset)
+    LogicalAddress(u16 selector, FlatPtr offset)
         : m_selector(selector)
         , m_offset(offset)
     {
     }
 
     u16 selector() const { return m_selector; }
-    u32 offset() const { return m_offset; }
+    FlatPtr offset() const { return m_offset; }
     void set_selector(u16 selector) { m_selector = selector; }
-    void set_offset(u32 offset) { m_offset = offset; }
+    void set_offset(FlatPtr offset) { m_offset = offset; }
 
 private:
     u16 m_selector { 0 };
-    u32 m_offset { 0 };
+    FlatPtr m_offset { 0 };
 };
 
 class InstructionStream {
