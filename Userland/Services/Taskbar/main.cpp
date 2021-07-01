@@ -60,7 +60,8 @@ int main(int argc, char** argv)
     window->make_window_manager(
         WindowServer::WMEventMask::WindowStateChanges
         | WindowServer::WMEventMask::WindowRemovals
-        | WindowServer::WMEventMask::WindowIconChanges);
+        | WindowServer::WMEventMask::WindowIconChanges
+        | WindowServer::WMEventMask::VirtualDesktopChanges);
 
     return app->exec();
 }
