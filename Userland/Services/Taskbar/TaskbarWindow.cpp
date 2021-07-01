@@ -221,6 +221,7 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
     button->set_text(window.title());
     button->set_tooltip(window.title());
     button->set_checked(show_as_active);
+    button->set_visible(is_window_on_current_virtual_desktop(window));
 }
 
 ::Window* TaskbarWindow::find_window_owner(::Window& window) const
@@ -304,6 +305,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         window.set_active(changed_event.is_active());
         window.set_minimized(changed_event.is_minimized());
         window.set_progress(changed_event.progress());
+        window.set_virtual_desktop(changed_event.virtual_desktop_row(), changed_event.virtual_desktop_column());
 
         auto* window_owner = find_window_owner(window);
         if (window_owner == &window) {
@@ -336,6 +338,10 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
             warnln("failed to spawn 'Assistant' when requested via Super+Space");
         break;
     }
+    case GUI::Event::WM_VirtualDesktopChanged: {
+        auto& changed_event = static_cast<GUI::WMVirtualDesktopChangedEvent&>(event);
+        virtual_desktop_change_event(changed_event.current_row(), changed_event.current_column());
+    }
     default:
         break;
     }
@@ -344,4 +350,20 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
 void TaskbarWindow::screen_rects_change_event(GUI::ScreenRectsChangeEvent& event)
 {
     on_screen_rects_change(event.rects(), event.main_screen_index());
+}
+
+bool TaskbarWindow::is_window_on_current_virtual_desktop(::Window& window) const
+{
+    return window.virtual_desktop_row() == m_current_virtual_desktop_row && window.virtual_desktop_column() == m_current_virtual_desktop_column;
+}
+
+void TaskbarWindow::virtual_desktop_change_event(unsigned current_row, unsigned current_column)
+{
+    m_current_virtual_desktop_row = current_row;
+    m_current_virtual_desktop_column = current_column;
+
+    WindowList::the().for_each_window([&](auto& window) {
+        if (auto* button = window.button())
+            button->set_visible(is_window_on_current_virtual_desktop(window));
+    });
 }

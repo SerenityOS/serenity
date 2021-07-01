@@ -34,6 +34,9 @@ private:
 
     void update_applet_area();
 
+    bool is_window_on_current_virtual_desktop(::Window&) const;
+    void virtual_desktop_change_event(unsigned, unsigned);
+
     NonnullRefPtr<GUI::Menu> m_start_menu;
     RefPtr<GUI::Widget> m_task_button_container;
     RefPtr<Gfx::Bitmap> m_default_icon;
@@ -43,4 +46,7 @@ private:
     RefPtr<GUI::Button> m_start_button;
 
     RefPtr<Desktop::AppFile> m_assistant_app_file;
+
+    unsigned m_current_virtual_desktop_row { 0 };
+    unsigned m_current_virtual_desktop_column { 0 };
 };
