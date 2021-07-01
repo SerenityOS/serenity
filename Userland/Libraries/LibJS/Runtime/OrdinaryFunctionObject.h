@@ -16,9 +16,9 @@ class OrdinaryFunctionObject final : public FunctionObject {
     JS_OBJECT(OrdinaryFunctionObject, FunctionObject);
 
 public:
-    static OrdinaryFunctionObject* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, EnvironmentRecord* parent_scope, FunctionKind, bool is_strict, bool is_arrow_function = false);
+    static OrdinaryFunctionObject* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind, bool is_strict, bool is_arrow_function = false);
 
-    OrdinaryFunctionObject(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, EnvironmentRecord* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool is_arrow_function = false);
+    OrdinaryFunctionObject(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool is_arrow_function = false);
     virtual void initialize(GlobalObject&) override;
     virtual ~OrdinaryFunctionObject();
 
@@ -35,7 +35,7 @@ public:
 
     auto& bytecode_executable() const { return m_bytecode_executable; }
 
-    virtual EnvironmentRecord* environment() override { return m_environment; }
+    virtual Environment* environment() override { return m_environment; }
 
     GlobalObject* realm() const override { return m_realm; }
 
@@ -44,7 +44,7 @@ protected:
 
 private:
     virtual bool is_ordinary_function_object() const override { return true; }
-    virtual FunctionEnvironmentRecord* create_environment_record(FunctionObject&) override;
+    virtual FunctionEnvironment* create_environment(FunctionObject&) override;
     virtual void visit_edges(Visitor&) override;
 
     Value execute_function_body();
@@ -56,7 +56,7 @@ private:
     NonnullRefPtr<Statement> m_body;
     const Vector<FunctionNode::Parameter> m_parameters;
     Optional<Bytecode::Executable> m_bytecode_executable;
-    EnvironmentRecord* m_environment { nullptr };
+    Environment* m_environment { nullptr };
     GlobalObject* m_realm { nullptr };
     i32 m_function_length { 0 };
     FunctionKind m_kind { FunctionKind::Regular };

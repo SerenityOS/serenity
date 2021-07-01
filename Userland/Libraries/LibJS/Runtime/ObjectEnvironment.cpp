@@ -6,24 +6,24 @@
 
 #include <LibJS/AST.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/ObjectEnvironmentRecord.h>
+#include <LibJS/Runtime/ObjectEnvironment.h>
 
 namespace JS {
 
-ObjectEnvironmentRecord::ObjectEnvironmentRecord(Object& binding_object, IsWithEnvironment is_with_environment, EnvironmentRecord* outer_environment)
-    : EnvironmentRecord(outer_environment)
+ObjectEnvironment::ObjectEnvironment(Object& binding_object, IsWithEnvironment is_with_environment, Environment* outer_environment)
+    : Environment(outer_environment)
     , m_binding_object(binding_object)
     , m_with_environment(is_with_environment == IsWithEnvironment::Yes)
 {
 }
 
-void ObjectEnvironmentRecord::visit_edges(Cell::Visitor& visitor)
+void ObjectEnvironment::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(&m_binding_object);
 }
 
-Optional<Variable> ObjectEnvironmentRecord::get_from_environment_record(FlyString const& name) const
+Optional<Variable> ObjectEnvironment::get_from_environment(FlyString const& name) const
 {
     auto value = m_binding_object.get(name);
     if (value.is_empty())
@@ -31,18 +31,18 @@ Optional<Variable> ObjectEnvironmentRecord::get_from_environment_record(FlyStrin
     return Variable { value, DeclarationKind::Var };
 }
 
-void ObjectEnvironmentRecord::put_into_environment_record(FlyString const& name, Variable variable)
+void ObjectEnvironment::put_into_environment(FlyString const& name, Variable variable)
 {
     m_binding_object.put(name, variable.value);
 }
 
-bool ObjectEnvironmentRecord::delete_from_environment_record(FlyString const& name)
+bool ObjectEnvironment::delete_from_environment(FlyString const& name)
 {
     return m_binding_object.delete_property(name);
 }
 
 // 9.1.1.2.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n
-bool ObjectEnvironmentRecord::has_binding(FlyString const& name) const
+bool ObjectEnvironment::has_binding(FlyString const& name) const
 {
     bool found_binding = m_binding_object.has_property(name);
     if (!found_binding)
@@ -54,7 +54,7 @@ bool ObjectEnvironmentRecord::has_binding(FlyString const& name) const
 }
 
 // 9.1.1.2.2 CreateMutableBinding ( N, D ), https://tc39.es/ecma262/#sec-object-environment-records-createmutablebinding-n-d
-void ObjectEnvironmentRecord::create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted)
+void ObjectEnvironment::create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted)
 {
     PropertyAttributes attributes;
     attributes.set_enumerable();
@@ -68,20 +68,20 @@ void ObjectEnvironmentRecord::create_mutable_binding(GlobalObject&, FlyString co
 }
 
 // 9.1.1.2.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-object-environment-records-createimmutablebinding-n-s
-void ObjectEnvironmentRecord::create_immutable_binding(GlobalObject&, FlyString const&, bool)
+void ObjectEnvironment::create_immutable_binding(GlobalObject&, FlyString const&, bool)
 {
     // "The CreateImmutableBinding concrete method of an object Environment Record is never used within this specification."
     VERIFY_NOT_REACHED();
 }
 
 // 9.1.1.2.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v
-void ObjectEnvironmentRecord::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
+void ObjectEnvironment::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
 {
     set_mutable_binding(global_object, name, value, false);
 }
 
 // 9.1.1.2.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s
-void ObjectEnvironmentRecord::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
+void ObjectEnvironment::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
 {
     bool still_exists = m_binding_object.has_property(name);
     if (!still_exists && strict) {
@@ -94,7 +94,7 @@ void ObjectEnvironmentRecord::set_mutable_binding(GlobalObject& global_object, F
 }
 
 // 9.1.1.2.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s
-Value ObjectEnvironmentRecord::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
+Value ObjectEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
 {
     if (!m_binding_object.has_property(name)) {
         if (!strict)
@@ -108,7 +108,7 @@ Value ObjectEnvironmentRecord::get_binding_value(GlobalObject& global_object, Fl
 }
 
 // 9.1.1.2.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n
-bool ObjectEnvironmentRecord::delete_binding(GlobalObject&, FlyString const& name)
+bool ObjectEnvironment::delete_binding(GlobalObject&, FlyString const& name)
 {
     return m_binding_object.delete_property(name);
 }

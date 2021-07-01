@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibJS/Runtime/EnvironmentRecord.h>
+#include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -18,7 +18,7 @@ public:
     enum class BaseType : u8 {
         Unresolvable,
         Value,
-        EnvironmentRecord,
+        Environment,
     };
 
     Reference() { }
@@ -44,9 +44,9 @@ public:
         }
     }
 
-    Reference(EnvironmentRecord& base, FlyString const& referenced_name, bool strict = false)
-        : m_base_type(BaseType::EnvironmentRecord)
-        , m_base_environment_record(&base)
+    Reference(Environment& base, FlyString const& referenced_name, bool strict = false)
+        : m_base_type(BaseType::Environment)
+        , m_base_environment(&base)
         , m_name(referenced_name)
         , m_strict(strict)
     {
@@ -58,10 +58,10 @@ public:
         return m_base_value;
     }
 
-    EnvironmentRecord& base_environment() const
+    Environment& base_environment() const
     {
-        VERIFY(m_base_type == BaseType::EnvironmentRecord);
-        return *m_base_environment_record;
+        VERIFY(m_base_type == BaseType::Environment);
+        return *m_base_environment;
     }
 
     PropertyName const& name() const { return m_name; }
@@ -75,7 +75,7 @@ public:
     {
         if (is_unresolvable())
             return false;
-        if (m_base_type == BaseType::EnvironmentRecord)
+        if (m_base_type == BaseType::Environment)
             return false;
         if (m_base_value.is_boolean() || m_base_value.is_string() || m_base_value.is_symbol() || m_base_value.is_bigint() || m_base_value.is_number() || m_base_value.is_object())
             return true;
@@ -109,7 +109,7 @@ private:
     BaseType m_base_type { BaseType::Unresolvable };
     union {
         Value m_base_value {};
-        EnvironmentRecord* m_base_environment_record;
+        Environment* m_base_environment;
     };
     PropertyName m_name;
     Value m_this_value;

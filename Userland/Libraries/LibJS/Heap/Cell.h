@@ -50,7 +50,7 @@ public:
         virtual ~Visitor() = default;
     };
 
-    virtual bool is_environment_record() const { return false; }
+    virtual bool is_environment() const { return false; }
     virtual void visit_edges(Visitor&) { }
 
     Heap& heap() const;

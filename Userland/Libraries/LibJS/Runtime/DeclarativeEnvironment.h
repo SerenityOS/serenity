@@ -8,7 +8,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
-#include <LibJS/Runtime/EnvironmentRecord.h>
+#include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -21,19 +21,19 @@ struct Binding {
     bool initialized { false };
 };
 
-class DeclarativeEnvironmentRecord : public EnvironmentRecord {
-    JS_ENVIRONMENT_RECORD(DeclarativeEnvironmentRecord, EnvironmentRecord);
+class DeclarativeEnvironment : public Environment {
+    JS_ENVIRONMENT(DeclarativeEnvironment, Environment);
 
 public:
-    DeclarativeEnvironmentRecord();
-    explicit DeclarativeEnvironmentRecord(EnvironmentRecord* parent_scope);
-    DeclarativeEnvironmentRecord(HashMap<FlyString, Variable> variables, EnvironmentRecord* parent_scope);
-    virtual ~DeclarativeEnvironmentRecord() override;
+    DeclarativeEnvironment();
+    explicit DeclarativeEnvironment(Environment* parent_scope);
+    DeclarativeEnvironment(HashMap<FlyString, Variable> variables, Environment* parent_scope);
+    virtual ~DeclarativeEnvironment() override;
 
-    // ^EnvironmentRecord
-    virtual Optional<Variable> get_from_environment_record(FlyString const&) const override;
-    virtual void put_into_environment_record(FlyString const&, Variable) override;
-    virtual bool delete_from_environment_record(FlyString const&) override;
+    // ^Environment
+    virtual Optional<Variable> get_from_environment(FlyString const&) const override;
+    virtual void put_into_environment(FlyString const&, Variable) override;
+    virtual bool delete_from_environment(FlyString const&) override;
 
     HashMap<FlyString, Variable> const& variables() const { return m_variables; }
 
@@ -49,13 +49,13 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
 private:
-    virtual bool is_declarative_environment_record() const override { return true; }
+    virtual bool is_declarative_environment() const override { return true; }
 
     HashMap<FlyString, Variable> m_variables;
     HashMap<FlyString, Binding> m_bindings;
 };
 
 template<>
-inline bool EnvironmentRecord::fast_is<DeclarativeEnvironmentRecord>() const { return is_declarative_environment_record(); }
+inline bool Environment::fast_is<DeclarativeEnvironment>() const { return is_declarative_environment(); }
 
 }

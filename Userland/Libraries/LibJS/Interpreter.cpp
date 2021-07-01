@@ -9,8 +9,8 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/FunctionEnvironmentRecord.h>
-#include <LibJS/Runtime/GlobalEnvironmentRecord.h>
+#include <LibJS/Runtime/FunctionEnvironment.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
@@ -51,8 +51,8 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     execution_context.this_value = &global_object;
     static FlyString global_execution_context_name = "(global execution context)";
     execution_context.function_name = global_execution_context_name;
-    execution_context.lexical_environment = &global_object.environment_record();
-    execution_context.variable_environment = &global_object.environment_record();
+    execution_context.lexical_environment = &global_object.environment();
+    execution_context.variable_environment = &global_object.environment();
     VERIFY(!vm.exception());
     execution_context.is_strict_mode = program.is_strict_mode();
     vm.push_execution_context(execution_context, global_object);
@@ -93,7 +93,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
     if (scope_type == ScopeType::Function) {
         push_scope({ scope_type, scope_node, false });
         for (auto& declaration : scope_node.functions())
-            lexical_environment()->put_into_environment_record(declaration.name(), { js_undefined(), DeclarationKind::Var });
+            lexical_environment()->put_into_environment(declaration.name(), { js_undefined(), DeclarationKind::Var });
         return;
     }
 
@@ -130,16 +130,16 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
         }
     }
 
-    bool pushed_environment_record = false;
+    bool pushed_environment = false;
 
     if (!scope_variables_with_declaration_kind.is_empty()) {
-        auto* environment_record = heap().allocate<DeclarativeEnvironmentRecord>(global_object, move(scope_variables_with_declaration_kind), lexical_environment());
-        vm().running_execution_context().lexical_environment = environment_record;
-        vm().running_execution_context().variable_environment = environment_record;
-        pushed_environment_record = true;
+        auto* environment = heap().allocate<DeclarativeEnvironment>(global_object, move(scope_variables_with_declaration_kind), lexical_environment());
+        vm().running_execution_context().lexical_environment = environment;
+        vm().running_execution_context().variable_environment = environment;
+        pushed_environment = true;
     }
 
-    push_scope({ scope_type, scope_node, pushed_environment_record });
+    push_scope({ scope_type, scope_node, pushed_environment });
 }
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
@@ -198,9 +198,9 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
     return last_value;
 }
 
-FunctionEnvironmentRecord* Interpreter::current_function_environment_record()
+FunctionEnvironment* Interpreter::current_function_environment()
 {
-    return verify_cast<FunctionEnvironmentRecord>(vm().running_execution_context().lexical_environment);
+    return verify_cast<FunctionEnvironment>(vm().running_execution_context().lexical_environment);
 }
 
 }

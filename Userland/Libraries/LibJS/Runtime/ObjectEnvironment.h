@@ -6,23 +6,23 @@
 
 #pragma once
 
-#include <LibJS/Runtime/EnvironmentRecord.h>
+#include <LibJS/Runtime/Environment.h>
 
 namespace JS {
 
-class ObjectEnvironmentRecord : public EnvironmentRecord {
-    JS_ENVIRONMENT_RECORD(ObjectEnvironmentRecord, EnvironmentRecord);
+class ObjectEnvironment : public Environment {
+    JS_ENVIRONMENT(ObjectEnvironment, Environment);
 
 public:
     enum class IsWithEnvironment {
         No,
         Yes,
     };
-    ObjectEnvironmentRecord(Object& binding_object, IsWithEnvironment, EnvironmentRecord* outer_environment);
+    ObjectEnvironment(Object& binding_object, IsWithEnvironment, Environment* outer_environment);
 
-    virtual Optional<Variable> get_from_environment_record(FlyString const&) const override;
-    virtual void put_into_environment_record(FlyString const&, Variable) override;
-    virtual bool delete_from_environment_record(FlyString const&) override;
+    virtual Optional<Variable> get_from_environment(FlyString const&) const override;
+    virtual void put_into_environment(FlyString const&, Variable) override;
+    virtual bool delete_from_environment(FlyString const&) override;
 
     virtual bool has_binding(FlyString const& name) const override;
     virtual void create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted) override;

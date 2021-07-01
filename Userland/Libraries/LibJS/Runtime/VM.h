@@ -49,8 +49,8 @@ struct ExecutionContext {
     Value this_value;
     Vector<Value> arguments;
     Object* arguments_object { nullptr };
-    EnvironmentRecord* lexical_environment { nullptr };
-    EnvironmentRecord* variable_environment { nullptr };
+    Environment* lexical_environment { nullptr };
+    Environment* variable_environment { nullptr };
     bool is_strict_mode { false };
 };
 
@@ -73,7 +73,7 @@ public:
     void clear_exception() { m_exception = nullptr; }
 
     void dump_backtrace() const;
-    void dump_environment_record_chain() const;
+    void dump_environment_chain() const;
 
     class InterpreterExecutionScope {
     public:
@@ -123,11 +123,11 @@ public:
     Vector<ExecutionContext*> const& execution_context_stack() const { return m_execution_context_stack; }
     Vector<ExecutionContext*>& execution_context_stack() { return m_execution_context_stack; }
 
-    EnvironmentRecord const* lexical_environment() const { return running_execution_context().lexical_environment; }
-    EnvironmentRecord* lexical_environment() { return running_execution_context().lexical_environment; }
+    Environment const* lexical_environment() const { return running_execution_context().lexical_environment; }
+    Environment* lexical_environment() { return running_execution_context().lexical_environment; }
 
-    EnvironmentRecord const* variable_environment() const { return running_execution_context().variable_environment; }
-    EnvironmentRecord* variable_environment() { return running_execution_context().variable_environment; }
+    Environment const* variable_environment() const { return running_execution_context().variable_environment; }
+    Environment* variable_environment() { return running_execution_context().variable_environment; }
 
     bool in_strict_mode() const;
 
@@ -198,13 +198,13 @@ public:
     FlyString unwind_until_label() const { return m_unwind_until_label; }
 
     Value get_variable(const FlyString& name, GlobalObject&);
-    void set_variable(const FlyString& name, Value, GlobalObject&, bool first_assignment = false, EnvironmentRecord* specific_scope = nullptr);
+    void set_variable(const FlyString& name, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
     bool delete_variable(FlyString const& name);
-    void assign(const Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>& target, Value, GlobalObject&, bool first_assignment = false, EnvironmentRecord* specific_scope = nullptr);
-    void assign(const FlyString& target, Value, GlobalObject&, bool first_assignment = false, EnvironmentRecord* specific_scope = nullptr);
-    void assign(const NonnullRefPtr<BindingPattern>& target, Value, GlobalObject&, bool first_assignment = false, EnvironmentRecord* specific_scope = nullptr);
+    void assign(const Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
+    void assign(const FlyString& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
+    void assign(const NonnullRefPtr<BindingPattern>& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
 
-    Reference resolve_binding(GlobalObject&, FlyString const&, EnvironmentRecord* = nullptr);
+    Reference resolve_binding(GlobalObject&, FlyString const&, Environment* = nullptr);
 
     template<typename T, typename... Args>
     void throw_exception(GlobalObject& global_object, Args&&... args)

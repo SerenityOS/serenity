@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
+#include <LibJS/Runtime/DeclarativeEnvironment.h>
 
 namespace JS {
 
-class FunctionEnvironmentRecord final : public DeclarativeEnvironmentRecord {
-    JS_ENVIRONMENT_RECORD(FunctionEnvironmentRecord, DeclarativeEnvironmentRecord);
+class FunctionEnvironment final : public DeclarativeEnvironment {
+    JS_ENVIRONMENT(FunctionEnvironment, DeclarativeEnvironment);
 
 public:
     enum class ThisBindingStatus : u8 {
@@ -20,8 +20,8 @@ public:
         Uninitialized,
     };
 
-    FunctionEnvironmentRecord(EnvironmentRecord* parent_scope, HashMap<FlyString, Variable> variables);
-    virtual ~FunctionEnvironmentRecord() override;
+    FunctionEnvironment(Environment* parent_scope, HashMap<FlyString, Variable> variables);
+    virtual ~FunctionEnvironment() override;
 
     // [[ThisValue]]
     Value this_value() const { return m_this_value; }
@@ -51,7 +51,7 @@ public:
     Value bind_this_value(GlobalObject&, Value);
 
 private:
-    virtual bool is_function_environment_record() const override { return true; }
+    virtual bool is_function_environment() const override { return true; }
     virtual void visit_edges(Visitor&) override;
 
     Value m_this_value;
@@ -61,6 +61,6 @@ private:
 };
 
 template<>
-inline bool EnvironmentRecord::fast_is<FunctionEnvironmentRecord>() const { return is_function_environment_record(); }
+inline bool Environment::fast_is<FunctionEnvironment>() const { return is_function_environment(); }
 
 }

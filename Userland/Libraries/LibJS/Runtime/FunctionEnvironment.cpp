@@ -5,22 +5,22 @@
  */
 
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/FunctionEnvironmentRecord.h>
+#include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
-FunctionEnvironmentRecord::FunctionEnvironmentRecord(EnvironmentRecord* parent_scope, HashMap<FlyString, Variable> variables)
-    : DeclarativeEnvironmentRecord(variables, parent_scope)
+FunctionEnvironment::FunctionEnvironment(Environment* parent_scope, HashMap<FlyString, Variable> variables)
+    : DeclarativeEnvironment(variables, parent_scope)
 {
 }
 
-FunctionEnvironmentRecord::~FunctionEnvironmentRecord()
+FunctionEnvironment::~FunctionEnvironment()
 {
 }
 
-void FunctionEnvironmentRecord::visit_edges(Visitor& visitor)
+void FunctionEnvironment::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_this_value);
@@ -29,7 +29,7 @@ void FunctionEnvironmentRecord::visit_edges(Visitor& visitor)
 }
 
 // 9.1.1.3.5 GetSuperBase ( ), https://tc39.es/ecma262/#sec-getsuperbase
-Value FunctionEnvironmentRecord::get_super_base() const
+Value FunctionEnvironment::get_super_base() const
 {
     VERIFY(m_function_object);
     auto home_object = m_function_object->home_object();
@@ -39,7 +39,7 @@ Value FunctionEnvironmentRecord::get_super_base() const
 }
 
 // 9.1.1.3.2 HasThisBinding ( ), https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding
-bool FunctionEnvironmentRecord::has_this_binding() const
+bool FunctionEnvironment::has_this_binding() const
 {
     if (this_binding_status() == ThisBindingStatus::Lexical)
         return false;
@@ -47,7 +47,7 @@ bool FunctionEnvironmentRecord::has_this_binding() const
 }
 
 // 9.1.1.3.3 HasSuperBinding ( ), https://tc39.es/ecma262/#sec-function-environment-records-hassuperbinding
-bool FunctionEnvironmentRecord::has_super_binding() const
+bool FunctionEnvironment::has_super_binding() const
 {
     if (this_binding_status() == ThisBindingStatus::Lexical)
         return false;
@@ -57,7 +57,7 @@ bool FunctionEnvironmentRecord::has_super_binding() const
 }
 
 // 9.1.1.3.4 GetThisBinding ( ), https://tc39.es/ecma262/#sec-function-environment-records-getthisbinding
-Value FunctionEnvironmentRecord::get_this_binding(GlobalObject& global_object) const
+Value FunctionEnvironment::get_this_binding(GlobalObject& global_object) const
 {
     VERIFY(has_this_binding());
     if (this_binding_status() == ThisBindingStatus::Uninitialized) {
@@ -68,7 +68,7 @@ Value FunctionEnvironmentRecord::get_this_binding(GlobalObject& global_object) c
 }
 
 // 9.1.1.3.1 BindThisValue ( V ), https://tc39.es/ecma262/#sec-bindthisvalue
-Value FunctionEnvironmentRecord::bind_this_value(GlobalObject& global_object, Value this_value)
+Value FunctionEnvironment::bind_this_value(GlobalObject& global_object, Value this_value)
 {
     VERIFY(this_binding_status() != ThisBindingStatus::Lexical);
     if (this_binding_status() == ThisBindingStatus::Initialized) {

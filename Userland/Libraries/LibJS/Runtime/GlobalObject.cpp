@@ -40,7 +40,7 @@
 #include <LibJS/Runtime/GeneratorFunctionConstructor.h>
 #include <LibJS/Runtime/GeneratorFunctionPrototype.h>
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
-#include <LibJS/Runtime/GlobalEnvironmentRecord.h>
+#include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
@@ -99,7 +99,7 @@ void GlobalObject::initialize_global_object()
     m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(*this);
     m_function_prototype = heap().allocate_without_global_object<FunctionPrototype>(*this);
 
-    m_environment_record = heap().allocate<GlobalEnvironmentRecord>(*this, *this);
+    m_environment = heap().allocate<GlobalEnvironment>(*this, *this);
 
     m_new_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
     m_new_object_shape->set_prototype_without_transition(m_object_prototype);
@@ -225,7 +225,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_new_ordinary_function_prototype_object_shape);
     visitor.visit(m_proxy_constructor);
     visitor.visit(m_generator_object_prototype);
-    visitor.visit(m_environment_record);
+    visitor.visit(m_environment);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     visitor.visit(m_##snake_name##_constructor);                                         \

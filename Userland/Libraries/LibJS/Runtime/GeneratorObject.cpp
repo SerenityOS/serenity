@@ -13,7 +13,7 @@
 
 namespace JS {
 
-GeneratorObject* GeneratorObject::create(GlobalObject& global_object, Value initial_value, OrdinaryFunctionObject* generating_function, EnvironmentRecord* generating_scope, Bytecode::RegisterWindow frame)
+GeneratorObject* GeneratorObject::create(GlobalObject& global_object, Value initial_value, OrdinaryFunctionObject* generating_function, Environment* generating_scope, Bytecode::RegisterWindow frame)
 {
     // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
     auto generating_function_proto_property = generating_function->get(global_object.vm().names.prototype).to_object(global_object);
@@ -22,7 +22,7 @@ GeneratorObject* GeneratorObject::create(GlobalObject& global_object, Value init
 
     auto object = global_object.heap().allocate<GeneratorObject>(global_object, global_object, *generating_function_proto_property);
     object->m_generating_function = generating_function;
-    object->m_environment_record = generating_scope;
+    object->m_environment = generating_scope;
     object->m_frame = move(frame);
     object->m_previous_value = initial_value;
     return object;
@@ -44,7 +44,7 @@ GeneratorObject::~GeneratorObject()
 void GeneratorObject::visit_edges(Cell::Visitor& visitor)
 {
     Object::visit_edges(visitor);
-    visitor.visit(m_environment_record);
+    visitor.visit(m_environment);
     visitor.visit(m_generating_function);
     if (m_previous_value.is_object())
         visitor.visit(&m_previous_value.as_object());
@@ -107,7 +107,7 @@ Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<V
     }
 
     // Temporarily switch to the captured environment record
-    TemporaryChange change { vm.running_execution_context().lexical_environment, m_environment_record };
+    TemporaryChange change { vm.running_execution_context().lexical_environment, m_environment };
 
     m_previous_value = bytecode_interpreter->run(*m_generating_function->bytecode_executable(), next_block);
 
