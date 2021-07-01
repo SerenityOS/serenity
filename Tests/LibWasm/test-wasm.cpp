@@ -254,7 +254,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
 
     auto result = WebAssemblyModule::machine().invoke(function_address, arguments);
     if (result.is_trap()) {
-        vm.throw_exception<JS::TypeError>(global_object, "Execution trapped");
+        vm.throw_exception<JS::TypeError>(global_object, String::formatted("Execution trapped: {}", result.trap().reason));
         return {};
     }
 

@@ -14,8 +14,9 @@ namespace Wasm {
 struct BytecodeInterpreter : public Interpreter {
     virtual void interpret(Configuration&) override;
     virtual ~BytecodeInterpreter() override = default;
-    virtual bool did_trap() const override { return m_do_trap; }
-    virtual void clear_trap() override { m_do_trap = false; }
+    virtual bool did_trap() const override { return m_trap.has_value(); }
+    virtual String trap_reason() const override { return m_trap.value().reason; }
+    virtual void clear_trap() override { m_trap.clear(); }
 
     struct CallFrameHandle {
         explicit CallFrameHandle(BytecodeInterpreter& interpreter, Configuration& configuration)
@@ -48,13 +49,14 @@ protected:
     T read_value(ReadonlyBytes data);
 
     Vector<Value> pop_values(Configuration& configuration, size_t count);
-    bool trap_if_not(bool value)
+    bool trap_if_not(bool value, String reason)
     {
         if (!value)
-            m_do_trap = true;
-        return m_do_trap;
+            m_trap = Trap { move(reason) };
+        return m_trap.has_value();
     }
-    bool m_do_trap { false };
+
+    Optional<Trap> m_trap;
 };
 
 struct DebuggerBytecodeInterpreter : public BytecodeInterpreter {

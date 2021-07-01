@@ -193,28 +193,29 @@ private:
 };
 
 struct Trap {
-    // Empty value type
+    String reason;
 };
 
 class Result {
 public:
     explicit Result(Vector<Value> values)
-        : m_values(move(values))
+        : m_result(move(values))
     {
     }
 
-    Result(Trap)
-        : m_is_trap(true)
+    Result(Trap trap)
+        : m_result(move(trap))
     {
     }
 
-    auto& values() const { return m_values; }
-    auto& values() { return m_values; }
-    auto is_trap() const { return m_is_trap; }
+    auto is_trap() const { return m_result.has<Trap>(); }
+    auto& values() const { return m_result.get<Vector<Value>>(); }
+    auto& values() { return m_result.get<Vector<Value>>(); }
+    auto& trap() const { return m_result.get<Trap>(); }
+    auto& trap() { return m_result.get<Trap>(); }
 
 private:
-    Vector<Value> m_values;
-    bool m_is_trap { false };
+    Variant<Vector<Value>, Trap> m_result;
 };
 
 using ExternValue = Variant<FunctionAddress, TableAddress, MemoryAddress, GlobalAddress>;

@@ -136,7 +136,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
             });
             auto result = config.execute(interpreter);
             if (result.is_trap())
-                instantiation_result = InstantiationError { "Global value construction trapped" };
+                instantiation_result = InstantiationError { String::formatted("Global value construction trapped: {}", result.trap().reason) };
             else
                 global_values.append(result.values().first());
         }
@@ -161,7 +161,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                 });
                 auto result = config.execute(interpreter);
                 if (result.is_trap()) {
-                    instantiation_result = InstantiationError { "Element construction trapped" };
+                    instantiation_result = InstantiationError { String::formatted("Element construction trapped: {}", result.trap().reason) };
                     return IterationDecision::Continue;
                 }
 
@@ -212,7 +212,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
             });
             auto result = config.execute(interpreter);
             if (result.is_trap()) {
-                instantiation_result = InstantiationError { "Element section initialisation trapped" };
+                instantiation_result = InstantiationError { String::formatted("Element section initialisation trapped: {}", result.trap().reason) };
                 return IterationDecision::Break;
             }
             auto d = result.values().first().to<i32>();
@@ -270,7 +270,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                     });
                     auto result = config.execute(interpreter);
                     if (result.is_trap()) {
-                        instantiation_result = InstantiationError { "Data section initialisation trapped" };
+                        instantiation_result = InstantiationError { String::formatted("Data section initialisation trapped: {}", result.trap().reason) };
                         return;
                     }
                     size_t offset = 0;

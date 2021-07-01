@@ -35,10 +35,10 @@ static bool post_interpret_hook(Wasm::Configuration&, Wasm::InstructionPointer& 
 {
     if (interpreter.did_trap()) {
         g_continue = false;
-        const_cast<Wasm::Interpreter&>(interpreter).clear_trap();
         warnln("Trapped when executing ip={}", ip);
         g_printer.print(instr);
-        warnln("");
+        warnln("Trap reason: {}", interpreter.trap_reason());
+        const_cast<Wasm::Interpreter&>(interpreter).clear_trap();
     }
     return true;
 }
@@ -206,7 +206,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
                 result = config.call(g_interpreter, *address, move(values));
             }
             if (result.is_trap())
-                warnln("Execution trapped!");
+                warnln("Execution trapped: {}", result.trap().reason);
             if (!result.values().is_empty())
                 warnln("Returned:");
             for (auto& value : result.values()) {
