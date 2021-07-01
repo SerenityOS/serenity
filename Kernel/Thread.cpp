@@ -459,8 +459,12 @@ void Thread::finalize_dying_threads()
         });
     }
     for (auto* thread : dying_threads) {
+        RefPtr<Process> process = thread->process();
+        dbgln_if(PROCESS_DEBUG, "Before finalization, {} has {} refs and its process has {}",
+            *thread, thread->ref_count(), thread->process().ref_count());
         thread->finalize();
-
+        dbgln_if(PROCESS_DEBUG, "After finalization, {} has {} refs and its process has {}",
+            *thread, thread->ref_count(), thread->process().ref_count());
         // This thread will never execute again, drop the running reference
         // NOTE: This may not necessarily drop the last reference if anything
         //       else is still holding onto this thread!
