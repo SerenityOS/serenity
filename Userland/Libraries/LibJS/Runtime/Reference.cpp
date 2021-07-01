@@ -60,7 +60,15 @@ void Reference::put_value(GlobalObject& global_object, Value value)
         return;
     }
 
-    m_base_environment->put_into_environment(m_name.as_string(), variable);
+    bool succeeded = m_base_environment->put_into_environment(m_name.as_string(), variable);
+    if (vm.exception())
+        return;
+
+    if (!succeeded && m_strict) {
+        // FIXME: This is a hack and will disappear when we support proper variable bindings.
+        vm.throw_exception<TypeError>(global_object, ErrorType::DescWriteNonWritable, m_name.to_value(vm).to_string_without_side_effects());
+        return;
+    }
 }
 
 void Reference::throw_reference_error(GlobalObject& global_object)
