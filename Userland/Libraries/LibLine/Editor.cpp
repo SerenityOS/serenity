@@ -252,7 +252,7 @@ bool Editor::load_history(const String& path)
     auto data = history_file->read_all();
     auto hist = StringView { data.data(), data.size() };
     for (auto& str : hist.split_view("\n\n")) {
-        auto it = str.find_first_of("::").value_or(0);
+        auto it = str.find("::").value_or(0);
         auto time = str.substring_view(0, it).to_uint<time_t>().value_or(0);
         auto string = str.substring_view(it == 0 ? it : it + 2);
         m_history.append({ string, time });

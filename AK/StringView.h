@@ -93,8 +93,8 @@ public:
 
     [[nodiscard]] Vector<size_t> find_all(StringView const& needle) const { return StringUtils::find_all(*this, needle); }
 
-    [[nodiscard]] Optional<size_t> find_first_of(StringView const&) const;
-    [[nodiscard]] Optional<size_t> find_last_of(StringView const&) const;
+    using SearchDirection = StringUtils::SearchDirection;
+    [[nodiscard]] Optional<size_t> find_any_of(StringView const& needles, SearchDirection direction = SearchDirection::Forward) { return StringUtils::find_any_of(*this, needles, direction); }
 
     [[nodiscard]] constexpr StringView substring_view(size_t start, size_t length) const
     {
