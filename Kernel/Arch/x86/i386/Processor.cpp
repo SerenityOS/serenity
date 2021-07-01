@@ -60,7 +60,6 @@ asm(
 
 String Processor::platform_string() const
 {
-    // FIXME: other platforms
     return "i386";
 }
 
