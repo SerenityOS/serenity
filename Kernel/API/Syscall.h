@@ -352,10 +352,16 @@ struct SC_create_thread_params {
     // a call to pthread_attr_getguardsize() specifying attr shall store in the guardsize
     // parameter the guard size specified by the previous pthread_attr_setguardsize() function call"
     // ... ok, if you say so posix. Guess we get to lie to people about guard page size
-    unsigned int m_guard_page_size = 0;          // Rounded up to PAGE_SIZE
-    unsigned int m_reported_guard_page_size = 0; // The lie we tell callers
-    unsigned int m_stack_size = 4 * MiB;         // Default PTHREAD_STACK_MIN
-    void* m_stack_location;                      // nullptr means any, o.w. process virtual address
+    unsigned int guard_page_size = 0;          // Rounded up to PAGE_SIZE
+    unsigned int reported_guard_page_size = 0; // The lie we tell callers
+    unsigned int stack_size = 4 * MiB;         // Default PTHREAD_STACK_MIN
+    void* stack_location;                      // nullptr means any, o.w. process virtual address
+#    if ARCH(X86_64)
+    FlatPtr rdi;
+    FlatPtr rsi;
+    FlatPtr rcx;
+    FlatPtr rdx;
+#    endif
 };
 
 struct SC_realpath_params {
