@@ -68,10 +68,10 @@ Result Configuration::execute(Interpreter& interpreter)
 {
     interpreter.interpret(*this);
     if (interpreter.did_trap())
-        return Trap {};
+        return Trap { interpreter.trap_reason() };
 
     if (stack().size() <= frame().arity() + 1)
-        return Trap {};
+        return Trap { "Not enough values to return from call" };
 
     Vector<Value> results;
     results.ensure_capacity(frame().arity());
@@ -80,7 +80,7 @@ Result Configuration::execute(Interpreter& interpreter)
     auto label = stack().pop();
     // ASSERT: label == current frame
     if (!label.has<Label>())
-        return Trap {};
+        return Trap { "Invalid stack configuration" };
     return Result { move(results) };
 }
 

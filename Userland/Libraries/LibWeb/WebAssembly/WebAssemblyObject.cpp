@@ -432,7 +432,7 @@ JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String
             auto result = WebAssemblyObject::s_abstract_machine.invoke(address, move(values));
             // FIXME: Use the convoluted mapping of errors defined in the spec.
             if (result.is_trap()) {
-                vm.throw_exception<JS::TypeError>(global_object, "Wasm execution trapped (WIP)");
+                vm.throw_exception<JS::TypeError>(global_object, String::formatted("Wasm execution trapped (WIP): {}", result.trap().reason));
                 return {};
             }
 
