@@ -1204,4 +1204,5 @@ String Window::computed_title() const
         return String::formatted("{} (Not responding)", title);
     return title;
 }
+
 }

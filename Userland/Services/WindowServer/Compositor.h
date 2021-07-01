@@ -112,7 +112,9 @@ public:
     }
 
     bool is_switching_window_stacks() const { return m_transitioning_to_window_stack != nullptr; }
-    void switch_to_window_stack(WindowStack&);
+    void switch_to_window_stack(WindowStack&, bool);
+    void set_current_window_stack_no_transition(WindowStack&);
+    void invalidate_for_window_stack_merge_or_change();
 
     void did_construct_window_manager(Badge<WindowManager>);
 
@@ -142,6 +144,8 @@ private:
     Gfx::IntPoint window_transition_offset(Window&);
     void update_animations(Screen&, Gfx::DisjointRectSet& flush_rects);
     void create_window_stack_switch_overlay(WindowStack&);
+    void remove_window_stack_switch_overlays();
+    void stop_window_stack_switch_overlay_timer();
     void start_window_stack_switch_overlay_timer();
     void finish_window_stack_switch();
 
@@ -227,7 +231,6 @@ private:
     WindowStack* m_current_window_stack { nullptr };
     WindowStack* m_transitioning_to_window_stack { nullptr };
     RefPtr<Animation> m_window_stack_transition_animation;
-    OwnPtr<WindowStackSwitchOverlay> m_stack_switch_overlay;
     RefPtr<Core::Timer> m_stack_switch_overlay_timer;
 
     size_t m_show_screen_number_count { 0 };

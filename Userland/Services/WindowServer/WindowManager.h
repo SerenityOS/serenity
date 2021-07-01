@@ -60,6 +60,13 @@ class WindowManager : public Core::Object {
     friend class WindowSwitcher;
 
 public:
+    static constexpr size_t default_window_stack_rows = 2;
+    static constexpr size_t default_window_stack_columns = 2;
+    static_assert(default_window_stack_rows >= 1);
+    static_assert(default_window_stack_columns >= 1);
+    static constexpr unsigned max_window_stack_rows = 16;
+    static constexpr unsigned max_window_stack_columns = 16;
+
     static WindowManager& the();
 
     explicit WindowManager(Gfx::PaletteImpl const&);
@@ -173,9 +180,11 @@ public:
     void tell_wms_window_state_changed(Window&);
     void tell_wms_window_icon_changed(Window&);
     void tell_wms_window_rect_changed(Window&);
+    void tell_wms_screen_rects_changed();
     void tell_wms_applet_area_size_changed(Gfx::IntSize const&);
     void tell_wms_super_key_pressed();
     void tell_wms_super_space_key_pressed();
+    void tell_wms_current_window_stack_changed();
 
     bool is_active_window_or_accessory(Window&) const;
 
@@ -251,10 +260,12 @@ public:
     void reevaluate_hovered_window(Window* = nullptr);
     Window* hovered_window() const { return m_hovered_window.ptr(); }
 
-    void switch_to_window_stack(WindowStack&, Window* = nullptr);
+    void switch_to_window_stack(WindowStack&, Window* = nullptr, bool show_overlay = true);
 
     size_t window_stack_rows() const { return m_window_stacks.size(); }
     size_t window_stack_columns() const { return m_window_stacks[0].size(); }
+
+    bool apply_virtual_desktop_settings(unsigned rows, unsigned columns, bool save);
 
     WindowStack& current_window_stack()
     {
@@ -324,6 +335,7 @@ private:
     void tell_wm_about_window(WMClientConnection& conn, Window&);
     void tell_wm_about_window_icon(WMClientConnection& conn, Window&);
     void tell_wm_about_window_rect(WMClientConnection& conn, Window&);
+    void tell_wm_about_current_window_stack(WMClientConnection&);
     bool pick_new_active_window(Window*);
 
     void do_move_to_front(Window&, bool, bool);
@@ -350,7 +362,7 @@ private:
     RefPtr<MultiScaleBitmaps> m_overlay_rect_shadow;
 
     // Setup 2 rows 1 column by default
-    NonnullOwnPtrVector<NonnullOwnPtrVector<WindowStack, 3>, 2> m_window_stacks;
+    NonnullOwnPtrVector<NonnullOwnPtrVector<WindowStack, default_window_stack_columns>, default_window_stack_rows> m_window_stacks;
     WindowStack* m_current_window_stack { nullptr };
 
     struct DoubleClickInfo {

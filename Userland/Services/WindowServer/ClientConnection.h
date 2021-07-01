@@ -42,7 +42,7 @@ public:
     static ClientConnection* from_client_id(int client_id);
     static void for_each_client(Function<void(ClientConnection&)>);
 
-    void notify_about_new_screen_rects(const Vector<Gfx::IntRect, 4>&, size_t);
+    void notify_about_new_screen_rects();
     void post_paint_message(Window&, bool ignore_occlusion = false);
 
     Menu* find_menu_by_id(int menu_id)
@@ -130,6 +130,8 @@ private:
     virtual Messages::WindowServer::SetScreenLayoutResponse set_screen_layout(ScreenLayout const&, bool) override;
     virtual Messages::WindowServer::GetScreenLayoutResponse get_screen_layout() override;
     virtual Messages::WindowServer::SaveScreenLayoutResponse save_screen_layout() override;
+    virtual Messages::WindowServer::ApplyVirtualDesktopSettingsResponse apply_virtual_desktop_settings(u32, u32, bool) override;
+    virtual Messages::WindowServer::GetVirtualDesktopSettingsResponse get_virtual_desktop_settings() override;
     virtual void show_screen_numbers(bool) override;
     virtual void set_window_cursor(i32, i32) override;
     virtual void set_window_custom_cursor(i32, Gfx::ShareableBitmap const&) override;

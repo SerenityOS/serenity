@@ -25,7 +25,7 @@ Desktop::Desktop()
 {
 }
 
-void Desktop::did_receive_screen_rects(Badge<WindowServerConnection>, const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index)
+void Desktop::did_receive_screen_rects(Badge<WindowServerConnection>, const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index, unsigned virtual_desktop_rows, unsigned virtual_desktop_columns)
 {
     m_main_screen_index = main_screen_index;
     m_rects = rects;
@@ -36,6 +36,9 @@ void Desktop::did_receive_screen_rects(Badge<WindowServerConnection>, const Vect
     } else {
         m_bounding_rect = {};
     }
+
+    m_virtual_desktop_rows = virtual_desktop_rows;
+    m_virtual_desktop_columns = virtual_desktop_columns;
 }
 
 void Desktop::set_background_color(const StringView& background_color)

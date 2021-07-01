@@ -26,6 +26,13 @@ void WindowStack::add(Window& window)
     window.set_outer_stack({}, this);
 }
 
+void WindowStack::add_to_back(Window& window)
+{
+    VERIFY(window.outer_stack() == nullptr);
+    m_windows.prepend(window);
+    window.set_outer_stack({}, this);
+}
+
 void WindowStack::remove(Window& window)
 {
     VERIFY(window.outer_stack() == this);
@@ -45,6 +52,27 @@ void WindowStack::move_to_front(Window& window)
         window.invalidate();
     m_windows.remove(window);
     m_windows.append(window);
+}
+
+void WindowStack::move_all_windows(WindowStack& new_window_stack, Vector<Window*, 32>& windows_moved, MoveAllWindowsTo move_to)
+{
+    VERIFY(this != &new_window_stack);
+    if (move_to == MoveAllWindowsTo::Front) {
+        while (auto* window = m_windows.take_first()) {
+            window->set_outer_stack({}, nullptr);
+            new_window_stack.add(*window);
+            windows_moved.append(window);
+        }
+    } else {
+        while (auto* window = m_windows.take_last()) {
+            window->set_outer_stack({}, nullptr);
+            new_window_stack.add_to_back(*window);
+            windows_moved.append(window);
+        }
+    }
+    m_active_window = nullptr;
+    m_active_input_window = nullptr;
+    m_active_input_tracking_window = nullptr;
 }
 
 Window* WindowStack::window_at(Gfx::IntPoint const& position, IncludeWindowFrame include_window_frame) const

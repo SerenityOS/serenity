@@ -53,7 +53,8 @@ ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socke
         s_connections = new HashMap<int, NonnullRefPtr<ClientConnection>>;
     s_connections->set(client_id, *this);
 
-    async_fast_greet(Screen::rects(), Screen::main().index(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query());
+    auto& wm = WindowManager::the();
+    async_fast_greet(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query());
 }
 
 ClientConnection::~ClientConnection()
@@ -84,9 +85,10 @@ void ClientConnection::die()
     });
 }
 
-void ClientConnection::notify_about_new_screen_rects(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index)
+void ClientConnection::notify_about_new_screen_rects()
 {
-    async_screen_rects_changed(rects, main_screen_index);
+    auto& wm = WindowManager::the();
+    async_screen_rects_changed(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns());
 }
 
 void ClientConnection::create_menubar(i32 menubar_id)
@@ -321,6 +323,20 @@ Messages::WindowServer::SaveScreenLayoutResponse ClientConnection::save_screen_l
     String error_msg;
     bool success = WindowManager::the().save_screen_layout(error_msg);
     return { success, move(error_msg) };
+}
+
+Messages::WindowServer::ApplyVirtualDesktopSettingsResponse ClientConnection::apply_virtual_desktop_settings(u32 rows, u32 columns, bool save)
+{
+    if (rows == 0 || columns == 0 || rows > WindowManager::max_window_stack_rows || columns > WindowManager::max_window_stack_columns)
+        return { false };
+
+    return { WindowManager::the().apply_virtual_desktop_settings(rows, columns, save) };
+}
+
+Messages::WindowServer::GetVirtualDesktopSettingsResponse ClientConnection::get_virtual_desktop_settings()
+{
+    auto& wm = WindowManager::the();
+    return { (unsigned)wm.window_stack_rows(), (unsigned)wm.window_stack_columns(), WindowManager::max_window_stack_rows, WindowManager::max_window_stack_columns };
 }
 
 void ClientConnection::show_screen_numbers(bool show)
