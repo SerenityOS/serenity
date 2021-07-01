@@ -478,7 +478,7 @@ public:
                         attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch;
                     } else if (ch == '~') {
                         consume_one();
-                        attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::Contains;
+                        attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ContainsWord;
                     }
                     attribute_name = String::copy(buffer);
                     buffer.clear();
