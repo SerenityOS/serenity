@@ -238,33 +238,6 @@ bool StringView::operator==(const String& string) const
     return !__builtin_memcmp(m_characters, string.characters(), m_length);
 }
 
-Optional<size_t> StringView::find_first_of(const StringView& view) const
-{
-    if (const auto location = AK::find_if(begin(), end(),
-            [&](const auto c) {
-                return any_of(view.begin(), view.end(),
-                    [&](const auto view_char) {
-                        return c == view_char;
-                    });
-            });
-        location != end()) {
-        return location.index();
-    }
-    return {};
-}
-
-Optional<size_t> StringView::find_last_of(const StringView& view) const
-{
-    for (size_t pos = m_length; pos != 0; --pos) {
-        char c = m_characters[pos - 1];
-        for (char view_char : view) {
-            if (c == view_char)
-                return pos - 1;
-        }
-    }
-    return {};
-}
-
 String StringView::to_string() const { return String { *this }; }
 
 }
