@@ -53,6 +53,31 @@ LocalSocket::~LocalSocket()
 {
 }
 
+pid_t LocalSocket::peer_pid() const
+{
+#ifdef AK_OS_MACOS
+    pid_t pid;
+    socklen_t pid_size = sizeof(pid);
+
+    if (getsockopt(fd(), SOL_LOCAL, LOCAL_PEERPID, &pid, &pid_size) < 0) {
+        dbgln("LocalSocket: getsockopt failed, {}", strerror(errno));
+        VERIFY_NOT_REACHED();
+    }
+
+    return pid;
+#else
+    struct ucred creds = {};
+    socklen_t creds_size = sizeof(creds);
+
+    if (getsockopt(fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0) {
+        dbgln("LocalSocket: getsockopt failed, {}", strerror(errno));
+        VERIFY_NOT_REACHED();
+    }
+
+    return creds.pid;
+#endif
+}
+
 HashMap<String, int> LocalSocket::s_overtaken_sockets {};
 bool LocalSocket::s_overtaken_sockets_parsed { false };
 
