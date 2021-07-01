@@ -15,7 +15,13 @@
 __BEGIN_DECLS
 
 struct __jmp_buf {
+#ifdef __i386__
     uint32_t regs[6];
+#elif __x86_64__
+    uint64_t regs[8];
+#else
+#    error
+#endif
     bool did_save_signal_mask;
     sigset_t saved_signal_mask;
 };
