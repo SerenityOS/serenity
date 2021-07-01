@@ -422,7 +422,10 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             return RelocationResult::Failed;
         }
         auto symbol_address = res.value().address;
-        *patch_ptr += symbol_address.get();
+        if (relocation.addend_used())
+            *patch_ptr = symbol_address.get() + relocation.addend();
+        else
+            *patch_ptr += symbol_address.get();
         break;
     }
 #ifndef __LP64__
@@ -466,7 +469,10 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         // FIXME: According to the spec, R_386_relative ones must be done first.
         //     We could explicitly do them first using m_number_of_relocations from DT_RELCOUNT
         //     However, our compiler is nice enough to put them at the front of the relocations for us :)
-        *patch_ptr += (FlatPtr)m_dynamic_object->base_address().as_ptr(); // + addend for RelA (addend for Rel is stored at addr)
+        if (relocation.addend_used())
+            *patch_ptr = (FlatPtr)m_dynamic_object->base_address().as_ptr() + relocation.addend();
+        else
+            *patch_ptr += (FlatPtr)m_dynamic_object->base_address().as_ptr();
         break;
     }
 #ifndef __LP64__
