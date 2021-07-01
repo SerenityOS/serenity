@@ -33,7 +33,7 @@ void WebAssemblyObject::initialize(JS::GlobalObject& global_object)
     auto& vm = global_object.vm();
 
     auto& window = static_cast<WindowObject&>(global_object);
-    auto& memory_constructor = window.ensure_web_prototype<WebAssemblyMemoryConstructor>("WebAssembly.Memory");
+    auto& memory_constructor = window.ensure_web_constructor<WebAssemblyMemoryConstructor>("WebAssembly.Memory");
     memory_constructor.define_property(vm.names.name, js_string(vm, "WebAssembly.Memory"), JS::Attribute::Configurable);
     auto& memory_prototype = window.ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype");
     memory_prototype.define_property(vm.names.constructor, &memory_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
@@ -420,7 +420,7 @@ JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String
 }
 
 WebAssemblyMemoryObject::WebAssemblyMemoryObject(JS::GlobalObject& global_object, Wasm::MemoryAddress address)
-    : Object(static_cast<WindowObject&>(global_object).ensure_web_prototype<WebAssemblyMemoryPrototype>(class_name()))
+    : Object(static_cast<WindowObject&>(global_object).ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype"))
     , m_address(address)
 {
 }
