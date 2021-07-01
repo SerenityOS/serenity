@@ -191,10 +191,17 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleCompo
                 if (delim_part.token().delim() == "~") {
                     simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ContainsWord;
                     attribute_index++;
-                }
-
-                if (delim_part.token().delim() == "|") {
+                } else if (delim_part.token().delim() == "*") {
+                    simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ContainsString;
+                    attribute_index++;
+                } else if (delim_part.token().delim() == "|") {
                     simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithSegment;
+                    attribute_index++;
+                } else if (delim_part.token().delim() == "^") {
+                    simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithString;
+                    attribute_index++;
+                } else if (delim_part.token().delim() == "$") {
+                    simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::EndsWithString;
                     attribute_index++;
                 }
             }
