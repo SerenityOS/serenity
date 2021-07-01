@@ -846,7 +846,9 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         // Align the stack to 16 bytes.
         // Note that we push 56 bytes (4 * 14) on to the stack,
         // so we need to account for this here.
-        FlatPtr stack_alignment = (*stack - 56) % 16;
+        // 56 % 16 = 8, so we only need to take 8 bytes into consideration for
+        // the stack alignment.
+        FlatPtr stack_alignment = (*stack - 8) % 16;
         *stack -= stack_alignment;
 
         push_value_on_user_stack(stack, ret_eflags);
@@ -864,8 +866,11 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         // Align the stack to 16 bytes.
         // Note that we push 176 bytes (8 * 22) on to the stack,
         // so we need to account for this here.
-        FlatPtr stack_alignment = (*stack - 112) % 16;
-        *stack -= stack_alignment;
+        // 22 % 2 = 0, so we dont need to take anything into consideration
+        // for the alignment.
+        // We also are not allowed to touch the thread's red-zone of 128 bytes
+        FlatPtr stack_alignment = *stack % 16;
+        *stack -= 128 + stack_alignment;
 
         push_value_on_user_stack(stack, ret_rflags);
 
