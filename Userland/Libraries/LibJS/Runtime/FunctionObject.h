@@ -26,7 +26,7 @@ public:
     virtual Value call() = 0;
     virtual Value construct(FunctionObject& new_target) = 0;
     virtual const FlyString& name() const = 0;
-    virtual FunctionEnvironmentRecord* create_environment_record(FunctionObject&) = 0;
+    virtual FunctionEnvironment* create_environment(FunctionObject&) = 0;
 
     BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
 
@@ -45,7 +45,7 @@ public:
     // [[Environment]]
     // The Environment Record that the function was closed over.
     // Used as the outer environment when evaluating the code of the function.
-    virtual EnvironmentRecord* environment() { return nullptr; }
+    virtual Environment* environment() { return nullptr; }
 
     // [[Realm]]
     virtual GlobalObject* realm() const { return nullptr; }

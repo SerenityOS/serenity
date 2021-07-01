@@ -19,12 +19,12 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/FunctionEnvironmentRecord.h>
+#include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/ObjectEnvironmentRecord.h>
+#include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Reference.h>
@@ -133,7 +133,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         Value this_value;
 
         if (is<SuperExpression>(member_expression.object())) {
-            auto super_base = interpreter.current_function_environment_record()->get_super_base();
+            auto super_base = interpreter.current_function_environment()->get_super_base();
             if (super_base.is_nullish()) {
                 vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, super_base.to_string_without_side_effects());
                 return {};
@@ -242,7 +242,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
             return {};
 
         auto& this_er = get_this_environment(interpreter.vm());
-        verify_cast<FunctionEnvironmentRecord>(this_er).bind_this_value(global_object, result);
+        verify_cast<FunctionEnvironment>(this_er).bind_this_value(global_object, result);
     } else {
         result = vm.call(function, this_value, move(arguments));
     }
@@ -305,8 +305,8 @@ Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_obje
 
     VERIFY(object);
 
-    auto* object_environment_record = new_object_environment(*object, true, interpreter.vm().running_execution_context().lexical_environment);
-    TemporaryChange<EnvironmentRecord*> scope_change(interpreter.vm().running_execution_context().lexical_environment, object_environment_record);
+    auto* object_environment = new_object_environment(*object, true, interpreter.vm().running_execution_context().lexical_environment);
+    TemporaryChange<Environment*> scope_change(interpreter.vm().running_execution_context().lexical_environment, object_environment);
     return interpreter.execute_statement(global_object, m_body).value_or(js_undefined());
 }
 
@@ -854,7 +854,7 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
     if (interpreter.exception())
         return {};
 
-    interpreter.lexical_environment()->put_into_environment_record(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
+    interpreter.lexical_environment()->put_into_environment(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
 
     return {};
 }
@@ -2049,8 +2049,8 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
 
             HashMap<FlyString, Variable> parameters;
             parameters.set(m_handler->parameter(), Variable { exception->value(), DeclarationKind::Var });
-            auto* catch_scope = interpreter.heap().allocate<DeclarativeEnvironmentRecord>(global_object, move(parameters), interpreter.vm().running_execution_context().lexical_environment);
-            TemporaryChange<EnvironmentRecord*> scope_change(interpreter.vm().running_execution_context().lexical_environment, catch_scope);
+            auto* catch_scope = interpreter.heap().allocate<DeclarativeEnvironment>(global_object, move(parameters), interpreter.vm().running_execution_context().lexical_environment);
+            TemporaryChange<Environment*> scope_change(interpreter.vm().running_execution_context().lexical_environment, catch_scope);
             result = interpreter.execute_statement(global_object, m_handler->body());
         }
     }

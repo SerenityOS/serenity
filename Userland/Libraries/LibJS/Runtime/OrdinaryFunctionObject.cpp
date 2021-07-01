@@ -14,7 +14,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/FunctionEnvironmentRecord.h>
+#include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GeneratorObject.h>
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -36,7 +36,7 @@ static OrdinaryFunctionObject* typed_this(VM& vm, GlobalObject& global_object)
     return static_cast<OrdinaryFunctionObject*>(this_object);
 }
 
-OrdinaryFunctionObject* OrdinaryFunctionObject::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, EnvironmentRecord* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
+OrdinaryFunctionObject* OrdinaryFunctionObject::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, Environment* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -50,7 +50,7 @@ OrdinaryFunctionObject* OrdinaryFunctionObject::create(GlobalObject& global_obje
     return global_object.heap().allocate<OrdinaryFunctionObject>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
 }
 
-OrdinaryFunctionObject::OrdinaryFunctionObject(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 function_length, EnvironmentRecord* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
+OrdinaryFunctionObject::OrdinaryFunctionObject(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 function_length, Environment* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
     : FunctionObject(is_arrow_function ? vm().this_value(global_object) : Value(), {}, prototype)
     , m_name(name)
     , m_body(body)
@@ -113,7 +113,7 @@ void OrdinaryFunctionObject::visit_edges(Visitor& visitor)
     visitor.visit(m_environment);
 }
 
-FunctionEnvironmentRecord* OrdinaryFunctionObject::create_environment_record(FunctionObject& function_being_invoked)
+FunctionEnvironment* OrdinaryFunctionObject::create_environment(FunctionObject& function_being_invoked)
 {
     HashMap<FlyString, Variable> variables;
     for (auto& parameter : m_parameters) {
@@ -142,11 +142,11 @@ FunctionEnvironmentRecord* OrdinaryFunctionObject::create_environment_record(Fun
         }
     }
 
-    auto* environment = heap().allocate<FunctionEnvironmentRecord>(global_object(), m_environment, variables);
+    auto* environment = heap().allocate<FunctionEnvironment>(global_object(), m_environment, variables);
     environment->set_function_object(function_being_invoked);
     if (m_is_arrow_function) {
-        if (is<FunctionEnvironmentRecord>(m_environment))
-            environment->set_new_target(static_cast<FunctionEnvironmentRecord*>(m_environment)->new_target());
+        if (is<FunctionEnvironment>(m_environment))
+            environment->set_new_target(static_cast<FunctionEnvironment*>(m_environment)->new_target());
     }
     return environment;
 }

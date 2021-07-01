@@ -47,8 +47,8 @@ void Reference::put_value(GlobalObject& global_object, Value value)
         return;
     }
 
-    VERIFY(m_base_type == BaseType::EnvironmentRecord);
-    auto existing_variable = m_base_environment_record->get_from_environment_record(m_name.as_string());
+    VERIFY(m_base_type == BaseType::Environment);
+    auto existing_variable = m_base_environment->get_from_environment(m_name.as_string());
     Variable variable {
         .value = value,
         .declaration_kind = existing_variable.has_value() ? existing_variable->declaration_kind : DeclarationKind::Var
@@ -60,7 +60,7 @@ void Reference::put_value(GlobalObject& global_object, Value value)
         return;
     }
 
-    m_base_environment_record->put_into_environment_record(m_name.as_string(), variable);
+    m_base_environment->put_into_environment(m_name.as_string(), variable);
 }
 
 void Reference::throw_reference_error(GlobalObject& global_object)
@@ -87,8 +87,8 @@ Value Reference::get_value(GlobalObject& global_object, bool throw_if_undefined)
         return base_obj->get(m_name).value_or(js_undefined());
     }
 
-    VERIFY(m_base_type == BaseType::EnvironmentRecord);
-    auto value = m_base_environment_record->get_from_environment_record(m_name.as_string());
+    VERIFY(m_base_type == BaseType::Environment);
+    auto value = m_base_environment->get_from_environment(m_name.as_string());
     if (!value.has_value()) {
         if (!throw_if_undefined) {
             // FIXME: This is an ad-hoc hack for the `typeof` operator until we support proper variable bindings.
@@ -121,8 +121,8 @@ bool Reference::delete_(GlobalObject& global_object)
         return succeeded;
     }
 
-    VERIFY(m_base_type == BaseType::EnvironmentRecord);
-    return m_base_environment_record->delete_from_environment_record(m_name.as_string());
+    VERIFY(m_base_type == BaseType::Environment);
+    return m_base_environment->delete_from_environment(m_name.as_string());
 }
 
 String Reference::to_string() const
@@ -133,7 +133,7 @@ String Reference::to_string() const
     case BaseType::Unresolvable:
         builder.append("Unresolvable");
         break;
-    case BaseType::EnvironmentRecord:
+    case BaseType::Environment:
         builder.appendff("{}", base_environment().class_name());
         break;
     case BaseType::Value:

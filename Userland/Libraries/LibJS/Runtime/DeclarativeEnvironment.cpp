@@ -5,7 +5,7 @@
  */
 
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
+#include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -13,27 +13,27 @@
 
 namespace JS {
 
-DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord()
-    : EnvironmentRecord(nullptr)
+DeclarativeEnvironment::DeclarativeEnvironment()
+    : Environment(nullptr)
 {
 }
 
-DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord(EnvironmentRecord* parent_scope)
-    : EnvironmentRecord(parent_scope)
+DeclarativeEnvironment::DeclarativeEnvironment(Environment* parent_scope)
+    : Environment(parent_scope)
 {
 }
 
-DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord(HashMap<FlyString, Variable> variables, EnvironmentRecord* parent_scope)
-    : EnvironmentRecord(parent_scope)
+DeclarativeEnvironment::DeclarativeEnvironment(HashMap<FlyString, Variable> variables, Environment* parent_scope)
+    : Environment(parent_scope)
     , m_variables(move(variables))
 {
 }
 
-DeclarativeEnvironmentRecord::~DeclarativeEnvironmentRecord()
+DeclarativeEnvironment::~DeclarativeEnvironment()
 {
 }
 
-void DeclarativeEnvironmentRecord::visit_edges(Visitor& visitor)
+void DeclarativeEnvironment::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     for (auto& it : m_variables)
@@ -42,29 +42,29 @@ void DeclarativeEnvironmentRecord::visit_edges(Visitor& visitor)
         visitor.visit(it.value.value);
 }
 
-Optional<Variable> DeclarativeEnvironmentRecord::get_from_environment_record(FlyString const& name) const
+Optional<Variable> DeclarativeEnvironment::get_from_environment(FlyString const& name) const
 {
     return m_variables.get(name);
 }
 
-void DeclarativeEnvironmentRecord::put_into_environment_record(FlyString const& name, Variable variable)
+void DeclarativeEnvironment::put_into_environment(FlyString const& name, Variable variable)
 {
     m_variables.set(name, variable);
 }
 
-bool DeclarativeEnvironmentRecord::delete_from_environment_record(FlyString const& name)
+bool DeclarativeEnvironment::delete_from_environment(FlyString const& name)
 {
     return m_variables.remove(name);
 }
 
 // 9.1.1.1.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n
-bool DeclarativeEnvironmentRecord::has_binding(FlyString const& name) const
+bool DeclarativeEnvironment::has_binding(FlyString const& name) const
 {
     return m_bindings.contains(name);
 }
 
 // 9.1.1.1.2 CreateMutableBinding ( N, D ), https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d
-void DeclarativeEnvironmentRecord::create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted)
+void DeclarativeEnvironment::create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted)
 {
     auto result = m_bindings.set(name,
         Binding {
@@ -78,7 +78,7 @@ void DeclarativeEnvironmentRecord::create_mutable_binding(GlobalObject&, FlyStri
 }
 
 // 9.1.1.1.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s
-void DeclarativeEnvironmentRecord::create_immutable_binding(GlobalObject&, FlyString const& name, bool strict)
+void DeclarativeEnvironment::create_immutable_binding(GlobalObject&, FlyString const& name, bool strict)
 {
     auto result = m_bindings.set(name,
         Binding {
@@ -92,7 +92,7 @@ void DeclarativeEnvironmentRecord::create_immutable_binding(GlobalObject&, FlySt
 }
 
 // 9.1.1.1.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v
-void DeclarativeEnvironmentRecord::initialize_binding(GlobalObject&, FlyString const& name, Value value)
+void DeclarativeEnvironment::initialize_binding(GlobalObject&, FlyString const& name, Value value)
 {
     auto it = m_bindings.find(name);
     VERIFY(it != m_bindings.end());
@@ -102,7 +102,7 @@ void DeclarativeEnvironmentRecord::initialize_binding(GlobalObject&, FlyString c
 }
 
 // 9.1.1.1.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s
-void DeclarativeEnvironmentRecord::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
+void DeclarativeEnvironment::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
 {
     auto it = m_bindings.find(name);
     if (it == m_bindings.end()) {
@@ -133,7 +133,7 @@ void DeclarativeEnvironmentRecord::set_mutable_binding(GlobalObject& global_obje
 }
 
 // 9.1.1.1.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s
-Value DeclarativeEnvironmentRecord::get_binding_value(GlobalObject& global_object, FlyString const& name, bool)
+Value DeclarativeEnvironment::get_binding_value(GlobalObject& global_object, FlyString const& name, bool)
 {
     auto it = m_bindings.find(name);
     VERIFY(it != m_bindings.end());
@@ -145,7 +145,7 @@ Value DeclarativeEnvironmentRecord::get_binding_value(GlobalObject& global_objec
 }
 
 // 9.1.1.1.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n
-bool DeclarativeEnvironmentRecord::delete_binding(GlobalObject&, FlyString const& name)
+bool DeclarativeEnvironment::delete_binding(GlobalObject&, FlyString const& name)
 {
     auto it = m_bindings.find(name);
     VERIFY(it != m_bindings.end());
