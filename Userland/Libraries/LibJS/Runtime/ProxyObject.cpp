@@ -478,10 +478,10 @@ const FlyString& ProxyObject::name() const
     return static_cast<FunctionObject&>(m_target).name();
 }
 
-FunctionEnvironmentRecord* ProxyObject::create_environment_record(FunctionObject& function_being_invoked)
+FunctionEnvironment* ProxyObject::create_environment(FunctionObject& function_being_invoked)
 {
     VERIFY(is_function());
-    return static_cast<FunctionObject&>(m_target).create_environment_record(function_being_invoked);
+    return static_cast<FunctionObject&>(m_target).create_environment(function_being_invoked);
 }
 
 }

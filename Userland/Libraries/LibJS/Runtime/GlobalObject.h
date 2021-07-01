@@ -7,7 +7,7 @@
 #pragma once
 
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Runtime/EnvironmentRecord.h>
+#include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
@@ -21,7 +21,7 @@ public:
 
     virtual ~GlobalObject() override;
 
-    GlobalEnvironmentRecord& environment_record() { return *m_environment_record; }
+    GlobalEnvironment& environment() { return *m_environment; }
 
     Console& console() { return *m_console; }
 
@@ -87,7 +87,7 @@ private:
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
     GeneratorObjectPrototype* m_generator_object_prototype { nullptr };
 
-    GlobalEnvironmentRecord* m_environment_record { nullptr };
+    GlobalEnvironment* m_environment { nullptr };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* m_##snake_name##_constructor { nullptr };                           \

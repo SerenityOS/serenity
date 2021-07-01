@@ -12,8 +12,8 @@
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
-#include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
-#include <LibJS/Runtime/EnvironmentRecord.h>
+#include <LibJS/Runtime/DeclarativeEnvironment.h>
+#include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
@@ -381,14 +381,14 @@ void ContinuePendingUnwind::replace_references_impl(BasicBlock const& from, Basi
         m_resume_target = Label { to };
 }
 
-void PushDeclarativeEnvironmentRecord::execute_impl(Bytecode::Interpreter& interpreter) const
+void PushDeclarativeEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     HashMap<FlyString, Variable> resolved_variables;
     for (auto& it : m_variables)
         resolved_variables.set(interpreter.current_executable().get_string(it.key), it.value);
-    auto* environment_record = interpreter.vm().heap().allocate<DeclarativeEnvironmentRecord>(interpreter.global_object(), move(resolved_variables), interpreter.vm().lexical_environment());
-    interpreter.vm().running_execution_context().lexical_environment = environment_record;
-    interpreter.vm().running_execution_context().variable_environment = environment_record;
+    auto* environment = interpreter.vm().heap().allocate<DeclarativeEnvironment>(interpreter.global_object(), move(resolved_variables), interpreter.vm().lexical_environment());
+    interpreter.vm().running_execution_context().lexical_environment = environment;
+    interpreter.vm().running_execution_context().variable_environment = environment;
 }
 
 void Yield::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -635,10 +635,10 @@ String ContinuePendingUnwind::to_string_impl(Bytecode::Executable const&) const
     return String::formatted("ContinuePendingUnwind resume:{}", m_resume_target);
 }
 
-String PushDeclarativeEnvironmentRecord::to_string_impl(const Bytecode::Executable& executable) const
+String PushDeclarativeEnvironment::to_string_impl(const Bytecode::Executable& executable) const
 {
     StringBuilder builder;
-    builder.append("PushDeclarativeEnvironmentRecord");
+    builder.append("PushDeclarativeEnvironment");
     if (!m_variables.is_empty()) {
         builder.append(" {");
         Vector<String> names;

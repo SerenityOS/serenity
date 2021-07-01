@@ -14,7 +14,7 @@
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Heap/Cell.h>
-#include <LibJS/Runtime/EnvironmentRecord.h>
+#include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Bytecode::Op {
@@ -635,10 +635,10 @@ private:
     Optional<Label> m_continuation_label;
 };
 
-class PushDeclarativeEnvironmentRecord final : public Instruction {
+class PushDeclarativeEnvironment final : public Instruction {
 public:
-    explicit PushDeclarativeEnvironmentRecord(HashMap<u32, Variable> variables)
-        : Instruction(Type::PushDeclarativeEnvironmentRecord)
+    explicit PushDeclarativeEnvironment(HashMap<u32, Variable> variables)
+        : Instruction(Type::PushDeclarativeEnvironment)
         , m_variables(move(variables))
     {
     }
