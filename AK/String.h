@@ -140,6 +140,7 @@ public:
 
     [[nodiscard]] Vector<String> split_limit(char separator, size_t limit, bool keep_empty = false) const;
     [[nodiscard]] Vector<String> split(char separator, bool keep_empty = false) const;
+    [[nodiscard]] Vector<StringView> split_view(char separator, bool keep_empty = false) const;
 
     [[nodiscard]] Optional<size_t> find(char needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
     [[nodiscard]] Optional<size_t> find(StringView const& needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
@@ -147,10 +148,8 @@ public:
     // FIXME: Implement find_last(StringView const&) for API symmetry.
     [[nodiscard]] Vector<size_t> find_all(StringView const& needle) const { return StringUtils::find_all(*this, needle); }
 
-    [[nodiscard]] String substring(size_t start) const;
     [[nodiscard]] String substring(size_t start, size_t length) const;
-
-    [[nodiscard]] Vector<StringView> split_view(char separator, bool keep_empty = false) const;
+    [[nodiscard]] String substring(size_t start) const;
     [[nodiscard]] StringView substring_view(size_t start, size_t length) const;
     [[nodiscard]] StringView substring_view(size_t start) const;
 
