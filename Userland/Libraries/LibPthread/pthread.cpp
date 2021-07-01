@@ -71,10 +71,17 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
     while (((uintptr_t)stack - 16) % 16 != 0)
         push_on_stack(nullptr);
 
+#if ARCH(I386)
     push_on_stack((void*)(uintptr_t)thread_params->stack_size);
     push_on_stack(thread_params->stack_location);
     push_on_stack(argument);
     push_on_stack((void*)entry);
+#else
+    thread_params->rdi = (FlatPtr)entry;
+    thread_params->rsi = (FlatPtr)argument;
+    thread_params->rdx = (FlatPtr)thread_params->stack_location;
+    thread_params->rcx = thread_params->stack_size;
+#endif
     VERIFY((uintptr_t)stack % 16 == 0);
 
     // Push a fake return address
