@@ -18,6 +18,8 @@ DOMTreeJSONModel::DOMTreeJSONModel(JsonObject dom_tree)
     m_document_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
     m_element_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
     m_text_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"));
+
+    map_dom_nodes_to_parent(nullptr, &m_dom_tree);
 }
 
 DOMTreeJSONModel::~DOMTreeJSONModel()
@@ -47,20 +49,18 @@ GUI::ModelIndex DOMTreeJSONModel::parent_index(const GUI::ModelIndex& index) con
         return {};
 
     auto const& node = *static_cast<JsonObject const*>(index.internal_data());
-    auto node_internal_id = get_internal_id(node);
 
-    auto const* parent_node = find_parent_of_child_with_internal_id(node_internal_id);
+    auto const* parent_node = get_parent(node);
     if (!parent_node)
         return {};
 
     // If the parent is the root document, we know it has index 0, 0
-    auto parent_node_internal_id = get_internal_id(*parent_node);
-    if (parent_node_internal_id == get_internal_id(m_dom_tree)) {
+    if (parent_node == &m_dom_tree) {
         return create_index(0, 0, parent_node);
     }
 
     // Otherwise, we need to find the grandparent, to find the index of parent within that
-    auto const* grandparent_node = find_parent_of_child_with_internal_id(parent_node_internal_id);
+    auto const* grandparent_node = get_parent(*parent_node);
     VERIFY(grandparent_node);
 
     auto const* grandparent_children = get_children(*grandparent_node);
@@ -69,7 +69,7 @@ GUI::ModelIndex DOMTreeJSONModel::parent_index(const GUI::ModelIndex& index) con
 
     for (size_t grandparent_child_index = 0; grandparent_child_index < grandparent_children->size(); ++grandparent_child_index) {
         auto const& child = grandparent_children->at(grandparent_child_index).as_object();
-        if (get_internal_id(child) == parent_node_internal_id)
+        if (&child == parent_node)
             return create_index(grandparent_child_index, 0, parent_node);
     }
 
@@ -157,24 +157,18 @@ void DOMTreeJSONModel::update()
     did_update();
 }
 
-JsonObject const* DOMTreeJSONModel::find_parent_of_child_with_internal_id(JsonObject const& node, size_t internal_id) const
+void DOMTreeJSONModel::map_dom_nodes_to_parent(JsonObject const* parent, JsonObject const* node)
 {
-    auto const* children = get_children(node);
+    m_dom_node_to_parent_map.set(node, parent);
+
+    auto const* children = get_children(*node);
     if (!children)
-        return nullptr;
+        return;
 
-    for (size_t i = 0; i < children->size(); ++i) {
-        auto const& child = children->at(i).as_object();
-
-        auto child_internal_id = get_internal_id(child);
-        if (child_internal_id == internal_id)
-            return &node;
-
-        if (auto const* maybe_node = find_parent_of_child_with_internal_id(child, internal_id); maybe_node)
-            return maybe_node;
-    }
-
-    return nullptr;
+    children->for_each([&](auto const& child) {
+        auto const& child_node = child.as_object();
+        map_dom_nodes_to_parent(node, &child_node);
+    });
 }
 
 }
