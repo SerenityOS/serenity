@@ -400,9 +400,9 @@ Reference VM::resolve_binding(GlobalObject& global_object, FlyString const& name
     for (auto* environment = lexical_environment(); environment && environment->outer_environment(); environment = environment->outer_environment()) {
         auto possible_match = environment->get_from_environment(name);
         if (possible_match.has_value())
-            return Reference { *environment, name };
+            return Reference { *environment, name, in_strict_mode() };
     }
-    return Reference { global_object.environment(), name };
+    return Reference { global_object.environment(), name, in_strict_mode() };
 }
 
 Value VM::construct(FunctionObject& function, FunctionObject& new_target, Optional<MarkedValueList> arguments)
