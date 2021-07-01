@@ -62,12 +62,12 @@ void URLResult::activate() const
     Desktop::Launcher::open(URL::create_with_url_or_path(title()));
 }
 
-void AppProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+void AppProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     if (query.starts_with("=") || query.starts_with('$'))
         return;
 
-    Vector<NonnullRefPtr<Result>> results;
+    NonnullRefPtrVector<Result> results;
 
     Desktop::AppFile::for_each([&](NonnullRefPtr<Desktop::AppFile> app_file) {
         auto match_result = fuzzy_match(query, app_file->name());
@@ -81,7 +81,7 @@ void AppProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<
     on_complete(results);
 }
 
-void CalculatorProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+void CalculatorProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     if (!query.starts_with("="))
         return;
@@ -107,20 +107,20 @@ void CalculatorProvider::query(String const& query, Function<void(Vector<Nonnull
         calculation = result.to_string_without_side_effects();
     }
 
-    Vector<NonnullRefPtr<Result>> results;
+    NonnullRefPtrVector<Result> results;
     results.append(adopt_ref(*new CalculatorResult(calculation)));
     on_complete(results);
 }
 
-void FileProvider::query(const String& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+void FileProvider::query(const String& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     build_filesystem_cache();
 
     if (m_fuzzy_match_work)
         m_fuzzy_match_work->cancel();
 
-    m_fuzzy_match_work = Threading::BackgroundAction<Vector<NonnullRefPtr<Result>>>::create([this, query](auto& task) {
-        Vector<NonnullRefPtr<Result>> results;
+    m_fuzzy_match_work = Threading::BackgroundAction<NonnullRefPtrVector<Result>>::create([this, query](auto& task) {
+        NonnullRefPtrVector<Result> results;
 
         for (auto& path : m_full_path_cache) {
             if (task.is_cancelled())
@@ -172,19 +172,19 @@ void FileProvider::build_filesystem_cache()
         return 0; }, [this](auto) { m_building_cache = false; });
 }
 
-void TerminalProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+void TerminalProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     if (!query.starts_with('$'))
         return;
 
     auto command = query.substring(1);
 
-    Vector<NonnullRefPtr<Result>> results;
+    NonnullRefPtrVector<Result> results;
     results.append(adopt_ref(*new TerminalResult(move(command))));
     on_complete(results);
 }
 
-void URLProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+void URLProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     URL url = URL(query);
 
@@ -198,7 +198,7 @@ void URLProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<
     if (!url.is_valid())
         return;
 
-    Vector<NonnullRefPtr<Result>> results;
+    NonnullRefPtrVector<Result> results;
     results.append(adopt_ref(*new URLResult(url)));
     on_complete(results);
 }
