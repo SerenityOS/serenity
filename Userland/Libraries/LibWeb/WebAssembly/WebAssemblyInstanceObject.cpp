@@ -18,7 +18,7 @@
 namespace Web::Bindings {
 
 WebAssemblyInstanceObject::WebAssemblyInstanceObject(JS::GlobalObject& global_object, size_t index)
-    : Object(static_cast<Web::Bindings::WindowObject&>(global_object).ensure_web_prototype<WebAssemblyInstancePrototype>(class_name()))
+    : Object(static_cast<Web::Bindings::WindowObject&>(global_object).ensure_web_prototype<WebAssemblyInstancePrototype>("WebAssemblyInstancePrototype"))
     , m_index(index)
 {
 }

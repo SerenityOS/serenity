@@ -28,6 +28,8 @@ public:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
+    static Result<size_t, JS::Value> instantiate_module(Wasm::Module const&, JS::VM&, JS::GlobalObject&);
+
     struct CompiledWebAssemblyModule {
         explicit CompiledWebAssemblyModule(Wasm::Module&& module)
             : module(move(module))

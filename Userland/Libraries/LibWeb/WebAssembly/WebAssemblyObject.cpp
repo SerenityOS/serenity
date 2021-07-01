@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/WebAssembly/WebAssemblyInstanceConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 namespace Web::Bindings {
@@ -38,6 +39,12 @@ void WebAssemblyObject::initialize(JS::GlobalObject& global_object)
     auto& memory_prototype = window.ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype");
     memory_prototype.define_property(vm.names.constructor, &memory_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_property("Memory", &memory_constructor);
+
+    auto& instance_constructor = window.ensure_web_constructor<WebAssemblyInstanceConstructor>("WebAssembly.Instance");
+    instance_constructor.define_property(vm.names.name, js_string(vm, "WebAssembly.Instance"), JS::Attribute::Configurable);
+    auto& instance_prototype = window.ensure_web_prototype<WebAssemblyInstancePrototype>("WebAssemblyInstancePrototype");
+    instance_prototype.define_property(vm.names.constructor, &instance_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+    define_property("Instance", &instance_constructor);
 }
 
 NonnullOwnPtrVector<WebAssemblyObject::CompiledWebAssemblyModule> WebAssemblyObject::s_compiled_modules;
@@ -119,49 +126,17 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     return promise;
 }
 
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
+Result<size_t, JS::Value> WebAssemblyObject::instantiate_module(Wasm::Module const& module, JS::VM& vm, JS::GlobalObject& global_object)
 {
-    // FIXME: This shouldn't block!
-    auto buffer = vm.argument(0).to_object(global_object);
-    auto promise = JS::Promise::create(global_object);
-    auto take_exception_and_reject_if_needed = [&] {
-        if (vm.exception()) {
-            auto rejection_value = vm.exception()->value();
-            vm.clear_exception();
-            promise->reject(rejection_value);
-            return true;
-        }
-
-        return false;
-    };
-
-    if (take_exception_and_reject_if_needed())
-        return promise;
-
-    const Wasm::Module* module { nullptr };
-    if (is<JS::ArrayBuffer>(buffer) || is<JS::TypedArrayBase>(buffer)) {
-        auto result = parse_module(global_object, buffer);
-        if (result.is_error()) {
-            promise->reject(result.error());
-            return promise;
-        }
-        module = &WebAssemblyObject::s_compiled_modules.at(result.value()).module;
-    } else if (is<WebAssemblyModuleObject>(buffer)) {
-        module = &static_cast<WebAssemblyModuleObject*>(buffer)->module();
-    } else {
-        auto error = JS::TypeError::create(global_object, String::formatted("{} is not an ArrayBuffer or a Module", buffer->class_name()));
-        promise->reject(error);
-        return promise;
-    }
-    VERIFY(module);
-
-    Wasm::Linker linker { *module };
+    Wasm::Linker linker { module };
     HashMap<Wasm::Linker::Name, Wasm::ExternValue> resolved_imports;
     auto import_argument = vm.argument(1);
     if (!import_argument.is_undefined()) {
         [[maybe_unused]] auto import_object = import_argument.to_object(global_object);
-        if (take_exception_and_reject_if_needed())
-            return promise;
+        if (auto exception = vm.exception()) {
+            vm.clear_exception();
+            return exception->value();
+        }
 
         dbgln("Trying to resolve stuff because import object was specified");
         for (const Wasm::Linker::Name& import_name : linker.unresolved_imports()) {
@@ -179,7 +154,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
             import_name.type.visit(
                 [&](Wasm::TypeIndex index) {
                     dbgln("Trying to resolve a function {}::{}, type index {}", import_name.module, import_name.name, index.value());
-                    auto& type = module->type(index);
+                    auto& type = module.type(index);
                     // FIXME: IsCallable()
                     if (!import_.is_function())
                         return;
@@ -268,8 +243,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
                 break;
         }
 
-        if (take_exception_and_reject_if_needed())
-            return promise;
+        if (auto exception = vm.exception()) {
+            vm.clear_exception();
+            return exception->value();
+        }
     }
 
     linker.link(resolved_imports);
@@ -279,22 +256,72 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
         StringBuilder builder;
         builder.append("LinkError: Missing ");
         builder.join(' ', link_result.error().missing_imports);
-        auto error = JS::TypeError::create(global_object, builder.build());
-        promise->reject(error);
-        return promise;
+        return JS::Value(JS::TypeError::create(global_object, builder.build()));
     }
 
-    auto instance_result = s_abstract_machine.instantiate(*module, link_result.release_value());
+    auto instance_result = s_abstract_machine.instantiate(module, link_result.release_value());
     if (instance_result.is_error()) {
         // FIXME: Throw a LinkError instead.
-        auto error = JS::TypeError::create(global_object, instance_result.error().error);
-        promise->reject(error);
-        return promise;
+        return JS::Value(JS::TypeError::create(global_object, instance_result.error().error));
     }
 
     s_instantiated_modules.append(instance_result.release_value());
     s_module_caches.empend();
-    promise->fulfill(vm.heap().allocate<WebAssemblyInstanceObject>(global_object, global_object, s_instantiated_modules.size() - 1));
+    return s_instantiated_modules.size() - 1;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
+{
+    // FIXME: This shouldn't block!
+    auto buffer = vm.argument(0).to_object(global_object);
+    auto promise = JS::Promise::create(global_object);
+    bool should_return_module = false;
+    auto take_exception_and_reject_if_needed = [&] {
+        if (vm.exception()) {
+            auto rejection_value = vm.exception()->value();
+            vm.clear_exception();
+            promise->reject(rejection_value);
+            return true;
+        }
+
+        return false;
+    };
+
+    if (take_exception_and_reject_if_needed())
+        return promise;
+
+    const Wasm::Module* module { nullptr };
+    if (is<JS::ArrayBuffer>(buffer) || is<JS::TypedArrayBase>(buffer)) {
+        auto result = parse_module(global_object, buffer);
+        if (result.is_error()) {
+            promise->reject(result.error());
+            return promise;
+        }
+        module = &WebAssemblyObject::s_compiled_modules.at(result.value()).module;
+        should_return_module = true;
+    } else if (is<WebAssemblyModuleObject>(buffer)) {
+        module = &static_cast<WebAssemblyModuleObject*>(buffer)->module();
+    } else {
+        auto error = JS::TypeError::create(global_object, String::formatted("{} is not an ArrayBuffer or a Module", buffer->class_name()));
+        promise->reject(error);
+        return promise;
+    }
+    VERIFY(module);
+
+    auto result = instantiate_module(*module, vm, global_object);
+    if (result.is_error()) {
+        promise->reject(result.release_error());
+    } else {
+        auto instance_object = vm.heap().allocate<WebAssemblyInstanceObject>(global_object, global_object, result.value());
+        if (should_return_module) {
+            auto object = JS::Object::create(global_object, nullptr);
+            object->put("module", vm.heap().allocate<WebAssemblyModuleObject>(global_object, global_object, s_compiled_modules.size() - 1));
+            object->put("instance", instance_object);
+            promise->fulfill(object);
+        } else {
+            promise->fulfill(instance_object);
+        }
+    }
     return promise;
 }
 
