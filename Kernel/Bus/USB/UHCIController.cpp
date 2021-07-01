@@ -144,9 +144,11 @@ KResultOr<size_t> ProcFSUSBBusFolder::entries_count() const
 KResult ProcFSUSBBusFolder::traverse_as_directory(unsigned fsid, Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
     ScopedSpinLock lock(m_lock);
-    VERIFY(m_parent_folder);
+    auto parent_folder = m_parent_folder.strong_ref();
+    // Note: if the parent folder is null, it means something bad happened as this should not happen for the USB folder.
+    VERIFY(parent_folder);
     callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, m_parent_folder->component_index() }, 0 });
+    callback({ "..", { fsid, parent_folder->component_index() }, 0 });
 
     for (auto& device_node : m_device_nodes) {
         InodeIdentifier identifier = { fsid, device_node.component_index() };

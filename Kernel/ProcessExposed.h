@@ -92,7 +92,9 @@ private:
     InodeIndex m_component_index {};
 };
 
-class ProcFSExposedFolder : public ProcFSExposedComponent {
+class ProcFSExposedFolder
+    : public ProcFSExposedComponent
+    , public Weakable<ProcFSExposedFolder> {
     friend class ProcFSProcessFolder;
     friend class ProcFSComponentsRegistrar;
 
@@ -104,8 +106,9 @@ public:
 
     virtual void prepare_for_deletion() override
     {
-        m_components.clear();
-        m_parent_folder.clear();
+        for (auto& component : m_components) {
+            component.prepare_for_deletion();
+        }
     }
     virtual mode_t required_mode() const override { return 0555; }
 
@@ -115,7 +118,7 @@ protected:
     explicit ProcFSExposedFolder(StringView name);
     ProcFSExposedFolder(StringView name, const ProcFSExposedFolder& parent_folder);
     NonnullRefPtrVector<ProcFSExposedComponent> m_components;
-    RefPtr<ProcFSExposedFolder> m_parent_folder;
+    WeakPtr<ProcFSExposedFolder> m_parent_folder;
 };
 
 class ProcFSExposedLink : public ProcFSExposedComponent {
@@ -134,7 +137,8 @@ protected:
 class ProcFSRootFolder;
 class ProcFSProcessInformation;
 
-class ProcFSProcessFolder final : public ProcFSExposedFolder {
+class ProcFSProcessFolder final
+    : public ProcFSExposedFolder {
     friend class ProcFSComponentsRegistrar;
     friend class ProcFSRootFolder;
     friend class ProcFSProcessInformation;
@@ -235,8 +239,8 @@ public:
 
     virtual KResultOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const override;
 
-    virtual uid_t owner_user() const override { return m_parent_folder->m_associated_process->uid(); }
-    virtual gid_t owner_group() const override { return m_parent_folder->m_associated_process->gid(); }
+    virtual uid_t owner_user() const override { return m_parent_folder.strong_ref()->m_associated_process->uid(); }
+    virtual gid_t owner_group() const override { return m_parent_folder.strong_ref()->m_associated_process->gid(); }
 
 protected:
     ProcFSProcessInformation(StringView name, const ProcFSProcessFolder& process_folder)
@@ -248,7 +252,7 @@ protected:
     virtual KResult refresh_data(FileDescription&) const override;
     virtual bool output(KBufferBuilder& builder) = 0;
 
-    NonnullRefPtr<ProcFSProcessFolder> m_parent_folder;
+    WeakPtr<ProcFSProcessFolder> m_parent_folder;
     mutable SpinLock<u8> m_refresh_lock;
 };
 
