@@ -140,6 +140,7 @@ void LayerListWidget::mousedown_event(GUI::MouseEvent& event)
         return;
     }
     m_moving_gadget_index = gadget_index;
+    m_selected_layer_index = gadget_index.value();
     m_moving_event_origin = translated_event_point;
     auto& gadget = m_gadgets[m_moving_gadget_index.value()];
     auto& layer = m_image->layer(gadget_index.value());
@@ -190,6 +191,7 @@ void LayerListWidget::context_menu_event(GUI::ContextMenuEvent& event)
     auto gadget_index = gadget_at(translated_event_point);
     if (gadget_index.has_value()) {
         auto& layer = m_image->layer(gadget_index.value());
+        m_selected_layer_index = gadget_index.value();
         set_selected_layer(&layer);
     }
 
@@ -244,6 +246,7 @@ void LayerListWidget::select_bottom_layer()
 {
     if (!m_image || !m_image->layer_count())
         return;
+    m_selected_layer_index = 0;
     set_selected_layer(&m_image->layer(0));
 }
 
@@ -251,15 +254,25 @@ void LayerListWidget::select_top_layer()
 {
     if (!m_image || !m_image->layer_count())
         return;
+    m_selected_layer_index = m_image->layer_count() - 1;
     set_selected_layer(&m_image->layer(m_image->layer_count() - 1));
 }
 
-void LayerListWidget::move_selection(int delta)
+void LayerListWidget::cycle_through_selection(int delta)
 {
     if (!m_image || !m_image->layer_count())
         return;
-    int new_layer_index = min(max(0, (int)m_image->layer_count() + delta), (int)m_image->layer_count() - 1);
-    set_selected_layer(&m_image->layer(new_layer_index));
+
+    int selected_layer_index = static_cast<int>(m_selected_layer_index);
+    selected_layer_index += delta;
+
+    if (selected_layer_index < 0)
+        selected_layer_index = m_image->layer_count() - 1;
+    if (selected_layer_index > static_cast<int>(m_image->layer_count()) - 1)
+        selected_layer_index = 0;
+
+    m_selected_layer_index = selected_layer_index;
+    set_selected_layer(&m_image->layer(m_selected_layer_index));
 }
 
 void LayerListWidget::relayout_gadgets()
@@ -295,6 +308,8 @@ void LayerListWidget::set_selected_layer(Layer* layer)
         m_image->layer(i).set_selected(layer == &m_image->layer(i));
     if (on_layer_select)
         on_layer_select(layer);
+
+    scroll_into_view(m_gadgets[m_selected_layer_index].rect, false, true);
     update();
 }
 
