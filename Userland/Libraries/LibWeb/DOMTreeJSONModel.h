@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <LibGUI/Model.h>
 #include <LibWeb/Forward.h>
@@ -36,16 +37,11 @@ public:
 private:
     explicit DOMTreeJSONModel(JsonObject);
 
-    ALWAYS_INLINE JsonObject const* find_parent_of_child_with_internal_id(size_t internal_id) const
+    ALWAYS_INLINE JsonObject const* get_parent(const JsonObject& o) const
     {
-        return find_parent_of_child_with_internal_id(m_dom_tree, internal_id);
-    }
-
-    JsonObject const* find_parent_of_child_with_internal_id(JsonObject const&, size_t) const;
-
-    ALWAYS_INLINE static size_t get_internal_id(const JsonObject& o)
-    {
-        return o.get("internal_id").as_u32();
+        auto parent_node = m_dom_node_to_parent_map.get(&o);
+        VERIFY(parent_node.has_value());
+        return *parent_node;
     }
 
     ALWAYS_INLINE static JsonArray const* get_children(const JsonObject& o)
@@ -55,10 +51,13 @@ private:
         return nullptr;
     }
 
+    void map_dom_nodes_to_parent(JsonObject const* parent, JsonObject const* child);
+
     GUI::Icon m_document_icon;
     GUI::Icon m_element_icon;
     GUI::Icon m_text_icon;
     JsonObject m_dom_tree;
+    HashMap<JsonObject const*, JsonObject const*> m_dom_node_to_parent_map;
 };
 
 }
