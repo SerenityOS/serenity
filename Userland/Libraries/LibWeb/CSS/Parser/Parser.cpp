@@ -189,12 +189,12 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleCompo
                 }
 
                 if (delim_part.token().delim() == "~") {
-                    simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::Contains;
+                    simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ContainsWord;
                     attribute_index++;
                 }
 
                 if (delim_part.token().delim() == "|") {
-                    simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::StartsWith;
+                    simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithSegment;
                     attribute_index++;
                 }
             }
