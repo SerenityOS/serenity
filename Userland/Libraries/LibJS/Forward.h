@@ -94,6 +94,7 @@
     __JS_ENUMERATE(match, match)                             \
     __JS_ENUMERATE(matchAll, match_all)                      \
     __JS_ENUMERATE(replace, replace)                         \
+    __JS_ENUMERATE(replaceAll, replace_all)                  \
     __JS_ENUMERATE(search, search)                           \
     __JS_ENUMERATE(split, split)                             \
     __JS_ENUMERATE(hasInstance, has_instance)                \

@@ -82,6 +82,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.match, match, 1, attr);
     define_native_function(vm.names.matchAll, match_all, 1, attr);
     define_native_function(vm.names.replace, replace, 2, attr);
+    define_native_function(vm.names.replaceAll, replace_all, 2, attr);
     define_native_function(vm.names.search, search, 1, attr);
     define_native_function(vm.names.anchor, anchor, 1, attr);
     define_native_function(vm.names.big, big, 0, attr);
@@ -765,7 +766,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
             if (vm.exception())
                 return {};
             if (!flags_string.contains("g")) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::StringMatchAllNonGlobalRegExp);
+                vm.throw_exception<TypeError>(global_object, ErrorType::StringNonGlobalRegExp);
                 return {};
             }
         }
@@ -833,6 +834,90 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     builder.append(string.substring(position.value() + search_string.length()));
 
     return js_string(vm, builder.build());
+}
+
+// 22.1.3.18 String.prototype.replaceAll ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replaceall
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
+{
+    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
+    if (vm.exception())
+        return {};
+    auto search_value = vm.argument(0);
+    auto replace_value = vm.argument(1);
+
+    if (!search_value.is_nullish()) {
+        bool is_regexp = search_value.is_regexp(global_object);
+        if (vm.exception())
+            return {};
+
+        if (is_regexp) {
+            auto flags = search_value.as_object().get(vm.names.flags);
+            if (vm.exception())
+                return {};
+            auto flags_object = require_object_coercible(global_object, flags);
+            if (vm.exception())
+                return {};
+            auto flags_string = flags_object.to_string(global_object);
+            if (vm.exception())
+                return {};
+            if (!flags_string.contains("g")) {
+                vm.throw_exception<TypeError>(global_object, ErrorType::StringNonGlobalRegExp);
+                return {};
+            }
+        }
+
+        auto* replacer = search_value.get_method(global_object, *vm.well_known_symbol_replace());
+        if (vm.exception())
+            return {};
+        if (replacer) {
+            auto result = vm.call(*replacer, search_value, this_object, replace_value);
+            if (vm.exception())
+                return {};
+            return result;
+        }
+    }
+
+    auto string = this_object.to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto search_string = search_value.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    Vector<size_t> match_positions = string.find_all(search_string);
+    size_t end_of_last_match = 0;
+
+    StringBuilder result;
+
+    for (auto position : match_positions) {
+        auto preserved = string.substring_view(end_of_last_match, position - end_of_last_match);
+        String replacement;
+
+        if (replace_value.is_function()) {
+            auto result = vm.call(replace_value.as_function(), js_undefined(), search_value, Value(position), js_string(vm, string));
+            if (vm.exception())
+                return {};
+
+            replacement = result.to_string(global_object);
+            if (vm.exception())
+                return {};
+        } else {
+            // FIXME: Implement the GetSubstituion algorithm for substituting placeholder '$' characters - https://tc39.es/ecma262/#sec-getsubstitution
+            replacement = replace_value.to_string(global_object);
+            if (vm.exception())
+                return {};
+        }
+
+        result.append(preserved);
+        result.append(replacement);
+
+        end_of_last_match = position + search_string.length();
+    }
+
+    if (end_of_last_match < string.length())
+        result.append(string.substring_view(end_of_last_match));
+
+    return js_string(vm, result.build());
 }
 
 // 22.1.3.19 String.prototype.search ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.search
