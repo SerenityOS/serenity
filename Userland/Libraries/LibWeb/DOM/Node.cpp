@@ -609,10 +609,9 @@ RefPtr<Document> Node::owner_document() const
 void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const
 {
     object.add("name", node_name().view());
-    object.add("internal_id", (size_t)this);
-    if (is_document())
+    if (is_document()) {
         object.add("type", "document");
-    else if (is_element()) {
+    } else if (is_element()) {
         object.add("type", "element");
 
         auto element = static_cast<DOM::Element const*>(this);
