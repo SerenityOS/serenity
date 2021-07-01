@@ -40,23 +40,13 @@ WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
     s_the = this;
 
     {
-        // Create the default window stacks
-        auto row_count = m_window_stacks.capacity();
-        VERIFY(row_count > 0);
-        for (size_t row_index = 0; row_index < row_count; row_index++) {
-            auto row = adopt_own(*new RemoveReference<decltype(m_window_stacks[0])>());
-            auto column_count = row->capacity();
-            VERIFY(column_count > 0);
-            for (size_t column_index = 0; column_index < column_count; column_index++)
-                row->append(adopt_own(*new WindowStack(row_index, column_index)));
-            m_window_stacks.append(move(row));
-        }
-
-        m_current_window_stack = &m_window_stacks[0][0];
-        for (auto& row : m_window_stacks) {
-            for (auto& stack : row)
-                stack.set_stationary_window_stack(*m_current_window_stack);
-        }
+        // If we haven't created any window stacks, at least create the stationary/main window stack
+        auto row = adopt_own(*new RemoveReference<decltype(m_window_stacks[0])>());
+        auto main_window_stack = adopt_own(*new WindowStack(0, 0));
+        main_window_stack->set_stationary_window_stack(*main_window_stack);
+        m_current_window_stack = main_window_stack.ptr();
+        row->append(move(main_window_stack));
+        m_window_stacks.append(move(row));
     }
 
     reload_config();
@@ -77,6 +67,14 @@ RefPtr<Cursor> WindowManager::get_cursor(String const& name)
 void WindowManager::reload_config()
 {
     m_config = Core::ConfigFile::open("/etc/WindowServer.ini");
+
+    unsigned virtual_desktop_rows = (unsigned)m_config->read_num_entry("VirtualDesktop", "Rows", default_window_stack_rows);
+    unsigned virtual_desktop_columns = (unsigned)m_config->read_num_entry("VirtualDesktop", "Columns", default_window_stack_columns);
+    if (virtual_desktop_rows == 0 || virtual_desktop_columns == 0 || virtual_desktop_rows > max_window_stack_rows || virtual_desktop_columns > max_window_stack_columns) {
+        virtual_desktop_rows = default_window_stack_rows;
+        virtual_desktop_columns = default_window_stack_columns;
+    }
+    apply_virtual_desktop_settings(virtual_desktop_rows, virtual_desktop_columns, false);
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
 
@@ -139,9 +137,7 @@ bool WindowManager::set_screen_layout(ScreenLayout&& screen_layout, bool save, S
 
     Compositor::the().screen_resolution_changed();
 
-    ClientConnection::for_each_client([&](ClientConnection& client) {
-        client.notify_about_new_screen_rects(Screen::rects(), Screen::main().index());
-    });
+    tell_wms_screen_rects_changed();
 
     for_each_window_stack([&](auto& window_stack) {
         window_stack.for_each_window([](Window& window) {
@@ -167,6 +163,113 @@ bool WindowManager::save_screen_layout(String& error_msg)
     if (!Screen::layout().save_config(*m_config)) {
         error_msg = "Could not save";
         return false;
+    }
+    return true;
+}
+
+bool WindowManager::apply_virtual_desktop_settings(unsigned rows, unsigned columns, bool save)
+{
+    VERIFY(rows != 0);
+    VERIFY(rows <= max_window_stack_rows);
+    VERIFY(columns != 0);
+    VERIFY(columns <= max_window_stack_columns);
+
+    auto current_rows = window_stack_rows();
+    auto current_columns = window_stack_columns();
+    if (rows != current_rows || columns != current_columns) {
+        auto& current_window_stack = this->current_window_stack();
+        auto current_stack_row = current_window_stack.row();
+        auto current_stack_column = current_window_stack.column();
+        bool need_rerender = false;
+        bool removing_current_stack = current_stack_row > rows - 1 || current_stack_column > columns - 1;
+        auto new_current_row = min(current_stack_row, rows - 1);
+        auto new_current_column = min(current_stack_column, columns - 1);
+
+        // Collect all windows that were moved. We can't tell the wms at this point because
+        // the current window stack may not be valid anymore, until after the move is complete
+        Vector<Window*, 32> windows_moved;
+
+        auto merge_window_stack = [&](WindowStack& from_stack, WindowStack& into_stack) {
+            auto move_to = WindowStack::MoveAllWindowsTo::Back;
+
+            // TODO: Figure out a better algorithm. We basically always layer it on top, unless
+            // it's either being moved to window stack we're viewing or that we will be viewing.
+            // In that case we would want to make sure the window stack ends up on top (with no
+            // change to the active window)
+            bool moving_to_new_current_stack = into_stack.row() == new_current_row && into_stack.column() == new_current_column;
+            if (moving_to_new_current_stack)
+                move_to = WindowStack::MoveAllWindowsTo::Front;
+            from_stack.move_all_windows(into_stack, windows_moved, move_to);
+        };
+
+        // While we have too many rows, merge each row too many into the new bottom row
+        while (current_rows > rows) {
+            auto& row = m_window_stacks[rows];
+            for (size_t column_index = 0; column_index < row.size(); column_index++) {
+                merge_window_stack(row[column_index], m_window_stacks[rows - 1][column_index]);
+                if (rows - 1 == current_stack_row && column_index == current_stack_column)
+                    need_rerender = true;
+            }
+            m_window_stacks.remove(rows);
+            current_rows--;
+        }
+        // While we have too many columns, merge each column too many into the new right most column
+        while (current_columns > columns) {
+            for (size_t row_index = 0; row_index < current_rows; row_index++) {
+                auto& row = m_window_stacks[row_index];
+                merge_window_stack(row[columns], row[columns - 1]);
+                if (row_index == current_stack_row && columns - 1 == current_stack_column)
+                    need_rerender = true;
+                row.remove(columns);
+            }
+            current_columns--;
+        }
+        // Add more rows if necessary
+        while (rows > current_rows) {
+            auto row = adopt_own(*new RemoveReference<decltype(m_window_stacks[0])>());
+            for (size_t column_index = 0; column_index < columns; column_index++) {
+                auto window_stack = adopt_own(*new WindowStack(current_rows, column_index));
+                window_stack->set_stationary_window_stack(m_window_stacks[0][0]);
+                row->append(move(window_stack));
+            }
+            m_window_stacks.append(move(row));
+            current_rows++;
+        }
+        // Add more columns if necessary
+        while (columns > current_columns) {
+            for (size_t row_index = 0; row_index < current_rows; row_index++) {
+                auto& row = m_window_stacks[row_index];
+                while (row.size() < columns) {
+                    auto window_stack = adopt_own(*new WindowStack(row_index, row.size()));
+                    window_stack->set_stationary_window_stack(m_window_stacks[0][0]);
+                    row.append(move(window_stack));
+                }
+            }
+            current_columns++;
+        }
+
+        if (removing_current_stack) {
+            // If we're on a window stack that was removed, we need to move...
+            m_current_window_stack = &m_window_stacks[new_current_row][new_current_column];
+            Compositor::the().set_current_window_stack_no_transition(*m_current_window_stack);
+            need_rerender = false; // The compositor already called invalidate_for_window_stack_merge_or_change for us
+        }
+
+        for (auto* window_moved : windows_moved)
+            WindowManager::the().tell_wms_window_state_changed(*window_moved);
+
+        tell_wms_screen_rects_changed(); // updates the available virtual desktops
+        if (current_stack_row != new_current_row || current_stack_column != new_current_column)
+            tell_wms_current_window_stack_changed();
+
+        if (need_rerender)
+            Compositor::the().invalidate_for_window_stack_merge_or_change();
+    }
+
+    if (save) {
+        m_config->write_num_entry("VirtualDesktop", "Rows", window_stack_rows());
+        m_config->write_num_entry("VirtualDesktop", "Columns", window_stack_columns());
+        return m_config->sync();
     }
     return true;
 }
@@ -322,6 +425,8 @@ void WindowManager::greet_window_manager(WMClientConnection& conn)
     if (conn.window_id() < 0)
         return;
 
+    tell_wm_about_current_window_stack(conn);
+
     for_each_window_stack([&](auto& window_stack) {
         window_stack.for_each_window([&](Window& other_window) {
             //if (conn.window_id() != other_window.window_id()) {
@@ -345,7 +450,12 @@ void WindowManager::tell_wm_about_window(WMClientConnection& conn, Window& windo
     if (window.is_internal())
         return;
     auto* parent = window.parent_window();
-    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
+    auto* window_stack = &current_window_stack();
+    if (!is_stationary_window_type(window.type())) {
+        if (auto* stack = window.outer_stack())
+            window_stack = stack;
+    }
+    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window_stack->row(), window_stack->column(), window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
 }
 
 void WindowManager::tell_wm_about_window_rect(WMClientConnection& conn, Window& window)
@@ -370,6 +480,16 @@ void WindowManager::tell_wm_about_window_icon(WMClientConnection& conn, Window& 
     conn.async_window_icon_bitmap_changed(conn.window_id(), window.client_id(), window.window_id(), window.icon().to_shareable_bitmap());
 }
 
+void WindowManager::tell_wm_about_current_window_stack(WMClientConnection& conn)
+{
+    if (conn.window_id() < 0)
+        return;
+    if (!(conn.event_mask() & WMEventMask::VirtualDesktopChanges))
+        return;
+    auto& window_stack = current_window_stack();
+    conn.async_virtual_desktop_changed(conn.window_id(), window_stack.row(), window_stack.column());
+}
+
 void WindowManager::tell_wms_window_state_changed(Window& window)
 {
     for_each_window_manager([&](WMClientConnection& conn) {
@@ -391,6 +511,13 @@ void WindowManager::tell_wms_window_rect_changed(Window& window)
     for_each_window_manager([&](WMClientConnection& conn) {
         tell_wm_about_window_rect(conn, window);
         return IterationDecision::Continue;
+    });
+}
+
+void WindowManager::tell_wms_screen_rects_changed()
+{
+    ClientConnection::for_each_client([&](ClientConnection& client) {
+        client.notify_about_new_screen_rects();
     });
 }
 
@@ -423,6 +550,14 @@ void WindowManager::tell_wms_super_space_key_pressed()
             return IterationDecision::Continue;
 
         conn.async_super_space_key_pressed(conn.window_id());
+        return IterationDecision::Continue;
+    });
+}
+
+void WindowManager::tell_wms_current_window_stack_changed()
+{
+    for_each_window_manager([&](WMClientConnection& conn) {
+        tell_wm_about_current_window_stack(conn);
         return IterationDecision::Continue;
     });
 }
@@ -1283,7 +1418,7 @@ bool WindowManager::is_window_in_modal_stack(Window& window_in_modal_stack, Wind
     return result == IterationDecision::Break;
 }
 
-void WindowManager::switch_to_window_stack(WindowStack& window_stack, Window* carry_window)
+void WindowManager::switch_to_window_stack(WindowStack& window_stack, Window* carry_window, bool show_overlay)
 {
     m_carry_window_to_new_stack.clear();
     m_switching_to_window_stack = &window_stack;
@@ -1334,7 +1469,7 @@ void WindowManager::switch_to_window_stack(WindowStack& window_stack, Window* ca
         m_current_window_stack = &window_stack;
     }
 
-    Compositor::the().switch_to_window_stack(window_stack);
+    Compositor::the().switch_to_window_stack(window_stack, show_overlay);
 }
 
 void WindowManager::did_switch_window_stack(Badge<Compositor>, WindowStack& previous_stack, WindowStack& new_stack)
@@ -1343,7 +1478,6 @@ void WindowManager::did_switch_window_stack(Badge<Compositor>, WindowStack& prev
 
     // We are being notified by the compositor, it should not be switching right now!
     VERIFY(!Compositor::the().is_switching_window_stacks());
-    VERIFY(&current_window_stack() == &new_stack);
 
     if (m_switching_to_window_stack == &new_stack) {
         m_switching_to_window_stack = nullptr;
@@ -1352,8 +1486,10 @@ void WindowManager::did_switch_window_stack(Badge<Compositor>, WindowStack& prev
             // carried to when the user rapidly tries to switch stacks, so make sure to
             // only reset the moving flag if we arrived at our final destination
             for (auto& window_ref : m_carry_window_to_new_stack) {
-                if (auto* window = window_ref.ptr())
+                if (auto* window = window_ref.ptr()) {
                     window->set_moving_to_another_stack(false);
+                    tell_wms_window_state_changed(*window);
+                }
             }
             m_carry_window_to_new_stack.clear();
         }
@@ -1378,6 +1514,8 @@ void WindowManager::did_switch_window_stack(Badge<Compositor>, WindowStack& prev
         pick_new_active_window(nullptr);
 
     reevaluate_hovered_window();
+
+    tell_wms_current_window_stack_changed();
 }
 
 void WindowManager::process_key_event(KeyEvent& event)

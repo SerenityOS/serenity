@@ -19,8 +19,15 @@ public:
 
     bool is_empty() const { return m_windows.is_empty(); }
     void add(Window&);
+    void add_to_back(Window&);
     void remove(Window&);
     void move_to_front(Window&);
+
+    enum class MoveAllWindowsTo {
+        Front,
+        Back
+    };
+    void move_all_windows(WindowStack&, Vector<Window*, 32>&, MoveAllWindowsTo);
 
     enum class IncludeWindowFrame {
         Yes,
@@ -38,6 +45,8 @@ public:
 
     template<typename Callback>
     void for_each_window(Callback);
+    template<typename Callback>
+    IterationDecision for_each_window_from_back_to_front(Callback);
 
     Window::List& windows() { return m_windows; }
 
@@ -143,6 +152,17 @@ inline void WindowStack::for_each_window(Callback callback)
         if (callback(window) == IterationDecision::Break)
             return;
     }
+}
+
+template<typename Callback>
+inline IterationDecision WindowStack::for_each_window_from_back_to_front(Callback callback)
+{
+    for (auto& window : m_windows) {
+        IterationDecision decision = callback(window);
+        if (decision != IterationDecision::Break)
+            return decision;
+    }
+    return IterationDecision::Continue;
 }
 
 template<typename Callback>
