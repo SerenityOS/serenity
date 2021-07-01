@@ -6,9 +6,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Platform.h>
 #include <LibTest/CrashTest.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#ifndef AK_OS_MACOS
+#    include <sys/prctl.h>
+#endif
 
 namespace Test {
 
@@ -49,6 +54,10 @@ bool Crash::run(RunType run_type)
             perror("fork");
             VERIFY_NOT_REACHED();
         } else if (pid == 0) {
+#ifndef AK_OS_MACOS
+            if (prctl(PR_SET_DUMPABLE, 0, 0) < 0)
+                perror("prctl(PR_SET_DUMPABLE)");
+#endif
             run_crash_and_print_if_error();
             exit(0);
         }
