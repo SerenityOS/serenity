@@ -64,6 +64,7 @@ public:
         WM_AppletAreaSizeChanged,
         WM_SuperKeyPressed,
         WM_SuperSpaceKeyPressed,
+        WM_VirtualDesktopChanged,
         __End_WM_Events,
     };
 
@@ -135,13 +136,15 @@ public:
 
 class WMWindowStateChangedEvent : public WMEvent {
 public:
-    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, const StringView& title, const Gfx::IntRect& rect, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
+    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, const StringView& title, const Gfx::IntRect& rect, unsigned virtual_desktop_row, unsigned virtual_desktop_column, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
         : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
         , m_parent_client_id(parent_client_id)
         , m_parent_window_id(parent_window_id)
         , m_title(title)
         , m_rect(rect)
         , m_window_type(window_type)
+        , m_virtual_desktop_row(virtual_desktop_row)
+        , m_virtual_desktop_column(virtual_desktop_column)
         , m_active(is_active)
         , m_modal(is_modal)
         , m_minimized(is_minimized)
@@ -160,6 +163,8 @@ public:
     bool is_minimized() const { return m_minimized; }
     bool is_frameless() const { return m_frameless; }
     Optional<int> progress() const { return m_progress; }
+    unsigned virtual_desktop_row() const { return m_virtual_desktop_row; }
+    unsigned virtual_desktop_column() const { return m_virtual_desktop_column; }
 
 private:
     int m_parent_client_id;
@@ -167,6 +172,8 @@ private:
     String m_title;
     Gfx::IntRect m_rect;
     WindowType m_window_type;
+    unsigned m_virtual_desktop_row;
+    unsigned m_virtual_desktop_column;
     bool m_active;
     bool m_modal;
     bool m_minimized;
@@ -200,6 +207,23 @@ public:
 
 private:
     RefPtr<Gfx::Bitmap> m_bitmap;
+};
+
+class WMVirtualDesktopChangedEvent : public WMEvent {
+public:
+    explicit WMVirtualDesktopChangedEvent(int client_id, unsigned current_row, unsigned current_column)
+        : WMEvent(Event::Type::WM_VirtualDesktopChanged, client_id, 0)
+        , m_current_row(current_row)
+        , m_current_column(current_column)
+    {
+    }
+
+    unsigned current_row() const { return m_current_row; }
+    unsigned current_column() const { return m_current_column; }
+
+private:
+    const unsigned m_current_row;
+    const unsigned m_current_column;
 };
 
 class MultiPaintEvent final : public Event {

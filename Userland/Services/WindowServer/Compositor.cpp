@@ -1287,11 +1287,7 @@ void Compositor::update_animations(Screen& screen, Gfx::DisjointRectSet& flush_r
 
 void Compositor::create_window_stack_switch_overlay(WindowStack& target_stack)
 {
-    if (m_stack_switch_overlay_timer) {
-        // Cancel any timer, we're going to delete the overlay
-        m_stack_switch_overlay_timer->stop();
-        m_stack_switch_overlay_timer = nullptr;
-    }
+    stop_window_stack_switch_overlay_timer();
     Screen::for_each([&](auto& screen) {
         auto& screen_data = m_screen_data[screen.index()];
         screen_data.m_window_stack_switch_overlay = nullptr; // delete it first
@@ -1301,20 +1297,45 @@ void Compositor::create_window_stack_switch_overlay(WindowStack& target_stack)
     });
 }
 
+void Compositor::remove_window_stack_switch_overlays()
+{
+    Screen::for_each([&](auto& screen) {
+        auto& screen_data = m_screen_data[screen.index()];
+        screen_data.m_window_stack_switch_overlay = nullptr;
+        return IterationDecision::Continue;
+    });
+}
+
+void Compositor::stop_window_stack_switch_overlay_timer()
+{
+    if (m_stack_switch_overlay_timer) {
+        // Cancel any timer, we're going to delete the overlay
+        m_stack_switch_overlay_timer->stop();
+        m_stack_switch_overlay_timer = nullptr;
+    }
+}
+
 void Compositor::start_window_stack_switch_overlay_timer()
 {
     if (m_stack_switch_overlay_timer) {
         m_stack_switch_overlay_timer->stop();
         m_stack_switch_overlay_timer = nullptr;
     }
+    bool have_overlay = false;
+    Screen::for_each([&](auto& screen) {
+        auto& screen_data = m_screen_data[screen.index()];
+        if (screen_data.m_window_stack_switch_overlay) {
+            have_overlay = true;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    if (!have_overlay)
+        return;
     m_stack_switch_overlay_timer = Core::Timer::create_single_shot(
         500,
         [this] {
-            Screen::for_each([&](auto& screen) {
-                auto& screen_data = m_screen_data[screen.index()];
-                screen_data.m_window_stack_switch_overlay = nullptr;
-                return IterationDecision::Continue;
-            });
+            remove_window_stack_switch_overlays();
         },
         this);
     m_stack_switch_overlay_timer->start();
@@ -1349,7 +1370,26 @@ void Compositor::finish_window_stack_switch()
     start_window_stack_switch_overlay_timer();
 }
 
-void Compositor::switch_to_window_stack(WindowStack& new_window_stack)
+void Compositor::set_current_window_stack_no_transition(WindowStack& new_window_stack)
+{
+    if (m_transitioning_to_window_stack) {
+        finish_window_stack_switch();
+        VERIFY(!m_window_stack_transition_animation);
+        VERIFY(!m_transitioning_to_window_stack);
+    }
+    if (m_current_window_stack == &new_window_stack)
+        return;
+    m_current_window_stack = &new_window_stack;
+    invalidate_for_window_stack_merge_or_change();
+}
+
+void Compositor::invalidate_for_window_stack_merge_or_change()
+{
+    invalidate_occlusions();
+    invalidate_screen();
+}
+
+void Compositor::switch_to_window_stack(WindowStack& new_window_stack, bool show_overlay)
 {
     if (m_transitioning_to_window_stack) {
         if (m_transitioning_to_window_stack == &new_window_stack)
@@ -1363,8 +1403,13 @@ void Compositor::switch_to_window_stack(WindowStack& new_window_stack)
 
     if (&new_window_stack == m_current_window_stack) {
         // So that the user knows which stack they're on, show the overlay briefly
-        create_window_stack_switch_overlay(*m_current_window_stack);
-        start_window_stack_switch_overlay_timer();
+        if (show_overlay) {
+            create_window_stack_switch_overlay(*m_current_window_stack);
+            start_window_stack_switch_overlay_timer();
+        } else {
+            stop_window_stack_switch_overlay_timer();
+            remove_window_stack_switch_overlays();
+        }
         return;
     }
     VERIFY(!m_transitioning_to_window_stack);
@@ -1387,8 +1432,13 @@ void Compositor::switch_to_window_stack(WindowStack& new_window_stack)
     m_transitioning_to_window_stack->set_transition_offset({}, { -delta_x, -delta_y });
     m_current_window_stack->set_transition_offset({}, {});
 
-    create_window_stack_switch_overlay(*m_transitioning_to_window_stack);
-    // We start the timer when the animation ends!
+    if (show_overlay) {
+        // We start the timer when the animation ends!
+        create_window_stack_switch_overlay(*m_transitioning_to_window_stack);
+    } else {
+        stop_window_stack_switch_overlay_timer();
+        remove_window_stack_switch_overlays();
+    }
 
     VERIFY(!m_window_stack_transition_animation);
     m_window_stack_transition_animation = Animation::create();
