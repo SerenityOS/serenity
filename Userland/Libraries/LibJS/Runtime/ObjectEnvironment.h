@@ -21,7 +21,7 @@ public:
     ObjectEnvironment(Object& binding_object, IsWithEnvironment, Environment* outer_environment);
 
     virtual Optional<Variable> get_from_environment(FlyString const&) const override;
-    virtual void put_into_environment(FlyString const&, Variable) override;
+    virtual bool put_into_environment(FlyString const&, Variable) override;
     virtual bool delete_from_environment(FlyString const&) override;
 
     virtual bool has_binding(FlyString const& name) const override;

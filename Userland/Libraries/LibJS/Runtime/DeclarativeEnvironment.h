@@ -24,7 +24,7 @@ public:
 
     // ^Environment
     virtual Optional<Variable> get_from_environment(FlyString const&) const override;
-    virtual void put_into_environment(FlyString const&, Variable) override;
+    virtual bool put_into_environment(FlyString const&, Variable) override;
     virtual bool delete_from_environment(FlyString const&) override;
 
     HashMap<FlyString, Variable> const& variables() const { return m_variables; }

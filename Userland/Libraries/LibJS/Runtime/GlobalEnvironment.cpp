@@ -32,10 +32,10 @@ Optional<Variable> GlobalEnvironment::get_from_environment(FlyString const& name
     return m_object_record->get_from_environment(name);
 }
 
-void GlobalEnvironment::put_into_environment(FlyString const& name, Variable variable)
+bool GlobalEnvironment::put_into_environment(FlyString const& name, Variable variable)
 {
     // FIXME: This should be a "composite" of the object record and the declarative record.
-    m_object_record->put_into_environment(name, variable);
+    return m_object_record->put_into_environment(name, variable);
 }
 
 bool GlobalEnvironment::delete_from_environment(FlyString const& name)
