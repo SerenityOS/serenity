@@ -18,7 +18,7 @@ namespace Web::CSS {
 AtStyleRule::AtStyleRule() { }
 AtStyleRule::~AtStyleRule() { }
 
-DeclarationOrAtRule::DeclarationOrAtRule(AtStyleRule at)
+DeclarationOrAtRule::DeclarationOrAtRule(RefPtr<AtStyleRule> at)
     : m_type(DeclarationType::At)
     , m_at(move(at))
 {
@@ -94,7 +94,7 @@ String DeclarationOrAtRule::to_string() const
     switch (m_type) {
     default:
     case DeclarationType::At:
-        builder.append(m_at.to_string());
+        builder.append(m_at->to_string());
         break;
     case DeclarationType::Declaration:
         builder.append(m_declaration.to_string());

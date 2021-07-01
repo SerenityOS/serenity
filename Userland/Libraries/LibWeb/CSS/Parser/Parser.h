@@ -27,11 +27,11 @@ public:
     ~Parser();
 
     // The normal parser entry point, for parsing stylesheets.
-    Vector<QualifiedStyleRule> parse_as_stylesheet();
+    NonnullRefPtrVector<QualifiedStyleRule> parse_as_stylesheet();
     // For the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
-    Vector<QualifiedStyleRule> parse_as_list_of_rules();
+    NonnullRefPtrVector<QualifiedStyleRule> parse_as_list_of_rules();
     // For use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
-    Optional<QualifiedStyleRule> parse_as_rule();
+    RefPtr<QualifiedStyleRule> parse_as_rule();
     // Used in @supports conditions. [CSS3-CONDITIONAL]
     Optional<StyleDeclarationRule> parse_as_declaration();
     // For the contents of a style attribute, which parses text into the contents of a single style rule.
@@ -71,9 +71,9 @@ private:
     void reconsume_current_input_token();
     bool is_combinator(String);
 
-    Vector<QualifiedStyleRule> consume_a_list_of_rules(bool top_level);
-    AtStyleRule consume_an_at_rule();
-    Optional<QualifiedStyleRule> consume_a_qualified_rule();
+    NonnullRefPtrVector<QualifiedStyleRule> consume_a_list_of_rules(bool top_level);
+    NonnullRefPtr<AtStyleRule> consume_an_at_rule();
+    RefPtr<QualifiedStyleRule> consume_a_qualified_rule();
     Vector<DeclarationOrAtRule> consume_a_list_of_declarations();
     Optional<StyleDeclarationRule> consume_a_declaration(Vector<StyleComponentValueRule>);
     Optional<StyleDeclarationRule> consume_a_declaration();

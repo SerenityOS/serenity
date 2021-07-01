@@ -15,7 +15,7 @@ class DeclarationOrAtRule {
     friend class Parser;
 
 public:
-    explicit DeclarationOrAtRule(AtStyleRule at);
+    explicit DeclarationOrAtRule(RefPtr<AtStyleRule> at);
     explicit DeclarationOrAtRule(StyleDeclarationRule declaration);
     ~DeclarationOrAtRule();
 
@@ -28,7 +28,7 @@ public:
 
 private:
     DeclarationType m_type;
-    AtStyleRule m_at;
+    RefPtr<AtStyleRule> m_at;
     StyleDeclarationRule m_declaration;
 };
 
