@@ -362,6 +362,22 @@ Optional<size_t> find_last(StringView const& haystack, char needle)
     return {};
 }
 
+Vector<size_t> find_all(StringView const& haystack, StringView const& needle)
+{
+    Vector<size_t> positions;
+    size_t current_position = 0;
+    while (current_position <= haystack.length()) {
+        auto maybe_position = AK::memmem_optional(
+            haystack.characters_without_null_termination() + current_position, haystack.length() - current_position,
+            needle.characters_without_null_termination(), needle.length());
+        if (!maybe_position.has_value())
+            break;
+        positions.append(current_position + *maybe_position);
+        current_position += *maybe_position + 1;
+    }
+    return positions;
+}
+
 String to_snakecase(const StringView& str)
 {
     auto should_insert_underscore = [&](auto i, auto current_char) {
