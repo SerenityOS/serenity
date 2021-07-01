@@ -95,6 +95,10 @@ is_valid_target() {
         CMAKE_ARGS+=("-DBUILD_LAGOM=ON")
         return 0
     fi
+    if [ "$TARGET" = "x86_64" ]; then
+        CMAKE_ARGS+=("-DSERENITY_ARCH=x86_64")
+        return 0
+    fi
     [[ "$TARGET" =~ ^(i686|x86_64|lagom)$ ]] || return 1
 }
 
