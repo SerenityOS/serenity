@@ -59,7 +59,6 @@ asm(
 
 String Processor::platform_string() const
 {
-    // FIXME: other platforms
     return "x86_64";
 }
 
