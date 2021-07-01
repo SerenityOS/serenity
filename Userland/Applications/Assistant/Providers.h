@@ -141,7 +141,7 @@ public:
 
 class URLProvider : public Provider {
 public:
-    void query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+    void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
 };
 
 }

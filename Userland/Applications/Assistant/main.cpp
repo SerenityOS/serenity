@@ -22,7 +22,7 @@ namespace Assistant {
 
 struct AppState {
     Optional<size_t> selected_index;
-    Vector<NonnullRefPtr<Result>> results;
+    NonnullRefPtrVector<Result> results;
     size_t visible_result_count { 0 };
 
     Threading::Lock lock;
@@ -123,7 +123,7 @@ public:
         m_file_provider.build_filesystem_cache();
     }
 
-    Function<void(Vector<NonnullRefPtr<Result>>)> on_new_results;
+    Function<void(NonnullRefPtrVector<Result>)> on_new_results;
 
     void search(String const& query)
     {
@@ -149,7 +149,7 @@ public:
     }
 
 private:
-    void recv_results(String const& query, Vector<NonnullRefPtr<Result>> const& results)
+    void recv_results(String const& query, NonnullRefPtrVector<Result> const& results)
     {
         {
             Threading::Locker db_locker(m_lock);
@@ -160,8 +160,8 @@ private:
             it = m_result_cache.find(query);
 
             for (auto& result : results) {
-                auto found = it->value.find_if([result](auto& other) {
-                    return result->equals(other);
+                auto found = it->value.find_if([&result](auto& other) {
+                    return result.equals(other);
                 });
 
                 if (found.is_end())
@@ -174,7 +174,12 @@ private:
         if (new_results == m_result_cache.end())
             return;
 
-        dual_pivot_quick_sort(new_results->value, 0, static_cast<int>(new_results->value.size() - 1), [](auto& a, auto& b) {
+        // NonnullRefPtrVector will provide dual_pivot_quick_sort references rather than pointers,
+        // and dual_pivot_quick_sort requires being able to construct the underlying type on the
+        // stack. Assistant::Result is pure virtual, thus cannot be constructed on the stack.
+        auto& sortable_results = static_cast<Vector<NonnullRefPtr<Result>>&>(new_results->value);
+
+        dual_pivot_quick_sort(sortable_results, 0, static_cast<int>(sortable_results.size() - 1), [](auto& a, auto& b) {
             return a->score() > b->score();
         });
 
@@ -190,7 +195,7 @@ private:
     URLProvider m_url_provider;
 
     Threading::Lock m_lock;
-    HashMap<String, Vector<NonnullRefPtr<Result>>> m_result_cache;
+    HashMap<String, NonnullRefPtrVector<Result>> m_result_cache;
 };
 
 }
@@ -241,7 +246,7 @@ int main(int argc, char** argv)
     text_box.on_return_pressed = [&]() {
         if (!app_state.selected_index.has_value())
             return;
-        app_state.results[app_state.selected_index.value()]->activate();
+        app_state.results[app_state.selected_index.value()].activate();
         exit(0);
     };
     text_box.on_up_pressed = [&]() {
@@ -283,13 +288,13 @@ int main(int argc, char** argv)
         results_container.remove_all_children();
 
         for (size_t i = 0; i < app_state.visible_result_count; ++i) {
-            auto result = app_state.results[i];
+            auto& result = app_state.results[i];
             auto& match = results_container.add<Assistant::ResultRow>();
-            match.set_image(result->bitmap());
-            match.set_title(result->title());
-            match.set_subtitle(result->subtitle());
-            match.on_selected = [result_copy = result]() {
-                result_copy->activate();
+            match.set_image(result.bitmap());
+            match.set_title(result.title());
+            match.set_subtitle(result.subtitle());
+            match.on_selected = [&result]() {
+                result.activate();
                 exit(0);
             };
         }
