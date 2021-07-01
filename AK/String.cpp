@@ -459,14 +459,4 @@ String String::vformatted(StringView fmtstr, TypeErasedFormatParams params)
     return builder.to_string();
 }
 
-Optional<size_t> String::find(char c, size_t start) const
-{
-    return find(StringView { &c, 1 }, start);
-}
-
-Optional<size_t> String::find(StringView const& view, size_t start) const
-{
-    return StringUtils::find(*this, view, start);
-}
-
 }
