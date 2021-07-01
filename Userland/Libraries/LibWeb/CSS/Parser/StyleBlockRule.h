@@ -7,12 +7,13 @@
 
 #pragma once
 
+#include <AK/RefCounted.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Parser/Token.h>
 
 namespace Web::CSS {
 
-class StyleBlockRule {
+class StyleBlockRule : public RefCounted<StyleBlockRule> {
     friend class Parser;
 
 public:
@@ -31,5 +32,4 @@ private:
     Token m_token;
     Vector<String> m_values;
 };
-
 }

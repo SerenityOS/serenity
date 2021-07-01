@@ -78,8 +78,8 @@ private:
     Optional<StyleDeclarationRule> consume_a_declaration(Vector<StyleComponentValueRule>);
     Optional<StyleDeclarationRule> consume_a_declaration();
     StyleComponentValueRule consume_a_component_value();
-    StyleBlockRule consume_a_simple_block();
-    StyleFunctionRule consume_a_function();
+    NonnullRefPtr<StyleBlockRule> consume_a_simple_block();
+    NonnullRefPtr<StyleFunctionRule> consume_a_function();
 
     Tokenizer m_tokenizer;
     Vector<Token> m_tokens;
