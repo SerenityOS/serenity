@@ -3,7 +3,7 @@
 echo
 echo "==== Running Tests on SerenityOS ===="
 
-run-tests
+run-tests --show-progress=false
 fail_count=$?
 
 echo "Failed: $fail_count" > ./test-results.log
