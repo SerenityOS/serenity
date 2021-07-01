@@ -185,7 +185,7 @@ struct KmallocGlobalHeap {
 };
 
 READONLY_AFTER_INIT static KmallocGlobalHeap* g_kmalloc_global;
-static u8 g_kmalloc_global_heap[sizeof(KmallocGlobalHeap)];
+alignas(KmallocGlobalHeap) static u8 g_kmalloc_global_heap[sizeof(KmallocGlobalHeap)];
 
 // Treat the heap as logically separate from .bss
 __attribute__((section(".heap"))) static u8 kmalloc_eternal_heap[ETERNAL_RANGE_SIZE];
