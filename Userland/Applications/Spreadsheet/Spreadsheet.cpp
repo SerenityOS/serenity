@@ -91,7 +91,7 @@ static size_t convert_from_string(StringView str, unsigned base = 26, StringView
 
     size_t value = 0;
     for (size_t i = str.length(); i > 0; --i) {
-        auto digit_value = map.find_first_of(str[i - 1]).value_or(0);
+        auto digit_value = map.find(str[i - 1]).value_or(0);
         // NOTE: Refer to the note in `String::bijective_base_from()'.
         if (i == str.length() && str.length() > 1)
             ++digit_value;
