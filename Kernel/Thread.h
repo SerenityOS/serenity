@@ -1188,7 +1188,7 @@ public:
     InodeIndex global_procfs_inode_index() const { return m_global_procfs_inode_index; }
 
 private:
-    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>);
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>, FPUState*);
 
     IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
