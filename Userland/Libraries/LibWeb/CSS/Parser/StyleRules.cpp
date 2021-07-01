@@ -45,7 +45,10 @@ StyleComponentValueRule::~StyleComponentValueRule() { }
 StyleDeclarationRule::StyleDeclarationRule() { }
 StyleDeclarationRule::~StyleDeclarationRule() { }
 
-StyleFunctionRule::StyleFunctionRule() { }
+StyleFunctionRule::StyleFunctionRule(String name)
+    : m_name(name)
+{
+}
 StyleFunctionRule::~StyleFunctionRule() { }
 
 template<class SeparatorType, class CollectionType>
@@ -106,7 +109,7 @@ String QualifiedStyleRule::to_string() const
     StringBuilder builder;
 
     append_with_to_string(builder, " ", m_prelude);
-    builder.append(m_block.to_string());
+    builder.append(m_block->to_string());
 
     return builder.to_string();
 }
@@ -131,10 +134,10 @@ String StyleComponentValueRule::to_string() const
         builder.append(m_token.to_string());
         break;
     case ComponentType::Function:
-        builder.append(m_function.to_string());
+        builder.append(m_function->to_string());
         break;
     case ComponentType::Block:
-        builder.append(m_block.to_string());
+        builder.append(m_block->to_string());
         break;
     }
 

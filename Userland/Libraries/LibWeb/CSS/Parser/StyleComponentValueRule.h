@@ -7,11 +7,14 @@
 
 #pragma once
 
-#include <LibWeb/CSS/Parser/StyleBlockRule.h>
-#include <LibWeb/CSS/Parser/StyleFunctionRule.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/RefPtr.h>
 #include <LibWeb/CSS/Parser/Token.h>
 
 namespace Web::CSS {
+
+class StyleBlockRule;
+class StyleFunctionRule;
 
 class StyleComponentValueRule {
     friend class Parser;
@@ -27,10 +30,18 @@ public:
     ~StyleComponentValueRule();
 
     bool is_block() const { return m_type == ComponentType::Block; }
-    StyleBlockRule const& block() const { return m_block; }
+    StyleBlockRule const& block() const
+    {
+        VERIFY(is_block());
+        return *m_block;
+    }
 
     bool is_function() const { return m_type == ComponentType::Function; }
-    StyleFunctionRule const& function() const { return m_function; }
+    StyleFunctionRule const& function() const
+    {
+        VERIFY(is_function());
+        return *m_function;
+    }
 
     bool is(Token::TokenType type) const
     {
@@ -44,7 +55,7 @@ public:
 private:
     ComponentType m_type;
     Token m_token;
-    StyleFunctionRule m_function;
-    StyleBlockRule m_block;
+    RefPtr<StyleFunctionRule> m_function;
+    RefPtr<StyleBlockRule> m_block;
 };
 }
