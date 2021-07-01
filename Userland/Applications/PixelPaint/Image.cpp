@@ -125,12 +125,12 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(Str
         if (width != layer->size().width() || height != layer->size().height())
             return String { "Decoded layer bitmap has wrong size"sv };
 
+        image->add_layer(*layer);
+
         layer->set_location({ layer_object.get("locationx").to_i32(), layer_object.get("locationy").to_i32() });
         layer->set_opacity_percent(layer_object.get("opacity_percent").to_i32());
         layer->set_visible(layer_object.get("visible").as_bool());
         layer->set_selected(layer_object.get("selected").as_bool());
-
-        image->add_layer(*layer);
     }
 
     image->set_path(file_path);
