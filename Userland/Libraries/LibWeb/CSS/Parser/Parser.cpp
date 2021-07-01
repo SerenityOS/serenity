@@ -155,12 +155,12 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> pa
             }
 
             if (attribute_parts.at(attribute_index) == " ~") {
-                simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::Contains;
+                simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ContainsWord;
                 attribute_index += 2;
             }
 
             if (attribute_parts.at(attribute_index) == " |") {
-                simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::StartsWith;
+                simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithSegment;
                 attribute_index += 2;
             }
 

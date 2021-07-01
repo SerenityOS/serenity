@@ -60,8 +60,11 @@ public:
             None,
             HasAttribute,
             ExactValueMatch,
-            Contains,
-            StartsWith,
+            ContainsWord,      // [att~=val]
+            ContainsString,    // [att*=val]
+            StartsWithSegment, // [att|=val]
+            StartsWithString,  // [att^=val]
+            EndsWithString,    // [att$=val]
         };
 
         AttributeMatchType attribute_match_type { AttributeMatchType::None };

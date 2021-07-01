@@ -325,11 +325,20 @@ void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
             case CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch:
                 attribute_match_type_description = "ExactValueMatch";
                 break;
-            case CSS::Selector::SimpleSelector::AttributeMatchType::Contains:
-                attribute_match_type_description = "Contains";
+            case CSS::Selector::SimpleSelector::AttributeMatchType::ContainsWord:
+                attribute_match_type_description = "ContainsWord";
                 break;
-            case CSS::Selector::SimpleSelector::AttributeMatchType::StartsWith:
-                attribute_match_type_description = "StartsWith";
+            case CSS::Selector::SimpleSelector::AttributeMatchType::ContainsString:
+                attribute_match_type_description = "ContainsString";
+                break;
+            case CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithSegment:
+                attribute_match_type_description = "StartsWithSegment";
+                break;
+            case CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithString:
+                attribute_match_type_description = "StartsWithString";
+                break;
+            case CSS::Selector::SimpleSelector::AttributeMatchType::EndsWithString:
+                attribute_match_type_description = "EndsWithString";
                 break;
             }
 

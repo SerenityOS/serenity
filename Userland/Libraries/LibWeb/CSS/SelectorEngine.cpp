@@ -180,8 +180,24 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
         if (element.attribute(component.attribute_name) != component.attribute_value)
             return false;
         break;
-    case CSS::Selector::SimpleSelector::AttributeMatchType::Contains:
+    case CSS::Selector::SimpleSelector::AttributeMatchType::ContainsWord:
         if (!element.attribute(component.attribute_name).split(' ').contains_slow(component.attribute_value))
+            return false;
+        break;
+    case CSS::Selector::SimpleSelector::AttributeMatchType::ContainsString:
+        if (!element.attribute(component.attribute_name).contains(component.attribute_value))
+            return false;
+        break;
+    case CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithSegment:
+        if (element.attribute(component.attribute_name).split('-').first() != component.attribute_value)
+            return false;
+        break;
+    case CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithString:
+        if (!element.attribute(component.attribute_name).starts_with(component.attribute_value))
+            return false;
+        break;
+    case CSS::Selector::SimpleSelector::AttributeMatchType::EndsWithString:
+        if (!element.attribute(component.attribute_name).ends_with(component.attribute_value))
             return false;
         break;
     default:
