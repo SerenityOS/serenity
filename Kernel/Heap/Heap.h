@@ -29,6 +29,15 @@ class Heap {
 
     static_assert(CHUNK_SIZE >= sizeof(AllocationHeader));
 
+    ALWAYS_INLINE AllocationHeader* allocation_header(void* ptr)
+    {
+        return (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
+    }
+    ALWAYS_INLINE const AllocationHeader* allocation_header(const void* ptr) const
+    {
+        return (const AllocationHeader*)((((const u8*)ptr) - sizeof(AllocationHeader)));
+    }
+
     static size_t calculate_chunks(size_t memory_size)
     {
         return (sizeof(u8) * memory_size) / (sizeof(u8) * CHUNK_SIZE + 1);
@@ -91,7 +100,7 @@ public:
     {
         if (!ptr)
             return;
-        auto* a = (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
+        auto* a = allocation_header(ptr);
         VERIFY((u8*)a >= m_chunks && (u8*)ptr < m_chunks + m_total_chunks * CHUNK_SIZE);
         FlatPtr start = ((FlatPtr)a - (FlatPtr)m_chunks) / CHUNK_SIZE;
 
@@ -115,7 +124,7 @@ public:
         if (!ptr)
             return h.allocate(new_size);
 
-        auto* a = (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
+        auto* a = allocation_header(ptr);
         VERIFY((u8*)a >= m_chunks && (u8*)ptr < m_chunks + m_total_chunks * CHUNK_SIZE);
         VERIFY((u8*)a + a->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
 
@@ -125,9 +134,10 @@ public:
             return ptr;
 
         auto* new_ptr = h.allocate(new_size);
-        if (new_ptr)
+        if (new_ptr) {
             __builtin_memcpy(new_ptr, ptr, min(old_size, new_size));
-        deallocate(ptr);
+            deallocate(ptr);
+        }
         return new_ptr;
     }
 
@@ -138,7 +148,7 @@ public:
 
     bool contains(const void* ptr) const
     {
-        const auto* a = (const AllocationHeader*)((((const u8*)ptr) - sizeof(AllocationHeader)));
+        const auto* a = allocation_header(ptr);
         if ((const u8*)a < m_chunks)
             return false;
         if ((const u8*)ptr >= m_chunks + m_total_chunks * CHUNK_SIZE)
