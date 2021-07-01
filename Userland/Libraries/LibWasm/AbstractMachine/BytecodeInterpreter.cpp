@@ -17,7 +17,7 @@ namespace Wasm {
 
 #define TRAP_IF_NOT(x)                                                                         \
     do {                                                                                       \
-        if (trap_if_not(x)) {                                                                  \
+        if (trap_if_not(x, #x)) {                                                              \
             dbgln_if(WASM_TRACE_DEBUG, "Trapped because {} failed, at line {}", #x, __LINE__); \
             return;                                                                            \
         }                                                                                      \
@@ -25,14 +25,14 @@ namespace Wasm {
 
 #define TRAP_IF_NOT_NORETURN(x)                                                                \
     do {                                                                                       \
-        if (trap_if_not(x)) {                                                                  \
+        if (trap_if_not(x, #x)) {                                                              \
             dbgln_if(WASM_TRACE_DEBUG, "Trapped because {} failed, at line {}", #x, __LINE__); \
         }                                                                                      \
     } while (false)
 
 void BytecodeInterpreter::interpret(Configuration& configuration)
 {
-    m_do_trap = false;
+    m_trap.clear();
     auto& instructions = configuration.frame().expression().instructions();
     auto max_ip_value = InstructionPointer { instructions.size() };
     auto& current_ip_value = configuration.ip();
@@ -40,13 +40,13 @@ void BytecodeInterpreter::interpret(Configuration& configuration)
 
     while (current_ip_value < max_ip_value) {
         if (executed_instructions++ >= Constants::max_allowed_executed_instructions_per_call) [[unlikely]] {
-            m_do_trap = true;
+            m_trap = Trap { "Exceeded maximum allowed number of instructions" };
             return;
         }
         auto& instruction = instructions[current_ip_value.value()];
         auto old_ip = current_ip_value;
         interpret(configuration, current_ip_value, instruction);
-        if (m_do_trap)
+        if (m_trap.has_value())
             return;
         if (current_ip_value == old_ip) // If no jump occurred
             ++current_ip_value;
@@ -83,7 +83,7 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, Instructio
     auto& address = configuration.frame().module().memories().first();
     auto memory = configuration.store().get(address);
     if (!memory) {
-        m_do_trap = true;
+        m_trap = Trap { "Nonexistent memory" };
         return;
     }
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
@@ -91,12 +91,12 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, Instructio
     TRAP_IF_NOT(entry.has<Value>());
     auto base = entry.get<Value>().to<i32>();
     if (!base.has_value()) {
-        m_do_trap = true;
+        m_trap = Trap { "Memory access out of bounds" };
         return;
     }
     auto instance_address = base.value() + static_cast<i64>(arg.offset);
     if (instance_address < 0 || static_cast<u64>(instance_address + sizeof(ReadType)) > memory->size()) {
-        m_do_trap = true;
+        m_trap = Trap { "Memory access out of bounds" };
         dbgln("LibWasm: Memory access out of bounds (expected 0 <= {} and {} <= {})", instance_address, instance_address + sizeof(ReadType), memory->size());
         return;
     }
@@ -117,7 +117,7 @@ void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruct
     TRAP_IF_NOT(base.has_value());
     auto instance_address = base.value() + static_cast<i64>(arg.offset);
     if (instance_address < 0 || static_cast<u64>(instance_address + data.size()) > memory->size()) {
-        m_do_trap = true;
+        m_trap = Trap { "Memory access out of bounds" };
         dbgln("LibWasm: Memory access out of bounds (expected 0 <= {} and {} <= {})", instance_address, instance_address + data.size(), memory->size());
         return;
     }
@@ -146,14 +146,14 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
     configuration.stack().entries().remove(configuration.stack().size() - span.size(), span.size());
 
-    Result result { Trap {} };
+    Result result { Trap { ""sv } };
     {
         CallFrameHandle handle { *this, configuration };
         result = configuration.call(*this, address, move(args));
     }
 
     if (result.is_trap()) {
-        m_do_trap = true;
+        m_trap = move(result.trap());
         return;
     }
 
@@ -254,7 +254,7 @@ T BytecodeInterpreter::read_value(ReadonlyBytes data)
     stream >> value;
     if (stream.handle_any_error()) {
         dbgln("Read from {} failed", data.data());
-        m_do_trap = true;
+        m_trap = Trap { "Read from memory failed" };
     }
     return value;
 }
@@ -266,7 +266,7 @@ float BytecodeInterpreter::read_value<float>(ReadonlyBytes data)
     LittleEndian<u32> raw_value;
     stream >> raw_value;
     if (stream.handle_any_error())
-        m_do_trap = true;
+        m_trap = Trap { "Read from memory failed" };
     return bit_cast<float>(static_cast<u32>(raw_value));
 }
 
@@ -277,7 +277,7 @@ double BytecodeInterpreter::read_value<double>(ReadonlyBytes data)
     LittleEndian<u64> raw_value;
     stream >> raw_value;
     if (stream.handle_any_error())
-        m_do_trap = true;
+        m_trap = Trap { "Read from memory failed" };
     return bit_cast<double>(static_cast<u64>(raw_value));
 }
 
@@ -319,7 +319,7 @@ template<typename V, typename T>
 MakeSigned<T> BytecodeInterpreter::checked_signed_truncate(V value)
 {
     if (isnan(value) || isinf(value)) { // "undefined", let's just trap.
-        m_do_trap = true;
+        m_trap = Trap { "Signed truncation undefined behaviour" };
         return 0;
     }
 
@@ -334,7 +334,7 @@ MakeSigned<T> BytecodeInterpreter::checked_signed_truncate(V value)
         return static_cast<SignedT>(truncated);
 
     dbgln_if(WASM_TRACE_DEBUG, "Truncate out of range error");
-    m_do_trap = true;
+    m_trap = Trap { "Signed truncation out of range" };
     return true;
 }
 
@@ -342,7 +342,7 @@ template<typename V, typename T>
 MakeUnsigned<T> BytecodeInterpreter::checked_unsigned_truncate(V value)
 {
     if (isnan(value) || isinf(value)) { // "undefined", let's just trap.
-        m_do_trap = true;
+        m_trap = Trap { "Unsigned truncation undefined behaviour" };
         return 0;
     }
     double truncated;
@@ -356,7 +356,7 @@ MakeUnsigned<T> BytecodeInterpreter::checked_unsigned_truncate(V value)
         return static_cast<UnsignedT>(truncated);
 
     dbgln_if(WASM_TRACE_DEBUG, "Truncate out of range error");
-    m_do_trap = true;
+    m_trap = Trap { "Unsigned truncation out of range" };
     return true;
 }
 
@@ -490,7 +490,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
 
     switch (instruction.opcode().value()) {
     case Instructions::unreachable.value():
-        m_do_trap = true;
+        m_trap = Trap { "Unreachable" };
         return;
     case Instructions::nop.value():
         return;
@@ -1087,7 +1087,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     default:
     unimplemented:;
         dbgln("Instruction '{}' not implemented", instruction_name(instruction.opcode()));
-        m_do_trap = true;
+        m_trap = Trap { String::formatted("Unimplemented instruction {}", instruction_name(instruction.opcode())) };
         return;
     }
 }
@@ -1097,7 +1097,7 @@ void DebuggerBytecodeInterpreter::interpret(Configuration& configuration, Instru
     if (pre_interpret_hook) {
         auto result = pre_interpret_hook(configuration, ip, instruction);
         if (!result) {
-            m_do_trap = true;
+            m_trap = Trap { "Trapped by user request" };
             return;
         }
     }
@@ -1106,7 +1106,7 @@ void DebuggerBytecodeInterpreter::interpret(Configuration& configuration, Instru
         if (post_interpret_hook) {
             auto result = post_interpret_hook(configuration, ip, instruction, *this);
             if (!result) {
-                m_do_trap = true;
+                m_trap = Trap { "Trapped by user request" };
                 return;
             }
         }
