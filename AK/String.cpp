@@ -483,10 +483,7 @@ Optional<size_t> String::find(char c, size_t start) const
 
 Optional<size_t> String::find(StringView const& view, size_t start) const
 {
-    auto index = StringUtils::find(substring_view(start), view);
-    if (!index.has_value())
-        return {};
-    return index.value() + start;
+    return StringUtils::find(*this, view, start);
 }
 
 }
