@@ -414,8 +414,6 @@ String JSONObject::quote_json_string(String string)
 // 25.5.1 JSON.parse ( text [ , reviver ] ), https://tc39.es/ecma262/#sec-json.parse
 JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 {
-    if (!vm.argument_count())
-        return js_undefined();
     auto string = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
@@ -426,16 +424,17 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
         vm.throw_exception<SyntaxError>(global_object, ErrorType::JsonMalformed);
         return {};
     }
-    Value result = parse_json_value(global_object, json.value());
+    Value unfiltered = parse_json_value(global_object, json.value());
     if (reviver.is_function()) {
         auto* root = Object::create(global_object, global_object.object_prototype());
         auto root_name = String::empty();
-        root->define_property(root_name, result);
+        root->define_property(root_name, unfiltered);
+        auto result = internalize_json_property(global_object, root, root_name, reviver.as_function());
         if (vm.exception())
             return {};
-        return internalize_json_property(global_object, root, root_name, reviver.as_function());
+        return result;
     }
-    return result;
+    return unfiltered;
 }
 
 Value JSONObject::parse_json_value(GlobalObject& global_object, const JsonValue& value)
@@ -480,43 +479,38 @@ Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray
 Value JSONObject::internalize_json_property(GlobalObject& global_object, Object* holder, PropertyName const& name, FunctionObject& reviver)
 {
     auto& vm = global_object.vm();
-    auto value = holder->get(name);
+    auto value = holder->get(name).value_or(js_undefined());
     if (vm.exception())
         return {};
     if (value.is_object()) {
-        auto& value_object = value.as_object();
+        auto is_array = value.is_array(global_object);
+        if (vm.exception())
+            return {};
 
+        auto& value_object = value.as_object();
         auto process_property = [&](const PropertyName& key) {
             auto element = internalize_json_property(global_object, &value_object, key, reviver);
             if (vm.exception())
                 return;
-            if (element.is_undefined()) {
+            if (element.is_undefined())
                 value_object.delete_property(key);
-            } else {
-                value_object.define_property(key, element, default_attributes, false);
-            }
+            else
+                value_object.define_property(key, element, default_attributes);
         };
 
-        if (value_object.is_array()) {
+        if (is_array) {
             auto length = length_of_array_like(global_object, value_object);
+            if (vm.exception())
+                return {};
             for (size_t i = 0; i < length; ++i) {
                 process_property(i);
                 if (vm.exception())
                     return {};
             }
         } else {
-            for (auto& entry : value_object.indexed_properties()) {
-                auto value_and_attributes = entry.value_and_attributes(&value_object);
-                if (!value_and_attributes.attributes.is_enumerable())
-                    continue;
-                process_property(entry.index());
-                if (vm.exception())
-                    return {};
-            }
-            for (auto& [key, metadata] : value_object.shape().property_table_ordered()) {
-                if (!metadata.attributes.is_enumerable())
-                    continue;
-                process_property(key);
+            auto property_list = value_object.get_enumerable_own_property_names(Object::PropertyKind::Key);
+            for (auto& property_name : property_list) {
+                process_property(property_name.as_string().string());
                 if (vm.exception())
                     return {};
             }
