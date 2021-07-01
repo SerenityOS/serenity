@@ -26,6 +26,9 @@ public:
     static RefPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);
     static RefPtr<StringImpl> create(const char* cstring, size_t length, ShouldChomp = NoChomp);
     static RefPtr<StringImpl> create(ReadonlyBytes, ShouldChomp = NoChomp);
+    static RefPtr<StringImpl> create_lowercased(char const* cstring, size_t length);
+    static RefPtr<StringImpl> create_uppercased(char const* cstring, size_t length);
+
     NonnullRefPtr<StringImpl> to_lowercase() const;
     NonnullRefPtr<StringImpl> to_uppercase() const;
 
