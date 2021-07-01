@@ -14,6 +14,7 @@
 namespace Web::Bindings {
 
 class WebAssemblyMemoryObject;
+Result<size_t, JS::Value> parse_module(JS::GlobalObject& global_object, JS::Object* buffer);
 JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String name, JS::GlobalObject& global_object);
 JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object);
 Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueType& type, JS::GlobalObject& global_object);
@@ -62,20 +63,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(validate);
     JS_DECLARE_NATIVE_FUNCTION(compile);
     JS_DECLARE_NATIVE_FUNCTION(instantiate);
-};
-
-class WebAssemblyModuleObject final : public JS::Object {
-    JS_OBJECT(WebAssemblyModuleObject, JS::Object);
-
-public:
-    explicit WebAssemblyModuleObject(JS::GlobalObject&, size_t index);
-    virtual ~WebAssemblyModuleObject() override = default;
-
-    size_t index() const { return m_index; }
-    const Wasm::Module& module() const { return WebAssemblyObject::s_compiled_modules.at(m_index).module; }
-
-private:
-    size_t m_index { 0 };
 };
 
 class WebAssemblyMemoryObject final : public JS::Object {
