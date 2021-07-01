@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/WebAssembly/WebAssemblyObject.h>
-#include <LibWeb/WebAssembly/WebAssemblyObjectPrototype.h>
+#include "WebAssemblyInstanceObject.h"
+#include <LibWeb/WebAssembly/WebAssemblyInstanceObjectPrototype.h>
 
 namespace Web::Bindings {
 

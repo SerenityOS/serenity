@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "WebAssemblyInstanceObject.h"
 #include "WebAssemblyMemoryPrototype.h"
 #include <AK/ScopeGuard.h>
 #include <LibJS/Runtime/Array.h>
@@ -15,10 +16,6 @@
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 namespace Web::Bindings {
-
-static JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String name, JS::GlobalObject& global_object);
-static JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object);
-static Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueType& type, JS::GlobalObject& global_object);
 
 WebAssemblyObject::WebAssemblyObject(JS::GlobalObject& global_object)
     : Object(*global_object.object_prototype())
@@ -307,12 +304,6 @@ WebAssemblyModuleObject::WebAssemblyModuleObject(JS::GlobalObject& global_object
 {
 }
 
-WebAssemblyInstanceObject::WebAssemblyInstanceObject(JS::GlobalObject& global_object, size_t index)
-    : Object(static_cast<WindowObject&>(global_object).ensure_web_prototype<WebAssemblyInstancePrototype>(class_name()))
-    , m_index(index)
-{
-}
-
 JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
 {
     switch (wasm_value.type().kind()) {
@@ -426,46 +417,6 @@ JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String
 
     WebAssemblyObject::s_global_cache.function_instances.set(address, function);
     return function;
-}
-
-void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
-{
-    Object::initialize(global_object);
-
-    VERIFY(!m_exports_object);
-    m_exports_object = JS::Object::create(global_object, nullptr);
-    auto& instance = this->instance();
-    auto& cache = this->cache();
-    for (auto& export_ : instance.exports()) {
-        export_.value().visit(
-            [&](const Wasm::FunctionAddress& address) {
-                auto object = cache.function_instances.get(address);
-                if (!object.has_value()) {
-                    object = create_native_function(address, export_.name(), global_object);
-                    cache.function_instances.set(address, *object);
-                }
-                m_exports_object->define_property(export_.name(), *object);
-            },
-            [&](const Wasm::MemoryAddress& address) {
-                auto object = cache.memory_instances.get(address);
-                if (!object.has_value()) {
-                    object = heap().allocate<WebAssemblyMemoryObject>(global_object, global_object, address);
-                    cache.memory_instances.set(address, *object);
-                }
-                m_exports_object->define_property(export_.name(), *object);
-            },
-            [&](const auto&) {
-                // FIXME: Implement other exports!
-            });
-    }
-
-    m_exports_object->set_integrity_level(IntegrityLevel::Frozen);
-}
-
-void WebAssemblyInstanceObject::visit_edges(Cell::Visitor& visitor)
-{
-    Object::visit_edges(visitor);
-    visitor.visit(m_exports_object);
 }
 
 WebAssemblyMemoryObject::WebAssemblyMemoryObject(JS::GlobalObject& global_object, Wasm::MemoryAddress address)
