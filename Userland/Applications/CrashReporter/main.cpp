@@ -100,7 +100,7 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
     builder.append('\n');
     builder.appendff(" r8={:16x}  r9={:16x} r10={:16x} r11={:16x}", regs.r8, regs.r9, regs.r10, regs.r11);
     builder.append('\n');
-    builder.appendff("r12={:16x}  r13={:16x} r14={:16x} r15={:16x}", regs.r12, regs.r13, regs.r14, regs.r15);
+    builder.appendff("r12={:16x} r13={:16x} r14={:16x} r15={:16x}", regs.r12, regs.r13, regs.r14, regs.r15);
     builder.append('\n');
     builder.appendff("rip={:16x} rflags={:16x}", regs.rip, regs.rflags);
 #endif
