@@ -143,6 +143,7 @@ public:
 
     [[nodiscard]] Optional<size_t> find(char, size_t start = 0) const;
     [[nodiscard]] Optional<size_t> find(StringView const&, size_t start = 0) const;
+    [[nodiscard]] Vector<size_t> find_all(StringView const& needle) const { return StringUtils::find_all(*this, needle); }
 
     [[nodiscard]] String substring(size_t start) const;
     [[nodiscard]] String substring(size_t start, size_t length) const;
@@ -279,7 +280,6 @@ public:
 
     int replace(const String& needle, const String& replacement, bool all_occurrences = false);
     size_t count(const String& needle) const;
-    Vector<size_t> find_all(const String& needle) const;
     [[nodiscard]] String reverse() const;
 
     template<typename... Ts>

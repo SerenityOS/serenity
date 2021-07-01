@@ -91,6 +91,8 @@ public:
     [[nodiscard]] Optional<size_t> find_last(char needle) const { return StringUtils::find_last(*this, needle); }
     // FIXME: Implement find_last(StringView const&) for API symmetry.
 
+    [[nodiscard]] Vector<size_t> find_all(StringView const& needle) const { return StringUtils::find_all(*this, needle); }
+
     [[nodiscard]] Optional<size_t> find_first_of(StringView const&) const;
     [[nodiscard]] Optional<size_t> find_last_of(StringView const&) const;
 
