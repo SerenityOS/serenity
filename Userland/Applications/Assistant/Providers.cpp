@@ -6,17 +6,24 @@
 
 #include "Providers.h"
 #include "FuzzyMatch.h"
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <unistd.h>
 
 namespace Assistant {
 
 void AppResult::activate() const
 {
+    if (chdir(Core::StandardPaths::home_directory().characters()) < 0) {
+        perror("chdir");
+        exit(1);
+    }
+
     m_app_file->spawn();
 }
 
