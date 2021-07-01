@@ -119,10 +119,10 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
     VERIFY(accepted_socket);
 
     if (user_address) {
-        u8 address_buffer[sizeof(sockaddr_un)];
+        sockaddr_un address_buffer;
         address_size = min(sizeof(sockaddr_un), static_cast<size_t>(address_size));
-        accepted_socket->get_peer_address((sockaddr*)address_buffer, &address_size);
-        if (!copy_to_user(user_address, address_buffer, address_size))
+        accepted_socket->get_peer_address((sockaddr*)&address_buffer, &address_size);
+        if (!copy_to_user(user_address, &address_buffer, address_size))
             return EFAULT;
         if (!copy_to_user(user_address_size, &address_size))
             return EFAULT;
@@ -311,13 +311,13 @@ int Process::get_sock_or_peer_name(const Params& params)
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
 
-    u8 address_buffer[sizeof(sockaddr_un)];
+    sockaddr_un address_buffer;
     addrlen_value = min(sizeof(sockaddr_un), static_cast<size_t>(addrlen_value));
     if constexpr (sockname)
-        socket.get_local_address((sockaddr*)address_buffer, &addrlen_value);
+        socket.get_local_address((sockaddr*)&address_buffer, &addrlen_value);
     else
-        socket.get_peer_address((sockaddr*)address_buffer, &addrlen_value);
-    if (!copy_to_user(params.addr, address_buffer, addrlen_value))
+        socket.get_peer_address((sockaddr*)&address_buffer, &addrlen_value);
+    if (!copy_to_user(params.addr, &address_buffer, addrlen_value))
         return EFAULT;
     if (!copy_to_user(params.addrlen, &addrlen_value))
         return EFAULT;

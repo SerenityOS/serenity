@@ -14,7 +14,7 @@
 namespace AK {
 
 template<typename T>
-class alignas(T) [[nodiscard]] Optional {
+class [[nodiscard]] Optional {
 public:
     using ValueType = T;
 
@@ -132,13 +132,13 @@ public:
     [[nodiscard]] ALWAYS_INLINE T& value()
     {
         VERIFY(m_has_value);
-        return *reinterpret_cast<T*>(&m_storage);
+        return *__builtin_launder(reinterpret_cast<T*>(&m_storage));
     }
 
     [[nodiscard]] ALWAYS_INLINE const T& value() const
     {
         VERIFY(m_has_value);
-        return *reinterpret_cast<const T*>(&m_storage);
+        return *__builtin_launder(reinterpret_cast<const T*>(&m_storage));
     }
 
     [[nodiscard]] T release_value()
@@ -164,7 +164,7 @@ public:
     ALWAYS_INLINE T* operator->() { return &value(); }
 
 private:
-    u8 m_storage[sizeof(T)] { 0 };
+    alignas(T) u8 m_storage[sizeof(T)];
     bool m_has_value { false };
 };
 
