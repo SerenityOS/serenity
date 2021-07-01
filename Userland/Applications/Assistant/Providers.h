@@ -85,6 +85,16 @@ public:
     void activate() const override;
 };
 
+class TerminalResult : public Result {
+public:
+    explicit TerminalResult(String command)
+        : Result(GUI::Icon::default_icon("app-terminal").bitmap_for_size(16), move(command), "Run command in Terminal"sv, 100)
+    {
+    }
+    ~TerminalResult() override = default;
+    void activate() const override;
+};
+
 class URLResult : public Result {
 public:
     explicit URLResult(const URL& url)
@@ -99,29 +109,34 @@ class Provider {
 public:
     virtual ~Provider() = default;
 
-    virtual void query(const String&, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) = 0;
+    virtual void query(const String&, Function<void(NonnullRefPtrVector<Result>)> on_complete) = 0;
 };
 
 class AppProvider : public Provider {
 public:
-    void query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+    void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
 };
 
 class CalculatorProvider : public Provider {
 public:
-    void query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+    void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
 };
 
 class FileProvider : public Provider {
 public:
-    void query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+    void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
     void build_filesystem_cache();
 
 private:
-    RefPtr<Threading::BackgroundAction<Vector<NonnullRefPtr<Result>>>> m_fuzzy_match_work;
+    RefPtr<Threading::BackgroundAction<NonnullRefPtrVector<Result>>> m_fuzzy_match_work;
     bool m_building_cache { false };
     Vector<String> m_full_path_cache;
     Queue<String> m_work_queue;
+};
+
+class TerminalProvider : public Provider {
+public:
+    void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
 };
 
 class URLProvider : public Provider {

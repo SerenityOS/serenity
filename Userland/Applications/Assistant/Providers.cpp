@@ -17,6 +17,9 @@
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <errno.h>
+#include <serenity.h>
+#include <spawn.h>
 #include <unistd.h>
 
 namespace Assistant {
@@ -41,6 +44,19 @@ void FileResult::activate() const
     Desktop::Launcher::open(URL::create_with_file_protocol(title()));
 }
 
+void TerminalResult::activate() const
+{
+    pid_t pid;
+    char const* argv[] = { "Terminal", "-e", title().characters(), nullptr };
+
+    if ((errno = posix_spawn(&pid, "/bin/Terminal", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+        perror("posix_spawn");
+    } else {
+        if (disown(pid) < 0)
+            perror("disown");
+    }
+}
+
 void URLResult::activate() const
 {
     Desktop::Launcher::open(URL::create_with_url_or_path(title()));
@@ -48,7 +64,7 @@ void URLResult::activate() const
 
 void AppProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
-    if (query.starts_with("="))
+    if (query.starts_with("=") || query.starts_with('$'))
         return;
 
     Vector<NonnullRefPtr<Result>> results;
@@ -154,6 +170,18 @@ void FileProvider::build_filesystem_cache()
         }
 
         return 0; }, [this](auto) { m_building_cache = false; });
+}
+
+void TerminalProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+{
+    if (!query.starts_with('$'))
+        return;
+
+    auto command = query.substring(1);
+
+    Vector<NonnullRefPtr<Result>> results;
+    results.append(adopt_ref(*new TerminalResult(move(command))));
+    on_complete(results);
 }
 
 void URLProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
