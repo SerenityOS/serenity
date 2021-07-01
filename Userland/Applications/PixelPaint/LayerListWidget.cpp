@@ -183,6 +183,20 @@ void LayerListWidget::mouseup_event(GUI::MouseEvent& event)
     m_image->change_layer_index(old_index, new_index);
 }
 
+void LayerListWidget::context_menu_event(GUI::ContextMenuEvent& event)
+{
+    Gfx::IntPoint translated_event_point = { 0, vertical_scrollbar().value() + event.position().y() };
+
+    auto gadget_index = gadget_at(translated_event_point);
+    if (gadget_index.has_value()) {
+        auto& layer = m_image->layer(gadget_index.value());
+        set_selected_layer(&layer);
+    }
+
+    if (on_context_menu_request)
+        on_context_menu_request(event);
+}
+
 void LayerListWidget::image_did_add_layer(size_t layer_index)
 {
     if (m_moving_gadget_index.has_value()) {

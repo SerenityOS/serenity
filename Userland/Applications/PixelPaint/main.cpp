@@ -405,6 +405,10 @@ int main(int argc, char** argv)
         },
         window));
 
+    layer_list_widget.on_context_menu_request = [&](auto& event) {
+        layer_menu.popup(event.screen_position());
+    };
+
     auto& filter_menu = menubar->add_menu("&Filter");
     auto& spatial_filters_menu = filter_menu.add_submenu("&Spatial");
 
