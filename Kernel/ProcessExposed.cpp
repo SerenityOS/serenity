@@ -157,7 +157,10 @@ KResult ProcFSProcessInformation::refresh_data(FileDescription& description) con
     // For process-specific inodes, hold the process's ptrace lock across refresh
     // and refuse to load data if the process is not dumpable.
     // Without this, files opened before a process went non-dumpable could still be used for dumping.
-    auto process = const_cast<ProcFSProcessInformation&>(*this).m_parent_folder->m_associated_process;
+    auto parent_folder = const_cast<ProcFSProcessInformation&>(*this).m_parent_folder.strong_ref();
+    if (parent_folder.is_null())
+        return KResult(EINVAL);
+    auto process = parent_folder->m_associated_process;
     process->ptrace_lock().lock();
     if (!process->is_dumpable()) {
         process->ptrace_lock().unlock();
@@ -240,9 +243,11 @@ RefPtr<ProcFSExposedComponent> ProcFSExposedFolder::lookup(StringView name)
 KResult ProcFSExposedFolder::traverse_as_directory(unsigned fsid, Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
     Locker locker(ProcFSComponentsRegistrar::the().m_lock);
-    VERIFY(m_parent_folder);
+    auto parent_folder = m_parent_folder.strong_ref();
+    if (parent_folder.is_null())
+        return KResult(EINVAL);
     callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, m_parent_folder->component_index() }, 0 });
+    callback({ "..", { fsid, parent_folder->component_index() }, 0 });
 
     for (auto& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };
