@@ -35,6 +35,8 @@ public:
 
     virtual size_t element_size() const = 0;
     virtual String element_name() const = 0;
+    virtual bool put_by_index(u32 property_index, Value value) override = 0;
+    virtual Value get_by_index(u32 property_index, AllowSideEffects = AllowSideEffects::Yes) const override = 0;
 
 protected:
     explicit TypedArrayBase(Object& prototype)

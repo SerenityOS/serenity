@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayIterator.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
@@ -37,6 +38,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.keys, keys, 0, attr);
     define_native_function(vm.names.values, values, 0, attr);
     define_native_function(vm.names.entries, entries, 0, attr);
+    define_native_function(vm.names.set, set, 1, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
@@ -316,6 +318,172 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
     if (!this_object.is_typed_array())
         return js_undefined();
     return js_string(vm, static_cast<TypedArrayBase&>(this_object).element_name());
+}
+
+// 23.2.3.23 %TypedArray%.prototype.set ( source [ , offset ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.set
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
+{
+    auto* typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+
+    auto source = vm.argument(0);
+
+    auto target_offset = vm.argument(1).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    if (target_offset < 0) {
+        vm.throw_exception<JS::RangeError>(global_object, "Invalid target offset");
+        return {};
+    }
+
+    if (source.is_object() && is<TypedArrayBase>(source.as_object())) {
+        auto& source_typed_array = static_cast<TypedArrayBase&>(source.as_object());
+        // 23.2.3.23.1 SetTypedArrayFromTypedArray ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray
+        auto target_buffer = typed_array->viewed_array_buffer();
+        if (target_buffer->is_detached()) {
+            vm.throw_exception<JS::TypeError>(global_object, "Target array is detached");
+            return {};
+        }
+        auto target_length = typed_array->array_length();
+        auto target_byte_offset = typed_array->byte_offset();
+
+        auto source_buffer = source_typed_array.viewed_array_buffer();
+        if (source_buffer->is_detached()) {
+            vm.throw_exception<JS::TypeError>(global_object, "Source array is detached");
+            return {};
+        }
+        auto source_length = source_typed_array.array_length();
+        auto source_byte_offset = source_typed_array.byte_offset();
+
+        if (isinf(target_offset)) {
+            vm.throw_exception<JS::RangeError>(global_object, "Invalid target offset");
+            return {};
+        }
+
+        Checked checked { source_length };
+        checked += static_cast<u32>(target_offset);
+        if (checked.has_overflow() || checked.value() > target_length) {
+            vm.throw_exception<JS::RangeError>(global_object, "Overflow or out of bounds in target length");
+            return {};
+        }
+
+        if (typed_array->content_type() != source_typed_array.content_type()) {
+            vm.throw_exception<JS::TypeError>(global_object, "Copy between arrays of different content types is prohibited");
+            return {};
+        }
+
+        size_t source_byte_index;
+        bool same = false;
+        // FIXME: Step 19: If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true...
+        same = same_value(source_buffer, target_buffer);
+        if (same) {
+            // FIXME: Implement this: Step 21
+            TODO();
+        } else {
+            source_byte_index = source_byte_offset;
+        }
+        Checked<size_t> checked_target_byte_index(static_cast<size_t>(target_offset));
+        checked_target_byte_index *= typed_array->element_size();
+        checked_target_byte_index += target_byte_offset;
+        if (checked_target_byte_index.has_overflow()) {
+            vm.throw_exception<JS::RangeError>(global_object, "Overflow in target byte index");
+            return {};
+        }
+        auto target_byte_index = checked_target_byte_index.value();
+
+        Checked<size_t> checked_limit(source_length);
+        checked_limit *= typed_array->element_size();
+        checked_limit += target_byte_index;
+        if (checked_limit.has_overflow()) {
+            vm.throw_exception<JS::RangeError>(global_object, "Overflow in target limit");
+            return {};
+        }
+        auto limit = checked_limit.value();
+
+        if (source_typed_array.element_size() == typed_array->element_size()) {
+            // FIXME: SharedBuffers use a different mechanism, implement that when SharedBuffers are implemented.
+            target_buffer->buffer().overwrite(target_byte_index, source_buffer->buffer().data(), limit - target_byte_index);
+        } else {
+            while (target_byte_index < limit) {
+                auto value = source_typed_array.get_by_index(source_byte_index);
+                typed_array->put_by_index(target_byte_index, value);
+                source_byte_index += source_typed_array.element_size();
+                target_byte_index += typed_array->element_size();
+            }
+        }
+    } else {
+        // 23.2.3.23.2 SetTypedArrayFromArrayLike ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromarraylike
+        auto target_buffer = typed_array->viewed_array_buffer();
+        if (target_buffer->is_detached()) {
+            vm.throw_exception<JS::TypeError>(global_object, "Target array is detached");
+            return {};
+        }
+        auto target_length = typed_array->array_length();
+        auto target_byte_offset = typed_array->byte_offset();
+
+        auto src = source.to_object(global_object);
+        if (vm.exception())
+            return {};
+
+        auto source_length = length_of_array_like(global_object, *src);
+        if (vm.exception())
+            return {};
+
+        if (isinf(target_offset)) {
+            vm.throw_exception<JS::RangeError>(global_object, "Invalid target offset");
+            return {};
+        }
+
+        Checked checked { source_length };
+        checked += static_cast<u32>(target_offset);
+        if (checked.has_overflow() || checked.value() > target_length) {
+            vm.throw_exception<JS::RangeError>(global_object, "Overflow or out of bounds in target length");
+            return {};
+        }
+
+        Checked<size_t> checked_target_byte_index(static_cast<size_t>(target_offset));
+        checked_target_byte_index *= typed_array->element_size();
+        checked_target_byte_index += target_byte_offset;
+        if (checked_target_byte_index.has_overflow()) {
+            vm.throw_exception<JS::RangeError>(global_object, "Overflow in target byte index");
+            return {};
+        }
+        auto target_byte_index = checked_target_byte_index.value();
+
+        Checked<size_t> checked_limit(source_length);
+        checked_limit *= typed_array->element_size();
+        checked_limit += target_byte_index;
+        if (checked_limit.has_overflow()) {
+            vm.throw_exception<JS::RangeError>(global_object, "Overflow in target limit");
+            return {};
+        }
+
+        auto limit = checked_limit.value();
+        auto k = 0;
+        while (target_byte_index < limit) {
+            auto value = src->get(k);
+            if (vm.exception())
+                return {};
+            if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt)
+                value = value.to_bigint(global_object);
+            else
+                value = value.to_number(global_object);
+            if (vm.exception())
+                return {};
+
+            if (target_buffer->is_detached()) {
+                vm.throw_exception<JS::TypeError>(global_object, "Target array is detached");
+                return {};
+            }
+
+            typed_array->put_by_index(target_byte_index, value);
+            ++k;
+            target_byte_index += typed_array->element_size();
+        }
+    }
+    return js_undefined();
 }
 
 }
