@@ -9,6 +9,7 @@
 
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
+#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Parser/Token.h>
 
 namespace Web::CSS {
@@ -24,12 +25,12 @@ public:
     bool is_paren() const { return m_token.is_open_paren(); }
     bool is_square() const { return m_token.is_open_square(); }
 
-    Vector<String> const& values() const { return m_values; }
+    Vector<StyleComponentValueRule> const& values() const { return m_values; }
 
     String to_string() const;
 
 private:
     Token m_token;
-    Vector<String> m_values;
+    Vector<StyleComponentValueRule> m_values;
 };
 }

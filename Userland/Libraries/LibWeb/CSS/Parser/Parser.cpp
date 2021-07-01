@@ -152,31 +152,69 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleCompo
         // FIXME: Attribute selectors want to be their own Selector::SimpleSelector::Type according to the spec.
         if (current_value.is_block() && current_value.block().is_square()) {
 
-            Vector<String> attribute_parts = current_value.block().values();
+            Vector<StyleComponentValueRule> const& attribute_parts = current_value.block().values();
+
+            // FIXME: Handle namespace prefix for attribute name.
+            auto& attribute_part = attribute_parts.first();
+            if (!attribute_part.is(Token::TokenType::Ident)) {
+                dbgln("Expected ident for attribute name, got: '{}'", attribute_part.to_string());
+                return {};
+            }
 
             simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::HasAttribute;
-            simple_selector.attribute_name = attribute_parts.first();
+            simple_selector.attribute_name = attribute_part.token().ident();
 
             size_t attribute_index = 1;
-            if (attribute_index >= attribute_parts.size())
-                return simple_selector;
+            while (attribute_parts.at(attribute_index).is(Token::TokenType::Whitespace)) {
+                attribute_index++;
+                if (attribute_index >= attribute_parts.size())
+                    return simple_selector;
+            }
 
-            if (attribute_parts.at(attribute_index) == " =") {
+            auto& delim_part = attribute_parts.at(attribute_index);
+            if (!delim_part.is(Token::TokenType::Delim)) {
+                dbgln("Expected a delim for attribute comparison, got: '{}'", delim_part.to_string());
+                return {};
+            }
+
+            if (delim_part.token().delim() == "=") {
                 simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch;
                 attribute_index++;
+            } else {
+                attribute_index++;
+                auto& delim_second_part = attribute_parts.at(attribute_index);
+                if (!(delim_part.is(Token::TokenType::Delim) && delim_part.token().delim() == "=")) {
+                    dbgln("Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_string(), delim_second_part.to_string());
+                    return {};
+                }
+
+                if (delim_part.token().delim() == "~") {
+                    simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::Contains;
+                    attribute_index++;
+                }
+
+                if (delim_part.token().delim() == "|") {
+                    simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::StartsWith;
+                    attribute_index++;
+                }
             }
 
-            if (attribute_parts.at(attribute_index) == " ~") {
-                simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::Contains;
-                attribute_index += 2;
+            while (attribute_parts.at(attribute_index).is(Token::TokenType::Whitespace)) {
+                attribute_index++;
+                if (attribute_index >= attribute_parts.size()) {
+                    dbgln("Attribute selector ended without a value to match.");
+                    return {};
+                }
             }
 
-            if (attribute_parts.at(attribute_index) == " |") {
-                simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::StartsWith;
-                attribute_index += 2;
+            auto& value_part = attribute_parts.at(attribute_index);
+            if (!value_part.is(Token::TokenType::Ident) && !value_part.is(Token::TokenType::String)) {
+                dbgln("Expected a string or ident for the value to match attribute against, got: '{}'", value_part.to_string());
+                return {};
             }
+            simple_selector.attribute_value = value_part.token().is_ident() ? value_part.token().ident() : value_part.token().string();
 
-            simple_selector.attribute_value = attribute_parts.at(attribute_index);
+            // FIXME: Handle case-sensitivity suffixes. https://www.w3.org/TR/selectors-4/#attribute-case
             return simple_selector;
         }
 
@@ -495,7 +533,7 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block()
                 continue;
             }
         }
-        block->m_values.append(value.to_string());
+        block->m_values.append(value);
     }
 }
 

@@ -119,7 +119,7 @@ String StyleBlockRule::to_string() const
     StringBuilder builder;
 
     builder.append(m_token.bracket_string());
-    append_raw(builder, ", ", m_values);
+    append_with_to_string(builder, ", ", m_values);
     builder.append(m_token.bracket_mirror_string());
 
     return builder.to_string();
