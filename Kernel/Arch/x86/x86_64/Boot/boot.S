@@ -1,4 +1,6 @@
 .code32
+.set KERNEL_VIRTUAL_BASE, 0xc0000000
+
 .section .stack, "aw", @nobits
 stack_bottom:
 .skip 32768
@@ -128,67 +130,67 @@ continue:
     addl $16, %esi
     movl (%esi), %esi
     movl $1024, %ecx
-    movl $(kernel_cmdline - 0xc0000000), %edi
+    movl $(kernel_cmdline - KERNEL_VIRTUAL_BASE), %edi
     rep movsl
 
     /* clear pml4t */
-    movl $(boot_pml4t - 0xc0000000), %edi
+    movl $(boot_pml4t - KERNEL_VIRTUAL_BASE), %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
     /* set up pml4t[0] */
-    movl $(boot_pml4t - 0xc0000000), %edi
-    movl $(boot_pdpt - 0xc0000000), 0(%edi)
+    movl $(boot_pml4t - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pdpt - KERNEL_VIRTUAL_BASE), 0(%edi)
     /* R/W + Present */
     orl $0x3, 0(%edi)
 
     /* clear pdpt */
-    movl $(boot_pdpt - 0xc0000000), %edi
+    movl $(boot_pdpt - KERNEL_VIRTUAL_BASE), %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
     /* set up pdpt[0] and pdpt[3] */
-    movl $(boot_pdpt - 0xc0000000), %edi
-    movl $((boot_pd0 - 0xc0000000) + 3), 0(%edi)
-    movl $((boot_pd3 - 0xc0000000) + 3), 24(%edi)
+    movl $(boot_pdpt - KERNEL_VIRTUAL_BASE), %edi
+    movl $((boot_pd0 - KERNEL_VIRTUAL_BASE) + 3), 0(%edi)
+    movl $((boot_pd3 - KERNEL_VIRTUAL_BASE) + 3), 24(%edi)
 
     /* clear pd0 */
-    movl $(boot_pd0 - 0xc0000000), %edi
+    movl $(boot_pd0 - KERNEL_VIRTUAL_BASE), %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
     /* clear pd3 */
-    movl $(boot_pd3 - 0xc0000000), %edi
+    movl $(boot_pd3 - KERNEL_VIRTUAL_BASE), %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
     /* clear pd0's pt's */
-    movl $(boot_pd0_pt0 - 0xc0000000), %edi
+    movl $(boot_pd0_pt0 - KERNEL_VIRTUAL_BASE), %edi
     movl $(1024 * 4), %ecx
     xorl %eax, %eax
     rep stosl
 
     /* clear pd3's pt's */
-    movl $(boot_pd3_pts - 0xc0000000), %edi
+    movl $(boot_pd3_pts - KERNEL_VIRTUAL_BASE), %edi
     movl $(1024 * 17), %ecx
     xorl %eax, %eax
     rep stosl
 
     /* add boot_pd0_pt0 to boot_pd0 */
-    movl $(boot_pd0 - 0xc0000000), %edi
-    movl $(boot_pd0_pt0 - 0xc0000000), %eax
+    movl $(boot_pd0 - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pd0_pt0 - KERNEL_VIRTUAL_BASE), %eax
     movl %eax, 0(%edi)
     /* R/W + Present */
     orl $0x3, 0(%edi)
 
     /* add boot_pd3_pts to boot_pd3 */
     movl $16, %ecx
-    movl $(boot_pd3 - 0xc0000000), %edi
-    movl $(boot_pd3_pts - 0xc0000000), %eax
+    movl $(boot_pd3 - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pd3_pts - KERNEL_VIRTUAL_BASE), %eax
 
 1:
     movl %eax, 0(%edi)
@@ -200,7 +202,7 @@ continue:
 
     /* identity map the 0 to 2MB range */
     movl $512, %ecx
-    movl $(boot_pd0_pt0 - 0xc0000000), %edi
+    movl $(boot_pd0_pt0 - KERNEL_VIRTUAL_BASE), %edi
     xorl %eax, %eax
 
 1:
@@ -213,7 +215,7 @@ continue:
 
     /* pseudo identity map the 3072-3102MB range */
     movl $(512 * 16), %ecx
-    movl $(boot_pd3_pts - 0xc0000000), %edi
+    movl $(boot_pd3_pts - KERNEL_VIRTUAL_BASE), %edi
     xorl %eax, %eax
 
 1:
@@ -225,13 +227,13 @@ continue:
     loop 1b
 
     /* create an empty page table for the top 2MB at the 4GB mark */
-    movl $(boot_pd3 - 0xc0000000), %edi
-    movl $(boot_pd3_pt1023 - 0xc0000000), 4088(%edi)
+    movl $(boot_pd3 - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pd3_pt1023 - KERNEL_VIRTUAL_BASE), 4088(%edi)
     orl $0x3, 4088(%edi)
     movl $0, 4092(%edi)
 
     /* point CR3 to PML4T */
-    movl $(boot_pml4t - 0xc0000000), %eax
+    movl $(boot_pml4t - KERNEL_VIRTUAL_BASE), %eax
     movl %eax, %cr3
 
     /* enable PAE + PSE */
@@ -265,7 +267,7 @@ continue:
 
     /* unmap the 0-1MB range, which isn't used after jmp-ing up here */
     movl $256, %ecx
-    movl $(boot_pd0_pt0 - 0xc0000000), %edi
+    movl $(boot_pd0_pt0 - KERNEL_VIRTUAL_BASE), %edi
     xorl %eax, %eax
 
 1:
@@ -274,7 +276,7 @@ continue:
     loop 1b
 
     /* jump into C++ land */
-    addl $0xc0000000, %ebx
+    addl $KERNEL_VIRTUAL_BASE, %ebx
     movl %ebx, multiboot_info_ptr
 
     lgdt gdt64ptr
@@ -421,7 +423,7 @@ apic_ap_start64:
 
     /* push the Processor pointer this CPU is going to use */
     movq (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %rax
-    movq $0xc0000000, %r8
+    movq $KERNEL_VIRTUAL_BASE, %r8
     addq %r8, %rax
     movq 0(%rax, %rsi, 4), %rax
     push %rax
