@@ -553,6 +553,12 @@ int main(int argc, char** argv)
 
     tab_widget.on_tab_close_click = [&](auto& widget) {
         auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
+
+        if (tab_widget.children().size() == 1) {
+            layer_list_widget.set_image(nullptr);
+            layer_properties_widget.set_layer(nullptr);
+        }
+
         tab_widget.deferred_invoke([&](auto&) {
             tab_widget.remove_tab(image_editor);
         });
