@@ -135,13 +135,6 @@ Window& Menu::ensure_menu_window(Gfx::IntPoint const& position)
         return { position, { width, window_height } };
     };
 
-    if (m_menu_window) {
-        // We might be on a different screen than previously, so recalculate the
-        // menu's rectangle as we have more or less screen available now
-        m_menu_window->set_rect(calculate_window_rect());
-        return *m_menu_window;
-    }
-
     Gfx::IntPoint next_item_location(frame_thickness(), frame_thickness());
     for (auto& item : m_items) {
         int height = 0;
@@ -153,11 +146,21 @@ Window& Menu::ensure_menu_window(Gfx::IntPoint const& position)
         next_item_location.translate_by(0, height);
     }
 
-    auto window = Window::construct(*this, WindowType::Menu);
-    window->set_visible(false);
-    window->set_rect(calculate_window_rect());
-    m_menu_window = move(window);
-    draw();
+    if (m_menu_window) {
+        // We might be on a different screen than previously, so recalculate the
+        // menu's rectangle as we have more or less screen available now
+        auto new_rect = calculate_window_rect();
+        if (new_rect != m_menu_window->rect()) {
+            m_menu_window->set_rect(new_rect);
+            redraw();
+        }
+    } else {
+        auto window = Window::construct(*this, WindowType::Menu);
+        window->set_visible(false);
+        window->set_rect(calculate_window_rect());
+        m_menu_window = move(window);
+        draw();
+    }
     return *m_menu_window;
 }
 
