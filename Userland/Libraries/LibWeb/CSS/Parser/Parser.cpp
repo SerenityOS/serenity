@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
 #include <LibWeb/CSS/Parser/AtStyleRule.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
@@ -62,7 +63,7 @@ Token Parser::current_token()
     return m_tokens.at(m_iterator_offset);
 }
 
-Vector<QualifiedStyleRule> Parser::parse_as_stylesheet()
+NonnullRefPtrVector<QualifiedStyleRule> Parser::parse_as_stylesheet()
 {
     auto rules = consume_a_list_of_rules(true);
 
@@ -390,9 +391,9 @@ bool Parser::is_combinator(String input)
     return input == ">" || input == "+" || input == "~" || input == "||";
 }
 
-Vector<QualifiedStyleRule> Parser::consume_a_list_of_rules(bool top_level)
+NonnullRefPtrVector<QualifiedStyleRule> Parser::consume_a_list_of_rules(bool top_level)
 {
-    Vector<QualifiedStyleRule> rules;
+    NonnullRefPtrVector<QualifiedStyleRule> rules;
 
     for (;;) {
         auto token = next_token();
@@ -412,8 +413,8 @@ Vector<QualifiedStyleRule> Parser::consume_a_list_of_rules(bool top_level)
 
             reconsume_current_input_token();
             auto maybe_qualified = consume_a_qualified_rule();
-            if (maybe_qualified.has_value()) {
-                rules.append(maybe_qualified.value());
+            if (maybe_qualified) {
+                rules.append(maybe_qualified.release_nonnull());
             }
 
             continue;
@@ -427,15 +428,15 @@ Vector<QualifiedStyleRule> Parser::consume_a_list_of_rules(bool top_level)
 
         reconsume_current_input_token();
         auto maybe_qualified = consume_a_qualified_rule();
-        if (maybe_qualified.has_value()) {
-            rules.append(maybe_qualified.value());
+        if (maybe_qualified) {
+            rules.append(maybe_qualified.release_nonnull());
         }
     }
 
     return rules;
 }
 
-AtStyleRule Parser::consume_an_at_rule()
+NonnullRefPtr<AtStyleRule> Parser::consume_an_at_rule()
 {
     auto initial = next_token();
 
@@ -466,9 +467,9 @@ AtStyleRule Parser::consume_an_at_rule()
     }
 }
 
-Optional<QualifiedStyleRule> Parser::consume_a_qualified_rule()
+RefPtr<QualifiedStyleRule> Parser::consume_a_qualified_rule()
 {
-    QualifiedStyleRule rule;
+    NonnullRefPtr<QualifiedStyleRule> rule = create<QualifiedStyleRule>();
 
     for (;;) {
         auto token = next_token();
@@ -479,7 +480,7 @@ Optional<QualifiedStyleRule> Parser::consume_a_qualified_rule()
         }
 
         if (token.is_open_curly()) {
-            rule.m_block = consume_a_simple_block();
+            rule->m_block = consume_a_simple_block();
             return rule;
         }
 
@@ -487,7 +488,7 @@ Optional<QualifiedStyleRule> Parser::consume_a_qualified_rule()
 
         reconsume_current_input_token();
         auto value = consume_a_component_value();
-        rule.m_prelude.append(value);
+        rule->m_prelude.append(value);
     }
 
     return rule;
@@ -690,9 +691,9 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations()
     return list;
 }
 
-Optional<QualifiedStyleRule> Parser::parse_as_rule()
+RefPtr<QualifiedStyleRule> Parser::parse_as_rule()
 {
-    Optional<QualifiedStyleRule> rule;
+    RefPtr<QualifiedStyleRule> rule;
 
     for (;;) {
         auto maybe_whitespace = peek_token();
@@ -730,7 +731,7 @@ Optional<QualifiedStyleRule> Parser::parse_as_rule()
     return {};
 }
 
-Vector<QualifiedStyleRule> Parser::parse_as_list_of_rules()
+NonnullRefPtrVector<QualifiedStyleRule> Parser::parse_as_list_of_rules()
 {
     return consume_a_list_of_rules(false);
 }

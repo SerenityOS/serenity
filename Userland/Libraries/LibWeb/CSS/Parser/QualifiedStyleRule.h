@@ -7,13 +7,14 @@
 
 #pragma once
 
+#include <AK/RefCounted.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 
 namespace Web::CSS {
 
-class QualifiedStyleRule {
+class QualifiedStyleRule : public RefCounted<QualifiedStyleRule> {
     friend class Parser;
 
 public:
