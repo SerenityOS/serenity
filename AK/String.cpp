@@ -293,23 +293,6 @@ bool String::equals_ignoring_case(const StringView& other) const
     return StringUtils::equals_ignoring_case(view(), other);
 }
 
-Vector<size_t> String::find_all(const String& needle) const
-{
-    Vector<size_t> positions;
-    size_t start = 0, pos;
-    for (;;) {
-        const char* ptr = strstr(characters() + start, needle.characters());
-        if (!ptr)
-            break;
-
-        pos = ptr - characters();
-        positions.append(pos);
-
-        start = pos + 1;
-    }
-    return positions;
-}
-
 int String::replace(const String& needle, const String& replacement, bool all_occurrences)
 {
     if (is_empty())
