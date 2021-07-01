@@ -7,8 +7,18 @@
 #include <LibTest/TestCase.h>
 
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Painter.h>
 #include <stdio.h>
+
+// Make sure that no matter what order tests are run in, we've got some
+// default fonts for the application to use without talking to WindowServer
+static struct FontDatabaseSpoofer {
+    FontDatabaseSpoofer()
+    {
+        Gfx::FontDatabase::the().set_default_font_query("Katica 10 400"sv);
+    }
+} g_spoof;
 
 BENCHMARK_CASE(diagonal_lines)
 {
