@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <cstdio>
+#include <AK/Format.h>
+#include <LibTest/TestCase.h>
 
 // Note: Needs to be 'noline' so stack canary isn't optimized out.
 static void __attribute__((noinline)) smasher(char* string)
@@ -24,11 +25,12 @@ static void __attribute__((noinline)) stack_to_smash()
     smasher(string);
 }
 
-int main()
+TEST_CASE(stack_smash)
 {
-    puts("[+] Starting the stack smash...");
-    stack_to_smash();
-    puts("[+] Stack smash wasn't detected!");
-
-    return 0;
+    EXPECT_CRASH("Smash the stack and trigger __stack_chk_fail", [] {
+        outln("[+] Starting the stack smash...");
+        stack_to_smash();
+        outln("[+] Stack smash wasn't detected!");
+        return Test::Crash::Failure::DidNotCrash;
+    });
 }
