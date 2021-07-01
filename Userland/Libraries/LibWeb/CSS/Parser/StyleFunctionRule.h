@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 
@@ -14,11 +15,11 @@ namespace Web::CSS {
 
 class StyleComponentValueRule;
 
-class StyleFunctionRule {
+class StyleFunctionRule : public RefCounted<StyleFunctionRule> {
     friend class Parser;
 
 public:
-    StyleFunctionRule();
+    StyleFunctionRule(String name);
     ~StyleFunctionRule();
 
     String const& name() const { return m_name; }
@@ -38,5 +39,4 @@ private:
     String m_name;
     Vector<String> m_values;
 };
-
 }

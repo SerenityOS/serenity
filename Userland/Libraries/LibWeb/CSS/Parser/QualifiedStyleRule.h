@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 
 namespace Web::CSS {
@@ -18,11 +19,15 @@ class QualifiedStyleRule {
 public:
     QualifiedStyleRule();
     ~QualifiedStyleRule();
+
+    Vector<StyleComponentValueRule> const& prelude() const { return m_prelude; }
+    StyleBlockRule const& block() const { return *m_block; }
+
     String to_string() const;
 
 private:
     Vector<StyleComponentValueRule> m_prelude;
-    StyleBlockRule m_block;
+    RefPtr<StyleBlockRule> m_block;
 };
 
 }

@@ -74,7 +74,7 @@ Vector<QualifiedStyleRule> Parser::parse_as_stylesheet()
             dbgln("{}", pre.to_string());
         }
         dbgln("BLOCK:");
-        dbgln("{}", rule.m_block.to_string());
+        dbgln("{}", rule.block().to_string());
         dbgln("");
 
         auto selectors = parse_selectors(rule.m_prelude);
@@ -95,7 +95,7 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleCompo
         if (index >= parts.size())
             return {};
 
-        auto current_value = parts.at(index);
+        auto& current_value = parts.at(index);
         index++;
 
         CSS::Selector::SimpleSelector::Type type;
@@ -246,7 +246,7 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleCompo
                     return simple_selector;
                 }
             } else if (current_value.is_function()) {
-                auto pseudo_function = current_value.function();
+                auto& pseudo_function = current_value.function();
                 if (pseudo_function.name().equals_ignoring_case("nth-child")) {
                     simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::NthChild;
                     simple_selector.nth_child_pattern = CSS::Selector::SimpleSelector::NthChildPattern::parse(pseudo_function.values_as_string());
@@ -469,12 +469,12 @@ StyleComponentValueRule Parser::consume_a_component_value()
     return component;
 }
 
-StyleBlockRule Parser::consume_a_simple_block()
+NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block()
 {
     auto ending_token = current_token().mirror_variant();
 
-    StyleBlockRule block;
-    block.m_token = current_token();
+    NonnullRefPtr<StyleBlockRule> block = create<StyleBlockRule>();
+    block->m_token = current_token();
 
     for (;;) {
         auto token = next_token();
@@ -495,14 +495,13 @@ StyleBlockRule Parser::consume_a_simple_block()
                 continue;
             }
         }
-        block.m_values.append(value.to_string());
+        block->m_values.append(value.to_string());
     }
 }
 
-StyleFunctionRule Parser::consume_a_function()
+NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function()
 {
-    StyleFunctionRule function;
-    function.m_name = current_token().m_value.to_string();
+    NonnullRefPtr<StyleFunctionRule> function = create<StyleFunctionRule>(current_token().m_value.to_string());
 
     for (;;) {
         auto token = next_token();
@@ -522,7 +521,7 @@ StyleFunctionRule Parser::consume_a_function()
                 continue;
             }
         }
-        function.m_values.append(value.to_string());
+        function->m_values.append(value.to_string());
     }
 
     return function;
