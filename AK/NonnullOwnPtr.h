@@ -163,9 +163,16 @@ inline NonnullOwnPtr<T> adopt_own(T& object)
 #endif
 
 template<class T, class... Args>
-inline NonnullOwnPtr<T> make(Args&&... args)
+requires(IsConstructible<T, Args...>) inline NonnullOwnPtr<T> make(Args&&... args)
 {
     return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, *new T(forward<Args>(args)...));
+}
+
+// FIXME: Remove once P0960R3 is available in Clang.
+template<class T, class... Args>
+inline NonnullOwnPtr<T> make(Args&&... args)
+{
+    return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, *new T { forward<Args>(args)... });
 }
 
 template<typename T>

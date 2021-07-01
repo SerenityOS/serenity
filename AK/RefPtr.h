@@ -486,9 +486,16 @@ inline RefPtr<T> adopt_ref_if_nonnull(T* object)
 }
 
 template<typename T, class... Args>
-inline RefPtr<T> try_create(Args&&... args)
+requires(IsConstructible<T, Args...>) inline RefPtr<T> try_create(Args&&... args)
 {
     return adopt_ref_if_nonnull(new (nothrow) T(forward<Args>(args)...));
+}
+
+// FIXME: Remove once P0960R3 is available in Clang.
+template<typename T, class... Args>
+inline RefPtr<T> try_create(Args&&... args)
+{
+    return adopt_ref_if_nonnull(new (nothrow) T { forward<Args>(args)... });
 }
 
 }
