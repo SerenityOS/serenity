@@ -227,6 +227,8 @@ set(SOURCES
     WebAssembly/WebAssemblyInstanceObjectPrototype.cpp
     WebAssembly/WebAssemblyMemoryConstructor.cpp
     WebAssembly/WebAssemblyMemoryPrototype.cpp
+    WebAssembly/WebAssemblyModuleConstructor.cpp
+    WebAssembly/WebAssemblyModuleObject.cpp
     WebAssembly/WebAssemblyObject.cpp
     WebContentClient.cpp
     XHR/EventNames.cpp

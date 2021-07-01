@@ -10,6 +10,7 @@
 #include <LibWeb/WebAssembly/WebAssemblyInstanceConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceObjectPrototype.h>
+#include <LibWeb/WebAssembly/WebAssemblyModuleObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 namespace Web::Bindings {

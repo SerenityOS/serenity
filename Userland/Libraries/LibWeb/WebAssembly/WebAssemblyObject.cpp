@@ -6,10 +6,14 @@
 
 #include "WebAssemblyInstanceObject.h"
 #include "WebAssemblyMemoryPrototype.h"
+#include "WebAssemblyModuleConstructor.h"
+#include "WebAssemblyModuleObject.h"
+#include "WebAssemblyModulePrototype.h"
 #include <AK/ScopeGuard.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BigInt.h>
+#include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWeb/Bindings/WindowObject.h>
@@ -45,6 +49,12 @@ void WebAssemblyObject::initialize(JS::GlobalObject& global_object)
     auto& instance_prototype = window.ensure_web_prototype<WebAssemblyInstancePrototype>("WebAssemblyInstancePrototype");
     instance_prototype.define_property(vm.names.constructor, &instance_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
     define_property("Instance", &instance_constructor);
+
+    auto& module_constructor = window.ensure_web_constructor<WebAssemblyModuleConstructor>("WebAssembly.Module");
+    module_constructor.define_property(vm.names.name, js_string(vm, "WebAssembly.Module"), JS::Attribute::Configurable);
+    auto& module_prototype = window.ensure_web_prototype<WebAssemblyModulePrototype>("WebAssemblyModulePrototype");
+    module_prototype.define_property(vm.names.constructor, &module_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+    define_property("Module", &module_constructor);
 }
 
 NonnullOwnPtrVector<WebAssemblyObject::CompiledWebAssemblyModule> WebAssemblyObject::s_compiled_modules;
@@ -74,20 +84,23 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::validate)
     return JS::Value { true };
 }
 
-static Result<size_t, JS::Value> parse_module(JS::GlobalObject& global_object, JS::Object* buffer)
+Result<size_t, JS::Value> parse_module(JS::GlobalObject& global_object, JS::Object* buffer_object)
 {
-    ByteBuffer* bytes;
-    if (is<JS::ArrayBuffer>(buffer)) {
-        auto array_buffer = static_cast<JS::ArrayBuffer*>(buffer);
-        bytes = &array_buffer->buffer();
-    } else if (is<JS::TypedArrayBase>(buffer)) {
-        auto array = static_cast<JS::TypedArrayBase*>(buffer);
-        bytes = &array->viewed_array_buffer()->buffer();
+    ReadonlyBytes data;
+    if (is<JS::ArrayBuffer>(buffer_object)) {
+        auto& buffer = static_cast<JS::ArrayBuffer&>(*buffer_object);
+        data = buffer.buffer();
+    } else if (is<JS::TypedArrayBase>(buffer_object)) {
+        auto& buffer = static_cast<JS::TypedArrayBase&>(*buffer_object);
+        data = buffer.viewed_array_buffer()->buffer().span().slice(buffer.byte_offset(), buffer.byte_length());
+    } else if (is<JS::DataView>(buffer_object)) {
+        auto& buffer = static_cast<JS::DataView&>(*buffer_object);
+        data = buffer.viewed_array_buffer()->buffer().span().slice(buffer.byte_offset(), buffer.byte_length());
     } else {
-        auto error = JS::TypeError::create(global_object, String::formatted("{} is not an ArrayBuffer", buffer->class_name()));
+        auto error = JS::TypeError::create(global_object, "Not a BufferSource");
         return JS::Value { error };
     }
-    InputMemoryStream stream { *bytes };
+    InputMemoryStream stream { data };
     auto module_result = Wasm::Module::parse(stream);
     ScopeGuard drain_errors {
         [&] {
@@ -323,12 +336,6 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
         }
     }
     return promise;
-}
-
-WebAssemblyModuleObject::WebAssemblyModuleObject(JS::GlobalObject& global_object, size_t index)
-    : Object(*global_object.object_prototype())
-    , m_index(index)
-{
 }
 
 JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
