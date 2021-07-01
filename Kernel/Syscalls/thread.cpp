@@ -24,11 +24,11 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
     if (!copy_from_user(&params, user_params))
         return EFAULT;
 
-    unsigned detach_state = params.m_detach_state;
-    int schedule_priority = params.m_schedule_priority;
-    unsigned stack_size = params.m_stack_size;
+    unsigned detach_state = params.detach_state;
+    int schedule_priority = params.schedule_priority;
+    unsigned stack_size = params.stack_size;
 
-    auto user_sp = Checked<FlatPtr>((FlatPtr)params.m_stack_location);
+    auto user_sp = Checked<FlatPtr>((FlatPtr)params.stack_location);
     user_sp += stack_size;
     if (user_sp.has_overflow())
         return EOVERFLOW;
