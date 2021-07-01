@@ -23,6 +23,7 @@ public:
 
     void set_selected_layer(Layer*);
     Function<void(Layer*)> on_layer_select;
+    Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
 
     void select_bottom_layer();
     void select_top_layer();
@@ -35,6 +36,7 @@ private:
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
 
     virtual void image_did_add_layer(size_t) override;
