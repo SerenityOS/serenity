@@ -8,6 +8,7 @@
 
 #include "../CSV.h"
 #include "../XSV.h"
+#include <AK/ByteBuffer.h>
 #include <LibCore/File.h>
 
 TEST_CASE(should_parse_valid_data)
@@ -82,13 +83,18 @@ TEST_CASE(should_iterate_rows)
 
 BENCHMARK_CASE(fairly_big_data)
 {
-    auto file_or_error = Core::File::open(__FILE__ ".data", Core::OpenMode::ReadOnly);
-    EXPECT_EQ_FORCE(file_or_error.is_error(), false);
+    constexpr auto num_rows = 100000u;
+    constexpr auto line = "well,hello,friends,1,2,3,4,5,6,7,8,pizza,guacamole\n"sv;
+    auto buf = ByteBuffer::create_uninitialized((line.length() * num_rows) + 1);
+    buf[buf.size() - 1] = '\0';
 
-    auto data = file_or_error.value()->read_all();
-    auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders };
+    for (size_t row = 0; row <= num_rows; ++row) {
+        memcpy(buf.offset_pointer(row * line.length()), line.characters_without_null_termination(), line.length());
+    }
+
+    auto csv = Reader::CSV { (char const*)buf.data(), Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders };
     csv.parse();
 
     EXPECT(!csv.has_error());
-    EXPECT_EQ(csv.size(), 100000u);
+    EXPECT_EQ(csv.size(), num_rows);
 }
