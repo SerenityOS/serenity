@@ -86,17 +86,22 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
             painter.fill_rect(adjusted_rect, palette().selection());
         }
 
-        painter.draw_rect(adjusted_rect, Color::Black);
+        painter.draw_rect(adjusted_rect, palette().color(ColorRole::BaseText));
 
         Gfx::IntRect thumbnail_rect { adjusted_rect.x(), adjusted_rect.y(), adjusted_rect.height(), adjusted_rect.height() };
         thumbnail_rect.shrink(8, 8);
         painter.draw_scaled_bitmap(thumbnail_rect, layer.bitmap(), layer.bitmap().rect());
-        painter.draw_rect(thumbnail_rect, Color::Black);
 
         Gfx::IntRect text_rect { thumbnail_rect.right() + 10, adjusted_rect.y(), adjusted_rect.width(), adjusted_rect.height() };
         text_rect.intersect(adjusted_rect);
 
-        painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, layer.is_selected() ? palette().selection_text() : palette().button_text());
+        if (layer.is_visible()) {
+            painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, layer.is_selected() ? palette().selection_text() : palette().button_text());
+            painter.draw_rect(thumbnail_rect, palette().color(ColorRole::BaseText));
+        } else {
+            painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, palette().color(ColorRole::DisabledText));
+            painter.draw_rect(thumbnail_rect, palette().color(ColorRole::DisabledText));
+        }
     };
 
     for (auto& gadget : m_gadgets) {
