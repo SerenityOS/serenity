@@ -26,7 +26,7 @@ static bool spawn(String executable, const Vector<String>& arguments);
 
 String Handler::name_from_executable(const StringView& executable)
 {
-    auto separator = executable.find_last_of('/');
+    auto separator = executable.find_last('/');
     if (separator.has_value()) {
         auto start = separator.value() + 1;
         return executable.substring_view(start, executable.length() - start);
