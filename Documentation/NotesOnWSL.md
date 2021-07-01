@@ -28,6 +28,12 @@ This is due to a bug in WSL2. For more information, microsoft/WSL#4106.
 
 Now you can finally, **ninja run**.
 
+If you encounter an error message regarding SDL, while using QEMU from within WSL; you can override the QEMU backend with the following environement variable.
+```bash
+export SERENITY_QEMU_DISPLAY_BACKEND=gtk,gl=off
+```
+WSL doesn't like the *gl=on* option because it doesn't have direct access to the GPU, and GTK might already have be required to build QEMU from source. Therefore, building QEMU from the source in this project pairs well with using the gtk backing in WSL. 
+
 ### Using native QEMU install with WSL:
 
 - Grab latest QEMU from [here](https://www.qemu.org/download/#windows) and install for Windows.
