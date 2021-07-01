@@ -443,6 +443,10 @@ auto declval() -> T;
 
 template<typename T, typename... Args>
 inline constexpr bool IsCallableWithArguments = requires(T t) { t(declval<Args>()...); };
+
+template<typename T, typename... Args>
+inline constexpr bool IsConstructible = requires { ::new T(declval<Args>()...); };
+
 }
 using AK::Detail::AddConst;
 using AK::Detail::Conditional;
@@ -459,6 +463,7 @@ using AK::Detail::IsBaseOf;
 using AK::Detail::IsCallableWithArguments;
 using AK::Detail::IsClass;
 using AK::Detail::IsConst;
+using AK::Detail::IsConstructible;
 using AK::Detail::IsEnum;
 using AK::Detail::IsFloatingPoint;
 using AK::Detail::IsFunction;

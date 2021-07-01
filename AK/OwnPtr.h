@@ -206,9 +206,17 @@ inline OwnPtr<T> adopt_own_if_nonnull(T* object)
 }
 
 template<typename T, class... Args>
-inline OwnPtr<T> try_make(Args&&... args)
+requires(IsConstructible<T, Args...>) inline OwnPtr<T> try_make(Args&&... args)
 {
     return adopt_own_if_nonnull(new (nothrow) T(forward<Args>(args)...));
+}
+
+// FIXME: Remove once P0960R3 is available in Clang.
+template<typename T, class... Args>
+inline OwnPtr<T> try_make(Args&&... args)
+
+{
+    return adopt_own_if_nonnull(new (nothrow) T { forward<Args>(args)... });
 }
 
 template<typename T>
