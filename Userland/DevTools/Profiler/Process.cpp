@@ -74,7 +74,7 @@ void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, const String& name)
     else if (!name.contains(":"))
         return;
     else
-        path = name.substring(0, name.view().find_first_of(":").value());
+        path = name.substring(0, name.view().find(':').value());
 
     String full_path;
     if (name.contains(".so"))

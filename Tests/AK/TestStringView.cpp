@@ -123,26 +123,19 @@ TEST_CASE(find_last)
     EXPECT_EQ(test_string_view.find_last('/'), 0U);
 }
 
-TEST_CASE(find_first_of)
+TEST_CASE(find_any_of)
 {
     auto test_string_view = "aabbcc_xy_ccbbaa"sv;
-    EXPECT_EQ(test_string_view.find_first_of("bc"), 2U);
-    EXPECT_EQ(test_string_view.find_first_of("yx"), 7U);
-    EXPECT_EQ(test_string_view.find_first_of("defg").has_value(), false);
+    EXPECT_EQ(test_string_view.find_any_of("bc", StringView::SearchDirection::Forward), 2U);
+    EXPECT_EQ(test_string_view.find_any_of("yx", StringView::SearchDirection::Forward), 7U);
+    EXPECT_EQ(test_string_view.find_any_of("defg", StringView::SearchDirection::Forward).has_value(), false);
+    EXPECT_EQ(test_string_view.find_any_of("bc", StringView::SearchDirection::Backward), 13U);
+    EXPECT_EQ(test_string_view.find_any_of("yx", StringView::SearchDirection::Backward), 8U);
+    EXPECT_EQ(test_string_view.find_any_of("fghi", StringView::SearchDirection::Backward).has_value(), false);
 
     test_string_view = "/"sv;
-    EXPECT_EQ(test_string_view.find_first_of("/"), 0U);
-}
-
-TEST_CASE(find_last_of)
-{
-    auto test_string_view = "aabbcc_xy_ccbbaa"sv;
-    EXPECT_EQ(test_string_view.find_last_of("bc"), 13U);
-    EXPECT_EQ(test_string_view.find_last_of("yx"), 8U);
-    EXPECT_EQ(test_string_view.find_last_of("fghi").has_value(), false);
-
-    test_string_view = "/"sv;
-    EXPECT_EQ(test_string_view.find_last_of("/"), 0U);
+    EXPECT_EQ(test_string_view.find_any_of("/", StringView::SearchDirection::Forward), 0U);
+    EXPECT_EQ(test_string_view.find_any_of("/", StringView::SearchDirection::Backward), 0U);
 }
 
 TEST_CASE(split_view)

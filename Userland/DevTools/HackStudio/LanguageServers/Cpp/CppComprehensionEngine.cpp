@@ -637,7 +637,7 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_a
     } else
         return {};
 
-    auto last_slash = partial_include.find_last_of("/");
+    auto last_slash = partial_include.find_last('/');
     auto include_dir = String::empty();
     auto partial_basename = partial_include.substring_view((last_slash.has_value() ? last_slash.value() : 0) + 1);
     if (last_slash.has_value()) {
