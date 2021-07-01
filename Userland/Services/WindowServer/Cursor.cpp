@@ -15,7 +15,7 @@ CursorParams CursorParams::parse_from_filename(const StringView& cursor_path, co
 {
     LexicalPath path(cursor_path);
     auto file_title = path.title();
-    auto last_dot_in_title = StringView(file_title).find_last_of('.');
+    auto last_dot_in_title = file_title.find_last('.');
     if (!last_dot_in_title.has_value() || last_dot_in_title.value() == 0) {
         // No encoded params in filename. Not an error, we'll just use defaults
         return { default_hotspot };
