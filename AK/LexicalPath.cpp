@@ -29,7 +29,7 @@ LexicalPath::LexicalPath(String path)
 
     m_parts = m_string.split_view('/');
 
-    auto last_slash_index = m_string.view().find_last_of('/');
+    auto last_slash_index = m_string.view().find_last('/');
     if (!last_slash_index.has_value()) {
         // The path contains a single part and is not absolute. m_dirname = "."sv
         m_dirname = { &s_single_dot, 1 };
@@ -47,7 +47,7 @@ LexicalPath::LexicalPath(String path)
         m_basename = m_parts.last();
     }
 
-    auto last_dot_index = m_basename.find_last_of('.');
+    auto last_dot_index = m_basename.find_last('.');
     // NOTE: if the dot index is 0, this means we have ".foo", it's not an extension, as the title would then be "".
     if (last_dot_index.has_value() && *last_dot_index != 0) {
         m_title = m_basename.substring_view(0, *last_dot_index);

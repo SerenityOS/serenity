@@ -142,7 +142,7 @@ String CookieJar::default_path(const URL& url)
         return "/";
 
     StringView uri_path_view = uri_path;
-    std::size_t last_separator = uri_path_view.find_last_of('/').value();
+    size_t last_separator = uri_path_view.find_last('/').value();
 
     // 3. If the uri-path contains no more than one %x2F ("/") character, output %x2F ("/") and skip the remaining step.
     if (last_separator == 0)

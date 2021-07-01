@@ -163,7 +163,7 @@ int main(int argc, char** argv)
         .value_name = "header-value",
         .accept_value = [&](auto* s) {
             StringView header { s };
-            auto split = header.find_first_of(':');
+            auto split = header.find(':');
             if (!split.has_value())
                 return false;
             request_headers.set(header.substring_view(0, split.value()), header.substring_view(split.value() + 1));

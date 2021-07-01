@@ -64,7 +64,7 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
             if (line.starts_with('#') && has_exteded_info_tag) {
                 if (line.starts_with("#EXTINF")) {
                     auto data = line.substring_view(8);
-                    auto separator = data.find_first_of(',');
+                    auto separator = data.find(',');
                     VERIFY(separator.has_value());
                     auto seconds = data.substring_view(0, separator.value());
                     VERIFY(!seconds.is_whitespace() && !seconds.is_null() && !seconds.is_empty());

@@ -86,16 +86,13 @@ public:
     [[nodiscard]] String to_lowercase_string() const;
     [[nodiscard]] String to_uppercase_string() const;
 
-    Optional<size_t> find_first_of(char) const;
-    Optional<size_t> find_first_of(const StringView&) const;
-
-    Optional<size_t> find_last_of(char) const;
-    Optional<size_t> find_last_of(const StringView&) const;
-
     [[nodiscard]] Optional<size_t> find(char needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
     [[nodiscard]] Optional<size_t> find(StringView const& needle, size_t start = 0) const { return StringUtils::find(*this, needle, start); }
     [[nodiscard]] Optional<size_t> find_last(char needle) const { return StringUtils::find_last(*this, needle); }
     // FIXME: Implement find_last(StringView const&) for API symmetry.
+
+    [[nodiscard]] Optional<size_t> find_first_of(StringView const&) const;
+    [[nodiscard]] Optional<size_t> find_last_of(StringView const&) const;
 
     [[nodiscard]] constexpr StringView substring_view(size_t start, size_t length) const
     {
