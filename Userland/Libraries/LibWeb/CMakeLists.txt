@@ -222,6 +222,7 @@ set(SOURCES
     UIEvents/EventNames.cpp
     UIEvents/MouseEvent.cpp
     URLEncoder.cpp
+    WebAssembly/WebAssemblyInstanceConstructor.cpp
     WebAssembly/WebAssemblyInstanceObject.cpp
     WebAssembly/WebAssemblyInstanceObjectPrototype.cpp
     WebAssembly/WebAssemblyMemoryConstructor.cpp
