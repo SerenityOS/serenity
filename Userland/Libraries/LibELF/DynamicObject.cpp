@@ -120,6 +120,8 @@ void DynamicObject::parse()
             m_plt_relocation_offset_location = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_RELA:
+            m_addend_used = true;
+            [[fallthrough]];
         case DT_REL:
             m_relocation_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
@@ -189,15 +191,15 @@ DynamicObject::Relocation DynamicObject::RelocationSection::relocation(unsigned 
 {
     VERIFY(index < entry_count());
     unsigned offset_in_section = index * entry_size();
-    auto relocation_address = (ElfW(Rel)*)address().offset(offset_in_section).as_ptr();
-    return Relocation(m_dynamic, *relocation_address, offset_in_section);
+    auto relocation_address = (ElfW(Rela)*)address().offset(offset_in_section).as_ptr();
+    return Relocation(m_dynamic, *relocation_address, offset_in_section, m_addend_used);
 }
 
 DynamicObject::Relocation DynamicObject::RelocationSection::relocation_at_offset(unsigned offset) const
 {
     VERIFY(offset <= (m_section_size_bytes - m_entry_size));
-    auto relocation_address = (ElfW(Rel)*)address().offset(offset).as_ptr();
-    return Relocation(m_dynamic, *relocation_address, offset);
+    auto relocation_address = (ElfW(Rela)*)address().offset(offset).as_ptr();
+    return Relocation(m_dynamic, *relocation_address, offset, m_addend_used);
 }
 
 DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
@@ -229,12 +231,12 @@ DynamicObject::Section DynamicObject::fini_array_section() const
 
 DynamicObject::RelocationSection DynamicObject::relocation_section() const
 {
-    return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"sv));
+    return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"sv), m_addend_used);
 }
 
 DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
 {
-    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv));
+    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv), false);
 }
 
 ElfW(Half) DynamicObject::program_header_count() const

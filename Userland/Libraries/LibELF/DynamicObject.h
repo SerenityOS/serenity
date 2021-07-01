@@ -133,8 +133,9 @@ public:
 
     class RelocationSection : public Section {
     public:
-        explicit RelocationSection(const Section& section)
+        explicit RelocationSection(const Section& section, bool addend_used)
             : Section(section.m_dynamic, section.m_section_offset, section.m_section_size_bytes, section.m_entry_size, section.m_name)
+            , m_addend_used(addend_used)
         {
         }
         unsigned relocation_count() const { return entry_count(); }
@@ -145,14 +146,18 @@ public:
         void for_each_relocation(F) const;
         template<VoidFunction<DynamicObject::Relocation&> F>
         void for_each_relocation(F func) const;
+
+    private:
+        const bool m_addend_used;
     };
 
     class Relocation {
     public:
-        Relocation(const DynamicObject& dynamic, const ElfW(Rel) & rel, unsigned offset_in_section)
+        Relocation(const DynamicObject& dynamic, const ElfW(Rela) & rel, unsigned offset_in_section, bool addend_used)
             : m_dynamic(dynamic)
             , m_rel(rel)
             , m_offset_in_section(offset_in_section)
+            , m_addend_used(addend_used)
         {
         }
 
@@ -173,6 +178,13 @@ public:
         }
         unsigned symbol_index() const { return ELF64_R_SYM(m_rel.r_info); }
 #endif
+        unsigned addend() const
+        {
+            VERIFY(m_addend_used);
+            return m_rel.r_addend;
+        }
+        bool addend_used() const { return m_addend_used; }
+
         Symbol symbol() const
         {
             return m_dynamic.symbol(symbol_index());
@@ -186,8 +198,9 @@ public:
 
     private:
         const DynamicObject& m_dynamic;
-        const ElfW(Rel) & m_rel;
+        const ElfW(Rela) & m_rel;
         const unsigned m_offset_in_section;
+        const bool m_addend_used;
     };
 
     enum class HashType {
@@ -357,6 +370,7 @@ private:
     size_t m_number_of_relocations { 0 };
     size_t m_size_of_relocation_entry { 0 };
     size_t m_size_of_relocation_table { 0 };
+    bool m_addend_used { false };
     FlatPtr m_relocation_table_offset { 0 };
     bool m_is_elf_dynamic { false };
 
