@@ -43,14 +43,9 @@ int main(int, char**)
             dbgln("backdoor accept failed.");
             return;
         }
-        struct ucred creds = {};
-        socklen_t creds_size = sizeof(creds);
-        if (getsockopt(client_socket->fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0) {
-            dbgln("SO_PEERCRED failed");
-            return;
-        }
+        auto pid = client_socket->peer_pid();
 
-        InspectorServer::g_processes.set(creds.pid, make<InspectorServer::InspectableProcess>(creds.pid, client_socket.release_nonnull()));
+        InspectorServer::g_processes.set(pid, make<InspectorServer::InspectableProcess>(pid, client_socket.release_nonnull()));
     };
 
     return event_loop.exec();
