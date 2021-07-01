@@ -271,3 +271,14 @@ TEST_CASE(find)
     EXPECT_EQ(a.find('b', 4), Optional<size_t> { 6 });
     EXPECT_EQ(a.find('b', 9), Optional<size_t> {});
 }
+
+TEST_CASE(find_with_empty_needle)
+{
+    String string = "";
+    EXPECT_EQ(string.find(""sv), 0u);
+    EXPECT_EQ(string.find_all(""sv), (Vector<size_t> { 0u }));
+
+    string = "abc";
+    EXPECT_EQ(string.find(""sv), 0u);
+    EXPECT_EQ(string.find_all(""sv), (Vector<size_t> { 0u, 1u, 2u, 3u }));
+}
