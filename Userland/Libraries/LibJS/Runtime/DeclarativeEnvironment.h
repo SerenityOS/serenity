@@ -13,14 +13,6 @@
 
 namespace JS {
 
-struct Binding {
-    Value value;
-    bool strict;
-    bool mutable_ { false };
-    bool can_be_deleted { false };
-    bool initialized { false };
-};
-
 class DeclarativeEnvironment : public Environment {
     JS_ENVIRONMENT(DeclarativeEnvironment, Environment);
 
@@ -52,6 +44,15 @@ private:
     virtual bool is_declarative_environment() const override { return true; }
 
     HashMap<FlyString, Variable> m_variables;
+
+    struct Binding {
+        Value value;
+        bool strict { false };
+        bool mutable_ { false };
+        bool can_be_deleted { false };
+        bool initialized { false };
+    };
+
     HashMap<FlyString, Binding> m_bindings;
 };
 
