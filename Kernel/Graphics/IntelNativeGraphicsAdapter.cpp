@@ -26,7 +26,7 @@ static constexpr IntelNativeGraphicsAdapter::PLLMaxSettings G35Limits {
 };
 
 static constexpr u16 supported_models[] {
-    { 0x29c2 }, // Intel G35 Adapter
+    0x29c2, // Intel G35 Adapter
 };
 
 static bool is_supported_model(u16 device_id)

@@ -48,7 +48,6 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
         [[maybe_unused]] auto rc = Process::current()->send_signal(SIGTTIN, nullptr);
         return EINTR;
     }
-
     if (m_input_buffer.size() < static_cast<size_t>(size))
         size = m_input_buffer.size();
 
@@ -93,7 +92,7 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
         u8 modified_data[num_chars * 2];
         size_t modified_data_size = 0;
         for (size_t i = 0; i < buffer_bytes; ++i) {
-            process_output(data[i], [this, &modified_data, &modified_data_size](u8 out_ch) {
+            process_output(data[i], [&modified_data, &modified_data_size](u8 out_ch) {
                 modified_data[modified_data_size++] = out_ch;
             });
         }
