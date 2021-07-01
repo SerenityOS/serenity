@@ -350,12 +350,12 @@ int main(int argc, char** argv)
     layer_menu.add_separator();
     layer_menu.add_action(GUI::Action::create(
         "Select &Previous Layer", { 0, Key_PageUp }, [&](auto&) {
-            layer_list_widget.move_selection(1);
+            layer_list_widget.cycle_through_selection(1);
         },
         window));
     layer_menu.add_action(GUI::Action::create(
         "Select &Next Layer", { 0, Key_PageDown }, [&](auto&) {
-            layer_list_widget.move_selection(-1);
+            layer_list_widget.cycle_through_selection(-1);
         },
         window));
     layer_menu.add_action(GUI::Action::create(

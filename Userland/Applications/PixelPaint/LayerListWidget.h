@@ -27,7 +27,7 @@ public:
 
     void select_bottom_layer();
     void select_top_layer();
-    void move_selection(int delta);
+    void cycle_through_selection(int delta);
 
 private:
     explicit LayerListWidget();
@@ -66,6 +66,8 @@ private:
 
     Optional<size_t> m_moving_gadget_index;
     Gfx::IntPoint m_moving_event_origin;
+
+    size_t m_selected_layer_index { 0 };
 };
 
 }
