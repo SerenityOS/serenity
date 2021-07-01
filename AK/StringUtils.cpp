@@ -378,6 +378,24 @@ Vector<size_t> find_all(StringView const& haystack, StringView const& needle)
     return positions;
 }
 
+Optional<size_t> find_any_of(StringView const& haystack, StringView const& needles, SearchDirection direction)
+{
+    if (haystack.is_empty() || needles.is_empty())
+        return {};
+    if (direction == SearchDirection::Forward) {
+        for (size_t i = 0; i < haystack.length(); ++i) {
+            if (needles.contains(haystack[i]))
+                return i;
+        }
+    } else if (direction == SearchDirection::Backward) {
+        for (size_t i = haystack.length(); i > 0; --i) {
+            if (needles.contains(haystack[i - 1]))
+                return i - 1;
+        }
+    }
+    return {};
+}
+
 String to_snakecase(const StringView& str)
 {
     auto should_insert_underscore = [&](auto i, auto current_char) {

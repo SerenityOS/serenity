@@ -222,7 +222,7 @@ static StringView parse_custom_property_name(const StringView& value)
     if (!value.starts_with("var(") || !value.ends_with(")"))
         return {};
     // FIXME: Allow for fallback
-    auto first_comma_index = value.find_first_of(",");
+    auto first_comma_index = value.find(',');
     auto length = value.length();
 
     auto substring_length = first_comma_index.has_value() ? first_comma_index.value() - 4 - 1 : length - 4 - 1;

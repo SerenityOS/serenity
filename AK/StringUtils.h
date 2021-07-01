@@ -62,6 +62,11 @@ Optional<size_t> find(StringView const& haystack, char needle, size_t start = 0)
 Optional<size_t> find(StringView const& haystack, StringView const& needle, size_t start = 0);
 Optional<size_t> find_last(StringView const& haystack, char needle);
 Vector<size_t> find_all(StringView const& haystack, StringView const& needle);
+enum class SearchDirection {
+    Forward,
+    Backward
+};
+Optional<size_t> find_any_of(StringView const& haystack, StringView const& needles, SearchDirection);
 
 String to_snakecase(const StringView&);
 
