@@ -173,6 +173,16 @@ bool StringView::equals_ignoring_case(const StringView& other) const
     return StringUtils::equals_ignoring_case(*this, other);
 }
 
+String StringView::to_lowercase_string() const
+{
+    return StringImpl::create_lowercased(characters_without_null_termination(), length());
+}
+
+String StringView::to_uppercase_string() const
+{
+    return StringImpl::create_uppercased(characters_without_null_termination(), length());
+}
+
 StringView StringView::substring_view_starting_from_substring(const StringView& substring) const
 {
     const char* remaining_characters = substring.characters_without_null_termination();
