@@ -47,9 +47,10 @@ Optional<Variable> DeclarativeEnvironment::get_from_environment(FlyString const&
     return m_variables.get(name);
 }
 
-void DeclarativeEnvironment::put_into_environment(FlyString const& name, Variable variable)
+bool DeclarativeEnvironment::put_into_environment(FlyString const& name, Variable variable)
 {
     m_variables.set(name, variable);
+    return true;
 }
 
 bool DeclarativeEnvironment::delete_from_environment(FlyString const& name)
