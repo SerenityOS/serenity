@@ -91,6 +91,16 @@ String String::isolated_copy() const
     return String(move(*impl));
 }
 
+String String::substring(size_t start, size_t length) const
+{
+    if (!length)
+        return String::empty();
+    VERIFY(m_impl);
+    VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
+    VERIFY(start + length <= m_impl->length());
+    return { characters() + start, length };
+}
+
 String String::substring(size_t start) const
 {
     VERIFY(m_impl);
@@ -98,21 +108,11 @@ String String::substring(size_t start) const
     return { characters() + start, length() - start };
 }
 
-String String::substring(size_t start, size_t length) const
-{
-    if (!length)
-        return "";
-    VERIFY(m_impl);
-    VERIFY(start + length <= m_impl->length());
-    // FIXME: This needs some input bounds checking.
-    return { characters() + start, length };
-}
-
 StringView String::substring_view(size_t start, size_t length) const
 {
     VERIFY(m_impl);
+    VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
     VERIFY(start + length <= m_impl->length());
-    // FIXME: This needs some input bounds checking.
     return { characters() + start, length };
 }
 
