@@ -26,8 +26,8 @@
 
 static Threading::Lock& malloc_lock()
 {
-    static u32 lock_storage[sizeof(Threading::Lock) / sizeof(u32)];
-    return *reinterpret_cast<Threading::Lock*>(&lock_storage);
+    alignas(Threading::Lock) static u8 lock_storage[sizeof(Threading::Lock)];
+    return *reinterpret_cast<Threading::Lock*>(lock_storage);
 }
 
 constexpr size_t number_of_hot_chunked_blocks_to_keep_around = 16;
@@ -111,8 +111,8 @@ struct BigAllocator {
 // are run. Similarly, we can not allow global destructors to destruct
 // them. We could have used AK::NeverDestoyed to prevent the latter,
 // but it would have not helped with the former.
-static u8 g_allocators_storage[sizeof(Allocator) * num_size_classes];
-static u8 g_big_allocators_storage[sizeof(BigAllocator)];
+alignas(Allocator) static u8 g_allocators_storage[sizeof(Allocator) * num_size_classes];
+alignas(BigAllocator) static u8 g_big_allocators_storage[sizeof(BigAllocator)];
 
 static inline Allocator (&allocators())[num_size_classes]
 {
