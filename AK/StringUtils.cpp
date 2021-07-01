@@ -332,11 +332,34 @@ StringView trim_whitespace(const StringView& str, TrimMode mode)
     return trim(str, " \n\t\v\f\r", mode);
 }
 
-Optional<size_t> find(const StringView& haystack, const StringView& needle)
+Optional<size_t> find(StringView const& haystack, char needle, size_t start)
 {
-    return AK::memmem_optional(
-        haystack.characters_without_null_termination(), haystack.length(),
+    if (start >= haystack.length())
+        return {};
+    for (size_t i = start; i < haystack.length(); ++i) {
+        if (haystack[i] == needle)
+            return i;
+    }
+    return {};
+}
+
+Optional<size_t> find(StringView const& haystack, StringView const& needle, size_t start)
+{
+    if (start > haystack.length())
+        return {};
+    auto index = AK::memmem_optional(
+        haystack.characters_without_null_termination() + start, haystack.length() - start,
         needle.characters_without_null_termination(), needle.length());
+    return index.has_value() ? (*index + start) : index;
+}
+
+Optional<size_t> find_last(StringView const& haystack, char needle)
+{
+    for (size_t i = haystack.length(); i > 0; --i) {
+        if (haystack[i - 1] == needle)
+            return i - 1;
+    }
+    return {};
 }
 
 String to_snakecase(const StringView& str)
