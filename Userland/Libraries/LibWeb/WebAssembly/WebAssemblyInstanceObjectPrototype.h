@@ -14,11 +14,11 @@
 namespace Web::Bindings {
 
 class WebAssemblyInstancePrototype final : public JS::Object {
-    JS_OBJECT(WebAssemblyInstancePrototype, JS::Object);
+    JS_OBJECT(WebAssemblyInstancePrototype, Object);
 
 public:
     explicit WebAssemblyInstancePrototype(JS::GlobalObject& global_object)
-        : JS::Object(global_object)
+        : Object(global_object)
     {
     }
 
