@@ -136,18 +136,15 @@ UNMAP_AFTER_INIT void APIC::initialize()
 
 PhysicalAddress APIC::get_base()
 {
-    u32 lo, hi;
     MSR msr(APIC_BASE_MSR);
-    msr.get(lo, hi);
-    return PhysicalAddress(lo & 0xfffff000);
+    auto base = msr.get();
+    return PhysicalAddress(base & 0xfffff000);
 }
 
 void APIC::set_base(const PhysicalAddress& base)
 {
-    u32 hi = 0;
-    u32 lo = base.get() | 0x800;
     MSR msr(APIC_BASE_MSR);
-    msr.set(lo, hi);
+    msr.set(base.get() | 0x800);
 }
 
 void APIC::write_register(u32 offset, u32 value)
