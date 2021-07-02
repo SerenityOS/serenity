@@ -35,8 +35,11 @@ public:
 
     virtual size_t element_size() const = 0;
     virtual String element_name() const = 0;
-    virtual bool put_by_index(u32 property_index, Value value) override = 0;
-    virtual Value get_by_index(u32 property_index, AllowSideEffects = AllowSideEffects::Yes) const override = 0;
+
+    // 25.1.2.10 GetValueFromBuffer ( arrayBuffer, byteIndex, type, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getvaluefrombuffer
+    virtual Value get_value_from_buffer(size_t byte_index, ArrayBuffer::Order, bool is_little_endian = true) const = 0;
+    // 25.1.2.12 SetValueInBuffer ( arrayBuffer, byteIndex, type, value, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-setvalueinbuffer
+    virtual void set_value_in_buffer(size_t byte_index, Value, ArrayBuffer::Order, bool is_little_endian = true) = 0;
 
 protected:
     explicit TypedArrayBase(Object& prototype)
@@ -139,6 +142,9 @@ public:
     }
 
     virtual size_t element_size() const override { return sizeof(UnderlyingBufferDataType); };
+
+    Value get_value_from_buffer(size_t byte_index, ArrayBuffer::Order order, bool is_little_endian = true) const override { return viewed_array_buffer()->template get_value<T>(byte_index, true, order, is_little_endian); }
+    void set_value_in_buffer(size_t byte_index, Value value, ArrayBuffer::Order order, bool is_little_endian = true) override { viewed_array_buffer()->template set_value<T>(byte_index, value, true, order, is_little_endian); }
 
 protected:
     TypedArray(u32 array_length, Object& prototype)

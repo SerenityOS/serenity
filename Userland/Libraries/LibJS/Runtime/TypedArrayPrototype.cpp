@@ -343,7 +343,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
         // 23.2.3.23.1 SetTypedArrayFromTypedArray ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray
         auto target_buffer = typed_array->viewed_array_buffer();
         if (target_buffer->is_detached()) {
-            vm.throw_exception<JS::TypeError>(global_object, "Target array is detached");
+            vm.throw_exception<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
             return {};
         }
         auto target_length = typed_array->array_length();
@@ -351,7 +351,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
 
         auto source_buffer = source_typed_array.viewed_array_buffer();
         if (source_buffer->is_detached()) {
-            vm.throw_exception<JS::TypeError>(global_object, "Source array is detached");
+            vm.throw_exception<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
             return {};
         }
         auto source_length = source_typed_array.array_length();
@@ -407,8 +407,8 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
             target_buffer->buffer().overwrite(target_byte_index, source_buffer->buffer().data(), limit - target_byte_index);
         } else {
             while (target_byte_index < limit) {
-                auto value = source_typed_array.get_by_index(source_byte_index);
-                typed_array->put_by_index(target_byte_index, value);
+                auto value = source_typed_array.get_value_from_buffer(source_byte_index, ArrayBuffer::Unordered);
+                typed_array->set_value_in_buffer(target_byte_index, value, ArrayBuffer::Unordered);
                 source_byte_index += source_typed_array.element_size();
                 target_byte_index += typed_array->element_size();
             }
@@ -417,7 +417,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
         // 23.2.3.23.2 SetTypedArrayFromArrayLike ( target, targetOffset, source ), https://tc39.es/ecma262/#sec-settypedarrayfromarraylike
         auto target_buffer = typed_array->viewed_array_buffer();
         if (target_buffer->is_detached()) {
-            vm.throw_exception<JS::TypeError>(global_object, "Target array is detached");
+            vm.throw_exception<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
             return {};
         }
         auto target_length = typed_array->array_length();
@@ -474,11 +474,11 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
                 return {};
 
             if (target_buffer->is_detached()) {
-                vm.throw_exception<JS::TypeError>(global_object, "Target array is detached");
+                vm.throw_exception<JS::TypeError>(global_object, ErrorType::DetachedArrayBuffer);
                 return {};
             }
 
-            typed_array->put_by_index(target_byte_index, value);
+            typed_array->set_value_in_buffer(target_byte_index, value, ArrayBuffer::Unordered);
             ++k;
             target_byte_index += typed_array->element_size();
         }
