@@ -8,6 +8,7 @@
 
 #include <AK/Queue.h>
 #include <AK/String.h>
+#include <AK/URL.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Desktop.h>
 #include <LibJS/Interpreter.h>
@@ -84,6 +85,16 @@ public:
     void activate() const override;
 };
 
+class URLResult : public Result {
+public:
+    explicit URLResult(const URL& url)
+        : Result(GUI::Icon::default_icon("app-browser").bitmap_for_size(16), url.to_string(), "'Enter' will open this URL in the browser"sv, 50)
+    {
+    }
+    ~URLResult() override = default;
+    void activate() const override;
+};
+
 class Provider {
 public:
     virtual ~Provider() = default;
@@ -111,6 +122,11 @@ private:
     bool m_building_cache { false };
     Vector<String> m_full_path_cache;
     Queue<String> m_work_queue;
+};
+
+class URLProvider : public Provider {
+public:
+    void query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
 };
 
 }
