@@ -34,7 +34,7 @@ static StyleSheet& default_stylesheet()
     if (!sheet) {
         extern const char default_stylesheet_source[];
         String css = default_stylesheet_source;
-        sheet = parse_css(CSS::ParsingContext(), css).leak_ref();
+        sheet = parse_css(CSS::DeprecatedParsingContext(), css).leak_ref();
     }
     return *sheet;
 }
@@ -45,7 +45,7 @@ static StyleSheet& quirks_mode_stylesheet()
     if (!sheet) {
         extern const char quirks_mode_stylesheet_source[];
         String css = quirks_mode_stylesheet_source;
-        sheet = parse_css(CSS::ParsingContext(), css).leak_ref();
+        sheet = parse_css(CSS::DeprecatedParsingContext(), css).leak_ref();
     }
     return *sheet;
 }
@@ -229,7 +229,7 @@ static inline bool is_background_repeat_property(const StyleValue& value)
 
 static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value, DOM::Document& document, bool is_internally_generated_pseudo_property = false)
 {
-    CSS::ParsingContext context(document);
+    CSS::DeprecatedParsingContext context(document);
 
     if (is_pseudo_property(property_id) && !is_internally_generated_pseudo_property) {
         dbgln("Ignoring non-internally-generated pseudo property: {}", string_from_property_id(property_id));

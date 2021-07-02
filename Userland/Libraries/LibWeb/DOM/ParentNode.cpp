@@ -13,7 +13,7 @@ namespace Web::DOM {
 
 RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
 {
-    auto selector = parse_selector(CSS::ParsingContext(*this), selector_text);
+    auto selector = parse_selector(CSS::DeprecatedParsingContext(*this), selector_text);
     if (!selector.has_value())
         return {};
 
@@ -33,7 +33,7 @@ RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
 
 NonnullRefPtrVector<Element> ParentNode::query_selector_all(const StringView& selector_text)
 {
-    auto selector = parse_selector(CSS::ParsingContext(*this), selector_text);
+    auto selector = parse_selector(CSS::DeprecatedParsingContext(*this), selector_text);
     if (!selector.has_value())
         return {};
 

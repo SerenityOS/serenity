@@ -18,6 +18,7 @@
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 #include <LibWeb/CSS/Selector.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 
 #define CSS_PARSER_TRACE 1
@@ -29,8 +30,33 @@ static void log_parse_error(const SourceLocation& location = SourceLocation::cur
 
 namespace Web::CSS {
 
-Parser::Parser(const StringView& input, const String& encoding)
-    : m_tokenizer(input, encoding)
+ParsingContext::ParsingContext()
+{
+}
+
+ParsingContext::ParsingContext(DOM::Document const& document)
+    : m_document(&document)
+{
+}
+
+ParsingContext::ParsingContext(DOM::ParentNode const& parent_node)
+    : m_document(&parent_node.document())
+{
+}
+
+bool ParsingContext::in_quirks_mode() const
+{
+    return m_document ? m_document->in_quirks_mode() : false;
+}
+
+URL ParsingContext::complete_url(String const& addr) const
+{
+    return m_document ? m_document->url().complete_url(addr) : URL::create_with_url_or_path(addr);
+}
+
+Parser::Parser(ParsingContext const& context, StringView const& input, String const& encoding)
+    : m_context(context)
+    , m_tokenizer(input, encoding)
 {
     m_tokens = m_tokenizer.parse();
 }
