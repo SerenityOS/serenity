@@ -318,20 +318,30 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleCompo
     auto parse_complex_selector = [&]() -> Optional<CSS::Selector::ComplexSelector> {
         auto relation = CSS::Selector::ComplexSelector::Relation::Descendant;
 
+        if (index >= parts.size())
+            return {};
+
         auto current_value = parts.at(index);
         if (current_value.is(Token::TokenType::Delim)) {
             auto delim = current_value.token().delim();
-            if (is_combinator(delim)) {
-                if (delim == ">") {
-                    relation = CSS::Selector::ComplexSelector::Relation::ImmediateChild;
-                } else if (delim == "+") {
-                    relation = CSS::Selector::ComplexSelector::Relation::AdjacentSibling;
-                } else if (delim == "~") {
-                    relation = CSS::Selector::ComplexSelector::Relation::GeneralSibling;
-                } else if (delim == "||") {
-                    relation = CSS::Selector::ComplexSelector::Relation::Column;
-                }
+            if (delim == ">") {
+                relation = CSS::Selector::ComplexSelector::Relation::ImmediateChild;
                 index++;
+            } else if (delim == "+") {
+                relation = CSS::Selector::ComplexSelector::Relation::AdjacentSibling;
+                index++;
+            } else if (delim == "~") {
+                relation = CSS::Selector::ComplexSelector::Relation::GeneralSibling;
+                index++;
+            } else if (delim == "|") {
+                if (index + 1 >= parts.size())
+                    return {};
+
+                auto next = parts.at(index + 1);
+                if (next.is(Token::TokenType::Delim) && next.token().delim() == "|") {
+                    relation = CSS::Selector::ComplexSelector::Relation::Column;
+                    index += 2;
+                }
             }
         }
 
@@ -384,11 +394,6 @@ void Parser::dump_all_tokens()
 void Parser::reconsume_current_input_token()
 {
     --m_iterator_offset;
-}
-
-bool Parser::is_combinator(String input)
-{
-    return input == ">" || input == "+" || input == "~" || input == "||";
 }
 
 NonnullRefPtrVector<QualifiedStyleRule> Parser::consume_a_list_of_rules(bool top_level)
