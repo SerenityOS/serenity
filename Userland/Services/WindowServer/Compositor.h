@@ -138,7 +138,6 @@ private:
     void start_compose_async_timer();
     void recompute_overlay_rects();
     void recompute_occlusions();
-    bool any_opaque_window_above_this_one_contains_rect(Window&, const Gfx::IntRect&);
     void change_cursor(const Cursor*);
     void flush(Screen&);
     Gfx::IntPoint window_transition_offset(Window&);
