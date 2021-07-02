@@ -1001,7 +1001,19 @@ void Compositor::recompute_occlusions()
     auto& wm = WindowManager::the();
     bool is_switcher_visible = wm.m_switcher.is_visible();
     wm.for_each_window_stack([&](WindowStack& window_stack) {
-        window_stack.set_all_occluded(!is_switcher_visible);
+        if (is_switcher_visible) {
+            switch (wm.m_switcher.mode()) {
+            case WindowSwitcher::Mode::ShowCurrentDesktop:
+                window_stack.set_all_occluded(!(&window_stack == m_current_window_stack || &window_stack == m_transitioning_to_window_stack));
+                break;
+            case WindowSwitcher::Mode::ShowAllWindows:
+                window_stack.set_all_occluded(false);
+                break;
+            }
+        } else {
+            window_stack.set_all_occluded(!(&window_stack == m_current_window_stack || &window_stack == m_transitioning_to_window_stack));
+        }
+
         return IterationDecision::Continue;
     });
     if (!is_switcher_visible) {
