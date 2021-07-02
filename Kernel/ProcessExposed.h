@@ -159,8 +159,11 @@ public:
 
     virtual uid_t owner_user() const override { return m_associated_process->uid(); }
     virtual gid_t owner_group() const override { return m_associated_process->gid(); }
+    virtual KResult refresh_data(FileDescription&) const override;
+    virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
 private:
+    void on_attach();
     IntrusiveListNode<ProcFSProcessFolder, RefPtr<ProcFSProcessFolder>> m_list_node;
 
     explicit ProcFSProcessFolder(const Process&);
