@@ -71,10 +71,10 @@ public:
     [[nodiscard]] Vector<Token> parse();
 
 private:
-    [[nodiscard]] Optional<u32> next_code_point();
-    [[nodiscard]] Optional<u32> peek_code_point(size_t offset = 0) const;
-    [[nodiscard]] Optional<U32Twin> peek_twin() const;
-    [[nodiscard]] Optional<U32Triplet> peek_triplet() const;
+    [[nodiscard]] u32 next_code_point();
+    [[nodiscard]] u32 peek_code_point(size_t offset = 0) const;
+    [[nodiscard]] U32Twin peek_twin() const;
+    [[nodiscard]] U32Triplet peek_triplet() const;
 
     [[nodiscard]] static Token create_new_token(Token::TokenType);
     [[nodiscard]] static Token create_value_token(Token::TokenType, String value);

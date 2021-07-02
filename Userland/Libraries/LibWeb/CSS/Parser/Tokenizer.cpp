@@ -14,10 +14,16 @@
 
 //U+FFFD REPLACEMENT CHARACTER (�)
 #define REPLACEMENT_CHARACTER 0xFFFD
+static const u32 TOKENIZER_EOF = 0xFFFFFFFF;
 
 static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
 {
     dbgln_if(CSS_TOKENIZER_TRACE, "Parse error (css tokenization) {} ", location);
+}
+
+static inline bool is_eof(u32 code_point)
+{
+    return code_point == TOKENIZER_EOF;
 }
 
 static inline bool is_quotation_mark(u32 code_point)
@@ -207,48 +213,50 @@ Vector<Token> Tokenizer::parse()
     }
 }
 
-Optional<u32> Tokenizer::next_code_point()
+u32 Tokenizer::next_code_point()
 {
     if (m_utf8_iterator == m_utf8_view.end())
-        return {};
+        return TOKENIZER_EOF;
     m_prev_utf8_iterator = m_utf8_iterator;
     ++m_utf8_iterator;
     dbgln_if(CSS_TOKENIZER_TRACE, "(Tokenizer) Next code_point: {:c}", (char)*m_prev_utf8_iterator);
     return *m_prev_utf8_iterator;
 }
 
-Optional<u32> Tokenizer::peek_code_point(size_t offset) const
+u32 Tokenizer::peek_code_point(size_t offset) const
 {
     auto it = m_utf8_iterator;
     for (size_t i = 0; i < offset && it != m_utf8_view.end(); ++i)
         ++it;
     if (it == m_utf8_view.end())
-        return {};
+        return TOKENIZER_EOF;
     return *it;
 }
 
-Optional<U32Twin> Tokenizer::peek_twin() const
+U32Twin Tokenizer::peek_twin() const
 {
     U32Twin values;
     auto it = m_utf8_iterator;
     for (size_t i = 0; i < 2 && it != m_utf8_view.end(); ++i) {
         if (it == m_utf8_view.end())
-            return {};
-        values.set(i, *it);
+            values.set(i, TOKENIZER_EOF);
+        else
+            values.set(i, *it);
         ++it;
     }
 
     return values;
 }
 
-Optional<U32Triplet> Tokenizer::peek_triplet() const
+U32Triplet Tokenizer::peek_triplet() const
 {
     U32Triplet values;
     auto it = m_utf8_iterator;
     for (size_t i = 0; i < 3 && it != m_utf8_view.end(); ++i) {
         if (it == m_utf8_view.end())
-            return {};
-        values.set(i, *it);
+            values.set(i, TOKENIZER_EOF);
+        else
+            values.set(i, *it);
         ++it;
     }
     return values;
@@ -279,25 +287,23 @@ Token Tokenizer::create_value_token(Token::TokenType type, u32 value)
 
 u32 Tokenizer::consume_escaped_code_point()
 {
-    auto code_point = next_code_point();
+    auto input = next_code_point();
 
-    if (!code_point.has_value()) {
+    if (is_eof(input)) {
         log_parse_error();
         return REPLACEMENT_CHARACTER;
     }
-
-    auto input = code_point.value();
 
     if (is_ascii_hex_digit(input)) {
         StringBuilder builder;
         builder.append_code_point(input);
 
         size_t counter = 0;
-        while (is_ascii_hex_digit(peek_code_point().value()) && counter++ < 5) {
-            builder.append_code_point(next_code_point().value());
+        while (is_ascii_hex_digit(peek_code_point()) && counter++ < 5) {
+            builder.append_code_point(next_code_point());
         }
 
-        if (is_whitespace(peek_code_point().value())) {
+        if (is_whitespace(peek_code_point())) {
             (void)next_code_point();
         }
 
@@ -321,11 +327,11 @@ Token Tokenizer::consume_an_ident_like_token()
 {
     auto string = consume_a_name();
 
-    if (string.equals_ignoring_case("url") && is_left_paren(peek_code_point().value())) {
+    if (string.equals_ignoring_case("url") && is_left_paren(peek_code_point())) {
         (void)next_code_point();
 
         for (;;) {
-            auto maybe_whitespace = peek_twin().value();
+            auto maybe_whitespace = peek_twin();
             if (!(is_whitespace(maybe_whitespace.first) && is_whitespace(maybe_whitespace.second))) {
                 break;
             }
@@ -333,7 +339,7 @@ Token Tokenizer::consume_an_ident_like_token()
             (void)next_code_point();
         }
 
-        auto next_two = peek_twin().value();
+        auto next_two = peek_twin();
         // if one of these ", ', ' "', " '"
         if (is_quotation_mark(next_two.first) || is_apostrophe(next_two.first) || (is_whitespace(next_two.first) && (is_quotation_mark(next_two.second) || is_apostrophe(next_two.second)))) {
             return create_value_token(Token::TokenType::Function, string);
@@ -342,7 +348,7 @@ Token Tokenizer::consume_an_ident_like_token()
         return consume_a_url_token();
     }
 
-    if (is_left_paren(peek_code_point().value())) {
+    if (is_left_paren(peek_code_point())) {
         (void)next_code_point();
 
         return create_value_token(Token::TokenType::Function, string);
@@ -356,56 +362,56 @@ CSSNumber Tokenizer::consume_a_number()
     StringBuilder repr;
     Token::NumberType type = Token::NumberType::Integer;
 
-    auto next_input = peek_code_point().value();
+    auto next_input = peek_code_point();
     if (is_plus_sign(next_input) || is_hyphen_minus(next_input)) {
-        repr.append_code_point(next_code_point().value());
+        repr.append_code_point(next_code_point());
     }
 
     for (;;) {
-        auto digits = peek_code_point().value();
+        auto digits = peek_code_point();
         if (!is_ascii_digit(digits))
             break;
 
-        repr.append_code_point(next_code_point().value());
+        repr.append_code_point(next_code_point());
     }
 
-    auto maybe_number = peek_twin().value();
+    auto maybe_number = peek_twin();
     if (is_full_stop(maybe_number.first) && is_ascii_digit(maybe_number.second)) {
-        repr.append_code_point(next_code_point().value());
-        repr.append_code_point(next_code_point().value());
+        repr.append_code_point(next_code_point());
+        repr.append_code_point(next_code_point());
+
+        type = Token::NumberType::Number;
+
+        for (;;) {
+            auto digit = peek_code_point();
+            if (!is_ascii_digit(digit))
+                break;
+
+            repr.append_code_point(next_code_point());
+        }
+    }
+
+    auto maybe_exp = peek_triplet();
+    if (is_E(maybe_exp.first) || is_e(maybe_exp.first)) {
+        if (is_plus_sign(maybe_exp.second) || is_hyphen_minus(maybe_exp.second)) {
+            if (is_ascii_digit(maybe_exp.third)) {
+                repr.append_code_point(next_code_point());
+                repr.append_code_point(next_code_point());
+                repr.append_code_point(next_code_point());
+            }
+        } else if (is_ascii_digit(maybe_exp.second)) {
+            repr.append_code_point(next_code_point());
+            repr.append_code_point(next_code_point());
+        }
 
         type = Token::NumberType::Number;
 
         for (;;) {
             auto digits = peek_code_point();
-            if (digits.has_value() && !is_ascii_digit(digits.value()))
-                break;
-
-            repr.append_code_point(next_code_point().value());
-        }
-    }
-
-    auto maybe_exp = peek_triplet().value();
-    if (is_E(maybe_exp.first) || is_e(maybe_exp.first)) {
-        if (is_plus_sign(maybe_exp.second) || is_hyphen_minus(maybe_exp.second)) {
-            if (is_ascii_digit(maybe_exp.third)) {
-                repr.append_code_point(next_code_point().value());
-                repr.append_code_point(next_code_point().value());
-                repr.append_code_point(next_code_point().value());
-            }
-        } else if (is_ascii_digit(maybe_exp.second)) {
-            repr.append_code_point(next_code_point().value());
-            repr.append_code_point(next_code_point().value());
-        }
-
-        type = Token::NumberType::Number;
-
-        for (;;) {
-            auto digits = peek_code_point().value();
             if (!is_ascii_digit(digits))
                 break;
 
-            repr.append_code_point(next_code_point().value());
+            repr.append_code_point(next_code_point());
         }
     }
 
@@ -417,7 +423,10 @@ String Tokenizer::consume_a_name()
     StringBuilder result;
 
     for (;;) {
-        auto input = next_code_point().value();
+        auto input = next_code_point();
+
+        if (is_eof(input))
+            break;
 
         if (is_name_code_point(input)) {
             result.append_code_point(input);
@@ -425,22 +434,22 @@ String Tokenizer::consume_a_name()
         }
 
         auto next = peek_code_point();
-        if (next.has_value() && is_valid_escape_sequence({ input, next.value() })) {
+        if (!is_eof(next) && is_valid_escape_sequence({ input, next })) {
             result.append_code_point(consume_escaped_code_point());
             continue;
         }
 
+        reconsume_current_input_code_point();
         break;
     }
 
-    reconsume_current_input_code_point();
     return result.to_string();
 }
 Token Tokenizer::consume_a_url_token()
 {
     auto token = create_new_token(Token::TokenType::Url);
     for (;;) {
-        if (!is_whitespace(peek_code_point().value())) {
+        if (!is_whitespace(peek_code_point())) {
             break;
         }
 
@@ -449,13 +458,11 @@ Token Tokenizer::consume_a_url_token()
 
     for (;;) {
 
-        auto code_point = peek_code_point();
-        if (!code_point.has_value()) {
+        auto input = peek_code_point();
+        if (is_eof(input)) {
             log_parse_error();
             return token;
         }
-
-        auto input = code_point.value();
 
         if (is_right_paren(input)) {
             (void)next_code_point();
@@ -464,19 +471,17 @@ Token Tokenizer::consume_a_url_token()
 
         if (is_whitespace(input)) {
             for (;;) {
-                if (!is_whitespace(peek_code_point().value())) {
+                if (!is_whitespace(peek_code_point())) {
                     break;
                 }
 
-                code_point = next_code_point();
+                input = next_code_point();
             }
 
-            if (!code_point.has_value()) {
+            if (is_eof(input)) {
                 log_parse_error();
                 return token;
             }
-
-            input = code_point.value();
 
             if (is_right_paren(input)) {
                 return token;
@@ -504,7 +509,7 @@ Token Tokenizer::consume_a_url_token()
             }
         }
 
-        token.m_value.append_code_point(next_code_point().value());
+        token.m_value.append_code_point(next_code_point());
     }
 }
 
@@ -513,11 +518,11 @@ void Tokenizer::consume_the_remnants_of_a_bad_url()
     for (;;) {
         auto next = peek_code_point();
 
-        if (!next.has_value()) {
+        if (is_eof(next)) {
             return;
         }
 
-        auto input = next.value();
+        auto input = next;
 
         if (is_right_paren(input)) {
             (void)next_code_point();
@@ -551,7 +556,7 @@ Token Tokenizer::consume_a_numeric_token()
         return token;
     }
 
-    if (is_percent(peek_code_point().value())) {
+    if (is_percent(peek_code_point())) {
         (void)next_code_point();
 
         auto token = create_new_token(Token::TokenType::Percentage);
@@ -567,7 +572,7 @@ Token Tokenizer::consume_a_numeric_token()
 
 bool Tokenizer::starts_with_a_number() const
 {
-    return starts_with_a_number(peek_triplet().value());
+    return starts_with_a_number(peek_triplet());
 }
 
 bool Tokenizer::starts_with_a_number(U32Triplet values)
@@ -593,7 +598,7 @@ bool Tokenizer::starts_with_a_number(U32Triplet values)
 
 bool Tokenizer::is_valid_escape_sequence()
 {
-    return is_valid_escape_sequence(peek_twin().value());
+    return is_valid_escape_sequence(peek_twin());
 }
 
 bool Tokenizer::is_valid_escape_sequence(U32Twin values)
@@ -611,7 +616,7 @@ bool Tokenizer::is_valid_escape_sequence(U32Twin values)
 
 bool Tokenizer::would_start_an_identifier()
 {
-    return would_start_an_identifier(peek_triplet().value());
+    return would_start_an_identifier(peek_triplet());
 }
 
 bool Tokenizer::would_start_an_identifier(U32Triplet values)
@@ -640,14 +645,12 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
     auto token = create_new_token(Token::TokenType::String);
 
     for (;;) {
-        auto code_point = next_code_point();
+        auto input = next_code_point();
 
-        if (!code_point.has_value()) {
+        if (is_eof(input)) {
             log_parse_error();
             return token;
         }
-
-        auto input = code_point.value();
 
         if (input == ending_code_point)
             return token;
@@ -659,10 +662,10 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
 
         if (is_reverse_solidus(input)) {
             auto next_input = peek_code_point();
-            if (!next_input.has_value())
+            if (is_eof(next_input))
                 continue;
 
-            if (is_newline(next_input.value())) {
+            if (is_newline(next_input)) {
                 (void)next_code_point();
                 continue;
             }
@@ -678,13 +681,7 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
 void Tokenizer::consume_comments()
 {
 start:
-    auto peek = peek_twin();
-    if (!peek.has_value()) {
-        log_parse_error();
-        return;
-    }
-
-    auto twin = peek.value();
+    auto twin = peek_twin();
     if (!(is_solidus(twin.first) && is_asterisk(twin.second)))
         return;
 
@@ -692,13 +689,11 @@ start:
     (void)next_code_point();
 
     for (;;) {
-        auto peek_inner = peek_twin();
-        if (!peek_inner.has_value()) {
+        auto twin_inner = peek_twin();
+        if (is_eof(twin_inner.first) || is_eof(twin_inner.second)) {
             log_parse_error();
             return;
         }
-
-        auto twin_inner = peek_inner.value();
 
         if (is_asterisk(twin_inner.first) && is_solidus(twin_inner.second)) {
             (void)next_code_point();
@@ -714,19 +709,17 @@ Token Tokenizer::consume_a_token()
 {
     consume_comments();
 
-    auto code_point = next_code_point();
+    auto input = next_code_point();
 
-    if (!code_point.has_value()) {
+    if (is_eof(input)) {
         return create_new_token(Token::TokenType::EndOfFile);
     }
-
-    auto input = code_point.value();
 
     if (is_whitespace(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is whitespace");
 
         auto next = peek_code_point();
-        while (next.has_value() && is_whitespace(next.value())) {
+        while (is_whitespace(next)) {
             (void)next_code_point();
             next = peek_code_point();
         }
@@ -742,8 +735,8 @@ Token Tokenizer::consume_a_token()
     if (is_number_sign(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is number sign");
 
-        auto next_input = peek_code_point().value();
-        auto maybe_escape = peek_twin().value();
+        auto next_input = peek_code_point();
+        auto maybe_escape = peek_twin();
 
         if (is_name_code_point(next_input) || is_valid_escape_sequence(maybe_escape)) {
             auto token = create_new_token(Token::TokenType::Hash);
@@ -797,7 +790,7 @@ Token Tokenizer::consume_a_token()
             return consume_a_numeric_token();
         }
 
-        auto next_twin = peek_twin().value();
+        auto next_twin = peek_twin();
         if (is_hyphen_minus(next_twin.first) && is_greater_than_sign(next_twin.second)) {
             (void)next_code_point();
             (void)next_code_point();
@@ -835,7 +828,7 @@ Token Tokenizer::consume_a_token()
 
     if (is_less_than_sign(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is less than");
-        auto maybe_cdo = peek_triplet().value();
+        auto maybe_cdo = peek_triplet();
 
         if (is_exclamation_mark(maybe_cdo.first) && is_hyphen_minus(maybe_cdo.second) && is_hyphen_minus(maybe_cdo.third)) {
             (void)next_code_point();
