@@ -587,7 +587,7 @@ bool FileSystemModel::fetch_thumbnail_for(const Node& node)
     auto weak_this = make_weak_ptr();
 
     Threading::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
-        [path] {
+        [path](auto&) {
             return render_thumbnail(path);
         },
 

@@ -689,7 +689,7 @@ bool Compositor::set_wallpaper_mode(const String& mode)
 bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callback)
 {
     Threading::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
-        [path] {
+        [path](auto&) {
             return Gfx::Bitmap::load_from_file(path);
         },
 
