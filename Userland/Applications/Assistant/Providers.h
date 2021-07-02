@@ -11,17 +11,12 @@
 #include <LibGUI/Desktop.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/VM.h>
+#include <typeinfo>
 
 namespace Assistant {
 
 class Result : public RefCounted<Result> {
 public:
-    enum class Kind {
-        Unknown,
-        App,
-        Calculator,
-    };
-
     virtual ~Result() = default;
 
     virtual void activate() const = 0;
@@ -29,22 +24,20 @@ public:
     RefPtr<Gfx::Bitmap> bitmap() { return m_bitmap; }
     String const& title() const { return m_title; }
     String const& subtitle() const { return m_subtitle; }
-    Kind kind() const { return m_kind; }
     int score() const { return m_score; }
     bool equals(Result const& other) const
     {
-        return kind() == other.kind()
+        return typeid(this) == typeid(&other)
             && title() == other.title()
             && subtitle() == other.subtitle();
     }
 
 protected:
-    Result(RefPtr<Gfx::Bitmap> bitmap, String title, String subtitle, int score = 0, Kind kind = Kind::Unknown)
+    Result(RefPtr<Gfx::Bitmap> bitmap, String title, String subtitle, int score = 0)
         : m_bitmap(move(bitmap))
         , m_title(move(title))
         , m_subtitle(move(subtitle))
         , m_score(score)
-        , m_kind(kind)
     {
     }
 
@@ -53,13 +46,12 @@ private:
     String m_title;
     String m_subtitle;
     int m_score { 0 };
-    Kind m_kind;
 };
 
 class AppResult : public Result {
 public:
     AppResult(RefPtr<Gfx::Bitmap> bitmap, String title, String subtitle, NonnullRefPtr<Desktop::AppFile> af, int score)
-        : Result(move(bitmap), move(title), move(subtitle), score, Kind::App)
+        : Result(move(bitmap), move(title), move(subtitle), score)
         , m_app_file(move(af))
     {
     }
@@ -73,7 +65,7 @@ private:
 class CalculatorResult : public Result {
 public:
     explicit CalculatorResult(String title)
-        : Result(GUI::Icon::default_icon("app-calculator").bitmap_for_size(16), move(title), "'Enter' will copy to clipboard"sv, 100, Kind::Calculator)
+        : Result(GUI::Icon::default_icon("app-calculator").bitmap_for_size(16), move(title), "'Enter' will copy to clipboard"sv, 100)
     {
     }
     ~CalculatorResult() override = default;
