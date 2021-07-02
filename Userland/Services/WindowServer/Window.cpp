@@ -664,9 +664,12 @@ void Window::clear_dirty_rects()
 
 bool Window::is_active() const
 {
-    if (!outer_stack())
+    if (!m_window_stack) {
+        // This may be called while destroying a window as part of
+        // determining what the render rectangle is!
         return false;
-    return outer_stack()->active_window() == this;
+    }
+    return m_window_stack->active_window() == this;
 }
 
 Window* Window::blocking_modal_window()

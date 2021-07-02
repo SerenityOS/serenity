@@ -137,8 +137,8 @@ void WindowSwitcher::select_window_at_index(int index)
     VERIFY(highlight_window);
     auto& wm = WindowManager::the();
     if (m_mode == Mode::ShowAllWindows) {
-        if (auto* window_stack = highlight_window->outer_stack(); window_stack != &wm.current_window_stack())
-            wm.switch_to_window_stack(*window_stack, nullptr, false);
+        if (auto& window_stack = highlight_window->window_stack(); &window_stack != &wm.current_window_stack())
+            wm.switch_to_window_stack(window_stack, nullptr, false);
     }
     wm.set_highlight_window(highlight_window);
     redraw();
@@ -191,7 +191,7 @@ void WindowSwitcher::draw()
         painter.fill_rect(icon_rect, palette.window());
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
         painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.computed_title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color);
-        auto window_details = m_windows_on_multiple_stacks ? String::formatted("{} on {}:{}", window.rect().to_string(), window.outer_stack()->row() + 1, window.outer_stack()->column() + 1) : window.rect().to_string();
+        auto window_details = m_windows_on_multiple_stacks ? String::formatted("{} on {}:{}", window.rect().to_string(), window.window_stack().row() + 1, window.window_stack().column() + 1) : window.rect().to_string();
         painter.draw_text(item_rect, window_details, Gfx::TextAlignment::CenterRight, rect_text_color);
     }
 }
@@ -221,10 +221,11 @@ void WindowSwitcher::refresh()
                 if (selected_window == &window)
                     m_selected_index = m_windows.size();
                 m_windows.append(window);
+                auto& window_stack = window.window_stack();
                 if (!last_added_on_window_stack) {
-                    last_added_on_window_stack = window.outer_stack();
-                } else if (last_added_on_window_stack != window.outer_stack()) {
-                    last_added_on_window_stack = window.outer_stack();
+                    last_added_on_window_stack = &window_stack;
+                } else if (last_added_on_window_stack != &window_stack) {
+                    last_added_on_window_stack = &window_stack;
                     m_windows_on_multiple_stacks = true;
                 }
                 return IterationDecision::Continue;
