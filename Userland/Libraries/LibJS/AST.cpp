@@ -115,11 +115,6 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
 {
     auto& vm = interpreter.vm();
 
-    if (is<NewExpression>(*this)) {
-        // Computing |this| is irrelevant for "new" expression.
-        return { js_undefined(), m_callee->execute(interpreter, global_object) };
-    }
-
     if (is<SuperExpression>(*m_callee)) {
         // If we are calling super, |this| has not been initialized yet, and would not be meaningful to provide.
         auto new_target = vm.get_new_target();
@@ -197,12 +192,12 @@ Value NewExpression::execute(Interpreter& interpreter, GlobalObject& global_obje
     InterpreterNodeScope node_scope { interpreter, *this };
     auto& vm = interpreter.vm();
 
-    auto [this_value, callee] = compute_this_and_callee(interpreter, global_object);
+    auto callee_value = m_callee->execute(interpreter, global_object);
     if (vm.exception())
         return {};
 
-    if (!callee.is_function() || (is<NativeFunction>(callee.as_object()) && !static_cast<NativeFunction&>(callee.as_object()).has_constructor())) {
-        throw_type_error_for_callee(interpreter, global_object, callee, "constructor"sv);
+    if (!callee_value.is_function() || (is<NativeFunction>(callee_value.as_object()) && !static_cast<NativeFunction&>(callee_value.as_object()).has_constructor())) {
+        throw_type_error_for_callee(interpreter, global_object, callee_value, "constructor"sv);
         return {};
     }
 
@@ -211,7 +206,7 @@ Value NewExpression::execute(Interpreter& interpreter, GlobalObject& global_obje
     if (interpreter.exception())
         return {};
 
-    auto& function = callee.as_function();
+    auto& function = callee_value.as_function();
     return vm.construct(function, function, move(arg_list));
 }
 

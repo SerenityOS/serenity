@@ -927,15 +927,16 @@ public:
 protected:
     void throw_type_error_for_callee(Interpreter&, GlobalObject&, Value callee_value, StringView call_type) const;
 
+    NonnullRefPtr<Expression> m_callee;
+    Vector<Argument> const m_arguments;
+
+private:
     struct ThisAndCallee {
         Value this_value;
         Value callee;
     };
 
     ThisAndCallee compute_this_and_callee(Interpreter&, GlobalObject&) const;
-
-    NonnullRefPtr<Expression> m_callee;
-    Vector<Argument> const m_arguments;
 };
 
 class NewExpression final : public CallExpression {
