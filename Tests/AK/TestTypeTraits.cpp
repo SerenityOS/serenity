@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,6 +32,12 @@
     for_each_type_zipped<ListA, ListB>([]<typename A, typename B>(TypeWrapper<A>, TypeWrapper<B>) { \
         STATIC_EXPECT_EQ(trait<A>, B);                                                              \
     })
+
+#define EXPECT_VARIADIC_TRAIT_TRUE(trait, ...) \
+    static_assert(trait<__VA_ARGS__>)
+
+#define EXPECT_VARIADIC_TRAIT_FALSE(trait, ...) \
+    static_assert(!trait<__VA_ARGS__>)
 
 struct Empty {
 };
@@ -112,4 +118,131 @@ TEST_CASE(RemoveCVReference)
     using ResultTypeList = TypeList<int, int, int, int, int, int, int, int, int>;
 
     EXPECT_EQ_WITH_TRAIT(RemoveCVReference, TestTypeList, ResultTypeList);
+}
+
+TEST_CASE(AddReference)
+{
+    STATIC_EXPECT_EQ(AddLvalueReference<int>, int&);
+    STATIC_EXPECT_EQ(AddLvalueReference<int&>, int&);
+    STATIC_EXPECT_EQ(AddLvalueReference<int&&>, int&);
+
+    STATIC_EXPECT_EQ(AddRvalueReference<int>, int&&);
+    STATIC_EXPECT_EQ(AddRvalueReference<int&>, int&);
+    STATIC_EXPECT_EQ(AddRvalueReference<int&&>, int&&);
+
+    STATIC_EXPECT_EQ(AddLvalueReference<void>, void);
+}
+
+TEST_CASE(IsConvertible)
+{
+    struct A {
+    };
+    struct B {
+        B(A);
+    };
+    struct C {
+        A a;
+        operator A() { return a; };
+    };
+    struct D {
+    };
+
+    EXPECT_VARIADIC_TRAIT_TRUE(IsConvertible, A, B);
+    EXPECT_VARIADIC_TRAIT_FALSE(IsConvertible, B, A);
+    EXPECT_VARIADIC_TRAIT_TRUE(IsConvertible, C, A);
+    EXPECT_VARIADIC_TRAIT_FALSE(IsConvertible, A, C);
+    EXPECT_VARIADIC_TRAIT_FALSE(IsConvertible, D, A);
+    EXPECT_VARIADIC_TRAIT_FALSE(IsConvertible, A, D);
+}
+
+TEST_CASE(IsAssignable)
+{
+    EXPECT_VARIADIC_TRAIT_FALSE(IsAssignable, int, int);
+    EXPECT_VARIADIC_TRAIT_TRUE(IsAssignable, int&, int);
+    EXPECT_VARIADIC_TRAIT_FALSE(IsAssignable, int, void);
+
+    struct A {
+    };
+    EXPECT_TRAIT_TRUE(IsCopyAssignable, A);
+    EXPECT_TRAIT_TRUE(IsTriviallyCopyAssignable, A);
+    EXPECT_TRAIT_TRUE(IsMoveAssignable, A);
+    EXPECT_TRAIT_TRUE(IsTriviallyMoveAssignable, A);
+
+    struct B {
+        B& operator=(const B&) { return *this; }
+        B& operator=(B&&) { return *this; }
+    };
+    EXPECT_TRAIT_TRUE(IsCopyAssignable, B);
+    EXPECT_TRAIT_FALSE(IsTriviallyCopyAssignable, B);
+    EXPECT_TRAIT_TRUE(IsMoveAssignable, B);
+    EXPECT_TRAIT_FALSE(IsTriviallyMoveAssignable, B);
+
+    struct C {
+        C& operator=(const C&) = delete;
+        C& operator=(C&&) = delete;
+    };
+    EXPECT_TRAIT_FALSE(IsCopyAssignable, C);
+    EXPECT_TRAIT_FALSE(IsTriviallyCopyAssignable, C);
+    EXPECT_TRAIT_FALSE(IsMoveAssignable, C);
+    EXPECT_TRAIT_FALSE(IsTriviallyMoveAssignable, C);
+}
+
+TEST_CASE(IsConstructible)
+{
+    struct A {
+    };
+    EXPECT_TRAIT_TRUE(IsCopyConstructible, A);
+    EXPECT_TRAIT_TRUE(IsTriviallyCopyConstructible, A);
+    EXPECT_TRAIT_TRUE(IsMoveConstructible, A);
+    EXPECT_TRAIT_TRUE(IsTriviallyMoveConstructible, A);
+
+    struct B {
+        B(const B&)
+        {
+        }
+        B(B&&)
+        {
+        }
+    };
+    EXPECT_TRAIT_TRUE(IsCopyConstructible, B);
+    EXPECT_TRAIT_FALSE(IsTriviallyCopyConstructible, B);
+    EXPECT_TRAIT_TRUE(IsMoveConstructible, B);
+    EXPECT_TRAIT_FALSE(IsTriviallyMoveConstructible, B);
+
+    struct C {
+        C(const C&) = delete;
+        C(C&&) = delete;
+    };
+    EXPECT_TRAIT_FALSE(IsCopyConstructible, C);
+    EXPECT_TRAIT_FALSE(IsTriviallyCopyConstructible, C);
+    EXPECT_TRAIT_FALSE(IsMoveConstructible, C);
+    EXPECT_TRAIT_FALSE(IsTriviallyMoveConstructible, C);
+
+    struct D {
+        D(int);
+    };
+    EXPECT_VARIADIC_TRAIT_TRUE(IsConstructible, D, int);
+    EXPECT_VARIADIC_TRAIT_TRUE(IsConstructible, D, char);
+    EXPECT_VARIADIC_TRAIT_FALSE(IsConstructible, D, const char*);
+    EXPECT_VARIADIC_TRAIT_FALSE(IsConstructible, D, void);
+}
+
+TEST_CASE(IsDestructible)
+{
+    struct A {
+    };
+    EXPECT_TRAIT_TRUE(IsDestructible, A);
+    EXPECT_TRAIT_TRUE(IsTriviallyDestructible, A);
+    struct B {
+        ~B()
+        {
+        }
+    };
+    EXPECT_TRAIT_TRUE(IsDestructible, B);
+    EXPECT_TRAIT_FALSE(IsTriviallyDestructible, B);
+    struct C {
+        ~C() = delete;
+    };
+    EXPECT_TRAIT_FALSE(IsDestructible, C);
+    EXPECT_TRAIT_FALSE(IsTriviallyDestructible, C);
 }
