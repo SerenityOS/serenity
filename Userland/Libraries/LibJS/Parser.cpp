@@ -1417,6 +1417,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
     ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Function);
 
+    constexpr auto is_function_expression = IsSame<FunctionNodeType, FunctionExpression>;
     auto is_generator = (parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0;
     String name;
     if (parse_options & FunctionNodeParseOptions::CheckForFunctionAndName) {
@@ -1431,6 +1432,8 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
         if (FunctionNodeType::must_have_name() || match(TokenType::Identifier))
             name = consume(TokenType::Identifier).value();
+        else if (is_function_expression && (match(TokenType::Yield) || match(TokenType::Await)))
+            name = consume().value();
     }
     consume(TokenType::ParenOpen);
     i32 function_length = -1;

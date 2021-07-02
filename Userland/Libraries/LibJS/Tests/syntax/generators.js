@@ -49,3 +49,8 @@ describe("parsing classes with generator methods", () => {
         expect(`class Foo { *constructor() { yield 42; } }`).not.toEval();
     });
 });
+
+test("function expression names equal to 'yield'", () => {
+    expect(`function *foo() { (function yield() {}); }`).toEval();
+    expect(`function *foo() { function yield() {} }`).not.toEval();
+});
