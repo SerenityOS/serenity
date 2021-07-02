@@ -34,7 +34,7 @@ struct TrapFrame {
 
 static_assert(TRAP_FRAME_SIZE == sizeof(TrapFrame));
 
-extern "C" void enter_trap_no_irq(TrapFrame* trap);
+extern "C" void enter_trap_no_irq(TrapFrame* trap) __attribute__((used));
 extern "C" void enter_trap(TrapFrame*) __attribute__((used));
 extern "C" void exit_trap(TrapFrame*) __attribute__((used));
 
