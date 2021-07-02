@@ -162,3 +162,10 @@ test("syntax errors", () => {
     expect("(a = 1 = 2) => {}").not.toEval();
     expect("()\n=> {}").not.toEval();
 });
+
+test("destructuring parameters", () => {
+    expect(`({ a }) => {}`).toEval();
+    expect(`([ a ]) => {}`).toEval();
+    expect(`{ a } => {}`).not.toEval();
+    expect(`[ a ] => {}`).not.toEval();
+});
