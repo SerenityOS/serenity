@@ -6,11 +6,13 @@
 
 #pragma once
 
+#include <AK/Queue.h>
 #include <AK/String.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Desktop.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibThreading/BackgroundAction.h>
 #include <typeinfo>
 
 namespace Assistant {
@@ -72,6 +74,16 @@ public:
     void activate() const override;
 };
 
+class FileResult : public Result {
+public:
+    explicit FileResult(String title, int score)
+        : Result(GUI::Icon::default_icon("filetype-folder").bitmap_for_size(16), move(title), "", score)
+    {
+    }
+    ~FileResult() override = default;
+    void activate() const override;
+};
+
 class Provider {
 public:
     virtual ~Provider() = default;
@@ -87,6 +99,18 @@ public:
 class CalculatorProvider : public Provider {
 public:
     void query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+};
+
+class FileProvider : public Provider {
+public:
+    void query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+    void build_filesystem_cache();
+
+private:
+    RefPtr<Threading::BackgroundAction<Vector<NonnullRefPtr<Result>>>> m_fuzzy_match_work;
+    bool m_building_cache { false };
+    Vector<String> m_full_path_cache;
+    Queue<String> m_work_queue;
 };
 
 }
