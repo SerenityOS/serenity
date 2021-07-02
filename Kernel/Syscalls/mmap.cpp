@@ -6,6 +6,7 @@
  */
 
 #include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/PerformanceEventBuffer.h>
@@ -618,7 +619,8 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
     tls_descriptor.set_base(main_thread->thread_specific_data());
     tls_descriptor.set_limit(main_thread->thread_specific_region_size());
 #else
-    dbgln("FIXME: Not setting FS_BASE for process.");
+    MSR fs_base_msr(MSR_FS_BASE);
+    fs_base_msr.set(main_thread->thread_specific_data().get());
 #endif
 
     return m_master_tls_region.unsafe_ptr()->vaddr().get();
