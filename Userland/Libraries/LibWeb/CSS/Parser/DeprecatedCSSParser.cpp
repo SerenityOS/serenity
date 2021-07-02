@@ -33,33 +33,33 @@ namespace Web {
 
 namespace CSS {
 
-ParsingContext::ParsingContext()
+DeprecatedParsingContext::DeprecatedParsingContext()
 {
 }
 
-ParsingContext::ParsingContext(const DOM::Document& document)
+DeprecatedParsingContext::DeprecatedParsingContext(const DOM::Document& document)
     : m_document(&document)
 {
 }
 
-ParsingContext::ParsingContext(const DOM::ParentNode& parent_node)
+DeprecatedParsingContext::DeprecatedParsingContext(const DOM::ParentNode& parent_node)
     : m_document(&parent_node.document())
 {
 }
 
-bool ParsingContext::in_quirks_mode() const
+bool DeprecatedParsingContext::in_quirks_mode() const
 {
     return m_document ? m_document->in_quirks_mode() : false;
 }
 
-URL ParsingContext::complete_url(const String& addr) const
+URL DeprecatedParsingContext::complete_url(const String& addr) const
 {
     return m_document ? m_document->url().complete_url(addr) : URL::create_with_url_or_path(addr);
 }
 
 }
 
-static Optional<Color> parse_css_color(const CSS::ParsingContext&, const StringView& view)
+static Optional<Color> parse_css_color(const CSS::DeprecatedParsingContext&, const StringView& view)
 {
     if (view.equals_ignoring_case("transparent"))
         return Color::from_rgba(0x00000000);
@@ -144,7 +144,7 @@ static Optional<float> try_parse_float(const StringView& string)
     return is_negative ? -value : value;
 }
 
-static CSS::Length parse_length(const CSS::ParsingContext& context, const StringView& view, bool& is_bad_length)
+static CSS::Length parse_length(const CSS::DeprecatedParsingContext& context, const StringView& view, bool& is_bad_length)
 {
     CSS::Length::Type type = CSS::Length::Type::Undefined;
     Optional<float> value;
@@ -229,7 +229,7 @@ static StringView parse_custom_property_name(const StringView& value)
     return value.substring_view(4, substring_length);
 }
 
-RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext& context, const StringView& string, CSS::PropertyID property_id)
+RefPtr<CSS::StyleValue> parse_css_value(const CSS::DeprecatedParsingContext& context, const StringView& string, CSS::PropertyID property_id)
 {
     bool is_bad_length = false;
 
@@ -269,7 +269,7 @@ RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext& context, cons
     return CSS::StringStyleValue::create(string);
 }
 
-RefPtr<CSS::LengthStyleValue> parse_line_width(const CSS::ParsingContext& context, const StringView& part)
+RefPtr<CSS::LengthStyleValue> parse_line_width(const CSS::DeprecatedParsingContext& context, const StringView& part)
 {
     auto value = parse_css_value(context, part);
     if (value && value->is_length())
@@ -277,7 +277,7 @@ RefPtr<CSS::LengthStyleValue> parse_line_width(const CSS::ParsingContext& contex
     return nullptr;
 }
 
-RefPtr<CSS::ColorStyleValue> parse_color(const CSS::ParsingContext& context, const StringView& part)
+RefPtr<CSS::ColorStyleValue> parse_color(const CSS::DeprecatedParsingContext& context, const StringView& part)
 {
     auto value = parse_css_value(context, part);
     if (value && value->is_color())
@@ -285,7 +285,7 @@ RefPtr<CSS::ColorStyleValue> parse_color(const CSS::ParsingContext& context, con
     return nullptr;
 }
 
-RefPtr<CSS::IdentifierStyleValue> parse_line_style(const CSS::ParsingContext& context, const StringView& part)
+RefPtr<CSS::IdentifierStyleValue> parse_line_style(const CSS::DeprecatedParsingContext& context, const StringView& part)
 {
     auto parsed_value = parse_css_value(context, part);
     if (!parsed_value || parsed_value->type() != CSS::StyleValue::Type::Identifier)
@@ -316,7 +316,7 @@ RefPtr<CSS::IdentifierStyleValue> parse_line_style(const CSS::ParsingContext& co
 
 class CSSParser {
 public:
-    CSSParser(const CSS::ParsingContext& context, const StringView& input)
+    CSSParser(const CSS::DeprecatedParsingContext& context, const StringView& input)
         : m_context(context)
         , css(input)
     {
@@ -1027,7 +1027,7 @@ public:
     }
 
 private:
-    CSS::ParsingContext m_context;
+    CSS::DeprecatedParsingContext m_context;
 
     NonnullRefPtrVector<CSS::CSSRule> rules;
 
@@ -1045,13 +1045,13 @@ private:
     StringView css;
 };
 
-Optional<CSS::Selector> parse_selector(const CSS::ParsingContext& context, const StringView& selector_text)
+Optional<CSS::Selector> parse_selector(const CSS::DeprecatedParsingContext& context, const StringView& selector_text)
 {
     CSSParser parser(context, selector_text);
     return parser.parse_individual_selector();
 }
 
-RefPtr<CSS::CSSStyleSheet> parse_css(const CSS::ParsingContext& context, const StringView& css)
+RefPtr<CSS::CSSStyleSheet> parse_css(const CSS::DeprecatedParsingContext& context, const StringView& css)
 {
     if (css.is_empty())
         return CSS::CSSStyleSheet::create({});
@@ -1059,7 +1059,7 @@ RefPtr<CSS::CSSStyleSheet> parse_css(const CSS::ParsingContext& context, const S
     return parser.parse_sheet();
 }
 
-RefPtr<CSS::CSSStyleDeclaration> parse_css_declaration(const CSS::ParsingContext& context, const StringView& css)
+RefPtr<CSS::CSSStyleDeclaration> parse_css_declaration(const CSS::DeprecatedParsingContext& context, const StringView& css)
 {
     if (css.is_empty())
         return CSS::CSSStyleDeclaration::create({}, {});
@@ -1072,6 +1072,6 @@ RefPtr<CSS::StyleValue> parse_html_length(const DOM::Document& document, const S
     auto integer = string.to_int();
     if (integer.has_value())
         return CSS::LengthStyleValue::create(CSS::Length::make_px(integer.value()));
-    return parse_css_value(CSS::ParsingContext(document), string);
+    return parse_css_value(CSS::DeprecatedParsingContext(document), string);
 }
 }

@@ -26,9 +26,23 @@ class CSSRule;
 class CSSStyleRule;
 struct StyleProperty;
 
+class ParsingContext {
+public:
+    ParsingContext();
+    explicit ParsingContext(DOM::Document const&);
+    explicit ParsingContext(DOM::ParentNode const&);
+
+    bool in_quirks_mode() const;
+
+    URL complete_url(String const&) const;
+
+private:
+    const DOM::Document* m_document { nullptr };
+};
+
 class Parser {
 public:
-    Parser(const StringView& input, const String& encoding = "utf-8");
+    Parser(ParsingContext const&, StringView const& input, String const& encoding = "utf-8");
     ~Parser();
 
     // The normal parser entry point, for parsing stylesheets.
@@ -86,6 +100,8 @@ private:
     NonnullRefPtr<StyleFunctionRule> consume_a_function();
 
     RefPtr<CSSRule> convert_rule(NonnullRefPtr<QualifiedStyleRule>);
+
+    ParsingContext m_context;
 
     Tokenizer m_tokenizer;
     Vector<Token> m_tokens;

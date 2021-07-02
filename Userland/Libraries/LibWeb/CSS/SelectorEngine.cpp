@@ -109,7 +109,7 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
     case CSS::Selector::SimpleSelector::PseudoClass::Not: {
         if (component.not_selector.is_empty())
             return false;
-        auto not_selector = Web::parse_selector(CSS::ParsingContext(element), component.not_selector);
+        auto not_selector = Web::parse_selector(CSS::DeprecatedParsingContext(element), component.not_selector);
         if (!not_selector.has_value())
             return false;
         auto not_matches = matches(not_selector.value(), element);
