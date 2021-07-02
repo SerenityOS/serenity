@@ -58,7 +58,7 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
         "    mov %ax, %ds\n"                        \
         "    mov %ax, %es\n"                        \
         "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n" \
-        "    mov %ax, %fs\n"                        \
+        "    mov %ax, %gs\n"                        \
         "    pushl %esp \n" /* set TrapFrame::regs */ \
         "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n" \
         "    pushl %esp \n"                         \
@@ -84,7 +84,7 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
         "    mov %ax, %ds\n"                        \
         "    mov %ax, %es\n"                        \
         "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n" \
-        "    mov %ax, %fs\n"                        \
+        "    mov %ax, %gs\n"                        \
         "    pushl %esp \n" /* set TrapFrame::regs */ \
         "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n" \
         "    pushl %esp \n"                         \
