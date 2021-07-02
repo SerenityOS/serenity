@@ -59,7 +59,6 @@ private:
 
     String m_filename;
     RefPtr<GUI::Label> m_filename_label;
-    RefPtr<GUI::Label> m_cursor_label;
     RefPtr<Editor> m_editor;
     bool m_document_dirty { false };
 
