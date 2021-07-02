@@ -97,6 +97,7 @@ private:
     void on_action_tab_change();
     void reveal_action_tab(GUI::Widget&);
     void initialize_debugger();
+    void update_statusbar();
 
     void handle_external_file_deletion(const String& filepath);
 
@@ -136,6 +137,7 @@ private:
     RefPtr<GitWidget> m_git_widget;
     RefPtr<ClassViewWidget> m_class_view;
     RefPtr<GUI::Menu> m_project_tree_view_context_menu;
+    RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::TabWidget> m_action_tab_widget;
     RefPtr<GUI::TabWidget> m_project_tab;
     RefPtr<TerminalWrapper> m_terminal_wrapper;
