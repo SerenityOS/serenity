@@ -67,6 +67,7 @@ private:
     Mode m_mode { Mode::ShowCurrentDesktop };
     Gfx::IntRect m_rect;
     bool m_visible { false };
+    bool m_windows_on_multiple_stacks { false };
     Vector<WeakPtr<Window>> m_windows;
     int m_selected_index { 0 };
     int m_hovered_index { -1 };

@@ -191,7 +191,8 @@ void WindowSwitcher::draw()
         painter.fill_rect(icon_rect, palette.window());
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
         painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.computed_title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color);
-        painter.draw_text(item_rect, window.rect().to_string(), Gfx::TextAlignment::CenterRight, rect_text_color);
+        auto window_details = m_windows_on_multiple_stacks ? String::formatted("{} on {}:{}", window.rect().to_string(), window.outer_stack()->row() + 1, window.outer_stack()->column() + 1) : window.rect().to_string();
+        painter.draw_text(item_rect, window_details, Gfx::TextAlignment::CenterRight, rect_text_color);
     }
 }
 
@@ -204,10 +205,12 @@ void WindowSwitcher::refresh()
     if (!selected_window)
         selected_window = wm.highlight_window() ? wm.highlight_window() : wm.active_window();
     m_windows.clear();
+    m_windows_on_multiple_stacks = false;
     m_selected_index = 0;
     int window_count = 0;
     int longest_title_width = 0;
 
+    WindowStack* last_added_on_window_stack = nullptr;
     auto add_window_stack_windows = [&](WindowStack& window_stack) {
         window_stack.for_each_window_of_type_from_front_to_back(
             WindowType::Normal, [&](Window& window) {
@@ -218,6 +221,12 @@ void WindowSwitcher::refresh()
                 if (selected_window == &window)
                     m_selected_index = m_windows.size();
                 m_windows.append(window);
+                if (!last_added_on_window_stack) {
+                    last_added_on_window_stack = window.outer_stack();
+                } else if (last_added_on_window_stack != window.outer_stack()) {
+                    last_added_on_window_stack = window.outer_stack();
+                    m_windows_on_multiple_stacks = true;
+                }
                 return IterationDecision::Continue;
             },
             true);
@@ -235,8 +244,8 @@ void WindowSwitcher::refresh()
         hide();
         return;
     }
-    int space_for_window_rect = 180;
-    m_rect.set_width(thumbnail_width() + longest_title_width + space_for_window_rect + padding() * 2 + item_padding() * 2);
+    int space_for_window_details = 200;
+    m_rect.set_width(thumbnail_width() + longest_title_width + space_for_window_details + padding() * 2 + item_padding() * 2);
     m_rect.set_height(window_count * item_height() + padding() * 2);
     m_rect.center_within(Screen::main().rect());
     if (!m_switcher_window)
