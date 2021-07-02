@@ -509,19 +509,40 @@ private:
     WeakPtr<ProcFSProcessFolder> m_parent_process_directory;
 };
 
+void ProcFSProcessFolder::on_attach()
+{
+    VERIFY(m_components.size() == 0);
+    m_components.append(ProcFSProcessUnveil::create(*this));
+    m_components.append(ProcFSProcessPerformanceEvents::create(*this));
+    m_components.append(ProcFSProcessFileDescriptions::create(*this));
+    m_components.append(ProcFSProcessOverallFileDescriptions::create(*this));
+    m_components.append(ProcFSProcessRoot::create(*this));
+    m_components.append(ProcFSProcessVirtualMemory::create(*this));
+    m_components.append(ProcFSProcessCurrentWorkDirectory::create(*this));
+    m_components.append(ProcFSProcessBinary::create(*this));
+    m_components.append(ProcFSProcessStacks::create(*this));
+}
+
+RefPtr<ProcFSExposedComponent> ProcFSProcessFolder::lookup(StringView name)
+{
+    // Note: we need to allocate all sub components when doing a lookup, because
+    // for some reason, the caller may not call ProcFSInode::attach method before calling this.
+    if (m_components.size() == 0)
+        on_attach();
+    return ProcFSExposedFolder::lookup(name);
+}
+
+KResult ProcFSProcessFolder::refresh_data(FileDescription&) const
+{
+    if (m_components.size() != 0)
+        return KSuccess;
+    const_cast<ProcFSProcessFolder&>(*this).on_attach();
+    return KSuccess;
+}
+
 NonnullRefPtr<ProcFSProcessFolder> ProcFSProcessFolder::create(const Process& process)
 {
-    auto folder = adopt_ref_if_nonnull(new (nothrow) ProcFSProcessFolder(process)).release_nonnull();
-    folder->m_components.append(ProcFSProcessUnveil::create(folder));
-    folder->m_components.append(ProcFSProcessPerformanceEvents::create(folder));
-    folder->m_components.append(ProcFSProcessFileDescriptions::create(folder));
-    folder->m_components.append(ProcFSProcessOverallFileDescriptions::create(folder));
-    folder->m_components.append(ProcFSProcessRoot::create(folder));
-    folder->m_components.append(ProcFSProcessVirtualMemory::create(folder));
-    folder->m_components.append(ProcFSProcessCurrentWorkDirectory::create(folder));
-    folder->m_components.append(ProcFSProcessBinary::create(folder));
-    folder->m_components.append(ProcFSProcessStacks::create(folder));
-    return folder;
+    return adopt_ref_if_nonnull(new (nothrow) ProcFSProcessFolder(process)).release_nonnull();
 }
 
 ProcFSProcessFolder::ProcFSProcessFolder(const Process& process)
