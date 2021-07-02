@@ -21,23 +21,23 @@ WindowStack::~WindowStack()
 
 void WindowStack::add(Window& window)
 {
-    VERIFY(window.outer_stack() == nullptr);
+    VERIFY(!window.is_on_any_window_stack({}));
     m_windows.append(window);
-    window.set_outer_stack({}, this);
+    window.set_window_stack({}, this);
 }
 
 void WindowStack::add_to_back(Window& window)
 {
-    VERIFY(window.outer_stack() == nullptr);
+    VERIFY(!window.is_on_any_window_stack({}));
     m_windows.prepend(window);
-    window.set_outer_stack({}, this);
+    window.set_window_stack({}, this);
 }
 
 void WindowStack::remove(Window& window)
 {
-    VERIFY(window.outer_stack() == this);
+    VERIFY(&window.window_stack() == this);
     m_windows.remove(window);
-    window.set_outer_stack({}, nullptr);
+    window.set_window_stack({}, nullptr);
     if (m_active_window == &window)
         m_active_window = nullptr;
     if (m_active_input_window == &window)
@@ -59,13 +59,13 @@ void WindowStack::move_all_windows(WindowStack& new_window_stack, Vector<Window*
     VERIFY(this != &new_window_stack);
     if (move_to == MoveAllWindowsTo::Front) {
         while (auto* window = m_windows.take_first()) {
-            window->set_outer_stack({}, nullptr);
+            window->set_window_stack({}, nullptr);
             new_window_stack.add(*window);
             windows_moved.append(window);
         }
     } else {
         while (auto* window = m_windows.take_last()) {
-            window->set_outer_stack({}, nullptr);
+            window->set_window_stack({}, nullptr);
             new_window_stack.add_to_back(*window);
             windows_moved.append(window);
         }
@@ -87,7 +87,7 @@ Window* WindowStack::window_at(Gfx::IntPoint const& position, IncludeWindowFrame
 
 Window* WindowStack::highlight_window() const
 {
-    if (auto* window = WindowManager::the().highlight_window(); window && window->outer_stack() == this)
+    if (auto* window = WindowManager::the().highlight_window(); window && &window->window_stack() == this)
         return window;
     return nullptr;
 }

@@ -142,7 +142,7 @@ Gfx::IntPoint Compositor::window_transition_offset(Window& window)
     if (window.is_moving_to_another_stack())
         return {};
 
-    return window.outer_stack()->transition_offset();
+    return window.window_stack().transition_offset();
 }
 
 void Compositor::compose()
@@ -1152,7 +1152,7 @@ void Compositor::recompute_occlusions()
             // This window should not be occluded while the window switcher is interested in it (depending
             // on the mode it's in). If it isn't then determine occlusions based on whether the window
             // rect has any visible areas at all.
-            w.set_occluded(never_occlude(*w.outer_stack()) ? false : visible_window_rects.is_empty());
+            w.set_occluded(never_occlude(w.window_stack()) ? false : visible_window_rects.is_empty());
 
             if (!m_overlay_rects.is_empty() && m_overlay_rects.intersects(visible_opaque)) {
                 // In order to render overlays flicker-free we need to force these area into the
