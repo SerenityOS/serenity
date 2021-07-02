@@ -41,6 +41,11 @@ void FileResult::activate() const
     Desktop::Launcher::open(URL::create_with_file_protocol(title()));
 }
 
+void URLResult::activate() const
+{
+    Desktop::Launcher::open(URL::create_with_url_or_path(title()));
+}
+
 void AppProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     if (query.starts_with("="))
@@ -149,6 +154,25 @@ void FileProvider::build_filesystem_cache()
         }
 
         return 0; }, [this](auto) { m_building_cache = false; });
+}
+
+void URLProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
+{
+    URL url = URL(query);
+
+    if (url.scheme().is_empty())
+        url.set_scheme("http");
+    if (url.host().is_empty())
+        url.set_host(query);
+    if (url.paths().is_empty())
+        url.set_paths({ "" });
+
+    if (!url.is_valid())
+        return;
+
+    Vector<NonnullRefPtr<Result>> results;
+    results.append(adopt_ref(*new URLResult(url)));
+    on_complete(results);
 }
 
 }

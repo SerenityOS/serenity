@@ -138,6 +138,10 @@ public:
         m_calculator_provider.query(query, [=, this](auto results) {
             recv_results(query, results);
         });
+
+        m_url_provider.query(query, [=, this](auto results) {
+            recv_results(query, results);
+        });
     }
 
 private:
@@ -178,6 +182,7 @@ private:
     AppProvider m_app_provider;
     CalculatorProvider m_calculator_provider;
     FileProvider m_file_provider;
+    URLProvider m_url_provider;
 
     Threading::Lock m_lock;
     HashMap<String, Vector<NonnullRefPtr<Result>>> m_result_cache;
