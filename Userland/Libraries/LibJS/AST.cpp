@@ -115,13 +115,6 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
 {
     auto& vm = interpreter.vm();
 
-    if (is<SuperExpression>(*m_callee)) {
-        // If we are calling super, |this| has not been initialized yet, and would not be meaningful to provide.
-        auto new_target = vm.get_new_target();
-        VERIFY(new_target.is_function());
-        return { js_undefined(), new_target };
-    }
-
     if (is<MemberExpression>(*m_callee)) {
         auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
         Value callee;
@@ -253,27 +246,63 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         return perform_eval(script_value, global_object, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct);
     }
 
-    Value result;
+    return vm.call(function, this_value, move(arg_list));
+}
 
-    if (!is<SuperExpression>(*m_callee))
-        return vm.call(function, this_value, move(arg_list));
+// 13.3.7.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
+// SuperCall : super Arguments
+Value SuperCall::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    InterpreterNodeScope node_scope { interpreter, *this };
+    auto& vm = interpreter.vm();
 
-    auto* super_constructor = get_super_constructor(interpreter.vm());
-    // FIXME: Functions should track their constructor kind.
-    if (!super_constructor || !super_constructor->is_function()) {
+    // 1. Let newTarget be GetNewTarget().
+    auto new_target = vm.get_new_target();
+    if (vm.exception())
+        return {};
+
+    // 2. Assert: Type(newTarget) is Object.
+    VERIFY(new_target.is_function());
+
+    // 3. Let func be ! GetSuperConstructor().
+    auto* func = get_super_constructor(interpreter.vm());
+    VERIFY(!vm.exception());
+
+    // 4. Let argList be ? ArgumentListEvaluation of Arguments.
+    MarkedValueList arg_list(vm.heap());
+    argument_list_evaluation(interpreter, global_object, m_arguments, arg_list);
+    if (interpreter.exception())
+        return {};
+
+    // 5. If IsConstructor(func) is false, throw a TypeError exception.
+    // FIXME: This check is non-conforming.
+    if (!func || !func->is_function()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
         return {};
     }
-    result = vm.construct(static_cast<FunctionObject&>(*super_constructor), function, move(arg_list));
+
+    // 6. Let result be ? Construct(func, argList, newTarget).
+    auto& function = new_target.as_function();
+    auto result = vm.construct(static_cast<FunctionObject&>(*func), function, move(arg_list));
     if (vm.exception())
         return {};
 
-    auto& this_er = get_this_environment(interpreter.vm());
-    verify_cast<FunctionEnvironment>(this_er).bind_this_value(global_object, result);
+    // 7. Let thisER be GetThisEnvironment().
+    auto& this_er = verify_cast<FunctionEnvironment>(get_this_environment(interpreter.vm()));
 
+    // 8. Perform ? thisER.BindThisValue(result).
+    this_er.bind_this_value(global_object, result);
     if (vm.exception())
         return {};
 
+    // 9. Let F be thisER.[[FunctionObject]].
+    // 10. Assert: F is an ECMAScript function object. (NOTE: This is implied by the strong C++ type.)
+    [[maybe_unused]] auto& f = this_er.function_object();
+
+    // 11. Perform ? InitializeInstanceElements(result, F).
+    // FIXME: This is missing here.
+
+    // 12. Return result.
     return result;
 }
 
@@ -755,11 +784,9 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
     VERIFY_NOT_REACHED();
 }
 
-Value SuperExpression::execute(Interpreter& interpreter, GlobalObject&) const
+Value SuperExpression::execute(Interpreter&, GlobalObject&) const
 {
-    InterpreterNodeScope node_scope { interpreter, *this };
-
-    // The semantics for SuperExpressions are handled in CallExpression::compute_this_and_callee()
+    // The semantics for SuperExpression are handled in CallExpression and SuperCall.
     VERIFY_NOT_REACHED();
 }
 
@@ -1051,6 +1078,14 @@ void CallExpression::dump(int indent) const
     else
         outln("CallExpression");
     m_callee->dump(indent + 1);
+    for (auto& argument : m_arguments)
+        argument.value->dump(indent + 1);
+}
+
+void SuperCall::dump(int indent) const
+{
+    print_indent(indent);
+    outln("SuperCall");
     for (auto& argument : m_arguments)
         argument.value->dump(indent + 1);
 }
