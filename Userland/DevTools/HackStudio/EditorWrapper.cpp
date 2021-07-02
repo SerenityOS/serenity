@@ -31,17 +31,9 @@ EditorWrapper::EditorWrapper()
     m_filename_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     m_filename_label->set_fixed_height(14);
 
-    m_cursor_label = label_wrapper.add<GUI::Label>("(Cursor)");
-    m_cursor_label->set_text_alignment(Gfx::TextAlignment::CenterRight);
-    m_cursor_label->set_fixed_height(14);
-
     m_editor = add<Editor>();
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
-
-    m_editor->on_cursor_change = [this] {
-        m_cursor_label->set_text(String::formatted("Line: {}, Column: {}", m_editor->cursor().line() + 1, m_editor->cursor().column()));
-    };
 
     m_editor->on_focus = [this] {
         set_current_editor_wrapper(this);
