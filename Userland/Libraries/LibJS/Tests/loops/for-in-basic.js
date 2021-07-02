@@ -49,3 +49,7 @@ test("use already-declared variable", () => {
     for (property in "abc");
     expect(property).toBe("2");
 });
+
+test("allow binding patterns", () => {
+    expect(`for (let [a, b] in foo) {}`).toEval();
+});
