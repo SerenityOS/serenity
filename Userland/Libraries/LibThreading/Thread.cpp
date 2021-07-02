@@ -20,7 +20,7 @@ Threading::Thread::Thread(Function<intptr_t()> action, StringView thread_name)
 
 Threading::Thread::~Thread()
 {
-    if (m_tid) {
+    if (m_tid && !m_detached) {
         dbgln("Destroying thread \"{}\"({}) while it is still running!", m_thread_name, m_tid);
         [[maybe_unused]] auto res = join();
     }
@@ -45,4 +45,14 @@ void Threading::Thread::start()
         VERIFY(rc == 0);
     }
     dbgln("Started thread \"{}\", tid = {}", m_thread_name, m_tid);
+}
+
+void Threading::Thread::detach()
+{
+    VERIFY(!m_detached);
+
+    int rc = pthread_detach(m_tid);
+    VERIFY(rc == 0);
+
+    m_detached = true;
 }
