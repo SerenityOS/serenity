@@ -1701,7 +1701,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
             init = parse_expression(2);
         } else if (!for_loop_variable_declaration && declaration_kind == DeclarationKind::Const) {
             syntax_error("Missing initializer in 'const' variable declaration");
-        } else if (target.has<NonnullRefPtr<BindingPattern>>()) {
+        } else if (!for_loop_variable_declaration && target.has<NonnullRefPtr<BindingPattern>>()) {
             syntax_error("Missing initializer in destructuring assignment");
         }
 
