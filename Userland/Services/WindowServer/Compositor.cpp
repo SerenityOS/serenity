@@ -921,35 +921,6 @@ void Compositor::decrement_show_screen_number(Badge<ClientConnection>)
     }
 }
 
-bool Compositor::any_opaque_window_above_this_one_contains_rect(Window& a_window, const Gfx::IntRect& rect)
-{
-    auto* window_stack = a_window.outer_stack();
-    if (!window_stack)
-        return false;
-    bool found_containing_window = false;
-    bool checking = false;
-    WindowManager::the().for_each_visible_window_from_back_to_front([&](Window& window) {
-        if (&window == &a_window) {
-            checking = true;
-            return IterationDecision::Continue;
-        }
-        if (!checking)
-            return IterationDecision::Continue;
-        if (!window.is_visible())
-            return IterationDecision::Continue;
-        if (window.is_minimized())
-            return IterationDecision::Continue;
-        if (!window.is_opaque())
-            return IterationDecision::Continue;
-        if (window.frame().render_rect().contains(rect)) {
-            found_containing_window = true;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-    return found_containing_window;
-};
-
 void Compositor::overlays_theme_changed()
 {
     for (auto& overlay : m_overlay_list)
@@ -1000,31 +971,30 @@ void Compositor::recompute_occlusions()
 {
     auto& wm = WindowManager::the();
     bool is_switcher_visible = wm.m_switcher.is_visible();
-    wm.for_each_window_stack([&](WindowStack& window_stack) {
+    auto never_occlude = [&](WindowStack& window_stack) {
         if (is_switcher_visible) {
             switch (wm.m_switcher.mode()) {
             case WindowSwitcher::Mode::ShowCurrentDesktop:
-                window_stack.set_all_occluded(!(&window_stack == m_current_window_stack || &window_stack == m_transitioning_to_window_stack));
-                break;
+                // Any window on the currently rendered desktop should not be occluded, even if it's behind
+                // another window entirely.
+                return &window_stack == m_current_window_stack || &window_stack == m_transitioning_to_window_stack;
             case WindowSwitcher::Mode::ShowAllWindows:
-                window_stack.set_all_occluded(false);
-                break;
+                // The window switcher wants to know about all windows, even those on other desktops
+                return true;
             }
-        } else {
-            window_stack.set_all_occluded(!(&window_stack == m_current_window_stack || &window_stack == m_transitioning_to_window_stack));
         }
+        return false;
+    };
 
+    wm.for_each_window_stack([&](WindowStack& window_stack) {
+        if (&window_stack == m_current_window_stack || &window_stack == m_transitioning_to_window_stack) {
+            // We'll calculate precise occlusions for these further down. Changing occlusions right now
+            // may trigger an additional unnecessary notification
+        } else {
+            window_stack.set_all_occluded(!never_occlude(window_stack));
+        }
         return IterationDecision::Continue;
     });
-    if (!is_switcher_visible) {
-        wm.for_each_visible_window_from_back_to_front([&](Window& window) {
-            if (any_opaque_window_above_this_one_contains_rect(window, window.frame().rect()))
-                window.set_occluded(true);
-            else
-                window.set_occluded(false);
-            return IterationDecision::Continue;
-        });
-    }
 
     if (m_overlay_rects_changed) {
         m_overlay_rects_changed = false;
@@ -1109,6 +1079,7 @@ void Compositor::recompute_occlusions()
 
             auto render_rect = w.frame().render_rect();
             auto render_rect_on_screen = render_rect;
+            auto visible_window_rects = visible_rects.intersected(w.rect().translated(transition_offset));
             if (window_stack_transition_in_progress)
                 render_rect_on_screen.translate_by(transition_offset);
             Gfx::DisjointRectSet opaque_covering;
@@ -1144,8 +1115,11 @@ void Compositor::recompute_occlusions()
                     return IterationDecision::Continue;
                 for (auto& covering : opaque_rects.rects()) {
                     opaque_covering.add(covering);
+                    if (!visible_window_rects.is_empty())
+                        visible_window_rects = visible_window_rects.shatter(covering);
                     if (opaque_covering.contains(render_rect_on_screen)) {
-                        // This window (including frame) is entirely covered by another opaque window
+                        // This entire window (including frame) is entirely covered by other opaque window areas
+                        visible_window_rects.clear();
                         visible_opaque.clear();
                         transparency_rects.clear();
                         return IterationDecision::Break;
@@ -1160,6 +1134,7 @@ void Compositor::recompute_occlusions()
                         transparency_rects = move(uncovered_transparency);
                     }
                 }
+
                 for (auto& covering : transparent_rects.rects()) {
                     visible_rects.for_each_intersected(covering, [&](const Gfx::IntRect& intersected) {
                         transparency_rects.add(intersected);
@@ -1173,6 +1148,11 @@ void Compositor::recompute_occlusions()
 
                 return IterationDecision::Continue;
             });
+
+            // This window should not be occluded while the window switcher is interested in it (depending
+            // on the mode it's in). If it isn't then determine occlusions based on whether the window
+            // rect has any visible areas at all.
+            w.set_occluded(never_occlude(*w.outer_stack()) ? false : visible_window_rects.is_empty());
 
             if (!m_overlay_rects.is_empty() && m_overlay_rects.intersects(visible_opaque)) {
                 // In order to render overlays flicker-free we need to force these area into the
