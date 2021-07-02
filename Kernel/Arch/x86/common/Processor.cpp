@@ -1128,7 +1128,7 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
 
 #if ARCH(X86_64)
     MSR gs_base(MSR_GS_BASE);
-    gs_base.set((size_t)this & 0xffffffff, (size_t)this >> 32);
+    gs_base.set((u64)this);
 #else
     asm volatile(
         "mov %%ax, %%ds\n"
