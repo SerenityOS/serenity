@@ -615,9 +615,8 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         if (!super_class.is_null()) {
             // Set constructor to the result of parsing the source text
             // constructor(... args){ super (...args);}
-            auto super_call = create_ast_node<CallExpression>(
+            auto super_call = create_ast_node<SuperCall>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
-                create_ast_node<SuperExpression>({ m_state.current_token.filename(), rule_start.position(), position() }),
                 Vector { CallExpression::Argument { create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, "args"), true } });
             constructor_body->append(create_ast_node<ExpressionStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(super_call)));
             constructor_body->add_variables(m_state.var_scopes.last());
@@ -1287,6 +1286,9 @@ NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expres
     }
 
     consume(TokenType::ParenClose);
+
+    if (is<SuperExpression>(*lhs))
+        return create_ast_node<SuperCall>({ m_state.current_token.filename(), rule_start.position(), position() }, move(arguments));
 
     return create_ast_node<CallExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(lhs), move(arguments));
 }
