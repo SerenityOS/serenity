@@ -46,7 +46,7 @@ public:
     // For the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
     Vector<StyleComponentValueRule> parse_as_list_of_component_values();
 
-    Vector<StyleComponentValueRule> parse_as_list_of_comma_separated_component_values();
+    Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
 
     Vector<CSS::Selector::ComplexSelector> parse_selectors(Vector<StyleComponentValueRule> parts);
 
