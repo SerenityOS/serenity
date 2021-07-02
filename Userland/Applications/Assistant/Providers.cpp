@@ -49,6 +49,8 @@ void AppProvider::query(String const& query, Function<void(Vector<NonnullRefPtr<
     Vector<NonnullRefPtr<Result>> results;
 
     Desktop::AppFile::for_each([&](NonnullRefPtr<Desktop::AppFile> app_file) {
+        if (app_file->name().equals_ignoring_case("assistant"))
+            return;
         auto match_result = fuzzy_match(query, app_file->name());
         if (!match_result.matched)
             return;
@@ -104,7 +106,8 @@ void FileProvider::query(const String& query, Function<void(Vector<NonnullRefPtr
         for (auto& path : m_full_path_cache) {
             if (task.is_cancelled())
                 return results;
-
+            if (path.equals_ignoring_case("//bin/assistant"))
+                continue;
             auto match_result = fuzzy_match(query, path);
             if (!match_result.matched)
                 continue;
