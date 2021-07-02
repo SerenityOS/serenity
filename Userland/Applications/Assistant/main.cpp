@@ -120,12 +120,17 @@ public:
     explicit Database(AppState& state)
         : m_state(state)
     {
+        m_file_provider.build_filesystem_cache();
     }
 
     Function<void(Vector<NonnullRefPtr<Result>>)> on_new_results;
 
     void search(String const& query)
     {
+        m_file_provider.query(query, [=, this](auto results) {
+            recv_results(query, results);
+        });
+
         m_app_provider.query(query, [=, this](auto results) {
             recv_results(query, results);
         });
@@ -172,6 +177,7 @@ private:
 
     AppProvider m_app_provider;
     CalculatorProvider m_calculator_provider;
+    FileProvider m_file_provider;
 
     Threading::Lock m_lock;
     HashMap<String, Vector<NonnullRefPtr<Result>>> m_result_cache;
@@ -183,7 +189,7 @@ static constexpr size_t MAX_SEARCH_RESULTS = 6;
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd rpath unix proc exec", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath unix proc exec thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
