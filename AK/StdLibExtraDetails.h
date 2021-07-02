@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -429,6 +430,24 @@ struct __IdentityType {
 template<typename T>
 using IdentityType = typename __IdentityType<T>::Type;
 
+template<typename T, typename = void>
+struct __AddReference {
+    using LvalueType = T;
+    using TvalueType = T;
+};
+
+template<typename T>
+struct __AddReference<T, VoidType<T&>> {
+    using LvalueType = T&;
+    using RvalueType = T&&;
+};
+
+template<typename T>
+using AddLvalueReference = typename __AddReference<T>::LvalueType;
+
+template<typename T>
+using AddRvalueReference = typename __AddReference<T>::RvalueType;
+
 template<class T>
 requires(IsEnum<T>) using UnderlyingType = __underlying_type(T);
 
@@ -447,8 +466,55 @@ inline constexpr bool IsCallableWithArguments = requires(T t) { t(declval<Args>(
 template<typename T, typename... Args>
 inline constexpr bool IsConstructible = requires { ::new T(declval<Args>()...); };
 
+template<typename T, typename... Args>
+inline constexpr bool IsTriviallyConstructible = __is_trivially_constructible(T, Args...);
+
+template<typename From, typename To>
+inline constexpr bool IsConvertible = requires { declval<void (*)(To)>()(declval<From>()); };
+
+template<typename T, typename U>
+inline constexpr bool IsAssignable = requires { declval<T>() = declval<U>(); };
+
+template<typename T, typename U>
+inline constexpr bool IsTriviallyAssignable = __is_trivially_assignable(T, U);
+
+template<typename T>
+inline constexpr bool IsDestructible = requires { declval<T>().~T(); };
+
+template<typename T>
+#if defined(__clang__)
+inline constexpr bool IsTriviallyDestructible = __is_trivially_destructible(T);
+#else
+inline constexpr bool IsTriviallyDestructible = __has_trivial_destructor(T) && IsDestructible<T>;
+#endif
+
+template<typename T>
+inline constexpr bool IsCopyConstructible = IsConstructible<T, AddLvalueReference<AddConst<T>>>;
+
+template<typename T>
+inline constexpr bool IsTriviallyCopyConstructible = IsTriviallyConstructible<T, AddLvalueReference<AddConst<T>>>;
+
+template<typename T>
+inline constexpr bool IsCopyAssignable = IsAssignable<AddLvalueReference<T>, AddLvalueReference<AddConst<T>>>;
+
+template<typename T>
+inline constexpr bool IsTriviallyCopyAssignable = IsTriviallyAssignable<AddLvalueReference<T>, AddLvalueReference<AddConst<T>>>;
+
+template<typename T>
+inline constexpr bool IsMoveConstructible = IsConstructible<T, AddRvalueReference<T>>;
+
+template<typename T>
+inline constexpr bool IsTriviallyMoveConstructible = IsTriviallyConstructible<T, AddRvalueReference<T>>;
+
+template<typename T>
+inline constexpr bool IsMoveAssignable = IsAssignable<AddLvalueReference<T>, AddRvalueReference<T>>;
+
+template<typename T>
+inline constexpr bool IsTriviallyMoveAssignable = IsTriviallyAssignable<AddLvalueReference<T>, AddRvalueReference<T>>;
 }
 using AK::Detail::AddConst;
+using AK::Detail::AddLvalueReference;
+using AK::Detail::AddRvalueReference;
 using AK::Detail::Conditional;
 using AK::Detail::CopyConst;
 using AK::Detail::declval;
@@ -459,24 +525,38 @@ using AK::Detail::IdentityType;
 using AK::Detail::IndexSequence;
 using AK::Detail::IntegerSequence;
 using AK::Detail::IsArithmetic;
+using AK::Detail::IsAssignable;
 using AK::Detail::IsBaseOf;
 using AK::Detail::IsCallableWithArguments;
 using AK::Detail::IsClass;
 using AK::Detail::IsConst;
 using AK::Detail::IsConstructible;
+using AK::Detail::IsConvertible;
+using AK::Detail::IsCopyAssignable;
+using AK::Detail::IsCopyConstructible;
+using AK::Detail::IsDestructible;
 using AK::Detail::IsEnum;
 using AK::Detail::IsFloatingPoint;
 using AK::Detail::IsFunction;
 using AK::Detail::IsFundamental;
 using AK::Detail::IsIntegral;
 using AK::Detail::IsLvalueReference;
+using AK::Detail::IsMoveAssignable;
+using AK::Detail::IsMoveConstructible;
 using AK::Detail::IsNullPointer;
 using AK::Detail::IsPointer;
 using AK::Detail::IsRvalueReference;
 using AK::Detail::IsSame;
 using AK::Detail::IsSigned;
 using AK::Detail::IsTrivial;
+using AK::Detail::IsTriviallyAssignable;
+using AK::Detail::IsTriviallyConstructible;
 using AK::Detail::IsTriviallyCopyable;
+using AK::Detail::IsTriviallyCopyAssignable;
+using AK::Detail::IsTriviallyCopyConstructible;
+using AK::Detail::IsTriviallyDestructible;
+using AK::Detail::IsTriviallyMoveAssignable;
+using AK::Detail::IsTriviallyMoveConstructible;
 using AK::Detail::IsUnion;
 using AK::Detail::IsUnsigned;
 using AK::Detail::IsVoid;
