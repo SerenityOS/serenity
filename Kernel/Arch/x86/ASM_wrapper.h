@@ -62,25 +62,25 @@ ALWAYS_INLINE u16 get_gs()
 }
 #endif
 
-ALWAYS_INLINE u32 read_fs_u32(u32 offset)
+ALWAYS_INLINE u32 read_gs_u32(u32 offset)
 {
     u32 val;
     asm volatile(
-        "movl %%fs:%a[off], %k[val]"
+        "movl %%gs:%a[off], %k[val]"
         : [val] "=r"(val)
         : [off] "ir"(offset));
     return val;
 }
 
-ALWAYS_INLINE FlatPtr read_fs_ptr(u32 offset)
+ALWAYS_INLINE FlatPtr read_gs_ptr(u32 offset)
 {
-    return read_fs_u32(offset);
+    return read_gs_u32(offset);
 }
 
-ALWAYS_INLINE void write_fs_u32(u32 offset, u32 val)
+ALWAYS_INLINE void write_gs_u32(u32 offset, u32 val)
 {
     asm volatile(
-        "movl %k[val], %%fs:%a[off]" ::[off] "ir"(offset), [val] "ir"(val)
+        "movl %k[val], %%gs:%a[off]" ::[off] "ir"(offset), [val] "ir"(val)
         : "memory");
 }
 
