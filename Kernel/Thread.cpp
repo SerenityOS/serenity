@@ -102,9 +102,9 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
         m_regs.cs = GDT_SELECTOR_CODE0;
         m_regs.ds = GDT_SELECTOR_DATA0;
         m_regs.es = GDT_SELECTOR_DATA0;
-        m_regs.fs = GDT_SELECTOR_PROC;
+        m_regs.fs = 0;
         m_regs.ss = GDT_SELECTOR_DATA0;
-        m_regs.gs = 0;
+        m_regs.gs = GDT_SELECTOR_PROC;
     } else {
         m_regs.cs = GDT_SELECTOR_CODE3 | 3;
         m_regs.ds = GDT_SELECTOR_DATA3 | 3;
