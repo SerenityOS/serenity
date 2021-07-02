@@ -769,7 +769,7 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
     if (!property_name.is_valid())
         return Reference {};
 
-    return Reference { object_value, property_name, object_value };
+    return Reference { object_value, property_name, {} };
 }
 
 Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
