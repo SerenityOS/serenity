@@ -1567,8 +1567,12 @@ void WindowManager::process_key_event(KeyEvent& event)
         return;
     }
 
-    if (event.type() == Event::KeyDown && ((event.modifiers() == Mod_Super && event.key() == Key_Tab) || (event.modifiers() == (Mod_Super | Mod_Shift) && event.key() == Key_Tab)))
-        m_switcher.show();
+    if (event.type() == Event::KeyDown) {
+        if ((event.modifiers() == Mod_Super && event.key() == Key_Tab) || (event.modifiers() == (Mod_Super | Mod_Shift) && event.key() == Key_Tab))
+            m_switcher.show(WindowSwitcher::Mode::ShowAllWindows);
+        else if ((event.modifiers() == Mod_Alt && event.key() == Key_Tab) || (event.modifiers() == (Mod_Alt | Mod_Shift) && event.key() == Key_Tab))
+            m_switcher.show(WindowSwitcher::Mode::ShowCurrentDesktop);
+    }
     if (m_switcher.is_visible()) {
         m_switcher.on_key_event(event);
         return;

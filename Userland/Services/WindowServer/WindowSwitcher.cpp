@@ -86,7 +86,7 @@ void WindowSwitcher::event(Core::Event& event)
 void WindowSwitcher::on_key_event(const KeyEvent& event)
 {
     if (event.type() == Event::KeyUp) {
-        if (event.key() == Key_Super) {
+        if (event.key() == (m_mode == Mode::ShowAllWindows ? Key_Super : Key_Alt)) {
             if (auto* window = selected_window()) {
                 window->set_minimized(false);
                 WindowManager::the().move_to_front_and_make_active(*window);
@@ -135,7 +135,12 @@ void WindowSwitcher::select_window_at_index(int index)
     m_selected_index = index;
     auto* highlight_window = m_windows.at(index).ptr();
     VERIFY(highlight_window);
-    WindowManager::the().set_highlight_window(highlight_window);
+    auto& wm = WindowManager::the();
+    if (m_mode == Mode::ShowAllWindows) {
+        if (auto* window_stack = highlight_window->outer_stack(); window_stack != &wm.current_window_stack())
+            wm.switch_to_window_stack(*window_stack, nullptr, false);
+    }
+    wm.set_highlight_window(highlight_window);
     redraw();
 }
 
@@ -202,7 +207,8 @@ void WindowSwitcher::refresh()
     m_selected_index = 0;
     int window_count = 0;
     int longest_title_width = 0;
-    wm.for_each_window_stack([&](auto& window_stack) {
+
+    auto add_window_stack_windows = [&](WindowStack& window_stack) {
         window_stack.for_each_window_of_type_from_front_to_back(
             WindowType::Normal, [&](Window& window) {
                 if (window.is_frameless())
@@ -215,8 +221,16 @@ void WindowSwitcher::refresh()
                 return IterationDecision::Continue;
             },
             true);
-        return IterationDecision::Continue;
-    });
+    };
+    if (m_mode == Mode::ShowAllWindows) {
+        wm.for_each_window_stack([&](auto& window_stack) {
+            add_window_stack_windows(window_stack);
+            return IterationDecision::Continue;
+        });
+    } else {
+        add_window_stack_windows(wm.current_window_stack());
+    }
+
     if (m_windows.is_empty()) {
         hide();
         return;
