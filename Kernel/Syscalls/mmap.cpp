@@ -578,11 +578,17 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
         return EFAULT;
 
     Thread* main_thread = nullptr;
-    for_each_thread([&main_thread](auto& thread) {
+    bool multiple_threads = false;
+    for_each_thread([&main_thread, &multiple_threads](auto& thread) {
+        if (main_thread)
+            multiple_threads = true;
         main_thread = &thread;
         return IterationDecision::Break;
     });
     VERIFY(main_thread);
+
+    if (multiple_threads)
+        return EINVAL;
 
     auto range = space().allocate_range({}, size);
     if (!range.has_value())
