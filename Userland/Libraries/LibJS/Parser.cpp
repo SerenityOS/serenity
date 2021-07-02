@@ -512,6 +512,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         RefPtr<Expression> property_key;
         bool is_static = false;
         bool is_constructor = false;
+        bool is_generator = false;
         auto method_kind = ClassMethod::Kind::Method;
 
         if (match(TokenType::Semicolon)) {
@@ -519,11 +520,22 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             continue;
         }
 
+        if (match(TokenType::Asterisk)) {
+            consume();
+            is_generator = true;
+        }
+
         if (match_property_key()) {
             StringView name;
-            if (match(TokenType::Identifier) && m_state.current_token.value() == "static") {
-                consume();
-                is_static = true;
+            if (!is_generator && m_state.current_token.value() == "static"sv) {
+                if (match(TokenType::Identifier)) {
+                    consume();
+                    is_static = true;
+                    if (match(TokenType::Asterisk)) {
+                        consume();
+                        is_generator = true;
+                    }
+                }
             }
 
             if (match(TokenType::Identifier)) {
@@ -565,6 +577,8 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                     syntax_error("Class constructor may not be an accessor");
                 if (!constructor.is_null())
                     syntax_error("Classes may not have more than one constructor");
+                if (is_generator)
+                    syntax_error("Class constructor may not be a generator");
 
                 is_constructor = true;
             }
@@ -578,6 +592,8 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 parse_options |= FunctionNodeParseOptions::IsGetterFunction;
             if (method_kind == ClassMethod::Kind::Setter)
                 parse_options |= FunctionNodeParseOptions::IsSetterFunction;
+            if (is_generator)
+                parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
             auto function = parse_function_node<FunctionExpression>(parse_options);
             if (is_constructor) {
                 constructor = move(function);
