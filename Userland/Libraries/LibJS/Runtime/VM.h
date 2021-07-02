@@ -204,7 +204,8 @@ public:
     void assign(const FlyString& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
     void assign(const NonnullRefPtr<BindingPattern>& target, Value, GlobalObject&, bool first_assignment = false, Environment* specific_scope = nullptr);
 
-    Reference resolve_binding(GlobalObject&, FlyString const&, Environment* = nullptr);
+    Reference resolve_binding(FlyString const&, Environment* = nullptr);
+    Reference get_identifier_reference(Environment*, FlyString const&, bool strict);
 
     template<typename T, typename... Args>
     void throw_exception(GlobalObject& global_object, Args&&... args)
