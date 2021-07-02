@@ -308,10 +308,8 @@ WindowStack& WindowManager::window_stack_for_window(Window& window)
 {
     if (is_stationary_window_type(window.type()))
         return m_window_stacks[0][0];
-    if (auto* parent = window.parent_window(); parent && !is_stationary_window_type(parent->type())) {
-        if (auto* parent_window_stack = parent->outer_stack())
-            return *parent_window_stack;
-    }
+    if (auto* parent = window.parent_window(); parent && !is_stationary_window_type(parent->type()))
+        return parent->window_stack();
     return current_window_stack();
 }
 
@@ -373,9 +371,7 @@ void WindowManager::move_to_front_and_make_active(Window& window)
 
 void WindowManager::do_move_to_front(Window& window, bool make_active, bool make_input)
 {
-    auto* window_stack = window.outer_stack();
-    VERIFY(window_stack);
-    window_stack->move_to_front(window);
+    window.window_stack().move_to_front(window);
 
     if (make_active)
         set_active_window(&window, make_input);
@@ -399,8 +395,7 @@ void WindowManager::remove_window(Window& window)
     check_hide_geometry_overlay(window);
     auto* active = active_window();
     auto* active_input = active_input_window();
-    if (auto* window_stack = window.outer_stack())
-        window_stack->remove(window);
+    window.window_stack().remove(window);
     if (active == &window || active_input == &window || (active && window.is_descendant_of(*active)) || (active_input && active_input != active && window.is_descendant_of(*active_input)))
         pick_new_active_window(&window);
 
@@ -450,12 +445,8 @@ void WindowManager::tell_wm_about_window(WMClientConnection& conn, Window& windo
     if (window.is_internal())
         return;
     auto* parent = window.parent_window();
-    auto* window_stack = &current_window_stack();
-    if (!is_stationary_window_type(window.type())) {
-        if (auto* stack = window.outer_stack())
-            window_stack = stack;
-    }
-    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window_stack->row(), window_stack->column(), window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
+    auto& window_stack = is_stationary_window_type(window.type()) ? current_window_stack() : window.window_stack();
+    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window_stack.row(), window_stack.column(), window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
 }
 
 void WindowManager::tell_wm_about_window_rect(WMClientConnection& conn, Window& window)
@@ -1422,15 +1413,15 @@ void WindowManager::switch_to_window_stack(WindowStack& window_stack, Window* ca
 {
     m_carry_window_to_new_stack.clear();
     m_switching_to_window_stack = &window_stack;
-    if (carry_window && !is_stationary_window_type(carry_window->type()) && carry_window->outer_stack() != &window_stack) {
-        auto& from_stack = *carry_window->outer_stack();
+    if (carry_window && !is_stationary_window_type(carry_window->type()) && &carry_window->window_stack() != &window_stack) {
+        auto& from_stack = carry_window->window_stack();
 
         auto* blocking_modal = carry_window->blocking_modal_window();
         for_each_visible_window_from_back_to_front([&](Window& window) {
             if (is_stationary_window_type(window.type()))
                 return IterationDecision::Continue;
 
-            if (window.outer_stack() != carry_window->outer_stack())
+            if (&window.window_stack() != &carry_window->window_stack())
                 return IterationDecision::Continue;
             if (&window == carry_window || ((carry_window->is_modal() || blocking_modal) && is_window_in_modal_stack(*carry_window, window)))
                 m_carry_window_to_new_stack.append(window);
@@ -1448,7 +1439,7 @@ void WindowManager::switch_to_window_stack(WindowStack& window_stack, Window* ca
             if (window == from_active_input_window)
                 did_carry_active_input_window = true;
             window->set_moving_to_another_stack(true);
-            VERIFY(window->outer_stack() == &from_stack);
+            VERIFY(&window->window_stack() == &from_stack);
             from_stack.remove(*window);
             window_stack.add(*window);
         }
