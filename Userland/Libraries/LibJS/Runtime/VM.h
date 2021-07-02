@@ -260,6 +260,7 @@ private:
     VM();
 
     [[nodiscard]] Value call_internal(FunctionObject&, Value this_value, Optional<MarkedValueList> arguments);
+    void prepare_for_ordinary_call(FunctionObject&, ExecutionContext& callee_context, Value new_target);
 
     Exception* m_exception { nullptr };
 
