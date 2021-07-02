@@ -111,9 +111,10 @@ jobs:
         # We only have 5 GiB of cache available *in total*. Beyond that, GitHub deletes caches.
         # Currently, we use about 130 MB for the two toolchains (i686 & x86_64), and four ccache caches:
         # Two with ALL_DEBUG (i686 & x86_64) and two with NORMAL_DEBUG (i686 & x86_64).
-        # Therefore, using 1.25 GB or more per ccache cache causes disaster.
-        # Building from scratch fills the ccache cache from 0 to about 0.6 GB, so 1 GB is enough.
-        ccache -M 1000M
+        # Therefore, using 1.25 GB or more per cache causes disaster.
+        # Building from scratch fills the ccache cache from 0 to about 0.7 GB, and after compression it comes out to
+        # about 0.25 GB, so 1.5 GB (0.5GB after compression) should be plenty, all while comfortly fitting in the cache.
+        ccache -M 1500M
         ccache -s
     - name: Create build environment with extra debug options
       working-directory: ${{ github.workspace }}
