@@ -93,11 +93,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if("${SERENITY_ARCH}" STREQUAL "x86_64")
-    # FIXME: Implement TLS support and get rid of this
-    add_compile_definitions(NO_TLS X86_64_NO_TLS)
-endif()
-
 add_compile_options(-Wno-literal-suffix)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-fconcepts)

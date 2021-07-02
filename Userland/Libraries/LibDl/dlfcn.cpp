@@ -11,16 +11,8 @@
 #include <string.h>
 
 // FIXME: use thread_local and a String once TLS works
-#ifndef X86_64_NO_TLS
-__thread
-#endif
-    char* s_dlerror_text
-    = NULL;
-#ifndef X86_64_NO_TLS
-__thread
-#endif
-    bool s_dlerror_retrieved
-    = false;
+__thread char* s_dlerror_text = NULL;
+__thread bool s_dlerror_retrieved = false;
 
 static void store_error(const String& error)
 {
