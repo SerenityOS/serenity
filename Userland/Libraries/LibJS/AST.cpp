@@ -720,6 +720,43 @@ Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) cons
 
 Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject& global_object) const
 {
+    // 13.3.7.1 Runtime Semantics: Evaluation
+    // SuperProperty : super [ Expression ]
+    // SuperProperty : super . IdentifierName
+    // https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation
+    if (is<SuperExpression>(object())) {
+        // 1. Let env be GetThisEnvironment().
+        auto& environment = get_this_environment(interpreter.vm());
+        // 2. Let actualThis be ? env.GetThisBinding().
+        auto actual_this = environment.get_this_binding(global_object);
+
+        StringOrSymbol property_key;
+
+        if (is_computed()) {
+            // SuperProperty : super [ Expression ]
+
+            // 3. Let propertyNameReference be the result of evaluating Expression.
+            // 4. Let propertyNameValue be ? GetValue(propertyNameReference).
+            auto property_name_value = m_property->execute(interpreter, global_object);
+            if (interpreter.exception())
+                return {};
+            // 5. Let propertyKey be ? ToPropertyKey(propertyNameValue).
+            property_key = property_name_value.to_property_key(global_object);
+        } else {
+            // SuperProperty : super . IdentifierName
+
+            // 3. Let propertyKey be StringValue of IdentifierName.
+            VERIFY(is<Identifier>(property()));
+            property_key = static_cast<Identifier const&>(property()).string();
+        }
+
+        // 6. If the code matched by this SuperProperty is strict mode code, let strict be true; else let strict be false.
+        bool strict = interpreter.vm().in_strict_mode();
+
+        // 7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
+        return make_super_property_reference(global_object, actual_this, property_key, strict);
+    }
+
     auto object_value = m_object->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
