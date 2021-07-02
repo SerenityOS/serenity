@@ -1092,17 +1092,17 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     tls_descriptor.type = 2;
     write_gdt_entry(GDT_SELECTOR_TLS, tls_descriptor); // tls3
 
-    Descriptor fs_descriptor {};
-    fs_descriptor.set_base(VirtualAddress { this });
-    fs_descriptor.set_limit(sizeof(Processor) - 1);
-    fs_descriptor.dpl = 0;
-    fs_descriptor.segment_present = 1;
-    fs_descriptor.granularity = 0;
-    fs_descriptor.operation_size64 = 0;
-    fs_descriptor.operation_size32 = 1;
-    fs_descriptor.descriptor_type = 1;
-    fs_descriptor.type = 2;
-    write_gdt_entry(GDT_SELECTOR_PROC, fs_descriptor); // fs0
+    Descriptor gs_descriptor {};
+    gs_descriptor.set_base(VirtualAddress { this });
+    gs_descriptor.set_limit(sizeof(Processor) - 1);
+    gs_descriptor.dpl = 0;
+    gs_descriptor.segment_present = 1;
+    gs_descriptor.granularity = 0;
+    gs_descriptor.operation_size64 = 0;
+    gs_descriptor.operation_size32 = 1;
+    gs_descriptor.descriptor_type = 1;
+    gs_descriptor.type = 2;
+    write_gdt_entry(GDT_SELECTOR_PROC, gs_descriptor); // gs0
 #endif
 
     Descriptor tss_descriptor {};
@@ -1127,16 +1127,16 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     load_task_register(GDT_SELECTOR_TSS);
 
 #if ARCH(X86_64)
-    MSR fs_base(MSR_FS_BASE);
-    fs_base.set((size_t)this & 0xffffffff, (size_t)this >> 32);
+    MSR gs_base(MSR_GS_BASE);
+    gs_base.set((size_t)this & 0xffffffff, (size_t)this >> 32);
 #else
     asm volatile(
         "mov %%ax, %%ds\n"
         "mov %%ax, %%es\n"
-        "mov %%ax, %%gs\n"
+        "mov %%ax, %%fs\n"
         "mov %%ax, %%ss\n" ::"a"(GDT_SELECTOR_DATA0)
         : "memory");
-    set_fs(GDT_SELECTOR_PROC);
+    set_gs(GDT_SELECTOR_PROC);
 #endif
 
 #if ARCH(I386)

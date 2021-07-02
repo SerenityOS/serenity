@@ -38,7 +38,7 @@ NEVER_INLINE void syscall_asm_entry_dummy()
         "    mov %ax, %ds\n"
         "    mov %ax, %es\n"
         "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n"
-        "    mov %ax, %fs\n"
+        "    mov %ax, %gs\n"
         "    cld\n"
         "    xor %esi, %esi\n"
         "    xor %edi, %edi\n"
