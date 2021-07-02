@@ -11,11 +11,11 @@
 #include <LibWeb/CSS/CSSStyleSheet.h>
 
 namespace Web::CSS {
-class ParsingContext {
+class DeprecatedParsingContext {
 public:
-    ParsingContext();
-    explicit ParsingContext(const DOM::Document&);
-    explicit ParsingContext(const DOM::ParentNode&);
+    DeprecatedParsingContext();
+    explicit DeprecatedParsingContext(const DOM::Document&);
+    explicit DeprecatedParsingContext(const DOM::ParentNode&);
 
     bool in_quirks_mode() const;
 
@@ -28,14 +28,14 @@ private:
 
 namespace Web {
 
-RefPtr<CSS::CSSStyleSheet> parse_css(const CSS::ParsingContext&, const StringView&);
-RefPtr<CSS::CSSStyleDeclaration> parse_css_declaration(const CSS::ParsingContext&, const StringView&);
-RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext&, const StringView&, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
-Optional<CSS::Selector> parse_selector(const CSS::ParsingContext&, const StringView&);
+RefPtr<CSS::CSSStyleSheet> parse_css(const CSS::DeprecatedParsingContext&, const StringView&);
+RefPtr<CSS::CSSStyleDeclaration> parse_css_declaration(const CSS::DeprecatedParsingContext&, const StringView&);
+RefPtr<CSS::StyleValue> parse_css_value(const CSS::DeprecatedParsingContext&, const StringView&, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
+Optional<CSS::Selector> parse_selector(const CSS::DeprecatedParsingContext&, const StringView&);
 
-RefPtr<CSS::LengthStyleValue> parse_line_width(const CSS::ParsingContext&, const StringView&);
-RefPtr<CSS::ColorStyleValue> parse_color(const CSS::ParsingContext&, const StringView&);
-RefPtr<CSS::IdentifierStyleValue> parse_line_style(const CSS::ParsingContext&, const StringView&);
+RefPtr<CSS::LengthStyleValue> parse_line_width(const CSS::DeprecatedParsingContext&, const StringView&);
+RefPtr<CSS::ColorStyleValue> parse_color(const CSS::DeprecatedParsingContext&, const StringView&);
+RefPtr<CSS::IdentifierStyleValue> parse_line_style(const CSS::DeprecatedParsingContext&, const StringView&);
 
 RefPtr<CSS::StyleValue> parse_html_length(const DOM::Document&, const StringView&);
 

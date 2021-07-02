@@ -159,7 +159,7 @@ void Element::parse_attribute(const FlyString& name, const String& value)
             m_classes.unchecked_append(new_class);
         }
     } else if (name == HTML::AttributeNames::style) {
-        m_inline_style = parse_css_declaration(CSS::ParsingContext(document()), value);
+        m_inline_style = parse_css_declaration(CSS::DeprecatedParsingContext(document()), value);
         set_needs_style_update(true);
     }
 }
