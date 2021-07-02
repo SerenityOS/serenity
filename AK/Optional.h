@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,23 +21,30 @@ public:
 
     ALWAYS_INLINE Optional() = default;
 
-    ALWAYS_INLINE Optional(const T& value)
-        : m_has_value(true)
-    {
-        new (&m_storage) T(value);
-    }
+#ifdef AK_HAS_CONDITIONALLY_TRIVIAL
+    Optional(const Optional& other) requires(!IsCopyConstructible<T>) = delete;
+    Optional(const Optional& other) = default;
 
-    template<typename U>
-    ALWAYS_INLINE Optional(const U& value)
-        : m_has_value(true)
-    {
-        new (&m_storage) T(value);
-    }
+    Optional(Optional&& other) requires(!IsMoveConstructible<T>) = delete;
 
-    ALWAYS_INLINE Optional(T&& value)
-        : m_has_value(true)
+    Optional& operator=(const Optional&) requires(!IsCopyConstructible<T> || !IsDestructible<T>) = delete;
+    Optional& operator=(const Optional&) = default;
+
+    Optional& operator=(Optional&& other) requires(!IsMoveConstructible<T> || !IsDestructible<T>) = delete;
+
+    ~Optional() requires(!IsDestructible<T>) = delete;
+    ~Optional() = default;
+#endif
+
+    ALWAYS_INLINE Optional(const Optional& other)
+#ifdef AK_HAS_CONDITIONALLY_TRIVIAL
+        requires(!IsTriviallyCopyConstructible<T>)
+#endif
+        : m_has_value(other.m_has_value)
     {
-        new (&m_storage) T(move(value));
+        if (other.has_value()) {
+            new (&m_storage) T(other.value());
+        }
     }
 
     ALWAYS_INLINE Optional(Optional&& other)
@@ -44,39 +52,25 @@ public:
     {
         if (other.has_value()) {
             new (&m_storage) T(other.release_value());
-            other.m_has_value = false;
         }
     }
 
-    ALWAYS_INLINE Optional(const Optional& other)
-        : m_has_value(other.m_has_value)
-    {
-        if (m_has_value) {
-            new (&m_storage) T(other.value());
-        }
-    }
-
-    ALWAYS_INLINE Optional(Optional& other)
-        : m_has_value(other.m_has_value)
-    {
-        if (m_has_value) {
-            new (&m_storage) T(other.value());
-        }
-    }
-
-    template<typename U>
-    ALWAYS_INLINE Optional(U& value)
+    template<typename U = T>
+    ALWAYS_INLINE explicit(!IsConvertible<U&&, T>) Optional(U&& value) requires(!IsSame<RemoveCVReference<U>, Optional<T>> && IsConstructible<T, U&&>)
         : m_has_value(true)
     {
-        new (&m_storage) T(value);
+        new (&m_storage) T(forward<U>(value));
     }
 
     ALWAYS_INLINE Optional& operator=(const Optional& other)
+#ifdef AK_HAS_CONDITIONALLY_TRIVIAL
+        requires(!IsTriviallyCopyConstructible<T> || !IsTriviallyDestructible<T>)
+#endif
     {
         if (this != &other) {
             clear();
             m_has_value = other.m_has_value;
-            if (m_has_value) {
+            if (other.has_value()) {
                 new (&m_storage) T(other.value());
             }
         }
@@ -88,8 +82,9 @@ public:
         if (this != &other) {
             clear();
             m_has_value = other.m_has_value;
-            if (other.has_value())
+            if (other.has_value()) {
                 new (&m_storage) T(other.release_value());
+            }
         }
         return *this;
     }
@@ -107,6 +102,9 @@ public:
     }
 
     ALWAYS_INLINE ~Optional()
+#ifdef AK_HAS_CONDITIONALLY_TRIVIAL
+        requires(!IsTriviallyDestructible<T>)
+#endif
     {
         clear();
     }
@@ -167,7 +165,6 @@ private:
     alignas(T) u8 m_storage[sizeof(T)];
     bool m_has_value { false };
 };
-
 }
 
 using AK::Optional;
