@@ -25,6 +25,7 @@
 #include <LibJS/Runtime/ObjectEnvironment.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/ProxyObject.h>
+#include <LibJS/Runtime/Reference.h>
 
 namespace JS {
 
@@ -178,6 +179,25 @@ Object* get_super_constructor(VM& vm)
     auto& active_function = verify_cast<FunctionEnvironment>(env).function_object();
     auto* super_constructor = active_function.prototype();
     return super_constructor;
+}
+
+// 13.3.7.3 MakeSuperPropertyReference ( actualThis, propertyKey, strict )
+Reference make_super_property_reference(GlobalObject& global_object, Value actual_this, StringOrSymbol const& property_key, bool strict)
+{
+    auto& vm = global_object.vm();
+    // 1. Let env be GetThisEnvironment().
+    auto& env = verify_cast<FunctionEnvironment>(get_this_environment(vm));
+    // 2. Assert: env.HasSuperBinding() is true.
+    VERIFY(env.has_super_binding());
+    // 3. Let baseValue be ? env.GetSuperBase().
+    auto base_value = env.get_super_base();
+    // 4. Let bv be ? RequireObjectCoercible(baseValue).
+    auto bv = require_object_coercible(global_object, base_value);
+    if (vm.exception())
+        return {};
+    // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
+    // 6. NOTE: This returns a Super Reference Record.
+    return Reference { bv, property_key, actual_this, strict };
 }
 
 // 19.2.1.1 PerformEval ( x, callerRealm, strictCaller, direct ), https://tc39.es/ecma262/#sec-performeval
