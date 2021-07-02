@@ -1680,6 +1680,10 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
                 consume(TokenType::Identifier).value());
         } else if (auto pattern = parse_binding_pattern()) {
             target = pattern.release_nonnull();
+        } else if (!m_state.in_generator_function_context && match(TokenType::Yield)) {
+            target = create_ast_node<Identifier>(
+                { m_state.current_token.filename(), rule_start.position(), position() },
+                consume().value());
         }
 
         if (target.has<Empty>()) {
