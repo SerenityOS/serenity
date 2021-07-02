@@ -478,6 +478,9 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
 #ifndef __LP64__
     case R_386_TLS_TPOFF32:
     case R_386_TLS_TPOFF: {
+#else
+    case R_X86_64_TPOFF64: {
+#endif
         auto symbol = relocation.symbol();
         // For some reason, LibC has a R_386_TLS_TPOFF that refers to the undefined symbol.. huh
         if (relocation.symbol_index() == 0)
@@ -490,12 +493,6 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         *patch_ptr = negative_offset_from_tls_block_end(res.value().value, dynamic_object_of_symbol->tls_offset().value(), res.value().size);
         break;
     }
-#else
-    case R_X86_64_TPOFF64:
-        dbgln("FIXME: Patched R_X86_64_TPOFF64 relocation with invalid ptr.");
-        *patch_ptr = 0xaaaaaaaaaaaaaaaa;
-        break;
-#endif
 #ifndef __LP64__
     case R_386_JMP_SLOT: {
 #else
