@@ -922,11 +922,16 @@ public:
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
-private:
+    Expression const& callee() const { return m_callee; }
+
+protected:
+    void throw_type_error_for_callee(Interpreter&, GlobalObject&, Value callee_value, StringView call_type) const;
+
     struct ThisAndCallee {
         Value this_value;
         Value callee;
     };
+
     ThisAndCallee compute_this_and_callee(Interpreter&, GlobalObject&) const;
 
     NonnullRefPtr<Expression> m_callee;
@@ -939,6 +944,8 @@ public:
         : CallExpression(source_range, move(callee), move(arguments))
     {
     }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
 
     virtual bool is_new_expression() const override { return true; }
 };

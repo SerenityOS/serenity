@@ -192,6 +192,45 @@ static void argument_list_evaluation(Interpreter& interpreter, GlobalObject& glo
     }
 }
 
+Value NewExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    InterpreterNodeScope node_scope { interpreter, *this };
+    auto& vm = interpreter.vm();
+
+    auto [this_value, callee] = compute_this_and_callee(interpreter, global_object);
+    if (vm.exception())
+        return {};
+
+    if (!callee.is_function() || (is<NativeFunction>(callee.as_object()) && !static_cast<NativeFunction&>(callee.as_object()).has_constructor())) {
+        throw_type_error_for_callee(interpreter, global_object, callee, "constructor"sv);
+        return {};
+    }
+
+    MarkedValueList arg_list(vm.heap());
+    argument_list_evaluation(interpreter, global_object, m_arguments, arg_list);
+    if (interpreter.exception())
+        return {};
+
+    auto& function = callee.as_function();
+    return vm.construct(function, function, move(arg_list));
+}
+
+void CallExpression::throw_type_error_for_callee(Interpreter& interpreter, GlobalObject& global_object, Value callee_value, StringView call_type) const
+{
+    auto& vm = interpreter.vm();
+    if (is<Identifier>(*m_callee) || is<MemberExpression>(*m_callee)) {
+        String expression_string;
+        if (is<Identifier>(*m_callee)) {
+            expression_string = static_cast<Identifier const&>(*m_callee).string();
+        } else {
+            expression_string = static_cast<MemberExpression const&>(*m_callee).to_string_approximation();
+        }
+        vm.throw_exception<TypeError>(global_object, ErrorType::IsNotAEvaluatedFrom, callee_value.to_string_without_side_effects(), call_type, expression_string);
+    } else {
+        vm.throw_exception<TypeError>(global_object, ErrorType::IsNotA, callee_value.to_string_without_side_effects(), call_type);
+    }
+}
+
 Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
@@ -202,68 +241,44 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     VERIFY(!callee.is_empty());
 
-    if (!callee.is_function()
-        || (is<NewExpression>(*this) && (is<NativeFunction>(callee.as_object()) && !static_cast<NativeFunction&>(callee.as_object()).has_constructor()))) {
-        String error_message;
-        auto call_type = is<NewExpression>(*this) ? "constructor" : "function";
-        if (is<Identifier>(*m_callee) || is<MemberExpression>(*m_callee)) {
-            String expression_string;
-            if (is<Identifier>(*m_callee)) {
-                expression_string = static_cast<Identifier const&>(*m_callee).string();
-            } else {
-                expression_string = static_cast<MemberExpression const&>(*m_callee).to_string_approximation();
-            }
-            vm.throw_exception<TypeError>(global_object, ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), call_type, expression_string);
-        } else {
-            vm.throw_exception<TypeError>(global_object, ErrorType::IsNotA, callee.to_string_without_side_effects(), call_type);
-        }
+    if (!callee.is_function()) {
+        throw_type_error_for_callee(interpreter, global_object, callee, "function"sv);
         return {};
     }
-
-    auto& function = callee.as_function();
 
     MarkedValueList arg_list(vm.heap());
     argument_list_evaluation(interpreter, global_object, m_arguments, arg_list);
     if (interpreter.exception())
         return {};
 
-    if (!is<NewExpression>(*this) && is<Identifier>(*m_callee) && static_cast<Identifier const&>(*m_callee).string() == vm.names.eval.as_string() && &callee.as_function() == global_object.eval_function()) {
+    auto& function = callee.as_function();
+
+    if (is<Identifier>(*m_callee) && static_cast<Identifier const&>(*m_callee).string() == vm.names.eval.as_string() && &function == global_object.eval_function()) {
         auto script_value = arg_list.size() == 0 ? js_undefined() : arg_list[0];
         return perform_eval(script_value, global_object, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct);
     }
 
-    vm.running_execution_context().current_node = interpreter.current_node();
-    Object* new_object = nullptr;
     Value result;
-    if (is<NewExpression>(*this)) {
-        result = vm.construct(function, function, move(arg_list));
-        if (result.is_object())
-            new_object = &result.as_object();
-    } else if (is<SuperExpression>(*m_callee)) {
-        auto* super_constructor = get_super_constructor(interpreter.vm());
-        // FIXME: Functions should track their constructor kind.
-        if (!super_constructor || !super_constructor->is_function()) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
-            return {};
-        }
-        result = vm.construct(static_cast<FunctionObject&>(*super_constructor), function, move(arg_list));
-        if (vm.exception())
-            return {};
 
-        auto& this_er = get_this_environment(interpreter.vm());
-        verify_cast<FunctionEnvironment>(this_er).bind_this_value(global_object, result);
-    } else {
-        result = vm.call(function, this_value, move(arg_list));
+    if (!is<SuperExpression>(*m_callee))
+        return vm.call(function, this_value, move(arg_list));
+
+    auto* super_constructor = get_super_constructor(interpreter.vm());
+    // FIXME: Functions should track their constructor kind.
+    if (!super_constructor || !super_constructor->is_function()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
+        return {};
     }
+    result = vm.construct(static_cast<FunctionObject&>(*super_constructor), function, move(arg_list));
+    if (vm.exception())
+        return {};
+
+    auto& this_er = get_this_environment(interpreter.vm());
+    verify_cast<FunctionEnvironment>(this_er).bind_this_value(global_object, result);
 
     if (vm.exception())
         return {};
 
-    if (is<NewExpression>(*this)) {
-        if (result.is_object())
-            return result;
-        return new_object;
-    }
     return result;
 }
 
