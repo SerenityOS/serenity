@@ -20,6 +20,10 @@ class Window;
 class WindowSwitcher final : public Core::Object {
     C_OBJECT(WindowSwitcher)
 public:
+    enum class Mode {
+        ShowAllWindows,
+        ShowCurrentDesktop
+    };
     static WindowSwitcher& the();
 
     WindowSwitcher();
@@ -28,7 +32,11 @@ public:
     bool is_visible() const { return m_visible; }
     void set_visible(bool);
 
-    void show() { set_visible(true); }
+    void show(Mode mode)
+    {
+        m_mode = mode;
+        set_visible(true);
+    }
     void hide() { set_visible(false); }
 
     void on_key_event(const KeyEvent&);
@@ -37,6 +45,8 @@ public:
     void refresh_if_needed();
 
     void select_window(Window&);
+
+    Mode mode() const { return m_mode; }
 
 private:
     int thumbnail_width() const { return 40; }
@@ -54,6 +64,7 @@ private:
     virtual void event(Core::Event&) override;
 
     RefPtr<Window> m_switcher_window;
+    Mode m_mode { Mode::ShowCurrentDesktop };
     Gfx::IntRect m_rect;
     bool m_visible { false };
     Vector<WeakPtr<Window>> m_windows;
