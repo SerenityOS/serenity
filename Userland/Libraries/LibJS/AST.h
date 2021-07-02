@@ -951,6 +951,21 @@ public:
     virtual bool is_new_expression() const override { return true; }
 };
 
+class SuperCall final : public Expression {
+public:
+    SuperCall(SourceRange source_range, Vector<CallExpression::Argument> arguments)
+        : Expression(source_range)
+        , m_arguments(move(arguments))
+    {
+    }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+
+private:
+    Vector<CallExpression::Argument> const m_arguments;
+};
+
 enum class AssignmentOp {
     Assignment,
     AdditionAssignment,
