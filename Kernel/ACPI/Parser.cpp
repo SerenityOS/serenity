@@ -146,8 +146,7 @@ UNMAP_AFTER_INIT void Parser::init_fadt()
     m_fadt = find_table("FACP");
     VERIFY(!m_fadt.is_null());
 
-    // FIXME: We need at least two pages for mapping, since we can be on the "edge" of one page...
-    auto sdt = map_typed<const volatile Structures::FADT>(m_fadt, PAGE_SIZE * 2);
+    auto sdt = map_typed<const volatile Structures::FADT>(m_fadt);
 
     dbgln_if(ACPI_DEBUG, "ACPI: FADT @ V{}, {}", &sdt, m_fadt);
 
