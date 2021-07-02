@@ -392,17 +392,43 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
     return value;
 }
 
-// 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding
-Reference VM::resolve_binding(GlobalObject& global_object, FlyString const& name, Environment*)
+// 9.1.2.1 GetIdentifierReference ( env, name, strict ), https://tc39.es/ecma262/#sec-getidentifierreference
+Reference VM::get_identifier_reference(Environment* environment, FlyString const& name, bool strict)
 {
-    // FIXME: This implementation of ResolveBinding is non-conforming.
+    // 1. If env is the value null, then
+    if (!environment) {
+        // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
+        return Reference { Reference::BaseType::Unresolvable, name, strict };
+    }
 
-    for (auto* environment = lexical_environment(); environment && environment->outer_environment(); environment = environment->outer_environment()) {
+    // FIXME: The remainder of this function is non-conforming.
+
+    auto& global_object = environment->global_object();
+    for (; environment && environment->outer_environment(); environment = environment->outer_environment()) {
         auto possible_match = environment->get_from_environment(name);
         if (possible_match.has_value())
-            return Reference { *environment, name, in_strict_mode() };
+            return Reference { *environment, name, strict };
     }
-    return Reference { global_object.environment(), name, in_strict_mode() };
+    return Reference { global_object.environment(), name, strict };
+}
+
+// 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding
+Reference VM::resolve_binding(FlyString const& name, Environment* environment)
+{
+    // 1. If env is not present or if env is undefined, then
+    if (!environment) {
+        // a. Set env to the running execution context's LexicalEnvironment.
+        environment = running_execution_context().lexical_environment;
+    }
+
+    // 2. Assert: env is an Environment Record.
+    VERIFY(environment);
+
+    // 3. If the code matching the syntactic production that is being evaluated is contained in strict mode code, let strict be true; else let strict be false.
+    bool strict = in_strict_mode();
+
+    // 4. Return ? GetIdentifierReference(env, name, strict).
+    return get_identifier_reference(environment, name, strict);
 }
 
 Value VM::construct(FunctionObject& function, FunctionObject& new_target, Optional<MarkedValueList> arguments)
