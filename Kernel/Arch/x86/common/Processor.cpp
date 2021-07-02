@@ -1214,6 +1214,9 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     auto& tls_descriptor = processor.get_gdt_entry(GDT_SELECTOR_TLS);
     tls_descriptor.set_base(to_thread->thread_specific_data());
     tls_descriptor.set_limit(to_thread->thread_specific_region_size());
+#else
+    MSR fs_base_msr(MSR_FS_BASE);
+    fs_base_msr.set(to_thread->thread_specific_data().get());
 #endif
 
     if (from_regs.cr3 != to_regs.cr3)
