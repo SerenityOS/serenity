@@ -75,7 +75,7 @@ Ping them right away if it's something urgent! If it's less urgent, advertise yo
 
 ### Who are the project reviewers?
 
-The project reviewers at this time are @awesomekling, @linusg and @alimpfard.
+The project reviewers at this time are [@awesomekling](https://github.com/awesomekling), [@linusg](https://github.com/linusg), [@alimpfard](https://github.com/alimpfard), and [@gunnarbeutner](https://github.com/gunnarbeutner).
 
 ### Is there a policy for branches/PRs that haven't been touched in X days? Should they be closed?
 
