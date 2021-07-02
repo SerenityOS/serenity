@@ -833,20 +833,35 @@ Vector<StyleComponentValueRule> Parser::parse_as_list_of_component_values()
     return rules;
 }
 
-Vector<StyleComponentValueRule> Parser::parse_as_list_of_comma_separated_component_values()
+Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of_component_values()
 {
-    Vector<StyleComponentValueRule> rules;
+    Vector<Vector<StyleComponentValueRule>> lists;
+    lists.append({});
 
     for (;;) {
-        rules.append(consume_a_component_value());
+        auto next = next_token();
 
-        if (peek_token().is_comma())
+        if (next.is_comma()) {
+            lists.append({});
             continue;
-        if (peek_token().is_eof())
+        } else if (next.is_eof()) {
             break;
+        }
+
+        reconsume_current_input_token();
+        auto component_value = consume_a_component_value();
+        lists.last().append(component_value);
     }
 
-    return rules;
+    for (auto& list : lists) {
+        if (!list.is_empty() && list.first().is(Token::TokenType::Whitespace))
+            list.take_first();
+
+        if (!list.is_empty() && list.last().is(Token::TokenType::Whitespace))
+            list.take_last();
+    }
+
+    return lists;
 }
 
 RefPtr<CSSRule> Parser::convert_rule(NonnullRefPtr<QualifiedStyleRule>)
