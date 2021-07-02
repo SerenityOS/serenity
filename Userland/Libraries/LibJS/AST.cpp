@@ -167,6 +167,31 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
     return { &global_object, m_callee->execute(interpreter, global_object) };
 }
 
+// 13.3.8.1 Runtime Semantics: ArgumentListEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
+static void argument_list_evaluation(Interpreter& interpreter, GlobalObject& global_object, Vector<CallExpression::Argument> const& arguments, MarkedValueList& list)
+{
+    auto& vm = global_object.vm();
+    list.ensure_capacity(arguments.size());
+
+    for (auto& argument : arguments) {
+        auto value = argument.value->execute(interpreter, global_object);
+        if (vm.exception())
+            return;
+        if (argument.is_spread) {
+            get_iterator_values(global_object, value, [&](Value iterator_value) {
+                if (vm.exception())
+                    return IterationDecision::Break;
+                list.append(iterator_value);
+                return IterationDecision::Continue;
+            });
+            if (vm.exception())
+                return;
+        } else {
+            list.append(value);
+        }
+    }
+}
+
 Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
@@ -197,29 +222,13 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
 
     auto& function = callee.as_function();
 
-    MarkedValueList arguments(vm.heap());
-    arguments.ensure_capacity(m_arguments.size());
-
-    for (auto& argument : m_arguments) {
-        auto value = argument.value->execute(interpreter, global_object);
-        if (vm.exception())
-            return {};
-        if (argument.is_spread) {
-            get_iterator_values(global_object, value, [&](Value iterator_value) {
-                if (vm.exception())
-                    return IterationDecision::Break;
-                arguments.append(iterator_value);
-                return IterationDecision::Continue;
-            });
-            if (vm.exception())
-                return {};
-        } else {
-            arguments.append(value);
-        }
-    }
+    MarkedValueList arg_list(vm.heap());
+    argument_list_evaluation(interpreter, global_object, m_arguments, arg_list);
+    if (interpreter.exception())
+        return {};
 
     if (!is<NewExpression>(*this) && is<Identifier>(*m_callee) && static_cast<Identifier const&>(*m_callee).string() == vm.names.eval.as_string() && &callee.as_function() == global_object.eval_function()) {
-        auto script_value = arguments.size() == 0 ? js_undefined() : arguments[0];
+        auto script_value = arg_list.size() == 0 ? js_undefined() : arg_list[0];
         return perform_eval(script_value, global_object, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct);
     }
 
@@ -227,7 +236,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     Object* new_object = nullptr;
     Value result;
     if (is<NewExpression>(*this)) {
-        result = vm.construct(function, function, move(arguments));
+        result = vm.construct(function, function, move(arg_list));
         if (result.is_object())
             new_object = &result.as_object();
     } else if (is<SuperExpression>(*m_callee)) {
@@ -237,14 +246,14 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
             return {};
         }
-        result = vm.construct(static_cast<FunctionObject&>(*super_constructor), function, move(arguments));
+        result = vm.construct(static_cast<FunctionObject&>(*super_constructor), function, move(arg_list));
         if (vm.exception())
             return {};
 
         auto& this_er = get_this_environment(interpreter.vm());
         verify_cast<FunctionEnvironment>(this_er).bind_this_value(global_object, result);
     } else {
-        result = vm.call(function, this_value, move(arguments));
+        result = vm.call(function, this_value, move(arg_list));
     }
 
     if (vm.exception())
