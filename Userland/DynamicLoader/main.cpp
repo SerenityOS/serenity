@@ -103,7 +103,7 @@ void _start(int argc, char** argv, char** envp)
         }
     }
 
-    if (main_program_name == "/usr/lib/Loader.so") {
+    if (main_program_name == "/usr/lib/Loader.so"sv) {
         // We've been invoked directly as an executable rather than as the
         // ELF interpreter for some other binary. In the future we may want
         // to support launching a program directly from the dynamic loader
