@@ -713,9 +713,9 @@ Reference Expression::to_reference(Interpreter&, GlobalObject&) const
     return {};
 }
 
-Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject& global_object) const
+Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) const
 {
-    return interpreter.vm().resolve_binding(global_object, string());
+    return interpreter.vm().resolve_binding(string());
 }
 
 Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject& global_object) const
