@@ -39,3 +39,13 @@ describe("parsing object literal generator functions", () => {
                 foo() { yield (yield); } }`).toEval();
     });
 });
+
+describe("parsing classes with generator methods", () => {
+    test("simple", () => {
+        expect(`class Foo { *foo() {} }`).toEval();
+        expect(`class Foo { static *foo() {} }`).toEval();
+        expect(`class Foo { *foo() { yield; } }`).toEval();
+        expect(`class Foo { *foo() { yield 42; } }`).toEval();
+        expect(`class Foo { *constructor() { yield 42; } }`).not.toEval();
+    });
+});
