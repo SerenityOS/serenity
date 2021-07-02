@@ -210,7 +210,27 @@ public:
     template<typename... NewTs>
     friend struct Variant;
 
+#ifdef AK_HAS_CONDITIONALLY_TRIVIAL
+    Variant(const Variant&) requires(!(IsCopyConstructible<Ts> && ...)) = delete;
+    Variant(const Variant&) = default;
+
+    Variant(Variant&&) requires(!(IsMoveConstructible<Ts> && ...)) = delete;
+    Variant(Variant&&) = default;
+
+    ~Variant() requires(!(IsDestructible<Ts> && ...)) = delete;
+    ~Variant() = default;
+
+    Variant& operator=(const Variant&) requires(!(IsCopyConstructible<Ts> && ...) || !(IsDestructible<Ts> && ...)) = delete;
+    Variant& operator=(const Variant&) = default;
+
+    Variant& operator=(Variant&&) requires(!(IsMoveConstructible<Ts> && ...) || !(IsDestructible<Ts> && ...)) = delete;
+    Variant& operator=(Variant&&) = default;
+#endif
+
     ALWAYS_INLINE Variant(const Variant& old)
+#ifdef AK_HAS_CONDITIONALLY_TRIVIAL
+        requires(!(IsTriviallyCopyConstructible<Ts> && ...))
+#endif
         : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
         , m_data {}
         , m_index(old.m_index)
@@ -223,6 +243,9 @@ public:
     //       and if a variant with a nontrivial move ctor is moved from, it may or may not be valid
     //       but it will still contain the "moved-from" state of the object it previously contained.
     ALWAYS_INLINE Variant(Variant&& old)
+#ifdef AK_HAS_CONDITIONALLY_TRIVIAL
+        requires(!(IsTriviallyMoveConstructible<Ts> && ...))
+#endif
         : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
         , m_data {}
         , m_index(old.m_index)
@@ -231,11 +254,17 @@ public:
     }
 
     ALWAYS_INLINE ~Variant()
+#ifdef AK_HAS_CONDITIONALLY_TRIVIAL
+        requires(!(IsTriviallyDestructible<Ts> && ...))
+#endif
     {
         Helper::delete_(m_index, m_data);
     }
 
     ALWAYS_INLINE Variant& operator=(const Variant& other)
+#ifdef AK_HAS_CONDITIONALLY_TRIVIAL
+        requires(!(IsTriviallyCopyConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
+#endif
     {
         m_index = other.m_index;
         Helper::copy_(other.m_index, other.m_data, m_data);
@@ -243,6 +272,9 @@ public:
     }
 
     ALWAYS_INLINE Variant& operator=(Variant&& other)
+#ifdef AK_HAS_CONDITIONALLY_TRIVIAL
+        requires(!(IsTriviallyMoveConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
+#endif
     {
         m_index = other.m_index;
         Helper::move_(other.m_index, other.m_data, m_data);

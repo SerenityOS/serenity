@@ -25,6 +25,10 @@
 
 #define ARCH(arch) (defined(AK_ARCH_##arch) && AK_ARCH_##arch)
 
+#if !defined(__clang__)
+#    define AK_HAS_CONDITIONALLY_TRIVIAL
+#endif
+
 #ifdef ALWAYS_INLINE
 #    undef ALWAYS_INLINE
 #endif
