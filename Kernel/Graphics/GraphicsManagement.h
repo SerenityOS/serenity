@@ -47,6 +47,7 @@ public:
     void activate_graphical_mode();
 
 private:
+    bool determine_and_initialize_graphics_device(const PCI::Address& address, PCI::ID id);
     NonnullRefPtrVector<GraphicsDevice> m_graphics_devices;
     NonnullOwnPtr<Region> m_vga_font_region;
     RefPtr<Graphics::Console> m_console;
