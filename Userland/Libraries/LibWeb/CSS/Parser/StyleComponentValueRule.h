@@ -26,7 +26,9 @@ public:
         Block
     };
 
-    explicit StyleComponentValueRule(ComponentType);
+    StyleComponentValueRule(Token);
+    explicit StyleComponentValueRule(NonnullRefPtr<StyleFunctionRule>);
+    explicit StyleComponentValueRule(NonnullRefPtr<StyleBlockRule>);
     ~StyleComponentValueRule();
 
     bool is_block() const { return m_type == ComponentType::Block; }
