@@ -1,3 +1,5 @@
+#include <AK/URL.h>
+
 endpoint WebSocketClient
 {
     // Connection API

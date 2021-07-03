@@ -1,3 +1,7 @@
+#include <AK/URL.h>
+#include <LibCore/AnonymousBuffer.h>
+#include <LibGfx/ShareableBitmap.h>
+
 endpoint WebContentClient
 {
     did_start_loading(URL url) =|
