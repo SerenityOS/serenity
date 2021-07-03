@@ -743,11 +743,12 @@ Optional<NonnullRefPtrVector<Parameter>> Parser::parse_parameter_list(ASTNode& p
     NonnullRefPtrVector<Parameter> parameters;
     while (peek().type() != Token::Type::RightParen && !eof()) {
         if (match_ellipsis()) {
-            auto last_dot = consume();
-            while (peek().type() == Token::Type::Dot)
-                last_dot = consume();
-            auto param = create_ast_node<Parameter>(parent, position(), last_dot.end(), StringView {});
+            auto param = create_ast_node<Parameter>(parent, position(), {}, StringView {});
+            consume(Token::Type::Dot);
+            consume(Token::Type::Dot);
+            auto last_dot = consume(Token::Type::Dot);
             param->m_is_ellipsis = true;
+            param->set_end(last_dot.end());
             parameters.append(move(param));
         } else {
             auto type = parse_type(parent);
@@ -1305,7 +1306,7 @@ bool Parser::match_ellipsis()
 {
     if (m_state.token_index > m_tokens.size() - 3)
         return false;
-    return peek().type() == Token::Type::Dot && peek().type() == Token::Type::Dot && peek().type() == Token::Type::Dot;
+    return peek().type() == Token::Type::Dot && peek(1).type() == Token::Type::Dot && peek(2).type() == Token::Type::Dot;
 }
 void Parser::add_tokens_for_preprocessor(Token& replaced_token, Preprocessor::DefinedValue& definition)
 {
