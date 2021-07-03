@@ -56,49 +56,23 @@ public:
         Number,
     };
 
-    bool is_eof() const { return m_type == Type::EndOfFile; }
-    bool is_ident() const { return m_type == Type::Ident; }
-    bool is_function() const { return m_type == Type::Function; }
-    bool is_at() const { return m_type == Type::AtKeyword; }
-    bool is_hash() const { return m_type == Type::Hash; }
-    bool is_string() const { return m_type == Type::String; }
-    bool is_bad_string() const { return m_type == Type::BadString; }
-    bool is_url() const { return m_type == Type::Url; }
-    bool is_bad_url() const { return m_type == Type::BadUrl; }
-    bool is_delim() const { return m_type == Type::Delim; }
-    bool is_number() const { return m_type == Type::Number; }
-    bool is_percentage() const { return m_type == Type::Percentage; }
-    bool is_dimension() const { return m_type == Type::Dimension; }
-    bool is_whitespace() const { return m_type == Type::Whitespace; }
-    bool is_cdo() const { return m_type == Type::CDO; }
-    bool is_cdc() const { return m_type == Type::CDC; }
-    bool is_colon() const { return m_type == Type::Colon; }
-    bool is_semicolon() const { return m_type == Type::Semicolon; }
-    bool is_comma() const { return m_type == Type::Comma; }
-    bool is_open_square() const { return m_type == Type::OpenSquare; }
-    bool is_close_square() const { return m_type == Type::CloseSquare; }
-    bool is_open_paren() const { return m_type == Type::OpenParen; }
-    bool is_close_paren() const { return m_type == Type::CloseParen; }
-    bool is_open_curly() const { return m_type == Type::OpenCurly; }
-    bool is_close_curly() const { return m_type == Type::CloseCurly; }
-
     bool is(Type type) const { return m_type == type; }
 
     StringView ident() const
     {
-        VERIFY(is_ident());
+        VERIFY(m_type == Type::Ident);
         return m_value.string_view();
     }
 
     StringView delim() const
     {
-        VERIFY(is_delim());
+        VERIFY(m_type == Type::Delim);
         return m_value.string_view();
     }
 
     StringView string() const
     {
-        VERIFY(is_string());
+        VERIFY(m_type == Type::String);
         return m_value.string_view();
     }
 
