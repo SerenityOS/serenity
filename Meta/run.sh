@@ -59,7 +59,7 @@ fi
     fi
 }
 
-if ! command -v $SERENITY_QEMU_BIN >/dev/null 2>&1 ; then
+if ! command -v "$SERENITY_QEMU_BIN" >/dev/null 2>&1 ; then
     die "Please install QEMU version 5.0 or newer or use the Toolchain/BuildQemu.sh script."
 fi
 
