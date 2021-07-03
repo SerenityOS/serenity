@@ -80,13 +80,18 @@ const Gfx::Bitmap& Compositor::front_bitmap_for_screenshot(Badge<ClientConnectio
 
 void Compositor::ScreenData::init_bitmaps(Compositor& compositor, Screen& screen)
 {
+    m_has_flipped = false;
+    m_have_flush_rects = false;
+    m_buffers_are_flipped = false;
+    m_screen_can_set_buffer = screen.can_set_buffer();
+
     auto size = screen.size();
 
     m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(0));
     m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
     m_front_painter->translate(-screen.rect().location());
 
-    if (screen.can_set_buffer())
+    if (m_screen_can_set_buffer)
         m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(screen.physical_height()));
     else
         m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
@@ -96,9 +101,6 @@ void Compositor::ScreenData::init_bitmaps(Compositor& compositor, Screen& screen
     m_temp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
     m_temp_painter = make<Gfx::Painter>(*m_temp_bitmap);
     m_temp_painter->translate(-screen.rect().location());
-
-    m_buffers_are_flipped = false;
-    m_screen_can_set_buffer = screen.can_set_buffer();
 
     // Recreate the screen-number overlay as the Screen instances may have changed, or get rid of it if we no longer need it
     if (compositor.showing_screen_numbers()) {
@@ -232,6 +234,7 @@ void Compositor::compose()
     auto& cursor_screen = ScreenInput::the().cursor_location_screen();
 
     for (auto& screen_data : m_screen_data) {
+        screen_data.m_have_flush_rects = false;
         screen_data.m_flush_rects.clear_with_capacity();
         screen_data.m_flush_transparent_rects.clear_with_capacity();
         screen_data.m_flush_special_rects.clear_with_capacity();
@@ -268,6 +271,7 @@ void Compositor::compose()
         dbgln_if(COMPOSE_DEBUG, "    -> flush opaque: {}", rect);
         VERIFY(!screen_data.m_flush_rects.intersects(rect));
         VERIFY(!screen_data.m_flush_transparent_rects.intersects(rect));
+        screen_data.m_have_flush_rects = true;
         screen_data.m_flush_rects.add(rect);
         check_restore_cursor_back(screen, rect);
     };
@@ -281,6 +285,7 @@ void Compositor::compose()
                 return;
         }
 
+        screen_data.m_have_flush_rects = true;
         screen_data.m_flush_transparent_rects.add(rect);
         check_restore_cursor_back(screen, rect);
     };
@@ -554,6 +559,8 @@ void Compositor::compose()
         Screen::for_each([&](auto& screen) {
             auto& screen_data = m_screen_data[screen.index()];
             update_animations(screen, screen_data.m_flush_special_rects);
+            if (!screen_data.m_flush_special_rects.is_empty())
+                screen_data.m_have_flush_rects = true;
             return IterationDecision::Continue;
         });
         // As long as animations are running make sure we keep rendering frames
@@ -564,9 +571,6 @@ void Compositor::compose()
     if (need_to_draw_cursor) {
         auto& screen_data = m_screen_data[cursor_screen.index()];
         screen_data.draw_cursor(cursor_screen, cursor_rect);
-        screen_data.m_flush_rects.add(cursor_rect.intersected(cursor_screen.rect()));
-        if (previous_cursor_screen && cursor_rect != previous_cursor_rect)
-            m_screen_data[previous_cursor_screen->index()].m_flush_rects.add(previous_cursor_rect);
     }
 
     Screen::for_each([&](auto& screen) {
@@ -578,16 +582,45 @@ void Compositor::compose()
 void Compositor::flush(Screen& screen)
 {
     auto& screen_data = m_screen_data[screen.index()];
+
+    bool device_can_flush_buffers = screen.can_device_flush_buffers();
+    if (!screen_data.m_have_flush_rects && (!screen_data.m_screen_can_set_buffer || screen_data.m_has_flipped)) {
+        dbgln_if(COMPOSE_DEBUG, "Nothing to flush on screen #{} {}", screen.index(), screen_data.m_have_flush_rects);
+        return;
+    }
+    screen_data.m_have_flush_rects = false;
+
     if (m_flash_flush) {
         for (auto& rect : screen_data.m_flush_rects.rects())
             screen_data.m_front_painter->fill_rect(rect, Color::Yellow);
     }
 
-    if (screen_data.m_screen_can_set_buffer)
-        screen_data.flip_buffers(screen);
-
     auto screen_rect = screen.rect();
-    bool device_can_flush_buffers = screen.can_device_flush_buffers();
+    if (device_can_flush_buffers && screen_data.m_screen_can_set_buffer) {
+        if (!screen_data.m_has_flipped) {
+            // If we have not flipped any buffers before, we should be flushing
+            // the entire buffer to make sure that the device has all the bits we wrote
+            screen_data.m_flush_rects = { screen.rect() };
+        }
+
+        // If we also support buffer flipping we need to make sure we transfer all
+        // updated areas to the device before we flip. We already modified the framebuffer
+        // memory, but the device needs to know what areas we actually did update.
+        for (auto& rect : screen_data.m_flush_rects.rects())
+            screen.queue_flush_display_rect(rect.translated(-screen_rect.location()));
+        for (auto& rect : screen_data.m_flush_transparent_rects.rects())
+            screen.queue_flush_display_rect(rect.translated(-screen_rect.location()));
+        for (auto& rect : screen_data.m_flush_special_rects.rects())
+            screen.queue_flush_display_rect(rect.translated(-screen_rect.location()));
+
+        screen.flush_display((!screen_data.m_screen_can_set_buffer || screen_data.m_buffers_are_flipped) ? 0 : 1);
+    }
+
+    if (screen_data.m_screen_can_set_buffer) {
+        screen_data.flip_buffers(screen);
+        screen_data.m_has_flipped = true;
+    }
+
     auto do_flush = [&](Gfx::IntRect rect) {
         VERIFY(screen_rect.contains(rect));
         rect.translate_by(-screen_rect.location());
@@ -625,8 +658,12 @@ void Compositor::flush(Screen& screen)
             from_ptr = (const Gfx::RGBA32*)((const u8*)from_ptr + pitch);
             to_ptr = (Gfx::RGBA32*)((u8*)to_ptr + pitch);
         }
-        if (device_can_flush_buffers)
+        if (device_can_flush_buffers) {
+            // Whether or not we need to flush buffers, we need to at least track what we modified
+            // so that we can flush these areas next time before we flip buffers. Or, if we don't
+            // support buffer flipping then we will flush them shortly.
             screen.queue_flush_display_rect(rect);
+        }
     };
     for (auto& rect : screen_data.m_flush_rects.rects())
         do_flush(rect);
@@ -634,8 +671,13 @@ void Compositor::flush(Screen& screen)
         do_flush(rect);
     for (auto& rect : screen_data.m_flush_special_rects.rects())
         do_flush(rect);
-    if (device_can_flush_buffers)
-        screen.flush_display();
+    if (device_can_flush_buffers && !screen_data.m_screen_can_set_buffer) {
+        // If we also support flipping buffers we don't really need to flush these areas right now.
+        // Instead, we skip this step and just keep track of them until shortly before the next flip.
+        // If we however don't support flipping buffers then we need to flush the changed areas right
+        // now so that they can be sent to the device.
+        screen.flush_display(screen_data.m_buffers_are_flipped ? 0 : 1);
+    }
 }
 
 void Compositor::invalidate_screen()
@@ -848,7 +890,10 @@ void Compositor::ScreenData::draw_cursor(Screen& screen, const Gfx::IntRect& cur
     auto& current_cursor = compositor.m_current_cursor ? *compositor.m_current_cursor : wm.active_cursor();
     auto screen_rect = screen.rect();
     m_cursor_back_painter->blit({ 0, 0 }, *m_back_bitmap, current_cursor.rect().translated(cursor_rect.location()).intersected(screen_rect).translated(-screen_rect.location()));
-    m_back_painter->blit(cursor_rect.location(), current_cursor.bitmap(screen.scale_factor()), current_cursor.source_rect(compositor.m_current_cursor_frame));
+    auto cursor_src_rect = current_cursor.source_rect(compositor.m_current_cursor_frame);
+    m_back_painter->blit(cursor_rect.location(), current_cursor.bitmap(screen.scale_factor()), cursor_src_rect);
+    m_flush_special_rects.add(Gfx::IntRect(cursor_rect.location(), cursor_src_rect.size()).intersected(screen.rect()));
+    m_have_flush_rects = true;
     m_last_cursor_rect = cursor_rect;
     VERIFY(compositor.m_current_cursor_screen == &screen);
     m_cursor_back_is_valid = true;
@@ -861,6 +906,8 @@ bool Compositor::ScreenData::restore_cursor_back(Screen& screen, Gfx::IntRect& l
 
     last_cursor_rect = m_last_cursor_rect.intersected(screen.rect());
     m_back_painter->blit(last_cursor_rect.location(), *m_cursor_back_bitmap, { { 0, 0 }, last_cursor_rect.size() });
+    m_flush_special_rects.add(last_cursor_rect.intersected(screen.rect()));
+    m_have_flush_rects = true;
     m_cursor_back_is_valid = false;
     return true;
 }
