@@ -130,6 +130,9 @@ $SERENITY_EXTRA_QEMU_ARGS
 -smp 2
 -display $SERENITY_QEMU_DISPLAY_BACKEND
 -device $SERENITY_QEMU_DISPLAY_DEVICE
+-device secondary-vga
+-device bochs-display
+-device VGA,vgamem_mb=64
 -device piix3-ide
 -drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
 -device ahci,id=ahci
