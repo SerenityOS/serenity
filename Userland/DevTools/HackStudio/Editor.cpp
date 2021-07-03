@@ -40,10 +40,8 @@ namespace HackStudio {
 Editor::Editor()
 {
     set_document(CodeDocument::create());
-    m_documentation_tooltip_window = GUI::Window::construct();
-    m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
-    m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
-    m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
+    initialize_documentation_tooltip();
+    initialize_parameters_hint_tooltip();
     m_evaluate_expression_action = GUI::Action::create("Evaluate expression", { Mod_Ctrl, Key_E }, [this](auto&) {
         if (!execution_position().has_value()) {
             GUI::MessageBox::show(window(), "Program is not running", "Error", GUI::MessageBox::Type::Error);
@@ -72,6 +70,22 @@ Editor::Editor()
 
 Editor::~Editor()
 {
+}
+
+void Editor::initialize_documentation_tooltip()
+{
+    m_documentation_tooltip_window = GUI::Window::construct();
+    m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
+    m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
+    m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
+}
+
+void Editor::initialize_parameters_hint_tooltip()
+{
+    m_parameters_hint_tooltip_window = GUI::Window::construct();
+    m_parameters_hint_tooltip_window->set_rect(0, 0, 280, 35);
+    m_parameters_hint_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
+    m_parameter_hint_page_view = m_parameters_hint_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
 }
 
 EditorWrapper& Editor::wrapper()
@@ -287,6 +301,8 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
 
 void Editor::mousedown_event(GUI::MouseEvent& event)
 {
+    m_parameters_hint_tooltip_window->hide();
+
     auto highlighter = wrapper().editor().syntax_highlighter();
     if (!highlighter) {
         GUI::TextEditor::mousedown_event(event);
@@ -566,6 +582,7 @@ void Editor::on_identifier_click(const GUI::TextDocumentSpan& span)
     };
     m_language_client->search_declaration(code_document().file_path(), span.range.start().line(), span.range.start().column());
 }
+
 void Editor::set_cursor(const GUI::TextPosition& a_position)
 {
     TextEditor::set_cursor(a_position);
@@ -604,6 +621,55 @@ void Editor::set_language_client_for(const CodeDocument& document)
 
     if (document.language() == Language::Shell)
         m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_path());
+}
+
+void Editor::keydown_event(GUI::KeyEvent& event)
+{
+    TextEditor::keydown_event(event);
+
+    m_parameters_hint_tooltip_window->hide();
+
+    if (!event.shift() && !event.alt() && event.ctrl() && event.key() == KeyCode::Key_P) {
+        handle_function_parameters_hint_request();
+    }
+}
+
+void Editor::handle_function_parameters_hint_request()
+{
+    VERIFY(m_language_client);
+
+    m_language_client->on_function_parameters_hint_result = [this](Vector<String> const& params, size_t argument_index) {
+        dbgln("on_function_parameters_hint_result");
+
+        StringBuilder html;
+        for (size_t i = 0; i < params.size(); ++i) {
+            if (i == argument_index)
+                html.append("<b>");
+
+            html.appendff("{}", params[i]);
+
+            if (i == argument_index)
+                html.append("</b>");
+
+            if (i < params.size() - 1)
+                html.append(", ");
+        }
+        html.append("<style>body { background-color: #dac7b5; }</style>");
+
+        m_parameter_hint_page_view->load_html(html.build(), {});
+
+        auto cursor_rect = current_editor().cursor_content_rect().location().translated(screen_relative_rect().location());
+
+        Gfx::Rect content(cursor_rect.x(), cursor_rect.y(), m_parameter_hint_page_view->children_clip_rect().width(), m_parameter_hint_page_view->children_clip_rect().height());
+        m_parameters_hint_tooltip_window->move_to(cursor_rect.x(), cursor_rect.y() - m_parameters_hint_tooltip_window->height() - vertical_scrollbar().value());
+
+        m_parameters_hint_tooltip_window->show();
+    };
+
+    m_language_client->get_parameters_hint(
+        code_document().file_path(),
+        cursor().line(),
+        cursor().column());
 }
 
 }
