@@ -131,7 +131,7 @@ private:
     };
     RelocationResult do_relocation(const DynamicObject::Relocation&, ShouldInitializeWeak should_initialize_weak);
     size_t calculate_tls_size() const;
-    ssize_t negative_offset_from_tls_block_end(size_t value_of_symbol, ssize_t tls_offset) const;
+    ssize_t negative_offset_from_tls_block_end(ssize_t tls_offset, size_t value_of_symbol) const;
 
     String m_filename;
     String m_program_interpreter;
