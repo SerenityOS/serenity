@@ -148,7 +148,13 @@ Parser::~Parser()
 
 NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet()
 {
-    auto parser_rules = consume_a_list_of_rules(true);
+    return parse_as_stylesheet(m_token_stream);
+}
+
+template<typename T>
+NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet(TokenStream<T>& tokens)
+{
+    auto parser_rules = consume_a_list_of_rules(tokens, true);
     NonnullRefPtrVector<CSSRule> rules;
 
     for (auto& raw_rule : parser_rules) {
@@ -162,16 +168,18 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet()
 
 Vector<Selector> Parser::parse_a_selector()
 {
-    auto comma_separated_lists = parse_as_comma_separated_list_of_component_values();
-    return parse_a_selector(comma_separated_lists);
+    return parse_a_selector(m_token_stream);
 }
 
-Vector<Selector> Parser::parse_a_selector(Vector<Vector<StyleComponentValueRule>>& parts)
+template<typename T>
+Vector<Selector> Parser::parse_a_selector(TokenStream<T>& tokens)
 {
+    auto comma_separated_lists = parse_as_comma_separated_list_of_component_values(tokens);
     Vector<Selector> selectors;
 
-    for (auto& selector_parts : parts) {
-        auto selector = parse_single_selector(selector_parts);
+    for (auto& selector_parts : comma_separated_lists) {
+        auto stream = TokenStream(selector_parts);
+        auto selector = parse_single_selector(stream);
         if (selector.has_value())
             selectors.append(selector.value());
     }
@@ -181,12 +189,19 @@ Vector<Selector> Parser::parse_a_selector(Vector<Vector<StyleComponentValueRule>
 
 Vector<Selector> Parser::parse_a_relative_selector()
 {
-    auto comma_separated_lists = parse_as_comma_separated_list_of_component_values();
+    return parse_a_relative_selector(m_token_stream);
+}
+
+template<typename T>
+Vector<Selector> Parser::parse_a_relative_selector(TokenStream<T>& tokens)
+{
+    auto comma_separated_lists = parse_as_comma_separated_list_of_component_values(tokens);
 
     Vector<Selector> selectors;
 
     for (auto& selector_parts : comma_separated_lists) {
-        auto selector = parse_single_selector(selector_parts, true);
+        auto stream = TokenStream(selector_parts);
+        auto selector = parse_single_selector(stream, true);
         if (selector.has_value())
             selectors.append(selector.value());
     }
@@ -194,26 +209,23 @@ Vector<Selector> Parser::parse_a_relative_selector()
     return selectors;
 }
 
-Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule> parts, bool is_relative)
+template<typename T>
+Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_relative)
 {
     // FIXME: Bring this all in line with the spec. https://www.w3.org/TR/selectors-4/
 
     Vector<CSS::Selector::ComplexSelector> selectors;
 
-    size_t index = 0;
-
     auto parse_simple_selector = [&]() -> Optional<CSS::Selector::SimpleSelector> {
-        if (index >= parts.size())
+        auto current_value = tokens.next_token();
+        if (current_value.is(Token::Type::EndOfFile))
             return {};
-
-        auto& current_value = parts.at(index);
-        index++;
 
         CSS::Selector::SimpleSelector::Type type;
         String value;
         // FIXME: Handle namespace prefixes.
 
-        if (current_value.is(Token::Type::Delim) && current_value.token().delim() == "*") {
+        if (current_value.is(Token::Type::Delim) && ((Token)current_value).delim() == "*") {
 
             // FIXME: Handle selectors like `*.foo`.
             type = CSS::Selector::SimpleSelector::Type::Universal;
@@ -223,18 +235,16 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
         }
 
         if (current_value.is(Token::Type::Hash)) {
-            if (current_value.token().m_hash_type != Token::HashType::Id) {
+            if (((Token)current_value).m_hash_type != Token::HashType::Id) {
                 dbgln("Selector contains hash token that is not an id: {}", current_value.to_string());
                 return {};
             }
             type = CSS::Selector::SimpleSelector::Type::Id;
-            value = current_value.token().m_value.to_string();
-        } else if (current_value.is(Token::Type::Delim) && current_value.token().delim() == ".") {
-            if (index >= parts.size())
+            value = ((Token)current_value).m_value.to_string();
+        } else if (current_value.is(Token::Type::Delim) && ((Token)current_value).delim() == ".") {
+            current_value = tokens.next_token();
+            if (current_value.is(Token::Type::EndOfFile))
                 return {};
-
-            current_value = parts.at(index);
-            index++;
 
             if (!current_value.is(Token::Type::Ident)) {
                 dbgln("Expected an ident after '.', got: {}", current_value.to_string());
@@ -243,7 +253,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
 
             type = CSS::Selector::SimpleSelector::Type::Class;
             value = current_value.to_string();
-        } else if (current_value.is(Token::Type::Delim) && current_value.token().delim() == "*") {
+        } else if (current_value.is(Token::Type::Delim) && ((Token)current_value).delim() == "*") {
             type = CSS::Selector::SimpleSelector::Type::Universal;
         } else {
             type = CSS::Selector::SimpleSelector::Type::TagName;
@@ -254,16 +264,19 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
         simple_selector.type = type;
         simple_selector.value = value;
 
-        if (index >= parts.size())
+        current_value = tokens.next_token();
+        if (current_value.is(Token::Type::EndOfFile))
             return simple_selector;
-
-        current_value = parts.at(index);
-        index++;
 
         // FIXME: Attribute selectors want to be their own Selector::SimpleSelector::Type according to the spec.
         if (current_value.is_block() && current_value.block().is_square()) {
 
             Vector<StyleComponentValueRule> const& attribute_parts = current_value.block().values();
+
+            if (attribute_parts.is_empty()) {
+                dbgln("CSS attribute selector is empty!");
+                return {};
+            }
 
             // FIXME: Handle namespace prefix for attribute name.
             auto& attribute_part = attribute_parts.first();
@@ -275,7 +288,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
             simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::HasAttribute;
             simple_selector.attribute_name = attribute_part.token().ident();
 
-            size_t attribute_index = 1;
+            size_t attribute_index = 0;
             while (attribute_parts.at(attribute_index).is(Token::Type::Whitespace)) {
                 attribute_index++;
                 if (attribute_index >= attribute_parts.size())
@@ -293,6 +306,11 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
                 attribute_index++;
             } else {
                 attribute_index++;
+                if (attribute_index >= attribute_parts.size()) {
+                    dbgln("Attribute selector ended part way through a match type.");
+                    return {};
+                }
+
                 auto& delim_second_part = attribute_parts.at(attribute_index);
                 if (!(delim_part.is(Token::Type::Delim) && delim_part.token().delim() == "=")) {
                     dbgln("Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_string(), delim_second_part.to_string());
@@ -325,6 +343,11 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
                 }
             }
 
+            if (attribute_index >= attribute_parts.size()) {
+                dbgln("Attribute selector ended without a value to match.");
+                return {};
+            }
+
             auto& value_part = attribute_parts.at(attribute_index);
             if (!value_part.is(Token::Type::Ident) && !value_part.is(Token::Type::String)) {
                 dbgln("Expected a string or ident for the value to match attribute against, got: '{}'", value_part.to_string());
@@ -340,16 +363,14 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
         if (current_value.is(Token::Type::Colon)) {
             bool is_pseudo = false;
 
-            current_value = parts.at(index);
-            index++;
-            if (index >= parts.size())
+            current_value = tokens.next_token();
+            if (current_value.is(Token::Type::EndOfFile))
                 return {};
 
             if (current_value.is(Token::Type::Colon)) {
                 is_pseudo = true;
-                current_value = parts.at(index);
-                index++;
-                if (index >= parts.size())
+                current_value = tokens.next_token();
+                if (current_value.is(Token::Type::EndOfFile))
                     return {};
             }
 
@@ -358,11 +379,12 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
             if (is_pseudo)
                 return {};
 
-            current_value = parts.at(index);
-            index++;
+            current_value = tokens.next_token();
+            if (current_value.is(Token::Type::EndOfFile))
+                return simple_selector;
 
             if (current_value.is(Token::Type::Ident)) {
-                auto pseudo_name = current_value.token().ident();
+                auto pseudo_name = ((Token)current_value).ident();
                 if (pseudo_name.equals_ignoring_case("link")) {
                     simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Link;
                 } else if (pseudo_name.equals_ignoring_case("visited")) {
@@ -428,29 +450,28 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
     auto parse_complex_selector = [&]() -> Optional<CSS::Selector::ComplexSelector> {
         auto relation = CSS::Selector::ComplexSelector::Relation::Descendant;
 
-        if (index >= parts.size())
-            return {};
-
-        auto current_value = parts.at(index);
+        auto current_value = tokens.peek_token();
         if (current_value.is(Token::Type::Delim)) {
-            auto delim = current_value.token().delim();
+            auto delim = ((Token)current_value).delim();
             if (delim == ">") {
                 relation = CSS::Selector::ComplexSelector::Relation::ImmediateChild;
-                index++;
+                tokens.next_token();
             } else if (delim == "+") {
                 relation = CSS::Selector::ComplexSelector::Relation::AdjacentSibling;
-                index++;
+                tokens.next_token();
             } else if (delim == "~") {
                 relation = CSS::Selector::ComplexSelector::Relation::GeneralSibling;
-                index++;
+                tokens.next_token();
             } else if (delim == "|") {
-                if (index + 1 >= parts.size())
+                tokens.next_token();
+
+                auto next = tokens.peek_token();
+                if (next.is(Token::Type::EndOfFile))
                     return {};
 
-                auto next = parts.at(index + 1);
                 if (next.is(Token::Type::Delim) && next.token().delim() == "|") {
                     relation = CSS::Selector::ComplexSelector::Relation::Column;
-                    index += 2;
+                    tokens.next_token();
                 }
             }
         }
@@ -476,14 +497,13 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
         if (complex.has_value())
             selectors.append(complex.value());
 
-        if (index >= parts.size())
+        auto current_value = tokens.peek_token();
+        if (current_value.is(Token::Type::EndOfFile))
             break;
-
-        auto current_value = parts.at(index);
         if (current_value.is(Token::Type::Comma))
             break;
 
-        index++;
+        tokens.next_token();
     }
 
     if (selectors.is_empty())
@@ -497,10 +517,16 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
 
 NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(bool top_level)
 {
+    return consume_a_list_of_rules(m_token_stream, top_level);
+}
+
+template<typename T>
+NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& tokens, bool top_level)
+{
     NonnullRefPtrVector<StyleRule> rules;
 
     for (;;) {
-        auto token = next_token();
+        auto token = tokens.next_token();
 
         if (token.is(Token::Type::Whitespace)) {
             continue;
@@ -515,8 +541,8 @@ NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(bool top_level)
                 continue;
             }
 
-            reconsume_current_input_token();
-            auto maybe_qualified = consume_a_qualified_rule();
+            tokens.reconsume_current_input_token();
+            auto maybe_qualified = consume_a_qualified_rule(tokens);
             if (maybe_qualified) {
                 rules.append(maybe_qualified.release_nonnull());
             }
@@ -525,13 +551,13 @@ NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(bool top_level)
         }
 
         if (token.is(Token::Type::AtKeyword)) {
-            reconsume_current_input_token();
-            rules.append(consume_an_at_rule());
+            tokens.reconsume_current_input_token();
+            rules.append(consume_an_at_rule(tokens));
             continue;
         }
 
-        reconsume_current_input_token();
-        auto maybe_qualified = consume_a_qualified_rule();
+        tokens.reconsume_current_input_token();
+        auto maybe_qualified = consume_a_qualified_rule(tokens);
         if (maybe_qualified) {
             rules.append(maybe_qualified.release_nonnull());
         }
@@ -542,13 +568,19 @@ NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(bool top_level)
 
 NonnullRefPtr<StyleRule> Parser::consume_an_at_rule()
 {
-    auto initial = next_token();
+    return consume_an_at_rule(m_token_stream);
+}
+
+template<typename T>
+NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
+{
+    auto initial = tokens.next_token();
 
     NonnullRefPtr<StyleRule> rule = create<StyleRule>(StyleRule::Type::At);
     rule->m_name = initial.m_value.to_string();
 
     for (;;) {
-        auto token = next_token();
+        auto token = tokens.next_token();
         if (token.is(Token::Type::Semicolon)) {
             return rule;
         }
@@ -559,24 +591,30 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule()
         }
 
         if (token.is(Token::Type::OpenCurly)) {
-            rule->m_block = consume_a_simple_block();
+            rule->m_block = consume_a_simple_block(tokens);
             return rule;
         }
 
         // how is "simple block with an associated token of <{-token>" a valid token?
 
-        reconsume_current_input_token();
-        auto value = consume_a_component_value();
+        tokens.reconsume_current_input_token();
+        auto value = consume_a_component_value(tokens);
         rule->m_prelude.append(value);
     }
 }
 
 RefPtr<StyleRule> Parser::consume_a_qualified_rule()
 {
+    return consume_a_qualified_rule(m_token_stream);
+}
+
+template<typename T>
+RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
+{
     NonnullRefPtr<StyleRule> rule = create<StyleRule>(StyleRule::Type::Qualified);
 
     for (;;) {
-        auto token = next_token();
+        auto token = tokens.next_token();
 
         if (token.is(Token::Type::EndOfFile)) {
             log_parse_error();
@@ -584,14 +622,14 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule()
         }
 
         if (token.is(Token::Type::OpenCurly)) {
-            rule->m_block = consume_a_simple_block();
+            rule->m_block = consume_a_simple_block(tokens);
             return rule;
         }
 
         // how is "simple block with an associated token of <{-token>" a valid token?
 
-        reconsume_current_input_token();
-        auto value = consume_a_component_value();
+        tokens.reconsume_current_input_token();
+        auto value = consume_a_component_value(tokens);
         rule->m_prelude.append(value);
     }
 
@@ -600,26 +638,38 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule()
 
 StyleComponentValueRule Parser::consume_a_component_value()
 {
-    auto token = next_token();
+    return consume_a_component_value(m_token_stream);
+}
+
+template<typename T>
+StyleComponentValueRule Parser::consume_a_component_value(TokenStream<T>& tokens)
+{
+    auto token = tokens.next_token();
 
     if (token.is(Token::Type::OpenCurly) || token.is(Token::Type::OpenSquare) || token.is(Token::Type::OpenParen))
-        return StyleComponentValueRule(consume_a_simple_block());
+        return StyleComponentValueRule(consume_a_simple_block(tokens));
 
     if (token.is(Token::Type::Function))
-        return StyleComponentValueRule(consume_a_function());
+        return StyleComponentValueRule(consume_a_function(tokens));
 
     return StyleComponentValueRule(token);
 }
 
 NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block()
 {
-    auto ending_token = current_token().mirror_variant();
+    return consume_a_simple_block(m_token_stream);
+}
+
+template<typename T>
+NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tokens)
+{
+    auto ending_token = ((Token)tokens.current_token()).mirror_variant();
 
     NonnullRefPtr<StyleBlockRule> block = create<StyleBlockRule>();
-    block->m_token = current_token();
+    block->m_token = tokens.current_token();
 
     for (;;) {
-        auto token = next_token();
+        auto token = tokens.next_token();
 
         if (token.is(ending_token)) {
             return block;
@@ -630,8 +680,8 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block()
             return block;
         }
 
-        reconsume_current_input_token();
-        auto value = consume_a_component_value();
+        tokens.reconsume_current_input_token();
+        auto value = consume_a_component_value(tokens);
         if (value.is(Token::Type::Whitespace))
             continue;
 
@@ -641,10 +691,18 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block()
 
 NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function()
 {
-    NonnullRefPtr<StyleFunctionRule> function = create<StyleFunctionRule>(current_token().m_value.to_string());
+    return consume_a_function(m_token_stream);
+}
+
+template<typename T>
+NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& tokens)
+{
+    auto name_ident = tokens.current_token();
+    VERIFY(name_ident.is(Token::Type::Function));
+    NonnullRefPtr<StyleFunctionRule> function = create<StyleFunctionRule>(((Token)name_ident).m_value.to_string());
 
     for (;;) {
-        auto token = next_token();
+        auto token = tokens.next_token();
         if (token.is(Token::Type::CloseParen)) {
             return function;
         }
@@ -654,8 +712,8 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function()
             return function;
         }
 
-        reconsume_current_input_token();
-        auto value = consume_a_component_value();
+        tokens.reconsume_current_input_token();
+        auto value = consume_a_component_value(tokens);
         if (value.is(Token::Type::Whitespace))
             continue;
 
@@ -664,44 +722,37 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function()
 
     return function;
 }
-Optional<StyleDeclarationRule> Parser::consume_a_declaration(Vector<StyleComponentValueRule>)
-{
-    TODO();
-}
 
 Optional<StyleDeclarationRule> Parser::consume_a_declaration()
 {
-    auto token = next_token();
+    return consume_a_declaration(m_token_stream);
+}
+
+template<typename T>
+Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tokens)
+{
+    auto token = tokens.next_token();
 
     StyleDeclarationRule declaration;
-    declaration.m_name = token.m_value.to_string();
+    VERIFY(token.is(Token::Type::Ident));
+    declaration.m_name = ((Token)token).ident();
 
-    for (;;) {
-        if (!peek_token().is(Token::Type::Whitespace)) {
-            break;
-        }
-        next_token();
-    }
+    tokens.skip_whitespace();
 
-    auto colon = next_token();
+    auto colon = tokens.next_token();
 
     if (!colon.is(Token::Type::Colon)) {
         log_parse_error();
         return {};
     }
 
-    for (;;) {
-        if (!peek_token().is(Token::Type::Whitespace)) {
-            break;
-        }
-        next_token();
-    }
+    tokens.skip_whitespace();
 
     for (;;) {
-        if (peek_token().is(Token::Type::EndOfFile)) {
+        if (tokens.peek_token().is(Token::Type::EndOfFile)) {
             break;
         }
-        declaration.m_values.append(consume_a_component_value());
+        declaration.m_values.append(consume_a_component_value(tokens));
     }
 
     auto second_last = declaration.m_values.at(declaration.m_values.size() - 2);
@@ -733,10 +784,16 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration()
 
 Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations()
 {
+    return consume_a_list_of_declarations(m_token_stream);
+}
+
+template<typename T>
+Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T>& tokens)
+{
     Vector<DeclarationOrAtRule> list;
 
     for (;;) {
-        auto token = next_token();
+        auto token = tokens.next_token();
         if (token.is(Token::Type::Whitespace) || token.is(Token::Type::Semicolon)) {
             continue;
         }
@@ -746,8 +803,8 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations()
         }
 
         if (token.is(Token::Type::AtKeyword)) {
-            reconsume_current_input_token();
-            list.append(DeclarationOrAtRule(consume_an_at_rule()));
+            tokens.reconsume_current_input_token();
+            list.append(DeclarationOrAtRule(consume_an_at_rule(tokens)));
             continue;
         }
 
@@ -756,24 +813,25 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations()
             temp.append(StyleComponentValueRule(token));
 
             for (;;) {
-                auto peek = peek_token();
+                auto peek = tokens.peek_token();
                 if (peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile)) {
                     break;
                 }
-                temp.append(consume_a_component_value());
+                temp.append(consume_a_component_value(tokens));
             }
 
-            auto maybe_declaration = consume_a_declaration(temp);
+            auto token_stream = TokenStream(temp);
+            auto maybe_declaration = consume_a_declaration(token_stream);
             if (maybe_declaration.has_value()) {
                 list.append(DeclarationOrAtRule(maybe_declaration.value()));
             }
         }
 
         log_parse_error();
-        reconsume_current_input_token();
-        auto peek = peek_token();
+        tokens.reconsume_current_input_token();
+        auto peek = tokens.peek_token();
         if (!(peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))) {
-            consume_a_component_value();
+            consume_a_component_value(tokens);
         }
     }
 
@@ -782,40 +840,34 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations()
 
 RefPtr<CSSRule> Parser::parse_as_rule()
 {
+    return parse_as_rule(m_token_stream);
+}
+
+template<typename T>
+RefPtr<CSSRule> Parser::parse_as_rule(TokenStream<T>& tokens)
+{
     RefPtr<CSSRule> rule;
 
-    for (;;) {
-        auto maybe_whitespace = peek_token();
-        if (!maybe_whitespace.is(Token::Type::Whitespace)) {
-            break;
-        }
-        next_token();
-    }
+    tokens.skip_whitespace();
 
-    auto token = peek_token();
+    auto token = tokens.peek_token();
 
     if (token.is(Token::Type::EndOfFile)) {
         return {};
     } else if (token.is(Token::Type::AtKeyword)) {
-        auto at_rule = consume_an_at_rule();
+        auto at_rule = consume_an_at_rule(tokens);
         rule = convert_rule(at_rule);
     } else {
-        auto qualified_rule = consume_a_qualified_rule();
+        auto qualified_rule = consume_a_qualified_rule(tokens);
         if (!qualified_rule)
             return {};
 
         rule = convert_rule(*qualified_rule);
     }
 
-    for (;;) {
-        auto maybe_whitespace = peek_token();
-        if (!maybe_whitespace.is(Token::Type::Whitespace)) {
-            break;
-        }
-        next_token();
-    }
+    tokens.skip_whitespace();
 
-    auto maybe_eof = peek_token();
+    auto maybe_eof = tokens.peek_token();
     if (maybe_eof.is(Token::Type::EndOfFile)) {
         return rule;
     }
@@ -825,7 +877,13 @@ RefPtr<CSSRule> Parser::parse_as_rule()
 
 NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules()
 {
-    auto parsed_rules = consume_a_list_of_rules(false);
+    return parse_as_list_of_rules(m_token_stream);
+}
+
+template<typename T>
+NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules(TokenStream<T>& tokens)
+{
+    auto parsed_rules = consume_a_list_of_rules(tokens, false);
     NonnullRefPtrVector<CSSRule> rules;
 
     for (auto& rule : parsed_rules) {
@@ -839,75 +897,82 @@ NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules()
 
 Optional<StyleProperty> Parser::parse_as_declaration()
 {
-    for (;;) {
-        auto maybe_whitespace = peek_token();
-        if (!maybe_whitespace.is(Token::Type::Whitespace)) {
-            break;
-        }
-        next_token();
-    }
+    return parse_as_declaration(m_token_stream);
+}
 
-    auto token = peek_token();
+template<typename T>
+Optional<StyleProperty> Parser::parse_as_declaration(TokenStream<T>& tokens)
+{
+    tokens.skip_whitespace();
+
+    auto token = tokens.peek_token();
 
     if (!token.is(Token::Type::Ident)) {
         return {};
     }
 
-    auto declaration = consume_a_declaration();
-    // FIXME: Return the declaration.
+    auto declaration = consume_a_declaration(tokens);
+    // FIXME: Return declaration
+
     return {};
 }
-Vector<StyleProperty> Parser::parse_as_list_of_declarations()
-{
-    auto declarations = consume_a_list_of_declarations();
 
+RefPtr<CSSStyleDeclaration> Parser::parse_as_list_of_declarations()
+{
+    return parse_as_list_of_declarations(m_token_stream);
+}
+
+template<typename T>
+RefPtr<CSSStyleDeclaration> Parser::parse_as_list_of_declarations(TokenStream<T>&)
+{
     // FIXME: Return the declarations.
     return {};
 }
 
 Optional<StyleComponentValueRule> Parser::parse_as_component_value()
 {
-    for (;;) {
-        auto maybe_whitespace = peek_token();
-        if (!maybe_whitespace.is(Token::Type::Whitespace)) {
-            break;
-        }
-        next_token();
-    }
+    return parse_as_component_value(m_token_stream);
+}
 
-    auto token = peek_token();
+template<typename T>
+Optional<StyleComponentValueRule> Parser::parse_as_component_value(TokenStream<T>& tokens)
+{
+    tokens.skip_whitespace();
+
+    auto token = tokens.peek_token();
 
     if (token.is(Token::Type::EndOfFile)) {
         return {};
     }
 
-    auto value = consume_a_component_value();
+    auto value = consume_a_component_value(tokens);
 
-    for (;;) {
-        auto maybe_whitespace = peek_token();
-        if (!maybe_whitespace.is(Token::Type::Whitespace)) {
-            break;
-        }
-        next_token();
-    }
+    tokens.skip_whitespace();
 
-    auto maybe_eof = peek_token();
+    auto maybe_eof = tokens.peek_token();
     if (maybe_eof.is(Token::Type::EndOfFile)) {
         return value;
     }
 
     return {};
 }
+
 Vector<StyleComponentValueRule> Parser::parse_as_list_of_component_values()
+{
+    return parse_as_list_of_component_values(m_token_stream);
+}
+
+template<typename T>
+Vector<StyleComponentValueRule> Parser::parse_as_list_of_component_values(TokenStream<T>& tokens)
 {
     Vector<StyleComponentValueRule> rules;
 
     for (;;) {
-        if (peek_token().is(Token::Type::EndOfFile)) {
+        if (tokens.peek_token().is(Token::Type::EndOfFile)) {
             break;
         }
 
-        rules.append(consume_a_component_value());
+        rules.append(consume_a_component_value(tokens));
     }
 
     return rules;
@@ -915,11 +980,17 @@ Vector<StyleComponentValueRule> Parser::parse_as_list_of_component_values()
 
 Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of_component_values()
 {
+    return parse_as_comma_separated_list_of_component_values(m_token_stream);
+}
+
+template<typename T>
+Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of_component_values(TokenStream<T>& tokens)
+{
     Vector<Vector<StyleComponentValueRule>> lists;
     lists.append({});
 
     for (;;) {
-        auto next = next_token();
+        auto next = tokens.next_token();
 
         if (next.is(Token::Type::Comma)) {
             lists.append({});
@@ -928,17 +999,9 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of
             break;
         }
 
-        reconsume_current_input_token();
-        auto component_value = consume_a_component_value();
+        tokens.reconsume_current_input_token();
+        auto component_value = consume_a_component_value(tokens);
         lists.last().append(component_value);
-    }
-
-    for (auto& list : lists) {
-        if (!list.is_empty() && list.first().is(Token::Type::Whitespace))
-            list.take_first();
-
-        if (!list.is_empty() && list.last().is(Token::Type::Whitespace))
-            list.take_last();
     }
 
     return lists;

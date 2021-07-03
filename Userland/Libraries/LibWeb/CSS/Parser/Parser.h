@@ -70,31 +70,55 @@ public:
 
     // The normal parser entry point, for parsing stylesheets.
     NonnullRefPtr<CSSStyleSheet> parse_as_stylesheet();
+    template<typename T>
+    NonnullRefPtr<CSSStyleSheet> parse_as_stylesheet(TokenStream<T>&);
+
     // For the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
     NonnullRefPtrVector<CSSRule> parse_as_list_of_rules();
+    template<typename T>
+    NonnullRefPtrVector<CSSRule> parse_as_list_of_rules(TokenStream<T>&);
+
     // For use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
     RefPtr<CSSRule> parse_as_rule();
+    template<typename T>
+    RefPtr<CSSRule> parse_as_rule(TokenStream<T>&);
+
     // Used in @supports conditions. [CSS3-CONDITIONAL]
     Optional<StyleProperty> parse_as_declaration();
+    template<typename T>
+    Optional<StyleProperty> parse_as_declaration(TokenStream<T>&);
+
     // For the contents of a style attribute, which parses text into the contents of a single style rule.
-    Vector<StyleProperty> parse_as_list_of_declarations();
+    RefPtr<CSSStyleDeclaration> parse_as_list_of_declarations();
+    template<typename T>
+    RefPtr<CSSStyleDeclaration> parse_as_list_of_declarations(TokenStream<T>&);
+
     // For things that need to consume a single value, like the parsing rules for attr().
     Optional<StyleComponentValueRule> parse_as_component_value();
+    template<typename T>
+    Optional<StyleComponentValueRule> parse_as_component_value(TokenStream<T>&);
+
     // For the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
     Vector<StyleComponentValueRule> parse_as_list_of_component_values();
+    template<typename T>
+    Vector<StyleComponentValueRule> parse_as_list_of_component_values(TokenStream<T>&);
 
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
+    template<typename T>
+    Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values(TokenStream<T>&);
 
-    Optional<Selector> parse_single_selector(Vector<StyleComponentValueRule> parts, bool is_relative = false);
+    template<typename T>
+    Optional<Selector> parse_single_selector(TokenStream<T>&, bool is_relative = false);
 
     // FIXME: https://www.w3.org/TR/selectors-4/
     // Contrary to the name, these parse a comma-separated list of selectors, according to the spec.
     Vector<Selector> parse_a_selector();
-    Vector<Selector> parse_a_selector(Vector<Vector<StyleComponentValueRule>>&);
+    template<typename T>
+    Vector<Selector> parse_a_selector(TokenStream<T>&);
+
     Vector<Selector> parse_a_relative_selector();
-    bool match_a_selector_against_an_element() { return false; }
-    bool match_a_selector_against_a_pseudo_element() { return false; }
-    bool match_a_selector_against_a_tree() { return false; }
+    template<typename T>
+    Vector<Selector> parse_a_relative_selector(TokenStream<T>&);
 
     // FIXME: https://drafts.csswg.org/css-backgrounds-3/
     static Optional<String> as_valid_background_repeat(String input) { return input; }
@@ -107,20 +131,37 @@ public:
     static Optional<String> as_valid_border_image_repeat(String input) { return input; }
 
 private:
-    Token next_token() { return m_token_stream.next_token(); }
-    Token peek_token() { return m_token_stream.peek_token(); }
-    Token current_token() { return m_token_stream.current_token(); }
-    void reconsume_current_input_token() { m_token_stream.reconsume_current_input_token(); }
+    [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(bool top_level);
+    template<typename T>
+    [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(TokenStream<T>&, bool top_level);
 
-    NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(bool top_level);
-    NonnullRefPtr<StyleRule> consume_an_at_rule();
-    RefPtr<StyleRule> consume_a_qualified_rule();
-    Vector<DeclarationOrAtRule> consume_a_list_of_declarations();
-    Optional<StyleDeclarationRule> consume_a_declaration(Vector<StyleComponentValueRule>);
+    [[nodiscard]] NonnullRefPtr<StyleRule> consume_an_at_rule();
+    template<typename T>
+    [[nodiscard]] NonnullRefPtr<StyleRule> consume_an_at_rule(TokenStream<T>&);
+
+    [[nodiscard]] RefPtr<StyleRule> consume_a_qualified_rule();
+    template<typename T>
+    [[nodiscard]] RefPtr<StyleRule> consume_a_qualified_rule(TokenStream<T>&);
+
+    [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_list_of_declarations();
+    template<typename T>
+    [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_list_of_declarations(TokenStream<T>&);
+
     Optional<StyleDeclarationRule> consume_a_declaration();
+    template<typename T>
+    Optional<StyleDeclarationRule> consume_a_declaration(TokenStream<T>&);
+
     StyleComponentValueRule consume_a_component_value();
+    template<typename T>
+    StyleComponentValueRule consume_a_component_value(TokenStream<T>&);
+
     NonnullRefPtr<StyleBlockRule> consume_a_simple_block();
+    template<typename T>
+    NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
+
     NonnullRefPtr<StyleFunctionRule> consume_a_function();
+    template<typename T>
+    NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
 
     RefPtr<CSSRule> convert_rule(NonnullRefPtr<StyleRule>);
 
