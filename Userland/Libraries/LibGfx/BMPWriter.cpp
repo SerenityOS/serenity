@@ -10,12 +10,6 @@
 
 namespace Gfx {
 
-constexpr int bytes_per_pixel = 3;
-
-#define FILE_HEADER_SIZE 14
-#define IMAGE_INFORMATION_SIZE 40
-#define PIXEL_DATA_OFFSET FILE_HEADER_SIZE + IMAGE_INFORMATION_SIZE
-
 class OutputStreamer {
 public:
     OutputStreamer(u8* data)
@@ -49,7 +43,7 @@ private:
     u8* m_data;
 };
 
-static ByteBuffer write_pixel_data(const RefPtr<Bitmap> bitmap, int pixel_row_data_size)
+static ByteBuffer write_pixel_data(const RefPtr<Bitmap> bitmap, int pixel_row_data_size, int bytes_per_pixel, bool include_alpha_channel)
 {
     int image_size = pixel_row_data_size * bitmap->height();
     auto buffer = ByteBuffer::create_uninitialized(image_size);
@@ -62,6 +56,8 @@ static ByteBuffer write_pixel_data(const RefPtr<Bitmap> bitmap, int pixel_row_da
             row[x * bytes_per_pixel + 0] = pixel.blue();
             row[x * bytes_per_pixel + 1] = pixel.green();
             row[x * bytes_per_pixel + 2] = pixel.red();
+            if (include_alpha_channel)
+                row[x * bytes_per_pixel + 3] = pixel.alpha();
         }
     }
 
@@ -71,41 +67,74 @@ static ByteBuffer write_pixel_data(const RefPtr<Bitmap> bitmap, int pixel_row_da
 static ByteBuffer compress_pixel_data(const ByteBuffer& pixel_data, BMPWriter::Compression compression)
 {
     switch (compression) {
-    case BMPWriter::Compression::RGB:
+    case BMPWriter::Compression::BI_BITFIELDS:
+    case BMPWriter::Compression::BI_RGB:
         return pixel_data;
     }
 
     VERIFY_NOT_REACHED();
 }
 
-ByteBuffer BMPWriter::dump(const RefPtr<Bitmap> bitmap)
+ByteBuffer BMPWriter::dump(const RefPtr<Bitmap> bitmap, DibHeader dib_header)
 {
-    int pixel_row_data_size = (bytes_per_pixel * 8 * bitmap->width() + 31) / 32 * 4;
-    int image_size = pixel_row_data_size * bitmap->height();
-    auto buffer = ByteBuffer::create_uninitialized(PIXEL_DATA_OFFSET);
 
-    auto pixel_data = write_pixel_data(bitmap, pixel_row_data_size);
+    switch (dib_header) {
+    case DibHeader::Info:
+        m_compression = Compression::BI_RGB;
+        m_bytes_per_pixel = 3;
+        m_include_alpha_channel = false;
+        break;
+    case DibHeader::V3:
+    case DibHeader::V4:
+        m_compression = Compression::BI_BITFIELDS;
+        m_bytes_per_pixel = 4;
+        m_include_alpha_channel = true;
+    }
+
+    const size_t file_header_size = 14;
+    size_t pixel_data_offset = file_header_size + (u32)dib_header;
+
+    int pixel_row_data_size = (m_bytes_per_pixel * 8 * bitmap->width() + 31) / 32 * 4;
+    int image_size = pixel_row_data_size * bitmap->height();
+    auto buffer = ByteBuffer::create_uninitialized(pixel_data_offset);
+
+    auto pixel_data = write_pixel_data(bitmap, pixel_row_data_size, m_bytes_per_pixel, m_include_alpha_channel);
     pixel_data = compress_pixel_data(pixel_data, m_compression);
 
-    int file_size = PIXEL_DATA_OFFSET + pixel_data.size();
+    size_t file_size = pixel_data_offset + pixel_data.size();
     OutputStreamer streamer(buffer.data());
     streamer.write_u8('B');
     streamer.write_u8('M');
     streamer.write_u32(file_size);
     streamer.write_u32(0);
-    streamer.write_u32(PIXEL_DATA_OFFSET);
+    streamer.write_u32(pixel_data_offset);
 
-    streamer.write_u32(IMAGE_INFORMATION_SIZE); // Header size
-    streamer.write_i32(bitmap->width());        // ImageWidth
-    streamer.write_i32(bitmap->height());       // ImageHeight
-    streamer.write_u16(1);                      // Planes
-    streamer.write_u16(bytes_per_pixel * 8);    // BitsPerPixel
-    streamer.write_u32((u32)m_compression);     // Compression
-    streamer.write_u32(image_size);             // ImageSize
-    streamer.write_i32(0);                      // XpixelsPerMeter
-    streamer.write_i32(0);                      // YpixelsPerMeter
-    streamer.write_u32(0);                      // TotalColors
-    streamer.write_u32(0);                      // ImportantColors
+    streamer.write_u32((u32)dib_header);       // Header size
+    streamer.write_i32(bitmap->width());       // ImageWidth
+    streamer.write_i32(bitmap->height());      // ImageHeight
+    streamer.write_u16(1);                     // Planes
+    streamer.write_u16(m_bytes_per_pixel * 8); // BitsPerPixel
+    streamer.write_u32((u32)m_compression);    // Compression
+    streamer.write_u32(image_size);            // ImageSize
+    streamer.write_i32(0);                     // XpixelsPerMeter
+    streamer.write_i32(0);                     // YpixelsPerMeter
+    streamer.write_u32(0);                     // TotalColors
+    streamer.write_u32(0);                     // ImportantColors
+
+    if (dib_header == DibHeader::V3 || dib_header == DibHeader::V4) {
+        streamer.write_u32(0x00ff0000); // Red bitmask
+        streamer.write_u32(0x0000ff00); // Green bitmask
+        streamer.write_u32(0x000000ff); // Blue bitmask
+        streamer.write_u32(0xff000000); // Alpha bitmask
+    }
+
+    if (dib_header == DibHeader::V4) {
+        streamer.write_u32(0); // Colorspace
+
+        for (int i = 0; i < 12; i++) {
+            streamer.write_u32(0); // Endpoints
+        }
+    }
 
     buffer.append(pixel_data.data(), pixel_data.size());
     return buffer;
