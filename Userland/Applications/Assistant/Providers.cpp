@@ -6,8 +6,10 @@
 
 #include "Providers.h"
 #include "FuzzyMatch.h"
+#include <AK/LexicalPath.h>
 #include <AK/URL.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
@@ -18,6 +20,7 @@
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <unistd.h>
@@ -151,28 +154,34 @@ void FileProvider::build_filesystem_cache()
     m_work_queue.enqueue("/");
 
     Threading::BackgroundAction<int>::create([this](auto&) {
+        String slash = "/";
+        Core::ElapsedTimer timer;
+        timer.start();
         while (!m_work_queue.is_empty()) {
-            auto start = m_work_queue.dequeue();
-            Core::DirIterator di(start, Core::DirIterator::SkipDots);
+            auto base_directory = m_work_queue.dequeue();
+            Core::DirIterator di(base_directory, Core::DirIterator::SkipDots);
 
             while (di.has_next()) {
-                auto path = di.next_full_path();
+                auto path = di.next_path();
                 struct stat st = {};
-                if (lstat(path.characters(), &st) < 0) {
-                    perror("stat");
+                if (fstatat(di.fd(), path.characters(), &st, AT_SYMLINK_NOFOLLOW) < 0) {
+                    perror("fstatat");
                     continue;
                 }
 
                 if (S_ISLNK(st.st_mode))
                     continue;
 
-                m_full_path_cache.append(path);
+                auto full_path = LexicalPath::join(slash, base_directory, path).string();
+
+                m_full_path_cache.append(full_path);
 
                 if (S_ISDIR(st.st_mode)) {
-                    m_work_queue.enqueue(path);
+                    m_work_queue.enqueue(full_path);
                 }
             }
         }
+        dbgln("Built cache in {} ms", timer.elapsed());
 
         return 0; }, [this](auto) { m_building_cache = false; });
 }
