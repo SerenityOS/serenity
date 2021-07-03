@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <LibWeb/CSS/Parser/AtStyleRule.h>
 #include <LibWeb/CSS/Parser/StyleDeclarationRule.h>
+#include <LibWeb/CSS/Parser/StyleRule.h>
 
 namespace Web::CSS {
 
@@ -15,7 +15,7 @@ class DeclarationOrAtRule {
     friend class Parser;
 
 public:
-    explicit DeclarationOrAtRule(RefPtr<AtStyleRule> at);
+    explicit DeclarationOrAtRule(RefPtr<StyleRule> at);
     explicit DeclarationOrAtRule(StyleDeclarationRule declaration);
     ~DeclarationOrAtRule();
 
@@ -28,7 +28,7 @@ public:
 
 private:
     DeclarationType m_type;
-    RefPtr<AtStyleRule> m_at;
+    RefPtr<StyleRule> m_at;
     StyleDeclarationRule m_declaration;
 };
 

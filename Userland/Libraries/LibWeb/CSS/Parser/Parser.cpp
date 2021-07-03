@@ -10,13 +10,12 @@
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
-#include <LibWeb/CSS/Parser/AtStyleRule.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
-#include <LibWeb/CSS/Parser/QualifiedStyleRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
+#include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
@@ -453,9 +452,9 @@ void Parser::reconsume_current_input_token()
     --m_iterator_offset;
 }
 
-NonnullRefPtrVector<QualifiedStyleRule> Parser::consume_a_list_of_rules(bool top_level)
+NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(bool top_level)
 {
-    NonnullRefPtrVector<QualifiedStyleRule> rules;
+    NonnullRefPtrVector<StyleRule> rules;
 
     for (;;) {
         auto token = next_token();
@@ -498,12 +497,12 @@ NonnullRefPtrVector<QualifiedStyleRule> Parser::consume_a_list_of_rules(bool top
     return rules;
 }
 
-NonnullRefPtr<AtStyleRule> Parser::consume_an_at_rule()
+NonnullRefPtr<StyleRule> Parser::consume_an_at_rule()
 {
     auto initial = next_token();
 
-    AtStyleRule rule;
-    rule.m_name = initial.m_value.to_string();
+    NonnullRefPtr<StyleRule> rule = create<StyleRule>(StyleRule::Type::At);
+    rule->m_name = initial.m_value.to_string();
 
     for (;;) {
         auto token = next_token();
@@ -517,7 +516,7 @@ NonnullRefPtr<AtStyleRule> Parser::consume_an_at_rule()
         }
 
         if (token.is_open_curly()) {
-            rule.m_block = consume_a_simple_block();
+            rule->m_block = consume_a_simple_block();
             return rule;
         }
 
@@ -525,13 +524,13 @@ NonnullRefPtr<AtStyleRule> Parser::consume_an_at_rule()
 
         reconsume_current_input_token();
         auto value = consume_a_component_value();
-        rule.m_prelude.append(value);
+        rule->m_prelude.append(value);
     }
 }
 
-RefPtr<QualifiedStyleRule> Parser::consume_a_qualified_rule()
+RefPtr<StyleRule> Parser::consume_a_qualified_rule()
 {
-    NonnullRefPtr<QualifiedStyleRule> rule = create<QualifiedStyleRule>();
+    NonnullRefPtr<StyleRule> rule = create<StyleRule>(StyleRule::Type::Qualified);
 
     for (;;) {
         auto token = next_token();
@@ -917,7 +916,7 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of
     return lists;
 }
 
-RefPtr<CSSRule> Parser::convert_rule(NonnullRefPtr<QualifiedStyleRule>)
+RefPtr<CSSRule> Parser::convert_rule(NonnullRefPtr<StyleRule>)
 {
     return {};
 }

@@ -5,20 +5,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/CSS/Parser/AtStyleRule.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
-#include <LibWeb/CSS/Parser/QualifiedStyleRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Parser/StyleDeclarationRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
+#include <LibWeb/CSS/Parser/StyleRule.h>
 
 namespace Web::CSS {
 
-AtStyleRule::AtStyleRule() { }
-AtStyleRule::~AtStyleRule() { }
-
-DeclarationOrAtRule::DeclarationOrAtRule(RefPtr<AtStyleRule> at)
+DeclarationOrAtRule::DeclarationOrAtRule(RefPtr<StyleRule> at)
     : m_type(DeclarationType::At)
     , m_at(move(at))
 {
@@ -30,8 +26,11 @@ DeclarationOrAtRule::DeclarationOrAtRule(StyleDeclarationRule declaration)
 }
 DeclarationOrAtRule::~DeclarationOrAtRule() { }
 
-QualifiedStyleRule::QualifiedStyleRule() { }
-QualifiedStyleRule::~QualifiedStyleRule() { }
+StyleRule::StyleRule(StyleRule::Type type)
+    : m_type(type)
+{
+}
+StyleRule::~StyleRule() { }
 
 StyleBlockRule::StyleBlockRule() { }
 StyleBlockRule::~StyleBlockRule() { }
@@ -77,17 +76,6 @@ void append_raw(StringBuilder& builder, SeparatorType& separator, CollectionType
     }
 }
 
-String AtStyleRule::to_string() const
-{
-    StringBuilder builder;
-    builder.append("@");
-    builder.append(m_name);
-
-    builder.append(QualifiedStyleRule::to_string());
-
-    return builder.to_string();
-}
-
 String DeclarationOrAtRule::to_string() const
 {
     StringBuilder builder;
@@ -104,12 +92,21 @@ String DeclarationOrAtRule::to_string() const
     return builder.to_string();
 }
 
-String QualifiedStyleRule::to_string() const
+String StyleRule::to_string() const
 {
     StringBuilder builder;
 
+    if (m_type == Type::At) {
+        builder.append("@");
+        builder.append(m_name);
+    }
+
     append_with_to_string(builder, " ", m_prelude);
-    builder.append(m_block->to_string());
+
+    if (m_block)
+        builder.append(m_block->to_string());
+    else
+        builder.append(';');
 
     return builder.to_string();
 }
