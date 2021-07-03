@@ -6,7 +6,7 @@
  */
 
 #include <AK/Function.h>
-#include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/Error.h>
@@ -47,42 +47,53 @@ void ArrayConstructor::initialize(GlobalObject& global_object)
 // 23.1.1.1 Array ( ...values ), https://tc39.es/ecma262/#sec-array
 Value ArrayConstructor::call()
 {
-    if (vm().argument_count() <= 0)
-        return Array::create(global_object());
-
-    if (vm().argument_count() == 1 && vm().argument(0).is_number()) {
-        auto length = vm().argument(0);
-        auto int_length = length.to_u32(global_object());
-        if (int_length != length.as_double()) {
-            vm().throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "array");
-            return {};
-        }
-        auto* array = Array::create(global_object());
-        array->indexed_properties().set_array_like_size(int_length);
-        return array;
-    }
-
-    auto* array = Array::create(global_object());
-    for (size_t i = 0; i < vm().argument_count(); ++i)
-        array->indexed_properties().append(vm().argument(i));
-    return array;
+    return construct(*this);
 }
 
 // 23.1.1.1 Array ( ...values ), https://tc39.es/ecma262/#sec-array
-Value ArrayConstructor::construct(FunctionObject&)
+Value ArrayConstructor::construct(FunctionObject& new_target)
 {
-    return call();
+    auto& vm = this->vm();
+
+    auto* proto = get_prototype_from_constructor(global_object(), new_target, &GlobalObject::array_prototype);
+    if (vm.exception())
+        return {};
+
+    if (vm.argument_count() == 0)
+        return Array::create(global_object(), 0, proto);
+
+    if (vm.argument_count() == 1) {
+        auto length = vm.argument(0);
+        auto* array = Array::create(global_object(), 0, proto);
+        size_t int_length;
+        if (!length.is_number()) {
+            array->define_property(0, length);
+            int_length = 1;
+        } else {
+            int_length = length.to_u32(global_object());
+            if (int_length != length.as_double()) {
+                vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "array");
+                return {};
+            }
+        }
+        array->put(vm.names.length, Value(int_length));
+        return array;
+    }
+
+    auto* array = Array::create(global_object(), vm.argument_count(), proto);
+    if (vm.exception())
+        return {};
+
+    for (size_t k = 0; k < vm.argument_count(); ++k)
+        array->define_property(k, vm.argument(k));
+
+    return array;
 }
 
 // 23.1.2.1 Array.from ( items [ , mapfn [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-array.from
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 {
-    auto value = vm.argument(0);
-    auto object = value.to_object(global_object);
-    if (!object)
-        return {};
-
-    auto* array = Array::create(global_object);
+    auto constructor = vm.this_value(global_object);
 
     FunctionObject* map_fn = nullptr;
     if (!vm.argument(1).is_undefined()) {
@@ -96,52 +107,106 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
     auto this_arg = vm.argument(2);
 
-    // Array.from() lets you create Arrays from:
-    if (auto size = object->indexed_properties().array_like_size()) {
-        // * array-like objects (objects with a length property and indexed elements)
-        MarkedValueList elements(vm.heap());
-        elements.ensure_capacity(size);
-        for (size_t i = 0; i < size; ++i) {
-            if (map_fn) {
-                auto element = object->get(i);
-                if (vm.exception())
-                    return {};
-
-                auto map_fn_result = vm.call(*map_fn, this_arg, element, Value((i32)i));
-                if (vm.exception())
-                    return {};
-
-                elements.append(map_fn_result);
-            } else {
-                elements.append(object->get(i));
-                if (vm.exception())
-                    return {};
-            }
-        }
-        array->set_indexed_property_elements(move(elements));
-    } else {
-        // * iterable objects
-        i32 i = 0;
-        get_iterator_values(global_object, value, [&](Value element) {
+    auto items = vm.argument(0);
+    auto using_iterator = items.get_method(global_object, *vm.well_known_symbol_iterator());
+    if (vm.exception())
+        return {};
+    if (using_iterator) {
+        Value array;
+        if (constructor.is_constructor()) {
+            array = vm.construct(constructor.as_function(), constructor.as_function(), {});
             if (vm.exception())
-                return IterationDecision::Break;
+                return {};
+        } else {
+            array = Array::create(global_object, 0);
+        }
+        auto iterator = get_iterator(global_object, items, IteratorHint::Sync, using_iterator);
+        if (vm.exception())
+            return {};
 
-            if (map_fn) {
-                auto map_fn_result = vm.call(*map_fn, this_arg, element, Value(i));
-                i++;
-                if (vm.exception())
-                    return IterationDecision::Break;
+        auto& array_object = array.as_object();
 
-                array->indexed_properties().append(map_fn_result);
-            } else {
-                array->indexed_properties().append(element);
+        size_t k = 0;
+        while (true) {
+            if (k >= MAX_ARRAY_LIKE_INDEX) {
+                vm.throw_exception<TypeError>(global_object, ErrorType::ArrayMaxSize);
+                iterator_close(*iterator);
+                return {};
             }
 
-            return IterationDecision::Continue;
-        });
+            auto next = iterator_step(global_object, *iterator);
+            if (vm.exception())
+                return {};
+
+            if (!next) {
+                array_object.put(vm.names.length, Value(k));
+                if (vm.exception())
+                    return {};
+                return array;
+            }
+
+            auto next_value = iterator_value(global_object, *next);
+            if (vm.exception())
+                return {};
+
+            Value mapped_value;
+            if (map_fn) {
+                mapped_value = vm.call(*map_fn, this_arg, next_value, Value(k));
+                if (vm.exception()) {
+                    iterator_close(*iterator);
+                    return {};
+                }
+            } else {
+                mapped_value = next_value;
+            }
+
+            array_object.define_property(k, mapped_value);
+            if (vm.exception()) {
+                iterator_close(*iterator);
+                return {};
+            }
+
+            ++k;
+        }
+    }
+
+    auto* array_like = items.to_object(global_object);
+
+    auto length = length_of_array_like(global_object, *array_like);
+    if (vm.exception())
+        return {};
+
+    Value array;
+    if (constructor.is_constructor()) {
+        MarkedValueList arguments(vm.heap());
+        arguments.empend(length);
+        array = vm.construct(constructor.as_function(), constructor.as_function(), move(arguments));
+        if (vm.exception())
+            return {};
+    } else {
+        array = Array::create(global_object, length);
         if (vm.exception())
             return {};
     }
+
+    auto& array_object = array.as_object();
+
+    for (size_t k = 0; k < length; ++k) {
+        auto k_value = array_like->get(k);
+        Value mapped_value;
+        if (map_fn) {
+            mapped_value = vm.call(*map_fn, this_arg, k_value, Value(k));
+            if (vm.exception())
+                return {};
+        } else {
+            mapped_value = k_value;
+        }
+        array_object.define_property(k, mapped_value);
+    }
+
+    array_object.put(vm.names.length, Value(length));
+    if (vm.exception())
+        return {};
 
     return array;
 }
@@ -165,7 +230,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
         if (vm.exception())
             return {};
     } else {
-        array = Array::create(global_object);
+        array = Array::create(global_object, vm.argument_count());
+        if (vm.exception())
+            return {};
     }
     auto& array_object = array.as_object();
     for (size_t k = 0; k < vm.argument_count(); ++k) {

@@ -431,7 +431,7 @@ Value ProxyObject::call()
     arguments.append(Value(&m_target));
     arguments.append(Value(&m_handler));
     // FIXME: Pass global object
-    auto arguments_array = Array::create(global_object());
+    auto arguments_array = Array::create(global_object(), 0);
     vm.for_each_argument([&](auto& argument) {
         arguments_array->indexed_properties().append(argument);
     });
@@ -458,7 +458,7 @@ Value ProxyObject::construct(FunctionObject& new_target)
         return static_cast<FunctionObject&>(m_target).construct(new_target);
     MarkedValueList arguments(vm.heap());
     arguments.append(Value(&m_target));
-    auto arguments_array = Array::create(global_object());
+    auto arguments_array = Array::create(global_object(), 0);
     vm.for_each_argument([&](auto& argument) {
         arguments_array->indexed_properties().append(argument);
     });
