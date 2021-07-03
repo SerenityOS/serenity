@@ -120,6 +120,11 @@ Gfx::Bitmap const* FileResult::bitmap() const
     return GUI::FileIconProvider::icon_for_path(title()).bitmap_for_size(16);
 }
 
+FileProvider::FileProvider()
+{
+    build_filesystem_cache();
+}
+
 void FileProvider::query(const String& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
     build_filesystem_cache();
