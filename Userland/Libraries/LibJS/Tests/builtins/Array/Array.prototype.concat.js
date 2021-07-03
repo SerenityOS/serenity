@@ -41,7 +41,7 @@ describe("normal behavior", () => {
         expect(concatenated[5]).toEqual([2, 3]);
     });
 
-    test.skip("Proxy is concatenated as array", () => {
+    test("Proxy is concatenated as array", () => {
         var proxy = new Proxy([9, 8], {});
         var concatenated = array.concat(proxy);
         expect(array).toHaveLength(1);
