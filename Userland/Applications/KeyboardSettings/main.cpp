@@ -8,12 +8,14 @@
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
@@ -33,8 +35,14 @@ int main(int argc, char** argv)
     // If there is no command line parameter go for GUI.
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio rpath recvfd sendfd proc exec", nullptr) < 0) {
+    if (pledge("stdio rpath cpath wpath recvfd sendfd proc exec", nullptr) < 0) {
         perror("pledge");
+        return 1;
+    }
+
+    auto config = Core::ConfigFile::get_for_app("KeyboardSettings");
+    if (unveil(config->filename().characters(), "rwc") < 0) {
+        perror("unveil");
         return 1;
     }
 
@@ -117,6 +125,9 @@ int main(int argc, char** argv)
     character_map_file_combo.set_model(*CharacterMapFileListModel::create(character_map_files));
     character_map_file_combo.set_selected_index(initial_keymap_index);
 
+    auto& num_lock_checkbox = root_widget.add<GUI::CheckBox>("Enable Num Lock on login");
+    num_lock_checkbox.set_checked(config->read_bool_entry("StartupEnable", "NumLock", true));
+
     root_widget.layout()->add_spacer();
 
     auto apply_settings = [&](bool quit) {
@@ -131,6 +142,10 @@ int main(int argc, char** argv)
             perror("posix_spawn");
             exit(1);
         }
+
+        config->write_bool_entry("StartupEnable", "NumLock", num_lock_checkbox.is_checked());
+        config->sync();
+
         if (quit)
             app->quit();
     };

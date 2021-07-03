@@ -6,6 +6,7 @@
 
 #include <LibCore/ConfigFile.h>
 #include <errno.h>
+#include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -16,6 +17,8 @@ int main()
         perror("pledge");
         return 1;
     }
+
+    auto keyboard_settings_config = Core::ConfigFile::get_for_app("KeyboardSettings");
 
     if (unveil("/bin/keymap", "x") < 0) {
         perror("unveil /bin/keymap");
@@ -41,4 +44,7 @@ int main()
         perror("posix_spawn");
         exit(1);
     }
+
+    bool enable_num_lock = keyboard_settings_config->read_bool_entry("StartupEnable", "NumLock", true);
+    set_num_lock(enable_num_lock);
 }
