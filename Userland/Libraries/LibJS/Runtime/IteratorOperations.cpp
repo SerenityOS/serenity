@@ -73,13 +73,40 @@ Object* iterator_next(Object& iterator, Value value)
 // 7.4.3 IteratorComplete ( iterResult ), https://tc39.es/ecma262/#sec-iteratorcomplete
 bool iterator_complete(GlobalObject& global_object, Object& iterator_result)
 {
-    return iterator_result.get(global_object.vm().names.done).value_or(Value(false)).to_boolean();
+    auto& vm = global_object.vm();
+    auto done = iterator_result.get(vm.names.done).value_or(js_undefined());
+    if (vm.exception())
+        return {};
+    return done.to_boolean();
 }
 
 // 7.4.4 IteratorValue ( iterResult ), https://tc39.es/ecma262/#sec-iteratorvalue
 Value iterator_value(GlobalObject& global_object, Object& iterator_result)
 {
-    return iterator_result.get(global_object.vm().names.value).value_or(js_undefined());
+    auto& vm = global_object.vm();
+    auto value = iterator_result.get(vm.names.value).value_or(js_undefined());
+    if (vm.exception())
+        return {};
+    return value;
+}
+
+// 7.4.5 IteratorStep ( iteratorRecord ), https://tc39.es/ecma262/#sec-iteratorstep
+Object* iterator_step(GlobalObject& global_object, Object& iterator)
+{
+    auto& vm = global_object.vm();
+
+    auto result = iterator_next(iterator);
+    if (vm.exception())
+        return {};
+
+    auto done = iterator_complete(global_object, *result);
+    if (vm.exception())
+        return {};
+
+    if (done)
+        return nullptr;
+
+    return result;
 }
 
 // 7.4.6 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
