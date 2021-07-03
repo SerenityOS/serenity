@@ -106,6 +106,8 @@ public:
     ~TerminalResult() override = default;
     void activate() const override;
 
+    virtual Gfx::Bitmap const* bitmap() const override { return m_bitmap; }
+
 private:
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
