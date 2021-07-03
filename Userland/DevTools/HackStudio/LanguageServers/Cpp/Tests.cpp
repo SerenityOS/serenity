@@ -42,6 +42,7 @@ static void test_complete_local_vars();
 static void test_complete_type();
 static void test_find_variable_definition();
 static void test_complete_includes();
+static void test_parameters_hint();
 
 int run_tests()
 {
@@ -50,6 +51,7 @@ int run_tests()
     test_complete_type();
     test_find_variable_definition();
     test_complete_includes();
+    test_parameters_hint();
     return s_some_test_failed ? 1 : 0;
 }
 
@@ -122,6 +124,7 @@ void test_find_variable_definition()
         PASS;
     FAIL("wrong declaration location");
 }
+
 void test_complete_includes()
 {
     I_TEST(Complete Type)
@@ -144,6 +147,35 @@ void test_complete_includes()
 
     if (suggestions[0].completion != "cdefs.h")
         FAIL("global include - wrong results");
+
+    PASS;
+}
+
+void test_parameters_hint()
+{
+    I_TEST(Function Parameters hint)
+    FileDB filedb;
+    filedb.set_project_root(TESTS_ROOT_DIR);
+    add_file(filedb, "parameters_hint1.cpp");
+    CppComprehensionEngine engine(filedb);
+
+    auto result = engine.get_function_params_hint("parameters_hint1.cpp", { 4, 9 });
+    if (!result.has_value())
+        FAIL("failed to get parameters hint (1)");
+    if (result->params != Vector<String> { "int x", "char y" } || result->current_index != 0)
+        FAIL("bad result (1)");
+
+    result = engine.get_function_params_hint("parameters_hint1.cpp", { 5, 15 });
+    if (!result.has_value())
+        FAIL("failed to get parameters hint (2)");
+    if (result->params != Vector<String> { "int x", "char y" } || result->current_index != 1)
+        FAIL("bad result (2)");
+
+    result = engine.get_function_params_hint("parameters_hint1.cpp", { 6, 8 });
+    if (!result.has_value())
+        FAIL("failed to get parameters hint (3)");
+    if (result->params != Vector<String> { "int x", "char y" } || result->current_index != 0)
+        FAIL("bad result (3)");
 
     PASS;
 }
