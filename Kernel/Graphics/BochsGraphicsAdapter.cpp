@@ -46,6 +46,8 @@ struct [[gnu::packed]] BochsDisplayMMIORegisters {
 
 UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initialize(PCI::Address address)
 {
+    PCI::ID id = PCI::get_id(address);
+    VERIFY((id.vendor_id == 0x1234 && id.device_id == 0x1111) || (id.vendor_id == 0x80ee && id.device_id == 0xbeef));
     return adopt_ref(*new BochsGraphicsAdapter(address));
 }
 
