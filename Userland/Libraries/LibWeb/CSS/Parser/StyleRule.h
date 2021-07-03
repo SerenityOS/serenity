@@ -14,12 +14,17 @@
 
 namespace Web::CSS {
 
-class QualifiedStyleRule : public RefCounted<QualifiedStyleRule> {
+class StyleRule : public RefCounted<StyleRule> {
     friend class Parser;
 
 public:
-    QualifiedStyleRule();
-    ~QualifiedStyleRule();
+    enum class Type {
+        At,
+        Qualified,
+    };
+
+    StyleRule(Type);
+    ~StyleRule();
 
     Vector<StyleComponentValueRule> const& prelude() const { return m_prelude; }
     StyleBlockRule const& block() const { return *m_block; }
@@ -27,6 +32,8 @@ public:
     String to_string() const;
 
 private:
+    Type const m_type;
+    String m_name; // At-rules only
     Vector<StyleComponentValueRule> m_prelude;
     RefPtr<StyleBlockRule> m_block;
 };
