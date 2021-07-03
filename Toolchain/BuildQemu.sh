@@ -7,8 +7,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "$DIR"
 
-ARCH=${ARCH:-"i686"}
-PREFIX="$DIR/Local/$ARCH"
+PREFIX="$DIR/Local/qemu"
 BUILD=$(realpath "$DIR/../Build")
 SYSROOT="$BUILD/Root"
 
@@ -46,7 +45,7 @@ pushd "$DIR/Tarballs"
 popd
 
 mkdir -p "$PREFIX"
-mkdir -p "$DIR/Build/$ARCH/qemu"
+mkdir -p "$DIR/Build/qemu"
 
 if [ -z "$MAKEJOBS" ]; then
     MAKEJOBS=$(nproc)
@@ -61,12 +60,10 @@ fi
 
 echo Using $UI_LIB based UI
 
-pushd "$DIR/Build/$ARCH"
-    pushd qemu
-        "$DIR"/Tarballs/$QEMU_VERSION/configure --prefix="$PREFIX" \
-                                                --target-list=i386-softmmu,x86_64-softmmu \
-                                                --enable-$UI_LIB || exit 1
-        make -j "$MAKEJOBS" || exit 1
-        make install || exit 1
-    popd
+pushd "$DIR/Build/qemu"
+    "$DIR"/Tarballs/$QEMU_VERSION/configure --prefix="$PREFIX" \
+                                            --target-list=i386-softmmu,x86_64-softmmu \
+                                            --enable-$UI_LIB || exit 1
+    make -j "$MAKEJOBS" || exit 1
+    make install || exit 1
 popd
