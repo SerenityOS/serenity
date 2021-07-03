@@ -177,6 +177,7 @@ Vector<StringView> CppComprehensionEngine::scope_of_reference_to_symbol(const AS
 {
     const Name* name = nullptr;
     if (node.is_name()) {
+        // FIXME It looks like this code path is never taken
         name = reinterpret_cast<const Name*>(&node);
     } else if (node.is_identifier()) {
         auto* parent = node.parent();
@@ -454,6 +455,7 @@ RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentDa
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "find_declaration_of: {} ({})", document_data.parser().text_of_node(node), node.class_name());
     if (!node.is_identifier()) {
         dbgln("node is not an identifier, can't find declaration");
+        return {};
     }
 
     auto target_decl = get_target_declaration(node);
@@ -724,6 +726,115 @@ bool CppComprehensionEngine::is_symbol_available(const Symbol& symbol, const Vec
             return false;
     }
     return true;
+}
+
+Optional<CodeComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::get_function_params_hint(const String& filename, const GUI::TextPosition& identifier_position)
+{
+    const auto* document_ptr = get_or_create_document_data(filename);
+    if (!document_ptr)
+        return {};
+
+    const auto& document = *document_ptr;
+    Cpp::Position cpp_position { identifier_position.line(), identifier_position.column() };
+    auto node = document.parser().node_at(cpp_position);
+    if (!node) {
+        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", identifier_position.line(), identifier_position.column());
+        return {};
+    }
+
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "node type: {}", node->class_name());
+
+    FunctionCall* call_node { nullptr };
+
+    if (node->is_function_call()) {
+        call_node = ((FunctionCall*)node.ptr());
+
+        auto token = document.parser().token_at(cpp_position);
+
+        // If we're in a function call with 0 arguments
+        if (token.has_value() && (token->type() == Token::Type::LeftParen || token->type() == Token::Type::RightParen)) {
+            return get_function_params_hint(document, *call_node, call_node->m_arguments.is_empty() ? 0 : call_node->m_arguments.size() - 1);
+        }
+    }
+
+    // Walk upwards in the AST to find a FunctionCall node
+    while (!call_node && node) {
+        auto parent_is_call = node->parent() && node->parent()->is_function_call();
+        if (parent_is_call) {
+            call_node = (FunctionCall*)node->parent();
+            break;
+        }
+        node = node->parent();
+    }
+
+    if (!call_node) {
+        dbgln("did not find function call");
+        return {};
+    }
+
+    Optional<size_t> invoked_arg_index;
+    for (size_t arg_index = 0; arg_index < call_node->m_arguments.size(); ++arg_index) {
+        if (&call_node->m_arguments[arg_index] == node.ptr()) {
+            invoked_arg_index = arg_index;
+            break;
+        }
+    }
+    if (!invoked_arg_index.has_value()) {
+        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "could not find argument index, defaulting to the last argument");
+        invoked_arg_index = call_node->m_arguments.is_empty() ? 0 : call_node->m_arguments.size() - 1;
+    }
+
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "arg index: {}", invoked_arg_index.value());
+    return get_function_params_hint(document, *call_node, invoked_arg_index.value());
+}
+
+Optional<CppComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::get_function_params_hint(
+    DocumentData const& document,
+    FunctionCall& call_node,
+    size_t argument_index)
+{
+    Identifier* callee = nullptr;
+    if (call_node.m_callee->is_identifier()) {
+        callee = (Identifier*)call_node.m_callee.ptr();
+    } else if (call_node.m_callee->is_name()) {
+        callee = ((Name&)*call_node.m_callee).m_name.ptr();
+    } else if (call_node.m_callee->is_member_expression()) {
+        auto& member_exp = ((MemberExpression&)*call_node.m_callee);
+        if (member_exp.m_property->is_identifier()) {
+            callee = (Identifier*)member_exp.m_property.ptr();
+        }
+    }
+
+    if (!callee) {
+        dbgln("unexpected node type for function call: {}", call_node.m_callee->class_name());
+        return {};
+    }
+    VERIFY(callee);
+
+    auto decl = find_declaration_of(document, *callee);
+    if (!decl) {
+        dbgln("func decl not found");
+        return {};
+    }
+    if (!decl->is_function()) {
+        dbgln("declaration is not a function");
+        return {};
+    }
+
+    auto& func_decl = (FunctionDeclaration&)*decl;
+    auto document_of_declaration = get_document_data(func_decl.filename());
+
+    FunctionParamsHint hint {};
+    hint.current_index = argument_index;
+    for (auto& arg : func_decl.m_parameters) {
+        Vector<StringView> tokens_text;
+        for (auto token : document_of_declaration->parser().tokens_in_range(arg.start(), arg.end())) {
+            tokens_text.append(token.text());
+        }
+        hint.params.append(String::join(" ", tokens_text));
+    }
+
+    return hint;
 }
 
 }

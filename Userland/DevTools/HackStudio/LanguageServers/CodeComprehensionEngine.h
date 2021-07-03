@@ -26,7 +26,13 @@ public:
     virtual void on_edit([[maybe_unused]] const String& file) {};
     virtual void file_opened([[maybe_unused]] const String& file) {};
 
-    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String&, const GUI::TextPosition&) { return {}; };
+    virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String&, const GUI::TextPosition&) { return {}; }
+
+    struct FunctionParamsHint {
+        Vector<String> params;
+        size_t current_index { 0 };
+    };
+    virtual Optional<FunctionParamsHint> get_function_params_hint(const String&, const GUI::TextPosition&) { return {}; }
 
 public:
     Function<void(const String&, Vector<GUI::AutocompleteProvider::Declaration>&&)> set_declarations_of_document_callback;

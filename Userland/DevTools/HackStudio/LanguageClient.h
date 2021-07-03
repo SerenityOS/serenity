@@ -48,6 +48,7 @@ protected:
     virtual void declaration_location(GUI::AutocompleteProvider::ProjectLocation const&) override;
     virtual void declarations_in_document(String const&, Vector<GUI::AutocompleteProvider::Declaration> const&) override;
     virtual void todo_entries_in_document(String const&, Vector<Cpp::Parser::TodoEntry> const&) override;
+    virtual void parameters_hint_result(Vector<String> const&, int index) override;
     void set_wrapper(ServerConnectionWrapper& wrapper) { m_wrapper = &wrapper; }
 
     String m_project_path;
@@ -129,12 +130,16 @@ public:
     virtual void remove_text(const String& path, size_t from_line, size_t from_column, size_t to_line, size_t to_column);
     virtual void request_autocomplete(const String& path, size_t cursor_line, size_t cursor_column);
     virtual void search_declaration(const String& path, size_t line, size_t column);
+    virtual void get_parameters_hint(const String& path, size_t line, size_t column);
 
     void provide_autocomplete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>&) const;
     void declaration_found(const String& file, size_t line, size_t column) const;
+    void parameters_hint_result(Vector<String> const& params, size_t argument_index) const;
 
+    // Callbacks that get called when the result of a language server query is ready
     Function<void(Vector<GUI::AutocompleteProvider::Entry>)> on_autocomplete_suggestions;
     Function<void(const String&, size_t, size_t)> on_declaration_found;
+    Function<void(Vector<String> const&, size_t)> on_function_parameters_hint_result;
 
 private:
     ServerConnectionWrapper& m_connection_wrapper;

@@ -29,6 +29,7 @@ public:
     virtual void on_edit(const String& file) override;
     virtual void file_opened([[maybe_unused]] const String& file) override;
     virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position) override;
+    virtual Optional<FunctionParamsHint> get_function_params_hint(const String&, const GUI::TextPosition&) override;
 
 private:
     struct SymbolName {
@@ -130,6 +131,7 @@ private:
     Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_name(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
     Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_include(const DocumentData&, Token include_path_token);
     static bool is_symbol_available(const Symbol&, const Vector<StringView>& current_scope, const Vector<StringView>& reference_scope);
+    Optional<FunctionParamsHint> get_function_params_hint(DocumentData const&, FunctionCall&, size_t argument_index);
 
     template<typename Func>
     void for_each_available_symbol(const DocumentData&, Func) const;
@@ -171,7 +173,6 @@ void CppComprehensionEngine::for_each_included_document_recursive(const Document
             continue;
     }
 }
-
 }
 
 namespace AK {

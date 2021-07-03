@@ -118,4 +118,29 @@ void ClientConnection::find_declaration(GUI::AutocompleteProvider::ProjectLocati
     async_declaration_location(GUI::AutocompleteProvider::ProjectLocation { decl_location.value().file, decl_location.value().line, decl_location.value().column });
 }
 
+void ClientConnection::get_parameters_hint(GUI::AutocompleteProvider::ProjectLocation const& location)
+{
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "GetFunctionParams: {} {}:{}", location.file, location.line, location.column);
+    auto document = m_filedb.get(location.file);
+    if (!document) {
+        dbgln("file {} has not been opened", location.file);
+        return;
+    }
+
+    GUI::TextPosition identifier_position = { (size_t)location.line, (size_t)location.column };
+    auto params = m_autocomplete_engine->get_function_params_hint(location.file, identifier_position);
+    if (!params.has_value()) {
+        dbgln("could not get parameters hint");
+        return;
+    }
+
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "parameters hint:");
+    for (auto& param : params->params) {
+        dbgln_if(LANGUAGE_SERVER_DEBUG, "{}", param);
+    }
+    dbgln_if(LANGUAGE_SERVER_DEBUG, "Parameter index: {}", params->current_index);
+
+    async_parameters_hint_result(params->params, params->current_index);
+}
+
 }

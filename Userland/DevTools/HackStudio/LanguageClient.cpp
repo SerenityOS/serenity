@@ -33,6 +33,17 @@ void ServerConnection::declaration_location(const GUI::AutocompleteProvider::Pro
     m_current_language_client->declaration_found(location.file, location.line, location.column);
 }
 
+void ServerConnection::parameters_hint_result(Vector<String> const& params, int argument_index)
+{
+    if (!m_current_language_client) {
+        dbgln("Language Server connection has no attached language client");
+        return;
+    }
+
+    VERIFY(argument_index >= 0);
+    m_current_language_client->parameters_hint_result(params, static_cast<size_t>(argument_index));
+}
+
 void ServerConnection::die()
 {
     VERIFY(m_wrapper);
@@ -112,6 +123,14 @@ void LanguageClient::search_declaration(const String& path, size_t line, size_t 
     m_connection_wrapper.connection()->async_find_declaration(GUI::AutocompleteProvider::ProjectLocation { path, line, column });
 }
 
+void LanguageClient::get_parameters_hint(const String& path, size_t line, size_t column)
+{
+    if (!m_connection_wrapper.connection())
+        return;
+    set_active_client();
+    m_connection_wrapper.connection()->async_get_parameters_hint(GUI::AutocompleteProvider::ProjectLocation { path, line, column });
+}
+
 void LanguageClient::declaration_found(const String& file, size_t line, size_t column) const
 {
     if (!on_declaration_found) {
@@ -119,6 +138,15 @@ void LanguageClient::declaration_found(const String& file, size_t line, size_t c
         return;
     }
     on_declaration_found(file, line, column);
+}
+
+void LanguageClient::parameters_hint_result(Vector<String> const& params, size_t argument_index) const
+{
+    if (!on_function_parameters_hint_result) {
+        dbgln("on_function_parameters_hint_result callback is not set");
+        return;
+    }
+    on_function_parameters_hint_result(params, argument_index);
 }
 
 void ServerConnectionInstances::set_instance_for_language(const String& language_name, NonnullOwnPtr<ServerConnectionWrapper>&& connection_wrapper)
