@@ -65,6 +65,11 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_add
     auto id = PCI::get_id(pci_address);
     if (id.vendor_id == 0x80ee && id.device_id == 0xbeef)
         m_io_required = true;
+
+    // FIXME: Although this helps with setting the screen to work on some cases,
+    // we need to check we actually can access the VGA MMIO remapped ioports before
+    // doing the unblanking.
+    unblank();
     set_safe_resolution();
 }
 
@@ -80,6 +85,14 @@ GraphicsDevice::Type BochsGraphicsAdapter::type() const
     if (PCI::get_class(pci_address()) == 0x3 && PCI::get_subclass(pci_address()) == 0x0)
         return Type::VGACompatible;
     return Type::Bochs;
+}
+
+void BochsGraphicsAdapter::unblank()
+{
+    auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
+    full_memory_barrier();
+    registers->vga_ioports[0] = 0x20;
+    full_memory_barrier();
 }
 
 void BochsGraphicsAdapter::set_safe_resolution()
