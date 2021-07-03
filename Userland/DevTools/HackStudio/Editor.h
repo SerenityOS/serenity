@@ -62,6 +62,7 @@ private:
     virtual void drop_event(GUI::DropEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
+    virtual void keydown_event(GUI::KeyEvent&) override;
 
     void show_documentation_tooltip_if_available(const String&, const Gfx::IntPoint& screen_location);
     void navigate_to_include_if_available(String);
@@ -94,11 +95,14 @@ private:
     void flush_file_content_to_langauge_server();
     void set_syntax_highlighter_for(const CodeDocument&);
     void set_language_client_for(const CodeDocument&);
+    void handle_function_parameters_hint_request();
 
     explicit Editor();
 
     RefPtr<GUI::Window> m_documentation_tooltip_window;
+    RefPtr<GUI::Window> m_parameters_hint_tooltip_window;
     RefPtr<Web::OutOfProcessWebView> m_documentation_page_view;
+    RefPtr<Web::OutOfProcessWebView> m_parameter_hint_page_view;
     String m_last_parsed_token;
     GUI::TextPosition m_previous_text_position { 0, 0 };
     bool m_hovering_editor { false };
@@ -108,6 +112,8 @@ private:
     RefPtr<GUI::Action> m_move_execution_to_line_action;
 
     OwnPtr<LanguageClient> m_language_client;
+    void initialize_documentation_tooltip();
+    void initialize_parameters_hint_tooltip();
 };
 
 }
