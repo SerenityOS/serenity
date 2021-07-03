@@ -2,12 +2,23 @@
 
 CLion can integrate with CMake to provide code comprehension features.
 
-After opening the `serenity` repository in CLion as a new project, go to "`File->Settings->Build, Execution, Deployment->Cmake`",
-and set the following fields: (Assuming you use `Ninja` as the build system and configured the CMake build directory to `Build/i686`)
+After opening the `serenity` repository in CLion as a new project, the "`Open Project Wizard`" window will open, from here set the following fields:
+
+(Assuming you use `Ninja` as the build system and configured the CMake build directory to `Build/i686`)
+
+`Build type`: `Default`
+
+> _CMake will complain with any other build type, make sure to use `Default` so that `CMAKE_BUILD_TYPE` is empty in the `Build/i686/CMakeCache.txt` file._
 
 `CMake Options`: `-G Ninja -DBUILD_LAGOM=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10`
 
 `Build Directory`: `Build/i686`
+
+> _If you have not built the Toolchain at this point, please do so: `./Toolchain/BuildIt.sh`_
+
+If you already have the project open, you can go to "`File->Settings->Build, Execution, Deployment->Cmake`" to find these options.
+
+Remember to recreate the CMake cache after changing any of the options.
 
 ## Excluding Build Artifacts
 
