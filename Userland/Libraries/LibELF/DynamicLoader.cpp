@@ -482,15 +482,21 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
     case R_X86_64_TPOFF64: {
 #endif
         auto symbol = relocation.symbol();
-        // For some reason, LibC has a R_386_TLS_TPOFF that refers to the undefined symbol.. huh
-        if (relocation.symbol_index() == 0)
-            break;
-        auto res = lookup_symbol(symbol);
-        if (!res.has_value())
-            break;
-        auto* dynamic_object_of_symbol = res.value().dynamic_object;
+        FlatPtr symbol_value;
+        DynamicObject const* dynamic_object_of_symbol;
+        if (relocation.symbol_index() != 0) {
+            auto res = lookup_symbol(symbol);
+            if (!res.has_value())
+                break;
+            symbol_value = res.value().value;
+            dynamic_object_of_symbol = res.value().dynamic_object;
+        } else {
+            symbol_value = 0;
+            dynamic_object_of_symbol = &relocation.dynamic_object();
+        }
         VERIFY(dynamic_object_of_symbol);
-        *patch_ptr = negative_offset_from_tls_block_end(res.value().value, dynamic_object_of_symbol->tls_offset().value());
+        size_t addend = relocation.addend_used() ? relocation.addend() : *patch_ptr;
+        *patch_ptr = negative_offset_from_tls_block_end(symbol_value + addend, dynamic_object_of_symbol->tls_offset().value());
         break;
     }
 #ifndef __LP64__
