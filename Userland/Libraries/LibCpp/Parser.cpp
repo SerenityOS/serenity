@@ -1189,7 +1189,7 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
     while (!eof() && peek().type() == Token::Type::Asterisk) {
         type->set_end(position());
         auto asterisk = consume();
-        auto ptr = create_ast_node<Pointer>(parent, asterisk.start(), asterisk.end());
+        auto ptr = create_ast_node<Pointer>(parent, type->start(), asterisk.end());
         type->set_parent(*ptr);
         ptr->m_pointee = type;
         ptr->set_end(position());

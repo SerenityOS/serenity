@@ -6,7 +6,7 @@ TranslationUnit[1:0->12:0]
         int
       x
     VariableDeclaration[4:4->5:0]
-      Pointer[4:12->4:14]
+      Pointer[4:4->4:14]
         NamedType[4:4->4:12]
           s
       next

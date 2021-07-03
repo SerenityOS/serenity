@@ -67,10 +67,10 @@ TranslationUnit[0:0->144:0]
     argc
       NamedType[12:9->12:13]
         int
-    Parameter[12:24->12:29]
+    Parameter[12:19->12:29]
     argv
-      Pointer[12:24->12:26]
-        Pointer[12:23->12:24]
+      Pointer[12:19->12:26]
+        Pointer[12:19->12:24]
           NamedType[12:19->12:23]
             char
     )
@@ -103,7 +103,7 @@ TranslationUnit[0:0->144:0]
           Vector<[const] char*>
         child_argv
       VariableDeclaration[21:4->21:41]
-        Pointer[21:14->21:16]
+        Pointer[21:4->21:16]
           NamedType[21:4->21:14]
             [const] char
         output_filename
@@ -382,8 +382,8 @@ TranslationUnit[0:0->144:0]
                   CppCastExpression[66:48->66:85]
                   const_cast
                     <
-                    Pointer[66:64->66:65]
-                      Pointer[66:63->66:64]
+                    Pointer[66:59->66:65]
+                      Pointer[66:59->66:64]
                         NamedType[66:59->66:63]
                           char
                     >
