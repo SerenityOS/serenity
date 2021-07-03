@@ -8,6 +8,7 @@
 #include <AK/Checked.h>
 #include <AK/Singleton.h>
 #include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/Bochs.h>
 #include <Kernel/Graphics/BochsGraphicsAdapter.h>
@@ -47,7 +48,7 @@ struct [[gnu::packed]] BochsDisplayMMIORegisters {
 UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initialize(PCI::Address address)
 {
     PCI::ID id = PCI::get_id(address);
-    VERIFY((id.vendor_id == 0x1234 && id.device_id == 0x1111) || (id.vendor_id == 0x80ee && id.device_id == 0xbeef));
+    VERIFY((id.vendor_id == PCI::VendorID::QEMUOld && id.device_id == 0x1111) || (id.vendor_id == PCI::VendorID::VirtualBox && id.device_id == 0xbeef));
     return adopt_ref(*new BochsGraphicsAdapter(address));
 }
 
