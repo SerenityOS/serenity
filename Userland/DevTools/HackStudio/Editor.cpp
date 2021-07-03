@@ -169,7 +169,7 @@ static HashMap<String, String>& man_paths()
         Core::DirIterator it("/usr/share/man/man2", Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
             auto path = it.next_full_path();
-            auto title = LexicalPath::title(path);
+            auto title = LexicalPath(path).title();
             paths.set(title, path);
         }
     }

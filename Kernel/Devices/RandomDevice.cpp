@@ -13,7 +13,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<RandomDevice> RandomDevice::must_create()
 {
-    return adopt_ref(*new RandomDevice);
+    return adopt_ref_if_nonnull(new RandomDevice).release_nonnull();
 }
 
 UNMAP_AFTER_INIT RandomDevice::RandomDevice()

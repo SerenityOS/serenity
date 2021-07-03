@@ -9,19 +9,19 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$getpid()
+KResultOr<pid_t> Process::sys$getpid()
 {
     REQUIRE_PROMISE(stdio);
     return pid().value();
 }
 
-KResultOr<FlatPtr> Process::sys$getppid()
+KResultOr<pid_t> Process::sys$getppid()
 {
     REQUIRE_PROMISE(stdio);
     return m_ppid.value();
 }
 
-KResultOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t buffer_size)
+KResultOr<int> Process::sys$get_process_name(Userspace<char*> buffer, size_t buffer_size)
 {
     REQUIRE_PROMISE(stdio);
     if (m_name.length() + 1 > buffer_size)
@@ -32,7 +32,7 @@ KResultOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length)
+KResultOr<int> Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length)
 {
     REQUIRE_PROMISE(proc);
     if (user_name_length > 256)
@@ -47,7 +47,7 @@ KResultOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_nam
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*> user_params)
+KResultOr<int> Process::sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*> user_params)
 {
     Syscall::SC_set_coredump_metadata_params params;
     if (!copy_from_user(&params, user_params))

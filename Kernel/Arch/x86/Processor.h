@@ -21,7 +21,7 @@ namespace Kernel {
 
 #if ARCH(X86_64)
 #    define MSR_FS_BASE 0xc0000100
-#    define MSR_GS_BASE 0xc0000101
+#    define MSR_GS_BASE 0xc0000102
 #endif
 
 class Thread;
@@ -96,7 +96,7 @@ struct DeferredCallEntry {
 };
 
 class Processor;
-// Note: We only support 8 processors at most at the moment,
+// Note: We only support processors at most at the moment,
 // so allocate 8 slots of inline capacity in the container.
 using ProcessorContainer = Array<Processor*, 8>;
 
@@ -241,16 +241,16 @@ public:
 
     ALWAYS_INLINE static Processor& current()
     {
-        return *(Processor*)read_gs_ptr(__builtin_offsetof(Processor, m_self));
+        return *(Processor*)read_fs_ptr(__builtin_offsetof(Processor, m_self));
     }
 
     ALWAYS_INLINE static bool is_initialized()
     {
         return
 #if ARCH(I386)
-            get_gs() == GDT_SELECTOR_PROC &&
+            get_fs() == GDT_SELECTOR_PROC &&
 #endif
-            read_gs_u32(__builtin_offsetof(Processor, m_self)) != 0;
+            read_fs_u32(__builtin_offsetof(Processor, m_self)) != 0;
     }
 
     ALWAYS_INLINE void set_scheduler_data(SchedulerPerProcessorData& scheduler_data)
@@ -286,19 +286,19 @@ public:
         // to another processor, which would lead us to get the wrong thread.
         // To avoid having to disable interrupts, we can just read the field
         // directly in an atomic fashion, similar to Processor::current.
-        return (Thread*)read_gs_ptr(__builtin_offsetof(Processor, m_current_thread));
+        return (Thread*)read_fs_ptr(__builtin_offsetof(Processor, m_current_thread));
     }
 
     ALWAYS_INLINE static void set_current_thread(Thread& current_thread)
     {
         // See comment in Processor::current_thread
-        write_gs_u32(__builtin_offsetof(Processor, m_current_thread), FlatPtr(&current_thread));
+        write_fs_u32(__builtin_offsetof(Processor, m_current_thread), FlatPtr(&current_thread));
     }
 
     ALWAYS_INLINE static Thread* idle_thread()
     {
         // See comment in Processor::current_thread
-        return (Thread*)read_gs_ptr(__builtin_offsetof(Processor, m_idle_thread));
+        return (Thread*)read_fs_ptr(__builtin_offsetof(Processor, m_idle_thread));
     }
 
     ALWAYS_INLINE u32 get_id() const
@@ -314,7 +314,7 @@ public:
     ALWAYS_INLINE static u32 id()
     {
         // See comment in Processor::current_thread
-        return read_gs_ptr(__builtin_offsetof(Processor, m_cpu));
+        return read_fs_ptr(__builtin_offsetof(Processor, m_cpu));
     }
 
     ALWAYS_INLINE static bool is_bootstrap_processor()
@@ -437,7 +437,7 @@ public:
     [[noreturn]] void initialize_context_switching(Thread& initial_thread);
     NEVER_INLINE void switch_context(Thread*& from_thread, Thread*& to_thread);
     [[noreturn]] static void assume_context(Thread& thread, FlatPtr flags);
-    FlatPtr init_context(Thread& thread, bool leave_crit);
+    u32 init_context(Thread& thread, bool leave_crit);
     static Vector<FlatPtr> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
     String platform_string() const;

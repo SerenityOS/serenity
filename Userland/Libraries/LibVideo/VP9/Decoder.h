@@ -10,19 +10,15 @@
 #include "LookupTables.h"
 #include "ProbabilityTables.h"
 #include "SyntaxElementCounter.h"
-#include "TreeParser.h"
 #include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
 
 namespace Video::VP9 {
 
 class Decoder {
-    friend class TreeParser;
-
 public:
     Decoder();
-    ~Decoder();
-    bool parse_frame(ByteBuffer const&);
+    bool parse_frame(const ByteBuffer&);
     void dump_info();
 
 private:
@@ -59,54 +55,7 @@ private:
     bool setup_past_independence();
     bool trailing_bits();
 
-    bool compressed_header();
-    bool read_tx_mode();
-    bool tx_mode_probs();
-    u8 diff_update_prob(u8 prob);
-    u8 decode_term_subexp();
-    u8 inv_remap_prob(u8 delta_prob, u8 prob);
-    u8 inv_recenter_nonneg(u8 v, u8 m);
-    bool read_coef_probs();
-    bool read_skip_prob();
-    bool read_inter_mode_probs();
-    bool read_interp_filter_probs();
-    bool read_is_inter_probs();
-    bool frame_reference_mode();
-    bool frame_reference_mode_probs();
-    bool read_y_mode_probs();
-    bool read_partition_probs();
-    bool mv_probs();
-    u8 update_mv_prob(u8 prob);
-    bool setup_compound_reference_mode();
-
-    bool decode_tiles();
-    bool clear_above_context();
-    u32 get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2);
-    bool decode_tile();
-    bool clear_left_context();
-    bool decode_partition(u32 row, u32 col, u8 block_subsize);
-    bool decode_block(u32 row, u32 col, u8 subsize);
-    bool mode_info();
-    bool intra_frame_mode_info();
-    bool intra_segment_id();
-    bool read_skip();
-    bool seg_feature_active(u8 feature);
-    bool read_tx_size(bool allow_select);
-    bool inter_frame_mode_info();
-    bool inter_segment_id();
-    u8 get_segment_id();
-    bool read_is_inter();
-    bool intra_block_mode_info();
-    bool inter_block_mode_info();
-    bool read_ref_frames();
-    bool assign_mv(bool is_compound);
-    bool read_mv(u8 ref);
-
-    /* (6.5) Motion Vector Prediction */
-    bool find_mv_refs(ReferenceFrame, int block);
-    bool find_best_ref_mvs(int ref_list);
-    bool append_sub8x8_mvs(u8 block, u8 ref_list);
-
+    u64 m_start_bit_pos { 0 };
     u8 m_profile { 0 };
     u8 m_frame_to_show_map_index { 0 };
     u16 m_header_size_in_bytes { 0 };
@@ -131,87 +80,29 @@ private:
     ColorRange m_color_range;
     bool m_subsampling_x { false };
     bool m_subsampling_y { false };
-    u32 m_frame_width { 0 };
-    u32 m_frame_height { 0 };
+    u16 m_frame_width { 0 };
+    u16 m_frame_height { 0 };
     u16 m_render_width { 0 };
     u16 m_render_height { 0 };
-    bool m_render_and_frame_size_different { false };
-    u32 m_mi_cols { 0 };
-    u32 m_mi_rows { 0 };
-    u32 m_sb64_cols { 0 };
-    u32 m_sb64_rows { 0 };
+    u16 m_mi_cols { 0 };
+    u16 m_mi_rows { 0 };
+    u16 m_sb64_cols { 0 };
+    u16 m_sb64_rows { 0 };
     InterpolationFilter m_interpolation_filter;
     bool m_lossless { false };
     u8 m_segmentation_tree_probs[7];
     u8 m_segmentation_pred_prob[3];
     bool m_feature_enabled[8][4];
     u8 m_feature_data[8][4];
-    bool m_segmentation_enabled { false };
-    bool m_segmentation_update_map { false };
-    bool m_segmentation_temporal_update { false };
     bool m_segmentation_abs_or_delta_update { false };
     u16 m_tile_cols_log2 { 0 };
     u16 m_tile_rows_log2 { 0 };
     i8 m_loop_filter_ref_deltas[MAX_REF_FRAMES];
     i8 m_loop_filter_mode_deltas[2];
 
-    u8** m_above_nonzero_context { nullptr };
-    u8** m_left_nonzero_context { nullptr };
-    u8* m_above_seg_pred_context { nullptr };
-    u8* m_left_seg_pred_context { nullptr };
-    u8* m_above_partition_context { nullptr };
-    u8* m_left_partition_context { nullptr };
-    u32 m_mi_row_start { 0 };
-    u32 m_mi_row_end { 0 };
-    u32 m_mi_col_start { 0 };
-    u32 m_mi_col_end { 0 };
-    u32 m_mi_row { 0 };
-    u32 m_mi_col { 0 };
-    u32 m_mi_size { 0 };
-    bool m_available_u { false };
-    bool m_available_l { false };
-    u8 m_segment_id { 0 };
-    bool m_skip { false };
-    u8 m_num_8x8 { 0 };
-    bool m_has_rows { false };
-    bool m_has_cols { false };
-    TXSize m_max_tx_size { TX_4x4 };
-    u8 m_block_subsize { 0 };
-    u32 m_row { 0 };
-    u32 m_col { 0 };
-    TXSize m_tx_size { TX_4x4 };
-    ReferenceFrame m_ref_frame[2];
-    bool m_is_inter { false };
-    IntraMode m_default_intra_mode { DcPred };
-    u8 m_y_mode { 0 };
-    u8 m_sub_modes[4]; // FIXME: What size is this supposed to be?
-    u8 m_num_4x4_w { 0 };
-    u8 m_num_4x4_h { 0 };
-    u8 m_uv_mode { 0 }; // FIXME: Is u8 the right size?
-    ReferenceFrame m_left_ref_frame[2];
-    ReferenceFrame m_above_ref_frame[2];
-    Vector<Vector<Vector<ReferenceFrame>>> m_ref_frames; // TODO: Can we make these fixed sized allocations?
-    bool m_left_intra { false };
-    bool m_above_intra { false };
-    bool m_left_single { false };
-    bool m_above_single { false };
-    Vector<Vector<u8>> m_prev_segment_ids;
-    InterpolationFilter m_interp_filter { EightTap };
-    InterMode m_mv[2];
-    InterMode m_near_mv[2];
-    InterMode m_nearest_mv[2];
-
-    bool m_use_hp { false };
-
-    TXMode m_tx_mode;
-    ReferenceMode m_reference_mode;
-    ReferenceFrame m_comp_fixed_ref;
-    ReferenceFrame m_comp_var_ref[2];
-
     OwnPtr<BitStream> m_bit_stream;
     OwnPtr<ProbabilityTables> m_probability_tables;
     OwnPtr<SyntaxElementCounter> m_syntax_element_counter;
-    NonnullOwnPtr<TreeParser> m_tree_parser;
 };
 
 }

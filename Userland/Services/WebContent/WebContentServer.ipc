@@ -1,7 +1,3 @@
-#include <AK/URL.h>
-#include <LibCore/AnonymousBuffer.h>
-#include <LibGfx/ShareableBitmap.h>
-
 endpoint WebContentServer
 {
     update_system_theme(Core::AnonymousBuffer theme_buffer) =|
@@ -26,7 +22,6 @@ endpoint WebContentServer
 
     debug_request(String request, String argument) =|
     get_source() =|
-    inspect_dom_tree() =|
     js_console_initialize() =|
     js_console_input(String js_source) =|
 }

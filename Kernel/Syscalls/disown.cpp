@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$disown(ProcessID pid)
+KResultOr<int> Process::sys$disown(ProcessID pid)
 {
     REQUIRE_PROMISE(proc);
     auto process = Process::from_pid(pid);

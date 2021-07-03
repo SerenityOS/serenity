@@ -1,5 +1,3 @@
-#include <LibGfx/ShareableBitmap.h>
-
 endpoint WindowManagerServer
 {
     set_event_mask(u32 event_mask) =|

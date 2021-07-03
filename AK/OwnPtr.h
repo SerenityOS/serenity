@@ -184,7 +184,8 @@ protected:
         : m_ptr(ptr)
     {
         static_assert(
-            requires { requires typename T::AllowOwnPtr()(); } || !requires { requires !typename T::AllowOwnPtr()(); declval<T>().ref(); declval<T>().unref(); }, "Use RefPtr<> for RefCounted types");
+            requires { requires typename T::AllowOwnPtr()(); } || !requires(T obj) { requires !typename T::AllowOwnPtr()(); obj.ref(); obj.unref(); },
+            "Use RefPtr<> for RefCounted types");
     }
 
 private:
@@ -206,17 +207,9 @@ inline OwnPtr<T> adopt_own_if_nonnull(T* object)
 }
 
 template<typename T, class... Args>
-requires(IsConstructible<T, Args...>) inline OwnPtr<T> try_make(Args&&... args)
+inline OwnPtr<T> try_make(Args&&... args)
 {
     return adopt_own_if_nonnull(new (nothrow) T(forward<Args>(args)...));
-}
-
-// FIXME: Remove once P0960R3 is available in Clang.
-template<typename T, class... Args>
-inline OwnPtr<T> try_make(Args&&... args)
-
-{
-    return adopt_own_if_nonnull(new (nothrow) T { forward<Args>(args)... });
 }
 
 template<typename T>

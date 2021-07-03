@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
+KResultOr<int> Process::sys$anon_create(size_t size, int options)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -24,7 +24,7 @@ KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
 
-    int new_fd = m_fds.allocate();
+    int new_fd = alloc_fd();
     if (new_fd < 0)
         return new_fd;
 

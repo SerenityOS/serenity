@@ -63,24 +63,10 @@ public:
         unsigned value() const { return m_sym.st_value; }
         unsigned size() const { return m_sym.st_size; }
         unsigned index() const { return m_index; }
-#if ARCH(I386)
-        unsigned type() const
-        {
-            return ELF32_ST_TYPE(m_sym.st_info);
-        }
+        unsigned type() const { return ELF32_ST_TYPE(m_sym.st_info); }
         unsigned bind() const { return ELF32_ST_BIND(m_sym.st_info); }
-#else
-        unsigned type() const
-        {
-            return ELF64_ST_TYPE(m_sym.st_info);
-        }
-        unsigned bind() const { return ELF64_ST_BIND(m_sym.st_info); }
-#endif
 
-        bool is_undefined() const
-        {
-            return section_index() == 0;
-        }
+        bool is_undefined() const { return section_index() == 0; }
 
         VirtualAddress address() const
         {
@@ -133,9 +119,8 @@ public:
 
     class RelocationSection : public Section {
     public:
-        explicit RelocationSection(const Section& section, bool addend_used)
+        explicit RelocationSection(const Section& section)
             : Section(section.m_dynamic, section.m_section_offset, section.m_section_size_bytes, section.m_entry_size, section.m_name)
-            , m_addend_used(addend_used)
         {
         }
         unsigned relocation_count() const { return entry_count(); }
@@ -146,18 +131,14 @@ public:
         void for_each_relocation(F) const;
         template<VoidFunction<DynamicObject::Relocation&> F>
         void for_each_relocation(F func) const;
-
-    private:
-        const bool m_addend_used;
     };
 
     class Relocation {
     public:
-        Relocation(const DynamicObject& dynamic, const ElfW(Rela) & rel, unsigned offset_in_section, bool addend_used)
+        Relocation(const DynamicObject& dynamic, const ElfW(Rel) & rel, unsigned offset_in_section)
             : m_dynamic(dynamic)
             , m_rel(rel)
             , m_offset_in_section(offset_in_section)
-            , m_addend_used(addend_used)
         {
         }
 
@@ -165,30 +146,9 @@ public:
 
         unsigned offset_in_section() const { return m_offset_in_section; }
         unsigned offset() const { return m_rel.r_offset; }
-#if ARCH(I386)
-        unsigned type() const
-        {
-            return ELF32_R_TYPE(m_rel.r_info);
-        }
+        unsigned type() const { return ELF32_R_TYPE(m_rel.r_info); }
         unsigned symbol_index() const { return ELF32_R_SYM(m_rel.r_info); }
-#else
-        unsigned type() const
-        {
-            return ELF64_R_TYPE(m_rel.r_info);
-        }
-        unsigned symbol_index() const { return ELF64_R_SYM(m_rel.r_info); }
-#endif
-        unsigned addend() const
-        {
-            VERIFY(m_addend_used);
-            return m_rel.r_addend;
-        }
-        bool addend_used() const { return m_addend_used; }
-
-        Symbol symbol() const
-        {
-            return m_dynamic.symbol(symbol_index());
-        }
+        Symbol symbol() const { return m_dynamic.symbol(symbol_index()); }
         VirtualAddress address() const
         {
             if (m_dynamic.elf_is_dynamic())
@@ -198,9 +158,8 @@ public:
 
     private:
         const DynamicObject& m_dynamic;
-        const ElfW(Rela) & m_rel;
+        const ElfW(Rel) & m_rel;
         const unsigned m_offset_in_section;
-        const bool m_addend_used;
     };
 
     enum class HashType {
@@ -370,7 +329,6 @@ private:
     size_t m_number_of_relocations { 0 };
     size_t m_size_of_relocation_entry { 0 };
     size_t m_size_of_relocation_table { 0 };
-    bool m_addend_used { false };
     FlatPtr m_relocation_table_offset { 0 };
     bool m_is_elf_dynamic { false };
 

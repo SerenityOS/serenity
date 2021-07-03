@@ -512,7 +512,6 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         RefPtr<Expression> property_key;
         bool is_static = false;
         bool is_constructor = false;
-        bool is_generator = false;
         auto method_kind = ClassMethod::Kind::Method;
 
         if (match(TokenType::Semicolon)) {
@@ -520,22 +519,11 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             continue;
         }
 
-        if (match(TokenType::Asterisk)) {
-            consume();
-            is_generator = true;
-        }
-
         if (match_property_key()) {
             StringView name;
-            if (!is_generator && m_state.current_token.value() == "static"sv) {
-                if (match(TokenType::Identifier)) {
-                    consume();
-                    is_static = true;
-                    if (match(TokenType::Asterisk)) {
-                        consume();
-                        is_generator = true;
-                    }
-                }
+            if (match(TokenType::Identifier) && m_state.current_token.value() == "static") {
+                consume();
+                is_static = true;
             }
 
             if (match(TokenType::Identifier)) {
@@ -577,8 +565,6 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                     syntax_error("Class constructor may not be an accessor");
                 if (!constructor.is_null())
                     syntax_error("Classes may not have more than one constructor");
-                if (is_generator)
-                    syntax_error("Class constructor may not be a generator");
 
                 is_constructor = true;
             }
@@ -592,8 +578,6 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 parse_options |= FunctionNodeParseOptions::IsGetterFunction;
             if (method_kind == ClassMethod::Kind::Setter)
                 parse_options |= FunctionNodeParseOptions::IsSetterFunction;
-            if (is_generator)
-                parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
             auto function = parse_function_node<FunctionExpression>(parse_options);
             if (is_constructor) {
                 constructor = move(function);
@@ -615,8 +599,9 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         if (!super_class.is_null()) {
             // Set constructor to the result of parsing the source text
             // constructor(... args){ super (...args);}
-            auto super_call = create_ast_node<SuperCall>(
+            auto super_call = create_ast_node<CallExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
+                create_ast_node<SuperExpression>({ m_state.current_token.filename(), rule_start.position(), position() }),
                 Vector { CallExpression::Argument { create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, "args"), true } });
             constructor_body->append(create_ast_node<ExpressionStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(super_call)));
             constructor_body->add_variables(m_state.var_scopes.last());
@@ -644,9 +629,7 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
     case TokenType::ParenOpen: {
         auto paren_position = position();
         consume(TokenType::ParenOpen);
-        if ((match(TokenType::ParenClose) || match(TokenType::Identifier) || match(TokenType::TripleDot) || match(TokenType::CurlyOpen) || match(TokenType::BracketOpen))
-            && !try_parse_arrow_function_expression_failed_at_position(paren_position)) {
-
+        if ((match(TokenType::ParenClose) || match(TokenType::Identifier) || match(TokenType::TripleDot)) && !try_parse_arrow_function_expression_failed_at_position(paren_position)) {
             auto arrow_function_result = try_parse_arrow_function_expression(true);
             if (!arrow_function_result.is_null())
                 return { arrow_function_result.release_nonnull() };
@@ -1287,9 +1270,6 @@ NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expres
 
     consume(TokenType::ParenClose);
 
-    if (is<SuperExpression>(*lhs))
-        return create_ast_node<SuperCall>({ m_state.current_token.filename(), rule_start.position(), position() }, move(arguments));
-
     return create_ast_node<CallExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, move(lhs), move(arguments));
 }
 
@@ -1421,7 +1401,6 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
     ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Function);
 
-    constexpr auto is_function_expression = IsSame<FunctionNodeType, FunctionExpression>;
     auto is_generator = (parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0;
     String name;
     if (parse_options & FunctionNodeParseOptions::CheckForFunctionAndName) {
@@ -1436,8 +1415,6 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
         if (FunctionNodeType::must_have_name() || match(TokenType::Identifier))
             name = consume(TokenType::Identifier).value();
-        else if (is_function_expression && (match(TokenType::Yield) || match(TokenType::Await)))
-            name = consume().value();
     }
     consume(TokenType::ParenOpen);
     i32 function_length = -1;
@@ -1687,10 +1664,6 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
                 consume(TokenType::Identifier).value());
         } else if (auto pattern = parse_binding_pattern()) {
             target = pattern.release_nonnull();
-        } else if (!m_state.in_generator_function_context && match(TokenType::Yield)) {
-            target = create_ast_node<Identifier>(
-                { m_state.current_token.filename(), rule_start.position(), position() },
-                consume().value());
         }
 
         if (target.has<Empty>()) {
@@ -1708,7 +1681,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
             init = parse_expression(2);
         } else if (!for_loop_variable_declaration && declaration_kind == DeclarationKind::Const) {
             syntax_error("Missing initializer in 'const' variable declaration");
-        } else if (!for_loop_variable_declaration && target.has<NonnullRefPtr<BindingPattern>>()) {
+        } else if (target.has<NonnullRefPtr<BindingPattern>>()) {
             syntax_error("Missing initializer in destructuring assignment");
         }
 

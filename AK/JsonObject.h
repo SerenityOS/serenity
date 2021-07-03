@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,46 +19,52 @@ public:
     JsonObject() = default;
     ~JsonObject() = default;
 
-    JsonObject(JsonObject const& other)
-        : m_members(other.m_members)
+    JsonObject(const JsonObject& other)
+        : m_order(other.m_order)
+        , m_members(other.m_members)
     {
     }
 
     JsonObject(JsonObject&& other)
-        : m_members(move(other.m_members))
+        : m_order(move(other.m_order))
+        , m_members(move(other.m_members))
     {
     }
 
-    JsonObject& operator=(JsonObject const& other)
+    JsonObject& operator=(const JsonObject& other)
     {
-        if (this != &other)
+        if (this != &other) {
             m_members = other.m_members;
+            m_order = other.m_order;
+        }
         return *this;
     }
 
     JsonObject& operator=(JsonObject&& other)
     {
-        if (this != &other)
+        if (this != &other) {
             m_members = move(other.m_members);
+            m_order = move(other.m_order);
+        }
         return *this;
     }
 
-    [[nodiscard]] size_t size() const { return m_members.size(); }
-    [[nodiscard]] bool is_empty() const { return m_members.is_empty(); }
+    int size() const { return m_members.size(); }
+    bool is_empty() const { return m_members.is_empty(); }
 
-    [[nodiscard]] JsonValue const& get(String const& key) const
+    JsonValue get(const String& key) const
     {
         auto* value = get_ptr(key);
-        static JsonValue* s_null_value { nullptr };
-        if (!value) {
-            if (!s_null_value)
-                s_null_value = new JsonValue;
-            return *s_null_value;
-        }
-        return *value;
+        return value ? *value : JsonValue(JsonValue::Type::Null);
     }
 
-    [[nodiscard]] JsonValue const* get_ptr(String const& key) const
+    JsonValue get_or(const String& key, const JsonValue& alternative) const
+    {
+        auto* value = get_ptr(key);
+        return value ? *value : alternative;
+    }
+
+    const JsonValue* get_ptr(const String& key) const
     {
         auto it = m_members.find(key);
         if (it == m_members.end())
@@ -67,84 +72,34 @@ public:
         return &(*it).value;
     }
 
-    [[nodiscard]] [[nodiscard]] bool has(String const& key) const
+    bool has(const String& key) const
     {
         return m_members.contains(key);
     }
 
-    [[nodiscard]] bool has_null(String const& key) const
+    void set(const String& key, JsonValue value)
     {
-        auto* value = get_ptr(key);
-        return value && value->is_null();
-    }
-    [[nodiscard]] bool has_bool(String const& key) const
-    {
-        auto* value = get_ptr(key);
-        return value && value->is_bool();
-    }
-    [[nodiscard]] bool has_string(String const& key) const
-    {
-        auto* value = get_ptr(key);
-        return value && value->is_string();
-    }
-    [[nodiscard]] bool has_i32(String const& key) const
-    {
-        auto* value = get_ptr(key);
-        return value && value->is_i32();
-    }
-    [[nodiscard]] bool has_u32(String const& key) const
-    {
-        auto* value = get_ptr(key);
-        return value && value->is_u32();
-    }
-    [[nodiscard]] bool has_i64(String const& key) const
-    {
-        auto* value = get_ptr(key);
-        return value && value->is_i64();
-    }
-    [[nodiscard]] bool has_u64(String const& key) const
-    {
-        auto* value = get_ptr(key);
-        return value && value->is_u64();
-    }
-    [[nodiscard]] bool has_number(String const& key) const
-    {
-        auto* value = get_ptr(key);
-        return value && value->is_number();
-    }
-    [[nodiscard]] bool has_array(String const& key) const
-    {
-        auto* value = get_ptr(key);
-        return value && value->is_array();
-    }
-    [[nodiscard]] bool has_object(String const& key) const
-    {
-        auto* value = get_ptr(key);
-        return value && value->is_object();
-    }
-#ifndef KERNEL
-    [[nodiscard]] [[nodiscard]] bool has_double(String const& key) const
-    {
-        auto* value = get_ptr(key);
-        return value && value->is_double();
-    }
-#endif
-
-    void set(String const& key, JsonValue value)
-    {
-        m_members.set(key, move(value));
+        if (m_members.set(key, move(value)) == HashSetResult::ReplacedExistingEntry)
+            m_order.remove(m_order.find_first_index(key).value());
+        m_order.append(key);
     }
 
     template<typename Callback>
     void for_each_member(Callback callback) const
     {
-        for (auto& member : m_members)
-            callback(member.key, member.value);
+        for (size_t i = 0; i < m_order.size(); ++i) {
+            auto property = m_order[i];
+            callback(property, m_members.get(property).value());
+        }
     }
 
-    bool remove(String const& key)
+    bool remove(const String& key)
     {
-        return m_members.remove(key);
+        if (m_members.remove(key)) {
+            m_order.remove(m_order.find_first_index(key).value());
+            return true;
+        }
+        return false;
     }
 
     template<typename Builder>
@@ -153,10 +108,11 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-    [[nodiscard]] String to_string() const { return serialized<StringBuilder>(); }
+    String to_string() const { return serialized<StringBuilder>(); }
 
 private:
-    OrderedHashMap<String, JsonValue> m_members;
+    Vector<String> m_order;
+    HashMap<String, JsonValue> m_members;
 };
 
 template<typename Builder>

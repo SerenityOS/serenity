@@ -14,7 +14,7 @@ namespace Kernel {
 
 using BlockFlags = Thread::FileBlocker::BlockFlags;
 
-KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params*> user_params)
+KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
     Syscall::SC_select_params params {};
@@ -61,7 +61,7 @@ KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params
         return EFAULT;
 
     Thread::SelectBlocker::FDVector fds_info;
-    Vector<int, FD_SETSIZE> selected_fds;
+    Vector<int, FD_SETSIZE> fds;
     for (int fd = 0; fd < params.nfds; fd++) {
         auto block_flags = BlockFlags::None;
         if (params.readfds && FD_ISSET(fd, &fds_read))
@@ -73,14 +73,14 @@ KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params
         if (block_flags == BlockFlags::None)
             continue;
 
-        auto description = fds().file_description(fd);
+        auto description = file_description(fd);
         if (!description) {
             dbgln("sys$select: Bad fd number {}", fd);
             return EBADF;
         }
         if (!fds_info.try_append({ description.release_nonnull(), block_flags }))
             return ENOMEM;
-        if (!selected_fds.try_append(fd))
+        if (!fds.try_append(fd))
             return ENOMEM;
     }
 
@@ -105,15 +105,15 @@ KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params
         if (fd_entry.unblocked_flags == BlockFlags::None)
             continue;
         if (params.readfds && has_flag(fd_entry.unblocked_flags, BlockFlags::Read)) {
-            FD_SET(selected_fds[i], &fds_read);
+            FD_SET(fds[i], &fds_read);
             marked_fd_count++;
         }
         if (params.writefds && has_flag(fd_entry.unblocked_flags, BlockFlags::Write)) {
-            FD_SET(selected_fds[i], &fds_write);
+            FD_SET(fds[i], &fds_write);
             marked_fd_count++;
         }
         if (params.exceptfds && has_flag(fd_entry.unblocked_flags, BlockFlags::Exception)) {
-            FD_SET(selected_fds[i], &fds_except);
+            FD_SET(fds[i], &fds_except);
             marked_fd_count++;
         }
     }
@@ -127,7 +127,7 @@ KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params
     return marked_fd_count;
 }
 
-KResultOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
+KResultOr<int> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -135,7 +135,7 @@ KResultOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> u
     if (!copy_from_user(&params, user_params))
         return EFAULT;
 
-    if (params.nfds >= fds().max_open())
+    if (params.nfds >= m_max_open_file_descriptors)
         return ENOBUFS;
 
     Thread::BlockTimeout timeout;
@@ -165,7 +165,7 @@ KResultOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> u
     Thread::SelectBlocker::FDVector fds_info;
     for (size_t i = 0; i < params.nfds; i++) {
         auto& pfd = fds_copy[i];
-        auto description = fds().file_description(pfd.fd);
+        auto description = file_description(pfd.fd);
         if (!description) {
             dbgln("sys$poll: Bad fd number {}", pfd.fd);
             return EBADF;

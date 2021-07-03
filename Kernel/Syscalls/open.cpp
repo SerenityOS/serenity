@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
+KResultOr<int> Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
 {
     Syscall::SC_open_params params;
     if (!copy_from_user(&params, user_params))
@@ -44,7 +44,7 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
         return path.error();
 
     dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path.value()->view(), options, mode);
-    int fd = m_fds.allocate();
+    int fd = alloc_fd();
     if (fd < 0)
         return fd;
 
@@ -52,7 +52,7 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
     if (dirfd == AT_FDCWD) {
         base = current_directory();
     } else {
-        auto base_description = fds().file_description(dirfd);
+        auto base_description = file_description(dirfd);
         if (!base_description)
             return EBADF;
         if (!base_description->is_directory())
@@ -75,10 +75,10 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
     return fd;
 }
 
-KResultOr<FlatPtr> Process::sys$close(int fd)
+KResultOr<int> Process::sys$close(int fd)
 {
     REQUIRE_PROMISE(stdio);
-    auto description = fds().file_description(fd);
+    auto description = file_description(fd);
     dbgln_if(IO_DEBUG, "sys$close({}) {}", fd, description.ptr());
     if (!description)
         return EBADF;

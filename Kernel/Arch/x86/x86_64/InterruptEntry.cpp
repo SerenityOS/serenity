@@ -12,30 +12,7 @@
 asm(
     ".globl interrupt_common_asm_entry\n"
     "interrupt_common_asm_entry: \n"
-    // save all the other registers
-    "    pushq %r15\n"
-    "    pushq %r14\n"
-    "    pushq %r13\n"
-    "    pushq %r12\n"
-    "    pushq %r11\n"
-    "    pushq %r10\n"
-    "    pushq %r9\n"
-    "    pushq %r8\n"
-    "    pushq %rax\n"
-    "    pushq %rcx\n"
-    "    pushq %rdx\n"
-    "    pushq %rbx\n"
-    "    pushq %rsp\n"
-    "    pushq %rbp\n"
-    "    pushq %rsi\n"
-    "    pushq %rdi\n"
-    "    pushq %rsp \n" /* set TrapFrame::regs */
-    "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n"
-    "    movq %rsp, %rdi \n"
-    "    cld\n"
-    "    call enter_trap \n"
-    "    movq %rsp, %rdi \n"
-    "    call handle_interrupt \n"
+    "    hlt \n" // FIXME
     ".globl common_trap_exit \n"
     "common_trap_exit: \n"
     // another thread may have handled this trap at this point, so don't

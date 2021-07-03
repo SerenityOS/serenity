@@ -12,9 +12,7 @@
 
 namespace Kernel::Graphics {
 
-class VirtIOGraphicsAdapter final
-    : public GraphicsDevice
-    , public PCI::DeviceController {
+class VirtIOGraphicsAdapter final : public GraphicsDevice {
     AK_MAKE_ETERNAL
 
 public:

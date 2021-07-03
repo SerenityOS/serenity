@@ -25,16 +25,6 @@ if [ "$(uname)" = "Darwin" ] && [ "$(uname -m)" = "x86_64" ]; then
     fi
 fi
 
-SCRIPT_DIR="$(dirname "${0}")"
-
-# Prepend the toolchain qemu directory so we pick up QEMU from there
-PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
-
-# Also prepend the i686 toolchain directory because that's where most
-# people will have their QEMU binaries if they built them before the
-# directory was changed to Toolchain/Local/qemu.
-PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
-
 SERENITY_RUN="${SERENITY_RUN:-$1}"
 
 if [ -z "$SERENITY_QEMU_BIN" ]; then
@@ -59,29 +49,16 @@ fi
     fi
 }
 
-if ! command -v "$SERENITY_QEMU_BIN" >/dev/null 2>&1 ; then
-    die "Please install QEMU version 5.0 or newer or use the Toolchain/BuildQemu.sh script."
-fi
-
 SERENITY_QEMU_MIN_REQ_VERSION=5
 installed_major_version=$("$SERENITY_QEMU_BIN" -version | head -n 1 | sed -E 's/QEMU emulator version ([1-9][0-9]*|0).*/\1/')
-if [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ]; then
-    echo "Required QEMU >= 5.0! Found $($SERENITY_QEMU_BIN -version | head -n 1)"
-    echo "Please install a newer version of QEMU or use the Toolchain/BuildQemu.sh script."
-    die
-fi
+[ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ] && die "Required QEMU >= 5.0! Found $($SERENITY_QEMU_BIN -version | head -n 1)"
 
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
-if (uname -a | grep -iq WSL) || (uname -a | grep -iq microsoft); then
+if uname -a | grep -iq WSL; then
     # QEMU for windows does not like gl=on, so detect if we are building in wsl, and if so, disable it
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=off}"
-elif ("${SERENITY_QEMU_BIN}" --display help | grep -iq sdl) && (ldconfig -p | grep -iq virglrenderer); then
-    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=on}"
-elif "${SERENITY_QEMU_BIN}" --display help | grep -iq cocoa; then
-    # QEMU for OSX seems to only support cocoa
-    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-cocoa,gl=off}"
 else
-    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-gtk,gl=off}"
+    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=on}"
 fi
 
 if [ "$SERENITY_SCREENS" -gt 1 ]; then
@@ -94,13 +71,9 @@ else
     SERENITY_QEMU_DISPLAY_DEVICE="VGA,vgamem_mb=64 "
 fi
 
-if [ -z "$SERENITY_DISABLE_GDB_SOCKET" ]; then
-  SERENITY_EXTRA_QEMU_ARGS="$SERENITY_EXTRA_QEMU_ARGS -s"
-fi
-
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
--m $SERENITY_RAM_SIZE
+-s -m $SERENITY_RAM_SIZE
 -cpu $SERENITY_QEMU_CPU
 -d guest_errors
 -smp 2
@@ -115,7 +88,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device virtio-rng-pci
 -soundhw pcspk
 -device sb16
--device pci-bridge,chassis_nr=1,id=bridge1 -device e1000,bus=bridge1
+-device pci-bridge,chassis_nr=1,id=bridge1 -device megasas,bus=bridge1
 -device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
 -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
 -device ich9-ahci,bus=bridge3
@@ -123,16 +96,13 @@ $SERENITY_EXTRA_QEMU_ARGS
 
 [ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
--m $SERENITY_RAM_SIZE
+-s -m $SERENITY_RAM_SIZE
 -cpu $SERENITY_QEMU_CPU
 -machine q35
 -d guest_errors
 -smp 2
 -display $SERENITY_QEMU_DISPLAY_BACKEND
 -device $SERENITY_QEMU_DISPLAY_DEVICE
--device secondary-vga
--device bochs-display
--device VGA,vgamem_mb=64
 -device piix3-ide
 -drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
 -device ahci,id=ahci
@@ -217,8 +187,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
     echo "Running QEMU in CI"
     "$SERENITY_QEMU_BIN" \
         $SERENITY_EXTRA_QEMU_ARGS \
-        $SERENITY_VIRT_TECH_ARG \
-        -m $SERENITY_RAM_SIZE \
+        -s -m $SERENITY_RAM_SIZE \
         -cpu $SERENITY_QEMU_CPU \
         -d guest_errors \
         -smp 2 \

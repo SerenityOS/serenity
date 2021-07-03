@@ -104,7 +104,7 @@ void __cxa_finalize(void* dso_handle)
     __pthread_mutex_unlock(&atexit_mutex);
 }
 
-__attribute__((noreturn)) void __cxa_pure_virtual()
+[[noreturn]] void __cxa_pure_virtual()
 {
     VERIFY_NOT_REACHED();
 }

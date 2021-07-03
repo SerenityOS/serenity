@@ -120,8 +120,6 @@ void DynamicObject::parse()
             m_plt_relocation_offset_location = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
         case DT_RELA:
-            m_addend_used = true;
-            [[fallthrough]];
         case DT_REL:
             m_relocation_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
             break;
@@ -191,15 +189,15 @@ DynamicObject::Relocation DynamicObject::RelocationSection::relocation(unsigned 
 {
     VERIFY(index < entry_count());
     unsigned offset_in_section = index * entry_size();
-    auto relocation_address = (ElfW(Rela)*)address().offset(offset_in_section).as_ptr();
-    return Relocation(m_dynamic, *relocation_address, offset_in_section, m_addend_used);
+    auto relocation_address = (ElfW(Rel)*)address().offset(offset_in_section).as_ptr();
+    return Relocation(m_dynamic, *relocation_address, offset_in_section);
 }
 
 DynamicObject::Relocation DynamicObject::RelocationSection::relocation_at_offset(unsigned offset) const
 {
     VERIFY(offset <= (m_section_size_bytes - m_entry_size));
-    auto relocation_address = (ElfW(Rela)*)address().offset(offset).as_ptr();
-    return Relocation(m_dynamic, *relocation_address, offset, m_addend_used);
+    auto relocation_address = (ElfW(Rel)*)address().offset(offset).as_ptr();
+    return Relocation(m_dynamic, *relocation_address, offset);
 }
 
 DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
@@ -231,12 +229,12 @@ DynamicObject::Section DynamicObject::fini_array_section() const
 
 DynamicObject::RelocationSection DynamicObject::relocation_section() const
 {
-    return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"sv), m_addend_used);
+    return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"sv));
 }
 
 DynamicObject::RelocationSection DynamicObject::plt_relocation_section() const
 {
-    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv), false);
+    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"sv));
 }
 
 ElfW(Half) DynamicObject::program_header_count() const
@@ -278,7 +276,8 @@ auto DynamicObject::HashSection::lookup_sysv_symbol(const StringView& name, u32 
 auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name, u32 hash_value) const -> Optional<Symbol>
 {
     // Algorithm reference: https://ent-voy.blogspot.com/2011/02/
-    using BloomWord = FlatPtr;
+    // TODO: Handle 64bit bloomwords for ELF_CLASS64
+    using BloomWord = u32;
     constexpr size_t bloom_word_size = sizeof(BloomWord) * 8;
 
     const u32* hash_table_begin = (u32*)address().as_ptr();
@@ -290,13 +289,13 @@ auto DynamicObject::HashSection::lookup_gnu_symbol(const StringView& name, u32 h
     const u32 num_maskwords_bitmask = num_maskwords - 1;
     const u32 shift2 = hash_table_begin[3];
 
-    const BloomWord* bloom_words = (BloomWord const*)&hash_table_begin[4];
-    const u32* const buckets = (u32 const*)&bloom_words[num_maskwords];
+    const BloomWord* bloom_words = &hash_table_begin[4];
+    const u32* const buckets = &bloom_words[num_maskwords];
     const u32* const chains = &buckets[num_buckets];
 
     BloomWord hash1 = hash_value;
     BloomWord hash2 = hash1 >> shift2;
-    const BloomWord bitmask = ((BloomWord)1 << (hash1 % bloom_word_size)) | ((BloomWord)1 << (hash2 % bloom_word_size));
+    const BloomWord bitmask = (1 << (hash1 % bloom_word_size)) | (1 << (hash2 % bloom_word_size));
 
     if ((bloom_words[(hash1 / bloom_word_size) & num_maskwords_bitmask] & bitmask) != bitmask)
         return {};
@@ -451,11 +450,7 @@ NonnullRefPtr<DynamicObject> DynamicObject::create(const String& filename, Virtu
 VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
 {
     auto relocation = plt_relocation_section().relocation_at_offset(relocation_offset);
-#if ARCH(I386)
     VERIFY(relocation.type() == R_386_JMP_SLOT);
-#else
-    VERIFY(relocation.type() == R_X86_64_JUMP_SLOT);
-#endif
     auto symbol = relocation.symbol();
     u8* relocation_address = relocation.address().as_ptr();
 

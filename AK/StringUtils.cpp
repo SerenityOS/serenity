@@ -332,68 +332,11 @@ StringView trim_whitespace(const StringView& str, TrimMode mode)
     return trim(str, " \n\t\v\f\r", mode);
 }
 
-Optional<size_t> find(StringView const& haystack, char needle, size_t start)
+Optional<size_t> find(const StringView& haystack, const StringView& needle)
 {
-    if (start >= haystack.length())
-        return {};
-    for (size_t i = start; i < haystack.length(); ++i) {
-        if (haystack[i] == needle)
-            return i;
-    }
-    return {};
-}
-
-Optional<size_t> find(StringView const& haystack, StringView const& needle, size_t start)
-{
-    if (start > haystack.length())
-        return {};
-    auto index = AK::memmem_optional(
-        haystack.characters_without_null_termination() + start, haystack.length() - start,
+    return AK::memmem_optional(
+        haystack.characters_without_null_termination(), haystack.length(),
         needle.characters_without_null_termination(), needle.length());
-    return index.has_value() ? (*index + start) : index;
-}
-
-Optional<size_t> find_last(StringView const& haystack, char needle)
-{
-    for (size_t i = haystack.length(); i > 0; --i) {
-        if (haystack[i - 1] == needle)
-            return i - 1;
-    }
-    return {};
-}
-
-Vector<size_t> find_all(StringView const& haystack, StringView const& needle)
-{
-    Vector<size_t> positions;
-    size_t current_position = 0;
-    while (current_position <= haystack.length()) {
-        auto maybe_position = AK::memmem_optional(
-            haystack.characters_without_null_termination() + current_position, haystack.length() - current_position,
-            needle.characters_without_null_termination(), needle.length());
-        if (!maybe_position.has_value())
-            break;
-        positions.append(current_position + *maybe_position);
-        current_position += *maybe_position + 1;
-    }
-    return positions;
-}
-
-Optional<size_t> find_any_of(StringView const& haystack, StringView const& needles, SearchDirection direction)
-{
-    if (haystack.is_empty() || needles.is_empty())
-        return {};
-    if (direction == SearchDirection::Forward) {
-        for (size_t i = 0; i < haystack.length(); ++i) {
-            if (needles.contains(haystack[i]))
-                return i;
-        }
-    } else if (direction == SearchDirection::Backward) {
-        for (size_t i = haystack.length(); i > 0; --i) {
-            if (needles.contains(haystack[i - 1]))
-                return i - 1;
-        }
-    }
-    return {};
 }
 
 String to_snakecase(const StringView& str)

@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::do_statvfs(String path, statvfs* buf)
+KResultOr<int> Process::do_statvfs(String path, statvfs* buf)
 {
     auto custody_or_error = VFS::the().resolve_path(path, current_directory(), nullptr, 0);
     if (custody_or_error.is_error())
@@ -69,7 +69,7 @@ KResultOr<FlatPtr> Process::do_statvfs(String path, statvfs* buf)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_params*> user_params)
+KResultOr<int> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_params*> user_params)
 {
     REQUIRE_PROMISE(rpath);
 
@@ -83,11 +83,11 @@ KResultOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_para
     return do_statvfs(path.value()->view(), params.buf);
 }
 
-KResultOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
+KResultOr<int> Process::sys$fstatvfs(int fd, statvfs* buf)
 {
     REQUIRE_PROMISE(stdio);
 
-    auto description = fds().file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return EBADF;
 

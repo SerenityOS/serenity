@@ -14,8 +14,12 @@ namespace WindowServer {
 CursorParams CursorParams::parse_from_filename(const StringView& cursor_path, const Gfx::IntPoint& default_hotspot)
 {
     LexicalPath path(cursor_path);
+    if (!path.is_valid()) {
+        dbgln("Cannot parse invalid cursor path, use default cursor params");
+        return { default_hotspot };
+    }
     auto file_title = path.title();
-    auto last_dot_in_title = file_title.find_last('.');
+    auto last_dot_in_title = StringView(file_title).find_last_of('.');
     if (!last_dot_in_title.has_value() || last_dot_in_title.value() == 0) {
         // No encoded params in filename. Not an error, we'll just use defaults
         return { default_hotspot };

@@ -60,13 +60,6 @@ class WindowManager : public Core::Object {
     friend class WindowSwitcher;
 
 public:
-    static constexpr size_t default_window_stack_rows = 2;
-    static constexpr size_t default_window_stack_columns = 2;
-    static_assert(default_window_stack_rows >= 1);
-    static_assert(default_window_stack_columns >= 1);
-    static constexpr unsigned max_window_stack_rows = 16;
-    static constexpr unsigned max_window_stack_columns = 16;
-
     static WindowManager& the();
 
     explicit WindowManager(Gfx::PaletteImpl const&);
@@ -97,36 +90,17 @@ public:
     void start_dnd_drag(ClientConnection&, String const& text, Gfx::Bitmap const*, Core::MimeData const&);
     void end_dnd_drag();
 
-    Window* active_window()
-    {
-        VERIFY(m_current_window_stack);
-        return m_current_window_stack->active_window();
-    }
-    Window const* active_window() const
-    {
-        VERIFY(m_current_window_stack);
-        return m_current_window_stack->active_window();
-    }
-
-    Window* active_input_window()
-    {
-        VERIFY(m_current_window_stack);
-        return m_current_window_stack->active_input_window();
-    }
-    Window const* active_input_window() const
-    {
-        VERIFY(m_current_window_stack);
-        return m_current_window_stack->active_input_window();
-    }
-
+    Window* active_window() { return m_window_stack.active_window(); }
+    Window const* active_window() const { return m_window_stack.active_window(); }
+    Window* active_input_window() { return m_active_input_window.ptr(); }
+    Window const* active_input_window() const { return m_active_input_window.ptr(); }
     ClientConnection const* active_client() const;
 
     Window* window_with_active_menu() { return m_window_with_active_menu; }
     Window const* window_with_active_menu() const { return m_window_with_active_menu; }
     void set_window_with_active_menu(Window*);
 
-    Window* highlight_window() { return m_highlight_window; }
-    Window const* highlight_window() const { return m_highlight_window; }
+    Window const* highlight_window() const { return m_window_stack.highlight_window(); }
     void set_highlight_window(Window*);
 
     void move_to_front_and_make_active(Window&);
@@ -180,11 +154,8 @@ public:
     void tell_wms_window_state_changed(Window&);
     void tell_wms_window_icon_changed(Window&);
     void tell_wms_window_rect_changed(Window&);
-    void tell_wms_screen_rects_changed();
     void tell_wms_applet_area_size_changed(Gfx::IntSize const&);
     void tell_wms_super_key_pressed();
-    void tell_wms_super_space_key_pressed();
-    void tell_wms_current_window_stack_changed();
 
     bool is_active_window_or_accessory(Window&) const;
 
@@ -251,7 +222,6 @@ public:
             return f(window, true);
         }
     }
-    bool is_window_in_modal_stack(Window& window_in_modal_stack, Window& other_window);
 
     Gfx::IntPoint get_recommended_window_position(Gfx::IntPoint const& desired);
 
@@ -260,62 +230,12 @@ public:
     void reevaluate_hovered_window(Window* = nullptr);
     Window* hovered_window() const { return m_hovered_window.ptr(); }
 
-    void switch_to_window_stack(WindowStack&, Window* = nullptr, bool show_overlay = true);
-
-    size_t window_stack_rows() const { return m_window_stacks.size(); }
-    size_t window_stack_columns() const { return m_window_stacks[0].size(); }
-
-    bool apply_virtual_desktop_settings(unsigned rows, unsigned columns, bool save);
-
-    WindowStack& current_window_stack()
-    {
-        VERIFY(m_current_window_stack);
-        return *m_current_window_stack;
-    }
-
-    template<typename F>
-    IterationDecision for_each_window_stack(F f)
-    {
-        for (auto& row : m_window_stacks) {
-            for (auto& stack : row) {
-                IterationDecision decision = f(stack);
-                if (decision != IterationDecision::Continue)
-                    return decision;
-            }
-        }
-        return IterationDecision::Continue;
-    }
-
-    WindowStack& window_stack_for_window(Window&);
-
-    static constexpr bool is_stationary_window_type(WindowType window_type)
-    {
-        switch (window_type) {
-        case WindowType::Normal:
-        case WindowType::ToolWindow:
-        case WindowType::Tooltip:
-            return false;
-        default:
-            return true;
-        }
-    }
-
-    void did_switch_window_stack(Badge<Compositor>, WindowStack&, WindowStack&);
-
-    template<typename Callback>
-    IterationDecision for_each_visible_window_from_back_to_front(Callback, WindowStack* = nullptr);
-    template<typename Callback>
-    IterationDecision for_each_visible_window_from_front_to_back(Callback, WindowStack* = nullptr);
+    WindowStack& window_stack() { return m_window_stack; }
 
     MultiScaleBitmaps const* overlay_rect_shadow() const { return m_overlay_rect_shadow.ptr(); }
 
 private:
     RefPtr<Cursor> get_cursor(String const& name);
-
-    void notify_new_active_window(Window&);
-    void notify_new_active_input_window(Window&);
-    void notify_previous_active_window(Window&);
-    void notify_previous_active_input_window(Window&);
 
     void process_mouse_event(MouseEvent&);
     void process_event_for_doubleclick(Window& window, MouseEvent& event);
@@ -335,12 +255,9 @@ private:
     void tell_wm_about_window(WMClientConnection& conn, Window&);
     void tell_wm_about_window_icon(WMClientConnection& conn, Window&);
     void tell_wm_about_window_rect(WMClientConnection& conn, Window&);
-    void tell_wm_about_current_window_stack(WMClientConnection&);
     bool pick_new_active_window(Window*);
 
     void do_move_to_front(Window&, bool, bool);
-
-    [[nodiscard]] static WindowStack& get_rendering_window_stacks(WindowStack*&);
 
     RefPtr<Cursor> m_hidden_cursor;
     RefPtr<Cursor> m_arrow_cursor;
@@ -361,9 +278,7 @@ private:
 
     RefPtr<MultiScaleBitmaps> m_overlay_rect_shadow;
 
-    // Setup 2 rows 1 column by default
-    NonnullOwnPtrVector<NonnullOwnPtrVector<WindowStack, default_window_stack_columns>, default_window_stack_rows> m_window_stacks;
-    WindowStack* m_current_window_stack { nullptr };
+    WindowStack m_window_stack;
 
     struct DoubleClickInfo {
         struct ClickMetadata {
@@ -401,7 +316,8 @@ private:
     bool m_previous_event_was_super_keydown { false };
 
     WeakPtr<Window> m_hovered_window;
-    WeakPtr<Window> m_highlight_window;
+    WeakPtr<Window> m_active_input_window;
+    WeakPtr<Window> m_active_input_tracking_window;
     WeakPtr<Window> m_window_with_active_menu;
 
     OwnPtr<WindowGeometryOverlay> m_geometry_overlay;
@@ -432,84 +348,7 @@ private:
     String m_dnd_text;
 
     RefPtr<Core::MimeData> m_dnd_mime_data;
-
-    WindowStack* m_switching_to_window_stack { nullptr };
-    Vector<WeakPtr<Window>, 4> m_carry_window_to_new_stack;
 };
-
-template<typename Callback>
-inline IterationDecision WindowManager::for_each_visible_window_from_back_to_front(Callback callback, WindowStack* specific_stack)
-{
-    auto* window_stack = specific_stack;
-    WindowStack* transitioning_to_window_stack = nullptr;
-    if (!window_stack)
-        window_stack = &get_rendering_window_stacks(transitioning_to_window_stack);
-    auto for_each_window = [&]<WindowType window_type>() {
-        if constexpr (is_stationary_window_type(window_type)) {
-            auto& stationary_stack = window_stack->stationary_window_stack();
-            return stationary_stack.for_each_visible_window_of_type_from_back_to_front(window_type, callback);
-        } else {
-            auto decision = window_stack->for_each_visible_window_of_type_from_back_to_front(window_type, callback);
-            if (decision == IterationDecision::Continue && transitioning_to_window_stack)
-                decision = transitioning_to_window_stack->for_each_visible_window_of_type_from_back_to_front(window_type, callback);
-            return decision;
-        }
-    };
-    if (for_each_window.template operator()<WindowType::Desktop>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Normal>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::ToolWindow>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Taskbar>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::AppletArea>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Notification>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Tooltip>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Menu>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    return for_each_window.template operator()<WindowType::WindowSwitcher>();
-}
-
-template<typename Callback>
-inline IterationDecision WindowManager::for_each_visible_window_from_front_to_back(Callback callback, WindowStack* specific_stack)
-{
-    auto* window_stack = specific_stack;
-    WindowStack* transitioning_to_window_stack = nullptr;
-    if (!window_stack)
-        window_stack = &get_rendering_window_stacks(transitioning_to_window_stack);
-    auto for_each_window = [&]<WindowType window_type>() {
-        if constexpr (is_stationary_window_type(window_type)) {
-            auto& stationary_stack = window_stack->stationary_window_stack();
-            return stationary_stack.for_each_visible_window_of_type_from_front_to_back(window_type, callback);
-        } else {
-            auto decision = window_stack->for_each_visible_window_of_type_from_front_to_back(window_type, callback);
-            if (decision == IterationDecision::Continue && transitioning_to_window_stack)
-                decision = transitioning_to_window_stack->for_each_visible_window_of_type_from_front_to_back(window_type, callback);
-            return decision;
-        }
-    };
-    if (for_each_window.template operator()<WindowType::WindowSwitcher>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Menu>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Tooltip>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Notification>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::AppletArea>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Taskbar>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::ToolWindow>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Normal>() == IterationDecision::Break)
-        return IterationDecision::Break;
-    return for_each_window.template operator()<WindowType::Desktop>();
-}
 
 template<typename Callback>
 void WindowManager::for_each_window_manager(Callback callback)

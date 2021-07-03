@@ -14,7 +14,7 @@
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Heap/Cell.h>
-#include <LibJS/Runtime/Environment.h>
+#include <LibJS/Runtime/EnvironmentRecord.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Bytecode::Op {
@@ -484,22 +484,6 @@ private:
     Register m_arguments[];
 };
 
-class NewClass final : public Instruction {
-public:
-    explicit NewClass(ClassExpression const& class_expression)
-        : Instruction(Type::NewClass)
-        , m_class_expression(class_expression)
-    {
-    }
-
-    void execute_impl(Bytecode::Interpreter&) const;
-    String to_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
-
-private:
-    ClassExpression const& m_class_expression;
-};
-
 class NewFunction final : public Instruction {
 public:
     explicit NewFunction(FunctionNode const& function_node)
@@ -651,10 +635,10 @@ private:
     Optional<Label> m_continuation_label;
 };
 
-class PushDeclarativeEnvironment final : public Instruction {
+class PushDeclarativeEnvironmentRecord final : public Instruction {
 public:
-    explicit PushDeclarativeEnvironment(HashMap<u32, Variable> variables)
-        : Instruction(Type::PushDeclarativeEnvironment)
+    explicit PushDeclarativeEnvironmentRecord(HashMap<u32, Variable> variables)
+        : Instruction(Type::PushDeclarativeEnvironmentRecord)
         , m_variables(move(variables))
     {
     }

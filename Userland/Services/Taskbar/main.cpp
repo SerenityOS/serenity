@@ -60,8 +60,7 @@ int main(int argc, char** argv)
     window->make_window_manager(
         WindowServer::WMEventMask::WindowStateChanges
         | WindowServer::WMEventMask::WindowRemovals
-        | WindowServer::WMEventMask::WindowIconChanges
-        | WindowServer::WMEventMask::VirtualDesktopChanges);
+        | WindowServer::WMEventMask::WindowIconChanges);
 
     return app->exec();
 }
@@ -199,7 +198,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         while (dt.has_next()) {
             auto theme_name = dt.next_path();
             auto theme_path = String::formatted("/res/themes/{}", theme_name);
-            g_themes.append({ LexicalPath::title(theme_name), theme_path });
+            g_themes.append({ LexicalPath(theme_name).title(), theme_path });
         }
         quick_sort(g_themes, [](auto& a, auto& b) { return a.name < b.name; });
     }

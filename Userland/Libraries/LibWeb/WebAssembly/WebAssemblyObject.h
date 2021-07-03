@@ -9,15 +9,11 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/WebAssembly/WebAssemblyInstanceObjectPrototype.h>
+#include <LibWeb/WebAssembly/WebAssemblyObjectPrototype.h>
 
 namespace Web::Bindings {
 
 class WebAssemblyMemoryObject;
-Result<size_t, JS::Value> parse_module(JS::GlobalObject& global_object, JS::Object* buffer);
-JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String name, JS::GlobalObject& global_object);
-JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object);
-Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueType& type, JS::GlobalObject& global_object);
 
 class WebAssemblyObject final : public JS::Object {
     JS_OBJECT(WebAssemblyObject, JS::Object);
@@ -28,8 +24,6 @@ public:
     virtual ~WebAssemblyObject() override = default;
 
     virtual void visit_edges(Cell::Visitor&) override;
-
-    static Result<size_t, JS::Value> instantiate_module(Wasm::Module const&, JS::VM&, JS::GlobalObject&);
 
     struct CompiledWebAssemblyModule {
         explicit CompiledWebAssemblyModule(Wasm::Module&& module)
@@ -63,6 +57,41 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(validate);
     JS_DECLARE_NATIVE_FUNCTION(compile);
     JS_DECLARE_NATIVE_FUNCTION(instantiate);
+};
+
+class WebAssemblyModuleObject final : public JS::Object {
+    JS_OBJECT(WebAssemblyModuleObject, JS::Object);
+
+public:
+    explicit WebAssemblyModuleObject(JS::GlobalObject&, size_t index);
+    virtual ~WebAssemblyModuleObject() override = default;
+
+    size_t index() const { return m_index; }
+    const Wasm::Module& module() const { return WebAssemblyObject::s_compiled_modules.at(m_index).module; }
+
+private:
+    size_t m_index { 0 };
+};
+
+class WebAssemblyInstanceObject final : public JS::Object {
+    JS_OBJECT(WebAssemblyInstanceObject, JS::Object);
+
+public:
+    explicit WebAssemblyInstanceObject(JS::GlobalObject&, size_t index);
+    virtual void initialize(JS::GlobalObject&) override;
+    virtual ~WebAssemblyInstanceObject() override = default;
+
+    size_t index() const { return m_index; }
+    Wasm::ModuleInstance& instance() const { return WebAssemblyObject::s_instantiated_modules.at(m_index); }
+    auto& cache() { return WebAssemblyObject::s_module_caches.at(m_index); }
+
+    void visit_edges(Cell::Visitor&) override;
+
+    friend class WebAssemblyInstancePrototype;
+
+private:
+    size_t m_index { 0 };
+    JS::Object* m_exports_object { nullptr };
 };
 
 class WebAssemblyMemoryObject final : public JS::Object {

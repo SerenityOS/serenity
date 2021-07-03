@@ -60,10 +60,9 @@ struct [[gnu::packed]] MemoryRegionInfo {
         StringView memory_region_name { region_name };
         if (memory_region_name.contains("Loader.so"))
             return "Loader.so";
-        auto maybe_colon_index = memory_region_name.find(':');
-        if (!maybe_colon_index.has_value())
+        if (!memory_region_name.contains(":"))
             return {};
-        return memory_region_name.substring_view(0, *maybe_colon_index).to_string();
+        return memory_region_name.substring_view(0, memory_region_name.find_first_of(":").value()).to_string();
     }
 };
 

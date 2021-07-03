@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$beep()
+KResultOr<int> Process::sys$beep()
 {
     PCSpeaker::tone_on(440);
     auto result = Thread::current()->sleep(Time::from_nanoseconds(200'000'000));

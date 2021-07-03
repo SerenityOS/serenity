@@ -1,5 +1,3 @@
-#include <LibGfx/ShareableBitmap.h>
-
 endpoint NotificationServer
 {
     show_notification([UTF8] String text, [UTF8] String title, Gfx::ShareableBitmap icon) => ()

@@ -5,10 +5,10 @@
  */
 
 #include <AK/MACAddress.h>
-#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/Net/RTL8168NetworkAdapter.h>
+#include <Kernel/PCI/IDs.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -179,7 +179,7 @@ namespace Kernel {
 UNMAP_AFTER_INIT RefPtr<RTL8168NetworkAdapter> RTL8168NetworkAdapter::try_to_initialize(PCI::Address address)
 {
     auto id = PCI::get_id(address);
-    if (id.vendor_id != PCI::VendorID::Realtek)
+    if (id.vendor_id != (u16)PCIVendorID::Realtek)
         return {};
     if (id.device_id != 0x8168)
         return {};

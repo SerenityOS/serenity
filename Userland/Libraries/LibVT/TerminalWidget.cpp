@@ -1064,7 +1064,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         // Then add them to the context menu.
         // FIXME: Adapt this code when we actually support calling LaunchServer with a specific handler in mind.
         for (auto& handler : handlers) {
-            auto af = Desktop::AppFile::get_for_app(LexicalPath::basename(handler));
+            auto af = Desktop::AppFile::get_for_app(LexicalPath(handler).basename());
             if (!af->is_valid())
                 continue;
             auto action = GUI::Action::create(String::formatted("&Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
@@ -1084,7 +1084,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
             // file://courage/home/anon/something -> /home/anon/something
             auto path = URL(m_context_menu_href).path();
             // /home/anon/something -> something
-            auto name = LexicalPath::basename(path);
+            auto name = LexicalPath(path).basename();
             GUI::Clipboard::the().set_plain_text(name);
         }));
         m_context_menu_for_hyperlink->add_separator();
@@ -1097,7 +1097,11 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
 void TerminalWidget::drop_event(GUI::DropEvent& event)
 {
-    if (event.mime_data().has_urls()) {
+    if (event.mime_data().has_text()) {
+        event.accept();
+        auto text = event.mime_data().text();
+        send_non_user_input(text.bytes());
+    } else if (event.mime_data().has_urls()) {
         event.accept();
         auto urls = event.mime_data().urls();
         bool first = true;
@@ -1112,10 +1116,6 @@ void TerminalWidget::drop_event(GUI::DropEvent& event)
 
             first = false;
         }
-    } else if (event.mime_data().has_text()) {
-        event.accept();
-        auto text = event.mime_data().text();
-        send_non_user_input(text.bytes());
     }
 }
 

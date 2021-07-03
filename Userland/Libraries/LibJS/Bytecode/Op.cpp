@@ -12,8 +12,8 @@
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
-#include <LibJS/Runtime/DeclarativeEnvironment.h>
-#include <LibJS/Runtime/Environment.h>
+#include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
+#include <LibJS/Runtime/EnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/OrdinaryFunctionObject.h>
@@ -381,14 +381,14 @@ void ContinuePendingUnwind::replace_references_impl(BasicBlock const& from, Basi
         m_resume_target = Label { to };
 }
 
-void PushDeclarativeEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
+void PushDeclarativeEnvironmentRecord::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     HashMap<FlyString, Variable> resolved_variables;
     for (auto& it : m_variables)
         resolved_variables.set(interpreter.current_executable().get_string(it.key), it.value);
-    auto* environment = interpreter.vm().heap().allocate<DeclarativeEnvironment>(interpreter.global_object(), move(resolved_variables), interpreter.vm().lexical_environment());
-    interpreter.vm().running_execution_context().lexical_environment = environment;
-    interpreter.vm().running_execution_context().variable_environment = environment;
+    auto* environment_record = interpreter.vm().heap().allocate<DeclarativeEnvironmentRecord>(interpreter.global_object(), move(resolved_variables), interpreter.vm().lexical_environment());
+    interpreter.vm().running_execution_context().lexical_environment = environment_record;
+    interpreter.vm().running_execution_context().variable_environment = environment_record;
 }
 
 void Yield::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -452,12 +452,6 @@ void IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
         interpreter.accumulator() = iterator_value(interpreter.global_object(), *iterator_result);
 }
 
-void NewClass::execute_impl(Bytecode::Interpreter&) const
-{
-    (void)m_class_expression;
-    TODO();
-}
-
 String Load::to_string_impl(Bytecode::Executable const&) const
 {
     return String::formatted("Load {}", m_src);
@@ -475,7 +469,7 @@ String Store::to_string_impl(Bytecode::Executable const&) const
 
 String NewBigInt::to_string_impl(Bytecode::Executable const&) const
 {
-    return String::formatted("NewBigInt \"{}\"", m_bigint.to_base(10));
+    return String::formatted("NewBigInt \"{}\"", m_bigint.to_base10());
 }
 
 String NewArray::to_string_impl(Bytecode::Executable const&) const
@@ -604,11 +598,6 @@ String NewFunction::to_string_impl(Bytecode::Executable const&) const
     return "NewFunction";
 }
 
-String NewClass::to_string_impl(Bytecode::Executable const&) const
-{
-    return "NewClass";
-}
-
 String Return::to_string_impl(Bytecode::Executable const&) const
 {
     return "Return";
@@ -646,10 +635,10 @@ String ContinuePendingUnwind::to_string_impl(Bytecode::Executable const&) const
     return String::formatted("ContinuePendingUnwind resume:{}", m_resume_target);
 }
 
-String PushDeclarativeEnvironment::to_string_impl(const Bytecode::Executable& executable) const
+String PushDeclarativeEnvironmentRecord::to_string_impl(const Bytecode::Executable& executable) const
 {
     StringBuilder builder;
-    builder.append("PushDeclarativeEnvironment");
+    builder.append("PushDeclarativeEnvironmentRecord");
     if (!m_variables.is_empty()) {
         builder.append(" {");
         Vector<String> names;

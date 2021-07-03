@@ -38,9 +38,8 @@ void HttpsJob::start()
             });
         }
     };
-    m_socket->on_tls_finished = [this] {
-        if (!m_has_scheduled_finish)
-            finish_up();
+    m_socket->on_tls_finished = [&] {
+        finish_up();
     };
     m_socket->on_tls_certificate_request = [this](auto&) {
         if (on_certificate_requested)

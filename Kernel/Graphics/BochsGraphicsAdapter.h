@@ -8,10 +8,10 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <Kernel/Bus/PCI/DeviceController.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
+#include <Kernel/PCI/DeviceController.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
@@ -46,7 +46,6 @@ private:
     explicit BochsGraphicsAdapter(PCI::Address);
 
     void set_safe_resolution();
-    void unblank();
 
     bool validate_setup_resolution(size_t width, size_t height);
     u32 find_framebuffer_address();

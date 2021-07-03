@@ -91,16 +91,6 @@ String String::isolated_copy() const
     return String(move(*impl));
 }
 
-String String::substring(size_t start, size_t length) const
-{
-    if (!length)
-        return String::empty();
-    VERIFY(m_impl);
-    VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
-    VERIFY(start + length <= m_impl->length());
-    return { characters() + start, length };
-}
-
 String String::substring(size_t start) const
 {
     VERIFY(m_impl);
@@ -108,11 +98,21 @@ String String::substring(size_t start) const
     return { characters() + start, length() - start };
 }
 
+String String::substring(size_t start, size_t length) const
+{
+    if (!length)
+        return "";
+    VERIFY(m_impl);
+    VERIFY(start + length <= m_impl->length());
+    // FIXME: This needs some input bounds checking.
+    return { characters() + start, length };
+}
+
 StringView String::substring_view(size_t start, size_t length) const
 {
     VERIFY(m_impl);
-    VERIFY(!Checked<size_t>::addition_would_overflow(start, length));
     VERIFY(start + length <= m_impl->length());
+    // FIXME: This needs some input bounds checking.
     return { characters() + start, length };
 }
 
@@ -293,6 +293,23 @@ bool String::equals_ignoring_case(const StringView& other) const
     return StringUtils::equals_ignoring_case(view(), other);
 }
 
+Vector<size_t> String::find_all(const String& needle) const
+{
+    Vector<size_t> positions;
+    size_t start = 0, pos;
+    for (;;) {
+        const char* ptr = strstr(characters() + start, needle.characters());
+        if (!ptr)
+            break;
+
+        pos = ptr - characters();
+        positions.append(pos);
+
+        start = pos + 1;
+    }
+    return positions;
+}
+
 int String::replace(const String& needle, const String& replacement, bool all_occurrences)
 {
     if (is_empty())
@@ -341,7 +358,7 @@ size_t String::count(const String& needle) const
 
 String String::reverse() const
 {
-    StringBuilder reversed_string(length());
+    StringBuilder reversed_string;
     for (size_t i = length(); i-- > 0;) {
         reversed_string.append(characters()[i]);
     }
@@ -457,6 +474,19 @@ String String::vformatted(StringView fmtstr, TypeErasedFormatParams params)
     StringBuilder builder;
     vformat(builder, fmtstr, params);
     return builder.to_string();
+}
+
+Optional<size_t> String::find(char c, size_t start) const
+{
+    return find(StringView { &c, 1 }, start);
+}
+
+Optional<size_t> String::find(StringView const& view, size_t start) const
+{
+    auto index = StringUtils::find(substring_view(start), view);
+    if (!index.has_value())
+        return {};
+    return index.value() + start;
 }
 
 }

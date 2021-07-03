@@ -27,30 +27,57 @@ size_t SignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) cons
     return m_unsigned_data.export_data(bytes_view, remove_leading_zeros) + 1;
 }
 
-SignedBigInteger SignedBigInteger::from_base(u16 N, StringView str)
+static bool parse_sign(StringView& str)
 {
-    auto sign = false;
+    bool sign = false;
     if (str.length() > 1) {
         auto maybe_sign = str[0];
         if (maybe_sign == '-') {
-            str = str.substring_view(1);
+            str = str.substring_view(1, str.length() - 1);
             sign = true;
         }
         if (maybe_sign == '+')
-            str = str.substring_view(1);
+            str = str.substring_view(1, str.length() - 1);
     }
-    auto unsigned_data = UnsignedBigInteger::from_base(N, str);
+    return sign;
+}
+
+SignedBigInteger SignedBigInteger::from_base10(StringView str)
+{
+    auto sign = parse_sign(str);
+    auto unsigned_data = UnsignedBigInteger::from_base10(str);
     return { move(unsigned_data), sign };
 }
 
-String SignedBigInteger::to_base(u16 N) const
+SignedBigInteger SignedBigInteger::from_base2(StringView str)
+{
+    auto sign = parse_sign(str);
+    auto unsigned_data = UnsignedBigInteger::from_base2(str);
+    return { move(unsigned_data), sign };
+}
+
+SignedBigInteger SignedBigInteger::from_base8(StringView str)
+{
+    auto sign = parse_sign(str);
+    auto unsigned_data = UnsignedBigInteger::from_base8(str);
+    return { move(unsigned_data), sign };
+}
+
+SignedBigInteger SignedBigInteger::from_base16(StringView str)
+{
+    auto sign = parse_sign(str);
+    auto unsigned_data = UnsignedBigInteger::from_base16(str);
+    return { move(unsigned_data), sign };
+}
+
+String SignedBigInteger::to_base10() const
 {
     StringBuilder builder;
 
     if (m_sign)
         builder.append('-');
 
-    builder.append(m_unsigned_data.to_base(N));
+    builder.append(m_unsigned_data.to_base10());
 
     return builder.to_string();
 }
@@ -156,7 +183,8 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const SignedBigInteger& ot
     auto result = bitwise_or(other.unsigned_value());
 
     // The sign bit will have to be OR'd manually.
-    result.m_sign = is_negative() || other.is_negative();
+    if (other.is_negative())
+        result.negate();
 
     return result;
 }
@@ -166,7 +194,7 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_and(const SignedBigInteger& o
     auto result = bitwise_and(other.unsigned_value());
 
     // The sign bit will have to be AND'd manually.
-    result.m_sign = is_negative() && other.is_negative();
+    result.m_sign = is_negative() || other.is_negative();
 
     return result;
 }

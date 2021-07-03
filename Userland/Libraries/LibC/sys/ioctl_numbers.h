@@ -32,7 +32,7 @@ struct FBRect {
 
 struct FBRects {
     unsigned count;
-    struct FBRect const* rects;
+    FBRect const* rects;
 };
 
 __END_DECLS

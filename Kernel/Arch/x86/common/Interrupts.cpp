@@ -58,7 +58,7 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
         "    mov %ax, %ds\n"                        \
         "    mov %ax, %es\n"                        \
         "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n" \
-        "    mov %ax, %gs\n"                        \
+        "    mov %ax, %fs\n"                        \
         "    pushl %esp \n" /* set TrapFrame::regs */ \
         "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n" \
         "    pushl %esp \n"                         \
@@ -84,7 +84,7 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
         "    mov %ax, %ds\n"                        \
         "    mov %ax, %es\n"                        \
         "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n" \
-        "    mov %ax, %gs\n"                        \
+        "    mov %ax, %fs\n"                        \
         "    pushl %esp \n" /* set TrapFrame::regs */ \
         "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n" \
         "    pushl %esp \n"                         \
@@ -94,69 +94,71 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
         "    jmp common_trap_exit \n");
 
 #elif ARCH(X86_64)
-#define EH_ENTRY(ec, title)                                               \
-    extern "C" void title##_asm_entry();                                  \
-    extern "C" void title##_handler(TrapFrame*) __attribute__((used));    \
-    asm(                                                                  \
-        ".globl " #title "_asm_entry\n"                                   \
-        "" #title "_asm_entry: \n"                                        \
-        "    pushq %r15\n"                                                \
-        "    pushq %r14\n"                                                \
-        "    pushq %r13\n"                                                \
-        "    pushq %r12\n"                                                \
-        "    pushq %r11\n"                                                \
-        "    pushq %r10\n"                                                \
-        "    pushq %r9\n"                                                 \
-        "    pushq %r8\n"                                                 \
-        "    pushq %rax\n"                                                \
-        "    pushq %rcx\n"                                                \
-        "    pushq %rdx\n"                                                \
-        "    pushq %rbx\n"                                                \
-        "    pushq %rsp\n"                                                \
-        "    pushq %rbp\n"                                                \
-        "    pushq %rsi\n"                                                \
-        "    pushq %rdi\n"                                                \
-        "    pushq %rsp \n" /* set TrapFrame::regs */                     \
-        "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n"         \
-        "    subq $0x8, %rsp\n" /* align stack */                         \
-        "    lea 0x8(%rsp), %rdi \n"                                      \
-        "    cld\n"                                                       \
-        "    call enter_trap_no_irq \n"                                   \
-        "    lea 0x8(%rsp), %rdi \n"                                      \
-        "    call " #title "_handler\n"                                   \
-        "    addq $0x8, %rsp\n" /* undo alignment */                      \
+#define EH_ENTRY(ec, title)                         \
+    extern "C" void title##_asm_entry();            \
+    extern "C" void title##_handler(TrapFrame*);    \
+    asm(                                            \
+        ".globl " #title "_asm_entry\n"             \
+        "" #title "_asm_entry: \n"                  \
+        "    pushq %r15\n"                          \
+        "    pushq %r14\n"                          \
+        "    pushq %r13\n"                          \
+        "    pushq %r12\n"                          \
+        "    pushq %r11\n"                          \
+        "    pushq %r10\n"                          \
+        "    pushq %r9\n"                           \
+        "    pushq %r8\n"                           \
+        "    pushq %rax\n"                          \
+        "    pushq %rcx\n"                          \
+        "    pushq %rdx\n"                          \
+        "    pushq %rbx\n"                          \
+        "    pushq %rsp\n"                          \
+        "    pushq %rbp\n"                          \
+        "    pushq %rsi\n"                          \
+        "    pushq %rdi\n"                          \
+        "    pushq %rsp \n" /* set TrapFrame::regs */ \
+        "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n" \
+        "    subq $0x8, %rsp\n" /* align stack */   \
+        "    lea 0x8(%rsp), %rdi \n"                \
+        "    cld\n"                                 \
+        "    call enter_trap_no_irq \n"             \
+        "    lea 0x8(%rsp), %rdi \n"                \
+        "    call " #title "_handler\n"             \
+        "    addq $0x8, %rsp\n" /* undo alignment */\
         "    jmp common_trap_exit \n");
 
-#define EH_ENTRY_NO_CODE(ec, title)                                       \
-    extern "C" void title##_handler(TrapFrame*) __attribute__((used));    \
-    extern "C" void title##_asm_entry();                                  \
-asm(                                                                      \
-        ".globl " #title "_asm_entry\n"                                   \
-        "" #title "_asm_entry: \n"                                        \
-        "    pushq $0x0\n"                                                \
-        "    pushq %r15\n"                                                \
-        "    pushq %r14\n"                                                \
-        "    pushq %r13\n"                                                \
-        "    pushq %r12\n"                                                \
-        "    pushq %r11\n"                                                \
-        "    pushq %r10\n"                                                \
-        "    pushq %r9\n"                                                 \
-        "    pushq %r8\n"                                                 \
-        "    pushq %rax\n"                                                \
-        "    pushq %rcx\n"                                                \
-        "    pushq %rdx\n"                                                \
-        "    pushq %rbx\n"                                                \
-        "    pushq %rsp\n"                                                \
-        "    pushq %rbp\n"                                                \
-        "    pushq %rsi\n"                                                \
-        "    pushq %rdi\n"                                                \
-        "    pushq %rsp \n" /* set TrapFrame::regs */                     \
-        "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n"         \
-        "    movq %rsp, %rdi \n"                                          \
-        "    cld\n"                                                       \
-        "    call enter_trap_no_irq \n"                                   \
-        "    movq %rsp, %rdi \n"                                          \
-        "    call " #title "_handler\n"                                   \
+#define EH_ENTRY_NO_CODE(ec, title)                 \
+    extern "C" void title##_handler(TrapFrame*);    \
+    extern "C" void title##_asm_entry();            \
+asm(                                                \
+        ".globl " #title "_asm_entry\n"             \
+        "" #title "_asm_entry: \n"                  \
+        "    pushq $0x0\n"                          \
+        "    pushq %r15\n"                          \
+        "    pushq %r14\n"                          \
+        "    pushq %r13\n"                          \
+        "    pushq %r12\n"                          \
+        "    pushq %r11\n"                          \
+        "    pushq %r10\n"                          \
+        "    pushq %r9\n"                           \
+        "    pushq %r8\n"                           \
+        "    pushq %rax\n"                          \
+        "    pushq %rcx\n"                          \
+        "    pushq %rdx\n"                          \
+        "    pushq %rbx\n"                          \
+        "    pushq %rsp\n"                          \
+        "    pushq %rbp\n"                          \
+        "    pushq %rsi\n"                          \
+        "    pushq %rdi\n"                          \
+        "    pushq %rsp \n" /* set TrapFrame::regs */ \
+        "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n" \
+        "    subq $0x8, %rsp\n" /* align stack */   \
+        "    lea 0x8(%rsp), %rdi \n"                \
+        "    cld\n"                                 \
+        "    call enter_trap_no_irq \n"             \
+        "    lea 0x8(%rsp), %rdi \n"                \
+        "    call " #title "_handler\n"             \
+        "    addq $0x8, %rsp\n" /* undo alignment */\
         "    jmp common_trap_exit \n");
 #endif
 
@@ -354,12 +356,12 @@ void page_fault_handler(TrapFrame* trap)
             regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "",
             regs.exception_code & PageFaultFlags::Write ? "write to" : "read from",
             VirtualAddress(fault_address));
-        FlatPtr malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
-        FlatPtr free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
-        FlatPtr kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
-        FlatPtr kfree_scrub_pattern = explode_byte(KFREE_SCRUB_BYTE);
-        FlatPtr slab_alloc_scrub_pattern = explode_byte(SLAB_ALLOC_SCRUB_BYTE);
-        FlatPtr slab_dealloc_scrub_pattern = explode_byte(SLAB_DEALLOC_SCRUB_BYTE);
+        u32 malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
+        u32 free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
+        u32 kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
+        u32 kfree_scrub_pattern = explode_byte(KFREE_SCRUB_BYTE);
+        u32 slab_alloc_scrub_pattern = explode_byte(SLAB_ALLOC_SCRUB_BYTE);
+        u32 slab_dealloc_scrub_pattern = explode_byte(SLAB_DEALLOC_SCRUB_BYTE);
         if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
             dbgln("Note: Address {} looks like it may be uninitialized malloc() memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
@@ -603,7 +605,7 @@ UNMAP_AFTER_INIT void flush_idt()
 UNMAP_AFTER_INIT void idt_init()
 {
     s_idtr.address = s_idt;
-    s_idtr.limit = 256 * sizeof(IDTEntry) - 1;
+    s_idtr.limit = 256 * 8 - 1;
 
     register_interrupt_handler(0x00, divide_error_asm_entry);
     register_user_callable_interrupt_handler(0x01, debug_asm_entry);

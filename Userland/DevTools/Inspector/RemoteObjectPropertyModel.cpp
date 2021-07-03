@@ -22,7 +22,7 @@ int RemoteObjectPropertyModel::row_count(const GUI::ModelIndex& index) const
             return value.as_array().size();
         else if (value.is_object())
             return value.as_object().size();
-        return (size_t)0;
+        return 0;
     };
 
     if (index.is_valid()) {

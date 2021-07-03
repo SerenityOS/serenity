@@ -242,9 +242,7 @@ bool Value::is_constructor() const
         return false;
     if (is<NativeFunction>(as_object()))
         return static_cast<const NativeFunction&>(as_object()).has_constructor();
-    if (is<BoundFunction>(as_object()))
-        return Value(&static_cast<const BoundFunction&>(as_object()).target_function()).is_constructor();
-    // OrdinaryFunctionObject
+    // OrdinaryFunctionObject or BoundFunction
     return true;
 }
 
@@ -355,7 +353,7 @@ String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_s
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "string");
         return {};
     case Type::BigInt:
-        return m_value.as_bigint->big_integer().to_base(10);
+        return m_value.as_bigint->big_integer().to_base10();
     case Type::Object: {
         auto primitive_value = to_primitive(global_object, PreferredType::String);
         if (global_object.vm().exception())
@@ -449,7 +447,7 @@ Object* Value::to_object(GlobalObject& global_object) const
     case Type::Double:
         return NumberObject::create(global_object, as_double());
     case Type::String:
-        return StringObject::create(global_object, *m_value.as_string, *global_object.string_prototype());
+        return StringObject::create(global_object, *m_value.as_string);
     case Type::Symbol:
         return SymbolObject::create(global_object, *m_value.as_symbol);
     case Type::BigInt:
@@ -547,7 +545,7 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
             vm.throw_exception<SyntaxError>(global_object, ErrorType::BigIntInvalidValue, string);
             return {};
         }
-        return js_bigint(vm.heap(), Crypto::SignedBigInteger::from_base(10, string.trim_whitespace()));
+        return js_bigint(vm.heap(), Crypto::SignedBigInteger::from_base10(string.trim_whitespace()));
     }
     case Type::Symbol:
         vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "BigInt");
@@ -993,7 +991,7 @@ Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
             return lhs_numeric;
         // Ok, so this performs toNumber() again but that "can't" throw
         auto lhs_i32 = lhs_numeric.to_i32(global_object);
-        auto rhs_u32 = rhs_numeric.to_u32(global_object) % 32;
+        auto rhs_u32 = rhs_numeric.to_u32(global_object);
         return Value(lhs_i32 << rhs_u32);
     }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
@@ -1398,7 +1396,7 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
         auto& rhs_string = rhs.as_string().string();
         if (!is_valid_bigint_value(rhs_string))
             return false;
-        return abstract_eq(global_object, lhs, js_bigint(global_object.heap(), Crypto::SignedBigInteger::from_base(10, rhs_string)));
+        return abstract_eq(global_object, lhs, js_bigint(global_object.heap(), Crypto::SignedBigInteger::from_base10(rhs_string)));
     }
 
     if (lhs.is_string() && rhs.is_bigint())
@@ -1490,7 +1488,7 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         auto& y_string = y_primitive.as_string().string();
         if (!is_valid_bigint_value(y_string))
             return TriState::Unknown;
-        if (x_primitive.as_bigint().big_integer() < Crypto::SignedBigInteger::from_base(10, y_string))
+        if (x_primitive.as_bigint().big_integer() < Crypto::SignedBigInteger::from_base10(y_string))
             return TriState::True;
         else
             return TriState::False;
@@ -1500,7 +1498,7 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         auto& x_string = x_primitive.as_string().string();
         if (!is_valid_bigint_value(x_string))
             return TriState::Unknown;
-        if (Crypto::SignedBigInteger::from_base(10, x_string) < y_primitive.as_bigint().big_integer())
+        if (Crypto::SignedBigInteger::from_base10(x_string) < y_primitive.as_bigint().big_integer())
             return TriState::True;
         else
             return TriState::False;

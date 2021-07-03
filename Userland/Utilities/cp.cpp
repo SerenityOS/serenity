@@ -36,7 +36,7 @@ int main(int argc, char** argv)
 
     for (auto& source : sources) {
         auto destination_path = destination_is_existing_dir
-            ? String::formatted("{}/{}", destination, LexicalPath::basename(source))
+            ? String::formatted("{}/{}", destination, LexicalPath(source).basename())
             : destination;
 
         auto result = Core::File::copy_file_or_directory(

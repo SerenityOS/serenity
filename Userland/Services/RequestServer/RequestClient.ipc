@@ -1,5 +1,3 @@
-#include <AK/URL.h>
-
 endpoint RequestClient
 {
     request_progress(i32 request_id, Optional<u32> total_size, u32 downloaded_size) =|

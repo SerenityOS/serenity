@@ -22,13 +22,13 @@ namespace Kernel {
 
 constexpr bool page_round_up_would_wrap(FlatPtr x)
 {
-    return x > (explode_byte(0xFF) & ~0xFFF);
+    return x > 0xfffff000u;
 }
 
 constexpr FlatPtr page_round_up(FlatPtr x)
 {
     FlatPtr rounded = (((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1));
-    // Rounding up >0xfffff000 wraps back to 0. That's never what we want.
+    // Rounding up >0xffff0000 wraps back to 0. That's never what we want.
     VERIFY(x == 0 || rounded != 0);
     return rounded;
 }
@@ -40,12 +40,12 @@ constexpr FlatPtr page_round_down(FlatPtr x)
 
 inline FlatPtr low_physical_to_virtual(FlatPtr physical)
 {
-    return physical + KERNEL_BASE;
+    return physical + 0xc0000000;
 }
 
 inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)
 {
-    return virtual_ - KERNEL_BASE;
+    return virtual_ - 0xc0000000;
 }
 
 enum class UsedMemoryRangeType {
@@ -260,7 +260,7 @@ void VMObject::for_each_region(Callback callback)
 
 inline bool is_user_address(VirtualAddress vaddr)
 {
-    return vaddr.get() < KERNEL_BASE;
+    return vaddr.get() < 0xc0000000;
 }
 
 inline bool is_user_range(VirtualAddress vaddr, size_t size)

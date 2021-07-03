@@ -271,17 +271,16 @@ static String get_duplicate_name(const String& path, int duplicate_count)
     LexicalPath lexical_path(path);
     StringBuilder duplicated_name;
     duplicated_name.append('/');
-    auto& parts = lexical_path.parts_view();
-    for (size_t i = 0; i < parts.size() - 1; ++i) {
-        duplicated_name.appendff("{}/", parts[i]);
+    for (size_t i = 0; i < lexical_path.parts().size() - 1; ++i) {
+        duplicated_name.appendff("{}/", lexical_path.parts()[i]);
     }
     auto prev_duplicate_tag = String::formatted("({})", duplicate_count);
     auto title = lexical_path.title();
     if (title.ends_with(prev_duplicate_tag)) {
         // remove the previous duplicate tag "(n)" so we can add a new tag.
-        title = title.substring_view(0, title.length() - prev_duplicate_tag.length());
+        title = title.substring(0, title.length() - prev_duplicate_tag.length());
     }
-    duplicated_name.appendff("{} ({})", title, duplicate_count);
+    duplicated_name.appendff("{} ({})", lexical_path.title(), duplicate_count);
     if (!lexical_path.extension().is_empty()) {
         duplicated_name.appendff(".{}", lexical_path.extension());
     }
@@ -333,7 +332,7 @@ Result<void, File::CopyError> File::copy_file(const String& dst_path, const stru
         if (errno != EISDIR)
             return CopyError { OSError(errno), false };
 
-        auto dst_dir_path = String::formatted("{}/{}", dst_path, LexicalPath::basename(source.filename()));
+        auto dst_dir_path = String::formatted("{}/{}", dst_path, LexicalPath(source.filename()).basename());
         dst_fd = creat(dst_dir_path.characters(), 0666);
         if (dst_fd < 0)
             return CopyError { OSError(errno), false };

@@ -39,13 +39,10 @@ Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 
 extern "C" void thread_context_first_enter(void);
 extern "C" void exit_kernel_thread(void);
-extern "C" void do_assume_context(Thread* thread, u32 flags);
 
-// The compiler can't see the calls to these functions inside assembly.
-// Declare them, to avoid dead code warnings.
+// The compiler can't see the calls to this function inside assembly.
+// Declare it, to avoid dead code warnings.
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap) __attribute__((used));
-extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
-extern "C" FlatPtr do_init_context(Thread* thread, u32 flags) __attribute__((used));
 
 UNMAP_AFTER_INIT static void sse_init()
 {
@@ -408,12 +405,12 @@ const DescriptorTablePointer& Processor::get_gdtr()
 
 Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames)
 {
-    FlatPtr frame_ptr = 0, ip = 0;
+    FlatPtr frame_ptr = 0, eip = 0;
     Vector<FlatPtr, 32> stack_trace;
 
     auto walk_stack = [&](FlatPtr stack_ptr) {
         static constexpr size_t max_stack_frames = 4096;
-        stack_trace.append(ip);
+        stack_trace.append(eip);
         size_t count = 1;
         while (stack_ptr && stack_trace.size() < max_stack_frames) {
             FlatPtr retaddr;
@@ -440,7 +437,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     };
     auto capture_current_thread = [&]() {
         frame_ptr = (FlatPtr)__builtin_frame_address(0);
-        ip = (FlatPtr)__builtin_return_address(0);
+        eip = (FlatPtr)__builtin_return_address(0);
 
         walk_stack(frame_ptr);
     };
@@ -496,15 +493,10 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             // pushed the callee-saved registers, and the last of them happens
             // to be ebp.
             ProcessPagingScope paging_scope(thread.process());
-            auto& regs = thread.regs();
-            FlatPtr* stack_top;
-            FlatPtr sp;
 #if ARCH(I386)
-            sp = regs.esp;
-#else
-            sp = regs.rsp;
-#endif
-            stack_top = reinterpret_cast<FlatPtr*>(sp);
+            auto& regs = thread.regs();
+            u32* stack_top;
+            stack_top = reinterpret_cast<u32*>(regs.esp);
             if (is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
                 if (!copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]))
                     frame_ptr = 0;
@@ -513,10 +505,9 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
                 if (!safe_memcpy(&frame_ptr, &((FlatPtr*)stack_top)[0], sizeof(FlatPtr), fault_at))
                     frame_ptr = 0;
             }
-#if ARCH(I386)
-            ip = regs.eip;
+            eip = regs.eip;
 #else
-            ip = regs.rip;
+            TODO();
 #endif
             // TODO: We need to leave the scheduler lock here, but we also
             //       need to prevent the target thread from being run while
@@ -1077,7 +1068,6 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
 #else
     write_raw_gdt_entry(GDT_SELECTOR_CODE0, 0x0000ffff, 0x00af9a00); // code0
     write_raw_gdt_entry(GDT_SELECTOR_CODE3, 0x0000ffff, 0x00affa00); // code3
-    write_raw_gdt_entry(GDT_SELECTOR_DATA3, 0x0000ffff, 0x008ff200); // data3
 #endif
 
 #if ARCH(I386)
@@ -1092,17 +1082,17 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     tls_descriptor.type = 2;
     write_gdt_entry(GDT_SELECTOR_TLS, tls_descriptor); // tls3
 
-    Descriptor gs_descriptor {};
-    gs_descriptor.set_base(VirtualAddress { this });
-    gs_descriptor.set_limit(sizeof(Processor) - 1);
-    gs_descriptor.dpl = 0;
-    gs_descriptor.segment_present = 1;
-    gs_descriptor.granularity = 0;
-    gs_descriptor.operation_size64 = 0;
-    gs_descriptor.operation_size32 = 1;
-    gs_descriptor.descriptor_type = 1;
-    gs_descriptor.type = 2;
-    write_gdt_entry(GDT_SELECTOR_PROC, gs_descriptor); // gs0
+    Descriptor fs_descriptor {};
+    fs_descriptor.set_base(VirtualAddress { this });
+    fs_descriptor.set_limit(sizeof(Processor) - 1);
+    fs_descriptor.dpl = 0;
+    fs_descriptor.segment_present = 1;
+    fs_descriptor.granularity = 0;
+    fs_descriptor.operation_size64 = 0;
+    fs_descriptor.operation_size32 = 1;
+    fs_descriptor.descriptor_type = 1;
+    fs_descriptor.type = 2;
+    write_gdt_entry(GDT_SELECTOR_PROC, fs_descriptor); // fs0
 #endif
 
     Descriptor tss_descriptor {};
@@ -1127,16 +1117,16 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     load_task_register(GDT_SELECTOR_TSS);
 
 #if ARCH(X86_64)
-    MSR gs_base(MSR_GS_BASE);
-    gs_base.set((size_t)this & 0xffffffff, (size_t)this >> 32);
+    MSR fs_base(MSR_FS_BASE);
+    fs_base.set((size_t)this & 0xffffffff, (size_t)this >> 32);
 #else
     asm volatile(
         "mov %%ax, %%ds\n"
         "mov %%ax, %%es\n"
-        "mov %%ax, %%fs\n"
+        "mov %%ax, %%gs\n"
         "mov %%ax, %%ss\n" ::"a"(GDT_SELECTOR_DATA0)
         : "memory");
-    set_gs(GDT_SELECTOR_PROC);
+    set_fs(GDT_SELECTOR_PROC);
 #endif
 
 #if ARCH(I386)
@@ -1173,87 +1163,6 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     flags = trap->regs->rflags;
 #endif
     Scheduler::leave_on_first_switch(flags & ~0x200);
-}
-
-extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
-{
-    VERIFY(from_thread == to_thread || from_thread->state() != Thread::Running);
-    VERIFY(to_thread->state() == Thread::Running);
-
-    bool has_fxsr = Processor::current().has_feature(CPUFeature::FXSR);
-    Processor::set_current_thread(*to_thread);
-
-    auto& from_regs = from_thread->regs();
-    auto& to_regs = to_thread->regs();
-
-    if (has_fxsr)
-        asm volatile("fxsave %0"
-                     : "=m"(from_thread->fpu_state()));
-    else
-        asm volatile("fnsave %0"
-                     : "=m"(from_thread->fpu_state()));
-
-#if ARCH(I386)
-    from_regs.fs = get_fs();
-    from_regs.gs = get_gs();
-    set_fs(to_regs.fs);
-    set_gs(to_regs.gs);
-#endif
-
-    if (from_thread->process().is_traced())
-        read_debug_registers_into(from_thread->debug_register_state());
-
-    if (to_thread->process().is_traced()) {
-        write_debug_registers_from(to_thread->debug_register_state());
-    } else {
-        clear_debug_registers();
-    }
-
-    auto& processor = Processor::current();
-#if ARCH(I386)
-    auto& tls_descriptor = processor.get_gdt_entry(GDT_SELECTOR_TLS);
-    tls_descriptor.set_base(to_thread->thread_specific_data());
-    tls_descriptor.set_limit(to_thread->thread_specific_region_size());
-#endif
-
-    if (from_regs.cr3 != to_regs.cr3)
-        write_cr3(to_regs.cr3);
-
-    to_thread->set_cpu(processor.get_id());
-    processor.restore_in_critical(to_thread->saved_critical());
-
-    if (has_fxsr)
-        asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
-    else
-        asm volatile("frstor %0" ::"m"(to_thread->fpu_state()));
-
-    // TODO: ioperm?
-}
-
-extern "C" FlatPtr do_init_context(Thread* thread, u32 flags)
-{
-    VERIFY_INTERRUPTS_DISABLED();
-#if ARCH(I386)
-    thread->regs().eflags = flags;
-#else
-    thread->regs().rflags = flags;
-#endif
-    return Processor::current().init_context(*thread, true);
-}
-
-void Processor::assume_context(Thread& thread, FlatPtr flags)
-{
-    dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
-
-    VERIFY_INTERRUPTS_DISABLED();
-    Scheduler::prepare_after_exec();
-    // in_critical() should be 2 here. The critical section in Process::exec
-    // and then the scheduler lock
-    VERIFY(Processor::current().in_critical() == 2);
-
-    do_assume_context(&thread, flags);
-
-    VERIFY_NOT_REACHED();
 }
 
 }

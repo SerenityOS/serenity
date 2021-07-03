@@ -12,7 +12,7 @@ namespace Kernel {
 
 using BlockFlags = Thread::FileBlocker::BlockFlags;
 
-KResultOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count)
+KResultOr<size_t> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count)
 {
     REQUIRE_PROMISE(stdio);
     if (iov_count < 0)
@@ -34,7 +34,7 @@ KResultOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov
             return EINVAL;
     }
 
-    auto description = fds().file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return EBADF;
 
@@ -68,7 +68,7 @@ KResultOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov
     return nread;
 }
 
-KResultOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
+KResultOr<size_t> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
 {
     REQUIRE_PROMISE(stdio);
     if (size == 0)
@@ -76,7 +76,7 @@ KResultOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
     dbgln_if(IO_DEBUG, "sys$read({}, {}, {})", fd, buffer.ptr(), size);
-    auto description = fds().file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return EBADF;
     if (!description->is_readable())

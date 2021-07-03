@@ -851,7 +851,6 @@ public:
     }
 
     StringView name() const { return m_name; }
-    RefPtr<FunctionExpression> constructor() const { return m_constructor; }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
@@ -873,7 +872,6 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
-    virtual void generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     NonnullRefPtr<ClassExpression> m_class_expression;
@@ -922,21 +920,15 @@ public:
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
-    Expression const& callee() const { return m_callee; }
-
-protected:
-    void throw_type_error_for_callee(Interpreter&, GlobalObject&, Value callee_value, StringView call_type) const;
-
-    NonnullRefPtr<Expression> m_callee;
-    Vector<Argument> const m_arguments;
-
 private:
     struct ThisAndCallee {
         Value this_value;
         Value callee;
     };
-
     ThisAndCallee compute_this_and_callee(Interpreter&, GlobalObject&) const;
+
+    NonnullRefPtr<Expression> m_callee;
+    Vector<Argument> const m_arguments;
 };
 
 class NewExpression final : public CallExpression {
@@ -946,24 +938,7 @@ public:
     {
     }
 
-    virtual Value execute(Interpreter&, GlobalObject&) const override;
-
     virtual bool is_new_expression() const override { return true; }
-};
-
-class SuperCall final : public Expression {
-public:
-    SuperCall(SourceRange source_range, Vector<CallExpression::Argument> arguments)
-        : Expression(source_range)
-        , m_arguments(move(arguments))
-    {
-    }
-
-    virtual Value execute(Interpreter&, GlobalObject&) const override;
-    virtual void dump(int indent) const override;
-
-private:
-    Vector<CallExpression::Argument> const m_arguments;
 };
 
 enum class AssignmentOp {

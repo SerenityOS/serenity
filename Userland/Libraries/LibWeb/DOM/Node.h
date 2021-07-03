@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/JsonObjectSerializer.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/TypeCasts.h>
@@ -162,9 +161,6 @@ public:
     ExceptionOr<void> ensure_pre_insertion_validity(NonnullRefPtr<Node> node, RefPtr<Node> child) const;
 
     bool is_host_including_inclusive_ancestor_of(const Node&) const;
-
-    // Used for dumping the DOM Tree
-    void serialize_tree_as_json(JsonObjectSerializer<StringBuilder>&) const;
 
 protected:
     Node(Document&, NodeType);

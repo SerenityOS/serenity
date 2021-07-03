@@ -7,14 +7,13 @@
 #include <AK/Atomic.h>
 #include <AK/Checked.h>
 #include <AK/Singleton.h>
-#include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/Bochs.h>
 #include <Kernel/Graphics/BochsGraphicsAdapter.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
+#include <Kernel/PCI/Access.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/VM/AnonymousVMObject.h>
@@ -47,13 +46,12 @@ struct [[gnu::packed]] BochsDisplayMMIORegisters {
 
 UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initialize(PCI::Address address)
 {
-    PCI::ID id = PCI::get_id(address);
-    VERIFY((id.vendor_id == PCI::VendorID::QEMUOld && id.device_id == 0x1111) || (id.vendor_id == PCI::VendorID::VirtualBox && id.device_id == 0xbeef));
     return adopt_ref(*new BochsGraphicsAdapter(address));
 }
 
 UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_address)
-    : PCI::DeviceController(pci_address)
+    : GraphicsDevice(pci_address)
+    , PCI::DeviceController(pci_address)
     , m_mmio_registers(PCI::get_BAR2(pci_address) & 0xfffffff0)
 {
     // We assume safe resolutio is 1024x768x32
@@ -65,11 +63,6 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_add
     auto id = PCI::get_id(pci_address);
     if (id.vendor_id == 0x80ee && id.device_id == 0xbeef)
         m_io_required = true;
-
-    // FIXME: Although this helps with setting the screen to work on some cases,
-    // we need to check we actually can access the VGA MMIO remapped ioports before
-    // doing the unblanking.
-    unblank();
     set_safe_resolution();
 }
 
@@ -85,14 +78,6 @@ GraphicsDevice::Type BochsGraphicsAdapter::type() const
     if (PCI::get_class(pci_address()) == 0x3 && PCI::get_subclass(pci_address()) == 0x0)
         return Type::VGACompatible;
     return Type::Bochs;
-}
-
-void BochsGraphicsAdapter::unblank()
-{
-    auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
-    full_memory_barrier();
-    registers->vga_ioports[0] = 0x20;
-    full_memory_barrier();
 }
 
 void BochsGraphicsAdapter::set_safe_resolution()

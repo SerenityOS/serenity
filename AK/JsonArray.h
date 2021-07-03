@@ -17,7 +17,7 @@ public:
     JsonArray() = default;
     ~JsonArray() = default;
 
-    JsonArray(JsonArray const& other)
+    JsonArray(const JsonArray& other)
         : m_values(other.m_values)
     {
     }
@@ -28,13 +28,13 @@ public:
     }
 
     template<typename T>
-    JsonArray(Vector<T> const& vector)
+    JsonArray(const Vector<T>& vector)
     {
         for (auto& value : vector)
             m_values.append(move(value));
     }
 
-    JsonArray& operator=(JsonArray const& other)
+    JsonArray& operator=(const JsonArray& other)
     {
         if (this != &other)
             m_values = other.m_values;
@@ -48,15 +48,15 @@ public:
         return *this;
     }
 
-    [[nodiscard]] size_t size() const { return m_values.size(); }
-    [[nodiscard]] bool is_empty() const { return m_values.is_empty(); }
+    int size() const { return m_values.size(); }
+    bool is_empty() const { return m_values.is_empty(); }
 
-    [[nodiscard]] JsonValue const& at(size_t index) const { return m_values.at(index); }
-    [[nodiscard]] JsonValue const& operator[](size_t index) const { return at(index); }
+    const JsonValue& at(size_t index) const { return m_values.at(index); }
+    const JsonValue& operator[](size_t index) const { return at(index); }
 
     void clear() { m_values.clear(); }
     void append(JsonValue value) { m_values.append(move(value)); }
-    void set(size_t index, JsonValue value) { m_values[index] = move(value); }
+    void set(int index, JsonValue value) { m_values[index] = move(value); }
 
     template<typename Builder>
     typename Builder::OutputType serialized() const;
@@ -64,7 +64,7 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-    [[nodiscard]] String to_string() const { return serialized<StringBuilder>(); }
+    String to_string() const { return serialized<StringBuilder>(); }
 
     template<typename Callback>
     void for_each(Callback callback) const
@@ -73,9 +73,9 @@ public:
             callback(value);
     }
 
-    [[nodiscard]] Vector<JsonValue> const& values() const { return m_values; }
+    const Vector<JsonValue>& values() const { return m_values; }
 
-    void ensure_capacity(size_t capacity) { m_values.ensure_capacity(capacity); }
+    void ensure_capacity(int capacity) { m_values.ensure_capacity(capacity); }
 
 private:
     Vector<JsonValue> m_values;

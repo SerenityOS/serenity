@@ -10,11 +10,11 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Types.h>
-#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/VirtIOGraphicsAdapter.h>
+#include <Kernel/PCI/Definitions.h>
 #include <Kernel/VM/Region.h>
 
 namespace Kernel {
@@ -47,7 +47,6 @@ public:
     void activate_graphical_mode();
 
 private:
-    bool determine_and_initialize_graphics_device(const PCI::Address& address, PCI::ID id);
     NonnullRefPtrVector<GraphicsDevice> m_graphics_devices;
     NonnullOwnPtr<Region> m_vga_font_region;
     RefPtr<Graphics::Console> m_console;

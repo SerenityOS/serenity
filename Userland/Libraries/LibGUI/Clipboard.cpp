@@ -8,7 +8,6 @@
 #include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/ClipboardServerEndpoint.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGfx/Bitmap.h>
 #include <LibIPC/ServerConnection.h>
 
 namespace GUI {

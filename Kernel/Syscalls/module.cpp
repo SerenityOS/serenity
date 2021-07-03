@@ -15,7 +15,7 @@ namespace Kernel {
 
 extern HashMap<String, OwnPtr<Module>>* g_modules;
 
-KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, size_t path_length)
+KResultOr<int> Process::sys$module_load(Userspace<const char*> user_path, size_t path_length)
 {
     if (!is_superuser())
         return EPERM;
@@ -144,7 +144,7 @@ KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, si
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$module_unload(Userspace<const char*> user_name, size_t name_length)
+KResultOr<int> Process::sys$module_unload(Userspace<const char*> user_name, size_t name_length)
 {
     if (!is_superuser())
         return EPERM;

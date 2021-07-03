@@ -643,6 +643,10 @@ int Shell::builtin_popd(int argc, const char** argv)
     }
 
     LexicalPath lexical_path(path.characters());
+    if (!lexical_path.is_valid()) {
+        warnln("LexicalPath failed to canonicalize '{}'", path);
+        return 1;
+    }
 
     const char* real_path = lexical_path.string().characters();
 
@@ -725,10 +729,16 @@ int Shell::builtin_pushd(int argc, const char** argv)
         }
     }
 
-    auto real_path = LexicalPath::canonicalized_path(path_builder.to_string());
+    LexicalPath lexical_path(path_builder.to_string());
+    if (!lexical_path.is_valid()) {
+        warnln("LexicalPath failed to canonicalize '{}'", path_builder.string_view());
+        return 1;
+    }
+
+    const char* real_path = lexical_path.string().characters();
 
     struct stat st;
-    int rc = stat(real_path.characters(), &st);
+    int rc = stat(real_path, &st);
     if (rc < 0) {
         warnln("stat({}) failed: {}", real_path, strerror(errno));
         return 1;
@@ -740,13 +750,13 @@ int Shell::builtin_pushd(int argc, const char** argv)
     }
 
     if (should_switch) {
-        int rc = chdir(real_path.characters());
+        int rc = chdir(real_path);
         if (rc < 0) {
             warnln("chdir({}) failed: {}", real_path, strerror(errno));
             return 1;
         }
 
-        cwd = real_path;
+        cwd = lexical_path.string();
     }
 
     return 0;

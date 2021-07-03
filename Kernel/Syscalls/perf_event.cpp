@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2)
+KResultOr<int> Process::sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2)
 {
     auto events_buffer = current_perf_events_buffer();
     if (!events_buffer) {

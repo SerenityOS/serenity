@@ -98,7 +98,3 @@ describe("errors", () => {
         }).toThrowWithMessage(TypeError, "[object Object] is not iterable");
     });
 });
-
-test("allow binding patterns", () => {
-    expect(`for (let [a, b] of foo) {}`).toEval();
-});

@@ -77,12 +77,7 @@ String DirIterator::next_path()
 
 String DirIterator::next_full_path()
 {
-    StringBuilder builder;
-    builder.append(m_path);
-    if (!m_path.ends_with('/'))
-        builder.append('/');
-    builder.append(next_path());
-    return builder.to_string();
+    return String::formatted("{}/{}", m_path, next_path());
 }
 
 String find_executable_in_path(String filename)

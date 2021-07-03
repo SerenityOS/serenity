@@ -7,7 +7,7 @@
 #pragma once
 
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Runtime/Environment.h>
+#include <LibJS/Runtime/EnvironmentRecord.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
@@ -21,7 +21,7 @@ public:
 
     virtual ~GlobalObject() override;
 
-    GlobalEnvironment& environment() { return *m_environment; }
+    GlobalEnvironmentRecord& environment_record() { return *m_environment_record; }
 
     Console& console() { return *m_console; }
 
@@ -37,8 +37,6 @@ public:
     GeneratorObjectPrototype* generator_object_prototype() { return m_generator_object_prototype; }
 
     FunctionObject* eval_function() const { return m_eval_function; }
-
-    FunctionObject* throw_type_error_function() const { return m_throw_type_error_function; }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* snake_name##_constructor() { return m_##snake_name##_constructor; } \
@@ -87,7 +85,7 @@ private:
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
     GeneratorObjectPrototype* m_generator_object_prototype { nullptr };
 
-    GlobalEnvironment* m_environment { nullptr };
+    GlobalEnvironmentRecord* m_environment_record { nullptr };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* m_##snake_name##_constructor { nullptr };                           \
@@ -101,7 +99,6 @@ private:
 #undef __JS_ENUMERATE
 
     FunctionObject* m_eval_function;
-    FunctionObject* m_throw_type_error_function;
 };
 
 template<typename ConstructorType>

@@ -10,10 +10,10 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
+KResultOr<int> Process::sys$pipe(int pipefd[2], int flags)
 {
     REQUIRE_PROMISE(stdio);
-    if (fds().open_count() + 2 > fds().max_open())
+    if (number_of_open_file_descriptors() + 2 > max_open_file_descriptors())
         return EMFILE;
     // Reject flags other than O_CLOEXEC.
     if ((flags & O_CLOEXEC) != flags)
@@ -29,13 +29,13 @@ KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
     if (open_writer_result.is_error())
         return open_writer_result.error();
 
-    int reader_fd = m_fds.allocate();
+    int reader_fd = alloc_fd();
     m_fds[reader_fd].set(open_reader_result.release_value(), fd_flags);
     m_fds[reader_fd].description()->set_readable(true);
     if (!copy_to_user(&pipefd[0], &reader_fd))
         return EFAULT;
 
-    int writer_fd = m_fds.allocate();
+    int writer_fd = alloc_fd();
     m_fds[writer_fd].set(open_writer_result.release_value(), fd_flags);
     m_fds[writer_fd].description()->set_writable(true);
     if (!copy_to_user(&pipefd[1], &writer_fd))

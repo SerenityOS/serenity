@@ -13,7 +13,6 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/ArrayIterator.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/Error.h>
@@ -158,14 +157,7 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
     if (vm.exception())
         return {};
     if (constructor.is_constructor()) {
-        auto& constructor_function = constructor.as_function();
-        auto* constructor_realm = get_function_realm(global_object, constructor_function);
-        if (vm.exception())
-            return {};
-        if (constructor_realm != &global_object) {
-            if (&constructor_function == constructor_realm->array_constructor())
-                constructor = js_undefined();
-        }
+        // FIXME: Check if the returned constructor is from another realm, and if so set constructor to undefined
     }
 
     if (constructor.is_object()) {

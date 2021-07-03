@@ -1,5 +1,3 @@
-#include <LibCore/AnonymousBuffer.h>
-
 endpoint AudioServer
 {
     // Mixer functions

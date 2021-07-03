@@ -31,13 +31,11 @@ public:
             finish();
     }
 
-#ifndef KERNEL
     void add(const JsonValue& value)
     {
         begin_item();
         value.serialize(m_builder);
     }
-#endif
 
     void add(const StringView& value)
     {
@@ -61,48 +59,6 @@ public:
         m_builder.append('"');
         m_builder.append_escaped_for_json(value);
         m_builder.append('"');
-    }
-
-    void add(bool value)
-    {
-        begin_item();
-        m_builder.append(value ? "true"sv : "false"sv);
-    }
-
-    void add(int value)
-    {
-        begin_item();
-        m_builder.appendff("{}", value);
-    }
-
-    void add(unsigned value)
-    {
-        begin_item();
-        m_builder.appendff("{}", value);
-    }
-
-    void add(long value)
-    {
-        begin_item();
-        m_builder.appendff("{}", value);
-    }
-
-    void add(long unsigned value)
-    {
-        begin_item();
-        m_builder.appendff("{}", value);
-    }
-
-    void add(long long value)
-    {
-        begin_item();
-        m_builder.appendff("{}", value);
-    }
-
-    void add(long long unsigned value)
-    {
-        begin_item();
-        m_builder.appendff("{}", value);
     }
 
     JsonArraySerializer<Builder> add_array()

@@ -22,7 +22,6 @@ class Cursor;
 class MultiScaleBitmaps;
 class Window;
 class WindowManager;
-class WindowStack;
 
 enum class WallpaperMode {
     Tile,
@@ -72,7 +71,6 @@ public:
         invalidate_screen();
     }
 
-    void animation_started(Badge<Animation>);
     void invalidate_occlusions() { m_occlusions_dirty = true; }
     void overlay_rects_changed();
 
@@ -92,29 +90,6 @@ public:
         }
         return IterationDecision::Continue;
     }
-
-    template<typename F>
-    IterationDecision for_each_rendering_window_stack(F f)
-    {
-        VERIFY(m_current_window_stack);
-        IterationDecision decision = f(*m_current_window_stack);
-        if (decision != IterationDecision::Continue)
-            return decision;
-        if (m_transitioning_to_window_stack)
-            decision = f(*m_transitioning_to_window_stack);
-        return decision;
-    }
-
-    [[nodiscard]] WindowStack& get_rendering_window_stacks(WindowStack*& transitioning_window_stack)
-    {
-        transitioning_window_stack = m_transitioning_to_window_stack;
-        return *m_current_window_stack;
-    }
-
-    bool is_switching_window_stacks() const { return m_transitioning_to_window_stack != nullptr; }
-    void switch_to_window_stack(WindowStack&, bool);
-    void set_current_window_stack_no_transition(WindowStack&);
-    void invalidate_for_window_stack_merge_or_change();
 
     void did_construct_window_manager(Badge<WindowManager>);
 
@@ -138,15 +113,10 @@ private:
     void start_compose_async_timer();
     void recompute_overlay_rects();
     void recompute_occlusions();
+    bool any_opaque_window_above_this_one_contains_rect(const Window&, const Gfx::IntRect&);
     void change_cursor(const Cursor*);
     void flush(Screen&);
-    Gfx::IntPoint window_transition_offset(Window&);
     void update_animations(Screen&, Gfx::DisjointRectSet& flush_rects);
-    void create_window_stack_switch_overlay(WindowStack&);
-    void remove_window_stack_switch_overlays();
-    void stop_window_stack_switch_overlay_timer();
-    void start_window_stack_switch_overlay_timer();
-    void finish_window_stack_switch();
 
     RefPtr<Core::Timer> m_compose_timer;
     RefPtr<Core::Timer> m_immediate_compose_timer;
@@ -168,7 +138,6 @@ private:
         OwnPtr<Gfx::Painter> m_cursor_back_painter;
         Gfx::IntRect m_last_cursor_rect;
         OwnPtr<ScreenNumberOverlay> m_screen_number_overlay;
-        OwnPtr<WindowStackSwitchOverlay> m_window_stack_switch_overlay;
         bool m_buffers_are_flipped { false };
         bool m_screen_can_set_buffer { false };
         bool m_cursor_back_is_valid { false };
@@ -226,11 +195,6 @@ private:
 
     RefPtr<Core::Timer> m_display_link_notify_timer;
     size_t m_display_link_count { 0 };
-
-    WindowStack* m_current_window_stack { nullptr };
-    WindowStack* m_transitioning_to_window_stack { nullptr };
-    RefPtr<Animation> m_window_stack_transition_animation;
-    RefPtr<Core::Timer> m_stack_switch_overlay_timer;
 
     size_t m_show_screen_number_count { 0 };
     Optional<Gfx::Color> m_custom_background_color;

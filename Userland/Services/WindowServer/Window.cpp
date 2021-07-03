@@ -346,7 +346,7 @@ void Window::start_minimize_animation()
     }
 
     m_animation = Animation::create();
-    m_animation->set_duration(150);
+    m_animation->set_length(150);
     m_animation->on_update = [this](float progress, Gfx::Painter& painter, Screen& screen, Gfx::DisjointRectSet& flush_rects) {
         Gfx::PainterStateSaver saver(painter);
         painter.set_draw_op(Gfx::Painter::DrawOp::Invert);
@@ -369,7 +369,7 @@ void Window::start_minimize_animation()
 void Window::start_launch_animation(Gfx::IntRect const& launch_origin_rect)
 {
     m_animation = Animation::create();
-    m_animation->set_duration(150);
+    m_animation->set_length(150);
     m_animation->on_update = [this, launch_origin_rect](float progress, Gfx::Painter& painter, Screen& screen, Gfx::DisjointRectSet& flush_rects) {
         Gfx::PainterStateSaver saver(painter);
         painter.set_draw_op(Gfx::Painter::DrawOp::Invert);
@@ -664,12 +664,9 @@ void Window::clear_dirty_rects()
 
 bool Window::is_active() const
 {
-    if (!m_window_stack) {
-        // This may be called while destroying a window as part of
-        // determining what the render rectangle is!
+    if (!outer_stack())
         return false;
-    }
-    return m_window_stack->active_window() == this;
+    return outer_stack()->active_window() == this;
 }
 
 Window* Window::blocking_modal_window()
@@ -1207,5 +1204,4 @@ String Window::computed_title() const
         return String::formatted("{} (Not responding)", title);
     return title;
 }
-
 }

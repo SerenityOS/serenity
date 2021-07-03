@@ -1,5 +1,3 @@
-#include <AK/URL.h>
-
 endpoint LaunchServer
 {
     open_url(URL url, String handler_name) => (bool response)

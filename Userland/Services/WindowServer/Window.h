@@ -35,7 +35,6 @@ enum WMEventMask {
     WindowStateChanges = 1 << 1,
     WindowIconChanges = 1 << 2,
     WindowRemovals = 1 << 3,
-    VirtualDesktopChanges = 1 << 4,
 };
 
 enum class WindowTileType {
@@ -319,18 +318,9 @@ public:
     const Menubar* menubar() const { return m_menubar; }
     void set_menubar(Menubar*);
 
-    WindowStack& window_stack()
-    {
-        VERIFY(m_window_stack);
-        return *m_window_stack;
-    }
-    WindowStack const& window_stack() const
-    {
-        VERIFY(m_window_stack);
-        return *m_window_stack;
-    }
-    bool is_on_any_window_stack(Badge<WindowStack>) const { return m_window_stack != nullptr; }
-    void set_window_stack(Badge<WindowStack>, WindowStack* stack) { m_window_stack = stack; }
+    WindowStack* outer_stack() { return m_outer_stack; }
+    WindowStack const* outer_stack() const { return m_outer_stack; }
+    void set_outer_stack(Badge<WindowStack>, WindowStack* stack) { m_outer_stack = stack; }
 
     const Vector<Screen*, default_screen_count>& screens() const { return m_screens; }
     Vector<Screen*, default_screen_count>& screens() { return m_screens; }
@@ -339,9 +329,6 @@ public:
     {
         frame().window_was_constructed({});
     }
-
-    void set_moving_to_another_stack(bool value) { m_moving_to_another_stack = value; }
-    bool is_moving_to_another_stack() const { return m_moving_to_another_stack; }
 
 private:
     Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
@@ -395,7 +382,6 @@ private:
     bool m_invalidated_frame { true };
     bool m_hit_testing_enabled { true };
     bool m_modified { false };
-    bool m_moving_to_another_stack { false };
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };
@@ -425,7 +411,7 @@ private:
     MenuItem* m_window_menu_menubar_visibility_item { nullptr };
     Optional<int> m_progress;
     bool m_should_show_menubar { true };
-    WindowStack* m_window_stack { nullptr };
+    WindowStack* m_outer_stack { nullptr };
     RefPtr<Animation> m_animation;
 
 public:

@@ -17,13 +17,7 @@ class RequestClient;
 
 namespace Web {
 
-#if ARCH(I386)
-#    define CPU_STRING "x86"
-#else
-#    define CPU_STRING "x86_64"
-#endif
-
-constexpr auto default_user_agent = "Mozilla/4.0 (SerenityOS; " CPU_STRING ") LibWeb+LibJS (Not KHTML, nor Gecko) LibWeb";
+constexpr auto default_user_agent = "Mozilla/4.0 (SerenityOS; x86) LibWeb+LibJS (Not KHTML, nor Gecko) LibWeb";
 
 class ResourceLoader : public Core::Object {
     C_OBJECT(ResourceLoader)

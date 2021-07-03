@@ -360,6 +360,7 @@ bool Lexer::slash_means_division() const
     return type == TokenType::BigIntLiteral
         || type == TokenType::BoolLiteral
         || type == TokenType::BracketClose
+        || type == TokenType::CurlyClose
         || type == TokenType::Identifier
         || type == TokenType::NullLiteral
         || type == TokenType::NumericLiteral

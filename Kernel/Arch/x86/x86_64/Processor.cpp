@@ -16,6 +16,7 @@
 namespace Kernel {
 
 extern "C" void thread_context_first_enter(void);
+extern "C" void do_assume_context(Thread* thread, u32 flags);
 extern "C" void exit_kernel_thread(void);
 
 // clang-format off
@@ -35,35 +36,38 @@ asm(
 );
 // clang-format on
 
+#if ARCH(I386)
 // clang-format off
 asm(
 ".global do_assume_context \n"
 "do_assume_context: \n"
-"    movq %rdi, %r12 \n" // save thread ptr
-"    movq %rsi, %r13 \n" // save flags
+"    movl 4(%esp), %ebx \n"
+"    movl 8(%esp), %esi \n"
 // We're going to call Processor::init_context, so just make sure
 // we have enough stack space so we don't stomp over it
-"    subq $(" __STRINGIFY(16 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 8) "), %rsp \n"
+"    subl $(" __STRINGIFY(4 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 4) "), %esp \n"
+"    pushl %esi \n"
+"    pushl %ebx \n"
 "    cld \n"
 "    call do_init_context \n"
-"    movq %rax, %rsp \n" // move stack pointer to what Processor::init_context set up for us
-"    movq %r12, %rdi \n" // to_thread
-"    movq %r12, %rsi \n" // from_thread
-"    pushq %r12 \n" // to_thread (for thread_context_first_enter)
-"    pushq %r12 \n" // from_thread (for thread_context_first_enter)
-"    movabs $thread_context_first_enter, %r12 \n" // should be same as regs.rip
-"    pushq %r12 \n"
+"    addl $8, %esp \n"
+"    movl %eax, %esp \n" // move stack pointer to what Processor::init_context set up for us
+"    pushl %ebx \n" // push to_thread
+"    pushl %ebx \n" // push from_thread
+"    pushl $thread_context_first_enter \n" // should be same as tss.eip
 "    jmp enter_thread_context \n"
 );
 // clang-format on
+#endif
 
 String Processor::platform_string() const
 {
+    // FIXME: other platforms
     return "x86_64";
 }
 
 // FIXME: For the most part this is a copy of the i386-specific function, get rid of the code duplication
-FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
+u32 Processor::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(is_kernel_mode());
     VERIFY(g_scheduler_lock.is_locked());
@@ -87,10 +91,21 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     auto& regs = thread.regs();
     bool return_to_user = (regs.cs & 3) != 0;
 
-    stack_top -= 1 * sizeof(u64);
-    *reinterpret_cast<u64*>(kernel_stack_top - 2 * sizeof(u64)) = FlatPtr(&exit_kernel_thread);
+    // make room for an interrupt frame
+    if (!return_to_user) {
+        // userspace_rsp is not popped off by iretq
+        // unless we're switching back to user mode
+        stack_top -= sizeof(RegisterState) - 2 * sizeof(FlatPtr);
 
-    stack_top -= sizeof(RegisterState);
+        // For kernel threads we'll push the thread function argument
+        // which should be in regs.rsp and exit_kernel_thread as return
+        // address.
+        stack_top -= 2 * sizeof(u64);
+        *reinterpret_cast<u64*>(kernel_stack_top - 2 * sizeof(u64)) = regs.rsp;
+        *reinterpret_cast<u64*>(kernel_stack_top - 3 * sizeof(u64)) = FlatPtr(&exit_kernel_thread);
+    } else {
+        stack_top -= sizeof(RegisterState);
+    }
 
     // we want to end up 16-byte aligned, %rsp + 8 should be aligned
     stack_top -= sizeof(u64);
@@ -108,24 +123,11 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     iretframe.rdx = regs.rdx;
     iretframe.rcx = regs.rcx;
     iretframe.rax = regs.rax;
-    iretframe.r8 = regs.r8;
-    iretframe.r9 = regs.r9;
-    iretframe.r10 = regs.r10;
-    iretframe.r11 = regs.r11;
-    iretframe.r12 = regs.r12;
-    iretframe.r13 = regs.r13;
-    iretframe.r14 = regs.r14;
-    iretframe.r15 = regs.r15;
     iretframe.rflags = regs.rflags;
     iretframe.rip = regs.rip;
     iretframe.cs = regs.cs;
-    if (return_to_user) {
+    if (return_to_user)
         iretframe.userspace_rsp = regs.rsp;
-        iretframe.userspace_ss = GDT_SELECTOR_DATA3 | 3;
-    } else {
-        iretframe.userspace_rsp = kernel_stack_top;
-        iretframe.userspace_ss = 0;
-    }
 
     // make space for a trap frame
     stack_top -= sizeof(TrapFrame);
@@ -175,75 +177,27 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
     from_thread->save_critical(m_in_critical);
 
-    // clang-format off
-    // Switch to new thread context, passing from_thread and to_thread
-    // through to the new context using registers rdx and rax
-    asm volatile(
-        // NOTE: changing how much we push to the stack affects thread_context_first_enter()!
-        "pushfq \n"
-        "pushq %%rbx \n"
-        "pushq %%rcx \n"
-        "pushq %%rbp \n"
-        "pushq %%rsi \n"
-        "pushq %%rdi \n"
-        "pushq %%r8 \n"
-        "pushq %%r9 \n"
-        "pushq %%r10 \n"
-        "pushq %%r11 \n"
-        "pushq %%r12 \n"
-        "pushq %%r13 \n"
-        "pushq %%r14 \n"
-        "pushq %%r15 \n"
-        "movq %%rsp, %[from_rsp] \n"
-        "movabs $1f, %%rbx \n"
-        "movq %%rbx, %[from_rip] \n"
-        "movq %[to_rsp0], %%rbx \n"
-        "movl %%ebx, %[tss_rsp0l] \n"
-        "shrq $32, %%rbx \n"
-        "movl %%ebx, %[tss_rsp0h] \n"
-        "movq %[to_rsp], %%rsp \n"
-        "pushq %[to_thread] \n"
-        "pushq %[from_thread] \n"
-        "pushq %[to_rip] \n"
-        "cld \n"
-        "movq 16(%%rsp), %%rsi \n"
-        "movq 8(%%rsp), %%rdi \n"
-        "jmp enter_thread_context \n"
-        "1: \n"
-        "popq %%rdx \n"
-        "popq %%rax \n"
-        "popq %%r15 \n"
-        "popq %%r14 \n"
-        "popq %%r13 \n"
-        "popq %%r12 \n"
-        "popq %%r11 \n"
-        "popq %%r10 \n"
-        "popq %%r9 \n"
-        "popq %%r8 \n"
-        "popq %%rdi \n"
-        "popq %%rsi \n"
-        "popq %%rbp \n"
-        "popq %%rcx \n"
-        "popq %%rbx \n"
-        "popfq \n"
-        : [from_rsp] "=m" (from_thread->regs().rsp),
-        [from_rip] "=m" (from_thread->regs().rip),
-        [tss_rsp0l] "=m" (m_tss.rsp0l),
-        [tss_rsp0h] "=m" (m_tss.rsp0h),
-        "=d" (from_thread), // needed so that from_thread retains the correct value
-        "=a" (to_thread) // needed so that to_thread retains the correct value
-        : [to_rsp] "g" (to_thread->regs().rsp),
-        [to_rsp0] "g" (to_thread->regs().rsp0),
-        [to_rip] "c" (to_thread->regs().rip),
-        [from_thread] "d" (from_thread),
-        [to_thread] "a" (to_thread)
-        : "memory", "rbx"
-    );
-    // clang-format on
+    PANIC("Context switching not implemented.");
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
     Processor::current().restore_in_critical(to_thread->saved_critical());
+}
+
+void Processor::assume_context(Thread& thread, FlatPtr flags)
+{
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
+
+    VERIFY_INTERRUPTS_DISABLED();
+    Scheduler::prepare_after_exec();
+    // in_critical() should be 2 here. The critical section in Process::exec
+    // and then the scheduler lock
+    VERIFY(Processor::current().in_critical() == 2);
+
+    (void)flags;
+    TODO();
+
+    VERIFY_NOT_REACHED();
 }
 
 UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_thread)

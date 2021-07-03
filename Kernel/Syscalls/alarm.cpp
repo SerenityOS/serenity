@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$alarm(unsigned seconds)
+KResultOr<unsigned> Process::sys$alarm(unsigned seconds)
 {
     REQUIRE_PROMISE(stdio);
     unsigned previous_alarm_remaining = 0;

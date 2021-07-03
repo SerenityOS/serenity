@@ -49,7 +49,7 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
     auto& inode_vm = static_cast<const InodeVMObject&>(region.vmobject());
     auto& inode = inode_vm.inode();
 
-    ElfW(Ehdr) header;
+    Elf32_Ehdr header;
     auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&header);
     auto result = inode.read_bytes(0, sizeof(header), buffer, nullptr);
     if (result.is_error() || result.value() != sizeof(header))
@@ -224,7 +224,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
             return EINVAL;
         if (static_cast<size_t>(offset) & ~PAGE_MASK)
             return EINVAL;
-        auto description = fds().file_description(fd);
+        auto description = file_description(fd);
         if (!description)
             return EBADF;
         if (description->is_directory())
@@ -279,7 +279,7 @@ static KResultOr<Range> expand_range_to_page_boundaries(FlatPtr address, size_t 
     return Range { base, end - base.get() };
 }
 
-KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int prot)
+KResultOr<int> Process::sys$mprotect(Userspace<void*> addr, size_t size, int prot)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -421,7 +421,7 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
     return EINVAL;
 }
 
-KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int advice)
+KResultOr<int> Process::sys$madvise(Userspace<void*> address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -470,7 +470,7 @@ KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, i
     return EINVAL;
 }
 
-KResultOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
+KResultOr<int> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -504,7 +504,7 @@ KResultOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mm
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
+KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -612,13 +612,13 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
     tls_descriptor.set_base(main_thread->thread_specific_data());
     tls_descriptor.set_limit(main_thread->thread_specific_region_size());
 #else
-    dbgln("FIXME: Not setting FS_BASE for process.");
+    TODO();
 #endif
 
     return m_master_tls_region.unsafe_ptr()->vaddr().get();
 }
 
-KResultOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
+KResultOr<int> Process::sys$msyscall(Userspace<void*> address)
 {
     if (space().enforces_syscall_regions())
         return EPERM;

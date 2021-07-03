@@ -35,8 +35,8 @@ static void perform_self_relocations(auxv_t* auxvp)
         }
     }
     VERIFY(found_base_address);
-    ElfW(Ehdr)* header = (ElfW(Ehdr)*)(base_address);
-    ElfW(Phdr)* pheader = (ElfW(Phdr)*)(base_address + header->e_phoff);
+    Elf32_Ehdr* header = (Elf32_Ehdr*)(base_address);
+    Elf32_Phdr* pheader = (Elf32_Phdr*)(base_address + header->e_phoff);
     u32 dynamic_section_addr = 0;
     for (size_t i = 0; i < (size_t)header->e_phnum; ++i, ++pheader) {
         if (pheader->p_type != PT_DYNAMIC)
@@ -49,13 +49,11 @@ static void perform_self_relocations(auxv_t* auxvp)
     auto dynamic_object = ELF::DynamicObject::create({}, (VirtualAddress(base_address)), (VirtualAddress(dynamic_section_addr)));
 
     dynamic_object->relocation_section().for_each_relocation([base_address](auto& reloc) {
-#if ARCH(I386)
-        VERIFY(reloc.type() == R_386_RELATIVE);
-#else
-        VERIFY(reloc.type() == R_X86_64_RELATIVE);
-#endif
+        if (reloc.type() != R_386_RELATIVE)
+            return IterationDecision::Continue;
 
-        *(FlatPtr*)reloc.address().as_ptr() += base_address;
+        *(u32*)reloc.address().as_ptr() += base_address;
+        return IterationDecision::Continue;
     });
 }
 
@@ -103,7 +101,7 @@ void _start(int argc, char** argv, char** envp)
         }
     }
 
-    if (main_program_name == "/usr/lib/Loader.so"sv) {
+    if (main_program_name == "/usr/lib/Loader.so") {
         // We've been invoked directly as an executable rather than as the
         // ELF interpreter for some other binary. In the future we may want
         // to support launching a program directly from the dynamic loader

@@ -14,7 +14,6 @@ struct Interpreter {
     virtual ~Interpreter() = default;
     virtual void interpret(Configuration&) = 0;
     virtual bool did_trap() const = 0;
-    virtual String trap_reason() const = 0;
     virtual void clear_trap() = 0;
 };
 

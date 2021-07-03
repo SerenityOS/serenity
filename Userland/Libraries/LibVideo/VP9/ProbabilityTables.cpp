@@ -1150,22 +1150,22 @@ static constexpr CoefProbs default_coef_probs = {
                     { 1, 16, 6 } } } } }
 };
 
-ParetoTable const& ProbabilityTables::pareto_table() const
+const ParetoTable& ProbabilityTables::pareto_table() const
 {
     return constant_pareto_table;
 }
 
-KfPartitionProbs const& ProbabilityTables::kf_partition_probs() const
+const KfPartitionProbs& ProbabilityTables::kf_partition_probs() const
 {
     return constant_kf_partition_probs;
 }
 
-KfYModeProbs const& ProbabilityTables::kf_y_mode_probs() const
+const KfYModeProbs& ProbabilityTables::kf_y_mode_probs() const
 {
     return constant_kf_y_mode_probs;
 }
 
-KfUVModeProbs const& ProbabilityTables::kf_uv_mode_prob() const
+const KfUVModeProbs& ProbabilityTables::kf_uv_mode_prob() const
 {
     return constant_kf_uv_mode_prob;
 }

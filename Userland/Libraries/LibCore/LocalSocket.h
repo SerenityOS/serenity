@@ -16,7 +16,6 @@ public:
     virtual ~LocalSocket() override;
 
     static RefPtr<LocalSocket> take_over_accepted_socket_from_system_server(String const& socket_path = String());
-    pid_t peer_pid() const;
 
 private:
     explicit LocalSocket(Object* parent = nullptr);

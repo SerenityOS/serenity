@@ -6,7 +6,6 @@
 
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/ArrayBufferConstructor.h>
-#include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
@@ -14,7 +13,7 @@
 namespace JS {
 
 ArrayBufferConstructor::ArrayBufferConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.ArrayBuffer.as_string(), *global_object.function_prototype())
+    : NativeFunction(vm().names.ArrayBuffer, *global_object.function_prototype())
 {
 }
 
@@ -71,8 +70,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
         return Value(false);
     if (arg.as_object().is_typed_array())
         return Value(true);
-    if (is<DataView>(arg.as_object()))
-        return Value(true);
+    // FIXME: Check for DataView as well
     return Value(false);
 }
 

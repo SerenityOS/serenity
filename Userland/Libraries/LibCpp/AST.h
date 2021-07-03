@@ -198,35 +198,19 @@ class Type : public ASTNode {
 public:
     virtual ~Type() override = default;
     virtual const char* class_name() const override { return "Type"; }
+    virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual bool is_type() const override { return true; }
     virtual bool is_templatized() const { return false; }
-    virtual bool is_named_type() const { return false; }
-    virtual String to_string() const = 0;
-    virtual void dump(FILE* = stdout, size_t indent = 0) const override;
+    virtual String to_string() const;
 
-    bool m_is_auto { false };
-    Vector<StringView> m_qualifiers;
-
-protected:
     Type(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : ASTNode(parent, start, end, filename)
     {
     }
-};
 
-class NamedType : public Type {
-public:
-    virtual ~NamedType() override = default;
-    virtual const char* class_name() const override { return "NamedType"; }
-    virtual String to_string() const override;
-    virtual bool is_named_type() const override { return true; }
-
-    NamedType(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
-        : Type(parent, start, end, filename)
-    {
-    }
-
+    bool m_is_auto { false };
     RefPtr<Name> m_name;
+    Vector<StringView> m_qualifiers;
 };
 
 class Pointer : public Type {
@@ -521,12 +505,6 @@ public:
     {
     }
 
-    enum class Type {
-        RegularEnum,
-        EnumClass
-    };
-
-    Type type { Type::RegularEnum };
     Vector<StringView> m_entries;
 };
 

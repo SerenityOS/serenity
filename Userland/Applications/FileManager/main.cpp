@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -188,7 +187,7 @@ void do_paste(const String& target_directory, GUI::Window* window)
 void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* window)
 {
     auto path = selected_file_paths.first();
-    auto destination = String::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath::basename(path));
+    auto destination = String::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath { path }.basename());
     if (auto result = Core::File::link_file(destination, path); result.is_error()) {
         GUI::MessageBox::show(window, String::formatted("Could not create desktop shortcut:\n{}", result.error()), "File Manager",
             GUI::MessageBox::Type::Error);
@@ -737,7 +736,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 selected = directory_view.selected_file_paths();
             } else {
                 path = directories_model->full_path(tree_view.selection().first());
-                container_dir_path = LexicalPath::basename(path);
+                container_dir_path = LexicalPath(path).basename();
                 selected = tree_view_selected_file_paths();
             }
 
@@ -923,18 +922,16 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         {
             LexicalPath lexical_path(new_path);
 
-            auto segment_index_of_new_path_in_breadcrumbbar = breadcrumbbar.find_segment_with_data(new_path);
+            auto segment_index_of_new_path_in_breadcrumbbar = [&]() -> Optional<size_t> {
+                for (size_t i = 0; i < breadcrumbbar.segment_count(); ++i) {
+                    if (breadcrumbbar.segment_data(i) == new_path)
+                        return i;
+                }
+                return {};
+            }();
 
             if (segment_index_of_new_path_in_breadcrumbbar.has_value()) {
-                auto new_segment_index = segment_index_of_new_path_in_breadcrumbbar.value();
-                breadcrumbbar.set_selected_segment(new_segment_index);
-
-                // If the path change was because the directory we were in was deleted,
-                // remove the breadcrumbs for it.
-                if ((new_segment_index + 1 < breadcrumbbar.segment_count())
-                    && !Core::File::is_directory(breadcrumbbar.segment_data(new_segment_index + 1))) {
-                    breadcrumbbar.remove_end_segments(new_segment_index + 1);
-                }
+                breadcrumbbar.set_selected_segment(segment_index_of_new_path_in_breadcrumbbar.value());
             } else {
                 breadcrumbbar.clear_segments();
 
@@ -952,15 +949,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 breadcrumbbar.set_selected_segment(breadcrumbbar.segment_count() - 1);
 
                 breadcrumbbar.on_segment_click = [&](size_t segment_index) {
-                    auto selected_path = breadcrumbbar.segment_data(segment_index);
-                    if (Core::File::is_directory(selected_path)) {
-                        directory_view.open(selected_path);
-                    } else {
-                        dbgln("Breadcrumb path '{}' doesn't exist", selected_path);
-                        breadcrumbbar.remove_end_segments(segment_index);
-                        auto existing_path_segment = breadcrumbbar.find_segment_with_data(directory_view.path());
-                        breadcrumbbar.set_selected_segment(existing_path_segment.value());
-                    }
+                    directory_view.open(breadcrumbbar.segment_data(segment_index));
                 };
             }
         }
@@ -1126,7 +1115,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         for (auto& url_to_copy : urls) {
             if (!url_to_copy.is_valid() || url_to_copy.path() == directory)
                 continue;
-            auto new_path = String::formatted("{}/{}", directory, LexicalPath::basename(url_to_copy.path()));
+            auto new_path = String::formatted("{}/{}", directory, LexicalPath(url_to_copy.path()).basename());
             if (url_to_copy.path() == new_path)
                 continue;
 

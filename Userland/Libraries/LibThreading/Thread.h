@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * Copyright (c) 2021, Spencer Dixon <spencercdixon@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,7 +24,6 @@ public:
     virtual ~Thread();
 
     void start();
-    void detach();
 
     template<typename T = void>
     Result<T, ThreadError> join();
@@ -38,7 +36,6 @@ private:
     Function<intptr_t()> m_action;
     pthread_t m_tid { 0 };
     String m_thread_name;
-    bool m_detached { false };
 };
 
 template<typename T>

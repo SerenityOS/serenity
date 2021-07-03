@@ -14,15 +14,15 @@
 
 namespace Kernel {
 
-static AK::Singleton<HashMap<FlatPtr, PageDirectory*>> s_cr3_map;
+static AK::Singleton<HashMap<u32, PageDirectory*>> s_cr3_map;
 
-static HashMap<FlatPtr, PageDirectory*>& cr3_map()
+static HashMap<u32, PageDirectory*>& cr3_map()
 {
     VERIFY_INTERRUPTS_DISABLED();
     return *s_cr3_map;
 }
 
-RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
+RefPtr<PageDirectory> PageDirectory::find_by_cr3(u32 cr3)
 {
     ScopedSpinLock lock(s_mm_lock);
     return cr3_map().get(cr3).value_or({});
@@ -37,7 +37,7 @@ extern "C" PageDirectoryEntry boot_pd3[1024];
 
 UNMAP_AFTER_INIT PageDirectory::PageDirectory()
 {
-    m_range_allocator.initialize_with_range(VirtualAddress(KERNEL_BASE + 0x02000000), 0x2f000000);
+    m_range_allocator.initialize_with_range(VirtualAddress(0xc2000000), 0x2f000000);
     m_identity_range_allocator.initialize_with_range(VirtualAddress(FlatPtr(0x00000000)), 0x00200000);
 
     // Adopt the page tables already set up by boot.S
@@ -89,13 +89,13 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
     m_directory_pages[2] = MM.allocate_user_physical_page();
     if (!m_directory_pages[2])
         return;
-    // Share the top 1 GiB of kernel-only mappings (>=3GiB or >=KERNEL_BASE)
+    // Share the top 1 GiB of kernel-only mappings (>=3GiB or >=0xc0000000)
     m_directory_pages[3] = MM.kernel_page_directory().m_directory_pages[3];
 
 #if ARCH(X86_64)
     {
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*m_pml4t);
-        table.raw[0] = (FlatPtr)m_directory_table->paddr().as_ptr() | 7;
+        table.raw[0] = (FlatPtr)m_directory_table->paddr().as_ptr() | 3;
         MM.unquickmap_page();
     }
 #endif
@@ -108,10 +108,10 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
         table.raw[2] = (FlatPtr)m_directory_pages[2]->paddr().as_ptr() | 1;
         table.raw[3] = (FlatPtr)m_directory_pages[3]->paddr().as_ptr() | 1;
 #else
-        table.raw[0] = (FlatPtr)m_directory_pages[0]->paddr().as_ptr() | 7;
-        table.raw[1] = (FlatPtr)m_directory_pages[1]->paddr().as_ptr() | 7;
-        table.raw[2] = (FlatPtr)m_directory_pages[2]->paddr().as_ptr() | 7;
-        table.raw[3] = (FlatPtr)m_directory_pages[3]->paddr().as_ptr() | 7;
+        table.raw[0] = (FlatPtr)m_directory_pages[0]->paddr().as_ptr() | 3;
+        table.raw[1] = (FlatPtr)m_directory_pages[1]->paddr().as_ptr() | 3;
+        table.raw[2] = (FlatPtr)m_directory_pages[2]->paddr().as_ptr() | 3;
+        table.raw[3] = (FlatPtr)m_directory_pages[3]->paddr().as_ptr() | 3;
 #endif
 
         // 2 ** MAXPHYADDR - 1

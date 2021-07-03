@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$reboot()
+KResultOr<int> Process::sys$reboot()
 {
     if (!is_superuser())
         return EPERM;
@@ -32,7 +32,7 @@ KResultOr<FlatPtr> Process::sys$reboot()
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$halt()
+KResultOr<int> Process::sys$halt()
 {
     if (!is_superuser())
         return EPERM;

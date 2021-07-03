@@ -11,21 +11,17 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
-#include <LibJS/Runtime/ArgumentsObject.h>
-#include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/BoundFunction.h>
-#include <LibJS/Runtime/DeclarativeEnvironment.h>
+#include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
 #include <LibJS/Runtime/ErrorTypes.h>
-#include <LibJS/Runtime/FunctionEnvironment.h>
+#include <LibJS/Runtime/FunctionEnvironmentRecord.h>
 #include <LibJS/Runtime/FunctionObject.h>
-#include <LibJS/Runtime/GlobalEnvironment.h>
+#include <LibJS/Runtime/GlobalEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/ObjectEnvironment.h>
+#include <LibJS/Runtime/ObjectEnvironmentRecord.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/ProxyObject.h>
-#include <LibJS/Runtime/Reference.h>
 
 namespace JS {
 
@@ -111,8 +107,9 @@ GlobalObject* get_function_realm(GlobalObject& global_object, FunctionObject con
 {
     auto& vm = global_object.vm();
 
-    if (function.realm())
-        return function.realm();
+    // FIXME: not sure how to do this currently.
+    // 2. If obj has a [[Realm]] internal slot, then
+    //     a. Return obj.[[Realm]].
     if (is<BoundFunction>(function)) {
         auto& bound_function = static_cast<BoundFunction const&>(function);
         auto& target = bound_function.target_function();
@@ -149,21 +146,21 @@ Object* get_prototype_from_constructor(GlobalObject& global_object, FunctionObje
 }
 
 // 9.1.2.2 NewDeclarativeEnvironment ( E ), https://tc39.es/ecma262/#sec-newdeclarativeenvironment
-DeclarativeEnvironment* new_declarative_environment(Environment& environment)
+DeclarativeEnvironmentRecord* new_declarative_environment(EnvironmentRecord& environment_record)
 {
-    auto& global_object = environment.global_object();
-    return global_object.heap().allocate<DeclarativeEnvironment>(global_object, &environment);
+    auto& global_object = environment_record.global_object();
+    return global_object.heap().allocate<DeclarativeEnvironmentRecord>(global_object, &environment_record);
 }
 
 // 9.1.2.3 NewObjectEnvironment ( O, W, E ), https://tc39.es/ecma262/#sec-newobjectenvironment
-ObjectEnvironment* new_object_environment(Object& object, bool is_with_environment, Environment* environment)
+ObjectEnvironmentRecord* new_object_environment(Object& object, bool is_with_environment, EnvironmentRecord* environment_record)
 {
     auto& global_object = object.global_object();
-    return global_object.heap().allocate<ObjectEnvironment>(global_object, object, is_with_environment ? ObjectEnvironment::IsWithEnvironment::Yes : ObjectEnvironment::IsWithEnvironment::No, environment);
+    return global_object.heap().allocate<ObjectEnvironmentRecord>(global_object, object, is_with_environment ? ObjectEnvironmentRecord::IsWithEnvironment::Yes : ObjectEnvironmentRecord::IsWithEnvironment::No, environment_record);
 }
 
 // 9.4.3 GetThisEnvironment ( ), https://tc39.es/ecma262/#sec-getthisenvironment
-Environment& get_this_environment(VM& vm)
+EnvironmentRecord& get_this_environment(VM& vm)
 {
     for (auto* env = vm.lexical_environment(); env; env = env->outer_environment()) {
         if (env->has_this_binding())
@@ -176,28 +173,9 @@ Environment& get_this_environment(VM& vm)
 Object* get_super_constructor(VM& vm)
 {
     auto& env = get_this_environment(vm);
-    auto& active_function = verify_cast<FunctionEnvironment>(env).function_object();
+    auto& active_function = verify_cast<FunctionEnvironmentRecord>(env).function_object();
     auto* super_constructor = active_function.prototype();
     return super_constructor;
-}
-
-// 13.3.7.3 MakeSuperPropertyReference ( actualThis, propertyKey, strict )
-Reference make_super_property_reference(GlobalObject& global_object, Value actual_this, StringOrSymbol const& property_key, bool strict)
-{
-    auto& vm = global_object.vm();
-    // 1. Let env be GetThisEnvironment().
-    auto& env = verify_cast<FunctionEnvironment>(get_this_environment(vm));
-    // 2. Assert: env.HasSuperBinding() is true.
-    VERIFY(env.has_super_binding());
-    // 3. Let baseValue be ? env.GetSuperBase().
-    auto base_value = env.get_super_base();
-    // 4. Let bv be ? RequireObjectCoercible(baseValue).
-    auto bv = require_object_coercible(global_object, base_value);
-    if (vm.exception())
-        return {};
-    // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
-    // 6. NOTE: This returns a Super Reference Record.
-    return Reference { bv, property_key, actual_this, strict };
 }
 
 // 19.2.1.1 PerformEval ( x, callerRealm, strictCaller, direct ), https://tc39.es/ecma262/#sec-performeval
@@ -222,71 +200,8 @@ Value perform_eval(Value x, GlobalObject& caller_realm, CallerMode strict_caller
     if (direct == EvalMode::Direct)
         return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
 
-    TemporaryChange scope_change(vm.running_execution_context().lexical_environment, static_cast<Environment*>(&caller_realm.environment()));
+    TemporaryChange scope_change(vm.running_execution_context().lexical_environment, static_cast<EnvironmentRecord*>(&caller_realm.environment_record()));
     return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
-}
-
-// 10.4.4.6 CreateUnmappedArgumentsObject ( argumentsList ), https://tc39.es/ecma262/#sec-createunmappedargumentsobject
-Object* create_unmapped_arguments_object(GlobalObject& global_object, Vector<Value> const& arguments)
-{
-    auto& vm = global_object.vm();
-    auto* object = Object::create(global_object, global_object.object_prototype());
-    if (vm.exception())
-        return nullptr;
-
-    for (auto& argument : arguments)
-        object->indexed_properties().append(argument);
-
-    // 4. Perform DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
-    auto length = arguments.size();
-    object->define_property(vm.names.length, Value(length), Attribute::Writable | Attribute::Configurable);
-    if (vm.exception())
-        return nullptr;
-
-    object->define_property(*vm.well_known_symbol_iterator(), global_object.array_prototype()->get(vm.names.values), Attribute::Writable | Attribute::Configurable);
-
-    // 8. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Get]]: %ThrowTypeError%, [[Set]]: %ThrowTypeError%, [[Enumerable]]: false, [[Configurable]]: false }).
-    object->define_accessor(vm.names.callee, global_object.throw_type_error_function(), global_object.throw_type_error_function(), 0);
-    if (vm.exception())
-        return nullptr;
-
-    return object;
-}
-
-// 10.4.4.7 CreateMappedArgumentsObject ( func, formals, argumentsList, env ), https://tc39.es/ecma262/#sec-createmappedargumentsobject
-Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObject& function, Vector<FunctionNode::Parameter> const& formals, Vector<Value> const& arguments, Environment&)
-{
-    // FIXME: This implementation is incomplete and doesn't support the actual identifier mappings yet.
-    (void)formals;
-
-    auto& vm = global_object.vm();
-    auto* object = vm.heap().allocate<ArgumentsObject>(global_object, global_object);
-    if (vm.exception())
-        return nullptr;
-
-    // 14. Let index be 0.
-    // 15. Repeat, while index < len,
-    //     a. Let val be argumentsList[index].
-    //     b . Perform ! CreateDataPropertyOrThrow(obj, ! ToString(𝔽(index)), val).
-    //     c. Set index to index + 1.
-    for (auto& argument : arguments)
-        object->indexed_properties().append(argument);
-
-    // 16. Perform ! DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
-    auto length = arguments.size();
-    object->define_property(vm.names.length, Value(length), Attribute::Writable | Attribute::Configurable);
-    if (vm.exception())
-        return nullptr;
-
-    // 20. Perform ! DefinePropertyOrThrow(obj, @@iterator, PropertyDescriptor { [[Value]]: %Array.prototype.values%, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
-    object->define_property(*vm.well_known_symbol_iterator(), global_object.array_prototype()->get(vm.names.values), Attribute::Writable | Attribute::Configurable);
-
-    // 21. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Value]]: func, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
-    object->define_property(vm.names.callee, Value(&function), Attribute::Writable | Attribute::Configurable);
-    if (vm.exception())
-        return nullptr;
-
-    return object;
 }
 
 }

@@ -38,12 +38,6 @@
 #    include <AK/Types.h>
 #endif
 
-#ifdef __LP64__
-#    define ElfW(type) Elf64_##type
-#else
-#    define ElfW(type) Elf32_##type
-#endif
-
 typedef uint8_t Elf_Byte;
 
 typedef uint32_t Elf32_Addr; /* Unsigned program address */
@@ -803,4 +797,3 @@ struct elf_args {
 #define R_X86_64_GLOB_DAT 6
 #define R_X86_64_JUMP_SLOT 7
 #define R_X86_64_RELATIVE 8
-#define R_X86_64_TPOFF64 18

@@ -70,7 +70,7 @@ static bool collect_work_items(const String& source, const String& destination, 
         items.append(WorkItem {
             .type = WorkItem::Type::CopyFile,
             .source = source,
-            .destination = String::formatted("{}/{}", destination, LexicalPath::basename(source)),
+            .destination = String::formatted("{}/{}", destination, LexicalPath(source).basename()),
             .size = st.st_size,
         });
         return true;
@@ -80,7 +80,7 @@ static bool collect_work_items(const String& source, const String& destination, 
     items.append(WorkItem {
         .type = WorkItem::Type::CreateDirectory,
         .source = {},
-        .destination = String::formatted("{}/{}", destination, LexicalPath::basename(source)),
+        .destination = String::formatted("{}/{}", destination, LexicalPath(source).basename()),
         .size = 0,
     });
 
@@ -89,7 +89,7 @@ static bool collect_work_items(const String& source, const String& destination, 
         auto name = dt.next_path();
         if (!collect_work_items(
                 String::formatted("{}/{}", source, name),
-                String::formatted("{}/{}", destination, LexicalPath::basename(source)),
+                String::formatted("{}/{}", destination, LexicalPath(source).basename()),
                 items)) {
             return false;
         }

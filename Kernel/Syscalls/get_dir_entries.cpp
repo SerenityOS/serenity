@@ -9,22 +9,18 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$get_dir_entries(int fd, Userspace<void*> user_buffer, size_t user_size)
+KResultOr<size_t> Process::sys$get_dir_entries(int fd, Userspace<void*> user_buffer, size_t user_size)
 {
     REQUIRE_PROMISE(stdio);
     if (user_size > NumericLimits<ssize_t>::max())
         return EINVAL;
-    auto description = fds().file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return EBADF;
     auto buffer = UserOrKernelBuffer::for_user_buffer(user_buffer, static_cast<size_t>(user_size));
     if (!buffer.has_value())
         return EFAULT;
-    auto result = description->get_dir_entries(buffer.value(), user_size);
-    if (result.is_error())
-        return result.error();
-    else
-        return result.release_value();
+    return description->get_dir_entries(buffer.value(), user_size);
 }
 
 }

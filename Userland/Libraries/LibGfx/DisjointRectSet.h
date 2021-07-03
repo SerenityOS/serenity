@@ -129,17 +129,6 @@ public:
     const Vector<IntRect, 32>& rects() const { return m_rects; }
     Vector<IntRect, 32> take_rects() { return move(m_rects); }
 
-    void translate_by(int dx, int dy)
-    {
-        for (auto& rect : m_rects)
-            rect.translate_by(dx, dy);
-    }
-    void translate_by(Gfx::IntPoint const& delta)
-    {
-        for (auto& rect : m_rects)
-            rect.translate_by(delta);
-    }
-
 private:
     bool add_no_shatter(const IntRect&);
     void shatter();

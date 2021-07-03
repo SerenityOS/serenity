@@ -40,7 +40,7 @@
 #include <LibJS/Runtime/GeneratorFunctionConstructor.h>
 #include <LibJS/Runtime/GeneratorFunctionPrototype.h>
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
-#include <LibJS/Runtime/GlobalEnvironment.h>
+#include <LibJS/Runtime/GlobalEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
@@ -99,7 +99,7 @@ void GlobalObject::initialize_global_object()
     m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(*this);
     m_function_prototype = heap().allocate_without_global_object<FunctionPrototype>(*this);
 
-    m_environment = heap().allocate<GlobalEnvironment>(*this, *this);
+    m_environment_record = heap().allocate<GlobalEnvironmentRecord>(*this, *this);
 
     m_new_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
     m_new_object_shape->set_prototype_without_transition(m_object_prototype);
@@ -141,19 +141,6 @@ void GlobalObject::initialize_global_object()
     define_native_function(vm.names.parseInt, parse_int, 2, attr);
     define_native_function(vm.names.eval, eval, 1, attr);
     m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
-
-    // 10.2.4.1 %ThrowTypeError% ( ), https://tc39.es/ecma262/#sec-%throwtypeerror%
-    m_throw_type_error_function = NativeFunction::create(global_object(), {}, [](VM& vm, GlobalObject& global_object) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::RestrictedFunctionPropertiesAccess);
-        return Value();
-    });
-    m_throw_type_error_function->prevent_extensions();
-    m_throw_type_error_function->define_property_without_transition(vm.names.length, Value(0), 0, false);
-    m_throw_type_error_function->define_property_without_transition(vm.names.name, js_string(vm, ""), 0, false);
-
-    // 10.2.4 AddRestrictedFunctionProperties ( F, realm ), https://tc39.es/ecma262/#sec-addrestrictedfunctionproperties
-    m_function_prototype->define_accessor(vm.names.caller, throw_type_error_function(), throw_type_error_function(), Attribute::Configurable);
-    m_function_prototype->define_accessor(vm.names.arguments, throw_type_error_function(), throw_type_error_function(), Attribute::Configurable);
 
     define_native_function(vm.names.encodeURI, encode_uri, 1, attr);
     define_native_function(vm.names.decodeURI, decode_uri, 1, attr);
@@ -225,7 +212,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_new_ordinary_function_prototype_object_shape);
     visitor.visit(m_proxy_constructor);
     visitor.visit(m_generator_object_prototype);
-    visitor.visit(m_environment);
+    visitor.visit(m_environment_record);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     visitor.visit(m_##snake_name##_constructor);                                         \
@@ -240,7 +227,6 @@ void GlobalObject::visit_edges(Visitor& visitor)
 #undef __JS_ENUMERATE
 
     visitor.visit(m_eval_function);
-    visitor.visit(m_throw_type_error_function);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)

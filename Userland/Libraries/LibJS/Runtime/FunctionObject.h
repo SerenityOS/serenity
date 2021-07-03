@@ -26,7 +26,7 @@ public:
     virtual Value call() = 0;
     virtual Value construct(FunctionObject& new_target) = 0;
     virtual const FlyString& name() const = 0;
-    virtual FunctionEnvironment* create_environment(FunctionObject&) = 0;
+    virtual FunctionEnvironmentRecord* create_environment_record(FunctionObject&) = 0;
 
     BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
 
@@ -45,10 +45,7 @@ public:
     // [[Environment]]
     // The Environment Record that the function was closed over.
     // Used as the outer environment when evaluating the code of the function.
-    virtual Environment* environment() { return nullptr; }
-
-    // [[Realm]]
-    virtual GlobalObject* realm() const { return nullptr; }
+    virtual EnvironmentRecord* environment() { return nullptr; }
 
     enum class ThisMode : u8 {
         Lexical,
@@ -60,16 +57,11 @@ public:
     ThisMode this_mode() const { return m_this_mode; }
     void set_this_mode(ThisMode this_mode) { m_this_mode = this_mode; }
 
-    // This is for IsSimpleParameterList (static semantics)
-    bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
-
 protected:
     virtual void visit_edges(Visitor&) override;
 
     explicit FunctionObject(Object& prototype);
     FunctionObject(Value bound_this, Vector<Value> bound_arguments, Object& prototype);
-
-    void set_has_simple_parameter_list(bool b) { m_has_simple_parameter_list = b; }
 
 private:
     virtual bool is_function() const override { return true; }
@@ -78,7 +70,6 @@ private:
     Value m_home_object;
     ConstructorKind m_constructor_kind = ConstructorKind::Base;
     ThisMode m_this_mode { ThisMode::Global };
-    bool m_has_simple_parameter_list { false };
 };
 
 }

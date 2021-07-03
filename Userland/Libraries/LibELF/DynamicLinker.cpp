@@ -77,7 +77,7 @@ Optional<DynamicObject::SymbolLookupResult> DynamicLinker::lookup_global_symbol(
 
 static String get_library_name(String path)
 {
-    return LexicalPath::basename(move(path));
+    return LexicalPath(move(path)).basename();
 }
 
 static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const String& filename, int fd)
@@ -99,7 +99,7 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const St
 
 static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const String& name)
 {
-    if (name.contains("/"sv)) {
+    if (name.contains("/")) {
         int fd = open(name.characters(), O_RDONLY);
         if (fd < 0)
             return DlErrorMessage { String::formatted("Could not open shared library: {}", name) };
@@ -300,13 +300,13 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(co
         VERIFY(!result.is_error());
         auto& object = result.value();
 
-        if (loader.filename() == "libsystem.so"sv) {
+        if (loader.filename() == "libsystem.so") {
             if (syscall(SC_msyscall, object->base_address().as_ptr())) {
                 VERIFY_NOT_REACHED();
             }
         }
 
-        if (loader.filename() == "libc.so"sv) {
+        if (loader.filename() == "libc.so") {
             initialize_libc(*object);
         }
     }
@@ -480,7 +480,7 @@ static Result<void, DlErrorMessage> __dladdr(void* addr, Dl_info* info)
 static void read_environment_variables()
 {
     for (char** env = s_envp; *env; ++env) {
-        if (StringView { *env } == "_LOADER_BREAKPOINT=1"sv) {
+        if (StringView { *env } == "_LOADER_BREAKPOINT=1") {
             s_do_breakpoint_trap_before_entry = true;
         }
     }

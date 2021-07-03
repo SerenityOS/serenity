@@ -7,33 +7,17 @@
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-
-struct TopOption {
-    enum class SortBy {
-        Pid,
-        Tid,
-        Priority,
-        UserName,
-        State,
-        Virt,
-        Phys,
-        Cpu,
-        Name
-    };
-
-    SortBy sort_by { SortBy::Cpu };
-    int delay_time { 1 };
-};
 
 struct ThreadData {
     int tid;
@@ -130,49 +114,7 @@ static Snapshot get_snapshot()
 static bool g_window_size_changed = true;
 static struct winsize g_window_size;
 
-static void parse_args(int argc, char** argv, TopOption& top_option)
-{
-    Core::ArgsParser::Option sort_by_option {
-        true,
-        "Sort by field [pid, tid, pri, user, state, virt, phys, cpu, name]",
-        "sort-by",
-        's',
-        nullptr,
-        [&top_option](const char* s) {
-            StringView sort_by_option { s };
-            if (sort_by_option == "pid"sv)
-                top_option.sort_by = TopOption::SortBy::Pid;
-            else if (sort_by_option == "tid"sv)
-                top_option.sort_by = TopOption::SortBy::Tid;
-            else if (sort_by_option == "pri"sv)
-                top_option.sort_by = TopOption::SortBy::Priority;
-            else if (sort_by_option == "user"sv)
-                top_option.sort_by = TopOption::SortBy::UserName;
-            else if (sort_by_option == "state"sv)
-                top_option.sort_by = TopOption::SortBy::State;
-            else if (sort_by_option == "virt"sv)
-                top_option.sort_by = TopOption::SortBy::Virt;
-            else if (sort_by_option == "phys"sv)
-                top_option.sort_by = TopOption::SortBy::Phys;
-            else if (sort_by_option == "cpu"sv)
-                top_option.sort_by = TopOption::SortBy::Cpu;
-            else if (sort_by_option == "name"sv)
-                top_option.sort_by = TopOption::SortBy::Name;
-            else
-                return false;
-            return true;
-        }
-    };
-
-    Core::ArgsParser args_parser;
-
-    args_parser.set_general_help("Display information about processes");
-    args_parser.add_option(top_option.delay_time, "Delay time interval in seconds", "delay-time", 'd', nullptr);
-    args_parser.add_option(move(sort_by_option));
-    args_parser.parse(argc, argv);
-}
-
-int main(int argc, char** argv)
+int main(int, char**)
 {
     if (pledge("stdio rpath tty sigaction ", nullptr) < 0) {
         perror("pledge");
@@ -199,9 +141,6 @@ int main(int argc, char** argv)
         perror("pledge");
         return 1;
     }
-
-    TopOption top_option;
-    parse_args(argc, argv, top_option);
 
     Vector<ThreadData*> threads;
     auto prev = get_snapshot();
@@ -246,28 +185,8 @@ int main(int argc, char** argv)
             threads.append(&it.value);
         }
 
-        quick_sort(threads, [&top_option](auto* p1, auto* p2) {
-            switch (top_option.sort_by) {
-            case TopOption::SortBy::Pid:
-                return p2->pid > p1->pid;
-            case TopOption::SortBy::Tid:
-                return p2->tid > p1->tid;
-            case TopOption::SortBy::Priority:
-                return p2->priority > p1->priority;
-            case TopOption::SortBy::UserName:
-                return p2->username > p1->username;
-            case TopOption::SortBy::State:
-                return p2->state > p1->state;
-            case TopOption::SortBy::Virt:
-                return p2->amount_virtual < p1->amount_virtual;
-            case TopOption::SortBy::Phys:
-                return p2->amount_resident < p1->amount_resident;
-            case TopOption::SortBy::Name:
-                return p2->name > p1->name;
-            case TopOption::SortBy::Cpu:
-            default:
-                return p2->times_scheduled_since_prev < p1->times_scheduled_since_prev;
-            }
+        quick_sort(threads, [](auto* p1, auto* p2) {
+            return p2->times_scheduled_since_prev < p1->times_scheduled_since_prev;
         });
 
         int row = 0;
@@ -292,7 +211,7 @@ int main(int argc, char** argv)
         }
         threads.clear_with_capacity();
         prev = move(current);
-        sleep(top_option.delay_time);
+        sleep(1);
     }
     return 0;
 }

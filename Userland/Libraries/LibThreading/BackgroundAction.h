@@ -39,26 +39,16 @@ class BackgroundAction final : public Core::Object
 
 public:
     static NonnullRefPtr<BackgroundAction<Result>> create(
-        Function<Result(BackgroundAction&)> action,
+        Function<Result()> action,
         Function<void(Result)> on_complete = nullptr)
     {
         return adopt_ref(*new BackgroundAction(move(action), move(on_complete)));
     }
 
-    void cancel()
-    {
-        m_cancelled = true;
-    }
-
-    bool is_cancelled() const
-    {
-        return m_cancelled;
-    }
-
     virtual ~BackgroundAction() { }
 
 private:
-    BackgroundAction(Function<Result(BackgroundAction&)> action, Function<void(Result)> on_complete)
+    BackgroundAction(Function<Result()> action, Function<void(Result)> on_complete)
         : Core::Object(&background_thread())
         , m_action(move(action))
         , m_on_complete(move(on_complete))
@@ -66,7 +56,7 @@ private:
         Locker locker(all_actions().lock());
 
         all_actions().resource().enqueue([this] {
-            m_result = m_action(*this);
+            m_result = m_action();
             if (m_on_complete) {
                 Core::EventLoop::current().post_event(*this, make<Core::DeferredInvocationEvent>([this](auto&) {
                     m_on_complete(m_result.release_value());
@@ -79,8 +69,7 @@ private:
         });
     }
 
-    bool m_cancelled { false };
-    Function<Result(BackgroundAction&)> m_action;
+    Function<Result()> m_action;
     Function<void(Result)> m_on_complete;
     Optional<Result> m_result;
 };

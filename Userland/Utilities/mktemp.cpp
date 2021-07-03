@@ -97,15 +97,20 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto target_path = LexicalPath::join(target_directory, file_template).string();
+    LexicalPath target_path(String::formatted("{}/{}", target_directory, file_template));
+    if (!target_path.is_valid()) {
+        if (!quiet)
+            warnln("Invalid template path {}", target_path.string().characters());
+        return 1;
+    }
 
-    char* final_path = make_temp(target_path.characters(), create_directory, dry_run);
+    char* final_path = make_temp(target_path.string().characters(), create_directory, dry_run);
     if (!final_path) {
         if (!quiet) {
             if (create_directory)
-                warnln("Failed to create directory via template {}", target_path.characters());
+                warnln("Failed to create directory via template {}", target_path.string().characters());
             else
-                warnln("Failed to create file via template {}", target_path.characters());
+                warnln("Failed to create file via template {}", target_path.string().characters());
         }
         return 1;
     }

@@ -11,10 +11,10 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
+KResultOr<int> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(tty);
-    auto description = fds().file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return EBADF;
     if (!description->is_tty())
@@ -27,10 +27,10 @@ KResultOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t 
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
+KResultOr<int> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(tty);
-    auto description = fds().file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return EBADF;
     auto* master_pty = description->master_pty();

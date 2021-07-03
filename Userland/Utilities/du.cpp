@@ -151,7 +151,7 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
         }
     }
 
-    const auto basename = LexicalPath::basename(path);
+    const auto basename = LexicalPath(path).basename();
     for (const auto& pattern : du_option.excluded_patterns) {
         if (basename.matches(pattern, CaseSensitivity::CaseSensitive))
             return 0;

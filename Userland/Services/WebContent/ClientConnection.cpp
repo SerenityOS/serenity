@@ -6,7 +6,6 @@
 
 #include <AK/Badge.h>
 #include <AK/Debug.h>
-#include <AK/JsonObject.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/SystemTheme.h>
@@ -214,13 +213,6 @@ void ClientConnection::get_source()
 {
     if (auto* doc = page().top_level_browsing_context().document()) {
         async_did_get_source(doc->url(), doc->source());
-    }
-}
-
-void ClientConnection::inspect_dom_tree()
-{
-    if (auto* doc = page().top_level_browsing_context().document()) {
-        async_did_get_dom_tree(doc->dump_dom_tree_as_json());
     }
 }
 

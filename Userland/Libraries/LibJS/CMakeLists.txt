@@ -26,7 +26,6 @@ set(SOURCES
     Runtime/AggregateError.cpp
     Runtime/AggregateErrorConstructor.cpp
     Runtime/AggregateErrorPrototype.cpp
-    Runtime/ArgumentsObject.cpp
     Runtime/Array.cpp
     Runtime/ArrayBuffer.cpp
     Runtime/ArrayBufferConstructor.cpp
@@ -50,8 +49,8 @@ set(SOURCES
     Runtime/DateConstructor.cpp
     Runtime/Date.cpp
     Runtime/DatePrototype.cpp
-    Runtime/DeclarativeEnvironment.cpp
-    Runtime/Environment.cpp
+    Runtime/DeclarativeEnvironmentRecord.cpp
+    Runtime/EnvironmentRecord.cpp
     Runtime/ErrorConstructor.cpp
     Runtime/Error.cpp
     Runtime/ErrorPrototype.cpp
@@ -61,14 +60,14 @@ set(SOURCES
     Runtime/FinalizationRegistryConstructor.cpp
     Runtime/FinalizationRegistryPrototype.cpp
     Runtime/FunctionConstructor.cpp
-    Runtime/FunctionEnvironment.cpp
+    Runtime/FunctionEnvironmentRecord.cpp
     Runtime/FunctionObject.cpp
     Runtime/FunctionPrototype.cpp
     Runtime/GeneratorFunctionConstructor.cpp
     Runtime/GeneratorFunctionPrototype.cpp
     Runtime/GeneratorObject.cpp
     Runtime/GeneratorObjectPrototype.cpp
-    Runtime/GlobalEnvironment.cpp
+    Runtime/GlobalEnvironmentRecord.cpp
     Runtime/GlobalObject.cpp
     Runtime/IndexedProperties.cpp
     Runtime/IteratorOperations.cpp
@@ -88,7 +87,7 @@ set(SOURCES
     Runtime/NumberPrototype.cpp
     Runtime/Object.cpp
     Runtime/ObjectConstructor.cpp
-    Runtime/ObjectEnvironment.cpp
+    Runtime/ObjectEnvironmentRecord.cpp
     Runtime/ObjectPrototype.cpp
     Runtime/PrimitiveString.cpp
     Runtime/Promise.cpp

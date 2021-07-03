@@ -8,14 +8,14 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$yield()
+KResultOr<int> Process::sys$yield()
 {
     REQUIRE_PROMISE(stdio);
     Thread::current()->yield_without_holding_big_lock();
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$donate(pid_t tid)
+KResultOr<int> Process::sys$donate(pid_t tid)
 {
     REQUIRE_PROMISE(stdio);
     if (tid < 0)
@@ -29,7 +29,7 @@ KResultOr<FlatPtr> Process::sys$donate(pid_t tid)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct sched_param*> user_param)
+KResultOr<int> Process::sys$sched_setparam(int pid, Userspace<const struct sched_param*> user_param)
 {
     REQUIRE_PROMISE(proc);
     struct sched_param desired_param;
@@ -54,7 +54,7 @@ KResultOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct s
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_param*> user_param)
+KResultOr<int> Process::sys$sched_getparam(pid_t pid, Userspace<struct sched_param*> user_param)
 {
     REQUIRE_PROMISE(proc);
     int priority;

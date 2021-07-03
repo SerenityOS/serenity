@@ -32,11 +32,8 @@ public:
     KResultOr<NonnullRefPtr<FileDescription>> open_direction(Direction);
     KResultOr<NonnullRefPtr<FileDescription>> open_direction_blocking(Direction);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Woverloaded-virtual"
     void attach(Direction);
     void detach(Direction);
-#pragma GCC diagnostic pop
 
 private:
     // ^File

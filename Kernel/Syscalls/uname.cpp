@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
+KResultOr<int> Process::sys$uname(Userspace<utsname*> user_buf)
 {
     extern String* g_hostname;
     extern Lock* g_hostname_lock;
@@ -23,12 +23,7 @@ KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
     memcpy(buf.sysname, "SerenityOS", 11);
     memcpy(buf.release, "1.0-dev", 8);
     memcpy(buf.version, "FIXME", 6);
-#if ARCH(I386)
     memcpy(buf.machine, "i686", 5);
-#else
-    memcpy(buf.machine, "x86_64", 7);
-#endif
-
     memcpy(buf.nodename, g_hostname->characters(), g_hostname->length() + 1);
 
     if (!copy_to_user(user_buf, &buf))

@@ -11,19 +11,19 @@
 
 namespace Kernel {
 
-KResultOr<FlatPtr> Process::sys$dump_backtrace()
+KResultOr<int> Process::sys$dump_backtrace()
 {
     dump_backtrace();
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$dbgputch(u8 ch)
+KResultOr<int> Process::sys$dbgputch(u8 ch)
 {
     dbgputch(ch);
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$dbgputstr(Userspace<const u8*> characters, size_t size)
+KResultOr<size_t> Process::sys$dbgputstr(Userspace<const u8*> characters, size_t size)
 {
     if (size == 0)
         return 0;

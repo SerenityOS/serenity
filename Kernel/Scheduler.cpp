@@ -354,13 +354,8 @@ bool Scheduler::context_switch(Thread* thread)
             from_thread->set_state(Thread::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-#    if ARCH(I386)
         dbgln("Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:08x}", Processor::id(), from_thread->tid().value(),
             thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().eip);
-#    else
-        dbgln("Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:16x}", Processor::id(), from_thread->tid().value(),
-            thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().rip);
-#    endif
 #endif
     }
 
@@ -380,19 +375,14 @@ bool Scheduler::context_switch(Thread* thread)
     enter_current(*from_thread, false);
     VERIFY(thread == Thread::current());
 
-    if (thread->process().is_user_process()) {
-        FlatPtr flags;
-        auto& regs = Thread::current()->get_register_dump_from_stack();
 #if ARCH(I386)
-        flags = regs.eflags;
-#else
-        flags = regs.rflags;
-#endif
-        auto iopl = get_iopl_from_eflags(flags);
+    if (thread->process().is_user_process()) {
+        auto iopl = get_iopl_from_eflags(Thread::current()->get_register_dump_from_stack().eflags);
         if (iopl != 0) {
             PANIC("Switched to thread {} with non-zero IOPL={}", Thread::current()->tid().value(), iopl);
         }
     }
+#endif
 
     return true;
 }
@@ -460,7 +450,7 @@ Process* Scheduler::colonel()
 
 UNMAP_AFTER_INIT void Scheduler::initialize()
 {
-    VERIFY(Processor::is_initialized()); // sanity check
+    VERIFY(&Processor::current() != nullptr); // sanity check
 
     RefPtr<Thread> idle_thread;
     g_finalizer_wait_queue = new WaitQueue;
@@ -583,7 +573,7 @@ void Scheduler::dump_scheduler_state()
 
 bool Scheduler::is_initialized()
 {
-    // The scheduler is initialized iff the idle thread exists
+    // The scheduler is initalized iff the idle thread exists
     return Processor::idle_thread() != nullptr;
 }
 
@@ -592,8 +582,12 @@ void dump_thread_list()
     dbgln("Scheduler thread list for processor {}:", Processor::id());
 
     auto get_cs = [](Thread& thread) -> u16 {
+#if ARCH(I386)
         if (!thread.current_trap())
             return thread.regs().cs;
+#else
+        PANIC("get_cs() not implemented");
+#endif
         return thread.get_register_dump_from_stack().cs;
     };
 
@@ -603,8 +597,7 @@ void dump_thread_list()
             return thread.regs().eip;
         return thread.get_register_dump_from_stack().eip;
 #else
-        if (!thread.current_trap())
-            return thread.regs().rip;
+        PANIC("get_eip() not implemented");
         return thread.get_register_dump_from_stack().rip;
 #endif
     };

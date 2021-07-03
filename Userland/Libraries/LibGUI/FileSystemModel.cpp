@@ -189,29 +189,28 @@ ModelIndex FileSystemModel::index(String path, int column) const
 
 FileSystemModel::Node const* FileSystemModel::node_for_path(String const& path) const
 {
-    String resolved_path;
-    if (path == m_root_path)
-        resolved_path = "/";
-    else if (!m_root_path.is_empty() && path.starts_with(m_root_path))
-        resolved_path = LexicalPath::relative_path(path, m_root_path);
-    else
-        resolved_path = path;
-    LexicalPath lexical_path(resolved_path);
+    LexicalPath lexical_path;
+    if (path == m_root_path) {
+        lexical_path = LexicalPath { "/" };
+    } else if (!m_root_path.is_empty() && path.starts_with(m_root_path)) {
+        lexical_path = LexicalPath { LexicalPath::relative_path(path, m_root_path) };
+    } else {
+        lexical_path = LexicalPath { move(path) };
+    }
 
     const Node* node = m_root->m_parent_of_root ? &m_root->children.first() : m_root;
     if (lexical_path.string() == "/")
         return node;
 
-    auto& parts = lexical_path.parts_view();
-    for (size_t i = 0; i < parts.size(); ++i) {
-        auto& part = parts[i];
+    for (size_t i = 0; i < lexical_path.parts().size(); ++i) {
+        auto& part = lexical_path.parts()[i];
         bool found = false;
         for (auto& child : node->children) {
             if (child.name == part) {
                 const_cast<Node&>(child).reify_if_needed();
                 node = &child;
                 found = true;
-                if (i == parts.size() - 1)
+                if (i == lexical_path.parts().size() - 1)
                     return node;
                 break;
             }
@@ -261,28 +260,10 @@ FileSystemModel::FileSystemModel(String root_path, Mode mode)
         dbgln("Event at \"{}\" on Node {}: {}", node.full_path(), &node, event);
 
         // FIXME: Your time is coming, un-granular updates.
-        auto refresh_node = [](Node& node) {
-            node.has_traversed = false;
-            node.mode = 0;
-            node.children.clear();
-            node.reify_if_needed();
-        };
-
-        if (event.type == Core::FileWatcherEvent::Type::Deleted) {
-            auto canonical_event_path = LexicalPath::canonicalized_path(event.event_path);
-            if (m_root_path.starts_with(canonical_event_path)) {
-                // Deleted directory contains our root, so navigate to our nearest parent.
-                auto new_path = LexicalPath(m_root_path).parent();
-                while (!Core::File::is_directory(new_path.string()))
-                    new_path = new_path.parent();
-
-                set_root_path(new_path.string());
-            } else if (node.parent) {
-                refresh_node(*node.parent);
-            }
-        } else {
-            refresh_node(node);
-        }
+        node.has_traversed = false;
+        node.mode = 0;
+        node.children.clear();
+        node.reify_if_needed();
         did_update();
     };
 
@@ -587,7 +568,7 @@ bool FileSystemModel::fetch_thumbnail_for(const Node& node)
     auto weak_this = make_weak_ptr();
 
     Threading::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
-        [path](auto&) {
+        [path] {
             return render_thumbnail(path);
         },
 
@@ -672,7 +653,7 @@ void FileSystemModel::set_data(const ModelIndex& index, const Variant& data)
 {
     VERIFY(is_editable(index));
     Node& node = const_cast<Node&>(this->node(index));
-    auto dirname = LexicalPath::dirname(node.full_path());
+    auto dirname = LexicalPath(node.full_path()).dirname();
     auto new_full_path = String::formatted("{}/{}", dirname, data.to_string());
     int rc = rename(node.full_path().characters(), new_full_path.characters());
     if (rc < 0) {

@@ -61,7 +61,7 @@ private:
 void ThreadStackWidget::refresh()
 {
     Threading::BackgroundAction<Vector<Symbolication::Symbol>>::create(
-        [pid = m_pid, tid = m_tid](auto&) {
+        [pid = m_pid, tid = m_tid] {
             return Symbolication::symbolicate_thread(pid, tid);
         },
 

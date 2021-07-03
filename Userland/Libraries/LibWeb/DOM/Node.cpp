@@ -606,35 +606,4 @@ RefPtr<Document> Node::owner_document() const
     return m_document;
 }
 
-void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const
-{
-    object.add("name", node_name().view());
-    if (is_document()) {
-        object.add("type", "document");
-    } else if (is_element()) {
-        object.add("type", "element");
-
-        auto element = static_cast<DOM::Element const*>(this);
-        if (element->has_attributes()) {
-            auto attributes = object.add_object("attributes");
-            element->for_each_attribute([&attributes](auto& name, auto& value) {
-                attributes.add(name, value);
-            });
-        }
-    } else if (is_text()) {
-        object.add("type", "text");
-
-        auto text_node = static_cast<DOM::Text const*>(this);
-        object.add("text", text_node->data());
-    }
-
-    if (has_child_nodes()) {
-        auto children = object.add_array("children");
-        for_each_child([&children](DOM::Node& child) {
-            JsonObjectSerializer<StringBuilder> child_object = children.add_object();
-            child.serialize_tree_as_json(child_object);
-        });
-    }
-}
-
 }

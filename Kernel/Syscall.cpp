@@ -38,7 +38,7 @@ NEVER_INLINE void syscall_asm_entry_dummy()
         "    mov %ax, %ds\n"
         "    mov %ax, %es\n"
         "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n"
-        "    mov %ax, %gs\n"
+        "    mov %ax, %fs\n"
         "    cld\n"
         "    xor %esi, %esi\n"
         "    xor %edi, %edi\n"
@@ -55,31 +55,8 @@ NEVER_INLINE void syscall_asm_entry_dummy()
     asm(
         ".globl syscall_asm_entry\n"
         "syscall_asm_entry:\n"
-        "    pushq $0x0\n"
-        "    pushq %r15\n"
-        "    pushq %r14\n"
-        "    pushq %r13\n"
-        "    pushq %r12\n"
-        "    pushq %r11\n"
-        "    pushq %r10\n"
-        "    pushq %r9\n"
-        "    pushq %r8\n"
-        "    pushq %rax\n"
-        "    pushq %rcx\n"
-        "    pushq %rdx\n"
-        "    pushq %rbx\n"
-        "    pushq %rsp\n"
-        "    pushq %rbp\n"
-        "    pushq %rsi\n"
-        "    pushq %rdi\n"
-        "    pushq %rsp \n" /* set TrapFrame::regs */
-        "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n"
-        "    movq %rsp, %rdi \n"
-        "    cld\n"
-        "    call enter_trap_no_irq \n"
-        "    movq %rsp, %rdi \n"
-        "    call syscall_handler\n"
-        "    jmp common_trap_exit \n");
+        "    cli\n"
+        "    hlt\n");
 #endif
     // clang-format on
 }

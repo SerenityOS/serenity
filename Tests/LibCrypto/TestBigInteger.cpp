@@ -234,7 +234,7 @@ TEST_CASE(test_unsigned_bigint_division_combined_test)
 
 TEST_CASE(test_unsigned_bigint_base10_from_string)
 {
-    auto result = Crypto::UnsignedBigInteger::from_base(10, "57195071295721390579057195715793");
+    auto result = Crypto::UnsignedBigInteger::from_base10("57195071295721390579057195715793");
     Vector<u32> expected_result { 3806301393, 954919431, 3879607298, 721 };
     EXPECT_EQ(result.words(), expected_result);
 }
@@ -243,7 +243,7 @@ TEST_CASE(test_unsigned_bigint_base10_to_string)
 {
     auto result = Crypto::UnsignedBigInteger {
         Vector<u32> { 3806301393, 954919431, 3879607298, 721 }
-    }.to_base(10);
+    }.to_base10();
     EXPECT_EQ(result, "57195071295721390579057195715793");
 }
 
@@ -386,10 +386,10 @@ TEST_CASE(test_bigint_random_distribution)
         "100000000000000000000000000000"_bigint);         // 10**29
     if (actual_result < "100000000000000000000"_bigint) { // 10**20
         FAIL("Too small");
-        outln("The generated number {} is extremely small. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base(10));
+        outln("The generated number {} is extremely small. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base10());
     } else if ("99999999900000000000000000000"_bigint < actual_result) { // 10**29 - 10**20
         FAIL("Too large");
-        outln("The generated number {} is extremely large. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base(10));
+        outln("The generated number {} is extremely large. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base10());
     }
 }
 
@@ -443,16 +443,6 @@ TEST_CASE(test_bigint_bitwise_or_different_lengths)
     EXPECT_EQ(result, expected);
 }
 
-TEST_CASE(test_signed_bigint_bitwise_or)
-{
-    auto num1 = "-1234567"_sbigint;
-    auto num2 = "1234567"_sbigint;
-    EXPECT_EQ(num1.bitwise_or(num1), num1);
-    EXPECT_EQ(num1.bitwise_or(num2), num1);
-    EXPECT_EQ(num2.bitwise_or(num1), num1);
-    EXPECT_EQ(num2.bitwise_or(num2), num2);
-}
-
 TEST_CASE(test_bigint_bitwise_and)
 {
     auto num1 = "1234567"_bigint;
@@ -467,16 +457,6 @@ TEST_CASE(test_bigint_bitwise_and_different_lengths)
     EXPECT_EQ(num1.bitwise_and(num2), "1180290"_bigint);
 }
 
-TEST_CASE(test_signed_bigint_bitwise_and)
-{
-    auto num1 = "-1234567"_sbigint;
-    auto num2 = "1234567"_sbigint;
-    EXPECT_EQ(num1.bitwise_and(num1), num1);
-    EXPECT_EQ(num1.bitwise_and(num2), num2);
-    EXPECT_EQ(num2.bitwise_and(num1), num2);
-    EXPECT_EQ(num2.bitwise_and(num2), num2);
-}
-
 TEST_CASE(test_bigint_bitwise_xor)
 {
     auto num1 = "1234567"_bigint;
@@ -489,16 +469,6 @@ TEST_CASE(test_bigint_bitwise_xor_different_lengths)
     auto num1 = "1234567"_bigint;
     auto num2 = "123456789012345678901234567890"_bigint;
     EXPECT_EQ(num1.bitwise_xor(num2), "123456789012345678901233441877"_bigint);
-}
-
-TEST_CASE(test_signed_bigint_bitwise_xor)
-{
-    auto num1 = "-3"_sbigint;
-    auto num2 = "1"_sbigint;
-    EXPECT_EQ(num1.bitwise_xor(num1), "0"_sbigint);
-    EXPECT_EQ(num1.bitwise_xor(num2), "-2"_sbigint);
-    EXPECT_EQ(num2.bitwise_xor(num1), "-2"_sbigint);
-    EXPECT_EQ(num2.bitwise_xor(num2), "0"_sbigint);
 }
 
 TEST_CASE(test_signed_bigint_fibo500)

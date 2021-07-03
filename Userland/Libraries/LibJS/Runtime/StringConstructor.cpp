@@ -6,7 +6,6 @@
 
 #include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
-#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -16,7 +15,7 @@
 namespace JS {
 
 StringConstructor::StringConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.String.as_string(), *global_object.function_prototype())
+    : NativeFunction(vm().names.String, *global_object.function_prototype())
 {
 }
 
@@ -54,70 +53,56 @@ Value StringConstructor::call()
 }
 
 // 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
-Value StringConstructor::construct(FunctionObject& new_target)
+Value StringConstructor::construct(FunctionObject&)
 {
-    auto& vm = global_object().vm();
-
-    PrimitiveString* primitive_string;
-    if (!vm.argument_count())
-        primitive_string = js_string(vm, "");
+    PrimitiveString* primitive_string = nullptr;
+    if (!vm().argument_count())
+        primitive_string = js_string(vm(), "");
     else
-        primitive_string = vm.argument(0).to_primitive_string(global_object());
+        primitive_string = vm().argument(0).to_primitive_string(global_object());
     if (!primitive_string)
         return {};
-    auto* prototype = get_prototype_from_constructor(global_object(), new_target, &GlobalObject::string_prototype);
-    if (vm.exception())
-        return {};
-    return StringObject::create(global_object(), *primitive_string, *prototype);
+    return StringObject::create(global_object(), *primitive_string);
 }
 
 // 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 {
-    auto* cooked = vm.argument(0).to_object(global_object);
+    auto* template_object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
 
-    auto raw_value = cooked->get(vm.names.raw).value_or(js_undefined());
+    auto raw = template_object->get(vm.names.raw);
     if (vm.exception())
         return {};
-
-    auto* raw = raw_value.to_object(global_object);
-    if (vm.exception())
+    if (raw.is_empty() || raw.is_nullish()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::StringRawCannotConvert, raw.is_null() ? "null" : "undefined");
         return {};
-
-    auto literal_segments = length_of_array_like(global_object, *raw);
-    if (vm.exception())
-        return {};
-
-    if (literal_segments == 0)
+    }
+    // FIXME: This should use length_of_array_like() and work with any object
+    if (!raw.is_object() || !raw.as_object().is_array())
         return js_string(vm, "");
 
-    const auto number_of_substituions = vm.argument_count() - 1;
-
+    auto* array = static_cast<Array*>(raw.to_object(global_object));
+    auto& raw_array_elements = array->indexed_properties();
     StringBuilder builder;
-    for (size_t i = 0; i < literal_segments; ++i) {
-        auto next_key = String::number(i);
-        auto next_segment_value = raw->get(next_key).value_or(js_undefined());
+
+    for (size_t i = 0; i < raw_array_elements.array_like_size(); ++i) {
+        auto result = raw_array_elements.get(array, i);
         if (vm.exception())
             return {};
-        auto next_segment = next_segment_value.to_string(global_object);
+        if (!result.has_value())
+            continue;
+        builder.append(result.value().value.to_string(global_object));
         if (vm.exception())
             return {};
-
-        builder.append(next_segment);
-
-        if (i + 1 == literal_segments)
-            break;
-
-        if (i < number_of_substituions) {
-            auto next = vm.argument(i + 1);
-            auto next_sub = next.to_string(global_object);
+        if (i + 1 < vm.argument_count() && i < raw_array_elements.array_like_size() - 1) {
+            builder.append(vm.argument(i + 1).to_string(global_object));
             if (vm.exception())
                 return {};
-            builder.append(next_sub);
         }
     }
+
     return js_string(vm, builder.build());
 }
 

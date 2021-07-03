@@ -360,7 +360,6 @@ void Job::timer_event(Core::TimerEvent& event)
 
 void Job::finish_up()
 {
-    VERIFY(!m_has_scheduled_finish);
     m_state = State::Finished;
     if (!m_can_stream_response) {
         auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size);
@@ -395,10 +394,9 @@ void Job::finish_up()
         return;
     }
 
-    m_has_scheduled_finish = true;
     auto response = HttpResponse::create(m_code, move(m_headers));
-    deferred_invoke([this, response = move(response)](auto&) {
-        did_finish(response);
+    deferred_invoke([this, response](auto&) {
+        did_finish(move(response));
     });
 }
 }

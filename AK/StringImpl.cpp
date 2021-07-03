@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
 #include <AK/FlyString.h>
 #include <AK/HashTable.h>
 #include <AK/Memory.h>
@@ -91,48 +90,60 @@ RefPtr<StringImpl> StringImpl::create(ReadonlyBytes bytes, ShouldChomp shouldCho
     return StringImpl::create(reinterpret_cast<const char*>(bytes.data()), bytes.size(), shouldChomp);
 }
 
-RefPtr<StringImpl> StringImpl::create_lowercased(char const* cstring, size_t length)
+static inline bool is_ascii_lowercase(char c)
 {
-    if (!cstring)
-        return nullptr;
-    if (!length)
-        return the_empty_stringimpl();
-    char* buffer;
-    auto impl = create_uninitialized(length, buffer);
-    for (size_t i = 0; i < length; ++i)
-        buffer[i] = (char)to_ascii_lowercase(cstring[i]);
-    return impl;
+    return c >= 'a' && c <= 'z';
 }
 
-RefPtr<StringImpl> StringImpl::create_uppercased(char const* cstring, size_t length)
+static inline bool is_ascii_uppercase(char c)
 {
-    if (!cstring)
-        return nullptr;
-    if (!length)
-        return the_empty_stringimpl();
-    char* buffer;
-    auto impl = create_uninitialized(length, buffer);
-    for (size_t i = 0; i < length; ++i)
-        buffer[i] = (char)to_ascii_uppercase(cstring[i]);
-    return impl;
+    return c >= 'A' && c <= 'Z';
+}
+
+static inline char to_ascii_lowercase(char c)
+{
+    if (is_ascii_uppercase(c))
+        return c | 0x20;
+    return c;
+}
+
+static inline char to_ascii_uppercase(char c)
+{
+    if (is_ascii_lowercase(c))
+        return c & ~0x20;
+    return c;
 }
 
 NonnullRefPtr<StringImpl> StringImpl::to_lowercase() const
 {
     for (size_t i = 0; i < m_length; ++i) {
-        if (is_ascii_upper_alpha(characters()[i]))
-            return create_lowercased(characters(), m_length).release_nonnull();
+        if (!is_ascii_lowercase(characters()[i]))
+            goto slow_path;
     }
     return const_cast<StringImpl&>(*this);
+
+slow_path:
+    char* buffer;
+    auto lowercased = create_uninitialized(m_length, buffer);
+    for (size_t i = 0; i < m_length; ++i)
+        buffer[i] = to_ascii_lowercase(characters()[i]);
+    return lowercased;
 }
 
 NonnullRefPtr<StringImpl> StringImpl::to_uppercase() const
 {
     for (size_t i = 0; i < m_length; ++i) {
-        if (is_ascii_lower_alpha(characters()[i]))
-            return create_uppercased(characters(), m_length).release_nonnull();
+        if (!is_ascii_uppercase(characters()[i]))
+            goto slow_path;
     }
     return const_cast<StringImpl&>(*this);
+
+slow_path:
+    char* buffer;
+    auto uppercased = create_uninitialized(m_length, buffer);
+    for (size_t i = 0; i < m_length; ++i)
+        buffer[i] = to_ascii_uppercase(characters()[i]);
+    return uppercased;
 }
 
 void StringImpl::compute_hash() const

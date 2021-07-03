@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, Spencer Dixon <spencercdixon@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,9 +9,6 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibDesktop/AppFile.h>
-#include <errno.h>
-#include <serenity.h>
-#include <spawn.h>
 
 namespace Desktop {
 
@@ -102,26 +98,6 @@ Vector<String> AppFile::launcher_protocols() const
             protocols.append(entry);
     }
     return protocols;
-}
-
-bool AppFile::spawn() const
-{
-    if (!is_valid())
-        return false;
-
-    pid_t child_pid;
-    const char* argv[] = { executable().characters(), nullptr };
-    if ((errno = posix_spawn(&child_pid, executable().characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
-        return false;
-    } else {
-        if (disown(child_pid) < 0) {
-            perror("disown");
-            return false;
-        }
-    }
-
-    return true;
 }
 
 }

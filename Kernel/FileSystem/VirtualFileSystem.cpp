@@ -533,7 +533,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     if (old_parent_custody->is_readonly() || new_parent_custody->is_readonly())
         return EROFS;
 
-    auto new_basename = LexicalPath::basename(new_path);
+    auto new_basename = LexicalPath(new_path).basename();
 
     if (!new_custody_or_error.is_error()) {
         auto& new_custody = *new_custody_or_error.value();
@@ -554,7 +554,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     if (auto result = new_parent_inode.add_child(old_inode, new_basename, old_inode.mode()); result.is_error())
         return result;
 
-    if (auto result = old_parent_inode.remove_child(LexicalPath::basename(old_path)); result.is_error())
+    if (auto result = old_parent_inode.remove_child(LexicalPath(old_path).basename()); result.is_error())
         return result;
 
     return KSuccess;
@@ -656,7 +656,7 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
     if (!hard_link_allowed(old_inode))
         return EPERM;
 
-    return parent_inode.add_child(old_inode, LexicalPath::basename(new_path), old_inode.mode());
+    return parent_inode.add_child(old_inode, LexicalPath(new_path).basename(), old_inode.mode());
 }
 
 KResult VFS::unlink(StringView path, Custody& base)
@@ -689,7 +689,7 @@ KResult VFS::unlink(StringView path, Custody& base)
     if (parent_custody->is_readonly())
         return EROFS;
 
-    if (auto result = parent_inode.remove_child(LexicalPath::basename(path)); result.is_error())
+    if (auto result = parent_inode.remove_child(LexicalPath(path).basename()); result.is_error())
         return result;
 
     return KSuccess;
@@ -771,7 +771,7 @@ KResult VFS::rmdir(StringView path, Custody& base)
     if (auto result = inode.remove_child(".."); result.is_error())
         return result;
 
-    return parent_inode.remove_child(LexicalPath::basename(path));
+    return parent_inode.remove_child(LexicalPath(path).basename());
 }
 
 VFS::Mount::Mount(FS& guest_fs, Custody* host_custody, int flags)
@@ -834,7 +834,7 @@ UnveilNode const& VFS::find_matching_unveiled_path(StringView path)
     auto& unveil_root = Process::current()->unveiled_paths();
 
     LexicalPath lexical_path { path };
-    auto& path_parts = lexical_path.parts_view();
+    auto& path_parts = lexical_path.parts();
     return unveil_root.traverse_until_last_accessible_node(path_parts.begin(), path_parts.end());
 }
 

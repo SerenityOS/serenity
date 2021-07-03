@@ -24,7 +24,7 @@ static void update_intermediate_node_permissions(UnveilNode& root_node, UnveilAc
     }
 }
 
-KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
+KResultOr<int> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
 {
     Syscall::SC_unveil_params params;
     if (!copy_from_user(&params, user_params))
@@ -91,7 +91,7 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
     if (!custody_or_error.is_error()) {
         new_unveiled_path = custody_or_error.value()->absolute_path();
     } else if (custody_or_error.error() == -ENOENT && parent_custody && (new_permissions & UnveilAccess::CreateOrRemove)) {
-        String basename = LexicalPath::basename(path.view());
+        String basename = LexicalPath(path.view()).basename();
         new_unveiled_path = String::formatted("{}/{}", parent_custody->absolute_path(), basename);
     } else {
         // FIXME Should this be EINVAL?
@@ -99,8 +99,8 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
     }
 
     LexicalPath lexical_path(new_unveiled_path);
-    auto it = lexical_path.parts_view().begin();
-    auto& matching_node = m_unveiled_paths.traverse_until_last_accessible_node(it, lexical_path.parts_view().end());
+    auto it = lexical_path.parts().begin();
+    auto& matching_node = m_unveiled_paths.traverse_until_last_accessible_node(it, lexical_path.parts().end());
     if (it.is_end()) {
         // If the path has already been explicitly unveiled, do not allow elevating its permissions.
         if (matching_node.was_explicitly_unveiled()) {
@@ -122,7 +122,7 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
 
     matching_node.insert(
         it,
-        lexical_path.parts_view().end(),
+        lexical_path.parts().end(),
         { new_unveiled_path, (UnveilAccess)new_permissions, true },
         [](auto& parent, auto& it) -> Optional<UnveilMetadata> {
             auto path = LexicalPath::join(parent.path(), *it).string();

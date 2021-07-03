@@ -8,13 +8,10 @@
 #include <Kernel/ACPI/DynamicParser.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
-#include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Arch/x86/Processor.h>
-#include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/Initializer.h>
-#include <Kernel/Bus/USB/UHCIController.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/DMI.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/MemoryDevice.h>
@@ -23,10 +20,10 @@
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/SerialDevice.h>
+#include <Kernel/Devices/USB/UHCIController.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
-#include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/SlabAllocator.h>
@@ -38,9 +35,10 @@
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
+#include <Kernel/PCI/Access.h>
+#include <Kernel/PCI/Initializer.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
-#include <Kernel/ProcessExposed.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
@@ -88,7 +86,7 @@ static void setup_serial_debug();
 // boot.S expects these functions to exactly have the following signatures.
 // We declare them here to ensure their signatures don't accidentally change.
 extern "C" void init_finished(u32 cpu) __attribute__((used));
-extern "C" [[noreturn]] void init_ap(FlatPtr cpu, Processor* processor_info);
+extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info);
 extern "C" [[noreturn]] void init();
 
 READONLY_AFTER_INIT VirtualConsole* tty0;
@@ -148,8 +146,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
     ACPI::initialize();
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
-    SystemRegistrar::initialize();
-    ProcFSComponentsRegistrar::initialize();
     PCI::initialize();
     PCISerialDevice::detect();
 
@@ -194,7 +190,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
 //
 // The purpose of init_ap() is to initialize APs for multi-tasking.
 //
-extern "C" [[noreturn]] UNMAP_AFTER_INIT void init_ap(FlatPtr cpu, Processor* processor_info)
+extern "C" [[noreturn]] UNMAP_AFTER_INIT void init_ap(u32 cpu, Processor* processor_info)
 {
     processor_info->early_initialize(cpu);
 
@@ -241,8 +237,7 @@ void init_stage2(void*)
 
     USB::UHCIController::detect();
 
-    BIOSExposedFolder::initialize();
-    ACPI::ExposedFolder::initialize();
+    DMIExpose::initialize();
 
     VirtIO::detect();
 

@@ -17,7 +17,7 @@
 namespace JS {
 
 ArrayConstructor::ArrayConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Array.as_string(), *global_object.function_prototype())
+    : NativeFunction(vm().names.Array, *global_object.function_prototype())
 {
 }
 
@@ -51,14 +51,13 @@ Value ArrayConstructor::call()
         return Array::create(global_object());
 
     if (vm().argument_count() == 1 && vm().argument(0).is_number()) {
-        auto length = vm().argument(0);
-        auto int_length = length.to_u32(global_object());
-        if (int_length != length.as_double()) {
+        auto array_length_value = vm().argument(0);
+        if (!array_length_value.is_integral_number() || array_length_value.as_i32() < 0) {
             vm().throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "array");
             return {};
         }
         auto* array = Array::create(global_object());
-        array->indexed_properties().set_array_like_size(int_length);
+        array->indexed_properties().set_array_like_size(array_length_value.as_i32());
         return array;
     }
 
@@ -156,26 +155,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 // 23.1.2.3 Array.of ( ...items ), https://tc39.es/ecma262/#sec-array.of
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 {
-    auto this_value = vm.this_value(global_object);
-    Value array;
-    if (this_value.is_constructor()) {
-        MarkedValueList arguments(vm.heap());
-        arguments.empend(vm.argument_count());
-        array = vm.construct(this_value.as_function(), this_value.as_function(), move(arguments));
-        if (vm.exception())
-            return {};
-    } else {
-        array = Array::create(global_object);
-    }
-    auto& array_object = array.as_object();
-    for (size_t k = 0; k < vm.argument_count(); ++k) {
-        array_object.define_property(k, vm.argument(k));
-        if (vm.exception())
-            return {};
-    }
-    array_object.put(vm.names.length, Value(vm.argument_count()));
-    if (vm.exception())
-        return {};
+    auto* array = Array::create(global_object);
+    for (size_t i = 0; i < vm.argument_count(); ++i)
+        array->indexed_properties().append(vm.argument(i));
     return array;
 }
 

@@ -26,21 +26,11 @@ set(KERNEL_SOURCES
     AddressSanitizer.cpp
     Arch/PC/BIOS.cpp
     Arch/x86/SmapDisabler.h
-    Bus/PCI/Access.cpp
-    Bus/PCI/Device.cpp
-    Bus/PCI/DeviceController.cpp
-    Bus/PCI/IOAccess.cpp
-    Bus/PCI/MMIOAccess.cpp
-    Bus/PCI/Initializer.cpp
-    Bus/PCI/WindowedMMIOAccess.cpp
-    Bus/USB/UHCIController.cpp
-    Bus/USB/USBDevice.cpp
-    Bus/USB/USBPipe.cpp
-    Bus/USB/USBTransfer.cpp
     CMOS.cpp
     CommandLine.cpp
     ConsoleDevice.cpp
     CoreDump.cpp
+    DMI.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
@@ -53,9 +43,13 @@ set(KERNEL_SOURCES
     Devices/RandomDevice.cpp
     Devices/SB16.cpp
     Devices/SerialDevice.cpp
+    Devices/USB/UHCIController.cpp
     VirtIO/VirtIO.cpp
     VirtIO/VirtIOQueue.cpp
     VirtIO/VirtIOConsole.cpp
+    Devices/USB/USBDevice.cpp
+    Devices/USB/USBPipe.cpp
+    Devices/USB/USBTransfer.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
     Devices/HID/I8042Controller.cpp
@@ -65,7 +59,6 @@ set(KERNEL_SOURCES
     Devices/HID/PS2KeyboardDevice.cpp
     Devices/HID/PS2MouseDevice.cpp
     Devices/HID/VMWareMouseDevice.cpp
-    GlobalProcessExposed.cpp
     Graphics/Console/GenericFramebufferConsole.cpp
     Graphics/Console/ContiguousFramebufferConsole.cpp
     Graphics/Console/TextModeConsole.cpp
@@ -114,7 +107,6 @@ set(KERNEL_SOURCES
     FileSystem/InodeWatcher.cpp
     FileSystem/Plan9FileSystem.cpp
     FileSystem/ProcFS.cpp
-    FileSystem/SysFS.cpp
     FileSystem/TmpFS.cpp
     FileSystem/VirtualFileSystem.cpp
     FutexQueue.cpp
@@ -146,11 +138,16 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
+    PCI/Access.cpp
+    PCI/Device.cpp
+    PCI/DeviceController.cpp
+    PCI/IOAccess.cpp
+    PCI/MMIOAccess.cpp
+    PCI/Initializer.cpp
+    PCI/WindowedMMIOAccess.cpp
     Panic.cpp
     PerformanceEventBuffer.cpp
     Process.cpp
-    ProcessExposed.cpp
-    ProcessSpecificExposed.cpp
     ProcessGroup.cpp
     RTC.cpp
     Random.cpp
@@ -228,7 +225,6 @@ set(KERNEL_SOURCES
     Syscalls/waitid.cpp
     Syscalls/inode_watcher.cpp
     Syscalls/write.cpp
-    SystemExposed.cpp
     TTY/ConsoleManagement.cpp
     TTY/MasterPTY.cpp
     TTY/PTYMultiplexer.cpp
@@ -281,6 +277,7 @@ set(KERNEL_SOURCES
     ${KERNEL_SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/ASM_wrapper.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Boot/boot.S
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/CPU.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/InterruptEntry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Processor.cpp
 )
@@ -301,6 +298,8 @@ set(AK_SOURCES
     ../AK/FlyString.cpp
     ../AK/GenericLexer.cpp
     ../AK/Hex.cpp
+    ../AK/JsonParser.cpp
+    ../AK/JsonValue.cpp
     ../AK/LexicalPath.cpp
     ../AK/String.cpp
     ../AK/StringBuilder.cpp
@@ -358,7 +357,7 @@ if (NOT ${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -fno-pic -mno-red-zone")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -fno-pic -mno-red-zone -z max-page-size=0x1000")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fPIE")
 endif()
