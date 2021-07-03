@@ -30,7 +30,8 @@ struct FBRect {
     unsigned height;
 };
 
-struct FBRects {
+struct FBFlushRects {
+    int buffer_index;
     unsigned count;
     struct FBRect const* rects;
 };

@@ -364,7 +364,7 @@ void Screen::queue_flush_display_rect(Gfx::IntRect const& flush_region)
     }
 }
 
-void Screen::flush_display()
+void Screen::flush_display(int buffer_index)
 {
     VERIFY(m_can_device_flush_buffers);
     auto& fb_data = *m_framebuffer_data;
@@ -380,7 +380,7 @@ void Screen::flush_display()
         flush_rect.height *= scale_factor;
     }
 
-    if (fb_flush_buffers(m_framebuffer_fd, fb_data.pending_flush_rects.data(), (unsigned)fb_data.pending_flush_rects.size()) < 0) {
+    if (fb_flush_buffers(m_framebuffer_fd, buffer_index, fb_data.pending_flush_rects.data(), (unsigned)fb_data.pending_flush_rects.size()) < 0) {
         int err = errno;
         if (err == ENOTSUP)
             m_can_device_flush_buffers = false;

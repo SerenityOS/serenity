@@ -171,7 +171,9 @@ private:
         OwnPtr<WindowStackSwitchOverlay> m_window_stack_switch_overlay;
         bool m_buffers_are_flipped { false };
         bool m_screen_can_set_buffer { false };
+        bool m_has_flipped { false };
         bool m_cursor_back_is_valid { false };
+        bool m_have_flush_rects { false };
 
         Gfx::DisjointRectSet m_flush_rects;
         Gfx::DisjointRectSet m_flush_transparent_rects;
