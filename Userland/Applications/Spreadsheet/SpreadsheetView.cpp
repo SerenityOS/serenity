@@ -315,6 +315,11 @@ void SpreadsheetView::show_event(GUI::ShowEvent&)
     }
 }
 
+void SpreadsheetView::move_cursor(GUI::AbstractView::CursorMovement direction)
+{
+    m_table_view->move_cursor(direction, GUI::AbstractView::SelectionUpdate::Set);
+}
+
 void SpreadsheetView::TableCellPainter::paint(GUI::Painter& painter, const Gfx::IntRect& rect, const Gfx::Palette& palette, const GUI::ModelIndex& index)
 {
     // Draw a border.
