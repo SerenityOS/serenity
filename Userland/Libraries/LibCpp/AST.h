@@ -182,14 +182,13 @@ public:
     virtual ~Parameter() override = default;
     virtual const char* class_name() const override { return "Parameter"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
+    virtual bool is_parameter() const override { return true; }
 
     Parameter(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename, StringView name)
         : VariableOrParameterDeclaration(parent, start, end, filename)
     {
         m_name = name;
     }
-
-    virtual bool is_parameter() const override { return true; }
 
     bool m_is_ellipsis { false };
 };
