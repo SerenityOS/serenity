@@ -53,6 +53,10 @@ SpreadsheetWidget::SpreadsheetWidget(NonnullRefPtrVector<Sheet>&& sheets, bool s
     cell_value_editor.set_font(Gfx::FontDatabase::default_fixed_width_font());
     cell_value_editor.set_scrollbars_enabled(false);
 
+    cell_value_editor.on_return_pressed = [this]() {
+        m_selected_view->move_cursor(GUI::AbstractView::CursorMovement::Down);
+    };
+
     cell_value_editor.set_syntax_highlighter(make<CellSyntaxHighlighter>());
     cell_value_editor.set_enabled(false);
     current_cell_label.set_enabled(false);
