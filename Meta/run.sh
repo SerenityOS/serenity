@@ -59,9 +59,17 @@ fi
     fi
 }
 
+if ! command -v $SERENITY_QEMU_BIN >/dev/null 2>&1 ; then
+    die "Please install QEMU version 5.0 or newer or use the Toolchain/BuildQemu.sh script."
+fi
+
 SERENITY_QEMU_MIN_REQ_VERSION=5
 installed_major_version=$("$SERENITY_QEMU_BIN" -version | head -n 1 | sed -E 's/QEMU emulator version ([1-9][0-9]*|0).*/\1/')
-[ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ] && die "Required QEMU >= 5.0! Found $($SERENITY_QEMU_BIN -version | head -n 1)"
+if [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ]; then
+    echo "Required QEMU >= 5.0! Found $($SERENITY_QEMU_BIN -version | head -n 1)"
+    echo "Please install a newer version of QEMU or use the Toolchain/BuildQemu.sh script."
+    die
+fi
 
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
 if (uname -a | grep -iq WSL) || (uname -a | grep -iq microsoft); then
