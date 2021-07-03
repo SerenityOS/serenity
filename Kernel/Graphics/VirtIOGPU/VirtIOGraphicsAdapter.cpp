@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/VirtIOGPU/VirtIOGPU.h>
@@ -13,6 +14,7 @@ namespace Kernel::Graphics {
 
 NonnullRefPtr<VirtIOGraphicsAdapter> VirtIOGraphicsAdapter::initialize(PCI::Address base_address)
 {
+    VERIFY(PCI::get_id(base_address).vendor_id == static_cast<u16>(PCIVendorID::VirtIO));
     return adopt_ref(*new VirtIOGraphicsAdapter(base_address));
 }
 
