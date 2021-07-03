@@ -7,7 +7,7 @@ env:
 
 jobs:
   run_and_update_results:
-    runs-on: ubuntu-20.04
+    runs-on: self-hosted
     if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
 
     concurrency: libjs-test262
