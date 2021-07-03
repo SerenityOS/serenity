@@ -870,15 +870,25 @@ String Parser::text_of_node(const ASTNode& node) const
 
 String Parser::text_in_range(Position start, Position end) const
 {
+    StringBuilder builder;
+    for (auto token : tokens_in_range(start, end)) {
+        builder.append(token.text());
+    }
+    return builder.to_string();
+}
+
+Vector<Token> Parser::tokens_in_range(Position start, Position end) const
+{
     auto start_token_index = index_of_token_at(start);
     auto end_node_index = index_of_token_at(end);
     VERIFY(start_token_index.has_value());
     VERIFY(end_node_index.has_value());
-    StringBuilder text;
+
+    Vector<Token> tokens;
     for (size_t i = start_token_index.value(); i <= end_node_index.value(); ++i) {
-        text.append(m_tokens[i].text());
+        tokens.append(m_tokens[i]);
     }
-    return text.build();
+    return tokens;
 }
 
 void Parser::error(StringView message)
