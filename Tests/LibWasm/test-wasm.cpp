@@ -119,7 +119,7 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
     if (import_value.is_object()) {
         auto& import_object = import_value.as_object();
         for (auto& property : import_object.shape().property_table()) {
-            auto value = import_object.get_own_property(property.key, {}, JS::AllowSideEffects::No);
+            auto value = import_object.get_without_side_effects(property.key);
             if (!value.is_object() || !is<WebAssemblyModule>(value.as_object()))
                 continue;
             auto& module_object = static_cast<WebAssemblyModule&>(value.as_object());
