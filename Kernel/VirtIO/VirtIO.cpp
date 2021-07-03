@@ -21,18 +21,18 @@ UNMAP_AFTER_INIT void VirtIO::detect()
         if (address.is_null() || id.is_null())
             return;
         // TODO: We should also be checking that the device_id is in between 0x1000 - 0x107F inclusive
-        if (id.vendor_id != (u16)PCIVendorID::VirtIO)
+        if (id.vendor_id != PCI::VendorID::VirtIO)
             return;
         switch (id.device_id) {
-        case (u16)PCIDeviceID::VirtIOConsole: {
+        case PCI::DeviceID::VirtIOConsole: {
             [[maybe_unused]] auto& unused = adopt_ref(*new VirtIOConsole(address)).leak_ref();
             break;
         }
-        case (u16)PCIDeviceID::VirtIOEntropy: {
+        case PCI::DeviceID::VirtIOEntropy: {
             [[maybe_unused]] auto& unused = adopt_ref(*new VirtIORNG(address)).leak_ref();
             break;
         }
-        case (u16)PCIDeviceID::VirtIOGPU: {
+        case PCI::DeviceID::VirtIOGPU: {
             // This should have been initialized by the graphics subsystem
             break;
         }
