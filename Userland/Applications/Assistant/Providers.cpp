@@ -114,7 +114,7 @@ void CalculatorProvider::query(String const& query, Function<void(NonnullRefPtrV
 
 Gfx::Bitmap const* FileResult::bitmap() const
 {
-    return GUI::Icon::default_icon("filetype-folder").bitmap_for_size(16);
+    return GUI::FileIconProvider::icon_for_path(title()).bitmap_for_size(16);
 }
 
 void FileProvider::query(const String& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
