@@ -559,21 +559,13 @@ StyleComponentValueRule Parser::consume_a_component_value()
 {
     auto token = next_token();
 
-    if (token.is_open_curly() || token.is_open_square() || token.is_open_paren()) {
-        auto component = StyleComponentValueRule(StyleComponentValueRule::ComponentType::Block);
-        component.m_block = consume_a_simple_block();
-        return component;
-    }
+    if (token.is_open_curly() || token.is_open_square() || token.is_open_paren())
+        return StyleComponentValueRule(consume_a_simple_block());
 
-    if (token.is_function()) {
-        auto component = StyleComponentValueRule(StyleComponentValueRule::ComponentType::Function);
-        component.m_function = consume_a_function();
-        return component;
-    }
+    if (token.is_function())
+        return StyleComponentValueRule(consume_a_function());
 
-    auto component = StyleComponentValueRule(StyleComponentValueRule::ComponentType::Token);
-    component.m_token = token;
-    return component;
+    return StyleComponentValueRule(token);
 }
 
 NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block()
@@ -722,10 +714,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations()
 
         if (token.is_ident()) {
             Vector<StyleComponentValueRule> temp;
-
-            auto component = StyleComponentValueRule(StyleComponentValueRule::ComponentType::Token);
-            component.m_token = token;
-            temp.append(component);
+            temp.append(StyleComponentValueRule(token));
 
             for (;;) {
                 auto peek = peek_token();

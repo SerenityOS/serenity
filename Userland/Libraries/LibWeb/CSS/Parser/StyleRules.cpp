@@ -35,8 +35,19 @@ StyleRule::~StyleRule() { }
 StyleBlockRule::StyleBlockRule() { }
 StyleBlockRule::~StyleBlockRule() { }
 
-StyleComponentValueRule::StyleComponentValueRule(ComponentType type)
-    : m_type(type)
+StyleComponentValueRule::StyleComponentValueRule(Token token)
+    : m_type(StyleComponentValueRule::ComponentType::Token)
+    , m_token(token)
+{
+}
+StyleComponentValueRule::StyleComponentValueRule(NonnullRefPtr<StyleFunctionRule> function)
+    : m_type(StyleComponentValueRule::ComponentType::Function)
+    , m_function(function)
+{
+}
+StyleComponentValueRule::StyleComponentValueRule(NonnullRefPtr<StyleBlockRule> block)
+    : m_type(StyleComponentValueRule::ComponentType::Block)
+    , m_block(block)
 {
 }
 StyleComponentValueRule::~StyleComponentValueRule() { }
