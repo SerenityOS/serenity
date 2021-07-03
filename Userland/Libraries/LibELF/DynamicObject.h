@@ -195,6 +195,7 @@ public:
                 return m_dynamic.base_address().offset(offset());
             return VirtualAddress { offset() };
         }
+        [[nodiscard]] DynamicObject const& dynamic_object() const { return m_dynamic; }
 
     private:
         const DynamicObject& m_dynamic;

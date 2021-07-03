@@ -490,7 +490,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             break;
         auto* dynamic_object_of_symbol = res.value().dynamic_object;
         VERIFY(dynamic_object_of_symbol);
-        *patch_ptr = negative_offset_from_tls_block_end(res.value().value, dynamic_object_of_symbol->tls_offset().value(), res.value().size);
+        *patch_ptr = negative_offset_from_tls_block_end(res.value().value, dynamic_object_of_symbol->tls_offset().value());
         break;
     }
 #ifndef __LP64__
@@ -519,10 +519,9 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
     return RelocationResult::Success;
 }
 
-ssize_t DynamicLoader::negative_offset_from_tls_block_end(size_t value_of_symbol, size_t tls_offset, size_t symbol_size) const
+ssize_t DynamicLoader::negative_offset_from_tls_block_end(size_t value_of_symbol, ssize_t tls_offset) const
 {
-    VERIFY(symbol_size > 0);
-    ssize_t offset = -static_cast<ssize_t>(value_of_symbol + tls_offset + symbol_size);
+    ssize_t offset = static_cast<ssize_t>(tls_offset + value_of_symbol);
     // At offset 0 there's the thread's ThreadSpecificData structure, we don't want to collide with it.
     VERIFY(offset < 0);
     return offset;
@@ -549,7 +548,7 @@ void DynamicLoader::copy_initial_tls_data_into(ByteBuffer& buffer) const
         if (symbol.type() != STT_TLS)
             return IterationDecision::Continue;
 
-        ssize_t negative_offset = negative_offset_from_tls_block_end(symbol.value(), m_tls_offset, symbol.size());
+        ssize_t negative_offset = negative_offset_from_tls_block_end(symbol.value(), m_tls_offset);
         VERIFY(symbol.size() != 0);
         VERIFY(buffer.size() + negative_offset + symbol.size() <= buffer.size());
         memcpy(buffer.data() + buffer.size() + negative_offset, tls_data + symbol.value(), symbol.size());

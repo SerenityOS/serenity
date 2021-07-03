@@ -91,8 +91,8 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> map_library(const St
 
     s_loaders.set(get_library_name(filename), *loader);
 
+    s_current_tls_offset -= loader->tls_size_of_current_object();
     loader->set_tls_offset(s_current_tls_offset);
-    s_current_tls_offset += loader->tls_size_of_current_object();
 
     return loader;
 }
