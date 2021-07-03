@@ -82,18 +82,18 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
 
     RefPtr<GraphicsDevice> adapter;
     switch (id.vendor_id) {
-    case 0x1234:
+    case PCI::VendorID::QEMUOld:
         if (id.device_id == 0x1111)
             adapter = BochsGraphicsAdapter::initialize(address);
         break;
-    case 0x80ee:
+    case PCI::VendorID::VirtualBox:
         if (id.device_id == 0xbeef)
             adapter = BochsGraphicsAdapter::initialize(address);
         break;
-    case 0x8086:
+    case PCI::VendorID::Intel:
         adapter = IntelNativeGraphicsAdapter::initialize(address);
         break;
-    case static_cast<u16>(PCIVendorID::VirtIO):
+    case PCI::VendorID::VirtIO:
         dmesgln("Graphics: Using VirtIO console");
         adapter = Graphics::VirtIOGraphicsAdapter::initialize(address);
         break;
