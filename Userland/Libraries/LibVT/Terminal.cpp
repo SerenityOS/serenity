@@ -1366,7 +1366,7 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 
 void Terminal::unimplemented_control_code(u8 code)
 {
-    dbgln("Unimplemented control code {:02x}", code);
+    dbgln_if(TERMINAL_DEBUG, "Unimplemented control code {:02x}", code);
 }
 
 void Terminal::unimplemented_escape_sequence(Intermediates intermediates, u8 last_byte)
