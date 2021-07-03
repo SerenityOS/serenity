@@ -49,6 +49,7 @@ public:
         Preprocessor::DefinedValue preprocessor_value;
     };
     const Vector<TokenAndPreprocessorDefinition>& replaced_preprocessor_tokens() const { return m_replaced_preprocessor_tokens; }
+    Vector<Token> tokens_in_range(Position start, Position end) const;
 
 private:
     enum class DeclarationType {
