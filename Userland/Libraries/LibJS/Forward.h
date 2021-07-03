@@ -144,6 +144,8 @@ class PrimitiveString;
 class PromiseReaction;
 class PromiseReactionJob;
 class PromiseResolveThenableJob;
+class PropertyAttributes;
+class PropertyDescriptor;
 class PropertyName;
 class Reference;
 class ScopeNode;
