@@ -148,14 +148,16 @@ int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr a
         return 0;
     }
     case FB_IOCTL_FLUSH_BUFFERS: {
-        FBRects user_dirty_rects;
-        if (!copy_from_user(&user_dirty_rects, (FBRects*)arg))
+        FBFlushRects user_flush_rects;
+        if (!copy_from_user(&user_flush_rects, (FBFlushRects*)arg))
             return -EFAULT;
-        if (Checked<unsigned>::multiplication_would_overflow(user_dirty_rects.count, sizeof(FBRect)))
+        if (user_flush_rects.buffer_index != 0)
+            return -EINVAL;
+        if (Checked<unsigned>::multiplication_would_overflow(user_flush_rects.count, sizeof(FBRect)))
             return -EFAULT;
-        for (unsigned i = 0; i < user_dirty_rects.count; i++) {
+        for (unsigned i = 0; i < user_flush_rects.count; i++) {
             FBRect user_dirty_rect;
-            if (!copy_from_user(&user_dirty_rect, &user_dirty_rects.rects[i]))
+            if (!copy_from_user(&user_dirty_rect, &user_flush_rects.rects[i]))
                 return -EFAULT;
             if (m_are_writes_active) {
                 VirtIOGPURect dirty_rect {

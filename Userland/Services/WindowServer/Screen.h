@@ -165,7 +165,7 @@ public:
 
     bool can_device_flush_buffers() const { return m_can_device_flush_buffers; }
     void queue_flush_display_rect(Gfx::IntRect const& rect);
-    void flush_display();
+    void flush_display(int buffer_index);
 
 private:
     Screen(ScreenLayout::Screen&);
