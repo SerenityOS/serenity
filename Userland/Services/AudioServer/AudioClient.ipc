@@ -1,3 +1,5 @@
+#include <LibCore/AnonymousBuffer.h>
+
 endpoint AudioClient
 {
     finished_playing_buffer(i32 buffer_id) =|
