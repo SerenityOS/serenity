@@ -53,42 +53,97 @@ URL ParsingContext::complete_url(String const& addr) const
     return m_document ? m_document->url().complete_url(addr) : URL::create_with_url_or_path(addr);
 }
 
+template<typename T>
+TokenStream<T>::TokenStream(Vector<T> const& tokens)
+    : m_tokens(tokens)
+    , m_eof(make_eof())
+{
+}
+
+template<typename T>
+TokenStream<T>::~TokenStream()
+{
+}
+
+template<typename T>
+bool TokenStream<T>::has_next_token()
+{
+    return (size_t)(m_iterator_offset + 1) < m_tokens.size();
+}
+
+template<typename T>
+T const& TokenStream<T>::peek_token()
+{
+    if (!has_next_token())
+        return m_eof;
+
+    return m_tokens.at(m_iterator_offset + 1);
+}
+
+template<typename T>
+T const& TokenStream<T>::next_token()
+{
+    if (!has_next_token())
+        return m_eof;
+
+    ++m_iterator_offset;
+
+    return m_tokens.at(m_iterator_offset);
+}
+
+template<typename T>
+T const& TokenStream<T>::current_token()
+{
+    if ((size_t)m_iterator_offset >= m_tokens.size())
+        return m_eof;
+
+    return m_tokens.at(m_iterator_offset);
+}
+
+template<typename T>
+void TokenStream<T>::reconsume_current_input_token()
+{
+    VERIFY(m_iterator_offset >= 0);
+    --m_iterator_offset;
+}
+
+template<typename T>
+void TokenStream<T>::skip_whitespace()
+{
+    while (peek_token().is(Token::Type::Whitespace))
+        next_token();
+}
+
+template<>
+Token TokenStream<Token>::make_eof()
+{
+    return Tokenizer::create_eof_token();
+}
+
+template<>
+StyleComponentValueRule TokenStream<StyleComponentValueRule>::make_eof()
+{
+    return StyleComponentValueRule(Tokenizer::create_eof_token());
+}
+
+template<typename T>
+void TokenStream<T>::dump_all_tokens()
+{
+    dbgln("Dumping all tokens:");
+    for (auto& token : m_tokens)
+        dbgln("{}", token.to_string());
+}
+
 Parser::Parser(ParsingContext const& context, StringView const& input, String const& encoding)
     : m_context(context)
     , m_tokenizer(input, encoding)
+    , m_tokens(m_tokenizer.parse())
+    , m_token_stream(TokenStream(m_tokens))
 {
-    m_tokens = m_tokenizer.parse();
 }
 
 Parser::~Parser()
 {
-}
-
-Token Parser::peek_token()
-{
-    size_t next_offset = m_iterator_offset + 1;
-
-    if (next_offset < m_tokens.size()) {
-        return m_tokens.at(next_offset);
-    }
-
-    return m_tokens.at(m_iterator_offset);
-}
-
-Token Parser::next_token()
-{
-    if (m_iterator_offset < (int)m_tokens.size() - 1) {
-        ++m_iterator_offset;
-    }
-
-    auto token = m_tokens.at(m_iterator_offset);
-
-    return token;
-}
-
-Token Parser::current_token()
-{
-    return m_tokens.at(m_iterator_offset);
 }
 
 NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet()
@@ -438,18 +493,6 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
         selectors.first().relation = CSS::Selector::ComplexSelector::Relation::None;
 
     return Selector(move(selectors));
-}
-
-void Parser::dump_all_tokens()
-{
-    dbgln("Dumping all tokens:");
-    for (auto& token : m_tokens)
-        dbgln("{}", token.to_string());
-}
-
-void Parser::reconsume_current_input_token()
-{
-    --m_iterator_offset;
 }
 
 NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(bool top_level)

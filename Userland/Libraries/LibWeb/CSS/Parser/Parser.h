@@ -39,6 +39,30 @@ private:
     const DOM::Document* m_document { nullptr };
 };
 
+template<typename T>
+class TokenStream {
+public:
+    explicit TokenStream(Vector<T> const&);
+    ~TokenStream();
+
+    bool has_next_token();
+    T const& next_token();
+    T const& peek_token();
+    T const& current_token();
+    void reconsume_current_input_token();
+
+    void skip_whitespace();
+
+    void dump_all_tokens();
+
+private:
+    Vector<T> const& m_tokens;
+    int m_iterator_offset { -1 };
+
+    T make_eof();
+    T m_eof;
+};
+
 class Parser {
 public:
     Parser(ParsingContext const&, StringView const& input, String const& encoding = "utf-8");
@@ -82,13 +106,11 @@ public:
     static Optional<String> as_valid_border_style(String input) { return input; }
     static Optional<String> as_valid_border_image_repeat(String input) { return input; }
 
-    void dump_all_tokens();
-
 private:
-    Token next_token();
-    Token peek_token();
-    Token current_token();
-    void reconsume_current_input_token();
+    Token next_token() { return m_token_stream.next_token(); }
+    Token peek_token() { return m_token_stream.peek_token(); }
+    Token current_token() { return m_token_stream.current_token(); }
+    void reconsume_current_input_token() { m_token_stream.reconsume_current_input_token(); }
 
     NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(bool top_level);
     NonnullRefPtr<StyleRule> consume_an_at_rule();
@@ -106,7 +128,7 @@ private:
 
     Tokenizer m_tokenizer;
     Vector<Token> m_tokens;
-    int m_iterator_offset { -1 };
+    TokenStream<Token> m_token_stream;
 };
 
 }

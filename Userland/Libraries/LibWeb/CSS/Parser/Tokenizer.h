@@ -70,6 +70,8 @@ public:
 
     [[nodiscard]] Vector<Token> parse();
 
+    [[nodiscard]] static Token create_eof_token();
+
 private:
     [[nodiscard]] u32 next_code_point();
     [[nodiscard]] u32 peek_code_point(size_t offset = 0) const;
