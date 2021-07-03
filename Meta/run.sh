@@ -25,6 +25,16 @@ if [ "$(uname)" = "Darwin" ] && [ "$(uname -m)" = "x86_64" ]; then
     fi
 fi
 
+SCRIPT_DIR="$(dirname "${0}")"
+
+# Prepend the toolchain qemu directory so we pick up QEMU from there
+PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
+
+# Also prepend the i686 toolchain directory because that's where most
+# people will have their QEMU binaries if they built them before the
+# directory was changed to Toolchain/Local/qemu.
+PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
+
 SERENITY_RUN="${SERENITY_RUN:-$1}"
 
 if [ -z "$SERENITY_QEMU_BIN" ]; then
