@@ -24,7 +24,7 @@ public:
 
     virtual void activate() const = 0;
 
-    virtual Gfx::Bitmap const* bitmap() const { return nullptr; }
+    virtual Gfx::Bitmap const* bitmap() const = 0;
 
     String const& title() const { return m_title; }
     String const& subtitle() const { return m_subtitle; }
