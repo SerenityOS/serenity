@@ -269,6 +269,11 @@ Token Tokenizer::create_new_token(Token::Type type)
     return token;
 }
 
+Token Tokenizer::create_eof_token()
+{
+    return create_new_token(Token::Type::EndOfFile);
+}
+
 Token Tokenizer::create_value_token(Token::Type type, String value)
 {
     Token token;
