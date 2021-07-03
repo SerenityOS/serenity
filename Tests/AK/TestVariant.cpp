@@ -57,6 +57,12 @@ TEST_CASE(destructor)
         Variant<DestructionChecker> test_variant { DestructionChecker { was_destroyed } };
     }
     EXPECT(was_destroyed);
+
+    bool was_destroyed_when_assigned_to = false;
+    Variant<DestructionChecker, int> original { DestructionChecker { was_destroyed_when_assigned_to } };
+    Variant<DestructionChecker, int> other { 42 };
+    original = other;
+    EXPECT(was_destroyed_when_assigned_to);
 }
 
 TEST_CASE(move_moves)

@@ -266,6 +266,9 @@ public:
         requires(!(IsTriviallyCopyConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
 #endif
     {
+        if constexpr (!(IsTriviallyDestructible<Ts> && ...)) {
+            Helper::delete_(m_index, m_data);
+        }
         m_index = other.m_index;
         Helper::copy_(other.m_index, other.m_data, m_data);
         return *this;
@@ -276,6 +279,9 @@ public:
         requires(!(IsTriviallyMoveConstructible<Ts> && ...) || !(IsTriviallyDestructible<Ts> && ...))
 #endif
     {
+        if constexpr (!(IsTriviallyDestructible<Ts> && ...)) {
+            Helper::delete_(m_index, m_data);
+        }
         m_index = other.m_index;
         Helper::move_(other.m_index, other.m_data, m_data);
         return *this;
