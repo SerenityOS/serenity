@@ -59,7 +59,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
     else if (iteration_kind == Object::PropertyKind::Value)
         return create_iterator_result_object(global_object, entry.value, false);
 
-    auto* entry_array = Array::create(global_object);
+    auto* entry_array = Array::create(global_object, 0);
     entry_array->define_property(0, entry.key);
     entry_array->define_property(1, entry.value);
     return create_iterator_result_object(global_object, entry_array, false);

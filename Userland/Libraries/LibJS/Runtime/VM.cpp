@@ -218,7 +218,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
             if (entry.is_rest) {
                 VERIFY(i == binding.entries.size() - 1);
 
-                auto* array = Array::create(global_object);
+                auto* array = Array::create(global_object, 0);
                 for (;;) {
                     auto next_object = iterator_next(*iterator);
                     if (!next_object)

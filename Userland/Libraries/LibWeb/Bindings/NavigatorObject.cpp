@@ -21,7 +21,7 @@ NavigatorObject::NavigatorObject(JS::GlobalObject& global_object)
 void NavigatorObject::initialize(JS::GlobalObject& global_object)
 {
     auto& heap = this->heap();
-    auto* languages = JS::Array::create(global_object);
+    auto* languages = JS::Array::create(global_object, 0);
     languages->indexed_properties().append(js_string(heap, "en-US"));
 
     define_property("appCodeName", js_string(heap, "Mozilla"));

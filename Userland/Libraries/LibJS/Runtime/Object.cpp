@@ -297,7 +297,7 @@ MarkedValueList Object::get_own_properties(PropertyKind kind, bool only_enumerab
             } else if (kind == PropertyKind::Value) {
                 properties.append(js_string(vm(), String::formatted("{:c}", str[i])));
             } else {
-                auto* entry_array = Array::create(global_object());
+                auto* entry_array = Array::create(global_object(), 0);
                 entry_array->define_property(0, js_string(vm(), String::number(i)));
                 entry_array->define_property(1, js_string(vm(), String::formatted("{:c}", str[i])));
                 properties.append(entry_array);
@@ -318,7 +318,7 @@ MarkedValueList Object::get_own_properties(PropertyKind kind, bool only_enumerab
             } else if (kind == PropertyKind::Value) {
                 properties.append(value_and_attributes.value);
             } else {
-                auto* entry_array = Array::create(global_object());
+                auto* entry_array = Array::create(global_object(), 0);
                 entry_array->define_property(0, js_string(vm(), String::number(entry.index())));
                 entry_array->define_property(1, value_and_attributes.value);
                 properties.append(entry_array);
@@ -341,7 +341,7 @@ MarkedValueList Object::get_own_properties(PropertyKind kind, bool only_enumerab
             if (val.is_empty())
                 return;
 
-            auto* entry_array = Array::create(global_object());
+            auto* entry_array = Array::create(global_object(), 0);
             entry_array->define_property(0, property.key.to_value(vm()));
             entry_array->define_property(1, val);
             properties.append(entry_array);

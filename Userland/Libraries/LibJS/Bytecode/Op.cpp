@@ -134,7 +134,7 @@ void IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
     if (vm.exception())
         return;
 
-    auto array = Array::create(global_object);
+    auto array = Array::create(global_object, 0);
     size_t index = 0;
 
     while (true) {
