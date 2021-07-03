@@ -149,15 +149,15 @@ String Token::to_string() const
 
 Token::Type Token::mirror_variant() const
 {
-    if (is_open_curly()) {
+    if (is(Token::Type::OpenCurly)) {
         return Type::CloseCurly;
     }
 
-    if (is_open_square()) {
+    if (is(Token::Type::OpenSquare)) {
         return Type::CloseSquare;
     }
 
-    if (is_open_paren()) {
+    if (is(Token::Type::OpenParen)) {
         return Type::CloseParen;
     }
 
@@ -166,27 +166,27 @@ Token::Type Token::mirror_variant() const
 
 String Token::bracket_string() const
 {
-    if (is_open_curly()) {
+    if (is(Token::Type::OpenCurly)) {
         return "{";
     }
 
-    if (is_close_curly()) {
+    if (is(Token::Type::CloseCurly)) {
         return "}";
     }
 
-    if (is_open_square()) {
+    if (is(Token::Type::OpenSquare)) {
         return "[";
     }
 
-    if (is_close_square()) {
+    if (is(Token::Type::CloseSquare)) {
         return "]";
     }
 
-    if (is_open_paren()) {
+    if (is(Token::Type::OpenParen)) {
         return "(";
     }
 
-    if (is_close_paren()) {
+    if (is(Token::Type::CloseParen)) {
         return ")";
     }
 
@@ -195,27 +195,27 @@ String Token::bracket_string() const
 
 String Token::bracket_mirror_string() const
 {
-    if (is_open_curly()) {
+    if (is(Token::Type::OpenCurly)) {
         return "}";
     }
 
-    if (is_close_curly()) {
+    if (is(Token::Type::CloseCurly)) {
         return "{";
     }
 
-    if (is_open_square()) {
+    if (is(Token::Type::OpenSquare)) {
         return "]";
     }
 
-    if (is_close_square()) {
+    if (is(Token::Type::CloseSquare)) {
         return "[";
     }
 
-    if (is_open_paren()) {
+    if (is(Token::Type::OpenParen)) {
         return ")";
     }
 
-    if (is_close_paren()) {
+    if (is(Token::Type::CloseParen)) {
         return "(";
     }
 

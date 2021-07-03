@@ -21,9 +21,9 @@ public:
     StyleBlockRule();
     ~StyleBlockRule();
 
-    bool is_curly() const { return m_token.is_open_curly(); }
-    bool is_paren() const { return m_token.is_open_paren(); }
-    bool is_square() const { return m_token.is_open_square(); }
+    bool is_curly() const { return m_token.is(Token::Type::OpenCurly); }
+    bool is_paren() const { return m_token.is(Token::Type::OpenParen); }
+    bool is_square() const { return m_token.is(Token::Type::OpenSquare); }
 
     Vector<StyleComponentValueRule> const& values() const { return m_values; }
 

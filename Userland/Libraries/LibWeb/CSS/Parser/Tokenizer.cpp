@@ -207,7 +207,7 @@ Vector<Token> Tokenizer::parse()
         auto token = consume_a_token();
         tokens.append(token);
 
-        if (token.is_eof()) {
+        if (token.is(Token::Type::EndOfFile)) {
             return tokens;
         }
     }
