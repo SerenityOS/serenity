@@ -100,6 +100,8 @@ public:
     Function<void(Vector<Position>&&)> on_selection_changed;
     Function<void()> on_selection_dropped;
 
+    void move_cursor(GUI::AbstractView::CursorMovement);
+
 private:
     virtual void hide_event(GUI::HideEvent&) override;
     virtual void show_event(GUI::ShowEvent&) override;
