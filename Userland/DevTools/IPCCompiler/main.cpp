@@ -276,12 +276,7 @@ int main(int argc, char** argv)
     generator.append(R"~~~(#include <AK/MemoryStream.h>
 #include <AK/OwnPtr.h>
 #include <AK/Result.h>
-#include <AK/URL.h>
 #include <AK/Utf8View.h>
-#include <LibCore/AnonymousBuffer.h>
-#include <LibGfx/Color.h>
-#include <LibGfx/Rect.h>
-#include <LibGfx/ShareableBitmap.h>
 #include <LibIPC/Connection.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>

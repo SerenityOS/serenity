@@ -1,3 +1,7 @@
+#include <AK/URL.h>
+#include <LibCore/AnonymousBuffer.h>
+#include <LibGfx/ShareableBitmap.h>
+
 endpoint WebContentServer
 {
     update_system_theme(Core::AnonymousBuffer theme_buffer) =|
