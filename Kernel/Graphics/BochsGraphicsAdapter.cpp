@@ -50,8 +50,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initi
 }
 
 UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_address)
-    : GraphicsDevice(pci_address)
-    , PCI::DeviceController(pci_address)
+    : PCI::DeviceController(pci_address)
     , m_mmio_registers(PCI::get_BAR2(pci_address) & 0xfffffff0)
 {
     // We assume safe resolutio is 1024x768x32

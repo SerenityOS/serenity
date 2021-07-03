@@ -17,7 +17,7 @@ NonnullRefPtr<VirtIOGraphicsAdapter> VirtIOGraphicsAdapter::initialize(PCI::Addr
 }
 
 VirtIOGraphicsAdapter::VirtIOGraphicsAdapter(PCI::Address base_address)
-    : GraphicsDevice(base_address)
+    : PCI::DeviceController(base_address)
 {
     m_gpu_device = adopt_ref(*new VirtIOGPU(base_address)).leak_ref();
 }
