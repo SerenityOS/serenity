@@ -322,7 +322,7 @@ void DynamicLoader::load_program_headers()
         FlatPtr ph_text_base = text_region.desired_load_address().page_base().get();
         FlatPtr ph_text_end = ph_text_base + round_up_to_power_of_two(text_region.size_in_memory() + (size_t)(text_region.desired_load_address().as_ptr() - ph_text_base), PAGE_SIZE);
 
-        auto* text_segment_address = (u8*)reservation + ph_text_base;
+        auto* text_segment_address = (u8*)reservation + ph_text_base - ph_load_base;
         size_t text_segment_size = ph_text_end - ph_text_base;
 
         // Now we can map the text segment at the reserved address.
@@ -347,11 +347,11 @@ void DynamicLoader::load_program_headers()
 
     if (relro_region.has_value()) {
         m_relro_segment_size = relro_region->size_in_memory();
-        m_relro_segment_address = VirtualAddress { (u8*)reservation + relro_region->desired_load_address().get() };
+        m_relro_segment_address = VirtualAddress { (u8*)reservation + relro_region->desired_load_address().get() - ph_load_base };
     }
 
     if (m_elf_image.is_dynamic())
-        m_dynamic_section_address = VirtualAddress { (u8*)reservation + dynamic_region_desired_vaddr.get() };
+        m_dynamic_section_address = VirtualAddress { (u8*)reservation + dynamic_region_desired_vaddr.get() - ph_load_base };
     else
         m_dynamic_section_address = dynamic_region_desired_vaddr;
 
@@ -359,7 +359,7 @@ void DynamicLoader::load_program_headers()
         FlatPtr ph_data_base = data_region.desired_load_address().page_base().get();
         FlatPtr ph_data_end = ph_data_base + round_up_to_power_of_two(data_region.size_in_memory() + (size_t)(data_region.desired_load_address().as_ptr() - ph_data_base), PAGE_SIZE);
 
-        auto* data_segment_address = (u8*)reservation + ph_data_base;
+        auto* data_segment_address = (u8*)reservation + ph_data_base - ph_load_base;
         size_t data_segment_size = ph_data_end - ph_data_base;
 
         // Finally, we make an anonymous mapping for the data segment. Contents are then copied from the file.
