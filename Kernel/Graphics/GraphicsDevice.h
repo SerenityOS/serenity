@@ -24,7 +24,6 @@ public:
     virtual ~GraphicsDevice() = default;
     virtual void initialize_framebuffer_devices() = 0;
     virtual Type type() const = 0;
-    PCI::Address device_pci_address() const { return m_pci_address; }
     virtual void enable_consoles() = 0;
     virtual void disable_consoles() = 0;
     bool consoles_enabled() const { return m_consoles_enabled; }
@@ -37,12 +36,8 @@ public:
     virtual bool set_y_offset(size_t output_port_index, size_t y) = 0;
 
 protected:
-    GraphicsDevice(PCI::Address pci_address)
-        : m_pci_address(pci_address)
-    {
-    }
+    GraphicsDevice() = default;
 
-    const PCI::Address m_pci_address;
     bool m_consoles_enabled { false };
 };
 

@@ -37,8 +37,7 @@ UNMAP_AFTER_INIT void VGACompatibleAdapter::initialize_framebuffer_devices()
 }
 
 UNMAP_AFTER_INIT VGACompatibleAdapter::VGACompatibleAdapter(PCI::Address address)
-    : GraphicsDevice(address)
-    , PCI::DeviceController(address)
+    : PCI::DeviceController(address)
 {
     m_framebuffer_console = Graphics::TextModeConsole::initialize(*this);
     // FIXME: This is a very wrong way to do this...
@@ -46,8 +45,7 @@ UNMAP_AFTER_INIT VGACompatibleAdapter::VGACompatibleAdapter(PCI::Address address
 }
 
 UNMAP_AFTER_INIT VGACompatibleAdapter::VGACompatibleAdapter(PCI::Address address, PhysicalAddress framebuffer_address, size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch)
-    : GraphicsDevice(address)
-    , PCI::DeviceController(address)
+    : PCI::DeviceController(address)
     , m_framebuffer_address(framebuffer_address)
     , m_framebuffer_width(framebuffer_width)
     , m_framebuffer_height(framebuffer_height)
