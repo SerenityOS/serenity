@@ -13,6 +13,11 @@ jobs:
     concurrency: libjs-test262
 
     steps:
+      - name: Cleanup
+        run: |
+          echo "Cleaning up previous run"
+          rm -rf "${{ github.workspace }}/*"
+
       - name: Checkout SerenityOS/serenity
         uses: actions/checkout@v2
 
