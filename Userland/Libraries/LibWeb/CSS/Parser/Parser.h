@@ -62,11 +62,13 @@ public:
 
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
 
-    Vector<CSS::Selector::ComplexSelector> parse_selectors(Vector<StyleComponentValueRule> parts);
+    Optional<Selector> parse_single_selector(Vector<StyleComponentValueRule> parts, bool is_relative = false);
 
     // FIXME: https://www.w3.org/TR/selectors-4/
-    Optional<String> parse_a_selector() { return {}; }
-    Optional<String> parse_a_relative_selector() { return {}; }
+    // Contrary to the name, these parse a comma-separated list of selectors, according to the spec.
+    Vector<Selector> parse_a_selector();
+    Vector<Selector> parse_a_selector(Vector<Vector<StyleComponentValueRule>>&);
+    Vector<Selector> parse_a_relative_selector();
     bool match_a_selector_against_an_element() { return false; }
     bool match_a_selector_against_a_pseudo_element() { return false; }
     bool match_a_selector_against_a_tree() { return false; }

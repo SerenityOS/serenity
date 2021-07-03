@@ -97,27 +97,53 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet()
     auto parser_rules = consume_a_list_of_rules(true);
     NonnullRefPtrVector<CSSRule> rules;
 
-    dbgln("Printing rules:");
-
-    for (auto& rule : parser_rules) {
-        dbgln("PRE:");
-        for (auto& pre : rule.m_prelude) {
-            dbgln("{}", pre.to_string());
-        }
-        dbgln("BLOCK:");
-        dbgln("{}", rule.block().to_string());
-        dbgln("");
-
-        auto css_rule = convert_rule(rule);
-        if (css_rule)
-            rules.append(*css_rule);
+    for (auto& raw_rule : parser_rules) {
+        auto rule = convert_rule(raw_rule);
+        if (rule)
+            rules.append(*rule);
     }
 
     return CSSStyleSheet::create(rules);
 }
 
-Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleComponentValueRule> parts)
+Vector<Selector> Parser::parse_a_selector()
 {
+    auto comma_separated_lists = parse_as_comma_separated_list_of_component_values();
+    return parse_a_selector(comma_separated_lists);
+}
+
+Vector<Selector> Parser::parse_a_selector(Vector<Vector<StyleComponentValueRule>>& parts)
+{
+    Vector<Selector> selectors;
+
+    for (auto& selector_parts : parts) {
+        auto selector = parse_single_selector(selector_parts);
+        if (selector.has_value())
+            selectors.append(selector.value());
+    }
+
+    return selectors;
+}
+
+Vector<Selector> Parser::parse_a_relative_selector()
+{
+    auto comma_separated_lists = parse_as_comma_separated_list_of_component_values();
+
+    Vector<Selector> selectors;
+
+    for (auto& selector_parts : comma_separated_lists) {
+        auto selector = parse_single_selector(selector_parts, true);
+        if (selector.has_value())
+            selectors.append(selector.value());
+    }
+
+    return selectors;
+}
+
+Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule> parts, bool is_relative)
+{
+    // FIXME: Bring this all in line with the spec. https://www.w3.org/TR/selectors-4/
+
     Vector<CSS::Selector::ComplexSelector> selectors;
 
     size_t index = 0;
@@ -409,9 +435,10 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleCompo
     if (selectors.is_empty())
         return {};
 
-    selectors.first().relation = CSS::Selector::ComplexSelector::Relation::None;
+    if (!is_relative)
+        selectors.first().relation = CSS::Selector::ComplexSelector::Relation::None;
 
-    return selectors;
+    return Selector(move(selectors));
 }
 
 void Parser::dump_all_tokens()
