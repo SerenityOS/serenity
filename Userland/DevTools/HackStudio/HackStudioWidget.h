@@ -65,7 +65,6 @@ private:
 
     enum class EditMode {
         Text,
-        Form,
         Diff,
     };
 
@@ -133,8 +132,6 @@ private:
     RefPtr<GUI::VerticalSplitter> m_right_hand_splitter;
     RefPtr<GUI::StackWidget> m_right_hand_stack;
     RefPtr<GUI::Splitter> m_editors_splitter;
-    RefPtr<GUI::Widget> m_form_inner_container;
-    RefPtr<GUI::TreeView> m_form_widget_tree_view;
     RefPtr<DiffViewer> m_diff_viewer;
     RefPtr<GitWidget> m_git_widget;
     RefPtr<ClassViewWidget> m_class_view;
