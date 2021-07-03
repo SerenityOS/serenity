@@ -9,13 +9,12 @@
 
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Vector.h>
-#include <LibWeb/CSS/Parser/AtStyleRule.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
-#include <LibWeb/CSS/Parser/QualifiedStyleRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Parser/StyleDeclarationRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
+#include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
 #include <LibWeb/CSS/Selector.h>
 
@@ -91,9 +90,9 @@ private:
     Token current_token();
     void reconsume_current_input_token();
 
-    NonnullRefPtrVector<QualifiedStyleRule> consume_a_list_of_rules(bool top_level);
-    NonnullRefPtr<AtStyleRule> consume_an_at_rule();
-    RefPtr<QualifiedStyleRule> consume_a_qualified_rule();
+    NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(bool top_level);
+    NonnullRefPtr<StyleRule> consume_an_at_rule();
+    RefPtr<StyleRule> consume_a_qualified_rule();
     Vector<DeclarationOrAtRule> consume_a_list_of_declarations();
     Optional<StyleDeclarationRule> consume_a_declaration(Vector<StyleComponentValueRule>);
     Optional<StyleDeclarationRule> consume_a_declaration();
@@ -101,7 +100,7 @@ private:
     NonnullRefPtr<StyleBlockRule> consume_a_simple_block();
     NonnullRefPtr<StyleFunctionRule> consume_a_function();
 
-    RefPtr<CSSRule> convert_rule(NonnullRefPtr<QualifiedStyleRule>);
+    RefPtr<CSSRule> convert_rule(NonnullRefPtr<StyleRule>);
 
     ParsingContext m_context;
 
