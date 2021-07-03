@@ -592,7 +592,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 
     auto string = this_value.to_string(global_object);
 
-    auto* result = Array::create(global_object);
+    auto* result = Array::create(global_object, 0);
     size_t result_len = 0;
 
     auto limit = NumericLimits<u32>::max();

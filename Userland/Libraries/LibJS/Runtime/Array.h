@@ -14,7 +14,7 @@ class Array : public Object {
     JS_OBJECT(Array, Object);
 
 public:
-    static Array* create(GlobalObject&, size_t length = 0);
+    static Array* create(GlobalObject&, size_t length, Object* prototype = nullptr);
     static Array* create_from(GlobalObject&, const Vector<Value>&);
 
     explicit Array(Object& prototype);

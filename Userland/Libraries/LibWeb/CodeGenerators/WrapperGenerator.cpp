@@ -1401,7 +1401,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
             // FIXME: Remove this fake type hack once it's no longer needed.
             //        Basically once we have NodeList we can throw this out.
             scoped_generator.append(R"~~~(
-    auto* new_array = JS::Array::create(global_object);
+    auto* new_array = JS::Array::create(global_object, 0);
     for (auto& element : retval)
         new_array->indexed_properties().append(wrap(global_object, element));
 

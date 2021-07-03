@@ -467,7 +467,7 @@ Object* JSONObject::parse_json_object(GlobalObject& global_object, const JsonObj
 
 Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray& json_array)
 {
-    auto* array = Array::create(global_object);
+    auto* array = Array::create(global_object, 0);
     size_t index = 0;
     json_array.for_each([&](auto& value) {
         array->define_property(index++, parse_json_value(global_object, value));
