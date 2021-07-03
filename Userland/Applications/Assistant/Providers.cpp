@@ -218,6 +218,9 @@ void TerminalProvider::query(String const& query, Function<void(NonnullRefPtrVec
 
 void URLProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
 {
+    if (query.is_empty() || query.starts_with('=') || query.starts_with('$'))
+        return;
+
     URL url = URL(query);
 
     if (url.scheme().is_empty())
