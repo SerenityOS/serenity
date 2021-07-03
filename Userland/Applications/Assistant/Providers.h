@@ -68,7 +68,7 @@ private:
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
-class CalculatorResult : public Result {
+class CalculatorResult final : public Result {
 public:
     explicit CalculatorResult(String title)
         : Result(move(title), "'Enter' will copy to clipboard"sv, 100)
@@ -84,7 +84,7 @@ private:
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
-class FileResult : public Result {
+class FileResult final : public Result {
 public:
     explicit FileResult(String title, int score)
         : Result(move(title), "", score)
@@ -96,7 +96,7 @@ public:
     virtual Gfx::Bitmap const* bitmap() const override;
 };
 
-class TerminalResult : public Result {
+class TerminalResult final : public Result {
 public:
     explicit TerminalResult(String command)
         : Result(move(command), "Run command in Terminal"sv, 100)
@@ -112,7 +112,7 @@ private:
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
-class URLResult : public Result {
+class URLResult final : public Result {
 public:
     explicit URLResult(const URL& url)
         : Result(url.to_string(), "'Enter' will open this URL in the browser"sv, 50)
@@ -135,17 +135,17 @@ public:
     virtual void query(const String&, Function<void(NonnullRefPtrVector<Result>)> on_complete) = 0;
 };
 
-class AppProvider : public Provider {
+class AppProvider final : public Provider {
 public:
     void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
 };
 
-class CalculatorProvider : public Provider {
+class CalculatorProvider final : public Provider {
 public:
     void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
 };
 
-class FileProvider : public Provider {
+class FileProvider final : public Provider {
 public:
     FileProvider();
 
@@ -159,12 +159,12 @@ private:
     Queue<String> m_work_queue;
 };
 
-class TerminalProvider : public Provider {
+class TerminalProvider final : public Provider {
 public:
     void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
 };
 
-class URLProvider : public Provider {
+class URLProvider final : public Provider {
 public:
     void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
 };
