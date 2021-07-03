@@ -120,36 +120,26 @@ public:
     explicit Database(AppState& state)
         : m_state(state)
     {
-        m_file_provider.build_filesystem_cache();
+        m_providers.append(make<AppProvider>());
+        m_providers.append(make<CalculatorProvider>());
+        m_providers.append(make<FileProvider>());
+        m_providers.append(make<TerminalProvider>());
+        m_providers.append(make<URLProvider>());
     }
 
     Function<void(NonnullRefPtrVector<Result>)> on_new_results;
 
     void search(String const& query)
     {
-        m_file_provider.query(query, [=, this](auto results) {
-            recv_results(query, results);
-        });
-
-        m_app_provider.query(query, [=, this](auto results) {
-            recv_results(query, results);
-        });
-
-        m_calculator_provider.query(query, [=, this](auto results) {
-            recv_results(query, results);
-        });
-
-        m_terminal_provider.query(query, [=, this](auto results) {
-            recv_results(query, results);
-        });
-
-        m_url_provider.query(query, [=, this](auto results) {
-            recv_results(query, results);
-        });
+        for (auto& provider : m_providers) {
+            provider.query(query, [=, this](auto results) {
+                did_receive_results(query, results);
+            });
+        }
     }
 
 private:
-    void recv_results(String const& query, NonnullRefPtrVector<Result> const& results)
+    void did_receive_results(String const& query, NonnullRefPtrVector<Result> const& results)
     {
         {
             Threading::Locker db_locker(m_lock);
@@ -188,11 +178,7 @@ private:
 
     AppState& m_state;
 
-    AppProvider m_app_provider;
-    CalculatorProvider m_calculator_provider;
-    FileProvider m_file_provider;
-    TerminalProvider m_terminal_provider;
-    URLProvider m_url_provider;
+    NonnullOwnPtrVector<Provider> m_providers;
 
     Threading::Lock m_lock;
     HashMap<String, NonnullRefPtrVector<Result>> m_result_cache;

@@ -145,6 +145,8 @@ public:
 
 class FileProvider : public Provider {
 public:
+    FileProvider();
+
     void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
     void build_filesystem_cache();
 
