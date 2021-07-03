@@ -170,6 +170,10 @@ void FileProvider::build_filesystem_cache()
             timer.start();
             while (!m_work_queue.is_empty()) {
                 auto base_directory = m_work_queue.dequeue();
+
+                if (base_directory.template is_one_of("/proc"sv, "/sys"sv))
+                    continue;
+
                 Core::DirIterator di(base_directory, Core::DirIterator::SkipDots);
 
                 while (di.has_next()) {
