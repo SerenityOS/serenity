@@ -45,6 +45,8 @@ public:
             m_modifiers &= ~modifier;
     }
 
+    void set_num_lock(bool on) { m_num_lock_on = on; }
+
 protected:
     KeyboardDevice();
     mutable SpinLock<u8> m_queue_lock;
