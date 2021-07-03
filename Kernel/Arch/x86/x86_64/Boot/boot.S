@@ -101,6 +101,23 @@ start:
     cli
     cld
 
+    /* test for long mode presence, save the most important registers from corruption */
+    pushl %eax
+    pushl %edx
+    pushl %ebx
+
+    movl $0x80000001, %eax
+    cpuid
+    testl $(1 << 29), %edx   /* Test if the LM-bit, which is bit 29, is set in the edx register. */
+    jnz continue             /* If LM-bit is not enabled, there is no long mode. */
+    hlt
+
+continue:
+    /* restore the pushed registers */
+    popl %ebx
+    popl %edx
+    popl %eax
+
     /* We don't know where the bootloader might have put the command line.
      * It might be at an inconvenient location that we're not about to map,
      * so let's just copy it to a convenient location while we have the whole
