@@ -31,6 +31,19 @@ ProxyObject::~ProxyObject()
 {
 }
 
+static Value property_name_to_value(VM& vm, PropertyName const& name)
+{
+    VERIFY(name.is_valid());
+    if (name.is_symbol())
+        return name.as_symbol();
+
+    if (name.is_string())
+        return js_string(vm, name.as_string());
+
+    VERIFY(name.is_number());
+    return js_string(vm, String::number(name.as_number()));
+}
+
 // 10.5.1 [[GetPrototypeOf]] ( ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof
 Object* ProxyObject::internal_get_prototype_of() const
 {
@@ -287,7 +300,7 @@ Optional<PropertyDescriptor> ProxyObject::internal_get_own_property(const Proper
     }
 
     // 8. Let trapResultObj be ? Call(trap, handler, « target, P »).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name.to_value(vm));
+    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name));
     if (vm.exception())
         return {};
 
@@ -408,7 +421,7 @@ bool ProxyObject::internal_define_own_property(PropertyName const& property_name
     auto descriptor_object = from_property_descriptor(global_object, property_descriptor);
 
     // 9. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, descObj »)).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name.to_value(vm), descriptor_object);
+    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), descriptor_object);
     if (vm.exception())
         return {};
 
@@ -506,7 +519,7 @@ bool ProxyObject::internal_has_property(PropertyName const& property_name) const
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name.to_value(vm));
+    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name));
     if (vm.exception())
         return {};
 
@@ -576,7 +589,7 @@ Value ProxyObject::internal_get(PropertyName const& property_name, Value receive
     }
 
     // 8. Let trapResult be ? Call(trap, handler, « target, P, Receiver »).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name.to_value(vm), receiver);
+    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), receiver);
     if (vm.exception())
         return {};
 
@@ -644,7 +657,7 @@ bool ProxyObject::internal_set(PropertyName const& property_name, Value value, V
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, V, Receiver »)).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name.to_value(vm), value, receiver);
+    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name), value, receiver);
     if (vm.exception())
         return {};
 
@@ -713,7 +726,7 @@ bool ProxyObject::internal_delete(PropertyName const& property_name)
     }
 
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
-    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name.to_value(vm));
+    auto trap_result = vm.call(*trap, &m_handler, &m_target, property_name_to_value(vm, property_name));
     if (vm.exception())
         return {};
 
