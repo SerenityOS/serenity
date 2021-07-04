@@ -3,7 +3,7 @@ list(APPEND SPECIAL_TARGETS test install)
 list(APPEND REQUIRED_TARGETS
     arp base64 basename cat chmod chown chroot clear cp cut date dd df dirname dmesg du echo env expr false fgrep
     file find grep groups head host hostname id ifconfig kill killall ln ls mkdir mount mv nproc
-    pidof ping pmap ps readlink realpath reboot rm rmdir seq shutdown sleep sort stat stty su tail test
+    pgrep pidof ping pmap ps readlink realpath reboot rm rmdir seq shutdown sleep sort stat stty su tail test
     touch tr true umount uname uniq uptime w wc which whoami xargs yes
 )
 list(APPEND RECOMMENDED_TARGETS
@@ -80,6 +80,7 @@ target_link_libraries(open LibDesktop)
 target_link_libraries(pape LibGUI)
 target_link_libraries(passwd LibCrypt)
 target_link_libraries(paste LibGUI)
+target_link_libraries(pgrep LibRegex)
 target_link_libraries(pls LibCrypt)
 target_link_libraries(pro LibProtocol)
 target_link_libraries(run-tests LibRegex)
