@@ -61,7 +61,13 @@ public:
 
     constexpr T phase() const COMPLEX_NOEXCEPT
     {
-        return atan2(m_imag, m_real);
+        if constexpr (sizeof(T) <= sizeof(float)) {
+            return atan2f(m_imag, m_real);
+        } else if constexpr (sizeof(T) <= sizeof(double)) {
+            return atan2(m_imag, m_real);
+        } else {
+            return atan2l(m_imag, m_real);
+        }
     }
 
     template<AK::Concepts::Arithmetic U, AK::Concepts::Arithmetic V>
