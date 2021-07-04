@@ -494,6 +494,7 @@ private:
                                                                                             \
     public:                                                                                 \
         virtual ~ClassName();                                                               \
+        static ClassName* create(GlobalObject&, u32 length, FunctionObject& new_target);    \
         static ClassName* create(GlobalObject&, u32 length);                                \
         ClassName(u32 length, Object& prototype);                                           \
         virtual String element_name() const override;                                       \
