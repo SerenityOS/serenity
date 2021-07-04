@@ -127,7 +127,7 @@ test("evaluation order", () => {
         b.hasBeenCalled = false;
         c.hasBeenCalled = false;
         expect(() => {
-            new Function(`a[b()] ${op} c()`)();
+            new Function("a", "b", "c", "op", `a[b()] ${op} c()`)(a, b, c, op);
         }).toThrow(Error);
         expect(b.hasBeenCalled).toBeTrue();
         expect(c.hasBeenCalled).toBeFalse();

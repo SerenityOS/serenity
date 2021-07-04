@@ -40,7 +40,7 @@ describe("normal behavior", () => {
         var array = [1, 2, 3, 4, 5];
 
         expect(
-            arrayTwo.every((value, index, arr) => {
+            array.every((value, index, arr) => {
                 arr.push(6);
                 return value <= 5;
             })
