@@ -169,6 +169,7 @@ static RefPtr<GUI::Window> create_settings_window(VT::TerminalWidget& terminal)
     color_scheme_combo.set_only_allow_values_from_model(true);
     color_scheme_combo.set_model(*GUI::ItemListModel<String>::create(color_scheme_names));
     color_scheme_combo.set_selected_index(color_scheme_names.find_first_index(terminal.color_scheme_name()).value());
+    color_scheme_combo.set_enabled(color_scheme_names.size() > 1);
     color_scheme_combo.on_change = [&](auto&, const GUI::ModelIndex& index) {
         terminal.set_color_scheme(index.data().as_string());
     };
