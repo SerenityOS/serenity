@@ -313,9 +313,11 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                                                                                                                                        \
         auto array_length = first_argument.to_index(global_object());                                                                  \
         if (vm.exception()) {                                                                                                          \
-            /* Re-throw more specific RangeError */                                                                                    \
-            vm.clear_exception();                                                                                                      \
-            vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                                  \
+            if (vm.exception()->value().is_object() && is<RangeError>(vm.exception()->value().as_object())) {                          \
+                /* Re-throw more specific RangeError */                                                                                \
+                vm.clear_exception();                                                                                                  \
+                vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                              \
+            }                                                                                                                          \
             return {};                                                                                                                 \
         }                                                                                                                              \
         if (array_length > NumericLimits<i32>::max() / sizeof(Type)) {                                                                 \
