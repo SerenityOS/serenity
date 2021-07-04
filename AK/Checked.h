@@ -28,6 +28,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Concepts.h>
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtras.h>
 
@@ -109,17 +110,17 @@ template<typename Destination, typename Source>
     return TypeBoundsChecker<Destination, Source>::is_within_range(value);
 }
 
-template<typename T>
+template<Integral T>
 class Checked {
 public:
     constexpr Checked() = default;
 
-    constexpr Checked(T value)
+    explicit constexpr Checked(T value)
         : m_value(value)
     {
     }
 
-    template<typename U>
+    template<Integral U>
     constexpr Checked(U value)
     {
         m_overflow = !is_within_range<T>(value);
