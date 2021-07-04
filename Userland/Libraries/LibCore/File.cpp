@@ -92,6 +92,12 @@ bool File::open_impl(OpenMode mode, mode_t permissions)
     return true;
 }
 
+int File::leak_fd()
+{
+    m_should_close_file_descriptor = ShouldCloseFileDescriptor::No;
+    return fd();
+}
+
 bool File::is_device() const
 {
     struct stat stat;
