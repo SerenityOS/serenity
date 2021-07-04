@@ -37,9 +37,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // Sneaky!
-    // FIXME: Doesn't have a 32x32 icon yet, need to make one!
-    auto app_icon = GUI::Icon::default_icon("find");
+    auto app_icon = GUI::Icon::default_icon("app-magnifier");
 
     // 4px on each side for padding
     constexpr int window_dimensions = 200 + 4 + 4;
