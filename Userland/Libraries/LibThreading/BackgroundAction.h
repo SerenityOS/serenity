@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +14,6 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
-#include <LibThreading/Lock.h>
 #include <LibThreading/Thread.h>
 
 namespace Threading {
@@ -28,7 +28,7 @@ class BackgroundActionBase {
 private:
     BackgroundActionBase() { }
 
-    static Lockable<Queue<Function<void()>>>& all_actions();
+    static void enqueue_work(Function<void()>);
     static Thread& background_thread();
 };
 
@@ -63,9 +63,7 @@ private:
         , m_action(move(action))
         , m_on_complete(move(on_complete))
     {
-        Locker locker(all_actions().lock());
-
-        all_actions().resource().enqueue([this] {
+        enqueue_work([this] {
             m_result = m_action(*this);
             if (m_on_complete) {
                 Core::EventLoop::current().post_event(*this, make<Core::DeferredInvocationEvent>([this](auto&) {
