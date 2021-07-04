@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Tobias Christiansen <tobi@tobyase.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -173,8 +174,10 @@ enum class ListStyleType {
     DecimalLeadingZero,
     LowerAlpha,
     LowerLatin,
+    LowerRoman,
     UpperAlpha,
     UpperLatin,
+    UpperRoman,
 };
 
 enum class Overflow : u8 {

@@ -36,6 +36,12 @@ ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType
     case CSS::ListStyleType::UpperLatin:
         m_text = String::bijective_base_from(m_index - 1);
         break;
+    case CSS::ListStyleType::LowerRoman:
+        m_text = String::roman_number_from(m_index).to_lowercase();
+        break;
+    case CSS::ListStyleType::UpperRoman:
+        m_text = String::roman_number_from(m_index);
+        break;
     case CSS::ListStyleType::None:
         break;
 
@@ -88,8 +94,10 @@ void ListItemMarkerBox::paint(PaintContext& context, PaintPhase phase)
     case CSS::ListStyleType::DecimalLeadingZero:
     case CSS::ListStyleType::LowerAlpha:
     case CSS::ListStyleType::LowerLatin:
+    case CSS::ListStyleType::LowerRoman:
     case CSS::ListStyleType::UpperAlpha:
     case CSS::ListStyleType::UpperLatin:
+    case CSS::ListStyleType::UpperRoman:
         if (m_text.is_null())
             break;
         context.painter().draw_text(enclosing, m_text, Gfx::TextAlignment::Center);
