@@ -645,6 +645,10 @@ Optional<CSS::ListStyleType> StyleProperties::list_style_type() const
         return CSS::ListStyleType::UpperAlpha;
     case CSS::ValueID::UpperLatin:
         return CSS::ListStyleType::UpperLatin;
+    case CSS::ValueID::UpperRoman:
+        return CSS::ListStyleType::UpperRoman;
+    case CSS::ValueID::LowerRoman:
+        return CSS::ListStyleType::LowerRoman;
     default:
         return {};
     }
