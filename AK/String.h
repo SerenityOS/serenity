@@ -99,6 +99,7 @@ public:
     [[nodiscard]] static String repeated(const StringView&, size_t count);
 
     [[nodiscard]] static String bijective_base_from(size_t value, unsigned base = 26, StringView map = {});
+    [[nodiscard]] static String roman_number_from(size_t value);
 
     template<class SeparatorType, class CollectionType>
     [[nodiscard]] static String join(const SeparatorType& separator, const CollectionType& collection)

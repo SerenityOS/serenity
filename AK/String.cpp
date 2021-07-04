@@ -273,6 +273,59 @@ String String::bijective_base_from(size_t value, unsigned base, StringView map)
     return String { ReadonlyBytes(buffer.data(), i) };
 }
 
+String String::roman_number_from(size_t value)
+{
+    if (value > 3999)
+        return String::number(value);
+
+    StringBuilder builder;
+
+    while (value > 0) {
+        if (value >= 1000) {
+            builder.append('M');
+            value -= 1000;
+        } else if (value >= 900) {
+            builder.append("CM"sv);
+            value -= 900;
+        } else if (value >= 500) {
+            builder.append('D');
+            value -= 500;
+        } else if (value >= 400) {
+            builder.append("CD"sv);
+            value -= 400;
+        } else if (value >= 100) {
+            builder.append('C');
+            value -= 100;
+        } else if (value >= 90) {
+            builder.append("XC"sv);
+            value -= 90;
+        } else if (value >= 50) {
+            builder.append('L');
+            value -= 50;
+        } else if (value >= 40) {
+            builder.append("XL"sv);
+            value -= 40;
+        } else if (value >= 10) {
+            builder.append('X');
+            value -= 10;
+        } else if (value == 9) {
+            builder.append("IX"sv);
+            value -= 9;
+        } else if (value >= 5 && value <= 8) {
+            builder.append('V');
+            value -= 5;
+        } else if (value == 4) {
+            builder.append("IV"sv);
+            value -= 4;
+        } else if (value <= 3) {
+            builder.append('I');
+            value -= 1;
+        }
+    }
+
+    return builder.to_string();
+}
+
 bool String::matches(const StringView& mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity, &mask_spans);
