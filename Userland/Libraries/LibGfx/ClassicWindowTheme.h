@@ -47,7 +47,10 @@ private:
 
         bool uses_alpha() const
         {
-            return title_color.alpha() != 0xff || border_color.alpha() != 0xff || border_color2.alpha() != 0xff || title_stripes_color.alpha() != 0xff || title_shadow_color.alpha() != 0xff;
+            // We don't care about the title_stripes_color or title_shadow_color alpha channels because they are
+            // effectively rendered on top of the borders and don't mean whether the frame itself atually has
+            // any alpha channels that would require the entire frame to be rendered as transparency.
+            return title_color.alpha() != 0xff || border_color.alpha() != 0xff || border_color2.alpha() != 0xff;
         }
     };
 
