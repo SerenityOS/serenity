@@ -112,13 +112,10 @@ void TaskbarWindow::show_desktop_button_clicked(unsigned)
 void TaskbarWindow::create_quick_launch_bar()
 {
     auto& quick_launch_bar = main_widget()->add<GUI::Frame>();
+    quick_launch_bar.set_shrink_to_fit(true);
     quick_launch_bar.set_layout<GUI::HorizontalBoxLayout>();
     quick_launch_bar.layout()->set_spacing(0);
-    quick_launch_bar.layout()->set_margins({ 3, 0, 3, 0 });
     quick_launch_bar.set_frame_thickness(0);
-
-    int total_width = 6;
-    bool first = true;
 
     auto config = Core::ConfigFile::get_for_app("Taskbar");
     constexpr const char* quick_launch = "QuickLaunch";
@@ -154,14 +151,8 @@ void TaskbarWindow::create_quick_launch_bar()
                     perror("disown");
             }
         };
-
-        if (!first)
-            total_width += quick_launch_bar.layout()->spacing();
-        first = false;
-        total_width += button_size;
     }
-
-    quick_launch_bar.set_fixed_size(total_width, 24);
+    quick_launch_bar.set_fixed_height(24);
 }
 
 void TaskbarWindow::on_screen_rects_change(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index)
