@@ -1,4 +1,5 @@
-.set KERNEL_VIRTUAL_BASE, 0xc0000000
+#define _BOOTLOADER
+#include <Kernel/Sections.h>
 
 .extern init_ap
 .type init_ap, @function
@@ -124,7 +125,7 @@ apic_ap_start64:
 
     /* push the Processor pointer this CPU is going to use */
     movq (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %rax
-    movq $KERNEL_VIRTUAL_BASE, %r8
+    movq $KERNEL_BASE, %r8
     addq %r8, %rax
     movq 0(%rax, %rsi, 4), %rax
     push %rax

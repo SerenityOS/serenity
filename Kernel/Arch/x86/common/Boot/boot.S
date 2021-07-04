@@ -1,8 +1,8 @@
 #define _BOOTLOADER
 #include <AK/Platform.h>
+#include <Kernel/Sections.h>
 
 .code32
-.set KERNEL_VIRTUAL_BASE, 0xc0000000
 
 .section .stack, "aw", @nobits
 stack_bottom:
@@ -142,74 +142,74 @@ continue:
     addl $16, %esi
     movl (%esi), %esi
     movl $1024, %ecx
-    movl $(kernel_cmdline - KERNEL_VIRTUAL_BASE), %edi
+    movl $(kernel_cmdline - KERNEL_BASE), %edi
     rep movsl
 
 #if ARCH(X86_64)
     /* clear pml4t */
-    movl $(boot_pml4t - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pml4t - KERNEL_BASE), %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
     /* set up pml4t[0] */
-    movl $(boot_pml4t - KERNEL_VIRTUAL_BASE), %edi
-    movl $(boot_pdpt - KERNEL_VIRTUAL_BASE), 0(%edi)
+    movl $(boot_pml4t - KERNEL_BASE), %edi
+    movl $(boot_pdpt - KERNEL_BASE), 0(%edi)
     /* R/W + Present */
     orl $0x3, 0(%edi)
 #endif
 
     /* clear pdpt */
-    movl $(boot_pdpt - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pdpt - KERNEL_BASE), %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
     /* set up pdpt[0] and pdpt[3] */
-    movl $(boot_pdpt - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pdpt - KERNEL_BASE), %edi
 #if ARCH(X86_64)
-    movl $((boot_pd0 - KERNEL_VIRTUAL_BASE) + 3), 0(%edi)
-    movl $((boot_pd3 - KERNEL_VIRTUAL_BASE) + 3), 24(%edi)
+    movl $((boot_pd0 - KERNEL_BASE) + 3), 0(%edi)
+    movl $((boot_pd3 - KERNEL_BASE) + 3), 24(%edi)
 #else
-    movl $((boot_pd0 - KERNEL_VIRTUAL_BASE) + 1), 0(%edi)
-    movl $((boot_pd3 - KERNEL_VIRTUAL_BASE) + 1), 24(%edi)
+    movl $((boot_pd0 - KERNEL_BASE) + 1), 0(%edi)
+    movl $((boot_pd3 - KERNEL_BASE) + 1), 24(%edi)
 #endif
 
     /* clear pd0 */
-    movl $(boot_pd0 - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pd0 - KERNEL_BASE), %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
     /* clear pd3 */
-    movl $(boot_pd3 - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pd3 - KERNEL_BASE), %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
     /* clear pd0's pt's */
-    movl $(boot_pd0_pt0 - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pd0_pt0 - KERNEL_BASE), %edi
     movl $(1024 * 4), %ecx
     xorl %eax, %eax
     rep stosl
 
     /* clear pd3's pt's */
-    movl $(boot_pd3_pts - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pd3_pts - KERNEL_BASE), %edi
     movl $(1024 * 17), %ecx
     xorl %eax, %eax
     rep stosl
 
     /* add boot_pd0_pt0 to boot_pd0 */
-    movl $(boot_pd0 - KERNEL_VIRTUAL_BASE), %edi
-    movl $(boot_pd0_pt0 - KERNEL_VIRTUAL_BASE), %eax
+    movl $(boot_pd0 - KERNEL_BASE), %edi
+    movl $(boot_pd0_pt0 - KERNEL_BASE), %eax
     movl %eax, 0(%edi)
     /* R/W + Present */
     orl $0x3, 0(%edi)
 
     /* add boot_pd3_pts to boot_pd3 */
     movl $16, %ecx
-    movl $(boot_pd3 - KERNEL_VIRTUAL_BASE), %edi
-    movl $(boot_pd3_pts - KERNEL_VIRTUAL_BASE), %eax
+    movl $(boot_pd3 - KERNEL_BASE), %edi
+    movl $(boot_pd3_pts - KERNEL_BASE), %eax
 
 1:
     movl %eax, 0(%edi)
@@ -221,7 +221,7 @@ continue:
 
     /* identity map the 0 to 2MB range */
     movl $512, %ecx
-    movl $(boot_pd0_pt0 - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pd0_pt0 - KERNEL_BASE), %edi
     xorl %eax, %eax
 
 1:
@@ -234,7 +234,7 @@ continue:
 
     /* pseudo identity map the 3072-3102MB range */
     movl $(512 * 16), %ecx
-    movl $(boot_pd3_pts - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pd3_pts - KERNEL_BASE), %edi
     xorl %eax, %eax
 
 1:
@@ -246,17 +246,17 @@ continue:
     loop 1b
 
     /* create an empty page table for the top 2MB at the 4GB mark */
-    movl $(boot_pd3 - KERNEL_VIRTUAL_BASE), %edi
-    movl $(boot_pd3_pt1023 - KERNEL_VIRTUAL_BASE), 4088(%edi)
+    movl $(boot_pd3 - KERNEL_BASE), %edi
+    movl $(boot_pd3_pt1023 - KERNEL_BASE), 4088(%edi)
     orl $0x3, 4088(%edi)
     movl $0, 4092(%edi)
 
 #if ARCH(X86_64)
     /* point CR3 to PML4T */
-    movl $(boot_pml4t - KERNEL_VIRTUAL_BASE), %eax
+    movl $(boot_pml4t - KERNEL_BASE), %eax
 #else
     /* point CR3 to PDPT */
-    movl $(boot_pdpt - KERNEL_VIRTUAL_BASE), %eax
+    movl $(boot_pdpt - KERNEL_BASE), %eax
 #endif
 
     movl %eax, %cr3
@@ -293,7 +293,7 @@ continue:
 
     /* unmap the 0-1MB range, which isn't used after jmp-ing up here */
     movl $256, %ecx
-    movl $(boot_pd0_pt0 - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pd0_pt0 - KERNEL_BASE), %edi
     xorl %eax, %eax
 
 1:
@@ -302,7 +302,7 @@ continue:
     loop 1b
 
     /* jump into C++ land */
-    addl $KERNEL_VIRTUAL_BASE, %ebx
+    addl $KERNEL_BASE, %ebx
     movl %ebx, multiboot_info_ptr
 
 #if ARCH(X86_64)
