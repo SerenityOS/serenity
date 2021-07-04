@@ -625,6 +625,11 @@ JS::Interpreter& Document::interpreter()
 {
     if (!m_interpreter) {
         auto& vm = Bindings::main_thread_vm();
+        m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(vm, *m_window);
+
+        // NOTE: We must hook `on_call_stack_emptied` after the interpreter was created, as the initialization of the
+        // WindowsObject can invoke some internal calls, which will eventually lead to this hook being called without
+        // `m_interpreter` being fully initialized yet.
         // TODO: Hook up vm.on_promise_unhandled_rejection and vm.on_promise_rejection_handled
         // See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises#promise_rejection_events
         vm.on_call_stack_emptied = [this] {
@@ -659,7 +664,6 @@ JS::Interpreter& Document::interpreter()
 
             vm.finish_execution_generation();
         };
-        m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(vm, *m_window);
     }
     return *m_interpreter;
 }
