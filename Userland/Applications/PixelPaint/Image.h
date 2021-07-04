@@ -43,7 +43,7 @@ public:
     static RefPtr<Image> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap>);
 
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
-    RefPtr<Gfx::Bitmap> try_compose_bitmap() const;
+    RefPtr<Gfx::Bitmap> try_compose_bitmap(Gfx::BitmapFormat format) const;
 
     size_t layer_count() const { return m_layers.size(); }
     Layer const& layer(size_t index) const { return m_layers.at(index); }
@@ -58,8 +58,8 @@ public:
 
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect) const;
     Result<void, String> write_to_file(String const& file_path) const;
-    Result<void, String> export_bmp_to_file(String const& file_path);
-    Result<void, String> export_png_to_file(String const& file_path);
+    Result<void, String> export_bmp_to_file(String const& file_path, bool preserve_alpha_channel);
+    Result<void, String> export_png_to_file(String const& file_path, bool preserve_alpha_channel);
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);
