@@ -131,6 +131,7 @@ set(KERNEL_SOURCES
     KString.cpp
     KSyms.cpp
     Lock.cpp
+    MiniStdLib.cpp
     Net/E1000ENetworkAdapter.cpp
     Net/E1000NetworkAdapter.cpp
     Net/IPv4Socket.cpp
@@ -289,8 +290,6 @@ set(KERNEL_SOURCES
 set(KERNEL_SOURCES
     ${KERNEL_SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Boot/boot.S
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Boot/multiboot.S
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
@@ -357,9 +356,13 @@ endif()
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -fno-pic -mno-red-zone")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new=8")
+    add_link_options(LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker_amd64.ld -nostdlib)
+    #set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker_amd64.ld)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fPIE")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new=4")
+    add_link_options(LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker_i386.ld -nostdlib)
+    #set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker_i386.ld)
 endif()
 
 # Kernel Undefined Behavior Sanitizer (KUBSAN)
@@ -378,8 +381,6 @@ add_compile_definitions(KERNEL)
 #       It's needed because CLion doesn't understand the way we switch compilers mid-build.
 add_compile_definitions(__serenity__)
 
-add_link_options(LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib)
-
 add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
 
 if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
@@ -394,28 +395,19 @@ else()
     link_directories(${TOOLCHAIN_ROOT}/lib/gcc/${SERENITY_ARCH}-pc-serenity/${GCC_VERSION}/)
 endif()
 
-if ("${SERENITY_ARCH}" STREQUAL "i686")
-    set(KERNEL_TARGET Kernel32)
-else()
-    set(KERNEL_TARGET Kernel64)
-endif()
-
-add_executable(${KERNEL_TARGET} ${SOURCES})
-add_dependencies(${KERNEL_TARGET} generate_EscapeSequenceStateMachine.h)
-
-set_target_properties(${KERNEL_TARGET} PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld)
+add_executable(Kernel ${SOURCES})
+add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
 
 if (ENABLE_KERNEL_LTO)
     include(CheckIPOSupported)
     check_ipo_supported()
-    set_property(TARGET ${KERNEL_TARGET} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    set_property(TARGET Kernel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
-target_link_libraries(${KERNEL_TARGET} kernel_heap gcc)
-add_dependencies(${KERNEL_TARGET} kernel_heap)
+target_link_libraries(Kernel kernel_heap gcc)
+add_dependencies(Kernel kernel_heap)
 
 add_custom_command(
-    TARGET ${KERNEL_TARGET} POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -O elf32-i386 ${CMAKE_CURRENT_BINARY_DIR}/${KERNEL_TARGET} ${CMAKE_CURRENT_BINARY_DIR}/Kernel
+    TARGET Kernel POST_BUILD
     COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
     COMMAND ${CMAKE_COMMAND} -E env OBJCOPY=${CMAKE_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
     COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug

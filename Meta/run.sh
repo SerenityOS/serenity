@@ -204,7 +204,8 @@ elif [ "$SERENITY_RUN" = "qn" ]; then
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         -device e1000 \
-        -kernel Kernel/Kernel \
+        -kernel Bootloader/Bootloader \
+        -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$SERENITY_RUN" = "qtap" ]; then
     # Meta/run.sh qtap: qemu with tap
@@ -216,7 +217,8 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev tap,ifname=tap0,id=br0 \
         -device e1000,netdev=br0 \
-        -kernel Kernel/Kernel \
+        -kernel Bootloader/Bootloader \
+        -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
     sudo ip tuntap del dev tap0 mode tap
 elif [ "$SERENITY_RUN" = "qgrub" ]; then
@@ -235,7 +237,8 @@ elif [ "$SERENITY_RUN" = "q35" ]; then
         $SERENITY_VIRT_TECH_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh \
-        -kernel Kernel/Kernel \
+        -kernel Bootloader/Bootloader \
+        -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$SERENITY_RUN" = "bootloader_test" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
@@ -265,7 +268,8 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
         -nographic \
         -display none \
         -debugcon file:debug.log \
-        -kernel Kernel/Kernel \
+        -kernel Bootloader/Bootloader \
+        -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
 else
     # Meta/run.sh: qemu with user networking
@@ -275,6 +279,7 @@ else
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23,hostfwd=tcp:127.0.0.1:8000-10.0.2.15:8000,hostfwd=tcp:127.0.0.1:2222-10.0.2.15:22 \
         -device e1000,netdev=breh \
-        -kernel Kernel/Kernel \
+        -kernel Bootloader/Bootloader \
+        -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
 fi

@@ -53,6 +53,7 @@ inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)
 
 enum class UsedMemoryRangeType {
     LowMemory = 0,
+    Bootloader,
     Kernel,
     BootModule,
     PhysicalPages,
@@ -60,6 +61,7 @@ enum class UsedMemoryRangeType {
 
 static constexpr StringView UserMemoryRangeTypeNames[] {
     "Low memory",
+    "Bootloader",
     "Kernel",
     "Boot module",
     "Physical Pages"

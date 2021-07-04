@@ -11,7 +11,12 @@
 #define READONLY_AFTER_INIT __attribute__((section(".ro_after_init")))
 #define UNMAP_AFTER_INIT NEVER_INLINE __attribute__((section(".unmap_after_init")))
 
+#ifdef AK_ARCH_X86_64
+#define KERNEL_BASE 0x1000000000
+#elif AK_ARCH_I386
 #define KERNEL_BASE 0xC0000000
+#endif
+
 #define KERNEL_PD_OFFSET 0x3000000
 #define KERNEL_PD_END (KERNEL_BASE + 0x31000000)
 #define KERNEL_PT1024_BASE (KERNEL_BASE + 0x3FE00000)
