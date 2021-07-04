@@ -39,9 +39,9 @@ TEST_CASE(reorder_format_arguments)
     EXPECT_EQ(String::formatted("{1}{0}", "a", "b"), "ba");
     EXPECT_EQ(String::formatted("{0}{1}", "a", "b"), "ab");
     // Compiletime check bypass: ignoring a passed argument.
-    EXPECT_EQ(String::formatted(StringView { "{0}{0}{0}" }, "a", "b"), "aaa");
+    EXPECT_EQ(String::formatted("{0}{0}{0}"sv, "a", "b"), "aaa");
     // Compiletime check bypass: ignoring a passed argument.
-    EXPECT_EQ(String::formatted(StringView { "{1}{}{0}" }, "a", "b", "c"), "baa");
+    EXPECT_EQ(String::formatted("{1}{}{0}"sv, "a", "b", "c"), "baa");
 }
 
 TEST_CASE(escape_braces)
@@ -108,7 +108,7 @@ TEST_CASE(replacement_field)
     EXPECT_EQ(String::formatted("{:*>{1}}", 13, static_cast<size_t>(10)), "********13");
     EXPECT_EQ(String::formatted("{:*<{1}}", 7, 4), "7***");
     // Compiletime check bypass: intentionally ignoring extra arguments
-    EXPECT_EQ(String::formatted(StringView { "{:{2}}" }, -5, 8, 16), "              -5");
+    EXPECT_EQ(String::formatted("{:{2}}"sv, -5, 8, 16), "              -5");
     EXPECT_EQ(String::formatted("{{{:*^{1}}}}", 1, 3), "{*1*}");
     EXPECT_EQ(String::formatted("{:0{}}", 1, 3), "001");
 }
@@ -116,7 +116,7 @@ TEST_CASE(replacement_field)
 TEST_CASE(replacement_field_regression)
 {
     // FIXME: Compiletime check bypass: cannot parse '}}' correctly.
-    EXPECT_EQ(String::formatted(StringView { "{:{}}" }, "", static_cast<unsigned long>(6)), "      ");
+    EXPECT_EQ(String::formatted("{:{}}"sv, "", static_cast<unsigned long>(6)), "      ");
 }
 
 TEST_CASE(complex_string_specifiers)
@@ -224,7 +224,7 @@ TEST_CASE(file_descriptor)
     Array<u8, 256> buffer;
     const auto nread = fread(buffer.data(), 1, buffer.size(), file);
 
-    EXPECT_EQ(StringView { "Hello, World!\nfoobar\n" }, StringView { buffer.span().trim(nread) });
+    EXPECT_EQ("Hello, World!\nfoobar\n"sv, StringView { buffer.span().trim(nread) });
 
     fclose(file);
 }

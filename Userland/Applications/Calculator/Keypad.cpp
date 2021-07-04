@@ -158,7 +158,7 @@ String Keypad::to_string() const
     if (m_frac_length > 0) {
         // FIXME: This disables the compiletime format string check since we can't parse '}}' here correctly.
         //        remove the 'StringView { }' when that's fixed.
-        builder.appendff(StringView { "{:0{}}" }, m_frac_value.value(), m_frac_length);
+        builder.appendff("{:0{}}"sv, m_frac_value.value(), m_frac_length);
     }
 
     return builder.to_string();
