@@ -911,7 +911,7 @@ void Window::set_fullscreen(bool fullscreen)
     m_fullscreen = fullscreen;
     if (!is_visible())
         return;
-    WindowServerConnection::the().set_fullscreen(m_window_id, fullscreen);
+    WindowServerConnection::the().async_set_fullscreen(m_window_id, fullscreen);
 }
 
 void Window::set_frameless(bool frameless)
@@ -921,7 +921,7 @@ void Window::set_frameless(bool frameless)
     m_frameless = frameless;
     if (!is_visible())
         return;
-    WindowServerConnection::the().set_frameless(m_window_id, frameless);
+    WindowServerConnection::the().async_set_frameless(m_window_id, frameless);
 
     if (!frameless)
         apply_icon();

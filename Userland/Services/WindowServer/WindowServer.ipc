@@ -78,7 +78,7 @@ endpoint WindowServer
     invalidate_rect(i32 window_id, Vector<Gfx::IntRect> rects, bool ignore_occlusion) =|
     did_finish_painting(i32 window_id, Vector<Gfx::IntRect> rects) =|
 
-    set_global_cursor_tracking(i32 window_id, bool enabled) => ()
+    set_global_cursor_tracking(i32 window_id, bool enabled) =|
     set_window_opacity(i32 window_id, float opacity) =|
 
     set_window_alpha_hit_threshold(i32 window_id, float threshold) =|
@@ -87,8 +87,8 @@ endpoint WindowServer
 
     set_window_has_alpha_channel(i32 window_id, bool has_alpha_channel) =|
     move_window_to_front(i32 window_id) =|
-    set_fullscreen(i32 window_id, bool fullscreen) => ()
-    set_frameless(i32 window_id, bool frameless) => ()
+    set_fullscreen(i32 window_id, bool fullscreen) =|
+    set_frameless(i32 window_id, bool frameless) =|
     popup_menu(i32 menu_id, Gfx::IntPoint screen_position) =|
     dismiss_menu(i32 menu_id) =|
 
@@ -127,10 +127,10 @@ endpoint WindowServer
 
     get_global_cursor_position() => (Gfx::IntPoint position)
 
-    set_mouse_acceleration(float factor) => ()
+    set_mouse_acceleration(float factor) =|
     get_mouse_acceleration() => (float factor)
 
-    set_scroll_step_size(u32 step_size) => ()
+    set_scroll_step_size(u32 step_size) =|
     get_scroll_step_size() => (u32 step_size)
 
     get_screen_bitmap(Optional<Gfx::IntRect> rect, Optional<u32> screen_index) => (Gfx::ShareableBitmap bitmap)
@@ -138,7 +138,7 @@ endpoint WindowServer
 
     pong() =|
 
-    set_double_click_speed(int speed) => ()
+    set_double_click_speed(int speed) =|
     get_double_click_speed() => (int speed)
 
     get_desktop_display_scale(u32 screen_index) => (int desktop_display_scale)

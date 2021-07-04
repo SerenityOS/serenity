@@ -24,9 +24,9 @@ constexpr int double_click_speed_default = 250;
 void MouseSettingsWindow::update_window_server()
 {
     const float factor = m_speed_slider->value() / speed_slider_scale;
-    GUI::WindowServerConnection::the().set_mouse_acceleration(factor);
-    GUI::WindowServerConnection::the().set_scroll_step_size(m_scroll_length_spinbox->value());
-    GUI::WindowServerConnection::the().set_double_click_speed(m_double_click_speed_slider->value());
+    GUI::WindowServerConnection::the().async_set_mouse_acceleration(factor);
+    GUI::WindowServerConnection::the().async_set_scroll_step_size(m_scroll_length_spinbox->value());
+    GUI::WindowServerConnection::the().async_set_double_click_speed(m_double_click_speed_slider->value());
 }
 
 void MouseSettingsWindow::reset_default_values()
