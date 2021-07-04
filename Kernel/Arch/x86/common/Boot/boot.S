@@ -1,3 +1,7 @@
+#define _BOOTLOADER
+#include <AK/Platform.h>
+
+.code32
 .set KERNEL_VIRTUAL_BASE, 0xc0000000
 
 .section .stack, "aw", @nobits
@@ -11,6 +15,11 @@ kernel_cmdline:
 
 .section .page_tables, "aw", @nobits
 .align 4096
+#if ARCH(X86_64)
+.global boot_pml4t
+boot_pml4t:
+.skip 4096
+#endif
 .global boot_pdpt
 boot_pdpt:
 .skip 4096
@@ -42,7 +51,12 @@ boot_pd3_pt1023:
 .type multiboot_info_ptr, @object
 
 /*
-    construct the following (32-bit PAE) page table layout:
+    construct the following (64-bit PML4T) page table layout:
+    (the PML4T part is not used for 32-bit x86)
+
+pml4t:
+
+    0: pdpt (0-512GB)
 
 pdpt
 
@@ -74,16 +88,49 @@ boot_pd3 : 512 pde's
     13: boot_pd3_pts[13] (3098-3100MB) (pseudo 512 4KB pages)
     14: boot_pd3_pts[14] (3100-3102MB) (pseudo 512 4KB pages)
     15: boot_pd3_pts[15] (3102-3104MB) (pseudo 512 4KB pages)
-    
+
     16: boot_pd3_pt1023 (4094-4096MB) (for page table mappings)
 
 the 9 page tables each contain 512 pte's that map individual 4KB pages
 
 */
 
+#if ARCH(X86_64)
+gdt64:
+    .quad 0
+gdt64code:
+    .quad (1<<43) | (1<<44) | (1<<47) | (1<<53) /* executable, code segment, present, 64-bit */
+.global gdt64ptr
+gdt64ptr:
+    .short . - gdt64 - 1
+    .quad gdt64
+
+.global code64_sel
+.set code64_sel,  gdt64code - gdt64
+#endif
+
 start:
     cli
     cld
+
+#if ARCH(X86_64)
+    /* test for long mode presence, save the most important registers from corruption */
+    pushl %eax
+    pushl %edx
+    pushl %ebx
+
+    movl $0x80000001, %eax
+    cpuid
+    testl $(1 << 29), %edx   /* Test if the LM-bit, which is bit 29, is set in the edx register. */
+    jnz continue             /* If LM-bit is not enabled, there is no long mode. */
+    hlt
+
+continue:
+    /* restore the pushed registers */
+    popl %ebx
+    popl %edx
+    popl %eax
+#endif
 
     /* We don't know where the bootloader might have put the command line.
      * It might be at an inconvenient location that we're not about to map,
@@ -98,6 +145,20 @@ start:
     movl $(kernel_cmdline - KERNEL_VIRTUAL_BASE), %edi
     rep movsl
 
+#if ARCH(X86_64)
+    /* clear pml4t */
+    movl $(boot_pml4t - KERNEL_VIRTUAL_BASE), %edi
+    movl $1024, %ecx
+    xorl %eax, %eax
+    rep stosl
+
+    /* set up pml4t[0] */
+    movl $(boot_pml4t - KERNEL_VIRTUAL_BASE), %edi
+    movl $(boot_pdpt - KERNEL_VIRTUAL_BASE), 0(%edi)
+    /* R/W + Present */
+    orl $0x3, 0(%edi)
+#endif
+
     /* clear pdpt */
     movl $(boot_pdpt - KERNEL_VIRTUAL_BASE), %edi
     movl $1024, %ecx
@@ -106,8 +167,13 @@ start:
 
     /* set up pdpt[0] and pdpt[3] */
     movl $(boot_pdpt - KERNEL_VIRTUAL_BASE), %edi
+#if ARCH(X86_64)
+    movl $((boot_pd0 - KERNEL_VIRTUAL_BASE) + 3), 0(%edi)
+    movl $((boot_pd3 - KERNEL_VIRTUAL_BASE) + 3), 24(%edi)
+#else
     movl $((boot_pd0 - KERNEL_VIRTUAL_BASE) + 1), 0(%edi)
     movl $((boot_pd3 - KERNEL_VIRTUAL_BASE) + 1), 24(%edi)
+#endif
 
     /* clear pd0 */
     movl $(boot_pd0 - KERNEL_VIRTUAL_BASE), %edi
@@ -185,14 +251,29 @@ start:
     orl $0x3, 4088(%edi)
     movl $0, 4092(%edi)
 
+#if ARCH(X86_64)
+    /* point CR3 to PML4T */
+    movl $(boot_pml4t - KERNEL_VIRTUAL_BASE), %eax
+#else
     /* point CR3 to PDPT */
     movl $(boot_pdpt - KERNEL_VIRTUAL_BASE), %eax
+#endif
+
     movl %eax, %cr3
 
     /* enable PAE + PSE */
     movl %cr4, %eax
     orl $0x60, %eax
     movl %eax, %cr4
+
+#if ARCH(X86_64)
+1:
+    /* Enter Long-mode! ref(https://wiki.osdev.org/Setting_Up_Long_Mode)*/
+    mov $0xC0000080, %ecx           /* Set the C-register to 0xC0000080, which is the EFER MSR.*/
+    rdmsr                           /* Read from the model-specific register.*/
+    or $(1 << 8), %eax              /* Set the LM-bit which is the 9th bit (bit 8).*/
+    wrmsr                           /* Write to the model-specific register.*/
+#endif
 
     /* enable PG */
     movl %cr0, %eax
@@ -224,184 +305,30 @@ start:
     addl $KERNEL_VIRTUAL_BASE, %ebx
     movl %ebx, multiboot_info_ptr
 
+#if ARCH(X86_64)
+    /* Now we are in 32-bit compatibility mode, We still need to load a 64-bit GDT */
+    lgdt gdt64ptr
+    ljmpl $code64_sel, $1f
+
+.code64
+1:
+    mov $0, %ax
+    mov %ax, %ss
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+#endif
+
     call init
+#if ARCH(X86_64)
+    add $4, %rsp
+#else
     add $4, %esp
+#endif
 
     cli
 loop:
     hlt
     jmp loop
 
-.extern init_ap
-.type init_ap, @function
-
-/*
-  The apic_ap_start function will be loaded to P0x00008000 where the APIC
-  will boot the AP from in real mode. This code also contains space for
-  special variables that *must* remain here. When initializing the APIC,
-  the code here gets copied to P0x00008000, the variables in here get
-  populated and then the the boot of the APs will be triggered. Having
-  the variables here allows us to access them from real mode. Also, the
-  code here avoids the need for relocation entries.
-
-  Basically, the variables between apic_ap_start and end_apic_ap_start
-  *MUST* remain here and cannot be moved into a .bss or any other location.
-*/
-.global apic_ap_start
-.type apic_ap_start, @function
-apic_ap_start:
-.code16
-    cli
-    jmp $0x800, $(1f - apic_ap_start) /* avoid relocation entries */
-1:
-    mov %cs, %ax
-    mov %ax, %ds
-
-    xor %ax, %ax
-    mov %ax, %sp
-
-    /* load the first temporary gdt */
-    lgdt (ap_cpu_gdtr_initial - apic_ap_start)
-
-    /* enable PM */
-    movl %cr0, %eax
-    orl $1, %eax
-    movl %eax, %cr0
-
-    ljmpl $8, $(apic_ap_start32 - apic_ap_start + 0x8000)
-apic_ap_start32:
-.code32
-    mov $0x10, %ax
-    mov %ax, %ss
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
-
-    movl $0x8000, %ebp
-
-    /* generate a unique ap cpu id (0 means 1st ap, not bsp!) */
-    xorl %eax, %eax
-    incl %eax
-    lock; xaddl %eax, (ap_cpu_id - apic_ap_start)(%ebp) /* avoid relocation entries */
-    movl %eax, %esi
-
-    /* find our allocated stack based on the generated id */
-    movl (ap_cpu_init_stacks - apic_ap_start)(%ebp, %eax, 4), %esp
-
-    /* check if we support NX and enable it if we do */
-    movl $0x80000001, %eax
-    cpuid
-    testl $0x100000, %edx
-    je (1f - apic_ap_start + 0x8000)
-    /* turn on IA32_EFER.NXE */
-    movl $0xc0000080, %ecx
-    rdmsr
-    orl $0x800, %eax
-    wrmsr
-1:
-
-    /* load the bsp's cr3 value */
-    movl (ap_cpu_init_cr3 - apic_ap_start)(%ebp), %eax
-    movl %eax, %cr3
-
-    /* enable PAE + PSE */
-    movl %cr4, %eax
-    orl $0x60, %eax
-    movl %eax, %cr4
-
-    /* enable PG */
-    movl %cr0, %eax
-    orl $0x80000000, %eax
-    movl %eax, %cr0
-
-    /* load a second temporary gdt that points above 3GB */
-    lgdt (ap_cpu_gdtr_initial2 - apic_ap_start + 0xc0008000)
-
-    /* jump above 3GB into our identity mapped area now */
-    ljmp $8, $(apic_ap_start32_2 - apic_ap_start + 0xc0008000)
-apic_ap_start32_2:
-    /* flush the TLB */
-    movl %cr3, %eax
-    movl %eax, %cr3
-
-    movl $0xc0008000, %ebp
-
-    /* now load the final gdt and idt from the identity mapped area */
-    movl (ap_cpu_gdtr - apic_ap_start)(%ebp), %eax
-    lgdt (%eax)
-    movl (ap_cpu_idtr - apic_ap_start)(%ebp), %eax
-    lidt (%eax)
-
-    /* set same cr0 and cr4 values as the BSP */
-    movl (ap_cpu_init_cr0 - apic_ap_start)(%ebp), %eax
-    movl %eax, %cr0
-    movl (ap_cpu_init_cr4 - apic_ap_start)(%ebp), %eax
-    movl %eax, %cr4
-
-    /* push the Processor pointer this CPU is going to use */
-    movl (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %eax
-    addl $KERNEL_VIRTUAL_BASE, %eax
-    movl 0(%eax, %esi, 4), %eax
-    push %eax
-
-    /* push the cpu id, 0 representing the bsp and call into c++ */
-    incl %esi
-    push %esi
-
-    xor %ebp, %ebp
-    cld
-
-    /* We are in identity mapped P0x8000 and the BSP will unload this code
-       once all APs are initialized, so call init_ap but return to our
-       infinite loop */
-    push $loop
-    ljmp $8, $init_ap
-
-.align 4
-.global apic_ap_start_size
-apic_ap_start_size:
-    .2byte end_apic_ap_start - apic_ap_start
-.align 4
-ap_cpu_id:
-    .4byte 0x0
-ap_cpu_gdt:
-    /* null */
-    .8byte 0x0
-    /* code */
-    .4byte 0x0000FFFF
-    .4byte 0x00cf9a00
-    /* data */
-    .4byte 0x0000FFFF
-    .4byte 0x00cf9200
-ap_cpu_gdt_end:
-ap_cpu_gdtr_initial:
-    .2byte ap_cpu_gdt_end - ap_cpu_gdt - 1
-    .4byte (ap_cpu_gdt - apic_ap_start) + 0x8000
-ap_cpu_gdtr_initial2:
-    .2byte ap_cpu_gdt_end - ap_cpu_gdt - 1
-    .4byte (ap_cpu_gdt - apic_ap_start) + 0xc0008000
-.global ap_cpu_gdtr
-ap_cpu_gdtr:
-    .4byte 0x0 /* will be set at runtime */
-.global ap_cpu_idtr
-ap_cpu_idtr:
-    .4byte 0x0 /* will be set at runtime */
-.global ap_cpu_init_cr0
-ap_cpu_init_cr0:
-    .4byte 0x0 /* will be set at runtime */
-.global ap_cpu_init_cr3
-ap_cpu_init_cr3:
-    .4byte 0x0 /* will be set at runtime */
-.global ap_cpu_init_cr4
-ap_cpu_init_cr4:
-    .4byte 0x0 /* will be set at runtime */
-.global ap_cpu_init_processor_info_array
-ap_cpu_init_processor_info_array:
-    .4byte 0x0 /* will be set at runtime */
-.global ap_cpu_init_stacks
-ap_cpu_init_stacks:
-    /* array of allocated stack pointers */
-    /* NOTE: ap_cpu_init_stacks must be the last variable before
-             end_apic_ap_start! */
-.set end_apic_ap_start, .
