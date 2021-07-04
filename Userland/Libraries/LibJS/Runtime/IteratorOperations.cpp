@@ -74,7 +74,7 @@ Object* iterator_next(Object& iterator, Value value)
 bool iterator_complete(GlobalObject& global_object, Object& iterator_result)
 {
     auto& vm = global_object.vm();
-    auto done = iterator_result.get(vm.names.done).value_or(js_undefined());
+    auto done = iterator_result.get(vm.names.done);
     if (vm.exception())
         return {};
     return done.to_boolean();
@@ -84,7 +84,7 @@ bool iterator_complete(GlobalObject& global_object, Object& iterator_result)
 Value iterator_value(GlobalObject& global_object, Object& iterator_result)
 {
     auto& vm = global_object.vm();
-    auto value = iterator_result.get(vm.names.value).value_or(js_undefined());
+    auto value = iterator_result.get(vm.names.value);
     if (vm.exception())
         return {};
     return value;

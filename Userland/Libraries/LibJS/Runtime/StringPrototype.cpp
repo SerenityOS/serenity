@@ -755,7 +755,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
         if (vm.exception())
             return {};
         if (is_regexp) {
-            auto flags = regexp.as_object().get("flags").value_or(js_undefined());
+            auto flags = regexp.as_object().get("flags");
             if (vm.exception())
                 return {};
             auto flags_object = require_object_coercible(global_object, flags);

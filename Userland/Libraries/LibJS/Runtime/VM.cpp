@@ -228,7 +228,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
                     if (exception())
                         return;
 
-                    if (!done_property.is_empty() && done_property.to_boolean())
+                    if (done_property.to_boolean())
                         break;
 
                     auto next_value = next_object->get(names.value);
@@ -247,7 +247,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
                 if (exception())
                     return;
 
-                if (!done_property.is_empty() && done_property.to_boolean()) {
+                if (done_property.to_boolean()) {
                     iterator = nullptr;
                     value = js_undefined();
                 } else {
