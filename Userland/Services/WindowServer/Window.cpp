@@ -342,6 +342,8 @@ static Gfx::IntRect interpolate_rect(Gfx::IntRect const& from_rect, Gfx::IntRect
 
 void Window::start_minimize_animation()
 {
+    if (&window_stack() != &WindowManager::the().current_window_stack())
+        return;
     if (!m_have_taskbar_rect) {
         // If this is a modal window, it may not have its own taskbar
         // button, so there is no rectangle. In that case, walk the
@@ -385,6 +387,9 @@ void Window::start_minimize_animation()
 
 void Window::start_launch_animation(Gfx::IntRect const& launch_origin_rect)
 {
+    if (&window_stack() != &WindowManager::the().current_window_stack())
+        return;
+
     m_animation = Animation::create();
     m_animation->set_duration(150);
     m_animation->on_update = [this, launch_origin_rect](float progress, Gfx::Painter& painter, Screen& screen, Gfx::DisjointRectSet& flush_rects) {
