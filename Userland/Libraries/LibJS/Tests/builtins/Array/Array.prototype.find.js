@@ -3,12 +3,6 @@ test("length is 1", () => {
 });
 
 describe("errors", () => {
-    test("requires at least one argument", () => {
-        expect(() => {
-            [].find();
-        }).toThrowWithMessage(TypeError, "Array.prototype.find() requires at least one argument");
-    });
-
     test("callback must be a function", () => {
         expect(() => {
             [].find(undefined);

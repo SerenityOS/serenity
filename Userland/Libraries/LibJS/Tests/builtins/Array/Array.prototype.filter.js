@@ -3,12 +3,6 @@ test("length is 1", () => {
 });
 
 describe("errors", () => {
-    test("requires at least one argument", () => {
-        expect(() => {
-            [].filter();
-        }).toThrowWithMessage(TypeError, "Array.prototype.filter() requires at least one argument");
-    });
-
     test("callback must be a function", () => {
         expect(() => {
             [].filter(undefined);
