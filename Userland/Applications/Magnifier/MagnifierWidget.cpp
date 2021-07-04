@@ -39,15 +39,18 @@ void MagnifierWidget::set_scale_factor(int scale_factor)
 
 void MagnifierWidget::sync()
 {
-    Gfx::IntSize grab_size { size().width() / m_scale_factor, size().height() / m_scale_factor };
+    auto size = frame_inner_rect().size();
+    Gfx::IntSize grab_size { size.width() / m_scale_factor, size.height() / m_scale_factor };
     m_grabbed_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap_around_cursor(grab_size).bitmap();
     update();
 }
 
-void MagnifierWidget::paint_event(GUI::PaintEvent&)
+void MagnifierWidget::paint_event(GUI::PaintEvent& event)
 {
+    GUI::Frame::paint_event(event);
+
     GUI::Painter painter(*this);
 
     if (m_grabbed_bitmap)
-        painter.draw_scaled_bitmap(rect(), *m_grabbed_bitmap, m_grabbed_bitmap->rect());
+        painter.draw_scaled_bitmap(frame_inner_rect(), *m_grabbed_bitmap, m_grabbed_bitmap->rect());
 }
