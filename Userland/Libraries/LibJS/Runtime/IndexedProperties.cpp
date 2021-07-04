@@ -197,13 +197,6 @@ bool IndexedPropertyIterator::operator!=(const IndexedPropertyIterator& other) c
     return m_index != other.m_index;
 }
 
-ValueAndAttributes IndexedPropertyIterator::value_and_attributes()
-{
-    if (m_index < m_indexed_properties.array_like_size())
-        return m_indexed_properties.get(m_index).value_or({});
-    return {};
-}
-
 void IndexedPropertyIterator::skip_empty_indices()
 {
     auto indices = m_indexed_properties.indices();

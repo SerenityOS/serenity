@@ -101,7 +101,6 @@ public:
     bool operator!=(const IndexedPropertyIterator&) const;
 
     u32 index() const { return m_index; };
-    ValueAndAttributes value_and_attributes();
 
 private:
     void skip_empty_indices();
