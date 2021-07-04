@@ -3,12 +3,6 @@ test("length is 1", () => {
 });
 
 describe("errors", () => {
-    test("requires at least one argument", () => {
-        expect(() => {
-            [].map();
-        }).toThrowWithMessage(TypeError, "Array.prototype.map() requires at least one argument");
-    });
-
     test("callback must be a function", () => {
         expect(() => {
             [].map(undefined);
