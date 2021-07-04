@@ -274,6 +274,18 @@ void ClientConnection::set_frameless(i32 window_id, bool frameless)
     WindowManager::the().tell_wms_window_state_changed(*it->value);
 }
 
+void ClientConnection::set_forced_shadow(i32 window_id, bool shadow)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("SetForcedShadow: Bad window ID");
+        return;
+    }
+    it->value->set_forced_shadow(shadow);
+    it->value->invalidate();
+    Compositor::the().invalidate_occlusions();
+}
+
 void ClientConnection::set_window_opacity(i32 window_id, float opacity)
 {
     auto it = m_windows.find(window_id);
@@ -510,10 +522,10 @@ Window* ClientConnection::window_from_id(i32 window_id)
 
 void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
     bool auto_position, bool has_alpha_channel, bool modal, bool minimizable, bool resizable,
-    bool fullscreen, bool frameless, bool accessory, float opacity, float alpha_hit_threshold,
-    Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment, Gfx::IntSize const& minimum_size,
-    Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type, String const& title, i32 parent_window_id,
-    Gfx::IntRect const& launch_origin_rect)
+    bool fullscreen, bool frameless, bool forced_shadow, bool accessory, float opacity,
+    float alpha_hit_threshold, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment,
+    Gfx::IntSize const& minimum_size, Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type,
+    String const& title, i32 parent_window_id, Gfx::IntRect const& launch_origin_rect)
 {
     Window* parent_window = nullptr;
     if (parent_window_id) {
@@ -535,6 +547,8 @@ void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
     }
 
     auto window = Window::construct(*this, (WindowType)type, window_id, modal, minimizable, frameless, resizable, fullscreen, accessory, parent_window);
+
+    window->set_forced_shadow(forced_shadow);
 
     if (!launch_origin_rect.is_empty())
         window->start_launch_animation(launch_origin_rect);

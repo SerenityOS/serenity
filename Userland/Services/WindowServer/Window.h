@@ -114,6 +114,9 @@ public:
     void check_untile_due_to_resize(Gfx::IntRect const&);
     bool set_untiled(Optional<Gfx::IntPoint> fixed_point = {});
 
+    void set_forced_shadow(bool b) { m_forced_shadow = b; }
+    bool has_forced_shadow() const { return m_forced_shadow; }
+
     bool is_occluded() const { return m_occluded; }
     void set_occluded(bool);
 
@@ -390,6 +393,7 @@ private:
     bool m_modal { false };
     bool m_minimizable { false };
     bool m_frameless { false };
+    bool m_forced_shadow { false };
     bool m_resizable { false };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
     WindowMinimizedState m_minimized_state { WindowMinimizedState::None };

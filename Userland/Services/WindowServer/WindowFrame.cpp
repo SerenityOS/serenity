@@ -164,7 +164,7 @@ void WindowFrame::reload_config()
 
 MultiScaleBitmaps* WindowFrame::shadow_bitmap() const
 {
-    if (m_window.is_frameless())
+    if (m_window.is_frameless() && !m_window.has_forced_shadow())
         return nullptr;
     switch (m_window.type()) {
     case WindowType::Desktop:
