@@ -215,6 +215,17 @@ int FramebufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
             return -EFAULT;
         return 0;
     }
+    case FB_IOCTL_GET_BUFFER_OFFSET: {
+        FBBufferOffset buffer_offset;
+        if (!copy_from_user(&buffer_offset, (FBBufferOffset*)arg))
+            return -EFAULT;
+        if (buffer_offset.buffer_index != 0 && buffer_offset.buffer_index != 1)
+            return -EINVAL;
+        buffer_offset.offset = (size_t)buffer_offset.buffer_index * m_framebuffer_pitch * m_framebuffer_height;
+        if (!copy_to_user((FBBufferOffset*)arg, &buffer_offset))
+            return -EFAULT;
+        return 0;
+    }
     case FB_IOCTL_FLUSH_BUFFERS:
         return -ENOTSUP;
     default:
