@@ -1157,12 +1157,12 @@ private:
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
         attribute_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_GETTER(@attribute.name:snakecase@_getter);
+    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_getter);
 )~~~");
 
         if (!attribute.readonly) {
             attribute_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_SETTER(@attribute.name:snakecase@_setter);
+    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_setter);
 )~~~");
         }
     }
@@ -1308,7 +1308,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
             attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
 
         attribute_generator.append(R"~~~(
-    define_native_property("@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
+    define_native_accessor("@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
 )~~~");
     }
 
@@ -1453,7 +1453,7 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
         }
 
         attribute_generator.append(R"~~~(
-JS_DEFINE_NATIVE_GETTER(@prototype_class@::@attribute.getter_callback@)
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -1491,14 +1491,16 @@ JS_DEFINE_NATIVE_GETTER(@prototype_class@::@attribute.getter_callback@)
 
         if (!attribute.readonly) {
             attribute_generator.append(R"~~~(
-JS_DEFINE_NATIVE_SETTER(@prototype_class@::@attribute.setter_callback@)
+JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
-        return;
+        return {};
+
+    auto value = vm.argument(0);
 )~~~");
 
-            generate_to_cpp(generator, attribute, "value", "", "cpp_value", true, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
+            generate_to_cpp(generator, attribute, "value", "", "cpp_value", false, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
 
             if (attribute.extended_attributes.contains("Reflect")) {
                 if (attribute.type.name != "boolean") {
@@ -1520,6 +1522,7 @@ JS_DEFINE_NATIVE_SETTER(@prototype_class@::@attribute.setter_callback@)
             }
 
             attribute_generator.append(R"~~~(
+    return {};
 }
 )~~~");
         }
