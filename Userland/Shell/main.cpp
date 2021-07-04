@@ -138,7 +138,7 @@ int main(int argc, char** argv)
         }
     }
 
-    auto execute_file = file_to_read_from && StringView { "-" } != file_to_read_from;
+    auto execute_file = file_to_read_from && "-"sv != file_to_read_from;
     attempt_interactive = !execute_file;
 
     initialize();

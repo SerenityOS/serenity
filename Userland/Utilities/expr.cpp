@@ -577,7 +577,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if ((argc == 2 && StringView { "--help" } == argv[1]) || argc == 1)
+    if ((argc == 2 && "--help"sv == argv[1]) || argc == 1)
         print_help_and_exit();
 
     Queue<StringView> args;

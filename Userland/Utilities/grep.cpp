@@ -59,11 +59,11 @@ int main(int argc, char** argv)
         .help_string = "Action to take for binary files ([binary], text, skip)",
         .long_name = "binary-mode",
         .accept_value = [&](auto* str) {
-            if (StringView { "text" } == str)
+            if ("text"sv == str)
                 binary_mode = BinaryFileMode::Text;
-            else if (StringView { "binary" } == str)
+            else if ("binary"sv == str)
                 binary_mode = BinaryFileMode::Binary;
-            else if (StringView { "skip" } == str)
+            else if ("skip"sv == str)
                 binary_mode = BinaryFileMode::Skip;
             else
                 return false;

@@ -89,7 +89,7 @@ int main(int argc, char** argv)
     FILE* fp = stdin;
     bool is_stdin = true;
 
-    if (StringView { "-" } != file_to_read) {
+    if ("-"sv != file_to_read) {
         // A file was specified, try to open it.
         fp = fopen(file_to_read, "re");
         if (!fp) {

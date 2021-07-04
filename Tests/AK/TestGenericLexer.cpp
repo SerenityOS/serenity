@@ -17,25 +17,25 @@ TEST_CASE(should_constexpr_construct_from_empty_string_view)
 
 TEST_CASE(should_construct_from_string_view)
 {
-    constexpr GenericLexer sut(StringView { "abcdef" });
+    constexpr GenericLexer sut("abcdef"sv);
     static_assert(!sut.is_eof());
 }
 
 TEST_CASE(should_constexpr_tell)
 {
-    constexpr GenericLexer sut(StringView { "abcdef" });
+    constexpr GenericLexer sut("abcdef"sv);
     static_assert(sut.tell() == 0);
 }
 
 TEST_CASE(should_constexpr_tell_remaining)
 {
-    constexpr GenericLexer sut(StringView { "abcdef" });
+    constexpr GenericLexer sut("abcdef"sv);
     static_assert(sut.tell_remaining() == 6);
 }
 
 TEST_CASE(should_constexpr_peek)
 {
-    constexpr GenericLexer sut(StringView { "abcdef" });
+    constexpr GenericLexer sut("abcdef"sv);
     static_assert(sut.peek() == 'a');
     static_assert(sut.peek(2) == 'c');
     static_assert(sut.peek(100) == '\0');
@@ -43,16 +43,16 @@ TEST_CASE(should_constexpr_peek)
 
 TEST_CASE(should_constexpr_next_is)
 {
-    constexpr GenericLexer sut(StringView { "abcdef" });
+    constexpr GenericLexer sut("abcdef"sv);
     static_assert(sut.next_is('a'));
     static_assert(sut.next_is("abc"));
-    static_assert(sut.next_is(StringView { "abc" }));
+    static_assert(sut.next_is("abc"sv));
 }
 
 TEST_CASE(should_constexpr_retreat)
 {
     constexpr auto sut = [] {
-        GenericLexer sut(StringView { "abcdef" });
+        GenericLexer sut("abcdef"sv);
         sut.consume();
         sut.retreat();
         return sut;
@@ -63,7 +63,7 @@ TEST_CASE(should_constexpr_retreat)
 TEST_CASE(should_constexpr_consume_1)
 {
     constexpr auto sut = [] {
-        GenericLexer sut(StringView { "abcdef" });
+        GenericLexer sut("abcdef"sv);
         sut.consume();
         return sut;
     }();
@@ -73,7 +73,7 @@ TEST_CASE(should_constexpr_consume_1)
 TEST_CASE(should_constexpr_consume_specific_char)
 {
     constexpr auto sut = [] {
-        GenericLexer sut(StringView { "abcdef" });
+        GenericLexer sut("abcdef"sv);
         sut.consume_specific('a');
         return sut;
     }();
@@ -83,8 +83,8 @@ TEST_CASE(should_constexpr_consume_specific_char)
 TEST_CASE(should_constexpr_consume_specific_string_view)
 {
     constexpr auto sut = [] {
-        GenericLexer sut(StringView { "abcdef" });
-        sut.consume_specific(StringView { "ab" });
+        GenericLexer sut("abcdef"sv);
+        sut.consume_specific("ab"sv);
         return sut;
     }();
     static_assert(sut.peek() == 'c');
@@ -93,7 +93,7 @@ TEST_CASE(should_constexpr_consume_specific_string_view)
 TEST_CASE(should_constexpr_consume_specific_cstring)
 {
     constexpr auto sut = [] {
-        GenericLexer sut(StringView { "abcdef" });
+        GenericLexer sut("abcdef"sv);
         sut.consume_specific("abcd");
         return sut;
     }();
@@ -103,7 +103,7 @@ TEST_CASE(should_constexpr_consume_specific_cstring)
 TEST_CASE(should_constexpr_ignore_until)
 {
     constexpr auto sut = [] {
-        GenericLexer sut(StringView { "abcdef" });
+        GenericLexer sut("abcdef"sv);
         sut.ignore_until('d');
         return sut;
     }();
@@ -113,7 +113,7 @@ TEST_CASE(should_constexpr_ignore_until)
 TEST_CASE(should_constexpr_ignore_until_cstring)
 {
     constexpr auto sut = [] {
-        GenericLexer sut(StringView { "abcdef" });
+        GenericLexer sut("abcdef"sv);
         sut.ignore_until("cde");
         return sut;
     }();
@@ -125,7 +125,7 @@ TEST_CASE(should_constexpr_next_is_pred)
     constexpr auto pred = [](auto c) {
         return c == 'a';
     };
-    constexpr GenericLexer sut(StringView { "abcdef" });
+    constexpr GenericLexer sut("abcdef"sv);
     static_assert(sut.next_is(pred));
 }
 
@@ -136,7 +136,7 @@ TEST_CASE(should_constexpr_ignore_while_pred)
             return c == 'a';
         };
 
-        GenericLexer sut(StringView { "abcdef" });
+        GenericLexer sut("abcdef"sv);
         sut.ignore_while(pred);
         return sut;
     }();
@@ -150,7 +150,7 @@ TEST_CASE(should_constexpr_ignore_until_pred)
             return c == 'c';
         };
 
-        GenericLexer sut(StringView { "abcdef" });
+        GenericLexer sut("abcdef"sv);
         sut.ignore_until(pred);
         return sut;
     }();
