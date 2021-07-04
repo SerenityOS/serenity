@@ -28,12 +28,13 @@ public:
     {
         m_label->set_text(Gfx::parse_ampersand_string(tooltip));
         int tooltip_width = m_label->min_width() + 10;
+        int tooltip_height = m_label->font().glyph_height() * max(1, m_label->text().count("\n")) + 8;
 
         Gfx::IntRect desktop_rect = Desktop::the().rect();
         if (tooltip_width > desktop_rect.width())
             tooltip_width = desktop_rect.width();
 
-        set_rect(rect().x(), rect().y(), tooltip_width, m_label->font().glyph_height() + 8);
+        set_rect(rect().x(), rect().y(), tooltip_width, tooltip_height);
     }
 
 private:
