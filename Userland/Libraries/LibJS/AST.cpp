@@ -2377,4 +2377,9 @@ void ScopeNode::add_functions(NonnullRefPtrVector<FunctionDeclaration> functions
     m_functions.extend(move(functions));
 }
 
+void ScopeNode::add_hoisted_functions(NonnullRefPtrVector<FunctionDeclaration> hoisted_functions)
+{
+    m_hoisted_functions.extend(move(hoisted_functions));
+}
+
 }
