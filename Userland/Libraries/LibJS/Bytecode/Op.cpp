@@ -436,6 +436,14 @@ void GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
     interpreter.accumulator() = get_iterator(interpreter.global_object(), interpreter.accumulator());
 }
 
+void IteratorClose::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto object = interpreter.accumulator().to_object(interpreter.global_object());
+    if (interpreter.vm().exception())
+        return;
+    iterator_close(*object);
+}
+
 void IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     if (auto* object = interpreter.accumulator().to_object(interpreter.global_object()))
@@ -688,6 +696,11 @@ String PutByValue::to_string_impl(const Bytecode::Executable&) const
 String GetIterator::to_string_impl(Executable const&) const
 {
     return "GetIterator";
+}
+
+String IteratorClose::to_string_impl(Executable const&) const
+{
+    return "IteratorClose";
 }
 
 String IteratorNext::to_string_impl(Executable const&) const

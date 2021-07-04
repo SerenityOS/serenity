@@ -1311,4 +1311,116 @@ void ThisExpression::generate_bytecode(Bytecode::Generator& generator) const
     generator.emit<Bytecode::Op::ResolveThisBinding>();
 }
 
+class SyntheticRegisterASTNode final : public Expression {
+public:
+    explicit SyntheticRegisterASTNode(SourceRange range, Bytecode::Register const& reg)
+        : Expression(range)
+        , m_register(reg)
+    {
+    }
+
+private:
+    virtual Value execute(Interpreter&, GlobalObject&) const { VERIFY_NOT_REACHED(); }
+    virtual void generate_bytecode(Bytecode::Generator& generator) const
+    {
+        if (m_register.index() != Bytecode::Register::accumulator().index())
+            generator.emit<Bytecode::Op::Load>(m_register);
+    }
+
+    Bytecode::Register const& m_register;
+};
+
+void ForOfStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    // First, get the iterator of the iterable object
+    // following that, generate a loop that gets the next
+    // value from the iterable and assigns it to the bindings
+    // following that, run the body:
+    //
+    // start:
+    //   $iterator = GetIterator <iterable>
+    //   Jump @next
+    // next:
+    //   $result = IteratorNext $iterable
+    //   $done = IteratorResultDone $result
+    //   Jump if $done true: @end false: @body
+    // body:
+    //   value = IteratorResultValue $result
+    //   ...bind to whatever...
+    //   ...body...
+    //   Jump @next
+    // end:
+    //   IteratorClose $iterable
+
+    auto iterator_reg = generator.allocate_register();
+    auto result_reg = generator.allocate_register();
+
+    m_rhs->generate_bytecode(generator);
+    generator.emit<Bytecode::Op::GetIterator>();
+    generator.emit<Bytecode::Op::Store>(iterator_reg);
+
+    auto& next_block = generator.make_block();
+    auto& body_block = generator.make_block();
+    auto& end_block = generator.make_block();
+
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        Bytecode::Label { next_block },
+        {});
+
+    generator.switch_to_basic_block(next_block);
+    generator.emit<Bytecode::Op::Load>(iterator_reg);
+    generator.emit<Bytecode::Op::IteratorNext>();
+    generator.emit<Bytecode::Op::Store>(result_reg);
+    generator.emit<Bytecode::Op::IteratorResultDone>();
+    generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+        Bytecode::Label { end_block },
+        Bytecode::Label { body_block });
+
+    generator.switch_to_basic_block(body_block);
+
+    // Synthesize an assignment/declaration node and then codegen for _that_
+    auto value_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Load>(result_reg);
+    generator.emit<Bytecode::Op::IteratorResultValue>();
+    generator.emit<Bytecode::Op::Store>(value_reg);
+    auto value_node = create_ast_node<SyntheticRegisterASTNode>(m_rhs->source_range(), value_reg);
+    if (is<VariableDeclaration>(*m_lhs)) {
+        auto& declaration = static_cast<VariableDeclaration const&>(*m_lhs);
+        VERIFY(declaration.declarations().size() == 1);
+        auto init_target = create_ast_node<VariableDeclarator>(
+            m_lhs->source_range(),
+            declaration.declarations().first().target(),
+            value_node);
+        auto node = create_ast_node<VariableDeclaration>(
+            m_lhs->source_range(),
+            declaration.declaration_kind(),
+            Vector { move(init_target) });
+        node->generate_bytecode(generator);
+    } else {
+        auto node = create_ast_node<AssignmentExpression>(
+            m_lhs->source_range(),
+            AssignmentOp::Assignment,
+            m_lhs,
+            value_node);
+        node->generate_bytecode(generator);
+    }
+
+    generator.begin_continuable_scope(Bytecode::Label { next_block });
+    generator.begin_breakable_scope(Bytecode::Label { end_block });
+
+    m_body->generate_bytecode(generator);
+
+    generator.end_breakable_scope();
+    generator.end_continuable_scope();
+
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        Bytecode::Label { next_block },
+        {});
+
+    generator.switch_to_basic_block(end_block);
+    generator.emit<Bytecode::Op::Load>(iterator_reg);
+    generator.emit<Bytecode::Op::IteratorClose>();
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+}
+
 }

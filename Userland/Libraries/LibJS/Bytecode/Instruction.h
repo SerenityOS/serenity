@@ -70,6 +70,7 @@
     O(ContinuePendingUnwind)         \
     O(Yield)                         \
     O(GetIterator)                   \
+    O(IteratorClose)                 \
     O(IteratorNext)                  \
     O(IteratorResultDone)            \
     O(IteratorResultValue)           \

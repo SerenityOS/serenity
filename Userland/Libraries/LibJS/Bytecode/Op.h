@@ -679,6 +679,18 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
+class IteratorClose final : public Instruction {
+public:
+    IteratorClose()
+        : Instruction(Type::IteratorClose)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+};
+
 class IteratorNext final : public Instruction {
 public:
     IteratorNext()
