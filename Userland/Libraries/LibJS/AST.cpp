@@ -1310,13 +1310,6 @@ void FunctionNode::dump(int indent, String const& class_name) const
                 parameter.default_value->dump(indent + 3);
         }
     }
-    if (!m_variables.is_empty()) {
-        print_indent(indent + 1);
-        outln("(Variables)");
-
-        for (auto& variable : m_variables)
-            variable.dump(indent + 2);
-    }
     print_indent(indent + 1);
     outln("(Body)");
     body().dump(indent + 2);
