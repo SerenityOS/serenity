@@ -66,7 +66,7 @@ void VirtIOGPUConsole::enqueue_refresh_timer()
                 .height = (u32)rect.height(),
             };
             g_io_work->queue([this, dirty_rect]() {
-                m_framebuffer_device->flush_dirty_window(dirty_rect);
+                m_framebuffer_device->flush_dirty_window(dirty_rect, m_framebuffer_device->current_buffer());
                 m_dirty_rect.clear();
             });
         }

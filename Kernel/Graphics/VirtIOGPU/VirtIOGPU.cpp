@@ -127,12 +127,12 @@ VirtIOGPUResourceID VirtIOGPU::create_2d_resource(VirtIOGPURect rect)
     return resource_id;
 }
 
-void VirtIOGPU::ensure_backing_storage(Region& region, size_t buffer_length, VirtIOGPUResourceID resource_id)
+void VirtIOGPU::ensure_backing_storage(Region& region, size_t buffer_offset, size_t buffer_length, VirtIOGPUResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
     // Allocate backing region
     auto& vm_object = region.vmobject();
-    size_t desired_num_pages = page_round_up(buffer_length);
+    size_t desired_num_pages = page_round_up(buffer_offset + buffer_length);
     auto& pages = vm_object.physical_pages();
     for (size_t i = pages.size(); i < desired_num_pages / PAGE_SIZE; ++i) {
         auto page = MM.allocate_user_physical_page();
@@ -141,7 +141,11 @@ void VirtIOGPU::ensure_backing_storage(Region& region, size_t buffer_length, Vir
         pages.append(move(page));
     }
     region.remap();
-    size_t num_mem_regions = vm_object.page_count();
+
+    VERIFY(buffer_offset % PAGE_SIZE == 0);
+    VERIFY(buffer_length % PAGE_SIZE == 0);
+    auto first_page_index = buffer_offset / PAGE_SIZE;
+    size_t num_mem_regions = buffer_length / PAGE_SIZE;
 
     // Send request
     auto& request = *reinterpret_cast<VirtIOGPUResourceAttachBacking*>(m_scratch_space->vaddr().as_ptr());
@@ -152,7 +156,7 @@ void VirtIOGPU::ensure_backing_storage(Region& region, size_t buffer_length, Vir
     request.resource_id = resource_id.value();
     request.num_entries = num_mem_regions;
     for (size_t i = 0; i < num_mem_regions; ++i) {
-        request.entries[i].address = region.physical_page(i)->paddr().get();
+        request.entries[i].address = region.physical_page(first_page_index + i)->paddr().get();
         request.entries[i].length = PAGE_SIZE;
     }
 
