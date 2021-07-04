@@ -8,7 +8,7 @@ test("basic functionality", () => {
 });
 
 // First two calls produce a ReferenceError, but the declarations should be hoisted
-test.skip("functions are hoisted across non-lexical scopes", () => {
+test("functions are hoisted across non-lexical scopes", () => {
     expect(scopedHoisted).toBeUndefined();
     expect(callScopedHoisted).toBeUndefined();
     {

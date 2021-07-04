@@ -145,8 +145,10 @@ public:
 
     void add_variables(NonnullRefPtrVector<VariableDeclaration>);
     void add_functions(NonnullRefPtrVector<FunctionDeclaration>);
+    void add_hoisted_functions(NonnullRefPtrVector<FunctionDeclaration>);
     NonnullRefPtrVector<VariableDeclaration> const& variables() const { return m_variables; }
     NonnullRefPtrVector<FunctionDeclaration> const& functions() const { return m_functions; }
+    NonnullRefPtrVector<FunctionDeclaration> const& hoisted_functions() const { return m_hoisted_functions; }
 
 protected:
     explicit ScopeNode(SourceRange source_range)
@@ -160,6 +162,7 @@ private:
     NonnullRefPtrVector<Statement> m_children;
     NonnullRefPtrVector<VariableDeclaration> m_variables;
     NonnullRefPtrVector<FunctionDeclaration> m_functions;
+    NonnullRefPtrVector<FunctionDeclaration> m_hoisted_functions;
 };
 
 class Program final : public ScopeNode {

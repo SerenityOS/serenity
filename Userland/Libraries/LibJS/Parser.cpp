@@ -31,10 +31,9 @@ public:
     enum Type {
         Var = 1,
         Let = 2,
-        Function = 3,
     };
 
-    ScopePusher(Parser& parser, unsigned mask)
+    ScopePusher(Parser& parser, unsigned mask, Parser::Scope::Type scope_type)
         : m_parser(parser)
         , m_mask(mask)
     {
@@ -42,8 +41,8 @@ public:
             m_parser.m_state.var_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
         if (m_mask & Let)
             m_parser.m_state.let_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
-        if (m_mask & Function)
-            m_parser.m_state.function_scopes.append(NonnullRefPtrVector<FunctionDeclaration>());
+
+        m_parser.m_state.current_scope = create<Parser::Scope>(scope_type, m_parser.m_state.current_scope);
     }
 
     ~ScopePusher()
@@ -52,8 +51,20 @@ public:
             m_parser.m_state.var_scopes.take_last();
         if (m_mask & Let)
             m_parser.m_state.let_scopes.take_last();
-        if (m_mask & Function)
-            m_parser.m_state.function_scopes.take_last();
+
+        auto& popped = m_parser.m_state.current_scope;
+        m_parser.m_state.current_scope = popped->parent;
+    }
+
+    void add_to_scope_node(NonnullRefPtr<ScopeNode> scope_node)
+    {
+        if (m_mask & Var)
+            scope_node->add_variables(m_parser.m_state.var_scopes.last());
+        if (m_mask & Let)
+            scope_node->add_variables(m_parser.m_state.let_scopes.last());
+
+        scope_node->add_functions(m_parser.m_state.current_scope->function_declarations);
+        scope_node->add_hoisted_functions(m_parser.m_state.current_scope->hoisted_function_declarations);
     }
 
     Parser& m_parser;
@@ -180,6 +191,24 @@ Parser::ParserState::ParserState(Lexer l)
 {
 }
 
+Parser::Scope::Scope(Parser::Scope::Type type, RefPtr<Parser::Scope> parent_scope)
+    : type(type)
+    , parent(move(parent_scope))
+{
+}
+
+RefPtr<Parser::Scope> Parser::Scope::get_current_function_scope()
+{
+    if (this->type == Parser::Scope::Function) {
+        return *this;
+    }
+    auto result = this->parent;
+    while (result->type != Parser::Scope::Function) {
+        result = result->parent;
+    }
+    return result;
+}
+
 Parser::Parser(Lexer lexer)
     : m_state(move(lexer))
 {
@@ -229,7 +258,7 @@ Associativity Parser::operator_associativity(TokenType type) const
 NonnullRefPtr<Program> Parser::parse_program(bool starts_in_strict_mode)
 {
     auto rule_start = push_start();
-    ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Let | ScopePusher::Function);
+    ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Let, Scope::Function);
     auto program = adopt_ref(*new Program({ m_filename, rule_start.position(), position() }));
     if (starts_in_strict_mode) {
         program->set_strict_mode();
@@ -258,9 +287,7 @@ NonnullRefPtr<Program> Parser::parse_program(bool starts_in_strict_mode)
         first = false;
     }
     if (m_state.var_scopes.size() == 1) {
-        program->add_variables(m_state.var_scopes.last());
-        program->add_variables(m_state.let_scopes.last());
-        program->add_functions(m_state.function_scopes.last());
+        scope.add_to_scope_node(program);
     } else {
         syntax_error("Unclosed lexical_environment");
     }
@@ -276,7 +303,8 @@ NonnullRefPtr<Declaration> Parser::parse_declaration()
         return parse_class_declaration();
     case TokenType::Function: {
         auto declaration = parse_function_node<FunctionDeclaration>();
-        m_state.function_scopes.last().append(declaration);
+        m_state.current_scope->function_declarations.append(declaration);
+        m_state.current_scope->get_current_function_scope()->hoisted_function_declarations.append(declaration);
         return declaration;
     }
     case TokenType::Let:
@@ -399,7 +427,10 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         TemporaryChange change(m_state.in_arrow_function_context, true);
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
-            return parse_block_statement(is_strict);
+            ScopePusher scope(*this, ScopePusher::Var, Scope::Function);
+            auto body = parse_block_statement(is_strict);
+            scope.add_to_scope_node(body);
+            return body;
         }
         if (match_expression()) {
             // Parse a function body which returns a single expression
@@ -1372,7 +1403,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
 NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict)
 {
     auto rule_start = push_start();
-    ScopePusher scope(*this, ScopePusher::Let);
+    ScopePusher scope(*this, ScopePusher::Let, Parser::Scope::Block);
     auto block = create_ast_node<BlockStatement>({ m_state.current_token.filename(), rule_start.position(), position() });
     consume(TokenType::CurlyOpen);
 
@@ -1404,8 +1435,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict)
     m_state.strict_mode = initial_strict_mode_state;
     m_state.string_legacy_octal_escape_sequence_in_scope = false;
     consume(TokenType::CurlyClose);
-    block->add_variables(m_state.let_scopes.last());
-    block->add_functions(m_state.function_scopes.last());
+    scope.add_to_scope_node(block);
     return block;
 }
 
@@ -1418,7 +1448,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     TemporaryChange super_property_access_rollback(m_state.allow_super_property_lookup, !!(parse_options & FunctionNodeParseOptions::AllowSuperPropertyLookup));
     TemporaryChange super_constructor_call_rollback(m_state.allow_super_constructor_call, !!(parse_options & FunctionNodeParseOptions::AllowSuperConstructorCall));
 
-    ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Function);
+    ScopePusher scope(*this, ScopePusher::Var, Parser::Scope::Function);
 
     constexpr auto is_function_expression = IsSame<FunctionNodeType, FunctionExpression>;
     auto is_generator = (parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0;
@@ -1460,8 +1490,8 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
     m_state.function_parameters.take_last();
 
-    body->add_variables(m_state.var_scopes.last());
-    body->add_functions(m_state.function_scopes.last());
+    scope.add_to_scope_node(body);
+
     return create_ast_node<FunctionNodeType>(
         { m_state.current_token.filename(), rule_start.position(), position() },
         name, move(body), move(parameters), function_length,
@@ -1962,10 +1992,10 @@ NonnullRefPtr<IfStatement> Parser::parse_if_statement()
         // Code matching this production is processed as if each matching occurrence of
         // FunctionDeclaration[?Yield, ?Await, ~Default] was the sole StatementListItem
         // of a BlockStatement occupying that position in the source code.
-        ScopePusher scope(*this, ScopePusher::Let);
+        ScopePusher scope(*this, ScopePusher::Let, Parser::Scope::Block);
         auto block = create_ast_node<BlockStatement>({ m_state.current_token.filename(), rule_start.position(), position() });
         block->append(parse_declaration());
-        block->add_functions(m_state.function_scopes.last());
+        scope.add_to_scope_node(block);
         return block;
     };
 
