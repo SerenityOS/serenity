@@ -230,9 +230,14 @@ namespace AK {
 
 template<>
 struct Formatter<JS::PropertyName> : Formatter<StringView> {
-    void format(FormatBuilder& builder, JS::PropertyName const& value)
+    void format(FormatBuilder& builder, JS::PropertyName const& property_name)
     {
-        Formatter<StringView>::format(builder, value.to_string());
+        if (!property_name.is_valid())
+            Formatter<StringView>::format(builder, "<invalid PropertyName>");
+        else if (property_name.is_number())
+            Formatter<StringView>::format(builder, String::number(property_name.as_number()));
+        else
+            Formatter<StringView>::format(builder, property_name.to_string_or_symbol().to_display_string());
     }
 };
 
