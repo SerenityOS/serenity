@@ -21,40 +21,40 @@ DebuggerGlobalJSObject::DebuggerGlobalJSObject()
     m_variables = lib->debug_info->get_variables_in_current_scope(regs);
 }
 
-JS::Value DebuggerGlobalJSObject::get(const JS::PropertyName& name, JS::Value receiver, JS::AllowSideEffects allow_side_effects) const
+JS::Value DebuggerGlobalJSObject::internal_get(JS::PropertyName const& property_name, JS::Value receiver) const
 {
-    if (m_variables.is_empty() || !name.is_string())
-        return JS::Object::get(name, receiver, allow_side_effects);
+    if (m_variables.is_empty() || !property_name.is_string())
+        return Base::internal_get(property_name, receiver);
 
     auto it = m_variables.find_if([&](auto& variable) {
-        return variable->name == name.as_string();
+        return variable->name == property_name.as_string();
     });
     if (it.is_end())
-        return JS::Object::get(name, receiver, allow_side_effects);
+        return Base::internal_get(property_name, receiver);
     auto& target_variable = **it;
     auto js_value = debugger_to_js(target_variable);
     if (js_value.has_value())
         return js_value.value();
-    auto error_string = String::formatted("Variable {} of type {} is not convertible to a JS Value", name.as_string(), target_variable.type_name);
+    auto error_string = String::formatted("Variable {} of type {} is not convertible to a JS Value", property_name.as_string(), target_variable.type_name);
     vm().throw_exception<JS::TypeError>(const_cast<DebuggerGlobalJSObject&>(*this), error_string);
     return {};
 }
 
-bool DebuggerGlobalJSObject::put(const JS::PropertyName& name, JS::Value value, JS::Value receiver)
+bool DebuggerGlobalJSObject::internal_set(JS::PropertyName const& property_name, JS::Value value, JS::Value receiver)
 {
-    if (m_variables.is_empty() || !name.is_string())
-        return JS::Object::put(name, value, receiver);
+    if (m_variables.is_empty() || !property_name.is_string())
+        return Base::internal_set(property_name, value, receiver);
 
     auto it = m_variables.find_if([&](auto& variable) {
-        return variable->name == name.as_string();
+        return variable->name == property_name.as_string();
     });
     if (it.is_end())
-        return JS::Object::put(name, value, receiver);
+        return Base::internal_set(property_name, value, receiver);
     auto& target_variable = **it;
     auto debugger_value = js_to_debugger(value, target_variable);
     if (debugger_value.has_value())
         return Debugger::the().session()->poke((u32*)target_variable.location_data.address, debugger_value.value());
-    auto error_string = String::formatted("Cannot convert JS value {} to variable {} of type {}", value.to_string_without_side_effects(), name.as_string(), target_variable.type_name);
+    auto error_string = String::formatted("Cannot convert JS value {} to variable {} of type {}", value.to_string_without_side_effects(), property_name.as_string(), target_variable.type_name);
     vm().throw_exception<JS::TypeError>(const_cast<DebuggerGlobalJSObject&>(*this), error_string);
     return {};
 }

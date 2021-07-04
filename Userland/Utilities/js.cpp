@@ -192,7 +192,7 @@ static void print_array(JS::Array& array, HashTable<JS::Object*>& seen_objects)
     bool first = true;
     for (auto it = array.indexed_properties().begin(false); it != array.indexed_properties().end(); ++it) {
         print_separator(first);
-        auto value = it.value_and_attributes(&array).value;
+        auto value = array.get(it.index());
         // The V8 repl doesn't throw an exception here, and instead just
         // prints 'undefined'. We may choose to replicate that behavior in
         // the future, but for now lets just catch the error
@@ -212,7 +212,7 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
     for (auto& entry : object.indexed_properties()) {
         print_separator(first);
         out("\"\033[33;1m{}\033[0m\": ", entry.index());
-        auto value = entry.value_and_attributes(&object).value;
+        auto value = object.get(entry.index());
         // The V8 repl doesn't throw an exception here, and instead just
         // prints 'undefined'. We may choose to replicate that behavior in
         // the future, but for now lets just catch the error

@@ -30,7 +30,6 @@ public:
     virtual void put(u32 index, Value value, PropertyAttributes attributes = default_attributes) = 0;
     virtual void remove(u32 index) = 0;
 
-    virtual void insert(u32 index, Value value, PropertyAttributes attributes = default_attributes) = 0;
     virtual ValueAndAttributes take_first() = 0;
     virtual ValueAndAttributes take_last() = 0;
 
@@ -51,7 +50,6 @@ public:
     virtual void put(u32 index, Value value, PropertyAttributes attributes = default_attributes) override;
     virtual void remove(u32 index) override;
 
-    virtual void insert(u32 index, Value value, PropertyAttributes attributes = default_attributes) override;
     virtual ValueAndAttributes take_first() override;
     virtual ValueAndAttributes take_last() override;
 
@@ -80,7 +78,6 @@ public:
     virtual void put(u32 index, Value value, PropertyAttributes attributes = default_attributes) override;
     virtual void remove(u32 index) override;
 
-    virtual void insert(u32 index, Value value, PropertyAttributes attributes = default_attributes) override;
     virtual ValueAndAttributes take_first() override;
     virtual ValueAndAttributes take_last() override;
 
@@ -104,7 +101,7 @@ public:
     bool operator!=(const IndexedPropertyIterator&) const;
 
     u32 index() const { return m_index; };
-    ValueAndAttributes value_and_attributes(Object* this_object, AllowSideEffects = AllowSideEffects::Yes);
+    ValueAndAttributes value_and_attributes();
 
 private:
     void skip_empty_indices();
@@ -124,15 +121,14 @@ public:
     }
 
     bool has_index(u32 index) const { return m_storage->has_index(index); }
-    Optional<ValueAndAttributes> get(Object* this_object, u32 index, AllowSideEffects = AllowSideEffects::Yes) const;
-    void put(Object* this_object, u32 index, Value value, PropertyAttributes attributes = default_attributes, AllowSideEffects allow_side_effects = AllowSideEffects::Yes);
-    bool remove(u32 index);
+    Optional<ValueAndAttributes> get(u32 index) const;
+    void put(u32 index, Value value, PropertyAttributes attributes = default_attributes);
+    void remove(u32 index);
 
-    void insert(u32 index, Value value, PropertyAttributes attributes = default_attributes);
     ValueAndAttributes take_first(Object* this_object);
     ValueAndAttributes take_last(Object* this_object);
 
-    void append(Value value, PropertyAttributes attributes = default_attributes) { put(nullptr, array_like_size(), value, attributes, AllowSideEffects::No); }
+    void append(Value value, PropertyAttributes attributes = default_attributes) { put(array_like_size(), value, attributes); }
 
     IndexedPropertyIterator begin(bool skip_empty = true) const { return IndexedPropertyIterator(*this, 0, skip_empty); };
     IndexedPropertyIterator end() const { return IndexedPropertyIterator(*this, array_like_size(), false); };

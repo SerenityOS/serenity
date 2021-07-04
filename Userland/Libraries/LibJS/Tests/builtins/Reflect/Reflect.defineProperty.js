@@ -7,10 +7,7 @@ describe("errors", () => {
         [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
             expect(() => {
                 Reflect.defineProperty(value);
-            }).toThrowWithMessage(
-                TypeError,
-                "First argument of Reflect.defineProperty() must be an object"
-            );
+            }).toThrowWithMessage(TypeError, `${value} is not an object`);
         });
     });
 
@@ -18,7 +15,7 @@ describe("errors", () => {
         [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
             expect(() => {
                 Reflect.defineProperty({}, "foo", value);
-            }).toThrowWithMessage(TypeError, "Descriptor argument is not an object");
+            }).toThrowWithMessage(TypeError, `${value} is not an object`);
         });
     });
 });

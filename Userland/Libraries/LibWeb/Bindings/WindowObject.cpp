@@ -43,7 +43,8 @@ void WindowObject::initialize_global_object()
 {
     Base::initialize_global_object();
 
-    Object::set_prototype(&ensure_web_prototype<EventTargetPrototype>("EventTarget"));
+    auto success = Object::internal_set_prototype_of(&ensure_web_prototype<EventTargetPrototype>("EventTarget"));
+    VERIFY(success);
 
     define_property("window", this, JS::Attribute::Enumerable);
     define_property("frames", this, JS::Attribute::Enumerable);

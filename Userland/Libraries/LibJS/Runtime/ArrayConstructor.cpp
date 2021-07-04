@@ -67,7 +67,7 @@ Value ArrayConstructor::construct(FunctionObject& new_target)
         auto* array = Array::create(global_object(), 0, proto);
         size_t int_length;
         if (!length.is_number()) {
-            array->define_property(0, length);
+            array->create_data_property_or_throw(0, length);
             int_length = 1;
         } else {
             int_length = length.to_u32(global_object());
@@ -76,7 +76,7 @@ Value ArrayConstructor::construct(FunctionObject& new_target)
                 return {};
             }
         }
-        array->put(vm.names.length, Value(int_length));
+        array->set(vm.names.length, Value(int_length), true);
         return array;
     }
 
@@ -85,7 +85,7 @@ Value ArrayConstructor::construct(FunctionObject& new_target)
         return {};
 
     for (size_t k = 0; k < vm.argument_count(); ++k)
-        array->define_property(k, vm.argument(k));
+        array->create_data_property_or_throw(k, vm.argument(k));
 
     return array;
 }
@@ -139,7 +139,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
                 return {};
 
             if (!next) {
-                array_object.put(vm.names.length, Value(k));
+                array_object.set(vm.names.length, Value(k), true);
                 if (vm.exception())
                     return {};
                 return array;
@@ -160,7 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
                 mapped_value = next_value;
             }
 
-            array_object.define_property(k, mapped_value);
+            array_object.create_data_property_or_throw(k, mapped_value);
             if (vm.exception()) {
                 iterator_close(*iterator);
                 return {};
@@ -201,10 +201,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         } else {
             mapped_value = k_value;
         }
-        array_object.define_property(k, mapped_value);
+        array_object.create_data_property_or_throw(k, mapped_value);
     }
 
-    array_object.put(vm.names.length, Value(length));
+    array_object.set(vm.names.length, Value(length), true);
     if (vm.exception())
         return {};
 
@@ -236,11 +236,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
     }
     auto& array_object = array.as_object();
     for (size_t k = 0; k < vm.argument_count(); ++k) {
-        array_object.define_property(k, vm.argument(k));
+        array_object.create_data_property_or_throw(k, vm.argument(k));
         if (vm.exception())
             return {};
     }
-    array_object.put(vm.names.length, Value(vm.argument_count()));
+    array_object.set(vm.names.length, Value(vm.argument_count()), true);
     if (vm.exception())
         return {};
     return array;

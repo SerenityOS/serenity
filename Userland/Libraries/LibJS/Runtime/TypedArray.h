@@ -1,13 +1,17 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/PropertyDescriptor.h>
+#include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/TypedArrayConstructor.h>
 #include <LibJS/Runtime/VM.h>
 
@@ -57,6 +61,114 @@ private:
     virtual void visit_edges(Visitor&) override;
 };
 
+// 10.4.5.9 IsValidIntegerIndex ( O, index ), https://tc39.es/ecma262/#sec-isvalidintegerindex
+inline bool is_valid_integer_index(TypedArrayBase const& typed_array, Value property_index)
+{
+    if (typed_array.viewed_array_buffer()->is_detached())
+        return false;
+
+    // TODO: This can be optimized by skipping the following 3 out of 4 checks if property_index
+    //  came from a number-type PropertyName instead of a canonicalized string-type PropertyName
+
+    // If ! IsIntegralNumber(index) is false, return false.
+    if (!property_index.is_integral_number())
+        return false;
+    // If index is -0𝔽, return false.
+    if (property_index.is_negative_zero())
+        return false;
+
+    // If ℝ(index) < 0 or ℝ(index) ≥ O.[[ArrayLength]], return false.
+    if (property_index.as_double() < 0 || property_index.as_double() >= typed_array.array_length())
+        return false;
+
+    return true;
+}
+
+// 10.4.5.10 IntegerIndexedElementGet ( O, index ), https://tc39.es/ecma262/#sec-integerindexedelementget
+template<typename T>
+inline Value integer_indexed_element_get(TypedArrayBase const& typed_array, Value property_index)
+{
+    // 1. Assert: O is an Integer-Indexed exotic object.
+
+    // 2. If ! IsValidIntegerIndex(O, index) is false, return undefined.
+    if (!is_valid_integer_index(typed_array, property_index))
+        return js_undefined();
+
+    // 3. Let offset be O.[[ByteOffset]].
+    auto offset = typed_array.byte_offset();
+
+    // 4. Let arrayTypeName be the String value of O.[[TypedArrayName]].
+    // 5. Let elementSize be the Element Size value specified in Table 64 for arrayTypeName.
+    // 6. Let indexedPosition be (ℝ(index) × elementSize) + offset.
+    Checked<size_t> indexed_position = (i64)property_index.as_double();
+    indexed_position *= typed_array.element_size();
+    indexed_position += offset;
+    // FIXME: Not exactly sure what we should do when overflow occurs.
+    //        Just return as if it's an invalid index for now.
+    if (indexed_position.has_overflow()) {
+        dbgln("integer_indexed_element_get(): indexed_position overflowed, returning as if it's an invalid index.");
+        return js_undefined();
+    }
+
+    // 7. Let elementType be the Element Type value in Table 64 for arrayTypeName.
+    // 8. Return GetValueFromBuffer(O.[[ViewedArrayBuffer]], indexedPosition, elementType, true, Unordered).
+    return typed_array.viewed_array_buffer()->template get_value<T>(indexed_position.value(), true, ArrayBuffer::Order::Unordered);
+}
+
+// 10.4.5.11 IntegerIndexedElementSet ( O, index, value ), https://tc39.es/ecma262/#sec-integerindexedelementset
+// NOTE: In error cases, the function will return as if it succeeded.
+template<typename T>
+inline void integer_indexed_element_set(TypedArrayBase& typed_array, Value property_index, Value value)
+{
+    VERIFY(!value.is_empty());
+    auto& vm = typed_array.vm();
+    auto& global_object = typed_array.global_object();
+
+    // 1. Assert: O is an Integer-Indexed exotic object.
+
+    Value num_value;
+
+    // 2. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
+    if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
+        num_value = value.to_bigint(global_object);
+        if (vm.exception())
+            return;
+    }
+    // 3. Otherwise, let numValue be ? ToNumber(value).
+    else {
+        num_value = value.to_number(global_object);
+        if (vm.exception())
+            return;
+    }
+
+    // 4. If ! IsValidIntegerIndex(O, index) is true, then
+    // NOTE: Inverted for flattened logic.
+    if (!is_valid_integer_index(typed_array, property_index))
+        return;
+
+    // a. Let offset be O.[[ByteOffset]].
+    auto offset = typed_array.byte_offset();
+
+    // b. Let arrayTypeName be the String value of O.[[TypedArrayName]].
+    // c. Let elementSize be the Element Size value specified in Table 64 for arrayTypeName.
+    // d. Let indexedPosition be (ℝ(index) × elementSize) + offset.
+    Checked<size_t> indexed_position = (i64)property_index.as_double();
+    indexed_position *= typed_array.element_size();
+    indexed_position += offset;
+    // FIXME: Not exactly sure what we should do when overflow occurs.
+    //        Just return as if it succeeded for now.
+    if (indexed_position.has_overflow()) {
+        dbgln("integer_indexed_element_set(): indexed_position overflowed, returning as if succeeded.");
+        return;
+    }
+
+    // e. Let elementType be the Element Type value in Table 64 for arrayTypeName.
+    // f. Perform SetValueInBuffer(O.[[ViewedArrayBuffer]], indexedPosition, elementType, numValue, true, Unordered).
+    typed_array.viewed_array_buffer()->template set_value<T>(indexed_position.value(), num_value, true, ArrayBuffer::Order::Unordered);
+
+    // 5. Return NormalCompletion(undefined).
+}
+
 template<typename T>
 class TypedArray : public TypedArrayBase {
     JS_OBJECT(TypedArray, TypedArrayBase);
@@ -64,72 +176,286 @@ class TypedArray : public TypedArrayBase {
     using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
 
 public:
-    // 10.4.5.11 IntegerIndexedElementSet ( O, index, value ), https://tc39.es/ecma262/#sec-integerindexedelementset
-    // NOTE: In error cases, the function will return as if it succeeded.
-    virtual bool put_by_index(u32 property_index, Value value) override
+    // 10.4.5.1 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-getownproperty-p
+    virtual Optional<PropertyDescriptor> internal_get_own_property(PropertyName const& property_name) const override
     {
-        auto& vm = this->vm();
-        auto& global_object = this->global_object();
+        // 1. Assert: IsPropertyKey(P) is true.
+        VERIFY(property_name.is_valid());
 
-        Value num_value;
-        if (content_type() == TypedArrayBase::ContentType::BigInt) {
-            num_value = value.to_bigint(global_object);
-            if (vm.exception())
-                return {};
-        } else {
-            num_value = value.to_number(global_object);
-            if (vm.exception())
-                return {};
+        // 2. Assert: O is an Integer-Indexed exotic object.
+
+        // NOTE: If the property name is a number type (An implementation-defined optimized
+        // property key type), it can be treated as a string property that has already been
+        // converted successfully into a canonical numeric index.
+
+        // 3. If Type(P) is String, then
+        // NOTE: This includes an implementation-defined optimization, see note above!
+        if (property_name.is_string() || property_name.is_number()) {
+            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // NOTE: This includes an implementation-defined optimization, see note above!
+            Value numeric_index;
+            if (property_name.is_string())
+                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
+            else
+                numeric_index = Value(property_name.as_number());
+            // b. If numericIndex is not undefined, then
+            if (!numeric_index.is_undefined()) {
+                // i. Let value be ! IntegerIndexedElementGet(O, numericIndex).
+                auto value = integer_indexed_element_get<T>(*this, numeric_index);
+
+                // ii. If value is undefined, return undefined.
+                if (value.is_undefined())
+                    return {};
+
+                // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
+                return PropertyDescriptor {
+                    .value = value,
+                    .writable = true,
+                    .enumerable = true,
+                    .configurable = true,
+                };
+            }
         }
 
-        if (!is_valid_integer_index(property_index))
-            return true;
-
-        auto offset = byte_offset();
-
-        // FIXME: Not exactly sure what we should do when overflow occurs.
-        //        Just return as if it succeeded for now.
-        Checked<size_t> indexed_position = property_index;
-        indexed_position *= sizeof(UnderlyingBufferDataType);
-        indexed_position += offset;
-        if (indexed_position.has_overflow()) {
-            dbgln("TypedArray::put_by_index: indexed_position overflowed, returning as if succeeded.");
-            return true;
-        }
-
-        viewed_array_buffer()->template set_value<T>(indexed_position.value(), num_value, true, ArrayBuffer::Order::Unordered);
-
-        return true;
-    }
-
-    // 10.4.5.10 IntegerIndexedElementGet ( O, index ), https://tc39.es/ecma262/#sec-integerindexedelementget
-    virtual Value get_by_index(u32 property_index, AllowSideEffects = AllowSideEffects::Yes) const override
-    {
-        if (!is_valid_integer_index(property_index))
-            return js_undefined();
-
-        auto offset = byte_offset();
-
-        // FIXME: Not exactly sure what we should do when overflow occurs.
-        //        Just return as if it's an invalid index for now.
-        Checked<size_t> indexed_position = property_index;
-        indexed_position *= sizeof(UnderlyingBufferDataType);
-        indexed_position += offset;
-        if (indexed_position.has_overflow()) {
-            dbgln("TypedArray::get_by_index: indexed_position overflowed, returning as if it's an invalid index.");
-            return js_undefined();
-        }
-
-        return viewed_array_buffer()->template get_value<T>(indexed_position.value(), true, ArrayBuffer::Order::Unordered);
+        // 4. Return OrdinaryGetOwnProperty(O, P).
+        return Object::internal_get_own_property(property_name);
     }
 
     // 10.4.5.2 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-hasproperty-p
-    bool has_property(const PropertyName& name) const override
+    virtual bool internal_has_property(PropertyName const& property_name) const override
     {
-        if (name.is_number()) {
-            return is_valid_integer_index(name.as_number());
+        // 1. Assert: IsPropertyKey(P) is true.
+        VERIFY(property_name.is_valid());
+
+        // 2. Assert: O is an Integer-Indexed exotic object.
+
+        // NOTE: If the property name is a number type (An implementation-defined optimized
+        // property key type), it can be treated as a string property that has already been
+        // converted successfully into a canonical numeric index.
+
+        // 3. If Type(P) is String, then
+        // NOTE: This includes an implementation-defined optimization, see note above!
+        if (property_name.is_string() || property_name.is_number()) {
+            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // NOTE: This includes an implementation-defined optimization, see note above!
+            Value numeric_index;
+            if (property_name.is_string())
+                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
+            else
+                numeric_index = Value(property_name.as_number());
+            // b. If numericIndex is not undefined, return ! IsValidIntegerIndex(O, numericIndex).
+            if (!numeric_index.is_undefined())
+                return is_valid_integer_index(*this, numeric_index);
         }
-        return Object::has_property(name);
+
+        // 4. Return ? OrdinaryHasProperty(O, P).
+        return Object::internal_has_property(property_name);
+    }
+
+    // 10.4.5.3 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-defineownproperty-p-desc
+    virtual bool internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor) override
+    {
+        // 1. Assert: IsPropertyKey(P) is true.
+        VERIFY(property_name.is_valid());
+
+        // 2. Assert: O is an Integer-Indexed exotic object.
+
+        // NOTE: If the property name is a number type (An implementation-defined optimized
+        // property key type), it can be treated as a string property that has already been
+        // converted successfully into a canonical numeric index.
+
+        // 3. If Type(P) is String, then
+        // NOTE: This includes an implementation-defined optimization, see note above!
+        if (property_name.is_string() || property_name.is_number()) {
+            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // NOTE: This includes an implementation-defined optimization, see note above!
+            Value numeric_index;
+            if (property_name.is_string())
+                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
+            else
+                numeric_index = Value(property_name.as_number());
+            // b. If numericIndex is not undefined, then
+            if (!numeric_index.is_undefined()) {
+                // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
+                if (!is_valid_integer_index(*this, numeric_index))
+                    return false;
+
+                // ii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is false, return false.
+                if (property_descriptor.configurable.has_value() && !*property_descriptor.configurable)
+                    return false;
+
+                // iii. If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
+                if (property_descriptor.enumerable.has_value() && !*property_descriptor.enumerable)
+                    return false;
+
+                // iv. If ! IsAccessorDescriptor(Desc) is true, return false.
+                if (property_descriptor.is_accessor_descriptor())
+                    return false;
+
+                // v. If Desc has a [[Writable]] field and if Desc.[[Writable]] is false, return false.
+                if (property_descriptor.writable.has_value() && !*property_descriptor.writable)
+                    return false;
+
+                // vi. If Desc has a [[Value]] field, perform ? IntegerIndexedElementSet(O, numericIndex, Desc.[[Value]]).
+                if (property_descriptor.value.has_value()) {
+                    integer_indexed_element_set<T>(*this, numeric_index, *property_descriptor.value);
+                    if (vm().exception())
+                        return {};
+                }
+
+                // vii. Return true.
+                return true;
+            }
+        }
+
+        // 4. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
+        return Object::internal_define_own_property(property_name, property_descriptor);
+    }
+
+    // 10.4.5.4 [[Get]] ( P, Receiver ), 10.4.5.4 [[Get]] ( P, Receiver )
+    virtual Value internal_get(PropertyName const& property_name, Value receiver) const override
+    {
+        VERIFY(!receiver.is_empty());
+
+        // 1. Assert: IsPropertyKey(P) is true.
+        VERIFY(property_name.is_valid());
+
+        // NOTE: If the property name is a number type (An implementation-defined optimized
+        // property key type), it can be treated as a string property that has already been
+        // converted successfully into a canonical numeric index.
+
+        // 2. If Type(P) is String, then
+        // NOTE: This includes an implementation-defined optimization, see note above!
+        if (property_name.is_string() || property_name.is_number()) {
+            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // NOTE: This includes an implementation-defined optimization, see note above!
+            Value numeric_index;
+            if (property_name.is_string())
+                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
+            else
+                numeric_index = Value(property_name.as_number());
+            // b. If numericIndex is not undefined, then
+            if (!numeric_index.is_undefined()) {
+                // i. Return ! IntegerIndexedElementGet(O, numericIndex).
+                return integer_indexed_element_get<T>(*this, numeric_index);
+            }
+        }
+
+        // 3. Return ? OrdinaryGet(O, P, Receiver).
+        return Object::internal_get(property_name, receiver);
+    }
+
+    // 10.4.5.5 [[Set]] ( P, V, Receiver ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-set-p-v-receiver
+    virtual bool internal_set(PropertyName const& property_name, Value value, Value receiver) override
+    {
+        VERIFY(!value.is_empty());
+        VERIFY(!receiver.is_empty());
+
+        // 1. Assert: IsPropertyKey(P) is true.
+        VERIFY(property_name.is_valid());
+
+        // NOTE: If the property name is a number type (An implementation-defined optimized
+        // property key type), it can be treated as a string property that has already been
+        // converted successfully into a canonical numeric index.
+
+        // 2. If Type(P) is String, then
+        // NOTE: This includes an implementation-defined optimization, see note above!
+        if (property_name.is_string() || property_name.is_number()) {
+            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // NOTE: This includes an implementation-defined optimization, see note above!
+            Value numeric_index;
+            if (property_name.is_string())
+                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
+            else
+                numeric_index = Value(property_name.as_number());
+            // b. If numericIndex is not undefined, then
+            if (!numeric_index.is_undefined()) {
+                // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
+                integer_indexed_element_set<T>(*this, numeric_index, value);
+                if (vm().exception())
+                    return {};
+
+                // ii. Return true.
+                return true;
+            }
+        }
+
+        // 3. Return ? OrdinarySet(O, P, V, Receiver).
+        return Object::internal_set(property_name, value, receiver);
+    }
+
+    // 10.4.5.6 [[Delete]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-delete-p
+    virtual bool internal_delete(PropertyName const& property_name) override
+    {
+        // 1. Assert: IsPropertyKey(P) is true.
+        VERIFY(property_name.is_valid());
+
+        // 2. Assert: O is an Integer-Indexed exotic object.
+
+        // NOTE: If the property name is a number type (An implementation-defined optimized
+        // property key type), it can be treated as a string property that has already been
+        // converted successfully into a canonical numeric index.
+
+        // 3. If Type(P) is String, then
+        // NOTE: This includes an implementation-defined optimization, see note above!
+        if (property_name.is_string() || property_name.is_number()) {
+            // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+            // NOTE: This includes an implementation-defined optimization, see note above!
+            Value numeric_index;
+            if (property_name.is_string())
+                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
+            else
+                numeric_index = Value(property_name.as_number());
+            // b. If numericIndex is not undefined, then
+            if (!numeric_index.is_undefined()) {
+                // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return true; else return false.
+                if (!is_valid_integer_index(*this, numeric_index))
+                    return true;
+                return false;
+            }
+        }
+
+        // 4. Return ? OrdinaryDelete(O, P).
+        return Object::internal_delete(property_name);
+    }
+
+    // 10.4.5.7 [[OwnPropertyKeys]] ( ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-ownpropertykeys
+    virtual MarkedValueList internal_own_property_keys() const override
+    {
+        auto& vm = this->vm();
+
+        // 1. Let keys be a new empty List.
+        auto keys = MarkedValueList { heap() };
+
+        // 2. Assert: O is an Integer-Indexed exotic object.
+
+        // 3. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is false, then
+        if (!m_viewed_array_buffer->is_detached()) {
+            // a. For each integer i starting with 0 such that i < O.[[ArrayLength]], in ascending order, do
+            for (size_t i = 0; i < m_array_length; ++i) {
+                // i. Add ! ToString(𝔽(i)) as the last element of keys.
+                keys.append(js_string(vm, String::number(i)));
+            }
+        }
+
+        // 4. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
+        for (auto& it : shape().property_table_ordered()) {
+            if (it.key.is_string()) {
+                // a. Add P as the last element of keys.
+                keys.append(it.key.to_value(vm));
+            }
+        }
+
+        // 5. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
+        for (auto& it : shape().property_table_ordered()) {
+            if (it.key.is_symbol()) {
+                // a. Add P as the last element of keys.
+                keys.append(it.key.to_value(vm));
+            }
+        }
+
+        // 6. Return keys.
+        return keys;
     }
 
     Span<const UnderlyingBufferDataType> data() const
@@ -160,22 +486,6 @@ protected:
 
 private:
     virtual bool is_typed_array() const final { return true; }
-
-    // 10.4.5.9 IsValidIntegerIndex ( O, index ), https://tc39.es/ecma262/#sec-isvalidintegerindex
-    bool is_valid_integer_index(u32 property_index) const
-    {
-        if (viewed_array_buffer()->is_detached())
-            return false;
-
-        // FIXME: If ! IsIntegralNumber(index) is false, return false.
-
-        // FIXME: If index is -0𝔽, return false.
-
-        if (property_index >= m_array_length /* FIXME: or less than 0 (index is currently unsigned) */)
-            return false;
-
-        return true;
-    }
 };
 
 #define JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type) \

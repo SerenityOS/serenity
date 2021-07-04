@@ -3,14 +3,11 @@ test("length is 2", () => {
 });
 
 describe("errors", () => {
-    test("target must be a function", () => {
+    test("target must be a constructor", () => {
         [null, undefined, "foo", 123, NaN, Infinity, {}].forEach(value => {
             expect(() => {
                 Reflect.construct(value);
-            }).toThrowWithMessage(
-                TypeError,
-                "First argument of Reflect.construct() must be a constructor"
-            );
+            }).toThrowWithMessage(TypeError, `${value} is not a constructor`);
         });
     });
 
@@ -22,14 +19,11 @@ describe("errors", () => {
         });
     });
 
-    test("new target must be a function", () => {
+    test("new target must be a constructor", () => {
         [null, undefined, "foo", 123, NaN, Infinity, {}].forEach(value => {
             expect(() => {
                 Reflect.construct(() => {}, [], value);
-            }).toThrowWithMessage(
-                TypeError,
-                "Optional third argument of Reflect.construct() must be a constructor"
-            );
+            }).toThrowWithMessage(TypeError, `${value} is not a constructor`);
         });
     });
 });

@@ -21,7 +21,7 @@ void Reference::put_value(GlobalObject& global_object, Value value)
             throw_reference_error(global_object);
             return;
         }
-        global_object.put(m_name, value);
+        global_object.set(m_name, value, false);
         return;
     }
 
@@ -39,7 +39,9 @@ void Reference::put_value(GlobalObject& global_object, Value value)
         if (!base_obj)
             return;
 
-        bool succeeded = base_obj->put(m_name, value);
+        bool succeeded = base_obj->internal_set(m_name, value, get_this_value());
+        if (vm.exception())
+            return;
         if (!succeeded && m_strict) {
             vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name.to_value(vm).to_string_without_side_effects(), m_base_value.to_string_without_side_effects());
             return;
@@ -108,6 +110,7 @@ Value Reference::get_value(GlobalObject& global_object, bool throw_if_undefined)
     return value->value;
 }
 
+// 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
 bool Reference::delete_(GlobalObject& global_object)
 {
     // 13.5.1.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation
@@ -136,21 +139,22 @@ bool Reference::delete_(GlobalObject& global_object)
         // b. If IsSuperReference(ref) is true, throw a ReferenceError exception.
         if (is_super_reference()) {
             vm.throw_exception<ReferenceError>(global_object, ErrorType::UnsupportedDeleteSuperProperty);
-            return false;
+            return {};
         }
 
         // c. Let baseObj be ! ToObject(ref.[[Base]]).
         auto* base_obj = m_base_value.to_object(global_object);
-        if (!base_obj)
-            return false;
+        VERIFY(base_obj);
 
         // d. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
-        bool delete_status = base_obj->delete_property(m_name);
+        bool delete_status = base_obj->internal_delete(m_name);
+        if (vm.exception())
+            return {};
 
         // e. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
         if (!delete_status && m_strict) {
             vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishDeleteProperty, m_name.to_value(vm).to_string_without_side_effects(), m_base_value.to_string_without_side_effects());
-            return false;
+            return {};
         }
 
         // f. Return deleteStatus.

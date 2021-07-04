@@ -23,16 +23,27 @@ Array* Array::create(GlobalObject& global_object, size_t length, Object* prototy
     if (!prototype)
         prototype = global_object.array_prototype();
     auto* array = global_object.heap().allocate<Array>(global_object, *prototype);
-    array->put(vm.names.length, Value(length));
+    array->internal_define_own_property(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = false });
     return array;
 }
 
 // 7.3.17 CreateArrayFromList ( elements ), https://tc39.es/ecma262/#sec-createarrayfromlist
-Array* Array::create_from(GlobalObject& global_object, const Vector<Value>& elements)
+Array* Array::create_from(GlobalObject& global_object, Vector<Value> const& elements)
 {
+    // 1. Assert: elements is a List whose elements are all ECMAScript language values.
+
+    // 2. Let array be ! ArrayCreate(0).
     auto* array = Array::create(global_object, 0);
-    for (size_t i = 0; i < elements.size(); ++i)
-        array->define_property(i, elements[i]);
+
+    // 3. Let n be 0.
+    // 4. For each element e of elements, do
+    for (u32 n = 0; n < elements.size(); ++n) {
+        // a. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(n)), e).
+        array->create_data_property_or_throw(n, elements[n]);
+        // b. Set n to n + 1.
+    }
+
+    // 5. Return array.
     return array;
 }
 
@@ -72,10 +83,10 @@ JS_DEFINE_NATIVE_GETTER(Array::length_getter)
 
     // TODO: could be incorrect if receiver/this_value is fixed or changed
     if (!this_object->is_array()) {
-        Value val = this_object->get_own_property(vm.names.length.to_string_or_symbol(), this_object);
+        auto value = this_object->internal_get(vm.names.length.to_string_or_symbol(), this_object);
         if (vm.exception())
             return {};
-        return val;
+        return value;
     }
 
     return Value(this_object->indexed_properties().array_like_size());

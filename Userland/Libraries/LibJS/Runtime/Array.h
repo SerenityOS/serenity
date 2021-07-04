@@ -15,7 +15,7 @@ class Array : public Object {
 
 public:
     static Array* create(GlobalObject&, size_t length, Object* prototype = nullptr);
-    static Array* create_from(GlobalObject&, const Vector<Value>&);
+    static Array* create_from(GlobalObject&, Vector<Value> const&);
 
     explicit Array(Object& prototype);
     virtual void initialize(GlobalObject&) override;

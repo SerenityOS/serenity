@@ -5,8 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/StringObject.h>
 
 namespace JS {
@@ -40,18 +42,149 @@ void StringObject::visit_edges(Cell::Visitor& visitor)
     visitor.visit(&m_string);
 }
 
-Optional<PropertyDescriptor> StringObject::get_own_property_descriptor(PropertyName const& property_name) const
+// 10.4.3.5 StringGetOwnProperty ( S, P ),https://tc39.es/ecma262/#sec-stringgetownproperty
+static Optional<PropertyDescriptor> string_get_own_property(GlobalObject& global_object, StringObject const& string, PropertyName const& property_name)
 {
-    if (!property_name.is_number() || property_name.as_number() >= m_string.string().length())
-        return Base::get_own_property_descriptor(property_name);
+    auto& vm = global_object.vm();
 
-    PropertyDescriptor descriptor;
-    descriptor.value = js_string(heap(), m_string.string().substring(property_name.as_number(), 1));
-    descriptor.attributes.set_has_configurable();
-    descriptor.attributes.set_has_enumerable();
-    descriptor.attributes.set_has_writable();
-    descriptor.attributes.set_enumerable();
-    return descriptor;
+    // 1. Assert: S is an Object that has a [[StringData]] internal slot.
+    // 2. Assert: IsPropertyKey(P) is true.
+    VERIFY(property_name.is_valid());
+
+    // 3. If Type(P) is not String, return undefined.
+    // NOTE: The spec only uses string and symbol keys, and later coerces to numbers -
+    // this is not the case for PropertyName, so '!property_name.is_string()' would be wrong.
+    if (property_name.is_symbol())
+        return {};
+
+    // 4. Let index be ! CanonicalNumericIndexString(P).
+    // NOTE: If the property name is a number type (An implementation-defined optimized
+    // property key type), it can be treated as a string property that has already been
+    // converted successfully into a canonical numeric index.
+    Value index;
+    if (property_name.is_string())
+        index = canonical_numeric_index_string(global_object, property_name.to_value(vm));
+    else
+        index = Value(property_name.as_number());
+    // 5. If index is undefined, return undefined.
+    if (index.is_undefined())
+        return {};
+    // 6. If IsIntegralNumber(index) is false, return undefined.
+    if (!index.is_integral_number())
+        return {};
+    // 7. If index is -0𝔽, return undefined.
+    if (index.is_negative_zero())
+        return {};
+
+    // 8. Let str be S.[[StringData]].
+    // 9. Assert: Type(str) is String.
+    auto& str = string.primitive_string().string();
+
+    // 10. Let len be the length of str.
+    auto length = str.length();
+
+    // 11. If ℝ(index) < 0 or len ≤ ℝ(index), return undefined.
+    if (index.as_double() < 0 || length <= index.as_double())
+        return {};
+
+    // 12. Let resultStr be the String value of length 1, containing one code unit from str, specifically the code unit at index ℝ(index).
+    auto result_str = js_string(string.vm(), str.substring(index.as_double(), 1));
+
+    // 13. Return the PropertyDescriptor { [[Value]]: resultStr, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }.
+    return PropertyDescriptor {
+        .value = result_str,
+        .writable = false,
+        .enumerable = true,
+        .configurable = false,
+    };
+}
+
+// 10.4.3.1 [[GetOwnProperty]] ( P ), https://tc39.es/ecma262/#sec-string-exotic-objects-getownproperty-p
+Optional<PropertyDescriptor> StringObject::internal_get_own_property(PropertyName const& property_name) const
+{
+    // Assert: IsPropertyKey(P) is true.
+
+    // 2. Let desc be OrdinaryGetOwnProperty(S, P).
+    auto descriptor = Object::internal_get_own_property(property_name);
+
+    // 3. If desc is not undefined, return desc.
+    if (descriptor.has_value())
+        return descriptor;
+
+    // 4. Return ! StringGetOwnProperty(S, P).
+    return string_get_own_property(global_object(), *this, property_name);
+}
+
+// 10.4.3.2 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-string-exotic-objects-defineownproperty-p-desc
+bool StringObject::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
+{
+    // 1. Assert: IsPropertyKey(P) is true.
+    VERIFY(property_name.is_valid());
+
+    // 2. Let stringDesc be ! StringGetOwnProperty(S, P).
+    auto string_descriptor = string_get_own_property(global_object(), *this, property_name);
+
+    // 3. If stringDesc is not undefined, then
+    if (string_descriptor.has_value()) {
+        // a. Let extensible be S.[[Extensible]].
+        auto extensible = m_is_extensible;
+
+        // b. Return ! IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc).
+        return is_compatible_property_descriptor(extensible, property_descriptor, string_descriptor);
+    }
+
+    // 4. Return ! OrdinaryDefineOwnProperty(S, P, Desc).
+    return Object::internal_define_own_property(property_name, property_descriptor);
+}
+
+// 10.4.3.3 [[OwnPropertyKeys]] ( ), https://tc39.es/ecma262/#sec-string-exotic-objects-ownpropertykeys
+MarkedValueList StringObject::internal_own_property_keys() const
+{
+    auto& vm = this->vm();
+
+    // 1. Let keys be a new empty List.
+    auto keys = MarkedValueList { heap() };
+
+    // 2. Let str be O.[[StringData]].
+    auto& str = m_string.string();
+
+    // 3. Assert: Type(str) is String.
+
+    // 4. Let len be the length of str.
+    auto length = str.length();
+
+    // 5. For each integer i starting with 0 such that i < len, in ascending order, do
+    for (size_t i = 0; i < length; ++i) {
+        // a. Add ! ToString(𝔽(i)) as the last element of keys.
+        keys.append(js_string(vm, String::number(i)));
+    }
+
+    // 6. For each own property key P of O such that P is an array index and ! ToIntegerOrInfinity(P) ≥ len, in ascending numeric index order, do
+    for (auto& entry : indexed_properties()) {
+        if (entry.index() >= length) {
+            // a. Add P as the last element of keys.
+            keys.append(js_string(vm, String::number(entry.index())));
+        }
+    }
+
+    // 7. For each own property key P of O such that Type(P) is String and P is not an array index, in ascending chronological order of property creation, do
+    for (auto& it : shape().property_table_ordered()) {
+        if (it.key.is_string()) {
+            // a. Add P as the last element of keys.
+            keys.append(it.key.to_value(vm));
+        }
+    }
+
+    // 8. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
+    for (auto& it : shape().property_table_ordered()) {
+        if (it.key.is_symbol()) {
+            // a. Add P as the last element of keys.
+            keys.append(it.key.to_value(vm));
+        }
+    }
+
+    // 9. Return keys.
+    return keys;
 }
 
 }
