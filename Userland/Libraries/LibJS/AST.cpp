@@ -884,7 +884,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
         Object* super_constructor_prototype = nullptr;
         if (!super_constructor.is_null()) {
-            auto super_constructor_prototype_value = super_constructor.as_object().get(vm.names.prototype).value_or(js_undefined());
+            auto super_constructor_prototype_value = super_constructor.as_object().get(vm.names.prototype);
             if (interpreter.exception())
                 return {};
             if (!super_constructor_prototype_value.is_object() && !super_constructor_prototype_value.is_null()) {

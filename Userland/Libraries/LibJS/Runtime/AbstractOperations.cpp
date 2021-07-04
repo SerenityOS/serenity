@@ -49,7 +49,7 @@ Value require_object_coercible(GlobalObject& global_object, Value value)
 size_t length_of_array_like(GlobalObject& global_object, Object const& object)
 {
     auto& vm = global_object.vm();
-    auto result = object.get(vm.names.length).value_or(js_undefined());
+    auto result = object.get(vm.names.length);
     if (vm.exception())
         return INVALID;
     return result.to_length(global_object);
@@ -71,7 +71,7 @@ MarkedValueList create_list_from_array_like(GlobalObject& global_object, Value v
     auto list = MarkedValueList { heap };
     for (size_t i = 0; i < length; ++i) {
         auto index_name = String::number(i);
-        auto next = array_like.get(index_name).value_or(js_undefined());
+        auto next = array_like.get(index_name);
         if (vm.exception())
             return MarkedValueList { heap };
         if (check_value) {
@@ -90,7 +90,7 @@ MarkedValueList create_list_from_array_like(GlobalObject& global_object, Value v
 FunctionObject* species_constructor(GlobalObject& global_object, Object const& object, FunctionObject& default_constructor)
 {
     auto& vm = global_object.vm();
-    auto constructor = object.get(vm.names.constructor).value_or(js_undefined());
+    auto constructor = object.get(vm.names.constructor);
     if (vm.exception())
         return nullptr;
     if (constructor.is_undefined())
@@ -99,7 +99,7 @@ FunctionObject* species_constructor(GlobalObject& global_object, Object const& o
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
         return nullptr;
     }
-    auto species = constructor.as_object().get(*vm.well_known_symbol_species()).value_or(js_undefined());
+    auto species = constructor.as_object().get(*vm.well_known_symbol_species());
     if (species.is_nullish())
         return &default_constructor;
     if (species.is_constructor())

@@ -94,7 +94,7 @@ Value Reference::get_value(GlobalObject& global_object, bool throw_if_undefined)
         auto* base_obj = m_base_value.to_object(global_object);
         if (!base_obj)
             return {};
-        return base_obj->get(m_name).value_or(js_undefined());
+        return base_obj->get(m_name);
     }
 
     VERIFY(m_base_type == BaseType::Environment);

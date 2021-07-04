@@ -230,7 +230,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
             builder.append(separator);
-        auto value = typed_array->get(i).value_or(js_undefined());
+        auto value = typed_array->get(i);
         if (vm.exception())
             return {};
         if (value.is_nullish())

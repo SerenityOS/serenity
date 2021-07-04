@@ -254,10 +254,10 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
             return IterationDecision::Break;
         }
-        auto key = iterator_value.as_object().get(0).value_or(js_undefined());
+        auto key = iterator_value.as_object().get(0);
         if (vm.exception())
             return IterationDecision::Break;
-        auto value = iterator_value.as_object().get(1).value_or(js_undefined());
+        auto value = iterator_value.as_object().get(1);
         if (vm.exception())
             return IterationDecision::Break;
         auto property_key = key.to_property_key(global_object);

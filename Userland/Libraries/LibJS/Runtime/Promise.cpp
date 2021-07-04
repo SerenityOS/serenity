@@ -22,7 +22,7 @@ Object* promise_resolve(GlobalObject& global_object, Object& constructor, Value 
 {
     auto& vm = global_object.vm();
     if (value.is_object() && is<Promise>(value.as_object())) {
-        auto value_constructor = value.as_object().get(vm.names.constructor).value_or(js_undefined());
+        auto value_constructor = value.as_object().get(vm.names.constructor);
         if (vm.exception())
             return nullptr;
         if (same_value(value_constructor, &constructor))

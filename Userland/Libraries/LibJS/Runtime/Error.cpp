@@ -38,7 +38,7 @@ void Error::install_error_cause(Value options)
     auto& options_object = options.as_object();
     if (!options_object.has_property(vm.names.cause))
         return;
-    auto cause = options_object.get(vm.names.cause).value_or(js_undefined());
+    auto cause = options_object.get(vm.names.cause);
     if (vm.exception())
         return;
     define_property(vm.names.cause, cause, Attribute::Writable | Attribute::Configurable);

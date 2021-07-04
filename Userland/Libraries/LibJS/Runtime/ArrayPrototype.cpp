@@ -108,7 +108,7 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
         return array;
     }
 
-    auto constructor = original_array.get(vm.names.constructor).value_or(js_undefined());
+    auto constructor = original_array.get(vm.names.constructor);
     if (vm.exception())
         return {};
     if (constructor.is_constructor()) {
@@ -123,7 +123,7 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
     }
 
     if (constructor.is_object()) {
-        constructor = constructor.as_object().get(*vm.well_known_symbol_species()).value_or(js_undefined());
+        constructor = constructor.as_object().get(*vm.well_known_symbol_species());
         if (vm.exception())
             return {};
         if (constructor.is_null())
@@ -396,7 +396,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
             if (vm.exception())
                 return {};
             if (from_present) {
-                auto from_value = this_object->get(from).value_or(js_undefined());
+                auto from_value = this_object->get(from);
                 if (vm.exception())
                     return {};
                 this_object->define_property(to, from_value);
@@ -442,7 +442,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
         return js_undefined();
     }
     auto index = length - 1;
-    auto element = this_object->get(index).value_or(js_undefined());
+    auto element = this_object->get(index);
     if (vm.exception())
         return {};
     this_object->delete_property_or_throw(index);
@@ -469,7 +469,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
             return {};
         return js_undefined();
     }
-    auto first = this_object->get(0).value_or(js_undefined());
+    auto first = this_object->get(0);
     if (vm.exception())
         return {};
 
@@ -480,7 +480,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
         if (vm.exception())
             return {};
         if (from_present) {
-            auto from_value = this_object->get(from).value_or(js_undefined());
+            auto from_value = this_object->get(from);
             if (vm.exception())
                 return {};
             this_object->define_property(to, from_value);
@@ -540,7 +540,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
             builder.append(separator);
-        auto value = this_object->get(i).value_or(js_undefined());
+        auto value = this_object->get(i);
         if (vm.exception())
             return {};
         if (value.is_nullish())
@@ -589,7 +589,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
             builder.append(separator);
-        auto value = this_object->get(i).value_or(js_undefined());
+        auto value = this_object->get(i);
         if (vm.exception())
             return {};
         if (value.is_nullish())
@@ -625,7 +625,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
         if (vm.exception())
             return false;
 
-        auto spreadable = object->get(*vm.well_known_symbol_is_concat_spreadable()).value_or(js_undefined());
+        auto spreadable = object->get(*vm.well_known_symbol_is_concat_spreadable());
         if (vm.exception())
             return false;
 
@@ -1075,7 +1075,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
             return {};
         Value lower_value;
         if (lower_exists) {
-            lower_value = this_object->get(lower).value_or(js_undefined());
+            lower_value = this_object->get(lower);
             if (vm.exception())
                 return {};
         }
@@ -1085,7 +1085,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
             return {};
         Value upper_value;
         if (upper_exists) {
-            upper_value = this_object->get(upper).value_or(js_undefined());
+            upper_value = this_object->get(upper);
             if (vm.exception())
                 return {};
         }
@@ -1386,7 +1386,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
     }
     auto value_to_find = vm.argument(0);
     for (i32 i = from_index; i < length; ++i) {
-        auto element = this_object->get(i).value_or(js_undefined());
+        auto element = this_object->get(i);
         if (vm.exception())
             return {};
         if (same_value_zero(element, value_to_find))
@@ -1818,7 +1818,7 @@ static size_t flatten_into_array(GlobalObject& global_object, Object& new_array,
 
         if (!value_exists)
             continue;
-        auto value = array.get(j).value_or(js_undefined());
+        auto value = array.get(j);
         if (vm.exception())
             return {};
 
@@ -1981,7 +1981,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
             return {};
 
         if (from_present) {
-            auto from_value = this_object->get(from_i).value_or(js_undefined());
+            auto from_value = this_object->get(from_i);
             if (vm.exception())
                 return {};
             this_object->put(to_i, from_value);
@@ -2024,7 +2024,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::at)
     }
     if (index.has_overflow() || index.value() >= length)
         return js_undefined();
-    return this_object->get(index.value()).value_or(js_undefined());
+    return this_object->get(index.value());
 }
 
 }

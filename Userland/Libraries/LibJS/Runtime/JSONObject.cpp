@@ -146,7 +146,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
 String JSONObject::serialize_json_property(GlobalObject& global_object, StringifyState& state, const PropertyName& key, Object* holder)
 {
     auto& vm = global_object.vm();
-    auto value = holder->get(key).value_or(js_undefined());
+    auto value = holder->get(key);
     if (vm.exception())
         return {};
     if (value.is_object() || value.is_bigint()) {
@@ -479,7 +479,7 @@ Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray
 Value JSONObject::internalize_json_property(GlobalObject& global_object, Object* holder, PropertyName const& name, FunctionObject& reviver)
 {
     auto& vm = global_object.vm();
-    auto value = holder->get(name).value_or(js_undefined());
+    auto value = holder->get(name);
     if (vm.exception())
         return {};
     if (value.is_object()) {

@@ -40,7 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
     auto& this_object = this_value.as_object();
 
     String name = "Error";
-    auto name_property = this_object.get(vm.names.name).value_or(js_undefined());
+    auto name_property = this_object.get(vm.names.name);
     if (vm.exception())
         return {};
     if (!name_property.is_undefined()) {
@@ -50,7 +50,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
     }
 
     String message = "";
-    auto message_property = this_object.get(vm.names.message).value_or(js_undefined());
+    auto message_property = this_object.get(vm.names.message);
     if (vm.exception())
         return {};
     if (!message_property.is_undefined()) {
