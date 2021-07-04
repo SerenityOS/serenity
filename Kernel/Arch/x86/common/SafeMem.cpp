@@ -148,7 +148,7 @@ NEVER_INLINE bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
         if (remainder != 0)
             return false; // fault_at is already set!
         n -= size_ts * sizeof(size_t);
-        if (remainder == 0) {
+        if (n == 0) {
             fault_at = nullptr;
             return true;
         }
