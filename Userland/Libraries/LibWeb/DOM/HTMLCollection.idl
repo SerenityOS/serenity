@@ -1,4 +1,4 @@
-[CustomGet,CustomGetByIndex]
+[CustomGet]
 interface HTMLCollection {
 
     readonly attribute unsigned long length;

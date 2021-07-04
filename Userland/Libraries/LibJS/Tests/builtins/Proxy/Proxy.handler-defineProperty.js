@@ -77,7 +77,7 @@ describe("[[DefineProperty]] invariants", () => {
 
         expect(() => {
             Object.defineProperty(p, "foo", {});
-        }).toThrowWithMessage(TypeError, "Object's [[DefineProperty]] method returned false");
+        }).toThrowWithMessage(TypeError, "Object's [[DefineOwnProperty]] method returned false");
     });
 
     test("trap cannot return true for a non-extensible target if the property does not exist", () => {

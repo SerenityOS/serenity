@@ -12,9 +12,6 @@
 
 namespace JS {
 
-// Disabled until PropertyDescriptor in Object.h is gone. I want to introduce this thing in a separate commit,
-// but the names conflict - this is the easiest solution. :^)
-#if 0
 // 6.2.5 The Property Descriptor Specification Type, https://tc39.es/ecma262/#sec-property-descriptor-specification-type
 
 Value from_property_descriptor(GlobalObject&, Optional<PropertyDescriptor> const&);
@@ -68,6 +65,5 @@ struct Formatter<JS::PropertyDescriptor> : Formatter<StringView> {
         Formatter<StringView>::format(builder, String::formatted("PropertyDescriptor {{ {} }}", String::join(", ", parts)));
     }
 };
-#endif
 
 }

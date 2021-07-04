@@ -294,7 +294,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
 
                 auto* rest_object = Object::create(global_object, global_object.object_prototype());
                 for (auto& object_property : object->shape().property_table()) {
-                    if (!object_property.value.attributes.has_enumerable())
+                    if (!object_property.value.attributes.is_enumerable())
                         continue;
                     if (seen_names.contains(object_property.key.to_display_string()))
                         continue;
@@ -386,10 +386,13 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
                 return possible_match.value().value;
         }
     }
-    auto value = global_object.get(name);
-    if (m_underscore_is_last_value && name == "_" && value.is_empty())
-        return m_last_value;
-    return value;
+
+    if (!global_object.storage_has(name)) {
+        if (m_underscore_is_last_value && name == "_")
+            return m_last_value;
+        return {};
+    }
+    return global_object.get(name);
 }
 
 // 9.1.2.1 GetIdentifierReference ( env, name, strict ), https://tc39.es/ecma262/#sec-getidentifierreference
@@ -472,9 +475,6 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
     callee_context.this_value = this_argument;
     auto result = function.construct(new_target);
 
-    Value this_value = this_argument;
-    if (auto* environment = callee_context.lexical_environment)
-        this_value = environment->get_this_binding(global_object);
     pop_execution_context();
     pop_guard.disarm();
 
@@ -487,7 +487,7 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
         if (exception())
             return {};
         if (prototype.is_object()) {
-            result.as_object().set_prototype(&prototype.as_object());
+            result.as_object().internal_set_prototype_of(&prototype.as_object());
             if (exception())
                 return {};
         }
@@ -500,7 +500,9 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
     if (result.is_object())
         return result;
 
-    return this_value;
+    if (auto* environment = callee_context.lexical_environment)
+        return environment->get_this_binding(global_object);
+    return this_argument;
 }
 
 void VM::throw_exception(Exception& exception)

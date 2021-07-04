@@ -129,7 +129,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
             auto property_name = member_expression.computed_property_name(interpreter, global_object);
             if (!property_name.is_valid())
                 return {};
-            auto reference = Reference { super_base, property_name, super_base };
+            auto reference = Reference { super_base, property_name, super_base, vm.in_strict_mode() };
             callee = reference.get_value(global_object);
             if (vm.exception())
                 return {};
@@ -559,7 +559,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         return {};
     auto* object = rhs_result.to_object(global_object);
     while (object) {
-        auto property_names = object->get_enumerable_own_property_names(Object::PropertyKind::Key);
+        auto property_names = object->enumerable_own_property_names(Object::PropertyKind::Key);
         for (auto& value : property_names) {
             interpreter.vm().assign(target, value, global_object, has_declaration);
             if (interpreter.exception())
@@ -578,7 +578,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
                 }
             }
         }
-        object = object->prototype();
+        object = object->internal_get_prototype_of();
         if (interpreter.exception())
             return {};
     }
@@ -781,6 +781,9 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
     if (interpreter.exception())
         return {};
 
+    // From here on equivalent to
+    // 13.3.4 EvaluatePropertyAccessWithIdentifierKey ( baseValue, identifierName, strict ), https://tc39.es/ecma262/#sec-evaluate-property-access-with-identifier-key
+
     object_value = require_object_coercible(global_object, object_value);
     if (interpreter.exception())
         return {};
@@ -789,7 +792,8 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
     if (!property_name.is_valid())
         return Reference {};
 
-    return Reference { object_value, property_name, {} };
+    auto strict = interpreter.vm().in_strict_mode();
+    return Reference { object_value, property_name, {}, strict };
 }
 
 Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -898,7 +902,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         class_constructor->define_property(vm.names.prototype, prototype, Attribute::Writable);
         if (interpreter.exception())
             return {};
-        class_constructor->set_prototype(super_constructor.is_null() ? global_object.function_prototype() : &super_constructor.as_object());
+        class_constructor->internal_set_prototype_of(super_constructor.is_null() ? global_object.function_prototype() : &super_constructor.as_object());
     }
 
     auto class_prototype = class_constructor->get(vm.names.prototype);
@@ -929,15 +933,15 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
         switch (method.kind()) {
         case ClassMethod::Kind::Method:
-            target.define_property(property_key, method_value);
+            target.define_property_or_throw(property_key, { .value = method_value, .writable = true, .enumerable = false, .configurable = true });
             break;
         case ClassMethod::Kind::Getter:
             update_function_name(method_value, String::formatted("get {}", get_function_name(global_object, key)));
-            target.define_accessor(property_key, &method_function, nullptr, Attribute::Configurable | Attribute::Enumerable);
+            target.define_property_or_throw(property_key, { .get = &method_function, .enumerable = true, .configurable = true });
             break;
         case ClassMethod::Kind::Setter:
             update_function_name(method_value, String::formatted("set {}", get_function_name(global_object, key)));
-            target.define_accessor(property_key, nullptr, &method_function, Attribute::Configurable | Attribute::Enumerable);
+            target.define_property_or_throw(property_key, { .set = &method_function, .enumerable = true, .configurable = true });
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -1431,9 +1435,10 @@ Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object)
     InterpreterNodeScope node_scope { interpreter, *this };
 
     auto value = interpreter.vm().get_variable(string(), global_object);
+    if (interpreter.exception())
+        return {};
     if (value.is_empty()) {
-        if (!interpreter.exception())
-            interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, string());
+        interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, string());
         return {};
     }
     return value;
@@ -1815,7 +1820,10 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
             if (key.is_object() && key.as_object().is_array()) {
                 auto& array_to_spread = static_cast<Array&>(key.as_object());
                 for (auto& entry : array_to_spread.indexed_properties()) {
-                    object->indexed_properties().put(object, entry.index(), entry.value_and_attributes(&array_to_spread).value);
+                    auto value = array_to_spread.get(entry.index());
+                    if (interpreter.exception())
+                        return {};
+                    object->indexed_properties().put(entry.index(), value);
                     if (interpreter.exception())
                         return {};
                 }

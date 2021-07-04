@@ -178,27 +178,27 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
     auto* array = Array::create(global_object, result.n_capture_groups + 1);
     if (vm.exception())
         return {};
-    array->define_property(vm.names.index, Value((i32)match.global_offset));
-    array->define_property(vm.names.input, js_string(vm, str));
-    array->indexed_properties().put(array, 0, js_string(vm, match.view.to_string()));
+    array->create_data_property_or_throw(vm.names.index, Value((i32)match.global_offset));
+    array->create_data_property_or_throw(vm.names.input, js_string(vm, str));
+    array->create_data_property_or_throw(0, js_string(vm, match.view.to_string()));
 
     for (size_t i = 0; i < result.n_capture_groups; ++i) {
         auto capture_value = js_undefined();
         auto& capture = result.capture_group_matches[0][i + 1];
         if (!capture.view.is_null())
             capture_value = js_string(vm, capture.view.to_string());
-        array->indexed_properties().put(array, i + 1, capture_value);
+        array->create_data_property_or_throw(i + 1, capture_value);
     }
 
     Value groups = js_undefined();
     if (result.n_named_capture_groups > 0) {
         auto groups_object = Object::create(global_object, nullptr);
         for (auto& entry : result.named_capture_group_matches[0])
-            groups_object->define_property(entry.key, js_string(vm, entry.value.view.to_string()));
+            groups_object->create_data_property_or_throw(entry.key, js_string(vm, entry.value.view.to_string()));
         groups = move(groups_object);
     }
 
-    array->define_property(vm.names.groups, groups);
+    array->create_data_property_or_throw(vm.names.groups, groups);
 
     return array;
 }

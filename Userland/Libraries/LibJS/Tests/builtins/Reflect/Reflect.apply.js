@@ -7,10 +7,7 @@ describe("errors", () => {
         [null, undefined, "foo", 123, NaN, Infinity, {}].forEach(value => {
             expect(() => {
                 Reflect.apply(value);
-            }).toThrowWithMessage(
-                TypeError,
-                "First argument of Reflect.apply() must be a function"
-            );
+            }).toThrowWithMessage(TypeError, `${value} is not a function`);
         });
     });
 
