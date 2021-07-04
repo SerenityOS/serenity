@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
+#include <AK/StdLibExtras.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>
 
@@ -59,6 +61,13 @@ public:
         *this << (u64)vector.size();
         for (auto& value : vector)
             *this << value;
+        return *this;
+    }
+
+    template<Enum T>
+    Encoder& operator<<(T const& enum_value)
+    {
+        *this << AK::to_underlying(enum_value);
         return *this;
     }
 

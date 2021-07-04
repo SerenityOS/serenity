@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Forward.h>
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtras.h>
@@ -63,6 +64,17 @@ public:
 
             hashmap.set(move(key), move(value));
         }
+        return true;
+    }
+
+    template<Enum T>
+    bool decode(T& enum_value)
+    {
+        UnderlyingType<T> inner_value;
+        if (!decode(inner_value))
+            return false;
+
+        enum_value = T(inner_value);
         return true;
     }
 

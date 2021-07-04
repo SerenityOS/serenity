@@ -26,6 +26,9 @@ concept Signed = IsSigned<T>;
 template<typename T>
 concept Unsigned = IsUnsigned<T>;
 
+template<typename T>
+concept Enum = IsEnum<T>;
+
 template<typename T, typename U>
 concept SameAs = IsSame<T, U>;
 
@@ -52,6 +55,7 @@ concept IteratorFunction = requires(Func func, Args... args)
 }
 
 using AK::Concepts::Arithmetic;
+using AK::Concepts::Enum;
 using AK::Concepts::FloatingPoint;
 using AK::Concepts::Integral;
 using AK::Concepts::IteratorFunction;
