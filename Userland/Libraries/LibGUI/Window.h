@@ -45,6 +45,8 @@ public:
     bool is_frameless() const { return m_frameless; }
     void set_frameless(bool);
 
+    void set_forced_shadow(bool);
+
     bool is_resizable() const { return m_resizable; }
     void set_resizable(bool resizable) { m_resizable = resizable; }
 
@@ -266,6 +268,7 @@ private:
     bool m_minimizable { true };
     bool m_fullscreen { false };
     bool m_frameless { false };
+    bool m_forced_shadow { false };
     bool m_layout_pending { false };
     bool m_visible_for_timer_purposes { true };
     bool m_visible { false };
