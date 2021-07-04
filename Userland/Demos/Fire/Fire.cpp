@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,12 +25,12 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Frame.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
@@ -39,7 +39,7 @@
 #include <unistd.h>
 
 #define FIRE_WIDTH 320
-#define FIRE_HEIGHT 168
+#define FIRE_HEIGHT 200
 #define FIRE_MAX 29
 
 static const Color s_palette[] = {
@@ -55,8 +55,9 @@ static const Color s_palette[] = {
     Color(0xCF, 0xCF, 0x6F), Color(0xEF, 0xEF, 0xC7), Color(0xFF, 0xFF, 0xFF)
 };
 
-class Fire : public GUI::Widget {
-    C_OBJECT(Fire)
+class Fire : public GUI::Frame {
+    C_OBJECT(Fire);
+
 public:
     virtual ~Fire() override;
     void set_stat_label(RefPtr<GUI::Label> l) { stats = l; };
@@ -80,7 +81,7 @@ private:
 
 Fire::Fire()
 {
-    bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::Indexed8, { 320, 200 });
+    bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::Indexed8, { FIRE_WIDTH, FIRE_HEIGHT });
 
     /* Initialize fire palette */
     for (int i = 0; i < 30; i++)
@@ -113,12 +114,13 @@ Fire::~Fire()
 
 void Fire::paint_event(GUI::PaintEvent& event)
 {
+    GUI::Frame::paint_event(event);
     Core::ElapsedTimer timer;
     timer.start();
 
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
-    painter.draw_scaled_bitmap(rect(), *bitmap, bitmap->rect());
+    painter.draw_scaled_bitmap(frame_inner_rect(), *bitmap, bitmap->rect());
 
     timeAvg += timer.elapsed();
     cycles++;
@@ -133,7 +135,7 @@ void Fire::timer_event(Core::TimerEvent&)
 
     /* Paint our palettized buffer to screen */
     for (int px = 0 + phase; px < FIRE_WIDTH; px += 2) {
-        for (int py = 1; py < 200; py++) {
+        for (int py = 1; py < FIRE_HEIGHT; py++) {
             int rnd = rand() % 3;
 
             /* Calculate new pixel value, don't go below 0 */
@@ -217,7 +219,7 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(false);
     window->set_title("Fire");
     window->set_resizable(false);
-    window->resize(640, 400);
+    window->resize(FIRE_WIDTH * 2 + 4, FIRE_HEIGHT * 2 + 4);
 
     auto menubar = GUI::Menubar::construct();
     auto& file_menu = menubar->add_menu("&File");
