@@ -362,7 +362,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
             return {};
         }
 
-        Checked checked { source_length };
+        Checked<size_t> checked = source_length;
         checked += static_cast<u32>(target_offset);
         if (checked.has_overflow() || checked.value() > target_length) {
             vm.throw_exception<JS::RangeError>(global_object, "Overflow or out of bounds in target length");
@@ -436,7 +436,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
             return {};
         }
 
-        Checked checked { source_length };
+        Checked<size_t> checked = source_length;
         checked += static_cast<u32>(target_offset);
         if (checked.has_overflow() || checked.value() > target_length) {
             vm.throw_exception<JS::RangeError>(global_object, "Overflow or out of bounds in target length");

@@ -152,7 +152,7 @@ KResultOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> u
 
     Vector<pollfd, FD_SETSIZE> fds_copy;
     if (params.nfds > 0) {
-        Checked nfds_checked = sizeof(pollfd);
+        Checked<size_t> nfds_checked = sizeof(pollfd);
         nfds_checked *= params.nfds;
         if (nfds_checked.has_overflow())
             return EFAULT;
