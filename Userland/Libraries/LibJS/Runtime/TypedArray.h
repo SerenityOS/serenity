@@ -185,19 +185,14 @@ public:
         // 2. Assert: O is an Integer-Indexed exotic object.
 
         // NOTE: If the property name is a number type (An implementation-defined optimized
-        // property key type), it can be treated as a string property that has already been
-        // converted successfully into a canonical numeric index.
+        // property key type), it can be treated as a string property that will transparently be
+        // converted into a canonical numeric index.
 
         // 3. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_name.is_string() || property_name.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            // NOTE: This includes an implementation-defined optimization, see note above!
-            Value numeric_index;
-            if (property_name.is_string())
-                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
-            else
-                numeric_index = Value(property_name.as_number());
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. Let value be ! IntegerIndexedElementGet(O, numericIndex).
@@ -230,19 +225,14 @@ public:
         // 2. Assert: O is an Integer-Indexed exotic object.
 
         // NOTE: If the property name is a number type (An implementation-defined optimized
-        // property key type), it can be treated as a string property that has already been
-        // converted successfully into a canonical numeric index.
+        // property key type), it can be treated as a string property that will transparently be
+        // converted into a canonical numeric index.
 
         // 3. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_name.is_string() || property_name.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            // NOTE: This includes an implementation-defined optimization, see note above!
-            Value numeric_index;
-            if (property_name.is_string())
-                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
-            else
-                numeric_index = Value(property_name.as_number());
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
             // b. If numericIndex is not undefined, return ! IsValidIntegerIndex(O, numericIndex).
             if (!numeric_index.is_undefined())
                 return is_valid_integer_index(*this, numeric_index);
@@ -261,19 +251,14 @@ public:
         // 2. Assert: O is an Integer-Indexed exotic object.
 
         // NOTE: If the property name is a number type (An implementation-defined optimized
-        // property key type), it can be treated as a string property that has already been
-        // converted successfully into a canonical numeric index.
+        // property key type), it can be treated as a string property that will transparently be
+        // converted into a canonical numeric index.
 
         // 3. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_name.is_string() || property_name.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            // NOTE: This includes an implementation-defined optimization, see note above!
-            Value numeric_index;
-            if (property_name.is_string())
-                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
-            else
-                numeric_index = Value(property_name.as_number());
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
@@ -319,21 +304,15 @@ public:
 
         // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_name.is_valid());
-
         // NOTE: If the property name is a number type (An implementation-defined optimized
-        // property key type), it can be treated as a string property that has already been
-        // converted successfully into a canonical numeric index.
+        // property key type), it can be treated as a string property that will transparently be
+        // converted into a canonical numeric index.
 
         // 2. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_name.is_string() || property_name.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            // NOTE: This includes an implementation-defined optimization, see note above!
-            Value numeric_index;
-            if (property_name.is_string())
-                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
-            else
-                numeric_index = Value(property_name.as_number());
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. Return ! IntegerIndexedElementGet(O, numericIndex).
@@ -353,21 +332,15 @@ public:
 
         // 1. Assert: IsPropertyKey(P) is true.
         VERIFY(property_name.is_valid());
-
         // NOTE: If the property name is a number type (An implementation-defined optimized
-        // property key type), it can be treated as a string property that has already been
-        // converted successfully into a canonical numeric index.
+        // property key type), it can be treated as a string property that will transparently be
+        // converted into a canonical numeric index.
 
         // 2. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_name.is_string() || property_name.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            // NOTE: This includes an implementation-defined optimization, see note above!
-            Value numeric_index;
-            if (property_name.is_string())
-                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
-            else
-                numeric_index = Value(property_name.as_number());
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
@@ -391,21 +364,15 @@ public:
         VERIFY(property_name.is_valid());
 
         // 2. Assert: O is an Integer-Indexed exotic object.
-
         // NOTE: If the property name is a number type (An implementation-defined optimized
-        // property key type), it can be treated as a string property that has already been
-        // converted successfully into a canonical numeric index.
+        // property key type), it can be treated as a string property that will transparently be
+        // converted into a canonical numeric index.
 
         // 3. If Type(P) is String, then
         // NOTE: This includes an implementation-defined optimization, see note above!
         if (property_name.is_string() || property_name.is_number()) {
             // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-            // NOTE: This includes an implementation-defined optimization, see note above!
-            Value numeric_index;
-            if (property_name.is_string())
-                numeric_index = canonical_numeric_index_string(global_object(), property_name.to_value(vm()));
-            else
-                numeric_index = Value(property_name.as_number());
+            auto numeric_index = canonical_numeric_index_string(global_object(), property_name);
             // b. If numericIndex is not undefined, then
             if (!numeric_index.is_undefined()) {
                 // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return true; else return false.

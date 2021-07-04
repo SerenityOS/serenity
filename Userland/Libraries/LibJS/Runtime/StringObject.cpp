@@ -45,8 +45,6 @@ void StringObject::visit_edges(Cell::Visitor& visitor)
 // 10.4.3.5 StringGetOwnProperty ( S, P ),https://tc39.es/ecma262/#sec-stringgetownproperty
 static Optional<PropertyDescriptor> string_get_own_property(GlobalObject& global_object, StringObject const& string, PropertyName const& property_name)
 {
-    auto& vm = global_object.vm();
-
     // 1. Assert: S is an Object that has a [[StringData]] internal slot.
     // 2. Assert: IsPropertyKey(P) is true.
     VERIFY(property_name.is_valid());
@@ -58,14 +56,7 @@ static Optional<PropertyDescriptor> string_get_own_property(GlobalObject& global
         return {};
 
     // 4. Let index be ! CanonicalNumericIndexString(P).
-    // NOTE: If the property name is a number type (An implementation-defined optimized
-    // property key type), it can be treated as a string property that has already been
-    // converted successfully into a canonical numeric index.
-    Value index;
-    if (property_name.is_string())
-        index = canonical_numeric_index_string(global_object, property_name.to_value(vm));
-    else
-        index = Value(property_name.as_number());
+    auto index = canonical_numeric_index_string(global_object, property_name);
     // 5. If index is undefined, return undefined.
     if (index.is_undefined())
         return {};
