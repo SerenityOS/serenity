@@ -10,5 +10,5 @@ set(SOURCES
     main.cpp
 )
 
-serenity_app(Magnifier ICON find)
+serenity_app(Magnifier ICON app-magnifier)
 target_link_libraries(Magnifier LibGUI)
