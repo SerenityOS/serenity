@@ -98,7 +98,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     StringBuilder builder;
     for (size_t i = 0; i < literal_segments; ++i) {
         auto next_key = String::number(i);
-        auto next_segment_value = raw->get(next_key).value_or(js_undefined());
+        auto next_segment_value = raw->get(next_key);
         if (vm.exception())
             return {};
         auto next_segment = next_segment_value.to_string(global_object);

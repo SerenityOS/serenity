@@ -117,7 +117,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
     }
 
     auto* wrapper = Object::create(global_object, global_object.object_prototype());
-    wrapper->define_property(String::empty(), value);
+    wrapper->create_data_property_or_throw(String::empty(), value);
     auto result = serialize_json_property(global_object, state, String::empty(), wrapper);
     if (vm.exception())
         return {};
@@ -256,7 +256,7 @@ String JSONObject::serialize_json_object(GlobalObject& global_object, StringifyS
                 return {};
         }
     } else {
-        auto property_list = object.get_enumerable_own_property_names(PropertyKind::Key);
+        auto property_list = object.enumerable_own_property_names(PropertyKind::Key);
         if (vm.exception())
             return {};
         for (auto& property : property_list) {
@@ -428,7 +428,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
     if (reviver.is_function()) {
         auto* root = Object::create(global_object, global_object.object_prototype());
         auto root_name = String::empty();
-        root->define_property(root_name, unfiltered);
+        root->create_data_property_or_throw(root_name, unfiltered);
         auto result = internalize_json_property(global_object, root, root_name, reviver.as_function());
         if (vm.exception())
             return {};
@@ -493,9 +493,9 @@ Value JSONObject::internalize_json_property(GlobalObject& global_object, Object*
             if (vm.exception())
                 return;
             if (element.is_undefined())
-                value_object.delete_property(key);
+                value_object.internal_delete(key);
             else
-                value_object.define_property(key, element, default_attributes);
+                value_object.create_data_property(key, element);
         };
 
         if (is_array) {
@@ -508,7 +508,7 @@ Value JSONObject::internalize_json_property(GlobalObject& global_object, Object*
                     return {};
             }
         } else {
-            auto property_list = value_object.get_enumerable_own_property_names(Object::PropertyKind::Key);
+            auto property_list = value_object.enumerable_own_property_names(Object::PropertyKind::Key);
             for (auto& property_name : property_list) {
                 process_property(property_name.as_string().string());
                 if (vm.exception())

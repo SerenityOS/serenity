@@ -357,7 +357,7 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
     // Collect logged messages
     auto& arr = interpreter->vm().get_variable("__UserOutput__", interpreter->global_object()).as_array();
     for (auto& entry : arr.indexed_properties()) {
-        auto message = entry.value_and_attributes(&interpreter->global_object()).value;
+        auto message = arr.get(entry.index());
         file_result.logged_messages.append(message.to_string_without_side_effects());
     }
 

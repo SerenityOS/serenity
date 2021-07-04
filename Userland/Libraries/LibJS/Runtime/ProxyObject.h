@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,20 +28,22 @@ public:
     const Object& target() const { return m_target; }
     const Object& handler() const { return m_handler; }
 
-    virtual Object* prototype() override;
-    virtual const Object* prototype() const override;
-    virtual bool set_prototype(Object* object) override;
-    virtual bool is_extensible() const override;
-    virtual bool prevent_extensions() override;
-    virtual Optional<PropertyDescriptor> get_own_property_descriptor(const PropertyName&) const override;
-    virtual bool define_property(const StringOrSymbol& property_name, const Object& descriptor, bool throw_exceptions = true) override;
-    virtual bool has_property(const PropertyName& name) const override;
-    virtual Value get(const PropertyName& name, Value receiver, AllowSideEffects = AllowSideEffects::Yes) const override;
-    virtual bool put(const PropertyName& name, Value value, Value receiver) override;
-    virtual bool delete_property(PropertyName const& name, bool force_throw_exception = false) override;
-
     bool is_revoked() const { return m_is_revoked; }
     void revoke() { m_is_revoked = true; }
+
+    // 10.5 Proxy Object Internal Methods and Internal Slots, https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots
+
+    virtual Object* internal_get_prototype_of() const override;
+    virtual bool internal_set_prototype_of(Object* prototype) override;
+    virtual bool internal_is_extensible() const override;
+    virtual bool internal_prevent_extensions() override;
+    virtual Optional<PropertyDescriptor> internal_get_own_property(PropertyName const&) const override;
+    virtual bool internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
+    virtual bool internal_has_property(PropertyName const&) const override;
+    virtual Value internal_get(PropertyName const&, Value receiver) const override;
+    virtual bool internal_set(PropertyName const&, Value value, Value receiver) override;
+    virtual bool internal_delete(PropertyName const&) override;
+    virtual MarkedValueList internal_own_property_keys() const override;
 
 private:
     virtual void visit_edges(Visitor&) override;

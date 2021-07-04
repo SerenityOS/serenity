@@ -96,6 +96,8 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
     }
 
     auto element_length = src_array.array_length();
+    auto src_element_size = src_array.element_size();
+    auto src_byte_offset = src_array.byte_offset();
     auto element_size = dest_array.element_size();
     Checked<size_t> byte_length = element_size;
     byte_length *= element_length;
@@ -104,6 +106,7 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
         return;
     }
 
+    // FIXME: Determine and use bufferConstructor
     auto data = ArrayBuffer::create(global_object, byte_length.value());
 
     if (src_data->is_detached()) {
@@ -116,26 +119,19 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
         return;
     }
 
+    u64 src_byte_index = src_byte_offset;
+    u64 target_byte_index = 0;
+    for (u32 i = 0; i < element_length; ++i) {
+        auto value = src_array.get_value_from_buffer(src_byte_index, ArrayBuffer::Order::Unordered);
+        data->template set_value<T>(target_byte_index, value, true, ArrayBuffer::Order::Unordered);
+        src_byte_index += src_element_size;
+        target_byte_index += element_size;
+    }
+
     dest_array.set_viewed_array_buffer(data);
     dest_array.set_byte_length(byte_length.value());
     dest_array.set_byte_offset(0);
     dest_array.set_array_length(element_length);
-
-    for (u32 i = 0; i < element_length; i++) {
-        Value v;
-#undef __JS_ENUMERATE
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    if (is<JS::ClassName>(src_array)) {                                                  \
-        auto& src = static_cast<JS::ClassName&>(src_array);                              \
-        v = src.get_by_index(i);                                                         \
-    }
-        JS_ENUMERATE_TYPED_ARRAYS
-#undef __JS_ENUMERATE
-
-        VERIFY(!v.is_empty());
-
-        dest_array.put_by_index(i, v);
-    }
 }
 
 // 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
@@ -160,10 +156,10 @@ static void initialize_typed_array_from_array_like(GlobalObject& global_object, 
     typed_array.set_array_length(length);
 
     for (size_t k = 0; k < length; k++) {
-        auto value = array_like.get(k).value_or(js_undefined());
+        auto value = array_like.get(k);
         if (vm.exception())
             return;
-        typed_array.put_by_index(k, value);
+        typed_array.set(k, value, true);
         if (vm.exception())
             return;
     }
@@ -188,7 +184,7 @@ static void initialize_typed_array_from_list(GlobalObject& global_object, TypedA
     auto& vm = global_object.vm();
     for (size_t k = 0; k < list.size(); k++) {
         auto value = list[k];
-        typed_array.put_by_index(k, value);
+        typed_array.set(k, value, true);
         if (vm.exception())
             return;
     }

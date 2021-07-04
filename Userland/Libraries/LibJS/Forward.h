@@ -175,11 +175,6 @@ class TypedArrayPrototype;
 // Tag type used to differentiate between u8 as used by Uint8Array and u8 as used by Uint8ClampedArray.
 struct ClampedU8;
 
-enum class AllowSideEffects {
-    Yes,
-    No
-};
-
 #define __JS_ENUMERATE(ClassName, snake_name, ConstructorName, PrototypeName, ArrayType) \
     class ClassName;                                                                     \
     class ConstructorName;                                                               \

@@ -34,10 +34,7 @@ describe("normal behavior", () => {
         // expect(Object.defineProperty(o, "foo", { configurable: false })).toBe(o);
         expect(() => {
             Object.defineProperty(o, "foo", { configurable: true });
-        }).toThrowWithMessage(
-            TypeError,
-            "Cannot change attributes of non-configurable property 'foo'"
-        );
+        }).toThrowWithMessage(TypeError, "Object's [[DefineOwnProperty]] method returned false");
     });
 
     test("prevents changing value of existing properties", () => {

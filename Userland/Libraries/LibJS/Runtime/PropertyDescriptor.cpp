@@ -13,9 +13,6 @@
 
 namespace JS {
 
-// Disabled until PropertyDescriptor in Object.h is gone. I want to introduce this thing in a separate commit,
-// but the names conflict - this is the easiest solution. :^)
-#if 0
 // 6.2.5.1 IsAccessorDescriptor ( Desc ), https://tc39.es/ecma262/#sec-isaccessordescriptor
 bool PropertyDescriptor::is_accessor_descriptor() const
 {
@@ -190,6 +187,5 @@ PropertyAttributes PropertyDescriptor::attributes() const
         attributes |= Attribute::Configurable;
     return { attributes };
 }
-#endif
 
 }

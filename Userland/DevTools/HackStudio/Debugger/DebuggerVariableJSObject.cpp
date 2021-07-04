@@ -29,19 +29,19 @@ DebuggerVariableJSObject::~DebuggerVariableJSObject()
 {
 }
 
-bool DebuggerVariableJSObject::put(const JS::PropertyName& name, JS::Value value, JS::Value receiver)
+bool DebuggerVariableJSObject::internal_set(const JS::PropertyName& property_name, JS::Value value, JS::Value receiver)
 {
     if (m_is_writing_properties)
-        return JS::Object::put(name, value, receiver);
+        return Base::internal_set(property_name, value, receiver);
 
-    if (!name.is_string()) {
-        vm().throw_exception<JS::TypeError>(global_object(), String::formatted("Invalid variable name {}", name.to_string()));
+    if (!property_name.is_string()) {
+        vm().throw_exception<JS::TypeError>(global_object(), String::formatted("Invalid variable name {}", property_name.to_string()));
         return false;
     }
 
-    auto property_name = name.as_string();
+    auto name = property_name.as_string();
     auto it = m_variable_info.members.find_if([&](auto& variable) {
-        return variable->name == property_name;
+        return variable->name == name;
     });
 
     if (it.is_end()) {
@@ -52,7 +52,7 @@ bool DebuggerVariableJSObject::put(const JS::PropertyName& name, JS::Value value
     auto& member = **it;
     auto new_value = debugger_object().js_to_debugger(value, member);
     if (!new_value.has_value()) {
-        auto string_error = String::formatted("Cannot convert JS value {} to variable {} of type {}", value.to_string_without_side_effects(), name.as_string(), member.type_name);
+        auto string_error = String::formatted("Cannot convert JS value {} to variable {} of type {}", value.to_string_without_side_effects(), name, member.type_name);
         vm().throw_exception<JS::TypeError>(global_object(), string_error);
         return false;
     }

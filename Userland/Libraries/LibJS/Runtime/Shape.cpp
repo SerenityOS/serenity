@@ -207,8 +207,9 @@ void Shape::remove_property_from_unique_shape(const StringOrSymbol& property_nam
     }
 }
 
-void Shape::add_property_without_transition(const StringOrSymbol& property_name, PropertyAttributes attributes)
+void Shape::add_property_without_transition(StringOrSymbol const& property_name, PropertyAttributes attributes)
 {
+    VERIFY(property_name.is_valid());
     ensure_property_table();
     if (m_property_table->set(property_name, { m_property_count, attributes }) == AK::HashSetResult::InsertedNewEntry)
         ++m_property_count;
@@ -216,7 +217,8 @@ void Shape::add_property_without_transition(const StringOrSymbol& property_name,
 
 FLATTEN void Shape::add_property_without_transition(PropertyName const& property_name, PropertyAttributes attributes)
 {
-    add_property_without_transition(StringOrSymbol(property_name.as_string()), attributes);
+    VERIFY(property_name.is_valid());
+    add_property_without_transition(property_name.to_string_or_symbol(), attributes);
 }
 
 }

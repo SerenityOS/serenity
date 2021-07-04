@@ -40,7 +40,7 @@ static Value this_bigint_value(GlobalObject& global_object, Value value)
     if (value.is_bigint())
         return value;
     if (value.is_object() && is<BigIntObject>(value.as_object()))
-        return static_cast<BigIntObject&>(value.as_object()).value_of();
+        return &static_cast<BigIntObject&>(value.as_object()).bigint();
     auto& vm = global_object.vm();
     vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "BigInt");
     return {};

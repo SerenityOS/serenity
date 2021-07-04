@@ -35,7 +35,7 @@ Value FunctionEnvironment::get_super_base() const
     auto home_object = m_function_object->home_object();
     if (home_object.is_undefined())
         return js_undefined();
-    return home_object.as_object().prototype();
+    return home_object.as_object().internal_get_prototype_of();
 }
 
 // 9.1.1.3.2 HasThisBinding ( ), https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding

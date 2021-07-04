@@ -596,7 +596,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     size_t result_len = 0;
 
     auto limit = NumericLimits<u32>::max();
-    if (!vm.argument(1).is_undefined()) {
+    if (!limit_argument.is_undefined()) {
         limit = limit_argument.to_u32(global_object);
         if (vm.exception())
             return {};
@@ -609,8 +609,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     if (limit == 0)
         return result;
 
-    if (vm.argument(0).is_undefined()) {
-        result->define_property(0, js_string(vm, string));
+    if (separator_argument.is_undefined()) {
+        result->create_data_property_or_throw(0, js_string(vm, string));
         return result;
     }
 
@@ -618,7 +618,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     auto separator_len = separator.length();
     if (len == 0) {
         if (separator_len > 0)
-            result->define_property(0, js_string(vm, string));
+            result->create_data_property_or_throw(0, js_string(vm, string));
         return result;
     }
 
@@ -638,7 +638,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
         }
 
         auto segment = string.substring_view(start, pos - start);
-        result->define_property(result_len, js_string(vm, segment));
+        result->create_data_property_or_throw(result_len, js_string(vm, segment));
         result_len++;
         if (result_len == limit)
             return result;
@@ -647,7 +647,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     }
 
     auto rest = string.substring(start, len - start);
-    result->define_property(result_len, js_string(vm, rest));
+    result->create_data_property_or_throw(result_len, js_string(vm, rest));
 
     return result;
 }
@@ -731,6 +731,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
     if (!regexp.is_nullish()) {
         if (auto* matcher = regexp.get_method(global_object, *vm.well_known_symbol_match()))
             return vm.call(*matcher, regexp, this_object);
+        if (vm.exception())
+            return {};
     }
     auto s = this_object.to_string(global_object);
     if (vm.exception())
@@ -793,6 +795,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     if (!search_value.is_nullish()) {
         if (auto* replacer = search_value.get_method(global_object, *vm.well_known_symbol_replace()))
             return vm.call(*replacer, search_value, this_object, replace_value);
+        if (vm.exception())
+            return {};
     }
 
     auto string = this_object.to_string(global_object);

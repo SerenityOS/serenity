@@ -193,7 +193,9 @@ void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpre
             return;
     }
 
-    auto own_keys = from_object->get_own_properties(Object::PropertyKind::Key, true);
+    auto own_keys = from_object->internal_own_property_keys();
+    if (interpreter.vm().exception())
+        return;
 
     for (auto& key : own_keys) {
         if (!excluded_names.contains(key)) {

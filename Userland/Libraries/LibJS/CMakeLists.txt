@@ -97,7 +97,6 @@ set(SOURCES
     Runtime/PromisePrototype.cpp
     Runtime/PromiseReaction.cpp
     Runtime/PromiseResolvingFunction.cpp
-    Runtime/PropertyAttributes.cpp
     Runtime/PropertyDescriptor.cpp
     Runtime/ProxyConstructor.cpp
     Runtime/ProxyObject.cpp
@@ -106,7 +105,7 @@ set(SOURCES
     Runtime/RegExpConstructor.cpp
     Runtime/RegExpObject.cpp
     Runtime/RegExpPrototype.cpp
-        Runtime/OrdinaryFunctionObject.cpp
+    Runtime/OrdinaryFunctionObject.cpp
     Runtime/Set.cpp
     Runtime/SetConstructor.cpp
     Runtime/SetIterator.cpp

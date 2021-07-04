@@ -47,7 +47,7 @@ describe("errors", () => {
 
         expect(() => {
             Object.defineProperty(o, "baz", { value: "baz" });
-        }).toThrowWithMessage(TypeError, "Cannot define property baz on non-extensible object");
+        }).toThrowWithMessage(TypeError, "Object's [[DefineOwnProperty]] method returned false");
 
         expect(o.baz).toBeUndefined();
     });
@@ -59,7 +59,7 @@ describe("errors", () => {
         expect(() => {
             "use strict";
             o.foo = "foo";
-        }).toThrowWithMessage(TypeError, "Cannot define property foo on non-extensible object");
+        }).toThrowWithMessage(TypeError, "Cannot set property 'foo' of [object Object]");
 
         expect((o.foo = "foo")).toBe("foo");
         expect(o.foo).toBeUndefined();

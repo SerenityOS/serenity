@@ -13,7 +13,7 @@ test("extending null", () => {
 
     expect(() => {
         new A();
-    }).toThrowWithMessage(ReferenceError, "|this| has not been initialized");
+    }).toThrowWithMessage(TypeError, "Super constructor is not a constructor");
 });
 
 test("extending String", () => {

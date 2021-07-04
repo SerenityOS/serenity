@@ -111,7 +111,8 @@ void GlobalObject::initialize_global_object()
     static_cast<FunctionPrototype*>(m_function_prototype)->initialize(*this);
     static_cast<ObjectPrototype*>(m_object_prototype)->initialize(*this);
 
-    Object::set_prototype(m_object_prototype);
+    auto success = Object::internal_set_prototype_of(m_object_prototype);
+    VERIFY(success);
 
     // This must be initialized before allocating AggregateErrorPrototype, which uses ErrorPrototype as its prototype.
     m_error_prototype = heap().allocate<ErrorPrototype>(*this, *this);
@@ -147,9 +148,9 @@ void GlobalObject::initialize_global_object()
         vm.throw_exception<TypeError>(global_object, ErrorType::RestrictedFunctionPropertiesAccess);
         return Value();
     });
-    m_throw_type_error_function->prevent_extensions();
     m_throw_type_error_function->define_property_without_transition(vm.names.length, Value(0), 0, false);
     m_throw_type_error_function->define_property_without_transition(vm.names.name, js_string(vm, ""), 0, false);
+    m_throw_type_error_function->internal_prevent_extensions();
 
     // 10.2.4 AddRestrictedFunctionProperties ( F, realm ), https://tc39.es/ecma262/#sec-addrestrictedfunctionproperties
     m_function_prototype->define_accessor(vm.names.caller, throw_type_error_function(), throw_type_error_function(), Attribute::Configurable);

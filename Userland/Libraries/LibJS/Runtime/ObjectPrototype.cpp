@@ -130,7 +130,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
     auto property_descriptor = this_object->get_own_property_descriptor(property_key);
     if (!property_descriptor.has_value())
         return Value(false);
-    return Value(property_descriptor.value().attributes.is_enumerable());
+    return Value(*property_descriptor->enumerable);
 }
 
 // 20.1.3.3 Object.prototype.isPrototypeOf ( V ), https://tc39.es/ecma262/#sec-object.prototype.isprototypeof
@@ -145,7 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
         return {};
 
     for (;;) {
-        object = object->prototype();
+        object = object->internal_get_prototype_of();
         if (!object)
             return Value(false);
         if (same_value(this_object, object))
@@ -166,22 +166,16 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
         return {};
     }
 
+    auto descriptor = PropertyDescriptor { .get = &getter.as_function(), .enumerable = true, .configurable = true };
+
     auto key = vm.argument(0).to_property_key(global_object);
     if (vm.exception())
         return {};
 
-    auto descriptor = Object::create(global_object, global_object.object_prototype());
-    descriptor->define_property(vm.names.get, getter);
-    descriptor->define_property(vm.names.enumerable, Value(true));
-    descriptor->define_property(vm.names.configurable, Value(true));
-
-    auto success = object->define_property(key, *descriptor);
+    object->define_property_or_throw(key, descriptor);
     if (vm.exception())
         return {};
-    if (!success) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ObjectDefinePropertyReturnedFalse);
-        return {};
-    }
+
     return js_undefined();
 }
 
@@ -198,22 +192,16 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
         return {};
     }
 
+    auto descriptor = PropertyDescriptor { .set = &setter.as_function(), .enumerable = true, .configurable = true };
+
     auto key = vm.argument(0).to_property_key(global_object);
     if (vm.exception())
         return {};
 
-    auto descriptor = Object::create(global_object, global_object.object_prototype());
-    descriptor->define_property(vm.names.set, setter);
-    descriptor->define_property(vm.names.enumerable, Value(true));
-    descriptor->define_property(vm.names.configurable, Value(true));
-
-    auto success = object->define_property(key, *descriptor);
+    object->define_property_or_throw(key, descriptor);
     if (vm.exception())
         return {};
-    if (!success) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ObjectDefinePropertyReturnedFalse);
-        return {};
-    }
+
     return js_undefined();
 }
 
@@ -229,12 +217,15 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
         return {};
 
     while (object) {
-        auto desc = object->get_own_property_descriptor(key);
+        auto desc = object->internal_get_own_property(key);
         if (vm.exception())
             return {};
-        if (desc.has_value())
-            return desc->getter ?: js_undefined();
-        object = object->prototype();
+        if (desc.has_value()) {
+            if (desc->is_accessor_descriptor())
+                return *desc->get ?: js_undefined();
+            return js_undefined();
+        }
+        object = object->internal_get_prototype_of();
         if (vm.exception())
             return {};
     }
@@ -254,12 +245,15 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
         return {};
 
     while (object) {
-        auto desc = object->get_own_property_descriptor(key);
+        auto desc = object->internal_get_own_property(key);
         if (vm.exception())
             return {};
-        if (desc.has_value())
-            return desc->setter ?: js_undefined();
-        object = object->prototype();
+        if (desc.has_value()) {
+            if (desc->is_accessor_descriptor())
+                return *desc->set ?: js_undefined();
+            return js_undefined();
+        }
+        object = object->internal_get_prototype_of();
         if (vm.exception())
             return {};
     }
@@ -273,7 +267,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_getter)
     auto object = vm.this_value(global_object).to_object(global_object);
     if (vm.exception())
         return {};
-    auto proto = object->prototype();
+    auto proto = object->internal_get_prototype_of();
     if (vm.exception())
         return {};
     return proto;
@@ -293,10 +287,11 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_setter)
     if (!object.is_object())
         return js_undefined();
 
-    auto status = object.as_object().set_prototype(proto.is_object() ? &proto.as_object() : nullptr);
+    auto status = object.as_object().internal_set_prototype_of(proto.is_object() ? &proto.as_object() : nullptr);
     if (vm.exception())
         return {};
     if (!status) {
+        // FIXME: Improve/contextualize error message
         vm.throw_exception<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfReturnedFalse);
         return {};
     }

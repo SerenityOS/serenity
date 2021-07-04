@@ -8,7 +8,6 @@
 
 #define JS_ENUMERATE_ERROR_TYPES(M)                                                                                                     \
     M(ArrayMaxSize, "Maximum array size exceeded")                                                                                      \
-    M(ArrayPrototypeOneArg, "Array.prototype.{}() requires at least one argument")                                                      \
     M(AccessorBadField, "Accessor descriptor's '{}' field must be a function or undefined")                                             \
     M(AccessorValueOrWritable, "Accessor property descriptor cannot specify a value or writable key")                                   \
     M(BigIntBadOperator, "Cannot use {} operator with BigInt")                                                                          \
@@ -23,7 +22,6 @@
     M(ConstructorWithoutNew, "{} constructor must be called with 'new'")                                                                \
     M(Convert, "Cannot convert {} to {}")                                                                                               \
     M(DataViewOutOfRangeByteOffset, "Data view byte offset {} is out of range for buffer with length {}")                               \
-    M(DescChangeNonConfigurable, "Cannot change attributes of non-configurable property '{}'")                                          \
     M(DescWriteNonWritable, "Cannot write to non-writable property '{}'")                                                               \
     M(DetachedArrayBuffer, "ArrayBuffer is detached")                                                                                   \
     M(DivisionByZero, "Division by zero")                                                                                               \
@@ -60,9 +58,11 @@
     M(NotASymbol, "{} is not a symbol")                                                                                                 \
     M(NotIterable, "{} is not iterable")                                                                                                \
     M(NotObjectCoercible, "{} cannot be converted to an object")                                                                        \
-    M(ObjectDefinePropertyReturnedFalse, "Object's [[DefineProperty]] method returned false")                                           \
+    M(ObjectDefineOwnPropertyReturnedFalse, "Object's [[DefineOwnProperty]] method returned false")                                     \
+    M(ObjectDeleteReturnedFalse, "Object's [[Delete]] method returned false")                                                           \
     M(ObjectFreezeFailed, "Could not freeze object")                                                                                    \
     M(ObjectSealFailed, "Could not seal object")                                                                                        \
+    M(ObjectSetReturnedFalse, "Object's [[Set]] method returned false")                                                                 \
     M(ObjectSetPrototypeOfReturnedFalse, "Object's [[SetPrototypeOf]] method returned false")                                           \
     M(ObjectPreventExtensionsReturnedFalse, "Object's [[PreventExtensions]] method returned false")                                     \
     M(ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess,                                                                              \
@@ -81,11 +81,17 @@
     M(ProxyDefinePropNonConfigurableNonExisting, "Proxy handler's defineProperty trap "                                                 \
                                                  "violates invariant: a property cannot be defined as non-configurable if it does not " \
                                                  "already exist on the target object")                                                  \
+    M(ProxyDefinePropNonWritable, "Proxy handler's defineProperty trap violates invariant: a non-configurable property cannot be "      \
+                                  "non-writable, unless there exists a corresponding non-configurable, non-writable own property of "   \
+                                  "the target object")                                                                                  \
     M(ProxyDefinePropNonExtensible, "Proxy handler's defineProperty trap violates invariant: "                                          \
                                     "a property cannot be reported as being defined if the property does not exist on "                 \
                                     "the target and the target is non-extensible")                                                      \
     M(ProxyDeleteNonConfigurable, "Proxy handler's deleteProperty trap violates invariant: "                                            \
                                   "cannot report a non-configurable own property of the target as deleted")                             \
+    M(ProxyDeleteNonExtensible, "Proxy handler's deleteProperty trap violates invariant: "                                              \
+                                "a property cannot be reported as deleted, if it exists as an own property of the target object and "   \
+                                "the target object is non-extensible. ")                                                                \
     M(ProxyGetImmutableDataProperty, "Proxy handler's get trap violates invariant: the "                                                \
                                      "returned value must match the value on the target if the property exists on the "                 \
                                      "target as a non-writable, non-configurable own data property")                                    \
@@ -103,6 +109,10 @@
     M(ProxyGetOwnDescriptorNonConfigurable, "Proxy handler's getOwnPropertyDescriptor trap "                                            \
                                             "violates invariant: cannot return undefined for a property on the target which is "        \
                                             "a non-configurable property")                                                              \
+    M(ProxyGetOwnDescriptorNonConfigurableNonWritable, "Proxy handler's getOwnPropertyDescriptor trap "                                 \
+                                                       "violates invariant: cannot a property as both non-configurable and "            \
+                                                       "non-writable, unless it exists as a non-configurable, non-writable own "        \
+                                                       "property of the target object")                                                 \
     M(ProxyGetOwnDescriptorReturn, "Proxy handler's getOwnPropertyDescriptor trap violates "                                            \
                                    "invariant: must return an object or undefined")                                                     \
     M(ProxyGetOwnDescriptorUndefinedReturn, "Proxy handler's getOwnPropertyDescriptor trap "                                            \
@@ -120,6 +130,8 @@
                                      "non-extensible")                                                                                  \
     M(ProxyIsExtensibleReturn, "Proxy handler's isExtensible trap violates invariant: "                                                 \
                                "return value must match the target's extensibility")                                                    \
+    M(ProxyOwnPropertyKeysNotStringOrSymbol, "Proxy handler's ownKeys trap violates invariant: "                                        \
+                                             "the type of each result list element is either String or Symbol")                         \
     M(ProxyPreventExtensionsReturn, "Proxy handler's preventExtensions trap violates "                                                  \
                                     "invariant: cannot return true if the target object is extensible")                                 \
     M(ProxyRevoked, "An operation was performed on a revoked Proxy object")                                                             \
@@ -138,11 +150,6 @@
     M(ReferenceNullishSetProperty, "Cannot set property '{}' of {}")                                                                    \
     M(ReferencePrimitiveSetProperty, "Cannot set property '{}' of {} '{}'")                                                             \
     M(ReferenceUnresolvable, "Unresolvable reference")                                                                                  \
-    M(ReflectArgumentMustBeAConstructor, "First argument of Reflect.{}() must be a constructor")                                        \
-    M(ReflectArgumentMustBeAFunction, "First argument of Reflect.{}() must be a function")                                              \
-    M(ReflectArgumentMustBeAnObject, "First argument of Reflect.{}() must be an object")                                                \
-    M(ReflectBadNewTarget, "Optional third argument of Reflect.construct() must be a constructor")                                      \
-    M(ReflectBadDescriptorArgument, "Descriptor argument is not an object")                                                             \
     M(RegExpCompileError, "RegExp compile error: {}")                                                                                   \
     M(RegExpObjectBadFlag, "Invalid RegExp flag '{}'")                                                                                  \
     M(RegExpObjectRepeatedFlag, "Repeated RegExp flag '{}'")                                                                            \
@@ -151,6 +158,7 @@
     M(SpeciesConstructorDidNotCreate, "Species constructor did not create {}")                                                          \
     M(SpeciesConstructorReturned, "Species constructor returned {}")                                                                    \
     M(StringMatchAllNonGlobalRegExp, "RegExp argument is non-global")                                                                   \
+    M(StringRawCannotConvert, "Cannot convert property 'raw' to object from {}")                                                        \
     M(StringRepeatCountMustBe, "repeat count must be a {} number")                                                                      \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
     M(ThisIsAlreadyInitialized, "|this| is already initialized")                                                                        \

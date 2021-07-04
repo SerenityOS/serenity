@@ -101,29 +101,29 @@ SheetGlobalObject::~SheetGlobalObject()
 {
 }
 
-JS::Value SheetGlobalObject::get(const JS::PropertyName& name, JS::Value receiver, JS::AllowSideEffects allow_side_effects) const
+JS::Value SheetGlobalObject::internal_get(const JS::PropertyName& property_name, JS::Value receiver) const
 {
-    if (name.is_string()) {
-        if (name.as_string() == "value") {
+    if (property_name.is_string()) {
+        if (property_name.as_string() == "value") {
             if (auto cell = m_sheet.current_evaluated_cell())
                 return cell->js_data();
 
             return JS::js_undefined();
         }
-        if (auto pos = m_sheet.parse_cell_name(name.as_string()); pos.has_value()) {
+        if (auto pos = m_sheet.parse_cell_name(property_name.as_string()); pos.has_value()) {
             auto& cell = m_sheet.ensure(pos.value());
             cell.reference_from(m_sheet.current_evaluated_cell());
             return cell.typed_js_data();
         }
     }
 
-    return GlobalObject::get(name, receiver, allow_side_effects);
+    return Base::internal_get(property_name, receiver);
 }
 
-bool SheetGlobalObject::put(const JS::PropertyName& name, JS::Value value, JS::Value receiver)
+bool SheetGlobalObject::internal_set(const JS::PropertyName& property_name, JS::Value value, JS::Value receiver)
 {
-    if (name.is_string()) {
-        if (auto pos = m_sheet.parse_cell_name(name.as_string()); pos.has_value()) {
+    if (property_name.is_string()) {
+        if (auto pos = m_sheet.parse_cell_name(property_name.as_string()); pos.has_value()) {
             auto& cell = m_sheet.ensure(pos.value());
             if (auto current = m_sheet.current_evaluated_cell())
                 current->reference_from(&cell);
@@ -133,7 +133,7 @@ bool SheetGlobalObject::put(const JS::PropertyName& name, JS::Value value, JS::V
         }
     }
 
-    return GlobalObject::put(name, value, receiver);
+    return Base::internal_set(property_name, value, receiver);
 }
 
 void SheetGlobalObject::initialize_global_object()

@@ -7,7 +7,7 @@ describe("errors", () => {
         [null, undefined, "foo", 123, NaN, Infinity].forEach(value => {
             expect(() => {
                 Reflect.set(value);
-            }).toThrowWithMessage(TypeError, "First argument of Reflect.set() must be an object");
+            }).toThrowWithMessage(TypeError, `${value} is not an object`);
         });
     });
 });

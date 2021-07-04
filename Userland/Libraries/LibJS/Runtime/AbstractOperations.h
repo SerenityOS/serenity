@@ -24,9 +24,12 @@ size_t length_of_array_like(GlobalObject&, Object const&);
 MarkedValueList create_list_from_array_like(GlobalObject&, Value, Function<Result<void, ErrorType>(Value)> = {});
 FunctionObject* species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
 GlobalObject* get_function_realm(GlobalObject&, FunctionObject const&);
+bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
+bool validate_and_apply_property_descriptor(Object*, PropertyName const&, bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 Object* get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
 Object* create_unmapped_arguments_object(GlobalObject&, Vector<Value> const& arguments);
 Object* create_mapped_arguments_object(GlobalObject&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Vector<Value> const& arguments, Environment&);
+Value canonical_numeric_index_string(GlobalObject&, Value);
 
 enum class CallerMode {
     Strict,

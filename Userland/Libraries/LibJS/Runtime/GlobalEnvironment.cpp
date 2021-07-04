@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -143,10 +144,14 @@ bool GlobalEnvironment::has_lexical_declaration(FlyString const& name) const
 // 9.1.1.4.14 HasRestrictedGlobalProperty ( N ), https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty
 bool GlobalEnvironment::has_restricted_global_property(FlyString const& name) const
 {
-    auto existing_prop = m_object_record->binding_object().get_own_property_descriptor(name);
-    if (!existing_prop.has_value() || existing_prop.value().value.is_undefined())
+    auto& vm = this->vm();
+    auto& global_object = m_object_record->binding_object();
+    auto existing_prop = global_object.internal_get_own_property(name);
+    if (vm.exception())
+        return {};
+    if (!existing_prop.has_value())
         return false;
-    if (existing_prop.value().attributes.is_configurable())
+    if (*existing_prop->configurable)
         return false;
     return true;
 }
@@ -154,21 +159,29 @@ bool GlobalEnvironment::has_restricted_global_property(FlyString const& name) co
 // 9.1.1.4.15 CanDeclareGlobalVar ( N ), https://tc39.es/ecma262/#sec-candeclareglobalvar
 bool GlobalEnvironment::can_declare_global_var(FlyString const& name) const
 {
-    bool has_property = m_object_record->binding_object().has_own_property(name);
+    auto& vm = this->vm();
+    auto& global_object = m_object_record->binding_object();
+    bool has_property = global_object.has_own_property(name);
+    if (vm.exception())
+        return {};
     if (has_property)
         return true;
-    return m_object_record->binding_object().is_extensible();
+    return global_object.is_extensible();
 }
 
 // 9.1.1.4.16 CanDeclareGlobalFunction ( N ), https://tc39.es/ecma262/#sec-candeclareglobalfunction
 bool GlobalEnvironment::can_declare_global_function(FlyString const& name) const
 {
-    auto existing_prop = m_object_record->binding_object().get_own_property_descriptor(name);
-    if (!existing_prop.has_value() || existing_prop.value().value.is_undefined())
-        return m_object_record->binding_object().is_extensible();
-    if (existing_prop.value().attributes.is_configurable())
+    auto& vm = this->vm();
+    auto& global_object = m_object_record->binding_object();
+    auto existing_prop = global_object.internal_get_own_property(name);
+    if (vm.exception())
+        return {};
+    if (!existing_prop.has_value())
+        return global_object.is_extensible();
+    if (*existing_prop->configurable)
         return true;
-    if (existing_prop.value().is_data_descriptor() && existing_prop.value().attributes.is_writable() && existing_prop.value().attributes.is_enumerable())
+    if (existing_prop->is_data_descriptor() && *existing_prop->writable && *existing_prop->enumerable)
         return true;
     return false;
 }
@@ -176,11 +189,21 @@ bool GlobalEnvironment::can_declare_global_function(FlyString const& name) const
 // 9.1.1.4.17 CreateGlobalVarBinding ( N, D ), https://tc39.es/ecma262/#sec-createglobalvarbinding
 void GlobalEnvironment::create_global_var_binding(FlyString const& name, bool can_be_deleted)
 {
-    bool has_property = m_object_record->binding_object().has_own_property(name);
-    bool extensible = m_object_record->binding_object().is_extensible();
+    auto& vm = this->vm();
+    auto& global_object = m_object_record->binding_object();
+    bool has_property = global_object.has_own_property(name);
+    if (vm.exception())
+        return;
+    bool extensible = global_object.is_extensible();
+    if (vm.exception())
+        return;
     if (!has_property && extensible) {
-        m_object_record->create_mutable_binding(static_cast<GlobalObject&>(m_object_record->binding_object()), name, can_be_deleted);
+        m_object_record->create_mutable_binding(m_object_record->global_object(), name, can_be_deleted);
+        if (vm.exception())
+            return;
         m_object_record->initialize_binding(m_object_record->global_object(), name, js_undefined());
+        if (vm.exception())
+            return;
     }
     if (!m_var_names.contains_slow(name))
         m_var_names.append(name);
@@ -189,23 +212,21 @@ void GlobalEnvironment::create_global_var_binding(FlyString const& name, bool ca
 // 9.1.1.4.18 CreateGlobalFunctionBinding ( N, V, D ), https://tc39.es/ecma262/#sec-createglobalfunctionbinding
 void GlobalEnvironment::create_global_function_binding(FlyString const& name, Value value, bool can_be_deleted)
 {
-    auto existing_prop = m_object_record->binding_object().get_own_property_descriptor(name);
+    auto& vm = this->vm();
+    auto& global_object = m_object_record->binding_object();
+    auto existing_prop = global_object.internal_get_own_property(name);
+    if (vm.exception())
+        return;
     PropertyDescriptor desc;
-    if (!existing_prop.has_value() || existing_prop.value().value.is_undefined() || existing_prop.value().attributes.is_configurable()) {
-        desc.value = value;
-        desc.attributes.set_has_writable();
-        desc.attributes.set_writable();
-        desc.attributes.set_has_enumerable();
-        desc.attributes.set_enumerable();
-        desc.attributes.set_has_configurable();
-        if (can_be_deleted)
-            desc.attributes.set_configurable();
-    } else {
-        desc.value = value;
-    }
-    // FIXME: This should be DefinePropertyOrThrow, followed by Set
-    m_object_record->binding_object().define_property(name, value, desc.attributes);
-    if (vm().exception())
+    if (!existing_prop.has_value() || *existing_prop->configurable)
+        desc = { .value = value, .writable = true, .enumerable = true, .configurable = can_be_deleted };
+    else
+        desc = { .value = value };
+    global_object.define_property_or_throw(name, desc);
+    if (vm.exception())
+        return;
+    global_object.set(name, value, false);
+    if (vm.exception())
         return;
     if (!m_var_names.contains_slow(name))
         m_var_names.append(name);

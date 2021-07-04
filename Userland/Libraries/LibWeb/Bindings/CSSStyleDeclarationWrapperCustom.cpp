@@ -11,12 +11,12 @@
 
 namespace Web::Bindings {
 
-JS::Value CSSStyleDeclarationWrapper::get(const JS::PropertyName& name, JS::Value receiver, JS::AllowSideEffects allow_side_effects) const
+JS::Value CSSStyleDeclarationWrapper::internal_get(const JS::PropertyName& name, JS::Value receiver) const
 {
     // FIXME: These should actually use camelCase versions of the property names!
     auto property_id = CSS::property_id_from_string(name.to_string());
     if (property_id == CSS::PropertyID::Invalid)
-        return Base::get(name, receiver, allow_side_effects);
+        return Base::internal_get(name, receiver);
     for (auto& property : impl().properties()) {
         if (property.property_id == property_id)
             return js_string(vm(), property.value->to_string());
@@ -24,12 +24,12 @@ JS::Value CSSStyleDeclarationWrapper::get(const JS::PropertyName& name, JS::Valu
     return js_string(vm(), String::empty());
 }
 
-bool CSSStyleDeclarationWrapper::put(const JS::PropertyName& name, JS::Value value, JS::Value receiver)
+bool CSSStyleDeclarationWrapper::internal_set(const JS::PropertyName& name, JS::Value value, JS::Value receiver)
 {
     // FIXME: These should actually use camelCase versions of the property names!
     auto property_id = CSS::property_id_from_string(name.to_string());
     if (property_id == CSS::PropertyID::Invalid)
-        return Base::put(name, value, receiver);
+        return Base::internal_set(name, value, receiver);
 
     auto css_text = value.to_string(global_object());
     if (vm().exception())

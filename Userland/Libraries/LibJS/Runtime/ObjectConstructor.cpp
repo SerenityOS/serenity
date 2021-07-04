@@ -80,55 +80,102 @@ Value ObjectConstructor::construct(FunctionObject& new_target)
     return value.to_object(global_object);
 }
 
+enum class GetOwnPropertyKeysType {
+    String,
+    Symbol,
+};
+
+// 20.1.2.11.1 GetOwnPropertyKeys ( O, type ), https://tc39.es/ecma262/#sec-getownpropertykeys
+static Array* get_own_property_keys(GlobalObject& global_object, Value value, GetOwnPropertyKeysType type)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let obj be ? ToObject(O).
+    auto* object = value.to_object(global_object);
+    if (vm.exception())
+        return {};
+
+    // 2. Let keys be ? obj.[[OwnPropertyKeys]]().
+    auto keys = object->internal_own_property_keys();
+    if (vm.exception())
+        return {};
+
+    // 3. Let nameList be a new empty List.
+    auto name_list = MarkedValueList { vm.heap() };
+
+    // 4. For each element nextKey of keys, do
+    for (auto& next_key : keys) {
+        // a. If Type(nextKey) is Symbol and type is symbol or Type(nextKey) is String and type is string, then
+        if ((next_key.is_symbol() && type == GetOwnPropertyKeysType::Symbol) || (next_key.is_string() && type == GetOwnPropertyKeysType::String)) {
+            // i. Append nextKey as the last element of nameList.
+            name_list.append(next_key);
+        }
+    }
+
+    // 5. Return CreateArrayFromList(nameList).
+    return Array::create_from(global_object, name_list);
+}
+
 // 20.1.2.10 Object.getOwnPropertyNames ( O ), https://tc39.es/ecma262/#sec-object.getownpropertynames
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
 {
-    auto* object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
-    return Array::create_from(global_object, object->get_own_properties(PropertyKind::Key, false, GetOwnPropertyReturnType::StringOnly));
+    // 1. Return ? GetOwnPropertyKeys(O, string).
+    return get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::String);
 }
 
 // 20.1.2.11 Object.getOwnPropertySymbols ( O ), https://tc39.es/ecma262/#sec-object.getownpropertysymbols
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
 {
-    auto* object = vm.argument(0).to_object(global_object);
-    if (vm.exception())
-        return {};
-    return Array::create_from(global_object, object->get_own_properties(PropertyKind::Key, false, GetOwnPropertyReturnType::SymbolOnly));
+    // 1. Return ? GetOwnPropertyKeys(O, symbol).
+    return get_own_property_keys(global_object, vm.argument(0), GetOwnPropertyKeysType::Symbol);
 }
 
 // 20.1.2.12 Object.getPrototypeOf ( O ), https://tc39.es/ecma262/#sec-object.getprototypeof
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 {
+    // 1. Let obj be ? ToObject(O).
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
-    return object->prototype();
+
+    // 2. Return ? obj.[[GetPrototypeOf]]().
+    return object->internal_get_prototype_of();
 }
 
 // 20.1.2.21 Object.setPrototypeOf ( O, proto ), https://tc39.es/ecma262/#sec-object.setprototypeof
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
 {
-    auto argument = require_object_coercible(global_object, vm.argument(0));
+    auto proto = vm.argument(1);
+
+    // 1. Set O to ? RequireObjectCoercible(O).
+    auto object = require_object_coercible(global_object, vm.argument(0));
     if (vm.exception())
         return {};
-    auto prototype_value = vm.argument(1);
-    if (!prototype_value.is_object() && !prototype_value.is_null()) {
+
+    // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
+    if (!proto.is_object() && !proto.is_null()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
         return {};
     }
-    if (!argument.is_object())
-        return argument;
-    auto* prototype = prototype_value.is_null() ? nullptr : &prototype_value.as_object();
-    auto status = argument.as_object().set_prototype(prototype);
+
+    // 3. If Type(O) is not Object, return O.
+    if (!object.is_object())
+        return object;
+
+    // 4. Let status be ? O.[[SetPrototypeOf]](proto).
+    auto status = object.as_object().internal_set_prototype_of(proto.is_null() ? nullptr : &proto.as_object());
     if (vm.exception())
         return {};
+
+    // 5. If status is false, throw a TypeError exception.
     if (!status) {
+        // FIXME: Improve/contextualize error message
         vm.throw_exception<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfReturnedFalse);
         return {};
     }
-    return argument;
+
+    // 6. Return O.
+    return object;
 }
 
 // 20.1.2.14 Object.isExtensible ( O ), https://tc39.es/ecma262/#sec-object.isextensible
@@ -164,10 +211,11 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
     auto argument = vm.argument(0);
     if (!argument.is_object())
         return argument;
-    auto status = argument.as_object().prevent_extensions();
+    auto status = argument.as_object().internal_prevent_extensions();
     if (vm.exception())
         return {};
     if (!status) {
+        // FIXME: Improve/contextualize error message
         vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPreventExtensionsReturnedFalse);
         return {};
     }
@@ -247,54 +295,48 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
-    auto property_key = vm.argument(1).to_property_key(global_object);
+    auto key = vm.argument(1).to_property_key(global_object);
     if (vm.exception())
         return {};
-    return object->get_own_property_descriptor_object(property_key);
+    auto descriptor = object->internal_get_own_property(key);
+    if (vm.exception())
+        return {};
+    return from_property_descriptor(global_object, descriptor);
 }
 
 // 20.1.2.4 Object.defineProperty ( O, P, Attributes ), https://tc39.es/ecma262/#sec-object.defineproperty
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property_)
 {
     if (!vm.argument(0).is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, "Object argument");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, vm.argument(0).to_string_without_side_effects());
         return {};
     }
-    auto property_key = vm.argument(1).to_property_key(global_object);
+    auto key = vm.argument(1).to_property_key(global_object);
     if (vm.exception())
         return {};
-    if (!vm.argument(2).is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, "Descriptor argument");
+    auto descriptor = to_property_descriptor(global_object, vm.argument(2));
+    if (vm.exception())
         return {};
-    }
-    auto& object = vm.argument(0).as_object();
-    auto& descriptor = vm.argument(2).as_object();
-    if (!object.define_property(property_key, descriptor)) {
-        if (!vm.exception()) {
-            if (AK::is<ProxyObject>(object)) {
-                vm.throw_exception<TypeError>(global_object, ErrorType::ObjectDefinePropertyReturnedFalse);
-            } else {
-                vm.throw_exception<TypeError>(global_object, ErrorType::NonExtensibleDefine, property_key.to_display_string());
-            }
-        }
+    vm.argument(0).as_object().define_property_or_throw(key, descriptor);
+    if (vm.exception())
         return {};
-    }
-    return &object;
+    return vm.argument(0);
 }
 
 // 20.1.2.3 Object.defineProperties ( O, Properties ), https://tc39.es/ecma262/#sec-object.defineproperties
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_properties)
 {
-    if (!vm.argument(0).is_object()) {
+    auto object = vm.argument(0);
+    auto properties = vm.argument(1);
+
+    // 1. If Type(O) is not Object, throw a TypeError exception.
+    if (!object.is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, "Object argument");
         return {};
     }
-    auto& object = vm.argument(0).as_object();
-    auto properties = vm.argument(1);
-    object.define_properties(properties);
-    if (vm.exception())
-        return {};
-    return &object;
+
+    // 2. Return ? ObjectDefineProperties(O, Properties).
+    return object.as_object().define_properties(properties);
 }
 
 // 20.1.2.13 Object.is ( value1, value2 ), https://tc39.es/ecma262/#sec-object.is
@@ -306,56 +348,61 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is)
 // 20.1.2.17 Object.keys ( O ), https://tc39.es/ecma262/#sec-object.keys
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 {
-    auto* obj_arg = vm.argument(0).to_object(global_object);
+    auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
-
-    return Array::create_from(global_object, obj_arg->get_enumerable_own_property_names(PropertyKind::Key));
+    auto name_list = object->enumerable_own_property_names(PropertyKind::Key);
+    if (vm.exception())
+        return {};
+    return Array::create_from(global_object, name_list);
 }
 
 // 20.1.2.22 Object.values ( O ), https://tc39.es/ecma262/#sec-object.values
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 {
-    auto* obj_arg = vm.argument(0).to_object(global_object);
+    auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
-
-    return Array::create_from(global_object, obj_arg->get_enumerable_own_property_names(PropertyKind::Value));
+    auto name_list = object->enumerable_own_property_names(PropertyKind::Value);
+    if (vm.exception())
+        return {};
+    return Array::create_from(global_object, name_list);
 }
 
 // 20.1.2.5 Object.entries ( O ), https://tc39.es/ecma262/#sec-object.entries
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
 {
-    auto* obj_arg = vm.argument(0).to_object(global_object);
+    auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
-
-    return Array::create_from(global_object, obj_arg->get_enumerable_own_property_names(PropertyKind::KeyAndValue));
+    auto name_list = object->enumerable_own_property_names(PropertyKind::KeyAndValue);
+    if (vm.exception())
+        return {};
+    return Array::create_from(global_object, name_list);
 }
 
 // 20.1.2.2 Object.create ( O, Properties ), https://tc39.es/ecma262/#sec-object.create
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
 {
-    auto prototype_value = vm.argument(0);
+    auto proto = vm.argument(0);
     auto properties = vm.argument(1);
 
-    Object* prototype;
-    if (prototype_value.is_null()) {
-        prototype = nullptr;
-    } else if (prototype_value.is_object()) {
-        prototype = &prototype_value.as_object();
-    } else {
+    // 1. If Type(O) is neither Object nor Null, throw a TypeError exception.
+    if (!proto.is_object() && !proto.is_null()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
         return {};
     }
 
-    auto* object = Object::create(global_object, prototype);
+    // 2. Let obj be ! OrdinaryObjectCreate(O).
+    auto* object = Object::create(global_object, proto.is_null() ? nullptr : &proto.as_object());
 
+    // 3. If Properties is not undefined, then
     if (!properties.is_undefined()) {
-        object->define_properties(properties);
-        if (vm.exception())
-            return {};
+        // a. Return ? ObjectDefineProperties(obj, Properties).
+        return object->define_properties(properties);
     }
+
+    // 4. Return obj.
     return object;
 }
 
@@ -385,18 +432,18 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
             continue;
         auto from = next_source.to_object(global_object);
         VERIFY(!vm.exception());
-        auto keys = from->get_own_properties(PropertyKind::Key);
+        auto keys = from->internal_own_property_keys();
         if (vm.exception())
             return {};
-        for (auto& key : keys) {
-            auto property_name = PropertyName::from_value(global_object, key);
-            auto property_descriptor = from->get_own_property_descriptor(property_name);
-            if (!property_descriptor.has_value() || !property_descriptor->attributes.is_enumerable())
+        for (auto& next_key : keys) {
+            auto property_name = PropertyName::from_value(global_object, next_key);
+            auto property_descriptor = from->internal_get_own_property(property_name);
+            if (!property_descriptor.has_value() || !*property_descriptor->enumerable)
                 continue;
-            auto value = from->get(property_name);
+            auto prop_value = from->get(property_name);
             if (vm.exception())
                 return {};
-            to->put(property_name, value);
+            to->set(property_name, prop_value, true);
             if (vm.exception())
                 return {};
         }
