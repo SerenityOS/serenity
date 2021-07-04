@@ -73,7 +73,8 @@
     O(IteratorNext)                  \
     O(IteratorResultDone)            \
     O(IteratorResultValue)           \
-    O(NewClass)
+    O(NewClass)                      \
+    O(ResolveThisBinding)
 
 namespace JS::Bytecode {
 

@@ -454,6 +454,11 @@ void IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
         interpreter.accumulator() = iterator_value(interpreter.global_object(), *iterator_result);
 }
 
+void ResolveThisBinding::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.accumulator() = interpreter.vm().resolve_this_binding(interpreter.global_object());
+}
+
 void NewClass::execute_impl(Bytecode::Interpreter&) const
 {
     (void)m_class_expression;
@@ -698,6 +703,11 @@ String IteratorResultDone::to_string_impl(Executable const&) const
 String IteratorResultValue::to_string_impl(Executable const&) const
 {
     return "IteratorResultValue";
+}
+
+String ResolveThisBinding::to_string_impl(Executable const&) const
+{
+    return "ResolveThisBinding";
 }
 
 }
