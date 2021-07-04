@@ -348,7 +348,6 @@ NonnullRefPtr<Statement> Parser::parse_statement()
 RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expect_parens)
 {
     save_state();
-    m_state.var_scopes.append(NonnullRefPtrVector<VariableDeclaration>());
     auto rule_start = push_start();
 
     ArmedScopeGuard state_rollback_guard = [&] {
@@ -426,7 +425,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         auto body = function_body_result.release_nonnull();
         return create_ast_node<FunctionExpression>(
             { m_state.current_token.filename(), rule_start.position(), position() }, "", move(body),
-            move(parameters), function_length, m_state.var_scopes.take_last(), FunctionKind::Regular, is_strict, true);
+            move(parameters), function_length, FunctionKind::Regular, is_strict, true);
     }
 
     return nullptr;
@@ -623,11 +622,11 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
             constructor = create_ast_node<FunctionExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
-                Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, NonnullRefPtrVector<VariableDeclaration>(), FunctionKind::Regular, true);
+                Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, FunctionKind::Regular, true);
         } else {
             constructor = create_ast_node<FunctionExpression>(
                 { m_state.current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
-                Vector<FunctionNode::Parameter> {}, 0, NonnullRefPtrVector<VariableDeclaration>(), FunctionKind::Regular, true);
+                Vector<FunctionNode::Parameter> {}, 0, FunctionKind::Regular, true);
         }
     }
 
@@ -1465,7 +1464,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     body->add_functions(m_state.function_scopes.last());
     return create_ast_node<FunctionNodeType>(
         { m_state.current_token.filename(), rule_start.position(), position() },
-        name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>(),
+        name, move(body), move(parameters), function_length,
         is_generator ? FunctionKind::Generator : FunctionKind::Regular, is_strict);
 }
 
