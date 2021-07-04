@@ -157,7 +157,8 @@ int main(int argc, char** argv)
                 auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
                 if (!save_path.has_value())
                     return;
-                auto result = editor->image().export_bmp_to_file(save_path.value());
+                auto preserve_alpha_channel = GUI::MessageBox::show(window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+                auto result = editor->image().export_bmp_to_file(save_path.value(), preserve_alpha_channel == GUI::MessageBox::ExecYes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(window, String::formatted("Export to BMP failed: {}", result.error()));
             },
@@ -169,7 +170,8 @@ int main(int argc, char** argv)
                 auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
                 if (!save_path.has_value())
                     return;
-                auto result = editor->image().export_bmp_to_file(save_path.value());
+                auto preserve_alpha_channel = GUI::MessageBox::show(window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+                auto result = editor->image().export_png_to_file(save_path.value(), preserve_alpha_channel == GUI::MessageBox::ExecYes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(window, String::formatted("Export to PNG failed: {}", result.error()));
             },

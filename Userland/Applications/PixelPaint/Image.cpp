@@ -192,9 +192,9 @@ Result<void, String> Image::write_to_file(const String& file_path) const
     return {};
 }
 
-RefPtr<Gfx::Bitmap> Image::try_compose_bitmap() const
+RefPtr<Gfx::Bitmap> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
 {
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, m_size);
+    auto bitmap = Gfx::Bitmap::create(format, m_size);
     if (!bitmap)
         return nullptr;
     GUI::Painter painter(*bitmap);
@@ -202,13 +202,14 @@ RefPtr<Gfx::Bitmap> Image::try_compose_bitmap() const
     return bitmap;
 }
 
-Result<void, String> Image::export_bmp_to_file(String const& file_path)
+Result<void, String> Image::export_bmp_to_file(String const& file_path, bool preserve_alpha_channel)
 {
     auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
     if (file_or_error.is_error())
         return file_or_error.error();
 
-    auto bitmap = try_compose_bitmap();
+    auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
+    auto bitmap = try_compose_bitmap(bitmap_format);
     if (!bitmap)
         return String { "Failed to allocate bitmap for encoding"sv };
 
@@ -222,13 +223,14 @@ Result<void, String> Image::export_bmp_to_file(String const& file_path)
     return {};
 }
 
-Result<void, String> Image::export_png_to_file(String const& file_path)
+Result<void, String> Image::export_png_to_file(String const& file_path, bool preserve_alpha_channel)
 {
     auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
     if (file_or_error.is_error())
         return file_or_error.error();
 
-    auto bitmap = try_compose_bitmap();
+    auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
+    auto bitmap = try_compose_bitmap(bitmap_format);
     if (!bitmap)
         return String { "Failed to allocate bitmap for encoding"sv };
 
