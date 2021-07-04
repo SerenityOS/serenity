@@ -191,7 +191,7 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
         TRAP_IF_NOT(rhs.has_value());                                                              \
         dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = ??", ulhs.value(), #operator, rhs.value());         \
         __VA_ARGS__;                                                                               \
-        Checked lhs = ulhs.value();                                                                \
+        Checked<type> lhs = ulhs.value();                                                          \
         lhs operator##= rhs.value();                                                               \
         TRAP_IF_NOT(!lhs.has_overflow());                                                          \
         auto result = lhs.value();                                                                 \

@@ -942,14 +942,14 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
     auto copy_user_strings = [](const auto& list, auto& output) {
         if (!list.length)
             return true;
-        Checked size = sizeof(*list.strings);
+        Checked<size_t> size = sizeof(*list.strings);
         size *= list.length;
         if (size.has_overflow())
             return false;
         Vector<Syscall::StringArgument, 32> strings;
         if (!strings.try_resize(list.length))
             return false;
-        if (!copy_from_user(strings.data(), list.strings, list.length * sizeof(*list.strings)))
+        if (!copy_from_user(strings.data(), list.strings, size.value()))
             return false;
         for (size_t i = 0; i < list.length; ++i) {
             auto string = copy_string_from_user(strings[i]);

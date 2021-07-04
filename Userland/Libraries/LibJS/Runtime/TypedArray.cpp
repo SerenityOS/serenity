@@ -97,7 +97,8 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
 
     auto element_length = src_array.array_length();
     auto element_size = dest_array.element_size();
-    Checked byte_length = element_size * element_length;
+    Checked<size_t> byte_length = element_size;
+    byte_length *= element_length;
     if (byte_length.has_overflow()) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
         return;
