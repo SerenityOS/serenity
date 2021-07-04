@@ -99,9 +99,10 @@ FontDatabase::FontDatabase()
             }
         } else if (path.ends_with(".ttf"sv)) {
             // FIXME: What about .otf and .woff
-            if (auto font = TTF::Font::load_from_file(path)) {
+            if (auto font_or_error = TTF::Font::try_load_from_file(path); !font_or_error.is_error()) {
+                auto font = font_or_error.release_value();
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
-                typeface->set_ttf_font(font);
+                typeface->set_ttf_font(move(font));
             }
         }
     }

@@ -205,61 +205,51 @@ GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
     };
 }
 
-RefPtr<Font> Font::load_from_file(String path, unsigned index)
+Result<NonnullRefPtr<Font>, String> Font::try_load_from_file(String path, unsigned index)
 {
     auto file_or_error = Core::File::open(move(path), Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error()) {
-        dbgln("Could not open file: {}", file_or_error.error());
-        return nullptr;
-    }
+    if (file_or_error.is_error())
+        return file_or_error.error();
+
     auto file = file_or_error.value();
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        dbgln("Could not open file");
-        return nullptr;
-    }
+    if (!file->open(Core::OpenMode::ReadOnly))
+        return String { "Could not open file" };
+
     auto buffer = file->read_all();
-    return load_from_memory(buffer, index);
+    return try_load_from_memory(buffer, index);
 }
 
-RefPtr<Font> Font::load_from_memory(ByteBuffer& buffer, unsigned index)
+Result<NonnullRefPtr<Font>, String> Font::try_load_from_memory(ByteBuffer& buffer, unsigned index)
 {
-    if (buffer.size() < 4) {
-        dbgln("Font file too small");
-        return nullptr;
-    }
+    if (buffer.size() < 4)
+        return String { "Font file too small" };
+
     u32 tag = be_u32(buffer.data());
     if (tag == tag_from_str("ttcf")) {
         // It's a font collection
-        if (buffer.size() < (u32)Sizes::TTCHeaderV1 + sizeof(u32) * (index + 1)) {
-            dbgln("Font file too small");
-            return nullptr;
-        }
+        if (buffer.size() < (u32)Sizes::TTCHeaderV1 + sizeof(u32) * (index + 1))
+            return String { "Font file too small" };
+
         u32 offset = be_u32(buffer.offset_pointer((u32)Sizes::TTCHeaderV1 + sizeof(u32) * index));
-        return load_from_offset(move(buffer), offset);
+        return try_load_from_offset(move(buffer), offset);
     }
-    if (tag == tag_from_str("OTTO")) {
-        dbgln("CFF fonts not supported yet");
-        return nullptr;
-    }
-    if (tag != 0x00010000) {
-        dbgln("Not a valid font");
-        return nullptr;
-    }
-    return load_from_offset(move(buffer), 0);
+    if (tag == tag_from_str("OTTO"))
+        return String { "CFF fonts not supported yet" };
+
+    if (tag != 0x00010000)
+        return String { "Not a valid font" };
+
+    return try_load_from_offset(move(buffer), 0);
 }
 
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
-RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
+Result<NonnullRefPtr<Font>, String> Font::try_load_from_offset(ByteBuffer&& buffer, u32 offset)
 {
-    if (Checked<u32>::addition_would_overflow(offset, (u32)Sizes::OffsetTable)) {
-        dbgln("Invalid offset in font header");
-        return nullptr;
-    }
+    if (Checked<u32>::addition_would_overflow(offset, (u32)Sizes::OffsetTable))
+        return String { "Invalid offset in font header" };
 
-    if (buffer.size() < offset + (u32)Sizes::OffsetTable) {
-        dbgln("Font file too small");
-        return nullptr;
-    }
+    if (buffer.size() < offset + (u32)Sizes::OffsetTable)
+        return String { "Font file too small" };
 
     Optional<ReadonlyBytes> opt_head_slice = {};
     Optional<ReadonlyBytes> opt_name_slice = {};
@@ -279,10 +269,8 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
     Optional<Loca> opt_loca = {};
 
     auto num_tables = be_u16(buffer.offset_pointer(offset + (u32)Offsets::NumTables));
-    if (buffer.size() < offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord) {
-        dbgln("Font file too small");
-        return nullptr;
-    }
+    if (buffer.size() < offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord)
+        return String { "Font file too small" };
 
     for (auto i = 0; i < num_tables; i++) {
         u32 record_offset = offset + (u32)Sizes::OffsetTable + i * (u32)Sizes::TableRecord;
@@ -290,15 +278,12 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
         u32 table_offset = be_u32(buffer.offset_pointer(record_offset + (u32)Offsets::TableRecord_Offset));
         u32 table_length = be_u32(buffer.offset_pointer(record_offset + (u32)Offsets::TableRecord_Length));
 
-        if (Checked<u32>::addition_would_overflow(table_offset, table_length)) {
-            dbgln("Invalid table offset/length in font.");
-            return nullptr;
-        }
+        if (Checked<u32>::addition_would_overflow(table_offset, table_length))
+            return String { "Invalid table offset/length in font." };
 
-        if (buffer.size() < table_offset + table_length) {
-            dbgln("Font file too small");
-            return nullptr;
-        }
+        if (buffer.size() < table_offset + table_length)
+            return String { "Font file too small" };
+
         auto buffer_here = ReadonlyBytes(buffer.offset_pointer(table_offset), table_length);
 
         // Get the table offsets we need.
@@ -321,52 +306,36 @@ RefPtr<Font> Font::load_from_offset(ByteBuffer&& buffer, u32 offset)
         }
     }
 
-    if (!opt_head_slice.has_value() || !(opt_head = Head::from_slice(opt_head_slice.value())).has_value()) {
-        dbgln("Could not load Head");
-        return nullptr;
-    }
+    if (!opt_head_slice.has_value() || !(opt_head = Head::from_slice(opt_head_slice.value())).has_value())
+        return String { "Could not load Head" };
     auto head = opt_head.value();
 
-    if (!opt_name_slice.has_value() || !(opt_name = Name::from_slice(opt_name_slice.value())).has_value()) {
-        dbgln("Could not load Name");
-        return nullptr;
-    }
+    if (!opt_name_slice.has_value() || !(opt_name = Name::from_slice(opt_name_slice.value())).has_value())
+        return String { "Could not load Name" };
     auto name = opt_name.value();
 
-    if (!opt_hhea_slice.has_value() || !(opt_hhea = Hhea::from_slice(opt_hhea_slice.value())).has_value()) {
-        dbgln("Could not load Hhea");
-        return nullptr;
-    }
+    if (!opt_hhea_slice.has_value() || !(opt_hhea = Hhea::from_slice(opt_hhea_slice.value())).has_value())
+        return String { "Could not load Hhea" };
     auto hhea = opt_hhea.value();
 
-    if (!opt_maxp_slice.has_value() || !(opt_maxp = Maxp::from_slice(opt_maxp_slice.value())).has_value()) {
-        dbgln("Could not load Maxp");
-        return nullptr;
-    }
+    if (!opt_maxp_slice.has_value() || !(opt_maxp = Maxp::from_slice(opt_maxp_slice.value())).has_value())
+        return String { "Could not load Maxp" };
     auto maxp = opt_maxp.value();
 
-    if (!opt_hmtx_slice.has_value() || !(opt_hmtx = Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics())).has_value()) {
-        dbgln("Could not load Hmtx");
-        return nullptr;
-    }
+    if (!opt_hmtx_slice.has_value() || !(opt_hmtx = Hmtx::from_slice(opt_hmtx_slice.value(), maxp.num_glyphs(), hhea.number_of_h_metrics())).has_value())
+        return String { "Could not load Hmtx" };
     auto hmtx = opt_hmtx.value();
 
-    if (!opt_cmap_slice.has_value() || !(opt_cmap = Cmap::from_slice(opt_cmap_slice.value())).has_value()) {
-        dbgln("Could not load Cmap");
-        return nullptr;
-    }
+    if (!opt_cmap_slice.has_value() || !(opt_cmap = Cmap::from_slice(opt_cmap_slice.value())).has_value())
+        return String { "Could not load Cmap" };
     auto cmap = opt_cmap.value();
 
-    if (!opt_loca_slice.has_value() || !(opt_loca = Loca::from_slice(opt_loca_slice.value(), maxp.num_glyphs(), head.index_to_loc_format())).has_value()) {
-        dbgln("Could not load Loca");
-        return nullptr;
-    }
+    if (!opt_loca_slice.has_value() || !(opt_loca = Loca::from_slice(opt_loca_slice.value(), maxp.num_glyphs(), head.index_to_loc_format())).has_value())
+        return String { "Could not load Loca" };
     auto loca = opt_loca.value();
 
-    if (!opt_glyf_slice.has_value()) {
-        dbgln("Could not load Glyf");
-        return nullptr;
-    }
+    if (!opt_glyf_slice.has_value())
+        return String { "Could not load Glyf" };
     auto glyf = Glyf(opt_glyf_slice.value());
 
     // Select cmap table. FIXME: Do this better. Right now, just looks for platform "Windows"
