@@ -378,6 +378,7 @@ static void print_number(T number) requires IsArithmetic<T>
 static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& typed_array_base = static_cast<const JS::TypedArrayBase&>(object);
+    auto& array_buffer = *typed_array_base.viewed_array_buffer();
     auto length = typed_array_base.array_length();
     print_type(object.class_name());
     out("\n  length: ");
@@ -386,8 +387,10 @@ static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& 
     print_value(JS::Value(typed_array_base.byte_length()), seen_objects);
     out("\n  buffer: ");
     print_type("ArrayBuffer");
-    out(" @ {:p}", typed_array_base.viewed_array_buffer());
-    if (!length)
+    if (array_buffer.is_detached())
+        out(" (detached)");
+    out(" @ {:p}", &array_buffer);
+    if (!length || array_buffer.is_detached())
         return;
     outln();
     // FIXME: This kinda sucks.
