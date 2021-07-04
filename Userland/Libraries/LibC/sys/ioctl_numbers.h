@@ -30,6 +30,11 @@ struct FBRect {
     unsigned height;
 };
 
+struct FBBufferOffset {
+    int buffer_index;
+    unsigned offset;
+};
+
 struct FBFlushRects {
     int buffer_index;
     unsigned count;
@@ -55,6 +60,7 @@ enum IOCtlNumber {
     FB_IOCTL_GET_RESOLUTION,
     FB_IOCTL_SET_RESOLUTION,
     FB_IOCTL_GET_BUFFER,
+    FB_IOCTL_GET_BUFFER_OFFSET,
     FB_IOCTL_SET_BUFFER,
     FB_IOCTL_FLUSH_BUFFERS,
     SIOCSIFADDR,
@@ -88,6 +94,7 @@ enum IOCtlNumber {
 #define FB_IOCTL_GET_RESOLUTION FB_IOCTL_GET_RESOLUTION
 #define FB_IOCTL_SET_RESOLUTION FB_IOCTL_SET_RESOLUTION
 #define FB_IOCTL_GET_BUFFER FB_IOCTL_GET_BUFFER
+#define FB_IOCTL_GET_BUFFER_OFFSET FB_IOCTL_GET_BUFFER_OFFSET
 #define FB_IOCTL_SET_BUFFER FB_IOCTL_SET_BUFFER
 #define FB_IOCTL_FLUSH_BUFFERS FB_IOCTL_FLUSH_BUFFERS
 #define SIOCSIFADDR SIOCSIFADDR

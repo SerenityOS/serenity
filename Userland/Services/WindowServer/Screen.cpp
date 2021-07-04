@@ -225,6 +225,19 @@ bool Screen::set_resolution(bool initial)
 
             m_framebuffer = (Gfx::RGBA32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
             VERIFY(m_framebuffer && m_framebuffer != (void*)-1);
+
+            if (m_can_set_buffer) {
+                unsigned buffer_offset = 0;
+                rc = fb_get_buffer_offset(m_framebuffer_fd, 1, &buffer_offset);
+                if (rc == 0) {
+                    m_back_buffer_offset = buffer_offset;
+                } else {
+                    // fall back to assuming the second buffer starts right after the last line of the first
+                    m_back_buffer_offset = physical_resolution.pitch * physical_resolution.height;
+                }
+            } else {
+                m_back_buffer_offset = 0;
+            }
         }
 
         m_info.resolution = { physical_resolution.width, physical_resolution.height };
@@ -253,6 +266,15 @@ void Screen::set_buffer(int index)
     VERIFY(m_can_set_buffer);
     int rc = fb_set_buffer(m_framebuffer_fd, index);
     VERIFY(rc == 0);
+}
+
+size_t Screen::buffer_offset(int index) const
+{
+    if (index == 0)
+        return 0;
+    if (index == 1)
+        return m_back_buffer_offset;
+    VERIFY_NOT_REACHED();
 }
 
 void ScreenInput::set_acceleration_factor(double factor)
