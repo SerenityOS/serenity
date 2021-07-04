@@ -238,7 +238,7 @@ void ComboBox::open()
     // Change direction and go upwards to prevent the list from becoming
     // infinitesimally small when pushed up against the screen edge.
     auto minimum_height = min(3, model()->row_count()) * m_list_view->item_height() + m_list_view->frame_thickness() * 2;
-    bool go_upwards_instead = list_window_rect.height() <= minimum_height;
+    bool go_upwards_instead = list_window_rect.height() < minimum_height;
     if (go_upwards_instead) {
         auto origin_point = my_screen_rect.top_left();
         list_window_rect = { Gfx::IntPoint { origin_point.x(), origin_point.y() - size.height() }, size };
