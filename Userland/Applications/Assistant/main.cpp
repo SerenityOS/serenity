@@ -294,6 +294,7 @@ int main(int argc, char** argv)
     };
 
     window->set_frameless(true);
+    window->set_forced_shadow(true);
     window->resize(GUI::Desktop::the().rect().width() / 3, 46);
     window->center_on_screen();
     window->move_to(window->x(), window->y() - (GUI::Desktop::the().rect().height() * 0.33));
