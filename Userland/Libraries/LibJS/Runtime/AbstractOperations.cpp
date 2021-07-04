@@ -544,10 +544,19 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
 }
 
 // 7.1.21 CanonicalNumericIndexString ( argument ), https://tc39.es/ecma262/#sec-canonicalnumericindexstring
-Value canonical_numeric_index_string(GlobalObject& global_object, Value argument)
+Value canonical_numeric_index_string(GlobalObject& global_object, PropertyName const& property_name)
 {
+    // NOTE: If the property name is a number type (An implementation-defined optimized
+    // property key type), it can be treated as a string property that has already been
+    // converted successfully into a canonical numeric index.
+
+    VERIFY(property_name.is_string() || property_name.is_number());
+
+    if (property_name.is_number())
+        return Value(property_name.as_number());
+
     // 1. Assert: Type(argument) is String.
-    VERIFY(argument.is_string());
+    auto argument = Value(js_string(global_object.vm(), property_name.as_string()));
 
     // 2. If argument is "-0", return -0𝔽.
     if (argument.as_string().string() == "-0")

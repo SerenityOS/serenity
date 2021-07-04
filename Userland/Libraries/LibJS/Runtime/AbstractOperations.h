@@ -29,7 +29,7 @@ bool validate_and_apply_property_descriptor(Object*, PropertyName const&, bool e
 Object* get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
 Object* create_unmapped_arguments_object(GlobalObject&, Vector<Value> const& arguments);
 Object* create_mapped_arguments_object(GlobalObject&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Vector<Value> const& arguments, Environment&);
-Value canonical_numeric_index_string(GlobalObject&, Value);
+Value canonical_numeric_index_string(GlobalObject&, PropertyName const&);
 
 enum class CallerMode {
     Strict,
