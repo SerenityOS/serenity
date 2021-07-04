@@ -21,6 +21,14 @@ using i16x4 = i16 __attribute__((vector_size(8)));
 using i16x8 = i16 __attribute__((vector_size(16)));
 using i16x16 = i16 __attribute__((vector_size(32)));
 
+// the asm intrinsics demand chars as  the 8-bit type, and do not allow
+// (un-)signed ones to be used
+using c8x2 = char __attribute__((vector_size(2)));
+using c8x4 = char __attribute__((vector_size(4)));
+using c8x8 = char __attribute__((vector_size(8)));
+using c8x16 = char __attribute__((vector_size(16)));
+using c8x32 = char __attribute__((vector_size(32)));
+
 using i32x2 = i32 __attribute__((vector_size(8)));
 using i32x4 = i32 __attribute__((vector_size(16)));
 using i32x8 = i32 __attribute__((vector_size(32)));
