@@ -50,6 +50,12 @@ ObjectPrototype::~ObjectPrototype()
 {
 }
 
+// 10.4.7.1 [[SetPrototypeOf]] ( V ), https://tc39.es/ecma262/#sec-immutable-prototype-exotic-objects-setprototypeof-v
+bool ObjectPrototype::internal_set_prototype_of(Object* prototype)
+{
+    return set_immutable_prototype(prototype);
+}
+
 // 20.1.3.2 Object.prototype.hasOwnProperty ( V ), https://tc39.es/ecma262/#sec-object.prototype.hasownproperty
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
 {
