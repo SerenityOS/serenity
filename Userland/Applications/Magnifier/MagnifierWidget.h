@@ -6,19 +6,19 @@
 
 #pragma once
 
-#include <LibGUI/Widget.h>
-#include <LibGfx/Point.h>
+#include <LibGUI/Frame.h>
 
-class MagnifierWidget final : public GUI::Widget {
-    C_OBJECT(MagnifierWidget)
+class MagnifierWidget final : public GUI::Frame {
+    C_OBJECT(MagnifierWidget);
 
 public:
-    MagnifierWidget();
     virtual ~MagnifierWidget();
     void set_scale_factor(int scale_factor);
     void track_cursor_globally();
 
 private:
+    MagnifierWidget();
+
     virtual void paint_event(GUI::PaintEvent&) override;
 
     void sync();
