@@ -78,7 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     if (vm.exception())
         return {};
 
-    auto raw_value = cooked->get(vm.names.raw).value_or(js_undefined());
+    auto raw_value = cooked->get(vm.names.raw);
     if (vm.exception())
         return {};
 

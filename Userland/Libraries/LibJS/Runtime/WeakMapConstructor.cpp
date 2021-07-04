@@ -68,10 +68,10 @@ Value WeakMapConstructor::construct(FunctionObject& new_target)
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
             return IterationDecision::Break;
         }
-        auto key = iterator_value.as_object().get(0).value_or(js_undefined());
+        auto key = iterator_value.as_object().get(0);
         if (vm.exception())
             return IterationDecision::Break;
-        auto value = iterator_value.as_object().get(1).value_or(js_undefined());
+        auto value = iterator_value.as_object().get(1);
         if (vm.exception())
             return IterationDecision::Break;
         (void)vm.call(adder.as_function(), Value(weak_map), key, value);
