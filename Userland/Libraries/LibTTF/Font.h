@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
@@ -47,7 +46,7 @@ class Font : public RefCounted<Font> {
 
 public:
     static Result<NonnullRefPtr<Font>, String> try_load_from_file(String path, unsigned index = 0);
-    static Result<NonnullRefPtr<Font>, String> try_load_from_memory(ByteBuffer&, unsigned index = 0);
+    static Result<NonnullRefPtr<Font>, String> try_load_from_externally_owned_memory(ReadonlyBytes bytes, unsigned index = 0);
 
     ScaledFontMetrics metrics(float x_scale, float y_scale) const;
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const;
@@ -72,9 +71,10 @@ private:
         TableRecord = 16,
     };
 
-    static Result<NonnullRefPtr<Font>, String> try_load_from_offset(ByteBuffer&&, unsigned index = 0);
-    Font(ByteBuffer&& buffer, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf)
-        : m_buffer(move(buffer))
+    static Result<NonnullRefPtr<Font>, String> try_load_from_offset(ReadonlyBytes, unsigned index = 0);
+
+    Font(ReadonlyBytes bytes, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf)
+        : m_buffer(move(bytes))
         , m_head(move(head))
         , m_name(move(name))
         , m_hhea(move(hhea))
@@ -86,8 +86,10 @@ private:
     {
     }
 
-    // This owns the font data
-    ByteBuffer m_buffer;
+    RefPtr<MappedFile> m_mapped_file;
+
+    ReadonlyBytes m_buffer;
+
     // These are stateful wrappers around non-owning slices
     Head m_head;
     Name m_name;
