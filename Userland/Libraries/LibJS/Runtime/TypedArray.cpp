@@ -143,6 +143,12 @@ static void initialize_typed_array_from_array_like(GlobalObject& global_object, 
     if (vm.exception())
         return;
 
+    // Enforce 2GB "Excessive Length" limit
+    if (length > NumericLimits<i32>::max() / sizeof(TypeError)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return;
+    }
+
     auto element_size = typed_array.element_size();
     if (Checked<size_t>::multiplication_would_overflow(element_size, length)) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
@@ -312,7 +318,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
             vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                                  \
             return {};                                                                                                                 \
         }                                                                                                                              \
-        if (array_length > NumericLimits<i32>::max()) {                                                                                \
+        if (array_length > NumericLimits<i32>::max() / sizeof(Type)) {                                                                 \
             vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                                  \
             return {};                                                                                                                 \
         }                                                                                                                              \
