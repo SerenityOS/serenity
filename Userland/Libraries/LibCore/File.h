@@ -74,6 +74,7 @@ public:
         Yes
     };
     bool open(int fd, OpenMode, ShouldCloseFileDescriptor);
+    [[nodiscard]] int leak_fd();
 
     static NonnullRefPtr<File> standard_input();
     static NonnullRefPtr<File> standard_output();
