@@ -799,6 +799,7 @@ Value Value::get(GlobalObject& global_object, PropertyName const& property_name)
     auto& vm = global_object.vm();
 
     // 1. Assert: IsPropertyKey(P) is true.
+    VERIFY(property_name.is_valid());
 
     // 2. Let O be ? ToObject(V).
     auto* object = to_object(global_object);
@@ -815,6 +816,7 @@ FunctionObject* Value::get_method(GlobalObject& global_object, PropertyName cons
     auto& vm = global_object.vm();
 
     // 1. Assert: IsPropertyKey(P) is true.
+    VERIFY(property_name.is_valid());
 
     // 2. Let func be ? GetV(V, P).
     auto function = get(global_object, property_name).value_or(js_undefined());
