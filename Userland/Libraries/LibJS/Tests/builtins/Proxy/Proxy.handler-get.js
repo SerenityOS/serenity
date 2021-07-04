@@ -18,6 +18,19 @@ describe("[[Get]] trap normal behavior", () => {
         p.foo;
     });
 
+    test("correct arguments passed to trap even for number", () => {
+        let o = {};
+        let p = new Proxy(o, {
+            get(target, property, receiver) {
+                expect(target).toBe(o);
+                expect(property).toBe("1");
+                expect(receiver).toBe(p);
+            },
+        });
+
+        p[1];
+    });
+
     test("conditional return", () => {
         let o = { foo: 1 };
         let p = new Proxy(o, {
