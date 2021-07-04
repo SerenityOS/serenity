@@ -282,3 +282,24 @@ TEST_CASE(find_with_empty_needle)
     EXPECT_EQ(string.find(""sv), 0u);
     EXPECT_EQ(string.find_all(""sv), (Vector<size_t> { 0u, 1u, 2u, 3u }));
 }
+
+TEST_CASE(roman_numerals)
+{
+    auto zero = String::roman_number_from(0);
+    EXPECT_EQ(zero, "");
+
+    auto one = String::roman_number_from(1);
+    EXPECT_EQ(one, "I");
+
+    auto nine = String::roman_number_from(9);
+    EXPECT_EQ(nine, "IX");
+
+    auto fourty_eight = String::roman_number_from(48);
+    EXPECT_EQ(fourty_eight, "XLVIII");
+
+    auto one_thousand_nine_hundred_ninety_eight = String::roman_number_from(1998);
+    EXPECT_EQ(one_thousand_nine_hundred_ninety_eight, "MCMXCVIII");
+
+    auto four_thousand = String::roman_number_from(4000);
+    EXPECT_EQ(four_thousand, "4000");
+}
