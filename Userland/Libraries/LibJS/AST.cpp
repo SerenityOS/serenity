@@ -339,23 +339,43 @@ Value IfStatement::execute(Interpreter& interpreter, GlobalObject& global_object
     return js_undefined();
 }
 
+// 14.11.2 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation
+// WithStatement : with ( Expression ) Statement
 Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    auto object_value = m_object->execute(interpreter, global_object);
+    // 1. Let value be the result of evaluating Expression.
+    auto value = m_object->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
 
-    auto* object = object_value.to_object(global_object);
+    // 2. Let obj be ? ToObject(? GetValue(value)).
+    auto* object = value.to_object(global_object);
     if (interpreter.exception())
         return {};
 
-    VERIFY(object);
+    // 3. Let oldEnv be the running execution context's LexicalEnvironment.
+    auto* old_environment = interpreter.vm().running_execution_context().lexical_environment;
 
-    auto* object_environment = new_object_environment(*object, true, interpreter.vm().running_execution_context().lexical_environment);
-    TemporaryChange<Environment*> scope_change(interpreter.vm().running_execution_context().lexical_environment, object_environment);
-    return interpreter.execute_statement(global_object, m_body).value_or(js_undefined());
+    // 4. Let newEnv be NewObjectEnvironment(obj, true, oldEnv).
+    auto* new_environment = new_object_environment(*object, true, old_environment);
+    if (interpreter.exception())
+        return {};
+
+    // 5. Set the running execution context's LexicalEnvironment to newEnv.
+    interpreter.vm().running_execution_context().lexical_environment = new_environment;
+
+    // 6. Let C be the result of evaluating Statement.
+    auto result = interpreter.execute_statement(global_object, m_body).value_or(js_undefined());
+    if (interpreter.exception())
+        return {};
+
+    // 7. Set the running execution context's LexicalEnvironment to oldEnv.
+    interpreter.vm().running_execution_context().lexical_environment = old_environment;
+
+    // 8. Return Completion(UpdateEmpty(C, undefined)).
+    return result;
 }
 
 Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
