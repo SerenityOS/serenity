@@ -141,7 +141,8 @@ void Window::set_rect(const Gfx::IntRect& rect)
     }
 
     invalidate(true, old_rect.size() != rect.size());
-    m_frame.window_rect_changed(old_rect, rect); // recomputes occlusions
+    m_frame.window_rect_changed(old_rect, rect);
+    invalidate_last_rendered_screen_rects();
 }
 
 void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
@@ -161,7 +162,8 @@ void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
     }
 
     invalidate(true, old_rect.size() != rect.size());
-    m_frame.window_rect_changed(old_rect, rect); // recomputes occlusions
+    m_frame.window_rect_changed(old_rect, rect);
+    invalidate_last_rendered_screen_rects();
 }
 
 bool Window::apply_minimum_size(Gfx::IntRect& rect)
@@ -284,12 +286,16 @@ void Window::set_minimized(bool minimized)
         return;
     m_minimized_state = minimized ? WindowMinimizedState::Minimized : WindowMinimizedState::None;
     update_window_menu_items();
-    Compositor::the().invalidate_occlusions();
-    Compositor::the().invalidate_screen(frame().render_rect());
+
     if (!blocking_modal_window())
         start_minimize_animation();
     if (!minimized)
         request_update({ {}, size() });
+
+    // Since a minimized window won't be visible we need to invalidate the last rendered
+    // rectangles before the next occlusion calculation
+    invalidate_last_rendered_screen_rects_now();
+
     WindowManager::the().notify_minimization_state_changed(*this);
 }
 
@@ -583,22 +589,24 @@ void Window::set_visible(bool b)
     if (!m_visible)
         WindowManager::the().check_hide_geometry_overlay(*this);
     Compositor::the().invalidate_occlusions();
-    if (m_visible)
+    if (m_visible) {
         invalidate(true);
-    else
-        Compositor::the().invalidate_screen(frame().render_rect());
+    } else {
+        // Since the window won't be visible we need to invalidate the last rendered
+        // rectangles before the next occlusion calculation
+        invalidate_last_rendered_screen_rects_now();
+    }
 }
 
 void Window::set_frameless(bool frameless)
 {
     if (m_frameless == frameless)
         return;
-    auto render_rect_before = frame().render_rect();
     m_frameless = frameless;
     if (m_visible) {
         Compositor::the().invalidate_occlusions();
         invalidate(true, true);
-        Compositor::the().invalidate_screen(frameless ? render_rect_before : frame().render_rect());
+        invalidate_last_rendered_screen_rects();
     }
 }
 
@@ -651,6 +659,24 @@ bool Window::invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame)
     return true;
 }
 
+void Window::invalidate_last_rendered_screen_rects()
+{
+    m_invalidate_last_render_rects = true;
+    Compositor::the().invalidate_occlusions();
+}
+
+void Window::invalidate_last_rendered_screen_rects_now()
+{
+    // We can't wait for the next occlusion computation because the window will either no longer
+    // be around or won't be visible anymore. So we need to invalidate the last rendered rects now.
+    if (!m_opaque_rects.is_empty())
+        Compositor::the().invalidate_screen(m_opaque_rects);
+    if (!m_transparency_rects.is_empty())
+        Compositor::the().invalidate_screen(m_transparency_rects);
+    m_invalidate_last_render_rects = false;
+    Compositor::the().invalidate_occlusions();
+}
+
 void Window::refresh_client_size()
 {
     client()->async_window_resized(m_window_id, m_rect);
@@ -686,11 +712,7 @@ void Window::clear_dirty_rects()
 
 bool Window::is_active() const
 {
-    if (!m_window_stack) {
-        // This may be called while destroying a window as part of
-        // determining what the render rectangle is!
-        return false;
-    }
+    VERIFY(m_window_stack);
     return m_window_stack->active_window() == this;
 }
 
@@ -793,8 +815,7 @@ void Window::handle_window_menu_action(WindowMenuAction action)
         m_should_show_menubar = item.is_checked();
         frame().invalidate();
         recalculate_rect();
-        Compositor::the().invalidate_occlusions();
-        Compositor::the().invalidate_screen();
+        invalidate_last_rendered_screen_rects();
         break;
     }
     }

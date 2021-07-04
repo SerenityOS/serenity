@@ -201,6 +201,9 @@ public:
     void invalidate(const Gfx::IntRect&, bool with_frame = false);
     void invalidate_menubar();
     bool invalidate_no_notify(const Gfx::IntRect& rect, bool with_frame = false);
+    void invalidate_last_rendered_screen_rects();
+    void invalidate_last_rendered_screen_rects_now();
+    [[nodiscard]] bool should_invalidate_last_rendered_screen_rects() { return exchange(m_invalidate_last_render_rects, false); }
 
     void refresh_client_size();
 
@@ -409,6 +412,7 @@ private:
     bool m_hit_testing_enabled { true };
     bool m_modified { false };
     bool m_moving_to_another_stack { false };
+    bool m_invalidate_last_render_rects { false };
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };

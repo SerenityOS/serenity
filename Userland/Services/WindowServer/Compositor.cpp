@@ -697,6 +697,18 @@ void Compositor::invalidate_screen(const Gfx::IntRect& screen_rect)
     start_compose_async_timer();
 }
 
+void Compositor::invalidate_screen(Gfx::DisjointRectSet const& rects)
+{
+    m_dirty_screen_rects.add(rects.intersected(Screen::bounding_rect()));
+
+    if (m_invalidated_any)
+        return;
+
+    m_invalidated_any = true;
+    m_invalidated_window = true;
+    start_compose_async_timer();
+}
+
 void Compositor::invalidate_window()
 {
     if (m_invalidated_window)
@@ -1089,14 +1101,31 @@ void Compositor::recompute_occlusions()
         visible_rects.add_many(Screen::rects());
         bool have_transparent = false;
         wm.for_each_visible_window_from_front_to_back([&](Window& w) {
+            VERIFY(!w.is_minimized());
             w.transparency_wallpaper_rects().clear();
+            auto previous_visible_opaque = move(w.opaque_rects());
+            auto previous_visible_transparency = move(w.transparency_rects());
+
+            auto invalidate_previous_render_rects = [&](Gfx::IntRect const& new_render_rect) {
+                if (!previous_visible_opaque.is_empty()) {
+                    if (new_render_rect.is_empty())
+                        invalidate_screen(previous_visible_opaque);
+                    else
+                        invalidate_screen(previous_visible_opaque.shatter(new_render_rect));
+                }
+                if (!previous_visible_transparency.is_empty()) {
+                    if (new_render_rect.is_empty())
+                        invalidate_screen(previous_visible_transparency);
+                    else
+                        invalidate_screen(previous_visible_transparency.shatter(new_render_rect));
+                }
+            };
+
             auto& visible_opaque = w.opaque_rects();
-            visible_opaque.clear();
             auto& transparency_rects = w.transparency_rects();
-            transparency_rects.clear();
+            bool should_invalidate_old = w.should_invalidate_last_rendered_screen_rects();
+
             w.screens().clear_with_capacity();
-            if (w.is_minimized())
-                return IterationDecision::Continue;
 
             auto transition_offset = window_transition_offset(w);
             auto transparent_frame_render_rects = w.frame().transparent_render_rects();
@@ -1104,6 +1133,12 @@ void Compositor::recompute_occlusions()
             if (window_stack_transition_in_progress) {
                 transparent_frame_render_rects.translate_by(transition_offset);
                 opaque_frame_render_rects.translate_by(transition_offset);
+            }
+            if (should_invalidate_old) {
+                for (auto& rect : opaque_frame_render_rects.rects())
+                    invalidate_previous_render_rects(rect);
+                for (auto& rect : transparent_frame_render_rects.rects())
+                    invalidate_previous_render_rects(rect);
             }
             Gfx::DisjointRectSet visible_opaque_rects;
             Screen::for_each([&](auto& screen) {
@@ -1138,8 +1173,7 @@ void Compositor::recompute_occlusions()
                     return IterationDecision::Continue;
                 }
 
-                if (w2.is_minimized())
-                    return IterationDecision::Continue;
+                VERIFY(!w2.is_minimized());
 
                 auto w2_render_rect = w2.frame().render_rect();
                 auto w2_render_rect_on_screen = w2_render_rect;
@@ -1245,10 +1279,8 @@ void Compositor::recompute_occlusions()
             // Determine what transparent window areas need to render the wallpaper first
             wm.for_each_visible_window_from_back_to_front([&](Window& w) {
                 auto& transparency_wallpaper_rects = w.transparency_wallpaper_rects();
-                if (w.is_minimized()) {
-                    transparency_wallpaper_rects.clear();
-                    return IterationDecision::Continue;
-                }
+                VERIFY(!w.is_minimized());
+
                 Gfx::DisjointRectSet& transparency_rects = w.transparency_rects();
                 if (transparency_rects.is_empty()) {
                     transparency_wallpaper_rects.clear();
