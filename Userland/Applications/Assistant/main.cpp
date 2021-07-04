@@ -202,8 +202,9 @@ int main(int argc, char** argv)
     Assistant::AppState app_state;
     Assistant::Database db { app_state };
 
-    auto& container = window->set_main_widget<GUI::Widget>();
+    auto& container = window->set_main_widget<GUI::Frame>();
     container.set_fill_with_background_color(true);
+    container.set_frame_shadow(Gfx::FrameShadow::Raised);
     auto& layout = container.set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins({ 8, 8, 8, 0 });
 
