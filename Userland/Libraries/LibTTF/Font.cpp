@@ -1,11 +1,12 @@
 /*
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AK/ByteBuffer.h"
 #include <AK/Checked.h>
+#include <AK/MappedFile.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/File.h>
@@ -15,6 +16,7 @@
 #include <LibTTF/Tables.h>
 #include <LibTextCodec/Decoder.h>
 #include <math.h>
+#include <sys/mman.h>
 
 namespace TTF {
 
@@ -207,19 +209,20 @@ GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 
 Result<NonnullRefPtr<Font>, String> Font::try_load_from_file(String path, unsigned index)
 {
-    auto file_or_error = Core::File::open(move(path), Core::OpenMode::ReadOnly);
+    auto file_or_error = MappedFile::map(path);
     if (file_or_error.is_error())
-        return file_or_error.error();
+        return String { file_or_error.error().string() };
 
-    auto file = file_or_error.value();
-    if (!file->open(Core::OpenMode::ReadOnly))
-        return String { "Could not open file" };
-
-    auto buffer = file->read_all();
-    return try_load_from_memory(buffer, index);
+    auto& file = *file_or_error.value();
+    auto result = try_load_from_externally_owned_memory(file.bytes(), index);
+    if (result.is_error())
+        return result.error();
+    auto& font = *result.value();
+    font.m_mapped_file = file_or_error.release_value();
+    return result;
 }
 
-Result<NonnullRefPtr<Font>, String> Font::try_load_from_memory(ByteBuffer& buffer, unsigned index)
+Result<NonnullRefPtr<Font>, String> Font::try_load_from_externally_owned_memory(ReadonlyBytes buffer, unsigned index)
 {
     if (buffer.size() < 4)
         return String { "Font file too small" };
@@ -243,7 +246,7 @@ Result<NonnullRefPtr<Font>, String> Font::try_load_from_memory(ByteBuffer& buffe
 }
 
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
-Result<NonnullRefPtr<Font>, String> Font::try_load_from_offset(ByteBuffer&& buffer, u32 offset)
+Result<NonnullRefPtr<Font>, String> Font::try_load_from_offset(ReadonlyBytes buffer, u32 offset)
 {
     if (Checked<u32>::addition_would_overflow(offset, (u32)Sizes::OffsetTable))
         return String { "Invalid offset in font header" };
