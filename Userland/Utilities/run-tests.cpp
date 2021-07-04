@@ -276,9 +276,9 @@ int main(int argc, char** argv)
         .long_name = "show-progress",
         .short_name = 'p',
         .accept_value = [&](auto* str) {
-            if (StringView { "true" } == str)
+            if ("true"sv == str)
                 print_progress = true;
-            else if (StringView { "false" } == str)
+            else if ("false"sv == str)
                 print_progress = false;
             else
                 return false;

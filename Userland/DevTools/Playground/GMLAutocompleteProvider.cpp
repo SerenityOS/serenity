@@ -149,7 +149,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
                     identifier_entries.empend(it.key, identifier_string.length());
             }
         }
-        if (can_have_declared_layout(class_names.last()) && StringView { "layout" }.starts_with(identifier_string))
+        if (can_have_declared_layout(class_names.last()) && "layout"sv.starts_with(identifier_string))
             identifier_entries.empend("layout", identifier_string.length());
         // No need to suggest anything if it's already completely typed out!
         if (identifier_entries.size() == 1 && identifier_entries.first().completion == identifier_string)

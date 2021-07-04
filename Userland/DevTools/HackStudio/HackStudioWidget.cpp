@@ -160,7 +160,7 @@ void HackStudioWidget::update_actions()
         auto widget = m_action_tab_widget->active_widget();
         if (!widget)
             return false;
-        if (StringView { "TerminalWrapper" } != widget->class_name())
+        if ("TerminalWrapper"sv != widget->class_name())
             return false;
         if (!reinterpret_cast<TerminalWrapper*>(widget)->user_spawned())
             return false;
