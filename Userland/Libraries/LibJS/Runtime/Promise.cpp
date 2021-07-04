@@ -63,7 +63,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
             return js_undefined();
         }
         already_resolved.value = true;
-        auto resolution = vm.argument(0).value_or(js_undefined());
+        auto resolution = vm.argument(0);
         if (resolution.is_object() && &resolution.as_object() == &promise) {
             dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Promise can't be resolved with itself, rejecting with error", &promise);
             auto* self_resolution_error = TypeError::create(global_object, "Cannot resolve promise with itself");
@@ -100,7 +100,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
         if (already_resolved.value)
             return js_undefined();
         already_resolved.value = true;
-        auto reason = vm.argument(0).value_or(js_undefined());
+        auto reason = vm.argument(0);
         return promise.reject(reason);
     });
 
