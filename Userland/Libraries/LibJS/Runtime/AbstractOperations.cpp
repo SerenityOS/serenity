@@ -395,6 +395,15 @@ Value perform_eval(Value x, GlobalObject& caller_realm, CallerMode strict_caller
         return {};
     }
 
+    if (direct == EvalMode::Direct) {
+        if (auto value = vm.execute_in_bytecode_interpreter_if_available(program, caller_realm); value.has_value())
+            return *value;
+    } else {
+        TemporaryChange scope_change(vm.running_execution_context().lexical_environment, static_cast<Environment*>(&caller_realm.environment()));
+        if (auto value = vm.execute_in_bytecode_interpreter_if_available(program, caller_realm); value.has_value())
+            return *value;
+    }
+
     auto& interpreter = vm.interpreter();
     if (direct == EvalMode::Direct)
         return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());

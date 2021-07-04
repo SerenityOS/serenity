@@ -65,6 +65,8 @@ public:
     Interpreter& interpreter();
     Interpreter* interpreter_if_exists();
 
+    Optional<Value> execute_in_bytecode_interpreter_if_available(ASTNode const&, GlobalObject&);
+
     void push_interpreter(Interpreter&);
     void pop_interpreter(Interpreter&);
 

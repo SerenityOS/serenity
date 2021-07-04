@@ -36,8 +36,11 @@ Interpreter::~Interpreter()
     s_current = nullptr;
 }
 
-Value Interpreter::run(Executable const& executable, BasicBlock const* entry_point)
+Value Interpreter::run(Executable const& executable, BasicBlock const* entry_point, GlobalObject* global_object)
 {
+    if (!global_object)
+        global_object = &this->global_object();
+
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
     TemporaryChange restore_executable { m_current_executable, &executable };
@@ -46,15 +49,15 @@ Value Interpreter::run(Executable const& executable, BasicBlock const* entry_poi
 
     ExecutionContext execution_context;
     if (vm().execution_context_stack().is_empty()) {
-        execution_context.this_value = &global_object();
+        execution_context.this_value = global_object;
         static FlyString global_execution_context_name = "(*BC* global execution context)";
         execution_context.function_name = global_execution_context_name;
-        execution_context.lexical_environment = &global_object().environment();
-        execution_context.variable_environment = &global_object().environment();
+        execution_context.lexical_environment = &global_object->environment();
+        execution_context.variable_environment = &global_object->environment();
         VERIFY(!vm().exception());
         // FIXME: How do we know if we're in strict mode? Maybe the Bytecode::Block should know this?
         // execution_context.is_strict_mode = ???;
-        vm().push_execution_context(execution_context, global_object());
+        vm().push_execution_context(execution_context, *global_object);
         VERIFY(!vm().exception());
     }
 
@@ -64,7 +67,7 @@ Value Interpreter::run(Executable const& executable, BasicBlock const* entry_poi
     } else {
         m_register_windows.append(make<RegisterWindow>());
         registers().resize(executable.number_of_registers);
-        registers()[Register::global_object_index] = Value(&global_object());
+        registers()[Register::global_object_index] = Value(global_object);
     }
 
     for (;;) {

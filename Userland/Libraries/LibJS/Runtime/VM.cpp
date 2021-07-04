@@ -8,6 +8,7 @@
 #include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -61,6 +62,16 @@ Interpreter* VM::interpreter_if_exists()
     if (m_interpreters.is_empty())
         return nullptr;
     return m_interpreters.last();
+}
+
+Optional<Value> VM::execute_in_bytecode_interpreter_if_available(ASTNode const& node, GlobalObject& global_object)
+{
+    auto interpreter = Bytecode::Interpreter::current();
+    if (!interpreter)
+        return {};
+
+    auto executable = Bytecode::Generator::generate(node);
+    return interpreter->run(executable, nullptr, &global_object);
 }
 
 void VM::push_interpreter(Interpreter& interpreter)
@@ -260,7 +271,10 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
             }
 
             if (value.is_undefined() && entry.initializer) {
-                value = entry.initializer->execute(interpreter(), global_object);
+                if (auto result = execute_in_bytecode_interpreter_if_available(*entry.initializer, global_object); result.has_value())
+                    value = *result;
+                else
+                    value = entry.initializer->execute(interpreter(), global_object);
                 if (exception())
                     return;
             }
@@ -311,10 +325,14 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
                         assignment_name = identifier->string();
                     },
                     [&](NonnullRefPtr<Expression> const& expression) {
-                        auto result = expression->execute(interpreter(), global_object);
+                        Value value;
+                        if (auto result = execute_in_bytecode_interpreter_if_available(*expression, global_object); result.has_value())
+                            value = *result;
+                        else
+                            value = expression->execute(interpreter(), global_object);
                         if (exception())
                             return;
-                        assignment_name = result.to_property_key(global_object);
+                        assignment_name = value.to_property_key(global_object);
                     });
 
                 if (exception())
