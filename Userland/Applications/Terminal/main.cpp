@@ -80,7 +80,7 @@ static void utmp_update(const char* tty, pid_t pid, bool create)
     }
 }
 
-static void run_command(String command)
+static void run_command(String command, bool keep_open)
 {
     String shell = "/bin/Shell";
     auto* pw = getpwuid(getuid());
@@ -89,10 +89,13 @@ static void run_command(String command)
     }
     endpwent();
 
-    const char* args[4] = { shell.characters(), nullptr, nullptr, nullptr };
+    const char* args[5] = { shell.characters(), nullptr, nullptr, nullptr, nullptr };
     if (!command.is_empty()) {
-        args[1] = "-c";
-        args[2] = command.characters();
+        int arg_index = 1;
+        if (keep_open)
+            args[arg_index++] = "--keep-open";
+        args[arg_index++] = "-c";
+        args[arg_index++] = command.characters();
     }
     const char* envs[] = { "TERM=xterm", "PAGER=more", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
     int rc = execve(shell.characters(), const_cast<char**>(args), const_cast<char**>(envs));
@@ -276,11 +279,18 @@ int main(int argc, char** argv)
     }
 
     const char* command_to_execute = nullptr;
+    bool keep_open = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(command_to_execute, "Execute this command inside the terminal", nullptr, 'e', "command");
+    args_parser.add_option(keep_open, "Keep the terminal open after the command has finished executing", nullptr, 'k');
 
     args_parser.parse(argc, argv);
+
+    if (keep_open && !command_to_execute) {
+        warnln("Option -k can only be used in combination with -e.");
+        return 1;
+    }
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
     Core::File::ensure_parent_directories(config->filename());
@@ -294,9 +304,9 @@ int main(int argc, char** argv)
     if (shell_pid == 0) {
         close(ptm_fd);
         if (command_to_execute)
-            run_command(command_to_execute);
+            run_command(command_to_execute, keep_open);
         else
-            run_command(config->read_entry("Startup", "Command", ""));
+            run_command(config->read_entry("Startup", "Command", ""), false);
         VERIFY_NOT_REACHED();
     }
 
