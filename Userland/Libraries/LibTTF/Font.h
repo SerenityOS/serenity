@@ -46,8 +46,8 @@ class Font : public RefCounted<Font> {
     AK_MAKE_NONCOPYABLE(Font);
 
 public:
-    static RefPtr<Font> load_from_file(String path, unsigned index = 0);
-    static RefPtr<Font> load_from_memory(ByteBuffer&, unsigned index = 0);
+    static Result<NonnullRefPtr<Font>, String> try_load_from_file(String path, unsigned index = 0);
+    static Result<NonnullRefPtr<Font>, String> try_load_from_memory(ByteBuffer&, unsigned index = 0);
 
     ScaledFontMetrics metrics(float x_scale, float y_scale) const;
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const;
@@ -72,7 +72,7 @@ private:
         TableRecord = 16,
     };
 
-    static RefPtr<Font> load_from_offset(ByteBuffer&&, unsigned index = 0);
+    static Result<NonnullRefPtr<Font>, String> try_load_from_offset(ByteBuffer&&, unsigned index = 0);
     Font(ByteBuffer&& buffer, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf)
         : m_buffer(move(buffer))
         , m_head(move(head))
