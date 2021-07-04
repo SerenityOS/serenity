@@ -870,6 +870,26 @@ MarkedValueList Object::internal_own_property_keys() const
     return keys;
 }
 
+// 10.4.7.2 SetImmutablePrototype ( O, V ), https://tc39.es/ecma262/#sec-set-immutable-prototype
+bool Object::set_immutable_prototype(Object* prototype)
+{
+    auto& vm = this->vm();
+
+    // 1. Assert: Either Type(V) is Object or Type(V) is Null.
+
+    // 2. Let current be ? O.[[GetPrototypeOf]]().
+    auto* current = internal_get_prototype_of();
+    if (vm.exception())
+        return {};
+
+    // 3. If SameValue(V, current) is true, return true.
+    if (prototype == current)
+        return true;
+
+    // 4. Return false.
+    return false;
+}
+
 Optional<ValueAndAttributes> Object::storage_get(PropertyName const& property_name, CallNativeProperty call_native_property) const
 {
     VERIFY(property_name.is_valid());
