@@ -29,9 +29,9 @@ void Reference::put_value(GlobalObject& global_object, Value value)
         // FIXME: This is an ad-hoc hack until we support proper variable bindings.
         if (!m_base_value.is_object() && vm.in_strict_mode()) {
             if (m_base_value.is_nullish())
-                vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name.to_value(vm).to_string_without_side_effects(), m_base_value.to_string_without_side_effects());
+                vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name, m_base_value.to_string_without_side_effects());
             else
-                vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveSetProperty, m_name.to_value(vm).to_string_without_side_effects(), m_base_value.typeof(), m_base_value.to_string_without_side_effects());
+                vm.throw_exception<TypeError>(global_object, ErrorType::ReferencePrimitiveSetProperty, m_name, m_base_value.typeof(), m_base_value.to_string_without_side_effects());
             return;
         }
 
@@ -43,7 +43,7 @@ void Reference::put_value(GlobalObject& global_object, Value value)
         if (vm.exception())
             return;
         if (!succeeded && m_strict) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name.to_value(vm).to_string_without_side_effects(), m_base_value.to_string_without_side_effects());
+            vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishSetProperty, m_name, m_base_value.to_string_without_side_effects());
             return;
         }
         return;
@@ -68,7 +68,7 @@ void Reference::put_value(GlobalObject& global_object, Value value)
 
     if (!succeeded && m_strict) {
         // FIXME: This is a hack and will disappear when we support proper variable bindings.
-        vm.throw_exception<TypeError>(global_object, ErrorType::DescWriteNonWritable, m_name.to_value(vm).to_string_without_side_effects());
+        vm.throw_exception<TypeError>(global_object, ErrorType::DescWriteNonWritable, m_name);
         return;
     }
 }
@@ -153,7 +153,7 @@ bool Reference::delete_(GlobalObject& global_object)
 
         // e. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
         if (!delete_status && m_strict) {
-            vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishDeleteProperty, m_name.to_value(vm).to_string_without_side_effects(), m_base_value.to_string_without_side_effects());
+            vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishDeleteProperty, m_name, m_base_value.to_string_without_side_effects());
             return {};
         }
 
