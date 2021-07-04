@@ -62,7 +62,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 
     auto& main_widget = set_main_widget<TaskbarWidget>();
     main_widget.set_layout<GUI::HorizontalBoxLayout>();
-    main_widget.layout()->set_margins({ 3, 3, 3, 1 });
+    main_widget.layout()->set_margins({ 3, 3, 1, 1 });
 
     m_start_button = GUI::Button::construct("Serenity");
     m_start_button->set_font(Gfx::FontDatabase::default_font().bold_variant());
@@ -90,7 +90,9 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 
     m_show_desktop_button = GUI::Button::construct();
     m_show_desktop_button->set_tooltip("Show Desktop");
-    m_show_desktop_button->set_fixed_size(12, 21);
+    m_show_desktop_button->set_icon(GUI::Icon::default_icon("desktop").bitmap_for_size(16));
+    m_show_desktop_button->set_button_style(Gfx::ButtonStyle::Coolbar);
+    m_show_desktop_button->set_fixed_size(24, 24);
     m_show_desktop_button->on_click = TaskbarWindow::show_desktop_button_clicked;
     main_widget.add_child(*m_show_desktop_button);
 
