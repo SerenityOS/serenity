@@ -118,28 +118,25 @@ void WMClientConnection::set_window_minimized(i32 client_id, i32 window_id, bool
 void WMClientConnection::toggle_show_desktop()
 {
     bool should_hide = false;
-    WindowServer::ClientConnection::for_each_client([&should_hide](auto& client) {
-        client.for_each_window([&should_hide](Window& window) {
-            if (window.type() == WindowType::Normal && window.is_minimizable()) {
-                if (!window.is_hidden() && !window.is_minimized()) {
-                    should_hide = true;
-                    return IterationDecision::Break;
-                }
+    auto& current_window_stack = WindowManager::the().current_window_stack();
+    current_window_stack.for_each_window([&](auto& window) {
+        if (window.type() == WindowType::Normal && window.is_minimizable()) {
+            if (!window.is_hidden() && !window.is_minimized()) {
+                should_hide = true;
+                return IterationDecision::Break;
             }
-            return IterationDecision::Continue;
-        });
+        }
+        return IterationDecision::Continue;
     });
 
-    WindowServer::ClientConnection::for_each_client([should_hide](auto& client) {
-        client.for_each_window([should_hide](Window& window) {
-            if (window.type() == WindowType::Normal && window.is_minimizable()) {
-                auto state = window.minimized_state();
-                if (state == WindowMinimizedState::None || state == WindowMinimizedState::Hidden) {
-                    WindowManager::the().hide_windows(window, should_hide);
-                }
+    current_window_stack.for_each_window([&](auto& window) {
+        if (window.type() == WindowType::Normal && window.is_minimizable()) {
+            auto state = window.minimized_state();
+            if (state == WindowMinimizedState::None || state == WindowMinimizedState::Hidden) {
+                WindowManager::the().hide_windows(window, should_hide);
             }
-            return IterationDecision::Continue;
-        });
+        }
+        return IterationDecision::Continue;
     });
 }
 
