@@ -42,6 +42,7 @@ public:
     void invalidate_window();
     void invalidate_screen();
     void invalidate_screen(const Gfx::IntRect&);
+    void invalidate_screen(Gfx::DisjointRectSet const&);
 
     void screen_resolution_changed();
 

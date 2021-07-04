@@ -399,7 +399,7 @@ void WindowManager::remove_window(Window& window)
     if (active == &window || active_input == &window || (active && window.is_descendant_of(*active)) || (active_input && active_input != active && window.is_descendant_of(*active_input)))
         pick_new_active_window(&window);
 
-    Compositor::the().invalidate_screen(window.frame().render_rect());
+    window.invalidate_last_rendered_screen_rects_now();
 
     if (m_switcher.is_visible() && window.type() != WindowType::WindowSwitcher)
         m_switcher.refresh();
