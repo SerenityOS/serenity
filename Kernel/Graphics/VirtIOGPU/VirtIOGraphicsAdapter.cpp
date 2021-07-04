@@ -40,7 +40,6 @@ void VirtIOGraphicsAdapter::enable_consoles()
     dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: Enabling consoles");
     m_gpu_device->for_each_framebuffer([&](auto& framebuffer, auto& console) {
         framebuffer.deactivate_writes();
-        framebuffer.clear_to_black();
         console.enable();
         return IterationDecision::Continue;
     });

@@ -15,10 +15,8 @@ VirtIOFrameBufferDevice::VirtIOFrameBufferDevice(VirtIOGPU& virtio_gpu, VirtIOGP
     , m_gpu(virtio_gpu)
     , m_scanout(scanout)
 {
-    if (display_info().enabled) {
-        Locker locker(m_gpu.operation_lock());
+    if (display_info().enabled)
         create_framebuffer();
-    }
 }
 
 VirtIOFrameBufferDevice::~VirtIOFrameBufferDevice()
@@ -27,39 +25,53 @@ VirtIOFrameBufferDevice::~VirtIOFrameBufferDevice()
 
 void VirtIOFrameBufferDevice::create_framebuffer()
 {
-    auto& info = display_info();
-
-    size_t buffer_length = page_round_up(calculate_framebuffer_size(info.rect.width, info.rect.height));
-
     // First delete any existing framebuffers to free the memory first
     m_framebuffer = nullptr;
     m_framebuffer_sink_vmobject = nullptr;
 
-    // 1. Allocate frame buffer
-    m_framebuffer = MM.allocate_kernel_region(buffer_length, String::formatted("VirtGPU FrameBuffer #{}", m_scanout.value()), Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
+    // Allocate frame buffer for both front and back
+    auto& info = display_info();
+    m_buffer_size = calculate_framebuffer_size(info.rect.width, info.rect.height);
+    m_framebuffer = MM.allocate_kernel_region(m_buffer_size * 2, String::formatted("VirtGPU FrameBuffer #{}", m_scanout.value()), Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
     auto write_sink_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No).release_nonnull();
     auto num_needed_pages = m_framebuffer->vmobject().page_count();
+
     NonnullRefPtrVector<PhysicalPage> pages;
     for (auto i = 0u; i < num_needed_pages; ++i) {
         pages.append(write_sink_page);
     }
     m_framebuffer_sink_vmobject = AnonymousVMObject::create_with_physical_pages(move(pages));
 
-    // 2. Create BUFFER using VIRTIO_GPU_CMD_RESOURCE_CREATE_2D
-    if (m_resource_id.value() != 0)
-        m_gpu.delete_resource(m_resource_id);
-    m_resource_id = m_gpu.create_2d_resource(info.rect);
+    Locker locker(m_gpu.operation_lock());
+    m_current_buffer = &buffer_from_index(m_last_set_buffer_index.load());
+    create_buffer(m_main_buffer, 0, m_buffer_size);
+    create_buffer(m_back_buffer, m_buffer_size, m_buffer_size);
+}
 
-    // 3. Attach backing storage using  VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING
-    m_gpu.ensure_backing_storage(*m_framebuffer, buffer_length, m_resource_id);
-    // 4. Use VIRTIO_GPU_CMD_SET_SCANOUT to link the framebuffer to a display scanout.
-    m_gpu.set_scanout_resource(m_scanout.value(), m_resource_id, info.rect);
-    // 5. Render our test pattern
-    draw_ntsc_test_pattern();
-    // 6. Use VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D to update the host resource from guest memory.
-    transfer_framebuffer_data_to_host(info.rect);
-    // 7. Use VIRTIO_GPU_CMD_RESOURCE_FLUSH to flush the updated resource to the display.
-    flush_displayed_image(info.rect);
+void VirtIOFrameBufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset, size_t framebuffer_size)
+{
+    buffer.framebuffer_offset = framebuffer_offset;
+    buffer.framebuffer_data = m_framebuffer->vaddr().as_ptr() + framebuffer_offset;
+
+    auto& info = display_info();
+
+    // 1. Create BUFFER using VIRTIO_GPU_CMD_RESOURCE_CREATE_2D
+    if (buffer.resource_id.value() != 0)
+        m_gpu.delete_resource(buffer.resource_id);
+    buffer.resource_id = m_gpu.create_2d_resource(info.rect);
+
+    // 2. Attach backing storage using  VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING
+    m_gpu.ensure_backing_storage(*m_framebuffer, buffer.framebuffer_offset, framebuffer_size, buffer.resource_id);
+    // 3. Use VIRTIO_GPU_CMD_SET_SCANOUT to link the framebuffer to a display scanout.
+    if (&buffer == m_current_buffer)
+        m_gpu.set_scanout_resource(m_scanout.value(), buffer.resource_id, info.rect);
+    // 4. Render our test pattern
+    draw_ntsc_test_pattern(buffer);
+    // 5. Use VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D to update the host resource from guest memory.
+    transfer_framebuffer_data_to_host(info.rect, buffer);
+    // 6. Use VIRTIO_GPU_CMD_RESOURCE_FLUSH to flush the updated resource to the display.
+    if (&buffer == m_current_buffer)
+        flush_displayed_image(info.rect, buffer);
 
     info.enabled = 1;
 }
@@ -74,25 +86,19 @@ VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne& VirtIOFrameBufferDevice::display_
     return m_gpu.display_info(m_scanout);
 }
 
-size_t VirtIOFrameBufferDevice::size_in_bytes() const
+void VirtIOFrameBufferDevice::transfer_framebuffer_data_to_host(VirtIOGPURect const& rect, Buffer& buffer)
 {
-    auto& info = display_info();
-    return info.rect.width * info.rect.height * sizeof(u32);
+    m_gpu.transfer_framebuffer_data_to_host(m_scanout, rect, buffer.resource_id);
 }
 
-void VirtIOFrameBufferDevice::flush_dirty_window(VirtIOGPURect const& dirty_rect)
+void VirtIOFrameBufferDevice::flush_dirty_window(VirtIOGPURect const& dirty_rect, Buffer& buffer)
 {
-    m_gpu.flush_dirty_window(m_scanout, dirty_rect, m_resource_id);
+    m_gpu.flush_dirty_window(m_scanout, dirty_rect, buffer.resource_id);
 }
 
-void VirtIOFrameBufferDevice::transfer_framebuffer_data_to_host(VirtIOGPURect const& rect)
+void VirtIOFrameBufferDevice::flush_displayed_image(VirtIOGPURect const& dirty_rect, Buffer& buffer)
 {
-    m_gpu.transfer_framebuffer_data_to_host(m_scanout, rect, m_resource_id);
-}
-
-void VirtIOFrameBufferDevice::flush_displayed_image(VirtIOGPURect const& dirty_rect)
-{
-    m_gpu.flush_displayed_image(dirty_rect, m_resource_id);
+    m_gpu.flush_displayed_image(dirty_rect, buffer.resource_id);
 }
 
 bool VirtIOFrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
@@ -114,13 +120,23 @@ bool VirtIOFrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
     return true;
 }
 
+void VirtIOFrameBufferDevice::set_buffer(int buffer_index)
+{
+    auto& buffer = buffer_index == 0 ? m_main_buffer : m_back_buffer;
+    Locker locker(m_gpu.operation_lock());
+    if (&buffer == m_current_buffer)
+        return;
+    m_current_buffer = &buffer;
+    m_gpu.set_scanout_resource(m_scanout.value(), buffer.resource_id, display_info().rect);
+}
+
 int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
         auto* out = (size_t*)arg;
-        size_t value = size_in_bytes();
+        size_t value = m_buffer_size * 2;
         if (!copy_to_user(out, &value))
             return -EFAULT;
         return 0;
@@ -147,28 +163,53 @@ int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr a
             return -EFAULT;
         return 0;
     }
+    case FB_IOCTL_SET_BUFFER: {
+        auto buffer_index = (int)arg;
+        if (!is_valid_buffer_index(buffer_index))
+            return -EINVAL;
+        if (m_last_set_buffer_index.exchange(buffer_index) != buffer_index && m_are_writes_active)
+            set_buffer(buffer_index);
+        return 0;
+    }
     case FB_IOCTL_FLUSH_BUFFERS: {
         FBFlushRects user_flush_rects;
         if (!copy_from_user(&user_flush_rects, (FBFlushRects*)arg))
             return -EFAULT;
-        if (user_flush_rects.buffer_index != 0)
+        if (!is_valid_buffer_index(user_flush_rects.buffer_index))
             return -EINVAL;
         if (Checked<unsigned>::multiplication_would_overflow(user_flush_rects.count, sizeof(FBRect)))
             return -EFAULT;
-        for (unsigned i = 0; i < user_flush_rects.count; i++) {
-            FBRect user_dirty_rect;
-            if (!copy_from_user(&user_dirty_rect, &user_flush_rects.rects[i]))
-                return -EFAULT;
-            if (m_are_writes_active) {
+        if (m_are_writes_active && user_flush_rects.count > 0) {
+            auto& buffer = buffer_from_index(user_flush_rects.buffer_index);
+            Locker locker(m_gpu.operation_lock());
+            for (unsigned i = 0; i < user_flush_rects.count; i++) {
+                FBRect user_dirty_rect;
+                if (!copy_from_user(&user_dirty_rect, &user_flush_rects.rects[i]))
+                    return -EFAULT;
                 VirtIOGPURect dirty_rect {
                     .x = user_dirty_rect.x,
                     .y = user_dirty_rect.y,
                     .width = user_dirty_rect.width,
                     .height = user_dirty_rect.height
                 };
-                flush_dirty_window(dirty_rect);
+                transfer_framebuffer_data_to_host(dirty_rect, buffer);
+                if (&buffer == m_current_buffer) {
+                    // Flushing directly to screen
+                    flush_displayed_image(dirty_rect, buffer);
+                }
             }
         }
+        return 0;
+    }
+    case FB_IOCTL_GET_BUFFER_OFFSET: {
+        FBBufferOffset buffer_offset;
+        if (!copy_from_user(&buffer_offset, (FBBufferOffset*)arg))
+            return -EFAULT;
+        if (!is_valid_buffer_index(buffer_offset.buffer_index))
+            return -EINVAL;
+        buffer_offset.offset = (size_t)buffer_offset.buffer_index * m_buffer_size;
+        if (!copy_to_user((FBBufferOffset*)arg, &buffer_offset))
+            return -EFAULT;
         return 0;
     }
     default:
@@ -181,9 +222,9 @@ KResultOr<Region*> VirtIOFrameBufferDevice::mmap(Process& process, FileDescripti
     REQUIRE_PROMISE(video);
     if (!shared)
         return ENODEV;
-    if (offset != 0)
+    if (offset != 0 || !m_framebuffer)
         return ENXIO;
-    if (range.size() != page_round_up(size_in_bytes()))
+    if (range.size() > m_framebuffer->size())
         return EOVERFLOW;
 
     // We only allow one process to map the region
@@ -217,24 +258,28 @@ void VirtIOFrameBufferDevice::deactivate_writes()
         region->set_vmobject(vm_object.release_nonnull());
         region->remap();
     }
+    set_buffer(0);
+    clear_to_black(buffer_from_index(0));
 }
 
 void VirtIOFrameBufferDevice::activate_writes()
 {
     m_are_writes_active = true;
+    auto last_set_buffer_index = m_last_set_buffer_index.load();
     if (m_userspace_mmap_region) {
         auto* region = m_userspace_mmap_region.unsafe_ptr();
         region->set_vmobject(m_framebuffer->vmobject());
         region->remap();
     }
+    set_buffer(last_set_buffer_index);
 }
 
-void VirtIOFrameBufferDevice::clear_to_black()
+void VirtIOFrameBufferDevice::clear_to_black(Buffer& buffer)
 {
     auto& info = display_info();
     size_t width = info.rect.width;
     size_t height = info.rect.height;
-    u8* data = m_framebuffer->vaddr().as_ptr();
+    u8* data = buffer.framebuffer_data;
     for (size_t i = 0; i < width * height; ++i) {
         data[4 * i + 0] = 0x00;
         data[4 * i + 1] = 0x00;
@@ -243,7 +288,7 @@ void VirtIOFrameBufferDevice::clear_to_black()
     }
 }
 
-void VirtIOFrameBufferDevice::draw_ntsc_test_pattern()
+void VirtIOFrameBufferDevice::draw_ntsc_test_pattern(Buffer& buffer)
 {
     static constexpr u8 colors[12][4] = {
         { 0xff, 0xff, 0xff, 0xff }, // White
@@ -262,7 +307,7 @@ void VirtIOFrameBufferDevice::draw_ntsc_test_pattern()
     auto& info = display_info();
     size_t width = info.rect.width;
     size_t height = info.rect.height;
-    u8* data = m_framebuffer->vaddr().as_ptr();
+    u8* data = buffer.framebuffer_data;
     // Draw NTSC test card
     for (size_t y = 0; y < height; ++y) {
         for (size_t x = 0; x < width; ++x) {
@@ -302,7 +347,7 @@ void VirtIOFrameBufferDevice::draw_ntsc_test_pattern()
 
 u8* VirtIOFrameBufferDevice::framebuffer_data()
 {
-    return m_framebuffer->vaddr().as_ptr();
+    return m_current_buffer->framebuffer_data;
 }
 
 }
