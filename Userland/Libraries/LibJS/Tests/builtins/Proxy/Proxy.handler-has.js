@@ -18,6 +18,19 @@ describe("[[Has]] trap normal behavior", () => {
         "foo" in p;
     });
 
+    test("correct arguments passed to trap even for number", () => {
+        let o = {};
+        let p = new Proxy(o, {
+            has(target, prop) {
+                expect(target).toBe(o);
+                expect(prop).toBe("1");
+                return true;
+            },
+        });
+
+        1 in p;
+    });
+
     test("conditional return", () => {
         let o = {};
         let p = new Proxy(o, {

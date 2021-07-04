@@ -20,6 +20,21 @@ describe("[[Set]] trap normal behavior", () => {
         p.foo = 10;
     });
 
+    test("correct arguments passed to trap even for number", () => {
+        let o = {};
+        let p = new Proxy(o, {
+            set(target, prop, value, receiver) {
+                expect(target).toBe(o);
+                expect(prop).toBe("1");
+                expect(value).toBe(10);
+                expect(receiver).toBe(p);
+                return true;
+            },
+        });
+
+        p[1] = 10;
+    });
+
     test("conditional return value", () => {
         let p = new Proxy(
             {},

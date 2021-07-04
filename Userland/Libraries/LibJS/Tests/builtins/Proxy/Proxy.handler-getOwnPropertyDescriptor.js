@@ -24,6 +24,18 @@ describe("[Call][GetOwnProperty]] trap normal behavior", () => {
         Object.getOwnPropertyDescriptor(p, "foo");
     });
 
+    test("correct arguments passed to trap even for number", () => {
+        let o = {};
+        let p = new Proxy(o, {
+            getOwnPropertyDescriptor(target, property) {
+                expect(target).toBe(o);
+                expect(property).toBe("1");
+            },
+        });
+
+        Object.getOwnPropertyDescriptor(p, 1);
+    });
+
     test("conditional returned descriptor", () => {
         let o = { foo: "bar" };
         Object.defineProperty(o, "baz", {

@@ -18,6 +18,19 @@ describe("[[Delete]] trap normal behavior", () => {
         delete p.foo;
     });
 
+    test("correct arguments passed to trap even for number", () => {
+        let o = {};
+        let p = new Proxy(o, {
+            deleteProperty(target, property) {
+                expect(target).toBe(o);
+                expect(property).toBe("1");
+                return true;
+            },
+        });
+
+        delete p[1];
+    });
+
     test("conditional deletion", () => {
         o = { foo: 1, bar: 2 };
         p = new Proxy(o, {
