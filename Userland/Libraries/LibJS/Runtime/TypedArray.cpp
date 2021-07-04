@@ -197,6 +197,15 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
 }
 
 #define JS_DEFINE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type)                                             \
+    ClassName* ClassName::create(GlobalObject& global_object, u32 length, FunctionObject& new_target)                                  \
+    {                                                                                                                                  \
+        auto& vm = global_object.vm();                                                                                                 \
+        auto* prototype = get_prototype_from_constructor(global_object, new_target, &GlobalObject::snake_name##_prototype);            \
+        if (vm.exception())                                                                                                            \
+            return {};                                                                                                                 \
+        return global_object.heap().allocate<ClassName>(global_object, length, *prototype);                                            \
+    }                                                                                                                                  \
+                                                                                                                                       \
     ClassName* ClassName::create(GlobalObject& global_object, u32 length)                                                              \
     {                                                                                                                                  \
         return global_object.heap().allocate<ClassName>(global_object, length, *global_object.snake_name##_prototype());               \
@@ -257,15 +266,17 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     }                                                                                                                                  \
                                                                                                                                        \
     /* 23.2.5.1 TypedArray ( ...args ), https://tc39.es/ecma262/#sec-typedarray */                                                     \
-    Value ConstructorName::construct(FunctionObject&)                                                                                  \
+    Value ConstructorName::construct(FunctionObject& new_target)                                                                       \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
         if (vm.argument_count() == 0)                                                                                                  \
-            return ClassName::create(global_object(), 0);                                                                              \
+            return ClassName::create(global_object(), 0, new_target);                                                                  \
                                                                                                                                        \
         auto first_argument = vm.argument(0);                                                                                          \
         if (first_argument.is_object()) {                                                                                              \
-            auto* typed_array = ClassName::create(global_object(), 0);                                                                 \
+            auto* typed_array = ClassName::create(global_object(), 0, new_target);                                                     \
+            if (vm.exception())                                                                                                        \
+                return {};                                                                                                             \
             if (first_argument.as_object().is_typed_array()) {                                                                         \
                 auto& arg_typed_array = static_cast<TypedArrayBase&>(first_argument.as_object());                                      \
                 initialize_typed_array_from_typed_array(global_object(), *typed_array, arg_typed_array);                               \
@@ -310,7 +321,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
             vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "typed array");                                  \
             return {};                                                                                                                 \
         }                                                                                                                              \
-        return ClassName::create(global_object(), array_length);                                                                       \
+        return ClassName::create(global_object(), array_length, new_target);                                                           \
     }
 
 #undef __JS_ENUMERATE
