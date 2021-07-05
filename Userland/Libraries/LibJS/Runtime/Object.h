@@ -125,7 +125,6 @@ public:
     // - Helpers using old, non-standard names but wrapping the standard methods.
     //   FIXME: Update all the code relying on these and remove them.
     bool put(PropertyName const& property_name, Value value, Value receiver = {}) { return internal_set(property_name, value, receiver.value_or(this)); }
-    Optional<PropertyDescriptor> get_own_property_descriptor(PropertyName const& property_name) const { return internal_get_own_property(property_name); }
     bool define_property(PropertyName const& property_name, Value value, PropertyAttributes attributes = default_attributes, bool = true)
     {
         return internal_define_own_property(property_name, { .value = value, .writable = attributes.is_writable(), .enumerable = attributes.is_enumerable(), .configurable = attributes.is_configurable() });
