@@ -17,6 +17,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Palette.h>
 #include <LibThreading/Lock.h>
+#include <unistd.h>
 
 namespace Assistant {
 
