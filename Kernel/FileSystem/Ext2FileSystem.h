@@ -118,10 +118,10 @@ private:
     ext2_group_desc* block_group_descriptors() { return (ext2_group_desc*)m_cached_group_descriptor_table->data(); }
     const ext2_group_desc* block_group_descriptors() const { return (const ext2_group_desc*)m_cached_group_descriptor_table->data(); }
     void flush_block_group_descriptor_table();
-    unsigned inodes_per_block() const;
-    unsigned inodes_per_group() const;
-    unsigned blocks_per_group() const;
-    unsigned inode_size() const;
+    u64 inodes_per_block() const;
+    u64 inodes_per_group() const;
+    u64 blocks_per_group() const;
+    u64 inode_size() const;
 
     bool write_ext2_inode(InodeIndex, const ext2_inode&);
     bool find_block_containing_inode(InodeIndex, BlockIndex& block_index, unsigned& offset) const;
@@ -158,7 +158,7 @@ private:
 
     BlockListShape compute_block_list_shape(unsigned blocks) const;
 
-    unsigned m_block_group_count { 0 };
+    u64 m_block_group_count { 0 };
 
     mutable ext2_super_block m_super_block;
     mutable OwnPtr<KBuffer> m_cached_group_descriptor_table;

@@ -74,20 +74,4 @@ void FS::lock_all()
     }
 }
 
-void FS::set_block_size(size_t block_size)
-{
-    VERIFY(block_size > 0);
-    if (block_size == m_block_size)
-        return;
-    m_block_size = block_size;
-}
-
-void FS::set_fragment_size(size_t fragment_size)
-{
-    VERIFY(fragment_size > 0);
-    if (fragment_size == m_fragment_size)
-        return;
-    m_fragment_size = fragment_size;
-}
-
 }
