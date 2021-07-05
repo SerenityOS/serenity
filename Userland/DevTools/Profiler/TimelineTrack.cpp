@@ -41,6 +41,7 @@ void TimelineTrack::event(Core::Event& event)
     case GUI::Event::MouseDown:
     case GUI::Event::MouseMove:
         event.ignore();
+        break;
     default:
         break;
     }
