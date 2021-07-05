@@ -137,11 +137,6 @@ int getkeymap(char* name_buffer, size_t name_buffer_size, u32* map, u32* shift_m
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-void set_num_lock(bool on)
-{
-    syscall(SC_set_num_lock, on);
-}
-
 u16 internet_checksum(const void* ptr, size_t count)
 {
     u32 checksum = 0;

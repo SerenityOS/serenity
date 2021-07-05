@@ -191,7 +191,6 @@ set(KERNEL_SOURCES
     Syscalls/mmap.cpp
     Syscalls/module.cpp
     Syscalls/mount.cpp
-    Syscalls/num_lock.cpp
     Syscalls/open.cpp
     Syscalls/perf_event.cpp
     Syscalls/pipe.cpp
