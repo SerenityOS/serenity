@@ -357,23 +357,40 @@ long double truncl(long double x) NOEXCEPT
 
 long double cosl(long double angle) NOEXCEPT
 {
-    return sinl(angle + M_PI_2);
+    long double ret = 0.0;
+    asm(
+        "fcos"
+        : "=t"(ret)
+        : "0"(angle));
+    return ret;
 }
 
 double cos(double angle) NOEXCEPT
 {
-    return sin(angle + M_PI_2);
+    double ret = 0.0;
+    asm(
+        "fcos"
+        : "=t"(ret)
+        : "0"(angle));
+
+    return ret;
 }
 
 float cosf(float angle) NOEXCEPT
 {
-    return sinf(angle + static_cast<float>(M_PI_2));
+    float ret = 0.0;
+    asm(
+        "fcos"
+        : "=t"(ret)
+        : "0"(angle));
+
+    return ret;
 }
 
 long double sinl(long double angle) NOEXCEPT
 {
     long double ret = 0.0;
-    __asm__(
+    asm(
         "fsin"
         : "=t"(ret)
         : "0"(angle));
@@ -388,7 +405,7 @@ long double sinl(long double angle) NOEXCEPT
 double sin(double angle) NOEXCEPT
 {
     double ret = 0.0;
-    __asm__(
+    asm(
         "fsin"
         : "=t"(ret)
         : "0"(angle));
@@ -399,7 +416,7 @@ double sin(double angle) NOEXCEPT
 float sinf(float angle) NOEXCEPT
 {
     float ret = 0.0f;
-    __asm__(
+    asm(
         "fsin"
         : "=t"(ret)
         : "0"(angle));
