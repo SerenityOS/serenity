@@ -394,7 +394,7 @@ void FormatBuilder::put_f80(
     StringBuilder string_builder;
     FormatBuilder format_builder { string_builder };
 
-    bool is_negative = value < 0.0;
+    bool is_negative = value < 0.0l;
     if (is_negative)
         value = -value;
 
@@ -406,16 +406,16 @@ void FormatBuilder::put_f80(
         // https://youtu.be/4P_kbF0EbZM (Stephan T. Lavavej “Floating-Point <charconv>: Making Your Code 10x Faster With C++17's Final Boss”)
         value -= static_cast<i64>(value);
 
-        long double epsilon = 0.5;
+        long double epsilon = 0.5l;
         for (size_t i = 0; i < precision; ++i)
-            epsilon /= 10.0;
+            epsilon /= 10.0l;
 
         size_t visible_precision = 0;
         for (; visible_precision < precision; ++visible_precision) {
             if (value - static_cast<i64>(value) < epsilon)
                 break;
-            value *= 10.0;
-            epsilon *= 10.0;
+            value *= 10.0l;
+            epsilon *= 10.0l;
         }
 
         if (visible_precision > 0) {
