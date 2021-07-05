@@ -22,7 +22,7 @@ JS_DEFINE_NATIVE_GETTER(WebAssemblyInstancePrototype::exports_getter)
     if (vm.exception())
         return {};
     if (!is<WebAssemblyInstanceObject>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAn, "WebAssemblyInstance");
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WebAssembly.Instance");
         return {};
     }
     auto object = static_cast<WebAssemblyInstanceObject*>(this_object);

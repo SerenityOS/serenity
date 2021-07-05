@@ -26,7 +26,7 @@ WebAssemblyModuleConstructor::~WebAssemblyModuleConstructor()
 
 JS::Value WebAssemblyModuleConstructor::call()
 {
-    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssemblyModule");
+    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Module");
     return {};
 }
 
