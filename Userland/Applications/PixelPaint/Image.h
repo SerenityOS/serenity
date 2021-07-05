@@ -68,6 +68,7 @@ public:
     void change_layer_index(size_t old_index, size_t new_index);
     void remove_layer(Layer&);
     void select_layer(Layer*);
+    void flatten_all_layers();
 
     void add_client(ImageClient&);
     void remove_client(ImageClient&);

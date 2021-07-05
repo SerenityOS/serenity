@@ -217,6 +217,7 @@ void LayerListWidget::image_did_remove_layer(size_t layer_index)
         m_moving_gadget_index = {};
     }
     m_gadgets.remove(layer_index);
+    m_selected_layer_index = 0;
     relayout_gadgets();
 }
 

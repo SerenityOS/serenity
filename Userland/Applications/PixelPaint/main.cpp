@@ -408,6 +408,16 @@ int main(int argc, char** argv)
     layer_list_widget.on_context_menu_request = [&](auto& event) {
         layer_menu.popup(event.screen_position());
     };
+    layer_menu.add_separator();
+    layer_menu.add_action(GUI::Action::create(
+        "&Flatten Image", { Mod_Ctrl, Key_F }, [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+            editor->image().flatten_all_layers();
+            editor->did_complete_action();
+        },
+        window));
 
     auto& filter_menu = menubar->add_menu("&Filter");
     auto& spatial_filters_menu = filter_menu.add_submenu("&Spatial");
