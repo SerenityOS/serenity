@@ -14,9 +14,7 @@
 __BEGIN_DECLS
 
 typedef struct {
-    pthread_mutex_t mtx;
-    pthread_cond_t cv;
-    int value;
+    uint32_t value;
 } sem_t;
 
 int sem_close(sem_t*);
@@ -28,6 +26,7 @@ int sem_post(sem_t*);
 int sem_trywait(sem_t*);
 int sem_unlink(const char*);
 int sem_wait(sem_t*);
+int sem_timedwait(sem_t*, const struct timespec* abstime);
 
 #define SEM_VALUE_MAX INT_MAX
 
