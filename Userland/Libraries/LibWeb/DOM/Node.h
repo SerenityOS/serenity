@@ -166,6 +166,8 @@ public:
 
     bool is_scripting_disabled() const;
 
+    bool contains(RefPtr<Node>) const;
+
     // Used for dumping the DOM Tree
     void serialize_tree_as_json(JsonObjectSerializer<StringBuilder>&) const;
 

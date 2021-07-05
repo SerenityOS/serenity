@@ -21,6 +21,7 @@ interface Node : EventTarget {
     Node replaceChild(Node node, Node child);
     [ImplementedAs=pre_remove] Node removeChild(Node child);
     [ImplementedAs=clone_node_binding] Node cloneNode(optional boolean deep = false);
+    boolean contains(Node? other);
 
     const unsigned short ELEMENT_NODE = 1;
     const unsigned short ATTRIBUTE_NODE = 2;
