@@ -22,15 +22,16 @@ NAKED void thread_context_first_enter(void)
     // clang-format off
     // enter_thread_context returns to here first time a thread is executing
     asm(
-    // switch_context will have pushed from_thread and to_thread to our new
-    // stack prior to thread_context_first_enter() being called, and the
-    // pointer to TrapFrame was the top of the stack before that
-    "    movl 8(%esp), %ebx \n" // save pointer to TrapFrame
-    "    cld \n"
-    "    call context_first_init \n"
-    "    addl $" __STRINGIFY(ENTER_THREAD_CONTEXT_ARGS_SIZE) ", %esp \n"
-    "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
-    "    jmp common_trap_exit \n");
+        // switch_context will have pushed from_thread and to_thread to our new
+        // stack prior to thread_context_first_enter() being called, and the
+        // pointer to TrapFrame was the top of the stack before that
+        "    movl 8(%esp), %ebx \n" // save pointer to TrapFrame
+        "    cld \n"
+        "    call context_first_init \n"
+        "    addl $" __STRINGIFY(ENTER_THREAD_CONTEXT_ARGS_SIZE) ", %esp \n"
+        "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
+        "    jmp common_trap_exit \n"
+    );
     // clang-format on
 }
 
@@ -39,21 +40,21 @@ NAKED void do_assume_context(Thread*, u32)
     // clang-format off
     // FIXME: I hope (Thread* thread, u32 flags) aren't compiled away
     asm(
-    "    movl 4(%esp), %ebx \n"
-    "    movl 8(%esp), %esi \n"
-    // We're going to call Processor::init_context, so just make sure
-    // we have enough stack space so we don't stomp over it
-    "    subl $(" __STRINGIFY(4 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 4) "), %esp \n"
-    "    pushl %esi \n"
-    "    pushl %ebx \n"
-    "    cld \n"
-    "    call do_init_context \n"
-    "    addl $8, %esp \n"
-    "    movl %eax, %esp \n" // move stack pointer to what Processor::init_context set up for us
-    "    pushl %ebx \n" // push to_thread
-    "    pushl %ebx \n" // push from_thread
-    "    pushl $thread_context_first_enter \n" // should be same as regs.eip
-    "    jmp enter_thread_context \n"
+        "    movl 4(%esp), %ebx \n"
+        "    movl 8(%esp), %esi \n"
+        // We're going to call Processor::init_context, so just make sure
+        // we have enough stack space so we don't stomp over it
+        "    subl $(" __STRINGIFY(4 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 4) "), %esp \n"
+        "    pushl %esi \n"
+        "    pushl %ebx \n"
+        "    cld \n"
+        "    call do_init_context \n"
+        "    addl $8, %esp \n"
+        "    movl %eax, %esp \n" // move stack pointer to what Processor::init_context set up for us
+        "    pushl %ebx \n" // push to_thread
+        "    pushl %ebx \n" // push from_thread
+        "    pushl $thread_context_first_enter \n" // should be same as regs.eip
+        "    jmp enter_thread_context \n"
     );
     // clang-format on
 }
