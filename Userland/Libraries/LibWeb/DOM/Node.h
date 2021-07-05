@@ -85,8 +85,8 @@ public:
 
     ExceptionOr<NonnullRefPtr<Node>> replace_child(NonnullRefPtr<Node> node, NonnullRefPtr<Node> child);
 
-    NonnullRefPtr<Node> clone_node(Document* document = nullptr, bool clone_children = false) const;
-    ExceptionOr<NonnullRefPtr<Node>> clone_node_binding(bool deep) const;
+    NonnullRefPtr<Node> clone_node(Document* document = nullptr, bool clone_children = false);
+    ExceptionOr<NonnullRefPtr<Node>> clone_node_binding(bool deep);
 
     // NOTE: This is intended for the JS bindings.
     bool has_child_nodes() const { return has_children(); }
@@ -134,6 +134,7 @@ public:
     virtual void removed_from(Node*) { }
     virtual void children_changed() { }
     virtual void adopted_from(const Document&) { }
+    virtual void cloned(Node&, bool) {};
 
     const Layout::Node* layout_node() const { return m_layout_node; }
     Layout::Node* layout_node() { return m_layout_node; }
