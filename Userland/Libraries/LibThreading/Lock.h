@@ -14,14 +14,25 @@ namespace Threading {
 
 class Lock {
 public:
-    Lock() { }
+    Lock() {
+#ifndef __serenity__
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&m_mutex, &attr);
+#endif
+    }
     ~Lock() { }
 
     void lock();
     void unlock();
 
 private:
+#ifdef __serenity__
     pthread_mutex_t m_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+#else
+    pthread_mutex_t m_mutex;
+#endif
 };
 
 class Locker {
