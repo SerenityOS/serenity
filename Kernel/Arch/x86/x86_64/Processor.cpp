@@ -15,47 +15,43 @@
 
 namespace Kernel {
 
-extern "C" void thread_context_first_enter(void);
-extern "C" void exit_kernel_thread(void);
+NAKED void thread_context_first_enter(void)
+{
+    // enter_thread_context returns to here first time a thread is executing
+    asm(
+        // switch_context will have pushed from_thread and to_thread to our news
+        // stack prior to thread_context_first_enter() being called, and the
+        // pointer to TrapFrame was the top of the stack before that
+        "    popq %rdi \n" // from_thread (argument 0)
+        "    popq %rsi \n" // to_thread (argument 1)
+        "    popq %rdx \n" // pointer to TrapFrame (argument 2)
+        "    cld \n"
+        "    call context_first_init \n"
+        "    jmp common_trap_exit \n");
+};
 
-// clang-format off
-asm(
-// enter_thread_context returns to here first time a thread is executing
-".globl thread_context_first_enter \n"
-"thread_context_first_enter: \n"
-// switch_context will have pushed from_thread and to_thread to our new
-// stack prior to thread_context_first_enter() being called, and the
-// pointer to TrapFrame was the top of the stack before that
-"    popq %rdi \n" // from_thread (argument 0)
-"    popq %rsi \n" // to_thread (argument 1)
-"    popq %rdx \n" // pointer to TrapFrame (argument 2)
-"    cld \n"
-"    call context_first_init \n"
-"    jmp common_trap_exit \n"
-);
-// clang-format on
-
-// clang-format off
-asm(
-".global do_assume_context \n"
-"do_assume_context: \n"
-"    movq %rdi, %r12 \n" // save thread ptr
-"    movq %rsi, %r13 \n" // save flags
-// We're going to call Processor::init_context, so just make sure
-// we have enough stack space so we don't stomp over it
-"    subq $(" __STRINGIFY(16 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 8) "), %rsp \n"
-"    cld \n"
-"    call do_init_context \n"
-"    movq %rax, %rsp \n" // move stack pointer to what Processor::init_context set up for us
-"    movq %r12, %rdi \n" // to_thread
-"    movq %r12, %rsi \n" // from_thread
-"    pushq %r12 \n" // to_thread (for thread_context_first_enter)
-"    pushq %r12 \n" // from_thread (for thread_context_first_enter)
-"    movabs $thread_context_first_enter, %r12 \n" // should be same as regs.rip
-"    pushq %r12 \n"
-"    jmp enter_thread_context \n"
-);
-// clang-format on
+NAKED void do_assume_context(Thread*, u32)
+{
+    // clang-format off
+    // FIXME: I hope (Thread* thread, u32 flags) aren't compiled away
+    asm(
+        "    movq %rdi, %r12 \n" // save thread ptr
+        "    movq %rsi, %r13 \n" // save flags
+        // We're going to call Processor::init_context, so just make sure
+        // we have enough stack space so we don't stomp over it
+        "    subq $(" __STRINGIFY(16 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 8) "), %rsp \n"
+        "    cld \n"
+        "    call do_init_context \n"
+        "    movq %rax, %rsp \n"                          // move stack pointer to what Processor::init_context set up for us
+        "    movq %r12, %rdi \n"                          // to_thread
+        "    movq %r12, %rsi \n"                          // from_thread
+        "    pushq %r12 \n"                               // to_thread (for thread_context_first_enter)
+        "    pushq %r12 \n"                               // from_thread (for thread_context_first_enter)
+        "    movabs $thread_context_first_enter, %r12 \n" // should be same as regs.rip
+        "    pushq %r12 \n"
+        "    jmp enter_thread_context \n");
+    // clang-format on
+}
 
 String Processor::platform_string() const
 {

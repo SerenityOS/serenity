@@ -42,122 +42,122 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
 // clang-format off
 
 #if ARCH(I386)
-#define EH_ENTRY(ec, title)                         \
-    extern "C" void title##_asm_entry();            \
-    extern "C" void title##_handler(TrapFrame*) __attribute__((used)); \
-    asm(                                            \
-        ".globl " #title "_asm_entry\n"             \
-        "" #title "_asm_entry: \n"                  \
-        "    pusha\n"                               \
-        "    pushl %ds\n"                           \
-        "    pushl %es\n"                           \
-        "    pushl %fs\n"                           \
-        "    pushl %gs\n"                           \
-        "    pushl %ss\n"                           \
-        "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n" \
-        "    mov %ax, %ds\n"                        \
-        "    mov %ax, %es\n"                        \
-        "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n" \
-        "    mov %ax, %gs\n"                        \
-        "    pushl %esp \n" /* set TrapFrame::regs */ \
-        "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n" \
-        "    pushl %esp \n"                         \
-        "    cld\n"                                 \
-        "    call enter_trap_no_irq \n"             \
-        "    call " #title "_handler\n"             \
-        "    jmp common_trap_exit \n");
+#define EH_ENTRY(ec, title)                                                    \
+    extern "C" void title##_asm_entry();                                       \
+    extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
+    NAKED void title##_asm_entry(){                                            \
+        asm(                                                                   \
+            "    pusha\n"                                                      \
+            "    pushl %ds\n"                                                  \
+            "    pushl %es\n"                                                  \
+            "    pushl %fs\n"                                                  \
+            "    pushl %gs\n"                                                  \
+            "    pushl %ss\n"                                                  \
+            "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n"              \
+            "    mov %ax, %ds\n"                                               \
+            "    mov %ax, %es\n"                                               \
+            "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n"               \
+            "    mov %ax, %gs\n"                                               \
+            "    pushl %esp \n" /* set TrapFrame::regs */                      \
+            "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n"          \
+            "    pushl %esp \n"                                                \
+            "    cld\n"                                                        \
+            "    call enter_trap_no_irq \n"                                    \
+            "    call " #title "_handler\n"                                    \
+            "    jmp common_trap_exit \n");                                    \
+    }
 
-#define EH_ENTRY_NO_CODE(ec, title)                 \
-    extern "C" void title##_asm_entry();	    \
-    extern "C" void title##_handler(TrapFrame*) __attribute__((used)); \
-    asm(                                            \
-        ".globl " #title "_asm_entry\n"             \
-        "" #title "_asm_entry: \n"                  \
-        "    pushl $0x0\n"                          \
-        "    pusha\n"                               \
-        "    pushl %ds\n"                           \
-        "    pushl %es\n"                           \
-        "    pushl %fs\n"                           \
-        "    pushl %gs\n"                           \
-        "    pushl %ss\n"                           \
-        "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n" \
-        "    mov %ax, %ds\n"                        \
-        "    mov %ax, %es\n"                        \
-        "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n" \
-        "    mov %ax, %gs\n"                        \
-        "    pushl %esp \n" /* set TrapFrame::regs */ \
-        "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n" \
-        "    pushl %esp \n"                         \
-        "    cld\n"                                 \
-        "    call enter_trap_no_irq \n"             \
-        "    call " #title "_handler\n"             \
-        "    jmp common_trap_exit \n");
+#define EH_ENTRY_NO_CODE(ec, title)                                            \
+    extern "C" void title##_asm_entry();	                                   \
+    extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
+    NAKED void title##_asm_entry(){                                            \
+        asm(                                                                   \
+            "    pushl $0x0\n"                                                 \
+            "    pusha\n"                                                      \
+            "    pushl %ds\n"                                                  \
+            "    pushl %es\n"                                                  \
+            "    pushl %fs\n"                                                  \
+            "    pushl %gs\n"                                                  \
+            "    pushl %ss\n"                                                  \
+            "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n"              \
+            "    mov %ax, %ds\n"                                               \
+            "    mov %ax, %es\n"                                               \
+            "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n"               \
+            "    mov %ax, %gs\n"                                               \
+            "    pushl %esp \n" /* set TrapFrame::regs */                      \
+            "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n"          \
+            "    pushl %esp \n"                                                \
+            "    cld\n"                                                        \
+            "    call enter_trap_no_irq \n"                                    \
+            "    call " #title "_handler\n"                                    \
+            "    jmp common_trap_exit \n");                                    \
+    }
 
 #elif ARCH(X86_64)
-#define EH_ENTRY(ec, title)                                               \
-    extern "C" void title##_asm_entry();                                  \
-    extern "C" void title##_handler(TrapFrame*) __attribute__((used));    \
-    asm(                                                                  \
-        ".globl " #title "_asm_entry\n"                                   \
-        "" #title "_asm_entry: \n"                                        \
-        "    pushq %r15\n"                                                \
-        "    pushq %r14\n"                                                \
-        "    pushq %r13\n"                                                \
-        "    pushq %r12\n"                                                \
-        "    pushq %r11\n"                                                \
-        "    pushq %r10\n"                                                \
-        "    pushq %r9\n"                                                 \
-        "    pushq %r8\n"                                                 \
-        "    pushq %rax\n"                                                \
-        "    pushq %rcx\n"                                                \
-        "    pushq %rdx\n"                                                \
-        "    pushq %rbx\n"                                                \
-        "    pushq %rsp\n"                                                \
-        "    pushq %rbp\n"                                                \
-        "    pushq %rsi\n"                                                \
-        "    pushq %rdi\n"                                                \
-        "    pushq %rsp \n" /* set TrapFrame::regs */                     \
-        "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n"         \
-        "    subq $0x8, %rsp\n" /* align stack */                         \
-        "    lea 0x8(%rsp), %rdi \n"                                      \
-        "    cld\n"                                                       \
-        "    call enter_trap_no_irq \n"                                   \
-        "    lea 0x8(%rsp), %rdi \n"                                      \
-        "    call " #title "_handler\n"                                   \
-        "    addq $0x8, %rsp\n" /* undo alignment */                      \
-        "    jmp common_trap_exit \n");
+#define EH_ENTRY(ec, title)                                                    \
+    extern "C" void title##_asm_entry();                                       \
+    extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
+    NAKED void title##_asm_entry(){                                            \
+        asm(                                                                   \
+            "    pushq %r15\n"                                                 \
+            "    pushq %r14\n"                                                 \
+            "    pushq %r13\n"                                                 \
+            "    pushq %r12\n"                                                 \
+            "    pushq %r11\n"                                                 \
+            "    pushq %r10\n"                                                 \
+            "    pushq %r9\n"                                                  \
+            "    pushq %r8\n"                                                  \
+            "    pushq %rax\n"                                                 \
+            "    pushq %rcx\n"                                                 \
+            "    pushq %rdx\n"                                                 \
+            "    pushq %rbx\n"                                                 \
+            "    pushq %rsp\n"                                                 \
+            "    pushq %rbp\n"                                                 \
+            "    pushq %rsi\n"                                                 \
+            "    pushq %rdi\n"                                                 \
+            "    pushq %rsp \n" /* set TrapFrame::regs */                      \
+            "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n"          \
+            "    subq $0x8, %rsp\n" /* align stack */                          \
+            "    lea 0x8(%rsp), %rdi \n"                                       \
+            "    cld\n"                                                        \
+            "    call enter_trap_no_irq \n"                                    \
+            "    lea 0x8(%rsp), %rdi \n"                                       \
+            "    call " #title "_handler\n"                                    \
+            "    addq $0x8, %rsp\n" /* undo alignment */                       \
+            "    jmp common_trap_exit \n");                                    \
+    }
 
-#define EH_ENTRY_NO_CODE(ec, title)                                       \
-    extern "C" void title##_handler(TrapFrame*) __attribute__((used));    \
-    extern "C" void title##_asm_entry();                                  \
-asm(                                                                      \
-        ".globl " #title "_asm_entry\n"                                   \
-        "" #title "_asm_entry: \n"                                        \
-        "    pushq $0x0\n"                                                \
-        "    pushq %r15\n"                                                \
-        "    pushq %r14\n"                                                \
-        "    pushq %r13\n"                                                \
-        "    pushq %r12\n"                                                \
-        "    pushq %r11\n"                                                \
-        "    pushq %r10\n"                                                \
-        "    pushq %r9\n"                                                 \
-        "    pushq %r8\n"                                                 \
-        "    pushq %rax\n"                                                \
-        "    pushq %rcx\n"                                                \
-        "    pushq %rdx\n"                                                \
-        "    pushq %rbx\n"                                                \
-        "    pushq %rsp\n"                                                \
-        "    pushq %rbp\n"                                                \
-        "    pushq %rsi\n"                                                \
-        "    pushq %rdi\n"                                                \
-        "    pushq %rsp \n" /* set TrapFrame::regs */                     \
-        "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n"         \
-        "    movq %rsp, %rdi \n"                                          \
-        "    cld\n"                                                       \
-        "    call enter_trap_no_irq \n"                                   \
-        "    movq %rsp, %rdi \n"                                          \
-        "    call " #title "_handler\n"                                   \
-        "    jmp common_trap_exit \n");
+#define EH_ENTRY_NO_CODE(ec, title)                                            \
+    extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
+    extern "C" void title##_asm_entry();                                       \
+    NAKED void title##_asm_entry(){                                            \
+        asm(                                                                   \
+            "    pushq $0x0\n"                                                 \
+            "    pushq %r15\n"                                                 \
+            "    pushq %r14\n"                                                 \
+            "    pushq %r13\n"                                                 \
+            "    pushq %r12\n"                                                 \
+            "    pushq %r11\n"                                                 \
+            "    pushq %r10\n"                                                 \
+            "    pushq %r9\n"                                                  \
+            "    pushq %r8\n"                                                  \
+            "    pushq %rax\n"                                                 \
+            "    pushq %rcx\n"                                                 \
+            "    pushq %rdx\n"                                                 \
+            "    pushq %rbx\n"                                                 \
+            "    pushq %rsp\n"                                                 \
+            "    pushq %rbp\n"                                                 \
+            "    pushq %rsi\n"                                                 \
+            "    pushq %rdi\n"                                                 \
+            "    pushq %rsp \n" /* set TrapFrame::regs */                      \
+            "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n"          \
+            "    movq %rsp, %rdi \n"                                           \
+            "    cld\n"                                                        \
+            "    call enter_trap_no_irq \n"                                    \
+            "    movq %rsp, %rdi \n"                                           \
+            "    call " #title "_handler\n"                                    \
+            "    jmp common_trap_exit \n");                                    \
+    }
 #endif
 
 // clang-format on
