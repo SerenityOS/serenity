@@ -20,7 +20,9 @@ void ClientConnection::enqueue(const Buffer& buffer)
         auto success = enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
         if (success)
             break;
-        usleep(100000);
+        // FIXME: We don't know what is a good value for this.
+        // For now, decrease it to enable better real-time audio.
+        usleep(10000);
     }
 }
 
