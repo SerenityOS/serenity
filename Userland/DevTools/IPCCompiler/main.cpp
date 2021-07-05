@@ -284,6 +284,11 @@ int main(int argc, char** argv)
 #include <LibIPC/File.h>
 #include <LibIPC/Message.h>
 #include <LibIPC/Stub.h>
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdefaulted-function-deleted"
+#endif
 )~~~");
 
     for (auto& endpoint : endpoints) {
@@ -865,6 +870,10 @@ public:
         endpoint_generator.append(R"~~~(
 private:
 };
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 )~~~");
     }
 
