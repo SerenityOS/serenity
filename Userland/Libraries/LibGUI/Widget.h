@@ -108,6 +108,8 @@ public:
         set_max_height(height);
     }
 
+    virtual bool is_visible_for_timer_purposes() const override;
+
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
     String tooltip() const { return m_tooltip; }
     void set_tooltip(String);

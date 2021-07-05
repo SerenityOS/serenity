@@ -1114,4 +1114,9 @@ bool Widget::has_pending_drop() const
     return Application::the()->pending_drop_widget() == this;
 }
 
+bool Widget::is_visible_for_timer_purposes() const
+{
+    return is_visible();
+}
+
 }
