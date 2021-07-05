@@ -58,19 +58,19 @@ public:
 private:
     virtual void visit_edges(Visitor&) override;
 
-    JS_DECLARE_NATIVE_GETTER(top_getter);
+    JS_DECLARE_NATIVE_FUNCTION(top_getter);
 
-    JS_DECLARE_NATIVE_GETTER(document_getter);
+    JS_DECLARE_NATIVE_FUNCTION(document_getter);
 
-    JS_DECLARE_NATIVE_GETTER(performance_getter);
-    JS_DECLARE_NATIVE_GETTER(screen_getter);
+    JS_DECLARE_NATIVE_FUNCTION(performance_getter);
+    JS_DECLARE_NATIVE_FUNCTION(screen_getter);
 
-    JS_DECLARE_NATIVE_GETTER(event_getter);
+    JS_DECLARE_NATIVE_FUNCTION(event_getter);
 
-    JS_DECLARE_NATIVE_GETTER(inner_width_getter);
-    JS_DECLARE_NATIVE_GETTER(inner_height_getter);
+    JS_DECLARE_NATIVE_FUNCTION(inner_width_getter);
+    JS_DECLARE_NATIVE_FUNCTION(inner_height_getter);
 
-    JS_DECLARE_NATIVE_GETTER(parent_getter);
+    JS_DECLARE_NATIVE_FUNCTION(parent_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(alert);
     JS_DECLARE_NATIVE_FUNCTION(confirm);
