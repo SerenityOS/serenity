@@ -203,7 +203,7 @@ bool Value::is_array(GlobalObject& global_object) const
     if (!is_object())
         return false;
     auto& object = as_object();
-    if (object.is_array())
+    if (is<Array>(object))
         return true;
     if (is<ProxyObject>(object)) {
         auto& proxy = static_cast<ProxyObject const&>(object);
@@ -219,7 +219,7 @@ bool Value::is_array(GlobalObject& global_object) const
 
 Array& Value::as_array()
 {
-    VERIFY(is_object() && as_object().is_array());
+    VERIFY(is_object() && is<Array>(as_object()));
     return static_cast<Array&>(*m_value.as_object);
 }
 

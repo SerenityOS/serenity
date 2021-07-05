@@ -61,7 +61,7 @@ void MarkupGenerator::value_to_html(Value value, StringBuilder& output_html, Has
 
     if (value.is_object()) {
         auto& object = value.as_object();
-        if (object.is_array())
+        if (is<Array>(object))
             return array_to_html(static_cast<const Array&>(object), output_html, seen_objects);
         output_html.append(wrap_string_in_style(object.class_name(), StyleType::ObjectType));
         if (object.is_function())

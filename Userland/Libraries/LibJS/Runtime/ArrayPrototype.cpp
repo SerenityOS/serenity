@@ -348,7 +348,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    if (this_object->is_array()) {
+    if (is<Array>(this_object)) {
         auto* array = static_cast<Array*>(this_object);
         for (size_t i = 0; i < vm.argument_count(); ++i)
             array->indexed_properties().append(vm.argument(i));
@@ -432,7 +432,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    if (this_object->is_array()) {
+    if (is<Array>(this_object)) {
         auto* array = static_cast<Array*>(this_object);
         if (array->indexed_properties().is_empty())
             return js_undefined();
