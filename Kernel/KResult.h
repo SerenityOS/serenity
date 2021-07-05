@@ -58,24 +58,30 @@ public:
     }
 
     ALWAYS_INLINE KResultOr(T&& value)
+        : m_have_storage(true)
     {
         new (&m_storage) T(move(value));
-        m_have_storage = true;
+    }
+
+    ALWAYS_INLINE KResultOr(const T& value)
+        : m_have_storage(true)
+    {
+        new (&m_storage) T(value);
     }
 
     template<typename U>
-    ALWAYS_INLINE KResultOr(U&& value)
+    ALWAYS_INLINE KResultOr(U&& value) requires(!IsSame<RemoveCVReference<U>, KResultOr<T>>)
+        : m_have_storage(true)
     {
-        new (&m_storage) T(move(value));
-        m_have_storage = true;
+        new (&m_storage) T(forward<U>(value));
     }
 
     KResultOr(KResultOr&& other)
     {
         m_is_error = other.m_is_error;
-        if (m_is_error)
+        if (m_is_error) {
             m_error = other.m_error;
-        else {
+        } else {
             if (other.m_have_storage) {
                 new (&m_storage) T(move(other.value()));
                 m_have_storage = true;
@@ -96,9 +102,9 @@ public:
             m_have_storage = false;
         }
         m_is_error = other.m_is_error;
-        if (m_is_error)
+        if (m_is_error) {
             m_error = other.m_error;
-        else {
+        } else {
             if (other.m_have_storage) {
                 new (&m_storage) T(move(other.value()));
                 m_have_storage = true;
