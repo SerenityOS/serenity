@@ -41,6 +41,8 @@ struct RollNote {
 
     u32 on_sample;
     u32 off_sample;
+    u8 pitch;
+    i8 velocity;
 };
 
 enum Direction {

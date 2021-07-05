@@ -267,7 +267,7 @@ void Track::sync_roll(int note)
 
 void Track::set_roll_note(int note, u32 on_sample, u32 off_sample)
 {
-    RollNote new_roll_note = { on_sample, off_sample };
+    RollNote new_roll_note = { on_sample, off_sample, (u8)note, 0 };
 
     VERIFY(note >= 0 && note < note_count);
     VERIFY(new_roll_note.off_sample < roll_length);
