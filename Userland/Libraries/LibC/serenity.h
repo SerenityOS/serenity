@@ -7,7 +7,9 @@
 #pragma once
 
 #include <stdio.h>
+#include <sys/cdefs.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 __BEGIN_DECLS
@@ -69,6 +71,26 @@ int profiling_free_buffer(pid_t);
 #define FUTEX_BITSET_MATCH_ANY 0xffffffff
 
 int futex(uint32_t* userspace_address, int futex_op, uint32_t value, const struct timespec* timeout, uint32_t* userspace_address2, uint32_t value3);
+
+static ALWAYS_INLINE int futex_wait(uint32_t* userspace_address, uint32_t value, const struct timespec* abstime, int clockid)
+{
+    int op;
+
+    if (abstime) {
+        // NOTE: FUTEX_WAIT takes a relative timeout, so use FUTEX_WAIT_BITSET instead!
+        op = FUTEX_WAIT_BITSET | FUTEX_PRIVATE_FLAG;
+        if (clockid == CLOCK_REALTIME || clockid == CLOCK_REALTIME_COARSE)
+            op |= FUTEX_CLOCK_REALTIME;
+    } else {
+        op = FUTEX_WAIT;
+    }
+    return futex(userspace_address, op, value, abstime, nullptr, FUTEX_BITSET_MATCH_ANY);
+}
+
+static ALWAYS_INLINE int futex_wake(uint32_t* userspace_address, uint32_t count)
+{
+    return futex(userspace_address, FUTEX_WAKE, count, NULL, NULL, 0);
+}
 
 #define PURGE_ALL_VOLATILE 0x1
 #define PURGE_ALL_CLEAN_INODE 0x2
