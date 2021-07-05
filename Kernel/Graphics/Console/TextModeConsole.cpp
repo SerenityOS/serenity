@@ -45,7 +45,7 @@ enum VGAColor : u8 {
     White,
 };
 
-static inline VGAColor convert_standard_color_to_vga_color(Console::Color color)
+[[maybe_unused]] static inline VGAColor convert_standard_color_to_vga_color(Console::Color color)
 {
     switch (color) {
     case Console::Color::Black:
