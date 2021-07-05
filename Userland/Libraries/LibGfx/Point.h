@@ -13,7 +13,6 @@
 #include <LibGfx/Orientation.h>
 #include <LibIPC/Forward.h>
 #include <math.h>
-#include <stdlib.h>
 
 namespace Gfx {
 
@@ -217,7 +216,7 @@ public:
     // Returns pixels moved from other in either direction
     [[nodiscard]] T pixels_moved(Point<T> const& other) const
     {
-        return max(abs(dx_relative_to(other)), abs(dy_relative_to(other)));
+        return max(AK::abs(dx_relative_to(other)), AK::abs(dy_relative_to(other)));
     }
 
     [[nodiscard]] float distance_from(Point<T> const& other) const
@@ -229,7 +228,7 @@ public:
 
     [[nodiscard]] Point absolute_relative_distance_to(Point const& other) const
     {
-        return { abs(dx_relative_to(other)), abs(dy_relative_to(other)) };
+        return { AK::abs(dx_relative_to(other)), AK::abs(dy_relative_to(other)) };
     }
 
     template<typename U>

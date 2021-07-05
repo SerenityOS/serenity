@@ -482,7 +482,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
 
             if (sum_of_unfrozen_flex_items_flex_factors < 1) {
                 auto intermediate_free_space = initial_free_space * sum_of_unfrozen_flex_items_flex_factors;
-                if (abs(intermediate_free_space) < abs(remaining_free_space))
+                if (AK::abs(intermediate_free_space) < AK::abs(remaining_free_space))
                     remaining_free_space = intermediate_free_space;
             }
 
@@ -503,7 +503,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
 
                     for_each_unfrozen_item([&](FlexItem* flex_item) {
                         float ratio = flex_item->scaled_flex_shrink_factor / sum_of_scaled_flex_shrink_factor_of_unfrozen_items;
-                        flex_item->target_main_size = flex_item->flex_base_size - (abs(remaining_free_space) * ratio);
+                        flex_item->target_main_size = flex_item->flex_base_size - (AK::abs(remaining_free_space) * ratio);
                     });
                 }
             } else {
