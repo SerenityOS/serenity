@@ -649,4 +649,10 @@ bool Node::is_scripting_disabled() const
     return !document().browsing_context();
 }
 
+// https://dom.spec.whatwg.org/#dom-node-contains
+bool Node::contains(RefPtr<Node> other) const
+{
+    return other && other->is_inclusive_descendant_of(*this);
+}
+
 }
