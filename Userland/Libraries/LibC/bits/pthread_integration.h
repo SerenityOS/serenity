@@ -21,6 +21,7 @@ void __pthread_fork_atfork_register_child(void (*)(void));
 int __pthread_mutex_init(pthread_mutex_t*, const pthread_mutexattr_t*);
 int __pthread_mutex_lock(pthread_mutex_t*);
 int __pthread_mutex_trylock(pthread_mutex_t*);
+int __pthread_mutex_lock_pessimistic_np(pthread_mutex_t*);
 int __pthread_mutex_unlock(pthread_mutex_t*);
 
 typedef void (*KeyDestructor)(void*);

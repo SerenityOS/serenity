@@ -167,6 +167,22 @@ int __pthread_mutex_lock(pthread_mutex_t* mutex)
 
 int pthread_mutex_lock(pthread_mutex_t*) __attribute__((weak, alias("__pthread_mutex_lock")));
 
+int __pthread_mutex_lock_pessimistic_np(pthread_mutex_t* mutex)
+{
+    // Same as pthread_mutex_lock(), but always set MUTEX_LOCKED_NEED_TO_WAKE,
+    // and also don't bother checking for already owning the mutex recursively,
+    // because we know we don't. Used in the condition variable implementation.
+    u32 value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
+    while (value != MUTEX_UNLOCKED) {
+        futex_wait(&mutex->lock, value, nullptr, 0);
+        value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
+    }
+
+    AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
+    mutex->level = 0;
+    return 0;
+}
+
 int __pthread_mutex_unlock(pthread_mutex_t* mutex)
 {
     if (mutex->type == __PTHREAD_MUTEX_RECURSIVE && mutex->level > 0) {
