@@ -59,8 +59,8 @@ void WebAssemblyInstanceConstructor::initialize(JS::GlobalObject& global_object)
     auto& window = static_cast<WindowObject&>(global_object);
 
     NativeFunction::initialize(global_object);
-    define_property(vm.names.prototype, &window.ensure_web_prototype<WebAssemblyInstancePrototype>("WebAssemblyInstancePrototype"));
-    define_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
+    define_direct_property(vm.names.prototype, &window.ensure_web_prototype<WebAssemblyInstancePrototype>("WebAssemblyInstancePrototype"), 0);
+    define_direct_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
 }
 
 }

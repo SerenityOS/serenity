@@ -26,9 +26,9 @@ void StringConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 22.1.2.3 String.prototype, https://tc39.es/ecma262/#sec-string.prototype
-    define_property(vm.names.prototype, global_object.string_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.string_prototype(), 0);
 
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.raw, raw, 1, attr);

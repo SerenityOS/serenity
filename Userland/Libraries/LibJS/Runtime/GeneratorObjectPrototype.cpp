@@ -37,7 +37,7 @@ void GeneratorObjectPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.throw_, throw_, 1, attr);
 
     // 27.5.1.5 Generator.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-generator.prototype-@@tostringtag
-    define_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Generator"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Generator"), Attribute::Configurable);
 }
 
 GeneratorObjectPrototype::~GeneratorObjectPrototype()

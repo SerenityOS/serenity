@@ -33,7 +33,7 @@ void StringObject::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     Object::initialize(global_object);
-    define_property(vm.names.length, Value(m_string.string().length()), 0);
+    define_direct_property(vm.names.length, Value(m_string.string().length()), 0);
 }
 
 void StringObject::visit_edges(Cell::Visitor& visitor)

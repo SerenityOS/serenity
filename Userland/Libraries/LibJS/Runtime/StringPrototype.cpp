@@ -68,9 +68,9 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.padEnd, pad_end, 1, attr);
     define_native_function(vm.names.trim, trim, 0, attr);
     define_native_function(vm.names.trimStart, trim_start, 0, attr);
-    define_property(vm.names.trimLeft, get_without_side_effects(vm.names.trimStart), attr);
+    define_direct_property(vm.names.trimLeft, get_without_side_effects(vm.names.trimStart), attr);
     define_native_function(vm.names.trimEnd, trim_end, 0, attr);
-    define_property(vm.names.trimRight, get_without_side_effects(vm.names.trimEnd), attr);
+    define_direct_property(vm.names.trimRight, get_without_side_effects(vm.names.trimEnd), attr);
     define_native_function(vm.names.concat, concat, 1, attr);
     define_native_function(vm.names.substr, substr, 2, attr);
     define_native_function(vm.names.substring, substring, 2, attr);

@@ -22,7 +22,7 @@ void BoundFunction::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     Base::initialize(global_object);
-    define_property(vm.names.length, Value(m_length), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(m_length), Attribute::Configurable);
 }
 
 BoundFunction::~BoundFunction()

@@ -23,9 +23,9 @@ void FinalizationRegistryConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 26.2.2.1 FinalizationRegistry.prototype, https://tc39.es/ecma262/#sec-finalization-registry.prototype
-    define_property(vm.names.prototype, global_object.finalization_registry_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.finalization_registry_prototype(), 0);
 
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
 FinalizationRegistryConstructor::~FinalizationRegistryConstructor()

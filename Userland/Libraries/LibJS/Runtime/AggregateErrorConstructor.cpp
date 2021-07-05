@@ -25,9 +25,9 @@ void AggregateErrorConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 20.5.7.2.1 AggregateError.prototype, https://tc39.es/ecma262/#sec-aggregate-error.prototype
-    define_property(vm.names.prototype, global_object.aggregate_error_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.aggregate_error_prototype(), 0);
 
-    define_property(vm.names.length, Value(2), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 }
 
 // 20.5.7.1.1 AggregateError ( errors, message ), https://tc39.es/ecma262/#sec-aggregate-error

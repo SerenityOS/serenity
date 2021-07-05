@@ -126,19 +126,14 @@ public:
     // - Helpers using old, non-standard names but wrapping the standard methods.
     //   FIXME: Update all the code relying on these and remove them.
     bool put(PropertyName const& property_name, Value value, Value receiver = {}) { return internal_set(property_name, value, receiver.value_or(this)); }
-    bool define_property(PropertyName const& property_name, Value value, PropertyAttributes attributes = default_attributes, bool = true)
-    {
-        return internal_define_own_property(property_name, { .value = value, .writable = attributes.is_writable(), .enumerable = attributes.is_enumerable(), .configurable = attributes.is_configurable() });
-    };
-
     Value get_without_side_effects(const PropertyName&) const;
 
-    bool define_property_without_transition(const PropertyName&, Value value, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
-    bool define_accessor(const PropertyName&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes = default_attributes, bool throw_exceptions = true);
+    void define_direct_property(PropertyName const& property_name, Value value, PropertyAttributes attributes) { storage_set(property_name, { value, attributes }); };
+    void define_direct_accessor(PropertyName const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
 
-    bool define_native_function(PropertyName const&, Function<Value(VM&, GlobalObject&)>, i32 length = 0, PropertyAttributes attributes = default_attributes);
-    bool define_native_property(PropertyName const&, Function<Value(VM&, GlobalObject&)> getter, Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attributes = default_attributes);
-    bool define_native_accessor(PropertyName const&, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attributes = default_attributes);
+    void define_native_function(PropertyName const&, Function<Value(VM&, GlobalObject&)>, i32 length = 0, PropertyAttributes attributes = default_attributes);
+    void define_native_property(PropertyName const&, Function<Value(VM&, GlobalObject&)> getter, Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attributes = default_attributes);
+    void define_native_accessor(PropertyName const&, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attributes = default_attributes);
 
     virtual bool is_array() const { return false; }
     virtual bool is_function() const { return false; }

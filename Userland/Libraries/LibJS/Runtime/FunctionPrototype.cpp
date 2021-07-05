@@ -35,8 +35,8 @@ void FunctionPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.call, call, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(*vm.well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
-    define_property(vm.names.length, Value(0), Attribute::Configurable);
-    define_property(vm.names.name, js_string(heap(), ""), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
+    define_direct_property(vm.names.name, js_string(heap(), ""), Attribute::Configurable);
 }
 
 FunctionPrototype::~FunctionPrototype()

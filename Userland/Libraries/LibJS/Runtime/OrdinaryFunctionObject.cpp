@@ -78,14 +78,14 @@ void OrdinaryFunctionObject::initialize(GlobalObject& global_object)
         auto* prototype = vm.heap().allocate<Object>(global_object, *global_object.new_ordinary_function_prototype_object_shape());
         switch (m_kind) {
         case FunctionKind::Regular:
-            prototype->define_property(vm.names.constructor, this, Attribute::Writable | Attribute::Configurable);
+            prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true });
             break;
         case FunctionKind::Generator:
             // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
             prototype->internal_set_prototype_of(global_object.generator_object_prototype());
             break;
         }
-        define_property(vm.names.prototype, prototype, Attribute::Writable);
+        define_direct_property(vm.names.prototype, prototype, Attribute::Writable);
     }
     define_property_or_throw(vm.names.length, { .value = Value(m_function_length), .writable = false, .enumerable = false, .configurable = true });
     define_property_or_throw(vm.names.name, { .value = js_string(vm, m_name.is_null() ? "" : m_name), .writable = false, .enumerable = false, .configurable = true });

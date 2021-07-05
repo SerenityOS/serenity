@@ -37,7 +37,7 @@ void JSONObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.parse, parse, 2, attr);
 
     // 25.5.3 JSON [ @@toStringTag ], https://tc39.es/ecma262/#sec-json-@@tostringtag
-    define_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "JSON"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "JSON"), Attribute::Configurable);
 }
 
 JSONObject::~JSONObject()
@@ -460,7 +460,7 @@ Object* JSONObject::parse_json_object(GlobalObject& global_object, const JsonObj
 {
     auto* object = Object::create(global_object, global_object.object_prototype());
     json_object.for_each_member([&](auto& key, auto& value) {
-        object->define_property(key, parse_json_value(global_object, value));
+        object->define_direct_property(key, parse_json_value(global_object, value), JS::default_attributes);
     });
     return object;
 }
@@ -470,7 +470,7 @@ Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray
     auto* array = Array::create(global_object, 0);
     size_t index = 0;
     json_array.for_each([&](auto& value) {
-        array->define_property(index++, parse_json_value(global_object, value));
+        array->define_direct_property(index++, parse_json_value(global_object, value), JS::default_attributes);
     });
     return array;
 }

@@ -61,17 +61,17 @@ void MathObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.tanh, tanh, 1, attr);
 
     // 21.3.1 Value Properties of the Math Object, https://tc39.es/ecma262/#sec-value-properties-of-the-math-object
-    define_property(vm.names.E, Value(M_E), 0);
-    define_property(vm.names.LN2, Value(M_LN2), 0);
-    define_property(vm.names.LN10, Value(M_LN10), 0);
-    define_property(vm.names.LOG2E, Value(::log2(M_E)), 0);
-    define_property(vm.names.LOG10E, Value(::log10(M_E)), 0);
-    define_property(vm.names.PI, Value(M_PI), 0);
-    define_property(vm.names.SQRT1_2, Value(M_SQRT1_2), 0);
-    define_property(vm.names.SQRT2, Value(M_SQRT2), 0);
+    define_direct_property(vm.names.E, Value(M_E), 0);
+    define_direct_property(vm.names.LN2, Value(M_LN2), 0);
+    define_direct_property(vm.names.LN10, Value(M_LN10), 0);
+    define_direct_property(vm.names.LOG2E, Value(::log2(M_E)), 0);
+    define_direct_property(vm.names.LOG10E, Value(::log10(M_E)), 0);
+    define_direct_property(vm.names.PI, Value(M_PI), 0);
+    define_direct_property(vm.names.SQRT1_2, Value(M_SQRT1_2), 0);
+    define_direct_property(vm.names.SQRT2, Value(M_SQRT2), 0);
 
     // 21.3.1.9 Math [ @@toStringTag ], https://tc39.es/ecma262/#sec-math-@@tostringtag
-    define_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), vm.names.Math.as_string()), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), vm.names.Math.as_string()), Attribute::Configurable);
 }
 
 MathObject::~MathObject()

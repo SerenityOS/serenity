@@ -26,9 +26,9 @@ void FunctionConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 20.2.2.2 Function.prototype, https://tc39.es/ecma262/#sec-function.prototype
-    define_property(vm.names.prototype, global_object.function_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.function_prototype(), 0);
 
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
 FunctionConstructor::~FunctionConstructor()

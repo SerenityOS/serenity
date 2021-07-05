@@ -20,7 +20,7 @@ Error* Error::create(GlobalObject& global_object, String const& message)
     auto& vm = global_object.vm();
     auto* error = Error::create(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    error->define_property(vm.names.message, js_string(vm, message), attr);
+    error->define_direct_property(vm.names.message, js_string(vm, message), attr);
     return error;
 }
 
@@ -55,7 +55,7 @@ void Error::install_error_cause(Value options)
         auto& vm = global_object.vm();                                                                           \
         auto* error = ClassName::create(global_object);                                                          \
         u8 attr = Attribute::Writable | Attribute::Configurable;                                                 \
-        error->define_property(vm.names.message, js_string(vm, message), attr);                                  \
+        error->define_direct_property(vm.names.message, js_string(vm, message), attr);                           \
         return error;                                                                                            \
     }                                                                                                            \
                                                                                                                  \

@@ -26,9 +26,9 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 27.2.4.4 Promise.prototype, https://tc39.es/ecma262/#sec-promise.prototype
-    define_property(vm.names.prototype, global_object.promise_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.promise_prototype(), 0);
 
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     // TODO: Implement these functions below and uncomment this.

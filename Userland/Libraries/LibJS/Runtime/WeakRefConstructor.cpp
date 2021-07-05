@@ -23,9 +23,9 @@ void WeakRefConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 26.1.2.1 WeakRef.prototype, https://tc39.es/ecma262/#sec-weak-ref.prototype
-    define_property(vm.names.prototype, global_object.weak_ref_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.weak_ref_prototype(), 0);
 
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
 WeakRefConstructor::~WeakRefConstructor()

@@ -24,9 +24,9 @@ void ArrayBufferConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 25.1.4.2 ArrayBuffer.prototype, https://tc39.es/ecma262/#sec-arraybuffer.prototype
-    define_property(vm.names.prototype, global_object.array_buffer_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.array_buffer_prototype(), 0);
 
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.isView, is_view, 1, attr);

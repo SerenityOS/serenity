@@ -42,7 +42,7 @@ PromiseCapability new_promise_capability(GlobalObject& global_object, Value cons
         promise_capability_functions.reject = reject;
         return js_undefined();
     });
-    executor->define_property(vm.names.length, Value(2), Attribute::Configurable);
+    executor->define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
 
     MarkedValueList arguments(vm.heap());
     arguments.append(executor);
