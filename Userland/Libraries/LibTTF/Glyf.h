@@ -106,8 +106,8 @@ public:
         template<typename GlyphCb>
         RefPtr<Gfx::Bitmap> raster_composite(float x_scale, float y_scale, GlyphCb glyph_callback) const
         {
-            u32 width = (u32)(ceil((m_xmax - m_xmin) * x_scale)) + 1;
-            u32 height = (u32)(ceil((m_ymax - m_ymin) * y_scale)) + 1;
+            u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 1;
+            u32 height = (u32)(ceilf((m_ymax - m_ymin) * y_scale)) + 1;
             Rasterizer rasterizer(Gfx::IntSize(width, height));
             auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -m_ymax);
             ComponentIterator component_iterator(m_slice);
