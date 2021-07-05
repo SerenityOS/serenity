@@ -409,7 +409,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
     return js_string(vm, Utf8View(*string).trim(whitespace_characters, TrimMode::Right).as_string());
 }
 
-// 22.1.3.23 String.prototype.substring ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.substring
+// 22.1.3.4 String.prototype.concat ( ...args ), https://tc39.es/ecma262/#sec-string.prototype.concat
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
 {
     auto string = ak_string_from(vm, global_object);
