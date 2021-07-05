@@ -21,16 +21,17 @@ void ConsoleObject::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     Object::initialize(global_object);
-    define_native_function(vm.names.log, log);
-    define_native_function(vm.names.debug, debug);
-    define_native_function(vm.names.info, info);
-    define_native_function(vm.names.warn, warn);
-    define_native_function(vm.names.error, error);
-    define_native_function(vm.names.trace, trace);
-    define_native_function(vm.names.count, count);
-    define_native_function(vm.names.countReset, count_reset);
-    define_native_function(vm.names.clear, clear);
-    define_native_function(vm.names.assert, assert_);
+    u8 attr = Attribute::Writable | Attribute::Enumerable | Attribute::Configurable;
+    define_native_function(vm.names.log, log, 0, attr);
+    define_native_function(vm.names.debug, debug, 0, attr);
+    define_native_function(vm.names.info, info, 0, attr);
+    define_native_function(vm.names.warn, warn, 0, attr);
+    define_native_function(vm.names.error, error, 0, attr);
+    define_native_function(vm.names.trace, trace, 0, attr);
+    define_native_function(vm.names.count, count, 0, attr);
+    define_native_function(vm.names.countReset, count_reset, 0, attr);
+    define_native_function(vm.names.clear, clear, 0, attr);
+    define_native_function(vm.names.assert, assert_, 0, attr);
 }
 
 ConsoleObject::~ConsoleObject()
