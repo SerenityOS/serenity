@@ -18,7 +18,6 @@
 namespace Test {
 TestRunner* TestRunner::s_the = nullptr;
 }
-using enum Test::Modifier;
 using Test::get_time_in_ms;
 using Test::print_modifiers;
 
@@ -115,36 +114,36 @@ void TestRunner::do_run_single_test(const String& test_path)
     bool crashed_or_failed = test_result.result == Test::Result::Fail || test_result.result == Test::Result::Crashed;
     bool print_stdout_stderr = crashed_or_failed || m_print_all_output;
     if (crashed_or_failed) {
-        print_modifiers({ BG_RED, FG_BLACK, FG_BOLD });
+        print_modifiers({ Test::BG_RED, Test::FG_BLACK, Test::FG_BOLD });
         out("{}", test_result.result == Test::Result::Fail ? " FAIL  " : "CRASHED");
-        print_modifiers({ CLEAR });
+        print_modifiers({ Test::CLEAR });
     } else {
-        print_modifiers({ BG_GREEN, FG_BLACK, FG_BOLD });
+        print_modifiers({ Test::BG_GREEN, Test::FG_BLACK, Test::FG_BOLD });
         out(" PASS ");
-        print_modifiers({ CLEAR });
+        print_modifiers({ Test::CLEAR });
     }
 
     out(" {}", LexicalPath::relative_path(test_path, m_test_root));
 
-    print_modifiers({ CLEAR, ITALIC, FG_GRAY });
+    print_modifiers({ Test::CLEAR, Test::ITALIC, Test::FG_GRAY });
     if (test_result.time_taken < 1000) {
         outln(" ({}ms)", static_cast<int>(test_result.time_taken));
     } else {
         outln(" ({:3}s)", test_result.time_taken / 1000.0);
     }
-    print_modifiers({ CLEAR });
+    print_modifiers({ Test::CLEAR });
 
     if (test_result.result != Test::Result::Pass) {
-        print_modifiers({ FG_GRAY, FG_BOLD });
+        print_modifiers({ Test::FG_GRAY, Test::FG_BOLD });
         out("         Test:   ");
         if (crashed_or_failed) {
-            print_modifiers({ CLEAR, FG_RED });
+            print_modifiers({ Test::CLEAR, Test::FG_RED });
             outln("{} ({})", test_result.file_path.basename(), test_result.result == Test::Result::Fail ? "failed" : "crashed");
         } else {
-            print_modifiers({ CLEAR, FG_ORANGE });
+            print_modifiers({ Test::CLEAR, Test::FG_ORANGE });
             outln("{} (skipped)", test_result.file_path.basename());
         }
-        print_modifiers({ CLEAR });
+        print_modifiers({ Test::CLEAR });
     }
 
     // Make sure our clear modifiers goes through before we dump file output via write(2)
