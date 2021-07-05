@@ -54,7 +54,6 @@ public:
         , m_high(high)
     {
     }
-
     constexpr T& low()
     {
         return m_low;
@@ -314,6 +313,11 @@ public:
         return *this;
     }
 
+    static constexpr size_t my_size()
+    {
+        return sizeof(R);
+    }
+
     // Arithmetics
 
     // implies size of less than u64, so passing references isn't useful
@@ -335,7 +339,7 @@ public:
         };
     }
     template<Unsigned U>
-    requires(sizeof(R) > sizeof(U) && sizeof(T) > sizeof(u64)) constexpr R addc(const U& other, bool& carry) const
+    requires(my_size() > sizeof(U) && sizeof(T) > sizeof(u64)) constexpr R addc(const U& other, bool& carry) const
     {
         T lower = m_low.addc(other, carry);
         T higher = m_high.addc(0u, carry);
@@ -377,7 +381,7 @@ public:
         };
     }
     template<Unsigned U>
-    requires(sizeof(R) < sizeof(U)) constexpr U addc(const U& other, bool& carry) const
+    requires(my_size() < sizeof(U)) constexpr U addc(const U& other, bool& carry) const
     {
         return other.addc(*this, carry);
     }
@@ -474,7 +478,7 @@ public:
 
     // FIXME: no restraints on this
     template<Unsigned U>
-    requires(sizeof(R) >= sizeof(U)) constexpr R div_mod(const U& divisor, U& remainder) const
+    requires(my_size() >= sizeof(U)) constexpr R div_mod(const U& divisor, U& remainder) const
     {
         // FIXME: Is there a better way to raise a division by 0?
         //        Maybe as a compiletime warning?
