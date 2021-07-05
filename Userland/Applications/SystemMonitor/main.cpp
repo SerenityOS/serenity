@@ -699,19 +699,19 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
     memory_graph.set_stack_values(true);
     memory_graph.set_value_format(0, {
                                          .graph_color_role = ColorRole::SyntaxComment,
-                                         .text_formatter = [&memory_graph](int value) {
+                                         .text_formatter = [](int value) {
                                              return String::formatted("Committed: {} KiB", value);
                                          },
                                      });
     memory_graph.set_value_format(1, {
                                          .graph_color_role = ColorRole::SyntaxPreprocessorStatement,
-                                         .text_formatter = [&memory_graph](int value) {
+                                         .text_formatter = [](int value) {
                                              return String::formatted("Allocated: {} KiB", value);
                                          },
                                      });
     memory_graph.set_value_format(2, {
                                          .graph_color_role = ColorRole::SyntaxPreprocessorValue,
-                                         .text_formatter = [&memory_graph](int value) {
+                                         .text_formatter = [](int value) {
                                              return String::formatted("Kernel heap: {} KiB", value);
                                          },
                                      });

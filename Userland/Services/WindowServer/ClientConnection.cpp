@@ -1034,7 +1034,6 @@ Messages::WindowServer::GetScreenBitmapAroundCursorResponse ClientConnection::ge
     if (auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1)) {
         auto bounding_screen_src_rect = Screen::bounding_rect().intersected(rect);
         Gfx::Painter painter(*bitmap);
-        Gfx::IntRect last_cursor_rect;
         auto& screen_with_cursor = ScreenInput::the().cursor_location_screen();
         auto cursor_rect = Compositor::the().current_cursor_rect();
         Screen::for_each([&](auto& screen) {

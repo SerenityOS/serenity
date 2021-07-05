@@ -295,7 +295,7 @@ void BrowserWindow::build_menus()
     };
 
     m_disable_search_engine_action = GUI::Action::create_checkable(
-        "Disable", [this](auto&) {
+        "Disable", [](auto&) {
             g_search_engine = {};
             auto config = Core::ConfigFile::get_for_app("Browser");
             config->write_entry("Preferences", "SearchEngine", g_search_engine);

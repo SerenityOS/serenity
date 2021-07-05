@@ -486,7 +486,7 @@ Optional<DebugSession::SymbolicationResult> DebugSession::symbolicate(FlatPtr ad
 Optional<DebugInfo::SourcePositionAndAddress> DebugSession::get_address_from_source_position(String const& file, size_t line) const
 {
     Optional<DebugInfo::SourcePositionAndAddress> result;
-    for_each_loaded_library([this, file, line, &result](auto& lib) {
+    for_each_loaded_library([file, line, &result](auto& lib) {
         // The loader contains its own definitions for LibC symbols, so we don't want to include it in the search.
         if (lib.name == "Loader.so")
             return IterationDecision::Continue;
