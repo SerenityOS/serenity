@@ -426,33 +426,56 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
 // 20.1.2.1 Object.assign ( target, ...sources ), https://tc39.es/ecma262/#sec-object.assign
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
 {
+    // 1. Let to be ? ToObject(target).
     auto* to = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
+
+    // 2. If only one argument was passed, return to.
     if (vm.argument_count() == 1)
         return to;
+
+    // 3. For each element nextSource of sources, do
     for (size_t i = 1; i < vm.argument_count(); ++i) {
         auto next_source = vm.argument(i);
+
+        // a. If nextSource is neither undefined nor null, then
         if (next_source.is_nullish())
             continue;
+
+        // i. Let from be ! ToObject(nextSource).
         auto from = next_source.to_object(global_object);
         VERIFY(!vm.exception());
+
+        // ii. Let keys be ? from.[[OwnPropertyKeys]]().
         auto keys = from->internal_own_property_keys();
         if (vm.exception())
             return {};
+
+        // iii. For each element nextKey of keys, do
         for (auto& next_key : keys) {
             auto property_name = PropertyName::from_value(global_object, next_key);
-            auto property_descriptor = from->internal_get_own_property(property_name);
-            if (!property_descriptor.has_value() || !*property_descriptor->enumerable)
+
+            // 1. Let desc be ? from.[[GetOwnProperty]](nextKey).
+            auto desc = from->internal_get_own_property(property_name);
+
+            // 2. If desc is not undefined and desc.[[Enumerable]] is true, then
+            if (!desc.has_value() || !*desc->enumerable)
                 continue;
+
+            // a. Let propValue be ? Get(from, nextKey).
             auto prop_value = from->get(property_name);
             if (vm.exception())
                 return {};
+
+            // b. Perform ? Set(to, nextKey, propValue, true).
             to->set(property_name, prop_value, true);
             if (vm.exception())
                 return {};
         }
     }
+
+    // 4. Return to.
     return to;
 }
 
