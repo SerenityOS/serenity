@@ -89,9 +89,8 @@ Optional<JS::Value> DebuggerGlobalJSObject::debugger_to_js(const Debug::DebugInf
         auto member_value = debugger_to_js(member);
         if (!member_value.has_value())
             continue;
-        object->put(member.name, member_value.value(), {});
+        object->define_direct_property(member.name, member_value.value(), JS::default_attributes);
     }
-    object->finish_writing_properties();
 
     return JS::Value(object);
 }

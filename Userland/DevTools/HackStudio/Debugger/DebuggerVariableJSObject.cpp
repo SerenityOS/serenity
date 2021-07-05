@@ -29,11 +29,8 @@ DebuggerVariableJSObject::~DebuggerVariableJSObject()
 {
 }
 
-bool DebuggerVariableJSObject::internal_set(const JS::PropertyName& property_name, JS::Value value, JS::Value receiver)
+bool DebuggerVariableJSObject::internal_set(const JS::PropertyName& property_name, JS::Value value, JS::Value)
 {
-    if (m_is_writing_properties)
-        return Base::internal_set(property_name, value, receiver);
-
     if (!property_name.is_string()) {
         vm().throw_exception<JS::TypeError>(global_object(), String::formatted("Invalid variable name {}", property_name.to_string()));
         return false;

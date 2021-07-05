@@ -34,7 +34,7 @@ Optional<Variable> ObjectEnvironment::get_from_environment(FlyString const& name
 
 bool ObjectEnvironment::put_into_environment(FlyString const& name, Variable variable)
 {
-    return m_binding_object.put(name, variable.value);
+    return m_binding_object.set(name, variable.value, false);
 }
 
 bool ObjectEnvironment::delete_from_environment(FlyString const& name)
