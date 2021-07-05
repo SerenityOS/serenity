@@ -25,9 +25,9 @@ void BigIntConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 21.2.2.3 BigInt.prototype, https://tc39.es/ecma262/#sec-bigint.prototype
-    define_property(vm.names.prototype, global_object.bigint_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.bigint_prototype(), 0);
 
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
     // TODO: Implement these functions below and uncomment this.
     // u8 attr = Attribute::Writable | Attribute::Configurable;

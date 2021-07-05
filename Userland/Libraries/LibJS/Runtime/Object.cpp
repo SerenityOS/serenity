@@ -1032,7 +1032,7 @@ void Object::set_shape(Shape& new_shape)
     m_shape = &new_shape;
 }
 
-bool Object::define_native_accessor(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
+void Object::define_native_accessor(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
 {
     auto& vm = this->vm();
     String formatted_property_name;
@@ -1047,34 +1047,20 @@ bool Object::define_native_accessor(PropertyName const& property_name, Function<
     if (getter) {
         auto name = String::formatted("get {}", formatted_property_name);
         getter_function = NativeFunction::create(global_object(), name, move(getter));
-        getter_function->define_property_without_transition(vm.names.length, Value(0), Attribute::Configurable);
-        if (vm.exception())
-            return {};
-        getter_function->define_property_without_transition(vm.names.name, js_string(vm.heap(), name), Attribute::Configurable);
-        if (vm.exception())
-            return {};
+        getter_function->define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
+        getter_function->define_direct_property(vm.names.name, js_string(vm.heap(), name), Attribute::Configurable);
     }
     FunctionObject* setter_function = nullptr;
     if (setter) {
         auto name = String::formatted("set {}", formatted_property_name);
         setter_function = NativeFunction::create(global_object(), name, move(setter));
-        setter_function->define_property_without_transition(vm.names.length, Value(1), Attribute::Configurable);
-        if (vm.exception())
-            return {};
-        setter_function->define_property_without_transition(vm.names.name, js_string(vm.heap(), name), Attribute::Configurable);
-        if (vm.exception())
-            return {};
+        setter_function->define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+        setter_function->define_direct_property(vm.names.name, js_string(vm.heap(), name), Attribute::Configurable);
     }
-    return define_accessor(property_name, getter_function, setter_function, attribute);
+    return define_direct_accessor(property_name, getter_function, setter_function, attribute);
 }
 
-bool Object::define_property_without_transition(PropertyName const& property_name, Value value, PropertyAttributes attributes, bool throw_exceptions)
-{
-    TemporaryChange change(m_transitions_enabled, false);
-    return define_property(property_name, value, attributes, throw_exceptions);
-}
-
-bool Object::define_accessor(PropertyName const& property_name, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes, bool throw_exceptions)
+void Object::define_direct_accessor(PropertyName const& property_name, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes)
 {
     VERIFY(property_name.is_valid());
 
@@ -1082,18 +1068,13 @@ bool Object::define_accessor(PropertyName const& property_name, FunctionObject* 
     auto* accessor = existing_property.is_accessor() ? &existing_property.as_accessor() : nullptr;
     if (!accessor) {
         accessor = Accessor::create(vm(), getter, setter);
-        bool definition_success = define_property(property_name, accessor, attributes, throw_exceptions);
-        if (vm().exception())
-            return {};
-        if (!definition_success)
-            return false;
+        define_direct_property(property_name, accessor, attributes);
     } else {
         if (getter)
             accessor->set_getter(getter);
         if (setter)
             accessor->set_setter(setter);
     }
-    return true;
 }
 
 void Object::ensure_shape_is_unique()
@@ -1117,7 +1098,7 @@ Value Object::get_without_side_effects(const PropertyName& property_name) const
     return {};
 }
 
-bool Object::define_native_function(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
+void Object::define_native_function(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
     auto& vm = this->vm();
     String function_name;
@@ -1127,18 +1108,14 @@ bool Object::define_native_function(PropertyName const& property_name, Function<
         function_name = String::formatted("[{}]", property_name.as_symbol()->description());
     }
     auto* function = NativeFunction::create(global_object(), function_name, move(native_function));
-    function->define_property_without_transition(vm.names.length, Value(length), Attribute::Configurable);
-    if (vm.exception())
-        return {};
-    function->define_property_without_transition(vm.names.name, js_string(vm.heap(), function_name), Attribute::Configurable);
-    if (vm.exception())
-        return {};
-    return define_property(property_name, function, attribute);
+    function->define_direct_property(vm.names.length, Value(length), Attribute::Configurable);
+    function->define_direct_property(vm.names.name, js_string(vm.heap(), function_name), Attribute::Configurable);
+    define_direct_property(property_name, function, attribute);
 }
 
-bool Object::define_native_property(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
+void Object::define_native_property(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
 {
-    return define_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
+    define_direct_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
 }
 
 // 20.1.2.3.1 ObjectDefineProperties ( O, Properties ), https://tc39.es/ecma262/#sec-objectdefineproperties

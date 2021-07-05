@@ -22,9 +22,9 @@ void ErrorConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 20.5.2.1 Error.prototype, https://tc39.es/ecma262/#sec-error.prototype
-    define_property(vm.names.prototype, global_object.error_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.error_prototype(), 0);
 
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
 // 20.5.1.1 Error ( message ), https://tc39.es/ecma262/#sec-error-message
@@ -70,9 +70,9 @@ Value ErrorConstructor::construct(FunctionObject& new_target)
                                                                                                            \
         /* 20.5.6.2.1 NativeError.prototype,                                                               \
            https://tc39.es/ecma262/#sec-nativeerror.prototype */                                           \
-        define_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);                    \
+        define_direct_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);             \
                                                                                                            \
-        define_property(vm.names.length, Value(1), Attribute::Configurable);                               \
+        define_direct_property(vm.names.length, Value(1), Attribute::Configurable);                        \
     }                                                                                                      \
                                                                                                            \
     ConstructorName::~ConstructorName() { }                                                                \

@@ -236,11 +236,16 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     PrototypeName::PrototypeName(GlobalObject& global_object)                                                                          \
         : Object(*global_object.typed_array_prototype())                                                                               \
     {                                                                                                                                  \
-        auto& vm = this->vm();                                                                                                         \
-        define_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                                      \
     }                                                                                                                                  \
                                                                                                                                        \
     PrototypeName::~PrototypeName() { }                                                                                                \
+                                                                                                                                       \
+    void PrototypeName::initialize(GlobalObject& global_object)                                                                        \
+    {                                                                                                                                  \
+        auto& vm = this->vm();                                                                                                         \
+        Object::initialize(global_object);                                                                                             \
+        define_direct_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                               \
+    }                                                                                                                                  \
                                                                                                                                        \
     ConstructorName::ConstructorName(GlobalObject& global_object)                                                                      \
         : TypedArrayConstructor(vm().names.ClassName.as_string(), *global_object.typed_array_constructor())                            \
@@ -255,12 +260,12 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         NativeFunction::initialize(global_object);                                                                                     \
                                                                                                                                        \
         /* 23.2.6.2 TypedArray.prototype, https://tc39.es/ecma262/#sec-typedarray.prototype */                                         \
-        define_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);                                                \
+        define_direct_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);                                         \
                                                                                                                                        \
-        define_property(vm.names.length, Value(3), Attribute::Configurable);                                                           \
+        define_direct_property(vm.names.length, Value(3), Attribute::Configurable);                                                    \
                                                                                                                                        \
         /* 23.2.6.1 TypedArray.BYTES_PER_ELEMENT, https://tc39.es/ecma262/#sec-typedarray.bytes_per_element */                         \
-        define_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                                      \
+        define_direct_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                               \
     }                                                                                                                                  \
                                                                                                                                        \
     /* 23.2.5.1 TypedArray ( ...args ), https://tc39.es/ecma262/#sec-typedarray */                                                     \

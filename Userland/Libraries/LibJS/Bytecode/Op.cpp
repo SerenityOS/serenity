@@ -203,7 +203,7 @@ void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpre
             auto property_value = from_object->get(property_name);
             if (interpreter.vm().exception())
                 return;
-            to_object->define_property(property_name, property_value);
+            to_object->define_direct_property(property_name, property_value, JS::default_attributes);
         }
     }
 

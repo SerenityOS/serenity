@@ -34,25 +34,25 @@ void NumberConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 21.1.2.15 Number.prototype, https://tc39.es/ecma262/#sec-number.prototype
-    define_property(vm.names.prototype, global_object.number_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.number_prototype(), 0);
 
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.isFinite, is_finite, 1, attr);
     define_native_function(vm.names.isInteger, is_integer, 1, attr);
     define_native_function(vm.names.isNaN, is_nan, 1, attr);
     define_native_function(vm.names.isSafeInteger, is_safe_integer, 1, attr);
-    define_property(vm.names.parseInt, global_object.get(vm.names.parseInt), attr);
-    define_property(vm.names.parseFloat, global_object.get(vm.names.parseFloat), attr);
-    define_property(vm.names.EPSILON, Value(EPSILON_VALUE), 0);
-    define_property(vm.names.MAX_VALUE, Value(NumericLimits<double>::max()), 0);
-    define_property(vm.names.MIN_VALUE, Value(NumericLimits<double>::min()), 0);
-    define_property(vm.names.MAX_SAFE_INTEGER, Value(MAX_SAFE_INTEGER_VALUE), 0);
-    define_property(vm.names.MIN_SAFE_INTEGER, Value(MIN_SAFE_INTEGER_VALUE), 0);
-    define_property(vm.names.NEGATIVE_INFINITY, js_negative_infinity(), 0);
-    define_property(vm.names.POSITIVE_INFINITY, js_infinity(), 0);
-    define_property(vm.names.NaN, js_nan(), 0);
+    define_direct_property(vm.names.parseInt, global_object.get(vm.names.parseInt), attr);
+    define_direct_property(vm.names.parseFloat, global_object.get(vm.names.parseFloat), attr);
+    define_direct_property(vm.names.EPSILON, Value(EPSILON_VALUE), 0);
+    define_direct_property(vm.names.MAX_VALUE, Value(NumericLimits<double>::max()), 0);
+    define_direct_property(vm.names.MIN_VALUE, Value(NumericLimits<double>::min()), 0);
+    define_direct_property(vm.names.MAX_SAFE_INTEGER, Value(MAX_SAFE_INTEGER_VALUE), 0);
+    define_direct_property(vm.names.MIN_SAFE_INTEGER, Value(MIN_SAFE_INTEGER_VALUE), 0);
+    define_direct_property(vm.names.NEGATIVE_INFINITY, js_negative_infinity(), 0);
+    define_direct_property(vm.names.POSITIVE_INFINITY, js_infinity(), 0);
+    define_direct_property(vm.names.NaN, js_nan(), 0);
 }
 
 NumberConstructor::~NumberConstructor()

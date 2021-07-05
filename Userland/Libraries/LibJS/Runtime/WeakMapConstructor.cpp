@@ -24,9 +24,9 @@ void WeakMapConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 24.3.2.1 WeakMap.prototype, https://tc39.es/ecma262/#sec-weakmap.prototype
-    define_property(vm.names.prototype, global_object.weak_map_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.weak_map_prototype(), 0);
 
-    define_property(vm.names.length, Value(0), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
 
 WeakMapConstructor::~WeakMapConstructor()

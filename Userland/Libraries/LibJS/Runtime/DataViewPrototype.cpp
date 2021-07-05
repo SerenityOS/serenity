@@ -45,7 +45,7 @@ void DataViewPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.byteOffset, byte_offset_getter, {}, Attribute::Configurable);
 
     // 25.3.4.25 DataView.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-dataview.prototype-@@tostringtag
-    define_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.DataView.as_string()), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.DataView.as_string()), Attribute::Configurable);
 }
 
 DataViewPrototype::~DataViewPrototype()

@@ -24,7 +24,7 @@ void MapIteratorPrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
 
     define_native_function(vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
-    define_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Map Iterator"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Map Iterator"), Attribute::Configurable);
 }
 
 MapIteratorPrototype::~MapIteratorPrototype()
@@ -59,10 +59,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapIteratorPrototype::next)
     else if (iteration_kind == Object::PropertyKind::Value)
         return create_iterator_result_object(global_object, entry.value, false);
 
-    auto* entry_array = Array::create(global_object, 0);
-    entry_array->define_property(0, entry.key);
-    entry_array->define_property(1, entry.value);
-    return create_iterator_result_object(global_object, entry_array, false);
+    return create_iterator_result_object(global_object, Array::create_from(global_object, { entry.key, entry.value }), false);
 }
 
 }

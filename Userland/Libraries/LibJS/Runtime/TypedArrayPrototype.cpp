@@ -43,7 +43,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
     // 23.2.3.29 %TypedArray%.prototype.toString ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tostring
-    define_property(vm.names.toString, global_object().array_prototype()->get_without_side_effects(vm.names.toString), attr);
+    define_direct_property(vm.names.toString, global_object().array_prototype()->get_without_side_effects(vm.names.toString), attr);
 }
 
 TypedArrayPrototype::~TypedArrayPrototype()

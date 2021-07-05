@@ -653,7 +653,7 @@ static JS::Value load_file_impl(JS::VM& vm, JS::GlobalObject& global_object)
 void ReplObject::initialize_global_object()
 {
     Base::initialize_global_object();
-    define_property("global", this, JS::Attribute::Enumerable);
+    define_direct_property("global", this, JS::Attribute::Enumerable);
     define_native_function("exit", exit_interpreter);
     define_native_function("help", repl_help);
     define_native_function("load", load_file, 1);
@@ -700,7 +700,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
 void ScriptObject::initialize_global_object()
 {
     Base::initialize_global_object();
-    define_property("global", this, JS::Attribute::Enumerable);
+    define_direct_property("global", this, JS::Attribute::Enumerable);
     define_native_function("load", load_file, 1);
 }
 
