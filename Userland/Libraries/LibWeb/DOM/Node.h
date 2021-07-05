@@ -133,7 +133,7 @@ public:
     virtual void inserted();
     virtual void removed_from(Node*) { }
     virtual void children_changed() { }
-    virtual void adopted_from(const Document&) { }
+    virtual void adopted_from(Document&) { }
     virtual void cloned(Node&, bool) {};
 
     const Layout::Node* layout_node() const { return m_layout_node; }
