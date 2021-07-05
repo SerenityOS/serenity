@@ -41,8 +41,7 @@ void Project::for_each_text_file(Function<void(const ProjectFile&)> callback) co
 {
     traverse_model(model(), {}, [&](auto& index) {
         auto file = get_file(model().full_path(index));
-        if (file)
-            callback(*file);
+        callback(*file);
     });
 }
 
