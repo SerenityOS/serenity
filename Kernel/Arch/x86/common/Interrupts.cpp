@@ -45,7 +45,7 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
 #define EH_ENTRY(ec, title)                                                    \
     extern "C" void title##_asm_entry();                                       \
     extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
-    NAKED void title##_asm_entry(){                                            \
+    NAKED void title##_asm_entry() {                                           \
         asm(                                                                   \
             "    pusha\n"                                                      \
             "    pushl %ds\n"                                                  \
@@ -64,13 +64,14 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
             "    cld\n"                                                        \
             "    call enter_trap_no_irq \n"                                    \
             "    call " #title "_handler\n"                                    \
-            "    jmp common_trap_exit \n");                                    \
+            "    jmp common_trap_exit \n"                                      \
+        );                                                                     \
     }
 
 #define EH_ENTRY_NO_CODE(ec, title)                                            \
-    extern "C" void title##_asm_entry();	                                   \
+    extern "C" void title##_asm_entry();                                       \
     extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
-    NAKED void title##_asm_entry(){                                            \
+    NAKED void title##_asm_entry() {                                           \
         asm(                                                                   \
             "    pushl $0x0\n"                                                 \
             "    pusha\n"                                                      \
@@ -90,14 +91,15 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
             "    cld\n"                                                        \
             "    call enter_trap_no_irq \n"                                    \
             "    call " #title "_handler\n"                                    \
-            "    jmp common_trap_exit \n");                                    \
+            "    jmp common_trap_exit \n"                                      \
+        );                                                                     \
     }
 
 #elif ARCH(X86_64)
 #define EH_ENTRY(ec, title)                                                    \
     extern "C" void title##_asm_entry();                                       \
     extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
-    NAKED void title##_asm_entry(){                                            \
+    NAKED void title##_asm_entry() {                                           \
         asm(                                                                   \
             "    pushq %r15\n"                                                 \
             "    pushq %r14\n"                                                 \
@@ -124,13 +126,14 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
             "    lea 0x8(%rsp), %rdi \n"                                       \
             "    call " #title "_handler\n"                                    \
             "    addq $0x8, %rsp\n" /* undo alignment */                       \
-            "    jmp common_trap_exit \n");                                    \
+            "    jmp common_trap_exit \n"                                      \
+        );                                                                     \
     }
 
 #define EH_ENTRY_NO_CODE(ec, title)                                            \
     extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
     extern "C" void title##_asm_entry();                                       \
-    NAKED void title##_asm_entry(){                                            \
+    NAKED void title##_asm_entry() {                                           \
         asm(                                                                   \
             "    pushq $0x0\n"                                                 \
             "    pushq %r15\n"                                                 \
@@ -156,7 +159,8 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
             "    call enter_trap_no_irq \n"                                    \
             "    movq %rsp, %rdi \n"                                           \
             "    call " #title "_handler\n"                                    \
-            "    jmp common_trap_exit \n");                                    \
+            "    jmp common_trap_exit \n"                                      \
+        );                                                                     \
     }
 #endif
 
