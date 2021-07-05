@@ -101,7 +101,11 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
 {
     auto& vm = global_object.vm();
 
-    if (!Value(&original_array).is_array(global_object)) {
+    auto is_array = Value(&original_array).is_array(global_object);
+    if (vm.exception())
+        return {};
+
+    if (!is_array) {
         auto array = Array::create(global_object, length);
         if (vm.exception())
             return {};
