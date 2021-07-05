@@ -198,7 +198,7 @@ public:
         , m_capabilities(capabilities)
     {
         if constexpr (PCI_DEBUG) {
-            for (auto capability : capabilities)
+            for (const auto& capability : capabilities)
                 dbgln("{} has capability {}", address, capability.id());
         }
     }

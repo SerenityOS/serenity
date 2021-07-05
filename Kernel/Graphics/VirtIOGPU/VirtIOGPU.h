@@ -185,8 +185,7 @@ public:
     template<typename F>
     IterationDecision for_each_framebuffer(F f)
     {
-        for (size_t i = 0; i < VIRTIO_GPU_MAX_SCANOUTS; i++) {
-            auto& scanout = m_scanouts[i];
+        for (auto& scanout : m_scanouts) {
             if (!scanout.framebuffer)
                 continue;
             IterationDecision decision = f(*scanout.framebuffer, *scanout.console);
