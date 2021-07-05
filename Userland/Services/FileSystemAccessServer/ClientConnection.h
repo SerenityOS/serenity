@@ -33,6 +33,9 @@ private:
     void prompt_helper(Optional<String> const&, Core::OpenMode const&);
     RefPtr<GUI::Window> create_dummy_child_window(i32, i32);
 
+    virtual void request_download_file(URL const&, String const&) override;
+    virtual void prompt_download_file(URL const&, String const&, String const&) override;
+
     HashMap<String, Core::OpenMode> m_approved_files;
 };
 

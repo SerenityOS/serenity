@@ -6,4 +6,7 @@ endpoint FileSystemAccessServer
     request_file(i32 window_server_client_id, i32 window_id, String path, Core::OpenMode requested_access) =|
     prompt_open_file(i32 window_server_client_id, i32 window_id, String path_to_view, Core::OpenMode requested_access) =|
     prompt_save_file(i32 window_server_client_id, i32 window_id,String title, String ext, String path_to_view, Core::OpenMode requested_access) =|
+
+    request_download_file(URL url, String path) =|
+    prompt_download_file(URL url, String filename, String ext) =|
 }

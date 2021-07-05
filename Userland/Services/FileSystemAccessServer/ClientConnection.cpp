@@ -8,10 +8,12 @@
 // clang-format off
 #include <LibGUI/WindowServerConnection.h>
 // clang-format on
+#include "DownloadWindow.h"
 #include <AK/Debug.h>
 #include <FileSystemAccessServer/ClientConnection.h>
 #include <LibCore/File.h>
 #include <LibCore/IODevice.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/MessageBox.h>
@@ -154,6 +156,66 @@ void ClientConnection::prompt_helper(Optional<String> const& user_picked_file, C
         }
     } else {
         async_handle_prompt_end(-1, Optional<IPC::File> {}, Optional<String> {});
+    }
+}
+
+void ClientConnection::request_download_file(URL const& url, String const& path)
+{
+    VERIFY(path.starts_with("/"sv));
+
+    bool approved = false;
+    auto maybe_permissions = m_approved_files.get(path);
+    if (maybe_permissions.has_value())
+        approved = has_flag(maybe_permissions.value(), Core::OpenMode::WriteOnly);
+
+    if (!approved) {
+        auto pid = this->socket().peer_pid();
+        auto exe_link = LexicalPath("/proc").append(String::number(pid)).append("exe").string();
+        auto exe_path = Core::File::real_path_for(exe_link);
+        auto exe_name = LexicalPath(exe_path).basename();
+
+        if (Core::File::exists(path)) {
+            auto result = GUI::MessageBox::show(nullptr, String::formatted("Give {} ({}) access to download from \"{}\" to overwrite \"{}\"?", exe_name, pid, url.to_string(), path), "Download Requested", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
+
+            approved = result == GUI::MessageBox::ExecYes;
+        } else {
+            auto result = GUI::MessageBox::show(nullptr, String::formatted("Give {} ({}) access to download from \"{}\" to \"{}\"?", exe_name, pid, url.to_string(), path), "Download Requested", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNo);
+
+            approved = result == GUI::MessageBox::ExecYes;
+        }
+
+        if (approved) {
+            auto new_permissions = Core::OpenMode::WriteOnly;
+
+            if (maybe_permissions.has_value())
+                new_permissions |= maybe_permissions.value();
+
+            m_approved_files.set(path, new_permissions);
+        }
+    }
+
+    if (approved) {
+        auto window = DownloadWindow::construct(client_id(), url, path);
+        window->show();
+    }
+}
+
+void ClientConnection::prompt_download_file(URL const& url, String const& filename, String const& ext)
+{
+    auto user_picked_file = GUI::FilePicker::get_save_filepath(nullptr, filename, ext, Core::StandardPaths::downloads_directory());
+
+    if (user_picked_file.has_value()) {
+        auto maybe_permissions = m_approved_files.get(user_picked_file.value());
+        auto new_permissions = Core::OpenMode::WriteOnly;
+        if (maybe_permissions.has_value())
+            new_permissions |= maybe_permissions.value();
+
+        m_approved_files.set(user_picked_file.value(), new_permissions);
+
+        auto window = DownloadWindow::construct(client_id(), url, user_picked_file.value());
+        window->show();
+    } else {
+        // Do nothing, the user cancelled the download.
     }
 }
 
