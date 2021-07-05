@@ -446,6 +446,9 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) co
         auto processing_instruction = verify_cast<ProcessingInstruction>(this);
         auto processing_instruction_copy = adopt_ref(*new ProcessingInstruction(*document, processing_instruction->data(), processing_instruction->target()));
         copy = move(processing_instruction_copy);
+    } else if (is<DocumentFragment>(this)) {
+        auto document_fragment_copy = adopt_ref(*new DocumentFragment(*document));
+        copy = move(document_fragment_copy);
     } else {
         dbgln("clone_node() not implemented for NodeType {}", (u16)m_type);
         TODO();
