@@ -395,6 +395,7 @@ void WindowManager::remove_window(Window& window)
     check_hide_geometry_overlay(window);
     auto* active = active_window();
     auto* active_input = active_input_window();
+    bool was_modal = window.is_modal(); // This requires the window to be on a window stack still!
     window.window_stack().remove(window);
     if (active == &window || active_input == &window || (active && window.is_descendant_of(*active)) || (active_input && active_input != active && window.is_descendant_of(*active_input)))
         pick_new_active_window(&window);
@@ -406,10 +407,10 @@ void WindowManager::remove_window(Window& window)
 
     Compositor::the().invalidate_occlusions();
 
-    for_each_window_manager([&window](WMClientConnection& conn) {
+    for_each_window_manager([&](WMClientConnection& conn) {
         if (conn.window_id() < 0 || !(conn.event_mask() & WMEventMask::WindowRemovals))
             return IterationDecision::Continue;
-        if (!window.is_internal() && !window.is_modal())
+        if (!window.is_internal() && !was_modal)
             conn.async_window_removed(conn.window_id(), window.client_id(), window.window_id());
         return IterationDecision::Continue;
     });
