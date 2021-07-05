@@ -465,9 +465,9 @@ void ColorField::create_color_bitmap()
     Gfx::HSV hsv;
     hsv.hue = m_hue;
     for (int x = 0; x < 256; x++) {
-        hsv.saturation = x / 255.0f;
+        hsv.saturation = x / 255.0;
         for (int y = 0; y < 256; y++) {
-            hsv.value = (255 - y) / 255.0f;
+            hsv.value = (255 - y) / 255.0;
             Color color = Color::from_hsv(hsv);
             painter.set_pixel({ x, y }, color);
         }
