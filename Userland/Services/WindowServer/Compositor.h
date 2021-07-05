@@ -212,7 +212,7 @@ private:
             return iterate_flush_rects(m_flush_transparent_rects);
         }
     };
-    friend class ScreenData;
+    friend struct ScreenData;
     Vector<ScreenData, default_screen_count> m_screen_data;
 
     IntrusiveList<Overlay, RawPtr<Overlay>, &Overlay::m_list_node> m_overlay_list;

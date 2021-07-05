@@ -11,7 +11,7 @@
 namespace Profiler {
 
 class Profile;
-class Process;
+struct Process;
 
 class TimelineHeader final : public GUI::Frame {
     C_OBJECT(TimelineHeader);
