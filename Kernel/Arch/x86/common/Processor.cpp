@@ -37,10 +37,6 @@ static volatile bool s_smp_enabled;
 static Atomic<ProcessorMessage*> s_message_pool;
 Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 
-extern "C" void thread_context_first_enter(void);
-extern "C" void exit_kernel_thread(void);
-extern "C" void do_assume_context(Thread* thread, u32 flags);
-
 // The compiler can't see the calls to these functions inside assembly.
 // Declare them, to avoid dead code warnings.
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap) __attribute__((used));
