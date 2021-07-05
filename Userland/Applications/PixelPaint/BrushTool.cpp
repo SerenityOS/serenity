@@ -25,11 +25,17 @@ BrushTool::~BrushTool()
 {
 }
 
-void BrushTool::on_mousedown(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
+void BrushTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
 {
     if (event.button() != GUI::MouseButton::Left && event.button() != GUI::MouseButton::Right)
         return;
 
+    const int first_draw_opacity = 10;
+
+    for (int i = 0; i < first_draw_opacity; ++i)
+        draw_point(layer.bitmap(), m_editor->color_for(event), event.position());
+
+    layer.did_modify_bitmap();
     m_last_position = event.position();
 }
 
