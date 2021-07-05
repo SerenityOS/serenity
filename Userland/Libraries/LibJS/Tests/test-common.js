@@ -1,10 +1,10 @@
-let describe;
-let test;
-let expect;
+var describe;
+var test;
+var expect;
 
 // Stores the results of each test and suite. Has a terrible
 // name to avoid name collision.
-let __TestResults__ = {};
+var __TestResults__ = {};
 
 // So test names like "toString" don't automatically produce an error
 Object.setPrototypeOf(__TestResults__, null);
@@ -12,7 +12,7 @@ Object.setPrototypeOf(__TestResults__, null);
 // This array is used to communicate with the C++ program. It treats
 // each message in this array as a separate message. Has a terrible
 // name to avoid name collision.
-let __UserOutput__ = [];
+var __UserOutput__ = [];
 
 // We also rebind console.log here to use the array above
 console.log = (...args) => {

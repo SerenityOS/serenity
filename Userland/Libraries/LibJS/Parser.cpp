@@ -2033,6 +2033,11 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
     consume(TokenType::ParenOpen);
 
     bool in_scope = false;
+    ScopeGuard guard([&]() {
+        if (in_scope)
+            m_state.let_scopes.take_last();
+    });
+
     RefPtr<ASTNode> init;
     if (!match(TokenType::Semicolon)) {
         if (match_expression()) {
@@ -2074,10 +2079,6 @@ NonnullRefPtr<Statement> Parser::parse_for_statement()
     TemporaryChange break_change(m_state.in_break_context, true);
     TemporaryChange continue_change(m_state.in_continue_context, true);
     auto body = parse_statement();
-
-    if (in_scope) {
-        m_state.let_scopes.take_last();
-    }
 
     return create_ast_node<ForStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(init), move(test), move(update), move(body));
 }
