@@ -22,9 +22,9 @@ void BooleanConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 20.3.2.1 Boolean.prototype, https://tc39.es/ecma262/#sec-boolean.prototype
-    define_property(vm.names.prototype, global_object.boolean_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.boolean_prototype(), 0);
 
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
 BooleanConstructor::~BooleanConstructor()

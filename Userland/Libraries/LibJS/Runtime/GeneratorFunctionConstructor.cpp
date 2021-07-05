@@ -27,9 +27,9 @@ void GeneratorFunctionConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 27.3.2.1 GeneratorFunction.length, https://tc39.es/ecma262/#sec-generatorfunction.length
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
     // 27.3.2.2 GeneratorFunction.prototype, https://tc39.es/ecma262/#sec-generatorfunction.length
-    define_property(vm.names.prototype, global_object.generator_function_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.generator_function_prototype(), 0);
 }
 
 GeneratorFunctionConstructor::~GeneratorFunctionConstructor()

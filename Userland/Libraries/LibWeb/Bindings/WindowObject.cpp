@@ -47,9 +47,9 @@ void WindowObject::initialize_global_object()
     VERIFY(success);
 
     // FIXME: These should be native accessors, not properties
-    define_property("window", this, JS::Attribute::Enumerable);
-    define_property("frames", this, JS::Attribute::Enumerable);
-    define_property("self", this, JS::Attribute::Enumerable);
+    define_direct_property("window", this, JS::Attribute::Enumerable);
+    define_direct_property("frames", this, JS::Attribute::Enumerable);
+    define_direct_property("self", this, JS::Attribute::Enumerable);
     define_native_accessor("top", top_getter, nullptr, JS::Attribute::Enumerable);
     define_native_accessor("parent", parent_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("document", document_getter, {}, JS::Attribute::Enumerable);
@@ -72,11 +72,11 @@ void WindowObject::initialize_global_object()
     // Legacy
     define_native_accessor("event", event_getter, {}, JS::Attribute::Enumerable);
 
-    define_property("navigator", heap().allocate<NavigatorObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_property("location", heap().allocate<LocationObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_direct_property("navigator", heap().allocate<NavigatorObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_direct_property("location", heap().allocate<LocationObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     // WebAssembly "namespace"
-    define_property("WebAssembly", heap().allocate<WebAssemblyObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_direct_property("WebAssembly", heap().allocate<WebAssemblyObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     ADD_WINDOW_OBJECT_INTERFACES;
 }

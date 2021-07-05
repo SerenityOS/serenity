@@ -27,7 +27,7 @@ PromiseResolvingFunction::PromiseResolvingFunction(Promise& promise, AlreadyReso
 void PromiseResolvingFunction::initialize(GlobalObject& global_object)
 {
     Base::initialize(global_object);
-    define_property(vm().names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm().names.length, Value(1), Attribute::Configurable);
 }
 
 Value PromiseResolvingFunction::call()

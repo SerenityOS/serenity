@@ -180,13 +180,13 @@ public:
 inline void TestRunnerGlobalObject::initialize_global_object()
 {
     Base::initialize_global_object();
-    define_property("global", this, JS::Attribute::Enumerable);
+    define_direct_property("global", this, JS::Attribute::Enumerable);
     for (auto& entry : s_exposed_global_functions) {
         define_native_function(
             entry.key, [fn = entry.value.function](auto& vm, auto& global_object) {
                 return fn(vm, global_object);
             },
-            entry.value.length);
+            entry.value.length, JS::default_attributes);
     }
 }
 

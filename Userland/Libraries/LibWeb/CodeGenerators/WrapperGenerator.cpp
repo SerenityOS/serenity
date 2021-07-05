@@ -1113,8 +1113,8 @@ void @constructor_class@::initialize(JS::GlobalObject& global_object)
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
 
     NativeFunction::initialize(global_object);
-    define_property(vm.names.prototype, &window.ensure_web_prototype<@prototype_class@>("@name@"), 0);
-    define_property(vm.names.length, JS::Value(@constructor.length@), JS::Attribute::Configurable);
+    define_direct_property(vm.names.prototype, &window.ensure_web_prototype<@prototype_class@>("@name@"), 0);
+    define_direct_property(vm.names.length, JS::Value(@constructor.length@), JS::Attribute::Configurable);
 
 )~~~");
 
@@ -1124,7 +1124,7 @@ void @constructor_class@::initialize(JS::GlobalObject& global_object)
         constant_generator.set("constant.value", constant.value);
 
         constant_generator.append(R"~~~(
-define_property("@constant.name@", JS::Value((i32)@constant.value@), JS::Attribute::Enumerable);
+define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::Attribute::Enumerable);
 )~~~");
     }
 
@@ -1336,7 +1336,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
         constant_generator.set("constant.value", constant.value);
 
         constant_generator.append(R"~~~(
-    define_property("@constant.name@", JS::Value((i32)@constant.value@), JS::Attribute::Enumerable);
+    define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::Attribute::Enumerable);
 )~~~");
     }
 

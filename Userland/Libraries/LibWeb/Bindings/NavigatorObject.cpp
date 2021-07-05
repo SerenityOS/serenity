@@ -24,13 +24,14 @@ void NavigatorObject::initialize(JS::GlobalObject& global_object)
     languages->indexed_properties().append(js_string(heap, "en-US"));
 
     // FIXME: All of these should be in Navigator's prototype and be native accessors
-    define_property("appCodeName", js_string(heap, "Mozilla"));
-    define_property("appName", js_string(heap, "Netscape"));
-    define_property("appVersion", js_string(heap, "4.0"));
-    define_property("language", languages->get(0));
-    define_property("languages", languages);
-    define_property("platform", js_string(heap, "SerenityOS"));
-    define_property("product", js_string(heap, "Gecko"));
+    u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
+    define_direct_property("appCodeName", js_string(heap, "Mozilla"), attr);
+    define_direct_property("appName", js_string(heap, "Netscape"), attr);
+    define_direct_property("appVersion", js_string(heap, "4.0"), attr);
+    define_direct_property("language", languages->get(0), attr);
+    define_direct_property("languages", languages, attr);
+    define_direct_property("platform", js_string(heap, "SerenityOS"), attr);
+    define_direct_property("product", js_string(heap, "Gecko"), attr);
 
     define_native_accessor("userAgent", user_agent_getter, {});
 }

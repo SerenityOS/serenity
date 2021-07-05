@@ -471,6 +471,7 @@ private:
                                                                                             \
     public:                                                                                 \
         PrototypeName(GlobalObject&);                                                       \
+        virtual void initialize(GlobalObject&) override;                                    \
         virtual ~PrototypeName() override;                                                  \
     };                                                                                      \
     class ConstructorName final : public TypedArrayConstructor {                            \

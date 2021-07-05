@@ -24,8 +24,8 @@ void ErrorPrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_property(vm.names.name, js_string(vm, "Error"), attr);
-    define_property(vm.names.message, js_string(vm, ""), attr);
+    define_direct_property(vm.names.name, js_string(vm, "Error"), attr);
+    define_direct_property(vm.names.message, js_string(vm, ""), attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
 }
 
@@ -77,8 +77,8 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
         auto& vm = this->vm();                                                           \
         Object::initialize(global_object);                                               \
         u8 attr = Attribute::Writable | Attribute::Configurable;                         \
-        define_property(vm.names.name, js_string(vm, #ClassName), attr);                 \
-        define_property(vm.names.message, js_string(vm, ""), attr);                      \
+        define_direct_property(vm.names.name, js_string(vm, #ClassName), attr);          \
+        define_direct_property(vm.names.message, js_string(vm, ""), attr);               \
     }
 
 JS_ENUMERATE_NATIVE_ERRORS

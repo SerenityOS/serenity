@@ -27,7 +27,7 @@ void SetIteratorPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
 
     // 24.2.5.2.2 %SetIteratorPrototype% [ @@toStringTag ], https://tc39.es/ecma262/#sec-%setiteratorprototype%-@@tostringtag
-    define_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Set Iterator"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Set Iterator"), Attribute::Configurable);
 }
 
 SetIteratorPrototype::~SetIteratorPrototype()
@@ -61,10 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetIteratorPrototype::next)
     if (iteration_kind == Object::PropertyKind::Value)
         return create_iterator_result_object(global_object, value, false);
 
-    auto* entry_array = Array::create(global_object, 0);
-    entry_array->define_property(0, value);
-    entry_array->define_property(1, value);
-    return create_iterator_result_object(global_object, entry_array, false);
+    return create_iterator_result_object(global_object, Array::create_from(global_object, { value, value }), false);
 }
 
 }

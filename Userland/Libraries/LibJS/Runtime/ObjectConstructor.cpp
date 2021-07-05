@@ -28,9 +28,9 @@ void ObjectConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
 
     // 20.1.2.19 Object.prototype, https://tc39.es/ecma262/#sec-object.prototype
-    define_property(vm.names.prototype, global_object.object_prototype(), 0);
+    define_direct_property(vm.names.prototype, global_object.object_prototype(), 0);
 
-    define_property(vm.names.length, Value(1), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.defineProperty, define_property_, 3, attr);
@@ -263,7 +263,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
         auto property_key = key.to_property_key(global_object);
         if (vm.exception())
             return IterationDecision::Break;
-        object->define_property(property_key, value);
+        object->create_data_property_or_throw(property_key, value);
         if (vm.exception())
             return IterationDecision::Break;
         return IterationDecision::Continue;
