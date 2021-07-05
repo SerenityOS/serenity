@@ -555,7 +555,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (parameter.type.nullable) {
             scoped_generator.append(R"~~~(
     RefPtr<EventListener> @cpp_name@;
-    if (!@js_name@@js_suffix@.is_null()) {
+    if (!@js_name@@js_suffix@.is_nullish()) {
         if (!@js_name@@js_suffix@.is_function()) {
             vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
             @return_statement@
@@ -589,7 +589,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         } else {
             scoped_generator.append(R"~~~(
     @parameter.type.name@* @cpp_name@ = nullptr;
-    if (!@js_name@@js_suffix@.is_null()) {
+    if (!@js_name@@js_suffix@.is_nullish()) {
         auto @cpp_name@_object = @js_name@@js_suffix@.to_object(global_object);
         if (vm.exception())
             @return_statement@
