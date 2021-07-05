@@ -1810,7 +1810,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
             return {};
 
         if (property.type() == ObjectProperty::Type::Spread) {
-            if (key.is_object() && key.as_object().is_array()) {
+            if (key.is_object() && is<Array>(key.as_object())) {
                 auto& array_to_spread = static_cast<Array&>(key.as_object());
                 for (auto& entry : array_to_spread.indexed_properties()) {
                     auto value = array_to_spread.get(entry.index());

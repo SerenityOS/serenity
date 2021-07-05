@@ -24,8 +24,6 @@ public:
     static Array* typed_this(VM&, GlobalObject&);
 
 private:
-    virtual bool is_array() const override { return true; }
-
     JS_DECLARE_NATIVE_GETTER(length_getter);
     JS_DECLARE_NATIVE_SETTER(length_setter);
 };
