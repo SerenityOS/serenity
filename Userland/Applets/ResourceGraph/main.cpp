@@ -94,7 +94,7 @@ private:
             if (value >= 0) {
                 painter.draw_line(
                     { rect.x() + i, rect.bottom() },
-                    { rect.x() + i, rect.top() + (int)(round(rect.height() - (value * rect.height()))) },
+                    { rect.x() + i, rect.top() + (int)(roundf(rect.height() - (value * rect.height()))) },
                     m_graph_color);
             } else {
                 painter.draw_line(
