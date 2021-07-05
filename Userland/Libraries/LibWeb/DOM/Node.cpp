@@ -15,6 +15,7 @@
 #include <LibWeb/DOM/Comment.h>
 #include <LibWeb/DOM/DocumentType.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/EventListener.h>
@@ -412,8 +413,7 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) co
     RefPtr<Node> copy;
     if (is<Element>(this)) {
         auto& element = *verify_cast<Element>(this);
-        auto qualified_name = QualifiedName(element.local_name(), element.prefix(), element.namespace_());
-        auto element_copy = adopt_ref(*new Element(*document, move(qualified_name)));
+        auto element_copy = DOM::create_element(*document, element.local_name(), element.namespace_() /* FIXME: node’s namespace prefix, and node’s is value, with the synchronous custom elements flag unset */);
         element.for_each_attribute([&](auto& name, auto& value) {
             element_copy->set_attribute(name, value);
         });
