@@ -8,8 +8,6 @@
 
 #include "MainWidget.h"
 #include "TrackManager.h"
-#include "DSP/Processor.h"
-#include "DSP/Music.h"
 #include <AK/Array.h>
 #include <AK/Queue.h>
 #include <LibAudio/Buffer.h>
@@ -18,6 +16,8 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/Object.h>
+#include <LibDSP/Music.h>
+#include <LibDSP/Processor.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>

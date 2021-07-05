@@ -5,4 +5,4 @@ set(SOURCES
 )
 
 serenity_lib(LibDSP dsp)
-target_link_libraries(LibDSP LibAudio LibCore)
+target_link_libraries(LibDSP LibCore)

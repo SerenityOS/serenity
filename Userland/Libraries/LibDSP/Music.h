@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibAudio/Buffer.h>
 
@@ -31,51 +32,9 @@ enum class SignalType : u8 {
     Sample
 };
 
-struct Signal {
-    union {
-        Sample audio;
-        Vector<RollNote> note;
-    };
-    SignalType type;
-
-    Signal();
-    Signal(const Sample sample)
+struct Signal : public Variant<Sample, Vector<RollNote>> {
+    Signal()
     {
-        audio = sample;
-        type = SignalType::Sample;
-    }
-    Signal(const Vector<RollNote> notes)
-    {
-        note = notes;
-        type = SignalType::Note;
-    }
-    ~Signal()
-    {
-        if (type == SignalType::Note) {
-            note.~Vector();
-        }
-    }
-    Signal(const Signal& to_copy)
-        : type(to_copy.type)
-    {
-        if (to_copy.type == SignalType::Note) {
-            note = to_copy.note;
-        } else {
-            audio = to_copy.audio;
-        }
-    }
-    Signal(const Signal&& to_copy)
-        : type(to_copy.type)
-    {
-        if (to_copy.type == SignalType::Note) {
-            note = move(to_copy.note);
-        } else {
-            audio = move(to_copy.audio);
-        }
-    }
-    Signal operator=(const Signal& other)
-    {
-        return other;
     }
 };
 

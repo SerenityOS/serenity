@@ -8,7 +8,7 @@
 #pragma once
 
 #include "Music.h"
-#include "DSP/Processor.h"
+#include <LibDSP/Processor.h>
 #include <LibGUI/Frame.h>
 
 class TrackManager;
