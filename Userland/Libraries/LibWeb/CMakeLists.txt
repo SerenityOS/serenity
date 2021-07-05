@@ -70,6 +70,7 @@ set(SOURCES
     HTML/AttributeNames.cpp
     HTML/BrowsingContextContainer.cpp
     HTML/CanvasRenderingContext2D.cpp
+    HTML/DOMParser.cpp
     HTML/EventNames.cpp
     HTML/FormAssociatedElement.cpp
     HTML/GlobalEventHandlers.cpp
@@ -331,6 +332,7 @@ libweb_js_wrapper(DOM/Range)
 libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(HTML/CanvasRenderingContext2D)
 libweb_js_wrapper(HTML/CloseEvent)
+libweb_js_wrapper(HTML/DOMParser)
 libweb_js_wrapper(HTML/HTMLAnchorElement)
 libweb_js_wrapper(HTML/HTMLAreaElement)
 libweb_js_wrapper(HTML/HTMLAudioElement)
