@@ -241,10 +241,10 @@ bool ScreenLayout::try_auto_add_framebuffer(String const& device_path)
 
         if (!collision) {
             screens.append({
-                device : device_path,
-                location : new_screen_rect.location(),
-                resolution : new_screen_rect.size(),
-                scale_factor : 1
+                .device = device_path,
+                .location = new_screen_rect.location(),
+                .resolution = new_screen_rect.size(),
+                .scale_factor = 1
             });
 
             if (is_valid()) {
