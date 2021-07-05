@@ -57,17 +57,18 @@ void WindowObject::initialize_global_object()
     define_native_accessor("screen", screen_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor("innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
-    define_native_function("alert", alert);
-    define_native_function("confirm", confirm);
-    define_native_function("prompt", prompt);
-    define_native_function("setInterval", set_interval, 1);
-    define_native_function("setTimeout", set_timeout, 1);
-    define_native_function("clearInterval", clear_interval, 1);
-    define_native_function("clearTimeout", clear_timeout, 1);
-    define_native_function("requestAnimationFrame", request_animation_frame, 1);
-    define_native_function("cancelAnimationFrame", cancel_animation_frame, 1);
-    define_native_function("atob", atob, 1);
-    define_native_function("btoa", btoa, 1);
+    u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
+    define_native_function("alert", alert, 0, attr);
+    define_native_function("confirm", confirm, 0, attr);
+    define_native_function("prompt", prompt, 0, attr);
+    define_native_function("setInterval", set_interval, 1, attr);
+    define_native_function("setTimeout", set_timeout, 1, attr);
+    define_native_function("clearInterval", clear_interval, 1, attr);
+    define_native_function("clearTimeout", clear_timeout, 1, attr);
+    define_native_function("requestAnimationFrame", request_animation_frame, 1, attr);
+    define_native_function("cancelAnimationFrame", cancel_animation_frame, 1, attr);
+    define_native_function("atob", atob, 1, attr);
+    define_native_function("btoa", btoa, 1, attr);
 
     // Legacy
     define_native_accessor("event", event_getter, {}, JS::Attribute::Enumerable);
