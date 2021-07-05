@@ -123,10 +123,189 @@ start:
     cpuid
     testl $(1 << 29), %edx   /* Test if the LM-bit, which is bit 29, is set in the edx register. */
     jnz continue             /* If LM-bit is not enabled, there is no long mode. */
+
+    /*  from now on, we don't really care about booting because we don't have long mode supported.
+         the flow from now is like so:
+         1. Copy all necessary parts to low memory section in RAM
+         2. Jump to that section
+         3. In that section we do:
+            a. exit protected mode to pure 16 bit real mode
+            b. load the "Long mode is not supported" String, call the BIOS print to screen service
+            c. halt
+    */
+
+.equ NO_LONG_MODE_STRING_LOCATION, 0x400
+.equ GDT_REAL_MODE_LOCATION, 0x45000
+.equ EXITING_PROTECTED_MODE_CODE_LOCATION, 0x10000
+.equ REAL_MODE_CODE, 0x500
+.equ PROTECTED_MODE_16_BIT_CODE, 0x600
+
+    /* Copy no_long_mode_string to low memory section  */
+    lea no_long_mode_string, %eax
+    lea exiting_real_mode, %ebx
+    sub $0xc0000000, %ebx
+    sub $0xc0000000, %eax
+
+    movl %ebx, %ecx
+    sub %eax, %ecx
+    mov %eax, %esi          /* source address of the code */
+    movw %cx, (NO_LONG_MODE_STRING_LOCATION)
+    mov $NO_LONG_MODE_STRING_LOCATION+2, %edi     /* destination address of the code */
+    rep movsb
+
+    /* Copy gdt_table_real_mode to low memory section  */
+    lea gdt_table_real_mode, %eax
+    lea gdt_table_real_mode_end, %ebx
+    sub $0xc0000000, %ebx
+    sub $0xc0000000, %eax
+
+    movl %ebx, %ecx
+    sub %eax, %ecx
+    mov %eax, %esi          /* source address of the code */
+    mov $GDT_REAL_MODE_LOCATION, %edi     /* destination address of the code */
+    rep movsb
+
+    /* Copy protected_mode_16_bit to real_mode to low memory section  */
+    lea protected_mode_16_bit, %eax
+    lea real_mode, %ebx
+    sub $0xc0000000, %ebx
+    sub $0xc0000000, %eax
+
+    movl %ebx, %ecx
+    sub %eax, %ecx
+    mov %eax, %esi          /* source address of the code */
+    mov $PROTECTED_MODE_16_BIT_CODE, %edi     /* destination address of the code */
+    rep movsb
+
+    /* Copy real_mode to continue to low memory section  */
+    lea real_mode, %eax
+    lea continue, %ebx
+    sub $0xc0000000, %ebx
+    sub $0xc0000000, %eax
+
+    movl %ebx, %ecx
+    sub %eax, %ecx
+    mov %eax, %esi          /* source address of the code */
+    mov $REAL_MODE_CODE, %edi     /* destination address of the code */
+    rep movsb
+
+
+    /* Copy all opcodes from exiting_real_mode label to protected_mode_16_bit label to low memory RAM  */
+    lea exiting_real_mode, %eax
+    lea protected_mode_16_bit, %ebx
+    sub $0xc0000000, %ebx
+    sub $0xc0000000, %eax
+
+    movl %ebx, %ecx
+    sub %eax, %ecx
+    mov %eax, %esi          /* source address of the code */
+    mov $EXITING_PROTECTED_MODE_CODE_LOCATION, %edi     /* destination address of the code */
+    pushl %edi
+    rep movsb
+    popl %edi
+    pushl %edi
+    ret
+
+gdt_table_real_mode:
+    .quad 0             /* Empty entry */
+
+	.short 0xffff
+	.short 0
+    .byte 0
+    .byte 0b10011010
+    .byte 0b00001111
+    .byte 0x0
+
+    .short 0xffff
+	.short 0
+    .byte 0
+    .byte 0b10010010
+    .byte 0b00001111
+    .byte 0x0
+gdt_table_real_mode_end:
+
+no_long_mode_string:
+    .asciz "Your computer does not support long mode (64-bit mode). Halting!"
+
+/*
+    This part is completely standalone - it doesn't involve any location from this
+    near code. It uses arbitrary locations in the low memory section of the RAM.
+    We don't really worry about where are these locations, because we only want to quickly
+    print a string and halt.
+*/
+.code32
+exiting_real_mode:
+
+    /* Build IDT pointer and load it */
+    mov $0x50000, %eax
+    pushl %eax
+    movl $0x3ff, 0(%eax)
+    add $2, %eax
+    movl $0, 0(%eax)
+    popl %eax
+    lidt (%eax)
+
+    /* Build GDT pointer and load it */
+    mov $0x40000, %eax
+    pushl %eax
+    movl $32, 0(%eax)
+    add $2, %eax
+    movl $GDT_REAL_MODE_LOCATION, 0(%eax)
+    popl %eax
+    lgdt (%eax)
+
+    /* far jump to protected_mode_16_bit in 0x5000 */
+    pushw $8
+    push $PROTECTED_MODE_16_BIT_CODE
+    retf
     hlt
 
+.code16
+protected_mode_16_bit:
+    xor %eax, %eax
+    movl $0x10, %eax
+    movw %ax, %ds
+    and $0xFE, %al       /* switch to pure real mode */
+    mov %eax, %cr0
+    mov $0x10, %eax
+    movl %eax, %cr0
+
+    pushw $0
+    push $REAL_MODE_CODE
+    retf
+    hlt
+
+real_mode:
+    movw $0x7000, %ax
+    movl $0x0000, %esp
+    movw %ax, %ss
+
+    xor %ax, %ax
+    movw %ax, %ds
+    movw %ax, %es
+    movw %ax, %fs
+    movw %ax, %gs
+
+    mov $0x3, %ax
+    int $0x10
+
+    movb $0x13, %ah
+    movb $0x0, %bh
+    movb $0xf, %bl
+    movw (NO_LONG_MODE_STRING_LOCATION), %cx
+    movw $0, %dx
+    movw $NO_LONG_MODE_STRING_LOCATION + 2, %bp
+    int $0x10
+
+    movl $0xdeadcafe, %ebx
+    cli
+    hlt
+
+/* If long mode is supported, continue with booting the system */
+
+.code32
 continue:
-    /* restore the pushed registers */
+    /* restore the pushed registers and continue with booting */
     popl %ebx
     popl %edx
     popl %eax
