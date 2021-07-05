@@ -98,11 +98,6 @@ void HIDManagement::set_maps(const Keyboard::CharacterMapData& character_map_dat
     dbgln("New Character map '{}' passed in by client.", character_map_name);
 }
 
-void HIDManagement::set_num_lock(bool on)
-{
-    m_i8042_controller->keyboard()->set_num_lock(on);
-}
-
 UNMAP_AFTER_INIT void HIDManagement::enumerate()
 {
     // FIXME: When we have USB HID support, we should ensure that we disable

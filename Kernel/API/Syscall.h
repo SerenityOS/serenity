@@ -143,7 +143,6 @@ namespace Kernel {
     S(getrandom)                  \
     S(getkeymap)                  \
     S(setkeymap)                  \
-    S(set_num_lock)               \
     S(clock_gettime)              \
     S(clock_settime)              \
     S(clock_nanosleep)            \
