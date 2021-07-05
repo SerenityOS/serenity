@@ -268,7 +268,7 @@ int Shell::builtin_cdh(int argc, const char** argv)
         }
 
         for (ssize_t i = cd_history.size() - 1; i >= 0; --i)
-            printf("%lu: %s\n", cd_history.size() - i, cd_history.at(i).characters());
+            printf("%zu: %s\n", cd_history.size() - i, cd_history.at(i).characters());
         return 0;
     }
 
