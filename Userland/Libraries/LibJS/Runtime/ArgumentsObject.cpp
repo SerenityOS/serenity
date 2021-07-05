@@ -33,7 +33,7 @@ void ArgumentsObject::visit_edges(Cell::Visitor& visitor)
 }
 
 // 10.4.4.3 [[Get]] ( P, Receiver ), https://tc39.es/ecma262/#sec-arguments-exotic-objects-get-p-receiver
-Value ArgumentsObject::internal_get(const PropertyName& property_name, Value receiver) const
+Value ArgumentsObject::internal_get(PropertyName const& property_name, Value receiver) const
 {
     // 1. Let map be args.[[ParameterMap]].
     auto& map = *m_parameter_map;
