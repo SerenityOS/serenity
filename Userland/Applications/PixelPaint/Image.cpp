@@ -366,6 +366,24 @@ void Image::remove_layer(Layer& layer)
     did_modify_layer_stack();
 }
 
+void Image::flatten_all_layers()
+{
+    if (m_layers.size() < 2)
+        return;
+
+    auto& bottom_layer = m_layers.at(0);
+
+    GUI::Painter painter(bottom_layer.bitmap());
+    paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
+
+    for (size_t index = m_layers.size() - 1; index > 0; index--) {
+        auto& layer = m_layers.at(index);
+        remove_layer(layer);
+    }
+    bottom_layer.set_name("Background");
+    select_layer(&bottom_layer);
+}
+
 void Image::select_layer(Layer* layer)
 {
     for (auto* client : m_clients)
