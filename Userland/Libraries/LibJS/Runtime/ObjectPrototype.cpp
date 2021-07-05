@@ -127,15 +127,22 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::value_of)
 // 20.1.3.4 Object.prototype.propertyIsEnumerable ( V ), https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
 {
+    // 1. Let P be ? ToPropertyKey(V).
     auto property_key = vm.argument(0).to_property_key(global_object);
     if (vm.exception())
         return {};
+    // 2. Let O be ? ToObject(this value).
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto property_descriptor = this_object->get_own_property_descriptor(property_key);
+    // 3. Let desc be ? O.[[GetOwnProperty]](P).
+    auto property_descriptor = this_object->internal_get_own_property(property_key);
+    if (vm.exception())
+        return {};
+    // 4. If desc is undefined, return false.
     if (!property_descriptor.has_value())
         return Value(false);
+    // 5. Return desc.[[Enumerable]].
     return Value(*property_descriptor->enumerable);
 }
 
