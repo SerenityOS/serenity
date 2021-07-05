@@ -406,7 +406,7 @@ ExceptionOr<NonnullRefPtr<Node>> Node::replace_child(NonnullRefPtr<Node> node, N
 }
 
 // https://dom.spec.whatwg.org/#concept-node-clone
-NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) const
+NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children)
 {
     if (!document)
         document = m_document;
@@ -454,7 +454,9 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) co
         TODO();
     }
     // FIXME: 4. Set copy’s node document and document to copy, if copy is a document, and set copy’s node document to document otherwise.
-    // FIXME: 5. Run any cloning steps defined for node in other applicable specifications and pass copy, node, document and the clone children flag if set, as parameters.
+
+    cloned(*copy, clone_children);
+
     if (clone_children) {
         for_each_child([&](auto& child) {
             copy->append_child(child.clone_node(document, true));
@@ -464,7 +466,7 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) co
 }
 
 // https://dom.spec.whatwg.org/#dom-node-clonenode
-ExceptionOr<NonnullRefPtr<Node>> Node::clone_node_binding(bool deep) const
+ExceptionOr<NonnullRefPtr<Node>> Node::clone_node_binding(bool deep)
 {
     if (is<ShadowRoot>(*this))
         return NotSupportedError::create("Cannot clone shadow root");
