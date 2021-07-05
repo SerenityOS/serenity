@@ -9,10 +9,13 @@
 #include "MainWidget.h"
 #include "TrackManager.h"
 #include <AK/Array.h>
+#include <AK/Queue.h>
+#include <LibAudio/Buffer.h>
 #include <LibAudio/ClientConnection.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/Object.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
@@ -23,6 +26,65 @@
 #include <LibGfx/Bitmap.h>
 #include <LibThreading/Thread.h>
 
+// Converts Piano-internal data to an Audio::Buffer that AudioServer receives
+static NonnullRefPtr<Audio::Buffer> music_samples_to_buffer(Array<Sample, sample_count> samples)
+{
+    Vector<Audio::Frame, sample_count> frames;
+    frames.ensure_capacity(sample_count);
+    for (auto sample : samples) {
+        Audio::Frame frame = { sample.left / (double)NumericLimits<i16>::max(), sample.right / (double)NumericLimits<i16>::max() };
+        frames.unchecked_append(frame);
+    }
+    return Audio::Buffer::create_with_samples(frames);
+}
+
+// Wrapper class accepting custom events to advance the track playing and forward audio data to the system.
+// This does not run on a separate thread, preventing IPC multithreading madness.
+class AudioPlayerLoop : public Core::Object {
+    C_OBJECT(AudioPlayerLoop)
+public:
+    AudioPlayerLoop(TrackManager& track_manager, bool& need_to_write_wav, Audio::WavWriter& wav_writer)
+        : m_track_manager(track_manager)
+        , m_need_to_write_wav(need_to_write_wav)
+        , m_wav_writer(wav_writer)
+    {
+        m_audio_client = Audio::ClientConnection::construct();
+        m_audio_client->on_finish_playing_buffer = [this](int buffer_id) {
+            (void)buffer_id;
+            enqueue_audio();
+        };
+    }
+
+    void enqueue_audio()
+    {
+        m_track_manager.fill_buffer(m_buffer);
+        NonnullRefPtr<Audio::Buffer> audio_buffer = music_samples_to_buffer(m_buffer);
+        m_audio_client->async_enqueue(audio_buffer);
+
+        // FIXME: This should be done somewhere else.
+        if (m_need_to_write_wav) {
+            m_need_to_write_wav = false;
+            m_track_manager.reset();
+            m_track_manager.set_should_loop(false);
+            do {
+                m_track_manager.fill_buffer(m_buffer);
+                m_wav_writer.write_samples(reinterpret_cast<u8*>(m_buffer.data()), buffer_size);
+            } while (m_track_manager.time());
+            m_track_manager.reset();
+            m_track_manager.set_should_loop(true);
+            m_wav_writer.finalize();
+        }
+    }
+
+private:
+    TrackManager& m_track_manager;
+    Array<Sample, sample_count> m_buffer;
+    RefPtr<Audio::ClientConnection> m_audio_client;
+
+    bool& m_need_to_write_wav;
+    Audio::WavWriter& m_wav_writer;
+};
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio thread rpath cpath wpath recvfd sendfd unix", nullptr) < 0) {
@@ -31,8 +93,6 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
-
-    auto audio_client = Audio::ClientConnection::construct();
 
     TrackManager track_manager;
 
@@ -48,37 +108,11 @@ int main(int argc, char** argv)
     Optional<String> save_path;
     bool need_to_write_wav = false;
 
-    auto audio_thread = Threading::Thread::construct([&] {
-        auto audio = Core::File::construct("/dev/audio");
-        if (!audio->open(Core::OpenMode::WriteOnly)) {
-            dbgln("Can't open audio device: {}", audio->error_string());
-            return 1;
-        }
+    auto audio_loop = AudioPlayerLoop::construct(track_manager, need_to_write_wav, wav_writer);
+    audio_loop->enqueue_audio();
+    audio_loop->enqueue_audio();
 
-        Array<Sample, sample_count> buffer;
-        while (!Core::EventLoop::current().was_exit_requested()) {
-            track_manager.fill_buffer(buffer);
-            audio->write(reinterpret_cast<u8*>(buffer.data()), buffer_size);
-            Core::EventLoop::wake();
-
-            if (need_to_write_wav) {
-                need_to_write_wav = false;
-                track_manager.reset();
-                track_manager.set_should_loop(false);
-                do {
-                    track_manager.fill_buffer(buffer);
-                    wav_writer.write_samples(reinterpret_cast<u8*>(buffer.data()), buffer_size);
-                } while (track_manager.time());
-                track_manager.reset();
-                track_manager.set_should_loop(true);
-                wav_writer.finalize();
-            }
-        }
-        return 0;
-    });
-    audio_thread->start();
-
-    auto main_widget_updater = Core::Timer::construct(150, [&] {
+    auto main_widget_updater = Core::Timer::construct(static_cast<int>((1 / 60.0) * 1000), [&] {
         Core::EventLoop::current().post_event(main_widget, make<Core::CustomEvent>(0));
     });
     main_widget_updater->start();
