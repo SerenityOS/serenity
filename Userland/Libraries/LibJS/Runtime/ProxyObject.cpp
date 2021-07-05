@@ -789,7 +789,7 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
     // 6. If trap is undefined, then
     if (!trap) {
         // a. Return ? target.[[OwnPropertyKeys]]().
-        return Object::internal_own_property_keys();
+        return m_target.internal_own_property_keys();
     }
 
     // 7. Let trapResultArray be ? Call(trap, handler, « target »).
