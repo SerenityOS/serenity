@@ -13,7 +13,7 @@ namespace Web::Bindings {
 void WebAssemblyMemoryPrototype::initialize(JS::GlobalObject& global_object)
 {
     Object::initialize(global_object);
-    define_native_property("buffer", buffer_getter, nullptr);
+    define_native_accessor("buffer", buffer_getter, {});
     define_native_function("grow", grow);
 }
 
@@ -42,7 +42,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)
     return JS::Value(static_cast<u32>(previous_size));
 }
 
-JS_DEFINE_NATIVE_GETTER(WebAssemblyMemoryPrototype::buffer_getter)
+JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::buffer_getter)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object || !is<WebAssemblyMemoryObject>(this_object)) {
