@@ -108,6 +108,8 @@ include_directories(../../Userland/)
 include_directories(../../Userland/Libraries/)
 include_directories(${CMAKE_BINARY_DIR})
 add_library(LagomCore ${LAGOM_CORE_SOURCES})
+find_package(Threads REQUIRED)
+target_link_libraries(LagomCore PRIVATE Threads::Threads)
 
 if (BUILD_LAGOM)
     add_library(Lagom $<TARGET_OBJECTS:LagomCore> ${LAGOM_MORE_SOURCES})
