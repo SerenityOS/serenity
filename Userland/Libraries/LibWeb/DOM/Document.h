@@ -110,7 +110,7 @@ public:
         return const_cast<Document*>(this)->body();
     }
 
-    ExceptionOr<void> set_body(HTML::HTMLElement& new_body);
+    ExceptionOr<void> set_body(HTML::HTMLElement* new_body);
 
     String title() const;
     void set_title(const String&);
