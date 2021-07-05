@@ -241,7 +241,7 @@ void DwarfInfo::build_cached_dies() const
         m_cached_dies_by_range.insert(range.start_address, DIEAndRange { die, range });
         m_cached_dies_by_offset.insert(die.offset(), die);
     };
-    auto get_ranges_of_die = [this](DIE const& die) -> Vector<DIERange> {
+    auto get_ranges_of_die = [](DIE const& die) -> Vector<DIERange> {
         // TODO support DW_AT_ranges (appears when range is non-contiguous)
 
         auto start = die.get_attribute(Attribute::LowPc);

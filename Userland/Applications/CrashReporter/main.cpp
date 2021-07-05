@@ -52,8 +52,6 @@ static TitleAndText build_backtrace(const CoreDump::Reader& coredump, const ELF:
         builder.append('\n');
     };
 
-    auto& backtrace_entries = backtrace.entries();
-
     if (metadata.contains("assertion"))
         prepend_metadata("assertion", "ASSERTION FAILED: {}");
     else if (metadata.contains("pledge_violation"))

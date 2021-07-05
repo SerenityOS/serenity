@@ -577,7 +577,7 @@ void Editor::on_identifier_click(const GUI::TextDocumentSpan& span)
     if (!m_language_client)
         return;
 
-    m_language_client->on_declaration_found = [this](const String& file, size_t line, size_t column) {
+    m_language_client->on_declaration_found = [](const String& file, size_t line, size_t column) {
         HackStudio::open_file(file, line, column);
     };
     m_language_client->search_declaration(code_document().file_path(), span.range.start().line(), span.range.start().column());

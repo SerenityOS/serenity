@@ -504,7 +504,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_action
         if (m_all_editor_wrappers.size() <= 1)
             return;
         Vector<EditorWrapper&> wrappers;
-        m_editors_splitter->for_each_child_of_type<EditorWrapper>([this, &wrappers](auto& child) {
+        m_editors_splitter->for_each_child_of_type<EditorWrapper>([&wrappers](auto& child) {
             wrappers.append(child);
             return IterationDecision::Continue;
         });
@@ -525,7 +525,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_previous_editor_ac
         if (m_all_editor_wrappers.size() <= 1)
             return;
         Vector<EditorWrapper&> wrappers;
-        m_editors_splitter->for_each_child_of_type<EditorWrapper>([this, &wrappers](auto& child) {
+        m_editors_splitter->for_each_child_of_type<EditorWrapper>([&wrappers](auto& child) {
             wrappers.append(child);
             return IterationDecision::Continue;
         });
