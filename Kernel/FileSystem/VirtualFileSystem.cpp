@@ -852,9 +852,9 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
     if (path == "/usr/lib/Loader.so")
         return KSuccess;
 
-    // FIXME: Figure out a nicer way to do this.
-    if (String(path).contains("/.."))
-        return EINVAL;
+    VERIFY(path.starts_with('/'));
+    VERIFY(!path.contains("/../"sv) && !path.ends_with("/.."sv));
+    VERIFY(!path.contains("/./"sv) && !path.ends_with("/."sv));
 
     auto& unveiled_path = find_matching_unveiled_path(path);
     if (unveiled_path.permissions() == UnveilAccess::None) {
