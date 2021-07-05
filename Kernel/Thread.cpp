@@ -1037,7 +1037,7 @@ struct RecognizedSymbol {
     const KernelSymbol* symbol { nullptr };
 };
 
-static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, StringBuilder& builder)
+static bool symbolicate(RecognizedSymbol const& symbol, Process& process, StringBuilder& builder)
 {
     if (!symbol.address)
         return false;
@@ -1047,7 +1047,15 @@ static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, 
         if (!is_user_address(VirtualAddress(symbol.address))) {
             builder.append("0xdeadc0de\n");
         } else {
-            builder.appendff("{:p}\n", symbol.address);
+            if (auto* region = process.space().find_region_containing({ VirtualAddress(symbol.address), sizeof(FlatPtr) })) {
+                size_t offset = symbol.address - region->vaddr().get();
+                if (auto region_name = region->name(); !region_name.is_null() && !region_name.is_empty())
+                    builder.appendff("{:p}  {} + 0x{:x}\n", (void*)symbol.address, region_name, offset);
+                else
+                    builder.appendff("{:p}  {:p} + 0x{:x}\n", (void*)symbol.address, region->vaddr().as_ptr(), offset);
+            } else {
+                builder.appendff("{:p}\n", symbol.address);
+            }
         }
         return true;
     }
@@ -1055,7 +1063,7 @@ static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, 
     if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096) {
         builder.appendff("{:p}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address));
     } else {
-        builder.appendff("{:p}  {} +{}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address), demangle(symbol.symbol->name), offset);
+        builder.appendff("{:p}  {} + 0x{:x}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address), demangle(symbol.symbol->name), offset);
     }
     return true;
 }
