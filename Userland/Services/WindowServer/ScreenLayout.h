@@ -28,7 +28,7 @@ public:
             return { location, { resolution.width() / scale_factor, resolution.height() / scale_factor } };
         }
 
-        auto operator<=>(const Screen&) const = default;
+        bool operator==(const Screen&) const = default;
     };
 
     Vector<Screen> screens;
