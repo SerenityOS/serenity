@@ -153,7 +153,10 @@ void HTMLScriptElement::prepare_script()
         return;
     }
 
-    // FIXME: Check if scripting is disabled, if so return
+    if (is_scripting_disabled()) {
+        dbgln("HTMLScriptElement: Refusing to run script because scripting is disabled.");
+        return;
+    }
 
     if (m_script_type == ScriptType::Classic && has_attribute(HTML::AttributeNames::nomodule)) {
         dbgln("HTMLScriptElement: Refusing to run classic script because it has the nomodule attribute.");
