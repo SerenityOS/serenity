@@ -68,11 +68,11 @@ Value PromiseConstructor::construct(FunctionObject& new_target)
 
     auto [resolve_function, reject_function] = promise->create_resolving_functions();
 
-    auto completion_value = vm.call(executor.as_function(), js_undefined(), &resolve_function, &reject_function);
-    if (vm.exception()) {
+    (void)vm.call(executor.as_function(), js_undefined(), &resolve_function, &reject_function);
+    if (auto* exception = vm.exception()) {
         vm.clear_exception();
         vm.stop_unwind();
-        [[maybe_unused]] auto result = vm.call(reject_function, js_undefined(), completion_value);
+        (void)vm.call(reject_function, js_undefined(), exception->value());
     }
     return promise;
 }
