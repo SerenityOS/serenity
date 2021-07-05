@@ -33,9 +33,9 @@ Value FunctionEnvironment::get_super_base() const
 {
     VERIFY(m_function_object);
     auto home_object = m_function_object->home_object();
-    if (home_object.is_undefined())
+    if (!home_object)
         return js_undefined();
-    return home_object.as_object().internal_get_prototype_of();
+    return home_object->internal_get_prototype_of();
 }
 
 // 9.1.1.3.2 HasThisBinding ( ), https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding
@@ -51,7 +51,7 @@ bool FunctionEnvironment::has_super_binding() const
 {
     if (this_binding_status() == ThisBindingStatus::Lexical)
         return false;
-    if (function_object().home_object().is_undefined())
+    if (!function_object().home_object())
         return false;
     return true;
 }
