@@ -23,15 +23,15 @@ public:
 private:
     JS_DECLARE_NATIVE_FUNCTION(reload);
 
-    JS_DECLARE_NATIVE_GETTER(href_getter);
-    JS_DECLARE_NATIVE_SETTER(href_setter);
+    JS_DECLARE_NATIVE_FUNCTION(href_getter);
+    JS_DECLARE_NATIVE_FUNCTION(href_setter);
 
-    JS_DECLARE_NATIVE_GETTER(host_getter);
-    JS_DECLARE_NATIVE_GETTER(hostname_getter);
-    JS_DECLARE_NATIVE_GETTER(pathname_getter);
-    JS_DECLARE_NATIVE_GETTER(hash_getter);
-    JS_DECLARE_NATIVE_GETTER(search_getter);
-    JS_DECLARE_NATIVE_GETTER(protocol_getter);
+    JS_DECLARE_NATIVE_FUNCTION(host_getter);
+    JS_DECLARE_NATIVE_FUNCTION(hostname_getter);
+    JS_DECLARE_NATIVE_FUNCTION(pathname_getter);
+    JS_DECLARE_NATIVE_FUNCTION(hash_getter);
+    JS_DECLARE_NATIVE_FUNCTION(search_getter);
+    JS_DECLARE_NATIVE_FUNCTION(protocol_getter);
 };
 
 }
