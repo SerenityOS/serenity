@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021, Edwin Hoksberg <mail@edwinhoksberg.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,6 +35,9 @@ public:
 
     // ^Device
     virtual mode_t required_mode() const override { return 0440; }
+
+    // ^File
+    virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
 
     virtual String device_name() const override { return String::formatted("keyboard{}", minor()); }
 

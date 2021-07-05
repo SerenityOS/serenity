@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021, Edwin Hoksberg <mail@edwinhoksberg.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +16,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/VirtualConsole.h>
+#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
@@ -312,6 +314,38 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, u64, UserOrKernelBuffer
 KResultOr<size_t> KeyboardDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t)
 {
     return 0;
+}
+
+int KeyboardDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
+{
+    switch (request) {
+    case KEYBOARD_IOCTL_GET_NUM_LOCK: {
+        auto* output = (bool*)arg;
+        if (!copy_to_user(output, &m_num_lock_on))
+            return -EFAULT;
+        return 0;
+    }
+    case KEYBOARD_IOCTL_SET_NUM_LOCK: {
+        if (arg != 0 && arg != 1)
+            return -EINVAL;
+        m_num_lock_on = arg;
+        return 0;
+    }
+    case KEYBOARD_IOCTL_GET_CAPS_LOCK: {
+        auto* output = (bool*)arg;
+        if (!copy_to_user(output, &m_caps_lock_on))
+            return -EFAULT;
+        return 0;
+    }
+    case KEYBOARD_IOCTL_SET_CAPS_LOCK: {
+        if (arg != 0 && arg != 1)
+            return -EINVAL;
+        m_caps_lock_on = arg;
+        return 0;
+    }
+    default:
+        return -EINVAL;
+    };
 }
 
 }
