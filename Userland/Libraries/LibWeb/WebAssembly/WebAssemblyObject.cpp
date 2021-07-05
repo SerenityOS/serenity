@@ -329,8 +329,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
         auto instance_object = vm.heap().allocate<WebAssemblyInstanceObject>(global_object, global_object, result.value());
         if (should_return_module) {
             auto object = JS::Object::create(global_object, nullptr);
-            object->put("module", vm.heap().allocate<WebAssemblyModuleObject>(global_object, global_object, s_compiled_modules.size() - 1));
-            object->put("instance", instance_object);
+            object->define_direct_property("module", vm.heap().allocate<WebAssemblyModuleObject>(global_object, global_object, s_compiled_modules.size() - 1), JS::default_attributes);
+            object->define_direct_property("instance", instance_object, JS::default_attributes);
             promise->fulfill(object);
         } else {
             promise->fulfill(instance_object);

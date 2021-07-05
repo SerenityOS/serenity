@@ -38,7 +38,7 @@ Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets)
     , m_interpreter_scope(JS::VM::InterpreterExecutionScope(interpreter()))
 {
     m_workbook_object = interpreter().heap().allocate<WorkbookObject>(global_object(), *this);
-    global_object().put("workbook", workbook_object());
+    global_object().define_direct_property("workbook", workbook_object(), JS::default_attributes);
 }
 
 bool Workbook::set_filename(const String& filename)

@@ -110,11 +110,11 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
             if (is_program_node && declaration.declaration_kind() == DeclarationKind::Var) {
                 declarator.target().visit(
                     [&](const NonnullRefPtr<Identifier>& id) {
-                        global_object.put(id->string(), js_undefined());
+                        global_object.define_direct_property(id->string(), js_undefined(), JS::Attribute::Writable | JS::Attribute::Enumerable);
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
                         binding->for_each_bound_name([&](const auto& name) {
-                            global_object.put(name, js_undefined());
+                            global_object.define_direct_property(name, js_undefined(), JS::Attribute::Writable | JS::Attribute::Enumerable);
                         });
                     });
                 if (exception())

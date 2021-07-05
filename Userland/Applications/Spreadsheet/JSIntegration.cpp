@@ -265,8 +265,8 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
         return JS::js_undefined();
 
     auto object = JS::Object::create(global_object, global_object.object_prototype());
-    object->put("column", JS::js_string(vm, sheet_object->m_sheet.column(position.value().column)));
-    object->put("row", JS::Value((unsigned)position.value().row));
+    object->define_direct_property("column", JS::js_string(vm, sheet_object->m_sheet.column(position.value().column)), JS::default_attributes);
+    object->define_direct_property("row", JS::Value((unsigned)position.value().row), JS::default_attributes);
 
     return object;
 }
@@ -295,8 +295,8 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
     auto position = current_cell->position();
 
     auto object = JS::Object::create(global_object, global_object.object_prototype());
-    object->put("column", JS::js_string(vm, sheet_object->m_sheet.column(position.column)));
-    object->put("row", JS::Value((unsigned)position.row));
+    object->define_direct_property("column", JS::js_string(vm, sheet_object->m_sheet.column(position.column)), JS::default_attributes);
+    object->define_direct_property("row", JS::Value((unsigned)position.row), JS::default_attributes);
 
     return object;
 }
