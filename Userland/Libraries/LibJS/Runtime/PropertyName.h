@@ -176,17 +176,6 @@ public:
         return StringOrSymbol(as_symbol());
     }
 
-    Value to_value(VM& vm) const
-    {
-        if (is_string())
-            return js_string(vm, m_string);
-        if (is_number())
-            return Value(m_number);
-        if (is_symbol())
-            return m_symbol;
-        return js_undefined();
-    }
-
 private:
     Type m_type { Type::Invalid };
     bool m_string_may_be_number { true };
