@@ -576,25 +576,27 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 // 22.1.3.21 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 {
-    auto separator_argument = vm.argument(0);
-    auto limit_argument = vm.argument(1);
-
-    auto this_value = require_object_coercible(global_object, vm.this_value(global_object));
+    auto object = require_object_coercible(global_object, vm.this_value(global_object));
     if (vm.exception())
         return {};
+
+    auto separator_argument = vm.argument(0);
+    auto limit_argument = vm.argument(1);
 
     if (!separator_argument.is_nullish()) {
         auto splitter = separator_argument.get_method(global_object, *vm.well_known_symbol_split());
         if (vm.exception())
             return {};
         if (splitter)
-            return vm.call(*splitter, separator_argument, this_value, limit_argument);
+            return vm.call(*splitter, separator_argument, object, limit_argument);
     }
 
-    auto string = this_value.to_string(global_object);
+    auto string = object.to_string(global_object);
+    if (vm.exception())
+        return {};
 
-    auto* result = Array::create(global_object, 0);
-    size_t result_len = 0;
+    auto* array = Array::create(global_object, 0);
+    size_t array_length = 0;
 
     auto limit = NumericLimits<u32>::max();
     if (!limit_argument.is_undefined()) {
@@ -608,49 +610,41 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
         return {};
 
     if (limit == 0)
-        return result;
+        return array;
 
     if (separator_argument.is_undefined()) {
-        result->create_data_property_or_throw(0, js_string(vm, string));
-        return result;
+        array->create_data_property_or_throw(0, js_string(vm, string));
+        return array;
     }
 
-    auto len = string.length();
-    auto separator_len = separator.length();
-    if (len == 0) {
-        if (separator_len > 0)
-            result->create_data_property_or_throw(0, js_string(vm, string));
-        return result;
+    if (string.length() == 0) {
+        if (!separator.is_empty())
+            array->create_data_property_or_throw(0, js_string(vm, string));
+        return array;
     }
 
     size_t start = 0;
-    auto pos = start;
-    if (separator_len == 0) {
-        for (pos = 0; pos < len; pos++)
-            result->define_property(pos, js_string(vm, string.substring(pos, 1)));
-        return result;
-    }
-
-    while (pos != len) {
-        auto e = split_match(string, pos, separator);
-        if (!e.has_value()) {
-            pos += 1;
+    auto position = start;
+    while (position != string.length()) {
+        auto match = split_match(string, position, separator);
+        if (!match.has_value() || match.value() == start) {
+            ++position;
             continue;
         }
 
-        auto segment = string.substring_view(start, pos - start);
-        result->create_data_property_or_throw(result_len, js_string(vm, segment));
-        result_len++;
-        if (result_len == limit)
-            return result;
-        start = e.value();
-        pos = start;
+        auto segment = string.substring_view(start, position - start);
+        array->create_data_property_or_throw(array_length, js_string(vm, segment));
+        ++array_length;
+        if (array_length == limit)
+            return array;
+        start = match.value();
+        position = start;
     }
 
-    auto rest = string.substring(start, len - start);
-    result->create_data_property_or_throw(result_len, js_string(vm, rest));
+    auto rest = string.substring(start);
+    array->create_data_property_or_throw(array_length, js_string(vm, rest));
 
-    return result;
+    return array;
 }
 
 // 22.1.3.9 String.prototype.lastIndexOf ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.lastindexof
