@@ -276,7 +276,6 @@ public:
     KResultOr<FlatPtr> sys$dbgputstr(Userspace<const u8*>, size_t);
     KResultOr<FlatPtr> sys$dump_backtrace();
     KResultOr<FlatPtr> sys$gettid();
-    KResultOr<FlatPtr> sys$donate(pid_t tid);
     KResultOr<FlatPtr> sys$setsid();
     KResultOr<FlatPtr> sys$getsid(pid_t);
     KResultOr<FlatPtr> sys$setpgid(pid_t pid, pid_t pgid);

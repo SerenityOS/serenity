@@ -695,12 +695,6 @@ int gettid()
     return cached_tid;
 }
 
-int donate(int tid)
-{
-    int rc = syscall(SC_donate, tid);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 void sysbeep()
 {
     syscall(SC_beep);

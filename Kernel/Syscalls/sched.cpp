@@ -15,20 +15,6 @@ KResultOr<FlatPtr> Process::sys$yield()
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$donate(pid_t tid)
-{
-    REQUIRE_PROMISE(stdio);
-    if (tid < 0)
-        return EINVAL;
-
-    ScopedCritical critical;
-    auto thread = Thread::from_tid(tid);
-    if (!thread || thread->pid() != pid())
-        return ESRCH;
-    Thread::current()->donate_without_holding_big_lock(thread, "sys$donate");
-    return 0;
-}
-
 KResultOr<FlatPtr> Process::sys$sched_setparam(int pid, Userspace<const struct sched_param*> user_param)
 {
     REQUIRE_PROMISE(proc);

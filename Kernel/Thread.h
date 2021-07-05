@@ -1337,7 +1337,6 @@ private:
     bool m_is_profiling_suppressed { false };
 
     void yield_without_holding_big_lock();
-    void donate_without_holding_big_lock(RefPtr<Thread>&, const char*);
     void yield_while_not_holding_big_lock();
     void drop_thread_count(bool);
 };

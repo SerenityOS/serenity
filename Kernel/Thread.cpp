@@ -334,18 +334,6 @@ void Thread::yield_without_holding_big_lock()
     relock_process(previous_locked, lock_count_to_restore);
 }
 
-void Thread::donate_without_holding_big_lock(RefPtr<Thread>& thread, const char* reason)
-{
-    VERIFY(!g_scheduler_lock.own_lock());
-    u32 lock_count_to_restore = 0;
-    auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
-    // NOTE: Even though we call Scheduler::yield here, unless we happen
-    // to be outside of a critical section, the yield will be postponed
-    // until leaving it in relock_process.
-    Scheduler::donate_to(thread, reason);
-    relock_process(previous_locked, lock_count_to_restore);
-}
-
 LockMode Thread::unlock_process_if_locked(u32& lock_count_to_restore)
 {
     return process().big_lock().force_unlock_if_locked(lock_count_to_restore);
@@ -354,8 +342,8 @@ LockMode Thread::unlock_process_if_locked(u32& lock_count_to_restore)
 void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 {
     // Clearing the critical section may trigger the context switch
-    // flagged by calling Scheduler::donate_to or Scheduler::yield
-    // above. We have to do it this way because we intentionally
+    // flagged by calling Scheduler::yield above.
+    // We have to do it this way because we intentionally
     // leave the critical section here to be able to switch contexts.
     u32 prev_flags;
     u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
