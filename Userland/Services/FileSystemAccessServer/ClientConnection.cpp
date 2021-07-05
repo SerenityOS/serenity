@@ -8,10 +8,12 @@
 // clang-format off
 #include <LibGUI/WindowServerConnection.h>
 // clang-format on
+#include "DownloadWindow.h"
 #include <AK/Debug.h>
 #include <FileSystemAccessServer/ClientConnection.h>
 #include <LibCore/File.h>
 #include <LibCore/IODevice.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/MessageBox.h>
