@@ -7,7 +7,8 @@
 
 #pragma once
 
-#include <fenv.h>
+// Defined in fenv.cpp, but we must not include fenv.h, so here's its prototype.
+int fgetround();
 
 #define FLT_RADIX 2
 #define DECIMAL_DIG 21
