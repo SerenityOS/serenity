@@ -573,7 +573,8 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
     } else if (is_wrappable_type(parameter.type)) {
-        scoped_generator.append(R"~~~(
+        if (!parameter.type.nullable) {
+            scoped_generator.append(R"~~~(
     auto @cpp_name@_object = @js_name@@js_suffix@.to_object(global_object);
     if (vm.exception())
         @return_statement@
@@ -585,6 +586,23 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
     auto& @cpp_name@ = static_cast<@parameter.type.name@Wrapper*>(@cpp_name@_object)->impl();
 )~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    @parameter.type.name@* @cpp_name@ = nullptr;
+    if (!@js_name@@js_suffix@.is_null()) {
+        auto @cpp_name@_object = @js_name@@js_suffix@.to_object(global_object);
+        if (vm.exception())
+            @return_statement@
+
+        if (!is<@parameter.type.name@Wrapper>(@cpp_name@_object)) {
+            vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "@parameter.type.name@");
+            @return_statement@
+        }
+
+        @cpp_name@ = &static_cast<@parameter.type.name@Wrapper*>(@cpp_name@_object)->impl();
+    }
+)~~~");
+        }
     } else if (parameter.type.name == "double") {
         if (!optional) {
             scoped_generator.append(R"~~~(

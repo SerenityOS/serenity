@@ -51,13 +51,16 @@ RefPtr<HTMLTableCaptionElement> HTMLTableElement::caption()
     return first_child_of_type<HTMLTableCaptionElement>();
 }
 
-void HTMLTableElement::set_caption(HTMLTableCaptionElement& caption)
+void HTMLTableElement::set_caption(HTMLTableCaptionElement* caption)
 {
+    // FIXME: This is not always the case, but this function is currently written in a way that assumes non-null.
+    VERIFY(caption);
+
     // FIXME: The spec requires deleting the current caption if caption is null
     //        Currently the wrapper generator doesn't send us a nullable value
     delete_caption();
 
-    pre_insert(caption, first_child());
+    pre_insert(*caption, first_child());
 }
 
 NonnullRefPtr<HTMLTableCaptionElement> HTMLTableElement::create_caption()
@@ -93,9 +96,12 @@ RefPtr<HTMLTableSectionElement> HTMLTableElement::t_head()
     return nullptr;
 }
 
-DOM::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement& thead)
+DOM::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* thead)
 {
-    if (thead.tag_name() != TagNames::thead)
+    // FIXME: This is not always the case, but this function is currently written in a way that assumes non-null.
+    VERIFY(thead);
+
+    if (thead->tag_name() != TagNames::thead)
         return DOM::HierarchyRequestError::create("Element is not thead");
 
     // FIXME: The spec requires deleting the current thead if thead is null
@@ -120,7 +126,7 @@ DOM::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement& the
         break;
     }
 
-    pre_insert(thead, child_to_append_after);
+    pre_insert(*thead, child_to_append_after);
 
     return {};
 }
@@ -177,9 +183,12 @@ RefPtr<HTMLTableSectionElement> HTMLTableElement::t_foot()
     return nullptr;
 }
 
-DOM::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement& tfoot)
+DOM::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement* tfoot)
 {
-    if (tfoot.tag_name() != TagNames::tfoot)
+    // FIXME: This is not always the case, but this function is currently written in a way that assumes non-null.
+    VERIFY(tfoot);
+
+    if (tfoot->tag_name() != TagNames::tfoot)
         return DOM::HierarchyRequestError::create("Element is not tfoot");
 
     // FIXME: The spec requires deleting the current tfoot if tfoot is null
@@ -187,7 +196,7 @@ DOM::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement& tfo
     delete_t_foot();
 
     // We insert the new tfoot at the end of the table
-    append_child(tfoot);
+    append_child(*tfoot);
 
     return {};
 }

@@ -215,14 +215,14 @@ HTML::HTMLElement* Document::body()
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-document-body
-ExceptionOr<void> Document::set_body(HTML::HTMLElement& new_body)
+ExceptionOr<void> Document::set_body(HTML::HTMLElement* new_body)
 {
     if (!is<HTML::HTMLBodyElement>(new_body) && !is<HTML::HTMLFrameSetElement>(new_body))
         return DOM::HierarchyRequestError::create("Invalid document body element, must be 'body' or 'frameset'");
 
     auto* existing_body = body();
     if (existing_body) {
-        auto replace_result = existing_body->parent()->replace_child(new_body, *existing_body);
+        auto replace_result = existing_body->parent()->replace_child(*new_body, *existing_body);
         if (replace_result.is_exception())
             return replace_result.exception();
         return {};
@@ -232,7 +232,7 @@ ExceptionOr<void> Document::set_body(HTML::HTMLElement& new_body)
     if (!document_element)
         return DOM::HierarchyRequestError::create("Missing document element");
 
-    auto append_result = document_element->append_child(new_body);
+    auto append_result = document_element->append_child(*new_body);
     if (append_result.is_exception())
         return append_result.exception();
     return {};
