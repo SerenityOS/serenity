@@ -102,3 +102,40 @@ test("functional regex replacement", () => {
         })
     ).toBe("xd");
 });
+
+test("replacement with substitution", () => {
+    expect("abc".replace("b", "$")).toBe("a$c");
+    expect("abc".replace("b", "$.")).toBe("a$.c");
+
+    expect("abc".replace("b", "$$")).toBe("a$c");
+    expect("abc".replace("b", ">$$<")).toBe("a>$<c");
+    expect("abc".replace("b", "$$$$")).toBe("a$$c");
+
+    expect("abc".replace("b", "$&")).toBe("abc");
+    expect("a123c".replace(/\d+/, "$&")).toBe("a123c");
+
+    expect("abc".replace("b", "$`")).toBe("aac");
+    expect("aabc".replace("b", "$`")).toBe("aaaac");
+    expect("a123c".replace(/\d+/, "$`")).toBe("aac");
+
+    expect("abc".replace("b", "$'")).toBe("acc");
+    expect("abcc".replace("b", "$'")).toBe("acccc");
+    expect("a123c".replace(/\d+/, "$'")).toBe("acc");
+
+    expect("abc".replace("b", "$0")).toBe("a$0c");
+    expect("abc".replace("b", "$99")).toBe("a$99c");
+    expect("abc".replace("b", "$100")).toBe("a$100c");
+    expect("abc".replace(/(a)b(c)/, "$0")).toBe("$0");
+    expect("abc".replace(/(a)b(c)/, "$1")).toBe("a");
+    expect("abc".replace(/(a)b(c)/, "$2")).toBe("c");
+    expect("abc".replace(/(a)b(c)/, "$3")).toBe("$3");
+    expect("abc".replace(/(a)b(c)/, "$2b$1")).toBe("cba");
+
+    expect("abc".replace("b", "$<val>")).toBe("a$<val>c");
+    expect("abc".replace(/(?<val1>a)b(?<val2>c)/, "$<")).toBe("$<");
+    expect("abc".replace(/(?<val1>a)b(?<val2>c)/, "$<not_terminated")).toBe("$<not_terminated");
+    expect("abc".replace(/(?<val1>a)b(?<val2>c)/, "$<not_found>")).toBe("");
+    expect("abc".replace(/(?<val1>a)b(?<val2>c)/, "$<val1>")).toBe("a");
+    expect("abc".replace(/(?<val1>a)b(?<val2>c)/, "$<val2>")).toBe("c");
+    expect("abc".replace(/(?<val1>a)b(?<val2>c)/, "$<val2>b$<val1>")).toBe("cba");
+});

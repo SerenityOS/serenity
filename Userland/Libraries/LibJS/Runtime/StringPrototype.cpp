@@ -822,8 +822,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
         if (vm.exception())
             return {};
     } else {
-        // FIXME: Implement the GetSubstituion algorithm for substituting placeholder '$' characters - https://tc39.es/ecma262/#sec-getsubstitution
-        replacement = replace_value.to_string(global_object);
+        replacement = get_substitution(global_object, search_string, string, *position, {}, js_undefined(), replace_value);
         if (vm.exception())
             return {};
     }
@@ -902,8 +901,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
             if (vm.exception())
                 return {};
         } else {
-            // FIXME: Implement the GetSubstituion algorithm for substituting placeholder '$' characters - https://tc39.es/ecma262/#sec-getsubstitution
-            replacement = replace_value.to_string(global_object);
+            replacement = get_substitution(global_object, search_string, string, position, {}, js_undefined(), replace_value);
             if (vm.exception())
                 return {};
         }

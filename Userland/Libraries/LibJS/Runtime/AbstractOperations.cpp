@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Function.h>
 #include <AK/Optional.h>
 #include <AK/Result.h>
@@ -572,6 +573,93 @@ Value canonical_numeric_index_string(GlobalObject& global_object, PropertyName c
 
     // 5. Return n.
     return n;
+}
+
+// 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution
+String get_substitution(GlobalObject& global_object, String const& matched, String const& str, size_t position, Vector<Value> const& captures, Value named_captures, Value replacement)
+{
+    auto& vm = global_object.vm();
+
+    auto replace_string = replacement.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    StringBuilder result;
+
+    for (size_t i = 0; i < replace_string.length(); ++i) {
+        char curr = replace_string[i];
+
+        if ((curr != '$') || (i + 1 >= replace_string.length())) {
+            result.append(curr);
+            continue;
+        }
+
+        char next = replace_string[i + 1];
+
+        if (next == '$') {
+            result.append(next);
+            ++i;
+        } else if (next == '&') {
+            result.append(matched);
+            ++i;
+        } else if (next == '`') {
+            result.append(str.substring_view(0, position));
+            ++i;
+        } else if (next == '\'') {
+            auto tail_pos = position + matched.length();
+            if (tail_pos < str.length())
+                result.append(str.substring_view(tail_pos));
+            ++i;
+        } else if (is_ascii_digit(next)) {
+            bool is_two_digits = (i + 2 < replace_string.length()) && is_ascii_digit(replace_string[i + 2]);
+
+            auto capture_postition_string = replace_string.substring_view(i + 1, is_two_digits ? 2 : 1);
+            auto capture_position = capture_postition_string.to_uint();
+
+            if (capture_position.has_value() && (*capture_position > 0) && (*capture_position <= captures.size())) {
+                auto& value = captures[*capture_position - 1];
+
+                if (!value.is_undefined()) {
+                    auto value_string = value.to_string(global_object);
+                    if (vm.exception())
+                        return {};
+
+                    result.append(value_string);
+                }
+
+                i += is_two_digits ? 2 : 1;
+            } else {
+                result.append(curr);
+            }
+        } else if (next == '<') {
+            auto start_position = i + 2;
+            auto end_position = replace_string.find('>', start_position);
+
+            if (named_captures.is_undefined() || !end_position.has_value()) {
+                result.append(curr);
+            } else {
+                auto group_name = replace_string.substring(start_position, *end_position - start_position);
+
+                auto capture = named_captures.as_object().get(group_name);
+                if (vm.exception())
+                    return {};
+
+                if (!capture.is_undefined()) {
+                    auto capture_string = capture.to_string(global_object);
+                    if (vm.exception())
+                        return {};
+
+                    result.append(capture_string);
+                }
+
+                i = *end_position;
+            }
+        } else {
+            result.append(curr);
+        }
+    }
+
+    return result.build();
 }
 
 }
