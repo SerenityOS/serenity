@@ -53,6 +53,9 @@ public:
             m_parser.m_state.let_scopes.take_last();
 
         auto& popped = m_parser.m_state.current_scope;
+        // Manual clear required to resolve circular references
+        popped->hoisted_function_declarations.clear();
+
         m_parser.m_state.current_scope = popped->parent;
     }
 
@@ -63,8 +66,26 @@ public:
         if (m_mask & Let)
             scope_node->add_variables(m_parser.m_state.let_scopes.last());
 
-        scope_node->add_functions(m_parser.m_state.current_scope->function_declarations);
-        scope_node->add_hoisted_functions(m_parser.m_state.current_scope->hoisted_function_declarations);
+        auto& scope = m_parser.m_state.current_scope;
+        scope_node->add_functions(scope->function_declarations);
+
+        for (auto& hoistable_function : scope->hoisted_function_declarations) {
+            if (is_hoistable(hoistable_function)) {
+                scope_node->add_hoisted_function(hoistable_function.declaration);
+            }
+        }
+    }
+
+    static bool is_hoistable(Parser::Scope::HoistableDeclaration& declaration)
+    {
+        auto& name = declaration.declaration->name();
+        // See if we find any conflicting lexical declaration on the way up
+        for (RefPtr<Parser::Scope> scope = declaration.scope; !scope.is_null(); scope = scope->parent) {
+            if (scope->lexical_declarations.contains(name)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     Parser& m_parser;
@@ -304,7 +325,8 @@ NonnullRefPtr<Declaration> Parser::parse_declaration()
     case TokenType::Function: {
         auto declaration = parse_function_node<FunctionDeclaration>();
         m_state.current_scope->function_declarations.append(declaration);
-        m_state.current_scope->get_current_function_scope()->hoisted_function_declarations.append(declaration);
+        auto hoisting_target = m_state.current_scope->get_current_function_scope();
+        hoisting_target->hoisted_function_declarations.append({ declaration, *m_state.current_scope });
         return declaration;
     }
     case TokenType::Let:
@@ -1760,10 +1782,23 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
         consume_or_insert_semicolon();
 
     auto declaration = create_ast_node<VariableDeclaration>({ m_state.current_token.filename(), rule_start.position(), position() }, declaration_kind, move(declarations));
-    if (declaration_kind == DeclarationKind::Var)
+    if (declaration_kind == DeclarationKind::Var) {
         m_state.var_scopes.last().append(declaration);
-    else
+    } else {
         m_state.let_scopes.last().append(declaration);
+
+        for (auto& declarator : declaration->declarations()) {
+            declarator.target().visit(
+                [&](const NonnullRefPtr<Identifier>& id) {
+                    m_state.current_scope->lexical_declarations.set(id->string());
+                },
+                [&](const NonnullRefPtr<BindingPattern>& binding) {
+                    binding->for_each_bound_name([&](const auto& name) {
+                        m_state.current_scope->lexical_declarations.set(name);
+                    });
+                });
+        }
+    }
     return declaration;
 }
 
