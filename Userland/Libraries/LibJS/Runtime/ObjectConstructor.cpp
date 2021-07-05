@@ -458,6 +458,8 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
 
             // 1. Let desc be ? from.[[GetOwnProperty]](nextKey).
             auto desc = from->internal_get_own_property(property_name);
+            if (vm.exception())
+                return {};
 
             // 2. If desc is not undefined and desc.[[Enumerable]] is true, then
             if (!desc.has_value() || !*desc->enumerable)
