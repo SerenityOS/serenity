@@ -157,8 +157,8 @@ TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)
 void WebAssemblyModule::initialize(JS::GlobalObject& global_object)
 {
     Base::initialize(global_object);
-    define_native_function("getExport", get_export);
-    define_native_function("invoke", wasm_invoke);
+    define_native_function("getExport", get_export, 1, JS::default_attributes);
+    define_native_function("invoke", wasm_invoke, 1, JS::default_attributes);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)

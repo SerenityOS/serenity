@@ -33,7 +33,7 @@ void NavigatorObject::initialize(JS::GlobalObject& global_object)
     define_direct_property("platform", js_string(heap, "SerenityOS"), attr);
     define_direct_property("product", js_string(heap, "Gecko"), attr);
 
-    define_native_accessor("userAgent", user_agent_getter, {});
+    define_native_accessor("userAgent", user_agent_getter, {}, JS::Attribute::Configurable | JS::Attribute::Enumerable);
 }
 
 NavigatorObject::~NavigatorObject()

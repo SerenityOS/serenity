@@ -12,7 +12,7 @@ namespace Web::Bindings {
 void WebAssemblyInstancePrototype::initialize(JS::GlobalObject& global_object)
 {
     Object::initialize(global_object);
-    define_native_accessor("exports", exports_getter, {});
+    define_native_accessor("exports", exports_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyInstancePrototype::exports_getter)
