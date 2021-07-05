@@ -16,7 +16,7 @@ public:
 
     virtual ~BlockBasedFS() override;
 
-    size_t logical_block_size() const { return m_logical_block_size; };
+    u64 logical_block_size() const { return m_logical_block_size; };
 
     virtual void flush_writes() override;
     void flush_writes_impl();
@@ -36,7 +36,7 @@ protected:
     KResult write_block(BlockIndex, const UserOrKernelBuffer&, size_t count, size_t offset = 0, bool allow_cache = true);
     KResult write_blocks(BlockIndex, unsigned count, const UserOrKernelBuffer&, bool allow_cache = true);
 
-    size_t m_logical_block_size { 512 };
+    u64 m_logical_block_size { 512 };
 
 private:
     DiskCache& cache() const;
