@@ -16,7 +16,7 @@ namespace Kernel {
 class FS;
 struct InodeMetadata;
 
-TYPEDEF_DISTINCT_ORDERED_ID(unsigned, InodeIndex);
+TYPEDEF_DISTINCT_ORDERED_ID(u64, InodeIndex);
 
 class InodeIdentifier {
 public:

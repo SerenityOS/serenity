@@ -123,7 +123,7 @@ KResult BlockBasedFS::write_block(BlockIndex index, const UserOrKernelBuffer& da
 
     if (!allow_cache) {
         flush_specific_block_if_needed(index);
-        u32 base_offset = index.value() * block_size() + offset;
+        auto base_offset = index.value() * block_size() + offset;
         auto seek_result = file_description().seek(base_offset, SEEK_SET);
         if (seek_result.is_error())
             return seek_result.error();
@@ -152,7 +152,7 @@ KResult BlockBasedFS::write_block(BlockIndex index, const UserOrKernelBuffer& da
 bool BlockBasedFS::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
 {
     Locker locker(m_lock);
-    u32 base_offset = index.value() * m_logical_block_size;
+    auto base_offset = index.value() * m_logical_block_size;
     auto seek_result = file_description().seek(base_offset, SEEK_SET);
     VERIFY(!seek_result.is_error());
     auto nread = file_description().read(buffer, m_logical_block_size);
@@ -164,7 +164,7 @@ bool BlockBasedFS::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
 bool BlockBasedFS::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
 {
     Locker locker(m_lock);
-    size_t base_offset = index.value() * m_logical_block_size;
+    auto base_offset = index.value() * m_logical_block_size;
     auto seek_result = file_description().seek(base_offset, SEEK_SET);
     VERIFY(!seek_result.is_error());
     auto nwritten = file_description().write(buffer, m_logical_block_size);
@@ -177,7 +177,7 @@ bool BlockBasedFS::raw_read_blocks(BlockIndex index, size_t count, UserOrKernelB
 {
     Locker locker(m_lock);
     auto current = buffer;
-    for (unsigned block = index.value(); block < (index.value() + count); block++) {
+    for (auto block = index.value(); block < (index.value() + count); block++) {
         if (!raw_read(BlockIndex { block }, current))
             return false;
         current = current.offset(logical_block_size());
@@ -189,7 +189,7 @@ bool BlockBasedFS::raw_write_blocks(BlockIndex index, size_t count, const UserOr
 {
     Locker locker(m_lock);
     auto current = buffer;
-    for (unsigned block = index.value(); block < (index.value() + count); block++) {
+    for (auto block = index.value(); block < (index.value() + count); block++) {
         if (!raw_write(block, current))
             return false;
         current = current.offset(logical_block_size());
@@ -297,7 +297,7 @@ void BlockBasedFS::flush_writes_impl()
         return;
     u32 count = 0;
     cache().for_each_dirty_entry([&](CacheEntry& entry) {
-        u32 base_offset = entry.block_index.value() * block_size();
+        auto base_offset = entry.block_index.value() * block_size();
         auto seek_result = file_description().seek(base_offset, SEEK_SET);
         VERIFY(!seek_result.is_error());
         // FIXME: Should this error path be surfaced somehow?
