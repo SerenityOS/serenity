@@ -345,6 +345,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     case GUI::Event::WM_VirtualDesktopChanged: {
         auto& changed_event = static_cast<GUI::WMVirtualDesktopChangedEvent&>(event);
         virtual_desktop_change_event(changed_event.current_row(), changed_event.current_column());
+        break;
     }
     default:
         break;

@@ -165,6 +165,7 @@ int main()
                 break;
             case SQL::AST::TokenCategory::Identifier:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::White), Line::Style::Bold });
+                break;
             default:
                 break;
             }
