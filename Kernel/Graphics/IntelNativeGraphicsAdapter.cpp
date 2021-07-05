@@ -217,7 +217,7 @@ void IntelNativeGraphicsAdapter::enable_vga_plane()
     VERIFY(m_modeset_lock.is_locked());
 }
 
-static inline const char* convert_register_index_to_string(IntelGraphics::RegisterIndex index)
+[[maybe_unused]] static inline const char* convert_register_index_to_string(IntelGraphics::RegisterIndex index)
 {
     switch (index) {
     case IntelGraphics::RegisterIndex::PipeAConf:
