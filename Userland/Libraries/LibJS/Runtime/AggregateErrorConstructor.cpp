@@ -46,13 +46,11 @@ Value AggregateErrorConstructor::construct(FunctionObject& new_target)
     if (vm.exception())
         return {};
 
-    u8 attr = Attribute::Writable | Attribute::Configurable;
-
     if (!vm.argument(1).is_undefined()) {
         auto message = vm.argument(1).to_string(global_object);
         if (vm.exception())
             return {};
-        aggregate_error->define_property(vm.names.message, js_string(vm, message), attr);
+        aggregate_error->create_non_enumerable_data_property_or_throw(vm.names.message, js_string(vm, message));
     }
 
     aggregate_error->install_error_cause(vm.argument(2));
@@ -63,7 +61,7 @@ Value AggregateErrorConstructor::construct(FunctionObject& new_target)
     if (vm.exception())
         return {};
 
-    aggregate_error->define_property(vm.names.errors, Array::create_from(global_object, errors_list), attr);
+    aggregate_error->define_property_or_throw(vm.names.errors, { .value = Array::create_from(global_object, errors_list), .writable = true, .enumerable = false, .configurable = true });
 
     return aggregate_error;
 }
