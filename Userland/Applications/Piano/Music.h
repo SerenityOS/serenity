@@ -23,7 +23,7 @@ struct Sample {
     i16 right;
 };
 
-constexpr int sample_count = 1024;
+constexpr int sample_count = 1 << 9;
 
 constexpr int buffer_size = sample_count * sizeof(Sample);
 
