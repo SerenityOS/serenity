@@ -12,10 +12,10 @@ namespace Web::Bindings {
 void WebAssemblyInstancePrototype::initialize(JS::GlobalObject& global_object)
 {
     Object::initialize(global_object);
-    define_native_property("exports", exports_getter, nullptr);
+    define_native_accessor("exports", exports_getter, {});
 }
 
-JS_DEFINE_NATIVE_GETTER(WebAssemblyInstancePrototype::exports_getter)
+JS_DEFINE_NATIVE_FUNCTION(WebAssemblyInstancePrototype::exports_getter)
 {
     auto this_value = vm.this_value(global_object);
     auto this_object = this_value.to_object(global_object);
