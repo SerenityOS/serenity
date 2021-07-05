@@ -409,13 +409,18 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
 // 1 Object.hasOwn ( O, P ), https://tc39.es/proposal-accessible-object-hasownproperty/#sec-object.hasown
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
 {
+    // 1. Let obj be ? ToObject(O).
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
-    auto property_key = vm.argument(1).to_property_key(global_object);
+
+    // 2. Let key be ? ToPropertyKey(P).
+    auto key = vm.argument(1).to_property_key(global_object);
     if (vm.exception())
         return {};
-    return Value(object->has_own_property(property_key));
+
+    // 3. Return ? HasOwnProperty(obj, key).
+    return Value(object->has_own_property(key));
 }
 
 // 20.1.2.1 Object.assign ( target, ...sources ), https://tc39.es/ecma262/#sec-object.assign
