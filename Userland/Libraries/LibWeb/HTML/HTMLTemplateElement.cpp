@@ -38,4 +38,20 @@ DOM::Document& HTMLTemplateElement::appropriate_template_contents_owner_document
     return document;
 }
 
+// https://html.spec.whatwg.org/multipage/scripting.html#the-template-element:concept-node-clone-ext
+void HTMLTemplateElement::cloned(Node& copy, bool clone_children)
+{
+    if (!clone_children)
+        return;
+
+    auto& template_clone = verify_cast<HTMLTemplateElement>(copy);
+
+    content()->for_each_child([&](auto& child) {
+        auto cloned_child = child.clone_node(&template_clone.content()->document(), true);
+
+        // FIXME: Should this use TreeNode::append_child instead?
+        template_clone.content()->append_child(cloned_child);
+    });
+}
+
 }
