@@ -22,17 +22,17 @@ public:
     virtual ~HTMLTableElement() override;
 
     RefPtr<HTMLTableCaptionElement> caption();
-    void set_caption(HTMLTableCaptionElement&);
+    void set_caption(HTMLTableCaptionElement*);
     NonnullRefPtr<HTMLTableCaptionElement> create_caption();
     void delete_caption();
 
     RefPtr<HTMLTableSectionElement> t_head();
-    DOM::ExceptionOr<void> set_t_head(HTMLTableSectionElement& thead);
+    DOM::ExceptionOr<void> set_t_head(HTMLTableSectionElement* thead);
     NonnullRefPtr<HTMLTableSectionElement> create_t_head();
     void delete_t_head();
 
     RefPtr<HTMLTableSectionElement> t_foot();
-    DOM::ExceptionOr<void> set_t_foot(HTMLTableSectionElement& thead);
+    DOM::ExceptionOr<void> set_t_foot(HTMLTableSectionElement* tfoot);
     NonnullRefPtr<HTMLTableSectionElement> create_t_foot();
     void delete_t_foot();
 
