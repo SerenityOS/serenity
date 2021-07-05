@@ -18,6 +18,7 @@ ArgumentsObject::ArgumentsObject(GlobalObject& global_object, Environment& envir
 void ArgumentsObject::initialize(GlobalObject& global_object)
 {
     Base::initialize(global_object);
+    set_has_parameter_map();
     m_parameter_map = Object::create(global_object, nullptr);
 }
 

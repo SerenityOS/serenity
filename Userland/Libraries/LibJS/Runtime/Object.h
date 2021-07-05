@@ -151,6 +151,9 @@ public:
     // B.3.7 The [[IsHTMLDDA]] Internal Slot, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
     virtual bool is_htmldda() const { return false; }
 
+    bool has_parameter_map() const { return m_has_parameter_map; }
+    void set_has_parameter_map() { m_has_parameter_map = true; }
+
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_edges(Cell::Visitor&) override;
     virtual Value value_of() const { return Value(const_cast<Object*>(this)); }
@@ -194,7 +197,11 @@ protected:
     explicit Object(GlobalObjectTag);
     Object(ConstructWithoutPrototypeTag, GlobalObject&);
 
+    // [[Extensible]]
     bool m_is_extensible { true };
+
+    // [[ParameterMap]]
+    bool m_has_parameter_map { false };
 
 private:
     Value call_native_property_getter(NativeProperty& property, Value this_value) const;

@@ -414,6 +414,7 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Vector<Val
     // 2. Let obj be ! OrdinaryObjectCreate(%Object.prototype%, « [[ParameterMap]] »).
     // 3. Set obj.[[ParameterMap]] to undefined.
     auto* object = Object::create(global_object, global_object.object_prototype());
+    object->set_has_parameter_map();
 
     // 4. Perform DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
     object->define_property_or_throw(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = true });
