@@ -163,6 +163,8 @@ public:
 
     bool is_host_including_inclusive_ancestor_of(const Node&) const;
 
+    bool is_scripting_disabled() const;
+
     // Used for dumping the DOM Tree
     void serialize_tree_as_json(JsonObjectSerializer<StringBuilder>&) const;
 

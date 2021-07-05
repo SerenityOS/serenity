@@ -637,4 +637,11 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
     }
 }
 
+// https://html.spec.whatwg.org/multipage/webappapis.html#concept-n-noscript
+bool Node::is_scripting_disabled() const
+{
+    // FIXME: or when scripting is disabled for its relevant settings object.
+    return !document().browsing_context();
+}
+
 }
