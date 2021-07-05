@@ -1,6 +1,7 @@
 set(SOURCES
     forward.cpp
     pthread.cpp
+    pthread_cond.cpp
     pthread_once.cpp
     semaphore.cpp
 )
