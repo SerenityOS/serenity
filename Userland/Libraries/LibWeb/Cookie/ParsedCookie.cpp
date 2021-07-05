@@ -161,8 +161,6 @@ void on_max_age_attribute(ParsedCookie& parsed_cookie, StringView attribute_valu
 
     // Let delta-seconds be the attribute-value converted to an integer.
     if (auto delta_seconds = attribute_value.to_int(); delta_seconds.has_value()) {
-        Core::DateTime expiry_time;
-
         if (*delta_seconds <= 0) {
             // If delta-seconds is less than or equal to zero (0), let expiry-time be the earliest representable date and time.
             parsed_cookie.expiry_time_from_max_age_attribute = Core::DateTime::from_timestamp(0);
