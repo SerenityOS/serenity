@@ -38,6 +38,14 @@ DOM::Document& HTMLTemplateElement::appropriate_template_contents_owner_document
     return document;
 }
 
+// https://html.spec.whatwg.org/multipage/scripting.html#the-template-element:concept-node-adopt-ext
+void HTMLTemplateElement::adopted_from(DOM::Document&)
+{
+    // NOTE: It seems the spec has been changed since appropriate_template_contents_owner_document was written above.
+    //       That function is now part of document, which ends up returning associated_inert_template_document in the new version anyway.
+    appropriate_template_contents_owner_document(document()).adopt_node(content());
+}
+
 // https://html.spec.whatwg.org/multipage/scripting.html#the-template-element:concept-node-clone-ext
 void HTMLTemplateElement::cloned(Node& copy, bool clone_children)
 {
