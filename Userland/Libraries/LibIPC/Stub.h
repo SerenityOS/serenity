@@ -16,7 +16,7 @@ class BufferStream;
 namespace IPC {
 
 class Message;
-class MessageBuffer;
+struct MessageBuffer;
 
 class Stub {
 public:

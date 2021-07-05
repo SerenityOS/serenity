@@ -60,7 +60,7 @@ namespace Web::HTML {
 class CanvasRenderingContext2D;
 class CloseEvent;
 class DOMParser;
-class EventHandler;
+struct EventHandler;
 class HTMLAnchorElement;
 class HTMLAreaElement;
 class HTMLAudioElement;

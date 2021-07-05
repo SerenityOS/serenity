@@ -11,7 +11,7 @@
 
 namespace Profiler {
 
-class Process;
+struct Process;
 class Profile;
 class TimelineView;
 
