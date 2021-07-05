@@ -81,14 +81,6 @@ JS_DEFINE_NATIVE_GETTER(Array::length_getter)
     if (!this_object)
         return {};
 
-    // TODO: could be incorrect if receiver/this_value is fixed or changed
-    if (!this_object->is_array()) {
-        auto value = this_object->internal_get(vm.names.length.to_string_or_symbol(), this_object);
-        if (vm.exception())
-            return {};
-        return value;
-    }
-
     return Value(this_object->indexed_properties().array_like_size());
 }
 
@@ -97,14 +89,6 @@ JS_DEFINE_NATIVE_SETTER(Array::length_setter)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return;
-
-    // TODO: could be incorrect if receiver/this_value is fixed or changed
-    if (!this_object->is_array()) {
-        this_object->define_property(vm.names.length.to_string_or_symbol(), value, default_attributes);
-        if (vm.exception())
-            return;
-        return;
-    }
 
     auto length = value.to_number(global_object);
     if (vm.exception())
