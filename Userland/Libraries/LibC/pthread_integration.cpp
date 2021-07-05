@@ -6,10 +6,12 @@
 
 #include <AK/Atomic.h>
 #include <AK/NeverDestroyed.h>
+#include <AK/Types.h>
 #include <AK/Vector.h>
 #include <bits/pthread_integration.h>
 #include <errno.h>
 #include <sched.h>
+#include <serenity.h>
 #include <unistd.h>
 
 namespace {
@@ -91,56 +93,9 @@ int __pthread_self()
 
 int pthread_self() __attribute__((weak, alias("__pthread_self")));
 
-int __pthread_mutex_lock(pthread_mutex_t* mutex)
-{
-    pthread_t this_thread = __pthread_self();
-    for (;;) {
-        u32 expected = 0;
-        if (!AK::atomic_compare_exchange_strong(&mutex->lock, expected, 1u, AK::memory_order_acquire)) {
-            if (mutex->type == __PTHREAD_MUTEX_RECURSIVE && mutex->owner == this_thread) {
-                mutex->level++;
-                return 0;
-            }
-            sched_yield();
-            continue;
-        }
-        mutex->owner = this_thread;
-        mutex->level = 0;
-        return 0;
-    }
-}
-
-int pthread_mutex_lock(pthread_mutex_t*) __attribute__((weak, alias("__pthread_mutex_lock")));
-
-int __pthread_mutex_unlock(pthread_mutex_t* mutex)
-{
-    if (mutex->type == __PTHREAD_MUTEX_RECURSIVE && mutex->level > 0) {
-        mutex->level--;
-        return 0;
-    }
-    mutex->owner = 0;
-    AK::atomic_store(&mutex->lock, 0u, AK::memory_order_release);
-    return 0;
-}
-
-int pthread_mutex_unlock(pthread_mutex_t*) __attribute__((weak, alias("__pthread_mutex_unlock")));
-
-int __pthread_mutex_trylock(pthread_mutex_t* mutex)
-{
-    u32 expected = 0;
-    if (!AK::atomic_compare_exchange_strong(&mutex->lock, expected, 1u, AK::memory_order_acquire)) {
-        if (mutex->type == __PTHREAD_MUTEX_RECURSIVE && mutex->owner == pthread_self()) {
-            mutex->level++;
-            return 0;
-        }
-        return EBUSY;
-    }
-    mutex->owner = pthread_self();
-    mutex->level = 0;
-    return 0;
-}
-
-int pthread_mutex_trylock(pthread_mutex_t* mutex) __attribute__((weak, alias("__pthread_mutex_trylock")));
+static constexpr u32 MUTEX_UNLOCKED = 0;
+static constexpr u32 MUTEX_LOCKED_NO_NEED_TO_WAKE = 1;
+static constexpr u32 MUTEX_LOCKED_NEED_TO_WAKE = 2;
 
 int __pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
 {
@@ -152,4 +107,81 @@ int __pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attr
 }
 
 int pthread_mutex_init(pthread_mutex_t*, const pthread_mutexattr_t*) __attribute__((weak, alias("__pthread_mutex_init")));
+
+int __pthread_mutex_trylock(pthread_mutex_t* mutex)
+{
+    u32 expected = MUTEX_UNLOCKED;
+    bool exchanged = AK::atomic_compare_exchange_strong(&mutex->lock, expected, MUTEX_LOCKED_NO_NEED_TO_WAKE, AK::memory_order_acquire);
+
+    if (exchanged) [[likely]] {
+        AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
+        mutex->level = 0;
+        return 0;
+    } else if (mutex->type == __PTHREAD_MUTEX_RECURSIVE) {
+        pthread_t owner = AK::atomic_load(&mutex->owner, AK::memory_order_relaxed);
+        if (owner == __pthread_self()) {
+            // We already own the mutex!
+            mutex->level++;
+            return 0;
+        }
+    }
+    return EBUSY;
+}
+
+int pthread_mutex_trylock(pthread_mutex_t* mutex) __attribute__((weak, alias("__pthread_mutex_trylock")));
+
+int __pthread_mutex_lock(pthread_mutex_t* mutex)
+{
+    pthread_t this_thread = __pthread_self();
+
+    // Fast path: attempt to claim the mutex without waiting.
+    u32 value = MUTEX_UNLOCKED;
+    bool exchanged = AK::atomic_compare_exchange_strong(&mutex->lock, value, MUTEX_LOCKED_NO_NEED_TO_WAKE, AK::memory_order_acquire);
+    if (exchanged) [[likely]] {
+        AK::atomic_store(&mutex->owner, this_thread, AK::memory_order_relaxed);
+        mutex->level = 0;
+        return 0;
+    } else if (mutex->type == __PTHREAD_MUTEX_RECURSIVE) {
+        pthread_t owner = AK::atomic_load(&mutex->owner, AK::memory_order_relaxed);
+        if (owner == this_thread) {
+            // We already own the mutex!
+            mutex->level++;
+            return 0;
+        }
+    }
+
+    // Slow path: wait, record the fact that we're going to wait, and always
+    // remember to wake the next thread up once we release the mutex.
+    if (value != MUTEX_LOCKED_NEED_TO_WAKE)
+        value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
+
+    while (value != MUTEX_UNLOCKED) {
+        futex_wait(&mutex->lock, value, nullptr, 0);
+        value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
+    }
+
+    AK::atomic_store(&mutex->owner, this_thread, AK::memory_order_relaxed);
+    mutex->level = 0;
+    return 0;
+}
+
+int pthread_mutex_lock(pthread_mutex_t*) __attribute__((weak, alias("__pthread_mutex_lock")));
+
+int __pthread_mutex_unlock(pthread_mutex_t* mutex)
+{
+    if (mutex->type == __PTHREAD_MUTEX_RECURSIVE && mutex->level > 0) {
+        mutex->level--;
+        return 0;
+    }
+
+    AK::atomic_store(&mutex->owner, 0, AK::memory_order_relaxed);
+
+    u32 value = AK::atomic_exchange(&mutex->lock, MUTEX_UNLOCKED, AK::memory_order_release);
+    if (value == MUTEX_LOCKED_NEED_TO_WAKE) [[unlikely]]
+        futex_wake(&mutex->lock, 1);
+
+    return 0;
+}
+
+int pthread_mutex_unlock(pthread_mutex_t*) __attribute__((weak, alias("__pthread_mutex_unlock")));
 }
