@@ -713,8 +713,8 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
         return EROFS;
 
     auto basename = LexicalPath::basename(linkpath);
-    dbgln_if(VFS_DEBUG, "VFS::symlink: '{}' (-> '{}') in {}", linkpath, target, parent_inode.identifier());
-    auto inode_or_error = parent_inode.create_child(linkpath, S_IFLNK | 0644, 0, current_process->euid(), current_process->egid());
+    dbgln_if(VFS_DEBUG, "VFS::symlink: '{}' (-> '{}') in {}", basename, target, parent_inode.identifier());
+    auto inode_or_error = parent_inode.create_child(basename, S_IFLNK | 0644, 0, current_process->euid(), current_process->egid());
     if (inode_or_error.is_error())
         return inode_or_error.error();
     auto& inode = inode_or_error.value();
