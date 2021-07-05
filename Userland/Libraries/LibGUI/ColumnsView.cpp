@@ -299,8 +299,8 @@ void ColumnsView::move_cursor(CursorMovement movement, SelectionUpdate selection
             if (model.is_valid(cursor_index()))
                 push_column(cursor_index());
             update();
-            break;
         }
+        break;
     default:
         break;
     }

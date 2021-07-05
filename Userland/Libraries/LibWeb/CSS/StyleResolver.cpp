@@ -244,6 +244,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         case CSS::ValueID::LineThrough:
         case CSS::ValueID::Blink:
             set_property_expanding_shorthands(style, CSS::PropertyID::TextDecorationLine, value, document);
+            break;
         default:
             break;
         }

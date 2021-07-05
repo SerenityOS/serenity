@@ -184,6 +184,7 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
             break;
         case DuOption::TimeType::Status:
             time = path_stat.st_ctime;
+            break;
         default:
             break;
         }

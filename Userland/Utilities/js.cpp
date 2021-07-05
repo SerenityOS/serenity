@@ -936,6 +936,7 @@ int main(int argc, char** argv)
                     break;
                 case JS::TokenCategory::Identifier:
                     stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::White), Line::Style::Bold });
+                    break;
                 default:
                     break;
                 }
