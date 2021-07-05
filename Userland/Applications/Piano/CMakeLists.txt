@@ -15,9 +15,6 @@ set(SOURCES
     RollWidget.cpp
     SamplerWidget.cpp
     WaveWidget.cpp
-    DSP/DevProcessors.cpp
-    DSP/Clip.cpp
-    DSP/Track.cpp
 )
 
 serenity_app(Piano ICON app-piano)
