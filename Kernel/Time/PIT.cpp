@@ -22,7 +22,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<PIT> PIT::initialize(Function<void(const Register
     return adopt_ref(*new PIT(move(callback)));
 }
 
-inline static void reset_countdown(u16 timer_reload)
+[[maybe_unused]] inline static void reset_countdown(u16 timer_reload)
 {
     IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_WORD | MODE_COUNTDOWN);
     IO::out8(TIMER0_CTL, LSB(timer_reload));
