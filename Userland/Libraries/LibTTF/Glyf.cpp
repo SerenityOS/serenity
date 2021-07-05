@@ -270,8 +270,8 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
     }
 
     float dxdy = (p1.x() - p0.x()) / (p1.y() - p0.y());
-    u32 y0 = floor(p0.y());
-    u32 y1 = ceil(p1.y());
+    u32 y0 = floorf(p0.y());
+    u32 y1 = ceilf(p1.y());
     float x_cur = p0.x();
 
     for (u32 y = y0; y < y1; y++) {
@@ -289,8 +289,8 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
             x1 = x_cur;
             x0 = x_next;
         }
-        float x0_floor = floor(x0);
-        float x1_ceil = ceil(x1);
+        float x0_floor = floorf(x0);
+        float x1_ceil = ceilf(x1);
         u32 x0i = x0_floor;
 
         if (x1_ceil <= x0_floor + 1.0f) {
@@ -304,7 +304,7 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
                 dydx = -dydx;
 
             float x0_right = 1.0f - (x0 - x0_floor);
-            u32 x1_floor_i = floor(x1);
+            u32 x1_floor_i = floorf(x1);
             float area_upto_here = 0.5f * x0_right * x0_right * dydx;
             m_data[line_offset + x0i] += direction * area_upto_here;
             for (u32 x = x0i + 1; x < x1_floor_i; x++) {
@@ -478,8 +478,8 @@ void Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& aff
 
 RefPtr<Gfx::Bitmap> Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
 {
-    u32 width = (u32)(ceil((m_xmax - m_xmin) * x_scale)) + 2;
-    u32 height = (u32)(ceil((m_ymax - m_ymin) * y_scale)) + 2;
+    u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 2;
+    u32 height = (u32)(ceilf((m_ymax - m_ymin) * y_scale)) + 2;
     Rasterizer rasterizer(Gfx::IntSize(width, height));
     auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -m_ymax);
     raster_inner(rasterizer, affine);

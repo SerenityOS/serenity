@@ -1895,7 +1895,7 @@ void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, cons
     if (theta_delta < 0) {
         swap(start, end);
         theta_1 = theta_1 + theta_delta;
-        theta_delta = fabs(theta_delta);
+        theta_delta = fabsf(theta_delta);
     }
 
     auto relative_start = start - center;
