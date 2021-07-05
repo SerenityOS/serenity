@@ -14,7 +14,7 @@ ClientConnection::ClientConnection()
 {
 }
 
-void ClientConnection::enqueue(const Buffer& buffer)
+void ClientConnection::enqueue(Buffer const& buffer)
 {
     for (;;) {
         auto success = enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
@@ -26,7 +26,12 @@ void ClientConnection::enqueue(const Buffer& buffer)
     }
 }
 
-bool ClientConnection::try_enqueue(const Buffer& buffer)
+void ClientConnection::async_enqueue(Buffer const& buffer)
+{
+    async_enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
+}
+
+bool ClientConnection::try_enqueue(Buffer const& buffer)
 {
     return enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
 }

@@ -21,8 +21,9 @@ class ClientConnection final
 public:
     ClientConnection();
 
-    void enqueue(const Buffer&);
-    bool try_enqueue(const Buffer&);
+    void enqueue(Buffer const&);
+    bool try_enqueue(Buffer const&);
+    void async_enqueue(Buffer const&);
 
     Function<void(i32 buffer_id)> on_finish_playing_buffer;
     Function<void(bool muted)> on_muted_state_change;
