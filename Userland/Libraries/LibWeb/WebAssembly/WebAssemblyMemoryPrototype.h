@@ -28,7 +28,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(grow);
-    JS_DECLARE_NATIVE_GETTER(buffer_getter);
+    JS_DECLARE_NATIVE_FUNCTION(buffer_getter);
 };
 
 }
