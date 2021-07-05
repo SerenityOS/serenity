@@ -36,8 +36,6 @@ public:
     static bool pick_next();
     static bool yield();
     static void yield_from_critical();
-    static bool donate_to_and_switch(Thread*, const char* reason);
-    static bool donate_to(RefPtr<Thread>&, const char* reason);
     static bool context_switch(Thread*);
     static void enter_current(Thread& prev_thread, bool is_first);
     static void leave_on_first_switch(u32 flags);

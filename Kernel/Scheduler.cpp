@@ -31,8 +31,6 @@ class SchedulerPerProcessorData {
 public:
     SchedulerPerProcessorData() = default;
 
-    WeakPtr<Thread> m_pending_beneficiary;
-    const char* m_pending_donate_reason { nullptr };
     bool m_in_scheduler { true };
 };
 
@@ -206,26 +204,6 @@ bool Scheduler::pick_next()
         dump_thread_list();
     }
 
-    auto pending_beneficiary = scheduler_data.m_pending_beneficiary.strong_ref();
-    if (pending_beneficiary && dequeue_runnable_thread(*pending_beneficiary, true)) {
-        // The thread we're supposed to donate to still exists and we can
-        const char* reason = scheduler_data.m_pending_donate_reason;
-        scheduler_data.m_pending_beneficiary = nullptr;
-        scheduler_data.m_pending_donate_reason = nullptr;
-
-        // We need to leave our first critical section before switching context,
-        // but since we're still holding the scheduler lock we're still in a critical section
-        critical.leave();
-
-        dbgln_if(SCHEDULER_DEBUG, "Processing pending donate to {} reason={}", *pending_beneficiary, reason);
-        return donate_to_and_switch(pending_beneficiary.ptr(), reason);
-    }
-
-    // Either we're not donating or the beneficiary disappeared.
-    // Either way clear any pending information
-    scheduler_data.m_pending_beneficiary = nullptr;
-    scheduler_data.m_pending_donate_reason = nullptr;
-
     auto& thread_to_schedule = pull_next_runnable_thread();
     if constexpr (SCHEDULER_DEBUG) {
 #if ARCH(I386)
@@ -250,11 +228,6 @@ bool Scheduler::yield()
 {
     InterruptDisabler disabler;
     auto& proc = Processor::current();
-    auto& scheduler_data = proc.get_scheduler_data();
-
-    // Clear any pending beneficiary
-    scheduler_data.m_pending_beneficiary = nullptr;
-    scheduler_data.m_pending_donate_reason = nullptr;
 
     auto current_thread = Thread::current();
     dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: yielding thread {} in_irq={}", proc.get_id(), *current_thread, proc.in_irq());
@@ -273,66 +246,6 @@ bool Scheduler::yield()
     if constexpr (SCHEDULER_DEBUG)
         dbgln("Scheduler[{}]: yield returns to thread {} in_irq={}", Processor::id(), *current_thread, Processor::current().in_irq());
     return true;
-}
-
-bool Scheduler::donate_to_and_switch(Thread* beneficiary, [[maybe_unused]] const char* reason)
-{
-    VERIFY(g_scheduler_lock.own_lock());
-
-    auto& proc = Processor::current();
-    VERIFY(proc.in_critical() == 1);
-
-    unsigned ticks_left = Thread::current()->ticks_left();
-    if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
-        return Scheduler::yield();
-
-    unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
-    dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Donating {} ticks to {}, reason={}", proc.get_id(), ticks_to_donate, *beneficiary, reason);
-    beneficiary->set_ticks_left(ticks_to_donate);
-
-    return Scheduler::context_switch(beneficiary);
-}
-
-bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
-{
-    VERIFY(beneficiary);
-
-    if (beneficiary == Thread::current())
-        return Scheduler::yield();
-
-    // Set the m_in_scheduler flag before acquiring the spinlock. This
-    // prevents a recursive call into Scheduler::invoke_async upon
-    // leaving the scheduler lock.
-    ScopedCritical critical;
-    auto& proc = Processor::current();
-    auto& scheduler_data = proc.get_scheduler_data();
-    scheduler_data.m_in_scheduler = true;
-    ScopeGuard guard(
-        []() {
-            // We may be on a different processor after we got switched
-            // back to this thread!
-            auto& scheduler_data = Processor::current().get_scheduler_data();
-            VERIFY(scheduler_data.m_in_scheduler);
-            scheduler_data.m_in_scheduler = false;
-        });
-
-    VERIFY(!proc.in_irq());
-
-    if (proc.in_critical() > 1) {
-        scheduler_data.m_pending_beneficiary = beneficiary; // Save the beneficiary
-        scheduler_data.m_pending_donate_reason = reason;
-        proc.invoke_scheduler_async();
-        return false;
-    }
-
-    ScopedSpinLock lock(g_scheduler_lock);
-
-    // "Leave" the critical section before switching context. Since we
-    // still hold the scheduler lock, we're not actually leaving it.
-    // Processor::switch_context expects Processor::in_critical() to be 1
-    critical.leave();
-    donate_to_and_switch(beneficiary, reason);
-    return false;
 }
 
 bool Scheduler::context_switch(Thread* thread)

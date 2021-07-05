@@ -40,7 +40,6 @@ void dump_backtrace();
 int fsync(int fd);
 void sysbeep();
 int gettid();
-int donate(int tid);
 int getpagesize();
 pid_t fork();
 pid_t vfork();
