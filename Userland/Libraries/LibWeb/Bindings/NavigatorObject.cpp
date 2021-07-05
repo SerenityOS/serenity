@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/FlyString.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
@@ -24,6 +23,7 @@ void NavigatorObject::initialize(JS::GlobalObject& global_object)
     auto* languages = JS::Array::create(global_object, 0);
     languages->indexed_properties().append(js_string(heap, "en-US"));
 
+    // FIXME: All of these should be in Navigator's prototype and be native accessors
     define_property("appCodeName", js_string(heap, "Mozilla"));
     define_property("appName", js_string(heap, "Netscape"));
     define_property("appVersion", js_string(heap, "4.0"));
@@ -32,14 +32,14 @@ void NavigatorObject::initialize(JS::GlobalObject& global_object)
     define_property("platform", js_string(heap, "SerenityOS"));
     define_property("product", js_string(heap, "Gecko"));
 
-    define_native_property("userAgent", user_agent_getter, nullptr);
+    define_native_accessor("userAgent", user_agent_getter, {});
 }
 
 NavigatorObject::~NavigatorObject()
 {
 }
 
-JS_DEFINE_NATIVE_GETTER(NavigatorObject::user_agent_getter)
+JS_DEFINE_NATIVE_FUNCTION(NavigatorObject::user_agent_getter)
 {
     return JS::js_string(vm, ResourceLoader::the().user_agent());
 }
