@@ -41,7 +41,7 @@ void Error::install_error_cause(Value options)
     auto cause = options_object.get(vm.names.cause);
     if (vm.exception())
         return;
-    define_property(vm.names.cause, cause, Attribute::Writable | Attribute::Configurable);
+    create_non_enumerable_data_property_or_throw(vm.names.cause, cause);
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                         \
