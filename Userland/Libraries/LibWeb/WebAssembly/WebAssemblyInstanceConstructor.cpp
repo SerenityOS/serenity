@@ -26,7 +26,7 @@ WebAssemblyInstanceConstructor::~WebAssemblyInstanceConstructor()
 
 JS::Value WebAssemblyInstanceConstructor::call()
 {
-    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssemblyInstance");
+    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Instance");
     return {};
 }
 

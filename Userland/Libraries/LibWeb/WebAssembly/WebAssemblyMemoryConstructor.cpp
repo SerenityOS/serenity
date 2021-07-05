@@ -24,7 +24,7 @@ WebAssemblyMemoryConstructor::~WebAssemblyMemoryConstructor()
 
 JS::Value WebAssemblyMemoryConstructor::call()
 {
-    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssemblyMemory");
+    vm().throw_exception<JS::TypeError>(global_object(), JS::ErrorType::ConstructorWithoutNew, "WebAssembly.Memory");
     return {};
 }
 
