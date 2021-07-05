@@ -123,9 +123,6 @@ public:
 
     // Non-standard methods
 
-    // - Helpers using old, non-standard names but wrapping the standard methods.
-    //   FIXME: Update all the code relying on these and remove them.
-    bool put(PropertyName const& property_name, Value value, Value receiver = {}) { return internal_set(property_name, value, receiver.value_or(this)); }
     Value get_without_side_effects(const PropertyName&) const;
 
     void define_direct_property(PropertyName const& property_name, Value value, PropertyAttributes attributes) { storage_set(property_name, { value, attributes }); };

@@ -73,10 +73,10 @@ Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<V
         return {};
 
     auto result = Object::create(global_object, global_object.object_prototype());
-    result->put("value", previous_generated_value);
+    result->define_direct_property("value", previous_generated_value, JS::default_attributes);
 
     if (m_done) {
-        result->put("done", Value(true));
+        result->define_direct_property("done", Value(true), JS::default_attributes);
         return result;
     }
 
@@ -88,7 +88,7 @@ Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<V
     if (!next_block) {
         // The generator has terminated, now we can simply return done=true.
         m_done = true;
-        result->put("done", Value(true));
+        result->define_direct_property("done", Value(true), JS::default_attributes);
         return result;
     }
 
@@ -115,8 +115,8 @@ Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<V
 
     m_done = generated_continuation(m_previous_value) == nullptr;
 
-    result->put("value", generated_value(m_previous_value));
-    result->put("done", Value(m_done));
+    result->define_direct_property("value", generated_value(m_previous_value), JS::default_attributes);
+    result->define_direct_property("done", Value(m_done), JS::default_attributes);
 
     if (vm.exception())
         return {};

@@ -155,7 +155,7 @@ void IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
         if (vm.exception())
             return;
 
-        array->put(index, value);
+        array->create_data_property_or_throw(index, value);
         index++;
     }
 }
@@ -234,7 +234,7 @@ void GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 void PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     if (auto* object = interpreter.reg(m_base).to_object(interpreter.global_object()))
-        object->put(interpreter.current_executable().get_string(m_property), interpreter.accumulator());
+        object->set(interpreter.current_executable().get_string(m_property), interpreter.accumulator(), true);
 }
 
 void Jump::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -397,11 +397,11 @@ void Yield::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto yielded_value = interpreter.accumulator().value_or(js_undefined());
     auto object = JS::Object::create(interpreter.global_object(), nullptr);
-    object->put("result", yielded_value);
+    object->define_direct_property("result", yielded_value, JS::default_attributes);
     if (m_continuation_label.has_value())
-        object->put("continuation", Value(static_cast<double>(reinterpret_cast<u64>(&m_continuation_label->block()))));
+        object->define_direct_property("continuation", Value(static_cast<double>(reinterpret_cast<u64>(&m_continuation_label->block()))), JS::default_attributes);
     else
-        object->put("continuation", Value(0));
+        object->define_direct_property("continuation", Value(0), JS::default_attributes);
     interpreter.do_return(object);
 }
 
@@ -427,7 +427,7 @@ void PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
         auto property_key = interpreter.reg(m_property).to_property_key(interpreter.global_object());
         if (interpreter.vm().exception())
             return;
-        object->put(property_key, interpreter.accumulator());
+        object->set(property_key, interpreter.accumulator(), true);
     }
 }
 

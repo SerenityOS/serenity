@@ -180,7 +180,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
     if (vm.exception())
         return {};
     for (size_t k = 0; k < length; ++k) {
-        auto success = new_object->put(k, vm.argument(k));
+        auto success = new_object->set(k, vm.argument(k), true);
         if (vm.exception())
             return {};
         if (!success) {
