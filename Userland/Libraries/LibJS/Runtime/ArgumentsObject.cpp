@@ -57,7 +57,7 @@ bool ArgumentsObject::internal_set(PropertyName const& property_name, Value valu
     bool is_mapped = false;
 
     // 1. If SameValue(args, Receiver) is false, then
-    if (same_value(this, receiver)) {
+    if (!same_value(this, receiver)) {
         // a. Let isMapped be false.
         is_mapped = false;
     } else {
