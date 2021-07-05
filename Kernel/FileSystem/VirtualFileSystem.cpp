@@ -353,15 +353,15 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
     if (parent_custody->is_readonly())
         return EROFS;
 
-    LexicalPath p(path);
-    dbgln("VFS::mknod: '{}' mode={} dev={} in {}", p.basename(), mode, dev, parent_inode.identifier());
-    return parent_inode.create_child(p.basename(), mode, dev, current_process->euid(), current_process->egid()).result();
+    auto basename = LexicalPath::basename(path);
+    dbgln("VFS::mknod: '{}' mode={} dev={} in {}", basename, mode, dev, parent_inode.identifier());
+    return parent_inode.create_child(basename, mode, dev, current_process->euid(), current_process->egid()).result();
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
-    LexicalPath p(path);
-    if (auto result = validate_path_against_process_veil(String::formatted("{}/{}", parent_custody.absolute_path(), p.basename()), options); result.is_error())
+    auto basename = LexicalPath::basename(path);
+    if (auto result = validate_path_against_process_veil(String::formatted("{}/{}", parent_custody.absolute_path(), basename), options); result.is_error())
         return result;
 
     if (!is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode)) {
@@ -376,14 +376,14 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
     if (parent_custody.is_readonly())
         return EROFS;
 
-    dbgln_if(VFS_DEBUG, "VFS::create: '{}' in {}", p.basename(), parent_inode.identifier());
+    dbgln_if(VFS_DEBUG, "VFS::create: '{}' in {}", basename, parent_inode.identifier());
     uid_t uid = owner.has_value() ? owner.value().uid : current_process->euid();
     gid_t gid = owner.has_value() ? owner.value().gid : current_process->egid();
-    auto inode_or_error = parent_inode.create_child(p.basename(), mode, 0, uid, gid);
+    auto inode_or_error = parent_inode.create_child(basename, mode, 0, uid, gid);
     if (inode_or_error.is_error())
         return inode_or_error.error();
 
-    auto new_custody_or_error = Custody::try_create(&parent_custody, p.basename(), inode_or_error.value(), parent_custody.mount_flags());
+    auto new_custody_or_error = Custody::try_create(&parent_custody, basename, inode_or_error.value(), parent_custody.mount_flags());
     if (new_custody_or_error.is_error())
         return new_custody_or_error.error();
     auto description = FileDescription::create(*new_custody_or_error.release_value());
@@ -418,9 +418,9 @@ KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
     if (parent_custody->is_readonly())
         return EROFS;
 
-    LexicalPath p(path);
-    dbgln_if(VFS_DEBUG, "VFS::mkdir: '{}' in {}", p.basename(), parent_inode.identifier());
-    return parent_inode.create_child(p.basename(), S_IFDIR | mode, 0, current_process->euid(), current_process->egid()).result();
+    auto basename = LexicalPath::basename(path);
+    dbgln_if(VFS_DEBUG, "VFS::mkdir: '{}' in {}", basename, parent_inode.identifier());
+    return parent_inode.create_child(basename, S_IFDIR | mode, 0, current_process->euid(), current_process->egid()).result();
 }
 
 KResult VFS::access(StringView path, int mode, Custody& base)
@@ -712,9 +712,9 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
     if (parent_custody->is_readonly())
         return EROFS;
 
-    LexicalPath p(linkpath);
-    dbgln_if(VFS_DEBUG, "VFS::symlink: '{}' (-> '{}') in {}", p.basename(), target, parent_inode.identifier());
-    auto inode_or_error = parent_inode.create_child(p.basename(), S_IFLNK | 0644, 0, current_process->euid(), current_process->egid());
+    auto basename = LexicalPath::basename(linkpath);
+    dbgln_if(VFS_DEBUG, "VFS::symlink: '{}' (-> '{}') in {}", linkpath, target, parent_inode.identifier());
+    auto inode_or_error = parent_inode.create_child(linkpath, S_IFLNK | 0644, 0, current_process->euid(), current_process->egid());
     if (inode_or_error.is_error())
         return inode_or_error.error();
     auto& inode = inode_or_error.value();
