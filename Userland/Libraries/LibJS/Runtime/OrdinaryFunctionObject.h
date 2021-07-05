@@ -29,7 +29,7 @@ public:
     virtual Value construct(FunctionObject& new_target) override;
 
     virtual const FlyString& name() const override { return m_name; };
-    void set_name(const FlyString& name) { m_name = name; };
+    void set_name(const FlyString& name);
 
     void set_is_class_constructor() { m_is_class_constructor = true; };
 
@@ -48,9 +48,6 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     Value execute_function_body();
-
-    JS_DECLARE_NATIVE_GETTER(length_getter);
-    JS_DECLARE_NATIVE_GETTER(name_getter);
 
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;
