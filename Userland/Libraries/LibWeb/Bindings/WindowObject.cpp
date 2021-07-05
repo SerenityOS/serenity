@@ -46,16 +46,17 @@ void WindowObject::initialize_global_object()
     auto success = Object::internal_set_prototype_of(&ensure_web_prototype<EventTargetPrototype>("EventTarget"));
     VERIFY(success);
 
+    // FIXME: These should be native accessors, not properties
     define_property("window", this, JS::Attribute::Enumerable);
     define_property("frames", this, JS::Attribute::Enumerable);
     define_property("self", this, JS::Attribute::Enumerable);
-    define_native_property("top", top_getter, nullptr, JS::Attribute::Enumerable);
-    define_native_property("parent", parent_getter, nullptr, JS::Attribute::Enumerable);
-    define_native_property("document", document_getter, nullptr, JS::Attribute::Enumerable);
-    define_native_property("performance", performance_getter, nullptr, JS::Attribute::Enumerable);
-    define_native_property("screen", screen_getter, nullptr, JS::Attribute::Enumerable);
-    define_native_property("innerWidth", inner_width_getter, nullptr, JS::Attribute::Enumerable);
-    define_native_property("innerHeight", inner_height_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_accessor("top", top_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_accessor("parent", parent_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor("document", document_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor("performance", performance_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor("screen", screen_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor("innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor("innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
     define_native_function("alert", alert);
     define_native_function("confirm", confirm);
     define_native_function("prompt", prompt);
@@ -69,7 +70,7 @@ void WindowObject::initialize_global_object()
     define_native_function("btoa", btoa, 1);
 
     // Legacy
-    define_native_property("event", event_getter, nullptr, JS::Attribute::Enumerable);
+    define_native_accessor("event", event_getter, {}, JS::Attribute::Enumerable);
 
     define_property("navigator", heap().allocate<NavigatorObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_property("location", heap().allocate<LocationObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -341,7 +342,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-top
-JS_DEFINE_NATIVE_GETTER(WindowObject::top_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::top_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -357,7 +358,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::top_getter)
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
-JS_DEFINE_NATIVE_GETTER(WindowObject::parent_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::parent_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -376,7 +377,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::parent_getter)
     return impl->wrapper();
 }
 
-JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::document_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -384,7 +385,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::document_getter)
     return wrap(global_object, impl->document());
 }
 
-JS_DEFINE_NATIVE_GETTER(WindowObject::performance_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::performance_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -392,7 +393,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::performance_getter)
     return wrap(global_object, impl->performance());
 }
 
-JS_DEFINE_NATIVE_GETTER(WindowObject::screen_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::screen_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -400,7 +401,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::screen_getter)
     return wrap(global_object, impl->screen());
 }
 
-JS_DEFINE_NATIVE_GETTER(WindowObject::event_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::event_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -410,7 +411,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::event_getter)
     return wrap(global_object, const_cast<DOM::Event&>(*impl->current_event()));
 }
 
-JS_DEFINE_NATIVE_GETTER(WindowObject::inner_width_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::inner_width_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
@@ -418,7 +419,7 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::inner_width_getter)
     return JS::Value(impl->inner_width());
 }
 
-JS_DEFINE_NATIVE_GETTER(WindowObject::inner_height_getter)
+JS_DEFINE_NATIVE_FUNCTION(WindowObject::inner_height_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
