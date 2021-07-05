@@ -838,6 +838,13 @@ UnveilNode const& VFS::find_matching_unveiled_path(StringView path)
     return unveil_root.traverse_until_last_accessible_node(path_parts.begin(), path_parts.end());
 }
 
+KResult VFS::validate_path_against_process_veil(Custody const& custody, int options)
+{
+    if (Process::current()->veil_state() == VeilState::None)
+        return KSuccess;
+    return validate_path_against_process_veil(custody.absolute_path(), options);
+}
+
 KResult VFS::validate_path_against_process_veil(StringView path, int options)
 {
     if (Process::current()->veil_state() == VeilState::None)
@@ -910,7 +917,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         return custody_or_error.error();
 
     auto& custody = custody_or_error.value();
-    if (auto result = validate_path_against_process_veil(custody->absolute_path(), options); result.is_error())
+    if (auto result = validate_path_against_process_veil(*custody, options); result.is_error())
         return result;
 
     return custody;
@@ -1009,7 +1016,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path
             if (!safe_to_follow_symlink(*child_inode, parent_metadata))
                 return EACCES;
 
-            if (auto result = validate_path_against_process_veil(custody->absolute_path(), options); result.is_error())
+            if (auto result = validate_path_against_process_veil(*custody, options); result.is_error())
                 return result;
 
             auto symlink_target = child_inode->resolve_as_link(parent, out_parent, options, symlink_recursion_level + 1);

@@ -103,6 +103,7 @@ private:
     friend class FileDescription;
 
     UnveilNode const& find_matching_unveiled_path(StringView path);
+    KResult validate_path_against_process_veil(Custody const& path, int options);
     KResult validate_path_against_process_veil(StringView path, int options);
 
     bool is_vfs_root(InodeIdentifier) const;
