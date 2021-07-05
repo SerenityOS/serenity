@@ -290,7 +290,6 @@ public:
     KResultOr<FlatPtr> sys$getresuid(Userspace<uid_t*>, Userspace<uid_t*>, Userspace<uid_t*>);
     KResultOr<FlatPtr> sys$getresgid(Userspace<gid_t*>, Userspace<gid_t*>, Userspace<gid_t*>);
     KResultOr<FlatPtr> sys$umask(mode_t);
-    KResultOr<FlatPtr> sys$set_num_lock(bool);
     KResultOr<FlatPtr> sys$open(Userspace<const Syscall::SC_open_params*>);
     KResultOr<FlatPtr> sys$close(int fd);
     KResultOr<FlatPtr> sys$read(int fd, Userspace<u8*>, size_t);

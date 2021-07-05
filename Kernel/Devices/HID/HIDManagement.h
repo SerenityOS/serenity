@@ -45,7 +45,6 @@ public:
     const Keyboard::CharacterMap& character_map() const { return m_character_map; }
     void set_client(KeyboardClient* client) { m_client = client; }
     void set_maps(const Keyboard::CharacterMapData& character_map, const String& character_map_name);
-    void set_num_lock(bool on);
 
 private:
     size_t generate_minor_device_number_for_mouse();
