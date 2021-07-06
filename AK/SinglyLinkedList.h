@@ -214,7 +214,6 @@ public:
             m_tail = node;
     }
 
-private:
     void remove(Iterator& iterator)
     {
         VERIFY(!iterator.is_end());
@@ -227,6 +226,7 @@ private:
         delete iterator.m_node;
     }
 
+private:
     Node* head() { return m_head; }
     const Node* head() const { return m_head; }
 
