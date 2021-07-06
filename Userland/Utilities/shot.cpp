@@ -20,7 +20,7 @@ int main(int argc, char** argv)
 
     String output_path;
     bool output_to_clipboard = false;
-    int delay = 0;
+    unsigned delay = 0;
     int screen = -1;
 
     args_parser.add_positional_argument(output_path, "Output filename", "output", Core::ArgsParser::Required::No);
