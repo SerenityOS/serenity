@@ -22,7 +22,7 @@ char* optarg = nullptr;
 // processed". Well, this is how we do it.
 static size_t s_index_into_multioption_argument = 0;
 
-static inline void report_error(const char* format, ...)
+[[gnu::format(printf, 1, 2)]] static inline void report_error(const char* format, ...)
 {
     if (!opterr)
         return;
