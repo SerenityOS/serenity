@@ -11,6 +11,7 @@
 #include "Tool.h"
 #include <LibGUI/Command.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
 
@@ -65,7 +66,15 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.add_clip_rect(frame_inner_rect());
 
-    Gfx::StylePainter::paint_transparency_grid(painter, rect(), palette());
+    {
+        Gfx::DisjointRectSet background_rects;
+        background_rects.add(frame_inner_rect());
+        background_rects.shatter(m_editor_image_rect);
+        for (auto& rect : background_rects.rects())
+            painter.fill_rect(rect, palette().color(Gfx::ColorRole::Tray));
+    }
+
+    Gfx::StylePainter::paint_transparency_grid(painter, m_editor_image_rect, palette());
 
     painter.draw_rect(m_editor_image_rect.inflated(2, 2), Color::Black);
     m_image->paint_into(painter, m_editor_image_rect);
