@@ -78,11 +78,11 @@ void Type::dump(FILE* output, size_t indent) const
 String NamedType::to_string() const
 {
     String qualifiers_string;
-    if (!m_qualifiers.is_empty())
-        qualifiers_string = String::formatted("[{}] ", String::join(" ", m_qualifiers));
+    if (!qualifiers().is_empty())
+        qualifiers_string = String::formatted("[{}] ", String::join(" ", qualifiers()));
 
     String name;
-    if (m_is_auto)
+    if (is_auto())
         name = "auto";
     else
         name = m_name.is_null() ? "" : m_name->full_name();
@@ -473,10 +473,10 @@ String Name::full_name() const
     StringBuilder builder;
     if (!m_scope.is_empty()) {
         for (auto& scope : m_scope) {
-            builder.appendff("{}::", scope.m_name);
+            builder.appendff("{}::", scope.name());
         }
     }
-    return String::formatted("{}{}", builder.to_string(), m_name.is_null() ? "" : m_name->m_name);
+    return String::formatted("{}{}", builder.to_string(), m_name.is_null() ? "" : m_name->name());
 }
 
 String TemplatizedName::full_name() const
@@ -539,13 +539,13 @@ void Constructor::dump(FILE* output, size_t indent) const
     outln(output, "C'tor");
     print_indent(output, indent + 1);
     outln(output, "(");
-    for (const auto& arg : m_parameters) {
+    for (const auto& arg : parameters()) {
         arg.dump(output, indent + 1);
     }
     print_indent(output, indent + 1);
     outln(output, ")");
-    if (!m_definition.is_null()) {
-        m_definition->dump(output, indent + 1);
+    if (definition()) {
+        definition()->dump(output, indent + 1);
     }
 }
 
@@ -555,13 +555,13 @@ void Destructor::dump(FILE* output, size_t indent) const
     outln(output, "D'tor");
     print_indent(output, indent + 1);
     outln(output, "(");
-    for (const auto& arg : m_parameters) {
+    for (const auto& arg : parameters()) {
         arg.dump(output, indent + 1);
     }
     print_indent(output, indent + 1);
     outln(output, ")");
-    if (!m_definition.is_null()) {
-        m_definition->dump(output, indent + 1);
+    if (definition()) {
+        definition()->dump(output, indent + 1);
     }
 }
 

@@ -51,7 +51,7 @@ NonnullRefPtr<TranslationUnit> Parser::parse()
     if (m_tokens.is_empty())
         return create_root_ast_node({}, {});
     auto unit = create_root_ast_node(m_tokens.first().start(), m_tokens.last().end());
-    unit->m_declarations = parse_declarations_in_translation_unit(*unit);
+    unit->set_declarations(parse_declarations_in_translation_unit(*unit));
     return unit;
 }
 
@@ -119,16 +119,16 @@ NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration(ASTNode& p
 {
     auto func = create_ast_node<FunctionDeclaration>(parent, position(), {});
 
-    func->m_qualifiers = parse_function_qualifiers();
-    func->m_return_type = parse_type(*func);
+    func->set_qualifiers(parse_function_qualifiers());
+    func->set_return_type(parse_type(*func));
 
     auto function_name = consume(Token::Type::Identifier);
-    func->m_name = text_of_token(function_name);
+    func->set_name(text_of_token(function_name));
 
     consume(Token::Type::LeftParen);
     auto parameters = parse_parameter_list(*func);
     if (parameters.has_value())
-        func->m_parameters = move(parameters.value());
+        func->set_parameters(parameters.value());
 
     consume(Token::Type::RightParen);
 
@@ -144,7 +144,7 @@ NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration(ASTNode& p
         consume(Token::Type::Semicolon);
     }
 
-    func->m_definition = move(body);
+    func->set_definition(move(body));
     func->set_end(func_end);
     return func;
 }
@@ -155,7 +155,7 @@ NonnullRefPtr<FunctionDefinition> Parser::parse_function_definition(ASTNode& par
     auto func = create_ast_node<FunctionDefinition>(parent, position(), {});
     consume(Token::Type::LeftCurly);
     while (!eof() && peek().type() != Token::Type::RightCurly) {
-        func->statements().append(parse_statement(func));
+        func->add_statement(parse_statement(func));
     }
     func->set_end(position());
     if (!eof())
@@ -221,7 +221,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(ASTNode& parent)
     auto block_statement = create_ast_node<BlockStatement>(parent, position(), {});
     consume(Token::Type::LeftCurly);
     while (!eof() && peek().type() != Token::Type::RightCurly) {
-        block_statement->m_statements.append(parse_statement(*block_statement));
+        block_statement->add_statement(parse_statement(*block_statement));
     }
     consume(Token::Type::RightCurly);
     block_statement->set_end(position());
@@ -330,7 +330,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& p
         var->set_end(position());
         return var;
     }
-    var->m_type = parse_type(var);
+    var->set_type(parse_type(var));
     auto identifier_token = consume(Token::Type::Identifier);
     RefPtr<Expression> initial_value;
 
@@ -347,8 +347,8 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(ASTNode& p
         consume(Token::Type::Semicolon);
 
     var->set_end(position());
-    var->m_name = text_of_token(identifier_token);
-    var->m_initial_value = move(initial_value);
+    var->set_name(text_of_token(identifier_token));
+    var->set_initial_value(move(initial_value));
 
     return var;
 }
@@ -510,9 +510,9 @@ NonnullRefPtr<UnaryExpression> Parser::parse_unary_expression(ASTNode& parent)
     default:
         break;
     }
-    unary_exp->m_op = op;
+    unary_exp->set_op(op);
     auto lhs = parse_expression(*unary_exp);
-    unary_exp->m_lhs = lhs;
+    unary_exp->set_lhs(lhs);
     unary_exp->set_end(lhs->end());
     return unary_exp;
 }
@@ -573,9 +573,9 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(ASTNode& parent, No
         consume();
         auto exp = create_ast_node<MemberExpression>(parent, lhs->start(), {});
         lhs->set_parent(*exp);
-        exp->m_object = move(lhs);
+        exp->set_object(move(lhs));
         auto identifier_token = consume(Token::Type::Identifier);
-        exp->m_property = create_ast_node<Identifier>(*exp, identifier_token.start(), identifier_token.end(), identifier_token.text());
+        exp->set_property(create_ast_node<Identifier>(*exp, identifier_token.start(), identifier_token.end(), identifier_token.text()));
         exp->set_end(position());
         return exp;
     }
@@ -583,9 +583,9 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(ASTNode& parent, No
         consume();
         auto func = create_ast_node<FunctionCall>(parent, lhs->start(), {});
         lhs->set_parent(*func);
-        func->m_callee = lhs;
+        func->set_callee(move(lhs));
         while (peek().type() != Token::Type::RightParen && !eof()) {
-            func->m_arguments.append(parse_expression(*func));
+            func->add_argument(parse_expression(*func));
             if (peek().type() == Token::Type::Comma)
                 consume(Token::Type::Comma);
         }
@@ -606,11 +606,11 @@ NonnullRefPtr<BinaryExpression> Parser::parse_binary_expression(ASTNode& parent,
     consume(); // Operator
     auto exp = create_ast_node<BinaryExpression>(parent, lhs->start(), {});
     lhs->set_parent(*exp);
-    exp->m_op = op;
-    exp->m_lhs = move(lhs);
+    exp->set_op(op);
+    exp->set_lhs(move(lhs));
     auto rhs = parse_expression(exp);
     exp->set_end(rhs->end());
-    exp->m_rhs = move(rhs);
+    exp->set_rhs(move(rhs));
     return exp;
 }
 
@@ -619,11 +619,11 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(ASTNode&
     consume(); // Operator
     auto exp = create_ast_node<AssignmentExpression>(parent, lhs->start(), {});
     lhs->set_parent(*exp);
-    exp->m_op = op;
-    exp->m_lhs = move(lhs);
+    exp->set_op(op);
+    exp->set_lhs(move(lhs));
     auto rhs = parse_expression(exp);
     exp->set_end(rhs->end());
-    exp->m_rhs = move(rhs);
+    exp->set_rhs(move(rhs));
     return exp;
 }
 
@@ -747,7 +747,7 @@ Optional<NonnullRefPtrVector<Parameter>> Parser::parse_parameter_list(ASTNode& p
             consume(Token::Type::Dot);
             consume(Token::Type::Dot);
             auto last_dot = consume(Token::Type::Dot);
-            param->m_is_ellipsis = true;
+            param->set_ellipsis(true);
             param->set_end(last_dot.end());
             parameters.append(move(param));
         } else {
@@ -763,7 +763,7 @@ Optional<NonnullRefPtrVector<Parameter>> Parser::parse_parameter_list(ASTNode& p
 
             auto param = create_ast_node<Parameter>(parent, type->start(), name_identifier.has_value() ? name_identifier.value().end() : type->end(), name);
 
-            param->m_type = move(type);
+            param->set_type(move(type));
             parameters.append(move(param));
         }
 
@@ -1042,7 +1042,7 @@ NonnullRefPtr<StringLiteral> Parser::parse_string_literal(ASTNode& parent)
 
     auto text = text_in_range(start_token.start(), end_token.end());
     auto string_literal = create_ast_node<StringLiteral>(parent, start_token.start(), end_token.end());
-    string_literal->m_value = text;
+    string_literal->set_value(move(text));
     return string_literal;
 }
 
@@ -1052,8 +1052,7 @@ NonnullRefPtr<ReturnStatement> Parser::parse_return_statement(ASTNode& parent)
     auto return_statement = create_ast_node<ReturnStatement>(parent, position(), {});
     consume(Token::Type::Keyword);
     if (!peek(Token::Type::Semicolon).has_value()) {
-        auto expression = parse_expression(*return_statement);
-        return_statement->m_value = expression;
+        return_statement->set_value(parse_expression(*return_statement));
     }
     return_statement->set_end(position());
     return return_statement;
@@ -1067,16 +1066,16 @@ NonnullRefPtr<EnumDeclaration> Parser::parse_enum_declaration(ASTNode& parent)
 
     if (match_keyword("class")) {
         consume(Token::Type::Keyword);
-        enum_decl->type = EnumDeclaration::Type::EnumClass;
+        enum_decl->set_type(EnumDeclaration::Type::EnumClass);
     } else {
-        enum_decl->type = EnumDeclaration::Type::RegularEnum;
+        enum_decl->set_type(EnumDeclaration::Type::RegularEnum);
     }
 
     auto name_token = consume(Token::Type::Identifier);
-    enum_decl->m_name = text_of_token(name_token);
+    enum_decl->set_name(text_of_token(name_token));
     consume(Token::Type::LeftCurly);
     while (!eof() && peek().type() != Token::Type::RightCurly) {
-        enum_decl->m_entries.append(text_of_token(consume(Token::Type::Identifier)));
+        enum_decl->add_entry(text_of_token(consume(Token::Type::Identifier)));
         if (peek().type() != Token::Type::Comma) {
             break;
         }
@@ -1129,12 +1128,12 @@ NonnullRefPtr<StructOrClassDeclaration> Parser::parse_class_declaration(ASTNode&
     auto decl = create_ast_node<StructOrClassDeclaration>(parent, position(), {}, type);
 
     auto name_token = consume(Token::Type::Identifier);
-    decl->m_name = text_of_token(name_token);
+    decl->set_name(text_of_token(name_token));
 
     consume(Token::Type::LeftCurly);
 
     while (!eof() && peek().type() != Token::Type::RightCurly) {
-        decl->m_members = parse_class_members(*decl);
+        decl->set_members(parse_class_members(*decl));
     }
 
     consume(Token::Type::RightCurly);
@@ -1175,11 +1174,11 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
     auto named_type = create_ast_node<NamedType>(parent, position(), {});
 
     auto qualifiers = parse_type_qualifiers();
-    named_type->m_qualifiers = move(qualifiers);
+    named_type->set_qualifiers(move(qualifiers));
 
     if (match_keyword("auto")) {
         consume(Token::Type::Keyword);
-        named_type->m_is_auto = true;
+        named_type->set_auto(true);
         named_type->set_end(position());
         return named_type;
     }
@@ -1193,7 +1192,7 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
         error(String::formatted("expected name instead of: {}", peek().text()));
         return named_type;
     }
-    named_type->m_name = parse_name(*named_type);
+    named_type->set_name(parse_name(*named_type));
 
     NonnullRefPtr<Type> type = named_type;
     while (!eof() && peek().type() == Token::Type::Asterisk) {
@@ -1201,7 +1200,7 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
         auto asterisk = consume();
         auto ptr = create_ast_node<Pointer>(parent, type->start(), asterisk.end());
         type->set_parent(*ptr);
-        ptr->m_pointee = type;
+        ptr->set_pointee(type);
         ptr->set_end(position());
         type = ptr;
     }
@@ -1217,20 +1216,20 @@ NonnullRefPtr<ForStatement> Parser::parse_for_statement(ASTNode& parent)
     consume(Token::Type::Keyword);
     consume(Token::Type::LeftParen);
     if (peek().type() != Token::Type::Semicolon)
-        for_statement->m_init = parse_variable_declaration(*for_statement, false);
+        for_statement->set_init(parse_variable_declaration(*for_statement, false));
     consume(Token::Type::Semicolon);
 
     if (peek().type() != Token::Type::Semicolon)
-        for_statement->m_test = parse_expression(*for_statement);
+        for_statement->set_test(parse_expression(*for_statement));
     consume(Token::Type::Semicolon);
 
     if (peek().type() != Token::Type::RightParen)
-        for_statement->m_update = parse_expression(*for_statement);
+        for_statement->set_update(parse_expression(*for_statement));
     consume(Token::Type::RightParen);
 
-    for_statement->m_body = parse_statement(*for_statement);
+    for_statement->set_body(parse_statement(*for_statement));
 
-    for_statement->set_end(for_statement->m_body->end());
+    for_statement->set_end(for_statement->body()->end());
     return for_statement;
 }
 
@@ -1240,15 +1239,15 @@ NonnullRefPtr<IfStatement> Parser::parse_if_statement(ASTNode& parent)
     auto if_statement = create_ast_node<IfStatement>(parent, position(), {});
     consume(Token::Type::Keyword);
     consume(Token::Type::LeftParen);
-    if_statement->m_predicate = parse_expression(*if_statement);
+    if_statement->set_predicate(parse_expression(*if_statement));
     consume(Token::Type::RightParen);
-    if_statement->m_then = parse_statement(*if_statement);
+    if_statement->set_then_statement(parse_statement(*if_statement));
     if (match_keyword("else")) {
         consume(Token::Type::Keyword);
-        if_statement->m_else = parse_statement(*if_statement);
-        if_statement->set_end(if_statement->m_else->end());
+        if_statement->set_else_statement(parse_statement(*if_statement));
+        if_statement->set_end(if_statement->else_statement()->end());
     } else {
-        if_statement->set_end(if_statement->m_then->end());
+        if_statement->set_end(if_statement->then_statement()->end());
     }
     return if_statement;
 }
@@ -1340,11 +1339,11 @@ NonnullRefPtr<NamespaceDeclaration> Parser::parse_namespace_declaration(ASTNode&
         consume(Token::Type::Keyword);
 
     auto name_token = consume(Token::Type::Identifier);
-    namespace_decl->m_name = name_token.text();
+    namespace_decl->set_name(name_token.text());
 
     if (peek().type() == Token::Type::ColonColon) {
         consume(Token::Type::ColonColon);
-        namespace_decl->m_declarations.append(parse_namespace_declaration(*namespace_decl, true));
+        namespace_decl->add_declaration(parse_namespace_declaration(*namespace_decl, true));
         namespace_decl->set_end(position());
         return namespace_decl;
     }
@@ -1353,7 +1352,7 @@ NonnullRefPtr<NamespaceDeclaration> Parser::parse_namespace_declaration(ASTNode&
     while (!eof() && peek().type() != Token::Type::RightCurly) {
         auto declaration = parse_single_declaration_in_translation_unit(*namespace_decl);
         if (declaration) {
-            namespace_decl->m_declarations.append(declaration.release_nonnull());
+            namespace_decl->add_declaration(declaration.release_nonnull());
         } else {
             error("unexpected token");
             consume();
@@ -1376,13 +1375,13 @@ NonnullRefPtr<Name> Parser::parse_name(ASTNode& parent)
     NonnullRefPtr<Name> name_node = create_ast_node<Name>(parent, position(), {});
     while (!eof() && (peek().type() == Token::Type::Identifier || peek().type() == Token::Type::KnownType) && peek(1).type() == Token::Type::ColonColon) {
         auto token = consume();
-        name_node->m_scope.append(create_ast_node<Identifier>(*name_node, token.start(), token.end(), token.text()));
+        name_node->add_to_scope(create_ast_node<Identifier>(*name_node, token.start(), token.end(), token.text()));
         consume(Token::Type::ColonColon);
     }
 
     if (peek().type() == Token::Type::Identifier || peek().type() == Token::Type::KnownType) {
         auto token = consume();
-        name_node->m_name = create_ast_node<Identifier>(*name_node, token.start(), token.end(), token.text());
+        name_node->set_name(create_ast_node<Identifier>(*name_node, token.start(), token.end(), token.text()));
     } else {
         name_node->set_end(position());
         return name_node;
@@ -1391,12 +1390,12 @@ NonnullRefPtr<Name> Parser::parse_name(ASTNode& parent)
     if (match_template_arguments()) {
         consume(Token::Type::Less);
         NonnullRefPtr<TemplatizedName> templatized_name = create_ast_node<TemplatizedName>(parent, name_node->start(), {});
-        templatized_name->m_name = move(name_node->m_name);
-        templatized_name->m_scope = move(name_node->m_scope);
+        templatized_name->set_name(name_node->name());
+        templatized_name->set_scope(name_node->scope());
         name_node->set_end(position());
         name_node = templatized_name;
         while (peek().type() != Token::Type::Greater && !eof()) {
-            templatized_name->m_template_arguments.append(parse_type(*templatized_name));
+            templatized_name->add_template_argument(parse_type(*templatized_name));
             if (peek().type() == Token::Type::Comma)
                 consume(Token::Type::Comma);
         }
@@ -1448,9 +1447,9 @@ NonnullRefPtr<CStyleCastExpression> Parser::parse_c_style_cast_expression(ASTNod
     auto parse_exp = create_ast_node<CStyleCastExpression>(parent, position(), {});
 
     consume(Token::Type::LeftParen);
-    parse_exp->m_type = parse_type(*parse_exp);
+    parse_exp->set_type(parse_type(*parse_exp));
     consume(Token::Type::RightParen);
-    parse_exp->m_expression = parse_expression(*parse_exp);
+    parse_exp->set_expression(parse_expression(*parse_exp));
     parse_exp->set_end(position());
 
     return parse_exp;
@@ -1460,14 +1459,14 @@ NonnullRefPtr<CppCastExpression> Parser::parse_cpp_cast_expression(ASTNode& pare
 {
     auto cast_expression = create_ast_node<CppCastExpression>(parent, position(), {});
 
-    cast_expression->m_cast_type = consume(Token::Type::Keyword).text();
+    cast_expression->set_cast_type(consume(Token::Type::Keyword).text());
 
     consume(Token::Type::Less);
-    cast_expression->m_type = parse_type(*cast_expression);
+    cast_expression->set_type(parse_type(*cast_expression));
     consume(Token::Type::Greater);
 
     consume(Token::Type::LeftParen);
-    cast_expression->m_expression = parse_expression(*cast_expression);
+    cast_expression->set_expression(parse_expression(*cast_expression));
     consume(Token::Type::RightParen);
 
     cast_expression->set_end(position());
@@ -1485,7 +1484,7 @@ NonnullRefPtr<SizeofExpression> Parser::parse_sizeof_expression(ASTNode& parent)
     auto exp = create_ast_node<SizeofExpression>(parent, position(), {});
     consume(Token::Type::Keyword);
     consume(Token::Type::LeftParen);
-    exp->m_type = parse_type(parent);
+    exp->set_type(parse_type(parent));
     consume(Token::Type::RightParen);
     exp->set_end(position());
     return exp;
@@ -1502,7 +1501,7 @@ NonnullRefPtr<BracedInitList> Parser::parse_braced_init_list(ASTNode& parent)
 
     consume(Token::Type::LeftCurly);
     while (!eof() && peek().type() != Token::Type::RightCurly) {
-        init_list->m_expressions.append(parse_expression(*init_list));
+        init_list->add_expression(parse_expression(*init_list));
     }
     consume(Token::Type::RightCurly);
     init_list->set_end(position());
@@ -1592,7 +1591,7 @@ void Parser::parse_constructor_or_destructor_impl(FunctionDeclaration& func, Cto
     if (name_token.type() != Token::Type::Identifier && name_token.type() != Token::Type::KnownType) {
         error("Unexpected constructor name");
     }
-    func.m_name = name_token.text();
+    func.set_name(name_token.text());
 
     consume(Token::Type::LeftParen);
     auto parameters = parse_parameter_list(func);
@@ -1600,7 +1599,7 @@ void Parser::parse_constructor_or_destructor_impl(FunctionDeclaration& func, Cto
         if (type == CtorOrDtor::Dtor && !parameters->is_empty())
             error("Destructor declaration that takes parameters");
         else
-            func.m_parameters = move(parameters.value());
+            func.set_parameters(parameters.value());
     }
 
     consume(Token::Type::RightParen);
@@ -1619,7 +1618,7 @@ void Parser::parse_constructor_or_destructor_impl(FunctionDeclaration& func, Cto
         consume(Token::Type::Semicolon);
     }
 
-    func.m_definition = move(body);
+    func.set_definition(move(body));
     func.set_end(ctor_end);
 }
 
