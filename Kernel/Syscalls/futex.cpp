@@ -164,8 +164,9 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         return nullptr;
     };
 
-    auto find_futex_queue = [&](VMObject* vmobject, FlatPtr user_address_or_offset, bool create_if_not_found) -> RefPtr<FutexQueue> {
+    auto find_futex_queue = [&](VMObject* vmobject, FlatPtr user_address_or_offset, bool create_if_not_found, bool* did_create = nullptr) -> RefPtr<FutexQueue> {
         VERIFY(is_private || vmobject);
+        VERIFY(!create_if_not_found || did_create != nullptr);
         auto* queues = is_private ? &m_futex_queues : find_global_futex_queues(*vmobject, create_if_not_found);
         if (!queues)
             return {};
@@ -173,6 +174,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         if (it != queues->end())
             return it->value;
         if (create_if_not_found) {
+            *did_create = true;
             auto futex_queue = adopt_ref(*new FutexQueue(user_address_or_offset, vmobject));
             auto result = queues->set(user_address_or_offset, futex_queue);
             VERIFY(result == AK::HashSetResult::InsertedNewEntry);
@@ -184,7 +186,12 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
     auto remove_futex_queue = [&](VMObject* vmobject, FlatPtr user_address_or_offset) {
         auto* queues = is_private ? &m_futex_queues : find_global_futex_queues(*vmobject, false);
         if (queues) {
-            queues->remove(user_address_or_offset);
+            if (auto it = queues->find(user_address_or_offset); it != queues->end()) {
+                if (it->value->try_remove()) {
+                    it->value->did_remove();
+                    queues->remove(it);
+                }
+            }
             if (!is_private && queues->is_empty())
                 g_global_futex_queues->remove(vmobject);
         }
@@ -208,17 +215,24 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
     ScopedSpinLock lock(queue_lock);
 
     auto do_wait = [&](u32 bitset) -> int {
-        auto user_value = user_atomic_load_relaxed(params.userspace_address);
-        if (!user_value.has_value())
-            return EFAULT;
-        if (user_value.value() != params.val) {
-            dbgln("futex wait: EAGAIN. user value: {:p} @ {:p} != val: {}", user_value.value(), params.userspace_address, params.val);
-            return EAGAIN;
-        }
-        atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
+        bool did_create;
+        RefPtr<FutexQueue> futex_queue;
+        do {
+            auto user_value = user_atomic_load_relaxed(params.userspace_address);
+            if (!user_value.has_value())
+                return EFAULT;
+            if (user_value.value() != params.val) {
+                dbgln_if(FUTEX_DEBUG, "futex wait: EAGAIN. user value: {:p} @ {:p} != val: {}", user_value.value(), params.userspace_address, params.val);
+                return EAGAIN;
+            }
+            atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
 
-        auto futex_queue = find_futex_queue(vmobject.ptr(), user_address_or_offset, true);
-        VERIFY(futex_queue);
+            did_create = false;
+            futex_queue = find_futex_queue(vmobject.ptr(), user_address_or_offset, true, &did_create);
+            VERIFY(futex_queue);
+            // We need to try again if we didn't create this queue and the existing queue
+            // was removed before we were able to queue an imminent wait.
+        } while (!did_create && !futex_queue->queue_imminent_wait());
 
         // We need to release the lock before blocking. But we have a reference
         // to the FutexQueue so that we can keep it alive.
@@ -227,7 +241,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         Thread::BlockResult block_result = futex_queue->wait_on(timeout, bitset);
 
         lock.lock();
-        if (futex_queue->is_empty()) {
+        if (futex_queue->is_empty_and_no_imminent_waits()) {
             // If there are no more waiters, we want to get rid of the futex!
             remove_futex_queue(vmobject, user_address_or_offset);
         }
