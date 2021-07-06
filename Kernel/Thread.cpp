@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Demangle.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
@@ -1051,7 +1050,7 @@ static bool symbolicate(RecognizedSymbol const& symbol, Process& process, String
     if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096) {
         builder.appendff("{:p}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address));
     } else {
-        builder.appendff("{:p}  {} + 0x{:x}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address), demangle(symbol.symbol->name), offset);
+        builder.appendff("{:p}  {} + 0x{:x}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address), symbol.symbol->name, offset);
     }
     return true;
 }

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Demangle.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
@@ -362,7 +361,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
     } else {
         if (ip >= KERNEL_BASE && g_kernel_symbols_available) {
             auto* symbol = symbolicate_kernel_address(ip);
-            dbgln("\033[31;1m{:p}  {} +{}\033[0m\n", ip, (symbol ? demangle(symbol->name) : "(k?)"), (symbol ? ip - symbol->address : 0));
+            dbgln("\033[31;1m{:p}  {} +{}\033[0m\n", ip, (symbol ? symbol->name : "(k?)"), (symbol ? ip - symbol->address : 0));
         } else {
             dbgln("\033[31;1m{:p}  (?)\033[0m\n", ip);
         }
