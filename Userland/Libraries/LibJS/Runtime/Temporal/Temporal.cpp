@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/Now.h>
 #include <LibJS/Runtime/Temporal/Temporal.h>
 
 namespace JS::Temporal {
@@ -18,6 +19,11 @@ Temporal::Temporal(GlobalObject& global_object)
 void Temporal::initialize(GlobalObject& global_object)
 {
     Object::initialize(global_object);
+
+    auto& vm = this->vm();
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+
+    define_direct_property(vm.names.now, heap().allocate<Now>(global_object, global_object), attr);
 }
 
 }
