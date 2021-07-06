@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/Forward.h>
