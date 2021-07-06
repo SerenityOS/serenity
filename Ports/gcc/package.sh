@@ -13,12 +13,6 @@ post_fetch() {
     run contrib/download_prerequisites
 }
 
-pre_configure() {
-    patch_internal
-    run sed -i.bak 's@-fno-exceptions @@' gcc/config/serenity.h
-    run rm -f gcc/config/serenity.h.bak
-}
-
 build() {
     run make $makeopts
     run find "./host-${SERENITY_ARCH}-pc-serenity/gcc/" -maxdepth 1 -type f -executable -exec strip --strip-debug {} \; || echo
