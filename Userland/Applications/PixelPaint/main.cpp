@@ -419,6 +419,16 @@ int main(int argc, char** argv)
         },
         window));
 
+    layer_menu.add_action(GUI::Action::create(
+        "&Merge Visible", { Mod_Ctrl, Key_M }, [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+            editor->image().merge_visible_layers();
+            editor->did_complete_action();
+        },
+        window));
+
     auto& filter_menu = menubar->add_menu("&Filter");
     auto& spatial_filters_menu = filter_menu.add_submenu("&Spatial");
 
