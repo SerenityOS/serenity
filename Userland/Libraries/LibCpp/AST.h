@@ -89,6 +89,9 @@ public:
     {
     }
 
+    void set_declarations(NonnullRefPtrVector<Declaration>&& declarations) { m_declarations = move(declarations); }
+
+private:
     NonnullRefPtrVector<Declaration> m_declarations;
 };
 
@@ -119,14 +122,15 @@ public:
     virtual bool is_namespace() const { return false; }
     virtual bool is_member() const { return false; }
     const StringView& name() const { return m_name; }
-
-    StringView m_name;
+    void set_name(const StringView& name) { m_name = move(name); }
 
 protected:
     Declaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : Statement(parent, start, end, filename)
     {
     }
+
+    StringView m_name;
 };
 
 class InvalidDeclaration : public Declaration {
@@ -156,7 +160,16 @@ public:
     }
 
     virtual NonnullRefPtrVector<Declaration> declarations() const override;
+    const Vector<StringView>& qualifiers() const { return m_qualifiers; }
+    void set_qualifiers(const Vector<StringView>& qualifiers) { m_qualifiers = qualifiers; }
+    const Type* return_type() const { return m_return_type.ptr(); }
+    void set_return_type(const RefPtr<Type>& return_type) { m_return_type = return_type; }
+    const NonnullRefPtrVector<Parameter>& parameters() const { return m_parameters; }
+    void set_parameters(const NonnullRefPtrVector<Parameter>& parameters) { m_parameters = parameters; }
+    const FunctionDefinition* definition() const { return m_definition.ptr(); }
+    void set_definition(RefPtr<FunctionDefinition>&& definition) { m_definition = move(definition); }
 
+private:
     Vector<StringView> m_qualifiers;
     RefPtr<Type> m_return_type;
     NonnullRefPtrVector<Parameter> m_parameters;
@@ -168,13 +181,16 @@ public:
     virtual ~VariableOrParameterDeclaration() override = default;
     virtual bool is_variable_or_parameter_declaration() const override { return true; }
 
-    RefPtr<Type> m_type;
+    void set_type(RefPtr<Type>&& type) { m_type = move(type); }
+    const Type* type() const { return m_type.ptr(); }
 
 protected:
     VariableOrParameterDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : Declaration(parent, start, end, filename)
     {
     }
+
+    RefPtr<Type> m_type;
 };
 
 class Parameter : public VariableOrParameterDeclaration {
@@ -190,6 +206,10 @@ public:
         m_name = name;
     }
 
+    bool is_ellipsis() const { return m_is_ellipsis; }
+    void set_ellipsis(bool is_ellipsis) { m_is_ellipsis = is_ellipsis; }
+
+private:
     bool m_is_ellipsis { false };
 };
 
@@ -203,14 +223,20 @@ public:
     virtual String to_string() const = 0;
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    bool m_is_auto { false };
-    Vector<StringView> m_qualifiers;
+    bool is_auto() const { return m_is_auto; }
+    void set_auto(bool is_auto) { m_is_auto = is_auto; }
+    Vector<StringView> const& qualifiers() const { return m_qualifiers; }
+    void set_qualifiers(Vector<StringView>&& qualifiers) { m_qualifiers = move(qualifiers); }
 
 protected:
     Type(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
         : ASTNode(parent, start, end, filename)
     {
     }
+
+private:
+    bool m_is_auto { false };
+    Vector<StringView> m_qualifiers;
 };
 
 class NamedType : public Type {
@@ -225,6 +251,10 @@ public:
     {
     }
 
+    const Name* name() const { return m_name.ptr(); }
+    void set_name(RefPtr<Name>&& name) { m_name = move(name); }
+
+private:
     RefPtr<Name> m_name;
 };
 
@@ -240,6 +270,10 @@ public:
     {
     }
 
+    const Type* pointee() const { return m_pointee.ptr(); }
+    void set_pointee(RefPtr<Type>&& pointee) { m_pointee = move(pointee); }
+
+private:
     RefPtr<Type> m_pointee;
 };
 
@@ -247,7 +281,6 @@ class FunctionDefinition : public ASTNode {
 public:
     virtual ~FunctionDefinition() override = default;
     virtual const char* class_name() const override { return "FunctionDefinition"; }
-    NonnullRefPtrVector<Statement>& statements() { return m_statements; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
     FunctionDefinition(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
@@ -256,7 +289,10 @@ public:
     }
 
     virtual NonnullRefPtrVector<Declaration> declarations() const override;
+    NonnullRefPtrVector<Statement> const& statements() { return m_statements; }
+    void add_statement(NonnullRefPtr<Statement>&& statement) { m_statements.append(move(statement)); }
 
+private:
     NonnullRefPtrVector<Statement> m_statements;
 };
 
@@ -305,6 +341,10 @@ public:
 
     virtual bool is_variable_declaration() const override { return true; }
 
+    const Expression* initial_value() const { return m_initial_value; }
+    void set_initial_value(RefPtr<Expression>&& initial_value) { m_initial_value = move(initial_value); }
+
+private:
     RefPtr<Expression> m_initial_value;
 };
 
@@ -326,6 +366,10 @@ public:
 
     virtual bool is_identifier() const override { return true; }
 
+    StringView const& name() const { return m_name; }
+    void set_name(StringView&& name) { m_name = move(name); }
+
+private:
     StringView m_name;
 };
 
@@ -343,6 +387,13 @@ public:
     }
     virtual String full_name() const;
 
+    const Identifier* name() const { return m_name.ptr(); }
+    void set_name(RefPtr<Identifier>&& name) { m_name = move(name); }
+    NonnullRefPtrVector<Identifier> const& scope() const { return m_scope; }
+    void set_scope(NonnullRefPtrVector<Identifier> scope) { m_scope = move(scope); }
+    void add_to_scope(NonnullRefPtr<Identifier>&& part) { m_scope.append(move(part)); }
+
+private:
     RefPtr<Identifier> m_name;
     NonnullRefPtrVector<Identifier> m_scope;
 };
@@ -359,6 +410,9 @@ public:
     {
     }
 
+    void add_template_argument(NonnullRefPtr<Type>&& type) { m_template_arguments.append(move(type)); }
+
+private:
     NonnullRefPtrVector<Type> m_template_arguments;
 };
 
@@ -374,6 +428,7 @@ public:
     {
     }
 
+private:
     StringView m_value;
 };
 
@@ -401,6 +456,7 @@ public:
     {
     }
 
+private:
     bool m_value;
 };
 
@@ -437,6 +493,14 @@ public:
     virtual const char* class_name() const override { return "BinaryExpression"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
+    BinaryOp op() const { return m_op; }
+    void set_op(BinaryOp op) { m_op = op; }
+    Expression const* lhs() const { return m_lhs.ptr(); }
+    void set_lhs(RefPtr<Expression>&& e) { m_lhs = move(e); }
+    Expression const* rhs() const { return m_rhs.ptr(); }
+    void set_rhs(RefPtr<Expression>&& e) { m_rhs = move(e); }
+
+private:
     BinaryOp m_op;
     RefPtr<Expression> m_lhs;
     RefPtr<Expression> m_rhs;
@@ -459,7 +523,15 @@ public:
     virtual const char* class_name() const override { return "AssignmentExpression"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    AssignmentOp m_op;
+    AssignmentOp op() const { return m_op; }
+    void set_op(AssignmentOp op) { m_op = op; }
+    const Expression* lhs() const { return m_lhs; }
+    void set_lhs(RefPtr<Expression>&& e) { m_lhs = move(e); }
+    const Expression* rhs() const { return m_rhs; }
+    void set_rhs(RefPtr<Expression>&& e) { m_rhs = move(e); }
+
+private:
+    AssignmentOp m_op {};
     RefPtr<Expression> m_lhs;
     RefPtr<Expression> m_rhs;
 };
@@ -477,6 +549,13 @@ public:
     virtual bool is_function_call() const override { return true; }
     virtual bool is_templatized() const { return false; }
 
+    const Expression* callee() const { return m_callee.ptr(); }
+    void set_callee(RefPtr<Expression>&& callee) { m_callee = move(callee); }
+
+    void add_argument(NonnullRefPtr<Expression>&& arg) { m_arguments.append(move(arg)); }
+    NonnullRefPtrVector<Expression> const& arguments() const { return m_arguments; }
+
+private:
     RefPtr<Expression> m_callee;
     NonnullRefPtrVector<Expression> m_arguments;
 };
@@ -492,6 +571,10 @@ public:
     virtual const char* class_name() const override { return "StringLiteral"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
+    String const& value() const { return m_value; }
+    void set_value(String value) { m_value = move(value); }
+
+private:
     String m_value;
 };
 
@@ -506,6 +589,10 @@ public:
     }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
+    const Expression* value() const { return m_value.ptr(); }
+    void set_value(RefPtr<Expression>&& value) { m_value = move(value); }
+
+private:
     RefPtr<Expression> m_value;
 };
 
@@ -525,7 +612,11 @@ public:
         EnumClass
     };
 
-    Type type { Type::RegularEnum };
+    void set_type(Type type) { m_type = type; }
+    void add_entry(StringView entry) { m_entries.append(move(entry)); }
+
+private:
+    Type m_type { Type::RegularEnum };
     Vector<StringView> m_entries;
 };
 
@@ -550,6 +641,10 @@ public:
     {
     }
 
+    NonnullRefPtrVector<Declaration> const& members() const { return m_members; }
+    void set_members(NonnullRefPtrVector<Declaration>&& members) { m_members = move(members); }
+
+private:
     StructOrClassDeclaration::Type m_type;
     NonnullRefPtrVector<Declaration> m_members;
 };
@@ -575,6 +670,10 @@ public:
     virtual const char* class_name() const override { return "UnaryExpression"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
+    void set_op(UnaryOp op) { m_op = op; }
+    void set_lhs(RefPtr<Expression>&& e) { m_lhs = move(e); }
+
+private:
     UnaryOp m_op;
     RefPtr<Expression> m_lhs;
 };
@@ -591,6 +690,12 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual bool is_member_expression() const override { return true; }
 
+    const Expression* object() const { return m_object.ptr(); }
+    void set_object(RefPtr<Expression>&& object) { m_object = move(object); }
+    const Expression* property() const { return m_property.ptr(); }
+    void set_property(RefPtr<Expression>&& property) { m_property = move(property); }
+
+private:
     RefPtr<Expression> m_object;
     RefPtr<Expression> m_property;
 };
@@ -608,6 +713,13 @@ public:
 
     virtual NonnullRefPtrVector<Declaration> declarations() const override;
 
+    void set_init(RefPtr<VariableDeclaration>&& init) { m_init = move(init); }
+    void set_test(RefPtr<Expression>&& test) { m_test = move(test); }
+    void set_update(RefPtr<Expression>&& update) { m_update = move(update); }
+    void set_body(RefPtr<Statement>&& body) { m_body = move(body); }
+    const Statement* body() const { return m_body.ptr(); }
+
+private:
     RefPtr<VariableDeclaration> m_init;
     RefPtr<Expression> m_test;
     RefPtr<Expression> m_update;
@@ -627,6 +739,9 @@ public:
 
     virtual NonnullRefPtrVector<Declaration> declarations() const override;
 
+    void add_statement(NonnullRefPtr<Statement>&& statement) { m_statements.append(move(statement)); }
+
+private:
     NonnullRefPtrVector<Statement> m_statements;
 };
 
@@ -653,6 +768,14 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual NonnullRefPtrVector<Declaration> declarations() const override;
 
+    void set_predicate(RefPtr<Expression>&& predicate) { m_predicate = move(predicate); }
+    void set_then_statement(RefPtr<Statement>&& then) { m_then = move(then); }
+    void set_else_statement(RefPtr<Statement>&& _else) { m_else = move(_else); }
+
+    const Statement* then_statement() const { return m_then.ptr(); }
+    const Statement* else_statement() const { return m_else.ptr(); }
+
+private:
     RefPtr<Expression> m_predicate;
     RefPtr<Statement> m_then;
     RefPtr<Statement> m_else;
@@ -671,7 +794,9 @@ public:
     }
 
     virtual NonnullRefPtrVector<Declaration> declarations() const override { return m_declarations; }
+    void add_declaration(NonnullRefPtr<Declaration>&& declaration) { m_declarations.append(move(declaration)); }
 
+private:
     NonnullRefPtrVector<Declaration> m_declarations;
 };
 
@@ -686,6 +811,11 @@ public:
     virtual const char* class_name() const override { return "CppCastExpression"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
+    void set_cast_type(StringView cast_type) { m_cast_type = move(cast_type); }
+    void set_type(NonnullRefPtr<Type>&& type) { m_type = move(type); }
+    void set_expression(NonnullRefPtr<Expression>&& e) { m_expression = move(e); }
+
+private:
     StringView m_cast_type;
     RefPtr<Type> m_type;
     RefPtr<Expression> m_expression;
@@ -702,6 +832,10 @@ public:
     virtual const char* class_name() const override { return "CStyleCastExpression"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
+    void set_type(NonnullRefPtr<Type>&& type) { m_type = move(type); }
+    void set_expression(NonnullRefPtr<Expression>&& e) { m_expression = move(e); }
+
+private:
     RefPtr<Type> m_type;
     RefPtr<Expression> m_expression;
 };
@@ -717,6 +851,9 @@ public:
     virtual const char* class_name() const override { return "SizeofExpression"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
+    void set_type(RefPtr<Type>&& type) { m_type = move(type); }
+
+private:
     RefPtr<Type> m_type;
 };
 
@@ -731,6 +868,9 @@ public:
     virtual const char* class_name() const override { return "BracedInitList"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
+    void add_expression(NonnullRefPtr<Expression>&& exp) { m_expressions.append(move(exp)); }
+
+private:
     NonnullRefPtrVector<Expression> m_expressions;
 };
 
