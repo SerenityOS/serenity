@@ -584,7 +584,7 @@ i32 Value::as_i32() const
 u32 Value::as_u32() const
 {
     VERIFY(as_double() >= 0);
-    return min((u32)as_i32(), NumericLimits<u32>::max());
+    return (u32)min(as_double(), (double)NumericLimits<u32>::max());
 }
 
 double Value::to_double(GlobalObject& global_object) const
