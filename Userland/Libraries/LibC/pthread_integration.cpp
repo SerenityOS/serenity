@@ -114,7 +114,8 @@ int __pthread_mutex_trylock(pthread_mutex_t* mutex)
     bool exchanged = AK::atomic_compare_exchange_strong(&mutex->lock, expected, MUTEX_LOCKED_NO_NEED_TO_WAKE, AK::memory_order_acquire);
 
     if (exchanged) [[likely]] {
-        AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
+        if (mutex->type == __PTHREAD_MUTEX_RECURSIVE)
+            AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
         mutex->level = 0;
         return 0;
     } else if (mutex->type == __PTHREAD_MUTEX_RECURSIVE) {
@@ -132,18 +133,17 @@ int pthread_mutex_trylock(pthread_mutex_t* mutex) __attribute__((weak, alias("__
 
 int __pthread_mutex_lock(pthread_mutex_t* mutex)
 {
-    pthread_t this_thread = __pthread_self();
-
     // Fast path: attempt to claim the mutex without waiting.
     u32 value = MUTEX_UNLOCKED;
     bool exchanged = AK::atomic_compare_exchange_strong(&mutex->lock, value, MUTEX_LOCKED_NO_NEED_TO_WAKE, AK::memory_order_acquire);
     if (exchanged) [[likely]] {
-        AK::atomic_store(&mutex->owner, this_thread, AK::memory_order_relaxed);
+        if (mutex->type == __PTHREAD_MUTEX_RECURSIVE)
+            AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
         mutex->level = 0;
         return 0;
     } else if (mutex->type == __PTHREAD_MUTEX_RECURSIVE) {
         pthread_t owner = AK::atomic_load(&mutex->owner, AK::memory_order_relaxed);
-        if (owner == this_thread) {
+        if (owner == __pthread_self()) {
             // We already own the mutex!
             mutex->level++;
             return 0;
@@ -160,7 +160,8 @@ int __pthread_mutex_lock(pthread_mutex_t* mutex)
         value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
     }
 
-    AK::atomic_store(&mutex->owner, this_thread, AK::memory_order_relaxed);
+    if (mutex->type == __PTHREAD_MUTEX_RECURSIVE)
+        AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
     mutex->level = 0;
     return 0;
 }
@@ -178,7 +179,8 @@ int __pthread_mutex_lock_pessimistic_np(pthread_mutex_t* mutex)
         value = AK::atomic_exchange(&mutex->lock, MUTEX_LOCKED_NEED_TO_WAKE, AK::memory_order_acquire);
     }
 
-    AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
+    if (mutex->type == __PTHREAD_MUTEX_RECURSIVE)
+        AK::atomic_store(&mutex->owner, __pthread_self(), AK::memory_order_relaxed);
     mutex->level = 0;
     return 0;
 }
@@ -190,11 +192,14 @@ int __pthread_mutex_unlock(pthread_mutex_t* mutex)
         return 0;
     }
 
-    AK::atomic_store(&mutex->owner, 0, AK::memory_order_relaxed);
+    if (mutex->type == __PTHREAD_MUTEX_RECURSIVE)
+        AK::atomic_store(&mutex->owner, 0, AK::memory_order_relaxed);
 
     u32 value = AK::atomic_exchange(&mutex->lock, MUTEX_UNLOCKED, AK::memory_order_release);
-    if (value == MUTEX_LOCKED_NEED_TO_WAKE) [[unlikely]]
-        futex_wake(&mutex->lock, 1);
+    if (value == MUTEX_LOCKED_NEED_TO_WAKE) [[unlikely]] {
+        int rc = futex_wake(&mutex->lock, 1);
+        VERIFY(rc >= 0);
+    }
 
     return 0;
 }
