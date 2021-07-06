@@ -59,6 +59,11 @@ test("basic regex replacement", () => {
 
     expect("abc123def".replaceAll(/\D/g, "*")).toBe("***123***");
     expect("123abc456".replaceAll(/\D/g, "*")).toBe("123***456");
+
+    expect("aaab a a aac".replaceAll("aa", "z")).toBe("zab a a zc");
+    expect("aaab a a aac".replaceAll("aa", "a")).toBe("aab a a ac");
+    expect("aaab a a aac".replaceAll("a", "a")).toBe("aaab a a aac");
+    expect("aaab a a aac".replaceAll("a", "z")).toBe("zzzb z z zzc");
 });
 
 test("functional regex replacement", () => {
