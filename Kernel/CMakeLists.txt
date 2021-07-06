@@ -335,10 +335,6 @@ set(CRYPTO_SOURCES
     ../Userland/Libraries/LibCrypto/Hash/SHA2.cpp
 )
 
-set(C_SOURCES
-    ../Userland/Libraries/LibC/ctype.cpp
-)
-
 set(SOURCES
     ${KERNEL_SOURCES}
     ${AK_SOURCES}
@@ -346,7 +342,6 @@ set(SOURCES
     ${VT_SOURCES}
     ${KEYBOARD_SOURCES}
     ${CRYPTO_SOURCES}
-    ${C_SOURCES}
 )
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -Wvla -Wnull-dereference")
