@@ -21,7 +21,7 @@ Object* get_super_constructor(VM&);
 Reference make_super_property_reference(GlobalObject&, Value actual_this, StringOrSymbol const& property_key, bool strict);
 Value require_object_coercible(GlobalObject&, Value);
 size_t length_of_array_like(GlobalObject&, Object const&);
-MarkedValueList create_list_from_array_like(GlobalObject&, Value, Function<Result<void, ErrorType>(Value)> = {});
+MarkedValueList create_list_from_array_like(GlobalObject&, Value, Function<void(Value)> = {});
 FunctionObject* species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
 GlobalObject* get_function_realm(GlobalObject&, FunctionObject const&);
 bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
