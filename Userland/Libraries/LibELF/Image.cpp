@@ -289,6 +289,7 @@ StringView Image::Symbol::raw_data() const
     return { section.raw_data() + (value() - section.address()), size() };
 }
 
+#ifndef KERNEL
 Optional<Image::Symbol> Image::find_demangled_function(const StringView& name) const
 {
     Optional<Image::Symbol> found;
@@ -309,6 +310,7 @@ Optional<Image::Symbol> Image::find_demangled_function(const StringView& name) c
     });
     return found;
 }
+#endif
 
 Image::SortedSymbol* Image::find_sorted_symbol(FlatPtr address) const
 {
@@ -355,6 +357,7 @@ NEVER_INLINE void Image::sort_symbols() const
     });
 }
 
+#ifndef KERNEL
 String Image::symbolicate(u32 address, u32* out_offset) const
 {
     auto symbol_count = this->symbol_count();
@@ -381,5 +384,6 @@ String Image::symbolicate(u32 address, u32* out_offset) const
     }
     return String::formatted("{} +{:#x}", demangled_name, address - symbol->address);
 }
+#endif
 
 } // end namespace ELF

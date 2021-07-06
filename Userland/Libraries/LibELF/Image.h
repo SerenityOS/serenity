@@ -227,10 +227,11 @@ public:
     FlatPtr base_address() const { return (FlatPtr)m_buffer; }
     size_t size() const { return m_size; }
 
-    Optional<Symbol> find_demangled_function(const StringView& name) const;
-
     bool has_symbols() const { return symbol_count(); }
+#ifndef KERNEL
+    Optional<Symbol> find_demangled_function(const StringView& name) const;
     String symbolicate(u32 address, u32* offset = nullptr) const;
+#endif
     Optional<Image::Symbol> find_symbol(u32 address, u32* offset = nullptr) const;
 
 private:

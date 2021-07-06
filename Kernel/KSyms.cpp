@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Demangle.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -148,7 +147,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
         if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096)
             dbgln("{:p}", symbol.address);
         else
-            dbgln("{:p}  {} +0x{:x}", symbol.address, demangle(symbol.symbol->name), offset);
+            dbgln("{:p}  {} +0x{:x}", symbol.address, symbol.symbol->name, offset);
     }
 }
 

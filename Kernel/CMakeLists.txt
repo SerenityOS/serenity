@@ -413,7 +413,7 @@ if (ENABLE_KERNEL_LTO)
     check_ipo_supported()
     set_property(TARGET ${KERNEL_TARGET} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
-target_link_libraries(${KERNEL_TARGET} kernel_heap gcc supc++)
+target_link_libraries(${KERNEL_TARGET} kernel_heap gcc)
 add_dependencies(${KERNEL_TARGET} kernel_heap)
 
 add_custom_command(
