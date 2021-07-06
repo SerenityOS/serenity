@@ -17,7 +17,7 @@ namespace Wasm {
 
 #define TRAP_IF_NOT(x)                                                                         \
     do {                                                                                       \
-        if (trap_if_not(x, #x)) {                                                              \
+        if (trap_if_not(x, #x##sv)) {                                                          \
             dbgln_if(WASM_TRACE_DEBUG, "Trapped because {} failed, at line {}", #x, __LINE__); \
             return;                                                                            \
         }                                                                                      \
@@ -25,7 +25,7 @@ namespace Wasm {
 
 #define TRAP_IF_NOT_NORETURN(x)                                                                \
     do {                                                                                       \
-        if (trap_if_not(x, #x)) {                                                              \
+        if (trap_if_not(x, #x##sv)) {                                                          \
             dbgln_if(WASM_TRACE_DEBUG, "Trapped because {} failed, at line {}", #x, __LINE__); \
         }                                                                                      \
     } while (false)
