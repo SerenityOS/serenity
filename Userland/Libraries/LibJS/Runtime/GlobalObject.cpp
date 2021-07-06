@@ -67,6 +67,7 @@
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/SymbolConstructor.h>
 #include <LibJS/Runtime/SymbolPrototype.h>
+#include <LibJS/Runtime/Temporal/Temporal.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/TypedArrayConstructor.h>
 #include <LibJS/Runtime/TypedArrayPrototype.h>
@@ -170,6 +171,7 @@ void GlobalObject::initialize_global_object()
     define_direct_property(vm.names.Math, heap().allocate<MathObject>(*this, *this), attr);
     define_direct_property(vm.names.JSON, heap().allocate<JSONObject>(*this, *this), attr);
     define_direct_property(vm.names.Reflect, heap().allocate<ReflectObject>(*this, *this), attr);
+    define_direct_property(vm.names.Temporal, heap().allocate<Temporal::Temporal>(*this, *this), attr);
 
     // This must be initialized before allocating AggregateErrorConstructor, which uses ErrorConstructor as its prototype.
     initialize_constructor(vm.names.Error, m_error_constructor, m_error_prototype);
