@@ -877,9 +877,16 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     if (vm.exception())
         return {};
 
-    Vector<size_t> match_positions = string.find_all(search_string);
-    size_t end_of_last_match = 0;
+    Vector<size_t> match_positions;
+    size_t advance_by = max(1u, search_string.length());
+    auto position = string.find(search_string);
 
+    while (position.has_value()) {
+        match_positions.append(*position);
+        position = string.find(search_string, *position + advance_by);
+    }
+
+    size_t end_of_last_match = 0;
     StringBuilder result;
 
     for (auto position : match_positions) {
