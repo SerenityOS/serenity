@@ -617,10 +617,11 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         TRAP_IF_NOT(entry.has<Value>());
         auto maybe_i = entry.get<Value>().to<i32>();
         TRAP_IF_NOT(maybe_i.has_value());
-        TRAP_IF_NOT(maybe_i.value() >= 0);
-        size_t i = *maybe_i;
-        if (i < arguments.labels.size())
-            return branch_to_label(configuration, arguments.labels[i]);
+        if (0 <= *maybe_i) {
+            size_t i = *maybe_i;
+            if (i < arguments.labels.size())
+                return branch_to_label(configuration, arguments.labels[i]);
+        }
         return branch_to_label(configuration, arguments.default_);
     }
     case Instructions::call.value(): {
