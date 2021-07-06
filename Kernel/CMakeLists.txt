@@ -128,6 +128,7 @@ set(KERNEL_SOURCES
     Interrupts/SpuriousInterruptHandler.cpp
     Interrupts/UnhandledInterruptHandler.cpp
     KBufferBuilder.cpp
+    KLexicalPath.cpp
     KString.cpp
     KSyms.cpp
     Lock.cpp
