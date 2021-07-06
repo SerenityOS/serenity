@@ -46,17 +46,35 @@ static void perform_self_relocations(auxv_t* auxvp)
     if (!dynamic_section_addr)
         exit(1);
 
-    auto dynamic_object = ELF::DynamicObject::create({}, (VirtualAddress(base_address)), (VirtualAddress(dynamic_section_addr)));
+    FlatPtr relocation_section_addr = 0;
+    size_t relocation_table_size = 0;
+    size_t relocation_count = 0;
+    auto* dyns = reinterpret_cast<const ElfW(Dyn)*>(dynamic_section_addr);
+    for (unsigned i = 0;; ++i) {
+        auto& dyn = dyns[i];
+        if (dyn.d_tag == DT_NULL)
+            break;
+        if (dyn.d_tag == DT_REL || dyn.d_tag == DT_RELA)
+            relocation_section_addr = base_address + dyn.d_un.d_ptr;
+        else if (dyn.d_tag == DT_RELCOUNT || dyn.d_tag == DT_RELACOUNT)
+            relocation_count = dyn.d_un.d_val;
+        else if (dyn.d_tag == DT_RELSZ || dyn.d_tag == DT_RELASZ)
+            relocation_table_size = dyn.d_un.d_val;
+    }
+    if (!relocation_section_addr || !relocation_table_size || !relocation_count)
+        exit(1);
 
-    dynamic_object->relocation_section().for_each_relocation([base_address](auto& reloc) {
+    auto relocation_entry_size = relocation_table_size / relocation_count;
+    for (unsigned i = 0; i < relocation_count; ++i) {
+        size_t offset_in_section = i * relocation_entry_size;
+        auto* relocation = (ElfW(Rela)*)(relocation_section_addr + offset_in_section);
 #if ARCH(I386)
-        VERIFY(reloc.type() == R_386_RELATIVE);
+        VERIFY(ELF32_R_TYPE(relocation->r_info) == R_386_RELATIVE);
 #else
-        VERIFY(reloc.type() == R_X86_64_RELATIVE);
+        VERIFY(ELF64_R_TYPE(relocation->r_info) == R_X86_64_RELATIVE);
 #endif
-
-        *(FlatPtr*)reloc.address().as_ptr() += base_address;
-    });
+        *(FlatPtr*)(base_address + relocation->r_offset) += base_address;
+    }
 }
 
 static void display_help()
