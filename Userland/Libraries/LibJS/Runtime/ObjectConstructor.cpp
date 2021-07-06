@@ -33,7 +33,7 @@ void ObjectConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.defineProperty, define_property_, 3, attr);
+    define_native_function(vm.names.defineProperty, define_property, 3, attr);
     define_native_function(vm.names.defineProperties, define_properties, 2, attr);
     define_native_function(vm.names.is, is, 2, attr);
     define_native_function(vm.names.getOwnPropertyDescriptor, get_own_property_descriptor, 2, attr);
@@ -305,7 +305,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 }
 
 // 20.1.2.4 Object.defineProperty ( O, P, Attributes ), https://tc39.es/ecma262/#sec-object.defineproperty
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property_)
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property)
 {
     if (!vm.argument(0).is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, vm.argument(0).to_string_without_side_effects());
