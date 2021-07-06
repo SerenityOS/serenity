@@ -31,7 +31,7 @@ public:
             return {};
         if (value.is_symbol())
             return value.as_symbol();
-        if (value.is_integral_number() && value.as_double() >= 0 && value.as_double() <= NumericLimits<u32>::max())
+        if (value.is_integral_number() && value.as_double() >= 0 && value.as_double() < NumericLimits<u32>::max())
             return value.as_u32();
         auto string = value.to_string(global_object);
         if (string.is_null())
@@ -49,8 +49,8 @@ public:
         // FIXME: Replace this with requires(IsUnsigned<T>)?
         //        Needs changes in various places using `int` (but not actually being in the negative range)
         VERIFY(index >= 0);
-        if constexpr (NumericLimits<T>::max() > NumericLimits<u32>::max())
-            VERIFY(index <= NumericLimits<u32>::max());
+        if constexpr (NumericLimits<T>::max() >= NumericLimits<u32>::max())
+            VERIFY(index < NumericLimits<u32>::max());
     }
 
     PropertyName(char const* chars)
@@ -131,7 +131,7 @@ public:
         }
 
         auto property_index = m_string.to_uint(TrimWhitespace::No);
-        if (!property_index.has_value()) {
+        if (!property_index.has_value() || property_index.value() == NumericLimits<u32>::max()) {
             m_string_may_be_number = false;
             return false;
         }
