@@ -200,6 +200,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
     auto do_wake = [&](VMObject* vmobject, FlatPtr user_address_or_offset, u32 count, Optional<u32> bitmask) -> int {
         if (count == 0)
             return 0;
+        ScopedSpinLock lock(queue_lock);
         auto futex_queue = find_futex_queue(vmobject, user_address_or_offset, false);
         if (!futex_queue)
             return 0;
@@ -211,8 +212,6 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         }
         return (int)woke_count;
     };
-
-    ScopedSpinLock lock(queue_lock);
 
     auto do_wait = [&](u32 bitset) -> int {
         bool did_create;
@@ -227,6 +226,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
             }
             atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
 
+            ScopedSpinLock lock(queue_lock);
             did_create = false;
             futex_queue = find_futex_queue(vmobject.ptr(), user_address_or_offset, true, &did_create);
             VERIFY(futex_queue);
@@ -234,13 +234,12 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
             // was removed before we were able to queue an imminent wait.
         } while (!did_create && !futex_queue->queue_imminent_wait());
 
-        // We need to release the lock before blocking. But we have a reference
+        // We must not hold the lock before blocking. But we have a reference
         // to the FutexQueue so that we can keep it alive.
-        lock.unlock();
 
         Thread::BlockResult block_result = futex_queue->wait_on(timeout, bitset);
 
-        lock.lock();
+        ScopedSpinLock lock(queue_lock);
         if (futex_queue->is_empty_and_no_imminent_waits()) {
             // If there are no more waiters, we want to get rid of the futex!
             remove_futex_queue(vmobject, user_address_or_offset);
@@ -260,6 +259,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         atomic_thread_fence(AK::MemoryOrder::memory_order_acquire);
 
         int woken_or_requeued = 0;
+        ScopedSpinLock lock(queue_lock);
         if (auto futex_queue = find_futex_queue(vmobject.ptr(), user_address_or_offset, false)) {
             RefPtr<FutexQueue> target_futex_queue;
             bool is_empty, is_target_empty;
