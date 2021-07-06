@@ -361,7 +361,10 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
 KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
     auto basename = KLexicalPath::basename(path);
-    if (auto result = validate_path_against_process_veil(String::formatted("{}/{}", parent_custody.absolute_path(), basename), options); result.is_error())
+    auto full_path = KLexicalPath::try_join(parent_custody.absolute_path(), basename);
+    if (!full_path)
+        return ENOMEM;
+    if (auto result = validate_path_against_process_veil(full_path->view(), options); result.is_error())
         return result;
 
     if (!is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode)) {

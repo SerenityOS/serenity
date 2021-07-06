@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/StringView.h>
+#include <Kernel/KString.h>
 
 namespace Kernel::KLexicalPath {
 
@@ -15,5 +16,7 @@ bool is_canonical(StringView const&);
 StringView basename(StringView const&);
 StringView dirname(StringView const&);
 Vector<StringView> parts(StringView const&);
+
+OwnPtr<KString> try_join(StringView const&, StringView const&);
 
 }
