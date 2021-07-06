@@ -20,7 +20,7 @@ test("basic functionality", () => {
         if (!isBigIntArray) typedArray = new T.array([1, 2, 3]);
         else typedArray = new T.array([1n, 2n, 3n]);
 
-        expect(Object.hasOwn(typedArray, "byteOffset")).toBeFalse();
+        expect(Object.hasOwn(typedArray, "byteLength")).toBeFalse();
         expect(typedArray.byteLength).toBe(T.expected);
     });
 });
