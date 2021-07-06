@@ -5,6 +5,7 @@
  */
 
 #include <AK/Format.h>
+#include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
@@ -20,7 +21,7 @@
 static struct termios g_save;
 static struct winsize g_wsize;
 
-static void setup_tty()
+static void setup_tty(bool switch_buffer)
 {
     // Save previous tty settings.
     if (tcgetattr(STDOUT_FILENO, &g_save) == -1) {
@@ -40,17 +41,21 @@ static void setup_tty()
         perror("tcsetattr(3)");
     }
 
-    // Save cursor and switch to alternate buffer.
-    out("\e[s\e[?1047h");
+    if (switch_buffer) {
+        // Save cursor and switch to alternate buffer.
+        out("\e[s\e[?1047h");
+    }
 }
 
-static void teardown_tty()
+static void teardown_tty(bool switch_buffer)
 {
     if (tcsetattr(STDOUT_FILENO, TCSAFLUSH, &g_save) == -1) {
         perror("tcsetattr(3)");
     }
 
-    out("\e[?1047l\e[u");
+    if (switch_buffer) {
+        out("\e[?1047l\e[u");
+    }
 }
 
 static Vector<String> wrap_line(Utf8View const& string, size_t width)
@@ -260,6 +265,7 @@ private:
         return off;
     }
 
+    // FIXME: Don't save scrollback when emulating more.
     Vector<String> m_lines;
     size_t m_line { 0 };
     FILE* m_file;
@@ -284,10 +290,19 @@ int main(int argc, char** argv)
 {
     char const* filename = "-";
     char const* prompt = "?f%f :.(line %l)?e (END):.";
+    bool dont_switch_buffer = false;
+    bool quit_at_eof = false;
+    bool emulate_more = false;
+
+    if (LexicalPath::basename(argv[0]) == "more"sv)
+        emulate_more = true;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(filename, "The paged file", "file", Core::ArgsParser::Required::No);
     args_parser.add_option(prompt, "Prompt line", "prompt", 'P', "Prompt");
+    args_parser.add_option(dont_switch_buffer, "Don't use xterm alternate buffer", "no-init", 'X');
+    args_parser.add_option(quit_at_eof, "Exit when the end of the file is reached", "quit-at-eof", 'e');
+    args_parser.add_option(emulate_more, "Pretend that we are more(1)", "emulate-more", 'm');
     args_parser.parse(argc, argv);
 
     FILE* file;
@@ -297,7 +312,14 @@ int main(int argc, char** argv)
         file = fopen(filename, "r");
     }
 
-    setup_tty();
+    if (emulate_more) {
+        // Configure options that match more's behavior
+        dont_switch_buffer = true;
+        quit_at_eof = true;
+        prompt = "--More--";
+    }
+
+    setup_tty(!dont_switch_buffer);
 
     Pager pager(file, stdout, g_wsize.ws_col, g_wsize.ws_row);
     pager.set_filename(filename);
@@ -311,12 +333,18 @@ int main(int argc, char** argv)
         } else if (sequence == "j" || sequence == "\e[B" || sequence == "\n") {
             pager.down();
         } else if (sequence == "k" || sequence == "\e[A") {
-            pager.up();
+            if (!emulate_more)
+                pager.up();
         } else if (sequence == " ") {
             pager.down_page();
         }
+
+        if (quit_at_eof && pager.at_end())
+            break;
     }
 
-    teardown_tty();
+    pager.clear_status();
+
+    teardown_tty(!dont_switch_buffer);
     return 0;
 }

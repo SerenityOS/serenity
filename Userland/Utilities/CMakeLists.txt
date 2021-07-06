@@ -8,7 +8,7 @@ list(APPEND REQUIRED_TARGETS
 )
 list(APPEND RECOMMENDED_TARGETS
     adjtime aplay avol bt checksum chres cksum copy fortune gunzip gzip init keymap lsirq lsof lspci man mknod mktemp
-    modload modunload more nc netstat notify ntpquery open pape passwd pls printf pro shot tar tt unzip zip
+    modload modunload nc netstat notify ntpquery open pape passwd pls printf pro shot tar tt unzip zip
 )
 
 # FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
