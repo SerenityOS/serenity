@@ -399,9 +399,9 @@ void ImageEditor::relayout()
     update();
 }
 
-void ImageEditor::image_did_change()
+void ImageEditor::image_did_change(Gfx::IntRect const& modified_image_rect)
 {
-    update(m_editor_image_rect);
+    update(m_editor_image_rect.intersected(enclosing_int_rect(image_rect_to_editor_rect(modified_image_rect))));
 }
 
 void ImageEditor::image_did_change_title(String const& path)

@@ -61,9 +61,9 @@ Layer::Layer(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, String name)
 {
 }
 
-void Layer::did_modify_bitmap()
+void Layer::did_modify_bitmap(Gfx::IntRect const& rect)
 {
-    m_image.layer_did_modify_bitmap({}, *this);
+    m_image.layer_did_modify_bitmap({}, *this, rect);
 }
 
 void Layer::set_visible(bool visible)

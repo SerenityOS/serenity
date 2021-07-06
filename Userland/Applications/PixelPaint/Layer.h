@@ -46,7 +46,7 @@ public:
 
     void set_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap) { m_bitmap = move(bitmap); }
 
-    void did_modify_bitmap();
+    void did_modify_bitmap(Gfx::IntRect const& = {});
 
     void set_selected(bool selected) { m_selected = selected; }
     bool is_selected() const { return m_selected; }

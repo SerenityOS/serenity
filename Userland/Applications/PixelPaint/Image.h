@@ -28,7 +28,7 @@ public:
     virtual void image_did_remove_layer(size_t) { }
     virtual void image_did_modify_layer(size_t) { }
     virtual void image_did_modify_layer_stack() { }
-    virtual void image_did_change() { }
+    virtual void image_did_change(Gfx::IntRect const&) { }
     virtual void image_select_layer(Layer*) { }
     virtual void image_did_change_title(String const&) { }
 
@@ -72,7 +72,7 @@ public:
     void add_client(ImageClient&);
     void remove_client(ImageClient&);
 
-    void layer_did_modify_bitmap(Badge<Layer>, Layer const&);
+    void layer_did_modify_bitmap(Badge<Layer>, Layer const&, Gfx::IntRect const& modified_layer_rect);
     void layer_did_modify_properties(Badge<Layer>, Layer const&);
 
     size_t index_of(Layer const&) const;
@@ -88,7 +88,7 @@ private:
 
     static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_file(String const& file_path);
 
-    void did_change();
+    void did_change(Gfx::IntRect const& modified_rect = {});
     void did_modify_layer_stack();
 
     String m_path;

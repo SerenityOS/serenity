@@ -384,13 +384,13 @@ void Image::remove_client(ImageClient& client)
     m_clients.remove(&client);
 }
 
-void Image::layer_did_modify_bitmap(Badge<Layer>, Layer const& layer)
+void Image::layer_did_modify_bitmap(Badge<Layer>, Layer const& layer, Gfx::IntRect const& modified_layer_rect)
 {
     auto layer_index = index_of(layer);
     for (auto* client : m_clients)
         client->image_did_modify_layer(layer_index);
 
-    did_change();
+    did_change(modified_layer_rect.translated(layer.location()));
 }
 
 void Image::layer_did_modify_properties(Badge<Layer>, Layer const& layer)
@@ -402,10 +402,11 @@ void Image::layer_did_modify_properties(Badge<Layer>, Layer const& layer)
     did_change();
 }
 
-void Image::did_change()
+void Image::did_change(Gfx::IntRect const& a_modified_rect)
 {
+    auto modified_rect = a_modified_rect.is_empty() ? this->rect() : a_modified_rect;
     for (auto* client : m_clients)
-        client->image_did_change();
+        client->image_did_change(modified_rect);
 }
 
 ImageUndoCommand::ImageUndoCommand(Image& image)
