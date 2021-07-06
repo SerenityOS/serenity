@@ -30,6 +30,7 @@ public:
     Inode& inode() { return *m_inode; }
     const Inode& inode() const { return *m_inode; }
     StringView name() const { return m_name->view(); }
+    OwnPtr<KString> try_create_absolute_path() const;
     String absolute_path() const;
 
     int mount_flags() const { return m_mount_flags; }
