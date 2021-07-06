@@ -509,6 +509,8 @@ Value JSONObject::internalize_json_property(GlobalObject& global_object, Object*
             }
         } else {
             auto property_list = value_object.enumerable_own_property_names(Object::PropertyKind::Key);
+            if (vm.exception())
+                return {};
             for (auto& property_name : property_list) {
                 process_property(property_name.as_string().string());
                 if (vm.exception())
