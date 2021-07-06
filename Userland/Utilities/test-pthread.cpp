@@ -36,6 +36,36 @@ static void test_once()
     VERIFY(v.size() == 1);
 }
 
+static void test_mutex()
+{
+    constexpr size_t threads_count = 10;
+    constexpr size_t num_times = 100;
+
+    Vector<int> v;
+    NonnullRefPtrVector<Threading::Thread, threads_count> threads;
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+    for (size_t i = 0; i < threads_count; i++) {
+        threads.append(Threading::Thread::construct([&] {
+            for (size_t j = 0; j < num_times; j++) {
+                pthread_mutex_lock(&mutex);
+                v.append(35);
+                sched_yield();
+                pthread_mutex_unlock(&mutex);
+                sched_yield();
+            }
+            return 0;
+        }));
+        threads.last().start();
+    }
+    for (auto& thread : threads)
+        [[maybe_unused]] auto res = thread.join();
+
+    VERIFY(v.size() == threads_count * num_times);
+    VERIFY(pthread_mutex_trylock(&mutex) == 0);
+    VERIFY(pthread_mutex_trylock(&mutex) == EBUSY);
+}
+
 static void test_semaphore_as_lock()
 {
     constexpr size_t threads_count = 10;
@@ -138,6 +168,7 @@ static void test_semaphore_nonbinary()
 int main()
 {
     test_once();
+    test_mutex();
 
     test_semaphore_as_lock();
     test_semaphore_as_event();
