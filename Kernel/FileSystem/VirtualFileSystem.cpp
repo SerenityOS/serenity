@@ -56,7 +56,7 @@ KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
     auto& inode = mount_point.inode();
     dbgln("VFS: Mounting {} at {} (inode: {}) with flags {}",
         file_system.class_name(),
-        mount_point.absolute_path(),
+        mount_point.try_create_absolute_path(),
         inode.identifier(),
         flags);
     // FIXME: check that this is not already a mount point
@@ -69,7 +69,7 @@ KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
     Locker locker(m_lock);
 
-    dbgln("VFS: Bind-mounting {} at {}", source.absolute_path(), mount_point.absolute_path());
+    dbgln("VFS: Bind-mounting {} at {}", source.try_create_absolute_path(), mount_point.try_create_absolute_path());
     // FIXME: check that this is not already a mount point
     Mount mount { source.inode(), mount_point, flags };
     m_mounts.append(move(mount));
@@ -80,7 +80,7 @@ KResult VFS::remount(Custody& mount_point, int new_flags)
 {
     Locker locker(m_lock);
 
-    dbgln("VFS: Remounting {}", mount_point.absolute_path());
+    dbgln("VFS: Remounting {}", mount_point.try_create_absolute_path());
 
     Mount* mount = find_mount_for_guest(mount_point.inode());
     if (!mount)
@@ -361,7 +361,10 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
 KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
     auto basename = KLexicalPath::basename(path);
-    auto full_path = KLexicalPath::try_join(parent_custody.absolute_path(), basename);
+    auto parent_path = parent_custody.try_create_absolute_path();
+    if (!parent_path)
+        return ENOMEM;
+    auto full_path = KLexicalPath::try_join(parent_path->view(), basename);
     if (!full_path)
         return ENOMEM;
     if (auto result = validate_path_against_process_veil(full_path->view(), options); result.is_error())
@@ -844,7 +847,10 @@ KResult VFS::validate_path_against_process_veil(Custody const& custody, int opti
 {
     if (Process::current()->veil_state() == VeilState::None)
         return KSuccess;
-    return validate_path_against_process_veil(custody.absolute_path(), options);
+    auto absolute_path = custody.try_create_absolute_path();
+    if (!absolute_path)
+        return ENOMEM;
+    return validate_path_against_process_veil(absolute_path->view(), options);
 }
 
 KResult VFS::validate_path_against_process_veil(StringView path, int options)

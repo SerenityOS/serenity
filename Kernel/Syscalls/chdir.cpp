@@ -48,7 +48,10 @@ KResultOr<FlatPtr> Process::sys$getcwd(Userspace<char*> buffer, size_t size)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
 
-    auto path = current_directory().absolute_path();
+    auto maybe_path = current_directory().try_create_absolute_path();
+    if (!maybe_path)
+        return ENOMEM;
+    auto& path = *maybe_path;
 
     size_t ideal_size = path.length() + 1;
     auto size_to_copy = min(ideal_size, size);
