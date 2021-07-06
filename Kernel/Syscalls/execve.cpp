@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <AK/WeakPtr.h>
