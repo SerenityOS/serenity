@@ -122,3 +122,24 @@ test("replacement value is evaluated before searching the source string", () => 
     expect(newString).toBe("");
     expect(calls).toBe(2);
 });
+
+test("search value is coerced to a string", () => {
+    var calls = 0;
+    var coerced;
+
+    var searchValue = {
+        toString: function () {
+            calls += 1;
+            return "x";
+        },
+    };
+
+    var replaceValue = function (matched) {
+        coerced = matched;
+        return "abc";
+    };
+
+    var newString = "x".replaceAll(searchValue, replaceValue);
+    expect(newString).toBe("abc");
+    expect(coerced).toBe("x");
+});
