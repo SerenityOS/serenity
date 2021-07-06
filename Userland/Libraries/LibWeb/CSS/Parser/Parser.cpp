@@ -1020,21 +1020,39 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of
 
 RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 {
-    dbgln("Converting a rule: {}", rule->to_string());
-
     if (rule->m_type == StyleRule::Type::At) {
-        dbgln("... It's an at rule");
-    } else {
-        dbgln("... It's a style rule");
+        if (rule->m_name.equals_ignoring_case("import"sv) && !rule->prelude().is_empty()) {
 
+            Optional<String> url;
+            auto url_token = rule->prelude().first();
+            if (url_token.is_function()) {
+                auto& function = url_token.function();
+                if (function.name().equals_ignoring_case("url"sv) && !function.values().is_empty())
+                    url = url_token.function().values().first();
+            }
+
+            if (url_token.is(Token::Type::String))
+                url = url_token.token().string();
+
+            // FIXME: Handle list of media queries. https://www.w3.org/TR/css-cascade-3/#conditional-import
+            if (url.has_value())
+                return CSSImportRule::create(m_context.complete_url(url.value()));
+        } else {
+            dbgln("Unrecognized CSS at-rule: {}", rule->m_name);
+        }
+
+        // FIXME: More at rules!
+
+    } else {
         auto prelude_stream = TokenStream(rule->m_prelude);
         Vector<Selector> selectors = parse_a_selector(prelude_stream);
         auto declaration = convert_to_declaration(*rule->m_block);
         if (declaration && !selectors.is_empty())
             return CSSStyleRule::create(move(selectors), move(*declaration));
+        else
+            dbgln("Discarding invalid/unsupported style rule: '{}'", rule->to_string());
     }
 
-    dbgln("... discarding because it's invalid or unsupported.");
     return {};
 }
 
