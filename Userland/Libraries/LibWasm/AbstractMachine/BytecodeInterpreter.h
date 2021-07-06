@@ -49,10 +49,10 @@ protected:
     T read_value(ReadonlyBytes data);
 
     Vector<Value> pop_values(Configuration& configuration, size_t count);
-    bool trap_if_not(bool value, String reason)
+    bool trap_if_not(bool value, StringView reason)
     {
         if (!value)
-            m_trap = Trap { move(reason) };
+            m_trap = Trap { reason };
         return m_trap.has_value();
     }
 
