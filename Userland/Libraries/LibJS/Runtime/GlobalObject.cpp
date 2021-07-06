@@ -12,8 +12,6 @@
 #include <LibJS/Console.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Lexer.h>
-#include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/AggregateErrorConstructor.h>
 #include <LibJS/Runtime/AggregateErrorPrototype.h>
