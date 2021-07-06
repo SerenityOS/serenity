@@ -14,6 +14,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#ifdef __clang__
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wdouble-promotion"
+#endif
+
 template<size_t>
 constexpr double e_to_power();
 template<>
@@ -1461,3 +1466,7 @@ float nearbyintf(float value) NOEXCEPT
     return internal_to_integer(value, RoundingMode { fegetround() });
 }
 }
+
+#ifdef __clang__
+#    pragma clang diagnostic pop
+#endif

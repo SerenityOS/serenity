@@ -21,7 +21,11 @@
 
 using Test::Crash;
 
-#pragma GCC optimize("O0")
+#ifdef __clang__
+#    pragma clang optimize off
+#else
+#    pragma GCC optimize("O0")
+#endif
 
 int main(int argc, char** argv)
 {
