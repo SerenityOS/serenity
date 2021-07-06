@@ -16,6 +16,13 @@ bool FutexQueue::should_add_blocker(Thread::Blocker& b, void* data)
     VERIFY(m_lock.is_locked());
     VERIFY(b.blocker_type() == Thread::Blocker::Type::Futex);
 
+    VERIFY(m_imminent_waits > 0);
+    m_imminent_waits--;
+
+    if (m_was_removed) {
+        dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: should not block thread {}: was removed", this, *static_cast<Thread*>(data));
+        return false;
+    }
     dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: should block thread {}", this, *static_cast<Thread*>(data));
 
     return true;
@@ -43,7 +50,7 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
         }
         return false;
     });
-    is_empty = is_empty_locked();
+    is_empty = is_empty_and_no_imminent_waits_locked();
     if (requeue_count > 0) {
         auto blockers_to_requeue = do_take_blockers(requeue_count);
         if (!blockers_to_requeue.is_empty()) {
@@ -69,7 +76,7 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
                     blocker.finish_requeue(*target_futex_queue);
                 }
                 target_futex_queue->do_append_blockers(move(blockers_to_requeue));
-                is_empty_target = target_futex_queue->is_empty_locked();
+                is_empty_target = target_futex_queue->is_empty_and_no_imminent_waits_locked();
             } else {
                 dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n_requeue could not get target queue to requeue {} blockers", this, blockers_to_requeue.size());
                 do_append_blockers(move(blockers_to_requeue));
@@ -81,8 +88,10 @@ u32 FutexQueue::wake_n_requeue(u32 wake_count, const Function<FutexQueue*()>& ge
 
 u32 FutexQueue::wake_n(u32 wake_count, const Optional<u32>& bitset, bool& is_empty)
 {
-    if (wake_count == 0)
+    if (wake_count == 0) {
+        is_empty = false;
         return 0; // should we assert instead?
+    }
     ScopedSpinLock lock(m_lock);
     dbgln_if(FUTEXQUEUE_DEBUG, "FutexQueue @ {}: wake_n({})", this, wake_count);
     u32 did_wake = 0;
@@ -100,7 +109,7 @@ u32 FutexQueue::wake_n(u32 wake_count, const Optional<u32>& bitset, bool& is_emp
         }
         return false;
     });
-    is_empty = is_empty_locked();
+    is_empty = is_empty_and_no_imminent_waits_locked();
     return did_wake;
 }
 
@@ -120,8 +129,40 @@ u32 FutexQueue::wake_all(bool& is_empty)
         }
         return false;
     });
-    is_empty = is_empty_locked();
+    is_empty = is_empty_and_no_imminent_waits_locked();
     return did_wake;
+}
+
+bool FutexQueue::is_empty_and_no_imminent_waits_locked()
+{
+    return m_imminent_waits == 0 && is_empty_locked();
+}
+
+bool FutexQueue::queue_imminent_wait()
+{
+    ScopedSpinLock lock(m_lock);
+    if (m_was_removed)
+        return false;
+    m_imminent_waits++;
+    return true;
+}
+
+bool FutexQueue::try_remove()
+{
+    ScopedSpinLock lock(m_lock);
+    if (m_was_removed)
+        return false;
+    if (!is_empty_and_no_imminent_waits_locked())
+        return false;
+    m_was_removed = true;
+    return true;
+}
+
+void FutexQueue::did_remove()
+{
+    ScopedSpinLock lock(m_lock);
+    VERIFY(m_was_removed);
+    VERIFY(is_empty_and_no_imminent_waits_locked());
 }
 
 }
