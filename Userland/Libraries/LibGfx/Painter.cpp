@@ -177,14 +177,38 @@ void Painter::fill_rect_with_checkerboard(const IntRect& a_rect, const IntSize& 
     RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
+    int first_cell_column = rect.x() / cell_size.width();
+    int prologue_length = cell_size.width() - (rect.x() % cell_size.width());
+    int number_of_aligned_strips = ((rect.width() - prologue_length) / cell_size.width());
+
     for (int i = 0; i < rect.height(); ++i) {
         int y = rect.y() + i;
         int cell_row = y / cell_size.height();
-        for (int j = 0; j < rect.width(); ++j) {
-            int x = rect.x() + j;
-            int cell_col = x / cell_size.width();
-            dst[j] = ((cell_row % 2) ^ (cell_col % 2)) ? color_light.value() : color_dark.value();
+        bool odd_row = cell_row & 1;
+
+        // Prologue: Paint the unaligned part up to the first intersection.
+        int j = 0;
+        int cell_column = first_cell_column;
+        for (int p = 0; p < prologue_length; ++p) {
+            dst[j] = (odd_row ^ (cell_column % 2)) ? color_light.value() : color_dark.value();
+            ++j;
         }
+
+        // Aligned run: Paint the maximum number of aligned cell strips.
+        for (int strip = 0; strip < number_of_aligned_strips; ++strip) {
+            ++cell_column;
+            bool odd_cell = cell_column & 1;
+            auto color = (odd_row ^ odd_cell) ? color_light.value() : color_dark.value();
+            fast_u32_fill(&dst[j], color, cell_size.width());
+            j += cell_size.width();
+        }
+
+        // Epilogue: Paint the unaligned part until the end of the rect.
+        ++cell_column;
+        for (; j < rect.width(); ++j) {
+            dst[j] = (odd_row ^ (cell_column % 2)) ? color_light.value() : color_dark.value();
+        }
+
         dst += dst_skip;
     }
 }
