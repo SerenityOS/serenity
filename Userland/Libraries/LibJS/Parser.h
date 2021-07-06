@@ -201,18 +201,12 @@ private:
             Function,
             Block,
         };
-        struct HoistableDeclaration {
-            NonnullRefPtr<FunctionDeclaration> declaration;
-            NonnullRefPtr<Scope> scope; // where it is actually declared
-        };
 
         Type type;
         RefPtr<Scope> parent;
 
         NonnullRefPtrVector<FunctionDeclaration> function_declarations;
-        Vector<HoistableDeclaration> hoisted_function_declarations;
-
-        HashTable<FlyString> lexical_declarations;
+        NonnullRefPtrVector<FunctionDeclaration> hoisted_function_declarations;
 
         explicit Scope(Type, RefPtr<Scope>);
         RefPtr<Scope> get_current_function_scope();
