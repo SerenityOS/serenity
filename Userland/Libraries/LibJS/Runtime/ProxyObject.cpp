@@ -798,13 +798,23 @@ MarkedValueList ProxyObject::internal_own_property_keys() const
         return MarkedValueList { heap() };
 
     // 8. Let trapResult be ? CreateListFromArrayLike(trapResultArray, « String, Symbol »).
-    auto trap_result = create_list_from_array_like(global_object, trap_result_array, [](auto value) -> Result<void, ErrorType> {
-        if (!value.is_string() && !value.is_symbol())
-            return ErrorType::ProxyOwnPropertyKeysNotStringOrSymbol;
-        return {};
+    HashTable<StringOrSymbol> unique_keys;
+    auto trap_result = create_list_from_array_like(global_object, trap_result_array, [&](auto value) {
+        auto& vm = global_object.vm();
+        if (!value.is_string() && !value.is_symbol()) {
+            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysNotStringOrSymbol);
+            return;
+        }
+        auto property_key = value.to_property_key(global_object);
+        VERIFY(!vm.exception());
+        unique_keys.set(property_key, AK::HashSetExistingEntryBehavior::Keep);
     });
 
-    // FIXME: 9. If trapResult contains any duplicate entries, throw a TypeError exception.
+    // 9. If trapResult contains any duplicate entries, throw a TypeError exception.
+    if (unique_keys.size() != trap_result.size()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ProxyOwnPropertyKeysDuplicates);
+        return MarkedValueList { heap() };
+    }
 
     // 10. Let extensibleTarget be ? IsExtensible(target).
     auto extensible_target = m_target.is_extensible();
