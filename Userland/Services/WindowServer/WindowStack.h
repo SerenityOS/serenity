@@ -22,6 +22,7 @@ public:
     void add_to_back(Window&);
     void remove(Window&);
     void move_to_front(Window&);
+    void move_pinned_windows_to_front();
 
     enum class MoveAllWindowsTo {
         Front,

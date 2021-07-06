@@ -223,6 +223,7 @@ public:
     void minimize_windows(Window&, bool);
     void hide_windows(Window&, bool);
     void maximize_windows(Window&, bool);
+    void set_pinned(Window&, bool);
 
     template<typename Function>
     IterationDecision for_each_window_in_modal_stack(Window& window, Function f)
