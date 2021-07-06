@@ -300,6 +300,7 @@ namespace JS {
     P(tanh)                                  \
     P(test)                                  \
     P(then)                                  \
+    P(timeZone)                              \
     P(toDateString)                          \
     P(toFixed)                               \
     P(toGMTString)                           \
