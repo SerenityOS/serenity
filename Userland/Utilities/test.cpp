@@ -16,7 +16,7 @@
 
 bool g_there_was_an_error = false;
 
-[[noreturn]] static void fatal_error(const char* format, ...)
+[[noreturn, gnu::format(printf, 1, 2)]] static void fatal_error(const char* format, ...)
 {
     fputs("\033[31m", stderr);
 
