@@ -128,6 +128,6 @@ int pthread_cond_broadcast(pthread_cond_t* cond)
     VERIFY(mutex);
 
     int rc = futex(&cond->value, FUTEX_REQUEUE, 1, nullptr, &mutex->lock, INT_MAX);
-    VERIFY(rc == 0);
+    VERIFY(rc >= 0);
     return 0;
 }
