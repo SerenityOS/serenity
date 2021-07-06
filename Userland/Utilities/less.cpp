@@ -174,7 +174,19 @@ public:
 
     void status_line()
     {
-        out(m_tty, "\e[7m -- less -- (line {})\e[27m", m_line + 1);
+        out(m_tty, "\e[7m ");
+        render_status_line(m_prompt);
+        out(m_tty, " \e[27m");
+    }
+
+    void set_filename(StringView const& filename)
+    {
+        m_filename = filename;
+    }
+
+    void set_prompt(StringView const& prompt)
+    {
+        m_prompt = prompt;
     }
 
     bool read_line()
@@ -191,7 +203,63 @@ public:
         return true;
     }
 
+    bool at_end()
+    {
+        return (m_line + m_height - 1) >= m_lines.size() && feof(m_file);
+    }
+
 private:
+    size_t render_status_line(StringView const& prompt, size_t off = 0, char end = '\0', bool ignored = false)
+    {
+        for (; prompt[off] != end && off < prompt.length(); ++off) {
+            if (ignored)
+                continue;
+
+            if (off + 1 >= prompt.length()) {
+                // Don't parse any multi-character sequences if we are at the end of input.
+                out(m_tty, "{}", prompt[off]);
+                continue;
+            }
+
+            switch (prompt[off]) {
+            case '?':
+                switch (prompt[++off]) {
+                case 'f':
+                    off = render_status_line(prompt, off + 1, ':', m_file == stdin);
+                    off = render_status_line(prompt, off + 1, '.', m_file != stdin);
+                    break;
+                case 'e':
+                    off = render_status_line(prompt, off + 1, ':', !at_end());
+                    off = render_status_line(prompt, off + 1, '.', at_end());
+                    break;
+                default:
+                    // Unknown flags are never true.
+                    off = render_status_line(prompt, off + 1, ':', true);
+                    off = render_status_line(prompt, off + 1, '.', false);
+                }
+                break;
+            case '%':
+                switch (prompt[++off]) {
+                case 'f':
+                    out(m_tty, "{}", m_filename);
+                    break;
+                case 'l':
+                    out(m_tty, "{}", m_line);
+                    break;
+                default:
+                    out(m_tty, "?");
+                }
+                break;
+            case '\\':
+                ++off;
+                [[fallthrough]];
+            default:
+                out(m_tty, "{}", prompt[off]);
+            }
+        }
+        return off;
+    }
+
     Vector<String> m_lines;
     size_t m_line { 0 };
     FILE* m_file;
@@ -214,9 +282,12 @@ static String get_key_sequence()
 
 int main(int argc, char** argv)
 {
-    const char* filename = "-";
+    char const* filename = "-";
+    char const* prompt = "?f%f :.(line %l)?e (END):.";
+
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(filename, "The paged file", "file", Core::ArgsParser::Required::No);
+    args_parser.add_option(prompt, "Prompt line", "prompt", 'P', "Prompt");
     args_parser.parse(argc, argv);
 
     FILE* file;
@@ -229,6 +300,8 @@ int main(int argc, char** argv)
     setup_tty();
 
     Pager pager(file, stdout, g_wsize.ws_col, g_wsize.ws_row);
+    pager.set_filename(filename);
+    pager.set_prompt(prompt);
 
     pager.init();
 
