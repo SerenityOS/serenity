@@ -7,6 +7,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Now.h>
 #include <LibJS/Runtime/Temporal/Temporal.h>
+#include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
 
 namespace JS::Temporal {
 
@@ -24,6 +25,7 @@ void Temporal::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_direct_property(vm.names.now, heap().allocate<Now>(global_object, global_object), attr);
+    define_direct_property(vm.names.TimeZone, global_object.temporal_time_zone_constructor(), attr);
 }
 
 }
