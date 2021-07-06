@@ -87,7 +87,7 @@ private:
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
 
-    virtual void image_did_change() override;
+    virtual void image_did_change(Gfx::IntRect const&) override;
     virtual void image_select_layer(Layer*) override;
     virtual void image_did_change_title(String const&) override;
 
