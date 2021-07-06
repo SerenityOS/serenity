@@ -27,11 +27,13 @@ KResultOr<FlatPtr> Process::sys$realpath(Userspace<const Syscall::SC_realpath_pa
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = custody_or_error.value();
-    auto absolute_path = custody->absolute_path();
+    auto absolute_path = custody->try_create_absolute_path();
+    if (!absolute_path)
+        return ENOMEM;
 
-    size_t ideal_size = absolute_path.length() + 1;
+    size_t ideal_size = absolute_path->length() + 1;
     auto size_to_copy = min(ideal_size, params.buffer.size);
-    if (!copy_to_user(params.buffer.data, absolute_path.characters(), size_to_copy))
+    if (!copy_to_user(params.buffer.data, absolute_path->characters(), size_to_copy))
         return EFAULT;
     // Note: we return the whole size here, not the copied size.
     return ideal_size;
