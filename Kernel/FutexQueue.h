@@ -33,6 +33,17 @@ public:
 
     virtual void vmobject_deleted(VMObject&) override;
 
+    bool queue_imminent_wait();
+    void did_remove();
+    bool try_remove();
+
+    bool is_empty_and_no_imminent_waits()
+    {
+        ScopedSpinLock lock(m_lock);
+        return is_empty_and_no_imminent_waits_locked();
+    }
+    bool is_empty_and_no_imminent_waits_locked();
+
 protected:
     virtual bool should_add_blocker(Thread::Blocker& b, void* data) override;
 
@@ -42,6 +53,8 @@ private:
     const FlatPtr m_user_address_or_offset;
     WeakPtr<VMObject> m_vmobject;
     const bool m_is_global;
+    size_t m_imminent_waits { 1 }; // We only create this object if we're going to be waiting, so start out with 1
+    bool m_was_removed { false };
 };
 
 }
