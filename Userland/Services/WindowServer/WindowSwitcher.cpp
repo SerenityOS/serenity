@@ -188,7 +188,6 @@ void WindowSwitcher::draw()
             Gfx::StylePainter::paint_frame(painter, thumbnail_rect.inflated(4, 4), palette, Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
         }
         Gfx::IntRect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
-        painter.fill_rect(icon_rect, palette.window());
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
         painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.computed_title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color);
         auto window_details = m_windows_on_multiple_stacks ? String::formatted("{} on {}:{}", window.rect().to_string(), window.window_stack().row() + 1, window.window_stack().column() + 1) : window.rect().to_string();
