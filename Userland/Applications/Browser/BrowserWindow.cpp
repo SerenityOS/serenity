@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -313,7 +314,7 @@ void BrowserWindow::build_menus()
 
     auto custom_search_engine_action = GUI::Action::create_checkable("Custom", [&](auto& action) {
         String search_engine;
-        if (GUI::InputBox::show(this, search_engine, "Enter URL template:", "Custom Search Engine") != GUI::InputBox::ExecOK || search_engine.is_empty()) {
+        if (GUI::InputBox::show(this, search_engine, "Enter URL template:", "Custom Search Engine", "https://host/search?q={}") != GUI::InputBox::ExecOK || search_engine.is_empty()) {
             m_disable_search_engine_action->activate();
             return;
         }
