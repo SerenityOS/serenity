@@ -263,29 +263,40 @@ int BitmapFont::width(const StringView& string) const
     return width(utf8);
 }
 
-int BitmapFont::width(const Utf8View& utf8) const
+template<typename T>
+int BitmapFont::unicode_view_width(T const& view) const
 {
+    if (view.is_empty())
+        return 0;
     bool first = true;
     int width = 0;
+    int longest_width = 0;
 
-    for (u32 code_point : utf8) {
+    for (u32 code_point : view) {
+        if (code_point == '\n' || code_point == '\r') {
+            first = true;
+            width = 0;
+            continue;
+        }
         if (!first)
             width += glyph_spacing();
         first = false;
         width += glyph_or_emoji_width(code_point);
+        if (width > longest_width)
+            longest_width = width;
     }
 
-    return width;
+    return longest_width;
+}
+
+int BitmapFont::width(const Utf8View& utf8) const
+{
+    return unicode_view_width(utf8);
 }
 
 int BitmapFont::width(const Utf32View& view) const
 {
-    if (view.length() == 0)
-        return 0;
-    int width = (view.length() - 1) * glyph_spacing();
-    for (size_t i = 0; i < view.length(); ++i)
-        width += glyph_or_emoji_width(view.code_points()[i]);
-    return width;
+    return unicode_view_width(view);
 }
 
 void BitmapFont::set_type(FontTypes type)
