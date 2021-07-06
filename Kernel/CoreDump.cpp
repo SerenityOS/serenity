@@ -13,6 +13,7 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/KLexicalPath.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <Kernel/SpinLock.h>
@@ -44,8 +45,7 @@ CoreDump::CoreDump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription
 
 RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, const String& output_path)
 {
-    LexicalPath lexical_path(output_path);
-    const auto& output_directory = lexical_path.dirname();
+    auto output_directory = KLexicalPath::dirname(output_path);
     auto dump_directory = VFS::the().open_directory(output_directory, VFS::the().root_custody());
     if (dump_directory.is_error()) {
         dbgln("Can't find directory '{}' for core dump", output_directory);
@@ -57,7 +57,7 @@ RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, con
         return nullptr;
     }
     auto fd_or_error = VFS::the().open(
-        lexical_path.basename(),
+        KLexicalPath::basename(output_path),
         O_CREAT | O_WRONLY | O_EXCL,
         S_IFREG, // We will enable reading from userspace when we finish generating the coredump file
         *dump_directory.value(),
