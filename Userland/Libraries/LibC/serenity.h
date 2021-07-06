@@ -82,14 +82,14 @@ static ALWAYS_INLINE int futex_wait(uint32_t* userspace_address, uint32_t value,
         if (clockid == CLOCK_REALTIME || clockid == CLOCK_REALTIME_COARSE)
             op |= FUTEX_CLOCK_REALTIME;
     } else {
-        op = FUTEX_WAIT;
+        op = FUTEX_WAIT | FUTEX_PRIVATE_FLAG;
     }
     return futex(userspace_address, op, value, abstime, nullptr, FUTEX_BITSET_MATCH_ANY);
 }
 
 static ALWAYS_INLINE int futex_wake(uint32_t* userspace_address, uint32_t count)
 {
-    return futex(userspace_address, FUTEX_WAKE, count, NULL, NULL, 0);
+    return futex(userspace_address, FUTEX_WAKE | FUTEX_PRIVATE_FLAG, count, NULL, NULL, 0);
 }
 
 #define PURGE_ALL_VOLATILE 0x1
