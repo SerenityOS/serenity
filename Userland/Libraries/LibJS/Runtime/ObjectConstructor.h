@@ -29,6 +29,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(define_properties);
     JS_DECLARE_NATIVE_FUNCTION(is);
     JS_DECLARE_NATIVE_FUNCTION(get_own_property_descriptor);
+    JS_DECLARE_NATIVE_FUNCTION(get_own_property_descriptors);
     JS_DECLARE_NATIVE_FUNCTION(get_own_property_names);
     JS_DECLARE_NATIVE_FUNCTION(get_own_property_symbols);
     JS_DECLARE_NATIVE_FUNCTION(get_prototype_of);

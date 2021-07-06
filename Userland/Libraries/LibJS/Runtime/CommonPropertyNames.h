@@ -156,6 +156,7 @@ namespace JS {
     P(getMinutes)                            \
     P(getMonth)                              \
     P(getOwnPropertyDescriptor)              \
+    P(getOwnPropertyDescriptors)             \
     P(getOwnPropertyNames)                   \
     P(getOwnPropertySymbols)                 \
     P(getPrototypeOf)                        \
