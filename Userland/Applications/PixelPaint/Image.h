@@ -69,6 +69,7 @@ public:
     void remove_layer(Layer&);
     void select_layer(Layer*);
     void flatten_all_layers();
+    void merge_visible_layers();
 
     void add_client(ImageClient&);
     void remove_client(ImageClient&);

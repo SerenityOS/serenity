@@ -384,6 +384,34 @@ void Image::flatten_all_layers()
     select_layer(&bottom_layer);
 }
 
+void Image::merge_visible_layers()
+{
+    if (m_layers.size() < 2)
+        return;
+
+    size_t index = 0;
+
+    while (index < m_layers.size()) {
+        if (m_layers.at(index).is_visible()) {
+            auto& bottom_layer = m_layers.at(index);
+            GUI::Painter painter(bottom_layer.bitmap());
+            paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
+            select_layer(&bottom_layer);
+            index++;
+            break;
+        }
+        index++;
+    }
+    while (index < m_layers.size()) {
+        if (m_layers.at(index).is_visible()) {
+            auto& layer = m_layers.at(index);
+            remove_layer(layer);
+        } else {
+            index++;
+        }
+    }
+}
+
 void Image::select_layer(Layer* layer)
 {
     for (auto* client : m_clients)
