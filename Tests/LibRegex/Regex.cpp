@@ -422,6 +422,27 @@ TEST_CASE(named_capture_group)
     EXPECT_EQ(result.named_capture_group_matches.at(1).ensure("Test").view, "0");
 }
 
+TEST_CASE(ecma262_named_capture_group_with_dollar_sign)
+{
+    Regex<ECMA262> re("[a-zA-Z]*=(?<$Test$>[0-9]*)");
+    RegexResult result;
+
+    if constexpr (REGEX_DEBUG) {
+        RegexDebug regex_dbg(stderr);
+        regex_dbg.print_raw_bytecode(re);
+        regex_dbg.print_header();
+        regex_dbg.print_bytecode(re);
+    }
+
+    String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
+    EXPECT_EQ(re.search(haystack, result, ECMAScriptFlags::Multiline), true);
+    EXPECT_EQ(result.count, 2u);
+    EXPECT_EQ(result.matches.at(0).view, "Opacity=255");
+    EXPECT_EQ(result.named_capture_group_matches.at(0).ensure("$Test$").view, "255");
+    EXPECT_EQ(result.matches.at(1).view, "AudibleBeep=0");
+    EXPECT_EQ(result.named_capture_group_matches.at(1).ensure("$Test$").view, "0");
+}
+
 TEST_CASE(a_star)
 {
     Regex<PosixExtended> re("a*");
