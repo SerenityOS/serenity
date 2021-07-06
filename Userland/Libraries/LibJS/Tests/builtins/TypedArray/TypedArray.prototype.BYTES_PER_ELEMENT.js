@@ -1,5 +1,6 @@
 const TYPED_ARRAYS = [
     { array: Uint8Array, expected: 1 },
+    { array: Uint8ClampedArray, expected: 1 },
     { array: Uint16Array, expected: 2 },
     { array: Uint32Array, expected: 4 },
     { array: BigUint64Array, expected: 8 },
