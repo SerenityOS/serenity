@@ -46,6 +46,7 @@ namespace JS {
     P(SQRT2)                                 \
     P(String)                                \
     P(Symbol)                                \
+    P(Temporal)                              \
     P(UTC)                                   \
     P(abs)                                   \
     P(acos)                                  \
