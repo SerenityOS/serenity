@@ -916,11 +916,11 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i64_popcnt.value():
         UNARY_NUMERIC_OPERATION(i64, __builtin_popcountll);
     case Instructions::i64_add.value():
-        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i64, +, i64);
+        BINARY_NUMERIC_OPERATION(i64, +, i64);
     case Instructions::i64_sub.value():
-        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i64, -, i64);
+        BINARY_NUMERIC_OPERATION(i64, -, i64);
     case Instructions::i64_mul.value():
-        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i64, *, i64);
+        BINARY_NUMERIC_OPERATION(i64, *, i64);
     case Instructions::i64_divs.value():
         OVF_CHECKED_BINARY_NUMERIC_OPERATION(i64, /, i64, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i64_divu.value():
