@@ -344,6 +344,9 @@ struct CommonPropertyNames {
 #define __JS_ENUMERATE(x, a, b, c, t) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
+#define __JS_ENUMERATE(x, a, b, c) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
+    JS_ENUMERATE_TEMPORAL_OBJECTS
+#undef __JS_ENUMERATE
 #define __JS_ENUMERATE(x, a) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
