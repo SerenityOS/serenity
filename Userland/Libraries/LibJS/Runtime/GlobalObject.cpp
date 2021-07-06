@@ -68,6 +68,8 @@
 #include <LibJS/Runtime/SymbolConstructor.h>
 #include <LibJS/Runtime/SymbolPrototype.h>
 #include <LibJS/Runtime/Temporal/Temporal.h>
+#include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
+#include <LibJS/Runtime/Temporal/TimeZonePrototype.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/TypedArrayConstructor.h>
 #include <LibJS/Runtime/TypedArrayPrototype.h>
@@ -243,7 +245,6 @@ void GlobalObject::visit_edges(Visitor& visitor)
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     visitor.visit(m_##snake_name##_constructor);                                         \
     visitor.visit(m_##snake_name##_prototype);
-    JS_ENUMERATE_NATIVE_ERRORS
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
