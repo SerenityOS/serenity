@@ -899,6 +899,7 @@ Value ProxyObject::call()
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
+    auto this_argument = vm.this_value(global_object);
 
     // A Proxy exotic object only has a [[Call]] internal method if the initial value of its [[ProxyTarget]] internal slot is an object that has a [[Call]] internal method.
     if (!is_function()) {
@@ -935,7 +936,7 @@ Value ProxyObject::call()
     });
 
     // 8. Return ? Call(trap, handler, « target, thisArgument, argArray »).
-    return vm.call(*trap, &m_handler, &m_target, &m_handler, arguments_array);
+    return vm.call(*trap, &m_handler, &m_target, this_argument, arguments_array);
 }
 
 // 10.5.13 [[Construct]] ( argumentsList, newTarget ), https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget
