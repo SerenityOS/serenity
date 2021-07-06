@@ -55,6 +55,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<BochsGraphicsAdapter> BochsGraphicsAdapter::initi
 UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_address)
     : PCI::DeviceController(pci_address)
     , m_mmio_registers(PCI::get_BAR2(pci_address) & 0xfffffff0)
+    , m_registers(map_typed_writable<BochsDisplayMMIORegisters volatile>(m_mmio_registers))
 {
     // We assume safe resolutio is 1024x768x32
     m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_address) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
@@ -89,9 +90,8 @@ GraphicsDevice::Type BochsGraphicsAdapter::type() const
 
 void BochsGraphicsAdapter::unblank()
 {
-    auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
     full_memory_barrier();
-    registers->vga_ioports[0] = 0x20;
+    m_registers->vga_ioports[0] = 0x20;
     full_memory_barrier();
 }
 
@@ -131,18 +131,17 @@ void BochsGraphicsAdapter::set_resolution_registers_via_io(size_t width, size_t 
 void BochsGraphicsAdapter::set_resolution_registers(size_t width, size_t height)
 {
     dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter resolution registers set to - {}x{}", width, height);
-    auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
-    registers->bochs_regs.enable = VBE_DISPI_DISABLED;
+    m_registers->bochs_regs.enable = VBE_DISPI_DISABLED;
     full_memory_barrier();
-    registers->bochs_regs.xres = width;
-    registers->bochs_regs.yres = height;
-    registers->bochs_regs.virt_width = width;
-    registers->bochs_regs.virt_height = height * 2;
-    registers->bochs_regs.bpp = 32;
+    m_registers->bochs_regs.xres = width;
+    m_registers->bochs_regs.yres = height;
+    m_registers->bochs_regs.virt_width = width;
+    m_registers->bochs_regs.virt_height = height * 2;
+    m_registers->bochs_regs.bpp = 32;
     full_memory_barrier();
-    registers->bochs_regs.enable = VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED;
+    m_registers->bochs_regs.enable = VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED;
     full_memory_barrier();
-    registers->bochs_regs.bank = 0;
+    m_registers->bochs_regs.bank = 0;
 }
 
 bool BochsGraphicsAdapter::try_to_set_resolution(size_t output_port_index, size_t width, size_t height)
@@ -181,8 +180,7 @@ bool BochsGraphicsAdapter::validate_setup_resolution_with_io(size_t width, size_
 
 bool BochsGraphicsAdapter::validate_setup_resolution(size_t width, size_t height)
 {
-    auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
-    if ((u16)width != registers->bochs_regs.xres || (u16)height != registers->bochs_regs.yres) {
+    if ((u16)width != m_registers->bochs_regs.xres || (u16)height != m_registers->bochs_regs.yres) {
         return false;
     }
     return true;
@@ -193,8 +191,7 @@ bool BochsGraphicsAdapter::set_y_offset(size_t output_port_index, size_t y_offse
     VERIFY(output_port_index == 0);
     if (m_console_enabled)
         return false;
-    auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
-    registers->bochs_regs.y_offset = y_offset;
+    m_registers->bochs_regs.y_offset = y_offset;
     return true;
 }
 
@@ -203,8 +200,7 @@ void BochsGraphicsAdapter::enable_consoles()
     ScopedSpinLock lock(m_console_mode_switch_lock);
     VERIFY(m_framebuffer_console);
     m_console_enabled = true;
-    auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
-    registers->bochs_regs.y_offset = 0;
+    m_registers->bochs_regs.y_offset = 0;
     if (m_framebuffer_device)
         m_framebuffer_device->deactivate_writes();
     m_framebuffer_console->enable();
@@ -215,8 +211,7 @@ void BochsGraphicsAdapter::disable_consoles()
     VERIFY(m_framebuffer_console);
     VERIFY(m_framebuffer_device);
     m_console_enabled = false;
-    auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
-    registers->bochs_regs.y_offset = 0;
+    m_registers->bochs_regs.y_offset = 0;
     m_framebuffer_console->disable();
     m_framebuffer_device->activate_writes();
 }
