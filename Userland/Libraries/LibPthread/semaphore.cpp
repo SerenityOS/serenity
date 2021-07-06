@@ -77,7 +77,7 @@ int sem_post(sem_t* sem)
     if (!(value & POST_WAKES)) [[likely]]
         return 0;
     int rc = futex_wake(&sem->value, 1);
-    VERIFY(rc == 0);
+    VERIFY(rc >= 0);
     return 0;
 }
 
