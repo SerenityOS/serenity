@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,10 +15,11 @@
 
 namespace GUI {
 
-InputBox::InputBox(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title)
+InputBox::InputBox(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title, const StringView& placeholder)
     : Dialog(parent_window)
     , m_text_value(text_value)
     , m_prompt(prompt)
+    , m_placeholder(placeholder)
 {
     set_title(title);
     build();
@@ -27,9 +29,9 @@ InputBox::~InputBox()
 {
 }
 
-int InputBox::show(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title)
+int InputBox::show(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title, const StringView& placeholder)
 {
-    auto box = InputBox::construct(parent_window, text_value, prompt, title);
+    auto box = InputBox::construct(parent_window, text_value, prompt, title, placeholder);
     box->set_resizable(false);
     if (parent_window)
         box->set_icon(parent_window->icon());
@@ -63,6 +65,9 @@ void InputBox::build()
     m_text_editor = label_editor_container.add<TextBox>();
     m_text_editor->set_fixed_height(19);
     m_text_editor->set_text(m_text_value);
+
+    if (!m_placeholder.is_null())
+        m_text_editor->set_placeholder(m_placeholder);
 
     auto& button_container_outer = widget.add<Widget>();
     button_container_outer.set_fixed_height(20);
