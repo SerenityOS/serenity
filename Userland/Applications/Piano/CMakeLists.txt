@@ -18,4 +18,4 @@ set(SOURCES
 )
 
 serenity_app(Piano ICON app-piano)
-target_link_libraries(Piano LibAudio LibGUI)
+target_link_libraries(Piano LibAudio LibDSP LibGUI)
