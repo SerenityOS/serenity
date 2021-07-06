@@ -139,3 +139,19 @@ test("replacement with substitution", () => {
     expect("abc".replace(/(?<val1>a)b(?<val2>c)/, "$<val2>")).toBe("c");
     expect("abc".replace(/(?<val1>a)b(?<val2>c)/, "$<val2>b$<val1>")).toBe("cba");
 });
+
+test("replacement with substitution and 'groups' coerced to an object", () => {
+    var r = /./;
+    var coercibleValue = {
+        length: 1,
+        0: "b",
+        index: 1,
+        groups: "123",
+    };
+
+    r.exec = function () {
+        return coercibleValue;
+    };
+
+    expect(r[Symbol.replace]("ab", "[$<length>]")).toBe("a[3]");
+});

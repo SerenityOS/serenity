@@ -399,7 +399,14 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             if (vm.exception())
                 return {};
         } else {
-            replacement = get_substitution(global_object, matched, string, position, captures, named_captures, replace_value);
+            auto named_captures_object = js_undefined();
+            if (!named_captures.is_undefined()) {
+                named_captures_object = named_captures.to_object(global_object);
+                if (vm.exception())
+                    return {};
+            }
+
+            replacement = get_substitution(global_object, matched, string, position, captures, named_captures_object, replace_value);
             if (vm.exception())
                 return {};
         }
