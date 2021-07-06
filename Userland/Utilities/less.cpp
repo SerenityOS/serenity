@@ -286,10 +286,26 @@ static String get_key_sequence()
     return String(buff, n);
 }
 
+static void cat_file(FILE* file)
+{
+    ByteBuffer buffer = ByteBuffer::create_uninitialized(4096);
+    while (!feof(file)) {
+        size_t n = fread(buffer.data(), 1, buffer.size(), file);
+        if (n == 0 && ferror(file)) {
+            perror("fread");
+            exit(1);
+        }
+
+        n = fwrite(buffer.data(), 1, n, stdout);
+        if (n == 0 && ferror(stdout)) {
+            perror("fwrite");
+            exit(1);
+        }
+    }
+}
+
 int main(int argc, char** argv)
 {
-    VERIFY(isatty(STDOUT_FILENO));
-
     char const* filename = "-";
     char const* prompt = "?f%f :.(line %l)?e (END):.";
     bool dont_switch_buffer = false;
@@ -319,6 +335,11 @@ int main(int argc, char** argv)
         dont_switch_buffer = true;
         quit_at_eof = true;
         prompt = "--More--";
+    }
+
+    if (!isatty(STDOUT_FILENO)) {
+        cat_file(file);
+        return 0;
     }
 
     setup_tty(!dont_switch_buffer);
