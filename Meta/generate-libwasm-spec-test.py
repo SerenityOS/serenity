@@ -188,8 +188,10 @@ def generate(ast):
         elif len(entry) >= 2 and entry[0][0] == 'invoke':
             # toplevel invoke :shrug:
             arg, name, module = 0, None, None
-            if isinstance(entry[1][1], str):
+            if not isinstance(entry[1], str) and isinstance(entry[1][1], str):
                 name = entry[1][1]
+            elif isinstance(entry[1], str):
+                name = entry[1]
             else:
                 name = entry[1][2]
                 module = named_modules[entry[1][1][0]]
