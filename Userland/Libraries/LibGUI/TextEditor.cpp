@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -510,7 +511,7 @@ void TextEditor::paint_event(PaintEvent& event)
             if constexpr (TEXTEDITOR_DEBUG)
                 painter.draw_rect(visual_line_rect, Color::Cyan);
 
-            if (!placeholder().is_empty() && document().is_empty() && !is_focused() && line_index == 0) {
+            if (!placeholder().is_empty() && document().is_empty() && line_index == 0) {
                 auto line_rect = visual_line_rect;
                 line_rect.set_width(text_width_for_font(placeholder(), font()));
                 draw_text(line_rect, placeholder(), font(), m_text_alignment, palette().color(Gfx::ColorRole::PlaceholderText));
