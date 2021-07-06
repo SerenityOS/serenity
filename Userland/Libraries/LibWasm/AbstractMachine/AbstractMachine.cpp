@@ -280,14 +280,22 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                     if (instantiation_result.has_value() && instantiation_result->is_error())
                         return;
                     if (main_module_instance.memories().size() <= data.index.value()) {
-                        instantiation_result = InstantiationError { String::formatted("Data segment referenced out-of-bounds memory ({}) of max {} entries", data.index.value(), main_module_instance.memories().size()) };
+                        instantiation_result = InstantiationError {
+                            String::formatted("Data segment referenced out-of-bounds memory ({}) of max {} entries",
+                                data.index.value(), main_module_instance.memories().size())
+                        };
                         return;
                     }
                     auto address = main_module_instance.memories()[data.index.value()];
                     if (auto instance = m_store.get(address)) {
-                        if (instance->type().limits().max().value_or(data.init.size() + offset + 1) <= data.init.size() + offset) {
-                            instantiation_result = InstantiationError { String::formatted("Data segment attempted to write to out-of-bounds memory ({}) of max {} bytes", data.init.size() + offset, instance->type().limits().max().value()) };
-                            return;
+                        if (auto max = instance->type().limits().max(); max.has_value()) {
+                            if (*max < data.init.size() + offset) {
+                                instantiation_result = InstantiationError {
+                                    String::formatted("Data segment attempted to write to out-of-bounds memory ({}) of max {} bytes",
+                                        data.init.size() + offset, instance->type().limits().max().value())
+                                };
+                                return;
+                            }
                         }
                         if (instance->size() < data.init.size() + offset)
                             instance->grow(data.init.size() + offset - instance->size());
