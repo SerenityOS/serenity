@@ -87,6 +87,7 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, Instructio
         return;
     }
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    TRAP_IF_NOT(!configuration.stack().is_empty());
     auto& entry = configuration.stack().peek();
     TRAP_IF_NOT(entry.has<Value>());
     auto base = entry.get<Value>().to<i32>();
@@ -111,6 +112,7 @@ void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruct
     auto memory = configuration.store().get(address);
     TRAP_IF_NOT(memory);
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    TRAP_IF_NOT(!configuration.stack().is_empty());
     auto entry = configuration.stack().pop();
     TRAP_IF_NOT(entry.has<Value>());
     auto base = entry.get<Value>().to<i32>();
@@ -164,6 +166,7 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
 #define BINARY_NUMERIC_OPERATION(type, operator, cast, ...)                                       \
     do {                                                                                          \
+        TRAP_IF_NOT(!configuration.stack().is_empty());                                           \
         auto rhs_entry = configuration.stack().pop();                                             \
         auto& lhs_entry = configuration.stack().peek();                                           \
         TRAP_IF_NOT(rhs_entry.has<Value>());                                                      \
@@ -181,6 +184,7 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
 #define OVF_CHECKED_BINARY_NUMERIC_OPERATION(type, operator, cast, ...)                            \
     do {                                                                                           \
+        TRAP_IF_NOT(!configuration.stack().is_empty());                                            \
         auto rhs_entry = configuration.stack().pop();                                              \
         auto& lhs_entry = configuration.stack().peek();                                            \
         TRAP_IF_NOT(rhs_entry.has<Value>());                                                       \
@@ -202,6 +206,7 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
 #define BINARY_PREFIX_NUMERIC_OPERATION(type, operation, cast, ...)                                 \
     do {                                                                                            \
+        TRAP_IF_NOT(!configuration.stack().is_empty());                                             \
         auto rhs_entry = configuration.stack().pop();                                               \
         auto& lhs_entry = configuration.stack().peek();                                             \
         TRAP_IF_NOT(rhs_entry.has<Value>());                                                        \
@@ -218,6 +223,7 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
 #define UNARY_MAP(pop_type, operation, ...)                                               \
     do {                                                                                  \
+        TRAP_IF_NOT(!configuration.stack().is_empty());                                   \
         auto& entry = configuration.stack().peek();                                       \
         TRAP_IF_NOT(entry.has<Value>());                                                  \
         auto value = entry.get<Value>().to<pop_type>();                                   \
@@ -238,6 +244,7 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
 #define POP_AND_STORE(pop_type, store_type)                                                   \
     do {                                                                                      \
+        TRAP_IF_NOT(!configuration.stack().is_empty());                                       \
         auto entry = configuration.stack().pop();                                             \
         TRAP_IF_NOT(entry.has<Value>());                                                      \
         auto value = ConvertToRaw<store_type> {}(*entry.get<Value>().to<pop_type>());         \
@@ -498,6 +505,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         configuration.stack().push(Value(configuration.frame().locals()[instruction.arguments().get<LocalIndex>().value()]));
         return;
     case Instructions::local_set.value(): {
+        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
         TRAP_IF_NOT(entry.has<Value>());
         configuration.frame().locals()[instruction.arguments().get<LocalIndex>().value()] = move(entry.get<Value>());
@@ -537,6 +545,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         if (args.block_type.kind() != BlockType::Empty)
             arity = 1;
 
+        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
         TRAP_IF_NOT(entry.has<Value>());
         auto value = entry.get<Value>().to<i32>();
@@ -594,6 +603,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::br.value():
         return branch_to_label(configuration, instruction.arguments().get<LabelIndex>());
     case Instructions::br_if.value(): {
+        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
         TRAP_IF_NOT(entry.has<Value>());
         if (entry.get<Value>().to<i32>().value_or(0) == 0)
@@ -602,6 +612,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     case Instructions::br_table.value(): {
         auto& arguments = instruction.arguments().get<Instruction::TableBranchArgs>();
+        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
         TRAP_IF_NOT(entry.has<Value>());
         auto maybe_i = entry.get<Value>().to<i32>();
@@ -625,6 +636,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         TRAP_IF_NOT(args.table.value() < configuration.frame().module().tables().size());
         auto table_address = configuration.frame().module().tables()[args.table.value()];
         auto table_instance = configuration.store().get(table_address);
+        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
         TRAP_IF_NOT(entry.has<Value>());
         auto index = entry.get<Value>().to<i32>();
@@ -686,6 +698,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i64_store32.value():
         POP_AND_STORE(i64, i32);
     case Instructions::local_tee.value(): {
+        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto& entry = configuration.stack().peek();
         TRAP_IF_NOT(entry.has<Value>());
         auto value = entry.get<Value>();
@@ -708,6 +721,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto global_index = instruction.arguments().get<GlobalIndex>();
         TRAP_IF_NOT(configuration.frame().module().globals().size() > global_index.value());
         auto address = configuration.frame().module().globals()[global_index.value()];
+        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
         TRAP_IF_NOT(entry.has<Value>());
         auto value = entry.get<Value>();
@@ -730,6 +744,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto address = configuration.frame().module().memories()[0];
         auto instance = configuration.store().get(address);
         i32 old_pages = instance->size() / Constants::page_size;
+        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto& entry = configuration.stack().peek();
         TRAP_IF_NOT(entry.has<Value>());
         auto new_pages = entry.get<Value>().to<i32>();
@@ -759,6 +774,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     }
     case Instructions::ref_is_null.value(): {
+        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto top = configuration.stack().peek().get_pointer<Value>();
         TRAP_IF_NOT(top);
         TRAP_IF_NOT(top->type().is_reference());
@@ -767,11 +783,13 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     }
     case Instructions::drop.value():
+        TRAP_IF_NOT(!configuration.stack().is_empty());
         configuration.stack().pop();
         return;
     case Instructions::select.value():
     case Instructions::select_typed.value(): {
         // Note: The type seems to only be used for validation.
+        TRAP_IF_NOT(!configuration.stack().is_empty());
         auto entry = configuration.stack().pop();
         TRAP_IF_NOT(entry.has<Value>());
         auto value = entry.get<Value>().to<i32>();
