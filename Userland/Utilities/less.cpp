@@ -288,6 +288,8 @@ static String get_key_sequence()
 
 int main(int argc, char** argv)
 {
+    VERIFY(isatty(STDOUT_FILENO));
+
     char const* filename = "-";
     char const* prompt = "?f%f :.(line %l)?e (END):.";
     bool dont_switch_buffer = false;
