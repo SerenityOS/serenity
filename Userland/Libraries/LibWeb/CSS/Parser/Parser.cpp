@@ -923,7 +923,8 @@ Optional<StyleProperty> Parser::parse_as_declaration(TokenStream<T>& tokens)
     }
 
     auto declaration = consume_a_declaration(tokens);
-    // FIXME: Return declaration
+    if (declaration.has_value())
+        return convert_to_style_property(declaration.value());
 
     return {};
 }
@@ -934,10 +935,33 @@ RefPtr<CSSStyleDeclaration> Parser::parse_as_list_of_declarations()
 }
 
 template<typename T>
-RefPtr<CSSStyleDeclaration> Parser::parse_as_list_of_declarations(TokenStream<T>&)
+RefPtr<CSSStyleDeclaration> Parser::parse_as_list_of_declarations(TokenStream<T>& tokens)
 {
-    // FIXME: Return the declarations.
-    return {};
+    auto declarations_and_at_rules = consume_a_list_of_declarations(tokens);
+
+    Vector<StyleProperty> properties;
+    HashMap<String, StyleProperty> custom_properties;
+
+    for (auto& declaration_or_at_rule : declarations_and_at_rules) {
+        if (declaration_or_at_rule.is_at_rule()) {
+            dbgln("Parser::parse_as_list_of_declarations(): At-rule is not allowed here!");
+            continue;
+        }
+
+        auto& declaration = declaration_or_at_rule.m_declaration;
+
+        auto maybe_property = convert_to_style_property(declaration);
+        if (maybe_property.has_value()) {
+            auto property = maybe_property.value();
+            if (property.property_id == PropertyID::Custom) {
+                custom_properties.set(property.custom_name, property);
+            } else {
+                properties.append(property);
+            }
+        }
+    }
+
+    return CSSStyleDeclaration::create(move(properties), move(custom_properties));
 }
 
 Optional<StyleComponentValueRule> Parser::parse_as_component_value()
@@ -1061,45 +1085,34 @@ RefPtr<CSSStyleDeclaration> Parser::convert_to_declaration(NonnullRefPtr<StyleBl
     if (!block->is_curly())
         return {};
 
-    Vector<StyleProperty> properties;
-    HashMap<String, StyleProperty> custom_properties;
-
     auto stream = TokenStream(block->m_values);
-    auto declarations_and_at_rules = consume_a_list_of_declarations(stream);
+    return parse_as_list_of_declarations(stream);
+}
 
-    for (auto& declaration_or_at_rule : declarations_and_at_rules) {
-        if (declaration_or_at_rule.is_at_rule()) {
-            dbgln("CSS::Parser::convert_to_declaration(): Skipping @ rule.");
-            continue;
-        }
+Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule& declaration)
+{
+    auto& property_name = declaration.m_name;
+    auto property_id = property_id_from_string(property_name);
+    if (property_id == PropertyID::Invalid && property_name.starts_with("--"))
+        property_id = PropertyID::Custom;
 
-        auto& declaration = declaration_or_at_rule.m_declaration;
-
-        auto& property_name = declaration.m_name;
-        auto property_id = property_id_from_string(property_name);
-        if (property_id == PropertyID::Invalid && property_name.starts_with("--"))
-            property_id = PropertyID::Custom;
-
-        if (property_id == PropertyID::Invalid && !property_name.starts_with("-")) {
-            dbgln("CSS::Parser::convert_to_declaration(): Unrecognized property '{}'", property_name);
-            continue;
-        }
-
-        auto value_token_stream = TokenStream(declaration.m_values);
-        auto value = parse_css_value(property_id, value_token_stream);
-        if (!value) {
-            dbgln("CSS::Parser::convert_to_declaration(): Property '{}' has no value.", property_name);
-            continue;
-        }
-
-        if (property_id == PropertyID::Custom) {
-            custom_properties.set(property_name, StyleProperty { property_id, value.release_nonnull(), declaration.m_name, declaration.m_important });
-        } else {
-            properties.append(StyleProperty { property_id, value.release_nonnull(), {}, declaration.m_important });
-        }
+    if (property_id == PropertyID::Invalid && !property_name.starts_with("-")) {
+        dbgln("Parser::convert_to_style_property(): Unrecognized property '{}'", property_name);
+        return {};
     }
 
-    return CSSStyleDeclaration::create(move(properties), move(custom_properties));
+    auto value_token_stream = TokenStream(declaration.m_values);
+    auto value = parse_css_value(property_id, value_token_stream);
+    if (!value) {
+        dbgln("Parser::convert_to_style_property(): Property '{}' has no value.", property_name);
+        return {};
+    }
+
+    if (property_id == PropertyID::Custom) {
+        return StyleProperty { property_id, value.release_nonnull(), declaration.m_name, declaration.m_important };
+    } else {
+        return StyleProperty { property_id, value.release_nonnull(), {}, declaration.m_important };
+    }
 }
 
 Optional<float> Parser::try_parse_float(StringView string)
