@@ -1625,7 +1625,7 @@ StringView ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_
 
     auto start_token = m_parser_state.current_token;
     size_t offset = 0;
-    while (match(TokenType::Char)) {
+    while (match(TokenType::Char) || match(TokenType::Dollar)) {
         auto c = m_parser_state.current_token.value();
         if (c == ">")
             break;

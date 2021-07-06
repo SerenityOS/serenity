@@ -138,6 +138,9 @@ test("replacement with substitution", () => {
     expect("abc".replace(/(?<val1>a)b(?<val2>c)/, "$<val1>")).toBe("a");
     expect("abc".replace(/(?<val1>a)b(?<val2>c)/, "$<val2>")).toBe("c");
     expect("abc".replace(/(?<val1>a)b(?<val2>c)/, "$<val2>b$<val1>")).toBe("cba");
+
+    expect(/(?<𝒜>b)/u[Symbol.replace]("abc", "d$<𝒜>$`")).toBe("adbac");
+    expect(/(?<$𐒤>b)/gu[Symbol.replace]("abc", "$'$<$𐒤>d")).toBe("acbdc");
 });
 
 test("replacement with substitution and 'groups' coerced to an object", () => {
