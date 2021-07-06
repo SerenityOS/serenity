@@ -39,6 +39,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.values, values, 0, attr);
     define_native_function(vm.names.entries, entries, 0, attr);
     define_native_function(vm.names.set, set, 1, attr);
+    define_native_function(vm.names.reverse, reverse, 0, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
@@ -484,6 +485,48 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
         }
     }
     return js_undefined();
+}
+
+// 23.2.3.22 %TypedArray%.prototype.reverse ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
+    auto* typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+
+    // 3. Let len be O.[[ArrayLength]].
+    auto length = typed_array->array_length();
+
+    // 4. Let middle be floor(len / 2).
+    auto middle = length / 2;
+
+    // 5. Let lower be 0.
+    // 6. Repeat, while lower ≠ middle,
+    for (size_t lower = 0; lower != middle; ++lower) {
+        // a. Let upper be len - lower - 1.
+        auto upper = length - lower - 1;
+
+        // b. Let upperP be ! ToString(𝔽(upper)).
+        // d. Let lowerValue be ! Get(O, lowerP).
+        auto lower_value = typed_array->get(lower);
+
+        // c. Let lowerP be ! ToString(𝔽(lower)).
+        // e. Let upperValue be ! Get(O, upperP).
+        auto upper_value = typed_array->get(upper);
+
+        // f. Perform ! Set(O, lowerP, upperValue, true).
+        typed_array->set(lower, upper_value, true);
+
+        // g. Perform ! Set(O, upperP, lowerValue, true).
+        typed_array->set(upper, lower_value, true);
+
+        // h. Set lower to lower + 1.
+    }
+
+    // 7. Return O.
+    return typed_array;
 }
 
 }
