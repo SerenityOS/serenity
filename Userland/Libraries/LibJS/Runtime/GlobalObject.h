@@ -46,6 +46,12 @@ public:
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                                          \
+    Temporal::ConstructorName* temporal_##snake_name##_constructor() { return m_temporal_##snake_name##_constructor; } \
+    Object* temporal_##snake_name##_prototype() { return m_temporal_##snake_name##_prototype; }
+    JS_ENUMERATE_TEMPORAL_OBJECTS
+#undef __JS_ENUMERATE
+
 #define __JS_ENUMERATE(ClassName, snake_name) \
     Object* snake_name##_prototype() { return m_##snake_name##_prototype; }
     JS_ENUMERATE_ITERATOR_PROTOTYPES
@@ -93,6 +99,12 @@ private:
     ConstructorName* m_##snake_name##_constructor { nullptr };                           \
     Object* m_##snake_name##_prototype { nullptr };
     JS_ENUMERATE_BUILTIN_TYPES
+#undef __JS_ENUMERATE
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)     \
+    Temporal::ConstructorName* m_temporal_##snake_name##_constructor { nullptr }; \
+    Object* m_temporal_##snake_name##_prototype { nullptr };
+    JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
