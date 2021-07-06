@@ -51,7 +51,7 @@ const KernelSymbol* symbolicate_kernel_address(FlatPtr address)
     return nullptr;
 }
 
-UNMAP_AFTER_INIT static void load_kernel_sybols_from_data(const KBuffer& buffer)
+UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(const KBuffer& buffer)
 {
     g_lowest_kernel_symbol_address = 0xffffffff;
     g_highest_kernel_symbol_address = 0;
@@ -172,7 +172,7 @@ UNMAP_AFTER_INIT void load_kernel_symbol_table()
         auto description = result.value();
         auto buffer = description->read_entire_file();
         if (!buffer.is_error())
-            load_kernel_sybols_from_data(*buffer.value());
+            load_kernel_symbols_from_data(*buffer.value());
     }
 }
 
