@@ -800,6 +800,17 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     auto search_string = search_value.to_string(global_object);
     if (vm.exception())
         return {};
+
+    if (!replace_value.is_function()) {
+        auto replace_string = replace_value.to_string(global_object);
+        if (vm.exception())
+            return {};
+
+        replace_value = js_string(vm, move(replace_string));
+        if (vm.exception())
+            return {};
+    }
+
     Optional<size_t> position = string.find(search_string);
     if (!position.has_value())
         return js_string(vm, string);
@@ -876,6 +887,16 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     auto search_string = search_value.to_string(global_object);
     if (vm.exception())
         return {};
+
+    if (!replace_value.is_function()) {
+        auto replace_string = replace_value.to_string(global_object);
+        if (vm.exception())
+            return {};
+
+        replace_value = js_string(vm, move(replace_string));
+        if (vm.exception())
+            return {};
+    }
 
     Vector<size_t> match_positions;
     size_t advance_by = max(1u, search_string.length());

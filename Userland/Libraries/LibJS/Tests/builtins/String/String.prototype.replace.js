@@ -158,3 +158,21 @@ test("replacement with substitution and 'groups' coerced to an object", () => {
 
     expect(r[Symbol.replace]("ab", "[$<length>]")).toBe("a[3]");
 });
+
+test("replacement value is evaluated before searching the source string", () => {
+    var calls = 0;
+    var replaceValue = {
+        toString: function () {
+            calls += 1;
+            return "b";
+        },
+    };
+
+    var newString = "".replace("a", replaceValue);
+    expect(newString).toBe("");
+    expect(calls).toBe(1);
+
+    newString = "".replace(/a/g, replaceValue);
+    expect(newString).toBe("");
+    expect(calls).toBe(2);
+});

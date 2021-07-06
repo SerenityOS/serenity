@@ -104,3 +104,21 @@ test("functional regex replacement", () => {
         })
     ).toBe("xd");
 });
+
+test("replacement value is evaluated before searching the source string", () => {
+    var calls = 0;
+    var replaceValue = {
+        toString: function () {
+            calls += 1;
+            return "b";
+        },
+    };
+
+    var newString = "".replaceAll("a", replaceValue);
+    expect(newString).toBe("");
+    expect(calls).toBe(1);
+
+    newString = "".replaceAll(/a/g, replaceValue);
+    expect(newString).toBe("");
+    expect(calls).toBe(2);
+});
