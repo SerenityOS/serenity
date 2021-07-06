@@ -304,65 +304,41 @@ pushd "$DIR/Build/$ARCH"
         cp "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h" "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-kernel.h"
     fi
 
-    for STAGE in Userland Kernel; do
-        rm -rf gcc
-        mkdir -p gcc
+    rm -rf gcc
+    mkdir -p gcc
 
-        pushd gcc
-            TEMPTARGET="$BUILD/Temp"
-            rm -rf "$TEMPTARGET"
+    pushd gcc
+        echo "XXX configure gcc and libgcc"
+        buildstep "gcc/configure" "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
+                                            --target="$TARGET" \
+                                            --with-sysroot="$SYSROOT" \
+                                            --disable-nls \
+                                            --with-newlib \
+                                            --enable-shared \
+                                            --enable-languages=c,c++ \
+                                            --enable-default-pie \
+                                            --enable-lto \
+                                            --enable-threads=posix \
+                                            ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
 
-            echo "XXX configure gcc and libgcc"
-            if [ "$STAGE" = "Userland" ]; then
-                REALTARGET="$PREFIX"
-            else
-                REALTARGET="$PREFIX/Kernel"
-            fi
-
-            cp "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity-kernel.h" "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h"
-            if [ "$STAGE" = "Userland" ]; then
-                sed -i='' 's@-fno-exceptions @@' "$DIR/Tarballs/gcc-$GCC_VERSION/gcc/config/serenity.h"
-            fi
-
-            buildstep "gcc/configure/${STAGE,,}" "$DIR/Tarballs/gcc-$GCC_VERSION/configure" --prefix="$PREFIX" \
-                                                --target="$TARGET" \
-                                                --with-sysroot="$SYSROOT" \
-                                                --disable-nls \
-                                                --with-newlib \
-                                                --enable-shared \
-                                                --enable-languages=c,c++ \
-                                                --enable-default-pie \
-                                                --enable-lto \
-                                                --enable-threads=posix \
-                                                ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
-
-            if [ "$STAGE" = "Userland" ]; then
-                echo "XXX build gcc and libgcc"
-                buildstep "gcc/build" "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
-                if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
-                    ln -sf liblto_plugin.so.0.0 gcc/liblto_plugin.so
-                fi
-                buildstep "libgcc/build" "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
-                echo "XXX install gcc and libgcc"
-                buildstep "gcc+libgcc/install" "$MAKE" DESTDIR="$TEMPTARGET" install-gcc install-target-libgcc || exit 1
-            fi
-
-            echo "XXX build libstdc++"
-            buildstep "libstdc++/build/${STAGE,,}" "$MAKE" -j "$MAKEJOBS" all-target-libstdc++-v3 || exit 1
-            echo "XXX install libstdc++"
-            buildstep "libstdc++/install/${STAGE,,}" "$MAKE" DESTDIR="$TEMPTARGET" install-target-libstdc++-v3 || exit 1
-
-            mkdir -p "$REALTARGET"
-            cp -a "$TEMPTARGET"/"$PREFIX"/* "$REALTARGET/"
-            rm -rf "$TEMPTARGET"
-        popd
-
-        if [ "$STAGE" = "Userland" ]; then
-            if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
-                cd "$DIR/Local/${ARCH}/libexec/gcc/$TARGET/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
-            fi
+        echo "XXX build gcc and libgcc"
+        buildstep "gcc/build" "$MAKE" -j "$MAKEJOBS" all-gcc || exit 1
+        if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
+            ln -sf liblto_plugin.so.0.0 gcc/liblto_plugin.so
         fi
-    done
+        buildstep "libgcc/build" "$MAKE" -j "$MAKEJOBS" all-target-libgcc || exit 1
+        echo "XXX install gcc and libgcc"
+        buildstep "gcc+libgcc/install" "$MAKE" install-gcc install-target-libgcc || exit 1
+
+        echo "XXX build libstdc++"
+        buildstep "libstdc++/build" "$MAKE" -j "$MAKEJOBS" all-target-libstdc++-v3 || exit 1
+        echo "XXX install libstdc++"
+        buildstep "libstdc++/install" "$MAKE" install-target-libstdc++-v3 || exit 1
+    popd
+
+    if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
+        cd "$DIR/Local/${ARCH}/libexec/gcc/$TARGET/$GCC_VERSION" && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
+    fi
 popd
 
 
