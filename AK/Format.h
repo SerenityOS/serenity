@@ -30,6 +30,12 @@ struct Formatter {
     using __no_formatter_defined = void;
 };
 
+template<typename T, typename = void>
+inline constexpr bool HasFormatter = true;
+
+template<typename T>
+inline constexpr bool HasFormatter<T, typename Formatter<T>::__no_formatter_defined> = false;
+
 constexpr size_t max_format_arguments = 256;
 
 struct TypeErasedParameter {
@@ -314,6 +320,49 @@ struct Formatter<StringView> : StandardFormatter {
     void format(FormatBuilder&, StringView value);
 };
 
+template<typename T>
+requires(HasFormatter<T>) struct Formatter<Vector<T>> : StandardFormatter {
+
+    Formatter() = default;
+    explicit Formatter(StandardFormatter formatter)
+        : StandardFormatter(formatter)
+    {
+    }
+    void format(FormatBuilder& builder, Vector<T> value)
+    {
+        if (m_mode == Mode::Pointer) {
+            Formatter<FlatPtr> formatter { *this };
+            formatter.format(builder, reinterpret_cast<FlatPtr>(value.data()));
+            return;
+        }
+
+        if (m_sign_mode != FormatBuilder::SignMode::Default)
+            VERIFY_NOT_REACHED();
+        if (m_alternative_form)
+            VERIFY_NOT_REACHED();
+        if (m_zero_pad)
+            VERIFY_NOT_REACHED();
+        if (m_mode != Mode::Default)
+            VERIFY_NOT_REACHED();
+        if (m_width.has_value() && m_precision.has_value())
+            VERIFY_NOT_REACHED();
+
+        m_width = m_width.value_or(0);
+        m_precision = m_precision.value_or(NumericLimits<size_t>::max());
+
+        Formatter<T> content_fmt;
+        builder.put_literal("[ ");
+        bool first = true;
+        for (auto& content : value) {
+            if (!first)
+                builder.put_literal(", ");
+            first = false;
+            content_fmt.format(builder, content);
+        }
+        builder.put_literal(" ]");
+    }
+};
+
 template<>
 struct Formatter<ReadonlyBytes> : Formatter<StringView> {
     void format(FormatBuilder& builder, ReadonlyBytes const& value)
@@ -508,12 +557,6 @@ void critical_dmesgln(CheckedFormatString<Parameters...>&& fmt, const Parameters
     v_critical_dmesgln(fmt.view(), VariadicFormatParams { parameters... });
 }
 #endif
-
-template<typename T, typename = void>
-inline constexpr bool HasFormatter = true;
-
-template<typename T>
-inline constexpr bool HasFormatter<T, typename Formatter<T>::__no_formatter_defined> = false;
 
 template<typename T>
 class FormatIfSupported {
