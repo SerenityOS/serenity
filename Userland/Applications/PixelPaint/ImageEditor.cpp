@@ -392,7 +392,7 @@ void ImageEditor::relayout()
 
 void ImageEditor::image_did_change()
 {
-    update();
+    update(m_editor_image_rect);
 }
 
 void ImageEditor::image_did_change_title(String const& path)
