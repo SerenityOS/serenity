@@ -67,6 +67,13 @@ static Gfx::Bitmap& close_icon()
     return *s_icon;
 }
 
+static Gfx::Bitmap& pin_icon()
+{
+    static Gfx::Bitmap* s_icon;
+    if (!s_icon)
+        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-pin.png").leak_ref();
+    return *s_icon;
+}
 Window::Window(Core::Object& parent, WindowType type)
     : Core::Object(&parent)
     , m_type(type)
@@ -276,6 +283,9 @@ void Window::update_window_menu_items()
     m_window_menu_maximize_item->set_enabled(m_resizable);
 
     m_window_menu_move_item->set_enabled(m_minimized_state == WindowMinimizedState::None && !m_maximized && !m_fullscreen);
+
+    if (m_window_menu_pin_item)
+        m_window_menu_pin_item->set_text(m_pinned ? "Un-&Pin Window" : "&Pin Window");
 }
 
 void Window::set_minimized(bool minimized)
@@ -466,6 +476,16 @@ void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
     m_frame.did_set_maximized({}, maximized);
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
     set_default_positioned(false);
+}
+void Window::set_pinned(bool pinned)
+{
+    if (m_pinned == pinned)
+        return;
+
+    m_pinned = pinned;
+    update_window_menu_items();
+
+    window_stack().move_pinned_windows_to_front();
 }
 void Window::set_vertically_maximized()
 {
@@ -776,6 +796,16 @@ void Window::ensure_window_menu()
 
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
+        if (!m_modal) {
+            auto pin_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::TogglePinned, "&Pin Window");
+            m_window_menu_pin_item = pin_item.ptr();
+            m_window_menu_pin_item->set_icon(&pin_icon());
+            m_window_menu_pin_item->set_checkable(true);
+            m_window_menu->add_item(move(pin_item));
+        }
+
+        m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
+
         auto close_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::Close, "&Close");
         m_window_menu_close_item = close_item.ptr();
         m_window_menu_close_item->set_icon(&close_icon());
@@ -816,6 +846,13 @@ void Window::handle_window_menu_action(WindowMenuAction action)
         frame().invalidate();
         recalculate_rect();
         invalidate_last_rendered_screen_rects();
+        break;
+    }
+    case WindowMenuAction::TogglePinned: {
+        auto& item = *m_window_menu->item_by_identifier((unsigned)action);
+        auto new_is_checked = !item.is_checked();
+        item.set_checked(new_is_checked);
+        WindowManager::the().set_pinned(*this, new_is_checked);
         break;
     }
     }

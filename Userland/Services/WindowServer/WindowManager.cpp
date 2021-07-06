@@ -2005,6 +2005,14 @@ void WindowManager::maximize_windows(Window& window, bool maximized)
     });
 }
 
+void WindowManager::set_pinned(Window& window, bool pinned)
+{
+    for_each_window_in_modal_stack(window, [&](auto& w, bool) {
+        w.set_pinned(pinned);
+        return IterationDecision::Continue;
+    });
+}
+
 Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint const& desired)
 {
     // FIXME: Find a  better source for the width and height to shift by.
