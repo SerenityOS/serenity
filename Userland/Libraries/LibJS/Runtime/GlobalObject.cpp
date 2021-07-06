@@ -133,6 +133,18 @@ void GlobalObject::initialize_global_object()
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    if (!m_temporal_##snake_name##_prototype)                                 \
+        m_temporal_##snake_name##_prototype = heap().allocate<Temporal::PrototypeName>(*this, *this);
+    JS_ENUMERATE_TEMPORAL_OBJECTS
+#undef __JS_ENUMERATE
+
+    // Must be allocated before `Temporal::Temporal` below.
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    initialize_constructor(vm.names.ClassName, m_temporal_##snake_name##_constructor, m_temporal_##snake_name##_prototype);
+    JS_ENUMERATE_TEMPORAL_OBJECTS
+#undef __JS_ENUMERATE
+
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.gc, gc, 0, attr);
     define_native_function(vm.names.isNaN, is_nan, 1, attr);
@@ -233,6 +245,12 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_##snake_name##_prototype);
     JS_ENUMERATE_NATIVE_ERRORS
     JS_ENUMERATE_BUILTIN_TYPES
+#undef __JS_ENUMERATE
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    visitor.visit(m_temporal_##snake_name##_constructor);                     \
+    visitor.visit(m_temporal_##snake_name##_prototype);
+    JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
