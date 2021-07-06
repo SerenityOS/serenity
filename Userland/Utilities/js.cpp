@@ -41,6 +41,7 @@
 #include <LibJS/Runtime/Set.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLine/Editor.h>
@@ -425,6 +426,18 @@ static void print_data_view(JS::Object const& object, HashTable<JS::Object*>& se
     out(" @ {:p}", data_view.viewed_array_buffer());
 }
 
+static void print_temporal_time_zone(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& time_zone = static_cast<JS::Temporal::TimeZone const&>(object);
+    print_type("Temporal.TimeZone");
+    out("\n  identifier: ");
+    print_value(JS::js_string(object.vm(), time_zone.identifier()), seen_objects);
+    if (time_zone.offset_nanoseconds().has_value()) {
+        out("\n  offset (ns): ");
+        print_value(JS::Value(*time_zone.offset_nanoseconds()), seen_objects);
+    }
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -482,6 +495,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_primitive_wrapper_object("Number", object, seen_objects);
         if (is<JS::BooleanObject>(object))
             return print_primitive_wrapper_object("Boolean", object, seen_objects);
+        if (is<JS::Temporal::TimeZone>(object))
+            return print_temporal_time_zone(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
