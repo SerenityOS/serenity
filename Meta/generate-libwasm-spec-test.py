@@ -295,8 +295,8 @@ def genresult(ident, entry):
 
     if entry['kind'] == 'return':
         return (
-            f'let {ident}_result = {expectation};\n    '
-            f'expect({ident}_result).toBe({genarg(entry["result"])})\n    ' if entry["result"] is not None else ''
+            f'let {ident}_result = {expectation};\n    ' +
+            (f'expect({ident}_result).toBe({genarg(entry["result"])})\n    ' if entry["result"] is not None else '')
         )
 
     if entry['kind'] == 'trap':
