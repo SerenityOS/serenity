@@ -37,6 +37,7 @@ void ObjectConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.defineProperties, define_properties, 2, attr);
     define_native_function(vm.names.is, is, 2, attr);
     define_native_function(vm.names.getOwnPropertyDescriptor, get_own_property_descriptor, 2, attr);
+    define_native_function(vm.names.getOwnPropertyDescriptors, get_own_property_descriptors, 1, attr);
     define_native_function(vm.names.getOwnPropertyNames, get_own_property_names, 1, attr);
     define_native_function(vm.names.getOwnPropertySymbols, get_own_property_symbols, 1, attr);
     define_native_function(vm.names.getPrototypeOf, get_prototype_of, 1, attr);
@@ -302,6 +303,40 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
     if (vm.exception())
         return {};
     return from_property_descriptor(global_object, descriptor);
+}
+
+// 20.1.2.9 Object.getOwnPropertyDescriptors ( O ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptors
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
+{
+    // 1. Let obj be ? ToObject(O).
+    auto* object = vm.argument(0).to_object(global_object);
+    if (vm.exception())
+        return {};
+    // 2. Let ownKeys be ? obj.[[OwnPropertyKeys]]().
+    auto own_keys = object->internal_own_property_keys();
+    if (vm.exception())
+        return {};
+    // 3. Let descriptors be ! OrdinaryObjectCreate(%Object.prototype%).
+    auto* descriptors = Object::create(global_object, global_object.object_prototype());
+    // 4. For each element key of ownKeys, do
+    for (auto& key : own_keys) {
+        auto property_name = PropertyName::from_value(global_object, key);
+
+        // a. Let desc be ? obj.[[GetOwnProperty]](key).
+        auto desc = object->internal_get_own_property(property_name);
+        if (vm.exception())
+            return {};
+
+        // b. Let descriptor be ! FromPropertyDescriptor(desc).
+        auto descriptor = from_property_descriptor(global_object, desc);
+
+        // c. If descriptor is not undefined, perform ! CreateDataPropertyOrThrow(descriptors, key, descriptor).
+        if (!descriptor.is_undefined())
+            descriptors->create_data_property_or_throw(property_name, descriptor);
+    }
+
+    // 5. Return descriptors.
+    return descriptors;
 }
 
 // 20.1.2.4 Object.defineProperty ( O, P, Attributes ), https://tc39.es/ecma262/#sec-object.defineproperty
