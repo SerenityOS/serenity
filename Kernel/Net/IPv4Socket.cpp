@@ -268,8 +268,6 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
         }
     }
 
-    VERIFY(!m_receive_buffer.is_empty());
-
     KResultOr<size_t> nreceived_or_error { 0 };
     if (flags & MSG_PEEK)
         nreceived_or_error = m_receive_buffer.peek(buffer, buffer_length);
