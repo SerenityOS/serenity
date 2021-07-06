@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andres Crucitti <dasc495@gmail.com>
+ * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -81,7 +82,7 @@ int main(int argc, char** argv)
     });
 
     toggle_running_action->set_checkable(true);
-    main_toolbar.add_action(toggle_running_action);
+    auto& toggle_running_toolbar_button = main_toolbar.add_action(toggle_running_action);
 
     auto run_one_generation_action = GUI::Action::create("Run &Next Generation", { Mod_Ctrl, Key_Equal }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [&](const GUI::Action&) {
         statusbar.set_text(click_tip);
@@ -130,11 +131,11 @@ int main(int argc, char** argv)
     board_widget.on_running_state_change = [&]() {
         if (board_widget.is_running()) {
             statusbar.set_text("Running...");
-            toggle_running_action->set_icon(paused_icon);
+            toggle_running_toolbar_button.set_icon(*paused_icon);
             main_widget.set_override_cursor(Gfx::StandardCursor::None);
         } else {
             statusbar.set_text(click_tip);
-            toggle_running_action->set_icon(play_icon);
+            toggle_running_toolbar_button.set_icon(*play_icon);
             main_widget.set_override_cursor(Gfx::StandardCursor::Drag);
         }
 
