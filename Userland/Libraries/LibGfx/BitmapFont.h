@@ -115,6 +115,9 @@ private:
 
     static RefPtr<BitmapFont> load_from_memory(const u8*);
 
+    template<typename T>
+    int unicode_view_width(T const& view) const;
+
     void update_x_height() { m_x_height = m_baseline - m_mean_line; };
     int glyph_or_emoji_width_for_variable_width_font(u32 code_point) const;
 
