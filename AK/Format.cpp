@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/kstdio.h>
-#include <ctype.h>
 
 #if defined(__serenity__) && !defined(KERNEL)
 #    include <serenity.h>
@@ -111,9 +111,9 @@ bool FormatParser::consume_number(size_t& value)
     value = 0;
 
     bool consumed_at_least_one = false;
-    while (next_is(isdigit)) {
+    while (next_is(is_ascii_digit)) {
         value *= 10;
-        value += consume() - '0';
+        value += parse_ascii_digit(consume());
         consumed_at_least_one = true;
     }
 
