@@ -73,7 +73,7 @@ int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, const s
     // Fetch the current value, and record that we're about to wait. Fetching
     // the current value has to be done while we hold the mutex, because the
     // value might change as soon as we unlock it.
-    u32 value = AK::atomic_fetch_or(&cond->value, NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL, AK::memory_order_relaxed) | NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL;
+    u32 value = AK::atomic_fetch_or(&cond->value, NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL, AK::memory_order_release) | NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL;
     pthread_mutex_unlock(mutex);
     int rc = futex_wait(&cond->value, value, abstime, cond->clockid);
     if (rc < 0 && errno != EAGAIN)
@@ -122,7 +122,7 @@ int pthread_cond_broadcast(pthread_cond_t* cond)
     if (!(value & NEED_TO_WAKE_ALL)) [[likely]]
         return 0;
 
-    AK::atomic_fetch_and(&cond->value, ~(NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL), AK::memory_order_relaxed);
+    AK::atomic_fetch_and(&cond->value, ~(NEED_TO_WAKE_ONE | NEED_TO_WAKE_ALL), AK::memory_order_acquire);
 
     pthread_mutex_t* mutex = AK::atomic_load(&cond->mutex, AK::memory_order_relaxed);
     VERIFY(mutex);
