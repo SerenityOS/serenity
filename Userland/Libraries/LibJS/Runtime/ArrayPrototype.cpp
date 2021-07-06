@@ -70,7 +70,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.entries, entries, 0, attr);
     define_native_function(vm.names.copyWithin, copy_within, 2, attr);
 
-    // Use define_property here instead of define_native_function so that
+    // Use define_direct_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
     // evaluates to true
     // 23.1.3.33 Array.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-array.prototype-@@iterator
