@@ -819,7 +819,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     String replacement;
 
     if (replace_value.is_function()) {
-        auto result = vm.call(replace_value.as_function(), js_undefined(), search_value, Value(position.value()), js_string(vm, string));
+        auto result = vm.call(replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position.value()), js_string(vm, string));
         if (vm.exception())
             return {};
 
@@ -915,7 +915,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
         String replacement;
 
         if (replace_value.is_function()) {
-            auto result = vm.call(replace_value.as_function(), js_undefined(), search_value, Value(position), js_string(vm, string));
+            auto result = vm.call(replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position), js_string(vm, string));
             if (vm.exception())
                 return {};
 
