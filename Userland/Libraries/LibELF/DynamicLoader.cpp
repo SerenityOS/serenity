@@ -319,20 +319,18 @@ void DynamicLoader::load_program_headers()
     }
 
     for (auto& text_region : text_regions) {
+        FlatPtr ph_text_desired_base = text_region.desired_load_address().get();
         FlatPtr ph_text_base = text_region.desired_load_address().page_base().get();
         FlatPtr ph_text_end = ph_text_base + round_up_to_power_of_two(text_region.size_in_memory() + (size_t)(text_region.desired_load_address().as_ptr() - ph_text_base), PAGE_SIZE);
 
-        auto* text_segment_address = (u8*)reservation + ph_text_base - ph_load_base;
-        size_t text_segment_size = ph_text_end - ph_text_base;
-
         // Now we can map the text segment at the reserved address.
         auto* text_segment_begin = (u8*)mmap_with_name(
-            text_segment_address,
-            text_segment_size,
+            (u8*)reservation + ph_text_base - ph_load_base,
+            ph_text_desired_base - ph_text_base + text_region.size_in_image(),
             PROT_READ,
             MAP_FILE | MAP_SHARED | MAP_FIXED,
             m_image_fd,
-            text_region.offset(),
+            VirtualAddress { text_region.offset() }.page_base().get(),
             String::formatted("{}: .text", m_filename).characters());
 
         if (text_segment_begin == MAP_FAILED) {
@@ -340,7 +338,7 @@ void DynamicLoader::load_program_headers()
             VERIFY_NOT_REACHED();
         }
 
-        m_text_segments.append({ VirtualAddress { (FlatPtr)text_segment_begin }, text_segment_size });
+        m_text_segments.append({ VirtualAddress { (FlatPtr)text_segment_begin }, ph_text_end - ph_text_base });
     }
 
     VERIFY(requested_load_address == nullptr || requested_load_address == reservation);
