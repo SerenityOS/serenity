@@ -132,6 +132,8 @@
                                "return value must match the target's extensibility")                                                    \
     M(ProxyOwnPropertyKeysNotStringOrSymbol, "Proxy handler's ownKeys trap violates invariant: "                                        \
                                              "the type of each result list element is either String or Symbol")                         \
+    M(ProxyOwnPropertyKeysDuplicates, "Proxy handler's ownKeys trap violates invariant: "                                               \
+                                      "the result list may not contain duplicate elements")                                             \
     M(ProxyPreventExtensionsReturn, "Proxy handler's preventExtensions trap violates "                                                  \
                                     "invariant: cannot return true if the target object is extensible")                                 \
     M(ProxyRevoked, "An operation was performed on a revoked Proxy object")                                                             \
