@@ -9,7 +9,7 @@
 
 namespace Web::CSS {
 
-String Token::to_string() const
+String Token::to_debug_string() const
 {
     StringBuilder builder;
 
@@ -21,7 +21,7 @@ String Token::to_string() const
         builder.append("__EOF__");
         break;
     case Type::Ident:
-        //builder.append("Identifier");
+        builder.append("Identifier: ");
         builder.append(m_value.to_string());
         return builder.to_string();
     case Type::Function:
@@ -31,11 +31,11 @@ String Token::to_string() const
         builder.append("@");
         break;
     case Type::Hash:
-        builder.append("#");
+        builder.append("Hash: ");
         builder.append(m_value.to_string());
         return builder.to_string();
     case Type::String:
-        //builder.append("String");
+        builder.append("String: ");
         builder.append(m_value.to_string());
         return builder.to_string();
     case Type::BadString:
@@ -48,21 +48,21 @@ String Token::to_string() const
         builder.append("Invalid Url");
         break;
     case Type::Delim:
-        //builder.append("Delimiter");
+        builder.append("Delimiter: ");
         builder.append(m_value.to_string());
         return builder.to_string();
     case Type::Number:
-        //builder.append("Number");
+        builder.append("Number: ");
         builder.append(m_value.to_string());
         builder.append(m_unit.to_string());
         return builder.to_string();
     case Type::Percentage:
-        //builder.append("Percentage");
+        builder.append("Percentage: ");
         builder.append(m_value.to_string());
         builder.append(m_unit.to_string());
         return builder.to_string();
     case Type::Dimension:
-        //builder.append("Dimension");
+        builder.append("Dimension: ");
         builder.append(m_value.to_string());
         builder.append(m_unit.to_string());
         return builder.to_string();

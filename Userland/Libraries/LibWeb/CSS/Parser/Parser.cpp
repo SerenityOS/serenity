@@ -131,7 +131,7 @@ void TokenStream<T>::dump_all_tokens()
 {
     dbgln("Dumping all tokens:");
     for (auto& token : m_tokens)
-        dbgln("{}", token.to_string());
+        dbgln("{}", token.to_debug_string());
 }
 
 Parser::Parser(ParsingContext const& context, StringView const& input, String const& encoding)
@@ -249,7 +249,7 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
 
         if (current_value.is(Token::Type::Hash)) {
             if (((Token)current_value).m_hash_type != Token::HashType::Id) {
-                dbgln("Selector contains hash token that is not an id: {}", current_value.to_string());
+                dbgln("Selector contains hash token that is not an id: {}", current_value.to_debug_string());
                 return {};
             }
             type = Selector::SimpleSelector::Type::Id;
@@ -260,12 +260,12 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                 return {};
 
             if (!current_value.is(Token::Type::Ident)) {
-                dbgln("Expected an ident after '.', got: {}", current_value.to_string());
+                dbgln("Expected an ident after '.', got: {}", current_value.to_debug_string());
                 return {};
             }
 
             type = Selector::SimpleSelector::Type::Class;
-            value = current_value.to_string();
+            value = current_value.token().ident().to_lowercase_string();
         } else if (current_value.is(Token::Type::Delim) && current_value.token().delim() == "*") {
             type = Selector::SimpleSelector::Type::Universal;
         } else if (current_value.is(Token::Type::Ident)) {
@@ -302,7 +302,7 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
             // FIXME: Handle namespace prefix for attribute name.
             auto& attribute_part = attribute_parts.first();
             if (!attribute_part.is(Token::Type::Ident)) {
-                dbgln("Expected ident for attribute name, got: '{}'", attribute_part.to_string());
+                dbgln("Expected ident for attribute name, got: '{}'", attribute_part.to_debug_string());
                 return {};
             }
 
@@ -315,7 +315,7 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
             size_t attribute_index = 1;
             auto& delim_part = attribute_parts.at(attribute_index);
             if (!delim_part.is(Token::Type::Delim)) {
-                dbgln("Expected a delim for attribute comparison, got: '{}'", delim_part.to_string());
+                dbgln("Expected a delim for attribute comparison, got: '{}'", delim_part.to_debug_string());
                 return {};
             }
 
@@ -331,7 +331,7 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
 
                 auto& delim_second_part = attribute_parts.at(attribute_index);
                 if (!(delim_second_part.is(Token::Type::Delim) && delim_second_part.token().delim() == "=")) {
-                    dbgln("Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_string(), delim_second_part.to_string());
+                    dbgln("Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_debug_string(), delim_second_part.to_debug_string());
                     return {};
                 }
 
@@ -360,7 +360,7 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
 
             auto& value_part = attribute_parts.at(attribute_index);
             if (!value_part.is(Token::Type::Ident) && !value_part.is(Token::Type::String)) {
-                dbgln("Expected a string or ident for the value to match attribute against, got: '{}'", value_part.to_string());
+                dbgln("Expected a string or ident for the value to match attribute against, got: '{}'", value_part.to_debug_string());
                 return {};
             }
             simple_selector.attribute_value = value_part.token().is(Token::Type::Ident) ? value_part.token().ident() : value_part.token().string();
@@ -449,8 +449,8 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                     return simple_selector;
                 }
             } else {
-                dbgln("Unexpected Block in pseudo-class name, expected a function or identifier. '{}'", current_value.to_string());
-                return simple_selector;
+                dbgln("Unexpected Block in pseudo-class name, expected a function or identifier. '{}'", current_value.to_debug_string());
+                return {};
             }
         }
 
@@ -487,8 +487,6 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                     relation = Selector::ComplexSelector::Relation::Column;
                     tokens.next_token();
                 }
-            } else {
-                dbgln("Unrecognized relation delimiter: '{}'", delim);
             }
         }
 
@@ -736,7 +734,7 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
 
         tokens.reconsume_current_input_token();
         auto value = consume_a_component_value(tokens);
-        function->m_values.append(value.to_string());
+        function->m_values.append(value.token().m_value.to_string());
     }
 
     return function;
@@ -1328,7 +1326,7 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         // https://www.w3.org/TR/css-color-3/
         // Right now, this uses non-CSS-specific parsing, and assumes the whole color value is one token,
         // which is isn't if it's a function-style syntax.
-        auto color = Color::from_string(token.to_string().to_lowercase());
+        auto color = Color::from_string(token.token().m_value.to_string().to_lowercase());
         if (color.has_value())
             return color;
 
