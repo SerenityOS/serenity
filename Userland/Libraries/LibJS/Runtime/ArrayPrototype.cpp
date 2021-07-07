@@ -362,7 +362,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
         if (vm.exception())
             return {};
     }
-    auto new_length_value = Value((i32)new_length);
+    auto new_length_value = Value(new_length);
     this_object->set(vm.names.length, new_length_value, true);
     if (vm.exception())
         return {};
@@ -440,7 +440,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
     this_object->delete_property_or_throw(index);
     if (vm.exception())
         return {};
-    this_object->set(vm.names.length, Value((i32)index), true);
+    this_object->set(vm.names.length, Value(index), true);
     if (vm.exception())
         return {};
     return element;
@@ -1713,7 +1713,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
             return {};
     }
 
-    this_object->set(vm.names.length, Value((i32)new_length), true);
+    this_object->set(vm.names.length, Value(new_length), true);
     if (vm.exception())
         return {};
 
