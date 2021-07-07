@@ -20,8 +20,11 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(time_zone);
+    JS_DECLARE_NATIVE_FUNCTION(instant);
 };
 
 Object* system_time_zone(GlobalObject&);
+BigInt* system_utc_epoch_nanoseconds(GlobalObject&);
+Object* system_instant(GlobalObject&);
 
 }
