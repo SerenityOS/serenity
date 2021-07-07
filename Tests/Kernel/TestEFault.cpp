@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <AK/Assertions.h>
 #include <AK/Format.h>
 #include <AK/Types.h>
+#include <LibTest/TestCase.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -16,6 +18,7 @@
 #define EXPECT_OK(syscall, address, size)                                                                                         \
     do {                                                                                                                          \
         rc = syscall(fd, (void*)(address), (size_t)(size));                                                                       \
+        EXPECT(rc >= 0);                                                                                                          \
         if (rc < 0) {                                                                                                             \
             warnln("Expected success: " #syscall "({:p}, {}), got rc={}, errno={}", (void*)(address), (size_t)(size), rc, errno); \
         }                                                                                                                         \
@@ -24,6 +27,8 @@
 #define EXPECT_EFAULT(syscall, address, size)                                                                                    \
     do {                                                                                                                         \
         rc = syscall(fd, (void*)(address), (size_t)(size));                                                                      \
+        EXPECT(rc < 0);                                                                                                          \
+        EXPECT_EQ(errno, EFAULT);                                                                                                \
         if (rc >= 0 || errno != EFAULT) {                                                                                        \
             warnln("Expected EFAULT: " #syscall "({:p}, {}), got rc={}, errno={}", (void*)(address), (size_t)(size), rc, errno); \
         }                                                                                                                        \
@@ -32,15 +37,17 @@
 #define EXPECT_EFAULT_NO_FD(syscall, address, size)                                                                              \
     do {                                                                                                                         \
         rc = syscall((address), (size_t)(size));                                                                                 \
+        EXPECT(rc < 0);                                                                                                          \
+        EXPECT_EQ(errno, EFAULT);                                                                                                \
         if (rc >= 0 || errno != EFAULT) {                                                                                        \
             warnln("Expected EFAULT: " #syscall "({:p}, {}), got rc={}, errno={}", (void*)(address), (size_t)(size), rc, errno); \
         }                                                                                                                        \
     } while (0)
 
-int main(int, char**)
+TEST_CASE(test_efault)
 {
     int fd = open("/dev/zero", O_RDONLY);
-    int rc;
+    int rc = -1;
 
     // Test a one-page mapping (4KB)
     u8* one_page = (u8*)mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
@@ -66,19 +73,26 @@ int main(int, char**)
     EXPECT_EFAULT(read, one_page, (u32)distance + 1024);
 
     // Test every kernel page just because.
-    for (u64 kernel_address = 0xc0000000; kernel_address <= 0xffffffff; kernel_address += PAGE_SIZE) {
-        EXPECT_EFAULT(read, (void*)kernel_address, 1);
+    constexpr auto user_range_ceiling = 0xbe000000u;
+    u8* jerk_page = nullptr;
+    for (u64 kernel_address = user_range_ceiling; kernel_address <= 0xffffffff; kernel_address += PAGE_SIZE) {
+        jerk_page = (u8*)mmap((void*)kernel_address, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, 0, 0);
+        EXPECT_EQ(jerk_page, MAP_FAILED);
+        EXPECT_EQ(errno, EFAULT);
     }
 
-    // Test the page just below where the kernel VM begins.
-    u8* jerk_page = (u8*)mmap((void*)(0xc0000000 - PAGE_SIZE), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, 0, 0);
-    VERIFY(jerk_page == (void*)(0xc0000000 - PAGE_SIZE));
+    // Test the page just below where the user VM ends.
+    jerk_page = (u8*)mmap((void*)(user_range_ceiling - PAGE_SIZE), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, 0, 0);
+    EXPECT_EQ(jerk_page, MAP_FAILED);
+    EXPECT_EQ(errno, EFAULT);
+
+    // Test the page just before that
+    jerk_page = (u8*)mmap((void*)(user_range_ceiling - (2 * PAGE_SIZE)), PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, -1, 0);
+    EXPECT_EQ(jerk_page, (u8*)(user_range_ceiling - (2 * PAGE_SIZE)));
 
     EXPECT_OK(read, jerk_page, 4096);
     EXPECT_EFAULT(read, jerk_page, 4097);
 
     // Test something that would wrap around the 2^32 mark.
     EXPECT_EFAULT(read, jerk_page, 0x50000000);
-
-    return 0;
 }
