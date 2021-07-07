@@ -9,10 +9,13 @@
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
+#include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -83,6 +86,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toTimeString, to_time_string, 0, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 1, attr);
+    define_native_function(vm.names.toTemporalInstant, to_temporal_instant, 0, attr);
 
     // 21.4.4.45 Date.prototype [ @@toPrimitive ] ( hint ), https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive
     define_native_function(*vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
@@ -853,6 +857,25 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
         return js_null();
 
     return this_object->invoke(vm.names.toISOString.as_string());
+}
+
+// 14.1.1 Date.prototype.toTemporalInstant ( ), https://tc39.es/proposal-temporal/#sec-date.prototype.totemporalinstant
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_temporal_instant)
+{
+    // 1. Let t be ? thisTimeValue(this value).
+    auto* this_object = typed_this(vm, global_object);
+    if (vm.exception())
+        return {};
+    auto t = this_object->value_of();
+
+    // 2. Let ns be ? NumberToBigInt(t) × 10^6.
+    auto* ns = number_to_bigint(global_object, t);
+    if (vm.exception())
+        return {};
+    ns = js_bigint(vm.heap(), ns->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }));
+
+    // 3. Return ? CreateTemporalInstant(ns).
+    return Temporal::create_temporal_instant(global_object, *ns);
 }
 
 // 21.4.4.45 Date.prototype [ @@toPrimitive ] ( hint ), https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive
