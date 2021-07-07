@@ -76,7 +76,8 @@
     __JS_ENUMERATE(Float32Array, float32_array, Float32ArrayPrototype, Float32ArrayConstructor, float)                          \
     __JS_ENUMERATE(Float64Array, float64_array, Float64ArrayPrototype, Float64ArrayConstructor, double)
 
-#define JS_ENUMERATE_TEMPORAL_OBJECTS \
+#define JS_ENUMERATE_TEMPORAL_OBJECTS                                      \
+    __JS_ENUMERATE(Instant, instant, InstantPrototype, InstantConstructor) \
     __JS_ENUMERATE(TimeZone, time_zone, TimeZonePrototype, TimeZoneConstructor)
 
 #define JS_ENUMERATE_ITERATOR_PROTOTYPES          \
