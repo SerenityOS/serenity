@@ -9,26 +9,31 @@
 #include <AK/Format.h>
 #include <AK/Types.h>
 
+typedef u64 PhysicalPtr;
+typedef u64 PhysicalSize;
+
 class PhysicalAddress {
 public:
+    ALWAYS_INLINE static PhysicalPtr physical_page_base(PhysicalPtr page_address) { return page_address & ~(PhysicalPtr)0xfff; }
+
     PhysicalAddress() = default;
-    explicit PhysicalAddress(FlatPtr address)
+    explicit PhysicalAddress(PhysicalPtr address)
         : m_address(address)
     {
     }
 
-    [[nodiscard]] PhysicalAddress offset(FlatPtr o) const { return PhysicalAddress(m_address + o); }
-    [[nodiscard]] FlatPtr get() const { return m_address; }
-    void set(FlatPtr address) { m_address = address; }
-    void mask(FlatPtr m) { m_address &= m; }
+    [[nodiscard]] PhysicalAddress offset(PhysicalPtr o) const { return PhysicalAddress(m_address + o); }
+    [[nodiscard]] PhysicalPtr get() const { return m_address; }
+    void set(PhysicalPtr address) { m_address = address; }
+    void mask(PhysicalPtr m) { m_address &= m; }
 
     [[nodiscard]] bool is_null() const { return m_address == 0; }
 
     [[nodiscard]] u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
     [[nodiscard]] const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
 
-    [[nodiscard]] PhysicalAddress page_base() const { return PhysicalAddress(m_address & 0xfffff000); }
-    [[nodiscard]] FlatPtr offset_in_page() const { return PhysicalAddress(m_address & 0xfff).get(); }
+    [[nodiscard]] PhysicalAddress page_base() const { return PhysicalAddress(physical_page_base(m_address)); }
+    [[nodiscard]] PhysicalPtr offset_in_page() const { return PhysicalAddress(m_address & 0xfff).get(); }
 
     bool operator==(const PhysicalAddress& other) const { return m_address == other.m_address; }
     bool operator!=(const PhysicalAddress& other) const { return m_address != other.m_address; }
@@ -38,13 +43,16 @@ public:
     bool operator<=(const PhysicalAddress& other) const { return m_address <= other.m_address; }
 
 private:
-    FlatPtr m_address { 0 };
+    PhysicalPtr m_address { 0 };
 };
 
 template<>
 struct AK::Formatter<PhysicalAddress> : AK::Formatter<FormatString> {
     void format(FormatBuilder& builder, PhysicalAddress value)
     {
-        return AK::Formatter<FormatString>::format(builder, "P{}", value.as_ptr());
+        if constexpr (sizeof(PhysicalPtr) == sizeof(u64))
+            return AK::Formatter<FormatString>::format(builder, "P{:016x}", value.get());
+        else
+            return AK::Formatter<FormatString>::format(builder, "P{}", value.as_ptr());
     }
 };

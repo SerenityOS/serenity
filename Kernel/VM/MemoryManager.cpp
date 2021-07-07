@@ -200,7 +200,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         dmesgln("MM: Multiboot mmap: address={:p}, length={}, type={}", mmap->addr, mmap->len, mmap->type);
 
         auto start_address = PhysicalAddress(mmap->addr);
-        auto length = static_cast<size_t>(mmap->len);
+        auto length = mmap->len;
         switch (mmap->type) {
         case (MULTIBOOT_MEMORY_AVAILABLE):
             m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_address, length });
@@ -227,9 +227,6 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
             continue;
 
-        if ((mmap->addr + mmap->len) > 0xffffffff)
-            continue;
-
         // Fix up unaligned memory regions.
         auto diff = (FlatPtr)mmap->addr % PAGE_SIZE;
         if (diff != 0) {
@@ -247,7 +244,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
             continue;
         }
 
-        for (size_t page_base = mmap->addr; page_base <= (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
+        for (PhysicalSize page_base = mmap->addr; page_base <= (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
             auto addr = PhysicalAddress(page_base);
 
             // Skip used memory ranges.
@@ -277,20 +274,21 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages + sizeof(super_pages))))));
 
     for (auto& region : m_super_physical_regions) {
-        m_super_physical_pages += region.finalize_capacity();
+        m_system_memory_info.super_physical_pages += region.finalize_capacity();
         dmesgln("MM: Super physical region: {} - {}", region.lower(), region.upper());
     }
 
     for (auto& region : m_user_physical_regions) {
-        m_user_physical_pages += region.finalize_capacity();
+        m_system_memory_info.user_physical_pages += region.finalize_capacity();
         dmesgln("MM: User physical region: {} - {}", region.lower(), region.upper());
     }
 
-    VERIFY(m_super_physical_pages > 0);
-    VERIFY(m_user_physical_pages > 0);
+    VERIFY(m_system_memory_info.super_physical_pages > 0);
+    VERIFY(m_system_memory_info.user_physical_pages > 0);
 
     // We start out with no committed pages
-    m_user_physical_pages_uncommitted = m_user_physical_pages.load();
+    m_system_memory_info.user_physical_pages_uncommitted = m_system_memory_info.user_physical_pages;
+
     register_reserved_ranges();
     for (auto& range : m_reserved_memory_ranges) {
         dmesgln("MM: Contiguous reserved range from {}, length is {}", range.start, range.length);
@@ -534,11 +532,11 @@ bool MemoryManager::commit_user_physical_pages(size_t page_count)
 {
     VERIFY(page_count > 0);
     ScopedSpinLock lock(s_mm_lock);
-    if (m_user_physical_pages_uncommitted < page_count)
+    if (m_system_memory_info.user_physical_pages_uncommitted < page_count)
         return false;
 
-    m_user_physical_pages_uncommitted -= page_count;
-    m_user_physical_pages_committed += page_count;
+    m_system_memory_info.user_physical_pages_uncommitted -= page_count;
+    m_system_memory_info.user_physical_pages_committed += page_count;
     return true;
 }
 
@@ -546,10 +544,10 @@ void MemoryManager::uncommit_user_physical_pages(size_t page_count)
 {
     VERIFY(page_count > 0);
     ScopedSpinLock lock(s_mm_lock);
-    VERIFY(m_user_physical_pages_committed >= page_count);
+    VERIFY(m_system_memory_info.user_physical_pages_committed >= page_count);
 
-    m_user_physical_pages_uncommitted += page_count;
-    m_user_physical_pages_committed -= page_count;
+    m_system_memory_info.user_physical_pages_uncommitted += page_count;
+    m_system_memory_info.user_physical_pages_committed -= page_count;
 }
 
 void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
@@ -560,12 +558,12 @@ void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
             continue;
 
         region.return_page(page);
-        --m_user_physical_pages_used;
+        --m_system_memory_info.user_physical_pages_used;
 
         // Always return pages to the uncommitted pool. Pages that were
         // committed and allocated are only freed upon request. Once
         // returned there is no guarantee being able to get them back.
-        ++m_user_physical_pages_uncommitted;
+        ++m_system_memory_info.user_physical_pages_uncommitted;
         return;
     }
 
@@ -579,18 +577,18 @@ RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
     RefPtr<PhysicalPage> page;
     if (committed) {
         // Draw from the committed pages pool. We should always have these pages available
-        VERIFY(m_user_physical_pages_committed > 0);
-        m_user_physical_pages_committed--;
+        VERIFY(m_system_memory_info.user_physical_pages_committed > 0);
+        m_system_memory_info.user_physical_pages_committed--;
     } else {
         // We need to make sure we don't touch pages that we have committed to
-        if (m_user_physical_pages_uncommitted == 0)
+        if (m_system_memory_info.user_physical_pages_uncommitted == 0)
             return {};
-        m_user_physical_pages_uncommitted--;
+        m_system_memory_info.user_physical_pages_uncommitted--;
     }
     for (auto& region : m_user_physical_regions) {
         page = region.take_free_page(false);
         if (!page.is_null()) {
-            ++m_user_physical_pages_used;
+            ++m_system_memory_info.user_physical_pages_used;
             break;
         }
     }
@@ -659,7 +657,7 @@ void MemoryManager::deallocate_supervisor_physical_page(const PhysicalPage& page
         }
 
         region.return_page(page);
-        --m_super_physical_pages_used;
+        --m_system_memory_info.super_physical_pages_used;
         return;
     }
 
@@ -692,7 +690,7 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
 
     auto cleanup_region = MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write);
     fast_u32_fill((u32*)cleanup_region->vaddr().as_ptr(), 0, (PAGE_SIZE * count) / sizeof(u32));
-    m_super_physical_pages_used += count;
+    m_system_memory_info.super_physical_pages_used += count;
     return physical_pages;
 }
 
@@ -718,7 +716,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
     }
 
     fast_u32_fill((u32*)page->paddr().offset(KERNEL_BASE).as_ptr(), 0, PAGE_SIZE / sizeof(u32));
-    ++m_super_physical_pages_used;
+    ++m_system_memory_info.super_physical_pages_used;
     return page;
 }
 
@@ -755,7 +753,7 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
     auto& mm_data = get_data();
     auto& pte = boot_pd3_pt1023[4];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
-    if (pte.physical_page_base() != pd_paddr.as_ptr()) {
+    if (pte.physical_page_base() != pd_paddr.get()) {
         pte.set_physical_page_base(pd_paddr.get());
         pte.set_present(true);
         pte.set_writable(true);
@@ -780,7 +778,7 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
     VERIFY(s_mm_lock.own_lock());
     auto& mm_data = get_data();
     auto& pte = boot_pd3_pt1023[0];
-    if (pte.physical_page_base() != pt_paddr.as_ptr()) {
+    if (pte.physical_page_base() != pt_paddr.get()) {
         pte.set_physical_page_base(pt_paddr.get());
         pte.set_present(true);
         pte.set_writable(true);
@@ -811,7 +809,7 @@ u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
     VirtualAddress vaddr(0xffe00000 + pte_idx * PAGE_SIZE);
 
     auto& pte = boot_pd3_pt1023[pte_idx];
-    if (pte.physical_page_base() != physical_page.paddr().as_ptr()) {
+    if (pte.physical_page_base() != physical_page.paddr().get()) {
         pte.set_physical_page_base(physical_page.paddr().get());
         pte.set_present(true);
         pte.set_writable(true);

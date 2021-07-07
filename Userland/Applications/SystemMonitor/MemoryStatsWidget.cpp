@@ -64,12 +64,12 @@ MemoryStatsWidget::~MemoryStatsWidget()
 {
 }
 
-static inline size_t page_count_to_kb(size_t kb)
+static inline u64 page_count_to_kb(u64 kb)
 {
     return (kb * 4096) / 1024;
 }
 
-static inline size_t bytes_to_kb(size_t bytes)
+static inline u64 bytes_to_kb(u64 bytes)
 {
     return bytes / 1024;
 }
@@ -88,12 +88,12 @@ void MemoryStatsWidget::refresh()
     [[maybe_unused]] unsigned kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_u32();
     unsigned kmalloc_allocated = json.get("kmalloc_allocated").to_u32();
     unsigned kmalloc_available = json.get("kmalloc_available").to_u32();
-    unsigned user_physical_allocated = json.get("user_physical_allocated").to_u32();
-    unsigned user_physical_available = json.get("user_physical_available").to_u32();
-    unsigned user_physical_committed = json.get("user_physical_committed").to_u32();
-    unsigned user_physical_uncommitted = json.get("user_physical_uncommitted").to_u32();
-    unsigned super_physical_alloc = json.get("super_physical_allocated").to_u32();
-    unsigned super_physical_free = json.get("super_physical_available").to_u32();
+    unsigned user_physical_allocated = json.get("user_physical_allocated").to_u64();
+    unsigned user_physical_available = json.get("user_physical_available").to_u64();
+    unsigned user_physical_committed = json.get("user_physical_committed").to_u64();
+    unsigned user_physical_uncommitted = json.get("user_physical_uncommitted").to_u64();
+    unsigned super_physical_alloc = json.get("super_physical_allocated").to_u64();
+    unsigned super_physical_free = json.get("super_physical_available").to_u64();
     unsigned kmalloc_call_count = json.get("kmalloc_call_count").to_u32();
     unsigned kfree_call_count = json.get("kfree_call_count").to_u32();
 
