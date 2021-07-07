@@ -384,6 +384,8 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
                 return {};
             if (possible_match.has_value())
                 return possible_match.value().value;
+            if (environment->has_binding(name))
+                return environment->get_binding_value(global_object, name, false);
         }
     }
 
