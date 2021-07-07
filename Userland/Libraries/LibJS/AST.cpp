@@ -1993,7 +1993,7 @@ void RegExpLiteral::dump(int indent) const
 Value RegExpLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return RegExpObject::create(global_object, pattern(), flags());
+    return regexp_create(global_object, js_string(interpreter.heap(), pattern()), js_string(interpreter.heap(), flags()));
 }
 
 void ArrayExpression::dump(int indent) const
