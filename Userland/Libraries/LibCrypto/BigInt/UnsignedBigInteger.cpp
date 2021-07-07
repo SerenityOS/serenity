@@ -332,6 +332,11 @@ bool UnsignedBigInteger::operator<(const UnsignedBigInteger& other) const
     return false;
 }
 
+bool UnsignedBigInteger::operator>(const UnsignedBigInteger& other) const
+{
+    return *this != other && !(*this < other);
+}
+
 }
 
 void AK::Formatter<Crypto::UnsignedBigInteger>::format(FormatBuilder& fmtbuilder, const Crypto::UnsignedBigInteger& value)

@@ -202,6 +202,11 @@ bool SignedBigInteger::operator<(const UnsignedBigInteger& other) const
     return m_unsigned_data < other;
 }
 
+bool SignedBigInteger::operator>(const UnsignedBigInteger& other) const
+{
+    return *this != other && !(*this < other);
+}
+
 FLATTEN SignedBigInteger SignedBigInteger::shift_left(size_t num_bits) const
 {
     return SignedBigInteger { m_unsigned_data.shift_left(num_bits), m_sign };
@@ -259,6 +264,11 @@ bool SignedBigInteger::operator<(const SignedBigInteger& other) const
         return other.m_unsigned_data < m_unsigned_data;
 
     return m_unsigned_data < other.m_unsigned_data;
+}
+
+bool SignedBigInteger::operator>(const SignedBigInteger& other) const
+{
+    return *this != other && !(*this < other);
 }
 
 }
