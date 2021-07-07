@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BinaryBufferWriter.h>
+#include <Kernel/Graphics/VirtIOGPU/Console.h>
 #include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/GPU.h>
-#include <Kernel/Graphics/VirtIOGPU/Console.h>
 
 #define DEVICE_EVENTS_READ 0x0
 #define DEVICE_EVENTS_CLEAR 0x4
@@ -98,10 +99,10 @@ void GPU::clear_pending_events(u32 event_bitmask)
 void GPU::query_display_information()
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<Protocol::ControlHeader*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<Protocol::DisplayInfoResponse*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
-
+    auto writer = create_scratchspace_writer();
+    auto& request = writer.append_structure<Protocol::ControlHeader>();
     populate_virtio_gpu_request_header(request, Protocol::CommandType::VIRTIO_GPU_CMD_GET_DISPLAY_INFO, VIRTIO_GPU_FLAG_FENCE);
+    auto& response = writer.append_structure<Protocol::DisplayInfoResponse>();
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
@@ -118,8 +119,9 @@ void GPU::query_display_information()
 ResourceID GPU::create_2d_resource(Protocol::Rect rect)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<Protocol::ResourceCreate2D*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto writer = create_scratchspace_writer();
+    auto& request = writer.append_structure<Protocol::ResourceCreate2D>();
+    auto& response = writer.append_structure<Protocol::ControlHeader>();
 
     populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_CREATE_2D, VIRTIO_GPU_FLAG_FENCE);
 
@@ -146,17 +148,20 @@ void GPU::ensure_backing_storage(Region const& region, size_t buffer_offset, siz
     size_t num_mem_regions = buffer_length / PAGE_SIZE;
 
     // Send request
-    auto& request = *reinterpret_cast<Protocol::ResourceAttachBacking*>(m_scratch_space->vaddr().as_ptr());
+    auto writer = create_scratchspace_writer();
+    auto& request = writer.append_structure<Protocol::ResourceAttachBacking>();
     const size_t header_block_size = sizeof(request) + num_mem_regions * sizeof(Protocol::MemoryEntry);
-    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(header_block_size).as_ptr()));
 
     populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
     request.num_entries = num_mem_regions;
     for (size_t i = 0; i < num_mem_regions; ++i) {
-        request.entries[i].address = region.physical_page(first_page_index + i)->paddr().get();
-        request.entries[i].length = PAGE_SIZE;
+        auto& memory_entry = writer.append_structure<Protocol::MemoryEntry>();
+        memory_entry.address = region.physical_page(first_page_index + i)->paddr().get();
+        memory_entry.length = PAGE_SIZE;
     }
+
+    auto& response = writer.append_structure<Protocol::ControlHeader>();
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), header_block_size, sizeof(response));
 
@@ -167,8 +172,9 @@ void GPU::ensure_backing_storage(Region const& region, size_t buffer_offset, siz
 void GPU::detach_backing_storage(ResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<Protocol::ResourceDetachBacking*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto writer = create_scratchspace_writer();
+    auto& request = writer.append_structure<Protocol::ResourceDetachBacking>();
+    auto& response = writer.append_structure<Protocol::ControlHeader>();
 
     populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_DETACH_BACKING, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
@@ -182,8 +188,9 @@ void GPU::detach_backing_storage(ResourceID resource_id)
 void GPU::set_scanout_resource(ScanoutID scanout, ResourceID resource_id, Protocol::Rect rect)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<Protocol::SetScanOut*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto writer = create_scratchspace_writer();
+    auto& request = writer.append_structure<Protocol::SetScanOut>();
+    auto& response = writer.append_structure<Protocol::ControlHeader>();
 
     populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_SET_SCANOUT, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
@@ -199,8 +206,9 @@ void GPU::set_scanout_resource(ScanoutID scanout, ResourceID resource_id, Protoc
 void GPU::transfer_framebuffer_data_to_host(ScanoutID scanout, Protocol::Rect const& dirty_rect, ResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<Protocol::TransferToHost2D*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto writer = create_scratchspace_writer();
+    auto& request = writer.append_structure<Protocol::TransferToHost2D>();
+    auto& response = writer.append_structure<Protocol::ControlHeader>();
 
     populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D, VIRTIO_GPU_FLAG_FENCE);
     request.offset = (dirty_rect.x + (dirty_rect.y * m_scanouts[scanout.value()].display_info.rect.width)) * sizeof(u32);
@@ -215,8 +223,9 @@ void GPU::transfer_framebuffer_data_to_host(ScanoutID scanout, Protocol::Rect co
 void GPU::flush_displayed_image(Protocol::Rect const& dirty_rect, ResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<Protocol::ResourceFlush*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto writer = create_scratchspace_writer();
+    auto& request = writer.append_structure<Protocol::ResourceFlush>();
+    auto& response = writer.append_structure<Protocol::ControlHeader>();
 
     populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_FLUSH, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
@@ -269,8 +278,9 @@ ResourceID GPU::allocate_resource_id()
 void GPU::delete_resource(ResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<Protocol::ResourceUnref*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto writer = create_scratchspace_writer();
+    auto& request = writer.append_structure<Protocol::ResourceUnref>();
+    auto& response = writer.append_structure<Protocol::ControlHeader>();
 
     populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_UNREF, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
