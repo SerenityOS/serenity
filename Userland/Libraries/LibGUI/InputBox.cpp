@@ -15,7 +15,7 @@
 
 namespace GUI {
 
-InputBox::InputBox(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title, const StringView& placeholder)
+InputBox::InputBox(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder)
     : Dialog(parent_window)
     , m_text_value(text_value)
     , m_prompt(prompt)
@@ -29,7 +29,7 @@ InputBox::~InputBox()
 {
 }
 
-int InputBox::show(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title, const StringView& placeholder)
+int InputBox::show(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder)
 {
     auto box = InputBox::construct(parent_window, text_value, prompt, title, placeholder);
     box->set_resizable(false);
