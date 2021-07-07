@@ -242,6 +242,42 @@ RefPtr<ProcFSExposedComponent> ProcFSProcessFileDescriptions::lookup(StringView 
     return procfd_fd;
 }
 
+class ProcFSProcessPledge final : public ProcFSProcessInformation {
+public:
+    static NonnullRefPtr<ProcFSProcessPledge> create(const ProcFSProcessFolder& parent_folder)
+    {
+        return adopt_ref(*new (nothrow) ProcFSProcessPledge(parent_folder));
+    }
+
+private:
+    explicit ProcFSProcessPledge(const ProcFSProcessFolder& parent_folder)
+        : ProcFSProcessInformation("pledge"sv, parent_folder)
+    {
+    }
+    virtual bool output(KBufferBuilder& builder) override
+    {
+        auto parent_folder = m_parent_folder.strong_ref();
+        if (parent_folder.is_null())
+            return false;
+        auto process = parent_folder->m_associated_process;
+        JsonObjectSerializer obj { builder };
+#define __ENUMERATE_PLEDGE_PROMISE(x)       \
+    if (process->has_promised(Pledge::x)) { \
+        if (!builder.is_empty())            \
+            builder.append(' ');            \
+        builder.append(#x);                 \
+    }
+        if (process->has_promises()) {
+            StringBuilder builder;
+            ENUMERATE_PLEDGE_PROMISES
+            obj.add("promises", builder.build());
+        }
+#undef __ENUMERATE_PLEDGE_PROMISE
+        obj.finish();
+        return true;
+    }
+};
+
 class ProcFSProcessUnveil final : public ProcFSProcessInformation {
 public:
     static NonnullRefPtr<ProcFSProcessUnveil> create(const ProcFSProcessFolder& parent_folder)
@@ -512,6 +548,7 @@ private:
 void ProcFSProcessFolder::on_attach()
 {
     VERIFY(m_components.size() == 0);
+    m_components.append(ProcFSProcessPledge::create(*this));
     m_components.append(ProcFSProcessUnveil::create(*this));
     m_components.append(ProcFSProcessPerformanceEvents::create(*this));
     m_components.append(ProcFSProcessFileDescriptions::create(*this));
