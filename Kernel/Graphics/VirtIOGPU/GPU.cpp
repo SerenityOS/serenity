@@ -261,10 +261,10 @@ void GPU::populate_virtio_gpu_request_header(Protocol::ControlHeader& header, Pr
     header.padding = 0;
 }
 
-void GPU::flush_dirty_window(ScanoutID scanout, Protocol::Rect const& dirty_rect, ResourceID resource_id)
+void GPU::flush_dirty_rectangle(ScanoutID scanout_id, Protocol::Rect const& dirty_rect, ResourceID resource_id)
 {
     MutexLocker locker(m_operation_lock);
-    transfer_framebuffer_data_to_host(scanout, dirty_rect, resource_id);
+    transfer_framebuffer_data_to_host(scanout_id, dirty_rect, resource_id);
     flush_displayed_image(dirty_rect, resource_id);
 }
 
