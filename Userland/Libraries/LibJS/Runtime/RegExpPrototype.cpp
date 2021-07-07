@@ -302,7 +302,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 // 22.2.5.7 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
-    auto* rx = this_object_from(vm, global_object);
+    auto* rx = regexp_object_from(vm, global_object);
     if (!rx)
         return {};
     auto s = vm.argument(0).to_string(global_object);
@@ -312,16 +312,18 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     if (vm.exception())
         return {};
     bool global = global_value.to_boolean();
-    // FIXME: Implement and use RegExpExec, this does something different - https://tc39.es/ecma262/#sec-regexpexec
-    auto* exec = Value(rx).get_method(global_object, vm.names.exec);
-    if (!exec)
-        return js_undefined();
-    // FIXME end
-    if (!global)
-        return vm.call(*exec, rx, js_string(vm, s));
+    if (!global) {
+        auto result = regexp_exec(global_object, *rx, s);
+        if (vm.exception())
+            return {};
+        return result;
+    }
 
     // FIXME: This should exec the RegExp repeatedly while updating "lastIndex"
-    return vm.call(*exec, rx, js_string(vm, s));
+    auto result = regexp_exec(global_object, *rx, s);
+    if (vm.exception())
+        return {};
+    return result;
 }
 
 // 22.2.5.10 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
