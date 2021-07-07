@@ -76,7 +76,7 @@ Optional<unsigned> PhysicalRegion::find_one_free_page()
         // Check if we can draw one from the return queue
         if (m_recently_returned.size() > 0) {
             u8 index = get_fast_random<u8>() % m_recently_returned.size();
-            Checked<FlatPtr> local_offset = m_recently_returned[index].get();
+            Checked<PhysicalPtr> local_offset = m_recently_returned[index].get();
             local_offset -= m_lower.get();
             m_recently_returned.remove(index);
             VERIFY(!local_offset.has_overflow());
@@ -131,7 +131,7 @@ RefPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
     if (!free_index.has_value())
         return nullptr;
 
-    return PhysicalPage::create(m_lower.offset(free_index.value() * PAGE_SIZE), supervisor);
+    return PhysicalPage::create(m_lower.offset((PhysicalPtr)free_index.value() * PAGE_SIZE), supervisor);
 }
 
 void PhysicalRegion::free_page_at(PhysicalAddress addr)
@@ -142,10 +142,10 @@ void PhysicalRegion::free_page_at(PhysicalAddress addr)
         VERIFY_NOT_REACHED();
     }
 
-    Checked<FlatPtr> local_offset = addr.get();
+    Checked<PhysicalPtr> local_offset = addr.get();
     local_offset -= m_lower.get();
     VERIFY(!local_offset.has_overflow());
-    VERIFY(local_offset.value() < (FlatPtr)(m_pages * PAGE_SIZE));
+    VERIFY(local_offset.value() < ((PhysicalPtr)m_pages * PAGE_SIZE));
 
     auto page = local_offset.value() / PAGE_SIZE;
     m_bitmap.set(page, false);
