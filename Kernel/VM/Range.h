@@ -58,3 +58,11 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<Kernel::Range> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, Kernel::Range value)
+    {
+        return Formatter<FormatString>::format(builder, "{} - {} (size 0x{:08x})", value.base().as_ptr(), value.base().offset(value.size() - 1).as_ptr(), value.size());
+    }
+};
