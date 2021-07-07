@@ -82,6 +82,9 @@ void MessageBox::build()
     auto& widget = set_main_widget<Widget>();
 
     int text_width = widget.font().width(m_text);
+    auto number_of_lines = m_text.split('\n').size();
+    int padded_text_height = widget.font().glyph_height() * 1.6;
+    int total_text_height = number_of_lines * padded_text_height;
     int icon_width = 0;
 
     widget.set_layout<VerticalBoxLayout>();
@@ -105,7 +108,7 @@ void MessageBox::build()
     }
 
     auto& label = message_container.add<Label>(m_text);
-    label.set_fixed_height(16);
+    label.set_fixed_height(total_text_height);
     if (m_type != Type::None)
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
@@ -141,7 +144,7 @@ void MessageBox::build()
     int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;
     width = max(width, text_width + icon_width + 56);
 
-    set_rect(x(), y(), width, 96);
+    set_rect(x(), y(), width, 80 + label.max_height());
     set_resizable(false);
 }
 
