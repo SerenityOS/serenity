@@ -100,28 +100,15 @@ static void increment_last_index(GlobalObject& global_object, Object& regexp_obj
     regexp_object.set(vm.names.lastIndex, Value(last_index), true);
 }
 
-static RegexResult do_match(const Regex<ECMA262>& re, const StringView& subject)
-{
-    auto result = re.match(subject);
-    // The 'lastIndex' property is reset on failing tests (if 'global')
-    if (!result.success && re.options().has_flag_set(ECMAScriptFlags::Global))
-        re.start_offset = 0;
-
-    return result;
-}
-
 // 22.2.5.2.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
 static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, String const& string)
 {
-    // FIXME: This should try using dynamic properties for 'lastIndex',
-    //        and internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
+    // FIXME: This should try using internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
     auto& vm = global_object.vm();
 
     auto str = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
-
-    StringView str_to_match = string;
 
     // RegExps without "global" and "sticky" always start at offset 0.
     if (!regexp_object.regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful)) {
@@ -137,7 +124,10 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     if (vm.exception())
         return {};
 
-    auto result = do_match(regexp_object.regex(), str_to_match);
+    auto result = regexp_object.regex().match(string);
+    // The 'lastIndex' property is reset on failing tests (if 'global')
+    if (!result.success && regexp_object.regex().options().has_flag_set(ECMAScriptFlags::Global))
+        regexp_object.regex().start_offset = 0;
 
     regexp_object.set(vm.names.lastIndex, Value(regexp_object.regex().start_offset), true);
     if (vm.exception())
