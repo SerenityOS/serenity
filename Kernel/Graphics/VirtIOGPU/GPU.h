@@ -23,6 +23,8 @@
 #define MAX_VIRTIOGPU_RESOLUTION_WIDTH 3840
 #define MAX_VIRTIOGPU_RESOLUTION_HEIGHT 2160
 
+#define VIRTIO_GPU_EVENT_DISPLAY (1 << 0)
+
 namespace Kernel::Graphics::VirtIOGPU {
 
 class Console;
