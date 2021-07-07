@@ -110,54 +110,47 @@ gdt64ptr:
 #endif
 
 start:
-    cli
-    cld
+    jmp real_start
 
-#if ARCH(X86_64)
-    /* test for long mode presence, save the most important registers from corruption */
-    pushl %eax
-    pushl %edx
-    pushl %ebx
+/* 
+    this function assumes that paging is disabled (or everything is mapped 1:1)
+    param 1: pointer to string ended with null terminator (C string)
+*/
+print_and_halt:
 
-    movl $0x80000001, %eax
-    cpuid
-    testl $(1 << 29), %edx   /* Test if the LM-bit, which is bit 29, is set in the edx register. */
-    jnz continue             /* If LM-bit is not enabled, there is no long mode. */
-
-    /*  from now on, we don't really care about booting because we don't have long mode supported.
-         the flow from now is like so:
-         1. Copy all necessary parts to low memory section in RAM
-         2. Jump to that section
-         3. In that section we do:
-            a. exit protected mode to pure 16 bit real mode
-            b. load the "Long mode is not supported" String, call the BIOS print to screen service
-            c. halt
-    */
-
-.equ NO_LONG_MODE_STRING_LOCATION, 0x400
+.equ COPIED_STRING_LOCATION, 0x400
 .equ GDT_REAL_MODE_LOCATION, 0x45000
 .equ EXITING_PROTECTED_MODE_CODE_LOCATION, 0x10000
 .equ REAL_MODE_CODE, 0x500
 .equ PROTECTED_MODE_16_BIT_CODE, 0x600
+    mov %esp, %ebp
+    mov 4(%ebp), %edi
 
-    /* Copy no_long_mode_string to low memory section  */
-    lea no_long_mode_string, %eax
-    lea exiting_real_mode, %ebx
-    sub $0xc0000000, %ebx
-    sub $0xc0000000, %eax
+    /* Copy string to low memory section  */
+    mov %edi, %esi
+    xor %ecx, %ecx
 
-    movl %ebx, %ecx
-    sub %eax, %ecx
-    mov %eax, %esi          /* source address of the code */
-    movw %cx, (NO_LONG_MODE_STRING_LOCATION)
-    mov $NO_LONG_MODE_STRING_LOCATION+2, %edi     /* destination address of the code */
+    pushl %eax
+    pushl %edi
+check_string_length:
+    movb (%edi), %ah
+    cmp $0, %ah
+    je check_string_length_exit
+    inc %ecx
+    inc %edi
+    jmp check_string_length
+check_string_length_exit:
+    popl %edi
+    popl %eax
+
+    /* source address of the code is ESI */
+    movw %cx, (COPIED_STRING_LOCATION)
+    mov $COPIED_STRING_LOCATION + 2, %edi     /* destination address of the code */
     rep movsb
 
     /* Copy gdt_table_real_mode to low memory section  */
-    lea gdt_table_real_mode, %eax
-    lea gdt_table_real_mode_end, %ebx
-    sub $0xc0000000, %ebx
-    sub $0xc0000000, %eax
+    movl $(gdt_table_real_mode - KERNEL_BASE), %eax
+    movl $(gdt_table_real_mode_end - KERNEL_BASE), %ebx
 
     movl %ebx, %ecx
     sub %eax, %ecx
@@ -166,10 +159,8 @@ start:
     rep movsb
 
     /* Copy protected_mode_16_bit to real_mode to low memory section  */
-    lea protected_mode_16_bit, %eax
-    lea real_mode, %ebx
-    sub $0xc0000000, %ebx
-    sub $0xc0000000, %eax
+    movl $(protected_mode_16_bit - KERNEL_BASE), %eax
+    movl $(real_mode - KERNEL_BASE), %ebx
 
     movl %ebx, %ecx
     sub %eax, %ecx
@@ -177,11 +168,9 @@ start:
     mov $PROTECTED_MODE_16_BIT_CODE, %edi     /* destination address of the code */
     rep movsb
 
-    /* Copy real_mode to continue to low memory section  */
-    lea real_mode, %eax
-    lea continue, %ebx
-    sub $0xc0000000, %ebx
-    sub $0xc0000000, %eax
+    /* Copy real_mode to end_of_print_and_halt_function to low memory section  */
+    movl $(real_mode - KERNEL_BASE), %eax
+    movl $(end_of_print_and_halt_function - KERNEL_BASE), %ebx
 
     movl %ebx, %ecx
     sub %eax, %ecx
@@ -191,10 +180,8 @@ start:
 
 
     /* Copy all opcodes from exiting_real_mode label to protected_mode_16_bit label to low memory RAM  */
-    lea exiting_real_mode, %eax
-    lea protected_mode_16_bit, %ebx
-    sub $0xc0000000, %ebx
-    sub $0xc0000000, %eax
+    movl $(exiting_real_mode - KERNEL_BASE), %eax
+    movl $(protected_mode_16_bit - KERNEL_BASE), %ebx
 
     movl %ebx, %ecx
     sub %eax, %ecx
@@ -226,6 +213,9 @@ gdt_table_real_mode_end:
 
 no_long_mode_string:
     .asciz "Your computer does not support long mode (64-bit mode). Halting!"
+
+kernel_image_too_big_string:
+    .asciz "Error: Kernel Image too big for memory slot. Halting!"
 
 /*
     This part is completely standalone - it doesn't involve any location from this
@@ -292,19 +282,64 @@ real_mode:
     movb $0x13, %ah
     movb $0x0, %bh
     movb $0xf, %bl
-    movw (NO_LONG_MODE_STRING_LOCATION), %cx
+    movw (COPIED_STRING_LOCATION), %cx
     movw $0, %dx
-    movw $NO_LONG_MODE_STRING_LOCATION + 2, %bp
+    movw $COPIED_STRING_LOCATION + 2, %bp
     int $0x10
 
     movl $0xdeadcafe, %ebx
     cli
     hlt
+end_of_print_and_halt_function:
+
+.code32
+real_start:
+    cli
+    cld
+    mov $end_of_kernel_image, %esi
+    cmp $0xc2000000, %esi
+    jbe kernel_not_too_large
+    
+    movl $(kernel_image_too_big_string - KERNEL_BASE), %esi
+    pushl %esi
+    call print_and_halt
+    /* We should not return, but just in case, halt */
+    hlt
+
+kernel_not_too_large:
+
+
+#if ARCH(X86_64)
+    /* test for long mode presence, save the most important registers from corruption */
+    pushl %eax
+    pushl %edx
+    pushl %ebx
+
+    movl $0x80000001, %eax
+    cpuid
+    testl $(1 << 29), %edx   /* Test if the LM-bit, which is bit 29, is set in the edx register. */
+    jnz long_mode_supported             /* If LM-bit is not enabled, there is no long mode. */
+
+    /*  from now on, we don't really care about booting because we don't have long mode supported.
+         the flow from now is like so:
+         1. Copy all necessary parts to low memory section in RAM
+         2. Jump to that section
+         3. In that section we do:
+            a. exit protected mode to pure 16 bit real mode
+            b. load the "Long mode is not supported" String, call the BIOS print to screen service
+            c. halt
+    */
+    movl $(no_long_mode_string - KERNEL_BASE), %esi
+    pushl %esi
+    call print_and_halt
+    /* We should not return, but just in case, halt */
+    hlt
+
 
 /* If long mode is supported, continue with booting the system */
 
 .code32
-continue:
+long_mode_supported:
     /* restore the pushed registers and continue with booting */
     popl %ebx
     popl %edx
