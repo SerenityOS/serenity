@@ -1264,8 +1264,7 @@ void Window::invalidate_menubar()
 {
     if (!m_should_show_menubar || !menubar())
         return;
-    // FIXME: This invalidates way more than the menubar!
-    frame().invalidate();
+    frame().invalidate_menubar();
 }
 
 void Window::set_modified(bool modified)
