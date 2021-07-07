@@ -17,6 +17,7 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/API/Syscall.h>
+#include <Kernel/AtomicEdgeAction.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
@@ -569,6 +570,7 @@ private:
 
     RefPtr<ProcessGroup> m_pg;
 
+    AtomicEdgeAction<u32> m_protected_data_refs;
     void protect_data();
     void unprotect_data();
 
