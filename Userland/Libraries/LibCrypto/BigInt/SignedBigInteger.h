@@ -121,10 +121,12 @@ public:
     bool operator==(const SignedBigInteger& other) const;
     bool operator!=(const SignedBigInteger& other) const;
     bool operator<(const SignedBigInteger& other) const;
+    bool operator>(const SignedBigInteger& other) const;
 
     bool operator==(const UnsignedBigInteger& other) const;
     bool operator!=(const UnsignedBigInteger& other) const;
     bool operator<(const UnsignedBigInteger& other) const;
+    bool operator>(const UnsignedBigInteger& other) const;
 
 private:
     bool m_sign { false };
