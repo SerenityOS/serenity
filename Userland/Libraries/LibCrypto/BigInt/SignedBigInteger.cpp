@@ -151,6 +151,11 @@ FLATTEN SignedBigInteger SignedBigInteger::bitwise_not() const
     return { unsigned_value().bitwise_not(), !m_sign };
 }
 
+FLATTEN SignedBigInteger SignedBigInteger::multiplied_by(UnsignedBigInteger const& other) const
+{
+    return { unsigned_value().multiplied_by(other), m_sign };
+}
+
 FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const SignedBigInteger& other) const
 {
     auto result = bitwise_or(other.unsigned_value());
