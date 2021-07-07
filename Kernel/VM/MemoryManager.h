@@ -278,7 +278,7 @@ void VMObject::for_each_region(Callback callback)
 
 inline bool is_user_address(VirtualAddress vaddr)
 {
-    return vaddr.get() < KERNEL_BASE;
+    return vaddr.get() < USER_RANGE_CEILING;
 }
 
 inline bool is_user_range(VirtualAddress vaddr, size_t size)
