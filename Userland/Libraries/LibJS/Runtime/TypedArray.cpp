@@ -262,10 +262,10 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         /* 23.2.6.2 TypedArray.prototype, https://tc39.es/ecma262/#sec-typedarray.prototype */                                         \
         define_direct_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);                                         \
                                                                                                                                        \
-        define_direct_property(vm.names.length, Value(3), Attribute::Configurable);                                                    \
-                                                                                                                                       \
         /* 23.2.6.1 TypedArray.BYTES_PER_ELEMENT, https://tc39.es/ecma262/#sec-typedarray.bytes_per_element */                         \
         define_direct_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                               \
+                                                                                                                                       \
+        define_direct_property(vm.names.length, Value(3), Attribute::Configurable);                                                    \
     }                                                                                                                                  \
                                                                                                                                        \
     /* 23.2.5.1 TypedArray ( ...args ), https://tc39.es/ecma262/#sec-typedarray */                                                     \

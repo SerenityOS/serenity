@@ -133,12 +133,12 @@ void DateConstructor::initialize(GlobalObject& global_object)
     // 21.4.3.3 Date.prototype, https://tc39.es/ecma262/#sec-date.prototype
     define_direct_property(vm.names.prototype, global_object.date_prototype(), 0);
 
-    define_direct_property(vm.names.length, Value(7), Attribute::Configurable);
-
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.now, now, 0, attr);
     define_native_function(vm.names.parse, parse, 1, attr);
     define_native_function(vm.names.UTC, utc, 1, attr);
+
+    define_direct_property(vm.names.length, Value(7), Attribute::Configurable);
 }
 
 DateConstructor::~DateConstructor()

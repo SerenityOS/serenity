@@ -33,8 +33,6 @@ void ArrayConstructor::initialize(GlobalObject& global_object)
     // 23.1.2.4 Array.prototype, https://tc39.es/ecma262/#sec-array.prototype
     define_direct_property(vm.names.prototype, global_object.array_prototype(), 0);
 
-    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);
     define_native_function(vm.names.isArray, is_array, 1, attr);
@@ -42,6 +40,8 @@ void ArrayConstructor::initialize(GlobalObject& global_object)
 
     // 23.1.2.5 get Array [ @@species ], https://tc39.es/ecma262/#sec-get-array-@@species
     define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
 // 23.1.1.1 Array ( ...values ), https://tc39.es/ecma262/#sec-array

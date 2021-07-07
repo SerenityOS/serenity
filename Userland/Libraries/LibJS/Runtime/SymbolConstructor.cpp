@@ -23,8 +23,6 @@ void SymbolConstructor::initialize(GlobalObject& global_object)
     // 20.4.2.9 Symbol.prototype, https://tc39.es/ecma262/#sec-symbol.prototype
     define_direct_property(vm.names.prototype, global_object.symbol_prototype(), 0);
 
-    define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
-
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.for_, for_, 1, attr);
     define_native_function(vm.names.keyFor, key_for, 1, attr);
@@ -33,6 +31,8 @@ void SymbolConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.SymbolName, vm.well_known_symbol_##snake_name(), 0);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
+
+    define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
 
 SymbolConstructor::~SymbolConstructor()

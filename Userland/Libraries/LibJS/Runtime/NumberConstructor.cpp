@@ -36,8 +36,6 @@ void NumberConstructor::initialize(GlobalObject& global_object)
     // 21.1.2.15 Number.prototype, https://tc39.es/ecma262/#sec-number.prototype
     define_direct_property(vm.names.prototype, global_object.number_prototype(), 0);
 
-    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.isFinite, is_finite, 1, attr);
     define_native_function(vm.names.isInteger, is_integer, 1, attr);
@@ -53,6 +51,8 @@ void NumberConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.NEGATIVE_INFINITY, js_negative_infinity(), 0);
     define_direct_property(vm.names.POSITIVE_INFINITY, js_infinity(), 0);
     define_direct_property(vm.names.NaN, js_nan(), 0);
+
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
 NumberConstructor::~NumberConstructor()
