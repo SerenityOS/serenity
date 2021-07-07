@@ -47,7 +47,6 @@ void SprayTool::paint_it()
     auto& bitmap = layer->bitmap();
     GUI::Painter painter(bitmap);
     VERIFY(bitmap.bpp() == 32);
-    m_editor->update();
     const double minimal_radius = 2;
     const double base_radius = minimal_radius * m_thickness;
     for (int i = 0; i < M_PI * base_radius * base_radius * (m_density / 100.0); i++) {
@@ -62,7 +61,7 @@ void SprayTool::paint_it()
         bitmap.set_pixel<Gfx::StorageFormat::BGRA8888>(xpos, ypos, m_color);
     }
 
-    layer->did_modify_bitmap();
+    layer->did_modify_bitmap(Gfx::IntRect::centered_on(m_last_pos, Gfx::IntSize(base_radius * 2, base_radius * 2)));
 }
 
 void SprayTool::on_mousedown(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
