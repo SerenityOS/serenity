@@ -28,12 +28,12 @@ void StringConstructor::initialize(GlobalObject& global_object)
     // 22.1.2.3 String.prototype, https://tc39.es/ecma262/#sec-string.prototype
     define_direct_property(vm.names.prototype, global_object.string_prototype(), 0);
 
-    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.raw, raw, 1, attr);
     define_native_function(vm.names.fromCharCode, from_char_code, 1, attr);
     define_native_function(vm.names.fromCodePoint, from_code_point, 1, attr);
+
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
 StringConstructor::~StringConstructor()
