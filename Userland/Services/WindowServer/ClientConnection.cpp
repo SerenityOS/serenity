@@ -1099,4 +1099,9 @@ void ClientConnection::set_window_modified(i32 window_id, bool modified)
     window.set_modified(modified);
 }
 
+void ClientConnection::set_flash_flush(bool enabled)
+{
+    Compositor::the().set_flash_flush(enabled);
+}
+
 }
