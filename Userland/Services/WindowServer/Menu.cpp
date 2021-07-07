@@ -558,11 +558,8 @@ int Menu::item_index_at(const Gfx::IntPoint& position)
 {
     int i = 0;
     for (auto& item : m_items) {
-        if (item.rect().contains(position)) {
-            if (item.type() == MenuItem::Type::Separator)
-                return -1;
+        if (item.rect().contains(position))
             return i;
-        }
         ++i;
     }
     return -1;
@@ -661,13 +658,13 @@ void Menu::set_hovered_index(int index, bool make_input)
     if (m_hovered_item_index == index)
         return;
     if (auto* old_hovered_item = hovered_item()) {
-        if (client())
+        if (client() && old_hovered_item->type() != MenuItem::Type::Separator)
             client()->async_menu_item_left(m_menu_id, old_hovered_item->identifier());
     }
     m_hovered_item_index = index;
     update_for_new_hovered_item(make_input);
     if (auto* new_hovered_item = hovered_item()) {
-        if (client())
+        if (client() && new_hovered_item->type() != MenuItem::Type::Separator)
             client()->async_menu_item_entered(m_menu_id, new_hovered_item->identifier());
     }
 }
