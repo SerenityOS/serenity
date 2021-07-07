@@ -306,6 +306,11 @@ static void cat_file(FILE* file)
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath tty", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     char const* filename = "-";
     char const* prompt = "?f%f :.(line %l)?e (END):.";
     bool dont_switch_buffer = false;
@@ -328,6 +333,11 @@ int main(int argc, char** argv)
         file = stdin;
     } else {
         file = fopen(filename, "r");
+    }
+
+    if (pledge("stdio tty", nullptr) < 0) {
+        perror("pledge");
+        return 1;
     }
 
     if (emulate_more) {
