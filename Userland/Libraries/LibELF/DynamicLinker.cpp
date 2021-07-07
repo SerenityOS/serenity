@@ -301,8 +301,11 @@ static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> load_main_library(co
         auto& object = result.value();
 
         if (loader.filename() == "libsystem.so"sv) {
-            if (syscall(SC_msyscall, object->base_address().as_ptr())) {
-                VERIFY_NOT_REACHED();
+            VERIFY(!loader.text_segments().is_empty());
+            for (const auto& segment : loader.text_segments()) {
+                if (syscall(SC_msyscall, segment.address().get())) {
+                    VERIFY_NOT_REACHED();
+                }
             }
         }
 
