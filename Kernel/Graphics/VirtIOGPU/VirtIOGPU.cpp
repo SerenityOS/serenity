@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Graphics/VirtIOGPU/VirtIOFrameBufferDevice.h>
+#include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/VirtIOGPU.h>
-#include <Kernel/Graphics/VirtIOGPU/VirtIOGPUConsole.h>
+#include <Kernel/Graphics/VirtIOGPU/Console.h>
 
 #define DEVICE_EVENTS_READ 0x0
 #define DEVICE_EVENTS_CLEAR 0x4
 #define DEVICE_NUM_SCANOUTS 0x8
 
-namespace Kernel::Graphics {
+namespace Kernel::Graphics::VirtIOGPU {
 
-VirtIOGPU::VirtIOGPU(PCI::Address address)
-    : VirtIODevice(address, "VirtIOGPU")
+GPU::GPU(PCI::Address address)
+    : VirtIODevice(address, "GPU")
     , m_scratch_space(MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Region::Access::Read | Region::Access::Write))
 {
     VERIFY(!!m_scratch_space);
@@ -24,16 +24,16 @@ VirtIOGPU::VirtIOGPU(PCI::Address address)
         bool success = negotiate_features([&](u64 supported_features) {
             u64 negotiated = 0;
             if (is_feature_set(supported_features, VIRTIO_GPU_F_VIRGL))
-                dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: VIRGL is not yet supported!");
+                dbgln_if(VIRTIO_DEBUG, "GPU: VIRGL is not yet supported!");
             if (is_feature_set(supported_features, VIRTIO_GPU_F_EDID))
-                dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: EDID is not yet supported!");
+                dbgln_if(VIRTIO_DEBUG, "GPU: EDID is not yet supported!");
             return negotiated;
         });
         if (success) {
             read_config_atomic([&]() {
                 m_num_scanouts = config_read32(*cfg, DEVICE_NUM_SCANOUTS);
             });
-            dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: num_scanouts: {}", m_num_scanouts);
+            dbgln_if(VIRTIO_DEBUG, "GPU: num_scanouts: {}", m_num_scanouts);
             success = setup_queues(2); // CONTROLQ + CURSORQ
         }
         VERIFY(success);
@@ -46,27 +46,27 @@ VirtIOGPU::VirtIOGPU(PCI::Address address)
     }
 }
 
-VirtIOGPU::~VirtIOGPU()
+GPU::~GPU()
 {
 }
 
-void VirtIOGPU::create_framebuffer_devices()
+void GPU::create_framebuffer_devices()
 {
     for (size_t i = 0; i < min(m_num_scanouts, VIRTIO_GPU_MAX_SCANOUTS); i++) {
         auto& scanout = m_scanouts[i];
-        scanout.framebuffer = adopt_ref(*new VirtIOFrameBufferDevice(*this, i));
-        scanout.console = Kernel::Graphics::VirtIOGPUConsole::initialize(scanout.framebuffer);
+        scanout.framebuffer = adopt_ref(*new VirtIOGPU::FrameBufferDevice(*this, i));
+        scanout.console = Kernel::Graphics::VirtIOGPU::Console::initialize(scanout.framebuffer);
     }
 }
 
-bool VirtIOGPU::handle_device_config_change()
+bool GPU::handle_device_config_change()
 {
     return false;
 }
 
-void VirtIOGPU::handle_queue_update(u16 queue_index)
+void GPU::handle_queue_update(u16 queue_index)
 {
-    dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: Handle queue update");
+    dbgln_if(VIRTIO_DEBUG, "GPU: Handle queue update");
     VERIFY(queue_index == CONTROLQ);
 
     auto& queue = get_queue(CONTROLQ);
@@ -75,23 +75,23 @@ void VirtIOGPU::handle_queue_update(u16 queue_index)
     m_outstanding_request.wake_all();
 }
 
-u32 VirtIOGPU::get_pending_events()
+u32 GPU::get_pending_events()
 {
     return config_read32(*m_device_configuration, DEVICE_EVENTS_READ);
 }
 
-void VirtIOGPU::clear_pending_events(u32 event_bitmask)
+void GPU::clear_pending_events(u32 event_bitmask)
 {
     config_write32(*m_device_configuration, DEVICE_EVENTS_CLEAR, event_bitmask);
 }
 
-void VirtIOGPU::query_display_information()
+void GPU::query_display_information()
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUCtrlHeader*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPURespDisplayInfo*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *reinterpret_cast<Protocol::ControlHeader*>(m_scratch_space->vaddr().as_ptr());
+    auto& response = *reinterpret_cast<Protocol::DisplayInfoResponse*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
 
-    populate_virtio_gpu_request_header(request, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_GET_DISPLAY_INFO, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request, Protocol::CommandType::VIRTIO_GPU_CMD_GET_DISPLAY_INFO, VIRTIO_GPU_FLAG_FENCE);
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
@@ -105,28 +105,28 @@ void VirtIOGPU::query_display_information()
     VERIFY(m_default_scanout.has_value());
 }
 
-VirtIOGPUResourceID VirtIOGPU::create_2d_resource(VirtIOGPURect rect)
+ResourceID GPU::create_2d_resource(Protocol::Rect rect)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUResourceCreate2D*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *reinterpret_cast<Protocol::ResourceCreate2D*>(m_scratch_space->vaddr().as_ptr());
+    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
 
-    populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_RESOURCE_CREATE_2D, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_CREATE_2D, VIRTIO_GPU_FLAG_FENCE);
 
     auto resource_id = allocate_resource_id();
     request.resource_id = resource_id.value();
     request.width = rect.width;
     request.height = rect.height;
-    request.format = static_cast<u32>(VirtIOGPUFormats::VIRTIO_GPU_FORMAT_B8G8R8X8_UNORM);
+    request.format = static_cast<u32>(Protocol::TextureFormat::VIRTIO_GPU_FORMAT_B8G8R8X8_UNORM);
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(VirtIOGPUCtrlType::VIRTIO_GPU_RESP_OK_NODATA));
-    dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: Allocated 2d resource with id {}", resource_id.value());
+    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+    dbgln_if(VIRTIO_DEBUG, "GPU: Allocated 2d resource with id {}", resource_id.value());
     return resource_id;
 }
 
-void VirtIOGPU::ensure_backing_storage(Region const& region, size_t buffer_offset, size_t buffer_length, VirtIOGPUResourceID resource_id)
+void GPU::ensure_backing_storage(Region const& region, size_t buffer_offset, size_t buffer_length, ResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
 
@@ -136,11 +136,11 @@ void VirtIOGPU::ensure_backing_storage(Region const& region, size_t buffer_offse
     size_t num_mem_regions = buffer_length / PAGE_SIZE;
 
     // Send request
-    auto& request = *reinterpret_cast<VirtIOGPUResourceAttachBacking*>(m_scratch_space->vaddr().as_ptr());
-    const size_t header_block_size = sizeof(request) + num_mem_regions * sizeof(VirtIOGPUMemEntry);
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(header_block_size).as_ptr()));
+    auto& request = *reinterpret_cast<Protocol::ResourceAttachBacking*>(m_scratch_space->vaddr().as_ptr());
+    const size_t header_block_size = sizeof(request) + num_mem_regions * sizeof(Protocol::MemoryEntry);
+    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(header_block_size).as_ptr()));
 
-    populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
     request.num_entries = num_mem_regions;
     for (size_t i = 0; i < num_mem_regions; ++i) {
@@ -150,74 +150,74 @@ void VirtIOGPU::ensure_backing_storage(Region const& region, size_t buffer_offse
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), header_block_size, sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(VirtIOGPUCtrlType::VIRTIO_GPU_RESP_OK_NODATA));
-    dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: Allocated backing storage");
+    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+    dbgln_if(VIRTIO_DEBUG, "GPU: Allocated backing storage");
 }
 
-void VirtIOGPU::detach_backing_storage(VirtIOGPUResourceID resource_id)
+void GPU::detach_backing_storage(ResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUResourceDetachBacking*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *reinterpret_cast<Protocol::ResourceDetachBacking*>(m_scratch_space->vaddr().as_ptr());
+    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
 
-    populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_RESOURCE_DETACH_BACKING, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_DETACH_BACKING, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(VirtIOGPUCtrlType::VIRTIO_GPU_RESP_OK_NODATA));
-    dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: Detached backing storage");
+    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+    dbgln_if(VIRTIO_DEBUG, "GPU: Detached backing storage");
 }
 
-void VirtIOGPU::set_scanout_resource(VirtIOGPUScanoutID scanout, VirtIOGPUResourceID resource_id, VirtIOGPURect rect)
+void GPU::set_scanout_resource(ScanoutID scanout, ResourceID resource_id, Protocol::Rect rect)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUSetScanOut*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *reinterpret_cast<Protocol::SetScanOut*>(m_scratch_space->vaddr().as_ptr());
+    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
 
-    populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_SET_SCANOUT, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_SET_SCANOUT, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
     request.scanout_id = scanout.value();
     request.rect = rect;
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(VirtIOGPUCtrlType::VIRTIO_GPU_RESP_OK_NODATA));
-    dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: Set backing scanout");
+    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
+    dbgln_if(VIRTIO_DEBUG, "GPU: Set backing scanout");
 }
 
-void VirtIOGPU::transfer_framebuffer_data_to_host(VirtIOGPUScanoutID scanout, VirtIOGPURect const& dirty_rect, VirtIOGPUResourceID resource_id)
+void GPU::transfer_framebuffer_data_to_host(ScanoutID scanout, Protocol::Rect const& dirty_rect, ResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUTransferToHost2D*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *reinterpret_cast<Protocol::TransferToHost2D*>(m_scratch_space->vaddr().as_ptr());
+    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
 
-    populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D, VIRTIO_GPU_FLAG_FENCE);
     request.offset = (dirty_rect.x + (dirty_rect.y * m_scanouts[scanout.value()].display_info.rect.width)) * sizeof(u32);
     request.resource_id = resource_id.value();
     request.rect = dirty_rect;
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(VirtIOGPUCtrlType::VIRTIO_GPU_RESP_OK_NODATA));
+    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
 }
 
-void VirtIOGPU::flush_displayed_image(VirtIOGPURect const& dirty_rect, VirtIOGPUResourceID resource_id)
+void GPU::flush_displayed_image(Protocol::Rect const& dirty_rect, ResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUResourceFlush*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *reinterpret_cast<Protocol::ResourceFlush*>(m_scratch_space->vaddr().as_ptr());
+    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
 
-    populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_RESOURCE_FLUSH, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_FLUSH, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
     request.rect = dirty_rect;
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(VirtIOGPUCtrlType::VIRTIO_GPU_RESP_OK_NODATA));
+    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
 }
 
-void VirtIOGPU::synchronous_virtio_gpu_command(PhysicalAddress buffer_start, size_t request_size, size_t response_size)
+void GPU::synchronous_virtio_gpu_command(PhysicalAddress buffer_start, size_t request_size, size_t response_size)
 {
     VERIFY(m_operation_lock.is_locked());
     VERIFY(m_outstanding_request.is_empty());
@@ -233,7 +233,7 @@ void VirtIOGPU::synchronous_virtio_gpu_command(PhysicalAddress buffer_start, siz
     m_outstanding_request.wait_forever();
 }
 
-void VirtIOGPU::populate_virtio_gpu_request_header(VirtIOGPUCtrlHeader& header, VirtIOGPUCtrlType ctrl_type, u32 flags)
+void GPU::populate_virtio_gpu_request_header(Protocol::ControlHeader& header, Protocol::CommandType ctrl_type, u32 flags)
 {
     header.type = static_cast<u32>(ctrl_type);
     header.flags = flags;
@@ -242,32 +242,32 @@ void VirtIOGPU::populate_virtio_gpu_request_header(VirtIOGPUCtrlHeader& header, 
     header.padding = 0;
 }
 
-void VirtIOGPU::flush_dirty_window(VirtIOGPUScanoutID scanout, VirtIOGPURect const& dirty_rect, VirtIOGPUResourceID resource_id)
+void GPU::flush_dirty_window(ScanoutID scanout, Protocol::Rect const& dirty_rect, ResourceID resource_id)
 {
     MutexLocker locker(m_operation_lock);
     transfer_framebuffer_data_to_host(scanout, dirty_rect, resource_id);
     flush_displayed_image(dirty_rect, resource_id);
 }
 
-VirtIOGPUResourceID VirtIOGPU::allocate_resource_id()
+ResourceID GPU::allocate_resource_id()
 {
     VERIFY(m_operation_lock.is_locked());
     m_resource_id_counter = m_resource_id_counter.value() + 1;
     return m_resource_id_counter;
 }
 
-void VirtIOGPU::delete_resource(VirtIOGPUResourceID resource_id)
+void GPU::delete_resource(ResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtioGPUResourceUnref*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *reinterpret_cast<Protocol::ResourceUnref*>(m_scratch_space->vaddr().as_ptr());
+    auto& response = *reinterpret_cast<Protocol::ControlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
 
-    populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_RESOURCE_UNREF, VIRTIO_GPU_FLAG_FENCE);
+    populate_virtio_gpu_request_header(request.header, Protocol::CommandType::VIRTIO_GPU_CMD_RESOURCE_UNREF, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
 
     synchronous_virtio_gpu_command(start_of_scratch_space(), sizeof(request), sizeof(response));
 
-    VERIFY(response.type == static_cast<u32>(VirtIOGPUCtrlType::VIRTIO_GPU_RESP_OK_NODATA));
+    VERIFY(response.type == static_cast<u32>(Protocol::CommandType::VIRTIO_GPU_RESP_OK_NODATA));
 }
 
 }

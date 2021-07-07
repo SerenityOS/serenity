@@ -5,12 +5,12 @@
  */
 
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/Graphics/VirtIOGPU/VirtIOFrameBufferDevice.h>
+#include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
 #include <LibC/sys/ioctl_numbers.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::Graphics::VirtIOGPU {
 
-VirtIOFrameBufferDevice::VirtIOFrameBufferDevice(VirtIOGPU& virtio_gpu, VirtIOGPUScanoutID scanout)
+FrameBufferDevice::FrameBufferDevice(GPU& virtio_gpu, ScanoutID scanout)
     : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
     , m_gpu(virtio_gpu)
     , m_scanout(scanout)
@@ -19,11 +19,11 @@ VirtIOFrameBufferDevice::VirtIOFrameBufferDevice(VirtIOGPU& virtio_gpu, VirtIOGP
         create_framebuffer();
 }
 
-VirtIOFrameBufferDevice::~VirtIOFrameBufferDevice()
+FrameBufferDevice::~FrameBufferDevice()
 {
 }
 
-void VirtIOFrameBufferDevice::create_framebuffer()
+void FrameBufferDevice::create_framebuffer()
 {
     // First delete any existing framebuffers to free the memory first
     m_framebuffer = nullptr;
@@ -48,7 +48,7 @@ void VirtIOFrameBufferDevice::create_framebuffer()
     create_buffer(m_back_buffer, m_buffer_size, m_buffer_size);
 }
 
-void VirtIOFrameBufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset, size_t framebuffer_size)
+void FrameBufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset, size_t framebuffer_size)
 {
     buffer.framebuffer_offset = framebuffer_offset;
     buffer.framebuffer_data = m_framebuffer->vaddr().as_ptr() + framebuffer_offset;
@@ -76,32 +76,32 @@ void VirtIOFrameBufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_o
     info.enabled = 1;
 }
 
-VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne const& VirtIOFrameBufferDevice::display_info() const
+Protocol::DisplayInfoResponse::Display const& FrameBufferDevice::display_info() const
 {
     return m_gpu.display_info(m_scanout);
 }
 
-VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne& VirtIOFrameBufferDevice::display_info()
+Protocol::DisplayInfoResponse::Display& FrameBufferDevice::display_info()
 {
     return m_gpu.display_info(m_scanout);
 }
 
-void VirtIOFrameBufferDevice::transfer_framebuffer_data_to_host(VirtIOGPURect const& rect, Buffer& buffer)
+void FrameBufferDevice::transfer_framebuffer_data_to_host(Protocol::Rect const& rect, Buffer& buffer)
 {
     m_gpu.transfer_framebuffer_data_to_host(m_scanout, rect, buffer.resource_id);
 }
 
-void VirtIOFrameBufferDevice::flush_dirty_window(VirtIOGPURect const& dirty_rect, Buffer& buffer)
+void FrameBufferDevice::flush_dirty_window(Protocol::Rect const& dirty_rect, Buffer& buffer)
 {
     m_gpu.flush_dirty_window(m_scanout, dirty_rect, buffer.resource_id);
 }
 
-void VirtIOFrameBufferDevice::flush_displayed_image(VirtIOGPURect const& dirty_rect, Buffer& buffer)
+void FrameBufferDevice::flush_displayed_image(Protocol::Rect const& dirty_rect, Buffer& buffer)
 {
     m_gpu.flush_displayed_image(dirty_rect, buffer.resource_id);
 }
 
-bool VirtIOFrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
+bool FrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
 {
     if (width > MAX_VIRTIOGPU_RESOLUTION_WIDTH || height > MAX_VIRTIOGPU_RESOLUTION_HEIGHT)
         return false;
@@ -120,7 +120,7 @@ bool VirtIOFrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
     return true;
 }
 
-void VirtIOFrameBufferDevice::set_buffer(int buffer_index)
+void FrameBufferDevice::set_buffer(int buffer_index)
 {
     auto& buffer = buffer_index == 0 ? m_main_buffer : m_back_buffer;
     MutexLocker locker(m_gpu.operation_lock());
@@ -132,7 +132,7 @@ void VirtIOFrameBufferDevice::set_buffer(int buffer_index)
     buffer.dirty_rect = {};
 }
 
-int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
+int FrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {
@@ -188,7 +188,7 @@ int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr a
                 FBRect user_dirty_rect;
                 if (!copy_from_user(&user_dirty_rect, &user_flush_rects.rects[i]))
                     return -EFAULT;
-                VirtIOGPURect dirty_rect {
+                Protocol::Rect dirty_rect {
                     .x = user_dirty_rect.x,
                     .y = user_dirty_rect.y,
                     .width = user_dirty_rect.width,
@@ -231,7 +231,7 @@ int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr a
     };
 }
 
-KResultOr<Region*> VirtIOFrameBufferDevice::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
+KResultOr<Region*> FrameBufferDevice::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
 {
     REQUIRE_PROMISE(video);
     if (!shared)
@@ -262,7 +262,7 @@ KResultOr<Region*> VirtIOFrameBufferDevice::mmap(Process& process, FileDescripti
     return result;
 }
 
-void VirtIOFrameBufferDevice::deactivate_writes()
+void FrameBufferDevice::deactivate_writes()
 {
     m_are_writes_active = false;
     if (m_userspace_mmap_region) {
@@ -276,7 +276,7 @@ void VirtIOFrameBufferDevice::deactivate_writes()
     clear_to_black(buffer_from_index(0));
 }
 
-void VirtIOFrameBufferDevice::activate_writes()
+void FrameBufferDevice::activate_writes()
 {
     m_are_writes_active = true;
     auto last_set_buffer_index = m_last_set_buffer_index.load();
@@ -288,7 +288,7 @@ void VirtIOFrameBufferDevice::activate_writes()
     set_buffer(last_set_buffer_index);
 }
 
-void VirtIOFrameBufferDevice::clear_to_black(Buffer& buffer)
+void FrameBufferDevice::clear_to_black(Buffer& buffer)
 {
     auto& info = display_info();
     size_t width = info.rect.width;
@@ -302,7 +302,7 @@ void VirtIOFrameBufferDevice::clear_to_black(Buffer& buffer)
     }
 }
 
-void VirtIOFrameBufferDevice::draw_ntsc_test_pattern(Buffer& buffer)
+void FrameBufferDevice::draw_ntsc_test_pattern(Buffer& buffer)
 {
     static constexpr u8 colors[12][4] = {
         { 0xff, 0xff, 0xff, 0xff }, // White
@@ -359,7 +359,7 @@ void VirtIOFrameBufferDevice::draw_ntsc_test_pattern(Buffer& buffer)
     dbgln_if(VIRTIO_DEBUG, "Finish drawing the pattern");
 }
 
-u8* VirtIOFrameBufferDevice::framebuffer_data()
+u8* FrameBufferDevice::framebuffer_data()
 {
     return m_current_buffer->framebuffer_data;
 }

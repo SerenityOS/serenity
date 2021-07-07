@@ -11,20 +11,20 @@
 #include <Kernel/VirtIO/VirtIO.h>
 #include <Kernel/VirtIO/VirtIOQueue.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::Graphics::VirtIOGPU {
 
-class VirtIOFrameBufferDevice final : public BlockDevice {
-    friend class VirtIOGPUConsole;
+class FrameBufferDevice final : public BlockDevice {
+    friend class Console;
     struct Buffer {
         size_t framebuffer_offset { 0 };
         u8* framebuffer_data { nullptr };
-        VirtIOGPUResourceID resource_id { 0 };
-        VirtIOGPURect dirty_rect {};
+        Protocol::Rect dirty_rect {};
+        ResourceID resource_id { 0 };
     };
 
 public:
-    VirtIOFrameBufferDevice(VirtIOGPU& virtio_gpu, VirtIOGPUScanoutID);
-    virtual ~VirtIOFrameBufferDevice() override;
+    FrameBufferDevice(VirtIOGPU::GPU& virtio_gpu, ScanoutID);
+    virtual ~FrameBufferDevice() override;
 
     virtual void deactivate_writes();
     virtual void activate_writes();
@@ -42,9 +42,9 @@ public:
         return page_round_up(sizeof(u32) * width * height);
     }
 
-    void flush_dirty_window(VirtIOGPURect const&, Buffer&);
-    void transfer_framebuffer_data_to_host(VirtIOGPURect const&, Buffer&);
-    void flush_displayed_image(VirtIOGPURect const&, Buffer&);
+    void flush_dirty_window(Protocol::Rect const&, Buffer&);
+    void transfer_framebuffer_data_to_host(Protocol::Rect const&, Buffer&);
+    void flush_displayed_image(Protocol::Rect const&, Buffer&);
 
     void draw_ntsc_test_pattern(Buffer&);
 
@@ -53,8 +53,8 @@ public:
 private:
     virtual StringView class_name() const override { return "VirtIOFrameBuffer"; }
 
-    VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne const& display_info() const;
-    VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne& display_info();
+    Protocol::DisplayInfoResponse::Display const& display_info() const;
+    Protocol::DisplayInfoResponse::Display& display_info();
 
     void create_framebuffer();
     void create_buffer(Buffer&, size_t, size_t);
@@ -82,8 +82,8 @@ private:
     }
     Buffer& current_buffer() const { return *m_current_buffer; }
 
-    VirtIOGPU& m_gpu;
-    const VirtIOGPUScanoutID m_scanout;
+    GPU& m_gpu;
+    const ScanoutID m_scanout;
     Buffer* m_current_buffer { nullptr };
     Atomic<int, AK::memory_order_relaxed> m_last_set_buffer_index { 0 };
     Buffer m_main_buffer;
