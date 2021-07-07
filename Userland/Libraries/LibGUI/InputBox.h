@@ -16,10 +16,10 @@ class InputBox : public Dialog {
 public:
     virtual ~InputBox() override;
 
-    static int show(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title, const StringView& placeholder = {});
+    static int show(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder = {});
 
 private:
-    explicit InputBox(Window* parent_window, String& text_value, const StringView& prompt, const StringView& title, const StringView& placeholder);
+    explicit InputBox(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder);
 
     String text_value() const { return m_text_value; }
 
