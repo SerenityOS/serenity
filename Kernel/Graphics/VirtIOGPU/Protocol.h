@@ -123,7 +123,6 @@ struct ResourceAttachBacking {
     ControlHeader header;
     u32 resource_id;
     u32 num_entries;
-    MemoryEntry entries[];
 };
 
 // Specification equivalent: struct virtio_gpu_resource_detach_backing

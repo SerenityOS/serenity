@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/BinaryBufferWriter.h>
 #include <AK/DistinctNumeric.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
@@ -82,6 +83,10 @@ private:
     virtual void handle_queue_update(u16 queue_index) override;
 
     auto& operation_lock() { return m_operation_lock; }
+    AK::BinaryBufferWriter create_scratchspace_writer()
+    {
+        return { Bytes(m_scratch_space->vaddr().as_ptr(), m_scratch_space->size()) };
+    }
 
     u32 get_pending_events();
     void clear_pending_events(u32 event_bitmask);
