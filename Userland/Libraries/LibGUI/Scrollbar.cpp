@@ -332,7 +332,8 @@ void Scrollbar::mousemove_event(MouseEvent& event)
     auto old_hovered_component = m_hovered_component;
     m_hovered_component = component_at_position(m_last_mouse_position);
     if (old_hovered_component != m_hovered_component) {
-        update();
+        if (is_enabled())
+            update();
     }
     if (m_pressed_component != Component::Scrubber)
         return;
@@ -347,7 +348,8 @@ void Scrollbar::leave_event(Core::Event&)
 {
     if (m_hovered_component != Component::None) {
         m_hovered_component = Component::None;
-        update();
+        if (is_enabled())
+            update();
     }
 }
 
