@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +7,7 @@
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/BigInt.h>
+#include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
@@ -23,6 +24,22 @@ BigInt::~BigInt()
 BigInt* js_bigint(Heap& heap, Crypto::SignedBigInteger big_integer)
 {
     return heap.allocate_without_global_object<BigInt>(move(big_integer));
+}
+
+// 21.2.1.1.1 NumberToBigInt ( number ), https://tc39.es/ecma262/#sec-numbertobigint
+BigInt* number_to_bigint(GlobalObject& global_object, Value number)
+{
+    VERIFY(number.is_number());
+    auto& vm = global_object.vm();
+
+    // 1. If IsIntegralNumber(number) is false, throw a RangeError exception.
+    if (!number.is_integral_number()) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::BigIntIntArgument);
+        return {};
+    }
+
+    // 2. Return the BigInt value that represents ℝ(number).
+    return js_bigint(vm.heap(), Crypto::SignedBigInteger::create_from((i64)number.as_double()));
 }
 
 }
