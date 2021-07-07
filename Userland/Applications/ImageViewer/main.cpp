@@ -92,9 +92,11 @@ int main(int argc, char** argv)
         if (window->is_maximized())
             return;
 
-        auto w = max(window->width(), rect.width() + 4);
-        auto h = max(window->height(), rect.height() + widget.toolbar_height() + 6);
-        window->resize(w, h);
+        if (scale == 100) {
+            auto w = min(GUI::Desktop::the().rect().width(), rect.width() + 4);
+            auto h = min(GUI::Desktop::the().rect().height(), rect.height() + widget.toolbar_height() + 6);
+            window->resize(w, h);
+        }
     };
     widget.on_drop = [&](auto& event) {
         window->move_to_front();
