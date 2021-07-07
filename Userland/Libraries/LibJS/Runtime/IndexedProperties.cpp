@@ -70,10 +70,11 @@ ValueAndAttributes SimpleIndexedPropertyStorage::take_last()
     return { last_element, default_attributes };
 }
 
-void SimpleIndexedPropertyStorage::set_array_like_size(size_t new_size)
+bool SimpleIndexedPropertyStorage::set_array_like_size(size_t new_size)
 {
     m_array_size = new_size;
     m_packed_elements.resize(new_size);
+    return true;
 }
 
 GenericIndexedPropertyStorage::GenericIndexedPropertyStorage(SimpleIndexedPropertyStorage&& storage)
@@ -137,35 +138,38 @@ ValueAndAttributes GenericIndexedPropertyStorage::take_last()
     return result.value();
 }
 
-void GenericIndexedPropertyStorage::set_array_like_size(size_t new_size)
+bool GenericIndexedPropertyStorage::set_array_like_size(size_t new_size)
 {
     if (new_size == m_array_size)
-        return;
+        return true;
 
     if (new_size >= m_array_size) {
         m_array_size = new_size;
-        return;
+        return true;
     }
 
+    bool any_failed = false;
     size_t highest_index = 0;
-    bool any_left = false;
 
     HashMap<u32, ValueAndAttributes> new_sparse_elements;
     for (auto& entry : m_sparse_elements) {
-        if (entry.key < new_size || !entry.value.attributes.is_configurable()) {
-            new_sparse_elements.set(entry.key, entry.value);
-            any_left = true;
-            highest_index = max(highest_index, (size_t)entry.key);
+        if (entry.key >= new_size) {
+            if (entry.value.attributes.is_configurable())
+                continue;
+            else
+                any_failed = true;
         }
+        new_sparse_elements.set(entry.key, entry.value);
+        highest_index = max(highest_index, entry.key);
     }
 
-    if (any_left) {
-        m_array_size = max(highest_index + 1, new_size);
-    } else {
+    if (any_failed)
+        m_array_size = highest_index + 1;
+    else
         m_array_size = new_size;
-    }
 
     m_sparse_elements = move(new_sparse_elements);
+    return !any_failed;
 }
 
 IndexedPropertyIterator::IndexedPropertyIterator(const IndexedProperties& indexed_properties, u32 staring_index, bool skip_empty)
@@ -245,7 +249,7 @@ ValueAndAttributes IndexedProperties::take_last(Object* this_object)
     return last;
 }
 
-void IndexedProperties::set_array_like_size(size_t new_size)
+bool IndexedProperties::set_array_like_size(size_t new_size)
 {
     auto current_array_like_size = array_like_size();
 
@@ -258,7 +262,21 @@ void IndexedProperties::set_array_like_size(size_t new_size)
         switch_to_generic_storage();
     }
 
-    m_storage->set_array_like_size(new_size);
+    return m_storage->set_array_like_size(new_size);
+}
+
+size_t IndexedProperties::real_size() const
+{
+    if (m_storage->is_simple_storage()) {
+        auto& packed_elements = static_cast<const SimpleIndexedPropertyStorage&>(*m_storage).elements();
+        size_t size = 0;
+        for (auto& element : packed_elements) {
+            if (!element.is_empty())
+                ++size;
+        }
+        return size;
+    }
+    return static_cast<const GenericIndexedPropertyStorage&>(*m_storage).size();
 }
 
 Vector<u32> IndexedProperties::indices() const

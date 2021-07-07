@@ -52,59 +52,185 @@ Array::Array(Object& prototype)
 {
 }
 
-void Array::initialize(GlobalObject& global_object)
-{
-    auto& vm = this->vm();
-    Object::initialize(global_object);
-    define_native_property(vm.names.length, length_getter, length_setter, Attribute::Writable);
-}
-
 Array::~Array()
 {
 }
 
-Array* Array::typed_this(VM& vm, GlobalObject& global_object)
+// 10.4.2.4 ArraySetLength ( A, Desc ), https://tc39.es/ecma262/#sec-arraysetlength
+bool Array::set_length(PropertyDescriptor const& property_descriptor)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<Array>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "Array");
-        return nullptr;
+    auto& global_object = this->global_object();
+    auto& vm = this->vm();
+
+    // 1. If Desc.[[Value]] is absent, then
+    // a. Return OrdinaryDefineOwnProperty(A, "length", Desc).
+    // 2. Let newLenDesc be a copy of Desc.
+    // NOTE: Handled by step 16
+
+    size_t new_length = indexed_properties().array_like_size();
+    if (property_descriptor.value.has_value()) {
+        // 3. Let newLen be ? ToUint32(Desc.[[Value]]).
+        new_length = property_descriptor.value->to_u32(global_object);
+        if (vm.exception())
+            return {};
+        // 4. Let numberLen be ? ToNumber(Desc.[[Value]]).
+        auto number_length = property_descriptor.value->to_number(global_object);
+        if (vm.exception())
+            return {};
+        // 5. If newLen is not the same value as numberLen, throw a RangeError exception.
+        if (new_length != number_length.as_double()) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "array");
+            return {};
+        }
     }
-    return static_cast<Array*>(this_object);
+
+    // 6. Set newLenDesc.[[Value]] to newLen.
+    // 7. Let oldLenDesc be OrdinaryGetOwnProperty(A, "length").
+    // 8. Assert: ! IsDataDescriptor(oldLenDesc) is true.
+    // 9. Assert: oldLenDesc.[[Configurable]] is false.
+    // 10. Let oldLen be oldLenDesc.[[Value]].
+    // 11. If newLen ≥ oldLen, then
+    // a. Return OrdinaryDefineOwnProperty(A, "length", newLenDesc).
+    // 12. If oldLenDesc.[[Writable]] is false, return false.
+    // NOTE: Handled by step 16
+
+    // 13. If newLenDesc.[[Writable]] is absent or has the value true, let newWritable be true.
+    // 14. Else,
+    // a. NOTE: Setting the [[Writable]] attribute to false is deferred in case any elements cannot be deleted.
+    // b. Let newWritable be false.
+    auto new_writable = property_descriptor.writable.value_or(true);
+
+    // c. Set newLenDesc.[[Writable]] to true.
+    // 15. Let succeeded be ! OrdinaryDefineOwnProperty(A, "length", newLenDesc).
+    // 16. If succeeded is false, return false.
+    // NOTE: Because the length property does not actually exist calling OrdinaryDefineOwnProperty
+    // will result in unintended behaviour, so instead we only implement here the small subset of
+    // checks performed inside of it that would have mattered to us:
+
+    // 10.1.6.3 ValidateAndApplyPropertyDescriptor ( O, P, extensible, Desc, current ), https://tc39.es/ecma262/#sec-validateandapplypropertydescriptor
+    // 4. If current.[[Configurable]] is false, then
+    // a. If Desc.[[Configurable]] is present and its value is true, return false.
+    if (property_descriptor.configurable.has_value() && *property_descriptor.configurable)
+        return false;
+    // b. If Desc.[[Enumerable]] is present and ! SameValue(Desc.[[Enumerable]], current.[[Enumerable]]) is false, return false.
+    if (property_descriptor.enumerable.has_value() && *property_descriptor.enumerable)
+        return false;
+    // 6. Else if ! SameValue(! IsDataDescriptor(current), ! IsDataDescriptor(Desc)) is false, then
+    if (property_descriptor.is_accessor_descriptor()) {
+        // a. If current.[[Configurable]] is false, return false.
+        return false;
+    }
+    // 7. Else if IsDataDescriptor(current) and IsDataDescriptor(Desc) are both true, then
+    // a. If current.[[Configurable]] is false and current.[[Writable]] is false, then
+    if (!m_length_writable) {
+        // i. If Desc.[[Writable]] is present and Desc.[[Writable]] is true, return false.
+        if (property_descriptor.writable.has_value() && *property_descriptor.writable)
+            return false;
+        // ii. If Desc.[[Value]] is present and SameValue(Desc.[[Value]], current.[[Value]]) is false, return false.
+        if (new_length != indexed_properties().array_like_size())
+            return false;
+    }
+
+    // 17. For each own property key P of A that is an array index, whose numeric value is greater than or equal to newLen, in descending numeric index order, do
+    // a. Let deleteSucceeded be ! A.[[Delete]](P).
+    // b. If deleteSucceeded is false, then
+    // i. Set newLenDesc.[[Value]] to ! ToUint32(P) + 1𝔽.
+    bool success = indexed_properties().set_array_like_size(new_length);
+
+    // ii. If newWritable is false, set newLenDesc.[[Writable]] to false.
+    // iii. Perform ! OrdinaryDefineOwnProperty(A, "length", newLenDesc).
+    // NOTE: Handled by step 18
+
+    // 18. If newWritable is false, then
+    // a. Set succeeded to ! OrdinaryDefineOwnProperty(A, "length", PropertyDescriptor { [[Writable]]: false }).
+    // b. Assert: succeeded is true.
+    if (!new_writable)
+        m_length_writable = false;
+
+    // NOTE: Continuation of step #17
+    // iv. Return false.
+    if (!success)
+        return false;
+
+    // 19. Return true.
+    return true;
 }
 
-JS_DEFINE_NATIVE_GETTER(Array::length_getter)
+// NON-STANDARD: Used to return the value of the ephemeral length property
+Optional<PropertyDescriptor> Array::internal_get_own_property(PropertyName const& property_name) const
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto& vm = this->vm();
+    if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string())
+        return PropertyDescriptor { .value = Value(indexed_properties().array_like_size()), .writable = m_length_writable, .enumerable = false, .configurable = false };
 
-    return Value(this_object->indexed_properties().array_like_size());
+    return Object::internal_get_own_property(property_name);
 }
 
-JS_DEFINE_NATIVE_SETTER(Array::length_setter)
+// 10.4.2.1 [[DefineOwnProperty]] ( P, Desc ), https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc
+bool Array::internal_define_own_property(PropertyName const& property_name, PropertyDescriptor const& property_descriptor)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return;
+    auto& vm = this->vm();
 
-    auto length = value.to_number(global_object);
+    // 1. Assert: IsPropertyKey(P) is true.
+    VERIFY(property_name.is_valid());
+
+    // 2. If P is "length", then
+    if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string()) {
+        // a. Return ? ArraySetLength(A, Desc).
+        return set_length(property_descriptor);
+    }
+
+    // 3. Else if P is an array index, then
+    if (property_name.is_number()) {
+        // a. Let oldLenDesc be OrdinaryGetOwnProperty(A, "length").
+        // b. Assert: ! IsDataDescriptor(oldLenDesc) is true.
+        // c. Assert: oldLenDesc.[[Configurable]] is false.
+        // d. Let oldLen be oldLenDesc.[[Value]].
+        // e. Assert: oldLen is a non-negative integral Number.
+        // f. Let index be ! ToUint32(P).
+
+        // g. If index ≥ oldLen and oldLenDesc.[[Writable]] is false, return false.
+        if (property_name.as_number() >= indexed_properties().array_like_size() && !m_length_writable)
+            return false;
+
+        // h. Let succeeded be ! OrdinaryDefineOwnProperty(A, P, Desc).
+        auto succeeded = Object::internal_define_own_property(property_name, property_descriptor);
+        // i. If succeeded is false, return false.
+        if (!succeeded)
+            return false;
+
+        // j. If index ≥ oldLen, then
+        // i. Set oldLenDesc.[[Value]] to index + 1𝔽.
+        // ii. Set succeeded to OrdinaryDefineOwnProperty(A, "length", oldLenDesc).
+        // iii. Assert: succeeded is true.
+
+        // k. Return true.
+        return true;
+    }
+
+    // 4. Return OrdinaryDefineOwnProperty(A, P, Desc).
+    return Object::internal_define_own_property(property_name, property_descriptor);
+}
+
+// NON-STANDARD: Used to reject deletes to ephemeral (non-configurable) length property
+bool Array::internal_delete(PropertyName const& property_name)
+{
+    auto& vm = this->vm();
+    if (property_name.is_string() && property_name.as_string() == vm.names.length.as_string())
+        return false;
+    return Object::internal_delete(property_name);
+}
+
+// NON-STANDARD: Used to inject the ephemeral length property's key
+MarkedValueList Array::internal_own_property_keys() const
+{
+    auto& vm = this->vm();
+    auto keys = Object::internal_own_property_keys();
     if (vm.exception())
-        return;
-
-    u32 val = length.as_double();
-
-    if (val != length.as_double()
-        || length.is_nan()
-        || length.is_infinity()
-        || length.as_double() < 0
-        || length.as_double() > NumericLimits<u32>::max()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "array");
-        return;
-    }
-    this_object->indexed_properties().set_array_like_size(val);
+        return MarkedValueList { vm.heap() };
+    // FIXME: This is pretty expensive, find a better way to do this
+    keys.insert(indexed_properties().real_size(), js_string(vm, vm.names.length.as_string()));
+    return keys;
 }
 
 }

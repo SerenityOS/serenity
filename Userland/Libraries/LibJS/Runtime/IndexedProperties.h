@@ -35,7 +35,7 @@ public:
 
     virtual size_t size() const = 0;
     virtual size_t array_like_size() const = 0;
-    virtual void set_array_like_size(size_t new_size) = 0;
+    virtual bool set_array_like_size(size_t new_size) = 0;
 
     virtual bool is_simple_storage() const { return false; }
 };
@@ -55,7 +55,7 @@ public:
 
     virtual size_t size() const override { return m_packed_elements.size(); }
     virtual size_t array_like_size() const override { return m_array_size; }
-    virtual void set_array_like_size(size_t new_size) override;
+    virtual bool set_array_like_size(size_t new_size) override;
 
     virtual bool is_simple_storage() const override { return true; }
     const Vector<Value>& elements() const { return m_packed_elements; }
@@ -83,7 +83,7 @@ public:
 
     virtual size_t size() const override { return m_sparse_elements.size(); }
     virtual size_t array_like_size() const override { return m_array_size; }
-    virtual void set_array_like_size(size_t new_size) override;
+    virtual bool set_array_like_size(size_t new_size) override;
 
     const HashMap<u32, ValueAndAttributes>& sparse_elements() const { return m_sparse_elements; }
 
@@ -134,7 +134,9 @@ public:
 
     bool is_empty() const { return array_like_size() == 0; }
     size_t array_like_size() const { return m_storage->array_like_size(); }
-    void set_array_like_size(size_t);
+    bool set_array_like_size(size_t);
+
+    size_t real_size() const;
 
     Vector<u32> indices() const;
 
