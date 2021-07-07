@@ -327,16 +327,20 @@ public:
         if (m_cannot_auto_rename)
             return;
         m_cannot_auto_rename = true;
-        if (name().is_empty())
+        if (name().is_empty()) {
             set_name(move(new_name));
+            m_is_auto_renamed = true;
+        }
     }
     bool cannot_auto_rename() const { return m_cannot_auto_rename; }
+    bool is_auto_renamed() const { return m_is_auto_renamed; }
     void set_cannot_auto_rename() { m_cannot_auto_rename = true; }
 
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     bool m_cannot_auto_rename { false };
+    bool m_is_auto_renamed { false };
 };
 
 class ErrorExpression final : public Expression {
