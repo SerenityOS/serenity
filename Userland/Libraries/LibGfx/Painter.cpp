@@ -178,8 +178,8 @@ void Painter::fill_rect_with_checkerboard(const IntRect& a_rect, const IntSize& 
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
     int first_cell_column = rect.x() / cell_size.width();
-    int prologue_length = cell_size.width() - (rect.x() % cell_size.width());
-    int number_of_aligned_strips = ((rect.width() - prologue_length) / cell_size.width());
+    int prologue_length = min(rect.width(), cell_size.width() - (rect.x() % cell_size.width()));
+    int number_of_aligned_strips = (rect.width() - prologue_length) / cell_size.width();
 
     for (int i = 0; i < rect.height(); ++i) {
         int y = rect.y() + i;
@@ -189,9 +189,12 @@ void Painter::fill_rect_with_checkerboard(const IntRect& a_rect, const IntSize& 
         // Prologue: Paint the unaligned part up to the first intersection.
         int j = 0;
         int cell_column = first_cell_column;
-        for (int p = 0; p < prologue_length; ++p) {
-            dst[j] = (odd_row ^ (cell_column % 2)) ? color_light.value() : color_dark.value();
-            ++j;
+
+        {
+            bool odd_cell = cell_column & 1;
+            auto color = (odd_row ^ odd_cell) ? color_light.value() : color_dark.value();
+            fast_u32_fill(&dst[j], color, prologue_length);
+            j += prologue_length;
         }
 
         // Aligned run: Paint the maximum number of aligned cell strips.
@@ -204,9 +207,13 @@ void Painter::fill_rect_with_checkerboard(const IntRect& a_rect, const IntSize& 
         }
 
         // Epilogue: Paint the unaligned part until the end of the rect.
-        ++cell_column;
-        for (; j < rect.width(); ++j) {
-            dst[j] = (odd_row ^ (cell_column % 2)) ? color_light.value() : color_dark.value();
+        if (j != rect.width()) {
+            ++cell_column;
+            bool odd_cell = cell_column & 1;
+            auto color = (odd_row ^ odd_cell) ? color_light.value() : color_dark.value();
+            int epilogue_length = rect.width() - j;
+            fast_u32_fill(&dst[j], color, epilogue_length);
+            j += epilogue_length;
         }
 
         dst += dst_skip;
