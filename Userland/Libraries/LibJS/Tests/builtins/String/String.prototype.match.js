@@ -3,6 +3,12 @@ test("basic functionality", () => {
 
     expect("hello friends".match(/hello/)).not.toBeNull();
     expect("hello friends".match(/enemies/)).toBeNull();
+
+    expect("aaa".match(/a/)).toEqual(["a"]);
+    expect("aaa".match(/a/g)).toEqual(["a", "a", "a"]);
+
+    expect("aaa".match(/b/)).toBeNull();
+    expect("aaa".match(/b/g)).toBeNull();
 });
 
 test("override exec with function", () => {
