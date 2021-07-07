@@ -205,12 +205,16 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
 
 void Process::protect_data()
 {
-    MM.set_page_writable_direct(VirtualAddress { this }, false);
+    m_protected_data_refs.unref([&]() {
+        MM.set_page_writable_direct(VirtualAddress { this }, false);
+    });
 }
 
 void Process::unprotect_data()
 {
-    MM.set_page_writable_direct(VirtualAddress { this }, true);
+    m_protected_data_refs.ref([&]() {
+        MM.set_page_writable_direct(VirtualAddress { this }, true);
+    });
 }
 
 RefPtr<Process> Process::create(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
