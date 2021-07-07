@@ -258,7 +258,6 @@ void ColumnsView::model_did_update(unsigned flags)
     AbstractView::model_did_update(flags);
 
     // FIXME: Don't drop the columns on minor updates.
-    dbgln("Model was updated; dropping columns :(");
     m_columns.clear();
     m_columns.append({ {}, 0 });
 
