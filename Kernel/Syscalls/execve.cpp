@@ -387,7 +387,10 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
             prot |= PROT_WRITE;
         if (program_header.is_executable())
             prot |= PROT_EXEC;
-        auto range = new_space->allocate_range(program_header.vaddr().offset(load_offset), program_header.size_in_memory());
+
+        auto range_base = VirtualAddress { page_round_down(program_header.vaddr().offset(load_offset).get()) };
+        auto range_end = VirtualAddress { page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
+        auto range = new_space->allocate_range(range_base, range_end.get() - range_base.get());
         if (!range.has_value()) {
             ph_load_result = ENOMEM;
             return IterationDecision::Break;
