@@ -10,7 +10,7 @@
 #include <Kernel/Graphics/VirtIOGPU/VirtIOGPU.h>
 #include <Kernel/TimerQueue.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::Graphics::VirtIOGPU {
 
 class DirtyRect {
 public:
@@ -30,9 +30,9 @@ private:
     size_t m_y1 { 0 };
 };
 
-class VirtIOGPUConsole final : public GenericFramebufferConsole {
+class Console final : public GenericFramebufferConsole {
 public:
-    static NonnullRefPtr<VirtIOGPUConsole> initialize(RefPtr<VirtIOFrameBufferDevice> const&);
+    static NonnullRefPtr<Console> initialize(RefPtr<FrameBufferDevice> const&);
 
     virtual void set_resolution(size_t width, size_t height, size_t pitch) override;
     virtual void flush(size_t x, size_t y, size_t width, size_t height) override;
@@ -42,8 +42,8 @@ private:
     void enqueue_refresh_timer();
     virtual u8* framebuffer_data() override;
 
-    VirtIOGPUConsole(RefPtr<VirtIOFrameBufferDevice> const&);
-    RefPtr<VirtIOFrameBufferDevice> m_framebuffer_device;
+    Console(RefPtr<FrameBufferDevice> const&);
+    RefPtr<FrameBufferDevice> m_framebuffer_device;
     DirtyRect m_dirty_rect;
 };
 
