@@ -19,8 +19,6 @@ public:
     virtual ~RegExpPrototype() override;
 
 private:
-    static RegexResult do_match(const Regex<ECMA262>&, const StringView&);
-
     JS_DECLARE_NATIVE_GETTER(flags);
     JS_DECLARE_NATIVE_GETTER(source);
 
