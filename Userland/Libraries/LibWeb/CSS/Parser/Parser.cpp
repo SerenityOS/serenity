@@ -231,7 +231,6 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
 
     auto parse_simple_selector = [&]() -> Optional<Selector::SimpleSelector> {
         auto current_value = tokens.next_token();
-        dbgln("parse_simple_selector, start token: {}", current_value.to_string());
         if (check_for_eof_or_whitespace(current_value))
             return {};
 
@@ -267,11 +266,19 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
 
             type = Selector::SimpleSelector::Type::Class;
             value = current_value.to_string();
-        } else if (current_value.is(Token::Type::Delim) && ((Token)current_value).delim() == "*") {
+        } else if (current_value.is(Token::Type::Delim) && current_value.token().delim() == "*") {
             type = Selector::SimpleSelector::Type::Universal;
-        } else {
+        } else if (current_value.is(Token::Type::Ident)) {
             type = Selector::SimpleSelector::Type::TagName;
-            value = current_value.to_string().to_lowercase();
+            value = current_value.token().ident().to_lowercase_string();
+        } else if ((current_value.is(Token::Type::Delim) && current_value.token().delim() == ":")
+            || (current_value.is_block() && current_value.block().is_square())) {
+            // FIXME: This is a temporary hack until we make the Selector::SimpleSelector::Type changes.
+            type = Selector::SimpleSelector::Type::Universal;
+            tokens.reconsume_current_input_token();
+        } else {
+            dbgln("Invalid simple selector!");
+            return {};
         }
 
         Selector::SimpleSelector simple_selector;
@@ -302,13 +309,10 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
             simple_selector.attribute_match_type = Selector::SimpleSelector::AttributeMatchType::HasAttribute;
             simple_selector.attribute_name = attribute_part.token().ident();
 
-            size_t attribute_index = 0;
-            while (attribute_parts.at(attribute_index).is(Token::Type::Whitespace)) {
-                attribute_index++;
-                if (attribute_index >= attribute_parts.size())
-                    return simple_selector;
-            }
+            if (attribute_parts.size() == 1)
+                return simple_selector;
 
+            size_t attribute_index = 1;
             auto& delim_part = attribute_parts.at(attribute_index);
             if (!delim_part.is(Token::Type::Delim)) {
                 dbgln("Expected a delim for attribute comparison, got: '{}'", delim_part.to_string());
@@ -326,7 +330,7 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                 }
 
                 auto& delim_second_part = attribute_parts.at(attribute_index);
-                if (!(delim_part.is(Token::Type::Delim) && delim_part.token().delim() == "=")) {
+                if (!(delim_second_part.is(Token::Type::Delim) && delim_second_part.token().delim() == "=")) {
                     dbgln("Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_string(), delim_second_part.to_string());
                     return {};
                 }
@@ -449,6 +453,8 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                 return simple_selector;
             }
         }
+
+        tokens.reconsume_current_input_token();
 
         return simple_selector;
     };
@@ -785,12 +791,12 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
         }
     }
 
-    for (;;) {
-        auto maybe_whitespace = declaration.m_values.at(declaration.m_values.size() - 1);
+    while (!declaration.m_values.is_empty()) {
+        auto maybe_whitespace = declaration.m_values.last();
         if (!(maybe_whitespace.is(Token::Type::Whitespace))) {
             break;
         }
-        declaration.m_values.remove(declaration.m_values.size() - 1);
+        declaration.m_values.take_last();
     }
 
     return declaration;
