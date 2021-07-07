@@ -197,3 +197,38 @@ test("search value is coerced to a string", () => {
     expect(newString).toBe("abc");
     expect(coerced).toBe("x");
 });
+
+test("override exec with function", () => {
+    let calls = 0;
+
+    let re = /test/;
+    let oldExec = re.exec.bind(re);
+    re.exec = function (...args) {
+        ++calls;
+        return oldExec(...args);
+    };
+
+    expect("test".replace(re, "x")).toBe("x");
+    expect(calls).toBe(1);
+});
+
+test("override exec with bad function", () => {
+    let calls = 0;
+
+    let re = /test/;
+    re.exec = function (...args) {
+        ++calls;
+        return 4;
+    };
+
+    expect(() => {
+        "test".replace(re, "x");
+    }).toThrow(TypeError);
+    expect(calls).toBe(1);
+});
+
+test("override exec with non-function", () => {
+    let re = /test/;
+    re.exec = 3;
+    expect("test".replace(re, "x")).toBe("x");
+});

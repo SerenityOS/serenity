@@ -330,8 +330,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     auto string_value = vm.argument(0);
     auto replace_value = vm.argument(1);
 
-    auto rx = regexp_object_from(vm, global_object);
-    if (!rx)
+    auto* regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
         return {};
     auto string = string_value.to_string(global_object);
     if (vm.exception())
@@ -347,26 +347,21 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             return {};
     }
 
-    auto global_value = rx->get(vm.names.global);
+    auto global_value = regexp_object->get(vm.names.global);
     if (vm.exception())
         return {};
 
     bool global = global_value.to_boolean();
     if (global) {
-        rx->set(vm.names.lastIndex, Value(0), true);
+        regexp_object->set(vm.names.lastIndex, Value(0), true);
         if (vm.exception())
             return {};
     }
 
-    // FIXME: Implement and use RegExpExec - https://tc39.es/ecma262/#sec-regexpexec
-    auto* exec = Value(rx).get_method(global_object, vm.names.exec);
-    if (!exec)
-        return {};
-
     MarkedValueList results(vm.heap());
 
     while (true) {
-        auto result = vm.call(*exec, rx, string_value);
+        auto result = regexp_exec(global_object, *regexp_object, string);
         if (vm.exception())
             return {};
         if (result.is_null())
@@ -390,13 +385,13 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         if (match_str.is_empty()) {
             // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
             //        Once implemented, step (8a) of the @@replace algorithm must also be implemented.
-            auto last_index = rx->get(vm.names.lastIndex);
+            auto last_index = regexp_object->get(vm.names.lastIndex);
             if (vm.exception())
                 return {};
             auto this_index = last_index.to_length(global_object);
             if (vm.exception())
                 return {};
-            rx->set(vm.names.lastIndex, Value(this_index + 1), true);
+            regexp_object->set(vm.names.lastIndex, Value(this_index + 1), true);
             if (vm.exception())
                 return {};
         }
