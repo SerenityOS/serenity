@@ -593,6 +593,8 @@ void Compositor::flush(Screen& screen)
     if (m_flash_flush) {
         for (auto& rect : screen_data.m_flush_rects.rects())
             screen_data.m_front_painter->fill_rect(rect, Color::Yellow);
+        for (auto& rect : screen_data.m_flush_transparent_rects.rects())
+            screen_data.m_front_painter->fill_rect(rect, Color::Green);
         usleep(10000);
     }
 
