@@ -94,8 +94,4 @@ AnonymousBufferImpl::AnonymousBufferImpl(int fd, size_t size, void* data)
 {
 }
 
-AnonymousBuffer::~AnonymousBuffer()
-{
-}
-
 }
