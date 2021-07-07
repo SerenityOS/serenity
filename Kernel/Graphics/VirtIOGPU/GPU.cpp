@@ -61,7 +61,17 @@ void GPU::create_framebuffer_devices()
 
 bool GPU::handle_device_config_change()
 {
-    return false;
+    auto events = get_pending_events();
+    if (events & VIRTIO_GPU_EVENT_DISPLAY) {
+        // The host window was resized, in SerenityOS we completely ignore this event
+        dbgln_if(VIRTIO_DEBUG, "{}: Ignoring virtio gpu display resize event", m_class_name);
+        clear_pending_events(VIRTIO_GPU_EVENT_DISPLAY);
+    }
+    if (events & ~VIRTIO_GPU_EVENT_DISPLAY) {
+        dbgln("GPU: Got unknown device config change event: 0x{:x}", events);
+        return false;
+    }
+    return true;
 }
 
 void GPU::handle_queue_update(u16 queue_index)
@@ -98,7 +108,7 @@ void GPU::query_display_information()
     for (size_t i = 0; i < VIRTIO_GPU_MAX_SCANOUTS; ++i) {
         auto& scanout = m_scanouts[i].display_info;
         scanout = response.scanout_modes[i];
-        dbgln_if(VIRTIO_DEBUG, "Scanout {}: enabled: {} x: {}, y: {}, width: {}, height: {}", i, !!scanout.enabled, scanout.rect.x, scanout.rect.y, scanout.rect.width, scanout.rect.height);
+        dbgln_if(VIRTIO_DEBUG, "GPU: Scanout {}: enabled: {} x: {}, y: {}, width: {}, height: {}", i, !!scanout.enabled, scanout.rect.x, scanout.rect.y, scanout.rect.width, scanout.rect.height);
         if (scanout.enabled && !m_default_scanout.has_value())
             m_default_scanout = i;
     }
