@@ -67,6 +67,8 @@
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/SymbolConstructor.h>
 #include <LibJS/Runtime/SymbolPrototype.h>
+#include <LibJS/Runtime/Temporal/InstantConstructor.h>
+#include <LibJS/Runtime/Temporal/InstantPrototype.h>
 #include <LibJS/Runtime/Temporal/Temporal.h>
 #include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
 #include <LibJS/Runtime/Temporal/TimeZonePrototype.h>

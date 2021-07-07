@@ -121,6 +121,9 @@ set(SOURCES
     Runtime/SymbolConstructor.cpp
     Runtime/SymbolObject.cpp
     Runtime/SymbolPrototype.cpp
+    Runtime/Temporal/Instant.cpp
+    Runtime/Temporal/InstantConstructor.cpp
+    Runtime/Temporal/InstantPrototype.cpp
     Runtime/Temporal/ISO8601.cpp
     Runtime/Temporal/Now.cpp
     Runtime/Temporal/Temporal.cpp
