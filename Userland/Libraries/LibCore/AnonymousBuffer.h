@@ -38,7 +38,6 @@ public:
     static AnonymousBuffer create_from_anon_fd(int fd, size_t);
 
     AnonymousBuffer() { }
-    ~AnonymousBuffer();
 
     bool is_valid() const { return m_impl; }
 
