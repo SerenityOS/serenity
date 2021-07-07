@@ -142,6 +142,7 @@ class ProcFSProcessFolder final
     friend class ProcFSComponentsRegistrar;
     friend class ProcFSRootFolder;
     friend class ProcFSProcessInformation;
+    friend class ProcFSProcessPledge;
     friend class ProcFSProcessUnveil;
     friend class ProcFSProcessPerformanceEvents;
     friend class ProcFSProcessFileDescription;
