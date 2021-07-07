@@ -162,6 +162,7 @@ private:
     virtual void set_window_modified(i32, bool) override;
     virtual Messages::WindowServer::IsWindowModifiedResponse is_window_modified(i32) override;
     virtual Messages::WindowServer::GetDesktopDisplayScaleResponse get_desktop_display_scale(u32) override;
+    virtual void set_flash_flush(bool) override;
 
     Window* window_from_id(i32 window_id);
 
