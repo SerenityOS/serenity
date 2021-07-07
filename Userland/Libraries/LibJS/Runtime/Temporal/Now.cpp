@@ -62,7 +62,7 @@ BigInt* system_utc_epoch_nanoseconds(GlobalObject& global_object)
     clock_gettime(CLOCK_REALTIME, &now);
     Checked<i64> ns_timestamp;
     ns_timestamp += now.tv_sec;
-    ns_timestamp *= 1000000000;
+    ns_timestamp *= 1'000'000'000;
     ns_timestamp += now.tv_nsec;
     if (ns_timestamp.has_overflow()) {
         // TODO: Deal with this before 2262-04-21T00:47:16Z.
