@@ -8,6 +8,7 @@ set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCInodeWatcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCString.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestStackSmash.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestIo.cpp
 )
 
 file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")

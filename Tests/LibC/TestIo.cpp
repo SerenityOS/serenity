@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <LibCore/File.h>
+#include <LibTest/TestCase.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
@@ -18,6 +20,8 @@
 #define EXPECT_ERROR_2(err, syscall, arg1, arg2)                                                                                   \
     do {                                                                                                                           \
         rc = syscall(arg1, arg2);                                                                                                  \
+        EXPECT(rc < 0);                                                                                                            \
+        EXPECT_EQ(errno, err);                                                                                                     \
         if (rc >= 0 || errno != err) {                                                                                             \
             warnln(__FILE__ ":{}: Expected " #err ": " #syscall "({}, {}), got rc={}, errno={}", __LINE__, arg1, arg2, rc, errno); \
         }                                                                                                                          \
@@ -26,12 +30,14 @@
 #define EXPECT_ERROR_3(err, syscall, arg1, arg2, arg3)                                                                                       \
     do {                                                                                                                                     \
         rc = syscall(arg1, arg2, arg3);                                                                                                      \
+        EXPECT(rc < 0);                                                                                                                      \
+        EXPECT_EQ(errno, err);                                                                                                               \
         if (rc >= 0 || errno != err) {                                                                                                       \
             warnln(__FILE__ ":{}: Expected " #err ": " #syscall "({}, {}, {}), got rc={}, errno={}", __LINE__, arg1, arg2, arg3, rc, errno); \
         }                                                                                                                                    \
     } while (0)
 
-static void test_read_from_directory()
+TEST_CASE(read_from_directory)
 {
     char buffer[BUFSIZ];
     int fd = open("/", O_DIRECTORY | O_RDONLY);
@@ -42,7 +48,7 @@ static void test_read_from_directory()
     VERIFY(rc == 0);
 }
 
-static void test_write_to_directory()
+TEST_CASE(write_to_directory)
 {
     char str[] = "oh frick";
     int fd = open("/", O_DIRECTORY | O_RDONLY);
@@ -55,7 +61,7 @@ static void test_write_to_directory()
     VERIFY(rc == 0);
 }
 
-static void test_read_from_writeonly()
+TEST_CASE(read_from_writeonly)
 {
     char buffer[BUFSIZ];
     int fd = open("/tmp/xxxx123", O_CREAT | O_WRONLY);
@@ -64,9 +70,11 @@ static void test_read_from_writeonly()
     EXPECT_ERROR_3(EBADF, read, fd, buffer, sizeof(buffer));
     rc = close(fd);
     VERIFY(rc == 0);
+    rc = unlink("/tmp/xxxx123");
+    VERIFY(rc == 0);
 }
 
-static void test_write_to_readonly()
+TEST_CASE(write_to_readonly)
 {
     char str[] = "hello";
     int fd = open("/tmp/abcd123", O_CREAT | O_RDONLY);
@@ -75,17 +83,19 @@ static void test_write_to_readonly()
     EXPECT_ERROR_3(EBADF, write, fd, str, sizeof(str));
     rc = close(fd);
     VERIFY(rc == 0);
+    rc = unlink("/tmp/abcd123");
+    VERIFY(rc == 0);
 }
 
-static void test_read_past_eof()
+TEST_CASE(read_past_eof)
 {
     char buffer[BUFSIZ];
-    int fd = open("/home/anon/myfile.txt", O_RDONLY);
+    int fd = open("/home/anon/README.md", O_RDONLY);
     if (fd < 0)
         perror("open");
     VERIFY(fd >= 0);
     int rc;
-    rc = lseek(fd, 9999, SEEK_SET);
+    rc = lseek(fd, 99999, SEEK_SET);
     if (rc < 0)
         perror("lseek");
     rc = read(fd, buffer, sizeof(buffer));
@@ -97,33 +107,40 @@ static void test_read_past_eof()
     VERIFY(rc == 0);
 }
 
-static void test_ftruncate_readonly()
+TEST_CASE(ftruncate_readonly)
 {
     int fd = open("/tmp/trunctest", O_RDONLY | O_CREAT, 0666);
     VERIFY(fd >= 0);
     int rc;
     EXPECT_ERROR_2(EBADF, ftruncate, fd, 0);
-    close(fd);
+    rc = close(fd);
+    VERIFY(rc == 0);
+    rc = unlink("/tmp/trunctest");
+    VERIFY(rc == 0);
 }
 
-static void test_ftruncate_negative()
+TEST_CASE(ftruncate_negative)
 {
     int fd = open("/tmp/trunctest", O_RDWR | O_CREAT, 0666);
     VERIFY(fd >= 0);
     int rc;
     EXPECT_ERROR_2(EINVAL, ftruncate, fd, -1);
-    close(fd);
+    rc = close(fd);
+    VERIFY(rc == 0);
+    rc = unlink("/tmp/trunctest");
+    VERIFY(rc == 0);
 }
 
-static void test_mmap_directory()
+TEST_CASE(mmap_directory)
 {
     int fd = open("/tmp", O_RDONLY | O_DIRECTORY);
     VERIFY(fd >= 0);
     auto* ptr = mmap(nullptr, 4096, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
+    EXPECT_EQ(ptr, MAP_FAILED);
     if (ptr != MAP_FAILED) {
         warnln("Boo! mmap() of a directory succeeded!");
-        return;
     }
+    EXPECT_EQ(errno, ENODEV);
     if (errno != ENODEV) {
         warnln("Boo! mmap() of a directory gave errno={} instead of ENODEV!", errno);
         return;
@@ -131,7 +148,7 @@ static void test_mmap_directory()
     close(fd);
 }
 
-static void test_tmpfs_read_past_end()
+TEST_CASE(tmpfs_read_past_end)
 {
     int fd = open("/tmp/x", O_RDWR | O_CREAT | O_TRUNC, 0600);
     VERIFY(fd >= 0);
@@ -147,10 +164,13 @@ static void test_tmpfs_read_past_end()
     if (nread != 0) {
         warnln("Expected 0-length read past end of file in /tmp");
     }
-    close(fd);
+    rc = close(fd);
+    VERIFY(rc == 0);
+    rc = unlink("/tmp/x");
+    VERIFY(rc == 0);
 }
 
-static void test_procfs_read_past_end()
+TEST_CASE(procfs_read_past_end)
 {
     int fd = open("/proc/uptime", O_RDONLY);
     VERIFY(fd >= 0);
@@ -166,63 +186,137 @@ static void test_procfs_read_past_end()
     close(fd);
 }
 
-static void test_open_create_device()
+TEST_CASE(open_create_device)
 {
     int fd = open("/tmp/fakedevice", (O_RDWR | O_CREAT), (S_IFCHR | 0600));
     VERIFY(fd >= 0);
 
     struct stat st;
-    if (fstat(fd, &st) < 0) {
+    int rc = fstat(fd, &st);
+    EXPECT(rc >= 0);
+    if (rc < 0) {
         perror("stat");
-        VERIFY_NOT_REACHED();
     }
 
+    EXPECT_EQ(st.st_mode, 0100600);
     if (st.st_mode != 0100600) {
         warnln("Expected mode 0100600 after attempt to create a device node with open(O_CREAT), mode={:o}", st.st_mode);
     }
-    unlink("/tmp/fakedevice");
+    rc = unlink("/tmp/fakedevice");
+    EXPECT_EQ(rc, 0);
     close(fd);
+    EXPECT_EQ(rc, 0);
 }
 
-static void test_unlink_symlink()
+TEST_CASE(unlink_symlink)
 {
     int rc = symlink("/proc/2/foo", "/tmp/linky");
+    EXPECT(rc >= 0);
     if (rc < 0) {
         perror("symlink");
-        VERIFY_NOT_REACHED();
     }
 
     auto target = Core::File::read_link("/tmp/linky");
-    VERIFY(target == "/proc/2/foo");
+    EXPECT_EQ(target, "/proc/2/foo");
 
     rc = unlink("/tmp/linky");
+    EXPECT(rc >= 0);
     if (rc < 0) {
         perror("unlink");
         warnln("Expected unlink() of a symlink into an unreadable directory to succeed!");
     }
 }
 
-static void test_eoverflow()
+TEST_CASE(tmpfs_eoverflow)
 {
-    int fd = open("/tmp/x", O_RDWR);
-    VERIFY(fd >= 0);
+    int fd = open("/tmp/x", O_RDWR | O_CREAT);
+    EXPECT(fd >= 0);
 
-    int rc = lseek(fd, INT32_MAX, SEEK_SET);
-    VERIFY(rc == INT32_MAX);
+    off_t rc = lseek(fd, INT64_MAX, SEEK_SET);
+    EXPECT_EQ(rc, INT64_MAX);
 
-    char buffer[16];
+    char buffer[16] {};
+    char empty_buffer[16] {};
+
     rc = read(fd, buffer, sizeof(buffer));
-    if (rc >= 0 || errno != EOVERFLOW) {
-        warnln("Expected EOVERFLOW when trying to read past INT32_MAX");
-    }
+    EXPECT_EQ(rc, -1);
+    EXPECT_EQ(errno, EOVERFLOW);
+
+    [[maybe_unused]] auto ignored = strlcpy(buffer, "abcdefghijklmno", sizeof(buffer) - 1);
+
     rc = write(fd, buffer, sizeof(buffer));
+    EXPECT_EQ(rc, -1);
+    EXPECT_EQ(errno, EOVERFLOW);
     if (rc >= 0 || errno != EOVERFLOW) {
-        warnln("Expected EOVERFLOW when trying to write past INT32_MAX");
+        warnln("Expected EOVERFLOW when trying to write past INT64_MAX");
     }
-    close(fd);
+
+    // ok now, write something to it, and try again
+    rc = lseek(fd, 0, SEEK_SET);
+    EXPECT_EQ(rc, 0);
+
+    rc = write(fd, buffer, sizeof(buffer));
+    EXPECT_EQ(rc, 16);
+
+    rc = lseek(fd, INT64_MAX, SEEK_SET);
+    EXPECT_EQ(rc, INT64_MAX);
+
+    memset(buffer, 0, sizeof(buffer));
+    rc = read(fd, buffer, sizeof(buffer));
+    EXPECT_EQ(rc, -1);
+    EXPECT_EQ(errno, EOVERFLOW);
+    if (rc >= 0 || errno != EOVERFLOW) {
+        warnln("Expected EOVERFLOW when trying to read past INT64_MAX");
+    }
+    EXPECT_EQ(0, memcmp(buffer, empty_buffer, sizeof(buffer)));
+
+    rc = close(fd);
+    EXPECT_EQ(rc, 0);
+    rc = unlink("/tmp/x");
+    EXPECT_EQ(rc, 0);
 }
 
-static void test_rmdir_while_inside_dir()
+TEST_CASE(tmpfs_massive_file)
+{
+    int fd = open("/tmp/x", O_RDWR | O_CREAT);
+    EXPECT(fd >= 0);
+
+    off_t rc = lseek(fd, INT32_MAX, SEEK_SET);
+    EXPECT_EQ(rc, INT32_MAX);
+
+    char buffer[16] {};
+    rc = read(fd, buffer, sizeof(buffer));
+    EXPECT_EQ(rc, 0);
+
+    [[maybe_unused]] auto ignored = strlcpy(buffer, "abcdefghijklmno", sizeof(buffer) - 1);
+
+    rc = write(fd, buffer, sizeof(buffer));
+    EXPECT_EQ(rc, -1);
+    EXPECT_EQ(errno, ENOMEM);
+
+    // ok now, write something to it, and try again
+    rc = lseek(fd, 0, SEEK_SET);
+    EXPECT_EQ(rc, 0);
+
+    rc = write(fd, buffer, sizeof(buffer));
+    EXPECT_EQ(rc, 16);
+
+    rc = lseek(fd, INT32_MAX, SEEK_SET);
+    EXPECT_EQ(rc, INT32_MAX);
+
+    // FIXME: Should this return EOVERFLOW? Or is a 0 read fine?
+    memset(buffer, 0, sizeof(buffer));
+    rc = read(fd, buffer, sizeof(buffer));
+    EXPECT_EQ(rc, 0);
+    EXPECT(buffer != "abcdefghijklmno"sv);
+
+    rc = close(fd);
+    EXPECT_EQ(rc, 0);
+    rc = unlink("/tmp/x");
+    EXPECT_EQ(rc, 0);
+}
+
+TEST_CASE(rmdir_while_inside_dir)
 {
     int rc = mkdir("/home/anon/testdir", 0700);
     VERIFY(rc == 0);
@@ -234,6 +328,8 @@ static void test_rmdir_while_inside_dir()
     VERIFY(rc == 0);
 
     int fd = open("x", O_CREAT | O_RDWR, 0600);
+    EXPECT(fd < 0);
+    EXPECT_EQ(errno, ENOENT);
     if (fd >= 0 || errno != ENOENT) {
         warnln("Expected ENOENT when trying to create a file inside a deleted directory. Got {} with errno={}", fd, errno);
     }
@@ -242,10 +338,11 @@ static void test_rmdir_while_inside_dir()
     VERIFY(rc == 0);
 }
 
-static void test_writev()
+TEST_CASE(writev)
 {
     int pipefds[2];
-    pipe(pipefds);
+    int rc = pipe(pipefds);
+    EXPECT(rc == 0);
 
     iovec iov[2];
     iov[0].iov_base = const_cast<void*>((const void*)"Hello");
@@ -253,17 +350,18 @@ static void test_writev()
     iov[1].iov_base = const_cast<void*>((const void*)"Friends");
     iov[1].iov_len = 7;
     int nwritten = writev(pipefds[1], iov, 2);
+    EXPECT_EQ(nwritten, 12);
     if (nwritten < 0) {
         perror("writev");
-        VERIFY_NOT_REACHED();
     }
     if (nwritten != 12) {
         warnln("Didn't write 12 bytes to pipe with writev");
-        VERIFY_NOT_REACHED();
     }
 
-    char buffer[32];
+    char buffer[32] {};
     int nread = read(pipefds[0], buffer, sizeof(buffer));
+    EXPECT_EQ(nread, 12);
+    EXPECT_EQ(buffer, "HelloFriends"sv);
     if (nread != 12 || memcmp(buffer, "HelloFriends", 12)) {
         warnln("Didn't read the expected data from pipe after writev");
         VERIFY_NOT_REACHED();
@@ -273,18 +371,19 @@ static void test_writev()
     close(pipefds[1]);
 }
 
-static void test_rmdir_root()
+TEST_CASE(rmdir_root)
 {
     int rc = rmdir("/");
+    EXPECT_EQ(rc, -1);
+    EXPECT_EQ(errno, EBUSY);
     if (rc != -1 || errno != EBUSY) {
         warnln("rmdir(/) didn't fail with EBUSY");
-        VERIFY_NOT_REACHED();
     }
 }
 
-int main()
+TEST_CASE(open_silly_things)
 {
-    int rc;
+    int rc = -1;
     EXPECT_ERROR_2(ENOTDIR, open, "/dev/zero", (O_DIRECTORY | O_RDONLY));
     EXPECT_ERROR_2(EINVAL, open, "/dev/zero", (O_DIRECTORY | O_CREAT | O_RDWR));
     EXPECT_ERROR_2(EEXIST, open, "/dev/zero", (O_CREAT | O_EXCL | O_RDWR));
@@ -292,25 +391,5 @@ int main()
     EXPECT_ERROR_2(EACCES, open, "/proc/all", (O_RDWR));
     EXPECT_ERROR_2(ENOENT, open, "/boof/baaf/nonexistent", (O_CREAT | O_RDWR));
     EXPECT_ERROR_2(EISDIR, open, "/tmp", (O_DIRECTORY | O_RDWR));
-
-    test_read_from_directory();
-    test_write_to_directory();
-    test_read_from_writeonly();
-    test_write_to_readonly();
-    test_read_past_eof();
-    test_ftruncate_readonly();
-    test_ftruncate_negative();
-    test_mmap_directory();
-    test_tmpfs_read_past_end();
-    test_procfs_read_past_end();
-    test_open_create_device();
-    test_unlink_symlink();
-    test_eoverflow();
-    test_rmdir_while_inside_dir();
-    test_writev();
-    test_rmdir_root();
-
     EXPECT_ERROR_2(EPERM, link, "/", "/home/anon/lolroot");
-
-    return 0;
 }
