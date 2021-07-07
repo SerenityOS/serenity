@@ -1845,10 +1845,10 @@ static size_t flatten_into_array(GlobalObject& global_object, Object& new_array,
         }
 
         if (depth > 0 && value.is_array(global_object)) {
-            auto length = length_of_array_like(global_object, value.as_array());
+            auto length = length_of_array_like(global_object, value.as_object());
             if (vm.exception())
                 return {};
-            target_index = flatten_into_array(global_object, new_array, value.as_array(), length, target_index, depth - 1);
+            target_index = flatten_into_array(global_object, new_array, value.as_object(), length, target_index, depth - 1);
             if (vm.exception())
                 return {};
             continue;
