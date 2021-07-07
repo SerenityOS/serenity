@@ -71,10 +71,10 @@ set(KERNEL_SOURCES
     Graphics/FramebufferDevice.cpp
     Graphics/GraphicsManagement.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
-    Graphics/VirtIOGPU/VirtIOFrameBufferDevice.cpp
-    Graphics/VirtIOGPU/VirtIOGPUConsole.cpp
+    Graphics/VirtIOGPU/FrameBufferDevice.cpp
+    Graphics/VirtIOGPU/Console.cpp
     Graphics/VirtIOGPU/VirtIOGPU.cpp
-    Graphics/VirtIOGPU/VirtIOGraphicsAdapter.cpp
+    Graphics/VirtIOGPU/GraphicsAdapter.cpp
     Graphics/VGACompatibleAdapter.cpp
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/DiskPartitionMetadata.cpp
