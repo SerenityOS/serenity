@@ -312,6 +312,7 @@ namespace JS {
     P(toLocaleTimeString)                    \
     P(toLowerCase)                           \
     P(toString)                              \
+    P(toTemporalInstant)                     \
     P(toTimeString)                          \
     P(toUpperCase)                           \
     P(toUTCString)                           \
