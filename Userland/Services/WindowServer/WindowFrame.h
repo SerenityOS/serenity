@@ -70,6 +70,7 @@ public:
 
     void window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect);
     void invalidate_titlebar();
+    void invalidate_menubar();
     void invalidate(Gfx::IntRect relative_rect);
     void invalidate();
 

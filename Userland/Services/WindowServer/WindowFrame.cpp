@@ -585,6 +585,11 @@ void WindowFrame::invalidate()
     m_window.invalidate(true, true);
 }
 
+void WindowFrame::invalidate_menubar()
+{
+    invalidate(menubar_rect());
+}
+
 void WindowFrame::invalidate(Gfx::IntRect relative_rect)
 {
     auto frame_rect = rect();
