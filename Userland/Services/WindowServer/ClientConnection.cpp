@@ -682,7 +682,7 @@ void ClientConnection::set_window_backing_store(i32 window_id, [[maybe_unused]] 
         }
         auto backing_store = Gfx::Bitmap::create_with_anonymous_buffer(
             has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
-            buffer,
+            move(buffer),
             size,
             1,
             {});
