@@ -165,10 +165,25 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
     StringView str_to_match = str;
 
     // RegExps without "global" and "sticky" always start at offset 0.
-    if (!regexp_object->regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful))
-        regexp_object->regex().start_offset = 0;
+    if (!regexp_object->regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful)) {
+        regexp_object->set(vm.names.lastIndex, Value(0), true);
+        if (vm.exception())
+            return {};
+    }
+
+    auto last_index = regexp_object->get(vm.names.lastIndex);
+    if (vm.exception())
+        return {};
+    regexp_object->regex().start_offset = last_index.to_length(global_object);
+    if (vm.exception())
+        return {};
 
     auto result = do_match(regexp_object->regex(), str_to_match);
+
+    regexp_object->set(vm.names.lastIndex, Value(regexp_object->regex().start_offset), true);
+    if (vm.exception())
+        return {};
+
     if (!result.success)
         return js_null();
 
@@ -217,10 +232,25 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
         return {};
 
     // RegExps without "global" and "sticky" always start at offset 0.
-    if (!regexp_object->regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful))
-        regexp_object->regex().start_offset = 0;
+    if (!regexp_object->regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful)) {
+        regexp_object->set(vm.names.lastIndex, Value(0), true);
+        if (vm.exception())
+            return {};
+    }
+
+    auto last_index = regexp_object->get(vm.names.lastIndex);
+    if (vm.exception())
+        return {};
+    regexp_object->regex().start_offset = last_index.to_length(global_object);
+    if (vm.exception())
+        return {};
 
     auto result = do_match(regexp_object->regex(), str);
+
+    regexp_object->set(vm.names.lastIndex, Value(regexp_object->regex().start_offset), true);
+    if (vm.exception())
+        return {};
+
     return Value(result.success);
 }
 
@@ -301,8 +331,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         return {};
 
     bool global = global_value.to_boolean();
-    if (global)
-        rx->regex().start_offset = 0;
+    if (global) {
+        rx->set(vm.names.lastIndex, Value(0), true);
+        if (vm.exception())
+            return {};
+    }
 
     // FIXME: Implement and use RegExpExec - https://tc39.es/ecma262/#sec-regexpexec
     auto* exec = Value(rx).get_method(global_object, vm.names.exec);
@@ -336,7 +369,15 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         if (match_str.is_empty()) {
             // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
             //        Once implemented, step (8a) of the @@replace algorithm must also be implemented.
-            rx->regex().start_offset += 1;
+            auto last_index = rx->get(vm.names.lastIndex);
+            if (vm.exception())
+                return {};
+            auto this_index = last_index.to_length(global_object);
+            if (vm.exception())
+                return {};
+            rx->set(vm.names.lastIndex, Value(this_index + 1), true);
+            if (vm.exception())
+                return {};
         }
     }
 

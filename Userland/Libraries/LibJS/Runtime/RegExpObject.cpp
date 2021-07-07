@@ -100,75 +100,42 @@ RegExpObject::RegExpObject(String pattern, String flags, Object& prototype)
     }
 }
 
-void RegExpObject::initialize(GlobalObject& global_object)
-{
-    auto& vm = this->vm();
-    Object::initialize(global_object);
-
-    define_native_property(vm.names.lastIndex, last_index, set_last_index, Attribute::Writable);
-}
-
 RegExpObject::~RegExpObject()
 {
 }
 
-static RegExpObject* regexp_object_from(VM& vm, GlobalObject& global_object)
+void RegExpObject::initialize(GlobalObject& global_object)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-    if (!is<RegExpObject>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "RegExp");
-        return nullptr;
-    }
-    return static_cast<RegExpObject*>(this_object);
-}
-
-JS_DEFINE_NATIVE_GETTER(RegExpObject::last_index)
-{
-    auto regexp_object = regexp_object_from(vm, global_object);
-    if (!regexp_object)
-        return {};
-
-    return Value((unsigned)regexp_object->regex().start_offset);
-}
-
-JS_DEFINE_NATIVE_SETTER(RegExpObject::set_last_index)
-{
-    auto regexp_object = regexp_object_from(vm, global_object);
-    if (!regexp_object)
-        return;
-
-    auto index = value.to_i32(global_object);
-    if (vm.exception())
-        return;
-
-    if (index < 0)
-        index = 0;
-
-    regexp_object->regex().start_offset = index;
+    auto& vm = this->vm();
+    Object::initialize(global_object);
+    define_direct_property(vm.names.lastIndex, {}, Attribute::Writable);
 }
 
 // 22.2.3.2.4 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate
 RegExpObject* regexp_create(GlobalObject& global_object, Value pattern, Value flags)
 {
+    auto& vm = global_object.vm();
     String p;
     if (pattern.is_undefined()) {
         p = String::empty();
     } else {
         p = pattern.to_string(global_object);
-        if (p.is_null())
-            return nullptr;
+        if (vm.exception())
+            return {};
     }
     String f;
     if (flags.is_undefined()) {
         f = String::empty();
     } else {
         f = flags.to_string(global_object);
-        if (f.is_null())
-            return nullptr;
+        if (vm.exception())
+            return {};
     }
-    return RegExpObject::create(global_object, move(p), move(f));
+    auto* object = RegExpObject::create(global_object, move(p), move(f));
+    object->set(vm.names.lastIndex, Value(0), true);
+    if (vm.exception())
+        return {};
+    return object;
 }
 
 }
