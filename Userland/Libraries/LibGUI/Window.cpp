@@ -808,7 +808,7 @@ OwnPtr<WindowBackingStore> Window::create_backing_store(const Gfx::IntSize& size
     }
 
     // FIXME: Plumb scale factor here eventually.
-    auto bitmap = Gfx::Bitmap::create_with_anonymous_buffer(format, buffer, size, 1, {});
+    auto bitmap = Gfx::Bitmap::create_with_anonymous_buffer(format, move(buffer), size, 1, {});
     if (!bitmap) {
         VERIFY(size.width() <= INT16_MAX);
         VERIFY(size.height() <= INT16_MAX);
