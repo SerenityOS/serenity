@@ -11,43 +11,36 @@
 #include <LibThreading/Thread.h>
 #include <unistd.h>
 
-static Threading::Lockable<Queue<Function<void()>>>* s_all_actions;
+static pthread_mutex_t s_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t s_condition = PTHREAD_COND_INITIALIZER;
+static Queue<Function<void()>>* s_all_actions;
 static Threading::Thread* s_background_thread;
-static int s_notify_pipe_fds[2];
 
 static intptr_t background_thread_func()
 {
+    Vector<Function<void()>> actions;
     while (true) {
-        char buffer[1];
-        auto nread = read(s_notify_pipe_fds[0], buffer, sizeof(buffer));
-        if (nread < 0) {
-            perror("read");
-            _exit(1);
-        }
 
-        Vector<Function<void()>> work_items;
-        {
-            Threading::Locker locker(s_all_actions->lock());
+        pthread_mutex_lock(&s_mutex);
 
-            while (!s_all_actions->resource().is_empty()) {
-                work_items.append(s_all_actions->resource().dequeue());
-            }
-        }
+        while (s_all_actions->is_empty())
+            pthread_cond_wait(&s_condition, &s_mutex);
 
-        for (auto& work_item : work_items)
-            work_item();
+        while (!s_all_actions->is_empty())
+            actions.append(s_all_actions->dequeue());
+
+        pthread_mutex_unlock(&s_mutex);
+
+        for (auto& action : actions)
+            action();
+
+        actions.clear();
     }
-
-    VERIFY_NOT_REACHED();
 }
 
 static void init()
 {
-    if (pipe(s_notify_pipe_fds) < 0) {
-        perror("pipe");
-        _exit(1);
-    }
-    s_all_actions = new Threading::Lockable<Queue<Function<void()>>>();
+    s_all_actions = new Queue<Function<void()>>;
     s_background_thread = &Threading::Thread::construct(background_thread_func).leak_ref();
     s_background_thread->set_name("Background thread");
     s_background_thread->start();
@@ -64,11 +57,9 @@ void Threading::BackgroundActionBase::enqueue_work(Function<void()> work)
 {
     if (s_all_actions == nullptr)
         init();
-    Locker locker(s_all_actions->lock());
-    s_all_actions->resource().enqueue(move(work));
-    char ch = 'x';
-    if (write(s_notify_pipe_fds[1], &ch, sizeof(ch)) < 0) {
-        perror("write");
-        _exit(1);
-    }
+
+    pthread_mutex_lock(&s_mutex);
+    s_all_actions->enqueue(move(work));
+    pthread_cond_broadcast(&s_condition);
+    pthread_mutex_unlock(&s_mutex);
 }
