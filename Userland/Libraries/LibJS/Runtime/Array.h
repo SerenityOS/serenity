@@ -18,14 +18,19 @@ public:
     static Array* create_from(GlobalObject&, Vector<Value> const&);
 
     explicit Array(Object& prototype);
-    virtual void initialize(GlobalObject&) override;
     virtual ~Array() override;
 
-    static Array* typed_this(VM&, GlobalObject&);
+    virtual Optional<PropertyDescriptor> internal_get_own_property(PropertyName const&) const override;
+    virtual bool internal_define_own_property(PropertyName const&, PropertyDescriptor const&) override;
+    virtual bool internal_delete(PropertyName const&) override;
+    virtual MarkedValueList internal_own_property_keys() const override;
+
+    [[nodiscard]] bool length_is_writable() const { return m_length_writable; };
 
 private:
-    JS_DECLARE_NATIVE_GETTER(length_getter);
-    JS_DECLARE_NATIVE_SETTER(length_setter);
+    bool set_length(PropertyDescriptor const&);
+
+    bool m_length_writable { true };
 };
 
 }
