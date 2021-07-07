@@ -64,7 +64,7 @@ Value TimeZoneConstructor::construct(FunctionObject& new_target)
         // a. If ! IsValidTimeZoneName(identifier) is false, then
         if (!is_valid_time_zone_name(identifier)) {
             // i. Throw a RangeError exception.
-            vm.throw_exception<RangeError>(global_object);
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidTimeZoneName);
             return {};
         }
 
