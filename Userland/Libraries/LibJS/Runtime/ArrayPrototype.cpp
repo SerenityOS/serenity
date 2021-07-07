@@ -1367,18 +1367,24 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
         return {};
     if (length == 0)
         return Value(false);
-    i32 from_index = 0;
+    u64 from_index = 0;
     if (vm.argument_count() >= 2) {
-        from_index = vm.argument(1).to_i32(global_object);
+        auto from_argument = vm.argument(1).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
-        if (from_index >= length)
+        if (Value(from_argument).is_positive_infinity() || from_argument >= length)
             return Value(false);
-        if (from_index < 0)
-            from_index = max(length + from_index, 0);
+
+        if (Value(from_argument).is_negative_infinity())
+            from_argument = 0;
+
+        if (from_argument < 0)
+            from_index = max(length + from_argument, 0);
+        else
+            from_index = from_argument;
     }
     auto value_to_find = vm.argument(0);
-    for (i32 i = from_index; i < length; ++i) {
+    for (u64 i = from_index; i < length; ++i) {
         auto element = this_object->get(i);
         if (vm.exception())
             return {};
