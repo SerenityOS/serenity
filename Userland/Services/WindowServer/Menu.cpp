@@ -322,7 +322,7 @@ void Menu::descend_into_submenu_at_hovered_item()
     VERIFY(hovered_item());
     auto submenu = hovered_item()->submenu();
     VERIFY(submenu);
-    MenuManager::the().open_menu(*submenu, false);
+    MenuManager::the().open_menu(*submenu, true);
     submenu->set_hovered_index(0);
     VERIFY(submenu->hovered_item()->type() != MenuItem::Separator);
 }
