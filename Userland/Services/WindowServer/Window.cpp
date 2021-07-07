@@ -643,14 +643,14 @@ void Window::invalidate(bool invalidate_frame, bool re_render_frame)
     Compositor::the().invalidate_window();
 }
 
-void Window::invalidate(const Gfx::IntRect& rect, bool with_frame)
+void Window::invalidate(Gfx::IntRect const& rect)
 {
     if (type() == WindowType::Applet) {
         AppletManager::the().invalidate_applet(*this, rect);
         return;
     }
 
-    if (invalidate_no_notify(rect, with_frame))
+    if (invalidate_no_notify(rect))
         Compositor::the().invalidate_window();
 }
 
