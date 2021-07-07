@@ -99,10 +99,24 @@ Value FunctionDeclaration::execute(Interpreter& interpreter, GlobalObject&) cons
     return {};
 }
 
+// 15.2.5 Runtime Semantics: InstantiateOrdinaryFunctionExpression, https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression
 Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return OrdinaryFunctionObject::create(global_object, name(), body(), parameters(), function_length(), interpreter.lexical_environment(), kind(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
+    auto* func_env = interpreter.lexical_environment();
+    bool has_identifier = !name().is_empty() && !is_auto_renamed();
+
+    if (has_identifier) {
+        func_env = interpreter.heap().allocate<DeclarativeEnvironment>(global_object, func_env);
+        func_env->create_immutable_binding(global_object, name(), false);
+    }
+
+    auto closure = OrdinaryFunctionObject::create(global_object, name(), body(), parameters(), function_length(), func_env, kind(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
+
+    if (has_identifier)
+        func_env->initialize_binding(global_object, name(), closure);
+
+    return closure;
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
