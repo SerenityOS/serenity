@@ -7,6 +7,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibTextCodec/Decoder.h>
+#include <LibTextCodec/ShiftJISConverter.h>
 
 namespace TextCodec {
 
@@ -75,6 +76,14 @@ TurkishDecoder& turkish_decoder()
     return *decoder;
 }
 
+ShiftJISEncoder& shift_jis_decoder()
+{
+    static ShiftJISEncoder* decoder = nullptr;
+    if (!decoder)
+        decoder = new ShiftJISEncoder;
+    return *decoder;
+}
+
 }
 
 Decoder* decoder_for(const String& a_encoding)
@@ -97,6 +106,8 @@ Decoder* decoder_for(const String& a_encoding)
             return &latin9_decoder();
         if (encoding.value().equals_ignoring_case("windows-1254"))
             return &turkish_decoder();
+        if (encoding.value().equals_ignoring_case("shift_jis"))
+            return &shift_jis_decoder();
     }
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
     return nullptr;
@@ -418,6 +429,20 @@ String TurkishDecoder::to_utf8(const StringView& input)
     StringBuilder builder(input.length());
     for (auto ch : input) {
         builder.append_code_point(convert_turkish_to_utf8(ch));
+    }
+    return builder.to_string();
+}
+
+String ShiftJISEncoder::to_utf8(StringView const& input)
+{
+    StringBuilder builder;
+    for (size_t i = 0; i < input.length(); ++i) {
+        if (((u8)input[i]) < 0x80) {
+            builder.append_code_point(convert_shift_jis_to_utf8(input[i]));
+        } else {
+            builder.append_code_point(convert_shift_jis_to_utf8((input[i] << 8) | input[i + 1]));
+            ++i;
+        }
     }
     return builder.to_string();
 }
