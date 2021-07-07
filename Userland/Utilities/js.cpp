@@ -41,6 +41,7 @@
 #include <LibJS/Runtime/Set.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
@@ -426,6 +427,15 @@ static void print_data_view(JS::Object const& object, HashTable<JS::Object*>& se
     out(" @ {:p}", data_view.viewed_array_buffer());
 }
 
+static void print_temporal_instant(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& instant = static_cast<JS::Temporal::Instant const&>(object);
+    print_type("Temporal.Instant");
+    // FIXME: Print human readable date and time, like in print_date() - ideally handling arbitrarily large values since we get a bigint.
+    out("\n  nanoseconds: ");
+    print_value(&instant.nanoseconds(), seen_objects);
+}
+
 static void print_temporal_time_zone(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& time_zone = static_cast<JS::Temporal::TimeZone const&>(object);
@@ -495,6 +505,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_primitive_wrapper_object("Number", object, seen_objects);
         if (is<JS::BooleanObject>(object))
             return print_primitive_wrapper_object("Boolean", object, seen_objects);
+        if (is<JS::Temporal::Instant>(object))
+            return print_temporal_instant(object, seen_objects);
         if (is<JS::Temporal::TimeZone>(object))
             return print_temporal_time_zone(object, seen_objects);
         return print_object(object, seen_objects);
