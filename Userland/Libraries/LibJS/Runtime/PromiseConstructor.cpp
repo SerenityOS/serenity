@@ -28,8 +28,6 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
     // 27.2.4.4 Promise.prototype, https://tc39.es/ecma262/#sec-promise.prototype
     define_direct_property(vm.names.prototype, global_object.promise_prototype(), 0);
 
-    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-
     u8 attr = Attribute::Writable | Attribute::Configurable;
     // TODO: Implement these functions below and uncomment this.
     // define_native_function(vm.names.all, all, 1, attr);
@@ -40,6 +38,8 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.resolve, resolve, 1, attr);
 
     define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+
+    define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
 // 27.2.3.1 Promise ( executor ), https://tc39.es/ecma262/#sec-promise-executor
