@@ -93,7 +93,7 @@ void FrameBufferDevice::transfer_framebuffer_data_to_host(Protocol::Rect const& 
 
 void FrameBufferDevice::flush_dirty_window(Protocol::Rect const& dirty_rect, Buffer& buffer)
 {
-    m_gpu.flush_dirty_window(m_scanout, dirty_rect, buffer.resource_id);
+    m_gpu.flush_dirty_rectangle(m_scanout, dirty_rect, buffer.resource_id);
 }
 
 void FrameBufferDevice::flush_displayed_image(Protocol::Rect const& dirty_rect, Buffer& buffer)
