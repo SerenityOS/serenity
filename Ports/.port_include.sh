@@ -489,13 +489,22 @@ do_all() {
     do_install "${1:-}"
 }
 
+do_shell() {
+    do_installdepends
+    do_fetch
+    do_patch
+    cd "$workdir"
+    bash
+    echo "End of package shell. Back to the User shell."
+}
+
 NO_GPG=false
 parse_arguments() {
     if [ -z "${1:-}" ]; then
         do_all
     else
         case "$1" in
-            fetch|patch|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall|showproperty)
+            fetch|patch|shell|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall|showproperty)
                 method=$1
                 shift
                 do_${method} "$@"
