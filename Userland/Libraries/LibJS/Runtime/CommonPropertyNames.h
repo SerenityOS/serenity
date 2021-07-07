@@ -190,6 +190,7 @@ namespace JS {
     P(indexOf)                               \
     P(info)                                  \
     P(input)                                 \
+    P(instant)                               \
     P(is)                                    \
     P(isArray)                               \
     P(isExtensible)                          \
