@@ -35,8 +35,8 @@ static IDAllocator s_window_id_allocator;
 
 class WindowBackingStore {
 public:
-    WindowBackingStore(NonnullRefPtr<Gfx::Bitmap> bitmap)
-        : m_bitmap(bitmap)
+    explicit WindowBackingStore(NonnullRefPtr<Gfx::Bitmap> bitmap)
+        : m_bitmap(move(bitmap))
         , m_serial(++s_next_backing_store_serial)
     {
     }
