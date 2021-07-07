@@ -737,14 +737,15 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
         return {};
 
     size_t index = 0;
+    size_t k = actual_start;
 
-    while (actual_start < final) {
-        bool present = this_object->has_property((u32)actual_start);
+    while (k < final) {
+        bool present = this_object->has_property(k);
         if (vm.exception())
             return {};
 
         if (present) {
-            auto value = this_object->get((u32)actual_start);
+            auto value = this_object->get(k);
             if (vm.exception())
                 return {};
 
@@ -753,7 +754,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
                 return {};
         }
 
-        ++actual_start;
+        ++k;
         ++index;
     }
 
@@ -801,18 +802,18 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::index_of)
     if (Value(n).is_negative_infinity())
         n = 0;
 
-    u32 k;
+    size_t k;
 
     // 8. If n ≥ 0, then
     if (n >= 0) {
         // a. Let k be n.
-        k = (u32)n;
+        k = (size_t)n;
     }
     // 9. Else,
     else {
         // a. Let k be len + n.
         // b. If k < 0, set k to 0.
-        k = max((i32)length + (i32)n, 0);
+        k = max(length + n, 0);
     }
 
     // 10. Repeat, while k < len,
@@ -1036,7 +1037,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
                 return {};
 
             // ii. Set accumulator to ? Call(callbackfn, undefined, « accumulator, kValue, 𝔽(k), O »).
-            accumulator = vm.call(callback_function.as_function(), js_undefined(), accumulator, k_value, Value((i32)k), object);
+            accumulator = vm.call(callback_function.as_function(), js_undefined(), accumulator, k_value, Value((size_t)k), object);
             if (vm.exception())
                 return {};
         }
@@ -1311,17 +1312,17 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
     if (Value(n).is_negative_infinity())
         return Value(-1);
 
-    i32 k;
+    ssize_t k;
 
     // 6. If n ≥ 0, then
     if (n >= 0) {
         // a. Let k be min(n, len - 1).
-        k = min((i32)n, (i32)length - 1);
+        k = min(n, (double)length - 1);
     }
     // 7. Else,
     else {
         //  a. Let k be len + n.
-        k = (i32)length + (i32)n;
+        k = (double)length + n;
     }
 
     // 8. Repeat, while k ≥ 0,
@@ -1345,7 +1346,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
 
             // iii. If same is true, return 𝔽(k).
             if (same)
-                return Value(k);
+                return Value((size_t)k);
         }
 
         // c. Set k to k - 1.
@@ -1361,7 +1362,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::includes)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    i32 length = length_of_array_like(global_object, *this_object);
+    auto length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
     if (length == 0)
