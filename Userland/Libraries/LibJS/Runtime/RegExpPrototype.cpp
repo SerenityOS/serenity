@@ -32,6 +32,7 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
 
     define_native_function(*vm.well_known_symbol_match(), symbol_match, 1, attr);
     define_native_function(*vm.well_known_symbol_replace(), symbol_replace, 2, attr);
+    define_native_function(*vm.well_known_symbol_search(), symbol_search, 1, attr);
 
     define_native_accessor(vm.names.flags, flags, {}, Attribute::Configurable);
     define_native_accessor(vm.names.source, source, {}, Attribute::Configurable);
@@ -539,6 +540,54 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     builder.append(string.substring(next_source_position));
 
     return js_string(vm, builder.build());
+}
+
+// 22.2.5.11 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
+JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
+{
+    auto string_value = vm.argument(0);
+
+    auto* regexp_object = this_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+    auto string = string_value.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    auto previous_last_index = regexp_object->get(vm.names.lastIndex);
+    if (vm.exception())
+        return {};
+    if (!same_value(previous_last_index, Value(0))) {
+        regexp_object->set(vm.names.lastIndex, Value(0), true);
+        if (vm.exception())
+            return {};
+    }
+
+    auto result = regexp_exec(global_object, *regexp_object, string);
+    if (vm.exception())
+        return {};
+
+    auto current_last_index = regexp_object->get(vm.names.lastIndex);
+    if (vm.exception())
+        return {};
+    if (!same_value(current_last_index, previous_last_index)) {
+        regexp_object->set(vm.names.lastIndex, previous_last_index, true);
+        if (vm.exception())
+            return {};
+    }
+
+    if (result.is_null())
+        return Value(-1);
+
+    auto* result_object = result.to_object(global_object);
+    if (!result_object)
+        return {};
+
+    auto index = result_object->get(vm.names.index);
+    if (vm.exception())
+        return {};
+
+    return index;
 }
 
 }
