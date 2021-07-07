@@ -70,7 +70,7 @@ void append_with_to_string(StringBuilder& builder, SeparatorType& separator, Col
             first = false;
         else
             builder.append(separator);
-        builder.append(item.to_string());
+        builder.append(item.to_debug_string());
     }
 }
 
@@ -133,18 +133,21 @@ String StyleBlockRule::to_string() const
     return builder.to_string();
 }
 
-String StyleComponentValueRule::to_string() const
+String StyleComponentValueRule::to_debug_string() const
 {
     StringBuilder builder;
 
     switch (m_type) {
     case ComponentType::Token:
-        builder.append(m_token.to_string());
+        builder.append("Token: ");
+        builder.append(m_token.to_debug_string());
         break;
     case ComponentType::Function:
+        builder.append("Function: ");
         builder.append(m_function->to_string());
         break;
     case ComponentType::Block:
+        builder.append("Block: ");
         builder.append(m_block->to_string());
         break;
     }
