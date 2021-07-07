@@ -82,6 +82,24 @@ static String escape_regexp_pattern(const RegExpObject& regexp_object)
     return pattern;
 }
 
+static void increment_last_index(GlobalObject& global_object, Object& regexp_object)
+{
+    auto& vm = global_object.vm();
+
+    auto last_index_value = regexp_object.get(vm.names.lastIndex);
+    if (vm.exception())
+        return;
+    auto last_index = last_index_value.to_length(global_object);
+    if (vm.exception())
+        return;
+
+    // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
+    //        Once implemented, step (8a) of the @@replace algorithm must also be implemented.
+    ++last_index;
+
+    regexp_object.set(vm.names.lastIndex, Value(last_index), true);
+}
+
 static RegexResult do_match(const Regex<ECMA262>& re, const StringView& subject)
 {
     auto result = re.match(subject);
@@ -302,28 +320,68 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 // 22.2.5.7 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
-    auto* rx = regexp_object_from(vm, global_object);
-    if (!rx)
+    auto* regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
         return {};
     auto s = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
-    auto global_value = rx->get(vm.names.global);
+
+    auto global_value = regexp_object->get(vm.names.global);
     if (vm.exception())
         return {};
     bool global = global_value.to_boolean();
+
     if (!global) {
-        auto result = regexp_exec(global_object, *rx, s);
+        auto result = regexp_exec(global_object, *regexp_object, s);
         if (vm.exception())
             return {};
         return result;
     }
 
-    // FIXME: This should exec the RegExp repeatedly while updating "lastIndex"
-    auto result = regexp_exec(global_object, *rx, s);
+    regexp_object->set(vm.names.lastIndex, Value(0), true);
     if (vm.exception())
         return {};
-    return result;
+
+    auto* array = Array::create(global_object, 0);
+    if (vm.exception())
+        return {};
+
+    size_t n = 0;
+
+    while (true) {
+        auto result = regexp_exec(global_object, *regexp_object, s);
+        if (vm.exception())
+            return {};
+
+        if (result.is_null()) {
+            if (n == 0)
+                return js_null();
+            return array;
+        }
+
+        auto* result_object = result.to_object(global_object);
+        if (!result_object)
+            return {};
+        auto match_object = result_object->get(0);
+        if (vm.exception())
+            return {};
+        auto match_str = match_object.to_string(global_object);
+        if (vm.exception())
+            return {};
+
+        array->create_data_property_or_throw(n, js_string(vm, match_str));
+        if (vm.exception())
+            return {};
+
+        if (match_str.is_empty()) {
+            increment_last_index(global_object, *regexp_object);
+            if (vm.exception())
+                return {};
+        }
+
+        ++n;
+    }
 }
 
 // 22.2.5.10 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
@@ -380,20 +438,12 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         auto match_object = result_object->get(0);
         if (vm.exception())
             return {};
-
         String match_str = match_object.to_string(global_object);
         if (vm.exception())
             return {};
+
         if (match_str.is_empty()) {
-            // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
-            //        Once implemented, step (8a) of the @@replace algorithm must also be implemented.
-            auto last_index = regexp_object->get(vm.names.lastIndex);
-            if (vm.exception())
-                return {};
-            auto this_index = last_index.to_length(global_object);
-            if (vm.exception())
-                return {};
-            regexp_object->set(vm.names.lastIndex, Value(this_index + 1), true);
+            increment_last_index(global_object, *regexp_object);
             if (vm.exception())
                 return {};
         }
