@@ -56,3 +56,38 @@ test("flag and options", () => {
         Function("/foo/x");
     }).toThrowWithMessage(SyntaxError, "Invalid RegExp flag 'x'");
 });
+
+test("override exec with function", () => {
+    let calls = 0;
+
+    let re = /test/;
+    let oldExec = re.exec.bind(re);
+    re.exec = function (...args) {
+        ++calls;
+        return oldExec(...args);
+    };
+
+    expect(re.test("test")).toBe(true);
+    expect(calls).toBe(1);
+});
+
+test("override exec with bad function", () => {
+    let calls = 0;
+
+    let re = /test/;
+    re.exec = function (...args) {
+        ++calls;
+        return 4;
+    };
+
+    expect(() => {
+        re.test("test");
+    }).toThrow(TypeError);
+    expect(calls).toBe(1);
+});
+
+test("override exec with non-function", () => {
+    let re = /test/;
+    re.exec = 3;
+    expect(re.test("test")).toBe(true);
+});

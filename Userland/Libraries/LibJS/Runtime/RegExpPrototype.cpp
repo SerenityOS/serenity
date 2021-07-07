@@ -260,9 +260,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 // 22.2.5.15 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 {
-    // FIXME: This should try using dynamic properties for 'exec' first,
-    //        before falling back to builtin_exec.
-    auto regexp_object = regexp_object_from(vm, global_object);
+    auto* regexp_object = regexp_object_from(vm, global_object);
     if (!regexp_object)
         return {};
 
@@ -270,27 +268,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
     if (vm.exception())
         return {};
 
-    // RegExps without "global" and "sticky" always start at offset 0.
-    if (!regexp_object->regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful)) {
-        regexp_object->set(vm.names.lastIndex, Value(0), true);
-        if (vm.exception())
-            return {};
-    }
-
-    auto last_index = regexp_object->get(vm.names.lastIndex);
-    if (vm.exception())
-        return {};
-    regexp_object->regex().start_offset = last_index.to_length(global_object);
+    auto match = regexp_exec(global_object, *regexp_object, str);
     if (vm.exception())
         return {};
 
-    auto result = do_match(regexp_object->regex(), str);
-
-    regexp_object->set(vm.names.lastIndex, Value(regexp_object->regex().start_offset), true);
-    if (vm.exception())
-        return {};
-
-    return Value(result.success);
+    return Value(!match.is_null());
 }
 
 // 22.2.5.16 RegExp.prototype.toString ( ), https://tc39.es/ecma262/#sec-regexp.prototype.tostring
