@@ -1,5 +1,5 @@
---- Python-3.9.5/Lib/webbrowser.py	2021-05-03 15:54:42.000000000 +0100
-+++ Python-3.9.5/Lib/webbrowser.py	2021-05-06 14:21:34.242964786 +0100
+--- Python-3.9.6/Lib/webbrowser.py	2021-05-03 15:54:42.000000000 +0100
++++ Python-3.9.6/Lib/webbrowser.py	2021-05-06 14:21:34.242964786 +0100
 @@ -574,6 +574,9 @@
              if shutil.which("w3m"):
                  register("w3m", None, GenericBrowser("w3m"))
