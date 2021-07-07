@@ -12,8 +12,6 @@
 #include <time.h>
 #include <unistd.h>
 
-typedef char assert_size_t_is_int[sizeof(size_t) == 4 ? 1 : -1];
-
 static constexpr char TEXT_ERROR[] = "\x1b[01;35m";
 static constexpr char TEXT_WRONG[] = "\x1b[01;31m";
 static constexpr char TEXT_OFBY1[] = "\x1b[01;97m";
@@ -328,10 +326,6 @@ static long long hex_to_ll(const char* hex)
 
 int main()
 {
-    if (sizeof(size_t) != 4) {
-        printf("lolwut?!\n");
-        return 1;
-    }
     printf("Running %lu testcases...\n", NUM_TESTCASES);
     printf("%3s(%-5s): %16s(%2s) %16s(%2s) %16s(%2s) %16s(%2s) – %s\n", "num", "name", "correct", "cs", "builtin", "cs", "old_strtod", "cs", "new_strtod", "cs", "teststring");
 
