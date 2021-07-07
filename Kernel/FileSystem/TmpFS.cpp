@@ -159,11 +159,14 @@ KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserO
 
     off_t old_size = m_metadata.size;
     off_t new_size = m_metadata.size;
-    if (offset + size > (size_t)new_size)
+    if (static_cast<off_t>(offset + size) > new_size)
         new_size = offset + size;
 
+    if (static_cast<u64>(new_size) > (NumericLimits<size_t>::max() / 2)) // on 32-bit, size_t might be 32 bits while off_t is 64 bits
+        return ENOMEM;                                                   // we won't be able to resize to this capacity
+
     if (new_size > old_size) {
-        if (m_content && m_content->capacity() >= (size_t)new_size) {
+        if (m_content && static_cast<off_t>(m_content->capacity()) >= new_size) {
             m_content->set_size(new_size);
         } else {
             // Grow the content buffer 2x the new sizeto accommodate repeating write() calls.
