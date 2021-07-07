@@ -1746,26 +1746,31 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
     if (!this_object)
         return {};
 
-    ssize_t length = length_of_array_like(global_object, *this_object);
+    auto length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
 
-    ssize_t relative_start = 0;
-    ssize_t relative_end = length;
+    double relative_start = 0;
+    double relative_end = length;
 
     if (vm.argument_count() >= 2) {
-        relative_start = vm.argument(1).to_i32(global_object);
+        relative_start = vm.argument(1).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
+        if (Value(relative_start).is_negative_infinity())
+            relative_start = 0;
     }
 
-    if (vm.argument_count() >= 3) {
-        relative_end = vm.argument(2).to_i32(global_object);
+    //If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
+    if (vm.argument_count() >= 3 && !vm.argument(2).is_undefined()) {
+        relative_end = vm.argument(2).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
+        if (Value(relative_end).is_negative_infinity())
+            relative_end = 0;
     }
 
-    size_t from, to;
+    u64 from, to;
 
     if (relative_start < 0)
         from = max(length + relative_start, 0L);
@@ -1777,7 +1782,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::fill)
     else
         to = min(relative_end, length);
 
-    for (size_t i = from; i < to; i++) {
+    for (u64 i = from; i < to; i++) {
         this_object->set(i, vm.argument(0), true);
         if (vm.exception())
             return {};
