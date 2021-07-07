@@ -253,6 +253,7 @@ void DirectoryView::setup_icon_view()
 
     if (is_desktop()) {
         m_icon_view->set_frame_shape(Gfx::FrameShape::NoFrame);
+        m_icon_view->set_frame_thickness(0);
         m_icon_view->set_scrollbars_enabled(false);
         m_icon_view->set_fill_with_background_color(false);
         m_icon_view->set_draw_item_text_with_shadow(true);
