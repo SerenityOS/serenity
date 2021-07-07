@@ -1,5 +1,5 @@
---- Python-3.9.5/config.sub	2021-02-21 20:22:43.901024503 +0100
-+++ Python-3.9.5/config.sub	2021-02-21 20:24:35.079400552 +0100
+--- Python-3.9.6/config.sub	2021-02-21 20:22:43.901024503 +0100
++++ Python-3.9.6/config.sub	2021-02-21 20:24:35.079400552 +0100
 @@ -1485,6 +1485,8 @@
  	-oss*)
  		os=-sysv3
@@ -9,8 +9,8 @@
  	-svr4*)
  		os=-sysv4
  		;;
---- Python-3.9.5/configure.ac	2021-05-03 15:54:42.000000000 +0100
-+++ Python-3.9.5/configure.ac	2021-05-06 16:40:34.503092204 +0100
+--- Python-3.9.6/configure.ac	2021-05-03 15:54:42.000000000 +0100
++++ Python-3.9.6/configure.ac	2021-05-06 16:40:34.503092204 +0100
 @@ -391,6 +391,9 @@
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
@@ -39,8 +39,8 @@
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
---- Python-3.9.5/configure	2021-05-03 15:54:42.000000000 +0100
-+++ Python-3.9.5/configure	2021-05-06 16:39:39.108339089 +0100
+--- Python-3.9.6/configure	2021-07-07 19:12:57.444219201 +0100
++++ Python-3.9.6/configure	2021-07-07 19:14:55.184825202 +0100
 @@ -3295,6 +3295,9 @@
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
@@ -69,7 +69,7 @@
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
-@@ -9646,6 +9653,7 @@
+@@ -9649,6 +9656,7 @@
  #	    LINKFORSHARED="-Wl,-E -Wl,+s -Wl,+b\$(BINLIBDEST)/lib-dynload";;
  	Linux-android*) LINKFORSHARED="-pie -Xlinker -export-dynamic";;
  	Linux*|GNU*) LINKFORSHARED="-Xlinker -export-dynamic";;
