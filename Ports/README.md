@@ -62,6 +62,10 @@ By default, run `make` with the port's [`makeopts`](#makeopts).
 
 By default, run `make install` with the port's [`installopts`](#installopts).
 
+#### `shell`
+
+Open a shell in the `$workdir` with the build environment set.
+
 #### `installdepends`
 
 Install all ports from the port's [`depends`](#depends) list.
