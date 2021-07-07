@@ -218,9 +218,21 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
 
     Vector<Selector::ComplexSelector> selectors;
 
+    auto check_for_eof_or_whitespace = [&](T& current_value) -> bool {
+        if (current_value.is(Token::Type::EndOfFile))
+            return true;
+
+        if (current_value.is(Token::Type::Whitespace)) {
+            tokens.reconsume_current_input_token();
+            return true;
+        }
+        return false;
+    };
+
     auto parse_simple_selector = [&]() -> Optional<Selector::SimpleSelector> {
         auto current_value = tokens.next_token();
-        if (current_value.is(Token::Type::EndOfFile))
+        dbgln("parse_simple_selector, start token: {}", current_value.to_string());
+        if (check_for_eof_or_whitespace(current_value))
             return {};
 
         Selector::SimpleSelector::Type type;
@@ -245,7 +257,7 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
             value = ((Token)current_value).m_value.to_string();
         } else if (current_value.is(Token::Type::Delim) && ((Token)current_value).delim() == ".") {
             current_value = tokens.next_token();
-            if (current_value.is(Token::Type::EndOfFile))
+            if (check_for_eof_or_whitespace(current_value))
                 return {};
 
             if (!current_value.is(Token::Type::Ident)) {
@@ -267,7 +279,7 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
         simple_selector.value = value;
 
         current_value = tokens.next_token();
-        if (current_value.is(Token::Type::EndOfFile))
+        if (check_for_eof_or_whitespace(current_value))
             return simple_selector;
 
         // FIXME: Attribute selectors want to be their own Selector::SimpleSelector::Type according to the spec.
@@ -337,14 +349,6 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                 }
             }
 
-            while (attribute_parts.at(attribute_index).is(Token::Type::Whitespace)) {
-                attribute_index++;
-                if (attribute_index >= attribute_parts.size()) {
-                    dbgln("Attribute selector ended without a value to match.");
-                    return {};
-                }
-            }
-
             if (attribute_index >= attribute_parts.size()) {
                 dbgln("Attribute selector ended without a value to match.");
                 return {};
@@ -366,13 +370,13 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
             bool is_pseudo = false;
 
             current_value = tokens.next_token();
-            if (current_value.is(Token::Type::EndOfFile))
+            if (check_for_eof_or_whitespace(current_value))
                 return {};
 
             if (current_value.is(Token::Type::Colon)) {
                 is_pseudo = true;
                 current_value = tokens.next_token();
-                if (current_value.is(Token::Type::EndOfFile))
+                if (check_for_eof_or_whitespace(current_value))
                     return {};
             }
 
@@ -382,7 +386,7 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                 return {};
 
             current_value = tokens.next_token();
-            if (current_value.is(Token::Type::EndOfFile))
+            if (check_for_eof_or_whitespace(current_value))
                 return simple_selector;
 
             if (current_value.is(Token::Type::Ident)) {
@@ -452,6 +456,8 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
     auto parse_complex_selector = [&]() -> Optional<Selector::ComplexSelector> {
         auto relation = Selector::ComplexSelector::Relation::Descendant;
 
+        tokens.skip_whitespace();
+
         auto current_value = tokens.peek_token();
         if (current_value.is(Token::Type::Delim)) {
             auto delim = ((Token)current_value).delim();
@@ -475,12 +481,20 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                     relation = Selector::ComplexSelector::Relation::Column;
                     tokens.next_token();
                 }
+            } else {
+                dbgln("Unrecognized relation delimiter: '{}'", delim);
             }
         }
+
+        tokens.skip_whitespace();
 
         Vector<Selector::SimpleSelector> simple_selectors;
 
         for (;;) {
+            auto current_value = tokens.peek_token();
+            if (current_value.is(Token::Type::EndOfFile) || current_value.is(Token::Type::Whitespace))
+                break;
+
             auto component = parse_simple_selector();
             if (!component.has_value())
                 break;
@@ -495,17 +509,13 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
     };
 
     for (;;) {
-        auto complex = parse_complex_selector();
-        if (complex.has_value())
-            selectors.append(complex.value());
-
         auto current_value = tokens.peek_token();
         if (current_value.is(Token::Type::EndOfFile))
             break;
-        if (current_value.is(Token::Type::Comma))
-            break;
 
-        tokens.next_token();
+        auto complex = parse_complex_selector();
+        if (complex.has_value())
+            selectors.append(complex.value());
     }
 
     if (selectors.is_empty())
