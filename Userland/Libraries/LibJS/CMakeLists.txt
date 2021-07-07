@@ -82,7 +82,6 @@ set(SOURCES
     Runtime/MarkedValueList.cpp
     Runtime/MathObject.cpp
     Runtime/NativeFunction.cpp
-    Runtime/NativeProperty.cpp
     Runtime/NumberConstructor.cpp
     Runtime/NumberObject.cpp
     Runtime/NumberPrototype.cpp

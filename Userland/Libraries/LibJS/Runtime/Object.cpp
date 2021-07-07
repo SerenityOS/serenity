@@ -15,7 +15,6 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/NativeProperty.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/ProxyObject.h>
@@ -903,7 +902,7 @@ bool Object::set_immutable_prototype(Object* prototype)
     return false;
 }
 
-Optional<ValueAndAttributes> Object::storage_get(PropertyName const& property_name, CallNativeProperty call_native_property) const
+Optional<ValueAndAttributes> Object::storage_get(PropertyName const& property_name) const
 {
     VERIFY(property_name.is_valid());
 
@@ -923,8 +922,6 @@ Optional<ValueAndAttributes> Object::storage_get(PropertyName const& property_na
         value = m_storage[metadata->offset];
         attributes = metadata->attributes;
     }
-    if (value.is_native_property() && call_native_property == CallNativeProperty::Yes)
-        value = call_native_property_getter(value.as_native_property(), this);
     return ValueAndAttributes { .value = value, .attributes = attributes };
 }
 
@@ -944,15 +941,7 @@ void Object::storage_set(PropertyName const& property_name, ValueAndAttributes c
 
     if (property_name.is_number()) {
         auto index = property_name.as_number();
-        if (value.is_native_property()) {
-            m_indexed_properties.put(index, value, attributes);
-        } else {
-            auto existing_value = m_indexed_properties.get(index);
-            if (existing_value.has_value() && existing_value->value.is_native_property())
-                call_native_property_setter(existing_value->value.as_native_property(), this, value);
-            else
-                m_indexed_properties.put(index, value, attributes);
-        }
+        m_indexed_properties.put(index, value, attributes);
         return;
     }
 
@@ -998,15 +987,7 @@ void Object::storage_set(PropertyName const& property_name, ValueAndAttributes c
         VERIFY(metadata.has_value());
     }
 
-    if (value.is_native_property()) {
-        m_storage[metadata->offset] = value;
-    } else {
-        auto existing_value = m_storage[metadata->offset];
-        if (existing_value.is_native_property())
-            call_native_property_setter(existing_value.as_native_property(), this, value);
-        else
-            m_storage[metadata->offset] = value;
-    }
+    m_storage[metadata->offset] = value;
 }
 
 void Object::storage_delete(PropertyName const& property_name)
@@ -1090,7 +1071,7 @@ Value Object::get_without_side_effects(const PropertyName& property_name) const
 {
     auto* object = this;
     while (object) {
-        auto value_and_attributes = object->storage_get(property_name, CallNativeProperty::No);
+        auto value_and_attributes = object->storage_get(property_name);
         if (value_and_attributes.has_value())
             return value_and_attributes->value;
         object = object->prototype();
@@ -1111,11 +1092,6 @@ void Object::define_native_function(PropertyName const& property_name, Function<
     function->define_direct_property(vm.names.length, Value(length), Attribute::Configurable);
     function->define_direct_property(vm.names.name, js_string(vm.heap(), function_name), Attribute::Configurable);
     define_direct_property(property_name, function, attribute);
-}
-
-void Object::define_native_property(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
-{
-    define_direct_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
 }
 
 // 20.1.2.3.1 ObjectDefineProperties ( O, Properties ), https://tc39.es/ecma262/#sec-objectdefineproperties
@@ -1236,37 +1212,6 @@ Value Object::invoke_internal(const StringOrSymbol& property_name, Optional<Mark
         return {};
     }
     return vm.call(property.as_function(), this, move(arguments));
-}
-
-Value Object::call_native_property_getter(NativeProperty& property, Value this_value) const
-{
-    auto& vm = this->vm();
-    ExecutionContext execution_context;
-    if (auto* interpreter = vm.interpreter_if_exists())
-        execution_context.current_node = interpreter->current_node();
-    execution_context.is_strict_mode = vm.in_strict_mode();
-    execution_context.this_value = this_value;
-    vm.push_execution_context(execution_context, global_object());
-    if (vm.exception())
-        return {};
-    auto result = property.get(vm, global_object());
-    vm.pop_execution_context();
-    return result;
-}
-
-void Object::call_native_property_setter(NativeProperty& property, Value this_value, Value setter_value) const
-{
-    auto& vm = this->vm();
-    ExecutionContext execution_context;
-    if (auto* interpreter = vm.interpreter_if_exists())
-        execution_context.current_node = interpreter->current_node();
-    execution_context.is_strict_mode = vm.in_strict_mode();
-    execution_context.this_value = this_value;
-    vm.push_execution_context(execution_context, global_object());
-    if (vm.exception())
-        return;
-    property.set(vm, global_object(), setter_value);
-    vm.pop_execution_context();
 }
 
 }

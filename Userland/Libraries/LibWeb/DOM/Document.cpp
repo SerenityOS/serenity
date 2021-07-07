@@ -646,7 +646,7 @@ JS::Interpreter& Document::interpreter()
                     auto& object = value.as_object();
                     auto name = object.get_without_side_effects(vm.names.name).value_or(JS::js_undefined());
                     auto message = object.get_without_side_effects(vm.names.message).value_or(JS::js_undefined());
-                    if (name.is_accessor() || name.is_native_property() || message.is_accessor() || message.is_native_property()) {
+                    if (name.is_accessor() || message.is_accessor()) {
                         // The result is not going to be useful, let's just print the value. This affects DOMExceptions, for example.
                         dbgln("Unhandled JavaScript exception: {}", value);
                     } else {

@@ -318,8 +318,6 @@ String Value::to_string_without_side_effects() const
         return String::formatted("[object {}]", as_object().class_name());
     case Type::Accessor:
         return "<accessor>";
-    case Type::NativeProperty:
-        return "<native-property>";
     default:
         VERIFY_NOT_REACHED();
     }

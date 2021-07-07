@@ -111,12 +111,7 @@ public:
 
     // Implementation-specific storage abstractions
 
-    enum class CallNativeProperty {
-        Yes,
-        No,
-    };
-
-    Optional<ValueAndAttributes> storage_get(PropertyName const&, CallNativeProperty = CallNativeProperty::Yes) const;
+    Optional<ValueAndAttributes> storage_get(PropertyName const&) const;
     bool storage_has(PropertyName const&) const;
     void storage_set(PropertyName const&, ValueAndAttributes const&);
     void storage_delete(PropertyName const&);
@@ -129,7 +124,6 @@ public:
     void define_direct_accessor(PropertyName const&, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes);
 
     void define_native_function(PropertyName const&, Function<Value(VM&, GlobalObject&)>, i32 length, PropertyAttributes attributes);
-    void define_native_property(PropertyName const&, Function<Value(VM&, GlobalObject&)> getter, Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attributes);
     void define_native_accessor(PropertyName const&, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attributes);
 
     virtual bool is_function() const { return false; }
@@ -196,9 +190,6 @@ protected:
     bool m_has_parameter_map { false };
 
 private:
-    Value call_native_property_getter(NativeProperty& property, Value this_value) const;
-    void call_native_property_setter(NativeProperty& property, Value this_value, Value) const;
-
     void set_shape(Shape&);
 
     Object* prototype() { return shape().prototype(); }
