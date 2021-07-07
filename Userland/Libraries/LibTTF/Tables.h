@@ -133,6 +133,12 @@ public:
         Macintosh = 1,
         Windows = 3,
     };
+    enum class MacintoshLanguage {
+        English = 0,
+    };
+    enum class WindowsLanguage {
+        EnglishUnitedStates = 0x0409,
+    };
     static Optional<Name> from_slice(const ReadonlyBytes&);
 
     String family_name() const { return string_for_id(NameId::FamilyName); }
