@@ -268,7 +268,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 // 22.2.5.15 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 {
-    auto* regexp_object = regexp_object_from(vm, global_object);
+    auto* regexp_object = this_object_from(vm, global_object);
     if (!regexp_object)
         return {};
 
@@ -310,7 +310,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 // 22.2.5.7 RegExp.prototype [ @@match ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@match
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 {
-    auto* regexp_object = regexp_object_from(vm, global_object);
+    auto* regexp_object = this_object_from(vm, global_object);
     if (!regexp_object)
         return {};
     auto s = vm.argument(0).to_string(global_object);
@@ -380,7 +380,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     auto string_value = vm.argument(0);
     auto replace_value = vm.argument(1);
 
-    auto* regexp_object = regexp_object_from(vm, global_object);
+    auto* regexp_object = this_object_from(vm, global_object);
     if (!regexp_object)
         return {};
     auto string = string_value.to_string(global_object);
