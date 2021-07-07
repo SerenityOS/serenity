@@ -8,6 +8,7 @@
 
 #include <AK/Badge.h>
 #include <AK/Types.h>
+#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 
@@ -16,12 +17,11 @@ class PageTableEntry;
 
 class PageDirectoryEntry {
 public:
-    const PageTableEntry* page_table_base() const { return reinterpret_cast<PageTableEntry*>(m_raw & 0xfffff000u); }
-    PageTableEntry* page_table_base() { return reinterpret_cast<PageTableEntry*>(m_raw & 0xfffff000u); }
+    PhysicalPtr page_table_base() const { return PhysicalAddress::physical_page_base(m_raw); }
     void set_page_table_base(u32 value)
     {
         m_raw &= 0x8000000000000fffULL;
-        m_raw |= value & 0xfffff000;
+        m_raw |= PhysicalAddress::physical_page_base(value);
     }
 
     bool is_null() const { return m_raw == 0; }
@@ -79,11 +79,11 @@ private:
 
 class PageTableEntry {
 public:
-    void* physical_page_base() { return reinterpret_cast<void*>(m_raw & 0xfffff000u); }
-    void set_physical_page_base(u32 value)
+    PhysicalPtr physical_page_base() { return PhysicalAddress::physical_page_base(m_raw); }
+    void set_physical_page_base(PhysicalPtr value)
     {
         m_raw &= 0x8000000000000fffULL;
-        m_raw |= value & 0xfffff000;
+        m_raw |= PhysicalAddress::physical_page_base(value);
     }
 
     u64 raw() const { return (u32)m_raw; }
@@ -141,7 +141,7 @@ class PageDirectoryPointerTable {
 public:
     PageDirectoryEntry* directory(size_t index)
     {
-        return (PageDirectoryEntry*)(raw[index] & ~0xfffu);
+        return (PageDirectoryEntry*)(PhysicalAddress::physical_page_base(raw[index]));
     }
 
     u64 raw[4];

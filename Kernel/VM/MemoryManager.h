@@ -68,7 +68,7 @@ struct UsedMemoryRange {
 
 struct ContiguousReservedMemoryRange {
     PhysicalAddress start;
-    size_t length {};
+    PhysicalSize length {};
 };
 
 enum class PhysicalMemoryRangeType {
@@ -83,7 +83,7 @@ enum class PhysicalMemoryRangeType {
 struct PhysicalMemoryRange {
     PhysicalMemoryRangeType type { PhysicalMemoryRangeType::Unknown };
     PhysicalAddress start;
-    size_t length {};
+    PhysicalSize length {};
 };
 
 #define MM Kernel::MemoryManager::the()
@@ -151,12 +151,20 @@ public:
     OwnPtr<Region> allocate_kernel_region_with_vmobject(VMObject&, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     OwnPtr<Region> allocate_kernel_region_with_vmobject(const Range&, VMObject&, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
 
-    unsigned user_physical_pages() const { return m_user_physical_pages; }
-    unsigned user_physical_pages_used() const { return m_user_physical_pages_used; }
-    unsigned user_physical_pages_committed() const { return m_user_physical_pages_committed; }
-    unsigned user_physical_pages_uncommitted() const { return m_user_physical_pages_uncommitted; }
-    unsigned super_physical_pages() const { return m_super_physical_pages; }
-    unsigned super_physical_pages_used() const { return m_super_physical_pages_used; }
+    struct SystemMemoryInfo {
+        PhysicalSize user_physical_pages { 0 };
+        PhysicalSize user_physical_pages_used { 0 };
+        PhysicalSize user_physical_pages_committed { 0 };
+        PhysicalSize user_physical_pages_uncommitted { 0 };
+        PhysicalSize super_physical_pages { 0 };
+        PhysicalSize super_physical_pages_used { 0 };
+    };
+
+    SystemMemoryInfo get_system_memory_info()
+    {
+        ScopedSpinLock lock(s_mm_lock);
+        return m_system_memory_info;
+    }
 
     template<IteratorFunction<VMObject&> Callback>
     static void for_each_vmobject(Callback callback)
@@ -223,12 +231,7 @@ private:
     RefPtr<PhysicalPage> m_shared_zero_page;
     RefPtr<PhysicalPage> m_lazy_committed_page;
 
-    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_user_physical_pages { 0 };
-    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_user_physical_pages_used { 0 };
-    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_user_physical_pages_committed { 0 };
-    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_user_physical_pages_uncommitted { 0 };
-    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_super_physical_pages { 0 };
-    Atomic<unsigned, AK::MemoryOrder::memory_order_relaxed> m_super_physical_pages_used { 0 };
+    SystemMemoryInfo m_system_memory_info;
 
     NonnullRefPtrVector<PhysicalRegion> m_user_physical_regions;
     NonnullRefPtrVector<PhysicalRegion> m_super_physical_regions;
