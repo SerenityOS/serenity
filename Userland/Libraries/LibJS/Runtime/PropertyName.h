@@ -43,14 +43,21 @@ public:
 
     template<Integral T>
     PropertyName(T index)
-        : m_type(Type::Number)
-        , m_number(index)
     {
         // FIXME: Replace this with requires(IsUnsigned<T>)?
         //        Needs changes in various places using `int` (but not actually being in the negative range)
         VERIFY(index >= 0);
-        if constexpr (NumericLimits<T>::max() >= NumericLimits<u32>::max())
-            VERIFY(index < NumericLimits<u32>::max());
+        if constexpr (NumericLimits<T>::max() >= NumericLimits<u32>::max()) {
+            if (index >= NumericLimits<u32>::max()) {
+                m_string = String::number(index);
+                m_type = Type::String;
+                m_string_may_be_number = false;
+                return;
+            }
+        }
+
+        m_type = Type::Number;
+        m_number = index;
     }
 
     PropertyName(char const* chars)
