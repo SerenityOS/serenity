@@ -348,14 +348,6 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    if (is<Array>(this_object)) {
-        auto* array = static_cast<Array*>(this_object);
-        if (array->length_is_writable()) {
-            for (size_t i = 0; i < vm.argument_count(); ++i)
-                array->indexed_properties().append(vm.argument(i));
-            return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
-        }
-    }
     auto length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
@@ -434,14 +426,6 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    if (is<Array>(this_object)) {
-        auto* array = static_cast<Array*>(this_object);
-        if (array->length_is_writable()) {
-            if (array->indexed_properties().is_empty())
-                return js_undefined();
-            return array->indexed_properties().take_last(array).value.value_or(js_undefined());
-        }
-    }
     auto length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};

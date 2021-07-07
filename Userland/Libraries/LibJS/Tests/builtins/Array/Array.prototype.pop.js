@@ -26,4 +26,19 @@ describe("normal behavior", () => {
         expect(a.pop()).toBeUndefined();
         expect(a).toEqual([]);
     });
+
+    test("array with prototype indexed value", () => {
+        Array.prototype[1] = 1;
+
+        var a = [0];
+        a.length = 2;
+        expect(a[1]).toEqual(1);
+        expect(a.pop()).toEqual(1);
+
+        expect(a.length).toEqual(1);
+        expect(a).toEqual([0]);
+        expect(a[1]).toEqual(1);
+
+        delete Array.prototype[1];
+    });
 });
