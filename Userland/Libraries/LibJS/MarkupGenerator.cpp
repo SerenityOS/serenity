@@ -148,7 +148,7 @@ void MarkupGenerator::error_to_html(const Object& object, StringBuilder& html_ou
     auto& vm = object.vm();
     auto name = object.get_without_side_effects(vm.names.name).value_or(JS::js_undefined());
     auto message = object.get_without_side_effects(vm.names.message).value_or(JS::js_undefined());
-    if (name.is_accessor() || name.is_native_property() || message.is_accessor() || message.is_native_property()) {
+    if (name.is_accessor() || message.is_accessor()) {
         html_output.append(wrap_string_in_style(JS::Value(&object).to_string_without_side_effects(), StyleType::Invalid));
     } else {
         auto name_string = name.to_string_without_side_effects();

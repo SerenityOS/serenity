@@ -143,7 +143,6 @@ class HeapBlock;
 class Interpreter;
 class MarkedValueList;
 class NativeFunction;
-class NativeProperty;
 class ObjectEnvironment;
 class PrimitiveString;
 class PromiseReaction;
