@@ -82,6 +82,110 @@ static String escape_regexp_pattern(const RegExpObject& regexp_object)
     return pattern;
 }
 
+static RegexResult do_match(const Regex<ECMA262>& re, const StringView& subject)
+{
+    auto result = re.match(subject);
+    // The 'lastIndex' property is reset on failing tests (if 'global')
+    if (!result.success && re.options().has_flag_set(ECMAScriptFlags::Global))
+        re.start_offset = 0;
+
+    return result;
+}
+
+// 22.2.5.2.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
+static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, String const& string)
+{
+    // FIXME: This should try using dynamic properties for 'lastIndex',
+    //        and internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
+    auto& vm = global_object.vm();
+
+    auto str = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    StringView str_to_match = string;
+
+    // RegExps without "global" and "sticky" always start at offset 0.
+    if (!regexp_object.regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful)) {
+        regexp_object.set(vm.names.lastIndex, Value(0), true);
+        if (vm.exception())
+            return {};
+    }
+
+    auto last_index = regexp_object.get(vm.names.lastIndex);
+    if (vm.exception())
+        return {};
+    regexp_object.regex().start_offset = last_index.to_length(global_object);
+    if (vm.exception())
+        return {};
+
+    auto result = do_match(regexp_object.regex(), str_to_match);
+
+    regexp_object.set(vm.names.lastIndex, Value(regexp_object.regex().start_offset), true);
+    if (vm.exception())
+        return {};
+
+    if (!result.success)
+        return js_null();
+
+    auto& match = result.matches[0];
+
+    // FIXME: Do code point index correction if the Unicode flag is set.
+    auto* array = Array::create(global_object, result.n_capture_groups + 1);
+    if (vm.exception())
+        return {};
+    array->create_data_property_or_throw(vm.names.index, Value((i32)match.global_offset));
+    array->create_data_property_or_throw(vm.names.input, js_string(vm, string));
+    array->create_data_property_or_throw(0, js_string(vm, match.view.to_string()));
+
+    for (size_t i = 0; i < result.n_capture_groups; ++i) {
+        auto capture_value = js_undefined();
+        auto& capture = result.capture_group_matches[0][i + 1];
+        if (!capture.view.is_null())
+            capture_value = js_string(vm, capture.view.to_string());
+        array->create_data_property_or_throw(i + 1, capture_value);
+    }
+
+    Value groups = js_undefined();
+    if (result.n_named_capture_groups > 0) {
+        auto groups_object = Object::create(global_object, nullptr);
+        for (auto& entry : result.named_capture_group_matches[0])
+            groups_object->create_data_property_or_throw(entry.key, js_string(vm, entry.value.view.to_string()));
+        groups = move(groups_object);
+    }
+
+    array->create_data_property_or_throw(vm.names.groups, groups);
+
+    return array;
+}
+
+// 22.2.5.2.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
+static Value regexp_exec(GlobalObject& global_object, Object& rx, String const& string)
+{
+    auto& vm = global_object.vm();
+
+    auto exec = rx.get(vm.names.exec);
+    if (vm.exception())
+        return {};
+
+    if (exec.is_function()) {
+        auto result = vm.call(exec.as_function(), &rx, js_string(vm, string));
+        if (vm.exception())
+            return {};
+
+        if (!result.is_object() && !result.is_null())
+            vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObjectOrNull, result.to_string_without_side_effects());
+
+        return result;
+    }
+
+    auto regexp_object = regexp_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    return regexp_builtin_exec(global_object, *regexp_object, string);
+}
+
 // 22.2.5.3 get RegExp.prototype.dotAll, https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll
 // 22.2.5.5 get RegExp.prototype.global, https://tc39.es/ecma262/#sec-get-regexp.prototype.global
 // 22.2.5.6 get RegExp.prototype.ignoreCase, https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase
@@ -139,83 +243,18 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
     return js_string(vm, escape_regexp_pattern(*regexp_object));
 }
 
-RegexResult RegExpPrototype::do_match(const Regex<ECMA262>& re, const StringView& subject)
-{
-    auto result = re.match(subject);
-    // The 'lastIndex' property is reset on failing tests (if 'global')
-    if (!result.success && re.options().has_flag_set(ECMAScriptFlags::Global))
-        re.start_offset = 0;
-
-    return result;
-}
-
 // 22.2.5.2 RegExp.prototype.exec ( string ), https://tc39.es/ecma262/#sec-regexp.prototype.exec
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 {
-    // FIXME: This should try using dynamic properties for 'lastIndex',
-    //        and internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
-    auto regexp_object = regexp_object_from(vm, global_object);
+    auto* regexp_object = regexp_object_from(vm, global_object);
     if (!regexp_object)
         return {};
 
-    auto str = vm.argument(0).to_string(global_object);
+    auto string = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
 
-    StringView str_to_match = str;
-
-    // RegExps without "global" and "sticky" always start at offset 0.
-    if (!regexp_object->regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful)) {
-        regexp_object->set(vm.names.lastIndex, Value(0), true);
-        if (vm.exception())
-            return {};
-    }
-
-    auto last_index = regexp_object->get(vm.names.lastIndex);
-    if (vm.exception())
-        return {};
-    regexp_object->regex().start_offset = last_index.to_length(global_object);
-    if (vm.exception())
-        return {};
-
-    auto result = do_match(regexp_object->regex(), str_to_match);
-
-    regexp_object->set(vm.names.lastIndex, Value(regexp_object->regex().start_offset), true);
-    if (vm.exception())
-        return {};
-
-    if (!result.success)
-        return js_null();
-
-    auto& match = result.matches[0];
-
-    // FIXME: Do code point index correction if the Unicode flag is set.
-    auto* array = Array::create(global_object, result.n_capture_groups + 1);
-    if (vm.exception())
-        return {};
-    array->create_data_property_or_throw(vm.names.index, Value((i32)match.global_offset));
-    array->create_data_property_or_throw(vm.names.input, js_string(vm, str));
-    array->create_data_property_or_throw(0, js_string(vm, match.view.to_string()));
-
-    for (size_t i = 0; i < result.n_capture_groups; ++i) {
-        auto capture_value = js_undefined();
-        auto& capture = result.capture_group_matches[0][i + 1];
-        if (!capture.view.is_null())
-            capture_value = js_string(vm, capture.view.to_string());
-        array->create_data_property_or_throw(i + 1, capture_value);
-    }
-
-    Value groups = js_undefined();
-    if (result.n_named_capture_groups > 0) {
-        auto groups_object = Object::create(global_object, nullptr);
-        for (auto& entry : result.named_capture_group_matches[0])
-            groups_object->create_data_property_or_throw(entry.key, js_string(vm, entry.value.view.to_string()));
-        groups = move(groups_object);
-    }
-
-    array->create_data_property_or_throw(vm.names.groups, groups);
-
-    return array;
+    return regexp_builtin_exec(global_object, *regexp_object, string);
 }
 
 // 22.2.5.15 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
