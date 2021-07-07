@@ -116,6 +116,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`python3`](python3/)                  | Python                                                     | 3.9.5                    | https://www.python.org/                                                        |
 | [`quake`](quake/)                      | Quake                                                      | 0.65                     | https://github.com/SerenityOS/SerenityQuake                                    |
 | [`quake2`](quake2/)                    | QuakeII                                                    | 0.1                      | https://github.com/SerenityOS/SerenityQuakeII                                  |
+| [`r0`](r0/)                            | r0 (minimalistic commandline hexadecimal editor)           | 0.8                      | https://github.com/radareorg/r0
 | [`readline`](readline/)                | GNU Readline Library                                       | 8.1                      | https://tiswww.case.edu/php/chet/readline/rltop.html                           |
 | [`rsync`](rsync/)                      | rsync                                                      | 3.1.3                    | https://rsync.samba.org/                                                       |
 | [`sam`](sam/)                          | Software Automatic Mouth (SAM)                             | c86ea39                  | https://github.com/vidarh/SAM                                                  |
