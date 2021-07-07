@@ -701,9 +701,6 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tok
 
         tokens.reconsume_current_input_token();
         auto value = consume_a_component_value(tokens);
-        if (value.is(Token::Type::Whitespace))
-            continue;
-
         block->m_values.append(value);
     }
 }
@@ -733,9 +730,6 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
 
         tokens.reconsume_current_input_token();
         auto value = consume_a_component_value(tokens);
-        if (value.is(Token::Type::Whitespace))
-            continue;
-
         function->m_values.append(value.to_string());
     }
 
