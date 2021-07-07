@@ -107,11 +107,6 @@ static Processor s_bsp_processor; // global but let's keep it "private"
 
 extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
 {
-    if ((FlatPtr)&end_of_kernel_image >= 0xc2000000u) {
-        // The kernel has grown too large again!
-        asm volatile("cli;hlt");
-    }
-
     g_in_early_boot = true;
     setup_serial_debug();
 
