@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringUtils.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <alloca.h>
@@ -18,6 +19,7 @@ static bool flag_print_uid = false;
 static bool flag_print_gid = false;
 static bool flag_print_name = false;
 static bool flag_print_gid_all = false;
+static String user_str;
 
 int main(int argc, char** argv)
 {
@@ -46,6 +48,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_print_gid, "Print GID", nullptr, 'g');
     args_parser.add_option(flag_print_gid_all, "Print all GIDs", nullptr, 'G');
     args_parser.add_option(flag_print_name, "Print name", nullptr, 'n');
+    args_parser.add_positional_argument(user_str, "User name/UID to query", "USER", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     if (flag_print_name && !(flag_print_uid || flag_print_gid || flag_print_gid_all)) {
@@ -58,8 +61,28 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto account = Core::Account::self(Core::Account::Read::PasswdOnly);
-    return print_id_objects(account);
+    Optional<Core::Account> account;
+    if (!user_str.is_empty()) {
+        if (auto user_id = user_str.to_uint(); user_id.has_value()) {
+            auto result = Core::Account::from_uid(user_id.value(), Core::Account::Read::PasswdOnly);
+            if (result.is_error()) {
+                warnln("Couldn't retrieve user id '{}': {}", user_str, result.error());
+                return 1;
+            }
+            account = result.release_value();
+        } else {
+            auto result = Core::Account::from_name(user_str.characters(), Core::Account::Read::PasswdOnly);
+            if (result.is_error()) {
+                warnln("Couldn't retrieve user name '{}': {}", user_str, result.error());
+                return 1;
+            }
+            account = result.release_value();
+        }
+    } else {
+        account = Core::Account::self(Core::Account::Read::PasswdOnly);
+    }
+
+    return print_id_objects(account.value());
 }
 
 static bool print_uid_object(Core::Account const& account)
