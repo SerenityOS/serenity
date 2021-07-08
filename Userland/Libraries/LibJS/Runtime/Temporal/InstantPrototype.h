@@ -17,6 +17,9 @@ public:
     explicit InstantPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~InstantPrototype() override = default;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(epoch_seconds_getter);
 };
 
 }

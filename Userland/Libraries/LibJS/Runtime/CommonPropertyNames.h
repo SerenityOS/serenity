@@ -113,6 +113,7 @@ namespace JS {
     P(endsWith)                              \
     P(entries)                               \
     P(enumerable)                            \
+    P(epochSeconds)                          \
     P(error)                                 \
     P(errors)                                \
     P(escape)                                \
