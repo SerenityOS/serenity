@@ -92,7 +92,8 @@ int main(int argc, char** argv)
         if (window->is_maximized())
             return;
 
-        if (scale == 100) {
+        if (scale == 100 && !widget.scaled_for_first_image()) {
+            widget.set_scaled_for_first_image(true);
             auto w = min(GUI::Desktop::the().rect().width(), rect.width() + 4);
             auto h = min(GUI::Desktop::the().rect().height(), rect.height() + widget.toolbar_height() + 6);
             window->resize(w, h);
