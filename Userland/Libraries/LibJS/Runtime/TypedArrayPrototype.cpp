@@ -30,6 +30,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_accessor(vm.names.byteOffset, byte_offset_getter, nullptr, Attribute::Configurable);
     define_native_function(vm.names.at, at, 1, attr);
     define_native_function(vm.names.every, every, 1, attr);
+    define_native_function(vm.names.fill, fill, 1, attr);
     define_native_function(vm.names.find, find, 1, attr);
     define_native_function(vm.names.findIndex, find_index, 1, attr);
     define_native_function(vm.names.forEach, for_each, 1, attr);
@@ -161,6 +162,69 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::every)
         return IterationDecision::Continue;
     });
     return Value(result);
+}
+
+// 23.2.3.8 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
+{
+    auto typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+
+    auto length = typed_array->array_length();
+
+    Value value;
+    if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt) {
+        value = vm.argument(0).to_bigint(global_object);
+        if (vm.exception())
+            return {};
+    } else {
+        value = vm.argument(0).to_number(global_object);
+        if (vm.exception())
+            return {};
+    }
+
+    auto relative_start = vm.argument(1).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    u32 k;
+    if (Value(relative_start).is_negative_infinity())
+        k = 0;
+    else if (relative_start < 0)
+        k = max(length + relative_start, 0);
+    else
+        k = min(relative_start, length);
+
+    double relative_end;
+    if (vm.argument(2).is_undefined()) {
+        relative_end = length;
+    } else {
+        relative_end = vm.argument(2).to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
+    }
+
+    u32 final;
+    if (Value(relative_end).is_negative_infinity())
+        final = 0;
+    else if (relative_end < 0)
+        final = max(length + relative_end, 0);
+    else
+        final = min(relative_end, length);
+
+    if (typed_array->viewed_array_buffer()->is_detached()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return {};
+    }
+
+    for (; k < final; ++k) {
+        typed_array->set(k, value, true);
+        if (vm.exception())
+            return {};
+    }
+
+    return typed_array;
 }
 
 // 23.2.3.10 %TypedArray%.prototype.find ( predicate [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.find
