@@ -20,6 +20,8 @@
 
 namespace FileManager {
 
+void spawn_terminal(String const& directory);
+
 class LauncherHandler : public RefCounted<LauncherHandler> {
 public:
     LauncherHandler(const NonnullRefPtr<Desktop::Launcher::Details>& details)
