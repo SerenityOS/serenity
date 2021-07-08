@@ -112,6 +112,8 @@ public:
     template<typename T>
     Optional<Selector> parse_single_selector(TokenStream<T>&, bool is_relative = false);
 
+    Optional<Selector::SimpleSelector::NthChildPattern> parse_nth_child_pattern(TokenStream<StyleComponentValueRule>&);
+
     // FIXME: https://www.w3.org/TR/selectors-4/
     // Contrary to the name, these parse a comma-separated list of selectors, according to the spec.
     Vector<Selector> parse_a_selector();
