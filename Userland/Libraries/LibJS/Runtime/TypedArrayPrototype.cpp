@@ -40,6 +40,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.entries, entries, 0, attr);
     define_native_function(vm.names.set, set, 1, attr);
     define_native_function(vm.names.reverse, reverse, 0, attr);
+    define_native_function(vm.names.copyWithin, copy_within, 2, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
@@ -526,6 +527,185 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
     }
 
     // 7. Return O.
+    return typed_array;
+}
+
+// 23.2.3.5 %TypedArray%.prototype.copyWithin ( target, start [ , end ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
+    auto* typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+
+    // 3. Let len be O.[[ArrayLength]].
+    auto length = typed_array->array_length();
+
+    // 4. Let relativeTarget be ? ToIntegerOrInfinity(target).
+    auto relative_target = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    double to;
+    if (Value(relative_target).is_negative_infinity()) {
+        // 5. If relativeTarget is -∞, let to be 0.
+        to = 0.0;
+    } else if (relative_target < 0) {
+        // 6. Else if relativeTarget < 0, let to be max(len + relativeTarget, 0)
+        to = max(length + relative_target, 0.0);
+    } else {
+        // 7. Else, let to be min(relativeTarget, len).
+        to = min(relative_target, (double)length);
+    }
+
+    // 8. Let relativeStart be ? ToIntegerOrInfinity(start).
+    auto relative_start = vm.argument(1).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    double from;
+    if (Value(relative_start).is_negative_infinity()) {
+        // 9. If relativeStart is -∞, let from be 0.
+        from = 0.0;
+    } else if (relative_start < 0) {
+        // 10. Else if relativeStart < 0, let from be max(len + relativeStart, 0).
+        from = max(length + relative_start, 0.0);
+    } else {
+        // 11. Else, let from be min(relativeStart, len).
+        from = min(relative_start, (double)length);
+    }
+
+    double relative_end;
+
+    // 12. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
+    if (vm.argument(2).is_undefined()) {
+        relative_end = length;
+    } else {
+        relative_end = vm.argument(2).to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
+    }
+
+    double final;
+    if (Value(relative_end).is_negative_infinity()) {
+        // 13. If relativeEnd is -∞, let final be 0.
+        final = 0.0;
+    } else if (relative_end < 0) {
+        // 14. Else if relativeEnd < 0, let final be max(len + relativeEnd, 0).
+        final = max(length + relative_end, 0.0);
+    } else {
+        // 15. Else, let final be min(relativeEnd, len).
+        final = min(relative_end, (double)length);
+    }
+
+    // 16. Let count be min(final - from, len - to).
+    double count = min(final - from, length - to);
+
+    // 17. If count > 0, then
+    if (count > 0.0) {
+        // a. NOTE: The copying must be performed in a manner that preserves the bit-level encoding of the source data.
+
+        // b. Let buffer be O.[[ViewedArrayBuffer]].
+        auto buffer = typed_array->viewed_array_buffer();
+
+        // c. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+        if (buffer->is_detached()) {
+            vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+            return {};
+        }
+
+        // d. Let typedArrayName be the String value of O.[[TypedArrayName]].
+        // e. Let elementSize be the Element Size value specified in Table 64 for typedArrayName.
+        auto element_size = typed_array->element_size();
+
+        // f. Let byteOffset be O.[[ByteOffset]].
+        auto byte_offset = typed_array->byte_offset();
+
+        // FIXME: Not exactly sure what we should do when overflow occurs.
+        //        Just return as if succeeded for now. (This goes for steps g to j)
+
+        // g. Let toByteIndex be to × elementSize + byteOffset.
+        Checked<size_t> to_byte_index_checked = static_cast<size_t>(to);
+        to_byte_index_checked *= element_size;
+        to_byte_index_checked += byte_offset;
+        if (to_byte_index_checked.has_overflow()) {
+            dbgln("TypedArrayPrototype::copy_within: to_byte_index overflowed, returning as if succeeded.");
+            return typed_array;
+        }
+
+        // h. Let fromByteIndex be from × elementSize + byteOffset.
+        Checked<size_t> from_byte_index_checked = static_cast<size_t>(from);
+        from_byte_index_checked *= element_size;
+        from_byte_index_checked += byte_offset;
+        if (from_byte_index_checked.has_overflow()) {
+            dbgln("TypedArrayPrototype::copy_within: from_byte_index_checked overflowed, returning as if succeeded.");
+            return typed_array;
+        }
+
+        // i. Let countBytes be count × elementSize.
+        Checked<size_t> count_bytes_checked = static_cast<size_t>(count);
+        count_bytes_checked *= element_size;
+        if (count_bytes_checked.has_overflow()) {
+            dbgln("TypedArrayPrototype::copy_within: count_bytes_checked overflowed, returning as if succeeded.");
+            return typed_array;
+        }
+
+        auto to_byte_index = to_byte_index_checked.value();
+        auto from_byte_index = from_byte_index_checked.value();
+        auto count_bytes = count_bytes_checked.value();
+
+        Checked<size_t> from_plus_count = from_byte_index;
+        from_plus_count += count_bytes;
+        if (from_plus_count.has_overflow()) {
+            dbgln("TypedArrayPrototype::copy_within: from_plus_count overflowed, returning as if succeeded.");
+            return typed_array;
+        }
+
+        i8 direction;
+
+        // j. If fromByteIndex < toByteIndex and toByteIndex < fromByteIndex + countBytes, then
+        if (from_byte_index < to_byte_index && to_byte_index < from_plus_count.value()) {
+            // i. Let direction be -1.
+            direction = -1;
+
+            // ii. Set fromByteIndex to fromByteIndex + countBytes - 1.
+            from_byte_index = from_plus_count.value() - 1;
+
+            Checked<size_t> to_plus_count = to_byte_index;
+            to_plus_count += count_bytes;
+            if (to_plus_count.has_overflow()) {
+                dbgln("TypedArrayPrototype::copy_within: to_plus_count overflowed, returning as if succeeded.");
+                return typed_array;
+            }
+
+            // iii. Set toByteIndex to toByteIndex + countBytes - 1.
+            to_byte_index = to_plus_count.value() - 1;
+        } else {
+            // k. Else,
+            // i. Let direction be 1.
+            direction = 1;
+        }
+
+        // l. Repeat, while countBytes > 0,
+        for (; count_bytes > 0; --count_bytes) {
+            // i. Let value be GetValueFromBuffer(buffer, fromByteIndex, Uint8, true, Unordered).
+            auto value = buffer->get_value<u8>(from_byte_index, true, ArrayBuffer::Order::Unordered);
+
+            // ii. Perform SetValueInBuffer(buffer, toByteIndex, Uint8, value, true, Unordered).
+            buffer->set_value<u8>(to_byte_index, value, true, ArrayBuffer::Order::Unordered);
+
+            // iii. Set fromByteIndex to fromByteIndex + direction.
+            from_byte_index += direction;
+
+            // iv. Set toByteIndex to toByteIndex + direction.
+            to_byte_index += direction;
+
+            // v. Set countBytes to countBytes - 1.
+        }
+    }
+
+    // 18. Return O.
     return typed_array;
 }
 
