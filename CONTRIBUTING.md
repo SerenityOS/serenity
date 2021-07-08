@@ -65,17 +65,19 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 
 ## Pull Request Q&A
 
-### I've submitted a PR and it passes CI. When can I expect to get first reviewer feedback?
+### I've submitted a PR and it passes CI. When can I expect to get some review feedback?
 
-While unadvertised PR's may get randomly merged by curious reviewers, you will have a much smoother time if you engage with the community on Discord.
+While unadvertised PR's may get randomly merged by curious maintainers, you will have a much smoother time if you engage with the community on Discord.
 
-### If my PR isn't getting attention, how long should I wait before pinging one of the project reviewers?
+### If my PR isn't getting attention, how long should I wait before pinging one of the project maintainers?
 
-Ping them right away if it's something urgent! If it's less urgent, advertise your PR on Discord and ask if someone could review it.
+Ping them right away if it's something urgent! If it's less urgent, advertise your PR on Discord (`#code-review`) and ask if someone could review it.
 
-### Who are the project reviewers?
+### Who are the project maintainers?
 
-The project reviewers at this time are [@awesomekling](https://github.com/awesomekling), [@linusg](https://github.com/linusg), [@alimpfard](https://github.com/alimpfard), and [@gunnarbeutner](https://github.com/gunnarbeutner).
+The project maintainers at this time are [@awesomekling](https://github.com/awesomekling), [@linusg](https://github.com/linusg), [@alimpfard](https://github.com/alimpfard), and [@gunnarbeutner](https://github.com/gunnarbeutner).
+
+Maintainership is by invitation only and does not correlate with any particular metric.
 
 ### Is there a policy for branches/PRs that haven't been touched in X days? Should they be closed?
 
