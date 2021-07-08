@@ -208,7 +208,7 @@
                     }
 
                     @GUI::Widget {
-                        fixed_width: 16
+                        fixed_width: 12
                     }
 
                     @GUI::ComboBox {
