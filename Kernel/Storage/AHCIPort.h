@@ -36,6 +36,7 @@ class AHCIPort : public RefCounted<AHCIPort> {
 
 public:
     UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPort> create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
+    ~AHCIPort();
 
     u32 port_index() const { return m_port_index; }
     u32 representative_port_index() const { return port_index() + 1; }
@@ -121,6 +122,7 @@ private:
     AHCI::PortInterruptEnableBitField m_interrupt_enable;
 
     RefPtr<ScatterGatherList> m_current_scatter_list;
+    NonnullOwnPtr<WorkQueue> m_io_work_queue;
     bool m_disabled_by_firmware { false };
 };
 }

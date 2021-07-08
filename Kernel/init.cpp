@@ -163,14 +163,12 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
     (void)SerialDevice::must_create(2).leak_ref();
     (void)SerialDevice::must_create(3).leak_ref();
 
-    VMWareBackdoor::the(); // don't wait until first mouse packet
-    HIDManagement::initialize();
-
     Thread::initialize();
     Process::initialize();
     Scheduler::initialize();
 
-    WorkQueue::initialize();
+    VMWareBackdoor::the(); // don't wait until first mouse packet
+    HIDManagement::initialize();
 
     {
         RefPtr<Thread> init_stage2_thread;

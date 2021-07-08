@@ -83,6 +83,7 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, u8 irq,
     , m_channel_type(type)
     , m_io_group(io_group)
     , m_parent_controller(controller)
+    , m_io_work_queue(adopt_own_if_nonnull(new WorkQueue("IDEChannel WorkQueue")).release_nonnull())
 {
     initialize();
 }
@@ -92,6 +93,7 @@ UNMAP_AFTER_INIT IDEChannel::IDEChannel(const IDEController& controller, IOAddre
     , m_channel_type(type)
     , m_io_group(io_group)
     , m_parent_controller(controller)
+    , m_io_work_queue(adopt_own_if_nonnull(new WorkQueue("IDEChannel WorkQueue")).release_nonnull())
 {
     initialize();
 }
@@ -132,7 +134,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     // This is important so that we can safely write the buffer back,
     // which could cause page faults. Note that this may be called immediately
     // before Processor::deferred_call_queue returns!
-    g_io_work->queue([this, result]() {
+    m_io_work_queue->queue([this, result]() {
         dbgln_if(PATA_DEBUG, "IDEChannel::complete_current_request result: {}", (int)result);
         Locker locker(m_lock);
         VERIFY(m_current_request);
@@ -221,7 +223,7 @@ bool IDEChannel::handle_irq(const RegisterState&)
     // Now schedule reading/writing the buffer as soon as we leave the irq handler.
     // This is important so that we can safely access the buffers, which could
     // trigger page faults
-    g_io_work->queue([this]() {
+    m_io_work_queue->queue([this]() {
         Locker locker(m_lock);
         ScopedSpinLock lock(m_request_lock);
         if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {

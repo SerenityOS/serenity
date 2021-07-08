@@ -11,16 +11,13 @@
 
 namespace Kernel {
 
-extern WorkQueue* g_io_work;
-
 class WorkQueue {
     AK_MAKE_NONCOPYABLE(WorkQueue);
     AK_MAKE_NONMOVABLE(WorkQueue);
 
 public:
-    static void initialize();
-
-    WorkQueue(const char*);
+    WorkQueue(String&&);
+    ~WorkQueue();
 
     void queue(void (*function)(void*), void* data = nullptr, void (*free_data)(void*) = nullptr)
     {
@@ -53,6 +50,7 @@ private:
     WaitQueue m_wait_queue;
     IntrusiveList<WorkItem, RawPtr<WorkItem>, &WorkItem::m_node> m_items;
     SpinLock<u8> m_lock;
+    bool m_destroying { false };
 };
 
 }

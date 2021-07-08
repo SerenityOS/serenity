@@ -69,7 +69,7 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
         break;
     default:
         if ((m_modifiers & Mod_Alt) != 0 && ch >= 2 && ch <= ConsoleManagement::s_max_virtual_consoles + 1) {
-            g_io_work->queue([ch]() {
+            m_io_work_queue->queue([ch]() {
                 ConsoleManagement::the().switch_to(ch - 0x02);
             });
         }
@@ -107,6 +107,7 @@ UNMAP_AFTER_INIT PS2KeyboardDevice::PS2KeyboardDevice(const I8042Controller& ps2
     : IRQHandler(IRQ_KEYBOARD)
     , KeyboardDevice()
     , I8042Device(ps2_controller)
+    , m_io_work_queue(adopt_own_if_nonnull(new WorkQueue("PS2KeyboardDevice WorkQueue")).release_nonnull())
 {
 }
 

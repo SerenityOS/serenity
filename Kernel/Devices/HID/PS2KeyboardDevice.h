@@ -43,6 +43,8 @@ private:
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "KeyboardDevice"; }
+
+    NonnullOwnPtr<WorkQueue> m_io_work_queue;
 };
 
 }

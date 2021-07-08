@@ -24,14 +24,20 @@ UNMAP_AFTER_INIT NonnullRefPtr<BMIDEChannel> BMIDEChannel::create(const IDEContr
 
 UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(const IDEController& controller, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
     : IDEChannel(controller, io_group, type)
+    , m_io_work_queue(adopt_own_if_nonnull(new WorkQueue("BMIDEChannel WorkQueue")).release_nonnull())
 {
     initialize();
 }
 
 UNMAP_AFTER_INIT BMIDEChannel::BMIDEChannel(const IDEController& controller, u8 irq, IDEChannel::IOAddressGroup io_group, IDEChannel::ChannelType type)
     : IDEChannel(controller, irq, io_group, type)
+    , m_io_work_queue(adopt_own_if_nonnull(new WorkQueue("BMIDEChannel WorkQueue")).release_nonnull())
 {
     initialize();
+}
+
+UNMAP_AFTER_INIT BMIDEChannel::~BMIDEChannel()
+{
 }
 
 UNMAP_AFTER_INIT void BMIDEChannel::initialize()
@@ -114,7 +120,7 @@ void BMIDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult re
     // This is important so that we can safely write the buffer back,
     // which could cause page faults. Note that this may be called immediately
     // before Processor::deferred_call_queue returns!
-    g_io_work->queue([this, result]() {
+    m_io_work_queue->queue([this, result]() {
         dbgln_if(PATA_DEBUG, "BMIDEChannel::complete_current_request result: {}", (int)result);
         ScopedSpinLock lock(m_request_lock);
         VERIFY(m_current_request);

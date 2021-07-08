@@ -38,6 +38,7 @@ private:
     // ^DiskDevice
     virtual const char* class_name() const override;
     NonnullRefPtr<AHCIPort> m_port;
+    NonnullOwnPtr<WorkQueue> m_io_queue;
 };
 
 }

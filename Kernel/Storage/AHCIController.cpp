@@ -12,6 +12,7 @@
 #include <Kernel/Storage/AHCIController.h>
 #include <Kernel/Storage/SATADiskDevice.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/WorkQueue.h>
 
 namespace Kernel {
 

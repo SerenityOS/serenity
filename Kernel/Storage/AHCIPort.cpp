@@ -31,6 +31,7 @@ AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters&
     , m_parent_handler(handler)
     , m_interrupt_status((volatile u32&)m_port_registers.is)
     , m_interrupt_enable((volatile u32&)m_port_registers.ie)
+    , m_io_work_queue(adopt_own_if_nonnull(new WorkQueue(String::formatted("AHCI Port #{} WorkQueue", representative_port_index()))).release_nonnull())
 {
     if (is_interface_disabled()) {
         m_disabled_by_firmware = true;
@@ -55,6 +56,10 @@ AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters&
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list region at {}", representative_port_index(), m_command_list_region->vaddr());
 }
 
+AHCIPort::~AHCIPort()
+{
+}
+
 void AHCIPort::clear_sata_error_register() const
 {
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Clearing SATA error register.", representative_port_index());
@@ -74,13 +79,13 @@ void AHCIPort::handle_interrupt()
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::INF)) {
         // We need to defer the reset, because we can receive interrupts when
         // resetting the device.
-        g_io_work->queue([this]() {
+        m_io_work_queue->queue([this]() {
             reset();
         });
         return;
     }
     if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::IF) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::TFE) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBD) || m_interrupt_status.is_set(AHCI::PortInterruptFlag::HBF)) {
-        g_io_work->queue([this]() {
+        m_io_work_queue->queue([this]() {
             recover_from_fatal_error();
         });
         return;
@@ -94,7 +99,7 @@ void AHCIPort::handle_interrupt()
         if (!m_current_request) {
             dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request handled, probably identify request", representative_port_index());
         } else {
-            g_io_work->queue([this]() {
+            m_io_work_queue->queue([this]() {
                 dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request handled", representative_port_index());
                 Locker locker(m_lock);
                 VERIFY(m_current_request);

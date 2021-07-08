@@ -162,5 +162,6 @@ protected:
 
     IOAddressGroup m_io_group;
     NonnullRefPtr<IDEController> m_parent_controller;
+    NonnullOwnPtr<WorkQueue> m_io_work_queue;
 };
 }

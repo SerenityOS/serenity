@@ -27,7 +27,7 @@ class BMIDEChannel final : public IDEChannel {
 public:
     static NonnullRefPtr<BMIDEChannel> create(const IDEController&, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
     static NonnullRefPtr<BMIDEChannel> create(const IDEController&, u8 irq, IDEChannel::IOAddressGroup, IDEChannel::ChannelType type);
-    virtual ~BMIDEChannel() override {};
+    virtual ~BMIDEChannel() override;
 
     virtual bool is_dma_enabled() const override { return true; };
 
@@ -51,5 +51,6 @@ private:
     OwnPtr<Region> m_dma_buffer_region;
     RefPtr<PhysicalPage> m_prdt_page;
     RefPtr<PhysicalPage> m_dma_buffer_page;
+    NonnullOwnPtr<WorkQueue> m_io_work_queue;
 };
 }

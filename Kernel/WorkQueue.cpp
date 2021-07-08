@@ -12,18 +12,11 @@
 
 namespace Kernel {
 
-WorkQueue* g_io_work;
-
-UNMAP_AFTER_INIT void WorkQueue::initialize()
-{
-    g_io_work = new WorkQueue("IO WorkQueue");
-}
-
-UNMAP_AFTER_INIT WorkQueue::WorkQueue(const char* name)
+WorkQueue::WorkQueue(String&& name)
 {
     RefPtr<Thread> thread;
-    Process::create_kernel_process(thread, name, [this] {
-        for (;;) {
+    Process::create_kernel_process(thread, move(name), [this] {
+        while (!m_destroying) {
             WorkItem* item;
             bool have_more;
             {
@@ -43,6 +36,15 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(const char* name)
     });
     // If we can't create the thread we're in trouble...
     m_thread = thread.release_nonnull();
+}
+
+WorkQueue::~WorkQueue()
+{
+    {
+        ScopedSpinLock lock(m_lock);
+        m_destroying = true;
+    }
+    m_wait_queue.wake_one();
 }
 
 void WorkQueue::do_queue(WorkItem* item)

@@ -10,6 +10,7 @@
 #include <Kernel/Storage/AHCIController.h>
 #include <Kernel/Storage/IDEChannel.h>
 #include <Kernel/Storage/SATADiskDevice.h>
+#include <Kernel/WorkQueue.h>
 
 namespace Kernel {
 
@@ -21,6 +22,7 @@ NonnullRefPtr<SATADiskDevice> SATADiskDevice::create(const AHCIController& contr
 SATADiskDevice::SATADiskDevice(const AHCIController& controller, const AHCIPort& port, size_t sector_size, u64 max_addressable_block)
     : StorageDevice(controller, sector_size, max_addressable_block)
     , m_port(port)
+    , m_io_queue(adopt_own_if_nonnull(new WorkQueue(String::formatted("SATADiskDevice {} WorkQueue", device_name()))).release_nonnull())
 {
 }
 
