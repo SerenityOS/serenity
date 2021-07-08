@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <alloca.h>
 #include <grp.h>
@@ -11,7 +12,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static int print_id_objects();
+static int print_id_objects(Core::Account const&);
 
 static bool flag_print_uid = false;
 static bool flag_print_gid = false;
@@ -57,100 +58,82 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    int status = print_id_objects();
-    return status;
+    auto account = Core::Account::self(Core::Account::Read::PasswdOnly);
+    return print_id_objects(account);
 }
 
-static bool print_uid_object(uid_t uid)
+static bool print_uid_object(Core::Account const& account)
 {
-    if (flag_print_name) {
-        struct passwd* pw = getpwuid(uid);
-        out("{}", pw ? pw->pw_name : "n/a");
-    } else
-        out("{}", uid);
+    if (flag_print_name)
+        out("{}", account.username());
+    else
+        out("{}", account.uid());
 
     return true;
 }
 
-static bool print_gid_object(gid_t gid)
+static bool print_gid_object(Core::Account const& account)
 {
     if (flag_print_name) {
-        struct group* gr = getgrgid(gid);
+        struct group* gr = getgrgid(account.gid());
         out("{}", gr ? gr->gr_name : "n/a");
     } else
-        out("{}", gid);
+        out("{}", account.gid());
+
     return true;
 }
 
-static bool print_gid_list()
+static bool print_gid_list(Core::Account const& account)
 {
-    int extra_gid_count = getgroups(0, nullptr);
-    if (extra_gid_count) {
-        auto* extra_gids = (gid_t*)alloca(extra_gid_count * sizeof(gid_t));
-        int rc = getgroups(extra_gid_count, extra_gids);
-
-        if (rc < 0) {
-            perror("\ngetgroups");
-            return false;
-        }
-
-        for (int g = 0; g < extra_gid_count; ++g) {
-            auto* gr = getgrgid(extra_gids[g]);
-            if (flag_print_name && gr)
-                out("{}", gr->gr_name);
-            else
-                out("{}", extra_gids[g]);
-            if (g != extra_gid_count - 1)
-                out(" ");
-        }
+    auto& extra_gids = account.extra_gids();
+    auto extra_gid_count = extra_gids.size();
+    for (size_t g = 0; g < extra_gid_count; ++g) {
+        auto gid = extra_gids[g];
+        auto* gr = getgrgid(gid);
+        if (flag_print_name && gr)
+            out("{}", gr->gr_name);
+        else
+            out("{}", gid);
+        if (g != extra_gid_count - 1)
+            out(" ");
     }
+
     return true;
 }
 
-static bool print_full_id_list()
+static bool print_full_id_list(Core::Account const& account)
 {
-    uid_t uid = getuid();
-    gid_t gid = getgid();
+    auto uid = account.uid();
+    auto gid = account.gid();
     struct passwd* pw = getpwuid(uid);
     struct group* gr = getgrgid(gid);
 
     out("uid={}({}) gid={}({})", uid, pw ? pw->pw_name : "n/a", gid, gr ? gr->gr_name : "n/a");
 
-    int extra_gid_count = getgroups(0, nullptr);
-    if (extra_gid_count) {
-        auto* extra_gids = (gid_t*)alloca(extra_gid_count * sizeof(gid_t));
-        int rc = getgroups(extra_gid_count, extra_gids);
-        if (rc < 0) {
-            perror("\ngetgroups");
-            return false;
-        }
-        out(" groups=");
-        for (int g = 0; g < extra_gid_count; ++g) {
-            auto* gr = getgrgid(extra_gids[g]);
-            if (gr)
-                out("{}({})", extra_gids[g], gr->gr_name);
-            else
-                out("{}", extra_gids[g]);
-            if (g != extra_gid_count - 1)
-                out(",");
-        }
+    for (auto extra_gid : account.extra_gids()) {
+        auto* gr = getgrgid(gid);
+        if (gr)
+            out(" {}({})", extra_gid, gr->gr_name);
+        else
+            out(" {}", extra_gid);
     }
+
     return true;
 }
 
-static int print_id_objects()
+static int print_id_objects(Core::Account const& account)
 {
     if (flag_print_uid) {
-        if (!print_uid_object(getuid()))
+        if (!print_uid_object(account))
             return 1;
     } else if (flag_print_gid) {
-        if (!print_gid_object(getgid()))
+        if (!print_gid_object(account))
             return 1;
     } else if (flag_print_gid_all) {
-        if (!print_gid_list())
+        if (!print_gid_list(account))
             return 1;
     } else {
-        if (!print_full_id_list())
+        if (!print_full_id_list(account))
             return 1;
     }
 
