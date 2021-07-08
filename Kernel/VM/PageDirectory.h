@@ -32,6 +32,8 @@ public:
 
     ~PageDirectory();
 
+    void allocate_kernel_directory();
+
     FlatPtr cr3() const
     {
 #if ARCH(X86_64)
