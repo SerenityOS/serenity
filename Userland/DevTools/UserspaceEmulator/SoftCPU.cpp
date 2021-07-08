@@ -3527,9 +3527,13 @@ DEFINE_GENERIC_INSN_HANDLERS(AND, op_and, true, false, false)
 DEFINE_GENERIC_INSN_HANDLERS(CMP, op_sub, false, false, false)
 DEFINE_GENERIC_INSN_HANDLERS_PARTIAL(TEST, op_and, false, false, false)
 
-void SoftCPU::MOVQ_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::MOVQ_mm1_mm2m64(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::MOVQ_mm1m64_mm2(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::MOVD_mm1_rm32(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::MOVQ_mm1_rm64(const X86::Instruction&) { TODO_INSN(); }; // long mode
+void SoftCPU::MOVD_rm32_mm2(const X86::Instruction&) { TODO_INSN(); };
+void SoftCPU::MOVQ_rm64_mm2(const X86::Instruction&) { TODO_INSN(); }; // long mode
 void SoftCPU::EMMS(const X86::Instruction&) { TODO_INSN(); }
-void SoftCPU::MOVQ_mm1_m64_mm2(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::wrap_0xC0(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::wrap_0xC1_16(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::wrap_0xC1_32(const X86::Instruction&) { TODO_INSN(); }
@@ -3539,4 +3543,5 @@ void SoftCPU::wrap_0xD1_32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::wrap_0xD2(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::wrap_0xD3_16(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::wrap_0xD3_32(const X86::Instruction&) { TODO_INSN(); }
+
 }
