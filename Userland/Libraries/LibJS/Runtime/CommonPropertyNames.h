@@ -115,6 +115,7 @@ namespace JS {
     P(enumerable)                            \
     P(epochMicroseconds)                     \
     P(epochMilliseconds)                     \
+    P(epochNanoseconds)                      \
     P(epochSeconds)                          \
     P(error)                                 \
     P(errors)                                \
