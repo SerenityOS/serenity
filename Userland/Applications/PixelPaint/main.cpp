@@ -101,9 +101,9 @@ int main(int argc, char** argv)
                 auto image_title = dialog->image_name().trim_whitespace();
                 image->set_title(image_title.is_empty() ? "Untitled" : image_title);
 
-                auto& image_editor = create_new_editor(*image);
+                create_new_editor(*image);
                 layer_list_widget.set_image(image);
-                image_editor.set_active_layer(bg_layer);
+                layer_list_widget.set_selected_layer(bg_layer);
             }
         },
         window);
@@ -343,6 +343,7 @@ int main(int argc, char** argv)
                 }
                 editor->image().add_layer(layer.release_nonnull());
                 editor->layers_did_change();
+                layer_list_widget.select_top_layer();
             }
         },
         window));
@@ -400,8 +401,16 @@ int main(int argc, char** argv)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
+
+            auto active_layer_index = editor->image().index_of(*active_layer);
             editor->image().remove_layer(*active_layer);
-            editor->set_active_layer(nullptr);
+
+            if (editor->image().layer_count()) {
+                auto& next_active_layer = editor->image().layer(active_layer_index > 0 ? active_layer_index - 1 : 0);
+                editor->set_active_layer(&next_active_layer);
+            } else {
+                editor->set_active_layer(nullptr);
+            }
         },
         window));
 
@@ -594,7 +603,7 @@ int main(int argc, char** argv)
         auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
         palette_widget.set_image_editor(image_editor);
         layer_list_widget.set_image(&image_editor.image());
-        layer_properties_widget.set_layer(nullptr);
+        layer_properties_widget.set_layer(image_editor.active_layer());
         // FIXME: This is badly factored. It transfers tools from the previously active editor to the new one.
         toolbox.template for_each_tool([&](auto& tool) {
             if (tool.editor()) {
