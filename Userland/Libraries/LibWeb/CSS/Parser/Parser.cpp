@@ -158,12 +158,14 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet(TokenStream<T>& tokens)
     NonnullRefPtrVector<CSSRule> rules;
 
     for (auto& raw_rule : parser_rules) {
-        auto rule = convert_rule(raw_rule);
+        auto rule = convert_to_rule(raw_rule);
         if (rule)
             rules.append(*rule);
     }
 
-    return CSSStyleSheet::create(rules);
+    auto stylesheet = CSSStyleSheet::create(rules);
+    dump_sheet(stylesheet);
+    return stylesheet;
 }
 
 Vector<Selector> Parser::parse_a_selector()
@@ -574,10 +576,11 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule()
 template<typename T>
 NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 {
-    auto initial = tokens.next_token();
+    auto name_ident = tokens.next_token();
+    VERIFY(name_ident.is(Token::Type::Ident));
 
     NonnullRefPtr<StyleRule> rule = create<StyleRule>(StyleRule::Type::At);
-    rule->m_name = initial.m_value.to_string();
+    rule->m_name = ((Token)name_ident).ident();
 
     for (;;) {
         auto token = tokens.next_token();
@@ -636,9 +639,10 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
     return rule;
 }
 
-StyleComponentValueRule Parser::consume_a_component_value()
+template<>
+StyleComponentValueRule Parser::consume_a_component_value(TokenStream<StyleComponentValueRule>& tokens)
 {
-    return consume_a_component_value(m_token_stream);
+    return tokens.next_token();
 }
 
 template<typename T>
@@ -653,6 +657,11 @@ StyleComponentValueRule Parser::consume_a_component_value(TokenStream<T>& tokens
         return StyleComponentValueRule(consume_a_function(tokens));
 
     return StyleComponentValueRule(token);
+}
+
+StyleComponentValueRule Parser::consume_a_component_value()
+{
+    return consume_a_component_value(m_token_stream);
 }
 
 NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block()
@@ -740,7 +749,6 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
     tokens.skip_whitespace();
 
     auto colon = tokens.next_token();
-
     if (!colon.is(Token::Type::Colon)) {
         log_parse_error();
         return {};
@@ -755,18 +763,20 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
         declaration.m_values.append(consume_a_component_value(tokens));
     }
 
-    auto second_last = declaration.m_values.at(declaration.m_values.size() - 2);
-    auto last = declaration.m_values.at(declaration.m_values.size() - 1);
+    if (declaration.m_values.size() >= 2) {
+        auto second_last = declaration.m_values.at(declaration.m_values.size() - 2);
+        auto last = declaration.m_values.at(declaration.m_values.size() - 1);
 
-    if (second_last.m_type == StyleComponentValueRule::ComponentType::Token && last.m_type == StyleComponentValueRule::ComponentType::Token) {
-        auto last_token = last.m_token;
-        auto second_last_token = second_last.m_token;
+        if (second_last.m_type == StyleComponentValueRule::ComponentType::Token && last.m_type == StyleComponentValueRule::ComponentType::Token) {
+            auto last_token = last.m_token;
+            auto second_last_token = second_last.m_token;
 
-        if (second_last_token.is(Token::Type::Delim) && second_last_token.m_value.to_string().equals_ignoring_case("!")) {
-            if (last_token.is(Token::Type::Ident) && last_token.m_value.to_string().equals_ignoring_case("important")) {
-                declaration.m_values.remove(declaration.m_values.size() - 2);
-                declaration.m_values.remove(declaration.m_values.size() - 1);
-                declaration.m_important = true;
+            if (second_last_token.is(Token::Type::Delim) && second_last_token.m_value.to_string().equals_ignoring_case("!")) {
+                if (last_token.is(Token::Type::Ident) && last_token.m_value.to_string().equals_ignoring_case("important")) {
+                    declaration.m_values.remove(declaration.m_values.size() - 2);
+                    declaration.m_values.remove(declaration.m_values.size() - 1);
+                    declaration.m_important = true;
+                }
             }
         }
     }
@@ -810,7 +820,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
 
         if (token.is(Token::Type::Ident)) {
             Vector<StyleComponentValueRule> temp;
-            temp.append(StyleComponentValueRule(token));
+            temp.append(token);
 
             for (;;) {
                 auto peek = tokens.peek_token();
@@ -825,13 +835,14 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
             if (maybe_declaration.has_value()) {
                 list.append(DeclarationOrAtRule(maybe_declaration.value()));
             }
+            continue;
         }
 
         log_parse_error();
         tokens.reconsume_current_input_token();
         auto peek = tokens.peek_token();
         if (!(peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))) {
-            consume_a_component_value(tokens);
+            (void)consume_a_component_value(tokens);
         }
     }
 
@@ -855,14 +866,14 @@ RefPtr<CSSRule> Parser::parse_as_rule(TokenStream<T>& tokens)
     if (token.is(Token::Type::EndOfFile)) {
         return {};
     } else if (token.is(Token::Type::AtKeyword)) {
-        auto at_rule = consume_an_at_rule(tokens);
-        rule = convert_rule(at_rule);
+        auto at_rule = consume_an_at_rule();
+        rule = convert_to_rule(at_rule);
     } else {
         auto qualified_rule = consume_a_qualified_rule(tokens);
         if (!qualified_rule)
             return {};
 
-        rule = convert_rule(*qualified_rule);
+        rule = convert_to_rule(*qualified_rule);
     }
 
     tokens.skip_whitespace();
@@ -887,7 +898,7 @@ NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules(TokenStream<T>& toke
     NonnullRefPtrVector<CSSRule> rules;
 
     for (auto& rule : parsed_rules) {
-        auto converted_rule = convert_rule(rule);
+        auto converted_rule = convert_to_rule(rule);
         if (converted_rule)
             rules.append(*converted_rule);
     }
@@ -1007,9 +1018,77 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of
     return lists;
 }
 
-RefPtr<CSSRule> Parser::convert_rule(NonnullRefPtr<StyleRule>)
+RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 {
+    dbgln("Converting a rule: {}", rule->to_string());
+
+    if (rule->m_type == StyleRule::Type::At) {
+        dbgln("... It's an at rule");
+    } else {
+        dbgln("... It's a style rule");
+
+        auto prelude_stream = TokenStream(rule->m_prelude);
+        Vector<Selector> selectors = parse_a_selector(prelude_stream);
+        auto declaration = convert_to_declaration(*rule->m_block);
+        if (declaration && !selectors.is_empty())
+            return CSSStyleRule::create(move(selectors), move(*declaration));
+    }
+
+    dbgln("... discarding because it's invalid or unsupported.");
     return {};
 }
 
+RefPtr<CSSStyleDeclaration> Parser::convert_to_declaration(NonnullRefPtr<StyleBlockRule> block)
+{
+    if (!block->is_curly())
+        return {};
+
+    Vector<StyleProperty> properties;
+    HashMap<String, StyleProperty> custom_properties;
+
+    auto stream = TokenStream(block->m_values);
+    auto declarations_and_at_rules = consume_a_list_of_declarations(stream);
+
+    for (auto& declaration_or_at_rule : declarations_and_at_rules) {
+        if (declaration_or_at_rule.is_at_rule()) {
+            dbgln("CSS::Parser::convert_to_declaration(): Skipping @ rule.");
+            continue;
+        }
+
+        auto& declaration = declaration_or_at_rule.m_declaration;
+
+        auto& property_name = declaration.m_name;
+        auto property_id = property_id_from_string(property_name);
+        if (property_id == CSS::PropertyID::Invalid && property_name.starts_with("--"))
+            property_id = CSS::PropertyID::Custom;
+
+        if (property_id == CSS::PropertyID::Invalid && !property_name.starts_with("-")) {
+            dbgln("CSS::Parser::convert_to_declaration(): Unrecognized property '{}'", property_name);
+            continue;
+        }
+
+        auto value_token_stream = TokenStream(declaration.m_values);
+        auto value = parse_css_value(property_id, value_token_stream);
+        if (!value) {
+            dbgln("CSS::Parser::convert_to_declaration(): Property '{}' has no value.", property_name);
+            continue;
+        }
+
+        if (property_id == CSS::PropertyID::Custom) {
+            custom_properties.set(property_name, CSS::StyleProperty { property_id, value.release_nonnull(), declaration.m_name, declaration.m_important });
+        } else {
+            properties.append(CSS::StyleProperty { property_id, value.release_nonnull(), {}, declaration.m_important });
+        }
+    }
+
+    return CSSStyleDeclaration::create(move(properties), move(custom_properties));
+}
+
+template<typename T>
+RefPtr<StyleValue> Parser::parse_css_value(PropertyID, TokenStream<T>&)
+{
+    // FIXME: This is mostly copied from the old, deprecated parser. It may or may not be to spec.
+
+    return {};
+}
 }
