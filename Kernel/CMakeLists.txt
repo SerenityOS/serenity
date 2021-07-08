@@ -70,7 +70,7 @@ set(KERNEL_SOURCES
     Graphics/BochsGraphicsAdapter.cpp
     Graphics/FramebufferDevice.cpp
     Graphics/GraphicsManagement.cpp
-    Graphics/IntelNativeGraphicsAdapter.cpp
+    Graphics/Intel/NativeGraphicsAdapter.cpp
     Graphics/VirtIOGPU/VirtIOFrameBufferDevice.cpp
     Graphics/VirtIOGPU/VirtIOGPUConsole.cpp
     Graphics/VirtIOGPU/VirtIOGPU.cpp
