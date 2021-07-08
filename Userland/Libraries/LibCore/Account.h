@@ -27,6 +27,7 @@ struct spwd {
 
 class Account {
 public:
+    static Account self();
     static Result<Account, String> from_name(const char* username);
     static Result<Account, String> from_uid(uid_t uid);
 
