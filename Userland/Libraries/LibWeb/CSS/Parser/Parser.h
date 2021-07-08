@@ -24,6 +24,8 @@ class CSSStyleSheet;
 class CSSRule;
 class CSSStyleRule;
 struct StyleProperty;
+class StyleValue;
+enum class PropertyID;
 
 class ParsingContext {
 public:
@@ -120,6 +122,9 @@ public:
     template<typename T>
     Vector<Selector> parse_a_relative_selector(TokenStream<T>&);
 
+    template<typename T>
+    RefPtr<StyleValue> parse_css_value(PropertyID, TokenStream<T>&);
+
     // FIXME: https://drafts.csswg.org/css-backgrounds-3/
     static Optional<String> as_valid_background_repeat(String input) { return input; }
     static Optional<String> as_valid_background_attachment(String input) { return input; }
@@ -147,23 +152,24 @@ private:
     template<typename T>
     [[nodiscard]] Vector<DeclarationOrAtRule> consume_a_list_of_declarations(TokenStream<T>&);
 
-    Optional<StyleDeclarationRule> consume_a_declaration();
+    [[nodiscard]] Optional<StyleDeclarationRule> consume_a_declaration();
     template<typename T>
-    Optional<StyleDeclarationRule> consume_a_declaration(TokenStream<T>&);
+    [[nodiscard]] Optional<StyleDeclarationRule> consume_a_declaration(TokenStream<T>&);
 
-    StyleComponentValueRule consume_a_component_value();
+    [[nodiscard]] StyleComponentValueRule consume_a_component_value();
     template<typename T>
-    StyleComponentValueRule consume_a_component_value(TokenStream<T>&);
+    [[nodiscard]] StyleComponentValueRule consume_a_component_value(TokenStream<T>&);
 
-    NonnullRefPtr<StyleBlockRule> consume_a_simple_block();
+    [[nodiscard]] NonnullRefPtr<StyleBlockRule> consume_a_simple_block();
     template<typename T>
-    NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
+    [[nodiscard]] NonnullRefPtr<StyleBlockRule> consume_a_simple_block(TokenStream<T>&);
 
-    NonnullRefPtr<StyleFunctionRule> consume_a_function();
+    [[nodiscard]] NonnullRefPtr<StyleFunctionRule> consume_a_function();
     template<typename T>
-    NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
+    [[nodiscard]] NonnullRefPtr<StyleFunctionRule> consume_a_function(TokenStream<T>&);
 
-    RefPtr<CSSRule> convert_rule(NonnullRefPtr<StyleRule>);
+    [[nodiscard]] RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
+    [[nodiscard]] RefPtr<CSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
 
     ParsingContext m_context;
 
