@@ -183,6 +183,7 @@ namespace JS {
     P(hasOwn)                                \
     P(hasOwnProperty)                        \
     P(hypot)                                 \
+    P(id)                                    \
     P(ignoreCase)                            \
     P(imul)                                  \
     P(includes)                              \

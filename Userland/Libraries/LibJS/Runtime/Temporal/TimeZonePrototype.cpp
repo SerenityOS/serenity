@@ -23,6 +23,7 @@ void TimeZonePrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_accessor(vm.names.id, id_getter, {}, Attribute::Configurable);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 
@@ -41,6 +42,16 @@ static TimeZone* typed_this(GlobalObject& global_object)
         return {};
     }
     return static_cast<TimeZone*>(this_object);
+}
+
+// 11.4.3 get Temporal.TimeZone.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.timezone.prototype.id
+JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::id_getter)
+{
+    // 1. Let timeZone be the this value.
+    auto time_zone = vm.this_value(global_object);
+
+    // 2. Return ? ToString(timeZone).
+    return js_string(vm, time_zone.to_string(global_object));
 }
 
 // 11.4.11 Temporal.TimeZone.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.tostring
