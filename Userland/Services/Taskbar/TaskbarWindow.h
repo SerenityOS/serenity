@@ -30,6 +30,7 @@ private:
     void update_window_button(::Window&, bool);
     ::Window* find_window_owner(::Window&) const;
 
+    virtual void event(Core::Event&) override;
     virtual void wm_event(GUI::WMEvent&) override;
     virtual void screen_rects_change_event(GUI::ScreenRectsChangeEvent&) override;
 

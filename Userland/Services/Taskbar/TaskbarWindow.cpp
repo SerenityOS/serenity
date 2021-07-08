@@ -244,6 +244,28 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
     return parent;
 }
 
+void TaskbarWindow::event(Core::Event& event)
+{
+    if (event.type() == GUI::Event::MouseDown) {
+        // If the cursor is at the edge/corner of the screen but technically not within the start button (or other taskbar buttons),
+        // we adjust it so that the nearest button ends up being clicked anyways.
+
+        auto& mouse_event = static_cast<GUI::MouseEvent&>(event);
+        const int ADJUSTMENT = 4;
+        auto adjusted_x = AK::clamp(mouse_event.x(), ADJUSTMENT, width() - ADJUSTMENT);
+        auto adjusted_y = AK::min(mouse_event.y(), height() - ADJUSTMENT);
+        Gfx::IntPoint adjusted_point = { adjusted_x, adjusted_y };
+
+        if (adjusted_point != mouse_event.position()) {
+            GUI::WindowServerConnection::the().async_set_global_cursor_position(position() + adjusted_point);
+            GUI::MouseEvent adjusted_event = { (GUI::Event::Type)mouse_event.type(), adjusted_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta() };
+            Window::event(adjusted_event);
+            return;
+        }
+    }
+    Window::event(event);
+}
+
 void TaskbarWindow::wm_event(GUI::WMEvent& event)
 {
     WindowIdentifier identifier { event.client_id(), event.window_id() };
