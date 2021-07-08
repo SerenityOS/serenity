@@ -894,6 +894,18 @@ void ClientConnection::pong()
     set_unresponsive(false);
 }
 
+void ClientConnection::set_global_cursor_position(Gfx::IntPoint const& position)
+{
+    if (!Screen::main().rect().contains(position)) {
+        did_misbehave("SetGlobalCursorPosition with bad position");
+        return;
+    }
+    if (position != ScreenInput::the().cursor_location()) {
+        ScreenInput::the().set_cursor_location(position);
+        Compositor::the().invalidate_cursor();
+    }
+}
+
 Messages::WindowServer::GetGlobalCursorPositionResponse ClientConnection::get_global_cursor_position()
 {
     return ScreenInput::the().cursor_location();
