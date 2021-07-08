@@ -29,13 +29,13 @@ public:
     unsigned size() const { return m_pages; }
     unsigned used() const { return m_used - m_recently_returned.size(); }
     unsigned free() const { return m_pages - m_used + m_recently_returned.size(); }
-    bool contains(const PhysicalPage& page) const { return page.paddr() >= m_lower && page.paddr() <= m_upper; }
+    bool contains(PhysicalAddress paddr) const { return paddr >= m_lower && paddr <= m_upper; }
 
     NonnullRefPtr<PhysicalRegion> take_pages_from_beginning(unsigned);
 
     RefPtr<PhysicalPage> take_free_page(bool supervisor);
     NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count, bool supervisor, size_t physical_alignment = PAGE_SIZE);
-    void return_page(const PhysicalPage& page);
+    void return_page(PhysicalAddress);
 
 private:
     unsigned find_contiguous_free_pages(size_t count, size_t physical_alignment = PAGE_SIZE);

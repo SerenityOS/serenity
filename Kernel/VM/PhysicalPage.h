@@ -28,11 +28,8 @@ public:
 
     void unref()
     {
-        if (m_ref_count.fetch_sub(1, AK::memory_order_acq_rel) == 1) {
-            if (m_may_return_to_freelist)
-                return_to_freelist();
-            this->~PhysicalPage(); // delete in place
-        }
+        if (m_ref_count.fetch_sub(1, AK::memory_order_acq_rel) == 1)
+            free_this();
     }
 
     static NonnullRefPtr<PhysicalPage> create(PhysicalAddress, bool supervisor, bool may_return_to_freelist = true);
@@ -46,7 +43,7 @@ private:
     PhysicalPage(bool supervisor, bool may_return_to_freelist = true);
     ~PhysicalPage() = default;
 
-    void return_to_freelist() const;
+    void free_this();
 
     Atomic<u32> m_ref_count { 1 };
     bool m_may_return_to_freelist { true };

@@ -728,14 +728,14 @@ void MemoryManager::uncommit_user_physical_pages(size_t page_count)
     m_system_memory_info.user_physical_pages_committed -= page_count;
 }
 
-void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
+void MemoryManager::deallocate_user_physical_page(PhysicalAddress paddr)
 {
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_user_physical_regions) {
-        if (!region.contains(page))
+        if (!region.contains(paddr))
             continue;
 
-        region.return_page(page);
+        region.return_page(paddr);
         --m_system_memory_info.user_physical_pages_used;
 
         // Always return pages to the uncommitted pool. Pages that were
@@ -745,7 +745,7 @@ void MemoryManager::deallocate_user_physical_page(const PhysicalPage& page)
         return;
     }
 
-    dmesgln("MM: deallocate_user_physical_page couldn't figure out region for user page @ {}", page.paddr());
+    dmesgln("MM: deallocate_user_physical_page couldn't figure out region for user page @ {}", paddr);
     VERIFY_NOT_REACHED();
 }
 
@@ -825,21 +825,21 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
     return page;
 }
 
-void MemoryManager::deallocate_supervisor_physical_page(const PhysicalPage& page)
+void MemoryManager::deallocate_supervisor_physical_page(PhysicalAddress paddr)
 {
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_super_physical_regions) {
-        if (!region.contains(page)) {
-            dbgln("MM: deallocate_supervisor_physical_page: {} not in {} - {}", page.paddr(), region.lower(), region.upper());
+        if (!region.contains(paddr)) {
+            dbgln("MM: deallocate_supervisor_physical_page: {} not in {} - {}", paddr, region.lower(), region.upper());
             continue;
         }
 
-        region.return_page(page);
+        region.return_page(paddr);
         --m_system_memory_info.super_physical_pages_used;
         return;
     }
 
-    dbgln("MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ {}", page.paddr());
+    dbgln("MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ {}", paddr);
     VERIFY_NOT_REACHED();
 }
 
