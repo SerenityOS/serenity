@@ -61,6 +61,12 @@ Please note that at the time of writing, audio and networking do not work in Vir
 
 That is all you need to boot Serenity in VirtualBox! Read on for additional configuration you may want to use.
 
+## Blinking cursor after GRUB menu
+If you only see a blinking cursor after selecting an option in the GRUB menu, it is very likely you have encountered one of the errors listed in the [troubleshooting document.](Troubleshooting.md)
+
+- Check that you have enabled PAE/NX in the **Settings** > **System** > **Processor** tab.
+- If you are using a 64-bit disk image, check that **Version** is set to **Other/Unknown (64-bit)** instead of **Other/Unknown** in **Settings** > **General**.
+
 ## Additional configuration (optional)
 For serial debugging, go to **Serial Ports** and enable port 1. Feel free to set the **Port Mode** to anything if you know what you're doing. The recommended mode is **Raw File**. Set **Path/Address** to where you want to store the file. This must also include the file name.
 

@@ -118,6 +118,16 @@ start:
 */
 print_and_halt:
 
+/*  from now on, we don't really care about booting because we are missing required CPU features such as PAE or long mode.
+    the flow from now is like so:
+    1. Copy all necessary parts to low memory section in RAM
+    2. Jump to that section
+    3. In that section we do:
+        a. exit protected mode to pure 16 bit real mode
+        b. load the "<missing feature> is not supported" String, call the BIOS print to screen service
+        c. halt
+*/
+
 .equ COPIED_STRING_LOCATION, 0x400
 .equ GDT_REAL_MODE_LOCATION, 0x45000
 .equ EXITING_PROTECTED_MODE_CODE_LOCATION, 0x10000
@@ -214,6 +224,9 @@ gdt_table_real_mode_end:
 no_long_mode_string:
     .asciz "Your computer does not support long mode (64-bit mode). Halting!"
 
+no_pae_string:
+    .asciz "Your computer does not support PAE. Halting!"
+
 kernel_image_too_big_string:
     .asciz "Error: Kernel Image too big for memory slot. Halting!"
 
@@ -307,28 +320,32 @@ real_start:
     hlt
 
 kernel_not_too_large:
-
-
-#if ARCH(X86_64)
-    /* test for long mode presence, save the most important registers from corruption */
+    /* test for PAE presence, save the most important registers from corruption */
     pushl %eax
     pushl %edx
     pushl %ebx
 
+    movl $0x1, %eax       /* PAE presence is in CPUID input 0x1 */
+    cpuid
+    testl $(1 << 6), %edx /* Test if the PAE-bit, which is bit 6, is set in the edx register. */
+    jnz pae_supported     /* If the bit is not set, there is no PAE capability. */
+
+    /* Since there is no PAE capability, halt with an error message */
+    movl $(no_pae_string - KERNEL_BASE), %esi
+    pushl %esi
+    call print_and_halt
+    /* We should not return, but just in case, halt */
+    hlt
+
+
+#if ARCH(X86_64)
+pae_supported:
     movl $0x80000001, %eax
     cpuid
     testl $(1 << 29), %edx   /* Test if the LM-bit, which is bit 29, is set in the edx register. */
     jnz long_mode_supported             /* If LM-bit is not enabled, there is no long mode. */
 
-    /*  from now on, we don't really care about booting because we don't have long mode supported.
-         the flow from now is like so:
-         1. Copy all necessary parts to low memory section in RAM
-         2. Jump to that section
-         3. In that section we do:
-            a. exit protected mode to pure 16 bit real mode
-            b. load the "Long mode is not supported" String, call the BIOS print to screen service
-            c. halt
-    */
+    /* Since there is no long mode, halt with an error message */
     movl $(no_long_mode_string - KERNEL_BASE), %esi
     pushl %esi
     call print_and_halt
@@ -336,10 +353,17 @@ kernel_not_too_large:
     hlt
 
 
-/* If long mode is supported, continue with booting the system */
+/* If both PAE and long mode is supported, continue with booting the system */
 
-.code32
 long_mode_supported:
+    /* restore the pushed registers and continue with booting */
+    popl %ebx
+    popl %edx
+    popl %eax
+#else
+/* If PAE is supported, continue with booting the system */
+
+pae_supported:
     /* restore the pushed registers and continue with booting */
     popl %ebx
     popl %edx
@@ -545,4 +569,3 @@ long_mode_supported:
 loop:
     hlt
     jmp loop
-
