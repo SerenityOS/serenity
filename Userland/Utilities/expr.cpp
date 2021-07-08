@@ -31,7 +31,7 @@ template<typename Fmt, typename... Args>
     warn("ERROR: \e[31m");
     warnln(StringView { fmt }, args...);
     warn("\e[0m");
-    exit(1);
+    exit(2);
 }
 
 class Expression {
@@ -569,12 +569,12 @@ int main(int argc, char** argv)
 {
     if (pledge("stdio", nullptr) < 0) {
         perror("pledge");
-        return 1;
+        return 3;
     }
 
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
-        return 1;
+        return 3;
     }
 
     if ((argc == 2 && "--help"sv == argv[1]) || argc == 1)
@@ -596,5 +596,5 @@ int main(int argc, char** argv)
         outln("{}", expression->string());
         break;
     }
-    return 0;
+    return expression->truth() ? 0 : 1;
 }
