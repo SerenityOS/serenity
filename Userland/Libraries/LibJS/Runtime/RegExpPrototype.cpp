@@ -107,10 +107,6 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     // FIXME: This should try using internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
     auto& vm = global_object.vm();
 
-    auto str = vm.argument(0).to_string(global_object);
-    if (vm.exception())
-        return {};
-
     // RegExps without "global" and "sticky" always start at offset 0.
     if (!regexp_object.regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful)) {
         regexp_object.set(vm.names.lastIndex, Value(0), true);
