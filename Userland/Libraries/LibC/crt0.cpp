@@ -19,9 +19,15 @@ extern u32 __stack_chk_guard;
 int main(int, char**, char**);
 
 // Tell the compiler that this may be called from somewhere else.
-int _start(int argc, char** argv, char** env);
+int _entry(int argc, char** argv, char** env);
 
-int _start(int argc, char** argv, char** env)
+asm(
+    ".globl _start\n"
+    "_start:\n"
+    "push $0\n"
+    "jmp _entry@plt\n");
+
+int _entry(int argc, char** argv, char** env)
 {
     u32 original_stack_chk = __stack_chk_guard;
     arc4random_buf(&__stack_chk_guard, sizeof(__stack_chk_guard));

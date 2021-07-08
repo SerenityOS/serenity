@@ -41,6 +41,8 @@ using LibCExitFunction = void (*)(int);
 using DlIteratePhdrCallbackFunction = int (*)(struct dl_phdr_info*, size_t, void*);
 using DlIteratePhdrFunction = int (*)(DlIteratePhdrCallbackFunction, void*);
 
+extern "C" [[noreturn]] void _invoke_entry(int argc, char** argv, char** envp, EntryPointFunction entry);
+
 static size_t s_current_tls_offset = 0;
 static size_t s_total_tls_size = 0;
 static size_t s_allocated_tls_block_size = 0;
@@ -550,14 +552,8 @@ void ELF::DynamicLinker::linker_main(String&& main_program_name, int main_progra
     if (s_do_breakpoint_trap_before_entry) {
         asm("int3");
     }
-    rc = entry_point_function(argc, argv, envp);
-    dbgln_if(DYNAMIC_LOAD_DEBUG, "rc: {}", rc);
-    if (s_libc_exit != nullptr) {
-        s_libc_exit(rc);
-    } else {
-        _exit(rc);
-    }
 
+    _invoke_entry(argc, argv, envp, entry_point_function);
     VERIFY_NOT_REACHED();
 }
 

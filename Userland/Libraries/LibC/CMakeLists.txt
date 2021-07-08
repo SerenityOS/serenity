@@ -64,10 +64,10 @@ file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
 
 if ("${SERENITY_ARCH}" STREQUAL "i686")
     set(ASM_SOURCES "arch/i386/setjmp.S")
-    set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/plt_trampoline.S)
+    set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/entry.S ../LibELF/Arch/i386/plt_trampoline.S)
 elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(ASM_SOURCES "arch/x86_64/setjmp.S")
-    set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/x86_64/plt_trampoline.S)
+    set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/x86_64/entry.S ../LibELF/Arch/x86_64/plt_trampoline.S)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -DSERENITY_LIBC_BUILD")
