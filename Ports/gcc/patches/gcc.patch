@@ -6317,3 +6317,17 @@ diff -Naur gcc-11.1.0/libstdc++-v3/configure gcc-11.1.0.serenity/libstdc++-v3/co
  if test x$gcc_no_link = xyes; then
    # Setting cross_compile will disable run tests; it will
    # also disable AC_CHECK_FILE but that's generally
+diff -Naur gcc-11.1.0/gcc/config/host-darwin.c gcc-11.1.0.serenity/gcc/config/host-darwin.c
+--- gcc-11.1.0/gcc/config/host-darwin.c	2021-04-27 03:00:13.000000000 -0700
++++ gcc-11.1.0.serenity/gcc/config/host-darwin.c	2021-06-11 14:49:13.754000000 -0700
+@@ -22,6 +22,10 @@
+ #include "coretypes.h"
+ #include "diagnostic-core.h"
+ #include "config/host-darwin.h"
++#include "hosthooks.h"
++#include "hosthooks-def.h"
++
++const struct host_hooks host_hooks = HOST_HOOKS_INITIALIZER;
+ 
+ /* Yes, this is really supposed to work.  */
+ /* This allows for a pagesize of 16384, which we have on Darwin20, but should
