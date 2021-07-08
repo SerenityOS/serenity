@@ -248,14 +248,12 @@ int BitmapFont::glyph_or_emoji_width_for_variable_width_font(u32 code_point) con
     return emoji->size().width();
 }
 
-int BitmapFont::width(const StringView& string) const
-{
-    Utf8View utf8 { string };
-    return width(utf8);
-}
+int BitmapFont::width(StringView const& view) const { return unicode_view_width(Utf8View(view)); }
+int BitmapFont::width(Utf8View const& view) const { return unicode_view_width(view); }
+int BitmapFont::width(Utf32View const& view) const { return unicode_view_width(view); }
 
 template<typename T>
-int BitmapFont::unicode_view_width(T const& view) const
+ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const
 {
     if (view.is_empty())
         return 0;
@@ -278,16 +276,6 @@ int BitmapFont::unicode_view_width(T const& view) const
     }
 
     return longest_width;
-}
-
-int BitmapFont::width(const Utf8View& utf8) const
-{
-    return unicode_view_width(utf8);
-}
-
-int BitmapFont::width(const Utf32View& view) const
-{
-    return unicode_view_width(view);
 }
 
 void BitmapFont::set_type(FontTypes type)
