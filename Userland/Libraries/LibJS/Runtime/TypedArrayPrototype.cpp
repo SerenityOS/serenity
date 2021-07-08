@@ -37,6 +37,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.includes, includes, 1, attr);
     define_native_function(vm.names.indexOf, index_of, 1, attr);
     define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
+    define_native_function(vm.names.reduce, reduce, 1, attr);
     define_native_function(vm.names.some, some, 1, attr);
     define_native_function(vm.names.join, join, 1, attr);
     define_native_function(vm.names.keys, keys, 0, attr);
@@ -402,6 +403,44 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
     }
 
     return Value(-1);
+}
+
+// 23.2.3.20 %TypedArray%.prototype.reduce ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
+{
+    auto* typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+
+    auto length = typed_array->array_length();
+
+    auto* callback_function = callback_from_args(global_object, vm.names.reduce.as_string());
+    if (!callback_function)
+        return {};
+
+    if (length == 0 && vm.argument_count() <= 1) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReduceNoInitial);
+        return {};
+    }
+
+    u32 k = 0;
+    Value accumulator;
+    if (vm.argument_count() > 1) {
+        accumulator = vm.argument(1);
+    } else {
+        accumulator = typed_array->get(k);
+        ++k;
+    }
+
+    for (; k < length; ++k) {
+        auto k_value = typed_array->get(k);
+
+        accumulator = vm.call(*callback_function, js_undefined(), accumulator, k_value, Value(k), typed_array);
+        if (vm.exception())
+            return {};
+    }
+
+    return accumulator;
 }
 
 // 23.2.3.25 %TypedArray%.prototype.some ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.some
