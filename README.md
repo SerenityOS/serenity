@@ -135,6 +135,7 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 * **Jean-Baptiste Boric** - [boricj](https://github.com/boricj)
 * **Stephan Unverwerth** - [sunverwerth](https://github.com/sunverwerth)
 * **Max Wipfli** - [MaxWipfli](https://github.com/MaxWipfli)
+* **Daniel Bertalan** - [BertalanD](https://github.com/BertalanD)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
