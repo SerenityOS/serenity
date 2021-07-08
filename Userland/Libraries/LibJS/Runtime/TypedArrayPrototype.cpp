@@ -34,6 +34,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.find, find, 1, attr);
     define_native_function(vm.names.findIndex, find_index, 1, attr);
     define_native_function(vm.names.forEach, for_each, 1, attr);
+    define_native_function(vm.names.includes, includes, 1, attr);
     define_native_function(vm.names.some, some, 1, attr);
     define_native_function(vm.names.join, join, 1, attr);
     define_native_function(vm.names.keys, keys, 0, attr);
@@ -262,6 +263,49 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
         return IterationDecision::Continue;
     });
     return js_undefined();
+}
+
+// 23.2.3.13 %TypedArray%.prototype.includes ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
+{
+    auto typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+
+    auto length = typed_array->array_length();
+
+    if (length == 0)
+        return Value(false);
+
+    auto n = vm.argument(1).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    auto value_n = Value(n);
+    if (value_n.is_positive_infinity())
+        return Value(false);
+    else if (value_n.is_negative_infinity())
+        n = 0;
+
+    u32 k;
+    if (n >= 0) {
+        k = n;
+    } else {
+        auto relative_k = length + n;
+        if (relative_k < 0)
+            relative_k = 0;
+        k = relative_k;
+    }
+
+    auto search_element = vm.argument(0);
+    for (; k < length; ++k) {
+        auto element_k = typed_array->get(k);
+
+        if (same_value_zero(search_element, element_k))
+            return Value(true);
+    }
+
+    return Value(false);
 }
 
 // 23.2.3.25 %TypedArray%.prototype.some ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.some
