@@ -32,6 +32,8 @@ public:
     int scale() { return m_scale; }
     void set_toolbar_height(int height) { m_toolbar_height = height; }
     int toolbar_height() { return m_toolbar_height; }
+    bool scaled_for_first_image() { return m_scaled_for_first_image; }
+    void set_scaled_for_first_image(bool val) { m_scaled_for_first_image = val; }
 
     void clear();
     void flip(Gfx::Orientation);
@@ -73,6 +75,7 @@ private:
 
     int m_scale { -1 };
     int m_toolbar_height { 28 };
+    bool m_scaled_for_first_image { false };
     Gfx::FloatPoint m_pan_origin;
     Gfx::IntPoint m_click_position;
     Gfx::FloatPoint m_saved_pan_origin;
