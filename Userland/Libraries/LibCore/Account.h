@@ -27,9 +27,14 @@ struct spwd {
 
 class Account {
 public:
-    static Account self();
-    static Result<Account, String> from_name(const char* username);
-    static Result<Account, String> from_uid(uid_t uid);
+    enum class Read {
+        All,
+        PasswdOnly
+    };
+
+    static Account self(Read options = Read::All);
+    static Result<Account, String> from_name(const char* username, Read options = Read::All);
+    static Result<Account, String> from_uid(uid_t uid, Read options = Read::All);
 
     bool authenticate(const char* password) const;
     bool login() const;
