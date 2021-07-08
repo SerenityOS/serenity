@@ -24,6 +24,21 @@ public:
         Declaration,
     };
 
+    bool is_at_rule() const { return m_type == DeclarationType::At; }
+    bool is_declaration() const { return m_type == DeclarationType::Declaration; }
+
+    StyleRule const& at_rule() const
+    {
+        VERIFY(is_at_rule());
+        return *m_at;
+    }
+
+    StyleDeclarationRule const& declaration() const
+    {
+        VERIFY(is_declaration());
+        return m_declaration;
+    }
+
     String to_string() const;
 
 private:
