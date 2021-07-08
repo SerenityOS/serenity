@@ -18,6 +18,11 @@ TimeZonePrototype::TimeZonePrototype(GlobalObject& global_object)
 void TimeZonePrototype::initialize(GlobalObject& global_object)
 {
     Object::initialize(global_object);
+
+    auto& vm = this->vm();
+
+    // 11.4.2 Temporal.TimeZone.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype-@@tostringtag
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.TimeZone"), Attribute::Configurable);
 }
 
 }
