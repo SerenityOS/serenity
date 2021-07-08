@@ -6,14 +6,24 @@
 
 #include "CatDog.h"
 #include "SpeechBubble.h"
+#include <AK/LexicalPath.h>
+#include <AK/QuickSort.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
+
+struct SkinMetadata {
+    String name;
+    String path;
+};
 
 int main(int argc, char** argv)
 {
@@ -54,6 +64,42 @@ int main(int argc, char** argv)
     catdog_widget.layout()->set_spacing(0);
 
     auto context_menu = GUI::Menu::construct();
+
+    Vector<SkinMetadata> g_skins;
+    RefPtr<GUI::Menu> g_skins_menu;
+    GUI::ActionGroup g_skins_group;
+    g_skins_group.set_exclusive(true);
+    g_skins_group.set_unchecking_allowed(false);
+
+    g_skins_menu = &context_menu->add_submenu("Skins");
+
+    {
+        Core::DirIterator dt("/res/icons/catdog", Core::DirIterator::SkipDots);
+        while (dt.has_next()) {
+            auto skin_name = dt.next_path();
+            auto skin_path = String::formatted("/res/icons/catdog/{}", skin_name);
+            g_skins.append({ LexicalPath::title(skin_name), skin_path });
+        }
+        quick_sort(g_skins, [](auto& a, auto& b) { return a.name < b.name; });
+    }
+
+    auto current_skin_name = catdog_widget.skin_name();
+
+    {
+        int skin_identifier = 0;
+        for (auto& skin : g_skins) {
+            auto action = GUI::Action::create_checkable(skin.name, [&, skin_identifier](auto&) {
+                auto& skin = g_skins[skin_identifier];
+                dbgln("Skin switched to {} at path {}", skin.name, skin.path);
+                catdog_widget.set_skin(skin.name, skin.path);
+            });
+            if (skin.name == current_skin_name)
+                action->set_checked(true);
+            g_skins_group.add_action(action);
+            g_skins_menu->add_action(action);
+            ++skin_identifier;
+        }
+    }
     context_menu->add_action(GUI::CommonActions::make_about_action("CatDog Demo", app_icon, window));
     context_menu->add_separator();
     context_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
