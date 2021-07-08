@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, the SerenityOS developers.
  * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
@@ -437,16 +438,30 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                 auto& pseudo_function = current_value.function();
                 if (pseudo_function.name().equals_ignoring_case("nth-child")) {
                     simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::NthChild;
-                    simple_selector.nth_child_pattern = Selector::SimpleSelector::NthChildPattern::parse(pseudo_function.values_as_string());
+                    auto function_values = TokenStream<StyleComponentValueRule>(pseudo_function.values());
+                    auto nth_child_pattern = parse_nth_child_pattern(function_values);
+                    if (nth_child_pattern.has_value()) {
+                        simple_selector.nth_child_pattern = nth_child_pattern.value();
+                    } else {
+                        dbgln("Invalid nth-child format");
+                        return {};
+                    }
                 } else if (pseudo_function.name().equals_ignoring_case("nth-last-child")) {
                     simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::NthLastChild;
-                    simple_selector.nth_child_pattern = Selector::SimpleSelector::NthChildPattern::parse(pseudo_function.values_as_string());
+                    auto function_values = TokenStream<StyleComponentValueRule>(pseudo_function.values());
+                    auto nth_child_pattern = parse_nth_child_pattern(function_values);
+                    if (nth_child_pattern.has_value()) {
+                        simple_selector.nth_child_pattern = nth_child_pattern.value();
+                    } else {
+                        dbgln("Invalid nth-child format");
+                        return {};
+                    }
                 } else if (pseudo_function.name().equals_ignoring_case("not")) {
                     simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Not;
                     simple_selector.not_selector = pseudo_function.values_as_string();
                 } else {
                     dbgln("Unknown pseudo class: '{}'()", pseudo_function.name());
-                    return simple_selector;
+                    return {};
                 }
             } else {
                 dbgln("Unexpected Block in pseudo-class name, expected a function or identifier. '{}'", current_value.to_debug_string());
@@ -1349,5 +1364,90 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         return StringStyleValue::create(token.token().string());
 
     return {};
+}
+
+Optional<Selector::SimpleSelector::NthChildPattern> Parser::parse_nth_child_pattern(TokenStream<StyleComponentValueRule>& values)
+{
+    Selector::SimpleSelector::NthChildPattern pattern;
+
+    auto current_value = values.next_token();
+    if (current_value.is(Token::Type::Ident)) {
+        auto ident = current_value.token().ident();
+        if (ident.equals_ignoring_case("odd")) {
+            pattern.step_size = 2;
+            pattern.offset = 1;
+            return pattern;
+
+        } else if (ident.equals_ignoring_case("even")) {
+            pattern.step_size = 2;
+            return pattern;
+        }
+    }
+
+    // Try to match any of following patterns:
+    // 1. An+B
+    // 2. An
+    // 3. B
+    // ...where "A" is "step_size", "B" is "offset" and rest are literals.
+    // "A" can be omitted, in that case "A" = 1.
+    // "A" may have "+" or "-" sign, "B" always must be predated by sign for pattern (1).
+
+    auto is_n = [](StyleComponentValueRule value) -> bool {
+        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("n");
+    };
+
+    auto is_delim = [](StyleComponentValueRule value, StringView delim) -> bool {
+        return value.is(Token::Type::Delim) && value.token().delim().equals_ignoring_case(delim);
+    };
+
+    int step_size_or_offset = 0;
+
+    // "When a=1, or a=-1, the 1 may be omitted from the rule."
+    if (is_n(current_value)) {
+        step_size_or_offset = +1;
+    } else if (is_delim(current_value, "+"sv) && is_n(values.peek_token())) {
+        step_size_or_offset = +1;
+        values.next_token();
+    } else if (is_delim(current_value, "-"sv) && is_n(values.peek_token())) {
+        step_size_or_offset = -1;
+        values.next_token();
+    } else if (current_value.is(Token::Type::Number)) {
+        step_size_or_offset = current_value.token().integer();
+    } else {
+        values.reconsume_current_input_token();
+    }
+
+    current_value = values.next_token();
+
+    if (is_n(current_value)) {
+        values.skip_whitespace();
+
+        auto next_value = values.peek_token();
+        if (is_delim(next_value, "+") || is_delim(next_value, "-")) {
+            const auto sign = is_delim(next_value, "+") ? 1 : -1;
+            values.next_token();
+
+            values.skip_whitespace();
+
+            // "An+B" pattern
+            auto number = values.next_token();
+            if (!number.is(Token::Type::Number))
+                return {};
+
+            pattern.step_size = step_size_or_offset;
+            pattern.offset = sign * number.token().integer();
+        } else {
+            // "An" pattern
+            pattern.step_size = step_size_or_offset;
+        }
+    } else {
+        // "B" pattern
+        pattern.offset = step_size_or_offset;
+    }
+
+    if (values.has_next_token())
+        return {};
+
+    return pattern;
 }
 }
