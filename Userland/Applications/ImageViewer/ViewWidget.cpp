@@ -10,6 +10,7 @@
 #include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -267,7 +268,7 @@ void ViewWidget::load_from_file(const String& path)
         m_timer->stop();
     }
 
-    m_path = path;
+    m_path = Core::File::real_path_for(path);
     m_scale = -1;
     reset_view();
 }
