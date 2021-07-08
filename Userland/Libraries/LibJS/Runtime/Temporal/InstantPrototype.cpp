@@ -25,6 +25,7 @@ void InstantPrototype::initialize(GlobalObject& global_object)
 
     define_native_accessor(vm.names.epochSeconds, epoch_seconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.epochMilliseconds, epoch_milliseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.epochMicroseconds, epoch_microseconds_getter, {}, Attribute::Configurable);
 
     // 8.3.2 Temporal.Instant.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.Instant"), Attribute::Configurable);
@@ -79,6 +80,25 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
 
     // 5. Return 𝔽(ms).
     return Value((double)ms.to_base(10).to_int<i64>().value());
+}
+
+// 8.3.5 get Temporal.Instant.prototype.epochMicroseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmicroseconds
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_microseconds_getter)
+{
+    // 1. Let instant be the this value.
+    // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
+    auto* instant = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let ns be instant.[[Nanoseconds]].
+    auto& ns = instant->nanoseconds();
+
+    // 4. Let µs be RoundTowardsZero(ℝ(ns) / 10^3).
+    auto [us, _] = ns.big_integer().divided_by(Crypto::SignedBigInteger::create_from(1'000));
+
+    // 5. Return ℤ(µs).
+    return js_bigint(vm.heap(), move(us));
 }
 
 }
