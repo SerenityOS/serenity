@@ -165,16 +165,16 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
 }
 
 // 22.2.5.2.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
-static Value regexp_exec(GlobalObject& global_object, Object& rx, String const& string)
+static Value regexp_exec(GlobalObject& global_object, Object& regexp_object, String const& string)
 {
     auto& vm = global_object.vm();
 
-    auto exec = rx.get(vm.names.exec);
+    auto exec = regexp_object.get(vm.names.exec);
     if (vm.exception())
         return {};
 
     if (exec.is_function()) {
-        auto result = vm.call(exec.as_function(), &rx, js_string(vm, string));
+        auto result = vm.call(exec.as_function(), &regexp_object, js_string(vm, string));
         if (vm.exception())
             return {};
 
@@ -184,11 +184,12 @@ static Value regexp_exec(GlobalObject& global_object, Object& rx, String const& 
         return result;
     }
 
-    auto regexp_object = regexp_object_from(vm, global_object);
-    if (!regexp_object)
+    if (!is<RegExpObject>(regexp_object)) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "RegExp");
         return {};
+    }
 
-    return regexp_builtin_exec(global_object, *regexp_object, string);
+    return regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), string);
 }
 
 // 22.2.5.3 get RegExp.prototype.dotAll, https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll
