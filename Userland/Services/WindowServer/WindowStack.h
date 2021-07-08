@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Jakob-Niklas See <git@nwex.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -122,7 +123,7 @@ template<typename Callback>
 inline IterationDecision WindowStack::for_each_visible_window_of_type_from_front_to_back(WindowType type, Callback callback, bool ignore_highlight)
 {
     auto* highlight_window = this->highlight_window();
-    if (!ignore_highlight && highlight_window && highlight_window->type() == type && highlight_window->is_visible()) {
+    if (!ignore_highlight && highlight_window && highlight_window->type() == type && highlight_window->is_visible() && !highlight_window->is_minimized()) {
         if (callback(*highlight_window) == IterationDecision::Break)
             return IterationDecision::Break;
     }
