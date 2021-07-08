@@ -74,6 +74,12 @@ sudo zypper install curl cmake mpfr-devel mpc-devel ninja gmp-devel e2fsprogs pa
 sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra ccache rsync
 ```
 
+#### Void Linux
+
+```console
+sudo xbps-install -S base-devel cmake curl mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja qemu ccache rsync
+```
+
 #### ALT Linux
 
 ```console
