@@ -1037,7 +1037,7 @@ String MemoryOrRegisterReference::to_string_a16() const
     String base;
     bool hasDisplacement = false;
 
-    switch (m_rm & 7) {
+    switch (rm()) {
     case 0:
         base = "bx+si";
         break;
@@ -1060,16 +1060,16 @@ String MemoryOrRegisterReference::to_string_a16() const
         base = "bx";
         break;
     case 6:
-        if ((m_rm & 0xc0) == 0)
+        if (mod() == 0)
             base = String::formatted("{:#04x}", m_displacement16);
         else
             base = "bp";
         break;
     }
 
-    switch (m_rm & 0xc0) {
-    case 0x40:
-    case 0x80:
+    switch (mod()) {
+    case 0b01:
+    case 0b10:
         hasDisplacement = true;
     }
 
@@ -1178,16 +1178,16 @@ String MemoryOrRegisterReference::to_string_a32() const
         return register_name(static_cast<RegisterIndex32>(m_register_index));
 
     bool has_displacement = false;
-    switch (m_rm & 0xc0) {
-    case 0x40:
-    case 0x80:
+    switch (mod()) {
+    case 0b01:
+    case 0b10:
         has_displacement = true;
     }
     if (m_has_sib && (m_sib & 7) == 5)
         has_displacement = true;
 
     String base;
-    switch (m_rm & 7) {
+    switch (rm()) {
     case 0:
         base = "eax";
         break;
@@ -1207,13 +1207,13 @@ String MemoryOrRegisterReference::to_string_a32() const
         base = "edi";
         break;
     case 5:
-        if ((m_rm & 0xc0) == 0)
+        if (mod() == 0)
             base = String::formatted("{:#08x}", m_displacement32);
         else
             base = "ebp";
         break;
     case 4:
-        base = sib_to_string(m_rm, m_sib);
+        base = sib_to_string(m_rm_byte, m_sib);
         break;
     }
 
@@ -1766,7 +1766,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
         break;
     case OP_reg32_CR:
         append_mnemonic_space();
-        builder.append(register_name(static_cast<RegisterIndex32>(rm() & 7)));
+        builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
         append(", ");
         append_creg();
         break;
@@ -1774,11 +1774,11 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
         append_mnemonic_space();
         append_creg();
         append(", ");
-        builder.append(register_name(static_cast<RegisterIndex32>(rm() & 7)));
+        builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
         break;
     case OP_reg32_DR:
         append_mnemonic_space();
-        builder.append(register_name(static_cast<RegisterIndex32>(rm() & 7)));
+        builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
         append(", ");
         append_dreg();
         break;
@@ -1786,7 +1786,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
         append_mnemonic_space();
         append_dreg();
         append(", ");
-        builder.append(register_name(static_cast<RegisterIndex32>(rm() & 7)));
+        builder.append(register_name(static_cast<RegisterIndex32>(modrm().rm())));
         break;
     case OP_short_imm8:
         append_mnemonic_space();
