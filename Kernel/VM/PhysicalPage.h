@@ -18,11 +18,8 @@ class PhysicalPage {
     friend class PageDirectory;
     friend class VMObject;
 
-    MAKE_SLAB_ALLOCATED(PhysicalPage);
-    AK_MAKE_NONMOVABLE(PhysicalPage);
-
 public:
-    PhysicalAddress paddr() const { return m_paddr; }
+    PhysicalAddress paddr() const;
 
     void ref()
     {
@@ -34,7 +31,7 @@ public:
         if (m_ref_count.fetch_sub(1, AK::memory_order_acq_rel) == 1) {
             if (m_may_return_to_freelist)
                 return_to_freelist();
-            delete this;
+            this->~PhysicalPage(); // delete in place
         }
     }
 
@@ -46,7 +43,7 @@ public:
     bool is_lazy_committed_page() const;
 
 private:
-    PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);
+    PhysicalPage(bool supervisor, bool may_return_to_freelist = true);
     ~PhysicalPage() = default;
 
     void return_to_freelist() const;
@@ -54,7 +51,14 @@ private:
     Atomic<u32> m_ref_count { 1 };
     bool m_may_return_to_freelist { true };
     bool m_supervisor { false };
-    PhysicalAddress m_paddr;
+};
+
+struct PhysicalPageEntry {
+    // This structure either holds a valid PhysicalPage
+    // or a PhysicalAllocator's free list information!
+    union {
+        PhysicalPage physical_page;
+    };
 };
 
 }

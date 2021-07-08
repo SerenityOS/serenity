@@ -59,8 +59,9 @@ bool MemoryManager::is_initialized()
 
 UNMAP_AFTER_INIT MemoryManager::MemoryManager()
 {
+    s_the = this;
+
     ScopedSpinLock lock(s_mm_lock);
-    m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
     parse_memory_map();
     write_cr3(kernel_page_directory().cr3());
     protect_kernel_image();
@@ -192,10 +193,6 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     auto* mmap_begin = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
     auto* mmap_end = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr) + multiboot_info_ptr->mmap_length);
 
-    for (auto& used_range : m_used_memory_ranges) {
-        dmesgln("MM: {} range @ {} - {}", UserMemoryRangeTypeNames[static_cast<int>(used_range.type)], used_range.start, used_range.end);
-    }
-
     for (auto* mmap = mmap_begin; mmap < mmap_end; mmap++) {
         dmesgln("MM: Multiboot mmap: address={:p}, length={}, type={}", mmap->addr, mmap->len, mmap->type);
 
@@ -273,15 +270,18 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages))),
         PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages + sizeof(super_pages))))));
 
-    for (auto& region : m_super_physical_regions) {
+    for (auto& region : m_super_physical_regions)
         m_system_memory_info.super_physical_pages += region.finalize_capacity();
-        dmesgln("MM: Super physical region: {} - {}", region.lower(), region.upper());
+
+    for (auto& region : m_user_physical_regions)
+        m_system_memory_info.user_physical_pages += region.finalize_capacity();
+
+    register_reserved_ranges();
+    for (auto& range : m_reserved_memory_ranges) {
+        dmesgln("MM: Contiguous reserved range from {}, length is {}", range.start, range.length);
     }
 
-    for (auto& region : m_user_physical_regions) {
-        m_system_memory_info.user_physical_pages += region.finalize_capacity();
-        dmesgln("MM: User physical region: {} - {}", region.lower(), region.upper());
-    }
+    initialize_physical_pages();
 
     VERIFY(m_system_memory_info.super_physical_pages > 0);
     VERIFY(m_system_memory_info.user_physical_pages > 0);
@@ -289,10 +289,188 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     // We start out with no committed pages
     m_system_memory_info.user_physical_pages_uncommitted = m_system_memory_info.user_physical_pages;
 
-    register_reserved_ranges();
-    for (auto& range : m_reserved_memory_ranges) {
-        dmesgln("MM: Contiguous reserved range from {}, length is {}", range.start, range.length);
+    for (auto& used_range : m_used_memory_ranges) {
+        dmesgln("MM: {} range @ {} - {}", UserMemoryRangeTypeNames[static_cast<int>(used_range.type)], used_range.start, used_range.end);
     }
+
+    for (auto& region : m_super_physical_regions)
+        dmesgln("MM: Super physical region: {} - {}", region.lower(), region.upper());
+
+    for (auto& region : m_user_physical_regions)
+        dmesgln("MM: User physical region: {} - {}", region.lower(), region.upper());
+}
+
+extern "C" PageDirectoryEntry boot_pd3[1024];
+
+UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
+{
+    // No physical memory region should be using any memory yet!
+    for (auto& region : m_user_physical_regions)
+        VERIFY(region.used() == 0);
+
+    // We assume that the physical page range is contiguous and doesn't contain huge gaps!
+    PhysicalAddress highest_physical_address;
+    for (auto& range : m_used_memory_ranges) {
+        if (range.end.get() > highest_physical_address.get())
+            highest_physical_address = range.end;
+    }
+    for (auto& region : m_physical_memory_ranges) {
+        auto range_end = PhysicalAddress(region.start).offset(region.length);
+        if (range_end.get() > highest_physical_address.get())
+            highest_physical_address = range_end;
+    }
+
+    // Calculate how many total physical pages the array will have
+    m_physical_page_entries_count = PhysicalAddress::physical_page_index(highest_physical_address.get()) + 1;
+    VERIFY(m_physical_page_entries_count != 0);
+    VERIFY(!Checked<decltype(m_physical_page_entries_count)>::multiplication_would_overflow(m_physical_page_entries_count, sizeof(PhysicalPageEntry)));
+
+    // Calculate how many bytes the array will consume
+    auto physical_page_array_size = m_physical_page_entries_count * sizeof(PhysicalPageEntry);
+    auto physical_page_array_pages = page_round_up(physical_page_array_size) / PAGE_SIZE;
+    VERIFY(physical_page_array_pages * PAGE_SIZE >= physical_page_array_size);
+
+    // Calculate how many page tables we will need to be able to map them all
+    auto needed_page_table_count = (physical_page_array_pages + 512 - 1) / 512;
+
+    auto physical_page_array_pages_and_page_tables_count = physical_page_array_pages + needed_page_table_count;
+
+    // Now that we know how much memory we need for a contiguous array of PhysicalPage instances, find a memory region that can fit it
+    RefPtr<PhysicalRegion> found_region;
+    for (auto& region : m_user_physical_regions) {
+        if (region.size() >= physical_page_array_pages_and_page_tables_count) {
+            found_region = region;
+            break;
+        }
+    }
+
+    if (!found_region) {
+        dmesgln("MM: Need {} bytes for physical page management, but no memory region is large enough!", physical_page_array_pages_and_page_tables_count);
+        VERIFY_NOT_REACHED();
+    }
+
+    VERIFY(m_system_memory_info.user_physical_pages >= physical_page_array_pages_and_page_tables_count);
+    m_system_memory_info.user_physical_pages -= physical_page_array_pages_and_page_tables_count;
+
+    if (found_region->size() == physical_page_array_pages_and_page_tables_count) {
+        // We're stealing the entire region
+        m_user_physical_regions.remove_first_matching([&](auto& region) {
+            return region == found_region.ptr();
+        });
+        m_physical_pages_region = found_region.release_nonnull();
+    } else {
+        m_physical_pages_region = found_region->take_pages_from_beginning(physical_page_array_pages_and_page_tables_count);
+    }
+    m_used_memory_ranges.append({ UsedMemoryRangeType::PhysicalPages, m_physical_pages_region->lower(), m_physical_pages_region->upper() });
+
+    // Create the bare page directory. This is not a fully constructed page directory and merely contains the allocators!
+    m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
+
+    // Allocate a virtual address range for our array
+    auto range = m_kernel_page_directory->range_allocator().allocate_anywhere(physical_page_array_pages * PAGE_SIZE);
+    if (!range.has_value()) {
+        dmesgln("MM: Could not allocate {} bytes to map physical page array!", physical_page_array_pages * PAGE_SIZE);
+        VERIFY_NOT_REACHED();
+    }
+
+    // Now that we have our special m_physical_pages_region region with enough pages to hold the entire array
+    // try to map the entire region into kernel space so we always have it
+    // We can't use ensure_pte here because it would try to allocate a PhysicalPage and we don't have the array
+    // mapped yet so we can't create them
+    ScopedSpinLock lock(s_mm_lock);
+
+    // Create page tables at the beginning of m_physical_pages_region, followed by the PhysicalPageEntry array
+    auto page_tables_base = m_physical_pages_region->lower();
+    auto physical_page_array_base = page_tables_base.offset(needed_page_table_count * PAGE_SIZE);
+    auto physical_page_array_current_page = physical_page_array_base.get();
+    auto virtual_page_array_base = range.value().base().get();
+    auto virtual_page_array_current_page = virtual_page_array_base;
+    for (size_t pt_index = 0; pt_index < needed_page_table_count; pt_index++) {
+        auto virtual_page_base_for_this_pt = virtual_page_array_current_page;
+        auto pt_paddr = page_tables_base.offset(pt_index * PAGE_SIZE);
+        auto* pt = reinterpret_cast<PageTableEntry*>(quickmap_page(pt_paddr));
+        __builtin_memset(pt, 0, PAGE_SIZE);
+        for (size_t pte_index = 0; pte_index < PAGE_SIZE / sizeof(PageTableEntry); pte_index++) {
+            auto& pte = pt[pte_index];
+            pte.set_physical_page_base(physical_page_array_current_page);
+            pte.set_user_allowed(false);
+            pte.set_writable(true);
+            if (Processor::current().has_feature(CPUFeature::NX))
+                pte.set_execute_disabled(false);
+            pte.set_global(true);
+            pte.set_present(true);
+
+            physical_page_array_current_page += PAGE_SIZE;
+            virtual_page_array_current_page += PAGE_SIZE;
+        }
+        unquickmap_page();
+
+        // Hook the page table into the kernel page directory
+        VERIFY(((virtual_page_base_for_this_pt >> 30) & 0x3) == 3);
+        PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((FlatPtr)boot_pd3));
+
+        u32 page_directory_index = (virtual_page_base_for_this_pt >> 21) & 0x1ff;
+        auto* pd = reinterpret_cast<PageDirectoryEntry*>(quickmap_page(boot_pd3_paddr));
+        PageDirectoryEntry& pde = pd[page_directory_index];
+
+        VERIFY(!pde.is_present()); // Nothing should be using this PD yet
+
+        // We can't use ensure_pte quite yet!
+        pde.set_page_table_base(pt_paddr.get());
+        pde.set_user_allowed(false);
+        pde.set_present(true);
+        pde.set_writable(true);
+        pde.set_global(true);
+
+        unquickmap_page();
+
+        flush_tlb_local(VirtualAddress(virtual_page_base_for_this_pt));
+    }
+
+    // We now have the entire PhysicalPageEntry array mapped!
+    m_physical_page_entries = (PhysicalPageEntry*)range.value().base().get();
+    for (size_t i = 0; i < m_physical_page_entries_count; i++)
+        new (&m_physical_page_entries[i]) PageTableEntry();
+    m_physical_page_entries_free = m_physical_page_entries_count;
+
+    // Now we should be able to allocate PhysicalPage instances,
+    // so finish setting up the kernel page directory
+    m_kernel_page_directory->allocate_kernel_directory();
+
+    // Now create legit PhysicalPage objects for the page tables we created, so that
+    // we can put them into kernel_page_directory().m_page_tables
+    auto& kernel_page_tables = kernel_page_directory().m_page_tables;
+    virtual_page_array_current_page = virtual_page_array_base;
+    for (size_t pt_index = 0; pt_index < needed_page_table_count; pt_index++) {
+        VERIFY(virtual_page_array_current_page <= range.value().end().get());
+        auto pt_paddr = page_tables_base.offset(pt_index * PAGE_SIZE);
+        auto physical_page_index = PhysicalAddress::physical_page_index(pt_paddr.get());
+        auto& physical_page_entry = m_physical_page_entries[physical_page_index];
+        auto physical_page = adopt_ref(*new (&physical_page_entry.physical_page) PhysicalPage(false, false));
+        auto result = kernel_page_tables.set(virtual_page_array_current_page & ~0x1fffff, move(physical_page));
+        VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+
+        virtual_page_array_current_page += (PAGE_SIZE / sizeof(PhysicalPageEntry)) * PAGE_SIZE;
+    }
+
+    dmesgln("MM: Physical page entries: {} - {}", range.value().base(), range.value().end());
+}
+
+PhysicalPageEntry& MemoryManager::get_physical_page_entry(PhysicalAddress physical_address)
+{
+    VERIFY(m_physical_page_entries);
+    auto physical_page_entry_index = PhysicalAddress::physical_page_index(physical_address.get());
+    VERIFY(physical_page_entry_index < m_physical_page_entries_count);
+    return m_physical_page_entries[physical_page_entry_index];
+}
+
+PhysicalAddress MemoryManager::get_physical_address(PhysicalPage const& physical_page)
+{
+    PhysicalPageEntry const& physical_page_entry = *reinterpret_cast<PhysicalPageEntry const*>((u8 const*)&physical_page - __builtin_offsetof(PhysicalPageEntry, physical_page));
+    VERIFY(m_physical_page_entries);
+    size_t physical_page_entry_index = &physical_page_entry - m_physical_page_entries;
+    VERIFY(physical_page_entry_index < m_physical_page_entries_count);
+    return PhysicalAddress((PhysicalPtr)physical_page_entry_index * PAGE_SIZE);
 }
 
 PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress vaddr)
@@ -395,7 +573,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
     Processor::current().set_mm_data(*mm_data);
 
     if (cpu == 0) {
-        s_the = new MemoryManager;
+        new MemoryManager;
         kmalloc_enable_expand();
     }
 }
@@ -751,7 +929,7 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
 {
     VERIFY(s_mm_lock.own_lock());
     auto& mm_data = get_data();
-    auto& pte = boot_pd3_pt1023[4];
+    auto& pte = boot_pd3_pt1023[(KERNEL_QUICKMAP_PD - KERNEL_PT1024_BASE) / PAGE_SIZE];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
     if (pte.physical_page_base() != pd_paddr.get()) {
         pte.set_physical_page_base(pd_paddr.get());
@@ -761,23 +939,23 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
         // Because we must continue to hold the MM lock while we use this
         // mapping, it is sufficient to only flush on the current CPU. Other
         // CPUs trying to use this API must wait on the MM lock anyway
-        flush_tlb_local(VirtualAddress(0xffe04000));
+        flush_tlb_local(VirtualAddress(KERNEL_QUICKMAP_PD));
     } else {
         // Even though we don't allow this to be called concurrently, it's
         // possible that this PD was mapped on a different CPU and we don't
         // broadcast the flush. If so, we still need to flush the TLB.
         if (mm_data.m_last_quickmap_pd != pd_paddr)
-            flush_tlb_local(VirtualAddress(0xffe04000));
+            flush_tlb_local(VirtualAddress(KERNEL_QUICKMAP_PD));
     }
     mm_data.m_last_quickmap_pd = pd_paddr;
-    return (PageDirectoryEntry*)0xffe04000;
+    return (PageDirectoryEntry*)KERNEL_QUICKMAP_PD;
 }
 
 PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
     VERIFY(s_mm_lock.own_lock());
     auto& mm_data = get_data();
-    auto& pte = boot_pd3_pt1023[0];
+    auto& pte = boot_pd3_pt1023[(KERNEL_QUICKMAP_PT - KERNEL_PT1024_BASE) / PAGE_SIZE];
     if (pte.physical_page_base() != pt_paddr.get()) {
         pte.set_physical_page_base(pt_paddr.get());
         pte.set_present(true);
@@ -786,31 +964,31 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
         // Because we must continue to hold the MM lock while we use this
         // mapping, it is sufficient to only flush on the current CPU. Other
         // CPUs trying to use this API must wait on the MM lock anyway
-        flush_tlb_local(VirtualAddress(0xffe00000));
+        flush_tlb_local(VirtualAddress(KERNEL_QUICKMAP_PT));
     } else {
         // Even though we don't allow this to be called concurrently, it's
         // possible that this PT was mapped on a different CPU and we don't
         // broadcast the flush. If so, we still need to flush the TLB.
         if (mm_data.m_last_quickmap_pt != pt_paddr)
-            flush_tlb_local(VirtualAddress(0xffe00000));
+            flush_tlb_local(VirtualAddress(KERNEL_QUICKMAP_PT));
     }
     mm_data.m_last_quickmap_pt = pt_paddr;
-    return (PageTableEntry*)0xffe00000;
+    return (PageTableEntry*)KERNEL_QUICKMAP_PT;
 }
 
-u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
+u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
 {
     VERIFY_INTERRUPTS_DISABLED();
     auto& mm_data = get_data();
     mm_data.m_quickmap_prev_flags = mm_data.m_quickmap_in_use.lock();
     ScopedSpinLock lock(s_mm_lock);
 
-    u32 pte_idx = 8 + Processor::id();
-    VirtualAddress vaddr(0xffe00000 + pte_idx * PAGE_SIZE);
+    VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::id() * PAGE_SIZE);
+    u32 pte_idx = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
 
     auto& pte = boot_pd3_pt1023[pte_idx];
-    if (pte.physical_page_base() != physical_page.paddr().get()) {
-        pte.set_physical_page_base(physical_page.paddr().get());
+    if (pte.physical_page_base() != physical_address.get()) {
+        pte.set_physical_page_base(physical_address.get());
         pte.set_present(true);
         pte.set_writable(true);
         pte.set_user_allowed(false);
@@ -825,8 +1003,8 @@ void MemoryManager::unquickmap_page()
     ScopedSpinLock lock(s_mm_lock);
     auto& mm_data = get_data();
     VERIFY(mm_data.m_quickmap_in_use.is_locked());
-    u32 pte_idx = 8 + Processor::id();
-    VirtualAddress vaddr(0xffe00000 + pte_idx * PAGE_SIZE);
+    VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::id() * PAGE_SIZE);
+    u32 pte_idx = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
     auto& pte = boot_pd3_pt1023[pte_idx];
     pte.clear();
     flush_tlb_local(vaddr);

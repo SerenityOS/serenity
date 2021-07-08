@@ -12,14 +12,19 @@ namespace Kernel {
 
 NonnullRefPtr<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
 {
-    return adopt_ref(*new PhysicalPage(paddr, supervisor, may_return_to_freelist));
+    auto& physical_page_entry = MM.get_physical_page_entry(paddr);
+    return adopt_ref(*new (&physical_page_entry.physical_page) PhysicalPage(supervisor, may_return_to_freelist));
 }
 
-PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
+PhysicalPage::PhysicalPage(bool supervisor, bool may_return_to_freelist)
     : m_may_return_to_freelist(may_return_to_freelist)
     , m_supervisor(supervisor)
-    , m_paddr(paddr)
 {
+}
+
+PhysicalAddress PhysicalPage::paddr() const
+{
+    return MM.get_physical_address(*this);
 }
 
 void PhysicalPage::return_to_freelist() const

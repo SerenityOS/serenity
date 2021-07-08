@@ -44,6 +44,25 @@ unsigned PhysicalRegion::finalize_capacity()
     return size();
 }
 
+NonnullRefPtr<PhysicalRegion> PhysicalRegion::take_pages_from_beginning(unsigned page_count)
+{
+    VERIFY(m_used == 0);
+    VERIFY(page_count > 0);
+    VERIFY(page_count < m_pages);
+    auto taken_lower = m_lower;
+    auto taken_upper = taken_lower.offset((PhysicalPtr)page_count * PAGE_SIZE);
+    m_lower = m_lower.offset((PhysicalPtr)page_count * PAGE_SIZE);
+
+    // TODO: find a more elegant way to re-init the existing region
+    m_pages = 0;
+    m_bitmap = {}; // FIXME: Kind of wasteful
+    finalize_capacity();
+
+    auto taken_region = create(taken_lower, taken_upper);
+    taken_region->finalize_capacity();
+    return taken_region;
+}
+
 NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count, bool supervisor, size_t physical_alignment)
 {
     VERIFY(m_pages);
