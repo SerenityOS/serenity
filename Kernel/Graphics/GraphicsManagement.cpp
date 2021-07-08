@@ -12,7 +12,7 @@
 #include <Kernel/Graphics/BochsGraphicsAdapter.h>
 #include <Kernel/Graphics/Console/TextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/Graphics/IntelNativeGraphicsAdapter.h>
+#include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/VirtIOGraphicsAdapter.h>
 #include <Kernel/IO.h>
