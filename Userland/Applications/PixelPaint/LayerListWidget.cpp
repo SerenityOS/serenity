@@ -134,11 +134,9 @@ void LayerListWidget::mousedown_event(GUI::MouseEvent& event)
     Gfx::IntPoint translated_event_point = { 0, vertical_scrollbar().value() + event.y() };
 
     auto gadget_index = gadget_at(translated_event_point);
-    if (!gadget_index.has_value()) {
-        if (on_layer_select)
-            on_layer_select(nullptr);
+    if (!gadget_index.has_value())
         return;
-    }
+
     m_moving_gadget_index = gadget_index;
     m_selected_layer_index = gadget_index.value();
     m_moving_event_origin = translated_event_point;
