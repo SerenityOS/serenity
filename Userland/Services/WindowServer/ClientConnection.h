@@ -150,6 +150,7 @@ private:
     virtual void set_window_progress(i32, Optional<i32> const&) override;
     virtual void refresh_system_theme() override;
     virtual void pong() override;
+    virtual void set_global_cursor_position(Gfx::IntPoint const&) override;
     virtual Messages::WindowServer::GetGlobalCursorPositionResponse get_global_cursor_position() override;
     virtual void set_mouse_acceleration(float) override;
     virtual Messages::WindowServer::GetMouseAccelerationResponse get_mouse_acceleration() override;
