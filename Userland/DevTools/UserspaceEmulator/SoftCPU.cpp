@@ -1721,7 +1721,7 @@ void SoftCPU::FCMOVB(const X86::Instruction& insn)
 {
     VERIFY(insn.modrm().is_register());
     if (cf())
-        fpu_set(0, fpu_get(insn.rm() & 7));
+        fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 
 void SoftCPU::FIMUL_RM32(const X86::Instruction& insn)
@@ -1736,7 +1736,7 @@ void SoftCPU::FCMOVE(const X86::Instruction& insn)
 {
     VERIFY(insn.modrm().is_register());
     if (zf())
-        fpu_set(0, fpu_get(insn.rm() & 7));
+        fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 
 void SoftCPU::FICOM_RM32(const X86::Instruction&) { TODO_INSN(); }
@@ -1744,7 +1744,7 @@ void SoftCPU::FICOM_RM32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::FCMOVBE(const X86::Instruction& insn)
 {
     if (evaluate_condition(6))
-        fpu_set(0, fpu_get(insn.rm() & 7));
+        fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 
 void SoftCPU::FICOMP_RM32(const X86::Instruction&) { TODO_INSN(); }
@@ -1832,7 +1832,7 @@ void SoftCPU::FIST_RM32(const X86::Instruction& insn)
 void SoftCPU::FCMOVNBE(const X86::Instruction& insn)
 {
     if (evaluate_condition(7))
-        fpu_set(0, fpu_get(insn.rm() & 7));
+        fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 
 void SoftCPU::FISTP_RM32(const X86::Instruction& insn)
@@ -1869,7 +1869,7 @@ void SoftCPU::FLD_RM80(const X86::Instruction& insn)
 
 void SoftCPU::FUCOMI(const X86::Instruction& insn)
 {
-    auto i = insn.rm() & 7;
+    auto i = insn.modrm().rm();
     // FIXME: Unordered comparison checks.
     // FIXME: QNaN / exception handling.
     // FIXME: Set C0, C2, C3 in FPU status word.
@@ -1890,7 +1890,7 @@ void SoftCPU::FUCOMI(const X86::Instruction& insn)
 
 void SoftCPU::FCOMI(const X86::Instruction& insn)
 {
-    auto i = insn.rm() & 7;
+    auto i = insn.modrm().rm();
     // FIXME: QNaN / exception handling.
     // FIXME: Set C0, C2, C3 in FPU status word.
     set_zf(fpu_get(0) == fpu_get(i));
