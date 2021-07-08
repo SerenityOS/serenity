@@ -37,6 +37,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(entries);
     JS_DECLARE_NATIVE_FUNCTION(set);
     JS_DECLARE_NATIVE_FUNCTION(reverse);
+    JS_DECLARE_NATIVE_FUNCTION(copy_within);
 };
 
 }
