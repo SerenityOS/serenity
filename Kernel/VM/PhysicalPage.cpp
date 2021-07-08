@@ -27,14 +27,21 @@ PhysicalAddress PhysicalPage::paddr() const
     return MM.get_physical_address(*this);
 }
 
-void PhysicalPage::return_to_freelist() const
+void PhysicalPage::free_this()
 {
-    VERIFY((paddr().get() & ~PAGE_MASK) == 0);
+    if (m_may_return_to_freelist) {
+        auto paddr = MM.get_physical_address(*this);
+        bool is_supervisor = m_supervisor;
 
-    if (m_supervisor)
-        MM.deallocate_supervisor_physical_page(*this);
-    else
-        MM.deallocate_user_physical_page(*this);
+        this->~PhysicalPage(); // delete in place
+
+        if (is_supervisor)
+            MM.deallocate_supervisor_physical_page(paddr);
+        else
+            MM.deallocate_user_physical_page(paddr);
+    } else {
+        this->~PhysicalPage(); // delete in place
+    }
 }
 
 }

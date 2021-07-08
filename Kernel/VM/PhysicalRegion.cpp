@@ -172,7 +172,7 @@ void PhysicalRegion::free_page_at(PhysicalAddress addr)
     m_used--;
 }
 
-void PhysicalRegion::return_page(const PhysicalPage& page)
+void PhysicalRegion::return_page(PhysicalAddress paddr)
 {
     auto returned_count = m_recently_returned.size();
     if (returned_count >= m_recently_returned.capacity()) {
@@ -180,10 +180,10 @@ void PhysicalRegion::return_page(const PhysicalPage& page)
         // and replace the entry with this page
         auto& entry = m_recently_returned[get_fast_random<u8>()];
         free_page_at(entry);
-        entry = page.paddr();
+        entry = paddr;
     } else {
         // Still filling the return queue, just append it
-        m_recently_returned.append(page.paddr());
+        m_recently_returned.append(paddr);
     }
 }
 
