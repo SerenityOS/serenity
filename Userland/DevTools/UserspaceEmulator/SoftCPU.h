@@ -1094,8 +1094,12 @@ private:
     virtual void XOR_reg32_RM32(const X86::Instruction&) override;
     virtual void XOR_reg8_RM8(const X86::Instruction&) override;
     virtual void MOVQ_mm1_mm2m64(const X86::Instruction&) override;
+    virtual void MOVQ_mm1m64_mm2(const X86::Instruction&) override;
+    virtual void MOVD_mm1_rm32(const X86::Instruction&) override;
+    virtual void MOVQ_mm1_rm64(const X86::Instruction&) override; // long mode
+    virtual void MOVD_rm32_mm2(const X86::Instruction&) override;
+    virtual void MOVQ_rm64_mm2(const X86::Instruction&) override; // long mode
     virtual void EMMS(const X86::Instruction&) override;
-    virtual void MOVQ_mm1_m64_mm2(const X86::Instruction&) override;
     virtual void wrap_0xC0(const X86::Instruction&) override;
     virtual void wrap_0xC1_16(const X86::Instruction&) override;
     virtual void wrap_0xC1_32(const X86::Instruction&) override;

@@ -641,8 +641,12 @@ public:
     virtual void XOR_reg32_RM32(const Instruction&) = 0;
     virtual void XOR_reg8_RM8(const Instruction&) = 0;
     virtual void MOVQ_mm1_mm2m64(const Instruction&) = 0;
+    virtual void MOVQ_mm1m64_mm2(const Instruction&) = 0;
+    virtual void MOVD_mm1_rm32(const Instruction&) = 0;
+    virtual void MOVQ_mm1_rm64(const Instruction&) = 0; // long mode
+    virtual void MOVD_rm32_mm2(const Instruction&) = 0;
+    virtual void MOVQ_rm64_mm2(const Instruction&) = 0; // long mode
     virtual void EMMS(const Instruction&) = 0;
-    virtual void MOVQ_mm1_m64_mm2(const Instruction&) = 0;
     virtual void wrap_0xC0(const Instruction&) = 0;
     virtual void wrap_0xC1_16(const Instruction&) = 0;
     virtual void wrap_0xC1_32(const Instruction&) = 0;

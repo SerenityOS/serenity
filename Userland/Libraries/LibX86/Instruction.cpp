@@ -142,6 +142,8 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     case OP_CR_reg32:
     case OP_reg16_RM8:
     case OP_reg32_RM8:
+    case OP_mm1_rm32:
+    case OP_rm32_mm2:
     case OP_mm1_mm2m64:
     case OP_mm1_mm2m32:
     case OP_mm1m64_mm2:
@@ -812,6 +814,7 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build_0f(0x69, "PUNPCKHWD", OP_mm1_mm2m64, &Interpreter::PUNPCKHWD_mm1_mm2m64);
     build_0f(0x6A, "PUNPCKHDQ", OP_mm1_mm2m64, &Interpreter::PUNPCKHDQ_mm1_mm2m64);
     build_0f(0x6B, "PACKSSDW", OP_mm1_mm2m64, &Interpreter::PACKSSDW_mm1_mm2m64);
+    build_0f(0x6E, "MOVD", OP_mm1_rm32, &Interpreter::MOVD_mm1_rm32);
     build_0f(0x6F, "MOVQ", OP_mm1_mm2m64, &Interpreter::MOVQ_mm1_mm2m64);
 
     build_0f_slash(0x71, 2, "PSRLW", OP_mm1_imm8, &Interpreter::PSRLW_mm1_mm2m64);
@@ -829,7 +832,8 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build_0f(0x76, "PCMPEQD", OP_mm1_mm2m64, &Interpreter::PCMPEQD_mm1_mm2m64);
     build_0f(0x75, "PCMPEQW", OP_mm1_mm2m64, &Interpreter::PCMPEQW_mm1_mm2m64);
     build_0f(0x77, "EMMS", OP, &Interpreter::EMMS);
-    build_0f(0x7F, "MOVQ", OP_mm1m64_mm2, &Interpreter::MOVQ_mm1_m64_mm2);
+    build_0f(0x7E, "MOVD", OP_rm32_mm2, &Interpreter::MOVD_rm32_mm2);
+    build_0f(0x7F, "MOVQ", OP_mm1m64_mm2, &Interpreter::MOVQ_mm1m64_mm2);
 
     build_0f(0x80, "JO", OP_NEAR_imm, &Interpreter::Jcc_NEAR_imm);
     build_0f(0x81, "JNO", OP_NEAR_imm, &Interpreter::Jcc_NEAR_imm);
@@ -1319,6 +1323,7 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
     auto append_relative_imm32 = [&] { formatted_address(origin + 5, x32, i32(imm32())); };
 
     auto append_mm = [&] { builder.appendff("mm{}", register_index()); };
+    auto append_mmrm32 = [&] { builder.append(m_modrm.to_string_mm(*this)); };
     auto append_mmrm64 = [&] { builder.append(m_modrm.to_string_mm(*this)); };
 
     auto append = [&](auto& content) { builder.append(content); };
@@ -1846,7 +1851,19 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
         append_mnemonic_space();
         append_mm();
         append(", ");
+        append_mmrm32();
+        break;
+    case OP_mm1_rm32:
+        append_mnemonic_space();
+        append_mm();
+        append(", ");
         append_rm32();
+        break;
+    case OP_rm32_mm2:
+        append_mnemonic_space();
+        append_rm32();
+        append(", ");
+        append_mm();
         break;
     case OP_mm1_mm2m64:
         append_mnemonic_space();
@@ -1856,9 +1873,9 @@ void Instruction::to_string_internal(StringBuilder& builder, u32 origin, const S
         break;
     case OP_mm1m64_mm2:
         append_mnemonic_space();
-        append_mm();
-        append(", ");
         append_mmrm64();
+        append(", ");
+        append_mm();
         break;
     case InstructionPrefix:
         append_mnemonic();

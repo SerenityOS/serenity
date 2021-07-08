@@ -103,6 +103,8 @@ enum InstructionFormat {
     OP_RM32_reg32_imm8,
     OP_RM16_reg16_CL,
     OP_RM32_reg32_CL,
+    OP_mm1_rm32,
+    OP_rm32_mm2,
     OP_mm1_mm2m64,
     OP_mm1_mm2m32,
     OP_mm1_imm8,
