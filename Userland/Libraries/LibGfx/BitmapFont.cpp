@@ -5,20 +5,11 @@
  */
 
 #include "BitmapFont.h"
-#include "Bitmap.h"
 #include "Emoji.h"
-#include <AK/StdLibExtras.h>
-#include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
-#include <AK/Vector.h>
 #include <LibCore/FileStream.h>
 #include <LibGfx/FontDatabase.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <unistd.h>
 
 namespace Gfx {
 
