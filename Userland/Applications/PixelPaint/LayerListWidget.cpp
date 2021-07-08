@@ -310,12 +310,18 @@ void LayerListWidget::set_selected_layer(Layer* layer)
 {
     if (!m_image)
         return;
-    for (size_t i = 0; i < m_image->layer_count(); ++i)
-        m_image->layer(i).set_selected(layer == &m_image->layer(i));
+    for (size_t i = 0; i < m_image->layer_count(); ++i) {
+        if (layer == &m_image->layer(i)) {
+            m_image->layer(i).set_selected(true);
+            scroll_into_view(m_gadgets[i].rect, false, true);
+            m_selected_layer_index = i;
+        } else {
+            m_image->layer(i).set_selected(false);
+        }
+    }
     if (on_layer_select)
         on_layer_select(layer);
 
-    scroll_into_view(m_gadgets[m_selected_layer_index].rect, false, true);
     update();
 }
 
