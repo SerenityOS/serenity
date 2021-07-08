@@ -446,7 +446,7 @@ long_mode_supported:
     addl $4096, %eax
     loop 1b
 
-    /* pseudo identity map the 3072-3102MB range */
+    /* pseudo identity map the 3072-3104MB range */
     movl $(512 * 16), %ecx
     movl $(boot_pd3_pts - KERNEL_BASE), %edi
     xorl %eax, %eax

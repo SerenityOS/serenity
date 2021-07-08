@@ -37,9 +37,12 @@ extern "C" PageDirectoryEntry boot_pd3[1024];
 
 UNMAP_AFTER_INIT PageDirectory::PageDirectory()
 {
-    m_range_allocator.initialize_with_range(VirtualAddress(KERNEL_BASE + 0x02000000), 0x2f000000);
+    m_range_allocator.initialize_with_range(VirtualAddress(KERNEL_BASE + KERNEL_PD_OFFSET), KERNEL_PD_END - (KERNEL_BASE + KERNEL_PD_OFFSET));
     m_identity_range_allocator.initialize_with_range(VirtualAddress(FlatPtr(0x00000000)), 0x00200000);
+}
 
+UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
+{
     // Adopt the page tables already set up by boot.S
 #if ARCH(X86_64)
     PhysicalAddress boot_pml4t_paddr(virtual_to_low_physical((FlatPtr)boot_pml4t));

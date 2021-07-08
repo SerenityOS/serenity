@@ -52,12 +52,14 @@ enum class UsedMemoryRangeType {
     LowMemory = 0,
     Kernel,
     BootModule,
+    PhysicalPages,
 };
 
 static constexpr StringView UserMemoryRangeTypeNames[] {
     "Low memory",
     "Kernel",
     "Boot module",
+    "Physical Pages"
 };
 
 struct UsedMemoryRange {
@@ -195,10 +197,14 @@ public:
     const Vector<UsedMemoryRange>& used_memory_ranges() { return m_used_memory_ranges; }
     bool is_allowed_to_mmap_to_userspace(PhysicalAddress, const Range&) const;
 
+    PhysicalPageEntry& get_physical_page_entry(PhysicalAddress);
+    PhysicalAddress get_physical_address(PhysicalPage const&);
+
 private:
     MemoryManager();
     ~MemoryManager();
 
+    void initialize_physical_pages();
     void register_reserved_ranges();
 
     void register_vmobject(VMObject&);
@@ -216,7 +222,12 @@ private:
     static Region* find_region_from_vaddr(VirtualAddress);
 
     RefPtr<PhysicalPage> find_free_user_physical_page(bool);
-    u8* quickmap_page(PhysicalPage&);
+
+    ALWAYS_INLINE u8* quickmap_page(PhysicalPage& page)
+    {
+        return quickmap_page(page.paddr());
+    }
+    u8* quickmap_page(PhysicalAddress const&);
     void unquickmap_page();
 
     PageDirectoryEntry* quickmap_pd(PageDirectory&, size_t pdpt_index);
@@ -235,6 +246,10 @@ private:
 
     NonnullRefPtrVector<PhysicalRegion> m_user_physical_regions;
     NonnullRefPtrVector<PhysicalRegion> m_super_physical_regions;
+    RefPtr<PhysicalRegion> m_physical_pages_region;
+    PhysicalPageEntry* m_physical_page_entries { nullptr };
+    size_t m_physical_page_entries_free { 0 };
+    size_t m_physical_page_entries_count { 0 };
 
     Region::List m_user_regions;
     Region::List m_kernel_regions;
