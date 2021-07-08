@@ -144,7 +144,7 @@ static void initialize_typed_array_from_array_like(GlobalObject& global_object, 
         return;
 
     // Enforce 2GB "Excessive Length" limit
-    if (length > NumericLimits<i32>::max() / sizeof(TypeError)) {
+    if (length > NumericLimits<i32>::max() / sizeof(T)) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
         return;
     }
@@ -175,9 +175,16 @@ static void initialize_typed_array_from_array_like(GlobalObject& global_object, 
 template<typename T>
 static void initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, const MarkedValueList& list)
 {
+    auto& vm = global_object.vm();
+    // Enforce 2GB "Excessive Length" limit
+    if (list.size() > NumericLimits<i32>::max() / sizeof(T)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        return;
+    }
+
     auto element_size = typed_array.element_size();
     if (Checked<size_t>::multiplication_would_overflow(element_size, list.size())) {
-        global_object.vm().throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
         return;
     }
     auto byte_length = element_size * list.size();
@@ -187,7 +194,6 @@ static void initialize_typed_array_from_list(GlobalObject& global_object, TypedA
     typed_array.set_byte_offset(0);
     typed_array.set_array_length(list.size());
 
-    auto& vm = global_object.vm();
     for (size_t k = 0; k < list.size(); k++) {
         auto value = list[k];
         typed_array.set(k, value, true);
