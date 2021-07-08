@@ -175,7 +175,7 @@ String StyleFunctionRule::to_string() const
 
     builder.append(m_name);
     builder.append("(");
-    append_raw(builder, ", ", m_values);
+    append_with_to_string(builder, ", ", m_values);
     builder.append(")");
 
     return builder.to_string();

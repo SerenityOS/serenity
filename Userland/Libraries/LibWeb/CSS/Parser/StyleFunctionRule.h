@@ -23,20 +23,17 @@ public:
     ~StyleFunctionRule();
 
     String const& name() const { return m_name; }
-    Vector<String> const& values() const { return m_values; }
+    Vector<StyleComponentValueRule> const& values() const { return m_values; }
     // FIXME: This method is a temporary hack while much of the parser still expects a string, rather than tokens.
     String values_as_string() const
     {
-        StringBuilder builder;
-        for (auto& value : m_values)
-            builder.append(value);
-        return builder.to_string();
+        return "";
     }
 
     String to_string() const;
 
 private:
     String m_name;
-    Vector<String> m_values;
+    Vector<StyleComponentValueRule> m_values;
 };
 }
