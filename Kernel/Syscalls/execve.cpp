@@ -147,10 +147,10 @@ static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]
     regs.rsi = argv;
     regs.rdx = envp;
 #endif
-    push_on_new_stack(0); // return address
 
-    VERIFY((new_sp + sizeof(void*)) % 16 == 0);
+    VERIFY(new_sp % 16 == 0);
 
+    // FIXME: The way we're setting up the stack and passing arguments to the entry point isn't ABI-compliant
     return new_sp;
 }
 
