@@ -19,6 +19,7 @@ public:
     virtual ~TimeZonePrototype() override = default;
 
 private:
+    JS_DECLARE_NATIVE_FUNCTION(id_getter);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(to_json);
 };
