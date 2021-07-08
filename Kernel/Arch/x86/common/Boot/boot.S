@@ -260,7 +260,7 @@ exiting_real_mode:
     /* far jump to protected_mode_16_bit in 0x5000 */
     pushw $8
     push $PROTECTED_MODE_16_BIT_CODE
-    retf
+    lret
     hlt
 
 .code16
@@ -275,7 +275,7 @@ protected_mode_16_bit:
 
     pushw $0
     push $REAL_MODE_CODE
-    retf
+    lret
     hlt
 
 real_mode:
