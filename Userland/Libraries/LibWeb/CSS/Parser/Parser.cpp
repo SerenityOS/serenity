@@ -734,7 +734,7 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
 
         tokens.reconsume_current_input_token();
         auto value = consume_a_component_value(tokens);
-        function->m_values.append(value.token().m_value.to_string());
+        function->m_values.append(value);
     }
 
     return function;
@@ -1059,8 +1059,13 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
             auto url_token = rule->prelude().first();
             if (url_token.is_function()) {
                 auto& function = url_token.function();
-                if (function.name().equals_ignoring_case("url"sv) && !function.values().is_empty())
-                    url = url_token.function().values().first();
+                if (function.name().equals_ignoring_case("url"sv) && !function.values().is_empty()) {
+                    auto& argument_token = url_token.function().values().first();
+                    if (argument_token.is(Token::Type::String))
+                        url = argument_token.token().string();
+                    else
+                        dbgln("First argument to url() was not a string: '{}'", argument_token.to_debug_string());
+                }
             }
 
             if (url_token.is(Token::Type::String))
@@ -1307,8 +1312,11 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         // FIXME: Handle fallback value as second parameter
         // https://www.w3.org/TR/css-variables-1/#using-variables
         if (!token.function().values().is_empty()) {
-            auto& property_name = token.function().values().first();
-            return CustomStyleValue::create(property_name);
+            auto& property_name_token = token.function().values().first();
+            if (property_name_token.is(Token::Type::Ident))
+                return CustomStyleValue::create(property_name_token.token().ident());
+            else
+                dbgln("First argument to var() function was not an ident: '{}'", property_name_token.to_debug_string());
         }
     }
 
