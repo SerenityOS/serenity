@@ -28,7 +28,12 @@ _plt_trampoline: # (object, relocation_index)
     shlq $3, %rsi
     leaq (%rsi, %rsi, 2), %rsi
 
+    pushq %rbp
+    movq %rsp, %rbp
+    andq $~15, %rsp
     call _fixup_plt_entry@PLT
+    movq %rbp, %rsp
+    popq %rbp
 
     movq %rax, 88(%rsp) # replace object argument with symbol address
 
