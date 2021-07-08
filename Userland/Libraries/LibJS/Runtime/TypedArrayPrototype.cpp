@@ -36,6 +36,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.forEach, for_each, 1, attr);
     define_native_function(vm.names.includes, includes, 1, attr);
     define_native_function(vm.names.indexOf, index_of, 1, attr);
+    define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
     define_native_function(vm.names.some, some, 1, attr);
     define_native_function(vm.names.join, join, 1, attr);
     define_native_function(vm.names.keys, keys, 0, attr);
@@ -343,6 +344,54 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
 
     auto search_element = vm.argument(0);
     for (; k < length; ++k) {
+        auto k_present = typed_array->has_property(k);
+        if (k_present) {
+            auto element_k = typed_array->get(k);
+
+            if (strict_eq(search_element, element_k))
+                return Value(k);
+        }
+    }
+
+    return Value(-1);
+}
+
+// 23.2.3.17 %TypedArray%.prototype.lastIndexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
+{
+    auto typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+
+    auto length = typed_array->array_length();
+
+    if (length == 0)
+        return Value(-1);
+
+    double n;
+    if (vm.argument_count() > 1) {
+        n = vm.argument(1).to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
+    } else {
+        n = length - 1;
+    }
+
+    if (Value(n).is_negative_infinity())
+        return Value(-1);
+
+    i32 k;
+    if (n >= 0) {
+        k = min(n, (i32)length - 1);
+    } else {
+        auto relative_k = length + n;
+        if (relative_k < 0) // ensures we dont underflow `k`
+            relative_k = -1;
+        k = relative_k;
+    }
+
+    auto search_element = vm.argument(0);
+    for (; k >= 0; --k) {
         auto k_present = typed_array->has_property(k);
         if (k_present) {
             auto element_k = typed_array->get(k);
