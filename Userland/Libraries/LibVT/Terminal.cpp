@@ -396,6 +396,9 @@ void Terminal::DECSTBM(Parameters params)
         dbgln("Error: DECSTBM: scrolling region invalid: {}-{}", top, bottom);
         return;
     }
+    if (top >= bottom) {
+        return;
+    }
     m_scroll_region_top = top - 1;
     m_scroll_region_bottom = bottom - 1;
     set_cursor(0, 0);
