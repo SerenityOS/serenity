@@ -39,7 +39,7 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.flags, flags, {}, Attribute::Configurable);
     define_native_accessor(vm.names.source, source, {}, Attribute::Configurable);
 
-#define __JS_ENUMERATE(flagName, flag_name, flag_char, ECMAScriptFlagName) \
+#define __JS_ENUMERATE(flagName, flag_name, flag_char) \
     define_native_accessor(vm.names.flagName, flag_name, {}, Attribute::Configurable);
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
@@ -230,7 +230,7 @@ static Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Str
 // 22.2.5.9 get RegExp.prototype.multiline, https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline
 // 22.2.5.14 get RegExp.prototype.sticky, https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
 // 22.2.5.17 get RegExp.prototype.unicode, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode
-#define __JS_ENUMERATE(flagName, flag_name, flag_char, ECMAScriptFlagName)           \
+#define __JS_ENUMERATE(flagName, flag_name, flag_char)                               \
     JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flag_name)                              \
     {                                                                                \
         auto* regexp_object = this_object_from(vm, global_object);                   \
@@ -244,8 +244,8 @@ static Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Str
             return {};                                                               \
         }                                                                            \
                                                                                      \
-        auto flags = static_cast<RegExpObject*>(regexp_object)->declared_options();  \
-        return Value(flags.has_flag_set(ECMAScriptFlags::ECMAScriptFlagName));       \
+        auto const& flags = static_cast<RegExpObject*>(regexp_object)->flags();      \
+        return Value(flags.contains(#flag_char##sv));                                \
     }
 JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
@@ -259,11 +259,11 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
 
     StringBuilder builder(8);
 
-#define __JS_ENUMERATE(flagName, flag_name, flag_char, ECMAScriptFlagName) \
-    auto flag_##flag_name = this_object->get(vm.names.flagName);           \
-    if (vm.exception())                                                    \
-        return {};                                                         \
-    if (flag_##flag_name.to_boolean())                                     \
+#define __JS_ENUMERATE(flagName, flag_name, flag_char)           \
+    auto flag_##flag_name = this_object->get(vm.names.flagName); \
+    if (vm.exception())                                          \
+        return {};                                               \
+    if (flag_##flag_name.to_boolean())                           \
         builder.append(#flag_char);
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
