@@ -188,6 +188,7 @@ namespace JS {
     P(globalThis)                            \
     P(groups)                                \
     P(has)                                   \
+    P(hasIndices)                            \
     P(hasOwn)                                \
     P(hasOwnProperty)                        \
     P(hypot)                                 \

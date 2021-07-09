@@ -224,6 +224,7 @@ static Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Str
     return regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), string);
 }
 
+// 1.1.4.3 get RegExp.prototype.hasIndices, https://tc39.es/proposal-regexp-match-indices/#sec-get-regexp.prototype.hasIndices
 // 22.2.5.3 get RegExp.prototype.dotAll, https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll
 // 22.2.5.5 get RegExp.prototype.global, https://tc39.es/ecma262/#sec-get-regexp.prototype.global
 // 22.2.5.6 get RegExp.prototype.ignoreCase, https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase
