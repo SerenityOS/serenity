@@ -303,6 +303,7 @@ namespace JS {
     P(strike)                                \
     P(stringify)                             \
     P(sub)                                   \
+    P(subarray)                              \
     P(substr)                                \
     P(substring)                             \
     P(sup)                                   \
