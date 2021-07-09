@@ -948,6 +948,7 @@ bool Window::is_maximized() const
 
 void Window::set_maximized(bool maximized)
 {
+    VERIFY(m_window_id != 0);
     WindowServerConnection::the().async_set_maximized(m_window_id, maximized);
 }
 
