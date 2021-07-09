@@ -156,6 +156,15 @@ FLATTEN SignedBigInteger SignedBigInteger::multiplied_by(UnsignedBigInteger cons
     return { unsigned_value().multiplied_by(other), m_sign };
 }
 
+FLATTEN SignedDivisionResult SignedBigInteger::divided_by(UnsignedBigInteger const& divisor) const
+{
+    auto division_result = unsigned_value().divided_by(divisor);
+    return {
+        { move(division_result.quotient), m_sign },
+        { move(division_result.remainder), m_sign },
+    };
+}
+
 FLATTEN SignedBigInteger SignedBigInteger::bitwise_or(const SignedBigInteger& other) const
 {
     auto result = bitwise_or(other.unsigned_value());
