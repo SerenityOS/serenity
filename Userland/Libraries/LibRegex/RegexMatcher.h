@@ -149,6 +149,7 @@ public:
             options.reset_flag(AllFlags::MatchNotEndOfLine);
             options.reset_flag(AllFlags::MatchNotBeginOfLine);
         }
+        options.reset_flag(AllFlags::Internal_Stateful);
         options |= AllFlags::Global;
 
         return matcher->match(view, options);
@@ -164,6 +165,7 @@ public:
             options.reset_flag(AllFlags::MatchNotEndOfLine);
             options.reset_flag(AllFlags::MatchNotBeginOfLine);
         }
+        options.reset_flag(AllFlags::Internal_Stateful);
         options |= AllFlags::Global;
 
         return matcher->match(views, options);

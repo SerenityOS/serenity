@@ -237,7 +237,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                 break;
             }
 
-            if (!continue_search && !input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
+            if (!continue_search)
                 break;
         }
 
