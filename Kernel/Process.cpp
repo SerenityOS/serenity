@@ -133,8 +133,10 @@ void Process::register_new(Process& process)
 {
     // Note: this is essentially the same like process->ref()
     RefPtr<Process> new_process = process;
-    ScopedSpinLock lock(g_processes_lock);
-    g_processes->prepend(process);
+    {
+        ScopedSpinLock lock(g_processes_lock);
+        g_processes->prepend(process);
+    }
     ProcFSComponentRegistry::the().register_new_process(process);
 }
 
@@ -180,7 +182,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     return process;
 }
 
-RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity)
+RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
 {
     auto process = Process::create(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true);
     if (!first_thread || !process)
@@ -193,9 +195,8 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
     first_thread->regs().rdi = FlatPtr(entry_data); // entry function argument is expected to be in regs.rdi
 #endif
 
-    if (process->pid() != 0) {
+    if (do_register == RegisterProcess::Yes)
         register_new(*process);
-    }
 
     ScopedSpinLock lock(g_scheduler_lock);
     first_thread->set_affinity(affinity);
