@@ -143,6 +143,7 @@ namespace JS {
     P(fromCharCode)                          \
     P(fromCodePoint)                         \
     P(fromEntries)                           \
+    P(fromEpochSeconds)                      \
     P(fround)                                \
     P(gc)                                    \
     P(get)                                   \
