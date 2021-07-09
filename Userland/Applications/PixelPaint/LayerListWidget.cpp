@@ -231,9 +231,18 @@ void LayerListWidget::image_did_remove_layer(size_t layer_index)
     relayout_gadgets();
 }
 
-void LayerListWidget::image_did_modify_layer(size_t layer_index)
+void LayerListWidget::image_did_modify_layer_properties(size_t layer_index)
 {
     update(m_gadgets[layer_index].rect);
+}
+
+void LayerListWidget::image_did_modify_layer_bitmap(size_t layer_index)
+{
+    Gfx::IntRect adjusted_rect;
+    Gfx::IntRect thumbnail_rect;
+    Gfx::IntRect text_rect;
+    get_gadget_rects(m_gadgets[layer_index], adjusted_rect, thumbnail_rect, text_rect);
+    update(thumbnail_rect);
 }
 
 void LayerListWidget::image_did_modify_layer_stack()

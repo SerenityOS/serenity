@@ -434,7 +434,7 @@ void Image::layer_did_modify_bitmap(Badge<Layer>, Layer const& layer, Gfx::IntRe
 {
     auto layer_index = index_of(layer);
     for (auto* client : m_clients)
-        client->image_did_modify_layer(layer_index);
+        client->image_did_modify_layer_bitmap(layer_index);
 
     did_change(modified_layer_rect.translated(layer.location()));
 }
@@ -443,7 +443,7 @@ void Image::layer_did_modify_properties(Badge<Layer>, Layer const& layer)
 {
     auto layer_index = index_of(layer);
     for (auto* client : m_clients)
-        client->image_did_modify_layer(layer_index);
+        client->image_did_modify_layer_properties(layer_index);
 
     did_change();
 }
