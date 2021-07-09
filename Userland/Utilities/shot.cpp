@@ -25,7 +25,7 @@ class SelectableLayover final : public GUI::Widget {
 public:
     SelectableLayover(GUI::Window* window)
         : m_window(window)
-        , m_background_color(palette().threed_highlight())
+        , m_background_color(palette().threed_highlight().with_alpha(128))
     {
         set_override_cursor(Gfx::StandardCursor::Crosshair);
     }
@@ -60,16 +60,14 @@ private:
 
     virtual void paint_event(GUI::PaintEvent&) override
     {
-        if (m_region.is_empty()) {
-            GUI::Painter painter(*this);
-            painter.fill_rect(m_window->rect(), m_background_color);
-            return;
-        }
-
         GUI::Painter painter(*this);
-        painter.fill_rect(m_region, Gfx::Color::Transparent);
-        for (auto rect : m_window->rect().shatter(m_region))
-            painter.fill_rect(rect, m_background_color);
+        painter.clear_rect(m_window->rect(), Gfx::Color::Transparent);
+        painter.fill_rect(m_window->rect(), m_background_color);
+
+        if (m_region.is_empty())
+            return;
+
+        painter.clear_rect(m_region, Gfx::Color::Transparent);
     }
 
     virtual void keydown_event(GUI::KeyEvent& event) override
@@ -113,10 +111,9 @@ int main(int argc, char** argv)
     if (select_region) {
         auto window = GUI::Window::construct();
         auto& container = window->set_main_widget<SelectableLayover>(window);
-        container.set_fill_with_background_color(true);
 
         window->set_title("shot");
-        window->set_opacity(0.2);
+        window->set_has_alpha_channel(true);
         window->set_fullscreen(true);
         window->show();
         app->exec();
