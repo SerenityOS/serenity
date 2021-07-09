@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/RegExpConstructor.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/RegExpPrototype.h>
 #include <LibJS/Token.h>
@@ -33,6 +34,7 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
     define_native_function(*vm.well_known_symbol_match(), symbol_match, 1, attr);
     define_native_function(*vm.well_known_symbol_replace(), symbol_replace, 2, attr);
     define_native_function(*vm.well_known_symbol_search(), symbol_search, 1, attr);
+    define_native_function(*vm.well_known_symbol_split(), symbol_split, 2, attr);
 
     define_native_accessor(vm.names.flags, flags, {}, Attribute::Configurable);
     define_native_accessor(vm.names.source, source, {}, Attribute::Configurable);
@@ -615,6 +617,126 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
         return {};
 
     return index;
+}
+
+// 22.2.5.13 RegExp.prototype [ @@split ] ( string, limit ), https://tc39.es/ecma262/#sec-regexp.prototype-@@split
+JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
+{
+    auto* regexp_object = this_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+    auto string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    auto* constructor = species_constructor(global_object, *regexp_object, *global_object.regexp_constructor());
+    if (vm.exception())
+        return {};
+
+    auto flags_object = regexp_object->get(vm.names.flags);
+    if (vm.exception())
+        return {};
+    auto flags = flags_object.to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto new_flags = flags.find('y').has_value() ? move(flags) : String::formatted("{}y", flags);
+
+    MarkedValueList arguments(vm.heap());
+    arguments.append(regexp_object);
+    arguments.append(js_string(vm, move(new_flags)));
+    auto splitter_value = vm.construct(*constructor, *constructor, move(arguments));
+    if (vm.exception())
+        return {};
+    auto* splitter = splitter_value.to_object(global_object);
+    if (!splitter)
+        return {};
+
+    auto* array = Array::create(global_object, 0);
+    size_t array_length = 0;
+
+    auto limit = NumericLimits<u32>::max();
+    if (!vm.argument(1).is_undefined()) {
+        limit = vm.argument(1).to_u32(global_object);
+        if (vm.exception())
+            return {};
+    }
+
+    if (limit == 0)
+        return array;
+
+    if (string.is_empty()) {
+        auto result = regexp_exec(global_object, *splitter, string);
+        if (!result.is_null())
+            return array;
+
+        array->create_data_property_or_throw(0, js_string(vm, string));
+        return array;
+    }
+
+    size_t last_match_end = 0;   // 'p' in the spec.
+    size_t next_search_from = 0; // 'q' in the spec.
+
+    while (next_search_from < string.length()) {
+        splitter->set(vm.names.lastIndex, Value(next_search_from), true);
+        if (vm.exception())
+            return {};
+
+        auto result = regexp_exec(global_object, *splitter, string);
+        if (vm.exception())
+            return {};
+        if (result.is_null()) {
+            // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
+            ++next_search_from;
+            continue;
+        }
+
+        auto last_index_value = splitter->get(vm.names.lastIndex);
+        if (vm.exception())
+            return {};
+        auto last_index = last_index_value.to_length(global_object); // 'e' in the spec.
+        if (vm.exception())
+            return {};
+        last_index = min(last_index, string.length());
+
+        if (last_index == last_match_end) {
+            // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
+            ++next_search_from;
+            continue;
+        }
+
+        auto substring = string.substring(last_match_end, next_search_from - last_match_end);
+        array->create_data_property_or_throw(array_length, js_string(vm, move(substring)));
+
+        if (++array_length == limit)
+            return array;
+
+        auto* result_object = result.to_object(global_object);
+        if (!result_object)
+            return {};
+        auto number_of_captures = length_of_array_like(global_object, *result_object);
+        if (vm.exception())
+            return {};
+        if (number_of_captures > 0)
+            --number_of_captures;
+
+        for (size_t i = 1; i <= number_of_captures; ++i) {
+            auto next_capture = result_object->get(i);
+            if (vm.exception())
+                return {};
+
+            array->create_data_property_or_throw(array_length, next_capture);
+            if (++array_length == limit)
+                return array;
+        }
+
+        last_match_end = last_index;
+        next_search_from = last_index;
+    }
+
+    auto substring = string.substring(last_match_end);
+    array->create_data_property_or_throw(array_length, js_string(vm, move(substring)));
+
+    return array;
 }
 
 }
