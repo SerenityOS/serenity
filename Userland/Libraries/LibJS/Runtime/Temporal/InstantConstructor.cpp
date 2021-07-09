@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/InstantConstructor.h>
@@ -24,6 +25,9 @@ void InstantConstructor::initialize(GlobalObject& global_object)
 
     // 8.2.1 Temporal.Instant.prototype, https://tc39.es/proposal-temporal/#sec-temporal-instant-prototype
     define_direct_property(vm.names.prototype, global_object.temporal_instant_prototype(), 0);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.fromEpochSeconds, from_epoch_seconds, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -58,6 +62,32 @@ Value InstantConstructor::construct(FunctionObject& new_target)
 
     // 4. Return ? CreateTemporalInstant(epochNanoseconds, NewTarget).
     return create_temporal_instant(global_object, *epoch_nanoseconds, &new_target);
+}
+
+// 8.2.3 Temporal.Instant.fromEpochSeconds ( epochSeconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochseconds
+JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
+{
+    // 1. Set epochSeconds to ? ToNumber(epochSeconds).
+    auto epoch_seconds_value = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+
+    // 2. Set epochSeconds to ? NumberToBigInt(epochSeconds).
+    auto* epoch_seconds = number_to_bigint(global_object, epoch_seconds_value);
+    if (vm.exception())
+        return {};
+
+    // 3. Let epochNanoseconds be epochSeconds × 10^9ℤ.
+    auto* epoch_nanoseconds = js_bigint(vm.heap(), epoch_seconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000'000 }));
+
+    // 4. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
+    if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return {};
+    }
+
+    // 5. Return ? CreateTemporalInstant(epochNanoseconds).
+    return create_temporal_instant(global_object, *epoch_nanoseconds);
 }
 
 }
