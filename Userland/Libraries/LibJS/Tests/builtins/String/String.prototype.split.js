@@ -33,3 +33,35 @@ test("limits", () => {
     expect("a b c d".split(" ", 3)).toEqual(["a", "b", "c"]);
     expect("a b c d".split(" ", 100)).toEqual(["a", "b", "c", "d"]);
 });
+
+test("regex split", () => {
+    class RegExp1 extends RegExp {
+        [Symbol.split](str, limit) {
+            const result = RegExp.prototype[Symbol.split].call(this, str, limit);
+            return result.map(x => `(${x})`);
+        }
+    }
+
+    expect("2016-01-02".split(new RegExp1("-"))).toEqual(["(2016)", "(01)", "(02)"]);
+    expect("2016-01-02".split(new RegExp("-"))).toEqual(["2016", "01", "02"]);
+
+    expect(/a*?/[Symbol.split]("ab")).toEqual(["a", "b"]);
+    expect(/a*/[Symbol.split]("ab")).toEqual(["", "b"]);
+
+    let captureResult = /<(\/)?([^<>]+)>/[Symbol.split]("A<B>bold</B>and<CODE>coded</CODE>");
+    expect(captureResult).toEqual([
+        "A",
+        undefined,
+        "B",
+        "bold",
+        "/",
+        "B",
+        "and",
+        undefined,
+        "CODE",
+        "coded",
+        "/",
+        "CODE",
+        "",
+    ]);
+});
