@@ -45,6 +45,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.values, values, 0, attr);
     define_native_function(vm.names.entries, entries, 0, attr);
     define_native_function(vm.names.set, set, 1, attr);
+    define_native_function(vm.names.slice, slice, 2, attr);
     define_native_function(vm.names.reverse, reverse, 0, attr);
     define_native_function(vm.names.copyWithin, copy_within, 2, attr);
     define_native_function(vm.names.filter, filter, 1, attr);
@@ -814,6 +815,96 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
         }
     }
     return js_undefined();
+}
+
+// 23.2.3.24 %TypedArray%.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
+{
+    auto* typed_array = validate_typed_array(global_object);
+    if (!typed_array)
+        return {};
+
+    auto length = typed_array->array_length();
+
+    auto relative_start = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    i32 k;
+    if (Value(relative_start).is_negative_infinity())
+        k = 0;
+    else if (relative_start < 0)
+        k = max(length + relative_start, 0);
+    else
+        k = min(relative_start, length);
+
+    double relative_end;
+    if (vm.argument(1).is_undefined()) {
+        relative_end = length;
+    } else {
+        relative_end = vm.argument(1).to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
+    }
+
+    i32 final;
+    if (Value(relative_end).is_negative_infinity())
+        final = 0;
+    else if (relative_end < 0)
+        final = max(length + relative_end, 0);
+    else
+        final = min(relative_end, length);
+
+    auto count = max(final - k, 0);
+
+    MarkedValueList arguments(vm.heap());
+    arguments.empend(count);
+    auto new_array = typed_array_species_create(global_object, *typed_array, move(arguments));
+    if (vm.exception())
+        return {};
+
+    if (count > 0) {
+        if (typed_array->viewed_array_buffer()->is_detached()) {
+            vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+            return {};
+        }
+
+        if (typed_array->element_name() != new_array->element_name()) {
+            for (i32 n = 0; k < final; ++k, ++n) {
+                auto k_value = typed_array->get(k);
+                new_array->set(n, k_value, true);
+            }
+        } else {
+            auto element_size = typed_array->element_size();
+
+            Checked<u32> source_byte_index = k;
+            source_byte_index *= element_size;
+            source_byte_index += typed_array->byte_offset();
+            if (source_byte_index.has_overflow()) {
+                dbgln("TypedArrayPrototype::slice: source_byte_index overflowed, returning as if succeeded.");
+                return new_array;
+            }
+
+            auto target_byte_index = new_array->byte_offset();
+
+            Checked<u32> limit = count;
+            limit *= element_size;
+            limit += target_byte_index;
+            if (limit.has_overflow()) {
+                dbgln("TypedArrayPrototype::slice: limit overflowed, returning as if succeeded.");
+                return new_array;
+            }
+
+            auto& source_buffer = *typed_array->viewed_array_buffer();
+            auto& target_buffer = *new_array->viewed_array_buffer();
+            for (; target_byte_index < limit.value(); ++source_byte_index, ++target_byte_index) {
+                auto value = source_buffer.get_value<u8>(source_byte_index.value(), true, ArrayBuffer::Unordered);
+                target_buffer.set_value<u8>(target_byte_index, value, true, ArrayBuffer::Unordered);
+            }
+        }
+    }
+
+    return new_array;
 }
 
 // 23.2.3.22 %TypedArray%.prototype.reverse ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse
