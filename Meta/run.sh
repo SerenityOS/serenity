@@ -128,11 +128,16 @@ $SERENITY_EXTRA_QEMU_ARGS
 -machine q35
 -d guest_errors
 -smp 2
+-device pcie-root-port,port=0x10,chassis=1,id=pcie.1,bus=pcie.0,multifunction=on,addr=0x2
+-device pcie-root-port,port=0x11,chassis=2,id=pcie.2,bus=pcie.0,addr=0x2.0x1
+-device pcie-root-port,port=0x12,chassis=3,id=pcie.3,bus=pcie.0,addr=0x2.0x2
+-device pcie-root-port,port=0x13,chassis=4,id=pcie.4,bus=pcie.0,addr=0x2.0x3
+-device pcie-root-port,port=0x14,chassis=5,id=pcie.5,bus=pcie.0,addr=0x2.0x4
+-device pcie-root-port,port=0x15,chassis=6,id=pcie.6,bus=pcie.0,addr=0x2.0x5
 -display $SERENITY_QEMU_DISPLAY_BACKEND
 -device $SERENITY_QEMU_DISPLAY_DEVICE
 -device secondary-vga
--device bochs-display
--device VGA,vgamem_mb=64
+-device bochs-display,bus=pcie.6,addr=0x10.0x0
 -device piix3-ide
 -drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
 -device ahci,id=ahci
@@ -232,7 +237,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
 else
     # Meta/run.sh: qemu with user networking
     "$SERENITY_QEMU_BIN" \
-        $SERENITY_COMMON_QEMU_ARGS \
+        $SERENITY_EXTRA_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23,hostfwd=tcp:127.0.0.1:8000-10.0.2.15:8000,hostfwd=tcp:127.0.0.1:2222-10.0.2.15:22 \
