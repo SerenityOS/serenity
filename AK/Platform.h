@@ -54,11 +54,6 @@
 #endif
 #define NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
 
-#ifdef NO_RETURN
-#    undef NO_RETURN
-#endif
-#define NO_RETURN [[noreturn]]
-
 #ifdef NAKED
 #    undef NAKED
 #endif
