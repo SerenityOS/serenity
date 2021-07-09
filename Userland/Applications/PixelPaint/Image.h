@@ -26,7 +26,8 @@ class ImageClient {
 public:
     virtual void image_did_add_layer(size_t) { }
     virtual void image_did_remove_layer(size_t) { }
-    virtual void image_did_modify_layer(size_t) { }
+    virtual void image_did_modify_layer_properties(size_t) { }
+    virtual void image_did_modify_layer_bitmap(size_t) { }
     virtual void image_did_modify_layer_stack() { }
     virtual void image_did_change(Gfx::IntRect const&) { }
     virtual void image_select_layer(Layer*) { }

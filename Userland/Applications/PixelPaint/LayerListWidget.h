@@ -41,7 +41,8 @@ private:
 
     virtual void image_did_add_layer(size_t) override;
     virtual void image_did_remove_layer(size_t) override;
-    virtual void image_did_modify_layer(size_t) override;
+    virtual void image_did_modify_layer_properties(size_t) override;
+    virtual void image_did_modify_layer_bitmap(size_t) override;
     virtual void image_did_modify_layer_stack() override;
 
     void rebuild_gadgets();
