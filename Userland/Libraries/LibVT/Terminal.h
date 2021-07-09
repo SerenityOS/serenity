@@ -226,7 +226,8 @@ protected:
 
     void emit_string(const StringView&);
 
-    void alter_mode(bool should_set, Parameters, Intermediates);
+    void alter_ansi_mode(bool should_set, Parameters);
+    void alter_private_mode(bool should_set, Parameters);
 
     // CUU – Cursor Up
     void CUU(Parameters);
@@ -274,10 +275,16 @@ protected:
     void DECSTBM(Parameters);
 
     // RM – Reset Mode
-    void RM(Parameters, Intermediates);
+    void RM(Parameters);
+
+    // DECRST - DEC Private Mode Reset
+    void DECRST(Parameters);
 
     // SM – Set Mode
-    void SM(Parameters, Intermediates);
+    void SM(Parameters);
+
+    // DECSET - Dec Private Mode Set
+    void DECSET(Parameters);
 
     // DA - Device Attributes
     void DA(Parameters);
