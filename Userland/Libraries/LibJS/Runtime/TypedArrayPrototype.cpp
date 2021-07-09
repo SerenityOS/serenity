@@ -48,6 +48,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.reverse, reverse, 0, attr);
     define_native_function(vm.names.copyWithin, copy_within, 2, attr);
     define_native_function(vm.names.filter, filter, 1, attr);
+    define_native_function(vm.names.map, map, 1, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
@@ -1094,6 +1095,56 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
 
     // 12. Return A.
     return filter_array;
+}
+
+// 23.2.3.19 %TypedArray%.prototype.map ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.map
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
+    auto* typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+
+    // 3. Let len be O.[[ArrayLength]].
+    auto initial_length = typed_array->array_length();
+
+    // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
+    auto* callback_function = callback_from_args(global_object, "map");
+    if (!callback_function)
+        return {};
+
+    // 5. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(len) »).
+    MarkedValueList arguments(vm.heap());
+    arguments.empend(initial_length);
+    auto* return_array = typed_array_species_create(global_object, *typed_array, move(arguments));
+    if (vm.exception())
+        return {};
+
+    auto this_value = vm.argument(1);
+
+    // 6. Let k be 0.
+    // 7. Repeat, while k < len,
+    for (size_t i = 0; i < initial_length; ++i) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        // b. Let kValue be ! Get(O, Pk).
+        auto value = typed_array->get(i);
+
+        // c. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
+        auto mapped_value = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
+        if (vm.exception())
+            return {};
+
+        // d. Perform ? Set(A, Pk, mappedValue, true).
+        return_array->set(i, mapped_value, true);
+        if (vm.exception())
+            return {};
+
+        // e. Set k to k + 1.
+    }
+
+    // 8. Return A.
+    return return_array;
 }
 
 }
