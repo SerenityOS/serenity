@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Maxime Friess <M4x1me@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <errno.h>
 #include <errno_numbers.h>
 #include <grp.h>
 #include <stdio.h>
@@ -158,5 +160,46 @@ int initgroups(const char* user, gid_t extra_gid)
     if (!extra_gid_added)
         gids[count++] = extra_gid;
     return setgroups(count, gids);
+}
+
+int putgrent(const struct group* group, FILE* stream)
+{
+    if (!group || !stream || !group->gr_name || !group->gr_passwd) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    auto is_valid_field = [](const char* str) {
+        return str && !strpbrk(str, ":\n");
+    };
+
+    if (!is_valid_field(group->gr_name) || !is_valid_field(group->gr_passwd)) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    int nwritten = fprintf(stream, "%s:%s:%u:", group->gr_name, group->gr_passwd, group->gr_gid);
+    if (!nwritten || nwritten < 0) {
+        errno = ferror(stream);
+        return -1;
+    }
+
+    if (group->gr_mem) {
+        for (size_t i = 0; group->gr_mem[i] != nullptr; i++) {
+            nwritten = fprintf(stream, i == 0 ? "%s" : ",%s", group->gr_mem[i]);
+            if (!nwritten || nwritten < 0) {
+                errno = ferror(stream);
+                return -1;
+            }
+        }
+    }
+
+    nwritten = fprintf(stream, "\n");
+    if (!nwritten || nwritten < 0) {
+        errno = ferror(stream);
+        return -1;
+    }
+
+    return 0;
 }
 }
