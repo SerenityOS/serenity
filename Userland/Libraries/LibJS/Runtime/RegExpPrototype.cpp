@@ -274,19 +274,18 @@ JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flags)
 // 22.2.5.12 get RegExp.prototype.source, https://tc39.es/ecma262/#sec-get-regexp.prototype.source
 JS_DEFINE_NATIVE_GETTER(RegExpPrototype::source)
 {
-    auto this_object = this_object_from(vm, global_object);
-    if (!this_object)
-        return {};
-
-    auto* regexp_prototype = global_object.regexp_prototype();
-    if (this_object == regexp_prototype)
-        return js_string(vm, "(?:)");
-
-    auto regexp_object = regexp_object_from(vm, global_object);
+    auto* regexp_object = this_object_from(vm, global_object);
     if (!regexp_object)
         return {};
 
-    return js_string(vm, escape_regexp_pattern(*regexp_object));
+    if (!is<RegExpObject>(regexp_object)) {
+        if (same_value(regexp_object, global_object.regexp_prototype()))
+            return js_string(vm, "(?:)");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "RegExp");
+        return {};
+    }
+
+    return js_string(vm, escape_regexp_pattern(static_cast<RegExpObject&>(*regexp_object)));
 }
 
 // 22.2.5.2 RegExp.prototype.exec ( string ), https://tc39.es/ecma262/#sec-regexp.prototype.exec
