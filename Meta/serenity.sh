@@ -120,7 +120,8 @@ pick_gcc() {
         if ! $GCC_CANDIDATE -dumpversion >/dev/null 2>&1; then
             continue
         fi
-        local VERSION="$($GCC_CANDIDATE -dumpversion)"
+        local VERSION=""
+        VERSION="$($GCC_CANDIDATE -dumpversion)"
         local MAJOR_VERSION="${VERSION%%.*}"
         if [ "$MAJOR_VERSION" -gt "$BEST_VERSION" ]; then
             BEST_VERSION=$MAJOR_VERSION
