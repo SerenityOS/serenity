@@ -92,14 +92,16 @@ void MessageBox::build()
 
     auto& message_container = widget.add<Widget>();
     message_container.set_layout<HorizontalBoxLayout>();
-    message_container.layout()->set_margins({ 8, 0, 0, 0 });
     message_container.layout()->set_spacing(8);
 
     if (m_type != Type::None) {
         auto& icon_image = message_container.add<ImageWidget>();
         icon_image.set_bitmap(icon());
-        if (icon())
+        if (icon()) {
             icon_width = icon()->width();
+            if (icon_width > 0)
+                message_container.layout()->set_margins({ 8, 0, 0, 0 });
+        }
     }
 
     auto& label = message_container.add<Label>(m_text);
