@@ -74,13 +74,18 @@ void Splitter::resize_event(ResizeEvent& event)
 
 void Splitter::set_hovered_grabbable(Grabbable* grabbable)
 {
-    if (m_hovered_index.has_value() && grabbable && grabbable->index == m_hovered_index.value())
-        return;
-    if (grabbable)
+    if (m_hovered_index.has_value()) {
+        if (grabbable && grabbable->index == m_hovered_index.value())
+            return;
+        update(m_grabbables[m_hovered_index.value()].paint_rect);
+    }
+
+    if (grabbable) {
         m_hovered_index = grabbable->index;
-    else
+        update(grabbable->paint_rect);
+    } else {
         m_hovered_index = {};
-    update();
+    }
 }
 
 void Splitter::override_cursor(bool do_override)
