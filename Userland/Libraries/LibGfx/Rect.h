@@ -612,12 +612,11 @@ using FloatRect = Rect<float>;
 
 [[nodiscard]] ALWAYS_INLINE IntRect enclosing_int_rect(FloatRect const& float_rect)
 {
-    return {
-        (int)float_rect.x(),
-        (int)float_rect.y(),
-        (int)ceilf(float_rect.width()),
-        (int)ceilf(float_rect.height()),
-    };
+    int x1 = floorf(float_rect.x());
+    int y1 = floorf(float_rect.y());
+    int x2 = ceilf(float_rect.x() + float_rect.width());
+    int y2 = ceilf(float_rect.y() + float_rect.height());
+    return Gfx::IntRect::from_two_points({ x1, y1 }, { x2, y2 });
 }
 
 }
