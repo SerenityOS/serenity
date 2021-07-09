@@ -179,7 +179,8 @@ namespace Kernel {
     S(readv)                      \
     S(emuctl)                     \
     S(statvfs)                    \
-    S(fstatvfs)
+    S(fstatvfs)                   \
+    S(kill_thread)
 
 namespace Syscall {
 
