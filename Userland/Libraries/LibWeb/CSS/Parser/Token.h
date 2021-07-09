@@ -76,6 +76,12 @@ public:
         return m_value.string_view();
     }
 
+    int integer() const
+    {
+        VERIFY(m_type == Type::Number && m_number_type == NumberType::Integer);
+        return m_value.string_view().to_int().value();
+    }
+
     Type mirror_variant() const;
     String bracket_string() const;
     String bracket_mirror_string() const;

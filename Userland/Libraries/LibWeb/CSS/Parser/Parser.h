@@ -122,8 +122,7 @@ public:
     template<typename T>
     Vector<Selector> parse_a_relative_selector(TokenStream<T>&);
 
-    template<typename T>
-    RefPtr<StyleValue> parse_css_value(PropertyID, TokenStream<T>&);
+    RefPtr<StyleValue> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
 
     // FIXME: https://drafts.csswg.org/css-backgrounds-3/
     static Optional<String> as_valid_background_repeat(String input) { return input; }
@@ -170,6 +169,8 @@ private:
 
     [[nodiscard]] RefPtr<CSSRule> convert_to_rule(NonnullRefPtr<StyleRule>);
     [[nodiscard]] RefPtr<CSSStyleDeclaration> convert_to_declaration(NonnullRefPtr<StyleBlockRule>);
+
+    static Optional<float> try_parse_float(StringView string);
 
     ParsingContext m_context;
 
