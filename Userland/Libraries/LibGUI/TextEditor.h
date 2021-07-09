@@ -47,17 +47,17 @@ public:
 
     virtual ~TextEditor() override;
 
-    const TextDocument& document() const { return *m_document; }
+    TextDocument const& document() const { return *m_document; }
     TextDocument& document() { return *m_document; }
     bool has_document() const { return !!m_document; }
 
     virtual void set_document(TextDocument&);
 
-    const String& placeholder() const { return m_placeholder; }
-    void set_placeholder(const StringView& placeholder) { m_placeholder = placeholder; }
+    String const& placeholder() const { return m_placeholder; }
+    void set_placeholder(StringView const& placeholder) { m_placeholder = placeholder; }
 
     TextDocumentLine& current_line() { return line(m_cursor.line()); }
-    const TextDocumentLine& current_line() const { return line(m_cursor.line()); }
+    TextDocumentLine const& current_line() const { return line(m_cursor.line()); }
 
     void set_visualize_trailing_whitespace(bool);
     bool visualize_trailing_whitespace() const { return m_visualize_trailing_whitespace; }
@@ -94,34 +94,34 @@ public:
     bool is_gutter_visible() const { return m_gutter_visible; }
     void set_gutter_visible(bool);
 
-    void set_icon(const Gfx::Bitmap*);
-    const Gfx::Bitmap* icon() const { return m_icon; }
+    void set_icon(Gfx::Bitmap const*);
+    Gfx::Bitmap const* icon() const { return m_icon; }
 
     Function<void()> on_cursor_change;
     Function<void()> on_selection_change;
     Function<void()> on_focusin;
     Function<void()> on_focusout;
 
-    void set_text(const StringView&);
+    void set_text(StringView const&);
     void scroll_cursor_into_view();
-    void scroll_position_into_view(const TextPosition&);
+    void scroll_position_into_view(TextPosition const&);
     size_t line_count() const { return document().line_count(); }
     TextDocumentLine& line(size_t index) { return document().line(index); }
-    const TextDocumentLine& line(size_t index) const { return document().line(index); }
+    TextDocumentLine const& line(size_t index) const { return document().line(index); }
     NonnullOwnPtrVector<TextDocumentLine>& lines() { return document().lines(); }
-    const NonnullOwnPtrVector<TextDocumentLine>& lines() const { return document().lines(); }
+    NonnullOwnPtrVector<TextDocumentLine> const& lines() const { return document().lines(); }
     int line_spacing() const { return m_line_spacing; }
     int line_height() const;
     TextPosition cursor() const { return m_cursor; }
     TextRange normalized_selection() const { return m_selection.normalized(); }
 
-    void insert_at_cursor_or_replace_selection(const StringView&);
+    void insert_at_cursor_or_replace_selection(StringView const&);
     bool write_to_file(String const& path);
     bool write_to_file_and_close(int fd);
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
     size_t number_of_selected_words() const;
-    void set_selection(const TextRange&);
+    void set_selection(TextRange const&);
     void clear_selection();
     bool can_undo() const { return document().can_undo(); }
     bool can_redo() const { return document().can_redo(); }
@@ -163,15 +163,15 @@ public:
 
     void set_cursor_and_focus_line(size_t line, size_t column);
     void set_cursor(size_t line, size_t column);
-    virtual void set_cursor(const TextPosition&);
+    virtual void set_cursor(TextPosition const&);
 
-    const Syntax::Highlighter* syntax_highlighter() const;
+    Syntax::Highlighter const* syntax_highlighter() const;
     void set_syntax_highlighter(OwnPtr<Syntax::Highlighter>);
 
-    const AutocompleteProvider* autocomplete_provider() const;
+    AutocompleteProvider const* autocomplete_provider() const;
     void set_autocomplete_provider(OwnPtr<AutocompleteProvider>&&);
 
-    const EditingEngine* editing_engine() const;
+    EditingEngine const* editing_engine() const;
     void set_editing_engine(OwnPtr<EditingEngine>);
 
     bool should_autocomplete_automatically() const { return m_autocomplete_timer; }
@@ -193,7 +193,7 @@ public:
 
     int number_of_visible_lines() const;
     Gfx::IntRect cursor_content_rect() const;
-    TextPosition text_position_at_content_position(const Gfx::IntPoint&) const;
+    TextPosition text_position_at_content_position(Gfx::IntPoint const&) const;
 
     void delete_text_range(TextRange);
 
@@ -219,10 +219,10 @@ protected:
     Gfx::IntRect ruler_content_rect(size_t line) const;
     Gfx::IntRect gutter_content_rect(size_t line) const;
 
-    TextPosition text_position_at(const Gfx::IntPoint&) const;
+    TextPosition text_position_at(Gfx::IntPoint const&) const;
     bool ruler_visible() const { return m_ruler_visible; }
     bool gutter_visible() const { return m_gutter_visible; }
-    Gfx::IntRect content_rect_for_position(const TextPosition&) const;
+    Gfx::IntRect content_rect_for_position(TextPosition const&) const;
     int ruler_width() const;
     int gutter_width() const;
 
@@ -236,12 +236,12 @@ private:
     virtual void document_did_remove_all_lines() override;
     virtual void document_did_change() override;
     virtual void document_did_set_text() override;
-    virtual void document_did_set_cursor(const TextPosition&) override;
+    virtual void document_did_set_cursor(TextPosition const&) override;
     virtual void document_did_update_undo_stack() override;
 
     // ^Syntax::HighlighterClient
     virtual Vector<TextDocumentSpan>& spans() final { return document().spans(); }
-    virtual const Vector<TextDocumentSpan>& spans() const final { return document().spans(); }
+    virtual Vector<TextDocumentSpan> const& spans() const final { return document().spans(); }
     virtual void highlighter_did_set_spans(Vector<TextDocumentSpan> spans) final { document().set_spans(move(spans)); }
     virtual void set_span_at_index(size_t index, TextDocumentSpan span) final { document().set_span_at_index(index, move(span)); }
     virtual void highlighter_did_request_update() final { update(); }
@@ -284,7 +284,7 @@ private:
     Gfx::IntRect line_content_rect(size_t item_index) const;
     Gfx::IntRect line_widget_rect(size_t line_index) const;
     void delete_selection();
-    int content_x_for_position(const TextPosition&) const;
+    int content_x_for_position(TextPosition const&) const;
     Gfx::IntRect ruler_rect_in_inner_coordinates() const;
     Gfx::IntRect gutter_rect_in_inner_coordinates() const;
     Gfx::IntRect visible_text_rect_in_inner_coordinates() const;
