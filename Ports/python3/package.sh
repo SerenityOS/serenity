@@ -19,6 +19,7 @@ depends="libffi zlib"
 # FIXME: --enable-optimizations results in lots of __gcov_* linker errors
 configopts="--disable-ipv6 --without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no"
 
+export CC="${CC} --sysroot=${SERENITY_INSTALL_ROOT}"
 export BLDSHARED="${CC} -shared"
 
 pre_configure() {
