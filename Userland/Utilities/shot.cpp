@@ -1,90 +1,18 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Aziz Berkay Yesilyurt <abyesilyurt@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Format.h>
-#include <AK/Optional.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGUI/Painter.h>
-#include <LibGUI/Widget.h>
-#include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/PNGWriter.h>
-#include <LibGfx/Palette.h>
 #include <unistd.h>
-
-class SelectableLayover final : public GUI::Widget {
-    C_OBJECT(SelectableLayover)
-public:
-    SelectableLayover(GUI::Window* window)
-        : m_window(window)
-        , m_background_color(palette().threed_highlight())
-    {
-        set_override_cursor(Gfx::StandardCursor::Crosshair);
-    }
-
-    virtual ~SelectableLayover() override {};
-
-    Gfx::IntRect region() const
-    {
-        return m_region;
-    }
-
-private:
-    virtual void mousedown_event(GUI::MouseEvent& event) override
-    {
-        if (event.button() == GUI::MouseButton::Left)
-            m_anchor_point = event.position();
-    };
-
-    virtual void mousemove_event(GUI::MouseEvent& event) override
-    {
-        if (m_anchor_point.has_value()) {
-            m_region = Gfx::IntRect::from_two_points(*m_anchor_point, event.position());
-            update();
-        }
-    };
-
-    virtual void mouseup_event(GUI::MouseEvent& event) override
-    {
-        if (event.button() == GUI::MouseButton::Left)
-            m_window->close();
-    };
-
-    virtual void paint_event(GUI::PaintEvent&) override
-    {
-        if (m_region.is_empty()) {
-            GUI::Painter painter(*this);
-            painter.fill_rect(m_window->rect(), m_background_color);
-            return;
-        }
-
-        GUI::Painter painter(*this);
-        painter.fill_rect(m_region, Gfx::Color::Transparent);
-        for (auto rect : m_window->rect().shatter(m_region))
-            painter.fill_rect(rect, m_background_color);
-    }
-
-    virtual void keydown_event(GUI::KeyEvent& event) override
-    {
-        if (event.key() == Key_Escape) {
-            m_region = Gfx::IntRect();
-            m_window->close();
-        }
-    }
-
-    Optional<Gfx::IntPoint> m_anchor_point;
-    Gfx::IntRect m_region;
-    GUI::Window* m_window = nullptr;
-    Gfx::Color const m_background_color;
-};
 
 int main(int argc, char** argv)
 {
@@ -93,14 +21,12 @@ int main(int argc, char** argv)
     String output_path;
     bool output_to_clipboard = false;
     unsigned delay = 0;
-    bool select_region = false;
     int screen = -1;
 
     args_parser.add_positional_argument(output_path, "Output filename", "output", Core::ArgsParser::Required::No);
     args_parser.add_option(output_to_clipboard, "Output to clipboard", "clipboard", 'c');
     args_parser.add_option(delay, "Seconds to wait before taking a screenshot", "delay", 'd', "seconds");
     args_parser.add_option(screen, "The index of the screen (default: -1 for all screens)", "screen", 's', "index");
-    args_parser.add_option(select_region, "Select a region to capture", "region", 'r');
 
     args_parser.parse(argc, argv);
 
@@ -109,25 +35,6 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
-    Gfx::IntRect crop_region;
-    if (select_region) {
-        auto window = GUI::Window::construct();
-        auto& container = window->set_main_widget<SelectableLayover>(window);
-        container.set_fill_with_background_color(true);
-
-        window->set_title("shot");
-        window->set_opacity(0.2);
-        window->set_fullscreen(true);
-        window->show();
-        app->exec();
-
-        crop_region = container.region();
-        if (crop_region.is_empty()) {
-            dbgln("cancelled...");
-            return 0;
-        }
-    }
-
     sleep(delay);
     Optional<u32> screen_index;
     if (screen >= 0)
@@ -136,14 +43,10 @@ int main(int argc, char** argv)
     auto shared_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap({}, screen_index);
     dbgln("got screenshot");
 
-    RefPtr<Gfx::Bitmap> bitmap = shared_bitmap.bitmap();
+    auto* bitmap = shared_bitmap.bitmap();
     if (!bitmap) {
         warnln("Failed to grab screenshot");
         return 1;
-    }
-
-    if (select_region) {
-        bitmap = bitmap->cropped(crop_region);
     }
 
     if (output_to_clipboard) {

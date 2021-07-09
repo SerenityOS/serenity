@@ -504,8 +504,7 @@ void Compositor::compose()
 
     // Paint the window stack.
     if (m_invalidated_window) {
-        auto* fullscreen_window = wm.active_fullscreen_window();
-        if (fullscreen_window && fullscreen_window->is_opaque()) {
+        if (auto* fullscreen_window = wm.active_fullscreen_window()) {
             compose_window(*fullscreen_window);
             fullscreen_window->clear_dirty_rects();
         } else {
@@ -1072,8 +1071,7 @@ void Compositor::recompute_occlusions()
 
     bool window_stack_transition_in_progress = m_transitioning_to_window_stack != nullptr;
     auto& main_screen = Screen::main();
-    auto* fullscreen_window = wm.active_fullscreen_window();
-    if (fullscreen_window) {
+    if (auto* fullscreen_window = wm.active_fullscreen_window()) {
         // TODO: support fullscreen windows on all screens
         auto screen_rect = main_screen.rect();
         wm.for_each_visible_window_from_front_to_back([&](Window& w) {
@@ -1101,8 +1099,7 @@ void Compositor::recompute_occlusions()
         });
 
         m_opaque_wallpaper_rects.clear();
-    }
-    if (!fullscreen_window || (fullscreen_window && !fullscreen_window->is_opaque())) {
+    } else {
         Gfx::DisjointRectSet visible_rects;
         visible_rects.add_many(Screen::rects());
         bool have_transparent = false;
