@@ -145,6 +145,7 @@ namespace JS {
     P(fromEntries)                           \
     P(fromEpochMicroseconds)                 \
     P(fromEpochMilliseconds)                 \
+    P(fromEpochNanoseconds)                  \
     P(fromEpochSeconds)                      \
     P(fround)                                \
     P(gc)                                    \
