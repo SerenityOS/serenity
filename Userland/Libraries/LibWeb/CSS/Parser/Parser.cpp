@@ -1084,10 +1084,222 @@ RefPtr<CSSStyleDeclaration> Parser::convert_to_declaration(NonnullRefPtr<StyleBl
     return CSSStyleDeclaration::create(move(properties), move(custom_properties));
 }
 
-template<typename T>
-RefPtr<StyleValue> Parser::parse_css_value(PropertyID, TokenStream<T>&)
+Optional<float> Parser::try_parse_float(StringView string)
 {
-    // FIXME: This is mostly copied from the old, deprecated parser. It may or may not be to spec.
+    // FIXME: This is copied from DeprecatedCSSParser, so may not be to spec.
+
+    const char* str = string.characters_without_null_termination();
+    size_t len = string.length();
+    size_t weight = 1;
+    int exp_val = 0;
+    float value = 0.0f;
+    float fraction = 0.0f;
+    bool has_sign = false;
+    bool is_negative = false;
+    bool is_fractional = false;
+    bool is_scientific = false;
+
+    if (str[0] == '-') {
+        is_negative = true;
+        has_sign = true;
+    }
+    if (str[0] == '+') {
+        has_sign = true;
+    }
+
+    for (size_t i = has_sign; i < len; i++) {
+
+        // Looks like we're about to start working on the fractional part
+        if (str[i] == '.') {
+            is_fractional = true;
+            continue;
+        }
+
+        if (str[i] == 'e' || str[i] == 'E') {
+            if (str[i + 1] == '-' || str[i + 1] == '+')
+                exp_val = atoi(str + i + 2);
+            else
+                exp_val = atoi(str + i + 1);
+
+            is_scientific = true;
+            continue;
+        }
+
+        if (str[i] < '0' || str[i] > '9' || exp_val != 0) {
+            return {};
+            continue;
+        }
+
+        if (is_fractional) {
+            fraction *= 10;
+            fraction += str[i] - '0';
+            weight *= 10;
+        } else {
+            value = value * 10;
+            value += str[i] - '0';
+        }
+    }
+
+    fraction /= weight;
+    value += fraction;
+
+    if (is_scientific) {
+        bool divide = exp_val < 0;
+        if (divide)
+            exp_val *= -1;
+
+        for (int i = 0; i < exp_val; i++) {
+            if (divide)
+                value /= 10;
+            else
+                value *= 10;
+        }
+    }
+
+    return is_negative ? -value : value;
+}
+
+RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
+{
+    // FIXME: This is mostly copied from the old, deprecated parser. It is probably not to spec.
+
+    auto takes_integer_value = [](PropertyID property_id) -> bool {
+        return property_id == PropertyID::ZIndex
+            || property_id == PropertyID::FontWeight
+            || property_id == PropertyID::Custom;
+    };
+
+    auto parse_length = [&]() -> Optional<Length> {
+        Length::Type type = Length::Type::Undefined;
+        Optional<float> numeric_value;
+
+        auto token = tokens.next_token();
+
+        if (token.is(Token::Type::Dimension)) {
+            auto length_string = token.token().m_value.string_view();
+            auto unit_string = token.token().m_unit.string_view();
+
+            if (unit_string.equals_ignoring_case("%")) {
+                type = Length::Type::Percentage;
+            } else if (unit_string.equals_ignoring_case("px")) {
+                type = Length::Type::Px;
+            } else if (unit_string.equals_ignoring_case("pt")) {
+                type = Length::Type::Pt;
+            } else if (unit_string.equals_ignoring_case("pc")) {
+                type = Length::Type::Pc;
+            } else if (unit_string.equals_ignoring_case("mm")) {
+                type = Length::Type::Mm;
+            } else if (unit_string.equals_ignoring_case("rem")) {
+                type = Length::Type::Rem;
+            } else if (unit_string.equals_ignoring_case("em")) {
+                type = Length::Type::Em;
+            } else if (unit_string.equals_ignoring_case("ex")) {
+                type = Length::Type::Ex;
+            } else if (unit_string.equals_ignoring_case("vw")) {
+                type = Length::Type::Vw;
+            } else if (unit_string.equals_ignoring_case("vh")) {
+                type = Length::Type::Vh;
+            } else if (unit_string.equals_ignoring_case("vmax")) {
+                type = Length::Type::Vmax;
+            } else if (unit_string.equals_ignoring_case("vmin")) {
+                type = Length::Type::Vmin;
+            } else if (unit_string.equals_ignoring_case("cm")) {
+                type = Length::Type::Cm;
+            } else if (unit_string.equals_ignoring_case("in")) {
+                type = Length::Type::In;
+            } else if (unit_string.equals_ignoring_case("Q")) {
+                type = Length::Type::Q;
+            } else if (m_context.in_quirks_mode()) {
+                type = Length::Type::Px;
+            }
+
+            numeric_value = try_parse_float(length_string);
+        } else if (token.is(Token::Type::Number)) {
+            auto value_string = token.token().m_value.string_view();
+            if (value_string == "0") {
+                type = Length::Type::Px;
+                numeric_value = 0;
+            } else if (m_context.in_quirks_mode()) {
+                type = Length::Type::Px;
+                numeric_value = try_parse_float(value_string);
+            }
+        }
+
+        if (!numeric_value.has_value())
+            return {};
+
+        return Length(numeric_value.value(), type);
+    };
+
+    auto token = tokens.next_token();
+
+    if (takes_integer_value(property_id) && token.is(Token::Type::Number)) {
+        auto number = token.token();
+        if (number.m_number_type == Token::NumberType::Integer) {
+            return LengthStyleValue::create(Length::make_px(number.integer()));
+        }
+    }
+
+    if (token.is(Token::Type::Dimension) || token.is(Token::Type::Number)) {
+        tokens.reconsume_current_input_token();
+
+        auto length = parse_length();
+        if (length.has_value())
+            return LengthStyleValue::create(length.value());
+
+        auto value_string = token.token().m_value.string_view();
+        auto float_number = try_parse_float(value_string);
+        if (float_number.has_value())
+            return NumericStyleValue::create(float_number.value());
+        return nullptr;
+    }
+
+    if (token.is(Token::Type::Ident)) {
+        auto ident = token.token().ident();
+        if (ident.equals_ignoring_case("inherit"))
+            return InheritStyleValue::create();
+        if (ident.equals_ignoring_case("initial"))
+            return InitialStyleValue::create();
+        if (ident.equals_ignoring_case("auto"))
+            return LengthStyleValue::create(Length::make_auto());
+    }
+
+    if (token.is_function() && token.function().name().equals_ignoring_case("var")) {
+        // FIXME: Handle fallback value as second parameter
+        // https://www.w3.org/TR/css-variables-1/#using-variables
+        if (!token.function().values().is_empty()) {
+            auto& property_name = token.function().values().first();
+            return CustomStyleValue::create(property_name);
+        }
+    }
+
+    if (token.is(Token::Type::Ident)) {
+        auto value_id = value_id_from_string(token.token().ident());
+        if (value_id != ValueID::Invalid)
+            return IdentifierStyleValue::create(value_id);
+    }
+
+    auto parse_css_color = [&]() -> Optional<Color> {
+        if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("transparent"))
+            return Color::from_rgba(0x00000000);
+
+        // FIXME: Handle all the different color notations.
+        // https://www.w3.org/TR/css-color-3/
+        // Right now, this uses non-CSS-specific parsing, and assumes the whole color value is one token,
+        // which is isn't if it's a function-style syntax.
+        auto color = Color::from_string(token.to_string().to_lowercase());
+        if (color.has_value())
+            return color;
+
+        return {};
+    };
+
+    auto color = parse_css_color();
+    if (color.has_value())
+        return ColorStyleValue::create(color.value());
+
+    if (token.is(Token::Type::String))
+        return StringStyleValue::create(token.token().string());
 
     return {};
 }
