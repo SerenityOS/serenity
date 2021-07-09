@@ -46,6 +46,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.entries, entries, 0, attr);
     define_native_function(vm.names.set, set, 1, attr);
     define_native_function(vm.names.slice, slice, 2, attr);
+    define_native_function(vm.names.subarray, subarray, 2, attr);
     define_native_function(vm.names.reverse, reverse, 0, attr);
     define_native_function(vm.names.copyWithin, copy_within, 2, attr);
     define_native_function(vm.names.filter, filter, 1, attr);
@@ -905,6 +906,61 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
     }
 
     return new_array;
+}
+
+// 23.2.3.27 %TypedArray%.prototype.subarray ( begin, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
+{
+    auto* typed_array = typed_array_from(global_object);
+    if (!typed_array)
+        return {};
+
+    auto length = typed_array->array_length();
+
+    auto relative_begin = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    i32 begin_index;
+    if (Value(relative_begin).is_negative_infinity())
+        begin_index = 0;
+    else if (relative_begin < 0)
+        begin_index = max(length + relative_begin, 0);
+    else
+        begin_index = min(relative_begin, length);
+
+    double relative_end;
+    if (vm.argument(1).is_undefined()) {
+        relative_end = length;
+    } else {
+        relative_end = vm.argument(1).to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
+    }
+
+    i32 end_index;
+    if (Value(relative_end).is_negative_infinity())
+        end_index = 0;
+    else if (relative_end < 0)
+        end_index = max(length + relative_end, 0);
+    else
+        end_index = min(relative_end, length);
+
+    auto new_length = max(end_index - begin_index, 0);
+
+    Checked<u32> begin_byte_offset = begin_index;
+    begin_byte_offset *= typed_array->element_size();
+    begin_byte_offset += typed_array->byte_offset();
+    if (begin_byte_offset.has_overflow()) {
+        dbgln("TypedArrayPrototype::begin_byte_offset: limit overflowed, returning as if succeeded.");
+        return typed_array;
+    }
+
+    MarkedValueList arguments(vm.heap());
+    arguments.empend(typed_array->viewed_array_buffer());
+    arguments.empend(begin_byte_offset.value());
+    arguments.empend(new_length);
+    return typed_array_species_create(global_object, *typed_array, move(arguments));
 }
 
 // 23.2.3.22 %TypedArray%.prototype.reverse ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse
