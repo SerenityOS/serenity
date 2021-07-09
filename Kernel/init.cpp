@@ -142,39 +142,21 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
     InterruptManagement::initialize();
     ACPI::initialize();
 
-    // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
-    SysFSComponentRegistry::initialize();
+    __stack_chk_guard = get_fast_random<u32>();
+
     ProcFSComponentRegistry::initialize();
-    PCI::initialize();
-    PCISerialDevice::detect();
-
-    VirtualFileSystem::initialize();
-
-    dmesgln("Starting SerenityOS...");
+    Thread::initialize();
+    Process::initialize();
 
     TimeManagement::initialize(0);
 
-    __stack_chk_guard = get_fast_random<u32>();
-
-    NullDevice::initialize();
-    if (!get_serial_debug())
-        (void)SerialDevice::must_create(0).leak_ref();
-    (void)SerialDevice::must_create(1).leak_ref();
-    (void)SerialDevice::must_create(2).leak_ref();
-    (void)SerialDevice::must_create(3).leak_ref();
-
-    VMWareBackdoor::the(); // don't wait until first mouse packet
-    HIDManagement::initialize();
-
-    Thread::initialize();
-    Process::initialize();
     Scheduler::initialize();
 
-    WorkQueue::initialize();
+    dmesgln("Starting SerenityOS...");
 
     {
         RefPtr<Thread> init_stage2_thread;
-        Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2, nullptr);
+        Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2, nullptr, THREAD_AFFINITY_DEFAULT, Process::RegisterProcess::No);
         // We need to make sure we drop the reference for init_stage2_thread
         // before calling into Scheduler::start, otherwise we will have a
         // dangling Thread that never gets cleaned up
@@ -218,6 +200,13 @@ extern "C" UNMAP_AFTER_INIT void init_finished(u32 cpu)
 
 void init_stage2(void*)
 {
+    // This is a little bit of a hack. We can't register our process at the time we're
+    // creating it, but we need to be registered otherwise finalization won't be happy.
+    // The colonel process gets away without having to do this because it never exits.
+    Process::register_new(*Process::current());
+
+    WorkQueue::initialize();
+
     if (APIC::initialized() && APIC::the().enabled_processor_count() > 1) {
         // We can't start the APs until we have a scheduler up and running.
         // We need to be able to process ICI messages, otherwise another
@@ -225,6 +214,23 @@ void init_stage2(void*)
         // exhausted
         APIC::the().boot_aps();
     }
+
+    // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
+    SysFSComponentRegistry::initialize();
+    PCI::initialize();
+    PCISerialDevice::detect();
+
+    VirtualFileSystem::initialize();
+
+    NullDevice::initialize();
+    if (!get_serial_debug())
+        (void)SerialDevice::must_create(0).leak_ref();
+    (void)SerialDevice::must_create(1).leak_ref();
+    (void)SerialDevice::must_create(2).leak_ref();
+    (void)SerialDevice::must_create(3).leak_ref();
+
+    VMWareBackdoor::the(); // don't wait until first mouse packet
+    HIDManagement::initialize();
 
     GraphicsManagement::the().initialize();
     ConsoleManagement::the().initialize();
