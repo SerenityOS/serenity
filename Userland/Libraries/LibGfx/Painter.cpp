@@ -1707,12 +1707,15 @@ void Painter::draw_physical_pixel(const IntPoint& physical_position, Color color
     fill_physical_rect(rect, color);
 }
 
-void Painter::draw_line(const IntPoint& p1, const IntPoint& p2, Color color, int thickness, LineStyle style)
+void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color, int thickness, LineStyle style)
 {
     if (color.alpha() == 0)
         return;
 
     auto clip_rect = this->clip_rect() * scale();
+
+    auto const p1 = thickness > 1 ? a_p1.translated(-(thickness / 2), -(thickness / 2)) : a_p1;
+    auto const p2 = thickness > 1 ? a_p2.translated(-(thickness / 2), -(thickness / 2)) : a_p2;
 
     auto point1 = to_physical(p1);
     auto point2 = to_physical(p2);
