@@ -24,8 +24,8 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    const char* preview_mode = "auto";
-    const char* file_to_edit = nullptr;
+    char const* preview_mode = "auto";
+    char const* file_to_edit = nullptr;
     Core::ArgsParser parser;
     parser.add_option(preview_mode, "Preview mode, one of 'none', 'html', 'markdown', 'auto'", "preview-mode", '\0', "mode");
     parser.add_positional_argument(file_to_edit, "File to edit, with optional starting line and column number", "file[:line[:column]]", Core::ArgsParser::Required::No);
