@@ -725,8 +725,11 @@ Token Tokenizer::consume_a_token()
     if (is_whitespace(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is whitespace");
 
-        while (is_whitespace(peek_code_point().value()))
+        auto next = peek_code_point();
+        while (next.has_value() && is_whitespace(next.value())) {
             (void)next_code_point();
+            next = peek_code_point();
+        }
 
         return create_new_token(Token::TokenType::Whitespace);
     }
