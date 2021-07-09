@@ -134,8 +134,13 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
 
     m_size_list_view->on_selection_change = [this] {
         const auto& index = m_size_list_view->selection().first();
-        m_size = index.data().to_i32();
-        m_size_spin_box->set_value(m_size.value());
+        auto size = index.data().to_i32();
+        Optional<size_t> index_of_new_size_in_list = m_sizes.find_first_index(size);
+        if (index_of_new_size_in_list.has_value()) {
+            m_size_list_view->set_selection_mode(GUI::AbstractView::SelectionMode::SingleSelection);
+            m_size = size;
+            m_size_spin_box->set_value(m_size.value());
+        }
         update_font();
     };
 
