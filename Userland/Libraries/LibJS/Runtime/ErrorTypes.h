@@ -12,7 +12,7 @@
     M(AccessorValueOrWritable, "Accessor property descriptor cannot specify a value or writable key")                                   \
     M(BigIntBadOperator, "Cannot use {} operator with BigInt")                                                                          \
     M(BigIntBadOperatorOtherType, "Cannot use {} operator with BigInt and other type")                                                  \
-    M(BigIntIntArgument, "BigInt argument must be an integer")                                                                          \
+    M(BigIntFromNonIntegral, "Cannot convert non-integral number to BigInt")                                                            \
     M(BigIntInvalidValue, "Invalid value for BigInt: {}")                                                                               \
     M(BindingNotInitialized, "Binding {} is not initialized")                                                                           \
     M(ClassConstructorWithoutNew, "Class constructor {} must be called with 'new'")                                                     \
