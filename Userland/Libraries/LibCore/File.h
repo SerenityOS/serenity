@@ -25,16 +25,16 @@ public:
     void set_filename(const String filename) { m_filename = move(filename); }
 
     bool is_directory() const;
-    static bool is_directory(const String& filename);
+    static bool is_directory(String const& filename);
 
     bool is_device() const;
-    static bool is_device(const String& filename);
+    static bool is_device(String const& filename);
 
     bool is_link() const;
-    static bool is_link(const String& filename);
+    static bool is_link(String const& filename);
 
-    static bool exists(const String& filename);
-    static bool ensure_parent_directories(const String& path);
+    static bool exists(String const& filename);
+    static bool ensure_parent_directories(String const& path);
     static String current_working_directory();
     static String absolute_path(String const& path);
 
@@ -58,19 +58,19 @@ public:
         bool tried_recursing;
     };
 
-    static Result<void, CopyError> copy_file(const String& dst_path, const struct stat& src_stat, File& source);
-    static Result<void, CopyError> copy_directory(const String& dst_path, const String& src_path, const struct stat& src_stat, LinkMode = LinkMode::Disallowed);
-    static Result<void, CopyError> copy_file_or_directory(const String& dst_path, const String& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes);
+    static Result<void, CopyError> copy_file(String const& dst_path, struct stat const& src_stat, File& source);
+    static Result<void, CopyError> copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed);
+    static Result<void, CopyError> copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes);
 
-    static String real_path_for(const String& filename);
+    static String real_path_for(String const& filename);
     static String read_link(String const& link_path);
-    static Result<void, OSError> link_file(const String& dst_path, const String& src_path);
+    static Result<void, OSError> link_file(String const& dst_path, String const& src_path);
 
     struct RemoveError {
         String file;
         OSError error_code;
     };
-    static Result<void, RemoveError> remove(const String& path, RecursionMode, bool force);
+    static Result<void, RemoveError> remove(String const& path, RecursionMode, bool force);
 
     virtual bool open(OpenMode) override;
 
