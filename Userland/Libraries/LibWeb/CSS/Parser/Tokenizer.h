@@ -92,7 +92,6 @@ private:
     void consume_the_remnants_of_a_bad_url();
     void consume_comments();
     void reconsume_current_input_code_point();
-    [[nodiscard]] bool is_valid_escape_sequence();
     [[nodiscard]] static bool is_valid_escape_sequence(U32Twin);
     [[nodiscard]] bool would_start_an_identifier();
     [[nodiscard]] bool would_start_an_identifier(U32Triplet);

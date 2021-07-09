@@ -504,7 +504,7 @@ Token Tokenizer::consume_a_url_token()
         }
 
         if (is_reverse_solidus(input)) {
-            if (is_valid_escape_sequence()) {
+            if (is_valid_escape_sequence(peek_twin())) {
                 token.m_value.append_code_point(consume_escaped_code_point());
             } else {
                 log_parse_error();
@@ -534,7 +534,7 @@ void Tokenizer::consume_the_remnants_of_a_bad_url()
             return;
         }
 
-        if (is_valid_escape_sequence()) {
+        if (is_valid_escape_sequence(peek_twin())) {
             [[maybe_unused]] auto cp = consume_escaped_code_point();
         }
 
@@ -599,11 +599,6 @@ bool Tokenizer::starts_with_a_number(U32Triplet values)
         return true;
 
     return false;
-}
-
-bool Tokenizer::is_valid_escape_sequence()
-{
-    return is_valid_escape_sequence(peek_twin());
 }
 
 bool Tokenizer::is_valid_escape_sequence(U32Twin values)
@@ -864,7 +859,7 @@ Token Tokenizer::consume_a_token()
 
     if (is_reverse_solidus(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is reverse solidus");
-        if (is_valid_escape_sequence()) {
+        if (is_valid_escape_sequence({ input, peek_code_point() })) {
             reconsume_current_input_code_point();
             return consume_an_ident_like_token();
         }
