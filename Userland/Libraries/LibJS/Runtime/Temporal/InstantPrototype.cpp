@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/InstantPrototype.h>
@@ -58,7 +58,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_seconds_getter)
     auto& ns = instant->nanoseconds();
 
     // 4. Let s be RoundTowardsZero(ℝ(ns) / 10^9).
-    auto [s, _] = ns.big_integer().divided_by(Crypto::SignedBigInteger::create_from(1'000'000'000));
+    auto [s, _] = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000'000 });
 
     // 5. Return 𝔽(s).
     return Value((double)s.to_base(10).to_int<i64>().value());
@@ -77,7 +77,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
     auto& ns = instant->nanoseconds();
 
     // 4. Let ms be RoundTowardsZero(ℝ(ns) / 10^6).
-    auto [ms, _] = ns.big_integer().divided_by(Crypto::SignedBigInteger::create_from(1'000'000));
+    auto [ms, _] = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000 });
 
     // 5. Return 𝔽(ms).
     return Value((double)ms.to_base(10).to_int<i64>().value());
@@ -96,7 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_microseconds_getter)
     auto& ns = instant->nanoseconds();
 
     // 4. Let µs be RoundTowardsZero(ℝ(ns) / 10^3).
-    auto [us, _] = ns.big_integer().divided_by(Crypto::SignedBigInteger::create_from(1'000));
+    auto [us, _] = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000 });
 
     // 5. Return ℤ(µs).
     return js_bigint(vm.heap(), move(us));
