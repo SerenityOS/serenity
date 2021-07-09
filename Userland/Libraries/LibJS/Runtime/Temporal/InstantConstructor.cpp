@@ -28,6 +28,7 @@ void InstantConstructor::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.fromEpochSeconds, from_epoch_seconds, 1, attr);
+    define_native_function(vm.names.fromEpochMilliseconds, from_epoch_milliseconds, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -79,6 +80,32 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
 
     // 3. Let epochNanoseconds be epochSeconds × 10^9ℤ.
     auto* epoch_nanoseconds = js_bigint(vm.heap(), epoch_seconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000'000 }));
+
+    // 4. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
+    if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return {};
+    }
+
+    // 5. Return ? CreateTemporalInstant(epochNanoseconds).
+    return create_temporal_instant(global_object, *epoch_nanoseconds);
+}
+
+// 8.2.4 Temporal.Instant.fromEpochMilliseconds ( epochMilliseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmilliseconds
+JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
+{
+    // 1. Set epochMilliseconds to ? ToNumber(epochMilliseconds).
+    auto epoch_milliseconds_value = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+
+    // 2. Set epochMilliseconds to ? NumberToBigInt(epochMilliseconds).
+    auto* epoch_milliseconds = number_to_bigint(global_object, epoch_milliseconds_value);
+    if (vm.exception())
+        return {};
+
+    // 3. Let epochNanoseconds be epochMilliseconds × 10^6ℤ.
+    auto* epoch_nanoseconds = js_bigint(vm.heap(), epoch_milliseconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }));
 
     // 4. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
     if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds)) {

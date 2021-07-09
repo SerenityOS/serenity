@@ -25,6 +25,7 @@ private:
     virtual bool has_constructor() const override { return true; }
 
     JS_DECLARE_NATIVE_FUNCTION(from_epoch_seconds);
+    JS_DECLARE_NATIVE_FUNCTION(from_epoch_milliseconds);
 };
 
 }
