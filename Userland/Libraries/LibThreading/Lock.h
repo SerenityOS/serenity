@@ -61,33 +61,4 @@ inline void Lock::unlock()
     pthread_mutex_unlock(&m_mutex);
 }
 
-template<typename T>
-class Lockable {
-public:
-    Lockable() { }
-
-    template<typename... Args>
-    Lockable(Args&&... args)
-        : m_resource(forward(args)...)
-    {
-    }
-
-    Lockable(T&& resource)
-        : m_resource(move(resource))
-    {
-    }
-    Lock& lock() { return m_lock; }
-    T& resource() { return m_resource; }
-
-    T lock_and_copy()
-    {
-        Locker locker(m_lock);
-        return m_resource;
-    }
-
-private:
-    T m_resource;
-    Lock m_lock;
-};
-
 }
