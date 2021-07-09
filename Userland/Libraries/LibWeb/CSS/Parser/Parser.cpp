@@ -890,8 +890,10 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
         log_parse_error();
         tokens.reconsume_current_input_token();
         auto peek = tokens.peek_token();
-        if (!(peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))) {
+        while (!(peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))) {
+            dbgln("Discarding token: '{}'", peek.to_debug_string());
             (void)consume_a_component_value(tokens);
+            peek = tokens.peek_token();
         }
     }
 
