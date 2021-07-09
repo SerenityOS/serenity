@@ -7,6 +7,9 @@
 
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
+#include <LibWeb/CSS/CSSStyleDeclaration.h>
+#include <LibWeb/CSS/CSSStyleRule.h>
+#include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/Parser/AtStyleRule.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
@@ -63,13 +66,14 @@ Token Parser::current_token()
     return m_tokens.at(m_iterator_offset);
 }
 
-NonnullRefPtrVector<QualifiedStyleRule> Parser::parse_as_stylesheet()
+NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet()
 {
-    auto rules = consume_a_list_of_rules(true);
+    auto parser_rules = consume_a_list_of_rules(true);
+    NonnullRefPtrVector<CSSRule> rules;
 
     dbgln("Printing rules:");
 
-    for (auto& rule : rules) {
+    for (auto& rule : parser_rules) {
         dbgln("PRE:");
         for (auto& pre : rule.m_prelude) {
             dbgln("{}", pre.to_string());
@@ -78,12 +82,12 @@ NonnullRefPtrVector<QualifiedStyleRule> Parser::parse_as_stylesheet()
         dbgln("{}", rule.block().to_string());
         dbgln("");
 
-        auto selectors = parse_selectors(rule.m_prelude);
-        CSS::Selector selector = Selector(move(selectors));
-        dump_selector(selector);
+        auto css_rule = convert_rule(rule);
+        if (css_rule)
+            rules.append(*css_rule);
     }
 
-    return rules;
+    return CSSStyleSheet::create(rules);
 }
 
 Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleComponentValueRule> parts)
@@ -696,9 +700,9 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations()
     return list;
 }
 
-RefPtr<QualifiedStyleRule> Parser::parse_as_rule()
+RefPtr<CSSRule> Parser::parse_as_rule()
 {
-    RefPtr<QualifiedStyleRule> rule;
+    RefPtr<CSSRule> rule;
 
     for (;;) {
         auto maybe_whitespace = peek_token();
@@ -712,12 +716,15 @@ RefPtr<QualifiedStyleRule> Parser::parse_as_rule()
 
     if (token.is_eof()) {
         return {};
-    }
-
-    if (token.is_at()) {
-        rule = consume_an_at_rule();
+    } else if (token.is_at()) {
+        auto at_rule = consume_an_at_rule();
+        rule = convert_rule(at_rule);
     } else {
-        rule = consume_a_qualified_rule();
+        auto qualified_rule = consume_a_qualified_rule();
+        if (!qualified_rule)
+            return {};
+
+        rule = convert_rule(*qualified_rule);
     }
 
     for (;;) {
@@ -736,12 +743,21 @@ RefPtr<QualifiedStyleRule> Parser::parse_as_rule()
     return {};
 }
 
-NonnullRefPtrVector<QualifiedStyleRule> Parser::parse_as_list_of_rules()
+NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules()
 {
-    return consume_a_list_of_rules(false);
+    auto parsed_rules = consume_a_list_of_rules(false);
+    NonnullRefPtrVector<CSSRule> rules;
+
+    for (auto& rule : parsed_rules) {
+        auto converted_rule = convert_rule(rule);
+        if (converted_rule)
+            rules.append(*converted_rule);
+    }
+
+    return rules;
 }
 
-Optional<StyleDeclarationRule> Parser::parse_as_declaration()
+Optional<StyleProperty> Parser::parse_as_declaration()
 {
     for (;;) {
         auto maybe_whitespace = peek_token();
@@ -757,11 +773,16 @@ Optional<StyleDeclarationRule> Parser::parse_as_declaration()
         return {};
     }
 
-    return consume_a_declaration();
+    auto declaration = consume_a_declaration();
+    // FIXME: Return the declaration.
+    return {};
 }
-Vector<DeclarationOrAtRule> Parser::parse_as_list_of_declarations()
+Vector<StyleProperty> Parser::parse_as_list_of_declarations()
 {
-    return consume_a_list_of_declarations();
+    auto declarations = consume_a_list_of_declarations();
+
+    // FIXME: Return the declarations.
+    return {};
 }
 
 Optional<StyleComponentValueRule> Parser::parse_as_component_value()
@@ -827,4 +848,10 @@ Vector<StyleComponentValueRule> Parser::parse_as_list_of_comma_separated_compone
 
     return rules;
 }
+
+RefPtr<CSSRule> Parser::convert_rule(NonnullRefPtr<QualifiedStyleRule>)
+{
+    return {};
+}
+
 }
