@@ -47,6 +47,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.set, set, 1, attr);
     define_native_function(vm.names.reverse, reverse, 0, attr);
     define_native_function(vm.names.copyWithin, copy_within, 2, attr);
+    define_native_function(vm.names.filter, filter, 1, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
@@ -116,6 +117,38 @@ static void for_each_item(VM& vm, GlobalObject& global_object, const String& nam
         if (callback(i, value, callback_result) == IterationDecision::Break)
             break;
     }
+}
+
+// 23.2.4.1 TypedArraySpeciesCreate ( exemplar, argumentList ), https://tc39.es/ecma262/#typedarray-species-create
+static TypedArrayBase* typed_array_species_create(GlobalObject& global_object, TypedArrayBase const& exemplar, MarkedValueList arguments)
+{
+    auto& vm = global_object.vm();
+
+    TypedArrayConstructor* typed_array_default_constructor = nullptr;
+
+    // FIXME: This kinda sucks.
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    if (is<ClassName>(exemplar))                                                    \
+        typed_array_default_constructor = global_object.snake_name##_constructor();
+    JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+
+    VERIFY(typed_array_default_constructor);
+
+    auto* constructor = species_constructor(global_object, exemplar, *typed_array_default_constructor);
+    if (vm.exception())
+        return nullptr;
+
+    auto* result = typed_array_create(global_object, *constructor, move(arguments));
+    if (vm.exception())
+        return nullptr;
+
+    if (result->content_type() != exemplar.content_type()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, result->class_name(), exemplar.class_name());
+        return nullptr;
+    }
+
+    return result;
 }
 
 // 23.2.3.18 get %TypedArray%.prototype.length, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length
@@ -989,6 +1022,78 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 
     // 18. Return O.
     return typed_array;
+}
+
+// 23.2.3.9 %TypedArray%.prototype.filter ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
+{
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
+    auto* typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+
+    // 3. Let len be O.[[ArrayLength]].
+    auto initial_length = typed_array->array_length();
+
+    // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
+    auto* callback_function = callback_from_args(global_object, "filter");
+    if (!callback_function)
+        return {};
+
+    // 5. Let kept be a new empty List.
+    MarkedValueList kept(vm.heap());
+
+    // 7. Let captured be 0.
+    size_t captured = 0;
+
+    auto this_value = vm.argument(1);
+
+    // 5. Let k be 0.
+    // 8. Repeat, while k < len,
+    for (size_t i = 0; i < initial_length; ++i) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        // b. Let kValue be ! Get(O, Pk).
+        auto value = typed_array->get(i);
+
+        // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
+        auto callback_result = vm.call(*callback_function, this_value, value, Value((i32)i), typed_array);
+        if (vm.exception())
+            return {};
+
+        // d. If selected is true, then
+        if (callback_result.to_boolean()) {
+            // i. Append kValue to the end of kept.
+            kept.append(value);
+
+            // ii. Set captured to captured + 1.
+            ++captured;
+        }
+
+        // e. Set k to k + 1.
+    }
+
+    // 9. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(captured) »).
+    MarkedValueList arguments(vm.heap());
+    arguments.empend(captured);
+    auto* filter_array = typed_array_species_create(global_object, *typed_array, move(arguments));
+    if (vm.exception())
+        return {};
+
+    // 10. Let n be 0.
+    size_t index = 0;
+
+    // 11. For each element e of kept, do
+    for (auto& value : kept) {
+        // a. Perform ! Set(A, ! ToString(𝔽(n)), e, true).
+        filter_array->set(index, value, true);
+
+        // b. Set n to n + 1.
+        ++index;
+    }
+
+    // 12. Return A.
+    return filter_array;
 }
 
 }
