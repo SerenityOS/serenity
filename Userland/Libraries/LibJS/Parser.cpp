@@ -789,7 +789,7 @@ NonnullRefPtr<RegExpLiteral> Parser::parse_regexp_literal()
         HashTable<char> seen_flags;
         for (size_t i = 0; i < flags.length(); ++i) {
             auto flag = flags.substring_view(i, 1);
-            if (!flag.is_one_of("g", "i", "m", "s", "u", "y"))
+            if (!flag.is_one_of("d", "g", "i", "m", "s", "u", "y"))
                 syntax_error(String::formatted("Invalid RegExp flag '{}'", flag), Position { flags_start.line, flags_start.column + i });
             if (seen_flags.contains(*flag.characters_without_null_termination()))
                 syntax_error(String::formatted("Repeated RegExp flag '{}'", flag), Position { flags_start.line, flags_start.column + i });

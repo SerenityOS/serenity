@@ -109,6 +109,7 @@
     __JS_ENUMERATE(toStringTag, to_string_tag)
 
 #define JS_ENUMERATE_REGEXP_FLAGS              \
+    __JS_ENUMERATE(hasIndices, has_indices, d) \
     __JS_ENUMERATE(global, global, g)          \
     __JS_ENUMERATE(ignoreCase, ignore_case, i) \
     __JS_ENUMERATE(multiline, multiline, m)    \

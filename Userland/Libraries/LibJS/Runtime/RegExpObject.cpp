@@ -16,7 +16,7 @@ namespace JS {
 static Flags options_from(GlobalObject& global_object, const String& flags)
 {
     auto& vm = global_object.vm();
-    bool g = false, i = false, m = false, s = false, u = false, y = false;
+    bool d = false, g = false, i = false, m = false, s = false, u = false, y = false;
     Flags options {
         // JS regexps are all 'global' by default as per our definition, but the "global" flag enables "stateful".
         // FIXME: Enable 'BrowserExtended' only if in a browser context.
@@ -26,6 +26,11 @@ static Flags options_from(GlobalObject& global_object, const String& flags)
 
     for (auto ch : flags) {
         switch (ch) {
+        case 'd':
+            if (d)
+                vm.throw_exception<SyntaxError>(global_object, ErrorType::RegExpObjectRepeatedFlag, ch);
+            d = true;
+            break;
         case 'g':
             if (g)
                 vm.throw_exception<SyntaxError>(global_object, ErrorType::RegExpObjectRepeatedFlag, ch);
