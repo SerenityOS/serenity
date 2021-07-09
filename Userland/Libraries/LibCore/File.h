@@ -35,6 +35,7 @@ public:
 
     static bool exists(const String& filename);
     static bool ensure_parent_directories(const String& path);
+    static String current_working_directory();
 
     enum class RecursionMode {
         Allowed,

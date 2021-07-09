@@ -193,6 +193,20 @@ bool File::ensure_parent_directories(const String& path)
     return rc == 0;
 }
 
+String File::current_working_directory()
+{
+    char* cwd = getcwd(nullptr, 0);
+    if (!cwd) {
+        perror("getcwd");
+        return {};
+    }
+
+    auto cwd_as_string = String(cwd);
+    free(cwd);
+
+    return cwd_as_string;
+}
+
 #ifdef __serenity__
 
 String File::read_link(String const& link_path)
