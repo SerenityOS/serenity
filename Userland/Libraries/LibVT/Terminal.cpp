@@ -126,9 +126,11 @@ void Terminal::alter_private_mode(bool should_set, Parameters params)
                 dbgln_if(TERMINAL_DEBUG, "Switching to Alternate Screen Buffer");
                 m_use_alternate_screen_buffer = true;
                 clear();
+                m_client.terminal_history_changed(-m_history.size());
             } else {
                 dbgln_if(TERMINAL_DEBUG, "Switching to Normal Screen Buffer");
                 m_use_alternate_screen_buffer = false;
+                m_client.terminal_history_changed(m_history.size());
             }
             m_need_full_flush = true;
 #else
@@ -148,11 +150,13 @@ void Terminal::alter_private_mode(bool should_set, Parameters params)
                 m_normal_saved_state = m_current_state;
                 m_use_alternate_screen_buffer = true;
                 clear();
+                m_client.terminal_history_changed(-m_history.size());
             } else {
                 dbgln_if(TERMINAL_DEBUG, "Switching to Normal Screen Buffer and restoring state");
                 m_current_state = m_normal_saved_state;
                 m_use_alternate_screen_buffer = false;
                 set_cursor(cursor_row(), cursor_column());
+                m_client.terminal_history_changed(m_history.size());
             }
             m_need_full_flush = true;
 #else
