@@ -10,8 +10,6 @@
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Menubar.h>
-#include <stdio.h>
-#include <unistd.h>
 
 using namespace TextEditor;
 
