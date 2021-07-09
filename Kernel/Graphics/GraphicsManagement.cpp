@@ -187,7 +187,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         // Note: Each graphics controller will try to set its native screen resolution
         // upon creation. Later on, if we don't want to have framebuffer devices, a
         // framebuffer console will take the control instead.
-        if (!is_vga_compatible_pci_device(address) || !is_display_controller_pci_device(address))
+        if (!is_vga_compatible_pci_device(address) && !is_display_controller_pci_device(address))
             return;
         determine_and_initialize_graphics_device(address, id);
     });
