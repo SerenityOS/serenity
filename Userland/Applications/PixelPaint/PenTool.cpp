@@ -57,7 +57,7 @@ void PenTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent
         painter.draw_line(event.position(), event.position(), m_editor->color_for(event), m_thickness);
         changed_rect = Gfx::IntRect::from_two_points(event.position(), event.position());
     }
-    changed_rect.inflate(m_thickness * 4, m_thickness * 4);
+    changed_rect.inflate(m_thickness, m_thickness);
     layer.did_modify_bitmap(changed_rect);
 
     m_last_drawing_event_position = event.position();
