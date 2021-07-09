@@ -1,0 +1,25 @@
+From b9992fdc37570ae7ca15b50c37ef431289cdc497 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Fri, 9 Jul 2021 05:02:01 +0430
+Subject: [PATCH 6/7] include: Teach the header about serenity
+
+---
+ include/uv/unix.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/include/uv/unix.h b/include/uv/unix.h
+index e3cf7bd..35f1433 100644
+--- a/include/uv/unix.h
++++ b/include/uv/unix.h
+@@ -71,6 +71,8 @@
+ # include "uv/posix.h"
+ #elif defined(__QNX__)
+ # include "uv/posix.h"
++#elif defined(__serenity__)
++# include "uv/posix.h"
+ #endif
+ 
+ #ifndef NI_MAXHOST
+-- 
+2.32.0
+
