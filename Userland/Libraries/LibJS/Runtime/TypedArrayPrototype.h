@@ -49,6 +49,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(copy_within);
     JS_DECLARE_NATIVE_FUNCTION(filter);
     JS_DECLARE_NATIVE_FUNCTION(map);
+    JS_DECLARE_NATIVE_FUNCTION(to_locale_string);
 };
 
 }

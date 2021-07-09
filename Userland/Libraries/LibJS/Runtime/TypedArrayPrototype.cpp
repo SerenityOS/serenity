@@ -53,6 +53,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.copyWithin, copy_within, 2, attr);
     define_native_function(vm.names.filter, filter, 1, attr);
     define_native_function(vm.names.map, map, 1, attr);
+    define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
@@ -1450,6 +1451,38 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
 
     // 8. Return A.
     return return_array;
+}
+
+// 23.2.3.28 %TypedArray%.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
+{
+    auto* typed_array = validate_typed_array(global_object);
+    if (!typed_array)
+        return {};
+
+    auto length = typed_array->array_length();
+
+    StringBuilder builder;
+    for (u32 k = 0; k < length; ++k) {
+        if (k > 0)
+            builder.append(','); // NOTE: Until we implement ECMA-402 (Intl) this is implementation specific.
+        auto value = typed_array->get(k);
+        if (vm.exception())
+            return {};
+        if (value.is_nullish())
+            continue;
+        auto* value_object = value.to_object(global_object);
+        if (!value_object)
+            return {};
+        auto locale_string_result = value_object->invoke(vm.names.toLocaleString);
+        if (vm.exception())
+            return {};
+        auto string = locale_string_result.to_string(global_object);
+        if (vm.exception())
+            return {};
+        builder.append(string);
+    }
+    return js_string(vm, builder.to_string());
 }
 
 }
