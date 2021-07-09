@@ -11,7 +11,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/Vector.h>
 #include <LibDebug/DebugSession.h>
-#include <LibThreading/Lock.h>
+#include <LibThreading/Mutex.h>
 #include <LibThreading/Thread.h>
 
 namespace HackStudio {

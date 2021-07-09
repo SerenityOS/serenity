@@ -16,7 +16,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Palette.h>
-#include <LibThreading/Lock.h>
+#include <LibThreading/Mutex.h>
 #include <unistd.h>
 
 namespace Assistant {
@@ -26,7 +26,7 @@ struct AppState {
     NonnullRefPtrVector<Result> results;
     size_t visible_result_count { 0 };
 
-    Threading::Lock lock;
+    Threading::Mutex lock;
     String last_query;
 };
 
@@ -143,7 +143,7 @@ private:
     void did_receive_results(String const& query, NonnullRefPtrVector<Result> const& results)
     {
         {
-            Threading::Locker db_locker(m_lock);
+            Threading::MutexLocker db_locker(m_mutex);
             auto it = m_result_cache.find(query);
             if (it == m_result_cache.end()) {
                 m_result_cache.set(query, {});
@@ -160,7 +160,7 @@ private:
             }
         }
 
-        Threading::Locker state_locker(m_state.lock);
+        Threading::MutexLocker state_locker(m_state.lock);
         auto new_results = m_result_cache.find(m_state.last_query);
         if (new_results == m_result_cache.end())
             return;
@@ -181,7 +181,7 @@ private:
 
     NonnullOwnPtrVector<Provider> m_providers;
 
-    Threading::Lock m_lock;
+    Threading::Mutex m_mutex;
     HashMap<String, NonnullRefPtrVector<Result>> m_result_cache;
 };
 
@@ -223,7 +223,7 @@ int main(int argc, char** argv)
 
     text_box.on_change = [&]() {
         {
-            Threading::Locker locker(app_state.lock);
+            Threading::MutexLocker locker(app_state.lock);
             if (app_state.last_query == text_box.text())
                 return;
 

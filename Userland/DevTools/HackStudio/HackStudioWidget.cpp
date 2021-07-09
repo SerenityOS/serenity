@@ -62,7 +62,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
-#include <LibThreading/Lock.h>
+#include <LibThreading/Mutex.h>
 #include <LibThreading/Thread.h>
 #include <LibVT/TerminalWidget.h>
 #include <fcntl.h>

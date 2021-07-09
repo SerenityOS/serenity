@@ -12,9 +12,9 @@
 
 namespace Threading {
 
-class Lock {
+class Mutex {
 public:
-    Lock()
+    Mutex()
     {
 #ifndef __serenity__
         pthread_mutexattr_t attr;
@@ -23,7 +23,7 @@ public:
         pthread_mutex_init(&m_mutex, &attr);
 #endif
     }
-    ~Lock() { }
+    ~Mutex() { }
 
     void lock();
     void unlock();
@@ -36,27 +36,27 @@ private:
 #endif
 };
 
-class Locker {
+class MutexLocker {
 public:
-    ALWAYS_INLINE explicit Locker(Lock& l)
-        : m_lock(l)
+    ALWAYS_INLINE explicit MutexLocker(Mutex& mutex)
+        : m_mutex(mutex)
     {
         lock();
     }
-    ALWAYS_INLINE ~Locker() { unlock(); }
-    ALWAYS_INLINE void unlock() { m_lock.unlock(); }
-    ALWAYS_INLINE void lock() { m_lock.lock(); }
+    ALWAYS_INLINE ~MutexLocker() { unlock(); }
+    ALWAYS_INLINE void unlock() { m_mutex.unlock(); }
+    ALWAYS_INLINE void lock() { m_mutex.lock(); }
 
 private:
-    Lock& m_lock;
+    Mutex& m_mutex;
 };
 
-ALWAYS_INLINE void Lock::lock()
+ALWAYS_INLINE void Mutex::lock()
 {
     pthread_mutex_lock(&m_mutex);
 }
 
-inline void Lock::unlock()
+ALWAYS_INLINE void Mutex::unlock()
 {
     pthread_mutex_unlock(&m_mutex);
 }
