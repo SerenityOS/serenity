@@ -9,7 +9,7 @@
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Graphics/BochsGraphicsAdapter.h>
+#include <Kernel/Graphics/Bochs/GraphicsAdapter.h>
 #include <Kernel/Graphics/Console/TextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
