@@ -148,7 +148,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    return this_object->invoke(vm.names.toString.as_string());
+    return this_object->invoke(vm.names.toString);
 }
 
 // 20.1.3.7 Object.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-object.prototype.valueof
