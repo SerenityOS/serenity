@@ -29,6 +29,7 @@ void InstantConstructor::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.fromEpochSeconds, from_epoch_seconds, 1, attr);
     define_native_function(vm.names.fromEpochMilliseconds, from_epoch_milliseconds, 1, attr);
+    define_native_function(vm.names.fromEpochMicroseconds, from_epoch_microseconds, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -114,6 +115,27 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
     }
 
     // 5. Return ? CreateTemporalInstant(epochNanoseconds).
+    return create_temporal_instant(global_object, *epoch_nanoseconds);
+}
+
+// 8.2.5 Temporal.Instant.fromEpochMicroseconds ( epochMicroseconds )
+JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
+{
+    // 1. Set epochMicroseconds to ? ToBigInt(epochMicroseconds).
+    auto* epoch_microseconds = vm.argument(0).to_bigint(global_object);
+    if (vm.exception())
+        return {};
+
+    // 2. Let epochNanoseconds be epochMicroseconds × 1000ℤ.
+    auto* epoch_nanoseconds = js_bigint(vm.heap(), epoch_microseconds->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000 }));
+
+    // 3. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
+    if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return {};
+    }
+
+    // 4. Return ? CreateTemporalInstant(epochNanoseconds).
     return create_temporal_instant(global_object, *epoch_nanoseconds);
 }
 
