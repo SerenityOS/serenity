@@ -48,7 +48,19 @@ void Terminal::clear_history()
 }
 #endif
 
-void Terminal::alter_mode(bool should_set, Parameters params, Intermediates intermediates)
+void Terminal::alter_ansi_mode(bool should_set, Parameters params)
+{
+    for (auto mode : params) {
+        switch (mode) {
+            // FIXME: implement *something* for this
+        default:
+            dbgln("Terminal::alter_ansi_mode: Unimplemented mode {} (should_set={})", mode, should_set);
+            break;
+        }
+    }
+}
+
+void Terminal::alter_private_mode(bool should_set, Parameters params)
 {
     auto steady_cursor_to_blinking = [](CursorStyle style) {
         switch (style) {
@@ -76,107 +88,106 @@ void Terminal::alter_mode(bool should_set, Parameters params, Intermediates inte
         }
     };
 
-    if (intermediates.size() > 0 && intermediates[0] == '?') {
-        for (auto mode : params) {
-            switch (mode) {
-            case 3: {
-                // 80/132-column mode (DECCOLM)
-                unsigned new_columns = should_set ? 132 : 80;
-                dbgln_if(TERMINAL_DEBUG, "Setting {}-column mode", new_columns);
-                set_size(new_columns, rows());
-                clear();
-                break;
-            }
-            case 12:
-                if (should_set) {
-                    // Start blinking cursor
-                    m_cursor_style = steady_cursor_to_blinking(m_cursor_style);
-                } else {
-                    // Stop blinking cursor
-                    m_cursor_style = blinking_cursor_to_steady(m_cursor_style);
-                }
-                m_client.set_cursor_style(m_cursor_style);
-                break;
-            case 25:
-                if (should_set) {
-                    // Show cursor
-                    m_cursor_style = m_saved_cursor_style;
-                    m_client.set_cursor_style(m_cursor_style);
-                } else {
-                    // Hide cursor
-                    m_saved_cursor_style = m_cursor_style;
-                    m_cursor_style = None;
-                    m_client.set_cursor_style(None);
-                }
-                break;
-            case 1047:
-#ifndef KERNEL
-                if (should_set) {
-                    dbgln_if(TERMINAL_DEBUG, "Switching to Alternate Screen Buffer");
-                    m_use_alternate_screen_buffer = true;
-                    clear();
-                } else {
-                    dbgln_if(TERMINAL_DEBUG, "Switching to Normal Screen Buffer");
-                    m_use_alternate_screen_buffer = false;
-                }
-                m_need_full_flush = true;
-#else
-                dbgln("Alternate Screen Buffer is not supported");
-#endif
-                break;
-            case 1048:
-                if (should_set)
-                    SCOSC();
-                else
-                    SCORC();
-                break;
-            case 1049:
-#ifndef KERNEL
-                if (should_set) {
-                    dbgln_if(TERMINAL_DEBUG, "Switching to Alternate Screen Buffer and saving state");
-                    m_normal_saved_state = m_current_state;
-                    m_use_alternate_screen_buffer = true;
-                    clear();
-                } else {
-                    dbgln_if(TERMINAL_DEBUG, "Switching to Normal Screen Buffer and restoring state");
-                    m_current_state = m_normal_saved_state;
-                    m_use_alternate_screen_buffer = false;
-                    set_cursor(cursor_row(), cursor_column());
-                }
-                m_need_full_flush = true;
-#else
-                dbgln("Alternate Screen Buffer is not supported");
-#endif
-                break;
-            case 2004:
-                dbgln_if(TERMINAL_DEBUG, "Setting bracketed mode enabled={}", should_set);
-                m_needs_bracketed_paste = should_set;
-                break;
-            default:
-                dbgln("Terminal::alter_mode: Unimplemented private mode {} (should_set={})", mode, should_set);
-                break;
-            }
+    for (auto mode : params) {
+        switch (mode) {
+        case 3: {
+            // 80/132-column mode (DECCOLM)
+            unsigned new_columns = should_set ? 132 : 80;
+            dbgln_if(TERMINAL_DEBUG, "Setting {}-column mode", new_columns);
+            set_size(new_columns, rows());
+            clear();
+            break;
         }
-    } else {
-        for (auto mode : params) {
-            switch (mode) {
-            // FIXME: implement *something* for this
-            default:
-                dbgln("Terminal::alter_mode: Unimplemented mode {} (should_set={})", mode, should_set);
-                break;
+        case 12:
+            if (should_set) {
+                // Start blinking cursor
+                m_cursor_style = steady_cursor_to_blinking(m_cursor_style);
+            } else {
+                // Stop blinking cursor
+                m_cursor_style = blinking_cursor_to_steady(m_cursor_style);
             }
+            m_client.set_cursor_style(m_cursor_style);
+            break;
+        case 25:
+            if (should_set) {
+                // Show cursor
+                m_cursor_style = m_saved_cursor_style;
+                m_client.set_cursor_style(m_cursor_style);
+            } else {
+                // Hide cursor
+                m_saved_cursor_style = m_cursor_style;
+                m_cursor_style = None;
+                m_client.set_cursor_style(None);
+            }
+            break;
+        case 1047:
+#ifndef KERNEL
+            if (should_set) {
+                dbgln_if(TERMINAL_DEBUG, "Switching to Alternate Screen Buffer");
+                m_use_alternate_screen_buffer = true;
+                clear();
+            } else {
+                dbgln_if(TERMINAL_DEBUG, "Switching to Normal Screen Buffer");
+                m_use_alternate_screen_buffer = false;
+            }
+            m_need_full_flush = true;
+#else
+            dbgln("Alternate Screen Buffer is not supported");
+#endif
+            break;
+        case 1048:
+            if (should_set)
+                SCOSC();
+            else
+                SCORC();
+            break;
+        case 1049:
+#ifndef KERNEL
+            if (should_set) {
+                dbgln_if(TERMINAL_DEBUG, "Switching to Alternate Screen Buffer and saving state");
+                m_normal_saved_state = m_current_state;
+                m_use_alternate_screen_buffer = true;
+                clear();
+            } else {
+                dbgln_if(TERMINAL_DEBUG, "Switching to Normal Screen Buffer and restoring state");
+                m_current_state = m_normal_saved_state;
+                m_use_alternate_screen_buffer = false;
+                set_cursor(cursor_row(), cursor_column());
+            }
+            m_need_full_flush = true;
+#else
+            dbgln("Alternate Screen Buffer is not supported");
+#endif
+            break;
+        case 2004:
+            dbgln_if(TERMINAL_DEBUG, "Setting bracketed mode enabled={}", should_set);
+            m_needs_bracketed_paste = should_set;
+            break;
+        default:
+            dbgln("Terminal::alter_private_mode: Unimplemented private mode {} (should_set={})", mode, should_set);
+            break;
         }
     }
 }
 
-void Terminal::RM(Parameters params, Intermediates intermediates)
+void Terminal::RM(Parameters params)
 {
-    alter_mode(false, params, intermediates);
+    alter_ansi_mode(false, params);
 }
 
-void Terminal::SM(Parameters params, Intermediates intermediates)
+void Terminal::DECRST(Parameters params)
 {
-    alter_mode(true, params, intermediates);
+    alter_private_mode(false, params);
+}
+
+void Terminal::SM(Parameters params)
+{
+    alter_ansi_mode(true, params);
+}
+
+void Terminal::DECSET(Parameters params)
+{
+    alter_private_mode(true, params);
 }
 
 void Terminal::SGR(Parameters params)
@@ -1085,124 +1096,95 @@ void Terminal::execute_csi_sequence(Parameters parameters, Intermediates interme
     if (ignore)
         dbgln("CSI sequence has its ignore flag set.");
 
-    switch (last_byte) {
-    case '@':
-        ICH(parameters);
-        break;
-    case 'A':
-        CUU(parameters);
-        break;
-    case 'B':
-        CUD(parameters);
-        break;
-    case 'C':
-        CUF(parameters);
-        break;
-    case 'D':
-        CUB(parameters);
-        break;
-    case 'E':
-        CNL(parameters);
-        break;
-    case 'F':
-        CPL(parameters);
-        break;
-    case 'G':
-        CHA(parameters);
-        break;
-    case 'H':
-        CUP(parameters);
-        break;
-    case 'J':
-        ED(parameters);
-        break;
-    case 'K':
-        EL(parameters);
-        break;
-    case 'L':
-        IL(parameters);
-        break;
-    case 'M':
-        DL(parameters);
-        break;
-    case 'P':
-        DCH(parameters);
-        break;
-    case 'S':
-        SU(parameters);
-        break;
-    case 'T':
-        SD(parameters);
-        break;
-    case 'X':
-        ECH(parameters);
-        break;
-    case '`':
-        HPA(parameters);
-        break;
-    case 'a':
-        HPR(parameters);
-        break;
-    case 'b':
-        REP(parameters);
-        break;
-    case 'c':
-        DA(parameters);
-        break;
-    case 'd':
-        VPA(parameters);
-        break;
-    case 'e':
-        VPR(parameters);
-        break;
-    case 'f':
-        HVP(parameters);
-        break;
-    case 'h':
-        SM(parameters, intermediates);
-        break;
-    case 'l':
-        RM(parameters, intermediates);
-        break;
-    case 'm':
-        SGR(parameters);
-        break;
-    case 'n':
-        DSR(parameters);
-        break;
-    case 'q':
-        if (intermediates.size() >= 1 && intermediates[0] == ' ')
-            DECSCUSR(parameters);
-        else
-            unimplemented_csi_sequence(parameters, intermediates, last_byte);
-        break;
-    case 'r':
-        DECSTBM(parameters);
-        break;
-    case 's':
-        SCOSC();
-        break;
-    case 't':
-        XTERM_WM(parameters);
-        break;
-    case 'u':
-        SCORC();
-        break;
-    case '}':
-        if (intermediates.size() >= 1 && intermediates[0] == '\'')
-            DECIC(parameters);
-        else
-            unimplemented_csi_sequence(parameters, intermediates, last_byte);
-        break;
-    case '~':
-        if (intermediates.size() >= 1 && intermediates[0] == '\'')
-            DECDC(parameters);
-        else
-            unimplemented_csi_sequence(parameters, intermediates, last_byte);
-        break;
-    default:
-        unimplemented_csi_sequence(parameters, intermediates, last_byte);
+    if (intermediates.is_empty()) {
+        switch (last_byte) {
+        case '@':
+            return ICH(parameters);
+        case 'A':
+            return CUU(parameters);
+        case 'B':
+            return CUD(parameters);
+        case 'C':
+            return CUF(parameters);
+        case 'D':
+            return CUB(parameters);
+        case 'E':
+            return CNL(parameters);
+        case 'F':
+            return CPL(parameters);
+        case 'G':
+            return CHA(parameters);
+        case 'H':
+            return CUP(parameters);
+        case 'J':
+            return ED(parameters);
+        case 'K':
+            return EL(parameters);
+        case 'L':
+            return IL(parameters);
+        case 'M':
+            return DL(parameters);
+        case 'P':
+            return DCH(parameters);
+        case 'S':
+            return SU(parameters);
+        case 'T':
+            return SD(parameters);
+        case 'X':
+            return ECH(parameters);
+        case '`':
+            return HPA(parameters);
+        case 'a':
+            return HPR(parameters);
+        case 'b':
+            return REP(parameters);
+        case 'c':
+            return DA(parameters);
+        case 'd':
+            return VPA(parameters);
+        case 'e':
+            return VPR(parameters);
+        case 'f':
+            return HVP(parameters);
+        case 'h':
+            return SM(parameters);
+        case 'l':
+            return RM(parameters);
+        case 'm':
+            return SGR(parameters);
+        case 'n':
+            return DSR(parameters);
+        case 'r':
+            return DECSTBM(parameters);
+        case 's':
+            return SCOSC();
+        case 't':
+            return XTERM_WM(parameters);
+        case 'u':
+            return SCORC();
+        }
+    } else if (intermediates.size() == 1 && intermediates[0] == '?') {
+        switch (last_byte) {
+        case 'h':
+            return DECSET(parameters);
+        case 'l':
+            return DECRST(parameters);
+        }
+    } else if (intermediates.size() == 1 && intermediates[0] == '\'') {
+        switch (last_byte) {
+        case '}':
+            return DECIC(parameters);
+        case '~':
+            return DECDC(parameters);
+        }
+    } else if (intermediates.size() == 1 && intermediates[0] == ' ') {
+        switch (last_byte) {
+        case 'q':
+            return DECSCUSR(parameters);
+        }
     }
+
+    unimplemented_csi_sequence(parameters, intermediates, last_byte);
 }
 
 void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
@@ -1603,5 +1585,4 @@ Attribute Terminal::attribute_at(const Position& position) const
     return line.attribute_at(position.column());
 }
 #endif
-
 }
