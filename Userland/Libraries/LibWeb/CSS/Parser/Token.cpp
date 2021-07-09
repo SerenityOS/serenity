@@ -14,92 +14,92 @@ String Token::to_string() const
     StringBuilder builder;
 
     switch (m_type) {
-    case TokenType::Invalid:
+    case Type::Invalid:
         VERIFY_NOT_REACHED();
 
-    case TokenType::EndOfFile:
+    case Type::EndOfFile:
         builder.append("__EOF__");
         break;
-    case TokenType::Ident:
+    case Type::Ident:
         //builder.append("Identifier");
         builder.append(m_value.to_string());
         return builder.to_string();
-    case TokenType::Function:
+    case Type::Function:
         builder.append("Function");
         break;
-    case TokenType::AtKeyword:
+    case Type::AtKeyword:
         builder.append("@");
         break;
-    case TokenType::Hash:
+    case Type::Hash:
         builder.append("#");
         builder.append(m_value.to_string());
         return builder.to_string();
-    case TokenType::String:
+    case Type::String:
         //builder.append("String");
         builder.append(m_value.to_string());
         return builder.to_string();
-    case TokenType::BadString:
+    case Type::BadString:
         builder.append("Invalid String");
         break;
-    case TokenType::Url:
+    case Type::Url:
         builder.append("Url");
         break;
-    case TokenType::BadUrl:
+    case Type::BadUrl:
         builder.append("Invalid Url");
         break;
-    case TokenType::Delim:
+    case Type::Delim:
         //builder.append("Delimiter");
         builder.append(m_value.to_string());
         return builder.to_string();
-    case TokenType::Number:
+    case Type::Number:
         //builder.append("Number");
         builder.append(m_value.to_string());
         builder.append(m_unit.to_string());
         return builder.to_string();
-    case TokenType::Percentage:
+    case Type::Percentage:
         //builder.append("Percentage");
         builder.append(m_value.to_string());
         builder.append(m_unit.to_string());
         return builder.to_string();
-    case TokenType::Dimension:
+    case Type::Dimension:
         //builder.append("Dimension");
         builder.append(m_value.to_string());
         builder.append(m_unit.to_string());
         return builder.to_string();
-    case TokenType::Whitespace:
+    case Type::Whitespace:
         builder.append("Whitespace");
         break;
-    case TokenType::CDO:
+    case Type::CDO:
         builder.append("CDO");
         break;
-    case TokenType::CDC:
+    case Type::CDC:
         builder.append("CDC");
         break;
-    case TokenType::Colon:
+    case Type::Colon:
         builder.append(":");
         break;
-    case TokenType::Semicolon:
+    case Type::Semicolon:
         builder.append(";");
         break;
-    case TokenType::Comma:
+    case Type::Comma:
         builder.append(",");
         break;
-    case TokenType::OpenSquare:
+    case Type::OpenSquare:
         builder.append("[");
         break;
-    case TokenType::CloseSquare:
+    case Type::CloseSquare:
         builder.append("]");
         break;
-    case TokenType::OpenParen:
+    case Type::OpenParen:
         builder.append("(");
         break;
-    case TokenType::CloseParen:
+    case Type::CloseParen:
         builder.append(")");
         break;
-    case TokenType::OpenCurly:
+    case Type::OpenCurly:
         builder.append("{");
         break;
-    case TokenType::CloseCurly:
+    case Type::CloseCurly:
         builder.append("}");
         break;
     }
@@ -113,7 +113,7 @@ String Token::to_string() const
     builder.append(" { value: '");
     builder.append(m_value.to_string());
 
-    if (m_type == Token::TokenType::Hash) {
+    if (m_type == Token::Type::Hash) {
         builder.append("', hash_type: '");
         if (m_hash_type == Token::HashType::Unrestricted) {
             builder.append("Unrestricted");
@@ -122,7 +122,7 @@ String Token::to_string() const
         }
     }
 
-    if (m_type == Token::TokenType::Number) {
+    if (m_type == Token::Type::Number) {
         builder.append("', number_type: '");
         if (m_number_type == Token::NumberType::Integer) {
             builder.append("Integer");
@@ -131,7 +131,7 @@ String Token::to_string() const
         }
     }
 
-    if (m_type == Token::TokenType::Dimension) {
+    if (m_type == Token::Type::Dimension) {
         builder.append("', number_type: '");
         if (m_number_type == Token::NumberType::Integer) {
             builder.append("Integer");
@@ -147,21 +147,21 @@ String Token::to_string() const
     return builder.to_string();
 }
 
-Token::TokenType Token::mirror_variant() const
+Token::Type Token::mirror_variant() const
 {
     if (is_open_curly()) {
-        return TokenType::CloseCurly;
+        return Type::CloseCurly;
     }
 
     if (is_open_square()) {
-        return TokenType::CloseSquare;
+        return Type::CloseSquare;
     }
 
     if (is_open_paren()) {
-        return TokenType::CloseParen;
+        return Type::CloseParen;
     }
 
-    return TokenType::Invalid;
+    return Type::Invalid;
 }
 
 String Token::bracket_string() const

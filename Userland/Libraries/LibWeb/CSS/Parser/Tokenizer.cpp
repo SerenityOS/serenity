@@ -262,14 +262,14 @@ U32Triplet Tokenizer::peek_triplet() const
     return values;
 }
 
-Token Tokenizer::create_new_token(Token::TokenType type)
+Token Tokenizer::create_new_token(Token::Type type)
 {
     Token token = {};
     token.m_type = type;
     return token;
 }
 
-Token Tokenizer::create_value_token(Token::TokenType type, String value)
+Token Tokenizer::create_value_token(Token::Type type, String value)
 {
     Token token;
     token.m_type = type;
@@ -277,7 +277,7 @@ Token Tokenizer::create_value_token(Token::TokenType type, String value)
     return token;
 }
 
-Token Tokenizer::create_value_token(Token::TokenType type, u32 value)
+Token Tokenizer::create_value_token(Token::Type type, u32 value)
 {
     Token token = {};
     token.m_type = type;
@@ -342,7 +342,7 @@ Token Tokenizer::consume_an_ident_like_token()
         auto next_two = peek_twin();
         // if one of these ", ', ' "', " '"
         if (is_quotation_mark(next_two.first) || is_apostrophe(next_two.first) || (is_whitespace(next_two.first) && (is_quotation_mark(next_two.second) || is_apostrophe(next_two.second)))) {
-            return create_value_token(Token::TokenType::Function, string);
+            return create_value_token(Token::Type::Function, string);
         }
 
         return consume_a_url_token();
@@ -351,10 +351,10 @@ Token Tokenizer::consume_an_ident_like_token()
     if (is_left_paren(peek_code_point())) {
         (void)next_code_point();
 
-        return create_value_token(Token::TokenType::Function, string);
+        return create_value_token(Token::Type::Function, string);
     }
 
-    return create_value_token(Token::TokenType::Ident, string);
+    return create_value_token(Token::Type::Ident, string);
 }
 
 CSSNumber Tokenizer::consume_a_number()
@@ -447,7 +447,7 @@ String Tokenizer::consume_a_name()
 }
 Token Tokenizer::consume_a_url_token()
 {
-    auto token = create_new_token(Token::TokenType::Url);
+    auto token = create_new_token(Token::Type::Url);
     for (;;) {
         if (!is_whitespace(peek_code_point())) {
             break;
@@ -488,14 +488,14 @@ Token Tokenizer::consume_a_url_token()
             }
 
             consume_the_remnants_of_a_bad_url();
-            return create_new_token(Token::TokenType::BadUrl);
+            return create_new_token(Token::Type::BadUrl);
         }
 
         if (is_quotation_mark(input) || is_apostrophe(input) || is_left_paren(input) || is_non_printable(input)) {
             log_parse_error();
             (void)next_code_point();
             consume_the_remnants_of_a_bad_url();
-            return create_new_token(Token::TokenType::BadUrl);
+            return create_new_token(Token::Type::BadUrl);
         }
 
         if (is_reverse_solidus(input)) {
@@ -505,7 +505,7 @@ Token Tokenizer::consume_a_url_token()
                 log_parse_error();
                 (void)next_code_point();
                 consume_the_remnants_of_a_bad_url();
-                return create_new_token(Token::TokenType::BadUrl);
+                return create_new_token(Token::Type::BadUrl);
             }
         }
 
@@ -546,7 +546,7 @@ Token Tokenizer::consume_a_numeric_token()
 {
     auto number = consume_a_number();
     if (would_start_an_identifier()) {
-        auto token = create_new_token(Token::TokenType::Dimension);
+        auto token = create_new_token(Token::Type::Dimension);
         token.m_value.append(number.value);
         token.m_number_type = number.type;
 
@@ -559,12 +559,12 @@ Token Tokenizer::consume_a_numeric_token()
     if (is_percent(peek_code_point())) {
         (void)next_code_point();
 
-        auto token = create_new_token(Token::TokenType::Percentage);
+        auto token = create_new_token(Token::Type::Percentage);
         token.m_value.append(number.value);
         return token;
     }
 
-    auto token = create_new_token(Token::TokenType::Number);
+    auto token = create_new_token(Token::Type::Number);
     token.m_value.append(number.value);
     token.m_number_type = number.type;
     return token;
@@ -642,7 +642,7 @@ bool Tokenizer::would_start_an_identifier(U32Triplet values)
 
 Token Tokenizer::consume_string_token(u32 ending_code_point)
 {
-    auto token = create_new_token(Token::TokenType::String);
+    auto token = create_new_token(Token::Type::String);
 
     for (;;) {
         auto input = next_code_point();
@@ -657,7 +657,7 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
 
         if (is_newline(input)) {
             reconsume_current_input_code_point();
-            return create_new_token(Token::TokenType::BadString);
+            return create_new_token(Token::Type::BadString);
         }
 
         if (is_reverse_solidus(input)) {
@@ -712,7 +712,7 @@ Token Tokenizer::consume_a_token()
     auto input = next_code_point();
 
     if (is_eof(input)) {
-        return create_new_token(Token::TokenType::EndOfFile);
+        return create_new_token(Token::Type::EndOfFile);
     }
 
     if (is_whitespace(input)) {
@@ -724,7 +724,7 @@ Token Tokenizer::consume_a_token()
             next = peek_code_point();
         }
 
-        return create_new_token(Token::TokenType::Whitespace);
+        return create_new_token(Token::Type::Whitespace);
     }
 
     if (is_quotation_mark(input)) {
@@ -739,7 +739,7 @@ Token Tokenizer::consume_a_token()
         auto maybe_escape = peek_twin();
 
         if (is_name_code_point(next_input) || is_valid_escape_sequence(maybe_escape)) {
-            auto token = create_new_token(Token::TokenType::Hash);
+            auto token = create_new_token(Token::Type::Hash);
 
             if (would_start_an_identifier())
                 token.m_hash_type = Token::HashType::Id;
@@ -750,7 +750,7 @@ Token Tokenizer::consume_a_token()
             return token;
         }
 
-        return create_value_token(Token::TokenType::Delim, input);
+        return create_value_token(Token::Type::Delim, input);
     }
 
     if (is_apostrophe(input)) {
@@ -760,12 +760,12 @@ Token Tokenizer::consume_a_token()
 
     if (is_left_paren(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is left paren");
-        return create_new_token(Token::TokenType::OpenParen);
+        return create_new_token(Token::Type::OpenParen);
     }
 
     if (is_right_paren(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is right paren");
-        return create_new_token(Token::TokenType::CloseParen);
+        return create_new_token(Token::Type::CloseParen);
     }
 
     if (is_plus_sign(input)) {
@@ -775,12 +775,12 @@ Token Tokenizer::consume_a_token()
             return consume_a_numeric_token();
         }
 
-        return create_value_token(Token::TokenType::Delim, input);
+        return create_value_token(Token::Type::Delim, input);
     }
 
     if (is_comma(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is comma");
-        return create_new_token(Token::TokenType::Comma);
+        return create_new_token(Token::Type::Comma);
     }
 
     if (is_hyphen_minus(input)) {
@@ -795,7 +795,7 @@ Token Tokenizer::consume_a_token()
             (void)next_code_point();
             (void)next_code_point();
 
-            return create_new_token(Token::TokenType::CDC);
+            return create_new_token(Token::Type::CDC);
         }
 
         if (would_start_an_identifier()) {
@@ -803,7 +803,7 @@ Token Tokenizer::consume_a_token()
             return consume_an_ident_like_token();
         }
 
-        return create_value_token(Token::TokenType::Delim, input);
+        return create_value_token(Token::Type::Delim, input);
     }
 
     if (is_full_stop(input)) {
@@ -813,17 +813,17 @@ Token Tokenizer::consume_a_token()
             return consume_a_numeric_token();
         }
 
-        return create_value_token(Token::TokenType::Delim, input);
+        return create_value_token(Token::Type::Delim, input);
     }
 
     if (is_colon(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is colon");
-        return create_new_token(Token::TokenType::Colon);
+        return create_new_token(Token::Type::Colon);
     }
 
     if (is_semicolon(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is semicolon");
-        return create_new_token(Token::TokenType::Semicolon);
+        return create_new_token(Token::Type::Semicolon);
     }
 
     if (is_less_than_sign(input)) {
@@ -835,10 +835,10 @@ Token Tokenizer::consume_a_token()
             (void)next_code_point();
             (void)next_code_point();
 
-            return create_new_token(Token::TokenType::CDO);
+            return create_new_token(Token::Type::CDO);
         }
 
-        return create_value_token(Token::TokenType::Delim, input);
+        return create_value_token(Token::Type::Delim, input);
     }
 
     if (is_at(input)) {
@@ -846,15 +846,15 @@ Token Tokenizer::consume_a_token()
         if (would_start_an_identifier()) {
             auto name = consume_a_name();
 
-            return create_value_token(Token::TokenType::AtKeyword, input);
+            return create_value_token(Token::Type::AtKeyword, input);
         }
 
-        return create_value_token(Token::TokenType::Delim, input);
+        return create_value_token(Token::Type::Delim, input);
     }
 
     if (is_open_square_bracket(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is open square");
-        return create_new_token(Token::TokenType::OpenSquare);
+        return create_new_token(Token::Type::OpenSquare);
     }
 
     if (is_reverse_solidus(input)) {
@@ -865,22 +865,22 @@ Token Tokenizer::consume_a_token()
         }
 
         log_parse_error();
-        return create_value_token(Token::TokenType::Delim, input);
+        return create_value_token(Token::Type::Delim, input);
     }
 
     if (is_closed_square_bracket(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is closed square");
-        return create_new_token(Token::TokenType::CloseSquare);
+        return create_new_token(Token::Type::CloseSquare);
     }
 
     if (is_open_curly_bracket(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is open curly");
-        return create_new_token(Token::TokenType::OpenCurly);
+        return create_new_token(Token::Type::OpenCurly);
     }
 
     if (is_closed_curly_bracket(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is closed curly");
-        return create_new_token(Token::TokenType::CloseCurly);
+        return create_new_token(Token::Type::CloseCurly);
     }
 
     if (is_ascii_digit(input)) {
@@ -896,7 +896,7 @@ Token Tokenizer::consume_a_token()
     }
 
     dbgln_if(CSS_TOKENIZER_TRACE, "is delimiter");
-    return create_value_token(Token::TokenType::Delim, input);
+    return create_value_token(Token::Type::Delim, input);
 }
 
 }
