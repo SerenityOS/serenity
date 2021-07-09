@@ -53,7 +53,7 @@ void LayerListWidget::rebuild_gadgets()
 
 void LayerListWidget::resize_event(GUI::ResizeEvent& event)
 {
-    Widget::resize_event(event);
+    AbstractScrollableWidget::resize_event(event);
     relayout_gadgets();
 }
 
