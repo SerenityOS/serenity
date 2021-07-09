@@ -8,10 +8,10 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
 #include <LibELF/AuxiliaryVector.h>
-#include <LibThreading/Mutex.h>
 #include <assert.h>
 #include <errno.h>
 #include <mallocdefs.h>
+#include <pthread.h>
 #include <serenity.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,15 +20,24 @@
 #include <sys/mman.h>
 #include <syscall.h>
 
-// FIXME: Thread safety.
+class PthreadMutexLocker {
+public:
+    ALWAYS_INLINE explicit PthreadMutexLocker(pthread_mutex_t& mutex)
+        : m_mutex(mutex)
+    {
+        lock();
+    }
+    ALWAYS_INLINE ~PthreadMutexLocker() { unlock(); }
+    ALWAYS_INLINE void lock() { pthread_mutex_lock(&m_mutex); }
+    ALWAYS_INLINE void unlock() { pthread_mutex_unlock(&m_mutex); }
+
+private:
+    pthread_mutex_t& m_mutex;
+};
 
 #define RECYCLE_BIG_ALLOCATIONS
 
-static Threading::Mutex& malloc_lock()
-{
-    alignas(Threading::Mutex) static u8 lock_storage[sizeof(Threading::Mutex)];
-    return *reinterpret_cast<Threading::Mutex*>(lock_storage);
-}
+static pthread_mutex_t s_malloc_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 constexpr size_t number_of_hot_chunked_blocks_to_keep_around = 16;
 constexpr size_t number_of_cold_chunked_blocks_to_keep_around = 16;
@@ -167,8 +176,6 @@ enum class CallerWillInitializeMemory {
 
 static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_initialize_memory)
 {
-    Threading::MutexLocker locker(malloc_lock());
-
     if (s_log_malloc)
         dbgln("LibC: malloc({})", size);
 
@@ -182,6 +189,8 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
 
     size_t good_size;
     auto* allocator = allocator_for_size(size, good_size);
+
+    PthreadMutexLocker locker(s_malloc_mutex);
 
     if (!allocator) {
         size_t real_size = round_up_to_power_of_two(sizeof(BigAllocationBlock) + size, ChunkedBlock::block_size);
@@ -304,10 +313,11 @@ static void free_impl(void* ptr)
 
     g_malloc_stats.number_of_free_calls++;
 
-    Threading::MutexLocker locker(malloc_lock());
 
     void* block_base = (void*)((FlatPtr)ptr & ChunkedBlock::ChunkedBlock::block_mask);
     size_t magic = *(size_t*)block_base;
+
+    PthreadMutexLocker locker(s_malloc_mutex);
 
     if (magic == MAGIC_BIGALLOC_HEADER) {
         auto* block = (BigAllocationBlock*)block_base;
@@ -413,7 +423,6 @@ size_t malloc_size(void* ptr)
 {
     if (!ptr)
         return 0;
-    Threading::MutexLocker locker(malloc_lock());
     void* page_base = (void*)((FlatPtr)ptr & ChunkedBlock::block_mask);
     auto* header = (const CommonHeader*)page_base;
     auto size = header->m_size;
@@ -440,7 +449,6 @@ void* realloc(void* ptr, size_t size)
         return nullptr;
     }
 
-    Threading::MutexLocker locker(malloc_lock());
     auto existing_allocation_size = malloc_size(ptr);
 
     if (size <= existing_allocation_size) {
@@ -457,8 +465,6 @@ void* realloc(void* ptr, size_t size)
 
 void __malloc_init()
 {
-    new (&malloc_lock()) Threading::Mutex();
-
     s_in_userspace_emulator = (int)syscall(SC_emuctl, 0) != -ENOSYS;
     if (s_in_userspace_emulator) {
         // Don't bother scrubbing memory if we're running in UE since it
