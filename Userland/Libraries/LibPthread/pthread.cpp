@@ -151,6 +151,12 @@ int pthread_join(pthread_t thread, void** exit_value_ptr)
     __RETURN_PTHREAD_ERROR(rc);
 }
 
+int pthread_kill(pthread_t thread, int sig)
+{
+    int rc = syscall(SC_kill_thread, thread, sig);
+    __RETURN_PTHREAD_ERROR(rc);
+}
+
 int pthread_detach(pthread_t thread)
 {
     int rc = syscall(SC_detach_thread, thread);

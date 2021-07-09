@@ -159,6 +159,27 @@ KResultOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_va
     return 0;
 }
 
+KResultOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
+{
+    REQUIRE_PROMISE(thread);
+
+    if (signal < 0 || signal >= 32)
+        return EINVAL;
+
+    auto thread = Thread::from_tid(tid);
+    if (!thread || thread->pid() != pid())
+        return ESRCH;
+
+    auto process = Process::current();
+    if (!process)
+        return ESRCH;
+
+    if (signal != 0)
+        thread->send_signal(signal, process);
+
+    return 0;
+}
+
 KResultOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, size_t user_name_length)
 {
     REQUIRE_PROMISE(stdio);
