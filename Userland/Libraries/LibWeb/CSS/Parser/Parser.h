@@ -21,21 +21,26 @@
 
 namespace Web::CSS {
 
+class CSSStyleSheet;
+class CSSRule;
+class CSSStyleRule;
+struct StyleProperty;
+
 class Parser {
 public:
     Parser(const StringView& input, const String& encoding = "utf-8");
     ~Parser();
 
     // The normal parser entry point, for parsing stylesheets.
-    NonnullRefPtrVector<QualifiedStyleRule> parse_as_stylesheet();
+    NonnullRefPtr<CSSStyleSheet> parse_as_stylesheet();
     // For the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
-    NonnullRefPtrVector<QualifiedStyleRule> parse_as_list_of_rules();
+    NonnullRefPtrVector<CSSRule> parse_as_list_of_rules();
     // For use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
-    RefPtr<QualifiedStyleRule> parse_as_rule();
+    RefPtr<CSSRule> parse_as_rule();
     // Used in @supports conditions. [CSS3-CONDITIONAL]
-    Optional<StyleDeclarationRule> parse_as_declaration();
+    Optional<StyleProperty> parse_as_declaration();
     // For the contents of a style attribute, which parses text into the contents of a single style rule.
-    Vector<DeclarationOrAtRule> parse_as_list_of_declarations();
+    Vector<StyleProperty> parse_as_list_of_declarations();
     // For things that need to consume a single value, like the parsing rules for attr().
     Optional<StyleComponentValueRule> parse_as_component_value();
     // For the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
@@ -79,6 +84,8 @@ private:
     StyleComponentValueRule consume_a_component_value();
     NonnullRefPtr<StyleBlockRule> consume_a_simple_block();
     NonnullRefPtr<StyleFunctionRule> consume_a_function();
+
+    RefPtr<CSSRule> convert_rule(NonnullRefPtr<QualifiedStyleRule>);
 
     Tokenizer m_tokenizer;
     Vector<Token> m_tokens;
