@@ -385,6 +385,7 @@ public:
     KResultOr<FlatPtr> sys$detach_thread(pid_t tid);
     KResultOr<FlatPtr> sys$set_thread_name(pid_t tid, Userspace<const char*> buffer, size_t buffer_size);
     KResultOr<FlatPtr> sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buffer_size);
+    KResultOr<FlatPtr> sys$kill_thread(pid_t tid, int signal);
     KResultOr<FlatPtr> sys$rename(Userspace<const Syscall::SC_rename_params*>);
     KResultOr<FlatPtr> sys$mknod(Userspace<const Syscall::SC_mknod_params*>);
     KResultOr<FlatPtr> sys$halt();
