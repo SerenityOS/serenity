@@ -14,7 +14,7 @@ auth_opts="Python-${version}.tar.xz.asc Python-${version}.tar.xz"
 
 # We could also add `ncurses`/`termcap` and `openssl` here, but neither of the _curses nor _ssl
 # modules build at the moment even with those available, so it's pointless.
-depends="libffi zlib"
+depends="libffi readline zlib"
 
 # FIXME: --enable-optimizations results in lots of __gcov_* linker errors
 configopts="--disable-ipv6 --without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no"
