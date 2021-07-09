@@ -156,19 +156,21 @@ class ProcFSProcessFolder final
 
 public:
     static NonnullRefPtr<ProcFSProcessFolder> create(const Process&);
-    NonnullRefPtr<Process> associated_process() { return m_associated_process; }
+    RefPtr<Process> associated_process() { return m_associated_process; }
 
-    virtual uid_t owner_user() const override { return m_associated_process->uid(); }
-    virtual gid_t owner_group() const override { return m_associated_process->gid(); }
+    virtual uid_t owner_user() const override { return m_associated_process ? m_associated_process->uid() : 0; }
+    virtual gid_t owner_group() const override { return m_associated_process ? m_associated_process->gid() : 0; }
     virtual KResult refresh_data(FileDescription&) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
+
+    virtual void prepare_for_deletion() override;
 
 private:
     void on_attach();
     IntrusiveListNode<ProcFSProcessFolder, RefPtr<ProcFSProcessFolder>> m_list_node;
 
     explicit ProcFSProcessFolder(const Process&);
-    NonnullRefPtr<Process> m_associated_process;
+    RefPtr<Process> m_associated_process;
 };
 
 class ProcFSRootFolder;
@@ -243,8 +245,26 @@ public:
 
     virtual KResultOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const override;
 
-    virtual uid_t owner_user() const override { return m_parent_folder.strong_ref()->m_associated_process->uid(); }
-    virtual gid_t owner_group() const override { return m_parent_folder.strong_ref()->m_associated_process->gid(); }
+    virtual uid_t owner_user() const override
+    {
+        auto parent_folder = m_parent_folder.strong_ref();
+        if (!parent_folder)
+            return false;
+        auto process = parent_folder->associated_process();
+        if (!process)
+            return false;
+        return process->uid();
+    }
+    virtual gid_t owner_group() const override
+    {
+        auto parent_folder = m_parent_folder.strong_ref();
+        if (!parent_folder)
+            return false;
+        auto process = parent_folder->associated_process();
+        if (!process)
+            return false;
+        return process->gid();
+    }
 
 protected:
     ProcFSProcessInformation(StringView name, const ProcFSProcessFolder& process_folder)

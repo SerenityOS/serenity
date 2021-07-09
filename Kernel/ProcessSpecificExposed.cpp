@@ -93,7 +93,10 @@ KResultOr<size_t> ProcFSProcessStacks::entries_count() const
     auto parent_folder = m_process_folder.strong_ref();
     if (parent_folder.is_null())
         return KResult(EINVAL);
-    return parent_folder->m_associated_process->thread_count();
+    auto process = parent_folder->associated_process();
+    if (process.is_null())
+        return KResult(ESRCH);
+    return process->thread_count();
 }
 
 KResult ProcFSProcessStacks::traverse_as_directory(unsigned fsid, Function<bool(const FS::DirectoryEntryView&)> callback) const
@@ -105,7 +108,9 @@ KResult ProcFSProcessStacks::traverse_as_directory(unsigned fsid, Function<bool(
     callback({ ".", { fsid, component_index() }, 0 });
     callback({ "..", { fsid, parent_folder->component_index() }, 0 });
 
-    auto process = parent_folder->m_associated_process;
+    auto process = parent_folder->associated_process();
+    if (process.is_null())
+        return KResult(ESRCH);
     process->for_each_thread([&](const Thread& thread) {
         int tid = thread.tid().value();
         InodeIdentifier identifier = { fsid, thread.global_procfs_inode_index() };
@@ -120,7 +125,9 @@ RefPtr<ProcFSExposedComponent> ProcFSProcessStacks::lookup(StringView name)
     auto parent_folder = m_process_folder.strong_ref();
     if (parent_folder.is_null())
         return nullptr;
-    auto process = parent_folder->m_associated_process;
+    auto process = parent_folder->associated_process();
+    if (process.is_null())
+        return nullptr;
     RefPtr<ProcFSThreadStack> procfd_stack;
     // FIXME: Try to exit the loop earlier
     process->for_each_thread([&](const Thread& thread) {
@@ -195,7 +202,10 @@ KResultOr<size_t> ProcFSProcessFileDescriptions::entries_count() const
     auto parent_folder = m_process_folder.strong_ref();
     if (parent_folder.is_null())
         return KResult(EINVAL);
-    return parent_folder->m_associated_process->fds().open_count();
+    auto process = parent_folder->associated_process();
+    if (process.is_null())
+        return KResult(ESRCH);
+    return process->fds().open_count();
 }
 KResult ProcFSProcessFileDescriptions::traverse_as_directory(unsigned fsid, Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
@@ -206,7 +216,9 @@ KResult ProcFSProcessFileDescriptions::traverse_as_directory(unsigned fsid, Func
     callback({ ".", { fsid, component_index() }, 0 });
     callback({ "..", { fsid, parent_folder->component_index() }, 0 });
 
-    auto process = parent_folder->m_associated_process;
+    auto process = parent_folder->associated_process();
+    if (process.is_null())
+        return KResult(ESRCH);
     size_t count = 0;
     process->fds().enumerate([&](auto& file_description_metadata) {
         if (!file_description_metadata.is_valid()) {
@@ -225,7 +237,9 @@ RefPtr<ProcFSExposedComponent> ProcFSProcessFileDescriptions::lookup(StringView 
     auto parent_folder = m_process_folder.strong_ref();
     if (parent_folder.is_null())
         return nullptr;
-    auto process = parent_folder->m_associated_process;
+    auto process = parent_folder->associated_process();
+    if (process.is_null())
+        return nullptr;
     RefPtr<ProcFSProcessFileDescription> procfd_fd;
     // FIXME: Try to exit the loop earlier
     size_t count = 0;
@@ -259,7 +273,9 @@ private:
         auto parent_folder = m_parent_folder.strong_ref();
         if (parent_folder.is_null())
             return false;
-        auto process = parent_folder->m_associated_process;
+        auto process = parent_folder->associated_process();
+        if (process.is_null())
+            return false;
         JsonObjectSerializer obj { builder };
 #define __ENUMERATE_PLEDGE_PROMISE(x)       \
     if (process->has_promised(Pledge::x)) { \
@@ -295,8 +311,11 @@ private:
         auto parent_folder = m_parent_folder.strong_ref();
         if (parent_folder.is_null())
             return false;
+        auto process = parent_folder->associated_process();
+        if (process.is_null())
+            return false;
         JsonArraySerializer array { builder };
-        for (auto& unveiled_path : parent_folder->m_associated_process->unveiled_paths()) {
+        for (auto& unveiled_path : process->unveiled_paths()) {
             if (!unveiled_path.was_explicitly_unveiled())
                 continue;
             auto obj = array.add_object();
@@ -337,7 +356,9 @@ private:
         auto parent_folder = m_parent_folder.strong_ref();
         if (parent_folder.is_null())
             return false;
-        auto process = parent_folder->m_associated_process;
+        auto process = parent_folder->associated_process();
+        if (process.is_null())
+            return false;
         if (!process->perf_events()) {
             dbgln("ProcFS: No perf events for {}", process->pid());
             return false;
@@ -364,7 +385,9 @@ private:
         if (parent_folder.is_null())
             return false;
         JsonArraySerializer array { builder };
-        auto process = parent_folder->m_associated_process;
+        auto process = parent_folder->associated_process();
+        if (process.is_null())
+            return false;
         if (process->fds().open_count() == 0) {
             array.finish();
             return true;
@@ -414,7 +437,10 @@ private:
         auto parent_folder = m_parent_process_directory.strong_ref();
         if (parent_folder.is_null())
             return false;
-        builder.append_bytes(parent_folder->m_associated_process->root_directory_relative_to_global_root().absolute_path().to_byte_buffer());
+        auto process = parent_folder->associated_process();
+        if (process.is_null())
+            return false;
+        builder.append_bytes(process->root_directory_relative_to_global_root().absolute_path().to_byte_buffer());
         return true;
     }
     WeakPtr<ProcFSProcessFolder> m_parent_process_directory;
@@ -437,7 +463,9 @@ private:
         auto parent_folder = m_parent_folder.strong_ref();
         if (parent_folder.is_null())
             return false;
-        auto process = parent_folder->m_associated_process;
+        auto process = parent_folder->associated_process();
+        if (process.is_null())
+            return false;
         JsonArraySerializer array { builder };
         {
             ScopedSpinLock lock(process->space().get_lock());
@@ -500,7 +528,10 @@ private:
         auto parent_folder = m_parent_process_directory.strong_ref();
         if (parent_folder.is_null())
             return false;
-        builder.append_bytes(parent_folder->m_associated_process->current_directory().absolute_path().bytes());
+        auto process = parent_folder->associated_process();
+        if (process.is_null())
+            return false;
+        builder.append_bytes(process->current_directory().absolute_path().bytes());
         return true;
     }
 
@@ -519,7 +550,10 @@ public:
         auto parent_folder = m_parent_process_directory.strong_ref();
         if (parent_folder.is_null())
             return false;
-        if (!parent_folder->m_associated_process->executable())
+        auto process = parent_folder->associated_process();
+        if (process.is_null())
+            return false;
+        if (!process->executable())
             return 0;
         return ProcFSExposedComponent::required_mode();
     }
@@ -535,7 +569,10 @@ private:
         auto parent_folder = m_parent_process_directory.strong_ref();
         if (parent_folder.is_null())
             return false;
-        auto* custody = parent_folder->m_associated_process->executable();
+        auto process = parent_folder->associated_process();
+        if (process.is_null())
+            return false;
+        auto* custody = process->executable();
         if (!custody)
             return false;
         builder.append(custody->absolute_path().bytes());
@@ -580,6 +617,12 @@ KResult ProcFSProcessFolder::refresh_data(FileDescription&) const
 NonnullRefPtr<ProcFSProcessFolder> ProcFSProcessFolder::create(const Process& process)
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSProcessFolder(process)).release_nonnull();
+}
+
+void ProcFSProcessFolder::prepare_for_deletion()
+{
+    ProcFSExposedFolder::prepare_for_deletion();
+    m_associated_process.clear();
 }
 
 ProcFSProcessFolder::ProcFSProcessFolder(const Process& process)

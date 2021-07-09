@@ -160,7 +160,9 @@ KResult ProcFSProcessInformation::refresh_data(FileDescription& description) con
     auto parent_folder = const_cast<ProcFSProcessInformation&>(*this).m_parent_folder.strong_ref();
     if (parent_folder.is_null())
         return KResult(EINVAL);
-    auto process = parent_folder->m_associated_process;
+    auto process = parent_folder->associated_process();
+    if (!process)
+        return KResult(ESRCH);
     process->ptrace_lock().lock();
     if (!process->is_dumpable()) {
         process->ptrace_lock().unlock();

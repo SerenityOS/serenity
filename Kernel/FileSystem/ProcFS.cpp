@@ -60,8 +60,6 @@ void ProcFSComponentsRegistrar::unregister_process(Process& deleted_process)
     process_folder->prepare_for_deletion();
     process_folder->m_list_node.remove();
     dbgln_if(PROCFS_DEBUG, "ProcFSExposedFolder ref_count now: {}", process_folder->ref_count());
-    // Note: Let's ensure we are the last holder of the ProcFSProcessFolder object before it can be deleted for good
-    VERIFY(process_folder->ref_count() == 1);
 }
 
 RefPtr<ProcFS> ProcFS::create()
