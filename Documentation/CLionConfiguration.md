@@ -36,7 +36,7 @@ It is possible to set the embedded terminal in CLion to the one that your WSL di
 This way you can build and run serenity without leaving the IDE.
 Note that following will only help if you don't use an X-window server to access qemu.
 It is possible to install qemu natively on Windows and allow WSL to use it instead of installing qemu first on (wsl) linux and then use X server to launch serenity inside of it.
-Check the updated manual [here](https://github.com/SerenityOS/serenity/blob/master/Documentation/NotesOnWSL.md).
+Check the updated manual [here](BuildInstructionsWindows.md).
 
 - Locate the terminal emulator for your linux distribution.
 Open CMD with elevated privileges and cd to `C:/Program Files/WindowsApps/`.

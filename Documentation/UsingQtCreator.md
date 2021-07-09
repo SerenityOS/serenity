@@ -2,7 +2,7 @@
 
 ## Setup
 
-First, make sure you have a working toolchain and can build and run SerenityOS. Go [here](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md) for instructions for setting that up.
+First, make sure you have a working toolchain and can build and run SerenityOS. Go [here](BuildInstructions.md) for instructions for setting that up.
 
 * Install [Qt Creator](https://www.qt.io/offline-installers). You don't need the entire Qt setup, just click 'Qt Creator' on the left side, and install that.
 * Open Qt Creator, select `File -> New File or Project...`
@@ -41,7 +41,7 @@ Qt Creator should be set up correctly now, go ahead and explore the project and 
 
 ## Auto-Formatting
 
-You can use `clang-format` to help you with the [style guide](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Before you proceed, check that you're actually using clang-format version 11, as some OSes still ship clang-format version 9 or 10 by default.
+You can use `clang-format` to help you with the [style guide](CodingStyle.md). Before you proceed, check that you're actually using clang-format version 11, as some OSes still ship clang-format version 9 or 10 by default.
 
 - In QtCreator, go to "Help > About Plugins…"
 - Find the `Beautifier (experimental)` row (for example, by typing `beau` into the search)
