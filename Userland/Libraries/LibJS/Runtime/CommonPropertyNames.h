@@ -198,6 +198,7 @@ namespace JS {
     P(includes)                              \
     P(index)                                 \
     P(indexOf)                               \
+    P(indices)                               \
     P(info)                                  \
     P(input)                                 \
     P(instant)                               \

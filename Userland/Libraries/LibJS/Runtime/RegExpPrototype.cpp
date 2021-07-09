@@ -103,6 +103,79 @@ static void increment_last_index(GlobalObject& global_object, Object& regexp_obj
     regexp_object.set(vm.names.lastIndex, Value(last_index), true);
 }
 
+// 1.1.2.1 Match Records, https://tc39.es/proposal-regexp-match-indices/#sec-match-records
+struct Match {
+    static Match create(regex::Match const& match)
+    {
+        return { match.global_offset, match.global_offset + match.view.length() };
+    }
+
+    size_t start_index { 0 };
+    size_t end_index { 0 };
+};
+
+// 1.1.4.1.4 GetMatchIndicesArray ( S, match ), https://tc39.es/proposal-regexp-match-indices/#sec-getmatchindicesarray
+static Value get_match_indices_array(GlobalObject& global_object, String const& string, Match const& match)
+{
+    VERIFY(match.start_index <= string.length());
+    VERIFY(match.end_index >= match.start_index);
+    VERIFY(match.end_index <= string.length());
+
+    return Array::create_from(global_object, { Value(match.start_index), Value(match.end_index) });
+}
+
+// 1.1.4.1.5 MakeIndicesArray ( S , indices, groupNames, hasGroups ), https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray
+static Value make_indices_array(GlobalObject& global_object, String const& string, Vector<Optional<Match>> const& indices, HashMap<String, Match> const& group_names, bool has_groups)
+{
+    // Note: This implementation differs from the spec, but has the same behavior.
+    //
+    // The spec dictates that [[RegExpMatcher]] results should contain one list of capture groups,
+    // where each entry holds its group name (if it has one). However, LibRegex stores named capture
+    // groups in a separate hash map.
+    //
+    // The spec further specifies that the group names provided to this abstraction align with the
+    // provided indices starting at indices[1], where any entry in indices that does not have a group
+    // name is undefined in the group names list. But, the undefined groups names are then just
+    // dropped when copying them to the output array.
+    //
+    // Therefore, this implementation tracks the group names without the assertion that the group
+    // names align with the indices. The end result is the same.
+
+    auto& vm = global_object.vm();
+
+    auto* array = Array::create(global_object, indices.size());
+    if (vm.exception())
+        return {};
+
+    auto groups = has_groups ? Object::create(global_object, nullptr) : js_undefined();
+
+    for (size_t i = 0; i < indices.size(); ++i) {
+        auto const& match_indices = indices[i];
+
+        auto match_indices_array = js_undefined();
+        if (match_indices.has_value())
+            match_indices_array = get_match_indices_array(global_object, string, *match_indices);
+
+        array->create_data_property(i, match_indices_array);
+        if (vm.exception())
+            return {};
+    }
+
+    for (auto const& entry : group_names) {
+        auto match_indices_array = get_match_indices_array(global_object, string, entry.value);
+
+        groups.as_object().create_data_property(entry.key, match_indices_array);
+        if (vm.exception())
+            return {};
+    }
+
+    array->create_data_property(vm.names.groups, groups);
+    if (vm.exception())
+        return {};
+
+    return array;
+}
+
 // 22.2.5.2.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
 static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, String const& string)
 {
@@ -119,6 +192,8 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     auto& regex = regexp_object.regex();
     bool global = regex.options().has_flag_set(ECMAScriptFlags::Global);
     bool sticky = regex.options().has_flag_set(ECMAScriptFlags::Sticky);
+    bool has_indices = regexp_object.flags().find('d').has_value();
+
     if (!global && !sticky)
         last_index = 0;
 
@@ -175,23 +250,43 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     array->create_data_property_or_throw(vm.names.input, js_string(vm, string));
     array->create_data_property_or_throw(0, js_string(vm, match.view.to_string()));
 
+    Vector<Optional<Match>> indices { Match::create(match) };
+    HashMap<String, Match> group_names;
+
     for (size_t i = 0; i < result.n_capture_groups; ++i) {
         auto capture_value = js_undefined();
         auto& capture = result.capture_group_matches[0][i + 1];
-        if (!capture.view.is_null())
+        if (capture.view.is_null()) {
+            indices.append({});
+        } else {
             capture_value = js_string(vm, capture.view.to_string());
+            indices.append(Match::create(capture));
+        }
         array->create_data_property_or_throw(i + 1, capture_value);
     }
 
+    bool has_groups = result.n_named_capture_groups > 0;
     Value groups = js_undefined();
-    if (result.n_named_capture_groups > 0) {
+
+    if (has_groups) {
         auto groups_object = Object::create(global_object, nullptr);
-        for (auto& entry : result.named_capture_group_matches[0])
+
+        for (auto& entry : result.named_capture_group_matches[0]) {
             groups_object->create_data_property_or_throw(entry.key, js_string(vm, entry.value.view.to_string()));
+            group_names.set(entry.key, Match::create(entry.value));
+        }
+
         groups = move(groups_object);
     }
 
     array->create_data_property_or_throw(vm.names.groups, groups);
+
+    if (has_indices) {
+        auto indices_array = make_indices_array(global_object, string, indices, group_names, has_groups);
+        array->create_data_property(vm.names.indices, indices_array);
+        if (vm.exception())
+            return {};
+    }
 
     return array;
 }
