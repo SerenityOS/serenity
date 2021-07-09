@@ -11,27 +11,6 @@ This patch is a big hack to wipe wide strings out of the codebase; naturally, it
 - [X] Resolves issue(s) with our side of things
 - [X] Hack
 
-## `0008-unix-stuff.patch`
-
-This patch removes the use of `{get,set}priority()` as we do not support it.
-it also removes two functions with the correct conditions (the same conditions as their dependents are removed with).
-
-### Status
-- [X] Local?
-- [X] Should be merged to upstream? Partially.
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
-
-## `0009-purge-non-serenity-syscalls.patch`
-
-This patch removes syscalls and options not defined in serenity.
-
-### Status
-- [X] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
-
 ## `0010-don-t-use-siginfo.patch`
 
 We don't support SIGINFO. This patch removes uses of SIGINFO.
@@ -91,26 +70,6 @@ These two defines make GCC very sad. reasons are unknown at this time.
 - [X] Resolves issue(s) with our side of things
 - [X] Hack
 
-## `0019-libuv-so_linger.patch`
-
-We don't have `SO_LINGER` or its associated struct. This patch removes them.
-
-### Status
-- [X] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [X] Hack
-
-## `0025-uv-platform.patch`
-
-This patch adds the definitions necessary to compile libuv on Serenity.
-
-### Status
-- [ ] Local?
-- [X] Should be merged to upstream? If we want to have cmake support serenity out of the box.
-- [ ] Resolves issue(s) with our side of things
-- [ ] Hack
-
 ## `0026-curl-struct-stat.patch`
 
 For unknown reasons, `curl_setup_once.h` does not include `sys/stat.h`. this patch includes `sys/stat.h`.
@@ -120,16 +79,6 @@ For unknown reasons, `curl_setup_once.h` does not include `sys/stat.h`. this pat
 - [ ] Should be merged to upstream?
 - [X] Resolves issue(s) with our side of things
 - [X] Hack
-
-## `0027-libuv-platform-serenity.patch`
-
-This patch adds a platform-specific conditional include to `uv/unix.h`.
-
-### Status
-- [ ] Local?
-- [X] Should be merged to upstream?
-- [ ] Resolves issue(s) with our side of things
-- [ ] Hack
 
 ## `0028-cmake-disable-tests.patch`
 
