@@ -67,10 +67,21 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_add
     if (id.vendor_id == 0x80ee && id.device_id == 0xbeef)
         m_io_required = true;
 
-    // FIXME: Although this helps with setting the screen to work on some cases,
-    // we need to check we actually can access the VGA MMIO remapped ioports before
-    // doing the unblanking.
-    unblank();
+    // Note: When dealing with a VGA-compatible device, this helps with setting the screen to work on
+    // It seems like the QEMU secondary-vga device represnets itself as non-VGA compatible device,
+    // but bochs-display does that too. The only reliable way to differentiate between them is to check
+    // if the device has a valid Expansion ROM pointer at 0x30. For secondary-vga device, there's no such
+    // valid base address, while for bochs-display device, there's a valid base address.
+
+    // Note: This check might not be relevant in the future, in case the QEMU developers
+    // decide to add a ROM for the secondary-vga device. In such scenario, we will need
+    // to find a way to differentiate between secondary-vga and bochs-display devices again.
+    if (GraphicsManagement::is_vga_compatible_pci_device(pci_address)) {
+        unblank();
+    } else {
+        if (!PCI::is_expansion_rom_base_address_valid(pci_address))
+            unblank();
+    }
     set_safe_resolution();
 }
 

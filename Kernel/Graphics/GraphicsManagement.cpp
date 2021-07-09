@@ -54,7 +54,7 @@ void GraphicsManagement::activate_graphical_mode()
     }
 }
 
-static inline bool is_vga_compatible_pci_device(PCI::Address address)
+bool GraphicsManagement::is_vga_compatible_pci_device(PCI::Address address)
 {
     // Note: Check for Display Controller, VGA Compatible Controller or
     // Unclassified, VGA-Compatible Unclassified Device

@@ -34,6 +34,8 @@ public:
     static bool is_initialized();
     bool initialize();
 
+    static bool is_vga_compatible_pci_device(PCI::Address address);
+
     unsigned allocate_minor_device_number() { return m_current_minor_number++; };
     GraphicsManagement();
 

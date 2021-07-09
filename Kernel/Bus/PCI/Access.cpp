@@ -207,6 +207,12 @@ void disable_memory_space(Address address)
 {
     write16(address, PCI_COMMAND, read16(address, PCI_COMMAND) & ~(1 << 1));
 }
+
+bool is_expansion_rom_base_address_valid(Address address)
+{
+    return read32(address, PCI_EXPANSION_ROM_BASE_ADDRESS) != 0;
+}
+
 bool is_io_space_enabled(Address address)
 {
     return (read16(address, PCI_COMMAND) & 1) != 0;
