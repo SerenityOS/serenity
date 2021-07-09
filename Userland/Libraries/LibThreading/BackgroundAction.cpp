@@ -7,7 +7,7 @@
 
 #include <AK/Queue.h>
 #include <LibThreading/BackgroundAction.h>
-#include <LibThreading/Lock.h>
+#include <LibThreading/Mutex.h>
 #include <LibThreading/Thread.h>
 #include <unistd.h>
 
