@@ -49,7 +49,7 @@ Token Parser::peek_token()
 
 Token Parser::next_token()
 {
-    if (m_iterator_offset < (int)m_tokens.size()) {
+    if (m_iterator_offset < (int)m_tokens.size() - 1) {
         ++m_iterator_offset;
     }
 
