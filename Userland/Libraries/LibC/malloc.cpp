@@ -313,7 +313,6 @@ static void free_impl(void* ptr)
 
     g_malloc_stats.number_of_free_calls++;
 
-
     void* block_base = (void*)((FlatPtr)ptr & ChunkedBlock::ChunkedBlock::block_mask);
     size_t magic = *(size_t*)block_base;
 
