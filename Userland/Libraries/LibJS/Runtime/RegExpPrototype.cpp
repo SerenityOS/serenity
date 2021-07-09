@@ -107,39 +107,69 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     // FIXME: This should try using internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
     auto& vm = global_object.vm();
 
-    // RegExps without "global" and "sticky" always start at offset 0.
-    if (!regexp_object.regex().options().has_flag_set((ECMAScriptFlags)regex::AllFlags::Internal_Stateful)) {
-        regexp_object.set(vm.names.lastIndex, Value(0), true);
+    auto last_index_value = regexp_object.get(vm.names.lastIndex);
+    if (vm.exception())
+        return {};
+    auto last_index = last_index_value.to_length(global_object);
+    if (vm.exception())
+        return {};
+
+    auto& regex = regexp_object.regex();
+    bool global = regex.options().has_flag_set(ECMAScriptFlags::Global);
+    bool sticky = regex.options().has_flag_set(ECMAScriptFlags::Sticky);
+    if (!global && !sticky)
+        last_index = 0;
+
+    RegexResult result;
+
+    while (true) {
+        if (last_index > string.length()) {
+            if (global || sticky) {
+                regexp_object.set(vm.names.lastIndex, Value(0), true);
+                if (vm.exception())
+                    return {};
+            }
+
+            return js_null();
+        }
+
+        regex.start_offset = last_index;
+        result = regex.match(string);
+
+        if (result.success)
+            break;
+
+        if (sticky) {
+            regexp_object.set(vm.names.lastIndex, Value(0), true);
+            if (vm.exception())
+                return {};
+
+            return js_null();
+        }
+
+        // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
+        ++last_index;
+    }
+
+    auto& match = result.matches[0];
+
+    // https://tc39.es/ecma262/#sec-notation:
+    // The endIndex is one plus the index of the last input character matched so far by the pattern.
+    auto end_index = match.global_offset + match.view.length();
+
+    // FIXME: Do code point index correction if the Unicode flag is set.
+
+    if (global || sticky) {
+        regexp_object.set(vm.names.lastIndex, Value(end_index), true);
         if (vm.exception())
             return {};
     }
 
-    auto last_index = regexp_object.get(vm.names.lastIndex);
-    if (vm.exception())
-        return {};
-    regexp_object.regex().start_offset = last_index.to_length(global_object);
-    if (vm.exception())
-        return {};
-
-    auto result = regexp_object.regex().match(string);
-    // The 'lastIndex' property is reset on failing tests (if 'global')
-    if (!result.success && regexp_object.regex().options().has_flag_set(ECMAScriptFlags::Global))
-        regexp_object.regex().start_offset = 0;
-
-    regexp_object.set(vm.names.lastIndex, Value(regexp_object.regex().start_offset), true);
-    if (vm.exception())
-        return {};
-
-    if (!result.success)
-        return js_null();
-
-    auto& match = result.matches[0];
-
-    // FIXME: Do code point index correction if the Unicode flag is set.
     auto* array = Array::create(global_object, result.n_capture_groups + 1);
     if (vm.exception())
         return {};
-    array->create_data_property_or_throw(vm.names.index, Value((i32)match.global_offset));
+
+    array->create_data_property_or_throw(vm.names.index, Value(match.global_offset));
     array->create_data_property_or_throw(vm.names.input, js_string(vm, string));
     array->create_data_property_or_throw(0, js_string(vm, match.view.to_string()));
 
