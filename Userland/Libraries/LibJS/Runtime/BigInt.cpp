@@ -34,7 +34,7 @@ BigInt* number_to_bigint(GlobalObject& global_object, Value number)
 
     // 1. If IsIntegralNumber(number) is false, throw a RangeError exception.
     if (!number.is_integral_number()) {
-        vm.throw_exception<RangeError>(global_object, ErrorType::BigIntIntArgument);
+        vm.throw_exception<RangeError>(global_object, ErrorType::BigIntFromNonIntegral);
         return {};
     }
 

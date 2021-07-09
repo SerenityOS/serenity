@@ -62,7 +62,7 @@ describe("errors", () => {
         [1.23, Infinity, -Infinity, NaN].forEach(value => {
             expect(() => {
                 BigInt(value);
-            }).toThrowWithMessage(RangeError, "BigInt argument must be an integer");
+            }).toThrowWithMessage(RangeError, "Cannot convert non-integral number to BigInt");
         });
     });
 });
