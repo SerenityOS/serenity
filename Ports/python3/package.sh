@@ -12,9 +12,8 @@ auth_type="sig"
 auth_import_key="E3FF2839C048B25C084DEBE9B26995E310250568"
 auth_opts="Python-${version}.tar.xz.asc Python-${version}.tar.xz"
 
-# We could also add `ncurses`/`termcap` and `openssl` here, but neither of the _curses nor _ssl
-# modules build at the moment even with those available, so it's pointless.
-depends="bzip2 libffi readline sqlite zlib"
+# We could also add `openssl` here, but the _ssl modules doesn't build at the moment 
+depends="bzip2 libffi ncurses readline sqlite termcap zlib"
 
 # FIXME: --enable-optimizations results in lots of __gcov_* linker errors
 configopts="--disable-ipv6 --without-ensurepip ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no"
