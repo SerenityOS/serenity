@@ -56,6 +56,7 @@ private:
         Gfx::IntPoint movement_delta;
     };
 
+    void get_gadget_rects(Gadget const&, Gfx::IntRect& outer_rect, Gfx::IntRect& thumbnail_rect, Gfx::IntRect& text_rect);
     bool is_moving_gadget() const { return m_moving_gadget_index.has_value(); }
 
     Optional<size_t> gadget_at(Gfx::IntPoint const&);

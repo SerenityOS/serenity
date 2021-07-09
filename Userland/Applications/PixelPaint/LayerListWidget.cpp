@@ -57,6 +57,22 @@ void LayerListWidget::resize_event(GUI::ResizeEvent& event)
     relayout_gadgets();
 }
 
+void LayerListWidget::get_gadget_rects(Gadget const& gadget, Gfx::IntRect& outer_rect, Gfx::IntRect& thumbnail_rect, Gfx::IntRect& text_rect)
+{
+    outer_rect = gadget.rect;
+    outer_rect.translate_by(0, -vertical_scrollbar().value());
+    outer_rect.translate_by(frame_thickness(), frame_thickness());
+    if (gadget.is_moving) {
+        outer_rect.translate_by(0, gadget.movement_delta.y());
+    }
+
+    thumbnail_rect = { outer_rect.x(), outer_rect.y(), outer_rect.height(), outer_rect.height() };
+    thumbnail_rect.shrink(8, 8);
+
+    text_rect = { thumbnail_rect.right() + 10, outer_rect.y(), outer_rect.width(), outer_rect.height() };
+    text_rect.intersect(outer_rect);
+}
+
 void LayerListWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
@@ -72,13 +88,10 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
     auto paint_gadget = [&](auto& gadget) {
         auto& layer = m_image->layer(gadget.layer_index);
 
-        auto adjusted_rect = gadget.rect;
-        adjusted_rect.translate_by(0, -vertical_scrollbar().value());
-        adjusted_rect.translate_by(frame_thickness(), frame_thickness());
-
-        if (gadget.is_moving) {
-            adjusted_rect.translate_by(0, gadget.movement_delta.y());
-        }
+        Gfx::IntRect adjusted_rect;
+        Gfx::IntRect thumbnail_rect;
+        Gfx::IntRect text_rect;
+        get_gadget_rects(gadget, adjusted_rect, thumbnail_rect, text_rect);
 
         if (gadget.is_moving) {
             painter.fill_rect(adjusted_rect, palette().selection().lightened(1.5f));
@@ -87,13 +100,7 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         }
 
         painter.draw_rect(adjusted_rect, palette().color(ColorRole::BaseText));
-
-        Gfx::IntRect thumbnail_rect { adjusted_rect.x(), adjusted_rect.y(), adjusted_rect.height(), adjusted_rect.height() };
-        thumbnail_rect.shrink(8, 8);
         painter.draw_scaled_bitmap(thumbnail_rect, layer.bitmap(), layer.bitmap().rect());
-
-        Gfx::IntRect text_rect { thumbnail_rect.right() + 10, adjusted_rect.y(), adjusted_rect.width(), adjusted_rect.height() };
-        text_rect.intersect(adjusted_rect);
 
         if (layer.is_visible()) {
             painter.draw_text(text_rect, layer.name(), Gfx::TextAlignment::CenterLeft, layer.is_selected() ? palette().selection_text() : palette().button_text());
