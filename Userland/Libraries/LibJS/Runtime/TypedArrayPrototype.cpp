@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -46,6 +47,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.entries, entries, 0, attr);
     define_native_function(vm.names.set, set, 1, attr);
     define_native_function(vm.names.slice, slice, 2, attr);
+    define_native_function(vm.names.sort, sort, 1, attr);
     define_native_function(vm.names.subarray, subarray, 2, attr);
     define_native_function(vm.names.reverse, reverse, 0, attr);
     define_native_function(vm.names.copyWithin, copy_within, 2, attr);
@@ -906,6 +908,150 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
     }
 
     return new_array;
+}
+
+static void typed_array_merge_sort(GlobalObject& global_object, FunctionObject* compare_function, ArrayBuffer& buffer, MarkedValueList& arr_to_sort)
+{
+    auto& vm = global_object.vm();
+    if (arr_to_sort.size() <= 1)
+        return;
+
+    MarkedValueList left(vm.heap());
+    MarkedValueList right(vm.heap());
+
+    left.ensure_capacity(arr_to_sort.size() / 2);
+    right.ensure_capacity(arr_to_sort.size() / 2 + (arr_to_sort.size() & 1));
+
+    for (size_t i = 0; i < arr_to_sort.size(); ++i) {
+        if (i < arr_to_sort.size() / 2) {
+            left.append(arr_to_sort[i]);
+        } else {
+            right.append(arr_to_sort[i]);
+        }
+    }
+
+    typed_array_merge_sort(global_object, compare_function, buffer, left);
+    if (vm.exception())
+        return;
+    typed_array_merge_sort(global_object, compare_function, buffer, right);
+    if (vm.exception())
+        return;
+
+    arr_to_sort.clear();
+
+    size_t left_index = 0, right_index = 0;
+
+    while (left_index < left.size() && right_index < right.size()) {
+        auto x = left[left_index];
+        auto y = right[right_index];
+
+        bool number_comparison = x.is_number();
+        double comparison_result;
+
+        if (compare_function) {
+            auto result = vm.call(*compare_function, js_undefined(), x, y);
+            if (vm.exception())
+                return;
+
+            auto value = result.to_number(global_object);
+            if (vm.exception())
+                return;
+
+            if (buffer.is_detached()) {
+                vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+                return;
+            }
+
+            if (value.is_nan())
+                comparison_result = 0;
+            else
+                comparison_result = value.as_double();
+        } else if (x.is_nan() && y.is_nan()) {
+            comparison_result = 0;
+        } else if (x.is_nan()) {
+            comparison_result = 1;
+        } else if (y.is_nan()) {
+            comparison_result = -1;
+        } else if (number_comparison ? (x.as_double() < y.as_double()) : (x.as_bigint().big_integer() < y.as_bigint().big_integer())) {
+            comparison_result = -1;
+        } else if (number_comparison ? (x.as_double() > y.as_double()) : (x.as_bigint().big_integer() > y.as_bigint().big_integer())) {
+            comparison_result = 1;
+        } else if (x.is_negative_zero() && y.is_positive_zero()) {
+            comparison_result = -1;
+        } else if (x.is_positive_zero() && y.is_negative_zero()) {
+            comparison_result = 1;
+        } else {
+            comparison_result = 0;
+        }
+
+        if (comparison_result <= 0) {
+            arr_to_sort.append(left[left_index]);
+            left_index++;
+        } else {
+            arr_to_sort.append(right[right_index]);
+            right_index++;
+        }
+    }
+
+    while (left_index < left.size()) {
+        arr_to_sort.append(left[left_index]);
+        left_index++;
+    }
+
+    while (right_index < right.size()) {
+        arr_to_sort.append(right[right_index]);
+        right_index++;
+    }
+}
+
+// 23.2.3.26 %TypedArray%.prototype.sort ( comparefn ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
+{
+    auto compare_fn = vm.argument(0);
+    if (!compare_fn.is_undefined() && !compare_fn.is_function()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, compare_fn.to_string_without_side_effects());
+        return {};
+    }
+
+    auto* typed_array = validate_typed_array(global_object);
+    if (!typed_array)
+        return {};
+
+    auto length = typed_array->array_length();
+
+    MarkedValueList items(vm.heap());
+    for (u32 k = 0; k < length; ++k) {
+        auto k_present = typed_array->has_property(k);
+        if (vm.exception())
+            return {};
+
+        if (k_present) {
+            auto k_value = typed_array->get(k);
+            if (vm.exception())
+                return {};
+
+            items.append(k_value);
+        }
+    }
+
+    typed_array_merge_sort(global_object, compare_fn.is_undefined() ? nullptr : &compare_fn.as_function(), *typed_array->viewed_array_buffer(), items);
+    if (vm.exception())
+        return {};
+
+    u32 j;
+    for (j = 0; j < items.size(); ++j) {
+        typed_array->set(j, items[j], true);
+        if (vm.exception())
+            return {};
+    }
+
+    for (; j < length; ++j) {
+        typed_array->delete_property_or_throw(j);
+        if (vm.exception())
+            return {};
+    }
+
+    return typed_array;
 }
 
 // 23.2.3.27 %TypedArray%.prototype.subarray ( begin, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray
