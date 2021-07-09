@@ -207,6 +207,20 @@ String File::current_working_directory()
     return cwd_as_string;
 }
 
+String File::absolute_path(String const& path)
+{
+    if (File::exists(path))
+        return File::real_path_for(path);
+
+    if (path.starts_with("/"sv))
+        return LexicalPath::canonicalized_path(path);
+
+    auto working_directory = File::current_working_directory();
+    auto full_path = LexicalPath::join(working_directory, path);
+
+    return LexicalPath::canonicalized_path(full_path.string());
+}
+
 #ifdef __serenity__
 
 String File::read_link(String const& link_path)
