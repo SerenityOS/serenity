@@ -45,7 +45,7 @@ public:
         return *m_function;
     }
 
-    bool is(Token::TokenType type) const
+    bool is(Token::Type type) const
     {
         return m_type == ComponentType::Token && m_token.is(type);
     }

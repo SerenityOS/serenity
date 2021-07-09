@@ -158,7 +158,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
         String value;
         // FIXME: Handle namespace prefixes.
 
-        if (current_value.is(Token::TokenType::Delim) && current_value.token().delim() == "*") {
+        if (current_value.is(Token::Type::Delim) && current_value.token().delim() == "*") {
 
             // FIXME: Handle selectors like `*.foo`.
             type = CSS::Selector::SimpleSelector::Type::Universal;
@@ -167,28 +167,28 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
             return result;
         }
 
-        if (current_value.is(Token::TokenType::Hash)) {
+        if (current_value.is(Token::Type::Hash)) {
             if (current_value.token().m_hash_type != Token::HashType::Id) {
                 dbgln("Selector contains hash token that is not an id: {}", current_value.to_string());
                 return {};
             }
             type = CSS::Selector::SimpleSelector::Type::Id;
             value = current_value.token().m_value.to_string();
-        } else if (current_value.is(Token::TokenType::Delim) && current_value.token().delim() == ".") {
+        } else if (current_value.is(Token::Type::Delim) && current_value.token().delim() == ".") {
             if (index >= parts.size())
                 return {};
 
             current_value = parts.at(index);
             index++;
 
-            if (!current_value.is(Token::TokenType::Ident)) {
+            if (!current_value.is(Token::Type::Ident)) {
                 dbgln("Expected an ident after '.', got: {}", current_value.to_string());
                 return {};
             }
 
             type = CSS::Selector::SimpleSelector::Type::Class;
             value = current_value.to_string();
-        } else if (current_value.is(Token::TokenType::Delim) && current_value.token().delim() == "*") {
+        } else if (current_value.is(Token::Type::Delim) && current_value.token().delim() == "*") {
             type = CSS::Selector::SimpleSelector::Type::Universal;
         } else {
             type = CSS::Selector::SimpleSelector::Type::TagName;
@@ -212,7 +212,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
 
             // FIXME: Handle namespace prefix for attribute name.
             auto& attribute_part = attribute_parts.first();
-            if (!attribute_part.is(Token::TokenType::Ident)) {
+            if (!attribute_part.is(Token::Type::Ident)) {
                 dbgln("Expected ident for attribute name, got: '{}'", attribute_part.to_string());
                 return {};
             }
@@ -221,14 +221,14 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
             simple_selector.attribute_name = attribute_part.token().ident();
 
             size_t attribute_index = 1;
-            while (attribute_parts.at(attribute_index).is(Token::TokenType::Whitespace)) {
+            while (attribute_parts.at(attribute_index).is(Token::Type::Whitespace)) {
                 attribute_index++;
                 if (attribute_index >= attribute_parts.size())
                     return simple_selector;
             }
 
             auto& delim_part = attribute_parts.at(attribute_index);
-            if (!delim_part.is(Token::TokenType::Delim)) {
+            if (!delim_part.is(Token::Type::Delim)) {
                 dbgln("Expected a delim for attribute comparison, got: '{}'", delim_part.to_string());
                 return {};
             }
@@ -239,7 +239,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
             } else {
                 attribute_index++;
                 auto& delim_second_part = attribute_parts.at(attribute_index);
-                if (!(delim_part.is(Token::TokenType::Delim) && delim_part.token().delim() == "=")) {
+                if (!(delim_part.is(Token::Type::Delim) && delim_part.token().delim() == "=")) {
                     dbgln("Expected a double delim for attribute comparison, got: '{}{}'", delim_part.to_string(), delim_second_part.to_string());
                     return {};
                 }
@@ -262,7 +262,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
                 }
             }
 
-            while (attribute_parts.at(attribute_index).is(Token::TokenType::Whitespace)) {
+            while (attribute_parts.at(attribute_index).is(Token::Type::Whitespace)) {
                 attribute_index++;
                 if (attribute_index >= attribute_parts.size()) {
                     dbgln("Attribute selector ended without a value to match.");
@@ -271,7 +271,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
             }
 
             auto& value_part = attribute_parts.at(attribute_index);
-            if (!value_part.is(Token::TokenType::Ident) && !value_part.is(Token::TokenType::String)) {
+            if (!value_part.is(Token::Type::Ident) && !value_part.is(Token::Type::String)) {
                 dbgln("Expected a string or ident for the value to match attribute against, got: '{}'", value_part.to_string());
                 return {};
             }
@@ -282,7 +282,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
         }
 
         // FIXME: Pseudo-class selectors want to be their own Selector::SimpleSelector::Type according to the spec.
-        if (current_value.is(Token::TokenType::Colon)) {
+        if (current_value.is(Token::Type::Colon)) {
             bool is_pseudo = false;
 
             current_value = parts.at(index);
@@ -290,7 +290,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
             if (index >= parts.size())
                 return {};
 
-            if (current_value.is(Token::TokenType::Colon)) {
+            if (current_value.is(Token::Type::Colon)) {
                 is_pseudo = true;
                 current_value = parts.at(index);
                 index++;
@@ -306,7 +306,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
             current_value = parts.at(index);
             index++;
 
-            if (current_value.is(Token::TokenType::Ident)) {
+            if (current_value.is(Token::Type::Ident)) {
                 auto pseudo_name = current_value.token().ident();
                 if (pseudo_name.equals_ignoring_case("link")) {
                     simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Link;
@@ -377,7 +377,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
             return {};
 
         auto current_value = parts.at(index);
-        if (current_value.is(Token::TokenType::Delim)) {
+        if (current_value.is(Token::Type::Delim)) {
             auto delim = current_value.token().delim();
             if (delim == ">") {
                 relation = CSS::Selector::ComplexSelector::Relation::ImmediateChild;
@@ -393,7 +393,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
                     return {};
 
                 auto next = parts.at(index + 1);
-                if (next.is(Token::TokenType::Delim) && next.token().delim() == "|") {
+                if (next.is(Token::Type::Delim) && next.token().delim() == "|") {
                     relation = CSS::Selector::ComplexSelector::Relation::Column;
                     index += 2;
                 }
@@ -425,7 +425,7 @@ Optional<Selector> Parser::parse_single_selector(Vector<StyleComponentValueRule>
             break;
 
         auto current_value = parts.at(index);
-        if (current_value.is(Token::TokenType::Comma))
+        if (current_value.is(Token::Type::Comma))
             break;
 
         index++;
@@ -895,10 +895,10 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of
     }
 
     for (auto& list : lists) {
-        if (!list.is_empty() && list.first().is(Token::TokenType::Whitespace))
+        if (!list.is_empty() && list.first().is(Token::Type::Whitespace))
             list.take_first();
 
-        if (!list.is_empty() && list.last().is(Token::TokenType::Whitespace))
+        if (!list.is_empty() && list.last().is(Token::Type::Whitespace))
             list.take_last();
     }
 
