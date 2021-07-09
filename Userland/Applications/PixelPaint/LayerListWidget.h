@@ -52,7 +52,6 @@ private:
     struct Gadget {
         size_t layer_index { 0 };
         Gfx::IntRect rect;
-        Gfx::IntRect temporary_rect_during_move;
         bool is_moving { false };
         Gfx::IntPoint movement_delta;
     };

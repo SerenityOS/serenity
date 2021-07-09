@@ -45,7 +45,7 @@ void LayerListWidget::rebuild_gadgets()
     m_gadgets.clear();
     if (m_image) {
         for (size_t layer_index = 0; layer_index < m_image->layer_count(); ++layer_index) {
-            m_gadgets.append({ layer_index, {}, {}, false, {} });
+            m_gadgets.append({ layer_index, {}, false, {} });
         }
     }
     relayout_gadgets();
@@ -208,8 +208,8 @@ void LayerListWidget::image_did_add_layer(size_t layer_index)
         m_gadgets[m_moving_gadget_index.value()].is_moving = false;
         m_moving_gadget_index = {};
     }
-    Gadget gadget { layer_index, {}, {}, false, {} };
-    m_gadgets.insert(layer_index, move(gadget));
+    Gadget gadget { layer_index, {}, false, {} };
+    m_gadgets.insert(layer_index, gadget);
     relayout_gadgets();
 }
 
