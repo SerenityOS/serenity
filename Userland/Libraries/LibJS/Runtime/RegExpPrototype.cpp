@@ -230,14 +230,22 @@ static Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Str
 // 22.2.5.9 get RegExp.prototype.multiline, https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline
 // 22.2.5.14 get RegExp.prototype.sticky, https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky
 // 22.2.5.17 get RegExp.prototype.unicode, https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode
-#define __JS_ENUMERATE(flagName, flag_name, flag_char, ECMAScriptFlagName)                                 \
-    JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flag_name)                                                    \
-    {                                                                                                      \
-        auto regexp_object = regexp_object_from(vm, global_object);                                        \
-        if (!regexp_object)                                                                                \
-            return {};                                                                                     \
-                                                                                                           \
-        return Value(regexp_object->declared_options().has_flag_set(ECMAScriptFlags::ECMAScriptFlagName)); \
+#define __JS_ENUMERATE(flagName, flag_name, flag_char, ECMAScriptFlagName)           \
+    JS_DEFINE_NATIVE_GETTER(RegExpPrototype::flag_name)                              \
+    {                                                                                \
+        auto* regexp_object = this_object_from(vm, global_object);                   \
+        if (!regexp_object)                                                          \
+            return {};                                                               \
+                                                                                     \
+        if (!is<RegExpObject>(regexp_object)) {                                      \
+            if (same_value(regexp_object, global_object.regexp_prototype()))         \
+                return js_undefined();                                               \
+            vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "RegExp"); \
+            return {};                                                               \
+        }                                                                            \
+                                                                                     \
+        auto flags = static_cast<RegExpObject*>(regexp_object)->declared_options();  \
+        return Value(flags.has_flag_set(ECMAScriptFlags::ECMAScriptFlagName));       \
     }
 JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
