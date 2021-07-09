@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Maxime Friess <M4x1me@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,6 +24,7 @@ void setgrent();
 void endgrent();
 struct group* getgrnam(const char* name);
 struct group* getgrgid(gid_t);
+int putgrent(const struct group*, FILE*);
 
 int initgroups(const char* user, gid_t);
 
