@@ -55,18 +55,18 @@ SystemExposedFolder::SystemExposedFolder(String name)
 {
 }
 
-SystemExposedFolder::SystemExposedFolder(String name, const SystemExposedFolder& parent_folder)
+SystemExposedFolder::SystemExposedFolder(String name, SystemExposedFolder const& parent_folder)
     : SystemExposedComponent(name)
     , m_parent_folder(parent_folder)
 {
 }
 
-NonnullRefPtr<Inode> SystemExposedFolder::to_inode(const SysFS& sysfs_instance) const
+NonnullRefPtr<Inode> SystemExposedFolder::to_inode(SysFS const& sysfs_instance) const
 {
     return SysFSDirectoryInode::create(sysfs_instance, *this);
 }
 
-NonnullRefPtr<Inode> SystemExposedComponent::to_inode(const SysFS& sysfs_instance) const
+NonnullRefPtr<Inode> SystemExposedComponent::to_inode(SysFS const& sysfs_instance) const
 {
     return SysFSInode::create(sysfs_instance, *this);
 }

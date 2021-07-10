@@ -62,7 +62,7 @@ public:
     static NonnullRefPtr<SysFS> create();
 
     virtual bool initialize() override;
-    virtual const char* class_name() const override { return "SysFS"; }
+    virtual char const* class_name() const override { return "SysFS"; }
 
     virtual NonnullRefPtr<Inode> root_inode() const override;
 
@@ -77,20 +77,20 @@ class SysFSInode : public Inode {
     friend class SysFSDirectoryInode;
 
 public:
-    static NonnullRefPtr<SysFSInode> create(const SysFS&, const SystemExposedComponent&);
+    static NonnullRefPtr<SysFSInode> create(SysFS const&, SystemExposedComponent const&);
     StringView name() const { return m_associated_component->name(); }
 
 protected:
-    SysFSInode(const SysFS&, const SystemExposedComponent&);
+    SysFSInode(SysFS const&, SystemExposedComponent const&);
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual InodeMetadata metadata() const override;
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, FileDescription*) override;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;
-    virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
-    virtual KResult remove_child(const StringView& name) override;
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(String const& name, mode_t, dev_t, uid_t, gid_t) override;
+    virtual KResult add_child(Inode&, StringView const& name, mode_t) override;
+    virtual KResult remove_child(StringView const& name) override;
     virtual KResultOr<size_t> directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
@@ -104,11 +104,11 @@ class SysFSDirectoryInode : public SysFSInode {
     friend class SysFSRootDirectoryInode;
 
 public:
-    static NonnullRefPtr<SysFSDirectoryInode> create(const SysFS&, const SystemExposedComponent&);
+    static NonnullRefPtr<SysFSDirectoryInode> create(SysFS const&, SystemExposedComponent const&);
     virtual ~SysFSDirectoryInode() override;
 
 protected:
-    SysFSDirectoryInode(const SysFS&, const SystemExposedComponent&);
+    SysFSDirectoryInode(SysFS const&, SystemExposedComponent const&);
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
