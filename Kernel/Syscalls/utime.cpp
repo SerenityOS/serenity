@@ -25,7 +25,7 @@ KResultOr<FlatPtr> Process::sys$utime(Userspace<const char*> user_path, size_t p
         // Not a bug!
         buf = { now, now };
     }
-    return VFS::the().utime(path.value()->view(), current_directory(), buf.actime, buf.modtime);
+    return VirtualFileSystem::the().utime(path.value()->view(), current_directory(), buf.actime, buf.modtime);
 }
 
 }

@@ -53,7 +53,7 @@ class TTY;
 class Thread;
 class UDPSocket;
 class UserOrKernelBuffer;
-class VFS;
+class VirtualFileSystem;
 class VMObject;
 class WaitQueue;
 class WorkQueue;

@@ -46,7 +46,7 @@ CoreDump::CoreDump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription
 RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, const String& output_path)
 {
     auto output_directory = KLexicalPath::dirname(output_path);
-    auto dump_directory = VFS::the().open_directory(output_directory, VFS::the().root_custody());
+    auto dump_directory = VirtualFileSystem::the().open_directory(output_directory, VirtualFileSystem::the().root_custody());
     if (dump_directory.is_error()) {
         dbgln("Can't find directory '{}' for core dump", output_directory);
         return nullptr;
@@ -56,7 +56,7 @@ RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, con
         dbgln("Refusing to put core dump in sketchy directory '{}'", output_directory);
         return nullptr;
     }
-    auto fd_or_error = VFS::the().open(
+    auto fd_or_error = VirtualFileSystem::the().open(
         KLexicalPath::basename(output_path),
         O_CREAT | O_WRONLY | O_EXCL,
         S_IFREG, // We will enable reading from userspace when we finish generating the coredump file

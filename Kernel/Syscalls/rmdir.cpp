@@ -16,7 +16,7 @@ KResultOr<FlatPtr> Process::sys$rmdir(Userspace<const char*> user_path, size_t p
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
-    return VFS::the().rmdir(path.value()->view(), current_directory());
+    return VirtualFileSystem::the().rmdir(path.value()->view(), current_directory());
 }
 
 }

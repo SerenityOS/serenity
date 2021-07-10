@@ -153,7 +153,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     }
 
     if (!cwd)
-        cwd = VFS::the().root_custody();
+        cwd = VirtualFileSystem::the().root_custody();
 
     auto process = Process::create(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty);
     if (!first_thread)
@@ -488,7 +488,7 @@ siginfo_t Process::wait_info()
 Custody& Process::current_directory()
 {
     if (!m_cwd)
-        m_cwd = VFS::the().root_custody();
+        m_cwd = VirtualFileSystem::the().root_custody();
     return *m_cwd;
 }
 
@@ -526,7 +526,7 @@ bool Process::dump_perfcore()
     VERIFY(is_dumpable());
     VERIFY(m_perf_event_buffer);
     dbgln("Generating perfcore for pid: {}", pid().value());
-    auto description_or_error = VFS::the().open(String::formatted("perfcore.{}", pid().value()), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
+    auto description_or_error = VirtualFileSystem::the().open(String::formatted("perfcore.{}", pid().value()), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
     if (description_or_error.is_error())
         return false;
     auto& description = description_or_error.value();
@@ -742,7 +742,7 @@ void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& desc
 Custody& Process::root_directory()
 {
     if (!m_root_directory)
-        m_root_directory = VFS::the().root_custody();
+        m_root_directory = VirtualFileSystem::the().root_custody();
     return *m_root_directory;
 }
 

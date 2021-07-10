@@ -113,7 +113,7 @@ public:
 
     OwnPtr<FileDescriptionData>& data() { return m_data; }
 
-    void set_original_inode(Badge<VFS>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
+    void set_original_inode(Badge<VirtualFileSystem>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
 
     KResult truncate(u64);
 
@@ -124,7 +124,7 @@ public:
     FileBlockCondition& block_condition();
 
 private:
-    friend class VFS;
+    friend class VirtualFileSystem;
     explicit FileDescription(File&);
 
     KResult attach();

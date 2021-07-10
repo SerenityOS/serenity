@@ -42,7 +42,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     else
         dbgln("mount {} @ {}", fs_type, target);
 
-    auto custody_or_error = VFS::the().resolve_path(target, current_directory());
+    auto custody_or_error = VirtualFileSystem::the().resolve_path(target, current_directory());
     if (custody_or_error.is_error())
         return custody_or_error.error();
 
@@ -50,7 +50,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
 
     if (params.flags & MS_REMOUNT) {
         // We're not creating a new mount, we're updating an existing one!
-        return VFS::the().remount(target_custody, params.flags & ~MS_REMOUNT);
+        return VirtualFileSystem::the().remount(target_custody, params.flags & ~MS_REMOUNT);
     }
 
     if (params.flags & MS_BIND) {
@@ -61,7 +61,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
             // We only support bind-mounting inodes, not arbitrary files.
             return ENODEV;
         }
-        return VFS::the().bind_mount(*description->custody(), target_custody, params.flags);
+        return VirtualFileSystem::the().bind_mount(*description->custody(), target_custody, params.flags);
     }
 
     RefPtr<FileSystem> fs;
@@ -106,7 +106,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
         return ENODEV;
     }
 
-    auto result = VFS::the().mount(fs.release_nonnull(), target_custody, params.flags);
+    auto result = VirtualFileSystem::the().mount(fs.release_nonnull(), target_custody, params.flags);
     if (!description.is_null())
         dbgln("mount: successfully mounted {} on {}", description->absolute_path(), target);
     else
@@ -125,12 +125,12 @@ KResultOr<FlatPtr> Process::sys$umount(Userspace<const char*> user_mountpoint, s
     if (mountpoint.is_error())
         return mountpoint.error();
 
-    auto custody_or_error = VFS::the().resolve_path(mountpoint.value()->view(), current_directory());
+    auto custody_or_error = VirtualFileSystem::the().resolve_path(mountpoint.value()->view(), current_directory());
     if (custody_or_error.is_error())
         return custody_or_error.error();
 
     auto& guest_inode = custody_or_error.value()->inode();
-    return VFS::the().unmount(guest_inode);
+    return VirtualFileSystem::the().unmount(guest_inode);
 }
 
 }

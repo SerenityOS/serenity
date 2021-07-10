@@ -339,7 +339,7 @@ private:
     virtual bool output(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        VFS::the().for_each_mount([&array](auto& mount) {
+        VirtualFileSystem::the().for_each_mount([&array](auto& mount) {
             auto& fs = mount.guest_fs();
             auto fs_object = array.add_object();
             fs_object.add("class_name", fs.class_name());

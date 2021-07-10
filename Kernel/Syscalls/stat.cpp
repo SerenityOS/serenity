@@ -47,7 +47,7 @@ KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> u
             return EINVAL;
         base = base_description->custody();
     }
-    auto metadata_or_error = VFS::the().lookup_metadata(path.value()->view(), *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR);
+    auto metadata_or_error = VirtualFileSystem::the().lookup_metadata(path.value()->view(), *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR);
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
     stat statbuf;

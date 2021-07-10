@@ -237,7 +237,7 @@ KResultOr<size_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_bu
         return true;
     };
 
-    KResult result = VFS::the().traverse_directory_inode(*m_inode, [&flush_stream_to_output_buffer, &stream, this](auto& entry) {
+    KResult result = VirtualFileSystem::the().traverse_directory_inode(*m_inode, [&flush_stream_to_output_buffer, &stream, this](auto& entry) {
         size_t serialized_size = sizeof(ino_t) + sizeof(u8) + sizeof(size_t) + sizeof(char) * entry.name.length();
         if (serialized_size > stream.remaining()) {
             if (!flush_stream_to_output_buffer()) {

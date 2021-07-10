@@ -762,7 +762,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
 
     if (!interpreter_path.is_empty()) {
         dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
-        auto interp_result = VFS::the().open(interpreter_path, O_EXEC, 0, current_directory());
+        auto interp_result = VirtualFileSystem::the().open(interpreter_path, O_EXEC, 0, current_directory());
         if (interp_result.is_error()) {
             dbgln("exec({}): Unable to open program interpreter {}", path, interpreter_path);
             return interp_result.error();
@@ -838,7 +838,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     //        * ET_EXEC binary that just gets loaded
     //        * ET_DYN binary that requires a program interpreter
     //
-    auto file_or_error = VFS::the().open(path, O_EXEC, 0, current_directory());
+    auto file_or_error = VirtualFileSystem::the().open(path, O_EXEC, 0, current_directory());
     if (file_or_error.is_error())
         return file_or_error.error();
     auto description = file_or_error.release_value();

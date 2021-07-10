@@ -59,7 +59,7 @@ KResultOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall:
     if (path.is_error())
         return path.error();
 
-    auto custody_or_error = VFS::the().resolve_path(path.value()->view(), current_directory());
+    auto custody_or_error = VirtualFileSystem::the().resolve_path(path.value()->view(), current_directory());
     if (custody_or_error.is_error())
         return custody_or_error.error();
 
