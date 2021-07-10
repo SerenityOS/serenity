@@ -60,13 +60,13 @@ UNMAP_AFTER_INIT ExposedComponent::ExposedComponent(String name, PhysicalAddress
 {
 }
 
-UNMAP_AFTER_INIT void ExposedFolder::initialize()
+UNMAP_AFTER_INIT void ExposedDirectory::initialize()
 {
-    auto acpi_folder = adopt_ref(*new (nothrow) ExposedFolder());
+    auto acpi_folder = adopt_ref(*new (nothrow) ExposedDirectory());
     SysFSComponentRegistry::the().register_new_component(acpi_folder);
 }
 
-UNMAP_AFTER_INIT ExposedFolder::ExposedFolder()
+UNMAP_AFTER_INIT ExposedDirectory::ExposedDirectory()
     : SysFSDirectory("acpi", SysFSComponentRegistry::the().root_folder())
 {
     NonnullRefPtrVector<SysFSComponent> components;

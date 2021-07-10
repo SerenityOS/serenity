@@ -92,7 +92,7 @@ private:
     size_t m_smbios_structure_table_length;
 };
 
-class BIOSExposedFolder : public SysFSDirectory {
+class BIOSExposedDirectory : public SysFSDirectory {
 public:
     static void initialize();
 
@@ -104,7 +104,7 @@ private:
     size_t dmi_entry_point_length() const;
     size_t smbios_structure_table_length() const;
 
-    BIOSExposedFolder();
+    BIOSExposedDirectory();
 
     void set_dmi_64_bit_entry_initialization_values();
     void set_dmi_32_bit_entry_initialization_values();
