@@ -359,7 +359,12 @@ public:
     }
 
 private:
-    virtual bool truth() const override { return integer() != 0; }
+    virtual bool truth() const override
+    {
+        if (type() == Expression::Type::String)
+            return !string().is_empty();
+        return integer() != 0;
+    }
     virtual int integer() const override
     {
         if (m_op == StringOperation::Substring || m_op == StringOperation::Match) {
@@ -411,10 +416,8 @@ private:
                     return "";
 
                 StringBuilder result;
-                for (auto& m : match.capture_group_matches) {
-                    for (auto& e : m)
-                        result.append(e.view.to_string());
-                }
+                for (auto& e : match.capture_group_matches[0])
+                    result.append(e.view.u8view());
 
                 return result.build();
             }
