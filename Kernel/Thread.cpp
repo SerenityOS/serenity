@@ -175,6 +175,100 @@ Thread::~Thread()
     }
 }
 
+void Thread::block(Kernel::Lock& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock, u32 lock_count)
+{
+    VERIFY(!Processor::current().in_irq());
+    VERIFY(this == Thread::current());
+    ScopedCritical critical;
+    VERIFY(!s_mm_lock.own_lock());
+
+    ScopedSpinLock block_lock(m_block_lock);
+    VERIFY(!m_in_block);
+    m_in_block = true;
+
+    ScopedSpinLock scheduler_lock(g_scheduler_lock);
+
+    switch (state()) {
+    case Thread::Stopped:
+        // It's possible that we were requested to be stopped!
+        break;
+    case Thread::Running:
+        VERIFY(m_blocker == nullptr);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+    VERIFY(!m_blocking_lock);
+    m_blocking_lock = &lock;
+    m_lock_requested_count = lock_count;
+
+    set_state(Thread::Blocked);
+
+    scheduler_lock.unlock();
+    block_lock.unlock();
+
+    lock_lock.unlock();
+
+    dbgln_if(THREAD_DEBUG, "Thread {} blocking on Lock {}", *this, &lock);
+
+    for (;;) {
+        // Yield to the scheduler, and wait for us to resume unblocked.
+        VERIFY(!g_scheduler_lock.own_lock());
+        VERIFY(Processor::current().in_critical());
+        yield_while_not_holding_big_lock(); // We might hold the big lock though!
+        VERIFY(Processor::current().in_critical());
+
+        ScopedSpinLock block_lock2(m_block_lock);
+        if (should_be_stopped() || state() == Stopped) {
+            dbgln("Thread should be stopped, current state: {}", state_string());
+            set_state(Thread::Blocked);
+            continue;
+        }
+
+        VERIFY(!m_blocking_lock);
+        VERIFY(m_in_block);
+        m_in_block = false;
+        break;
+    }
+
+    lock_lock.lock();
+}
+
+u32 Thread::unblock_from_lock(Kernel::Lock& lock)
+{
+    ScopedSpinLock block_lock(m_block_lock);
+    VERIFY(m_blocking_lock == &lock);
+    auto requested_count = m_lock_requested_count;
+    block_lock.unlock();
+
+    auto do_unblock = [&]() {
+        ScopedSpinLock scheduler_lock(g_scheduler_lock);
+        ScopedSpinLock block_lock(m_block_lock);
+        VERIFY(m_blocking_lock == &lock);
+        VERIFY(!Processor::current().in_irq());
+        VERIFY(g_scheduler_lock.own_lock());
+        VERIFY(m_block_lock.own_lock());
+        VERIFY(m_blocking_lock == &lock);
+        dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Lock {}", *this, &lock);
+        m_blocking_lock = nullptr;
+        if (Thread::current() == this) {
+            set_state(Thread::Running);
+            return;
+        }
+        VERIFY(m_state != Thread::Runnable && m_state != Thread::Running);
+        set_state(Thread::Runnable);
+    };
+    if (Processor::current().in_irq()) {
+        Processor::current().deferred_call_queue([do_unblock = move(do_unblock), self = make_weak_ptr()]() {
+            if (auto this_thread = self.strong_ref())
+                do_unblock();
+        });
+    } else {
+        do_unblock();
+    }
+    return requested_count;
+}
+
 void Thread::unblock_from_blocker(Blocker& blocker)
 {
     auto do_unblock = [&]() {
@@ -201,6 +295,8 @@ void Thread::unblock(u8 signal)
     VERIFY(g_scheduler_lock.own_lock());
     VERIFY(m_block_lock.own_lock());
     if (m_state != Thread::Blocked)
+        return;
+    if (m_blocking_lock)
         return;
     VERIFY(m_blocker);
     if (signal != 0) {
@@ -314,9 +410,11 @@ void Thread::exit(void* exit_value)
 void Thread::yield_while_not_holding_big_lock()
 {
     VERIFY(!g_scheduler_lock.own_lock());
+    // Disable interrupts here. This ensures we don't accidentally switch contexts twice
+    InterruptDisabler disable;
+    Scheduler::yield(); // flag a switch
     u32 prev_flags;
     u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
-    Scheduler::yield();
     // NOTE: We may be on a different CPU now!
     Processor::current().restore_critical(prev_crit, prev_flags);
 }
@@ -324,12 +422,14 @@ void Thread::yield_while_not_holding_big_lock()
 void Thread::yield_without_holding_big_lock()
 {
     VERIFY(!g_scheduler_lock.own_lock());
+    // Disable interrupts here. This ensures we don't accidentally switch contexts twice
+    InterruptDisabler disable;
+    Scheduler::yield(); // flag a switch
     u32 lock_count_to_restore = 0;
     auto previous_locked = unlock_process_if_locked(lock_count_to_restore);
     // NOTE: Even though we call Scheduler::yield here, unless we happen
     // to be outside of a critical section, the yield will be postponed
     // until leaving it in relock_process.
-    Scheduler::yield();
     relock_process(previous_locked, lock_count_to_restore);
 }
 
@@ -387,8 +487,11 @@ const char* Thread::state_string() const
         return "Stopped";
     case Thread::Blocked: {
         ScopedSpinLock block_lock(m_block_lock);
-        VERIFY(m_blocker != nullptr);
-        return m_blocker->state_string();
+        if (m_blocking_lock)
+            return "Lock";
+        if (m_blocker)
+            return m_blocker->state_string();
+        VERIFY_NOT_REACHED();
     }
     }
     PANIC("Thread::state_string(): Invalid state: {}", (int)state());
@@ -705,7 +808,7 @@ void Thread::resume_from_stopped()
     VERIFY(g_scheduler_lock.own_lock());
     if (m_stop_state == Blocked) {
         ScopedSpinLock block_lock(m_block_lock);
-        if (m_blocker) {
+        if (m_blocker || m_blocking_lock) {
             // Hasn't been unblocked yet
             set_state(Blocked, 0);
         } else {
