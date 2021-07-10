@@ -1570,6 +1570,7 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
         RefPtr<Expression> default_value;
         if (match(TokenType::Equals)) {
             consume();
+            TemporaryChange change(m_state.in_function_context, true);
             has_default_parameter = true;
             function_length = parameters.size();
             default_value = parse_expression(2);
