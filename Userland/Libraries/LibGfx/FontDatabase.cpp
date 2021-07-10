@@ -140,6 +140,13 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(const StringView& name)
 {
     auto it = m_private->full_name_to_font_map.find(name);
     if (it == m_private->full_name_to_font_map.end()) {
+        auto parts = name.split_view(" "sv);
+        if (parts.size() >= 3) {
+            auto weight = parts.take_last().to_int().value_or(0);
+            auto size = parts.take_last().to_int().value_or(0);
+            auto family = String::join(' ', parts);
+            return get(family, size, weight);
+        }
         dbgln("Font lookup failed: '{}'", name);
         return nullptr;
     }
@@ -152,6 +159,7 @@ RefPtr<Gfx::Font> FontDatabase::get(const String& family, unsigned size, unsigne
         if (typeface->family() == family && typeface->weight() == weight)
             return typeface->get_font(size);
     }
+    dbgln("Failed to get font: '{} {} {}'", family, size, weight);
     return nullptr;
 }
 
