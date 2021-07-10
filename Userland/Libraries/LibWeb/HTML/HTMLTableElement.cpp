@@ -88,7 +88,7 @@ RefPtr<HTMLTableSectionElement> HTMLTableElement::t_head()
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<HTMLTableSectionElement>(*child)) {
             auto table_section_element = &verify_cast<HTMLTableSectionElement>(*child);
-            if (table_section_element->tag_name() == TagNames::thead)
+            if (table_section_element->local_name() == TagNames::thead)
                 return table_section_element;
         }
     }
@@ -101,7 +101,7 @@ DOM::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* the
     // FIXME: This is not always the case, but this function is currently written in a way that assumes non-null.
     VERIFY(thead);
 
-    if (thead->tag_name() != TagNames::thead)
+    if (thead->local_name() != TagNames::thead)
         return DOM::HierarchyRequestError::create("Element is not thead");
 
     // FIXME: The spec requires deleting the current thead if thead is null
@@ -117,7 +117,7 @@ DOM::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement* the
             continue;
         if (is<HTMLTableColElement>(*child)) {
             auto table_col_element = &verify_cast<HTMLTableColElement>(*child);
-            if (table_col_element->tag_name() == TagNames::colgroup)
+            if (table_col_element->local_name() == TagNames::colgroup)
                 continue;
         }
 
@@ -148,7 +148,7 @@ NonnullRefPtr<HTMLTableSectionElement> HTMLTableElement::create_t_head()
             continue;
         if (is<HTMLTableColElement>(*child)) {
             auto table_col_element = &verify_cast<HTMLTableColElement>(*child);
-            if (table_col_element->tag_name() == TagNames::colgroup)
+            if (table_col_element->local_name() == TagNames::colgroup)
                 continue;
         }
 
@@ -175,7 +175,7 @@ RefPtr<HTMLTableSectionElement> HTMLTableElement::t_foot()
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<HTMLTableSectionElement>(*child)) {
             auto table_section_element = &verify_cast<HTMLTableSectionElement>(*child);
-            if (table_section_element->tag_name() == TagNames::tfoot)
+            if (table_section_element->local_name() == TagNames::tfoot)
                 return table_section_element;
         }
     }
@@ -188,7 +188,7 @@ DOM::ExceptionOr<void> HTMLTableElement::set_t_foot(HTMLTableSectionElement* tfo
     // FIXME: This is not always the case, but this function is currently written in a way that assumes non-null.
     VERIFY(tfoot);
 
-    if (tfoot->tag_name() != TagNames::tfoot)
+    if (tfoot->local_name() != TagNames::tfoot)
         return DOM::HierarchyRequestError::create("Element is not tfoot");
 
     // FIXME: The spec requires deleting the current tfoot if tfoot is null
@@ -223,7 +223,7 @@ void HTMLTableElement::delete_t_foot()
 NonnullRefPtr<DOM::HTMLCollection> HTMLTableElement::t_bodies()
 {
     return DOM::HTMLCollection::create(*this, [](DOM::Element const& element) {
-        return element.tag_name() == TagNames::tbody;
+        return element.local_name() == TagNames::tbody;
     });
 }
 
@@ -238,7 +238,7 @@ NonnullRefPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
             continue;
         if (is<HTMLTableSectionElement>(*child)) {
             auto table_section_element = &verify_cast<HTMLTableSectionElement>(*child);
-            if (table_section_element->tag_name() == TagNames::tbody) {
+            if (table_section_element->local_name() == TagNames::tbody) {
                 // We have found an element which is a <tbody> we'll insert after this
                 child_to_append_after = child->next_sibling();
                 break;
@@ -270,7 +270,7 @@ NonnullRefPtr<DOM::HTMLCollection> HTMLTableElement::rows()
         if (element.parent_element() == table_node)
             return true;
 
-        if (element.parent_element() && (element.parent_element()->tag_name() == TagNames::thead || element.parent_element()->tag_name() == TagNames::tbody || element.parent_element()->tag_name() == TagNames::tfoot)
+        if (element.parent_element() && (element.parent_element()->local_name() == TagNames::thead || element.parent_element()->local_name() == TagNames::tbody || element.parent_element()->local_name() == TagNames::tfoot)
             && element.parent()->parent() == table_node) {
             return true;
         }
