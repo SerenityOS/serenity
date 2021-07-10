@@ -69,12 +69,12 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.draw_scaled_bitmap(enclosing_int_rect(m_bug.rect()), *m_bug.current_bitmap(), m_bug.flapping_bitmap->rect());
 
     if (m_active) {
-        painter.draw_text({ 10, 10, 100, 100 }, String::formatted("{:.0}", m_difficulty), Gfx::TextAlignment::TopLeft, Color::White);
+        painter.draw_text(m_score_rect, String::formatted("{:.0}", m_difficulty), Gfx::TextAlignment::TopLeft, Color::White);
     } else if (m_high_score.has_value()) {
         auto message = String::formatted("Your score: {:.0}\nHigh score: {:.0}\n\n{}", m_last_score, m_high_score.value(), m_restart_cooldown < 0 ? "Press any key to play again" : " ");
-        painter.draw_text(rect(), message, Gfx::TextAlignment::Center, Color::White);
+        painter.draw_text(m_text_rect, message, Gfx::TextAlignment::Center, Color::White);
     } else {
-        painter.draw_text(rect(), "Press any key to start", Gfx::TextAlignment::Center, Color::White);
+        painter.draw_text(m_text_rect, "Press any key to start", Gfx::TextAlignment::Center, Color::White);
     }
 }
 
@@ -97,7 +97,18 @@ void Game::keydown_event(GUI::KeyEvent& event)
 
 void Game::tick()
 {
+    auto queue_update = [&]() {
+        update(m_score_rect);
+        update(m_text_rect);
+        update(enclosing_int_rect(m_bug.rect()));
+        update(enclosing_int_rect(m_obstacle.top_rect()));
+        update(enclosing_int_rect(m_obstacle.bottom_rect()));
+        update(m_cloud.rect());
+    };
+
     if (m_active) {
+        queue_update();
+
         m_difficulty += 1.0f / 16.0f;
 
         m_bug.fall();
@@ -124,7 +135,7 @@ void Game::tick()
 
     m_restart_cooldown -= 1.0f / 16.0f;
 
-    update();
+    queue_update();
 }
 
 }
