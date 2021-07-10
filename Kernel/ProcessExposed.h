@@ -29,11 +29,6 @@ class ProcFSBusDirectory;
 class ProcFSSystemBoolean;
 
 class ProcFSComponentsRegistrar {
-    friend class ProcFS;
-    friend class ProcFSExposedComponent;
-    friend class ProcFSExposedDirectory;
-    friend class ProcFSRootDirectory;
-
 public:
     static ProcFSComponentsRegistrar& the();
 
@@ -50,6 +45,7 @@ public:
     void unregister_process(Process&);
 
     ProcFSRootDirectory& root_folder() { return *m_root_folder; }
+    Lock& get_lock() { return m_lock; }
 
 private:
     Lock m_lock;
