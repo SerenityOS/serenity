@@ -5,7 +5,6 @@
  */
 
 #include <AK/Singleton.h>
-#include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -85,12 +84,12 @@ NonnullRefPtr<Inode> SysFS::root_inode() const
     return *m_root_inode;
 }
 
-NonnullRefPtr<SysFSInode> SysFSInode::create(const SysFS& fs, const SystemExposedComponent& component)
+NonnullRefPtr<SysFSInode> SysFSInode::create(SysFS const& fs, SystemExposedComponent const& component)
 {
     return adopt_ref(*new (nothrow) SysFSInode(fs, component));
 }
 
-SysFSInode::SysFSInode(const SysFS& fs, const SystemExposedComponent& component)
+SysFSInode::SysFSInode(SysFS const& fs, SystemExposedComponent const& component)
     : Inode(const_cast<SysFS&>(fs), component.component_index())
     , m_associated_component(component)
 {
@@ -128,22 +127,22 @@ void SysFSInode::flush_metadata()
 {
 }
 
-KResultOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription* fd)
+KResultOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, FileDescription* fd)
 {
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
 
-KResultOr<NonnullRefPtr<Inode>> SysFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> SysFSInode::create_child(String const&, mode_t, dev_t, uid_t, gid_t)
 {
     return EROFS;
 }
 
-KResult SysFSInode::add_child(Inode&, const StringView&, mode_t)
+KResult SysFSInode::add_child(Inode&, StringView const&, mode_t)
 {
     return EROFS;
 }
 
-KResult SysFSInode::remove_child(const StringView&)
+KResult SysFSInode::remove_child(StringView const&)
 {
     return EROFS;
 }
@@ -168,12 +167,12 @@ KResult SysFSInode::truncate(u64)
     return EPERM;
 }
 
-NonnullRefPtr<SysFSDirectoryInode> SysFSDirectoryInode::create(const SysFS& sysfs, const SystemExposedComponent& component)
+NonnullRefPtr<SysFSDirectoryInode> SysFSDirectoryInode::create(SysFS const& sysfs, SystemExposedComponent const& component)
 {
     return adopt_ref(*new (nothrow) SysFSDirectoryInode(sysfs, component));
 }
 
-SysFSDirectoryInode::SysFSDirectoryInode(const SysFS& fs, const SystemExposedComponent& component)
+SysFSDirectoryInode::SysFSDirectoryInode(SysFS const& fs, SystemExposedComponent const& component)
     : SysFSInode(fs, component)
     , m_parent_fs(const_cast<SysFS&>(fs))
 {

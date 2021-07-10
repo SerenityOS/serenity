@@ -26,10 +26,10 @@ public:
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const { VERIFY_NOT_REACHED(); }
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual RefPtr<SystemExposedComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*) { return -EROFS; }
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*) { return -EROFS; }
     virtual size_t size() const { return 0; }
 
-    virtual NonnullRefPtr<Inode> to_inode(const SysFS& sysfs_instance) const;
+    virtual NonnullRefPtr<Inode> to_inode(SysFS const&) const;
 
     InodeIndex component_index() const { return m_component_index; };
 
@@ -48,13 +48,13 @@ public:
     virtual KResultOr<size_t> entries_count() const override { return m_components.size(); };
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SystemExposedComponent> lookup(StringView name) override;
-    void add_component(const SystemExposedComponent&);
+    void add_component(SystemExposedComponent const&);
 
-    virtual NonnullRefPtr<Inode> to_inode(const SysFS& sysfs_instance) const override final;
+    virtual NonnullRefPtr<Inode> to_inode(SysFS const& sysfs_instance) const override final;
 
 protected:
     explicit SystemExposedFolder(String name);
-    SystemExposedFolder(String name, const SystemExposedFolder& parent_folder);
+    SystemExposedFolder(String name, SystemExposedFolder const& parent_folder);
     NonnullRefPtrVector<SystemExposedComponent> m_components;
     RefPtr<SystemExposedFolder> m_parent_folder;
 };
