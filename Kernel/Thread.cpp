@@ -67,7 +67,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
     , m_fpu_state(fpu_state)
     , m_name(m_process->name())
     , m_block_timer(block_timer)
-    , m_global_procfs_inode_index(ProcFSComponentsRegistrar::the().allocate_inode_index())
+    , m_global_procfs_inode_index(ProcFSComponentRegistry::the().allocate_inode_index())
 {
     bool is_first_thread = m_process->add_thread(*this);
     if (is_first_thread) {

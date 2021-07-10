@@ -199,8 +199,8 @@ UNMAP_AFTER_INIT ProcFSUSBBusDirectory::ProcFSUSBBusDirectory(const ProcFSBusDir
 
 UNMAP_AFTER_INIT void ProcFSUSBBusDirectory::initialize()
 {
-    auto folder = adopt_ref(*new ProcFSUSBBusDirectory(ProcFSComponentsRegistrar::the().buses_folder()));
-    ProcFSComponentsRegistrar::the().register_new_bus_folder(folder);
+    auto folder = adopt_ref(*new ProcFSUSBBusDirectory(ProcFSComponentRegistry::the().buses_folder()));
+    ProcFSComponentRegistry::the().register_new_bus_folder(folder);
     s_procfs_usb_bus_folder = folder;
 }
 
