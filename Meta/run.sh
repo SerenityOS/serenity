@@ -57,6 +57,13 @@ fi
     else
         SERENITY_DISK_IMAGE="_disk_image"
     fi
+    if command -v wslpath >/dev/null; then
+        case "$SERENITY_QEMU_BIN" in
+            /mnt/c/*)
+                SERENITY_DISK_IMAGE=$(wslpath -w "$SERENITY_DISK_IMAGE")
+                ;;
+        esac
+    fi
 }
 
 if ! command -v "$SERENITY_QEMU_BIN" >/dev/null 2>&1 ; then
