@@ -117,7 +117,9 @@ void Process::kill_threads_except_self()
         thread.set_should_die();
     });
 
-    big_lock().clear_waiters();
+    u32 dropped_lock_count = 0;
+    if (big_lock().force_unlock_if_locked(dropped_lock_count) != LockMode::Unlocked)
+        dbgln("Process {} big lock had {} locks", *this, dropped_lock_count);
 }
 
 void Process::kill_all_threads()

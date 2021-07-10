@@ -243,7 +243,7 @@ private:
 
     PageFaultResponse handle_cow_fault(size_t page_index);
     PageFaultResponse handle_inode_fault(size_t page_index, ScopedSpinLock<RecursiveSpinLock>&);
-    PageFaultResponse handle_zero_fault(size_t page_index);
+    PageFaultResponse handle_zero_fault(size_t page_index, ScopedSpinLock<RecursiveSpinLock>&);
 
     bool map_individual_page_impl(size_t page_index);
 

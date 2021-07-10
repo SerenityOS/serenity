@@ -17,6 +17,8 @@
 namespace Kernel {
 
 class Lock {
+    friend class Thread;
+
     AK_MAKE_NONCOPYABLE(Lock);
     AK_MAKE_NONMOVABLE(Lock);
 
@@ -40,7 +42,6 @@ public:
     void unlock();
     [[nodiscard]] Mode force_unlock_if_locked(u32&);
     [[nodiscard]] bool is_locked() const { return m_mode != Mode::Unlocked; }
-    void clear_waiters();
 
     [[nodiscard]] const char* name() const { return m_name; }
 
@@ -59,10 +60,19 @@ public:
     }
 
 private:
-    Atomic<bool> m_lock { false };
+    typedef IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_blocked_threads_list_node> BlockedThreadList;
+
+    ALWAYS_INLINE BlockedThreadList& thread_list_for_mode(Mode mode)
+    {
+        VERIFY(mode == Mode::Exclusive || mode == Mode::Shared);
+        return mode == Mode::Exclusive ? m_blocked_threads_list_exclusive : m_blocked_threads_list_shared;
+    }
+
+    void block(Thread&, Mode, ScopedSpinLock<SpinLock<u8>>&, u32);
+    void unblock_waiters(Mode);
+
     const char* m_name { nullptr };
-    WaitQueue m_queue;
-    Atomic<Mode, AK::MemoryOrder::memory_order_relaxed> m_mode { Mode::Unlocked };
+    Mode m_mode { Mode::Unlocked };
 
     // When locked exclusively, only the thread already holding the lock can
     // lock it again. When locked in shared mode, any thread can do that.
@@ -75,6 +85,11 @@ private:
     // lock.
     RefPtr<Thread> m_holder;
     HashMap<Thread*, u32> m_shared_holders;
+
+    BlockedThreadList m_blocked_threads_list_exclusive;
+    BlockedThreadList m_blocked_threads_list_shared;
+
+    SpinLock<u8> m_lock;
 };
 
 class Locker {
