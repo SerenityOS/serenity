@@ -411,7 +411,7 @@ bool PosixBasicParser::parse_nonduplicating_re(ByteCode& bytecode, size_t& match
     if (try_skip("\\(")) {
         ByteCode capture_bytecode;
         size_t capture_length_minimum = 0;
-        auto capture_group_index = ++m_capture_group;
+        auto capture_group_index = ++m_parser_state.capture_groups_count;
 
         if (!parse_re_expression(capture_bytecode, capture_length_minimum))
             return false;

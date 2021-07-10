@@ -155,7 +155,6 @@ private:
     bool parse_nonduplicating_re(ByteCode&, size_t&);
     bool parse_one_char_or_collation_element(ByteCode&, size_t&);
 
-    size_t m_capture_group { 0 };
     constexpr static size_t number_of_addressable_capture_groups = 9;
     size_t m_capture_group_minimum_lengths[number_of_addressable_capture_groups] { 0 };
     bool m_capture_group_seen[number_of_addressable_capture_groups] { false };
