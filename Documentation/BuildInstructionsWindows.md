@@ -51,9 +51,6 @@ To run SerenityOS in a WHPX-enabled QEMU VM:
 - Specify QEMU acceleration option: \
 `export SERENITY_VIRT_TECH_ARG="-accel whpx,kernel-irqchip=off"`
 
-- Disable Virtual Machine eXtensions on the vCPU, otherwise some versions of QEMU will crash out with a "WHPX: Unexpected VP exit code 4" error: \
-`export SERENITY_QEMU_CPU="max,vmx=off"`
-
 - Start the VM with `Meta/serenity.sh run` as usual.
 
 ### Known issues with WHPX

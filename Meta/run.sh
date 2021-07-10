@@ -49,6 +49,13 @@ fi
 
 [ -z "$SERENITY_RAM_SIZE" ] && SERENITY_RAM_SIZE=512M
 
+if command -v wslpath >/dev/null; then
+    case "$SERENITY_QEMU_BIN" in
+        /mnt/c/*)
+            [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max,vmx=off"
+    esac
+fi
+
 [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max"
 
 [ -z "$SERENITY_DISK_IMAGE" ] && {
