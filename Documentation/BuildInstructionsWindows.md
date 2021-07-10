@@ -19,13 +19,16 @@ section to set up QEMU on your host system.
 
 ## Setting up QEMU
 
-- Grab the latest QEMU binaries from [here](https://www.qemu.org/download/#windows) and install them.
+- Grab the latest QEMU binaries from [here](https://www.qemu.org/download/#windows) and install them. At a minimum you
+will need to install the tools as well as the system emulators for i386 and x86_64.
 
-- Locate the executable `qemu-system-i386.exe` in WSL.
-By default this will be located at `/mnt/c/Program Files/qemu/qemu-system-i386.exe`.
+![QEMU Components](QEMU_Components.png)
+
+- Locate the executable `qemu-system-x86_64.exe` in WSL.
+By default this will be located at `/mnt/c/Program Files/qemu/qemu-system-x86_64.exe`.
 
 - Set the `SERENITY_QEMU_BIN` environment variable to the location above. For example: \
-`export SERENITY_QEMU_BIN='/mnt/c/Program Files/qemu/qemu-system-i386.exe'`
+`export SERENITY_QEMU_BIN='/mnt/c/Program Files/qemu/qemu-system-x86_64.exe'`
 
 - Set the `SERENITY_KERNEL_CMDLINE` environment variable to disable VirtIO support (Because it is currently broken on
   native windows QEMU):
@@ -73,7 +76,7 @@ with feature detection logic in libgcc and resulting in this error.
 
 To workaround this, first adjust the `SERENITY_QEMU_CPU` setting to emulate a more restricted feature set. `SERENITY_QEMU_CPU="qemu32"`
 appears to work in some cases, however in others causes the boot freeze issue above. It's worth playing around with
-various different values here to see if you can find one that works for you. Running `qemu-system-i386.exe -cpu ?` will
+various different values here to see if you can find one that works for you. Running `qemu-system-x86_64.exe -cpu ?` will
 list the supported CPU configurations.
 
 If you cannot find a working CPU feature set, the next workaround is to patch libgcc in the Serenity toolchain build to
@@ -88,7 +91,7 @@ Rebuild the toolchain using `Toolchain/BuildIt.sh` as normal, then rebuild Seren
 On some Windows systems running with >100% scaling, the booting phase of Serenity might slow to a crawl. Changing the
 zoom settings of the QEMU window will speed up the emulation, but you'll have to squint harder to read the smaller display.
 
-A quick workaround is opening the properties of the QEMU executable at `C:\Program Files\qemu\qemu-system-i386.exe`, and
+A quick workaround is opening the properties of the QEMU executable at `C:\Program Files\qemu\qemu-system-x86_64.exe`, and
 in the Compatibility tab changing the DPI settings to force the scaling to be performed by the System, by changing the
 setting at at the bottom of the window. The QEMU window will now render at normal size while retaining acceptable emulation speeds.
 
