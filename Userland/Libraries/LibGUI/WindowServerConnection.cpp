@@ -203,7 +203,7 @@ void WindowServerConnection::key_up(i32 window_id, u32 code_point, u32 key, u32 
     Core::EventLoop::current().post_event(*window, move(key_event));
 }
 
-static MouseButton to_gmousebutton(u32 button)
+static MouseButton to_mouse_button(u32 button)
 {
     switch (button) {
     case 0:
@@ -227,13 +227,13 @@ static MouseButton to_gmousebutton(u32 button)
 void WindowServerConnection::mouse_down(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta)
 {
     if (auto* window = Window::from_window_id(window_id))
-        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseDown, mouse_position, buttons, to_gmousebutton(button), modifiers, wheel_delta));
+        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseDown, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta));
 }
 
 void WindowServerConnection::mouse_up(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta)
 {
     if (auto* window = Window::from_window_id(window_id))
-        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseUp, mouse_position, buttons, to_gmousebutton(button), modifiers, wheel_delta));
+        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseUp, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta));
 }
 
 void WindowServerConnection::mouse_move(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta, bool is_drag, Vector<String> const& mime_types)
@@ -242,20 +242,20 @@ void WindowServerConnection::mouse_move(i32 window_id, Gfx::IntPoint const& mous
         if (is_drag)
             Core::EventLoop::current().post_event(*window, make<DragEvent>(Event::DragMove, mouse_position, mime_types));
         else
-            Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseMove, mouse_position, buttons, to_gmousebutton(button), modifiers, wheel_delta));
+            Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseMove, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta));
     }
 }
 
 void WindowServerConnection::mouse_double_click(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta)
 {
     if (auto* window = Window::from_window_id(window_id))
-        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseDoubleClick, mouse_position, buttons, to_gmousebutton(button), modifiers, wheel_delta));
+        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseDoubleClick, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta));
 }
 
 void WindowServerConnection::mouse_wheel(i32 window_id, Gfx::IntPoint const& mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta)
 {
     if (auto* window = Window::from_window_id(window_id))
-        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseWheel, mouse_position, buttons, to_gmousebutton(button), modifiers, wheel_delta));
+        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseWheel, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta));
 }
 
 void WindowServerConnection::menu_visibility_did_change(i32 menu_id, bool visible)
