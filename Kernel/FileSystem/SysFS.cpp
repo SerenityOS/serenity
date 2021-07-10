@@ -12,25 +12,25 @@
 
 namespace Kernel {
 
-static AK::Singleton<SystemRegistrar> s_the;
+static AK::Singleton<SysFSComponentRegistry> s_the;
 
-SystemRegistrar& SystemRegistrar::the()
+SysFSComponentRegistry& SysFSComponentRegistry::the()
 {
     return *s_the;
 }
 
-UNMAP_AFTER_INIT void SystemRegistrar::initialize()
+UNMAP_AFTER_INIT void SysFSComponentRegistry::initialize()
 {
     VERIFY(!s_the.is_initialized());
     s_the.ensure_instance();
 }
 
-UNMAP_AFTER_INIT SystemRegistrar::SystemRegistrar()
+UNMAP_AFTER_INIT SysFSComponentRegistry::SysFSComponentRegistry()
     : m_root_folder(SysFSRootFolder::create())
 {
 }
 
-UNMAP_AFTER_INIT void SystemRegistrar::register_new_component(SystemExposedComponent& component)
+UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SystemExposedComponent& component)
 {
     Locker locker(m_lock);
     m_root_folder->m_components.append(component);
@@ -43,7 +43,7 @@ NonnullRefPtr<SysFSRootFolder> SysFSRootFolder::create()
 
 KResult SysFSRootFolder::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(SystemRegistrar::the().m_lock);
+    Locker locker(SysFSComponentRegistry::the().m_lock);
     callback({ ".", { fsid, component_index() }, 0 });
     callback({ "..", { fsid, 0 }, 0 });
 
@@ -65,7 +65,7 @@ NonnullRefPtr<SysFS> SysFS::create()
 }
 
 SysFS::SysFS()
-    : m_root_inode(SystemRegistrar::the().m_root_folder->to_inode(*this))
+    : m_root_inode(SysFSComponentRegistry::the().m_root_folder->to_inode(*this))
 {
     Locker locker(m_lock);
 }

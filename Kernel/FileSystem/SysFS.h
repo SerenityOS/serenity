@@ -22,7 +22,7 @@ class SysFSInode;
 class SysFSDirectoryInode;
 
 class SysFSRootFolder final : public SystemExposedFolder {
-    friend class SystemRegistrar;
+    friend class SysFSComponentRegistry;
 
 public:
     static NonnullRefPtr<SysFSRootFolder> create();
@@ -32,18 +32,18 @@ private:
     SysFSRootFolder();
 };
 
-class SystemRegistrar {
+class SysFSComponentRegistry {
     friend class SysFS;
     friend class SystemExposedComponent;
     friend class SystemExposedFolder;
     friend class SysFSRootFolder;
 
 public:
-    static SystemRegistrar& the();
+    static SysFSComponentRegistry& the();
 
     static void initialize();
 
-    SystemRegistrar();
+    SysFSComponentRegistry();
     void register_new_component(SystemExposedComponent&);
 
     NonnullRefPtr<SystemExposedFolder> root_folder() { return m_root_folder; }

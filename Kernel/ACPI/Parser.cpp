@@ -63,11 +63,11 @@ UNMAP_AFTER_INIT ExposedComponent::ExposedComponent(String name, PhysicalAddress
 UNMAP_AFTER_INIT void ExposedFolder::initialize()
 {
     auto acpi_folder = adopt_ref(*new (nothrow) ExposedFolder());
-    SystemRegistrar::the().register_new_component(acpi_folder);
+    SysFSComponentRegistry::the().register_new_component(acpi_folder);
 }
 
 UNMAP_AFTER_INIT ExposedFolder::ExposedFolder()
-    : SystemExposedFolder("acpi", SystemRegistrar::the().root_folder())
+    : SystemExposedFolder("acpi", SysFSComponentRegistry::the().root_folder())
 {
     NonnullRefPtrVector<SystemExposedComponent> components;
     size_t ssdt_count = 0;
