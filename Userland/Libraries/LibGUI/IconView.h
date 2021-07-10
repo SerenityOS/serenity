@@ -40,6 +40,7 @@ public:
 
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
     virtual Gfx::IntRect content_rect(const ModelIndex&) const override;
+    virtual Gfx::IntRect editing_rect(ModelIndex const&) const override;
 
     virtual void select_all() override;
 

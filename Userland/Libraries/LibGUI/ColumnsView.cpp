@@ -323,4 +323,12 @@ Gfx::IntRect ColumnsView::content_rect(const ModelIndex& index) const
     return {};
 }
 
+Gfx::IntRect ColumnsView::paint_invalidation_rect(ModelIndex const& index) const
+{
+    auto rect = content_rect(index);
+    rect.translate_by(-icon_size(), 0);
+    rect.set_width(rect.width() + icon_size());
+    return rect;
+}
+
 }

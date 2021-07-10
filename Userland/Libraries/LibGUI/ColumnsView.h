@@ -19,6 +19,7 @@ public:
 
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
     virtual Gfx::IntRect content_rect(const ModelIndex&) const override;
+    virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const&) const override;
 
 private:
     ColumnsView();

@@ -388,7 +388,15 @@ void IconView::update_item_rects(int item_index, ItemData& item_data) const
     item_data.text_rect.set_top(item_rect.y() + item_data.text_offset_y);
 }
 
-Gfx::IntRect IconView::content_rect(const ModelIndex& index) const
+Gfx::IntRect IconView::content_rect(ModelIndex const& index) const
+{
+    if (!index.is_valid())
+        return {};
+    auto& item_data = get_item_data(index.row());
+    return item_data.rect();
+}
+
+Gfx::IntRect IconView::editing_rect(ModelIndex const& index) const
 {
     if (!index.is_valid())
         return {};
