@@ -241,34 +241,42 @@ void EditingEngine::move_to_next_span(const KeyEvent& event)
     }
 }
 
-void EditingEngine::move_to_line_beginning()
+void EditingEngine::move_to_logical_line_beginning()
 {
     TextPosition new_cursor;
-    if (m_editor->is_wrapping_enabled()) {
-        // FIXME: Replicate the first_nonspace_column behavior in wrapping mode.
-        auto home_position = m_editor->cursor_content_rect().location().translated(-m_editor->width(), 0);
-        new_cursor = m_editor->text_position_at_content_position(home_position);
+    size_t first_nonspace_column = m_editor->current_line().first_non_whitespace_column();
+    if (m_editor->cursor().column() == first_nonspace_column) {
+        new_cursor = { m_editor->cursor().line(), 0 };
     } else {
-        size_t first_nonspace_column = m_editor->current_line().first_non_whitespace_column();
-        if (m_editor->cursor().column() == first_nonspace_column) {
-            new_cursor = { m_editor->cursor().line(), 0 };
-        } else {
-            new_cursor = { m_editor->cursor().line(), first_nonspace_column };
-        }
+        new_cursor = { m_editor->cursor().line(), first_nonspace_column };
     }
     m_editor->set_cursor(new_cursor);
 }
 
+void EditingEngine::move_to_line_beginning()
+{
+    if (m_editor->is_wrapping_enabled()) {
+        // FIXME: Replicate the first_nonspace_column behavior in wrapping mode.
+        auto home_position = m_editor->cursor_content_rect().location().translated(-m_editor->width(), 0);
+        m_editor->set_cursor(m_editor->text_position_at_content_position(home_position));
+    } else {
+        move_to_logical_line_beginning();
+    }
+}
+
 void EditingEngine::move_to_line_end()
 {
-    TextPosition new_cursor;
     if (m_editor->is_wrapping_enabled()) {
         auto end_position = m_editor->cursor_content_rect().location().translated(m_editor->width(), 0);
-        new_cursor = m_editor->text_position_at_content_position(end_position);
+        m_editor->set_cursor(m_editor->text_position_at_content_position(end_position));
     } else {
-        new_cursor = { m_editor->cursor().line(), m_editor->current_line().length() };
+        move_to_logical_line_end();
     }
-    m_editor->set_cursor(new_cursor);
+}
+
+void EditingEngine::move_to_logical_line_end()
+{
+    m_editor->set_cursor({ m_editor->cursor().line(), m_editor->current_line().length() });
 }
 
 void EditingEngine::move_one_up(const KeyEvent& event)
