@@ -27,7 +27,7 @@ StorageDevice::StorageDevice(const StorageController& controller, int major, int
 {
 }
 
-const char* StorageDevice::class_name() const
+StringView StorageDevice::class_name() const
 {
     return "StorageDevice";
 }

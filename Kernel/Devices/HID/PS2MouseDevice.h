@@ -23,7 +23,7 @@ public:
 
     virtual ~PS2MouseDevice() override;
 
-    virtual const char* purpose() const override { return class_name(); }
+    virtual StringView purpose() const override { return class_name(); }
 
     // ^I8042Device
     virtual void irq_handle_byte_read(u8 byte) override;

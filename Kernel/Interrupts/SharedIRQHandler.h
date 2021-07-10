@@ -33,8 +33,8 @@ public:
     virtual bool is_sharing_with_others() const override { return false; }
 
     virtual HandlerType type() const override { return HandlerType::SharedIRQHandler; }
-    virtual const char* purpose() const override { return "Shared IRQ Handler"; }
-    virtual const char* controller() const override { return m_responsible_irq_controller->model(); }
+    virtual StringView purpose() const override { return "Shared IRQ Handler"; }
+    virtual StringView controller() const override { return m_responsible_irq_controller->model(); }
 
 private:
     void enable_interrupt_vector();

@@ -29,7 +29,7 @@ public:
 
     virtual ~UHCIController() override;
 
-    virtual const char* purpose() const override { return "UHCI"; }
+    virtual StringView purpose() const override { return "UHCI"; }
 
     void reset();
     void stop();

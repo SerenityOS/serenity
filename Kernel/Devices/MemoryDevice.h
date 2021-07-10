@@ -27,7 +27,7 @@ public:
 
 private:
     MemoryDevice();
-    virtual const char* class_name() const override { return "MemoryDevice"; }
+    virtual StringView class_name() const override { return "MemoryDevice"; }
     virtual bool can_read(const FileDescription&, size_t) const override { return true; }
     virtual bool can_write(const FileDescription&, size_t) const override { return false; }
     virtual bool is_seekable() const override { return true; }

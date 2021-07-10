@@ -164,7 +164,7 @@ protected:
 
 private:
     explicit TCPSocket(int protocol);
-    virtual const char* class_name() const override { return "TCPSocket"; }
+    virtual StringView class_name() const override { return "TCPSocket"; }
 
     static NetworkOrdered<u16> compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket&, u16 payload_size);
 

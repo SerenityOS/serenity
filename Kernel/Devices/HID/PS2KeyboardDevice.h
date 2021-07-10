@@ -26,7 +26,7 @@ public:
     virtual ~PS2KeyboardDevice() override;
     bool initialize();
 
-    virtual const char* purpose() const override { return class_name(); }
+    virtual StringView purpose() const override { return class_name(); }
 
     // ^I8042Device
     virtual void irq_handle_byte_read(u8 byte) override;
@@ -42,7 +42,7 @@ private:
     virtual bool handle_irq(const RegisterState&) override;
 
     // ^CharacterDevice
-    virtual const char* class_name() const override { return "KeyboardDevice"; }
+    virtual StringView class_name() const override { return "KeyboardDevice"; }
 };
 
 }

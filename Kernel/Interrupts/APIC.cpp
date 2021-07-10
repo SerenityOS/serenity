@@ -76,8 +76,8 @@ public:
     virtual bool eoi() override;
 
     virtual HandlerType type() const override { return HandlerType::IRQHandler; }
-    virtual const char* purpose() const override { return "IPI Handler"; }
-    virtual const char* controller() const override { return nullptr; }
+    virtual StringView purpose() const override { return "IPI Handler"; }
+    virtual StringView controller() const override { return nullptr; }
 
     virtual size_t sharing_devices_count() const override { return 0; }
     virtual bool is_shared_handler() const override { return false; }
@@ -107,8 +107,8 @@ public:
     virtual bool eoi() override;
 
     virtual HandlerType type() const override { return HandlerType::IRQHandler; }
-    virtual const char* purpose() const override { return "SMP Error Handler"; }
-    virtual const char* controller() const override { return nullptr; }
+    virtual StringView purpose() const override { return "SMP Error Handler"; }
+    virtual StringView controller() const override { return nullptr; }
 
     virtual size_t sharing_devices_count() const override { return 0; }
     virtual bool is_shared_handler() const override { return false; }

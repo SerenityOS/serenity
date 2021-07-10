@@ -48,7 +48,7 @@ private:
     PATADiskDevice(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u64);
 
     // ^DiskDevice
-    virtual const char* class_name() const override;
+    virtual StringView class_name() const override;
 
     bool is_slave() const;
 

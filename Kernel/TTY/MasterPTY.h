@@ -41,7 +41,7 @@ private:
     virtual KResult close() override;
     virtual bool is_master_pty() const override { return true; }
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
-    virtual const char* class_name() const override { return "MasterPTY"; }
+    virtual StringView class_name() const override { return "MasterPTY"; }
 
     RefPtr<SlavePTY> m_slave;
     unsigned m_index;

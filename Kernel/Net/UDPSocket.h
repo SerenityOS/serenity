@@ -21,7 +21,7 @@ public:
 
 private:
     explicit UDPSocket(int protocol);
-    virtual const char* class_name() const override { return "UDPSocket"; }
+    virtual StringView class_name() const override { return "UDPSocket"; }
     static Lockable<HashMap<u16, UDPSocket*>>& sockets_by_port();
 
     virtual KResultOr<size_t> protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, int flags) override;

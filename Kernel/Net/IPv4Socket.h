@@ -75,7 +75,7 @@ public:
 
 protected:
     IPv4Socket(int type, int protocol);
-    virtual const char* class_name() const override { return "IPv4Socket"; }
+    virtual StringView class_name() const override { return "IPv4Socket"; }
 
     PortAllocationResult allocate_local_port_if_needed();
 

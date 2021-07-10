@@ -29,8 +29,8 @@ public:
     virtual bool is_sharing_with_others() const override { return false; }
 
     virtual HandlerType type() const override { return HandlerType::SpuriousInterruptHandler; }
-    virtual const char* purpose() const override;
-    virtual const char* controller() const override;
+    virtual StringView purpose() const override;
+    virtual StringView controller() const override;
 
 private:
     void enable_interrupt_vector();
