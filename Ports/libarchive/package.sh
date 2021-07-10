@@ -9,5 +9,6 @@ depends="zlib pcre"
 auth_type="sig"
 auth_import_key="CB55788360B992FA0885C878F040F7196BA99AF4"
 auth_opts="libarchive-${version}.tar.gz.asc libarchive-${version}.tar.gz"
+makeopts=CPPFLAGS=-Diswprint=isprint
 
 export ac_cv_header_regex_h=no
