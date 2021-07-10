@@ -119,7 +119,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
     return create_temporal_instant(global_object, *epoch_nanoseconds);
 }
 
-// 8.2.5 Temporal.Instant.fromEpochMicroseconds ( epochMicroseconds )
+// 8.2.5 Temporal.Instant.fromEpochMicroseconds ( epochMicroseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochmicroseconds
 JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
 {
     // 1. Set epochMicroseconds to ? ToBigInt(epochMicroseconds).
@@ -140,7 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
     return create_temporal_instant(global_object, *epoch_nanoseconds);
 }
 
-// 8.2.6 Temporal.Instant.fromEpochNanoseconds ( epochNanoseconds )
+// 8.2.6 Temporal.Instant.fromEpochNanoseconds ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochnanoseconds
 JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_nanoseconds)
 {
     // 1. Set epochNanoseconds to ? ToBigInt(epochNanoseconds).
