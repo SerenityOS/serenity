@@ -202,6 +202,8 @@ public:
 
     void set_menubar(RefPtr<Menubar>);
 
+    void force_update(Badge<Widget>, Vector<Gfx::IntRect> const&);
+
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);

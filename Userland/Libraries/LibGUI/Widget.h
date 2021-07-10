@@ -14,6 +14,7 @@
 #include <LibGUI/Forward.h>
 #include <LibGUI/Margins.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Rect.h>
@@ -55,6 +56,9 @@ AK_ENUM_BITWISE_OPERATORS(FocusPolicy)
 
 class Widget : public Core::Object {
     C_OBJECT(Widget)
+
+    friend class ScopedPaintEventDisable;
+
 public:
     virtual ~Widget() override;
 
@@ -335,6 +339,8 @@ private:
 
     virtual bool load_from_json(const JsonObject&, RefPtr<Core::Object> (*unregistered_child_handler)(const String&)) override;
 
+    void deliver_pending_paint_events();
+
     // HACK: These are used as property getters for the fixed_* size property aliases.
     int dummy_fixed_width() { return 0; }
     int dummy_fixed_height() { return 0; }
@@ -367,6 +373,9 @@ private:
     FocusPolicy m_focus_policy { FocusPolicy::NoFocus };
 
     Gfx::StandardCursor m_override_cursor { Gfx::StandardCursor::None };
+
+    unsigned m_paint_events_disabled { 0 };
+    Gfx::DisjointRectSet m_pending_paint_rects;
 };
 
 inline Widget* Widget::parent_widget()
@@ -381,6 +390,32 @@ inline const Widget* Widget::parent_widget() const
         return &verify_cast<const Widget>(*parent());
     return nullptr;
 }
+
+class ScopedPaintEventDisable {
+    AK_MAKE_NONCOPYABLE(ScopedPaintEventDisable);
+
+public:
+    ScopedPaintEventDisable(ScopedPaintEventDisable&&) = default;
+    ScopedPaintEventDisable& operator=(ScopedPaintEventDisable&&) = default;
+
+    ScopedPaintEventDisable(Widget& widget)
+        : m_widget(widget)
+    {
+        widget.m_paint_events_disabled++;
+    }
+
+    ~ScopedPaintEventDisable()
+    {
+        if (auto* widget = m_widget.ptr()) {
+            if (--widget->m_paint_events_disabled == 0)
+                widget->deliver_pending_paint_events();
+        }
+    }
+
+private:
+    WeakPtr<Widget> m_widget;
+};
+
 }
 
 template<>

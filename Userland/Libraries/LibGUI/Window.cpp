@@ -619,6 +619,13 @@ void Window::force_update()
     WindowServerConnection::the().async_invalidate_rect(m_window_id, { { 0, 0, rect.width(), rect.height() } }, true);
 }
 
+void Window::force_update(Badge<Widget>, Vector<Gfx::IntRect> const& rects)
+{
+    if (!is_visible())
+        return;
+    WindowServerConnection::the().async_invalidate_rect(m_window_id, rects, true);
+}
+
 void Window::update(const Gfx::IntRect& a_rect)
 {
     if (!is_visible())

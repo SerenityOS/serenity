@@ -315,6 +315,22 @@ void Widget::handle_keydown_event(KeyEvent& event)
     }
 }
 
+void Widget::deliver_pending_paint_events()
+{
+    VERIFY(!m_paint_events_disabled);
+    if (m_pending_paint_rects.is_empty())
+        return;
+    auto pending_paint_rects = move(m_pending_paint_rects);
+    auto* window = this->window();
+    if (!window)
+        return;
+    for (auto& rect : pending_paint_rects.rects()) {
+        PaintEvent paint_event(rect);
+        handle_paint_event(paint_event);
+    }
+    window->force_update({}, pending_paint_rects.rects());
+}
+
 void Widget::handle_paint_event(PaintEvent& event)
 {
     VERIFY(is_visible());
@@ -322,6 +338,12 @@ void Widget::handle_paint_event(PaintEvent& event)
     if (!rect().intersects(event.rect())) {
         // This widget is not inside the paint event rect.
         // Since widgets fully contain their children, we don't need to recurse further.
+        return;
+    }
+
+    if (m_paint_events_disabled) {
+        // This widget temporarily disabled paint events, queue them up
+        m_pending_paint_rects.add(event.rect());
         return;
     }
 
