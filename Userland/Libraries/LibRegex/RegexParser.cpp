@@ -173,114 +173,12 @@ ALWAYS_INLINE bool Parser::match_ordinary_characters()
 }
 
 // =============================
-// PosixExtended Parser
+// Abstract Posix Parser
 // =============================
 
-bool PosixExtendedParser::parse_internal(ByteCode& stack, size_t& match_length_minimum)
+ALWAYS_INLINE bool AbstractPosixParser::parse_bracket_expression(Vector<CompareTypeAndValuePair>& values, size_t& match_length_minimum)
 {
-    return parse_root(stack, match_length_minimum);
-}
-
-ALWAYS_INLINE bool PosixExtendedParser::match_repetition_symbol()
-{
-    auto type = m_parser_state.current_token.type();
-    return (type == TokenType::Asterisk
-        || type == TokenType::Plus
-        || type == TokenType::Questionmark
-        || type == TokenType::LeftCurly);
-}
-
-ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& bytecode_to_repeat, size_t& match_length_minimum)
-{
-    if (match(TokenType::LeftCurly)) {
-        consume();
-
-        StringBuilder number_builder;
-
-        while (match(TokenType::Char)) {
-            number_builder.append(consume().value());
-        }
-
-        auto maybe_minimum = number_builder.build().to_uint();
-        if (!maybe_minimum.has_value())
-            return set_error(Error::InvalidBraceContent);
-
-        auto minimum = maybe_minimum.value();
-        match_length_minimum *= minimum;
-
-        if (match(TokenType::Comma)) {
-            consume();
-        } else {
-            ByteCode bytecode;
-            bytecode.insert_bytecode_repetition_n(bytecode_to_repeat, minimum);
-            bytecode_to_repeat = move(bytecode);
-
-            consume(TokenType::RightCurly, Error::MismatchingBrace);
-            return !has_error();
-        }
-
-        Optional<size_t> maybe_maximum {};
-        number_builder.clear();
-        while (match(TokenType::Char)) {
-            number_builder.append(consume().value());
-        }
-        if (!number_builder.is_empty()) {
-            auto value = number_builder.build().to_uint();
-            if (!value.has_value() || minimum > value.value())
-                return set_error(Error::InvalidBraceContent);
-
-            maybe_maximum = value.value();
-        }
-
-        ByteCode::transform_bytecode_repetition_min_max(bytecode_to_repeat, minimum, maybe_maximum);
-
-        consume(TokenType::RightCurly, Error::MismatchingBrace);
-        return !has_error();
-
-    } else if (match(TokenType::Plus)) {
-        consume();
-
-        bool nongreedy = match(TokenType::Questionmark);
-        if (nongreedy)
-            consume();
-
-        // Note: don't touch match_length_minimum, it's already correct
-        ByteCode::transform_bytecode_repetition_min_one(bytecode_to_repeat, !nongreedy);
-        return !has_error();
-
-    } else if (match(TokenType::Asterisk)) {
-        consume();
-        match_length_minimum = 0;
-
-        bool nongreedy = match(TokenType::Questionmark);
-        if (nongreedy)
-            consume();
-
-        ByteCode::transform_bytecode_repetition_any(bytecode_to_repeat, !nongreedy);
-
-        return !has_error();
-
-    } else if (match(TokenType::Questionmark)) {
-        consume();
-        match_length_minimum = 0;
-
-        bool nongreedy = match(TokenType::Questionmark);
-        if (nongreedy)
-            consume();
-
-        ByteCode::transform_bytecode_repetition_zero_or_one(bytecode_to_repeat, !nongreedy);
-        return !has_error();
-    }
-
-    return false;
-}
-
-ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack, size_t& match_length_minimum)
-{
-    Vector<CompareTypeAndValuePair> values;
-
-    for (;;) {
-
+    for (; !done();) {
         if (match(TokenType::HyphenMinus)) {
             consume();
 
@@ -409,6 +307,296 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack
 
     if (values.first().type == CharacterCompareType::Inverse)
         match_length_minimum = 0;
+
+    return true;
+}
+
+// =============================
+// PosixBasic Parser
+// =============================
+
+bool PosixBasicParser::parse_internal(ByteCode& stack, size_t& match_length_minimum)
+{
+    return parse_root(stack, match_length_minimum);
+}
+
+bool PosixBasicParser::parse_root(ByteCode& bytecode, size_t& match_length_minimum)
+{
+    // basic_reg_exp : L_ANCHOR? RE_expression R_ANCHOR?
+    if (match(TokenType::Circumflex)) {
+        consume();
+        bytecode.empend((ByteCodeValueType)OpCodeId::CheckBegin);
+    }
+
+    if (!parse_re_expression(bytecode, match_length_minimum))
+        return false;
+
+    if (match(TokenType::Dollar)) {
+        consume();
+        bytecode.empend((ByteCodeValueType)OpCodeId::CheckEnd);
+    }
+
+    return !has_error();
+}
+
+bool PosixBasicParser::parse_re_expression(ByteCode& bytecode, size_t& match_length_minimum)
+{
+    // RE_expression : RE_expression? simple_RE
+    while (!done()) {
+        if (!parse_simple_re(bytecode, match_length_minimum))
+            break;
+    }
+
+    return !has_error();
+}
+
+bool PosixBasicParser::parse_simple_re(ByteCode& bytecode, size_t& match_length_minimum)
+{
+    // simple_RE : nondupl_RE RE_dupl_symbol?
+    ByteCode simple_re_bytecode;
+    size_t re_match_length_minimum = 0;
+    if (!parse_nonduplicating_re(simple_re_bytecode, re_match_length_minimum))
+        return false;
+
+    // RE_dupl_symbol : '*' | Back_open_brace DUP_COUNT (',' DUP_COUNT?)? Back_close_brace
+    if (match(TokenType::Asterisk)) {
+        consume();
+        ByteCode::transform_bytecode_repetition_any(simple_re_bytecode, true);
+    } else if (try_skip("\\{")) {
+        auto read_number = [&]() -> Optional<size_t> {
+            if (!match(TokenType::Char))
+                return {};
+            size_t value = 0;
+            while (match(TokenType::Char)) {
+                auto c = m_parser_state.current_token.value().substring_view(0, 1);
+                auto c_value = c.to_uint();
+                if (!c_value.has_value())
+                    break;
+                value *= 10;
+                value += *c_value;
+                consume();
+            }
+            return value;
+        };
+
+        size_t min_limit;
+        Optional<size_t> max_limit;
+
+        if (auto limit = read_number(); !limit.has_value())
+            return set_error(Error::InvalidRepetitionMarker);
+        else
+            min_limit = *limit;
+
+        if (match(TokenType::Comma)) {
+            consume();
+            max_limit = read_number();
+        }
+
+        if (!try_skip("\\}"))
+            return set_error(Error::MismatchingBrace);
+
+        ByteCode::transform_bytecode_repetition_min_max(simple_re_bytecode, min_limit, max_limit, true);
+        match_length_minimum += re_match_length_minimum * min_limit;
+    } else {
+        match_length_minimum += re_match_length_minimum;
+    }
+
+    bytecode.extend(move(simple_re_bytecode));
+    return true;
+}
+
+bool PosixBasicParser::parse_nonduplicating_re(ByteCode& bytecode, size_t& match_length_minimum)
+{
+    // nondupl_RE : one_char_or_coll_elem_RE | Back_open_paren RE_expression Back_close_paren | BACKREF
+    if (try_skip("\\(")) {
+        ByteCode capture_bytecode;
+        size_t capture_length_minimum = 0;
+        auto capture_group_index = ++m_capture_group;
+
+        if (!parse_re_expression(capture_bytecode, capture_length_minimum))
+            return false;
+
+        if (!try_skip("\\)"))
+            return set_error(Error::MismatchingParen);
+
+        match_length_minimum += capture_length_minimum;
+        if (capture_group_index <= number_of_addressable_capture_groups) {
+            m_capture_group_minimum_lengths[capture_group_index - 1] = capture_length_minimum;
+            m_capture_group_seen[capture_group_index - 1] = true;
+            bytecode.insert_bytecode_group_capture_left(capture_group_index);
+        }
+
+        bytecode.extend(capture_bytecode);
+
+        if (capture_group_index <= number_of_addressable_capture_groups)
+            bytecode.insert_bytecode_group_capture_right(capture_group_index);
+        return true;
+    }
+
+    for (size_t i = 1; i < 10; ++i) {
+        char backref_name[2] { '\\', '0' };
+        backref_name[1] += i;
+        if (try_skip({ backref_name, 2 })) {
+            if (!m_capture_group_seen[i - 1])
+                return set_error(Error::InvalidNumber);
+            match_length_minimum += m_capture_group_minimum_lengths[i - 1];
+            bytecode.insert_bytecode_compare_values({ { CharacterCompareType::Reference, (ByteCodeValueType)i } });
+            return true;
+        }
+    }
+
+    return parse_one_char_or_collation_element(bytecode, match_length_minimum);
+}
+
+bool PosixBasicParser::parse_one_char_or_collation_element(ByteCode& bytecode, size_t& match_length_minimum)
+{
+    // one_char_or_coll_elem_RE : ORD_CHAR | QUOTED_CHAR | '.' | bracket_expression
+    if (match(TokenType::Period)) {
+        consume();
+        bytecode.insert_bytecode_compare_values({ { CharacterCompareType::AnyChar, 0 } });
+        match_length_minimum += 1;
+        return true;
+    }
+
+    // None of these are special in BRE.
+    if (match(TokenType::Char) || match(TokenType::Questionmark) || match(TokenType::RightParen) || match(TokenType::HyphenMinus)
+        || match(TokenType::Circumflex) || match(TokenType::RightCurly) || match(TokenType::Comma) || match(TokenType::Colon)
+        || match(TokenType::Dollar) || match(TokenType::EqualSign) || match(TokenType::LeftCurly) || match(TokenType::LeftParen)
+        || match(TokenType::Pipe) || match(TokenType::Slash) || match(TokenType::RightBracket) || match(TokenType::RightParen)) {
+
+        auto ch = consume().value()[0];
+        bytecode.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)ch } });
+        match_length_minimum += 1;
+        return true;
+    }
+
+    if (match(TokenType::EscapeSequence)) {
+        if (m_parser_state.current_token.value().is_one_of("\\)"sv, "\\}"sv, "\\("sv, "\\{"sv))
+            return false;
+        auto ch = consume().value()[1];
+        bytecode.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)ch } });
+        match_length_minimum += 1;
+        return true;
+    }
+
+    Vector<CompareTypeAndValuePair> values;
+    size_t bracket_minimum_length = 0;
+    if (!AbstractPosixParser::parse_bracket_expression(values, bracket_minimum_length))
+        return false;
+
+    bytecode.insert_bytecode_compare_values(move(values));
+    match_length_minimum += bracket_minimum_length;
+    return !has_error();
+}
+
+// =============================
+// PosixExtended Parser
+// =============================
+
+bool PosixExtendedParser::parse_internal(ByteCode& stack, size_t& match_length_minimum)
+{
+    return parse_root(stack, match_length_minimum);
+}
+
+ALWAYS_INLINE bool PosixExtendedParser::match_repetition_symbol()
+{
+    auto type = m_parser_state.current_token.type();
+    return (type == TokenType::Asterisk
+        || type == TokenType::Plus
+        || type == TokenType::Questionmark
+        || type == TokenType::LeftCurly);
+}
+
+ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& bytecode_to_repeat, size_t& match_length_minimum)
+{
+    if (match(TokenType::LeftCurly)) {
+        consume();
+
+        StringBuilder number_builder;
+
+        while (match(TokenType::Char)) {
+            number_builder.append(consume().value());
+        }
+
+        auto maybe_minimum = number_builder.build().to_uint();
+        if (!maybe_minimum.has_value())
+            return set_error(Error::InvalidBraceContent);
+
+        auto minimum = maybe_minimum.value();
+        match_length_minimum *= minimum;
+
+        if (match(TokenType::Comma)) {
+            consume();
+        } else {
+            ByteCode bytecode;
+            bytecode.insert_bytecode_repetition_n(bytecode_to_repeat, minimum);
+            bytecode_to_repeat = move(bytecode);
+
+            consume(TokenType::RightCurly, Error::MismatchingBrace);
+            return !has_error();
+        }
+
+        Optional<size_t> maybe_maximum {};
+        number_builder.clear();
+        while (match(TokenType::Char)) {
+            number_builder.append(consume().value());
+        }
+        if (!number_builder.is_empty()) {
+            auto value = number_builder.build().to_uint();
+            if (!value.has_value() || minimum > value.value())
+                return set_error(Error::InvalidBraceContent);
+
+            maybe_maximum = value.value();
+        }
+
+        ByteCode::transform_bytecode_repetition_min_max(bytecode_to_repeat, minimum, maybe_maximum);
+
+        consume(TokenType::RightCurly, Error::MismatchingBrace);
+        return !has_error();
+
+    } else if (match(TokenType::Plus)) {
+        consume();
+
+        bool nongreedy = match(TokenType::Questionmark);
+        if (nongreedy)
+            consume();
+
+        // Note: don't touch match_length_minimum, it's already correct
+        ByteCode::transform_bytecode_repetition_min_one(bytecode_to_repeat, !nongreedy);
+        return !has_error();
+
+    } else if (match(TokenType::Asterisk)) {
+        consume();
+        match_length_minimum = 0;
+
+        bool nongreedy = match(TokenType::Questionmark);
+        if (nongreedy)
+            consume();
+
+        ByteCode::transform_bytecode_repetition_any(bytecode_to_repeat, !nongreedy);
+
+        return !has_error();
+
+    } else if (match(TokenType::Questionmark)) {
+        consume();
+        match_length_minimum = 0;
+
+        bool nongreedy = match(TokenType::Questionmark);
+        if (nongreedy)
+            consume();
+
+        ByteCode::transform_bytecode_repetition_zero_or_one(bytecode_to_repeat, !nongreedy);
+        return !has_error();
+    }
+
+    return false;
+}
+
+ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack, size_t& match_length_minimum)
+{
+    Vector<CompareTypeAndValuePair> values;
+    if (!AbstractPosixParser::parse_bracket_expression(values, match_length_minimum))
+        return false;
 
     stack.insert_bytecode_compare_values(move(values));
 
