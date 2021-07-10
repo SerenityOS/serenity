@@ -290,14 +290,14 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     m_system_memory_info.user_physical_pages_uncommitted = m_system_memory_info.user_physical_pages;
 
     for (auto& used_range : m_used_memory_ranges) {
-        dmesgln("MM: {} range @ {} - {}", UserMemoryRangeTypeNames[static_cast<int>(used_range.type)], used_range.start, used_range.end);
+        dmesgln("MM: {} range @ {} - {} (size 0x{:x})", UserMemoryRangeTypeNames[to_underlying(used_range.type)], used_range.start, used_range.end.offset(-1), used_range.end.as_ptr() - used_range.start.as_ptr());
     }
 
     for (auto& region : m_super_physical_regions)
-        dmesgln("MM: Super physical region: {} - {}", region.lower(), region.upper());
+        dmesgln("MM: Super physical region: {} - {} (size 0x{:x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
 
     for (auto& region : m_user_physical_regions)
-        dmesgln("MM: User physical region: {} - {}", region.lower(), region.upper());
+        dmesgln("MM: User physical region: {} - {} (size 0x{:x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
 }
 
 extern "C" PageDirectoryEntry boot_pd3[1024];
@@ -453,7 +453,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         virtual_page_array_current_page += (PAGE_SIZE / sizeof(PhysicalPageEntry)) * PAGE_SIZE;
     }
 
-    dmesgln("MM: Physical page entries: {} - {}", range.value().base(), range.value().end());
+    dmesgln("MM: Physical page entries: {}", range.value());
 }
 
 PhysicalPageEntry& MemoryManager::get_physical_page_entry(PhysicalAddress physical_address)
