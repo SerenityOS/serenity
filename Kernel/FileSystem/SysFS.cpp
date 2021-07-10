@@ -66,7 +66,6 @@ NonnullRefPtr<SysFS> SysFS::create()
 SysFS::SysFS()
     : m_root_inode(SysFSComponentRegistry::the().root_folder().to_inode(*this))
 {
-    Locker locker(m_lock);
 }
 
 SysFS::~SysFS()
