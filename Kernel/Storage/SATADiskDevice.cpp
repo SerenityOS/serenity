@@ -28,7 +28,7 @@ SATADiskDevice::~SATADiskDevice()
 {
 }
 
-const char* SATADiskDevice::class_name() const
+StringView SATADiskDevice::class_name() const
 {
     return "SATADiskDevice";
 }

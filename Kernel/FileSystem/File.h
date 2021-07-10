@@ -97,7 +97,7 @@ public:
     virtual KResult chown(FileDescription&, uid_t, gid_t) { return EBADF; }
     virtual KResult chmod(FileDescription&, mode_t) { return EBADF; }
 
-    virtual const char* class_name() const = 0;
+    virtual StringView class_name() const = 0;
 
     virtual bool is_seekable() const { return false; }
 

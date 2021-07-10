@@ -32,7 +32,7 @@ UNMAP_AFTER_INIT PATADiskDevice::~PATADiskDevice()
 {
 }
 
-const char* PATADiskDevice::class_name() const
+StringView PATADiskDevice::class_name() const
 {
     return "PATADiskDevice";
 }

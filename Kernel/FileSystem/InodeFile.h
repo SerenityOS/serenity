@@ -42,7 +42,7 @@ public:
     virtual KResult chown(FileDescription&, uid_t, gid_t) override;
     virtual KResult chmod(FileDescription&, mode_t) override;
 
-    virtual const char* class_name() const override { return "InodeFile"; }
+    virtual StringView class_name() const override { return "InodeFile"; }
 
     virtual bool is_seekable() const override { return true; }
     virtual bool is_inode() const override { return true; }

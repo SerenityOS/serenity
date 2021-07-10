@@ -36,7 +36,7 @@ protected:
     StorageDevice(const StorageController&, size_t, u64);
     StorageDevice(const StorageController&, int, int, size_t, u64);
     // ^DiskDevice
-    virtual const char* class_name() const override;
+    virtual StringView class_name() const override;
 
 private:
     NonnullRefPtr<StorageController> m_storage_controller;

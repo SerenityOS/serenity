@@ -21,7 +21,7 @@ public:
     VirtIOConsole(PCI::Address);
     virtual ~VirtIOConsole() override = default;
 
-    virtual const char* purpose() const override { return "VirtIOConsole"; }
+    virtual StringView purpose() const override { return "VirtIOConsole"; }
 
     unsigned device_id() const
     {

@@ -32,7 +32,7 @@ public:
     const DiskPartitionMetadata& metadata() const;
 
 private:
-    virtual const char* class_name() const override;
+    virtual StringView class_name() const override;
 
     DiskPartition(BlockDevice&, unsigned, DiskPartitionMetadata);
 

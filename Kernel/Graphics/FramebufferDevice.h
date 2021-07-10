@@ -38,7 +38,7 @@ public:
 
 private:
     // ^File
-    virtual const char* class_name() const override { return "FramebufferDevice"; }
+    virtual StringView class_name() const override { return "FramebufferDevice"; }
 
     virtual bool can_read(const FileDescription&, size_t) const override final { return true; }
     virtual bool can_write(const FileDescription&, size_t) const override final { return true; }

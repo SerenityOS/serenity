@@ -72,7 +72,7 @@ String DiskPartition::device_name() const
     return String::formatted("{}{}", m_device->device_name(), partition_index + 1);
 }
 
-const char* DiskPartition::class_name() const
+StringView DiskPartition::class_name() const
 {
     return "DiskPartition";
 }

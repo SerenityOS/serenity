@@ -27,7 +27,7 @@ public:
     virtual void send_raw(ReadonlyBytes) override;
     virtual bool link_up() override { return m_link_up; }
 
-    virtual const char* purpose() const override { return class_name(); }
+    virtual StringView purpose() const override { return class_name(); }
 
 private:
     RTL8139NetworkAdapter(PCI::Address, u8 irq);

@@ -51,7 +51,7 @@ public:
     u8* framebuffer_data();
 
 private:
-    virtual const char* class_name() const override { return "VirtIOFrameBuffer"; }
+    virtual StringView class_name() const override { return "VirtIOFrameBuffer"; }
 
     VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne const& display_info() const;
     VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne& display_info();

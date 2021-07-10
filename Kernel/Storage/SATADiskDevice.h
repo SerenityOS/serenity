@@ -36,7 +36,7 @@ private:
     SATADiskDevice(const AHCIController&, const AHCIPort&, size_t sector_size, u64 max_addressable_block);
 
     // ^DiskDevice
-    virtual const char* class_name() const override;
+    virtual StringView class_name() const override;
     NonnullRefPtr<AHCIPort> m_port;
 };
 

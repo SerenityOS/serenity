@@ -112,7 +112,7 @@ private:
     SerialDevice(IOAddress base_addr, unsigned minor);
 
     // ^CharacterDevice
-    virtual const char* class_name() const override { return "SerialDevice"; }
+    virtual StringView class_name() const override { return "SerialDevice"; }
 
     void initialize();
     void set_interrupts(bool interrupt_enable);

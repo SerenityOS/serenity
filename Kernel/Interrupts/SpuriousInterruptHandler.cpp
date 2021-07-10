@@ -38,7 +38,7 @@ bool SpuriousInterruptHandler::eoi()
     return false;
 }
 
-const char* SpuriousInterruptHandler::purpose() const
+StringView SpuriousInterruptHandler::purpose() const
 {
     if (!m_real_handler)
         return "Spurious Interrupt Handler";
@@ -87,7 +87,7 @@ void SpuriousInterruptHandler::disable_interrupt_vector()
     m_responsible_irq_controller->disable(*this);
 }
 
-const char* SpuriousInterruptHandler::controller() const
+StringView SpuriousInterruptHandler::controller() const
 {
     if (m_responsible_irq_controller->type() == IRQControllerType::i82093AA)
         return "";

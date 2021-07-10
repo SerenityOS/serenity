@@ -29,7 +29,7 @@ public:
     virtual void send_raw(ReadonlyBytes) override;
     virtual bool link_up() override;
 
-    virtual const char* purpose() const override { return class_name(); }
+    virtual StringView purpose() const override { return class_name(); }
 
 protected:
     void setup_interrupts();

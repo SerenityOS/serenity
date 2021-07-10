@@ -45,8 +45,8 @@ public:
     virtual bool is_sharing_with_others() const = 0;
 
     virtual HandlerType type() const = 0;
-    virtual const char* purpose() const = 0;
-    virtual const char* controller() const = 0;
+    virtual StringView purpose() const = 0;
+    virtual StringView controller() const = 0;
 
     virtual bool eoi() = 0;
     ALWAYS_INLINE void increment_invoking_counter()

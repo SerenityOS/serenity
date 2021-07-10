@@ -105,7 +105,7 @@ private:
     virtual void set_cursor_style(VT::CursorStyle) override;
 
     // ^CharacterDevice
-    virtual const char* class_name() const override { return "VirtualConsole"; }
+    virtual StringView class_name() const override { return "VirtualConsole"; }
 
     // ^Device
     virtual String device_name() const override;

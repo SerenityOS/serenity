@@ -27,7 +27,7 @@ public:
 
     virtual ~E1000ENetworkAdapter() override;
 
-    virtual const char* purpose() const override { return class_name(); }
+    virtual StringView purpose() const override { return class_name(); }
 
 private:
     E1000ENetworkAdapter(PCI::Address, u8 irq);

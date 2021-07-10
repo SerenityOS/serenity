@@ -25,7 +25,7 @@ public:
     virtual void start_request(AsyncBlockDeviceRequest&) override;
 
     // ^DiskDevice
-    virtual const char* class_name() const override;
+    virtual StringView class_name() const override;
     virtual String device_name() const override;
 
     bool is_slave() const;

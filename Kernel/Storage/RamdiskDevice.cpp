@@ -28,7 +28,7 @@ RamdiskDevice::~RamdiskDevice()
 {
 }
 
-const char* RamdiskDevice::class_name() const
+StringView RamdiskDevice::class_name() const
 {
     return "RamdiskDevice";
 }

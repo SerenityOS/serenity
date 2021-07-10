@@ -32,7 +32,7 @@ public:
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const FileDescription&, size_t) const override { return true; }
 
-    virtual const char* purpose() const override { return class_name(); }
+    virtual StringView purpose() const override { return class_name(); }
 
     // ^Device
     virtual mode_t required_mode() const override { return 0220; }
@@ -43,7 +43,7 @@ private:
     virtual bool handle_irq(const RegisterState&) override;
 
     // ^CharacterDevice
-    virtual const char* class_name() const override { return "SB16"; }
+    virtual StringView class_name() const override { return "SB16"; }
 
     void initialize();
     void wait_for_irq();

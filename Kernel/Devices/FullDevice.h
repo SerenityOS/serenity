@@ -28,7 +28,7 @@ private:
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override { return true; }
-    virtual const char* class_name() const override { return "FullDevice"; }
+    virtual StringView class_name() const override { return "FullDevice"; }
 };
 
 }

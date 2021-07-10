@@ -67,7 +67,7 @@ public:
         IRQHandler::will_be_destroyed();
     }
 
-    virtual const char* purpose() const override
+    virtual StringView purpose() const override
     {
         if (TimeManagement::the().is_system_timer(*this))
             return "System Timer";
@@ -118,7 +118,7 @@ public:
         GenericInterruptHandler::will_be_destroyed();
     }
 
-    virtual const char* purpose() const override
+    virtual StringView purpose() const override
     {
         return model();
     }
@@ -134,7 +134,7 @@ public:
     virtual bool is_shared_handler() const override { return false; }
     virtual bool is_sharing_with_others() const override { return false; }
     virtual HandlerType type() const override { return HandlerType::IRQHandler; }
-    virtual const char* controller() const override { return nullptr; }
+    virtual StringView controller() const override { return nullptr; }
     virtual bool eoi() override;
 
     virtual u32 frequency() const override { return (u32)m_frequency; }

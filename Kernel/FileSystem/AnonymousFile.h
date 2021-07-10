@@ -22,7 +22,7 @@ public:
     virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, u64 offset, int prot, bool shared) override;
 
 private:
-    virtual const char* class_name() const override { return "AnonymousFile"; }
+    virtual StringView class_name() const override { return "AnonymousFile"; }
     virtual String absolute_path(const FileDescription&) const override { return ":anonymous-file:"; }
     virtual bool can_read(const FileDescription&, size_t) const override { return false; }
     virtual bool can_write(const FileDescription&, size_t) const override { return false; }
