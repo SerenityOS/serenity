@@ -25,7 +25,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<DMIEntryPointExposedBlob> DMIEntryPointExposedBlo
 }
 
 UNMAP_AFTER_INIT BIOSExposedComponent::BIOSExposedComponent(String name)
-    : SystemExposedComponent(name)
+    : SysFSComponent(name)
 {
 }
 

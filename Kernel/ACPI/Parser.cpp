@@ -54,7 +54,7 @@ OwnPtr<KBuffer> ExposedComponent::try_to_generate_buffer() const
 }
 
 UNMAP_AFTER_INIT ExposedComponent::ExposedComponent(String name, PhysicalAddress paddr, size_t table_size)
-    : SystemExposedComponent(name)
+    : SysFSComponent(name)
     , m_paddr(paddr)
     , m_length(table_size)
 {
@@ -69,7 +69,7 @@ UNMAP_AFTER_INIT void ExposedFolder::initialize()
 UNMAP_AFTER_INIT ExposedFolder::ExposedFolder()
     : SystemExposedFolder("acpi", SysFSComponentRegistry::the().root_folder())
 {
-    NonnullRefPtrVector<SystemExposedComponent> components;
+    NonnullRefPtrVector<SysFSComponent> components;
     size_t ssdt_count = 0;
     ACPI::Parser::the()->enumerate_static_tables([&](const StringView& signature, PhysicalAddress p_table, size_t length) {
         if (signature == "SSDT") {

@@ -407,7 +407,7 @@ NonnullRefPtr<ExposedAttribute> ExposedAttribute::create(String name, const Expo
 }
 
 ExposedAttribute::ExposedAttribute(String name, const ExposedDeviceFolder& device, size_t offset, size_t field_bytes_width)
-    : SystemExposedComponent(name)
+    : SysFSComponent(name)
     , m_device(device)
     , m_offset(offset)
     , m_field_bytes_width(field_bytes_width)

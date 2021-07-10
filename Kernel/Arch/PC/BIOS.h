@@ -58,7 +58,7 @@ namespace Kernel {
 MappedROM map_bios();
 MappedROM map_ebda();
 
-class BIOSExposedComponent : public SystemExposedComponent {
+class BIOSExposedComponent : public SysFSComponent {
 public:
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const override;
 

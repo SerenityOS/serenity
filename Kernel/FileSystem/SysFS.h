@@ -34,7 +34,7 @@ private:
 
 class SysFSComponentRegistry {
     friend class SysFS;
-    friend class SystemExposedComponent;
+    friend class SysFSComponent;
     friend class SystemExposedFolder;
     friend class SysFSRootFolder;
 
@@ -44,7 +44,7 @@ public:
     static void initialize();
 
     SysFSComponentRegistry();
-    void register_new_component(SystemExposedComponent&);
+    void register_new_component(SysFSComponent&);
 
     NonnullRefPtr<SystemExposedFolder> root_folder() { return m_root_folder; }
 
@@ -77,11 +77,11 @@ class SysFSInode : public Inode {
     friend class SysFSDirectoryInode;
 
 public:
-    static NonnullRefPtr<SysFSInode> create(SysFS const&, SystemExposedComponent const&);
+    static NonnullRefPtr<SysFSInode> create(SysFS const&, SysFSComponent const&);
     StringView name() const { return m_associated_component->name(); }
 
 protected:
-    SysFSInode(SysFS const&, SystemExposedComponent const&);
+    SysFSInode(SysFS const&, SysFSComponent const&);
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
@@ -96,7 +96,7 @@ protected:
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResult truncate(u64) override;
 
-    NonnullRefPtr<SystemExposedComponent> m_associated_component;
+    NonnullRefPtr<SysFSComponent> m_associated_component;
 };
 
 class SysFSDirectoryInode : public SysFSInode {
@@ -104,11 +104,11 @@ class SysFSDirectoryInode : public SysFSInode {
     friend class SysFSRootDirectoryInode;
 
 public:
-    static NonnullRefPtr<SysFSDirectoryInode> create(SysFS const&, SystemExposedComponent const&);
+    static NonnullRefPtr<SysFSDirectoryInode> create(SysFS const&, SysFSComponent const&);
     virtual ~SysFSDirectoryInode() override;
 
 protected:
-    SysFSDirectoryInode(SysFS const&, SystemExposedComponent const&);
+    SysFSDirectoryInode(SysFS const&, SysFSComponent const&);
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
