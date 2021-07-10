@@ -10,6 +10,7 @@ test("basic functionality", () => {
     expect(Date.parse("2020T23:59Z")).toBe(1577923140000);
 
     expect(Date.parse("+020000")).toBe(568971820800000);
+    expect(Date.parse("-000001")).toBe(-62198755200000);
     expect(Date.parse("+020000-01")).toBe(568971820800000);
     expect(Date.parse("+020000-01T00:00:00.000Z")).toBe(568971820800000);
 
