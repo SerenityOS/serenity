@@ -42,7 +42,7 @@ NonnullRefPtr<SysFSRootFolder> SysFSRootFolder::create()
 
 KResult SysFSRootFolder::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(SysFSComponentRegistry::the().m_lock);
+    Locker locker(SysFSComponentRegistry::the().get_lock());
     callback({ ".", { fsid, component_index() }, 0 });
     callback({ "..", { fsid, 0 }, 0 });
 
@@ -64,7 +64,7 @@ NonnullRefPtr<SysFS> SysFS::create()
 }
 
 SysFS::SysFS()
-    : m_root_inode(SysFSComponentRegistry::the().m_root_folder->to_inode(*this))
+    : m_root_inode(SysFSComponentRegistry::the().root_folder().to_inode(*this))
 {
     Locker locker(m_lock);
 }

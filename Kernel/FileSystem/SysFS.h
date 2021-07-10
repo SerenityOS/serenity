@@ -24,11 +24,6 @@ private:
 };
 
 class SysFSComponentRegistry {
-    friend class SysFS;
-    friend class SysFSComponent;
-    friend class SysFSDirectory;
-    friend class SysFSRootFolder;
-
 public:
     static SysFSComponentRegistry& the();
 
@@ -37,7 +32,8 @@ public:
     SysFSComponentRegistry();
     void register_new_component(SysFSComponent&);
 
-    NonnullRefPtr<SysFSDirectory> root_folder() { return m_root_folder; }
+    SysFSDirectory& root_folder() { return m_root_folder; }
+    Lock& get_lock() { return m_lock; }
 
 private:
     Lock m_lock;

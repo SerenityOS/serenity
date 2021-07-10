@@ -115,7 +115,7 @@ ProcFSInode::~ProcFSInode()
 }
 
 ProcFS::ProcFS()
-    : m_root_inode(ProcFSComponentsRegistrar::the().m_root_folder->to_inode(*this))
+    : m_root_inode(ProcFSComponentsRegistrar::the().root_folder().to_inode(*this))
 {
 }
 
