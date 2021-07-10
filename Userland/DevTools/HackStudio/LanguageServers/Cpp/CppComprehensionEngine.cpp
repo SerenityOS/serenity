@@ -220,13 +220,13 @@ bool CppComprehensionEngine::is_property(const ASTNode& node) const
     if (!node.parent()->is_member_expression())
         return false;
 
-    auto& parent = (MemberExpression&)(*node.parent());
+    auto& parent = verify_cast<MemberExpression>(*node.parent());
     return parent.property() == &node;
 }
 
 String CppComprehensionEngine::type_of_property(const DocumentData& document, const Identifier& identifier) const
 {
-    auto& parent = (const MemberExpression&)(*identifier.parent());
+    auto& parent = verify_cast<MemberExpression>(*identifier.parent());
     VERIFY(parent.object());
     auto properties = properties_of_type(document, type_of(document, *parent.object()));
     for (auto& prop : properties) {
@@ -234,15 +234,15 @@ String CppComprehensionEngine::type_of_property(const DocumentData& document, co
             continue;
         const Type* type { nullptr };
         if (prop.declaration->is_variable_declaration()) {
-            type = ((VariableDeclaration&)*prop.declaration).type();
+            type = verify_cast<VariableDeclaration>(*prop.declaration).type();
         }
         if (!type)
             continue;
         if (!type->is_named_type())
             continue;
 
-        VERIFY(((NamedType const&)*type).name());
-        return ((NamedType const&)*type).name()->full_name();
+        VERIFY(verify_cast<NamedType>(*type).name());
+        return verify_cast<NamedType>(*type).name()->full_name();
     }
     return {};
 }
@@ -253,10 +253,10 @@ String CppComprehensionEngine::type_of_variable(const Identifier& identifier) co
     while (current) {
         for (auto& decl : current->declarations()) {
             if (decl.is_variable_or_parameter_declaration()) {
-                auto& var_or_param = (VariableOrParameterDeclaration&)decl;
+                auto& var_or_param = verify_cast<VariableOrParameterDeclaration>(decl);
                 if (var_or_param.name() == identifier.name() && var_or_param.type()->is_named_type()) {
-                    VERIFY(((NamedType const&)(*var_or_param.type())).name());
-                    return ((NamedType const&)(*var_or_param.type())).name()->full_name();
+                    VERIFY(verify_cast<NamedType>(*var_or_param.type()).name());
+                    return verify_cast<NamedType>(*var_or_param.type()).name()->full_name();
                 }
             }
         }
@@ -268,7 +268,7 @@ String CppComprehensionEngine::type_of_variable(const Identifier& identifier) co
 String CppComprehensionEngine::type_of(const DocumentData& document, const Expression& expression) const
 {
     if (expression.is_member_expression()) {
-        auto& member_expression = (const MemberExpression&)expression;
+        auto& member_expression = verify_cast<MemberExpression>(expression);
         VERIFY(member_expression.property());
         if (member_expression.property()->is_identifier())
             return type_of_property(document, static_cast<const Identifier&>(*member_expression.property()));
@@ -305,7 +305,7 @@ Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::properties_of_typ
         return {};
     }
 
-    auto& struct_or_class = (StructOrClassDeclaration&)*decl;
+    auto& struct_or_class = verify_cast<StructOrClassDeclaration>(*decl);
     VERIFY(struct_or_class.name() == type_symbol.name);
 
     Vector<Symbol> properties;
@@ -474,7 +474,7 @@ RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentDa
         bool match_function = target_decl.value().type == TargetDeclaration::Function && symbol.declaration->is_function();
         bool match_variable = target_decl.value().type == TargetDeclaration::Variable && symbol.declaration->is_variable_declaration();
         bool match_type = target_decl.value().type == TargetDeclaration::Type && symbol.declaration->is_struct_or_class();
-        bool match_property = target_decl.value().type == TargetDeclaration::Property && symbol.declaration->parent()->is_declaration() && ((Declaration*)symbol.declaration->parent())->is_struct_or_class();
+        bool match_property = target_decl.value().type == TargetDeclaration::Property && symbol.declaration->parent()->is_declaration() && verify_cast<Declaration>(symbol.declaration->parent())->is_struct_or_class();
         bool match_parameter = target_decl.value().type == TargetDeclaration::Variable && symbol.declaration->is_parameter();
 
         if (match_property) {
@@ -752,7 +752,7 @@ Optional<CodeComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::ge
     FunctionCall* call_node { nullptr };
 
     if (node->is_function_call()) {
-        call_node = ((FunctionCall*)node.ptr());
+        call_node = verify_cast<FunctionCall>(node.ptr());
 
         auto token = document.parser().token_at(cpp_position);
 
@@ -766,7 +766,7 @@ Optional<CodeComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::ge
     while (!call_node && node) {
         auto parent_is_call = node->parent() && node->parent()->is_function_call();
         if (parent_is_call) {
-            call_node = (FunctionCall*)node->parent();
+            call_node = verify_cast<FunctionCall>(node->parent());
             break;
         }
         node = node->parent();
@@ -801,14 +801,14 @@ Optional<CppComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::get
     const Identifier* callee = nullptr;
     VERIFY(call_node.callee());
     if (call_node.callee()->is_identifier()) {
-        callee = (const Identifier*)call_node.callee();
+        callee = verify_cast<Identifier>(call_node.callee());
     } else if (call_node.callee()->is_name()) {
-        callee = ((Name const&)*call_node.callee()).name();
+        callee = verify_cast<Name>(*call_node.callee()).name();
     } else if (call_node.callee()->is_member_expression()) {
-        auto& member_exp = ((MemberExpression const&)*call_node.callee());
+        auto& member_exp = verify_cast<MemberExpression>(*call_node.callee());
         VERIFY(member_exp.property());
         if (member_exp.property()->is_identifier()) {
-            callee = (const Identifier*)member_exp.property();
+            callee = verify_cast<Identifier>(member_exp.property());
         }
     }
 
@@ -828,7 +828,7 @@ Optional<CppComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::get
         return {};
     }
 
-    auto& func_decl = (FunctionDeclaration&)*decl;
+    auto& func_decl = verify_cast<FunctionDeclaration>(*decl);
     auto document_of_declaration = get_document_data(func_decl.filename());
 
     FunctionParamsHint hint {};
