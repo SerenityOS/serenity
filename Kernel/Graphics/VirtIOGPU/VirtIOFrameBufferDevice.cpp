@@ -128,6 +128,8 @@ void VirtIOFrameBufferDevice::set_buffer(int buffer_index)
         return;
     m_current_buffer = &buffer;
     m_gpu.set_scanout_resource(m_scanout.value(), buffer.resource_id, display_info().rect);
+    m_gpu.flush_displayed_image(buffer.dirty_rect, buffer.resource_id); // QEMU SDL backend requires this (as per spec)
+    buffer.dirty_rect = {};
 }
 
 int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
@@ -196,6 +198,18 @@ int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr a
                 if (&buffer == m_current_buffer) {
                     // Flushing directly to screen
                     flush_displayed_image(dirty_rect, buffer);
+                    buffer.dirty_rect = {};
+                } else {
+                    if (buffer.dirty_rect.width == 0 || buffer.dirty_rect.height == 0) {
+                        buffer.dirty_rect = dirty_rect;
+                    } else {
+                        auto current_dirty_right = buffer.dirty_rect.x + buffer.dirty_rect.width;
+                        auto current_dirty_bottom = buffer.dirty_rect.y + buffer.dirty_rect.height;
+                        buffer.dirty_rect.x = min(buffer.dirty_rect.x, dirty_rect.x);
+                        buffer.dirty_rect.y = min(buffer.dirty_rect.y, dirty_rect.y);
+                        buffer.dirty_rect.width = max(current_dirty_right, dirty_rect.x + dirty_rect.width) - buffer.dirty_rect.x;
+                        buffer.dirty_rect.height = max(current_dirty_bottom, dirty_rect.y + dirty_rect.height) - buffer.dirty_rect.y;
+                    }
                 }
             }
         }
