@@ -297,8 +297,17 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     case GUI::Event::WM_WindowIconBitmapChanged: {
         auto& changed_event = static_cast<GUI::WMWindowIconBitmapChangedEvent&>(event);
         if (auto* window = WindowList::the().window(identifier)) {
-            if (window->button())
-                window->button()->set_icon(changed_event.bitmap());
+            if (window->button()) {
+                auto icon = changed_event.bitmap();
+                if (icon->height() != taskbar_icon_size() || icon->width() != taskbar_icon_size()) {
+                    auto sw = taskbar_icon_size() / (float)icon->width();
+                    auto sh = taskbar_icon_size() / (float)icon->height();
+                    auto scaled_bitmap = icon->scaled(sw, sh);
+                    window->button()->set_icon(move(scaled_bitmap));
+                } else {
+                    window->button()->set_icon(icon);
+                }
+            }
         }
         break;
     }
