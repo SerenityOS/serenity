@@ -1305,6 +1305,36 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
         || match(TokenType::DoublePipeEquals)
         || match(TokenType::DoubleQuestionMarkEquals));
     consume();
+
+    if (assignment_op == AssignmentOp::Assignment) {
+        auto synthesize_binding_pattern = [this](Expression const& expression) -> RefPtr<BindingPattern> {
+            // Clear any syntax error that has occurred in the range that 'expression' spans.
+            m_state.errors.remove_all_matching([range = expression.source_range()](auto const& error) {
+                return error.position.has_value() && range.contains(*error.position);
+            });
+            // Make a parser and parse the source for this expression as a binding pattern.
+            auto source = m_state.lexer.source().substring_view(expression.source_range().start.offset - 2, expression.source_range().end.offset - expression.source_range().start.offset);
+            Lexer lexer { source, m_state.lexer.filename(), expression.source_range().start.line, expression.source_range().start.column };
+            Parser parser { lexer };
+            auto result = parser.parse_binding_pattern();
+            if (parser.has_errors()) {
+                for (auto& error : parser.errors())
+                    syntax_error(move(error.message), move(error.position));
+            }
+            return result;
+        };
+        if (is<ArrayExpression>(*lhs) || is<ObjectExpression>(*lhs)) {
+            auto binding_pattern = synthesize_binding_pattern(*lhs);
+            if (binding_pattern) {
+                auto rhs = parse_expression(min_precedence, associativity);
+                return create_ast_node<AssignmentExpression>(
+                    { m_state.current_token.filename(), rule_start.position(), position() },
+                    assignment_op,
+                    binding_pattern.release_nonnull(),
+                    move(rhs));
+            }
+        }
+    }
     if (!is<Identifier>(*lhs) && !is<MemberExpression>(*lhs) && !is<CallExpression>(*lhs)) {
         syntax_error("Invalid left-hand side in assignment");
     } else if (m_state.strict_mode && is<Identifier>(*lhs)) {
@@ -2398,7 +2428,8 @@ Position Parser::position() const
 {
     return {
         m_state.current_token.line_number(),
-        m_state.current_token.line_column()
+        m_state.current_token.line_column(),
+        m_state.current_token.offset(),
     };
 }
 

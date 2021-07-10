@@ -998,13 +998,21 @@ public:
     {
     }
 
+    AssignmentExpression(SourceRange source_range, AssignmentOp op, NonnullRefPtr<BindingPattern> lhs, NonnullRefPtr<Expression> rhs)
+        : Expression(source_range)
+        , m_op(op)
+        , m_lhs(move(lhs))
+        , m_rhs(move(rhs))
+    {
+    }
+
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     AssignmentOp m_op;
-    NonnullRefPtr<Expression> m_lhs;
+    Variant<NonnullRefPtr<Expression>, NonnullRefPtr<BindingPattern>> m_lhs;
     NonnullRefPtr<Expression> m_rhs;
 };
 

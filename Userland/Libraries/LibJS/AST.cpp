@@ -1484,11 +1484,18 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
+#define EXECUTE_LHS()                                                     \
+    do {                                                                  \
+        if (auto* ptr = m_lhs.get_pointer<NonnullRefPtr<Expression>>()) { \
+            lhs_result = (*ptr)->execute(interpreter, global_object);     \
+            if (interpreter.exception())                                  \
+                return {};                                                \
+        }                                                                 \
+    } while (0)
+
 #define EXECUTE_LHS_AND_RHS()                                    \
     do {                                                         \
-        lhs_result = m_lhs->execute(interpreter, global_object); \
-        if (interpreter.exception())                             \
-            return {};                                           \
+        EXECUTE_LHS();                                           \
         rhs_result = m_rhs->execute(interpreter, global_object); \
         if (interpreter.exception())                             \
             return {};                                           \
@@ -1548,25 +1555,19 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         rhs_result = unsigned_right_shift(global_object, lhs_result, rhs_result);
         break;
     case AssignmentOp::AndAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS();
         if (!lhs_result.to_boolean())
             return lhs_result;
         rhs_result = m_rhs->execute(interpreter, global_object);
         break;
     case AssignmentOp::OrAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS();
         if (lhs_result.to_boolean())
             return lhs_result;
         rhs_result = m_rhs->execute(interpreter, global_object);
         break;
     case AssignmentOp::NullishAssignment:
-        lhs_result = m_lhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
+        EXECUTE_LHS();
         if (!lhs_result.is_nullish())
             return lhs_result;
         rhs_result = m_rhs->execute(interpreter, global_object);
@@ -1575,26 +1576,42 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
     if (interpreter.exception())
         return {};
 
-    auto reference = m_lhs->to_reference(interpreter, global_object);
-    if (interpreter.exception())
-        return {};
+    return m_lhs.visit(
+        [&](NonnullRefPtr<Expression>& lhs) -> JS::Value {
+            auto reference = lhs->to_reference(interpreter, global_object);
+            if (interpreter.exception())
+                return {};
 
-    if (m_op == AssignmentOp::Assignment) {
-        rhs_result = m_rhs->execute(interpreter, global_object);
-        if (interpreter.exception())
-            return {};
-    }
+            if (m_op == AssignmentOp::Assignment) {
+                rhs_result = m_rhs->execute(interpreter, global_object);
+                if (interpreter.exception())
+                    return {};
+            }
 
-    if (reference.is_unresolvable()) {
-        interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::InvalidLeftHandAssignment);
-        return {};
-    }
+            if (reference.is_unresolvable()) {
+                interpreter.vm().throw_exception<ReferenceError>(global_object, ErrorType::InvalidLeftHandAssignment);
+                return {};
+            }
 
-    reference.put_value(global_object, rhs_result);
-    if (interpreter.exception())
-        return {};
+            reference.put_value(global_object, rhs_result);
+            if (interpreter.exception())
+                return {};
 
-    return rhs_result;
+            return rhs_result;
+        },
+        [&](NonnullRefPtr<BindingPattern>& pattern) -> JS::Value {
+            VERIFY(m_op == AssignmentOp::Assignment);
+
+            rhs_result = m_rhs->execute(interpreter, global_object);
+            if (interpreter.exception())
+                return {};
+
+            interpreter.vm().assign(pattern, rhs_result, global_object);
+            if (interpreter.exception())
+                return {};
+
+            return rhs_result;
+        });
 }
 
 Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -1693,7 +1710,7 @@ void AssignmentExpression::dump(int indent) const
     ASTNode::dump(indent);
     print_indent(indent + 1);
     outln("{}", op_string);
-    m_lhs->dump(indent + 1);
+    m_lhs.visit([&](auto& lhs) { lhs->dump(indent + 1); });
     m_rhs->dump(indent + 1);
 }
 
@@ -2395,5 +2412,4 @@ void ScopeNode::add_hoisted_function(NonnullRefPtr<FunctionDeclaration> hoisted_
 {
     m_hoisted_functions.append(hoisted_function);
 }
-
 }
