@@ -107,8 +107,36 @@ create_build_dir() {
     cmake -GNinja "${CMAKE_ARGS[@]}" -S . -B "$BUILD_DIR"
 }
 
+pick_gcc() {
+    local BEST_VERSION=0
+    local BEST_GCC_CANDIDATE=""
+    for GCC_CANDIDATE in gcc gcc-10 gcc-11 gcc-12 /usr/local/bin/gcc-11 /opt/homebrew/bin/gcc-11; do
+        if ! command -v $GCC_CANDIDATE >/dev/null 2>&1; then
+            continue
+        fi
+        if $GCC_CANDIDATE --version 2>&1 | grep "Apple clang" >/dev/null; then
+            continue
+        fi
+        if ! $GCC_CANDIDATE -dumpversion >/dev/null 2>&1; then
+            continue
+        fi
+        local VERSION="$($GCC_CANDIDATE -dumpversion)"
+        local MAJOR_VERSION="${VERSION%%.*}"
+        if [ "$MAJOR_VERSION" -gt "$BEST_VERSION" ]; then
+            BEST_VERSION=$MAJOR_VERSION
+            BEST_GCC_CANDIDATE="$GCC_CANDIDATE"
+        fi
+    done
+    CMAKE_ARGS+=("-DCMAKE_C_COMPILER=$BEST_GCC_CANDIDATE")
+    CMAKE_ARGS+=("-DCMAKE_CXX_COMPILER=${BEST_GCC_CANDIDATE/gcc/g++}")
+    if [ "$BEST_VERSION" -lt 10 ]; then
+        die "Please make sure that GCC version 10.2 or higher is installed."
+    fi
+}
+
 cmd_with_target() {
     is_valid_target || ( >&2 echo "Unknown target: $TARGET"; usage )
+    pick_gcc
 
     if [ ! -d "$SERENITY_SOURCE_DIR" ]; then
         SERENITY_SOURCE_DIR="$(get_top_dir)"
