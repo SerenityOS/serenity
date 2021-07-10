@@ -147,7 +147,7 @@ void AbstractView::begin_editing(const ModelIndex& index)
     m_edit_widget = m_editing_delegate->widget();
     add_child(*m_edit_widget);
     m_edit_widget->move_to_back();
-    m_edit_widget_content_rect = content_rect(index).translated(frame_thickness(), frame_thickness());
+    m_edit_widget_content_rect = editing_rect(index).translated(frame_thickness(), frame_thickness());
     update_edit_widget_position();
     m_edit_widget->set_focus(true);
     m_editing_delegate->will_begin_editing();
