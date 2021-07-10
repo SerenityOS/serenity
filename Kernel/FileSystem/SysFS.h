@@ -6,14 +6,9 @@
 
 #pragma once
 
-#include <AK/Singleton.h>
-#include <AK/String.h>
-#include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/SystemExposed.h>
-#include <Kernel/TTY/SlavePTY.h>
 
 namespace Kernel {
 
@@ -97,7 +92,6 @@ protected:
 
 class SysFSDirectoryInode : public SysFSInode {
     friend class SysFS;
-    friend class SysFSRootDirectoryInode;
 
 public:
     static NonnullRefPtr<SysFSDirectoryInode> create(SysFS const&, SysFSComponent const&);

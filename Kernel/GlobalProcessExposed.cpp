@@ -29,6 +29,7 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/ProcessExposed.h>
 #include <Kernel/Sections.h>
+#include <Kernel/TTY/TTY.h>
 
 namespace Kernel {
 
