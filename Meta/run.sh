@@ -53,6 +53,7 @@ if command -v wslpath >/dev/null; then
     case "$SERENITY_QEMU_BIN" in
         /mnt/c/*)
             [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max,vmx=off"
+            SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE disable_virtio"
     esac
 fi
 
