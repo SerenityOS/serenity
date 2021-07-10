@@ -5,6 +5,7 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/ByteReader.h>
 #include <AK/Debug.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Socket.h>
@@ -58,7 +59,9 @@ bool Socket::connect(const String& hostname, int port)
         return false;
     }
 
-    IPv4Address host_address((const u8*)hostent->h_addr_list[0]);
+    // On macOS, the pointer in the hostent structure is misaligned. Load it using ByteReader to avoid UB
+    auto* host_addr = AK::ByteReader::load_pointer<u8 const>(reinterpret_cast<u8 const*>(&hostent->h_addr_list[0]));
+    IPv4Address host_address(host_addr);
     dbgln_if(CSOCKET_DEBUG, "Socket::connect: Resolved '{}' to {}", hostname, host_address);
     return connect(host_address, port);
 }
