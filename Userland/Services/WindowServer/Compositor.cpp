@@ -591,15 +591,28 @@ void Compositor::flush(Screen& screen)
     }
     screen_data.m_have_flush_rects = false;
 
+    auto screen_rect = screen.rect();
     if (m_flash_flush) {
-        for (auto& rect : screen_data.m_flush_rects.rects())
+        Gfx::IntRect bounding_flash;
+        for (auto& rect : screen_data.m_flush_rects.rects()) {
             screen_data.m_front_painter->fill_rect(rect, Color::Yellow);
-        for (auto& rect : screen_data.m_flush_transparent_rects.rects())
+            bounding_flash = bounding_flash.united(rect);
+        }
+        for (auto& rect : screen_data.m_flush_transparent_rects.rects()) {
             screen_data.m_front_painter->fill_rect(rect, Color::Green);
-        usleep(10000);
+            bounding_flash = bounding_flash.united(rect);
+        }
+        if (!bounding_flash.is_empty()) {
+            if (device_can_flush_buffers) {
+                // If the device needs a flush we need to let it know that we
+                // modified the front buffer!
+                bounding_flash.translate_by(-screen_rect.location());
+                screen.flush_display_front_buffer((!screen_data.m_screen_can_set_buffer || !screen_data.m_buffers_are_flipped) ? 0 : 1, bounding_flash);
+            }
+            usleep(10000);
+        }
     }
 
-    auto screen_rect = screen.rect();
     if (device_can_flush_buffers && screen_data.m_screen_can_set_buffer) {
         if (!screen_data.m_has_flipped) {
             // If we have not flipped any buffers before, we should be flushing
@@ -680,7 +693,7 @@ void Compositor::flush(Screen& screen)
         // Instead, we skip this step and just keep track of them until shortly before the next flip.
         // If we however don't support flipping buffers then we need to flush the changed areas right
         // now so that they can be sent to the device.
-        screen.flush_display(screen_data.m_buffers_are_flipped ? 0 : 1);
+        screen.flush_display(screen_data.m_buffers_are_flipped ? 1 : 0);
     }
 }
 

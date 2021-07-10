@@ -413,4 +413,25 @@ void Screen::flush_display(int buffer_index)
     fb_data.too_many_pending_flush_rects = false;
     fb_data.pending_flush_rects.clear_with_capacity();
 }
+
+void Screen::flush_display_front_buffer(int front_buffer_index, Gfx::IntRect& rect)
+{
+    VERIFY(m_can_device_flush_buffers);
+    auto scale_factor = this->scale_factor();
+    FBRect flush_rect {
+        x : (unsigned)(rect.x() * scale_factor),
+        y : (unsigned)(rect.y() * scale_factor),
+        width : (unsigned)(rect.width() * scale_factor),
+        height : (unsigned)(rect.height() * scale_factor)
+    };
+
+    if (fb_flush_buffers(m_framebuffer_fd, front_buffer_index, &flush_rect, 1) < 0) {
+        int err = errno;
+        if (err == ENOTSUP)
+            m_can_device_flush_buffers = false;
+        else
+            dbgln("Screen #{}: Error ({}) flushing display front buffer: {}", index(), err, strerror(err));
+    }
+}
+
 }
