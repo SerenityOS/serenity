@@ -26,9 +26,9 @@ public:
     ~Custody();
 
     Custody* parent() { return m_parent.ptr(); }
-    const Custody* parent() const { return m_parent.ptr(); }
+    Custody const* parent() const { return m_parent.ptr(); }
     Inode& inode() { return *m_inode; }
-    const Inode& inode() const { return *m_inode; }
+    Inode const& inode() const { return *m_inode; }
     StringView name() const { return m_name->view(); }
     OwnPtr<KString> try_create_absolute_path() const;
     String absolute_path() const;
