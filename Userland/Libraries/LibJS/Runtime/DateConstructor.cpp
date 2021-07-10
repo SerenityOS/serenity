@@ -290,7 +290,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
 {
     struct timeval tv;
     gettimeofday(&tv, nullptr);
-    return Value(tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0);
+    return Value(floor(tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0));
 }
 
 // 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
