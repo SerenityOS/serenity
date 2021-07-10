@@ -583,7 +583,7 @@ NonnullRefPtr<ProcFSProcessDirectory> ProcFSProcessDirectory::create(const Proce
 }
 
 ProcFSProcessDirectory::ProcFSProcessDirectory(const Process& process)
-    : ProcFSExposedDirectory(String::formatted("{:d}", process.pid().value()), ProcFSComponentsRegistrar::the().root_folder())
+    : ProcFSExposedDirectory(String::formatted("{:d}", process.pid().value()), ProcFSComponentRegistry::the().root_folder())
     , m_associated_process(process)
 {
 }

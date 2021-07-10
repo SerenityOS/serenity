@@ -26,7 +26,7 @@ static size_t s_allocate_inode_index()
     return s_next_inode_index.value();
 }
 
-InodeIndex ProcFSComponentsRegistrar::allocate_inode_index() const
+InodeIndex ProcFSComponentRegistry::allocate_inode_index() const
 {
     return s_allocate_inode_index();
 }
@@ -242,7 +242,7 @@ RefPtr<ProcFSExposedComponent> ProcFSExposedDirectory::lookup(StringView name)
 
 KResult ProcFSExposedDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(ProcFSComponentsRegistrar::the().get_lock());
+    Locker locker(ProcFSComponentRegistry::the().get_lock());
     auto parent_folder = m_parent_folder.strong_ref();
     if (parent_folder.is_null())
         return KResult(EINVAL);

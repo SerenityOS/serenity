@@ -144,7 +144,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
     SysFSComponentRegistry::initialize();
-    ProcFSComponentsRegistrar::initialize();
+    ProcFSComponentRegistry::initialize();
     PCI::initialize();
     PCISerialDevice::detect();
 

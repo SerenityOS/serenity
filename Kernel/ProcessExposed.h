@@ -28,15 +28,15 @@ class ProcFSRootDirectory;
 class ProcFSBusDirectory;
 class ProcFSSystemBoolean;
 
-class ProcFSComponentsRegistrar {
+class ProcFSComponentRegistry {
 public:
-    static ProcFSComponentsRegistrar& the();
+    static ProcFSComponentRegistry& the();
 
     static void initialize();
 
     InodeIndex allocate_inode_index() const;
 
-    ProcFSComponentsRegistrar();
+    ProcFSComponentRegistry();
     void register_new_bus_folder(ProcFSExposedDirectory&);
 
     const ProcFSBusDirectory& buses_folder() const;
@@ -92,7 +92,7 @@ class ProcFSExposedDirectory
     : public ProcFSExposedComponent
     , public Weakable<ProcFSExposedDirectory> {
     friend class ProcFSProcessDirectory;
-    friend class ProcFSComponentsRegistrar;
+    friend class ProcFSComponentRegistry;
 
 public:
     virtual KResultOr<size_t> entries_count() const override { return m_components.size(); };
@@ -135,7 +135,7 @@ class ProcFSProcessInformation;
 
 class ProcFSProcessDirectory final
     : public ProcFSExposedDirectory {
-    friend class ProcFSComponentsRegistrar;
+    friend class ProcFSComponentRegistry;
     friend class ProcFSRootDirectory;
     friend class ProcFSProcessInformation;
     friend class ProcFSProcessPledge;
@@ -170,7 +170,7 @@ private:
 class ProcFSRootDirectory;
 
 class ProcFSBusDirectory : public ProcFSExposedDirectory {
-    friend class ProcFSComponentsRegistrar;
+    friend class ProcFSComponentRegistry;
 
 public:
     static NonnullRefPtr<ProcFSBusDirectory> must_create(const ProcFSRootDirectory& parent_folder);
@@ -180,7 +180,7 @@ private:
 };
 
 class ProcFSRootDirectory final : public ProcFSExposedDirectory {
-    friend class ProcFSComponentsRegistrar;
+    friend class ProcFSComponentRegistry;
 
 public:
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;

@@ -19,42 +19,42 @@
 
 namespace Kernel {
 
-static AK::Singleton<ProcFSComponentsRegistrar> s_the;
+static AK::Singleton<ProcFSComponentRegistry> s_the;
 
-ProcFSComponentsRegistrar& ProcFSComponentsRegistrar::the()
+ProcFSComponentRegistry& ProcFSComponentRegistry::the()
 {
     return *s_the;
 }
 
-UNMAP_AFTER_INIT void ProcFSComponentsRegistrar::initialize()
+UNMAP_AFTER_INIT void ProcFSComponentRegistry::initialize()
 {
     VERIFY(!s_the.is_initialized());
     s_the.ensure_instance();
 }
 
-UNMAP_AFTER_INIT ProcFSComponentsRegistrar::ProcFSComponentsRegistrar()
+UNMAP_AFTER_INIT ProcFSComponentRegistry::ProcFSComponentRegistry()
     : m_root_folder(ProcFSRootDirectory::must_create())
 {
 }
 
-const ProcFSBusDirectory& ProcFSComponentsRegistrar::buses_folder() const
+const ProcFSBusDirectory& ProcFSComponentRegistry::buses_folder() const
 {
     return *m_root_folder->m_buses_folder;
 }
 
-void ProcFSComponentsRegistrar::register_new_bus_folder(ProcFSExposedDirectory& new_bus_folder)
+void ProcFSComponentRegistry::register_new_bus_folder(ProcFSExposedDirectory& new_bus_folder)
 {
     VERIFY(!m_root_folder->m_buses_folder.is_null());
     m_root_folder->m_buses_folder->m_components.append(new_bus_folder);
 }
 
-void ProcFSComponentsRegistrar::register_new_process(Process& new_process)
+void ProcFSComponentRegistry::register_new_process(Process& new_process)
 {
     Locker locker(m_lock);
     m_root_folder->m_process_folders.append(ProcFSProcessDirectory::create(new_process));
 }
 
-void ProcFSComponentsRegistrar::unregister_process(Process& deleted_process)
+void ProcFSComponentRegistry::unregister_process(Process& deleted_process)
 {
     auto process_folder = m_root_folder->process_folder_for(deleted_process).release_nonnull();
     process_folder->prepare_for_deletion();
@@ -115,7 +115,7 @@ ProcFSInode::~ProcFSInode()
 }
 
 ProcFS::ProcFS()
-    : m_root_inode(ProcFSComponentsRegistrar::the().root_folder().to_inode(*this))
+    : m_root_inode(ProcFSComponentRegistry::the().root_folder().to_inode(*this))
 {
 }
 
