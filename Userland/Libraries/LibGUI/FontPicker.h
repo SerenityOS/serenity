@@ -22,11 +22,12 @@ public:
     void set_font(const Gfx::Font*);
 
 private:
-    FontPicker(Window* parent_window = nullptr, const Gfx::Font* current_font = nullptr, bool fixed_width_only = false);
+    FontPicker(Window* parent_window = nullptr, const Gfx::Font* current_font = nullptr, bool fixed_width_only = false, bool fixed_size_only = false);
 
     void update_font();
 
     const bool m_fixed_width_only;
+    const bool m_fixed_size_only;
 
     RefPtr<Gfx::Font> m_font;
 

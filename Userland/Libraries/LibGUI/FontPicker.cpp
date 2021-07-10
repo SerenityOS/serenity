@@ -18,9 +18,10 @@
 
 namespace GUI {
 
-FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, bool fixed_width_only)
+FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, bool fixed_width_only, bool fixed_size_only)
     : Dialog(parent_window)
     , m_fixed_width_only(fixed_width_only)
+    , m_fixed_size_only(fixed_size_only)
 {
     set_title("Font picker");
     resize(430, 280);
@@ -51,6 +52,8 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
         if (m_fixed_width_only && !typeface.is_fixed_width())
             return;
+        if (m_fixed_size_only && !typeface.is_fixed_size())
+            return;
         if (!m_families.contains_slow(typeface.family()))
             m_families.append(typeface.family());
     });
@@ -62,6 +65,8 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
         m_weights.clear();
         Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
             if (m_fixed_width_only && !typeface.is_fixed_width())
+                return;
+            if (m_fixed_size_only && !typeface.is_fixed_size())
                 return;
             if (typeface.family() == m_family.value() && !m_weights.contains_slow(typeface.weight())) {
                 m_weights.append(typeface.weight());
@@ -85,6 +90,8 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
         dbgln("Selected weight: {}", m_weight.value());
         Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
             if (m_fixed_width_only && !typeface.is_fixed_width())
+                return;
+            if (m_fixed_size_only && !typeface.is_fixed_size())
                 return;
             if (typeface.family() == m_family.value() && (int)typeface.weight() == m_weight.value()) {
                 font_is_fixed_size = typeface.is_fixed_size();
