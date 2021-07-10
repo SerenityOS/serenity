@@ -926,6 +926,8 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 move_one_left();
                 return true;
             }
+            case (KeyCode::Key_P):
+                put_before();
             default:
                 break;
             }
@@ -986,7 +988,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 m_previous_key = event.key();
                 return true;
             case (KeyCode::Key_P):
-                put();
+                put_after();
                 return true;
             case (KeyCode::Key_PageUp):
                 move_page_up();
@@ -1237,7 +1239,22 @@ void VimEditingEngine::yank(TextRange range)
     m_yank_buffer = m_editor->document().text_in_range(range);
 }
 
-void VimEditingEngine::put()
+void VimEditingEngine::put_before()
+{
+    if (m_yank_type == YankType::Line) {
+        move_to_logical_line_beginning();
+        StringBuilder sb = StringBuilder(m_yank_buffer.length() + 1);
+        sb.append(m_yank_buffer);
+        sb.append_code_point(0x0A);
+        m_editor->insert_at_cursor_or_replace_selection(sb.to_string());
+        m_editor->set_cursor({ m_editor->cursor().line(), m_editor->current_line().first_non_whitespace_column() });
+    } else {
+        m_editor->insert_at_cursor_or_replace_selection(m_yank_buffer);
+        move_one_left();
+    }
+}
+
+void VimEditingEngine::put_after()
 {
     if (m_yank_type == YankType::Line) {
         move_to_logical_line_end();
