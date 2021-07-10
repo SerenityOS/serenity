@@ -44,6 +44,8 @@ To run SerenityOS in a WHPX-enabled QEMU VM:
   or by running the following command in an elevated PowerShell session: \
 `dism /Online /Enable-Feature /All /FeatureName:HypervisorPlatform`
 
+![WHPX Windows Feature](WHPX_Feature.png)
+
 - Specify QEMU acceleration option: \
 `export SERENITY_VIRT_TECH_ARG="-accel whpx,kernel-irqchip=off"`
 
