@@ -331,8 +331,9 @@ int main(int argc, char** argv)
     FILE* file;
     if (String("-") == filename) {
         file = stdin;
-    } else {
-        file = fopen(filename, "r");
+    } else if ((file = fopen(filename, "r")) == nullptr) {
+        perror("fopen");
+        exit(1);
     }
 
     if (pledge("stdio tty", nullptr) < 0) {
