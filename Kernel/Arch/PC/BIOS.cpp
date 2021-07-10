@@ -75,32 +75,32 @@ OwnPtr<KBuffer> SMBIOSExposedTable::try_to_generate_buffer() const
     return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_smbios_structure_table_length });
 }
 
-UNMAP_AFTER_INIT void BIOSExposedFolder::set_dmi_64_bit_entry_initialization_values()
+UNMAP_AFTER_INIT void BIOSExposedDirectory::set_dmi_64_bit_entry_initialization_values()
 {
-    dbgln("BIOSExposedFolder: SMBIOS 64bit Entry point @ {}", m_dmi_entry_point);
+    dbgln("BIOSExposedDirectory: SMBIOS 64bit Entry point @ {}", m_dmi_entry_point);
     auto smbios_entry = map_typed<SMBIOS::EntryPoint64bit>(m_dmi_entry_point, SMBIOS_SEARCH_AREA_SIZE);
     m_smbios_structure_table = PhysicalAddress(smbios_entry.ptr()->table_ptr);
     m_dmi_entry_point_length = smbios_entry.ptr()->length;
     m_smbios_structure_table_length = smbios_entry.ptr()->table_maximum_size;
 }
 
-UNMAP_AFTER_INIT void BIOSExposedFolder::set_dmi_32_bit_entry_initialization_values()
+UNMAP_AFTER_INIT void BIOSExposedDirectory::set_dmi_32_bit_entry_initialization_values()
 {
-    dbgln("BIOSExposedFolder: SMBIOS 32bit Entry point @ {}", m_dmi_entry_point);
+    dbgln("BIOSExposedDirectory: SMBIOS 32bit Entry point @ {}", m_dmi_entry_point);
     auto smbios_entry = map_typed<SMBIOS::EntryPoint32bit>(m_dmi_entry_point, SMBIOS_SEARCH_AREA_SIZE);
     m_smbios_structure_table = PhysicalAddress(smbios_entry.ptr()->legacy_structure.smbios_table_ptr);
     m_dmi_entry_point_length = smbios_entry.ptr()->length;
     m_smbios_structure_table_length = smbios_entry.ptr()->legacy_structure.smboios_table_length;
 }
 
-UNMAP_AFTER_INIT void BIOSExposedFolder::initialize()
+UNMAP_AFTER_INIT void BIOSExposedDirectory::initialize()
 {
-    auto bios_folder = adopt_ref(*new (nothrow) BIOSExposedFolder());
+    auto bios_folder = adopt_ref(*new (nothrow) BIOSExposedDirectory());
     SysFSComponentRegistry::the().register_new_component(bios_folder);
     bios_folder->create_components();
 }
 
-void BIOSExposedFolder::create_components()
+void BIOSExposedDirectory::create_components()
 {
     auto dmi_entry_point = DMIEntryPointExposedBlob::create(m_dmi_entry_point, m_dmi_entry_point_length);
     m_components.append(dmi_entry_point);
@@ -108,16 +108,16 @@ void BIOSExposedFolder::create_components()
     m_components.append(smbios_table);
 }
 
-size_t BIOSExposedFolder::dmi_entry_point_length() const
+size_t BIOSExposedDirectory::dmi_entry_point_length() const
 {
     return m_dmi_entry_point_length;
 }
-size_t BIOSExposedFolder::smbios_structure_table_length() const
+size_t BIOSExposedDirectory::smbios_structure_table_length() const
 {
     return m_smbios_structure_table_length;
 }
 
-UNMAP_AFTER_INIT void BIOSExposedFolder::initialize_dmi_exposer()
+UNMAP_AFTER_INIT void BIOSExposedDirectory::initialize_dmi_exposer()
 {
     VERIFY(!(m_dmi_entry_point.is_null()));
     if (m_using_64bit_dmi_entry_point) {
@@ -125,16 +125,16 @@ UNMAP_AFTER_INIT void BIOSExposedFolder::initialize_dmi_exposer()
     } else {
         set_dmi_32_bit_entry_initialization_values();
     }
-    dbgln("BIOSExposedFolder: Data table @ {}", m_smbios_structure_table);
+    dbgln("BIOSExposedDirectory: Data table @ {}", m_smbios_structure_table);
 }
 
-OwnPtr<KBuffer> BIOSExposedFolder::smbios_structure_table() const
+OwnPtr<KBuffer> BIOSExposedDirectory::smbios_structure_table() const
 {
     auto dmi_blob = map_typed<u8>(m_smbios_structure_table, m_smbios_structure_table_length);
     return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_smbios_structure_table_length });
 }
 
-UNMAP_AFTER_INIT BIOSExposedFolder::BIOSExposedFolder()
+UNMAP_AFTER_INIT BIOSExposedDirectory::BIOSExposedDirectory()
     : SysFSDirectory("bios", SysFSComponentRegistry::the().root_folder())
 {
     auto entry_32bit = find_dmi_entry32bit_point();
@@ -150,12 +150,12 @@ UNMAP_AFTER_INIT BIOSExposedFolder::BIOSExposedFolder()
     initialize_dmi_exposer();
 }
 
-UNMAP_AFTER_INIT Optional<PhysicalAddress> BIOSExposedFolder::find_dmi_entry64bit_point()
+UNMAP_AFTER_INIT Optional<PhysicalAddress> BIOSExposedDirectory::find_dmi_entry64bit_point()
 {
     return map_bios().find_chunk_starting_with("_SM3_", 16);
 }
 
-UNMAP_AFTER_INIT Optional<PhysicalAddress> BIOSExposedFolder::find_dmi_entry32bit_point()
+UNMAP_AFTER_INIT Optional<PhysicalAddress> BIOSExposedDirectory::find_dmi_entry32bit_point()
 {
     return map_bios().find_chunk_starting_with("_SM_", 16);
 }

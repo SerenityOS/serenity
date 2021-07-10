@@ -25,7 +25,7 @@ UNMAP_AFTER_INIT void SysFSComponentRegistry::initialize()
 }
 
 UNMAP_AFTER_INIT SysFSComponentRegistry::SysFSComponentRegistry()
-    : m_root_folder(SysFSRootFolder::create())
+    : m_root_folder(SysFSRootDirectory::create())
 {
 }
 
@@ -35,12 +35,12 @@ UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SysFSCompon
     m_root_folder->m_components.append(component);
 }
 
-NonnullRefPtr<SysFSRootFolder> SysFSRootFolder::create()
+NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
 {
-    return adopt_ref(*new (nothrow) SysFSRootFolder);
+    return adopt_ref(*new (nothrow) SysFSRootDirectory);
 }
 
-KResult SysFSRootFolder::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+KResult SysFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(SysFSComponentRegistry::the().get_lock());
     callback({ ".", { fsid, component_index() }, 0 });
@@ -53,7 +53,7 @@ KResult SysFSRootFolder::traverse_as_directory(unsigned fsid, Function<bool(File
     return KSuccess;
 }
 
-SysFSRootFolder::SysFSRootFolder()
+SysFSRootDirectory::SysFSRootDirectory()
     : SysFSDirectory(".")
 {
 }

@@ -17,12 +17,12 @@
 namespace Kernel {
 namespace ACPI {
 
-class ExposedFolder : public SysFSDirectory {
+class ExposedDirectory : public SysFSDirectory {
 public:
     static void initialize();
 
 private:
-    ExposedFolder();
+    ExposedDirectory();
 };
 
 class ExposedComponent : public SysFSComponent {

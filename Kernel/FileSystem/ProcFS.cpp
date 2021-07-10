@@ -33,7 +33,7 @@ UNMAP_AFTER_INIT void ProcFSComponentsRegistrar::initialize()
 }
 
 UNMAP_AFTER_INIT ProcFSComponentsRegistrar::ProcFSComponentsRegistrar()
-    : m_root_folder(ProcFSRootFolder::must_create())
+    : m_root_folder(ProcFSRootDirectory::must_create())
 {
 }
 
@@ -42,7 +42,7 @@ const ProcFSBusDirectory& ProcFSComponentsRegistrar::buses_folder() const
     return *m_root_folder->m_buses_folder;
 }
 
-void ProcFSComponentsRegistrar::register_new_bus_folder(ProcFSExposedFolder& new_bus_folder)
+void ProcFSComponentsRegistrar::register_new_bus_folder(ProcFSExposedDirectory& new_bus_folder)
 {
     VERIFY(!m_root_folder->m_buses_folder.is_null());
     m_root_folder->m_buses_folder->m_components.append(new_bus_folder);
@@ -51,7 +51,7 @@ void ProcFSComponentsRegistrar::register_new_bus_folder(ProcFSExposedFolder& new
 void ProcFSComponentsRegistrar::register_new_process(Process& new_process)
 {
     Locker locker(m_lock);
-    m_root_folder->m_process_folders.append(ProcFSProcessFolder::create(new_process));
+    m_root_folder->m_process_folders.append(ProcFSProcessDirectory::create(new_process));
 }
 
 void ProcFSComponentsRegistrar::unregister_process(Process& deleted_process)
@@ -59,8 +59,8 @@ void ProcFSComponentsRegistrar::unregister_process(Process& deleted_process)
     auto process_folder = m_root_folder->process_folder_for(deleted_process).release_nonnull();
     process_folder->prepare_for_deletion();
     process_folder->m_list_node.remove();
-    dbgln_if(PROCFS_DEBUG, "ProcFSExposedFolder ref_count now: {}", process_folder->ref_count());
-    // Note: Let's ensure we are the last holder of the ProcFSProcessFolder object before it can be deleted for good
+    dbgln_if(PROCFS_DEBUG, "ProcFSExposedDirectory ref_count now: {}", process_folder->ref_count());
+    // Note: Let's ensure we are the last holder of the ProcFSProcessDirectory object before it can be deleted for good
     VERIFY(process_folder->ref_count() == 1);
 }
 

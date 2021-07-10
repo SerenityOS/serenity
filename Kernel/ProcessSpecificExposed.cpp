@@ -20,13 +20,13 @@ class ProcFSProcessStacks;
 class ProcFSThreadStack final : public ProcFSProcessInformation {
 public:
     // Note: We pass const ProcFSProcessStacks& to enforce creation with this type of folder
-    static NonnullRefPtr<ProcFSThreadStack> create(const ProcFSProcessFolder& process_folder, const ProcFSProcessStacks&, const Thread& thread)
+    static NonnullRefPtr<ProcFSThreadStack> create(const ProcFSProcessDirectory& process_folder, const ProcFSProcessStacks&, const Thread& thread)
     {
         return adopt_ref(*new (nothrow) ProcFSThreadStack(process_folder, thread));
     }
 
 private:
-    explicit ProcFSThreadStack(const ProcFSProcessFolder& process_folder, const Thread& thread)
+    explicit ProcFSThreadStack(const ProcFSProcessDirectory& process_folder, const Thread& thread)
         : ProcFSProcessInformation(String::formatted("{}", thread.tid()), process_folder)
         , m_associated_thread(thread)
     {
@@ -53,7 +53,7 @@ private:
     NonnullRefPtr<Thread> m_associated_thread;
 };
 
-class ProcFSProcessStacks final : public ProcFSExposedFolder {
+class ProcFSProcessStacks final : public ProcFSExposedDirectory {
     // Note: This folder is special, because everything that is created here is dynamic!
     // This means we don't register anything in the m_components Vector, and every inode
     // is created in runtime when called to get it
@@ -65,7 +65,7 @@ public:
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
-    static NonnullRefPtr<ProcFSProcessStacks> create(const ProcFSProcessFolder& parent_folder)
+    static NonnullRefPtr<ProcFSProcessStacks> create(const ProcFSProcessDirectory& parent_folder)
     {
         auto folder = adopt_ref(*new (nothrow) ProcFSProcessStacks(parent_folder));
         return folder;
@@ -73,17 +73,17 @@ public:
 
     virtual void prepare_for_deletion() override
     {
-        ProcFSExposedFolder::prepare_for_deletion();
+        ProcFSExposedDirectory::prepare_for_deletion();
         m_process_folder.clear();
     }
 
 private:
-    ProcFSProcessStacks(const ProcFSProcessFolder& parent_folder)
-        : ProcFSExposedFolder("stacks"sv, parent_folder)
+    ProcFSProcessStacks(const ProcFSProcessDirectory& parent_folder)
+        : ProcFSExposedDirectory("stacks"sv, parent_folder)
         , m_process_folder(parent_folder)
     {
     }
-    WeakPtr<ProcFSProcessFolder> m_process_folder;
+    WeakPtr<ProcFSProcessDirectory> m_process_folder;
     mutable Lock m_lock;
 };
 
@@ -156,7 +156,7 @@ private:
     NonnullRefPtr<FileDescription> m_associated_file_description;
 };
 
-class ProcFSProcessFileDescriptions final : public ProcFSExposedFolder {
+class ProcFSProcessFileDescriptions final : public ProcFSExposedDirectory {
     // Note: This folder is special, because everything that is created here is dynamic!
     // This means we don't register anything in the m_components Vector, and every inode
     // is created in runtime when called to get it
@@ -168,24 +168,24 @@ public:
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
-    static NonnullRefPtr<ProcFSProcessFileDescriptions> create(const ProcFSProcessFolder& parent_folder)
+    static NonnullRefPtr<ProcFSProcessFileDescriptions> create(const ProcFSProcessDirectory& parent_folder)
     {
         return adopt_ref(*new (nothrow) ProcFSProcessFileDescriptions(parent_folder));
     }
 
     virtual void prepare_for_deletion() override
     {
-        ProcFSExposedFolder::prepare_for_deletion();
+        ProcFSExposedDirectory::prepare_for_deletion();
         m_process_folder.clear();
     }
 
 private:
-    explicit ProcFSProcessFileDescriptions(const ProcFSProcessFolder& parent_folder)
-        : ProcFSExposedFolder("fd"sv, parent_folder)
+    explicit ProcFSProcessFileDescriptions(const ProcFSProcessDirectory& parent_folder)
+        : ProcFSExposedDirectory("fd"sv, parent_folder)
         , m_process_folder(parent_folder)
     {
     }
-    WeakPtr<ProcFSProcessFolder> m_process_folder;
+    WeakPtr<ProcFSProcessDirectory> m_process_folder;
     mutable Lock m_lock;
 };
 
@@ -244,13 +244,13 @@ RefPtr<ProcFSExposedComponent> ProcFSProcessFileDescriptions::lookup(StringView 
 
 class ProcFSProcessPledge final : public ProcFSProcessInformation {
 public:
-    static NonnullRefPtr<ProcFSProcessPledge> create(const ProcFSProcessFolder& parent_folder)
+    static NonnullRefPtr<ProcFSProcessPledge> create(const ProcFSProcessDirectory& parent_folder)
     {
         return adopt_ref(*new (nothrow) ProcFSProcessPledge(parent_folder));
     }
 
 private:
-    explicit ProcFSProcessPledge(const ProcFSProcessFolder& parent_folder)
+    explicit ProcFSProcessPledge(const ProcFSProcessDirectory& parent_folder)
         : ProcFSProcessInformation("pledge"sv, parent_folder)
     {
     }
@@ -280,13 +280,13 @@ private:
 
 class ProcFSProcessUnveil final : public ProcFSProcessInformation {
 public:
-    static NonnullRefPtr<ProcFSProcessUnveil> create(const ProcFSProcessFolder& parent_folder)
+    static NonnullRefPtr<ProcFSProcessUnveil> create(const ProcFSProcessDirectory& parent_folder)
     {
         return adopt_ref(*new (nothrow) ProcFSProcessUnveil(parent_folder));
     }
 
 private:
-    explicit ProcFSProcessUnveil(const ProcFSProcessFolder& parent_folder)
+    explicit ProcFSProcessUnveil(const ProcFSProcessDirectory& parent_folder)
         : ProcFSProcessInformation("unveil"sv, parent_folder)
     {
     }
@@ -321,13 +321,13 @@ private:
 
 class ProcFSProcessPerformanceEvents final : public ProcFSProcessInformation {
 public:
-    static NonnullRefPtr<ProcFSProcessPerformanceEvents> create(const ProcFSProcessFolder& parent_folder)
+    static NonnullRefPtr<ProcFSProcessPerformanceEvents> create(const ProcFSProcessDirectory& parent_folder)
     {
         return adopt_ref(*new (nothrow) ProcFSProcessPerformanceEvents(parent_folder));
     }
 
 private:
-    explicit ProcFSProcessPerformanceEvents(const ProcFSProcessFolder& parent_folder)
+    explicit ProcFSProcessPerformanceEvents(const ProcFSProcessDirectory& parent_folder)
         : ProcFSProcessInformation("perf_events"sv, parent_folder)
     {
     }
@@ -348,13 +348,13 @@ private:
 
 class ProcFSProcessOverallFileDescriptions final : public ProcFSProcessInformation {
 public:
-    static NonnullRefPtr<ProcFSProcessOverallFileDescriptions> create(const ProcFSProcessFolder& parent_folder)
+    static NonnullRefPtr<ProcFSProcessOverallFileDescriptions> create(const ProcFSProcessDirectory& parent_folder)
     {
         return adopt_ref(*new (nothrow) ProcFSProcessOverallFileDescriptions(parent_folder));
     }
 
 private:
-    explicit ProcFSProcessOverallFileDescriptions(const ProcFSProcessFolder& parent_folder)
+    explicit ProcFSProcessOverallFileDescriptions(const ProcFSProcessDirectory& parent_folder)
         : ProcFSProcessInformation("fds"sv, parent_folder)
     {
     }
@@ -398,13 +398,13 @@ private:
 
 class ProcFSProcessRoot final : public ProcFSExposedLink {
 public:
-    static NonnullRefPtr<ProcFSProcessRoot> create(const ProcFSProcessFolder& parent_folder)
+    static NonnullRefPtr<ProcFSProcessRoot> create(const ProcFSProcessDirectory& parent_folder)
     {
         return adopt_ref(*new (nothrow) ProcFSProcessRoot(parent_folder));
     }
 
 private:
-    explicit ProcFSProcessRoot(const ProcFSProcessFolder& parent_folder)
+    explicit ProcFSProcessRoot(const ProcFSProcessDirectory& parent_folder)
         : ProcFSExposedLink("root"sv)
         , m_parent_process_directory(parent_folder)
     {
@@ -417,18 +417,18 @@ private:
         builder.append_bytes(parent_folder->m_associated_process->root_directory_relative_to_global_root().absolute_path().to_byte_buffer());
         return true;
     }
-    WeakPtr<ProcFSProcessFolder> m_parent_process_directory;
+    WeakPtr<ProcFSProcessDirectory> m_parent_process_directory;
 };
 
 class ProcFSProcessVirtualMemory final : public ProcFSProcessInformation {
 public:
-    static NonnullRefPtr<ProcFSProcessRoot> create(const ProcFSProcessFolder& parent_folder)
+    static NonnullRefPtr<ProcFSProcessRoot> create(const ProcFSProcessDirectory& parent_folder)
     {
         return adopt_ref(*new (nothrow) ProcFSProcessVirtualMemory(parent_folder));
     }
 
 private:
-    explicit ProcFSProcessVirtualMemory(const ProcFSProcessFolder& parent_folder)
+    explicit ProcFSProcessVirtualMemory(const ProcFSProcessDirectory& parent_folder)
         : ProcFSProcessInformation("vm"sv, parent_folder)
     {
     }
@@ -484,13 +484,13 @@ private:
 
 class ProcFSProcessCurrentWorkDirectory final : public ProcFSExposedLink {
 public:
-    static NonnullRefPtr<ProcFSProcessCurrentWorkDirectory> create(const ProcFSProcessFolder& parent_folder)
+    static NonnullRefPtr<ProcFSProcessCurrentWorkDirectory> create(const ProcFSProcessDirectory& parent_folder)
     {
         return adopt_ref(*new (nothrow) ProcFSProcessCurrentWorkDirectory(parent_folder));
     }
 
 private:
-    explicit ProcFSProcessCurrentWorkDirectory(const ProcFSProcessFolder& parent_folder)
+    explicit ProcFSProcessCurrentWorkDirectory(const ProcFSProcessDirectory& parent_folder)
         : ProcFSExposedLink("cwd"sv)
         , m_parent_process_directory(parent_folder)
     {
@@ -504,12 +504,12 @@ private:
         return true;
     }
 
-    WeakPtr<ProcFSProcessFolder> m_parent_process_directory;
+    WeakPtr<ProcFSProcessDirectory> m_parent_process_directory;
 };
 
 class ProcFSProcessBinary final : public ProcFSExposedLink {
 public:
-    static NonnullRefPtr<ProcFSProcessBinary> create(const ProcFSProcessFolder& parent_folder)
+    static NonnullRefPtr<ProcFSProcessBinary> create(const ProcFSProcessDirectory& parent_folder)
     {
         return adopt_ref(*new (nothrow) ProcFSProcessBinary(parent_folder));
     }
@@ -525,7 +525,7 @@ public:
     }
 
 private:
-    explicit ProcFSProcessBinary(const ProcFSProcessFolder& parent_folder)
+    explicit ProcFSProcessBinary(const ProcFSProcessDirectory& parent_folder)
         : ProcFSExposedLink("exe"sv)
         , m_parent_process_directory(parent_folder)
     {
@@ -542,10 +542,10 @@ private:
         return true;
     }
 
-    WeakPtr<ProcFSProcessFolder> m_parent_process_directory;
+    WeakPtr<ProcFSProcessDirectory> m_parent_process_directory;
 };
 
-void ProcFSProcessFolder::on_attach()
+void ProcFSProcessDirectory::on_attach()
 {
     VERIFY(m_components.size() == 0);
     m_components.append(ProcFSProcessPledge::create(*this));
@@ -560,30 +560,30 @@ void ProcFSProcessFolder::on_attach()
     m_components.append(ProcFSProcessStacks::create(*this));
 }
 
-RefPtr<ProcFSExposedComponent> ProcFSProcessFolder::lookup(StringView name)
+RefPtr<ProcFSExposedComponent> ProcFSProcessDirectory::lookup(StringView name)
 {
     // Note: we need to allocate all sub components when doing a lookup, because
     // for some reason, the caller may not call ProcFSInode::attach method before calling this.
     if (m_components.size() == 0)
         on_attach();
-    return ProcFSExposedFolder::lookup(name);
+    return ProcFSExposedDirectory::lookup(name);
 }
 
-KResult ProcFSProcessFolder::refresh_data(FileDescription&) const
+KResult ProcFSProcessDirectory::refresh_data(FileDescription&) const
 {
     if (m_components.size() != 0)
         return KSuccess;
-    const_cast<ProcFSProcessFolder&>(*this).on_attach();
+    const_cast<ProcFSProcessDirectory&>(*this).on_attach();
     return KSuccess;
 }
 
-NonnullRefPtr<ProcFSProcessFolder> ProcFSProcessFolder::create(const Process& process)
+NonnullRefPtr<ProcFSProcessDirectory> ProcFSProcessDirectory::create(const Process& process)
 {
-    return adopt_ref_if_nonnull(new (nothrow) ProcFSProcessFolder(process)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) ProcFSProcessDirectory(process)).release_nonnull();
 }
 
-ProcFSProcessFolder::ProcFSProcessFolder(const Process& process)
-    : ProcFSExposedFolder(String::formatted("{:d}", process.pid().value()), ProcFSComponentsRegistrar::the().root_folder())
+ProcFSProcessDirectory::ProcFSProcessDirectory(const Process& process)
+    : ProcFSExposedDirectory(String::formatted("{:d}", process.pid().value()), ProcFSComponentsRegistrar::the().root_folder())
     , m_associated_process(process)
 {
 }

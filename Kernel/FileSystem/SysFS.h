@@ -12,15 +12,15 @@
 
 namespace Kernel {
 
-class SysFSRootFolder final : public SysFSDirectory {
+class SysFSRootDirectory final : public SysFSDirectory {
     friend class SysFSComponentRegistry;
 
 public:
-    static NonnullRefPtr<SysFSRootFolder> create();
+    static NonnullRefPtr<SysFSRootDirectory> create();
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
 
 private:
-    SysFSRootFolder();
+    SysFSRootDirectory();
 };
 
 class SysFSComponentRegistry {
@@ -37,7 +37,7 @@ public:
 
 private:
     Lock m_lock;
-    NonnullRefPtr<SysFSRootFolder> m_root_folder;
+    NonnullRefPtr<SysFSRootDirectory> m_root_folder;
 };
 
 class SysFS final : public FileSystem {

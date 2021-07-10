@@ -69,11 +69,11 @@ static constexpr u16 UHCI_PORTSC_SUSPEND = 0x1000;
 static constexpr u8 UHCI_NUMBER_OF_ISOCHRONOUS_TDS = 128;
 static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 
-class ProcFSUSBBusFolder;
-static ProcFSUSBBusFolder* s_procfs_usb_bus_folder;
+class ProcFSUSBBusDirectory;
+static ProcFSUSBBusDirectory* s_procfs_usb_bus_folder;
 
 class ProcFSUSBDeviceInformation : public ProcFSGlobalInformation {
-    friend class ProcFSUSBBusFolder;
+    friend class ProcFSUSBBusDirectory;
 
 public:
     virtual ~ProcFSUSBDeviceInformation() override {};
@@ -115,7 +115,7 @@ protected:
     RefPtr<USB::Device> m_device;
 };
 
-class ProcFSUSBBusFolder final : public ProcFSExposedFolder {
+class ProcFSUSBBusDirectory final : public ProcFSExposedDirectory {
     friend class ProcFSComponentsRegistrar;
 
 public:
@@ -128,7 +128,7 @@ public:
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
 private:
-    ProcFSUSBBusFolder(const ProcFSBusDirectory&);
+    ProcFSUSBBusDirectory(const ProcFSBusDirectory&);
 
     RefPtr<ProcFSUSBDeviceInformation> device_node_for(USB::Device& device);
 
@@ -136,12 +136,12 @@ private:
     mutable SpinLock<u8> m_lock;
 };
 
-KResultOr<size_t> ProcFSUSBBusFolder::entries_count() const
+KResultOr<size_t> ProcFSUSBBusDirectory::entries_count() const
 {
     ScopedSpinLock lock(m_lock);
     return m_device_nodes.size_slow();
 }
-KResult ProcFSUSBBusFolder::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+KResult ProcFSUSBBusDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     ScopedSpinLock lock(m_lock);
     auto parent_folder = m_parent_folder.strong_ref();
@@ -156,7 +156,7 @@ KResult ProcFSUSBBusFolder::traverse_as_directory(unsigned fsid, Function<bool(F
     }
     return KSuccess;
 }
-RefPtr<ProcFSExposedComponent> ProcFSUSBBusFolder::lookup(StringView name)
+RefPtr<ProcFSExposedComponent> ProcFSUSBBusDirectory::lookup(StringView name)
 {
     ScopedSpinLock lock(m_lock);
     for (auto& device_node : m_device_nodes) {
@@ -167,7 +167,7 @@ RefPtr<ProcFSExposedComponent> ProcFSUSBBusFolder::lookup(StringView name)
     return {};
 }
 
-RefPtr<ProcFSUSBDeviceInformation> ProcFSUSBBusFolder::device_node_for(USB::Device& device)
+RefPtr<ProcFSUSBDeviceInformation> ProcFSUSBBusDirectory::device_node_for(USB::Device& device)
 {
     RefPtr<USB::Device> checked_device = device;
     for (auto& device_node : m_device_nodes) {
@@ -177,14 +177,14 @@ RefPtr<ProcFSUSBDeviceInformation> ProcFSUSBBusFolder::device_node_for(USB::Devi
     return {};
 }
 
-void ProcFSUSBBusFolder::plug(USB::Device& new_device)
+void ProcFSUSBBusDirectory::plug(USB::Device& new_device)
 {
     ScopedSpinLock lock(m_lock);
     auto device_node = device_node_for(new_device);
     VERIFY(!device_node);
     m_device_nodes.append(ProcFSUSBDeviceInformation::create(new_device));
 }
-void ProcFSUSBBusFolder::unplug(USB::Device& deleted_device)
+void ProcFSUSBBusDirectory::unplug(USB::Device& deleted_device)
 {
     ScopedSpinLock lock(m_lock);
     auto device_node = device_node_for(deleted_device);
@@ -192,14 +192,14 @@ void ProcFSUSBBusFolder::unplug(USB::Device& deleted_device)
     device_node->m_list_node.remove();
 }
 
-UNMAP_AFTER_INIT ProcFSUSBBusFolder::ProcFSUSBBusFolder(const ProcFSBusDirectory& buses_folder)
-    : ProcFSExposedFolder("usb"sv, buses_folder)
+UNMAP_AFTER_INIT ProcFSUSBBusDirectory::ProcFSUSBBusDirectory(const ProcFSBusDirectory& buses_folder)
+    : ProcFSExposedDirectory("usb"sv, buses_folder)
 {
 }
 
-UNMAP_AFTER_INIT void ProcFSUSBBusFolder::initialize()
+UNMAP_AFTER_INIT void ProcFSUSBBusDirectory::initialize()
 {
-    auto folder = adopt_ref(*new ProcFSUSBBusFolder(ProcFSComponentsRegistrar::the().buses_folder()));
+    auto folder = adopt_ref(*new ProcFSUSBBusDirectory(ProcFSComponentsRegistrar::the().buses_folder()));
     ProcFSComponentsRegistrar::the().register_new_bus_folder(folder);
     s_procfs_usb_bus_folder = folder;
 }
@@ -221,7 +221,7 @@ UNMAP_AFTER_INIT void UHCIController::detect()
 
     // FIXME: We create the /proc/bus/usb representation here, but it should really be handled
     // in a more broad singleton than this once we refactor things in USB subsystem.
-    ProcFSUSBBusFolder::initialize();
+    ProcFSUSBBusDirectory::initialize();
 
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())

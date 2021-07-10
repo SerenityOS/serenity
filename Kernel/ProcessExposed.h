@@ -23,16 +23,16 @@ namespace Kernel {
 
 class ProcFS;
 class ProcFSExposedComponent;
-class ProcFSExposedFolder;
-class ProcFSRootFolder;
+class ProcFSExposedDirectory;
+class ProcFSRootDirectory;
 class ProcFSBusDirectory;
 class ProcFSSystemBoolean;
 
 class ProcFSComponentsRegistrar {
     friend class ProcFS;
     friend class ProcFSExposedComponent;
-    friend class ProcFSExposedFolder;
-    friend class ProcFSRootFolder;
+    friend class ProcFSExposedDirectory;
+    friend class ProcFSRootDirectory;
 
 public:
     static ProcFSComponentsRegistrar& the();
@@ -42,18 +42,18 @@ public:
     InodeIndex allocate_inode_index() const;
 
     ProcFSComponentsRegistrar();
-    void register_new_bus_folder(ProcFSExposedFolder&);
+    void register_new_bus_folder(ProcFSExposedDirectory&);
 
     const ProcFSBusDirectory& buses_folder() const;
 
     void register_new_process(Process&);
     void unregister_process(Process&);
 
-    ProcFSRootFolder& root_folder() { return *m_root_folder; }
+    ProcFSRootDirectory& root_folder() { return *m_root_folder; }
 
 private:
     Lock m_lock;
-    NonnullRefPtr<ProcFSRootFolder> m_root_folder;
+    NonnullRefPtr<ProcFSRootDirectory> m_root_folder;
 };
 
 class ProcFSExposedComponent : public RefCounted<ProcFSExposedComponent> {
@@ -92,10 +92,10 @@ private:
     InodeIndex m_component_index {};
 };
 
-class ProcFSExposedFolder
+class ProcFSExposedDirectory
     : public ProcFSExposedComponent
-    , public Weakable<ProcFSExposedFolder> {
-    friend class ProcFSProcessFolder;
+    , public Weakable<ProcFSExposedDirectory> {
+    friend class ProcFSProcessDirectory;
     friend class ProcFSComponentsRegistrar;
 
 public:
@@ -115,10 +115,10 @@ public:
     virtual NonnullRefPtr<Inode> to_inode(const ProcFS& procfs_instance) const override final;
 
 protected:
-    explicit ProcFSExposedFolder(StringView name);
-    ProcFSExposedFolder(StringView name, const ProcFSExposedFolder& parent_folder);
+    explicit ProcFSExposedDirectory(StringView name);
+    ProcFSExposedDirectory(StringView name, const ProcFSExposedDirectory& parent_folder);
     NonnullRefPtrVector<ProcFSExposedComponent> m_components;
-    WeakPtr<ProcFSExposedFolder> m_parent_folder;
+    WeakPtr<ProcFSExposedDirectory> m_parent_folder;
 };
 
 class ProcFSExposedLink : public ProcFSExposedComponent {
@@ -134,13 +134,13 @@ protected:
     mutable Lock m_lock { "ProcFSLink" };
 };
 
-class ProcFSRootFolder;
+class ProcFSRootDirectory;
 class ProcFSProcessInformation;
 
-class ProcFSProcessFolder final
-    : public ProcFSExposedFolder {
+class ProcFSProcessDirectory final
+    : public ProcFSExposedDirectory {
     friend class ProcFSComponentsRegistrar;
-    friend class ProcFSRootFolder;
+    friend class ProcFSRootDirectory;
     friend class ProcFSProcessInformation;
     friend class ProcFSProcessPledge;
     friend class ProcFSProcessUnveil;
@@ -155,7 +155,7 @@ class ProcFSProcessFolder final
     friend class ProcFSProcessStacks;
 
 public:
-    static NonnullRefPtr<ProcFSProcessFolder> create(const Process&);
+    static NonnullRefPtr<ProcFSProcessDirectory> create(const Process&);
     NonnullRefPtr<Process> associated_process() { return m_associated_process; }
 
     virtual uid_t owner_user() const override { return m_associated_process->uid(); }
@@ -165,40 +165,40 @@ public:
 
 private:
     void on_attach();
-    IntrusiveListNode<ProcFSProcessFolder, RefPtr<ProcFSProcessFolder>> m_list_node;
+    IntrusiveListNode<ProcFSProcessDirectory, RefPtr<ProcFSProcessDirectory>> m_list_node;
 
-    explicit ProcFSProcessFolder(const Process&);
+    explicit ProcFSProcessDirectory(const Process&);
     NonnullRefPtr<Process> m_associated_process;
 };
 
-class ProcFSRootFolder;
+class ProcFSRootDirectory;
 
-class ProcFSBusDirectory : public ProcFSExposedFolder {
+class ProcFSBusDirectory : public ProcFSExposedDirectory {
     friend class ProcFSComponentsRegistrar;
 
 public:
-    static NonnullRefPtr<ProcFSBusDirectory> must_create(const ProcFSRootFolder& parent_folder);
+    static NonnullRefPtr<ProcFSBusDirectory> must_create(const ProcFSRootDirectory& parent_folder);
 
 private:
-    ProcFSBusDirectory(const ProcFSRootFolder& parent_folder);
+    ProcFSBusDirectory(const ProcFSRootDirectory& parent_folder);
 };
 
-class ProcFSRootFolder final : public ProcFSExposedFolder {
+class ProcFSRootDirectory final : public ProcFSExposedDirectory {
     friend class ProcFSComponentsRegistrar;
 
 public:
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
-    RefPtr<ProcFSProcessFolder> process_folder_for(Process&);
-    static NonnullRefPtr<ProcFSRootFolder> must_create();
-    virtual ~ProcFSRootFolder();
+    RefPtr<ProcFSProcessDirectory> process_folder_for(Process&);
+    static NonnullRefPtr<ProcFSRootDirectory> must_create();
+    virtual ~ProcFSRootDirectory();
 
 private:
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    ProcFSRootFolder();
+    ProcFSRootDirectory();
 
     RefPtr<ProcFSBusDirectory> m_buses_folder;
-    IntrusiveList<ProcFSProcessFolder, RefPtr<ProcFSProcessFolder>, &ProcFSProcessFolder::m_list_node> m_process_folders;
+    IntrusiveList<ProcFSProcessDirectory, RefPtr<ProcFSProcessDirectory>, &ProcFSProcessDirectory::m_list_node> m_process_folders;
 };
 
 class ProcFSGlobalInformation : public ProcFSExposedComponent {
@@ -247,7 +247,7 @@ public:
     virtual gid_t owner_group() const override { return m_parent_folder.strong_ref()->m_associated_process->gid(); }
 
 protected:
-    ProcFSProcessInformation(StringView name, const ProcFSProcessFolder& process_folder)
+    ProcFSProcessInformation(StringView name, const ProcFSProcessDirectory& process_folder)
         : ProcFSExposedComponent(name)
         , m_parent_folder(process_folder)
     {
@@ -256,7 +256,7 @@ protected:
     virtual KResult refresh_data(FileDescription&) const override;
     virtual bool output(KBufferBuilder& builder) = 0;
 
-    WeakPtr<ProcFSProcessFolder> m_parent_folder;
+    WeakPtr<ProcFSProcessDirectory> m_parent_folder;
     mutable SpinLock<u8> m_refresh_lock;
 };
 
