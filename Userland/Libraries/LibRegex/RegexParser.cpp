@@ -481,12 +481,20 @@ bool PosixBasicParser::parse_one_char_or_collation_element(ByteCode& bytecode, s
 
     Vector<CompareTypeAndValuePair> values;
     size_t bracket_minimum_length = 0;
-    if (!AbstractPosixParser::parse_bracket_expression(values, bracket_minimum_length))
-        return false;
 
-    bytecode.insert_bytecode_compare_values(move(values));
-    match_length_minimum += bracket_minimum_length;
-    return !has_error();
+    if (match(TokenType::LeftBracket)) {
+        consume();
+        if (!AbstractPosixParser::parse_bracket_expression(values, bracket_minimum_length))
+            return false;
+
+        consume(TokenType::RightBracket, Error::MismatchingBracket);
+
+        bytecode.insert_bytecode_compare_values(move(values));
+        match_length_minimum += bracket_minimum_length;
+        return !has_error();
+    }
+
+    return set_error(Error::InvalidPattern);
 }
 
 // =============================
