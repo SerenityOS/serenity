@@ -122,7 +122,7 @@ T ClientConnection::prompt_helper(Optional<String> const& user_picked_file, Core
         if (file.is_error()) {
             dbgln("FileSystemAccessServer: Couldn't open {}, error {}", user_picked_file.value(), file.error());
 
-            return { errno, Optional<IPC::File> {}, Optional<String> {} };
+            return { errno, Optional<IPC::File> {}, user_picked_file.value() };
         }
 
         auto maybe_permissions = m_approved_files.get(user_picked_file.value());
