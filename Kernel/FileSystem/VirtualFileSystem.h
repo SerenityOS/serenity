@@ -86,9 +86,7 @@ private:
 
     KResult traverse_directory_inode(Inode&, Function<bool(FileSystem::DirectoryEntryView const&)>);
 
-    Mount* find_mount_for_host(Inode&);
     Mount* find_mount_for_host(InodeIdentifier);
-    Mount* find_mount_for_guest(Inode&);
     Mount* find_mount_for_guest(InodeIdentifier);
 
     Lock m_lock { "VFSLock" };

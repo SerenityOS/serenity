@@ -82,7 +82,7 @@ KResult VirtualFileSystem::remount(Custody& mount_point, int new_flags)
 
     dbgln("VirtualFileSystem: Remounting {}", mount_point.try_create_absolute_path());
 
-    Mount* mount = find_mount_for_guest(mount_point.inode());
+    Mount* mount = find_mount_for_guest(mount_point.inode().identifier());
     if (!mount)
         return ENODEV;
 
@@ -139,28 +139,10 @@ bool VirtualFileSystem::mount_root(FileSystem& fs)
     return true;
 }
 
-auto VirtualFileSystem::find_mount_for_host(Inode& inode) -> Mount*
-{
-    for (auto& mount : m_mounts) {
-        if (mount.host() == &inode)
-            return &mount;
-    }
-    return nullptr;
-}
-
 auto VirtualFileSystem::find_mount_for_host(InodeIdentifier id) -> Mount*
 {
     for (auto& mount : m_mounts) {
         if (mount.host() && mount.host()->identifier() == id)
-            return &mount;
-    }
-    return nullptr;
-}
-
-auto VirtualFileSystem::find_mount_for_guest(Inode& inode) -> Mount*
-{
-    for (auto& mount : m_mounts) {
-        if (&mount.guest() == &inode)
             return &mount;
     }
     return nullptr;
@@ -192,7 +174,7 @@ KResult VirtualFileSystem::traverse_directory_inode(Inode& dir_inode, Function<b
         // FIXME: This is now broken considering chroot and bind mounts.
         bool is_root_inode = dir_inode.identifier() == dir_inode.fs().root_inode()->identifier();
         if (is_root_inode && !is_vfs_root(dir_inode.identifier()) && entry.name == "..") {
-            auto mount = find_mount_for_guest(dir_inode);
+            auto mount = find_mount_for_guest(dir_inode.identifier());
             VERIFY(mount);
             VERIFY(mount->host());
             resolved_inode = mount->host()->identifier();
@@ -965,7 +947,7 @@ KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(S
 
         // See if there's something mounted on the child; in that case
         // we would need to return the guest inode, not the host inode.
-        if (auto mount = find_mount_for_host(*child_inode)) {
+        if (auto mount = find_mount_for_host(child_inode->identifier())) {
             child_inode = mount->guest();
             mount_flags_for_child = mount->flags();
         }
