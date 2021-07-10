@@ -1127,3 +1127,26 @@ TEST_CASE(simple_notbol_noteol)
     regfree(&regex);
     regfree(&regex2);
 }
+
+TEST_CASE(bre_basic)
+{
+    regex_t regex;
+    EXPECT_EQ(regcomp(&regex, "hello friends", REG_NOSUB | REG_ICASE), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "hello friends", 0, NULL, 0), REG_NOERR);
+    regfree(&regex);
+
+    EXPECT_EQ(regcomp(&regex, "\\(15\\)\\1", REG_NOSUB | REG_ICASE), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "1515", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "55", 0, NULL, 0), REG_NOMATCH);
+    regfree(&regex);
+
+    EXPECT_EQ(regcomp(&regex, "15\\{1,2\\}", REG_NOSUB | REG_ICASE), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "15", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "1515", 0, NULL, 0), REG_NOMATCH);
+    EXPECT_EQ(regexec(&regex, "55", 0, NULL, 0), REG_NOMATCH);
+    regfree(&regex);
+
+    EXPECT_EQ(regcomp(&regex, "15{1,2}", REG_NOSUB | REG_ICASE), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "15{1,2}", 0, NULL, 0), REG_NOERR);
+    regfree(&regex);
+}
