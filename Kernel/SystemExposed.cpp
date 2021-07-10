@@ -26,7 +26,7 @@ SystemExposedComponent::SystemExposedComponent(StringView name)
 {
 }
 
-KResult SystemExposedFolder::traverse_as_directory(unsigned fsid, Function<bool(const FS::DirectoryEntryView&)> callback) const
+KResult SystemExposedFolder::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(SystemRegistrar::the().m_lock);
     VERIFY(m_parent_folder);

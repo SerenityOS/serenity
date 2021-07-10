@@ -865,7 +865,7 @@ KResultOr<size_t> Plan9FSInode::directory_entry_count() const
     return count;
 }
 
-KResult Plan9FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
+KResult Plan9FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     KResult result = KSuccess;
 

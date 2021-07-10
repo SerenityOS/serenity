@@ -62,7 +62,7 @@ class ProcFSProcessStacks final : public ProcFSExposedFolder {
     // It should be deleted (as soon as possible)
 public:
     virtual KResultOr<size_t> entries_count() const override;
-    virtual KResult traverse_as_directory(unsigned, Function<bool(const FS::DirectoryEntryView&)>) const override;
+    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
     static NonnullRefPtr<ProcFSProcessStacks> create(const ProcFSProcessFolder& parent_folder)
@@ -96,7 +96,7 @@ KResultOr<size_t> ProcFSProcessStacks::entries_count() const
     return parent_folder->m_associated_process->thread_count();
 }
 
-KResult ProcFSProcessStacks::traverse_as_directory(unsigned fsid, Function<bool(const FS::DirectoryEntryView&)> callback) const
+KResult ProcFSProcessStacks::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(m_lock);
     auto parent_folder = m_process_folder.strong_ref();
@@ -165,7 +165,7 @@ class ProcFSProcessFileDescriptions final : public ProcFSExposedFolder {
     // It should be deleted (as soon as possible)
 public:
     virtual KResultOr<size_t> entries_count() const override;
-    virtual KResult traverse_as_directory(unsigned, Function<bool(const FS::DirectoryEntryView&)>) const override;
+    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
     static NonnullRefPtr<ProcFSProcessFileDescriptions> create(const ProcFSProcessFolder& parent_folder)
@@ -197,7 +197,7 @@ KResultOr<size_t> ProcFSProcessFileDescriptions::entries_count() const
         return KResult(EINVAL);
     return parent_folder->m_associated_process->fds().open_count();
 }
-KResult ProcFSProcessFileDescriptions::traverse_as_directory(unsigned fsid, Function<bool(const FS::DirectoryEntryView&)> callback) const
+KResult ProcFSProcessFileDescriptions::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(m_lock);
     auto parent_folder = m_process_folder.strong_ref();

@@ -26,7 +26,7 @@ public:
     static void initialize(String boot_argument, bool force_pio);
     static StorageManagement& the();
 
-    NonnullRefPtr<FS> root_filesystem() const;
+    NonnullRefPtr<FileSystem> root_filesystem() const;
 
     static int major_number();
     static int minor_number();

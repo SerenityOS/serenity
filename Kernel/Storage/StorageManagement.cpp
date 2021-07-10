@@ -176,7 +176,7 @@ int StorageManagement::minor_number()
     return s_device_minor_number++;
 }
 
-NonnullRefPtr<FS> StorageManagement::root_filesystem() const
+NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
 {
     auto boot_device_description = boot_block_device();
     if (!boot_device_description) {

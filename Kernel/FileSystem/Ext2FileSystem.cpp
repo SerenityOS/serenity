@@ -1068,7 +1068,7 @@ Ext2FS::FeaturesReadOnly Ext2FS::get_features_readonly() const
     return Ext2FS::FeaturesReadOnly::None;
 }
 
-KResult Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
+KResult Ext2FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(m_lock);
     VERIFY(is_directory());

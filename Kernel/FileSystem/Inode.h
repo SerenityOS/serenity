@@ -26,16 +26,16 @@ namespace Kernel {
 class Inode : public RefCounted<Inode>
     , public Weakable<Inode> {
     friend class VFS;
-    friend class FS;
+    friend class FileSystem;
 
 public:
     virtual ~Inode();
 
     virtual void one_ref_left() { }
 
-    FS& fs() { return m_fs; }
-    const FS& fs() const { return m_fs; }
-    unsigned fsid() const { return m_fs.fsid(); }
+    FileSystem& fs() { return m_file_system; }
+    FileSystem const& fs() const { return m_file_system; }
+    unsigned fsid() const { return m_file_system.fsid(); }
     InodeIndex index() const { return m_index; }
 
     size_t size() const { return metadata().size; }
@@ -53,7 +53,7 @@ public:
     virtual void detach(FileDescription&) { }
     virtual void did_seek(FileDescription&, off_t) { }
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const = 0;
-    virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const = 0;
+    virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const = 0;
     virtual RefPtr<Inode> lookup(StringView name) = 0;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) = 0;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) = 0;
@@ -100,7 +100,7 @@ public:
     NonnullRefPtr<FIFO> fifo();
 
 protected:
-    Inode(FS& fs, InodeIndex);
+    Inode(FileSystem&, InodeIndex);
     void set_metadata_dirty(bool);
     KResult prepare_to_write_data();
 
@@ -112,7 +112,7 @@ protected:
     mutable Lock m_lock { "Inode" };
 
 private:
-    FS& m_fs;
+    FileSystem& m_file_system;
     InodeIndex m_index { 0 };
     WeakPtr<SharedInodeVMObject> m_shared_vmobject;
     RefPtr<LocalSocket> m_socket;

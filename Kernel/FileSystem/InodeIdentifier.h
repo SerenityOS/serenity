@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-class FS;
+class FileSystem;
 struct InodeMetadata;
 
 TYPEDEF_DISTINCT_ORDERED_ID(u64, InodeIndex);
@@ -32,8 +32,8 @@ public:
     u32 fsid() const { return m_fsid; }
     InodeIndex index() const { return m_index; }
 
-    FS* fs();
-    const FS* fs() const;
+    FileSystem* fs();
+    const FileSystem* fs() const;
 
     bool operator==(const InodeIdentifier& other) const
     {

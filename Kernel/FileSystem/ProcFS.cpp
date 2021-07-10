@@ -129,7 +129,7 @@ StringView ProcFSInode::name() const
     return m_associated_component->name();
 }
 
-KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const
+KResult ProcFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -222,7 +222,7 @@ InodeMetadata ProcFSDirectoryInode::metadata() const
     metadata.mtime = m_associated_component->modified_time();
     return metadata;
 }
-KResult ProcFSDirectoryInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
+KResult ProcFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(m_parent_fs.m_lock);
     return m_associated_component->traverse_as_directory(m_parent_fs.fsid(), move(callback));

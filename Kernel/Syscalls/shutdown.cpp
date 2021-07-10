@@ -20,9 +20,9 @@ KResultOr<FlatPtr> Process::sys$reboot()
     REQUIRE_NO_PROMISES;
 
     dbgln("acquiring FS locks...");
-    FS::lock_all();
+    FileSystem::lock_all();
     dbgln("syncing mounted filesystems...");
-    FS::sync();
+    FileSystem::sync();
     dbgln("attempting reboot via ACPI");
     if (ACPI::is_enabled())
         ACPI::Parser::the()->try_acpi_reboot();
@@ -41,9 +41,9 @@ KResultOr<FlatPtr> Process::sys$halt()
     ConsoleManagement::the().switch_to_debug();
 
     dbgln("acquiring FS locks...");
-    FS::lock_all();
+    FileSystem::lock_all();
     dbgln("syncing mounted filesystems...");
-    FS::sync();
+    FileSystem::sync();
     dbgln("attempting system shutdown...");
     // QEMU Shutdown
     IO::out16(0x604, 0x2000);

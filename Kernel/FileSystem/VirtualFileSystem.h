@@ -35,7 +35,7 @@ class VFS {
 public:
     class Mount {
     public:
-        Mount(FS&, Custody* host_custody, int flags);
+        Mount(FileSystem&, Custody* host_custody, int flags);
         Mount(Inode& source, Custody& host_custody, int flags);
 
         const Inode* host() const;
@@ -44,7 +44,7 @@ public:
         const Inode& guest() const { return *m_guest; }
         Inode& guest() { return *m_guest; }
 
-        const FS& guest_fs() const { return *m_guest_fs; }
+        FileSystem const& guest_fs() const { return *m_guest_fs; }
 
         String absolute_path() const;
 
@@ -53,7 +53,7 @@ public:
 
     private:
         NonnullRefPtr<Inode> m_guest;
-        NonnullRefPtr<FS> m_guest_fs;
+        NonnullRefPtr<FileSystem> m_guest_fs;
         RefPtr<Custody> m_host_custody;
         int m_flags;
     };
@@ -64,8 +64,8 @@ public:
     VFS();
     ~VFS();
 
-    bool mount_root(FS&);
-    KResult mount(FS&, Custody& mount_point, int flags);
+    bool mount_root(FileSystem&);
+    KResult mount(FileSystem&, Custody& mount_point, int flags);
     KResult bind_mount(Custody& source, Custody& mount_point, int flags);
     KResult remount(Custody& mount_point, int new_flags);
     KResult unmount(Inode& guest_inode);
@@ -108,7 +108,7 @@ private:
 
     bool is_vfs_root(InodeIdentifier) const;
 
-    KResult traverse_directory_inode(Inode&, Function<bool(const FS::DirectoryEntryView&)>);
+    KResult traverse_directory_inode(Inode&, Function<bool(FileSystem::DirectoryEntryView const&)>);
 
     Mount* find_mount_for_host(Inode&);
     Mount* find_mount_for_host(InodeIdentifier);

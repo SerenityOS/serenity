@@ -64,7 +64,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
         return VFS::the().bind_mount(*description->custody(), target_custody, params.flags);
     }
 
-    RefPtr<FS> fs;
+    RefPtr<FileSystem> fs;
 
     if (fs_type == "ext2" || fs_type == "Ext2FS") {
         if (description.is_null())

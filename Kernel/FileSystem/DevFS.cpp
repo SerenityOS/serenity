@@ -86,7 +86,7 @@ KResultOr<size_t> DevFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, Fil
     VERIFY_NOT_REACHED();
 }
 
-KResult DevFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const
+KResult DevFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -201,7 +201,7 @@ InodeMetadata DevFSDirectoryInode::metadata() const
     metadata.mtime = mepoch;
     return metadata;
 }
-KResult DevFSDirectoryInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const
+KResult DevFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
 {
     Locker locker(m_lock);
     return EINVAL;
@@ -222,7 +222,7 @@ DevFSRootDirectoryInode::DevFSRootDirectoryInode(DevFS& fs)
     , m_parent_fs(fs)
 {
 }
-KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
+KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(m_parent_fs.m_lock);
     callback({ ".", identifier(), 0 });
@@ -392,7 +392,7 @@ DevFSPtsDirectoryInode::DevFSPtsDirectoryInode(DevFS& fs)
     : DevFSDirectoryInode(fs)
 {
 }
-KResult DevFSPtsDirectoryInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
+KResult DevFSPtsDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(m_lock);
     callback({ ".", identifier(), 0 });
