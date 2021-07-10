@@ -32,7 +32,7 @@ pushd "$DIR/Tarballs"
     echo "qemu md5='$md5'"
     if  [ "$md5" != "$QEMU_MD5SUM" ] ; then
         echo "qemu md5 sum mismatching, please run script again."
-        rm $$QEMU_VERSION.tar.xz
+        rm -f $QEMU_VERSION.tar.xz
         exit 1
     fi
 
