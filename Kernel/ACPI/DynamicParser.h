@@ -13,8 +13,7 @@
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 
-namespace Kernel {
-namespace ACPI {
+namespace Kernel::ACPI {
 
 class DynamicParser final
     : public IRQHandler
@@ -40,5 +39,5 @@ private:
 
     OwnPtr<Region> m_acpi_namespace;
 };
-}
+
 }

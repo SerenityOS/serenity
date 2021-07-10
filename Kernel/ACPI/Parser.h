@@ -14,8 +14,7 @@
 #include <Kernel/VM/Region.h>
 #include <Kernel/VirtualAddress.h>
 
-namespace Kernel {
-namespace ACPI {
+namespace Kernel::ACPI {
 
 class ACPISysFSDirectory : public SysFSDirectory {
 public:
@@ -105,5 +104,4 @@ private:
     FADTFlags::x86_Specific_Flags m_x86_specific_flags;
 };
 
-}
 }

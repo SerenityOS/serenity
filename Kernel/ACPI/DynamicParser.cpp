@@ -8,8 +8,7 @@
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Sections.h>
 
-namespace Kernel {
-namespace ACPI {
+namespace Kernel::ACPI {
 
 UNMAP_AFTER_INIT DynamicParser::DynamicParser(PhysicalAddress rsdp)
     : IRQHandler(9)
@@ -56,5 +55,4 @@ void DynamicParser::build_namespace()
     VERIFY_NOT_REACHED();
 }
 
-}
 }
