@@ -18,6 +18,7 @@ public:
     virtual ~TaskbarWindow() override;
 
     static int taskbar_height() { return 27; }
+    static int taskbar_icon_size() { return 16; }
 
 private:
     explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu);
