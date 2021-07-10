@@ -58,23 +58,6 @@ To run SerenityOS in a WHPX-enabled QEMU VM:
 
 ### Known issues with WHPX
 
-#### Illegal instruction on boot
-
-Using `SERENITY_QEMU_CPU="max"` can trigger a QEMU bug where the OSXSAVE CPUID flag is erroneously set, playing havoc
-with feature detection logic in libgcc and resulting in this error.
-
-To workaround this, first adjust the `SERENITY_QEMU_CPU` setting to emulate a more restricted feature set. `SERENITY_QEMU_CPU="qemu32"`
-appears to work in some cases, however in others causes the boot freeze issue above. It's worth playing around with
-various different values here to see if you can find one that works for you. Running `qemu-system-x86_64.exe -cpu ?` will
-list the supported CPU configurations.
-
-If you cannot find a working CPU feature set, the next workaround is to patch libgcc in the Serenity toolchain build to
-remove the offending instruction.
-Comment out the `if ((ecx & bit_OSXSAVE))` block in `Toolchain/Tarballs/gcc-<version>/libgcc/config/i386/cpuinfo.c`. In
-GCC 10.2.0 this is lines 282-297.
-
-Rebuild the toolchain using `Toolchain/BuildIt.sh` as normal, then rebuild Serenity.
-
 #### Slow boot on HiDPI systems
 
 On some Windows systems running with >100% scaling, the booting phase of Serenity might slow to a crawl. Changing the
