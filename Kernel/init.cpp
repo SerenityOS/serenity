@@ -236,7 +236,7 @@ void init_stage2(void*)
 
     USB::UHCIController::detect();
 
-    BIOSExposedDirectory::initialize();
+    BIOSSysFSDirectory::initialize();
     ACPI::ACPISysFSDirectory::initialize();
 
     VirtIO::detect();
