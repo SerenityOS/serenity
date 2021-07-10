@@ -260,7 +260,7 @@ MainWidget::MainWidget()
     });
 
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
-        auto fd_response = m_file_system_access_client->prompt_open_file(Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
+        auto fd_response = m_file_system_access_client->prompt_open_file(Core::StandardPaths::home_directory(), Core::OpenMode::ReadOnly);
 
         if (fd_response.error() != 0)
             return;
