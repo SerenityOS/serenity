@@ -27,12 +27,12 @@ Parser* Parser::the()
     return s_acpi_parser;
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ExposedComponent> ExposedComponent::create(String name, PhysicalAddress paddr, size_t table_size)
+UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(String name, PhysicalAddress paddr, size_t table_size)
 {
-    return adopt_ref(*new (nothrow) ExposedComponent(name, paddr, table_size));
+    return adopt_ref(*new (nothrow) ACPISysFSComponent(name, paddr, table_size));
 }
 
-KResultOr<size_t> ExposedComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     auto blob = try_to_generate_buffer();
     if (!blob)
@@ -47,48 +47,48 @@ KResultOr<size_t> ExposedComponent::read_bytes(off_t offset, size_t count, UserO
     return nread;
 }
 
-OwnPtr<KBuffer> ExposedComponent::try_to_generate_buffer() const
+OwnPtr<KBuffer> ACPISysFSComponent::try_to_generate_buffer() const
 {
     auto acpi_blob = map_typed<u8>((m_paddr), m_length);
     return KBuffer::try_create_with_bytes(Span<u8> { acpi_blob.ptr(), m_length });
 }
 
-UNMAP_AFTER_INIT ExposedComponent::ExposedComponent(String name, PhysicalAddress paddr, size_t table_size)
+UNMAP_AFTER_INIT ACPISysFSComponent::ACPISysFSComponent(String name, PhysicalAddress paddr, size_t table_size)
     : SysFSComponent(name)
     , m_paddr(paddr)
     , m_length(table_size)
 {
 }
 
-UNMAP_AFTER_INIT void ExposedDirectory::initialize()
+UNMAP_AFTER_INIT void ACPISysFSDirectory::initialize()
 {
-    auto acpi_folder = adopt_ref(*new (nothrow) ExposedDirectory());
+    auto acpi_folder = adopt_ref(*new (nothrow) ACPISysFSDirectory());
     SysFSComponentRegistry::the().register_new_component(acpi_folder);
 }
 
-UNMAP_AFTER_INIT ExposedDirectory::ExposedDirectory()
+UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory()
     : SysFSDirectory("acpi", SysFSComponentRegistry::the().root_folder())
 {
     NonnullRefPtrVector<SysFSComponent> components;
     size_t ssdt_count = 0;
     ACPI::Parser::the()->enumerate_static_tables([&](const StringView& signature, PhysicalAddress p_table, size_t length) {
         if (signature == "SSDT") {
-            components.append(ExposedComponent::create(String::formatted("{:4s}{}", signature.characters_without_null_termination(), ssdt_count), p_table, length));
+            components.append(ACPISysFSComponent::create(String::formatted("{:4s}{}", signature.characters_without_null_termination(), ssdt_count), p_table, length));
             ssdt_count++;
             return;
         }
-        components.append(ExposedComponent::create(signature, p_table, length));
+        components.append(ACPISysFSComponent::create(signature, p_table, length));
     });
     m_components = components;
 
     auto rsdp = map_typed<Structures::RSDPDescriptor20>(ACPI::Parser::the()->rsdp());
-    m_components.append(ExposedComponent::create("RSDP", ACPI::Parser::the()->rsdp(), rsdp->base.revision == 0 ? sizeof(Structures::RSDPDescriptor) : rsdp->length));
+    m_components.append(ACPISysFSComponent::create("RSDP", ACPI::Parser::the()->rsdp(), rsdp->base.revision == 0 ? sizeof(Structures::RSDPDescriptor) : rsdp->length));
 
     auto main_system_description_table = map_typed<Structures::SDTHeader>(ACPI::Parser::the()->main_system_description_table());
     if (ACPI::Parser::the()->is_xsdt_supported()) {
-        m_components.append(ExposedComponent::create("XSDT", ACPI::Parser::the()->main_system_description_table(), main_system_description_table->length));
+        m_components.append(ACPISysFSComponent::create("XSDT", ACPI::Parser::the()->main_system_description_table(), main_system_description_table->length));
     } else {
-        m_components.append(ExposedComponent::create("RSDT", ACPI::Parser::the()->main_system_description_table(), main_system_description_table->length));
+        m_components.append(ACPISysFSComponent::create("RSDT", ACPI::Parser::the()->main_system_description_table(), main_system_description_table->length));
     }
 }
 

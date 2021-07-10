@@ -17,23 +17,23 @@
 namespace Kernel {
 namespace ACPI {
 
-class ExposedDirectory : public SysFSDirectory {
+class ACPISysFSDirectory : public SysFSDirectory {
 public:
     static void initialize();
 
 private:
-    ExposedDirectory();
+    ACPISysFSDirectory();
 };
 
-class ExposedComponent : public SysFSComponent {
+class ACPISysFSComponent : public SysFSComponent {
 public:
-    static NonnullRefPtr<ExposedComponent> create(String name, PhysicalAddress, size_t table_size);
+    static NonnullRefPtr<ACPISysFSComponent> create(String name, PhysicalAddress, size_t table_size);
 
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const override;
 
 protected:
     OwnPtr<KBuffer> try_to_generate_buffer() const;
-    ExposedComponent(String name, PhysicalAddress, size_t table_size);
+    ACPISysFSComponent(String name, PhysicalAddress, size_t table_size);
 
     PhysicalAddress m_paddr;
     size_t m_length;
