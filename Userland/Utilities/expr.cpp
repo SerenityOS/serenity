@@ -441,14 +441,17 @@ private:
 
     void ensure_regex() const
     {
-        if (!m_compiled_regex)
-            m_compiled_regex = make<regex::Regex<PosixExtended>>(m_pos_or_chars->string());
+        if (!m_compiled_regex) {
+            m_compiled_regex = make<regex::Regex<PosixBasic>>(m_pos_or_chars->string());
+            if (m_compiled_regex->parser_result.error != regex::Error::NoError)
+                fail("Regex error: {}", regex::get_error_string(m_compiled_regex->parser_result.error));
+        }
     }
 
     StringOperation m_op { StringOperation::Substring };
     NonnullOwnPtr<Expression> m_str;
     OwnPtr<Expression> m_pos_or_chars, m_length;
-    mutable OwnPtr<regex::Regex<PosixExtended>> m_compiled_regex;
+    mutable OwnPtr<regex::Regex<PosixBasic>> m_compiled_regex;
 };
 
 NonnullOwnPtr<Expression> Expression::parse(Queue<StringView>& args, Precedence prec)
