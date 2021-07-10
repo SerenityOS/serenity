@@ -378,6 +378,9 @@ ALWAYS_INLINE Optional<bool> Matcher<Parser>::execute_low_prio_forks(const Match
     return false;
 }
 
+template class Matcher<PosixBasicParser>;
+template class Regex<PosixBasicParser>;
+
 template class Matcher<PosixExtendedParser>;
 template class Regex<PosixExtendedParser>;
 
