@@ -135,7 +135,7 @@ OwnPtr<KBuffer> BIOSExposedFolder::smbios_structure_table() const
 }
 
 UNMAP_AFTER_INIT BIOSExposedFolder::BIOSExposedFolder()
-    : SystemExposedFolder("bios", SysFSComponentRegistry::the().root_folder())
+    : SysFSDirectory("bios", SysFSComponentRegistry::the().root_folder())
 {
     auto entry_32bit = find_dmi_entry32bit_point();
     m_dmi_entry_point = entry_32bit.value();

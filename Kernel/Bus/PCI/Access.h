@@ -14,7 +14,7 @@
 
 namespace Kernel::PCI {
 
-class BusExposedFolder final : public SystemExposedFolder {
+class BusExposedFolder final : public SysFSDirectory {
 public:
     static void initialize();
 
@@ -22,13 +22,13 @@ private:
     BusExposedFolder();
 };
 
-class ExposedDeviceFolder final : public SystemExposedFolder {
+class ExposedDeviceFolder final : public SysFSDirectory {
 public:
-    static NonnullRefPtr<ExposedDeviceFolder> create(const SystemExposedFolder&, Address);
+    static NonnullRefPtr<ExposedDeviceFolder> create(const SysFSDirectory&, Address);
     const Address& address() const { return m_address; }
 
 private:
-    ExposedDeviceFolder(const SystemExposedFolder&, Address);
+    ExposedDeviceFolder(const SysFSDirectory&, Address);
 
     Address m_address;
 };

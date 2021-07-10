@@ -67,7 +67,7 @@ UNMAP_AFTER_INIT void ExposedFolder::initialize()
 }
 
 UNMAP_AFTER_INIT ExposedFolder::ExposedFolder()
-    : SystemExposedFolder("acpi", SysFSComponentRegistry::the().root_folder())
+    : SysFSDirectory("acpi", SysFSComponentRegistry::the().root_folder())
 {
     NonnullRefPtrVector<SysFSComponent> components;
     size_t ssdt_count = 0;

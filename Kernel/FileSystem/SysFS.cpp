@@ -55,7 +55,7 @@ KResult SysFSRootFolder::traverse_as_directory(unsigned fsid, Function<bool(File
 }
 
 SysFSRootFolder::SysFSRootFolder()
-    : SystemExposedFolder(".")
+    : SysFSDirectory(".")
 {
 }
 
