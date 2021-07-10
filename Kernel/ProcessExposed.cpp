@@ -242,7 +242,7 @@ RefPtr<ProcFSExposedComponent> ProcFSExposedDirectory::lookup(StringView name)
 
 KResult ProcFSExposedDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(ProcFSComponentsRegistrar::the().m_lock);
+    Locker locker(ProcFSComponentsRegistrar::the().get_lock());
     auto parent_folder = m_parent_folder.strong_ref();
     if (parent_folder.is_null())
         return KResult(EINVAL);
