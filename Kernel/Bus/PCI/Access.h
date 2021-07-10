@@ -14,37 +14,37 @@
 
 namespace Kernel::PCI {
 
-class BusExposedFolder final : public SysFSDirectory {
+class PCIBusSysFSDirectory final : public SysFSDirectory {
 public:
     static void initialize();
 
 private:
-    BusExposedFolder();
+    PCIBusSysFSDirectory();
 };
 
-class ExposedDeviceFolder final : public SysFSDirectory {
+class PCIDeviceSysFSDirectory final : public SysFSDirectory {
 public:
-    static NonnullRefPtr<ExposedDeviceFolder> create(const SysFSDirectory&, Address);
+    static NonnullRefPtr<PCIDeviceSysFSDirectory> create(const SysFSDirectory&, Address);
     const Address& address() const { return m_address; }
 
 private:
-    ExposedDeviceFolder(const SysFSDirectory&, Address);
+    PCIDeviceSysFSDirectory(const SysFSDirectory&, Address);
 
     Address m_address;
 };
 
-class ExposedAttribute : public SysFSComponent {
+class PCIDeviceAttributeSysFSComponent : public SysFSComponent {
 public:
-    static NonnullRefPtr<ExposedAttribute> create(String name, const ExposedDeviceFolder& device, size_t offset, size_t field_bytes_width);
+    static NonnullRefPtr<PCIDeviceAttributeSysFSComponent> create(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width);
 
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const override;
-    virtual ~ExposedAttribute() {};
+    virtual ~PCIDeviceAttributeSysFSComponent() {};
     virtual size_t size() const override;
 
 protected:
     virtual OwnPtr<KBuffer> try_to_generate_buffer() const;
-    ExposedAttribute(String name, const ExposedDeviceFolder& device, size_t offset, size_t field_bytes_width);
-    NonnullRefPtr<ExposedDeviceFolder> m_device;
+    PCIDeviceAttributeSysFSComponent(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width);
+    NonnullRefPtr<PCIDeviceSysFSDirectory> m_device;
     size_t m_offset;
     size_t m_field_bytes_width;
 };
