@@ -25,7 +25,7 @@ private:
     ExposedFolder();
 };
 
-class ExposedComponent : public SystemExposedComponent {
+class ExposedComponent : public SysFSComponent {
 public:
     static NonnullRefPtr<ExposedComponent> create(String name, PhysicalAddress, size_t table_size);
 

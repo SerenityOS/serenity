@@ -33,7 +33,7 @@ private:
     Address m_address;
 };
 
-class ExposedAttribute : public SystemExposedComponent {
+class ExposedAttribute : public SysFSComponent {
 public:
     static NonnullRefPtr<ExposedAttribute> create(String name, const ExposedDeviceFolder& device, size_t offset, size_t field_bytes_width);
 

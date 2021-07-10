@@ -20,7 +20,7 @@ static size_t allocate_inode_index()
     return s_next_inode_index.value();
 }
 
-SystemExposedComponent::SystemExposedComponent(StringView name)
+SysFSComponent::SysFSComponent(StringView name)
     : m_name(KString::try_create(name).release_nonnull())
     , m_component_index(allocate_inode_index())
 {
@@ -40,7 +40,7 @@ KResult SystemExposedFolder::traverse_as_directory(unsigned fsid, Function<bool(
     return KSuccess;
 }
 
-RefPtr<SystemExposedComponent> SystemExposedFolder::lookup(StringView name)
+RefPtr<SysFSComponent> SystemExposedFolder::lookup(StringView name)
 {
     for (auto& component : m_components) {
         if (component.name() == name) {
@@ -51,12 +51,12 @@ RefPtr<SystemExposedComponent> SystemExposedFolder::lookup(StringView name)
 }
 
 SystemExposedFolder::SystemExposedFolder(StringView name)
-    : SystemExposedComponent(name)
+    : SysFSComponent(name)
 {
 }
 
 SystemExposedFolder::SystemExposedFolder(StringView name, SystemExposedFolder const& parent_folder)
-    : SystemExposedComponent(name)
+    : SysFSComponent(name)
     , m_parent_folder(parent_folder)
 {
 }
@@ -66,7 +66,7 @@ NonnullRefPtr<Inode> SystemExposedFolder::to_inode(SysFS const& sysfs_instance) 
     return SysFSDirectoryInode::create(sysfs_instance, *this);
 }
 
-NonnullRefPtr<Inode> SystemExposedComponent::to_inode(SysFS const& sysfs_instance) const
+NonnullRefPtr<Inode> SysFSComponent::to_inode(SysFS const& sysfs_instance) const
 {
     return SysFSInode::create(sysfs_instance, *this);
 }

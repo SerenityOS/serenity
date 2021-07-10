@@ -19,13 +19,13 @@
 namespace Kernel {
 
 class SysFS;
-class SystemExposedComponent : public RefCounted<SystemExposedComponent> {
+class SysFSComponent : public RefCounted<SysFSComponent> {
 public:
     virtual KResultOr<size_t> entries_count() const { VERIFY_NOT_REACHED(); };
     virtual StringView name() const { return m_name->view(); }
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const { VERIFY_NOT_REACHED(); }
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
-    virtual RefPtr<SystemExposedComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
+    virtual RefPtr<SysFSComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
     virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*) { return -EROFS; }
     virtual size_t size() const { return 0; }
 
@@ -33,29 +33,29 @@ public:
 
     InodeIndex component_index() const { return m_component_index; };
 
-    virtual ~SystemExposedComponent() = default;
+    virtual ~SysFSComponent() = default;
 
 protected:
-    explicit SystemExposedComponent(StringView name);
+    explicit SysFSComponent(StringView name);
 
 private:
     NonnullOwnPtr<KString> m_name;
     InodeIndex m_component_index {};
 };
 
-class SystemExposedFolder : public SystemExposedComponent {
+class SystemExposedFolder : public SysFSComponent {
 public:
     virtual KResultOr<size_t> entries_count() const override { return m_components.size(); };
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<SystemExposedComponent> lookup(StringView name) override;
-    void add_component(SystemExposedComponent const&);
+    virtual RefPtr<SysFSComponent> lookup(StringView name) override;
+    void add_component(SysFSComponent const&);
 
     virtual NonnullRefPtr<Inode> to_inode(SysFS const& sysfs_instance) const override final;
 
 protected:
     explicit SystemExposedFolder(StringView name);
     SystemExposedFolder(StringView name, SystemExposedFolder const& parent_folder);
-    NonnullRefPtrVector<SystemExposedComponent> m_components;
+    NonnullRefPtrVector<SysFSComponent> m_components;
     RefPtr<SystemExposedFolder> m_parent_folder;
 };
 

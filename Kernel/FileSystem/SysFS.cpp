@@ -30,7 +30,7 @@ UNMAP_AFTER_INIT SysFSComponentRegistry::SysFSComponentRegistry()
 {
 }
 
-UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SystemExposedComponent& component)
+UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SysFSComponent& component)
 {
     Locker locker(m_lock);
     m_root_folder->m_components.append(component);
@@ -84,12 +84,12 @@ NonnullRefPtr<Inode> SysFS::root_inode() const
     return *m_root_inode;
 }
 
-NonnullRefPtr<SysFSInode> SysFSInode::create(SysFS const& fs, SystemExposedComponent const& component)
+NonnullRefPtr<SysFSInode> SysFSInode::create(SysFS const& fs, SysFSComponent const& component)
 {
     return adopt_ref(*new (nothrow) SysFSInode(fs, component));
 }
 
-SysFSInode::SysFSInode(SysFS const& fs, SystemExposedComponent const& component)
+SysFSInode::SysFSInode(SysFS const& fs, SysFSComponent const& component)
     : Inode(const_cast<SysFS&>(fs), component.component_index())
     , m_associated_component(component)
 {
@@ -167,12 +167,12 @@ KResult SysFSInode::truncate(u64)
     return EPERM;
 }
 
-NonnullRefPtr<SysFSDirectoryInode> SysFSDirectoryInode::create(SysFS const& sysfs, SystemExposedComponent const& component)
+NonnullRefPtr<SysFSDirectoryInode> SysFSDirectoryInode::create(SysFS const& sysfs, SysFSComponent const& component)
 {
     return adopt_ref(*new (nothrow) SysFSDirectoryInode(sysfs, component));
 }
 
-SysFSDirectoryInode::SysFSDirectoryInode(SysFS const& fs, SystemExposedComponent const& component)
+SysFSDirectoryInode::SysFSDirectoryInode(SysFS const& fs, SysFSComponent const& component)
     : SysFSInode(fs, component)
     , m_parent_fs(const_cast<SysFS&>(fs))
 {
