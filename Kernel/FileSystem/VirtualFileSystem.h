@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,7 +30,7 @@ struct UidAndGid {
     gid_t gid;
 };
 
-class VFS {
+class VirtualFileSystem {
     AK_MAKE_ETERNAL
 public:
     class Mount {
@@ -59,10 +59,10 @@ public:
     };
 
     static void initialize();
-    static VFS& the();
+    static VirtualFileSystem& the();
 
-    VFS();
-    ~VFS();
+    VirtualFileSystem();
+    ~VirtualFileSystem();
 
     bool mount_root(FileSystem&);
     KResult mount(FileSystem&, Custody& mount_point, int flags);

@@ -62,7 +62,7 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
         base = base_description->custody();
     }
 
-    auto result = VFS::the().open(path.value()->view(), options, mode & ~umask(), *base);
+    auto result = VirtualFileSystem::the().open(path.value()->view(), options, mode & ~umask(), *base);
     if (result.is_error())
         return result.error();
     auto description = result.value();

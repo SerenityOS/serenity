@@ -86,7 +86,7 @@ KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<C
 
     auto& contents = contents_or.value();
     auto path = StringView(contents->data(), contents->size());
-    return VFS::the().resolve_path(path, base, out_parent, options, symlink_recursion_level);
+    return VirtualFileSystem::the().resolve_path(path, base, out_parent, options, symlink_recursion_level);
 }
 
 Inode::Inode(FileSystem& fs, InodeIndex index)
@@ -254,7 +254,7 @@ void Inode::did_delete_self()
 KResult Inode::prepare_to_write_data()
 {
     // FIXME: It's a poor design that filesystems are expected to call this before writing out data.
-    //        We should funnel everything through an interface at the VFS layer so this can happen from a single place.
+    //        We should funnel everything through an interface at the VirtualFileSystem layer so this can happen from a single place.
     Locker locker(m_lock);
     if (fs().is_readonly())
         return EROFS;

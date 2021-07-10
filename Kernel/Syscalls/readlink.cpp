@@ -23,7 +23,7 @@ KResultOr<FlatPtr> Process::sys$readlink(Userspace<const Syscall::SC_readlink_pa
     if (path.is_error())
         return path.error();
 
-    auto result = VFS::the().open(path.value()->view(), O_RDONLY | O_NOFOLLOW_NOERROR, 0, current_directory());
+    auto result = VirtualFileSystem::the().open(path.value()->view(), O_RDONLY | O_NOFOLLOW_NOERROR, 0, current_directory());
     if (result.is_error())
         return result.error();
     auto description = result.value();

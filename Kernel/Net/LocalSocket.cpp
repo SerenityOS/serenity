@@ -126,7 +126,7 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 0777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
-    auto result = VFS::the().open(path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current()->current_directory(), owner);
+    auto result = VirtualFileSystem::the().open(path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current()->current_directory(), owner);
     if (result.is_error()) {
         if (result.error() == -EEXIST)
             return EADDRINUSE;
@@ -168,7 +168,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
 
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({})", this, safe_address);
 
-    auto description_or_error = VFS::the().open(safe_address, O_RDWR, 0, Process::current()->current_directory());
+    auto description_or_error = VirtualFileSystem::the().open(safe_address, O_RDWR, 0, Process::current()->current_directory());
     if (description_or_error.is_error())
         return ECONNREFUSED;
 

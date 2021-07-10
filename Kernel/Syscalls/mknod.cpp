@@ -21,7 +21,7 @@ KResultOr<FlatPtr> Process::sys$mknod(Userspace<const Syscall::SC_mknod_params*>
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
-    return VFS::the().mknod(path.value()->view(), params.mode & ~umask(), params.dev, current_directory());
+    return VirtualFileSystem::the().mknod(path.value()->view(), params.mode & ~umask(), params.dev, current_directory());
 }
 
 }

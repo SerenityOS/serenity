@@ -125,14 +125,14 @@ KResult InodeFile::chown(FileDescription& description, uid_t uid, gid_t gid)
 {
     VERIFY(description.inode() == m_inode);
     VERIFY(description.custody());
-    return VFS::the().chown(*description.custody(), uid, gid);
+    return VirtualFileSystem::the().chown(*description.custody(), uid, gid);
 }
 
 KResult InodeFile::chmod(FileDescription& description, mode_t mode)
 {
     VERIFY(description.inode() == m_inode);
     VERIFY(description.custody());
-    return VFS::the().chmod(*description.custody(), mode);
+    return VirtualFileSystem::the().chmod(*description.custody(), mode);
 }
 
 }

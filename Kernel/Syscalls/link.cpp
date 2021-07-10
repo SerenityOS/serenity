@@ -22,7 +22,7 @@ KResultOr<FlatPtr> Process::sys$link(Userspace<const Syscall::SC_link_params*> u
     auto new_path = copy_string_from_user(params.new_path);
     if (new_path.is_null())
         return EFAULT;
-    return VFS::the().link(old_path, new_path, current_directory());
+    return VirtualFileSystem::the().link(old_path, new_path, current_directory());
 }
 
 KResultOr<FlatPtr> Process::sys$symlink(Userspace<const Syscall::SC_symlink_params*> user_params)
@@ -37,7 +37,7 @@ KResultOr<FlatPtr> Process::sys$symlink(Userspace<const Syscall::SC_symlink_para
     auto linkpath = get_syscall_path_argument(params.linkpath);
     if (linkpath.is_error())
         return linkpath.error();
-    return VFS::the().symlink(target.value()->view(), linkpath.value()->view(), current_directory());
+    return VirtualFileSystem::the().symlink(target.value()->view(), linkpath.value()->view(), current_directory());
 }
 
 }

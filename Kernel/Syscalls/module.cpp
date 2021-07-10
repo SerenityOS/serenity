@@ -25,7 +25,7 @@ KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, si
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
-    auto description_or_error = VFS::the().open(path.value()->view(), O_RDONLY, 0, current_directory());
+    auto description_or_error = VirtualFileSystem::the().open(path.value()->view(), O_RDONLY, 0, current_directory());
     if (description_or_error.is_error())
         return description_or_error.error();
     auto& description = description_or_error.value();

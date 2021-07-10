@@ -166,7 +166,7 @@ void dump_backtrace()
 
 UNMAP_AFTER_INIT void load_kernel_symbol_table()
 {
-    auto result = VFS::the().open("/res/kernel.map", O_RDONLY, 0, VFS::the().root_custody());
+    auto result = VirtualFileSystem::the().open("/res/kernel.map", O_RDONLY, 0, VirtualFileSystem::the().root_custody());
     if (!result.is_error()) {
         auto description = result.value();
         auto buffer = description->read_entire_file();

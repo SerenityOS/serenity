@@ -13,7 +13,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::do_statvfs(String path, statvfs* buf)
 {
-    auto custody_or_error = VFS::the().resolve_path(path, current_directory(), nullptr, 0);
+    auto custody_or_error = VirtualFileSystem::the().resolve_path(path, current_directory(), nullptr, 0);
     if (custody_or_error.is_error())
         return custody_or_error.error();
 
@@ -42,7 +42,7 @@ KResultOr<FlatPtr> Process::do_statvfs(String path, statvfs* buf)
     Custody* current_custody = custody;
 
     while (current_custody) {
-        VFS::the().for_each_mount([&kernelbuf, &current_custody](auto& mount) {
+        VirtualFileSystem::the().for_each_mount([&kernelbuf, &current_custody](auto& mount) {
             if (current_custody) {
                 if (&current_custody->inode() == &mount.guest()) {
                     int mountflags = mount.flags();
