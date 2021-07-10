@@ -13,12 +13,12 @@
 #include <AK/Types.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 
-class SysFS;
 class SysFSComponent : public RefCounted<SysFSComponent> {
 public:
     virtual KResultOr<size_t> entries_count() const { VERIFY_NOT_REACHED(); };
