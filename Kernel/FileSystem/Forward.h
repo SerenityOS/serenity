@@ -11,6 +11,9 @@ namespace Kernel {
 class FileSystem;
 class Inode;
 class Mount;
+class SysFS;
+class SysFSDirectoryInode;
+class SysFSInode;
 class VirtualFileSystem;
 struct InodeMetadata;
 

@@ -17,10 +17,6 @@
 
 namespace Kernel {
 
-class SysFS;
-class SysFSInode;
-class SysFSDirectoryInode;
-
 class SysFSRootFolder final : public SysFSDirectory {
     friend class SysFSComponentRegistry;
 
