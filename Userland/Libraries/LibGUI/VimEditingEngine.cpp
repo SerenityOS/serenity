@@ -916,6 +916,16 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             case (KeyCode::Key_RightBrace):
                 move_to_next_empty_lines_block();
                 return true;
+            case (KeyCode::Key_J): {
+                if (m_editor->cursor().line() + 1 >= m_editor->line_count())
+                    return true;
+                move_to_logical_line_end();
+                m_editor->add_code_point(' ');
+                TextPosition next_line = { m_editor->cursor().line() + 1, 0 };
+                m_editor->delete_text_range({ m_editor->cursor(), next_line });
+                move_one_left();
+                return true;
+            }
             default:
                 break;
             }
