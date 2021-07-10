@@ -834,10 +834,10 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             delete_line();
             if (was_second_last_line || (m_editor->cursor().line() != 0 && m_editor->cursor().line() != m_editor->line_count() - 1)) {
                 move_one_up(event);
-                move_to_line_end();
+                move_to_logical_line_end();
                 m_editor->add_code_point(0x0A);
             } else if (m_editor->cursor().line() == 0) {
-                move_to_line_beginning();
+                move_to_logical_line_beginning();
                 m_editor->add_code_point(0x0A);
                 move_one_up(event);
             } else if (m_editor->cursor().line() == m_editor->line_count() - 1) {
@@ -896,15 +896,15 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
         if (event.shift() && !event.ctrl() && !event.alt()) {
             switch (event.key()) {
             case (KeyCode::Key_A):
-                move_to_line_end();
+                move_to_logical_line_end();
                 switch_to_insert_mode();
                 return true;
             case (KeyCode::Key_I):
-                move_to_line_beginning();
+                move_to_logical_line_beginning();
                 switch_to_insert_mode();
                 return true;
             case (KeyCode::Key_O):
-                move_to_line_beginning();
+                move_to_logical_line_beginning();
                 m_editor->add_code_point(0x0A);
                 move_one_up(event);
                 switch_to_insert_mode();
@@ -958,7 +958,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
                 switch_to_insert_mode();
                 return true;
             case (KeyCode::Key_O):
-                move_to_line_end();
+                move_to_logical_line_end();
                 m_editor->add_code_point(0x0A);
                 switch_to_insert_mode();
                 return true;
@@ -1043,11 +1043,11 @@ bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
     if (event.shift() && !event.ctrl() && !event.alt()) {
         switch (event.key()) {
         case (KeyCode::Key_A):
-            move_to_line_end();
+            move_to_logical_line_end();
             switch_to_insert_mode();
             return true;
         case (KeyCode::Key_I):
-            move_to_line_beginning();
+            move_to_logical_line_beginning();
             switch_to_insert_mode();
             return true;
         default:
@@ -1230,7 +1230,7 @@ void VimEditingEngine::yank(TextRange range)
 void VimEditingEngine::put()
 {
     if (m_yank_type == YankType::Line) {
-        move_to_line_end();
+        move_to_logical_line_end();
         StringBuilder sb = StringBuilder(m_yank_buffer.length() + 1);
         sb.append_code_point(0x0A);
         sb.append(m_yank_buffer);

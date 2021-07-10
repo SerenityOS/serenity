@@ -48,6 +48,8 @@ protected:
     void move_one_down(const KeyEvent& event);
     void move_to_previous_span();
     void move_to_next_span(const KeyEvent& event);
+    void move_to_logical_line_beginning();
+    void move_to_logical_line_end();
     void move_to_line_beginning();
     void move_to_line_end();
     void move_page_up();
