@@ -116,6 +116,7 @@ class Thread
     AK_MAKE_NONCOPYABLE(Thread);
     AK_MAKE_NONMOVABLE(Thread);
 
+    friend class Lock;
     friend class Process;
     friend class ProtectedProcessBase;
     friend class Scheduler;
@@ -823,6 +824,8 @@ public:
         }
     }
 
+    void block(Kernel::Lock&, ScopedSpinLock<SpinLock<u8>>&, u32);
+
     template<typename BlockerType, class... Args>
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
     {
@@ -954,6 +957,7 @@ public:
         return result;
     }
 
+    u32 unblock_from_lock(Kernel::Lock&);
     void unblock_from_blocker(Blocker&);
     void unblock(u8 signal = 0);
 
@@ -1280,6 +1284,9 @@ private:
     Optional<Range> m_thread_specific_range;
     Array<SignalActionData, NSIG> m_signal_action_data;
     Blocker* m_blocker { nullptr };
+    Kernel::Lock* m_blocking_lock { nullptr };
+    u32 m_lock_requested_count { 0 };
+    IntrusiveListNode<Thread> m_blocked_threads_list_node;
     bool m_may_die_immediately { true };
 
 #if LOCK_DEBUG

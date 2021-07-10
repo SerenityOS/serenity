@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-enum class LockMode {
+enum class LockMode : u8 {
     Unlocked,
     Shared,
     Exclusive
