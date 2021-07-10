@@ -30,11 +30,14 @@ int main(int argc, char** argv)
 
     parser.parse(argc, argv);
 
+    String file_to_edit_full_path;
+
     if (file_to_edit) {
         FileArgument parsed_argument(file_to_edit);
 
-        auto path_to_unveil = Core::File::real_path_for(parsed_argument.filename());
-        if (unveil(path_to_unveil.characters(), "rwc") < 0) {
+        file_to_edit_full_path = Core::File::real_path_for(parsed_argument.filename());
+        dbgln("unveil for: {}", file_to_edit_full_path);
+        if (unveil(file_to_edit_full_path.characters(), "rwc") < 0) {
             perror("unveil");
             return 1;
         }
@@ -104,13 +107,12 @@ int main(int argc, char** argv)
     if (file_to_edit) {
         // A file name was passed, parse any possible line and column numbers included.
         FileArgument parsed_argument(file_to_edit);
-        auto absolute_path = Core::File::real_path_for(parsed_argument.filename());
-        auto file = Core::File::open(absolute_path, Core::OpenMode::ReadWrite);
+        auto file = Core::File::open(file_to_edit_full_path, Core::OpenMode::ReadWrite);
 
         if (file.is_error())
             return 1;
 
-        if (!text_widget.read_file_and_close(file.value()->leak_fd(), absolute_path))
+        if (!text_widget.read_file_and_close(file.value()->leak_fd(), file_to_edit_full_path))
             return 1;
 
         text_widget.editor().set_cursor_and_focus_line(parsed_argument.line().value_or(1) - 1, parsed_argument.column().value_or(0));
