@@ -249,7 +249,12 @@ void AbstractView::set_hovered_index(const ModelIndex& index)
     auto old_index = m_hovered_index;
     m_hovered_index = index;
     did_change_hovered_index(old_index, index);
-    update();
+
+    if (old_index.is_valid())
+        update(to_widget_rect(paint_invalidation_rect(old_index)));
+
+    if (index.is_valid())
+        update(to_widget_rect(paint_invalidation_rect(index)));
 }
 
 void AbstractView::leave_event(Core::Event& event)
