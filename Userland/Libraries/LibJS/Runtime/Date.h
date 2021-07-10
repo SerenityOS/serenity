@@ -53,7 +53,8 @@ public:
         m_milliseconds = milliseconds;
     }
 
-    String date_string() const { return m_datetime.to_string("%a %b %d %Y"); }
+    // FIXME: Support %04Y in Core::DateTime::to_string()
+    String date_string() const { return String::formatted(m_datetime.to_string("%a %b %d {:04}"), m_datetime.year()); }
     // FIXME: Deal with timezones once SerenityOS has a working tzset(3)
     String time_string() const { return m_datetime.to_string("%T GMT+0000 (UTC)"); }
     String string() const
