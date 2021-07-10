@@ -12,7 +12,7 @@ namespace Kernel {
 KResultOr<FlatPtr> Process::sys$sync()
 {
     REQUIRE_PROMISE(stdio);
-    VirtualFileSystem::the().sync();
+    VirtualFileSystem::sync();
     return 0;
 }
 
