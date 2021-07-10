@@ -21,7 +21,7 @@ class SysFS;
 class SysFSInode;
 class SysFSDirectoryInode;
 
-class SysFSRootFolder final : public SystemExposedFolder {
+class SysFSRootFolder final : public SysFSDirectory {
     friend class SysFSComponentRegistry;
 
 public:
@@ -35,7 +35,7 @@ private:
 class SysFSComponentRegistry {
     friend class SysFS;
     friend class SysFSComponent;
-    friend class SystemExposedFolder;
+    friend class SysFSDirectory;
     friend class SysFSRootFolder;
 
 public:
@@ -46,7 +46,7 @@ public:
     SysFSComponentRegistry();
     void register_new_component(SysFSComponent&);
 
-    NonnullRefPtr<SystemExposedFolder> root_folder() { return m_root_folder; }
+    NonnullRefPtr<SysFSDirectory> root_folder() { return m_root_folder; }
 
 private:
     Lock m_lock;

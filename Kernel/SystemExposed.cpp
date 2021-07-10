@@ -26,7 +26,7 @@ SysFSComponent::SysFSComponent(StringView name)
 {
 }
 
-KResult SystemExposedFolder::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
+KResult SysFSDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(SysFSComponentRegistry::the().m_lock);
     VERIFY(m_parent_folder);
@@ -40,7 +40,7 @@ KResult SystemExposedFolder::traverse_as_directory(unsigned fsid, Function<bool(
     return KSuccess;
 }
 
-RefPtr<SysFSComponent> SystemExposedFolder::lookup(StringView name)
+RefPtr<SysFSComponent> SysFSDirectory::lookup(StringView name)
 {
     for (auto& component : m_components) {
         if (component.name() == name) {
@@ -50,18 +50,18 @@ RefPtr<SysFSComponent> SystemExposedFolder::lookup(StringView name)
     return {};
 }
 
-SystemExposedFolder::SystemExposedFolder(StringView name)
+SysFSDirectory::SysFSDirectory(StringView name)
     : SysFSComponent(name)
 {
 }
 
-SystemExposedFolder::SystemExposedFolder(StringView name, SystemExposedFolder const& parent_folder)
+SysFSDirectory::SysFSDirectory(StringView name, SysFSDirectory const& parent_folder)
     : SysFSComponent(name)
     , m_parent_folder(parent_folder)
 {
 }
 
-NonnullRefPtr<Inode> SystemExposedFolder::to_inode(SysFS const& sysfs_instance) const
+NonnullRefPtr<Inode> SysFSDirectory::to_inode(SysFS const& sysfs_instance) const
 {
     return SysFSDirectoryInode::create(sysfs_instance, *this);
 }

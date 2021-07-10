@@ -17,7 +17,7 @@
 namespace Kernel {
 namespace ACPI {
 
-class ExposedFolder : public SystemExposedFolder {
+class ExposedFolder : public SysFSDirectory {
 public:
     static void initialize();
 

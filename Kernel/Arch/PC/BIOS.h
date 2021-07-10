@@ -92,7 +92,7 @@ private:
     size_t m_smbios_structure_table_length;
 };
 
-class BIOSExposedFolder : public SystemExposedFolder {
+class BIOSExposedFolder : public SysFSDirectory {
 public:
     static void initialize();
 

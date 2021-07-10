@@ -43,7 +43,7 @@ private:
     InodeIndex m_component_index {};
 };
 
-class SystemExposedFolder : public SysFSComponent {
+class SysFSDirectory : public SysFSComponent {
 public:
     virtual KResultOr<size_t> entries_count() const override { return m_components.size(); };
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
@@ -53,10 +53,10 @@ public:
     virtual NonnullRefPtr<Inode> to_inode(SysFS const& sysfs_instance) const override final;
 
 protected:
-    explicit SystemExposedFolder(StringView name);
-    SystemExposedFolder(StringView name, SystemExposedFolder const& parent_folder);
+    explicit SysFSDirectory(StringView name);
+    SysFSDirectory(StringView name, SysFSDirectory const& parent_folder);
     NonnullRefPtrVector<SysFSComponent> m_components;
-    RefPtr<SystemExposedFolder> m_parent_folder;
+    RefPtr<SysFSDirectory> m_parent_folder;
 };
 
 }

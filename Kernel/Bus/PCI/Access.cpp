@@ -368,13 +368,13 @@ void Capability::write32(u32 field, u32 value)
     PCI::write32(m_address, m_ptr + field, value);
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ExposedDeviceFolder> ExposedDeviceFolder::create(const SystemExposedFolder& parent_folder, Address address)
+UNMAP_AFTER_INIT NonnullRefPtr<ExposedDeviceFolder> ExposedDeviceFolder::create(const SysFSDirectory& parent_folder, Address address)
 {
     return adopt_ref(*new (nothrow) ExposedDeviceFolder(parent_folder, address));
 }
 
-UNMAP_AFTER_INIT ExposedDeviceFolder::ExposedDeviceFolder(const SystemExposedFolder& parent_folder, Address address)
-    : SystemExposedFolder(String::formatted("{:04x}:{:04x}:{:02x}.{}", address.seg(), address.bus(), address.device(), address.function()), parent_folder)
+UNMAP_AFTER_INIT ExposedDeviceFolder::ExposedDeviceFolder(const SysFSDirectory& parent_folder, Address address)
+    : SysFSDirectory(String::formatted("{:04x}:{:04x}:{:02x}.{}", address.seg(), address.bus(), address.device(), address.function()), parent_folder)
 {
     m_components.append(ExposedAttribute::create("vendor", *this, PCI_VENDOR_ID, 2));
     m_components.append(ExposedAttribute::create("device_id", *this, PCI_DEVICE_ID, 2));
@@ -393,7 +393,7 @@ UNMAP_AFTER_INIT void BusExposedFolder::initialize()
 }
 
 UNMAP_AFTER_INIT BusExposedFolder::BusExposedFolder()
-    : SystemExposedFolder("pci", SysFSComponentRegistry::the().root_folder())
+    : SysFSDirectory("pci", SysFSComponentRegistry::the().root_folder())
 {
     PCI::enumerate([&](const Address& address, ID) {
         auto pci_device = PCI::ExposedDeviceFolder::create(*this, address);
