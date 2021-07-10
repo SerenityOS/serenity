@@ -148,6 +148,8 @@ private:
     float m_difficulty {};
     float m_restart_cooldown {};
     const RefPtr<Gfx::Bitmap> m_background_bitmap { Gfx::Bitmap::load_from_file("/res/icons/flappybug/background.png") };
+    const Gfx::IntRect m_score_rect { 10, 10, 20, 20 };
+    const Gfx::IntRect m_text_rect { game_width / 2 - 80, game_height / 2 - 40, 160, 80 };
 };
 
 }
