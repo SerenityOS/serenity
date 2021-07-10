@@ -28,6 +28,20 @@ On Linux, QEMU is significantly faster if it's able to use KVM. The run script w
 if `/dev/kvm` exists and is readable+writable by the current user. On Windows, ensure that you have
 WHPX acceleration enabled.
 
+### Slow boot on HiDPI systems
+
+On some Windows systems running with >100% scaling, the booting phase of Serenity might slow to a crawl. Changing the
+zoom settings of the QEMU window will speed up the emulation, but you'll have to squint harder to read the smaller display.
+
+The default display backend (`SERENITY_QEMU_DISPLAY_BACKEND=sdl,gl=off`) does _not_ have this problem. If you're
+running into this problem, make sure you haven't changed the QEMU display backend.
+
+A quick workaround is opening the properties of the QEMU executable at `C:\Program Files\qemu\qemu-system-x86_64.exe`, and
+in the Compatibility tab changing the DPI settings to force the scaling to be performed by the System, by changing the
+setting at at the bottom of the window. The QEMU window will now render at normal size while retaining acceptable emulation speeds.
+
+This is being tracked as issue [#7657](https://github.com/SerenityOS/serenity/issues/7657).
+
 ### Boot fails with "Error: Kernel Image too big for memory slot. Halting!"
 
 This means the kernel is too large again. Contact us on the discord server or open a GitHub Issue about it.
