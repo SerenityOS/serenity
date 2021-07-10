@@ -389,11 +389,11 @@ UNMAP_AFTER_INIT ExposedDeviceFolder::ExposedDeviceFolder(const SystemExposedFol
 UNMAP_AFTER_INIT void BusExposedFolder::initialize()
 {
     auto pci_folder = adopt_ref(*new (nothrow) BusExposedFolder());
-    SystemRegistrar::the().register_new_component(pci_folder);
+    SysFSComponentRegistry::the().register_new_component(pci_folder);
 }
 
 UNMAP_AFTER_INIT BusExposedFolder::BusExposedFolder()
-    : SystemExposedFolder("pci", SystemRegistrar::the().root_folder())
+    : SystemExposedFolder("pci", SysFSComponentRegistry::the().root_folder())
 {
     PCI::enumerate([&](const Address& address, ID) {
         auto pci_device = PCI::ExposedDeviceFolder::create(*this, address);

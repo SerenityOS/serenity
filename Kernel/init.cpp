@@ -143,7 +143,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
     ACPI::initialize();
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
-    SystemRegistrar::initialize();
+    SysFSComponentRegistry::initialize();
     ProcFSComponentsRegistrar::initialize();
     PCI::initialize();
     PCISerialDevice::detect();

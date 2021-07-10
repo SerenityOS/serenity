@@ -96,7 +96,7 @@ UNMAP_AFTER_INIT void BIOSExposedFolder::set_dmi_32_bit_entry_initialization_val
 UNMAP_AFTER_INIT void BIOSExposedFolder::initialize()
 {
     auto bios_folder = adopt_ref(*new (nothrow) BIOSExposedFolder());
-    SystemRegistrar::the().register_new_component(bios_folder);
+    SysFSComponentRegistry::the().register_new_component(bios_folder);
     bios_folder->create_components();
 }
 
@@ -135,7 +135,7 @@ OwnPtr<KBuffer> BIOSExposedFolder::smbios_structure_table() const
 }
 
 UNMAP_AFTER_INIT BIOSExposedFolder::BIOSExposedFolder()
-    : SystemExposedFolder("bios", SystemRegistrar::the().root_folder())
+    : SystemExposedFolder("bios", SysFSComponentRegistry::the().root_folder())
 {
     auto entry_32bit = find_dmi_entry32bit_point();
     m_dmi_entry_point = entry_32bit.value();
