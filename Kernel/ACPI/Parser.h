@@ -9,8 +9,8 @@
 #include <AK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/ACPI/Initialize.h>
+#include <Kernel/FileSystem/SysFSComponent.h>
 #include <Kernel/PhysicalAddress.h>
-#include <Kernel/SystemExposed.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VirtualAddress.h>
 
