@@ -262,8 +262,11 @@ MainWidget::MainWidget()
     m_open_action = GUI::CommonActions::make_open_action([this](auto&) {
         auto fd_response = m_file_system_access_client->prompt_open_file(Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
 
-        if (fd_response.error() != 0)
+        if (fd_response.error() != 0) {
+            if (fd_response.error() != -1)
+                GUI::MessageBox::show_error(window(), String::formatted("Opening \"{}\" failed: {}", fd_response.chosen_file().value(), strerror(fd_response.error())));
             return;
+        }
 
         if (editor().document().is_modified()) {
             auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
@@ -279,8 +282,11 @@ MainWidget::MainWidget()
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         auto response = m_file_system_access_client->prompt_save_file(m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "txt" : m_extension, Core::StandardPaths::home_directory(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
 
-        if (response.error() != 0)
+        if (response.error() != 0) {
+            if (response.error() != -1)
+                GUI::MessageBox::show_error(window(), String::formatted("Saving \"{}\" failed: {}", response.chosen_file().value(), strerror(response.error())));
             return;
+        }
 
         if (!m_editor->write_to_file_and_close(response.fd()->take_fd())) {
             GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
@@ -297,8 +303,11 @@ MainWidget::MainWidget()
         if (!m_path.is_empty()) {
             auto response = m_file_system_access_client->request_file(m_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
 
-            if (response.error() != 0)
+            if (response.error() != 0) {
+                if (response.error() != -1)
+                    GUI::MessageBox::show_error(window(), String::formatted("Unable to save file: {}", strerror(response.error())));
                 return;
+            }
 
             int fd = response.fd()->take_fd();
 
