@@ -30,10 +30,6 @@ By default this will be located at `/mnt/c/Program Files/qemu/qemu-system-x86_64
 - Set the `SERENITY_QEMU_BIN` environment variable to the location above. For example: \
 `export SERENITY_QEMU_BIN='/mnt/c/Program Files/qemu/qemu-system-x86_64.exe'`
 
-- Set the `SERENITY_KERNEL_CMDLINE` environment variable to disable VirtIO support (Because it is currently broken on
-  native windows QEMU):
-`export SERENITY_KERNEL_CMDLINE="disable_virtio"`
-
 - `ninja run` as usual.
 
 ### Hardware acceleration
