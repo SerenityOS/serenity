@@ -1149,4 +1149,10 @@ TEST_CASE(bre_basic)
     EXPECT_EQ(regcomp(&regex, "15{1,2}", REG_NOSUB | REG_ICASE), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "15{1,2}", 0, NULL, 0), REG_NOERR);
     regfree(&regex);
+
+    EXPECT_EQ(regcomp(&regex, "1[56]", REG_NOSUB | REG_ICASE), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "15", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "16", 0, NULL, 0), REG_NOERR);
+    EXPECT_EQ(regexec(&regex, "17", 0, NULL, 0), REG_NOMATCH);
+    regfree(&regex);
 }
