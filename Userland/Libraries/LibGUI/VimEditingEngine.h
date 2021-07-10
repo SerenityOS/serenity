@@ -166,7 +166,8 @@ private:
     String m_yank_buffer {};
     void yank(YankType);
     void yank(TextRange);
-    void put();
+    void put_before();
+    void put_after();
 
     TextPosition m_selection_start_position = {};
     void update_selection_on_cursor_move();
