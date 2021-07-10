@@ -15,7 +15,7 @@ NonnullRefPtr<Plan9FS> Plan9FS::create(FileDescription& file_description)
 }
 
 Plan9FS::Plan9FS(FileDescription& file_description)
-    : FileBackedFS(file_description)
+    : FileBackedFileSystem(file_description)
     , m_completion_blocker(*this)
 {
 }

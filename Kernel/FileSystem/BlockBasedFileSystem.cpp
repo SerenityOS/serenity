@@ -64,8 +64,8 @@ public:
 
         if (m_clean_list.is_empty()) {
             // Not a single clean entry! Flush writes and try again.
-            // NOTE: We want to make sure we only call FileBackedFS flush here,
-            //       not some FileBackedFS subclass flush!
+            // NOTE: We want to make sure we only call FileBackedFileSystem flush here,
+            //       not some FileBackedFileSystem subclass flush!
             m_fs.flush_writes_impl();
             return get(block_index);
         }
@@ -105,7 +105,7 @@ private:
 };
 
 BlockBasedFS::BlockBasedFS(FileDescription& file_description)
-    : FileBackedFS(file_description)
+    : FileBackedFileSystem(file_description)
 {
     VERIFY(file_description.file().is_seekable());
 }

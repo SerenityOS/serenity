@@ -15,7 +15,7 @@ namespace Kernel {
 
 class Plan9FSInode;
 
-class Plan9FS final : public FileBackedFS {
+class Plan9FS final : public FileBackedFileSystem {
     friend class Plan9FSInode;
 
 public:

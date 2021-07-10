@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-class BlockBasedFS : public FileBackedFS {
+class BlockBasedFS : public FileBackedFileSystem {
 public:
     TYPEDEF_DISTINCT_ORDERED_ID(u64, BlockIndex);
 

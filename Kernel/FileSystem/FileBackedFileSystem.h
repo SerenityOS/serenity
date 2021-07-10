@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,9 +11,9 @@
 
 namespace Kernel {
 
-class FileBackedFS : public FileSystem {
+class FileBackedFileSystem : public FileSystem {
 public:
-    virtual ~FileBackedFS() override;
+    virtual ~FileBackedFileSystem() override;
 
     File& file() { return m_file_description->file(); }
     FileDescription& file_description() { return *m_file_description; }
@@ -21,7 +21,7 @@ public:
     FileDescription& file_description() const { return *m_file_description; }
 
 protected:
-    explicit FileBackedFS(FileDescription&);
+    explicit FileBackedFileSystem(FileDescription&);
 
 private:
     virtual bool is_file_backed() const override { return true; }

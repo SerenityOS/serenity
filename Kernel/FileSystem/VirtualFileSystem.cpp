@@ -128,7 +128,7 @@ bool VirtualFileSystem::mount_root(FileSystem& fs)
     }
 
     m_root_inode = move(root_inode);
-    dmesgln("VirtualFileSystem: mounted root from {} ({})", fs.class_name(), static_cast<FileBackedFS&>(fs).file_description().absolute_path());
+    dmesgln("VirtualFileSystem: mounted root from {} ({})", fs.class_name(), static_cast<FileBackedFileSystem&>(fs).file_description().absolute_path());
 
     m_mounts.append(move(mount));
 

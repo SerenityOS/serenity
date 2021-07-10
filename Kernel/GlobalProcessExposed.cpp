@@ -353,7 +353,7 @@ private:
             fs_object.add("mount_flags", mount.flags());
 
             if (fs.is_file_backed())
-                fs_object.add("source", static_cast<const FileBackedFS&>(fs).file_description().absolute_path());
+                fs_object.add("source", static_cast<const FileBackedFileSystem&>(fs).file_description().absolute_path());
             else
                 fs_object.add("source", "none");
         });
