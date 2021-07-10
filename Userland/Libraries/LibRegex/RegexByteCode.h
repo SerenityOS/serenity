@@ -347,7 +347,7 @@ public:
         // LABEL _END = alterantive_bytecode.size
     }
 
-    void insert_bytecode_repetition_min_max(ByteCode& bytecode_to_repeat, size_t minimum, Optional<size_t> maximum, bool greedy = true)
+    static void transform_bytecode_repetition_min_max(ByteCode& bytecode_to_repeat, size_t minimum, Optional<size_t> maximum, bool greedy = true)
     {
         ByteCode new_bytecode;
         new_bytecode.insert_bytecode_repetition_n(bytecode_to_repeat, minimum);
@@ -381,7 +381,7 @@ public:
             extend(bytecode_to_repeat);
     }
 
-    void insert_bytecode_repetition_min_one(ByteCode& bytecode_to_repeat, bool greedy)
+    static void transform_bytecode_repetition_min_one(ByteCode& bytecode_to_repeat, bool greedy)
     {
         // LABEL _START = -bytecode_to_repeat.size()
         // REGEXP
@@ -395,7 +395,7 @@ public:
         bytecode_to_repeat.empend(-(bytecode_to_repeat.size() + 1)); // Jump to the _START label
     }
 
-    void insert_bytecode_repetition_any(ByteCode& bytecode_to_repeat, bool greedy)
+    static void transform_bytecode_repetition_any(ByteCode& bytecode_to_repeat, bool greedy)
     {
         // LABEL _START
         // FORKJUMP _END  (FORKSTAY -> Greedy)
@@ -423,7 +423,7 @@ public:
         bytecode_to_repeat = move(bytecode);
     }
 
-    void insert_bytecode_repetition_zero_or_one(ByteCode& bytecode_to_repeat, bool greedy)
+    static void transform_bytecode_repetition_zero_or_one(ByteCode& bytecode_to_repeat, bool greedy)
     {
         // FORKJUMP _END (FORKSTAY -> Greedy)
         // REGEXP
