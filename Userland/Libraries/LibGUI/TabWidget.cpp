@@ -85,11 +85,12 @@ void TabWidget::set_active_widget(Widget* widget)
         m_active_widget->set_visible(false);
     m_active_widget = widget;
     if (m_active_widget) {
+        GUI::ScopedPaintEventDisable disable_paint_events(*widget);
         m_active_widget->set_relative_rect(child_rect_for_size(size()));
         if (active_widget_had_focus)
             m_active_widget->set_focus(true);
         m_active_widget->set_visible(true);
-        deferred_invoke([this](auto&) {
+        deferred_invoke([this, disable_paint_events = move(disable_paint_events)](auto&) {
             if (on_change)
                 on_change(*m_active_widget);
         });
