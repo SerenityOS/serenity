@@ -780,43 +780,6 @@ KResult VirtualFileSystem::rmdir(StringView path, Custody& base)
     return parent_inode.remove_child(KLexicalPath::basename(path));
 }
 
-VirtualFileSystem::Mount::Mount(FileSystem& guest_fs, Custody* host_custody, int flags)
-    : m_guest(guest_fs.root_inode())
-    , m_guest_fs(guest_fs)
-    , m_host_custody(host_custody)
-    , m_flags(flags)
-{
-}
-
-VirtualFileSystem::Mount::Mount(Inode& source, Custody& host_custody, int flags)
-    : m_guest(source)
-    , m_guest_fs(source.fs())
-    , m_host_custody(host_custody)
-    , m_flags(flags)
-{
-}
-
-String VirtualFileSystem::Mount::absolute_path() const
-{
-    if (!m_host_custody)
-        return "/";
-    return m_host_custody->absolute_path();
-}
-
-Inode* VirtualFileSystem::Mount::host()
-{
-    if (!m_host_custody)
-        return nullptr;
-    return &m_host_custody->inode();
-}
-
-const Inode* VirtualFileSystem::Mount::host() const
-{
-    if (!m_host_custody)
-        return nullptr;
-    return &m_host_custody->inode();
-}
-
 void VirtualFileSystem::for_each_mount(Function<void(const Mount&)> callback) const
 {
     for (auto& mount : m_mounts) {
