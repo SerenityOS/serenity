@@ -49,6 +49,27 @@ struct ByteReader {
         value = v._32;
     }
 
+    static void load(const u8* address, u64& value)
+    {
+        union {
+            u64 _64;
+            u8 _8[8];
+        } v { ._64 = 0 };
+        __builtin_memcpy(&v._8, address, 8);
+        value = v._64;
+    }
+
+    template<typename T>
+    static T* load_pointer(const u8* address)
+    {
+        if constexpr (sizeof(T*) == 4) {
+            return reinterpret_cast<T*>(load32(address));
+        } else {
+            static_assert(sizeof(T*) == 8, "sizeof(T*) must be either 4 or 8");
+            return reinterpret_cast<T*>(load64(address));
+        }
+    }
+
     static u16 load16(const u8* address)
     {
         u16 value;
@@ -59,6 +80,13 @@ struct ByteReader {
     static u32 load32(const u8* address)
     {
         u32 value;
+        load(address, value);
+        return value;
+    }
+
+    static u64 load64(const u8* address)
+    {
+        u64 value;
         load(address, value);
         return value;
     }
