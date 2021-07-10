@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Region.h"
+#include "SoftFPU.h"
 #include "ValueWithShadow.h"
 #include <AK/ByteReader.h>
 #include <LibX86/Instruction.h>
@@ -35,6 +36,8 @@ union PartAddressableRegister {
 class SoftCPU final
     : public X86::Interpreter
     , public X86::InstructionStream {
+    friend SoftFPU;
+
 public:
     using ValueWithShadowType8 = ValueWithShadow<u8>;
     using ValueWithShadowType16 = ValueWithShadow<u16>;
@@ -264,6 +267,10 @@ public:
     ValueWithShadow<u8> dl() const { return const_gpr8(X86::RegisterDL); }
     ValueWithShadow<u8> dh() const { return const_gpr8(X86::RegisterDH); }
 
+    long double fpu_get(u8 index) const { return m_fpu.fpu_get(index); }
+    long double fpu_pop() { return m_fpu.fpu_pop(); }
+    MMX mmx_get(u8 index) const { return m_fpu.mmx_get(index); };
+
     void set_eax(ValueWithShadow<u32> value) { gpr32(X86::RegisterEAX) = value; }
     void set_ebx(ValueWithShadow<u32> value) { gpr32(X86::RegisterEBX) = value; }
     void set_ecx(ValueWithShadow<u32> value) { gpr32(X86::RegisterECX) = value; }
@@ -290,6 +297,10 @@ public:
     void set_ch(ValueWithShadow<u8> value) { gpr8(X86::RegisterCH) = value; }
     void set_dl(ValueWithShadow<u8> value) { gpr8(X86::RegisterDL) = value; }
     void set_dh(ValueWithShadow<u8> value) { gpr8(X86::RegisterDH) = value; }
+
+    void fpu_push(long double value) { m_fpu.fpu_push(value); }
+    void fpu_set(u8 index, long double value) { m_fpu.fpu_set(index, value); }
+    void mmx_set(u8 index, MMX value) { m_fpu.mmx_set(index, value); }
 
     bool of() const { return m_eflags & Flags::OF; }
     bool sf() const { return m_eflags & Flags::SF; }
@@ -1160,6 +1171,7 @@ private:
 
 private:
     Emulator& m_emulator;
+    SoftFPU m_fpu;
 
     PartAddressableRegister m_gpr[8];
     PartAddressableRegister m_gpr_shadow[8];
@@ -1171,44 +1183,6 @@ private:
 
     u32 m_eip { 0 };
     u32 m_base_eip { 0 };
-
-    long double m_fpu[8];
-    // FIXME: Shadow for m_fpu.
-
-    // FIXME: Use bits 11 to 13 in the FPU status word for this.
-    int m_fpu_top { -1 };
-
-    void fpu_push(long double n)
-    {
-        ++m_fpu_top;
-        fpu_set(0, n);
-    }
-    long double fpu_pop()
-    {
-        auto n = fpu_get(0);
-        m_fpu_top--;
-        return n;
-    }
-    long double fpu_get(int i)
-    {
-        VERIFY(i >= 0 && i <= m_fpu_top);
-        return m_fpu[m_fpu_top - i];
-    }
-    void fpu_set(int i, long double n)
-    {
-        VERIFY(i >= 0 && i <= m_fpu_top);
-        m_fpu[m_fpu_top - i] = n;
-    }
-
-    // FIXME: Or just something like m_flags_tainted?
-    ValueWithShadow<u16> m_fpu_cw { 0, 0 };
-
-    // FIXME: Make FPU/MMX memory its own struct
-    // FIXME: FPU Status word
-    // FIXME: FPU Tag Word
-    // FIXME: FPU Data Pointer
-    // FIXME: FPU Instruction Pointer ?
-    // FIXME: FPU Last OP Code ?
 
     Region* m_cached_code_region { nullptr };
     u8* m_cached_code_base_ptr { nullptr };
