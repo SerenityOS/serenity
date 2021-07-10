@@ -19,6 +19,7 @@
 namespace regex {
 
 class PosixExtendedParser;
+class PosixBasicParser;
 class ECMA262Parser;
 
 template<typename T>
@@ -32,6 +33,10 @@ struct ParserTraits : public GenericParserTraits<T> {
 
 template<>
 struct ParserTraits<PosixExtendedParser> : public GenericParserTraits<PosixOptions> {
+};
+
+template<>
+struct ParserTraits<PosixBasicParser> : public GenericParserTraits<PosixOptions> {
 };
 
 template<>
@@ -112,15 +117,59 @@ protected:
     ParserState m_parser_state;
 };
 
-class PosixExtendedParser final : public Parser {
-public:
-    explicit PosixExtendedParser(Lexer& lexer)
+class AbstractPosixParser : public Parser {
+protected:
+    explicit AbstractPosixParser(Lexer& lexer)
         : Parser(lexer)
     {
     }
 
-    PosixExtendedParser(Lexer& lexer, Optional<typename ParserTraits<PosixExtendedParser>::OptionsType> regex_options)
+    AbstractPosixParser(Lexer& lexer, Optional<typename ParserTraits<PosixExtendedParser>::OptionsType> regex_options)
         : Parser(lexer, regex_options.value_or({}))
+    {
+    }
+
+    ALWAYS_INLINE bool parse_bracket_expression(Vector<CompareTypeAndValuePair>&, size_t&);
+};
+
+class PosixBasicParser final : public AbstractPosixParser {
+public:
+    explicit PosixBasicParser(Lexer& lexer)
+        : AbstractPosixParser(lexer)
+    {
+    }
+
+    PosixBasicParser(Lexer& lexer, Optional<typename ParserTraits<PosixBasicParser>::OptionsType> regex_options)
+        : AbstractPosixParser(lexer, regex_options.value_or({}))
+    {
+    }
+
+    ~PosixBasicParser() = default;
+
+private:
+    bool parse_internal(ByteCode&, size_t&) override;
+
+    bool parse_root(ByteCode&, size_t&);
+    bool parse_re_expression(ByteCode&, size_t&);
+    bool parse_simple_re(ByteCode&, size_t&);
+    bool parse_nonduplicating_re(ByteCode&, size_t&);
+    bool parse_one_char_or_collation_element(ByteCode&, size_t&);
+
+    size_t m_capture_group { 0 };
+    constexpr static size_t number_of_addressable_capture_groups = 9;
+    size_t m_capture_group_minimum_lengths[number_of_addressable_capture_groups] { 0 };
+    bool m_capture_group_seen[number_of_addressable_capture_groups] { false };
+};
+
+class PosixExtendedParser final : public AbstractPosixParser {
+public:
+    explicit PosixExtendedParser(Lexer& lexer)
+        : AbstractPosixParser(lexer)
+    {
+    }
+
+    PosixExtendedParser(Lexer& lexer, Optional<typename ParserTraits<PosixExtendedParser>::OptionsType> regex_options)
+        : AbstractPosixParser(lexer, regex_options.value_or({}))
     {
     }
 
@@ -197,9 +246,11 @@ private:
 };
 
 using PosixExtended = PosixExtendedParser;
+using PosixBasic = PosixBasicParser;
 using ECMA262 = ECMA262Parser;
 
 }
 
 using regex::ECMA262;
+using regex::PosixBasic;
 using regex::PosixExtended;
