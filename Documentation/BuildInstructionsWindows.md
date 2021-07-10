@@ -39,9 +39,8 @@ By default this will be located at `/mnt/c/Program Files/qemu/qemu-system-x86_64
 ### Hardware acceleration
 
 The steps above will run QEMU in software virtualisation mode, which is very slow.
-QEMU supports hardware acceleration on Windows via the [Windows Hypervisor Platform](https://docs.microsoft.com/en-us/virtualization/api/) (WHPX), a user-mode virtualisation API that can be used alongside Hyper-V.
-This is important to note as WSL2 itself runs on top of Hyper-V, which conflicts with other acceleration technologies
-such as Intel HAXM.
+QEMU supports hardware acceleration on Windows via the [Windows Hypervisor Platform](https://docs.microsoft.com/en-us/virtualization/api/)
+(WHPX), a user-mode virtualisation API that can be used alongside Hyper-V.
 
 To run SerenityOS in a WHPX-enabled QEMU VM:
 
@@ -55,19 +54,9 @@ To run SerenityOS in a WHPX-enabled QEMU VM:
 - Disable Virtual Machine eXtensions on the vCPU, otherwise some versions of QEMU will crash out with a "WHPX: Unexpected VP exit code 4" error: \
 `export SERENITY_QEMU_CPU="max,vmx=off"`
 
-- `ninja run` as usual.
+- Start the VM with `Meta/serenity.sh run` as usual.
 
 ### Known issues with WHPX
-
-#### Freeze on boot in Scheduler
-
-If Serenity freezes on boot with the log message: `Scheduler[0]: idle loop running` then you are likely missing some emulated CPU features.
-Please ensure you have installed the most recent version of [QEMU for Windows](https://qemu.weilnetz.de/) and that you
-have followed the step above to enable the maximum feature set available: `export SERENITY_QEMU_CPU="max,vmx=off"`.
-
-If the steps above do not fix the problem, check the boot log for `whpx: injection failed, MSI (0, 0) delivery: 0, dest_mode: 0, trigger mode: 0, vector: 0, lost (c0350005)`.
-If present, try disabling the KVM in-kernel interrupt handler by extending the above to `export SERENITY_EXTRA_QEMU_ARGS="-accel whpx,kernel-irqchip=off"`.
-This seems to be an issue for some users with QEMU 6.x.
 
 #### Illegal instruction on boot
 
