@@ -717,4 +717,20 @@ int TreeView::tree_column_x_offset() const
     return offset;
 }
 
+Gfx::IntRect TreeView::content_rect(ModelIndex const& index) const
+{
+    if (!index.is_valid())
+        return {};
+
+    Gfx::IntRect found_rect;
+    traverse_in_paint_order([&](ModelIndex const& current_index, Gfx::IntRect const& rect, Gfx::IntRect const&, int) {
+        if (index == current_index) {
+            found_rect = rect;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return found_rect;
+}
+
 }

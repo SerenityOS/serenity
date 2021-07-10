@@ -33,6 +33,9 @@ public:
 
     virtual int vertical_padding() const override { return m_vertical_padding; }
 
+    virtual Gfx::IntRect content_rect(ModelIndex const&) const override;
+    virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const& index) const override { return content_rect(index); }
+
 protected:
     TreeView();
 

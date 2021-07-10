@@ -51,6 +51,8 @@ public:
     Gfx::IntRect content_rect(int row, int column) const;
     Gfx::IntRect row_rect(int item_index) const;
 
+    virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const& index) const override;
+
     virtual void scroll_into_view(const ModelIndex&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
     void scroll_into_view(const ModelIndex& index, Orientation orientation)
     {

@@ -293,6 +293,13 @@ void AbstractTableView::context_menu_event(ContextMenuEvent& event)
         on_context_menu_request(index, event);
 }
 
+Gfx::IntRect AbstractTableView::paint_invalidation_rect(ModelIndex const& index) const
+{
+    if (!index.is_valid())
+        return {};
+    return row_rect(index.row());
+}
+
 Gfx::IntRect AbstractTableView::content_rect(int row, int column) const
 {
     auto row_rect = this->row_rect(row);
