@@ -60,7 +60,7 @@ NonnullRefPtr<Ext2FS> Ext2FS::create(FileDescription& file_description)
 }
 
 Ext2FS::Ext2FS(FileDescription& file_description)
-    : BlockBasedFS(file_description)
+    : BlockBasedFileSystem(file_description)
 {
 }
 
@@ -210,7 +210,7 @@ Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks) const
     return shape;
 }
 
-KResult Ext2FSInode::write_indirect_block(BlockBasedFS::BlockIndex block, Span<BlockBasedFS::BlockIndex> blocks_indices)
+KResult Ext2FSInode::write_indirect_block(BlockBasedFileSystem::BlockIndex block, Span<BlockBasedFileSystem::BlockIndex> blocks_indices)
 {
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     VERIFY(blocks_indices.size() <= entries_per_block);
@@ -227,7 +227,7 @@ KResult Ext2FSInode::write_indirect_block(BlockBasedFS::BlockIndex block, Span<B
     return fs().write_block(block, buffer, stream.size());
 }
 
-KResult Ext2FSInode::grow_doubly_indirect_block(BlockBasedFS::BlockIndex block, size_t old_blocks_length, Span<BlockBasedFS::BlockIndex> blocks_indices, Vector<Ext2FS::BlockIndex>& new_meta_blocks, unsigned& meta_blocks)
+KResult Ext2FSInode::grow_doubly_indirect_block(BlockBasedFileSystem::BlockIndex block, size_t old_blocks_length, Span<BlockBasedFileSystem::BlockIndex> blocks_indices, Vector<Ext2FS::BlockIndex>& new_meta_blocks, unsigned& meta_blocks)
 {
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
@@ -269,7 +269,7 @@ KResult Ext2FSInode::grow_doubly_indirect_block(BlockBasedFS::BlockIndex block, 
     return fs().write_block(block, buffer, stream.size());
 }
 
-KResult Ext2FSInode::shrink_doubly_indirect_block(BlockBasedFS::BlockIndex block, size_t old_blocks_length, size_t new_blocks_length, unsigned& meta_blocks)
+KResult Ext2FSInode::shrink_doubly_indirect_block(BlockBasedFileSystem::BlockIndex block, size_t old_blocks_length, size_t new_blocks_length, unsigned& meta_blocks)
 {
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
@@ -304,7 +304,7 @@ KResult Ext2FSInode::shrink_doubly_indirect_block(BlockBasedFS::BlockIndex block
     return KSuccess;
 }
 
-KResult Ext2FSInode::grow_triply_indirect_block(BlockBasedFS::BlockIndex block, size_t old_blocks_length, Span<BlockBasedFS::BlockIndex> blocks_indices, Vector<Ext2FS::BlockIndex>& new_meta_blocks, unsigned& meta_blocks)
+KResult Ext2FSInode::grow_triply_indirect_block(BlockBasedFileSystem::BlockIndex block, size_t old_blocks_length, Span<BlockBasedFileSystem::BlockIndex> blocks_indices, Vector<Ext2FS::BlockIndex>& new_meta_blocks, unsigned& meta_blocks)
 {
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
@@ -349,7 +349,7 @@ KResult Ext2FSInode::grow_triply_indirect_block(BlockBasedFS::BlockIndex block, 
     return fs().write_block(block, buffer, stream.size());
 }
 
-KResult Ext2FSInode::shrink_triply_indirect_block(BlockBasedFS::BlockIndex block, size_t old_blocks_length, size_t new_blocks_length, unsigned& meta_blocks)
+KResult Ext2FSInode::shrink_triply_indirect_block(BlockBasedFileSystem::BlockIndex block, size_t old_blocks_length, size_t new_blocks_length, unsigned& meta_blocks)
 {
     const auto entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     const auto entries_per_doubly_indirect_block = entries_per_block * entries_per_block;
@@ -422,7 +422,7 @@ KResult Ext2FSInode::flush_block_list()
     bool inode_dirty = false;
     VERIFY(new_shape.direct_blocks <= EXT2_NDIR_BLOCKS);
     for (unsigned i = 0; i < new_shape.direct_blocks; ++i) {
-        if (BlockBasedFS::BlockIndex(m_raw_inode.i_block[i]) != m_block_list[output_block_index])
+        if (BlockBasedFileSystem::BlockIndex(m_raw_inode.i_block[i]) != m_block_list[output_block_index])
             inode_dirty = true;
         m_raw_inode.i_block[i] = m_block_list[output_block_index].value();
         ++output_block_index;
@@ -708,7 +708,7 @@ void Ext2FS::flush_writes()
         }
     }
 
-    BlockBasedFS::flush_writes();
+    BlockBasedFileSystem::flush_writes();
 
     // Uncache Inodes that are only kept alive by the index-to-inode lookup cache.
     // We don't uncache Inodes that are being watched by at least one InodeWatcher.
@@ -855,8 +855,8 @@ KResultOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKern
 
     const int block_size = fs().block_size();
 
-    BlockBasedFS::BlockIndex first_block_logical_index = offset / block_size;
-    BlockBasedFS::BlockIndex last_block_logical_index = (offset + count) / block_size;
+    BlockBasedFileSystem::BlockIndex first_block_logical_index = offset / block_size;
+    BlockBasedFileSystem::BlockIndex last_block_logical_index = (offset + count) / block_size;
     if (last_block_logical_index >= m_block_list.size())
         last_block_logical_index = m_block_list.size() - 1;
 
@@ -1009,8 +1009,8 @@ KResultOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const Use
         return EIO;
     }
 
-    BlockBasedFS::BlockIndex first_block_logical_index = offset / block_size;
-    BlockBasedFS::BlockIndex last_block_logical_index = (offset + count) / block_size;
+    BlockBasedFileSystem::BlockIndex first_block_logical_index = offset / block_size;
+    BlockBasedFileSystem::BlockIndex last_block_logical_index = (offset + count) / block_size;
     if (last_block_logical_index >= m_block_list.size())
         last_block_logical_index = m_block_list.size() - 1;
 
