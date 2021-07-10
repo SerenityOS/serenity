@@ -488,32 +488,29 @@ bool Font::is_fixed_width() const
     return glyph_metrics(glyph_id_for_code_point('.'), 1, 1).advance_width == glyph_metrics(glyph_id_for_code_point('X'), 1, 1).advance_width;
 }
 
-int ScaledFont::width(const StringView& string) const
-{
-    Utf8View utf8 { string };
-    return width(utf8);
-}
+int ScaledFont::width(StringView const& view) const { return unicode_view_width(Utf8View(view)); }
+int ScaledFont::width(Utf8View const& view) const { return unicode_view_width(view); }
+int ScaledFont::width(Utf32View const& view) const { return unicode_view_width(view); }
 
-int ScaledFont::width(const Utf8View& utf8) const
+template<typename T>
+ALWAYS_INLINE int ScaledFont::unicode_view_width(T const& view) const
 {
+    if (view.is_empty())
+        return 0;
     int width = 0;
-    for (u32 code_point : utf8) {
+    int longest_width = 0;
+    for (auto code_point : view) {
+        if (code_point == '\n' || code_point == '\r') {
+            longest_width = max(width, longest_width);
+            width = 0;
+            continue;
+        }
         u32 glyph_id = glyph_id_for_code_point(code_point);
         auto metrics = glyph_metrics(glyph_id);
         width += metrics.advance_width;
     }
-    return width;
-}
-
-int ScaledFont::width(const Utf32View& utf32) const
-{
-    int width = 0;
-    for (size_t i = 0; i < utf32.length(); i++) {
-        u32 glyph_id = glyph_id_for_code_point(utf32.code_points()[i]);
-        auto metrics = glyph_metrics(glyph_id);
-        width += metrics.advance_width;
-    }
-    return width;
+    longest_width = max(width, longest_width);
+    return longest_width;
 }
 
 RefPtr<Gfx::Bitmap> ScaledFont::raster_glyph(u32 glyph_id) const
