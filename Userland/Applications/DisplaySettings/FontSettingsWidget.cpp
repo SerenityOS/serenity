@@ -38,7 +38,7 @@ FontSettingsWidget::FontSettingsWidget()
 
     auto& fixed_width_font_button = *find_descendant_of_type_named<GUI::Button>("fixed_width_font_button");
     fixed_width_font_button.on_click = [this](auto) {
-        auto font_picker = GUI::FontPicker::construct(window(), &m_fixed_width_font_label->font(), true);
+        auto font_picker = GUI::FontPicker::construct(window(), &m_fixed_width_font_label->font(), true, true);
         if (font_picker->exec() == GUI::Dialog::ExecOK) {
             update_label_with_font(*m_fixed_width_font_label, *font_picker->font());
         }
