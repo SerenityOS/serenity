@@ -50,12 +50,12 @@ RefPtr<SystemExposedComponent> SystemExposedFolder::lookup(StringView name)
     return {};
 }
 
-SystemExposedFolder::SystemExposedFolder(String name)
+SystemExposedFolder::SystemExposedFolder(StringView name)
     : SystemExposedComponent(name)
 {
 }
 
-SystemExposedFolder::SystemExposedFolder(String name, SystemExposedFolder const& parent_folder)
+SystemExposedFolder::SystemExposedFolder(StringView name, SystemExposedFolder const& parent_folder)
     : SystemExposedComponent(name)
     , m_parent_folder(parent_folder)
 {

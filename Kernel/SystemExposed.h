@@ -9,7 +9,7 @@
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/String.h>
+#include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileSystem.h>
@@ -53,8 +53,8 @@ public:
     virtual NonnullRefPtr<Inode> to_inode(SysFS const& sysfs_instance) const override final;
 
 protected:
-    explicit SystemExposedFolder(String name);
-    SystemExposedFolder(String name, SystemExposedFolder const& parent_folder);
+    explicit SystemExposedFolder(StringView name);
+    SystemExposedFolder(StringView name, SystemExposedFolder const& parent_folder);
     NonnullRefPtrVector<SystemExposedComponent> m_components;
     RefPtr<SystemExposedFolder> m_parent_folder;
 };
