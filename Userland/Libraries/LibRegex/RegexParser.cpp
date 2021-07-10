@@ -232,7 +232,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
             maybe_maximum = value.value();
         }
 
-        bytecode_to_repeat.insert_bytecode_repetition_min_max(bytecode_to_repeat, minimum, maybe_maximum);
+        ByteCode::transform_bytecode_repetition_min_max(bytecode_to_repeat, minimum, maybe_maximum);
 
         consume(TokenType::RightCurly, Error::MismatchingBrace);
         return !has_error();
@@ -245,7 +245,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
             consume();
 
         // Note: don't touch match_length_minimum, it's already correct
-        bytecode_to_repeat.insert_bytecode_repetition_min_one(bytecode_to_repeat, !nongreedy);
+        ByteCode::transform_bytecode_repetition_min_one(bytecode_to_repeat, !nongreedy);
         return !has_error();
 
     } else if (match(TokenType::Asterisk)) {
@@ -256,7 +256,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
         if (nongreedy)
             consume();
 
-        bytecode_to_repeat.insert_bytecode_repetition_any(bytecode_to_repeat, !nongreedy);
+        ByteCode::transform_bytecode_repetition_any(bytecode_to_repeat, !nongreedy);
 
         return !has_error();
 
@@ -268,7 +268,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
         if (nongreedy)
             consume();
 
-        bytecode_to_repeat.insert_bytecode_repetition_zero_or_one(bytecode_to_repeat, !nongreedy);
+        ByteCode::transform_bytecode_repetition_zero_or_one(bytecode_to_repeat, !nongreedy);
         return !has_error();
     }
 
@@ -956,21 +956,20 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         ungreedy = true;
     }
 
-    ByteCode new_bytecode;
     switch (repetition_mark) {
     case Repetition::OneOrMore:
-        new_bytecode.insert_bytecode_repetition_min_one(stack, !ungreedy);
+        ByteCode::transform_bytecode_repetition_min_one(stack, !ungreedy);
         break;
     case Repetition::ZeroOrMore:
-        new_bytecode.insert_bytecode_repetition_any(stack, !ungreedy);
+        ByteCode::transform_bytecode_repetition_any(stack, !ungreedy);
         match_length_minimum = 0;
         break;
     case Repetition::Optional:
-        new_bytecode.insert_bytecode_repetition_zero_or_one(stack, !ungreedy);
+        ByteCode::transform_bytecode_repetition_zero_or_one(stack, !ungreedy);
         match_length_minimum = 0;
         break;
     case Repetition::Explicit:
-        new_bytecode.insert_bytecode_repetition_min_max(stack, repeat_min.value(), repeat_max, !ungreedy);
+        ByteCode::transform_bytecode_repetition_min_max(stack, repeat_min.value(), repeat_max, !ungreedy);
         match_length_minimum *= repeat_min.value();
         break;
     case Repetition::None:
