@@ -7,7 +7,6 @@
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/SysFS.h>
-#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

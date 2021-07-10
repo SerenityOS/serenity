@@ -15,7 +15,6 @@
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Forward.h>
 #include <Kernel/KResult.h>
-#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 
@@ -48,7 +47,6 @@ public:
     virtual KResultOr<size_t> entries_count() const override { return m_components.size(); };
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
-    void add_component(SysFSComponent const&);
 
     virtual NonnullRefPtr<Inode> to_inode(SysFS const& sysfs_instance) const override final;
 
