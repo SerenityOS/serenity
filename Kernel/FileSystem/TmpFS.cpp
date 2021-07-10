@@ -110,7 +110,7 @@ InodeMetadata TmpFSInode::metadata() const
     return m_metadata;
 }
 
-KResult TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
+KResult TmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(m_lock, Lock::Mode::Shared);
 

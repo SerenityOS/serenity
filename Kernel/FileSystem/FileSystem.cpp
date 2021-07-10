@@ -19,57 +19,57 @@
 namespace Kernel {
 
 static u32 s_lastFileSystemID;
-static AK::Singleton<HashMap<u32, FS*>> s_fs_map;
+static AK::Singleton<HashMap<u32, FileSystem*>> s_file_system_map;
 
-static HashMap<u32, FS*>& all_fses()
+static HashMap<u32, FileSystem*>& all_file_systems()
 {
-    return *s_fs_map;
+    return *s_file_system_map;
 }
 
-FS::FS()
+FileSystem::FileSystem()
     : m_fsid(++s_lastFileSystemID)
 {
-    all_fses().set(m_fsid, this);
+    s_file_system_map->set(m_fsid, this);
 }
 
-FS::~FS()
+FileSystem::~FileSystem()
 {
-    all_fses().remove(m_fsid);
+    s_file_system_map->remove(m_fsid);
 }
 
-FS* FS::from_fsid(u32 id)
+FileSystem* FileSystem::from_fsid(u32 id)
 {
-    auto it = all_fses().find(id);
-    if (it != all_fses().end())
+    auto it = all_file_systems().find(id);
+    if (it != all_file_systems().end())
         return (*it).value;
     return nullptr;
 }
 
-FS::DirectoryEntryView::DirectoryEntryView(const StringView& n, InodeIdentifier i, u8 ft)
+FileSystem::DirectoryEntryView::DirectoryEntryView(const StringView& n, InodeIdentifier i, u8 ft)
     : name(n)
     , inode(i)
     , file_type(ft)
 {
 }
 
-void FS::sync()
+void FileSystem::sync()
 {
     Inode::sync();
 
-    NonnullRefPtrVector<FS, 32> fses;
+    NonnullRefPtrVector<FileSystem, 32> file_systems;
     {
         InterruptDisabler disabler;
-        for (auto& it : all_fses())
-            fses.append(*it.value);
+        for (auto& it : all_file_systems())
+            file_systems.append(*it.value);
     }
 
-    for (auto& fs : fses)
+    for (auto& fs : file_systems)
         fs.flush_writes();
 }
 
-void FS::lock_all()
+void FileSystem::lock_all()
 {
-    for (auto& it : all_fses()) {
+    for (auto& it : all_file_systems()) {
         it.value->m_lock.lock();
     }
 }

@@ -864,7 +864,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootFolder> ProcFSRootFolder::must_create()
     return folder;
 }
 
-KResult ProcFSRootFolder::traverse_as_directory(unsigned fsid, Function<bool(const FS::DirectoryEntryView&)> callback) const
+KResult ProcFSRootFolder::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(ProcFSComponentsRegistrar::the().m_lock);
     callback({ ".", { fsid, component_index() }, 0 });

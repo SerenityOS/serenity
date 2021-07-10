@@ -120,7 +120,7 @@ InodeMetadata DevPtsFSInode::metadata() const
     return m_metadata;
 }
 
-KResult DevPtsFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
+KResult DevPtsFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     if (identifier().index() > 1)
         return ENOTDIR;

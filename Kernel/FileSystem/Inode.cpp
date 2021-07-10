@@ -89,8 +89,8 @@ KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<C
     return VFS::the().resolve_path(path, base, out_parent, options, symlink_recursion_level);
 }
 
-Inode::Inode(FS& fs, InodeIndex index)
-    : m_fs(fs)
+Inode::Inode(FileSystem& fs, InodeIndex index)
+    : m_file_system(fs)
     , m_index(index)
 {
     ScopedSpinLock all_inodes_lock(s_all_inodes_lock);

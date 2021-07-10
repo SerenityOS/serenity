@@ -49,18 +49,18 @@ InodeIdentifier VFS::root_inode_id() const
     return m_root_inode->identifier();
 }
 
-KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
+KResult VFS::mount(FileSystem& fs, Custody& mount_point, int flags)
 {
     Locker locker(m_lock);
 
     auto& inode = mount_point.inode();
     dbgln("VFS: Mounting {} at {} (inode: {}) with flags {}",
-        file_system.class_name(),
+        fs.class_name(),
         mount_point.try_create_absolute_path(),
         inode.identifier(),
         flags);
     // FIXME: check that this is not already a mount point
-    Mount mount { file_system, &mount_point, flags };
+    Mount mount { fs, &mount_point, flags };
     m_mounts.append(move(mount));
     return KSuccess;
 }
@@ -112,23 +112,23 @@ KResult VFS::unmount(Inode& guest_inode)
     return ENODEV;
 }
 
-bool VFS::mount_root(FS& file_system)
+bool VFS::mount_root(FileSystem& fs)
 {
     if (m_root_inode) {
         dmesgln("VFS: mount_root can't mount another root");
         return false;
     }
 
-    Mount mount { file_system, nullptr, root_mount_flags };
+    Mount mount { fs, nullptr, root_mount_flags };
 
-    auto root_inode = file_system.root_inode();
+    auto root_inode = fs.root_inode();
     if (!root_inode->is_directory()) {
         dmesgln("VFS: root inode ({}) for / is not a directory :(", root_inode->identifier());
         return false;
     }
 
     m_root_inode = move(root_inode);
-    dmesgln("VFS: mounted root from {} ({})", file_system.class_name(), static_cast<FileBackedFS&>(file_system).file_description().absolute_path());
+    dmesgln("VFS: mounted root from {} ({})", fs.class_name(), static_cast<FileBackedFS&>(fs).file_description().absolute_path());
 
     m_mounts.append(move(mount));
 
@@ -180,7 +180,7 @@ bool VFS::is_vfs_root(InodeIdentifier inode) const
     return inode == root_inode_id();
 }
 
-KResult VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::DirectoryEntryView&)> callback)
+KResult VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(FileSystem::DirectoryEntryView const&)> callback)
 {
     return dir_inode.traverse_as_directory([&](auto& entry) {
         InodeIdentifier resolved_inode;
@@ -780,7 +780,7 @@ KResult VFS::rmdir(StringView path, Custody& base)
     return parent_inode.remove_child(KLexicalPath::basename(path));
 }
 
-VFS::Mount::Mount(FS& guest_fs, Custody* host_custody, int flags)
+VFS::Mount::Mount(FileSystem& guest_fs, Custody* host_custody, int flags)
     : m_guest(guest_fs.root_inode())
     , m_guest_fs(guest_fs)
     , m_host_custody(host_custody)
@@ -826,7 +826,7 @@ void VFS::for_each_mount(Function<void(const Mount&)> callback) const
 
 void VFS::sync()
 {
-    FS::sync();
+    FileSystem::sync();
 }
 
 Custody& VFS::root_custody()

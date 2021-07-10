@@ -16,7 +16,7 @@ namespace Kernel {
 
 class TmpFSInode;
 
-class TmpFS final : public FS {
+class TmpFS final : public FileSystem {
     friend class TmpFSInode;
 
 public:
@@ -56,7 +56,7 @@ public:
     // ^Inode
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
     virtual InodeMetadata metadata() const override;
-    virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override;
+    virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, FileDescription*) override;

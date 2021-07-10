@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,14 +25,14 @@ class FileDescription;
 class LocalSocket;
 class VMObject;
 
-class FS : public RefCounted<FS> {
+class FileSystem : public RefCounted<FileSystem> {
     friend class Inode;
 
 public:
-    virtual ~FS();
+    virtual ~FileSystem();
 
     unsigned fsid() const { return m_fsid; }
-    static FS* from_fsid(u32);
+    static FileSystem* from_fsid(u32);
     static void sync();
     static void lock_all();
 
@@ -69,7 +69,7 @@ public:
     virtual u8 internal_file_type_to_directory_entry_type(const DirectoryEntryView& entry) const { return entry.file_type; }
 
 protected:
-    FS();
+    FileSystem();
 
     void set_block_size(u64 size) { m_block_size = size; }
     void set_fragment_size(size_t size) { m_fragment_size = size; }
@@ -83,14 +83,14 @@ private:
     bool m_readonly { false };
 };
 
-inline FS* InodeIdentifier::fs()
+inline FileSystem* InodeIdentifier::fs()
 {
-    return FS::from_fsid(m_fsid);
+    return FileSystem::from_fsid(m_fsid);
 }
 
-inline const FS* InodeIdentifier::fs() const
+inline const FileSystem* InodeIdentifier::fs() const
 {
-    return FS::from_fsid(m_fsid);
+    return FileSystem::from_fsid(m_fsid);
 }
 
 }

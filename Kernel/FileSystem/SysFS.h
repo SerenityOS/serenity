@@ -26,7 +26,7 @@ class SysFSRootFolder final : public SystemExposedFolder {
 
 public:
     static NonnullRefPtr<SysFSRootFolder> create();
-    virtual KResult traverse_as_directory(unsigned, Function<bool(const FS::DirectoryEntryView&)>) const override;
+    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
 
 private:
     SysFSRootFolder();
@@ -53,7 +53,7 @@ private:
     NonnullRefPtr<SysFSRootFolder> m_root_folder;
 };
 
-class SysFS final : public FS {
+class SysFS final : public FileSystem {
     friend class SysFSInode;
     friend class SysFSDirectoryInode;
 
@@ -83,7 +83,7 @@ public:
 protected:
     SysFSInode(const SysFS&, const SystemExposedComponent&);
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
-    virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override;
+    virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual InodeMetadata metadata() const override;
@@ -111,7 +111,7 @@ protected:
     SysFSDirectoryInode(const SysFS&, const SystemExposedComponent&);
     // ^Inode
     virtual InodeMetadata metadata() const override;
-    virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override;
+    virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual KResultOr<size_t> directory_entry_count() const override;
 

@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-class FileBackedFS : public FS {
+class FileBackedFS : public FileSystem {
 public:
     virtual ~FileBackedFS() override;
 

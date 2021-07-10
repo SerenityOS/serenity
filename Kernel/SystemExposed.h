@@ -24,7 +24,7 @@ public:
     virtual KResultOr<size_t> entries_count() const { VERIFY_NOT_REACHED(); };
     virtual StringView name() const { return m_name->view(); }
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const { VERIFY_NOT_REACHED(); }
-    virtual KResult traverse_as_directory(unsigned, Function<bool(const FS::DirectoryEntryView&)>) const { VERIFY_NOT_REACHED(); }
+    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual RefPtr<SystemExposedComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*) { return -EROFS; }
     virtual size_t size() const { return 0; }
@@ -46,7 +46,7 @@ private:
 class SystemExposedFolder : public SystemExposedComponent {
 public:
     virtual KResultOr<size_t> entries_count() const override { return m_components.size(); };
-    virtual KResult traverse_as_directory(unsigned, Function<bool(const FS::DirectoryEntryView&)>) const override;
+    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SystemExposedComponent> lookup(StringView name) override;
     void add_component(const SystemExposedComponent&);
 
