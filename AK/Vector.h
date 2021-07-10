@@ -775,10 +775,26 @@ private:
     StorageType& raw_first() { return raw_at(0); }
     StorageType& raw_at(size_t index) { return *slot(index); }
 
+    constexpr static size_t inline_storage_size()
+    {
+        if constexpr (inline_capacity == 0)
+            return 0;
+        else
+            return inline_capacity * sizeof(StorageType);
+    }
+
+    constexpr static size_t inline_storage_align()
+    {
+        if constexpr (inline_capacity == 0)
+            return 1;
+        else
+            return alignof(StorageType);
+    }
+
     size_t m_size { 0 };
     size_t m_capacity { 0 };
 
-    alignas(StorageType) unsigned char m_inline_buffer_storage[sizeof(StorageType) * inline_capacity];
+    alignas(inline_storage_align()) unsigned char m_inline_buffer_storage[inline_storage_size()];
     StorageType* m_outline_buffer { nullptr };
 };
 

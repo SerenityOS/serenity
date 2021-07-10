@@ -510,3 +510,13 @@ TEST_CASE(reference_deletion_should_not_affect_object)
     }
     EXPECT_EQ(times_deleted, 1u);
 }
+
+TEST_CASE(allows_incomplete_types_with_zero_inline_storage)
+{
+    struct IncompleteStruct;
+    Vector<IncompleteStruct> vector_of_incomplete_type;
+
+    struct IncompleteStruct {
+    };
+    vector_of_incomplete_type.append({});
+}
