@@ -11,6 +11,7 @@
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <AK/TypeCasts.h>
 #include <AK/Vector.h>
 #include <LibCpp/Lexer.h>
 
@@ -30,6 +31,9 @@ public:
     virtual ~ASTNode() = default;
     virtual const char* class_name() const = 0;
     virtual void dump(FILE* = stdout, size_t indent = 0) const;
+
+    template<typename T>
+    bool fast_is() const = delete;
 
     ASTNode* parent() const { return m_parent; }
     Position start() const
@@ -547,7 +551,6 @@ public:
     virtual const char* class_name() const override { return "FunctionCall"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual bool is_function_call() const override { return true; }
-    virtual bool is_templatized() const { return false; }
 
     const Expression* callee() const { return m_callee.ptr(); }
     void set_callee(RefPtr<Expression>&& callee) { m_callee = move(callee); }
@@ -910,5 +913,39 @@ public:
     {
     }
 };
+
+template<>
+inline bool ASTNode::fast_is<Identifier>() const { return is_identifier(); }
+template<>
+inline bool ASTNode::fast_is<MemberExpression>() const { return is_member_expression(); }
+template<>
+inline bool ASTNode::fast_is<VariableOrParameterDeclaration>() const { return is_variable_or_parameter_declaration(); }
+template<>
+inline bool ASTNode::fast_is<FunctionCall>() const { return is_function_call(); }
+template<>
+inline bool ASTNode::fast_is<Type>() const { return is_type(); }
+template<>
+inline bool ASTNode::fast_is<Declaration>() const { return is_declaration(); }
+template<>
+inline bool ASTNode::fast_is<Name>() const { return is_name(); }
+template<>
+inline bool ASTNode::fast_is<DummyAstNode>() const { return is_dummy_node(); }
+
+template<>
+inline bool ASTNode::fast_is<VariableDeclaration>() const { return is_declaration() && verify_cast<Declaration>(*this).is_variable_declaration(); }
+template<>
+inline bool ASTNode::fast_is<StructOrClassDeclaration>() const { return is_declaration() && verify_cast<Declaration>(*this).is_struct_or_class(); }
+template<>
+inline bool ASTNode::fast_is<FunctionDeclaration>() const { return is_declaration() && verify_cast<Declaration>(*this).is_function(); }
+template<>
+inline bool ASTNode::fast_is<NamespaceDeclaration>() const { return is_declaration() && verify_cast<Declaration>(*this).is_namespace(); }
+template<>
+inline bool ASTNode::fast_is<Constructor>() const { return is_declaration() && verify_cast<Declaration>(*this).is_function() && verify_cast<FunctionDeclaration>(*this).is_constructor(); }
+template<>
+inline bool ASTNode::fast_is<Destructor>() const { return is_declaration() && verify_cast<Declaration>(*this).is_function() && verify_cast<FunctionDeclaration>(*this).is_destructor(); }
+template<>
+inline bool ASTNode::fast_is<NamedType>() const { return is_type() && verify_cast<Type>(*this).is_named_type(); }
+template<>
+inline bool ASTNode::fast_is<TemplatizedName>() const { return is_name() && verify_cast<Name>(*this).is_templatized(); }
 
 }
