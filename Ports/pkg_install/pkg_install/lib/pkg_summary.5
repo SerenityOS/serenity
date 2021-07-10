@@ -1,0 +1,138 @@
+.\"	$NetBSD: pkg_summary.5,v 1.10 2011/10/19 21:15:39 cheusov Exp $
+.\"
+.\" Copyright (c) 2006 The NetBSD Foundation
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\" 3. Neither the name of the NetBSD Foundation nor the names of its
+.\"    contributors may be used to endorse or promote products derived from
+.\"    this software without specific prior written permission.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION AND ITS CONTRIBUTORS
+.\" ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT
+.\" NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+.\" FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT
+.\" SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+.\" INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+.\" (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+.\" SUCH DAMAGE.
+.\"
+.Dd April 11, 2009
+.Dt PKG_SUMMARY 5
+.Os
+.Sh NAME
+.Nm pkg_summary
+.Nd summary of binary package repository
+.Sh DESCRIPTION
+The file
+.Nm
+contains information about each package in a binary package
+repository as a list of variable-value pairs.
+The variables describing different packages are separated by one empty
+line.
+Each line has the format
+.Ev VARIABLE=VALUE .
+If the value consists of more than one line, each line is prefixed with
+.Ev VARIABLE= .
+Multi-line variables are guaranteed to be in consecutive lines.
+.Pp
+The following variables are used:
+.Bl -tag -width indent
+.It Ev BUILD_DATE
+(required) The date and time when the package was built.
+.It Ev CATEGORIES
+(required) A list of categories which this package fits in, separated by
+space.
+.It Ev COMMENT
+(required) A one-line description of the package.
+.It Ev CONFLICTS
+(optional) A list of dewey patterns of packages the package conflicts
+with, one per line.
+If missing, this package has no conflicts.
+.It Ev DEPENDS
+(optional) A list of dewey patterns of packages the package depends
+on, one per line.
+If missing, this package has no dependencies.
+.It Ev DESCRIPTION
+(required) A more detailed description of the package.
+.\" DIGEST
+.It Ev FILE_CKSUM
+(optional) A checksum type supported by
+.Xr digest 1
+and checksum separated by space character.
+.It Ev FILE_NAME
+(optional) The name of the binary package file.
+If not given,
+.Pa PKGNAME.tgz
+can be assumed.
+.It Ev FILE_SIZE
+(optional) The size of the binary package file, in bytes.
+.It Ev HOMEPAGE
+(optional) A URL where more information about the package can be found.
+.It Ev LICENSE
+(optional) The type of license this package is distributed under.
+If empty or missing, it is OSI-approved.
+.It Ev MACHINE_ARCH
+(required) The architecture on which the package was compiled.
+.It Ev OPSYS
+(required) The operating system on which the package was compiled.
+.It Ev OS_VERSION
+(required) The version of the operating system on which the package
+was compiled.
+.It Ev PKG_OPTIONS
+(optional) Any options selected to compile this package.
+If missing, the package does not support options.
+.It Ev PKGNAME
+(required) The name of the package.
+.It Ev PKGPATH
+(required) The path of the package directory within pkgsrc.
+.It Ev PKGTOOLS_VERSION
+(required) The version of the package tools used to create the package.
+.It Ev PREV_PKGPATH
+(optional) The previous path of the package directory within pkgsrc when
+a package was moved.
+(See
+.Ev SUPERSEDES
+below for a renamed package.)
+.It Ev PROVIDES
+(optional) A list of shared libraries provided by the package,
+including major version number, one per line.
+If missing, this package does not provide shared libraries.
+.It Ev REQUIRES
+(optional) A list of shared libraries needed by the package, including
+major version number, one per line.
+If missing, this package does not require shared libraries.
+.It Ev SIZE_PKG
+(required) The size of the package when installed, in bytes.
+.It Ev SUPERSEDES
+(optional) A list of dewey patterns of previous packages this
+package replaces, one per line.
+This is used for package renaming.
+.El
+.Pp
+The
+.Nm pkg_summary
+file can be generated using the
+.Xr pkg_info 1
+.Fl X
+option.
+For example, the following will list this data for all installed packages:
+.Pp
+.Dl "pkg_info -X -a"
+.Sh SEE ALSO
+.Xr digest 1 ,
+.Xr pkg_info 1
+.Sh HISTORY
+The
+.Nm pkg_summary
+format was first officially documented in April 2006.

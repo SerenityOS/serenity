@@ -1,0 +1,21 @@
+# $NetBSD: README,v 1.9 2007/07/16 09:57:56 joerg Exp $
+# Original from FreeBSD, no rcs id.
+
+This is the pkg_install suite of tools for doing maintainance of
+software "packages".  More documentation is available in the man pages
+for each individual command.
+
+This code was written by Jordan Hubbard for FreeBSD, snatched and
+mildly reshaped by John Kohl in NetBSD and the changes taken back into
+FreeBSD again by Jordan, who then proceeded to add another couple
+of dozen features on top.  Whee! :-)
+
+In another round of enhancements, NetBSD changes were added by
+Alistair Crooks, Hubert Feyrer, Thorsten Frueauf, Rene Hexel,
+Christian E. Hopps, Thomas Klausner, Johnny Lam, Matthias Scheler and
+Adrian Portelli.
+
+When making snapshots, please modify PKGTOOLS_VERSION in lib/version.h
+to that day's date.
+
+pkgsrc/pkgtools/pkg_install is the canonical location for these sources.

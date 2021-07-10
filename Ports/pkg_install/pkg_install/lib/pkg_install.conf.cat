@@ -1,0 +1,183 @@
+PKG_INSTALL.CONF(5)           File Formats Manual          PKG_INSTALL.CONF(5)
+
+NNAAMMEE
+     ppkkgg__iinnssttaallll..ccoonnff - configuration file for package installation tools
+
+DDEESSCCRRIIPPTTIIOONN
+     The file ppkkgg__iinnssttaallll..ccoonnff contains system defaults for the package
+     installation tools as a list of variable-value pairs.  Each line has the
+     format VARIABLE=VALUE.  If the value consists of more than one line, each
+     line is prefixed with VARIABLE=.
+
+     The current value of a variable can be checked by running
+           ppkkgg__aaddmmiinn ccoonnffiigg--vvaarr VVAARRIIAABBLLEE
+
+     Some variables are overriden by environmental variables of the same name.
+     Those are marked by (*).
+
+     The following variables are supported:
+
+     ACCEPTABLE_LICENSES
+             Space-separated list of licenses packages are allowed to carry.
+             License names are case-sensitive.
+
+     ACTIVE_FTP
+             Force the use of active FTP.
+
+     CACHE_INDEX
+             Cache directory listings in memory.  This avoids retransfers of
+             the large directory index for HTTP and is enabled by default.
+
+     CERTIFICATE_ANCHOR_PKGS
+             Path to the file containing the certificates used for validating
+             binary packages.  A package is trusted when a certificate chain
+             ends in one of the certificates contained in this file.  The
+             certificates must be PEM-encoded.
+
+     CERTIFICATE_ANCHOR_PKGVULN
+             Analogous to CERTIFICATE_ANCHOR_PKGS.  The _p_k_g_-_v_u_l_n_e_r_a_b_i_l_i_t_i_e_s is
+             trusted when a certificate chain ends in one of the certificates
+             contained in this file.
+
+     CERTIFICATE_CHAIN
+             Path to a file containing additional certificates that can be
+             used for completing certificate chains when validating binary
+             packages or pkg-vulnerabilities files.
+
+     CHECK_LICENSE
+             Check the license conditions of packages before installing them.
+             Supported values are:
+
+             no             The check is not performed.
+
+             yes            The check is performed if the package has license
+                            conditions set.
+
+             always         Passing the license check is required.  Missing
+                            license conditions are considered an error.
+
+     CHECK_END_OF_LIFE
+             During vulnerability checks, consider packages that have reached
+             end-of-life as vulnerable.  This option is enabled by default.
+
+     CHECK_OS_VERSION
+             If "no", pkg_add will not warn if the host OS version does not
+             exactly match the OS version the package was built on.  The
+             default is "yes".
+
+     CHECK_OSABI
+             If "no", osabi package does not check OS version.  The default is
+             "yes".
+
+     CHECK_VULNERABILITIES
+             Check for vulnerabilities when installing packages.  Supported
+             values are:
+
+             never          No check is performed.
+
+             always         Passing the vulnerability check is required.  A
+                            missing pkg-vulnerabilities file is considered an
+                            error.
+
+             interactive    The user is always asked to confirm installation
+                            of vulnerable packages.
+
+     CONFIG_CACHE_CONNECTIONS
+             Limit the global connection cache to this value.  For FTP, this
+             is the number of sessions without active command.  For HTTP, this
+             is the number of connections open with keep-alive.
+
+     CONFIG_CACHE_CONNECTIONS_HOST
+             Like CONFIG_CACHE_CONNECTIONS, but limit the number of
+             connections to the host as well.  See fetch(3) for further
+             details
+
+     DEFAULT_ACCEPTABLE_LICENSES
+             Space-separated list of common Free and Open Source licenses
+             packages are allowed to carry.  The default value contains all
+             OSI approved licenses in pkgsrc on the date pkg_install was
+             released.  License names are case-sensitive.
+
+     GPG     Path to gpg(1), which can be used to verify the signature in the
+             _p_k_g_-_v_u_l_n_e_r_a_b_i_l_i_t_i_e_s file when running
+                   ppkkgg__aaddmmiinn cchheecckk--ppkkgg--vvuullnneerraabbiilliittiieess --ss
+             or
+                   ppkkgg__aaddmmiinn ffeettcchh--ppkkgg--vvuullnneerraabbiilliittiieess --ss
+             It can also be used to verify and sign binary packages.
+
+     GPG_KEYRING_PKGVULN
+             Non-default keyring to use for verifying GPG signatures of
+             _p_k_g_-_v_u_l_n_e_r_a_b_i_l_i_t_i_e_s.
+
+     GPG_KEYRING_SIGN
+             Non-default keyring to use for signing packages with GPG.
+
+     GPG_KEYRING_VERIFY
+             Non-default keyring to use for verifying GPG signature of
+             packages.
+
+     GPG_SIGN_AS
+             User-id to use for signing packages.
+
+     IGNORE_PROXY
+             Use direct connections and ignore FTP_PROXY and HTTP_PROXY.
+
+     IGNORE_URL
+             One line per advisory which should be ignored when running
+                   ppkkgg__aaddmmiinn aauuddiitt
+             The URL from the _p_k_g_-_v_u_l_n_e_r_a_b_i_l_i_t_i_e_s file should be used as
+             value.
+
+     PKG_DBDIR (*)
+             Location of the packages database.  This option is always
+             overriden by the argument of the --KK option.
+
+     PKG_PATH (*)
+             Search path for packages.  The entries are separated by
+             semicolon.  Each entry specifies a directory or URL to search for
+             packages.
+
+     PKG_REFCOUNT_DBDIR (*)
+             Location of the package reference counts database directory.  The
+             default value is _$_{_P_K_G___D_B_D_I_R_}_._r_e_f_c_o_u_n_t.
+
+     PKGVULNDIR
+             Directory name in which the _p_k_g_-_v_u_l_n_e_r_a_b_i_l_i_t_i_e_s file resides.
+             Default is _$_{_P_K_G___D_B_D_I_R_}.
+
+     PKGVULNURL
+             URL which is used for updating the local _p_k_g_-_v_u_l_n_e_r_a_b_i_l_i_t_i_e_s file
+             when running
+                   ppkkgg__aaddmmiinn ffeettcchh--ppkkgg--vvuullnneerraabbiilliittiieess
+             The default location is ftp.NetBSD.org using HTTP.  _N_o_t_e:
+             Usually, only the compression type should be changed.  Currently
+             supported are uncompressed files and files compressed by bzip2(1)
+             (_._b_z_2) or gzip(1) (_._g_z).
+
+     VERBOSE_NETIO
+             Log details of network IO to stderr.
+
+     VERIFIED_INSTALLATION
+             Set trust level used when installation.  Supported values are:
+
+             never          No signature checks are performed.
+
+             always         A valid signature is required.  If the binary
+                            package can not be verified, the installation is
+                            terminated
+
+             trusted        A valid signature is required.  If the binary
+                            package can not be verified, the user is asked
+                            interactively.
+
+             interactive    The user is always asked interactively when
+                            installing a package.
+
+FFIILLEESS
+     _@_S_Y_S_C_O_N_F_D_I_R_@_/_p_k_g___i_n_s_t_a_l_l_._c_o_n_f      Default location for the file
+                                        described in this manual page.
+
+SSEEEE AALLSSOO
+     pkg_add(1), pkg_admin(1), pkg_create(1), pkg_delete(1), pkg_info(1)
+
+pkgsrc                         October 28, 2014                         pkgsrc

@@ -1,0 +1,103 @@
+# $NetBSD: Makefile.in,v 1.39 2015/05/02 12:52:59 joerg Exp $
+#
+
+srcdir=		@srcdir@
+prefix= 	@prefix@
+VPATH=		@srcdir@
+SHELL=		/bin/sh
+
+CC=		@CC@
+CCLD=		@CC@
+CFLAGS=		-I$(srcdir) -I. @INCLUDES@ @CFLAGS@
+CPPFLAGS=	@CPPFLAGS@
+DEFS=		@DEFS@
+INSTALL=	@INSTALL@
+LIBMODE?=	644
+LDFLAGS=	@LDFLAGS@
+
+AWK=		@AWK@
+AR=		@AR@
+RANLIB=		@RANLIB@
+
+LIB=		libnbcompat.a
+
+INCS=		nbcompat.h \
+		nbcompat/assert.h \
+		nbcompat/cdefs.h \
+		nbcompat/ctype.h \
+		nbcompat/dirent.h \
+		nbcompat/endian.h \
+		nbcompat/err.h \
+		nbcompat/fnmatch.h \
+		nbcompat/fts.h \
+		nbcompat/getopt.h \
+		nbcompat/glob.h \
+		nbcompat/grp.h \
+		nbcompat/limits.h \
+		nbcompat/md5.h \
+		nbcompat/nbconfig.h \
+		nbcompat/netdb.h \
+		nbcompat/param.h \
+		nbcompat/paths.h \
+		nbcompat/poll.h \
+		nbcompat/pwd.h \
+		nbcompat/queue.h \
+		nbcompat/regex.h \
+		nbcompat/rmd160.h \
+		nbcompat/sha1.h \
+		nbcompat/sha2.h \
+		nbcompat/stat.h \
+		nbcompat/statvfs.h \
+		nbcompat/stdbool.h \
+		nbcompat/stdio.h \
+		nbcompat/stdlib.h \
+		nbcompat/string.h \
+		nbcompat/termcap.h \
+		nbcompat/time.h \
+		nbcompat/types.h \
+		nbcompat/tzfile.h \
+		nbcompat/unistd.h \
+		nbcompat/util.h \
+		nbcompat/vis.h
+
+OBJS=		@LIBOBJS@
+
+WITH_DB=	@WITH_DB@
+
+.if ${WITH_DB} == "yes"
+.  include "${.CURDIR}/db/Makefile.inc"
+.endif
+
+LINK=		$(CCLD) $(CFLAGS) $(LDFLAGS) -o $@
+COMPILE=	$(CC) $(CPPFLAGS) $(CFLAGS)
+
+all: $(LIB)
+all $(OBJS): nbcompat/nbconfig.h
+
+.c.o:
+	$(COMPILE) $(DEFS) -c $<
+
+$(LIB): $(OBJS)
+	$(AR) cr $@ $(OBJS)
+	$(RANLIB) $@
+
+nbcompat/nbconfig.h: nbcompat/config.h nbcompat.awk
+	$(AWK) -f nbcompat.awk nbcompat/config.h > $@
+
+install:
+	$(INSTALL) -m 755 -d ${DESTDIR}$(prefix)/lib
+	$(INSTALL) -m $(LIBMODE) ${LIB} ${DESTDIR}$(prefix)/lib
+	$(RANLIB) ${DESTDIR}$(prefix)/lib/$(LIB)
+	$(INSTALL) -m 755 -d ${DESTDIR}$(prefix)/include
+	$(INSTALL) -m 755 -d ${DESTDIR}$(prefix)/include/nbcompat
+	@for file in $(INCS); do \
+		echo "$(INSTALL) -m 444 $$file ${DESTDIR}$(prefix)/include/$$file"; \
+		$(INSTALL) -m 444 $$file ${DESTDIR}$(prefix)/include/$$file; \
+	done
+
+clean:
+	rm -f *.a *.o bits nbcompat/nbcompat.h
+
+distclean: clean
+	rm -f Makefile config.log config.status configure.lineno
+	rm -f nbcompat/config.h nbcompat/nbconfig.h

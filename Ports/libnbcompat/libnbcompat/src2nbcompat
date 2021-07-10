@@ -1,0 +1,182 @@
+#!/bin/sh
+#
+#	$NetBSD: src2nbcompat,v 1.11 2018/08/22 20:48:38 maya Exp $
+#
+# Copyright (c) 2003 The NetBSD Foundation, Inc.
+# All rights reserved.
+#
+# This code is derived from software contributed to The NetBSD Foundation
+# by Johnny C. Lam.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+# ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+# BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+
+if [ $# -lt 2 ]; then echo "src2nbcompat src dest"; exit 1; fi
+
+src=$1
+dest=$2
+
+case $src in
+/*)	;;
+*)	src=`pwd`/$src ;;
+esac
+
+case $dest in
+/*)	;;
+*)	dest=`pwd`/$dest ;;
+esac
+
+make_dir()
+{
+	_d="$1"
+	_destdir="$2"
+	_newd=${3-`echo $_d | sed 's,^\./,,'`}
+	case $_newd in
+	*CVS)
+		;;
+	.)
+		;;
+	*)
+		mkdir -p $_destdir/$_newd
+		;;
+	esac
+}
+
+copy_file()
+{
+	_f="$1"
+	_destdir="$2"
+	_newf=${3-`echo $_f | sed 's,^\./,,'`}
+	case $_newf in
+	*CVS/*)
+		# Skip copying over any CVS information.
+		;;
+	*Makefile|*Makefile.inc)
+		# Skip copying over the Makefiles since we'll be using
+		# a GNU autoconf-based build infrastructure.
+		;;
+	*.sh)
+		# Assume shell scripts will require variable substitution
+		# by the GNU configure script.
+		#
+		cp $_f $_destdir/$_newf.in
+		;;
+	*.[ch])
+		# Add "#include <nbcompat.h>" before the first system
+		# header inclusion.  Protect all system headers with
+		# "#if HAVE_FOO_H ... #endif" guards.
+		#
+		awk '							\
+			BEGIN { config = 0; nbcompat = 0 }		\
+			/^#[ 	]*if[ 	]+HAVE_NBTOOL_CONFIG_H/ {	\
+				if (config == 0) {			\
+					print "#if HAVE_CONFIG_H";	\
+					print "#include \"config.h\"";	\
+					print "#endif";			\
+					config = 1;			\
+				}					\
+			}						\
+			/^#[ 	]*include[ 	]+/ {			\
+				if (config == 0) {			\
+					print "#if HAVE_CONFIG_H";	\
+					print "#include \"config.h\"";	\
+					print "#endif";			\
+					config = 1;			\
+				}					\
+			}						\
+			/^#[ 	]*include[ 	]+<[^ 	]*>/ {		\
+				guard = $0;				\
+				sub("#[ 	]*include[ 	]+<", "HAVE_", guard); \
+				sub(">.*", "", guard);			\
+				gsub("[-/.]", "_", guard);		\
+				guard = toupper(guard);			\
+				if (nbcompat == 0) {			\
+					print "#include <nbcompat.h>";	\
+					nbcompat = 1;			\
+				};					\
+				print "#if " guard;			\
+				print $0;				\
+				print "#endif";				\
+				next;					\
+			}						\
+			{ print }					\
+		' $_f > $_destdir/$_newf.tmp
+		if [ -f $_destdir/$_newf ] &&				\
+		   diff -q -I "\$Net""BSD.*\$" $_destdir/$_newf $_destdir/$_newf.tmp >/dev/null; then
+			rm -f $_destdir/$_newf.tmp
+		else
+			rm -f $_destdir/$_newf
+			mv $_destdir/$_newf.tmp $_destdir/$_newf
+		fi
+		;;
+	*.[1-9])
+		# Copy the manpage over, and generate the catpage.
+		cp $_newf $_destdir/$_newf.tmp
+		if [ -f $_destdir/$_newf ] &&				\
+		   diff -q -I "\$Net""BSD.*\$" $_destdir/$_newf $_destdir/$_newf.tmp >/dev/null; then
+			rm -f $_destdir/$_newf.tmp
+		else
+			mv -f $_destdir/$_newf.tmp $_destdir/$_newf
+			_catf=`echo $_newf | sed 's,\.\([1-9]\),.cat\1,'`
+			nroff -mandoc $_newf > $_destdir/$_catf
+		fi
+		;;
+	*)
+		# Everything else just gets copied verbatim.
+		cp $_newf $_destdir/$_newf.tmp
+		if [ -f $_destdir/$_newf ] &&				\
+		   diff -q -I "\$Net""BSD.*\$" $_destdir/$_newf $_destdir/$_newf.tmp >/dev/null; then
+			rm -f $_destdir/$_newf.tmp
+		else
+			mv -f $_destdir/$_newf.tmp $_destdir/$_newf
+		fi
+		;;
+	esac
+}
+
+if [ -f "$src" ]; then
+	srcdir=`dirname $src`
+	destdir=`dirname $dest`
+else
+	srcdir="$src"
+	destdir="$dest"
+fi
+
+echo "Preparing directory $destdir"
+mkdir -p $destdir
+
+if [ -f "$src" ]; then
+	echo "Copying $src to $dest"
+	cd $srcdir
+	copy_file `basename $src` $destdir `basename $dest`
+else
+	echo "Copying files and directories to $destdir"
+	cd $srcdir
+	find . -type d -print |
+	while read d; do
+		make_dir $d $destdir
+	done
+	find . \! -type d -print |
+	while read f; do
+		copy_file $f $destdir
+	done
+fi

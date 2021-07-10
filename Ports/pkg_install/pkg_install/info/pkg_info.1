@@ -1,0 +1,349 @@
+.\" $NetBSD: pkg_info.1,v 1.34 2015/01/11 22:53:44 wiz Exp $
+.\"
+.\" FreeBSD install - a package for the installation and maintenance
+.\" of non-core utilities.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" Jordan K. Hubbard
+.\"
+.\"
+.\"     @(#)pkg_info.1
+.\"
+.Dd January 11, 2015
+.Dt PKG_INFO 1
+.Os
+.Sh NAME
+.Nm pkg_info
+.Nd a utility for displaying information on software packages
+.Sh SYNOPSIS
+.Nm
+.Op Fl BbcDdFfhIikLmNnpqRrSsVvX
+.Op Fl E Ar pkg-name
+.Op Fl e Ar pkg-name
+.Op Fl K Ar pkg_dbdir
+.Op Fl l Ar prefix
+.Ar pkg-name ...
+.Nm
+.Op Fl a | Fl u
+.Op flags
+.Nm
+.Op Fl Q Ar variable
+.Ar pkg-name ...
+.Sh DESCRIPTION
+The
+.Nm
+command is used to dump out information for packages, which may be either
+packed up in files or already installed on the system with the
+.Xr pkg_create 1
+command.
+.Pp
+The
+.Ar pkg-name
+may be the name of an installed package (with or without version), a
+pattern matching several installed packages (see the
+.Sx PACKAGE WILDCARDS
+section for a description of possible patterns),
+the pathname to a
+binary package, a filename belonging to an installed
+package (with
+.Fl F ) ,
+or a URL to an FTP-available package.
+.Pp
+The following command line options are available:
+.Bl -tag -width indent
+.It Fl a
+Show information for all currently installed packages.
+See also
+.Fl u .
+When neither
+.Fl a
+nor
+.Fl u
+is given, the former is assumed.
+.It Fl B
+Show some of the important definitions used when building
+the binary package (the
+.Dq Build information )
+for each package.
+Additionally, any installation information variables
+(lowercase) can be queried, too.
+In particular,
+.Ar automatic
+tells if a package was installed automatically
+as a dependency of another package.
+.It Fl b
+Show the
+.Nx
+RCS Id strings from the files used in the construction
+of the binary package (the
+.Dq Build version )
+for each package.
+These files are the package Makefile, any patch files, any checksum
+files, and the packing list file.
+.It Fl c
+Show the one-line comment field for each package.
+.It Fl D
+Show the install-message file (if any) for each package.
+.It Fl d
+Show the long-description field for each package.
+.It Fl E Ar pkg-name
+This option
+allows you to test for the existence of a given package.
+If a package identified by
+.Ar pkg-name
+is currently installed, return code is 0, otherwise 1.
+The name of the best matching package found installed is printed to
+stdout unless turned off using the
+.Fl q
+option.
+.Ar pkg-name
+can contain wildcards (see the
+.Sx PACKAGE WILDCARDS
+section below).
+.It Fl e Ar pkg-name
+This option
+allows you to test for the existence of a given package.
+If a package identified by
+.Ar pkg-name
+is currently installed, return code is 0, otherwise 1.
+The names of any package(s) found installed are printed to
+stdout unless turned off using the
+.Fl q
+option.
+.Ar pkg-name
+can contain wildcards (see the
+.Sx PACKAGE WILDCARDS
+section below).
+.It Fl F
+Interpret any
+.Ar pkg-name
+given as filename, and query information on the package that
+file belongs to.
+This can be used to query information on a per-file basis.
+See the
+.Sx TECHNICAL DETAILS
+section below for more information.
+.It Fl f
+Show the packing list instructions for each package.
+.It Fl h
+Print usage message and exit.
+.It Fl I
+Show the index entry for each package.
+This option is assumed when no arguments or relevant flags are specified.
+.It Fl i
+Show the install script (if any) for each package.
+.It Fl K Ar pkg_dbdir
+Override the value of the
+.Dv PKG_DBDIR
+configuration option with the value
+.Ar pkg_dbdir .
+.It Fl k
+Show the de-install script (if any) for each package.
+.It Fl L
+Show the files within each package.
+This is different from just viewing the packing list, since full pathnames
+for everything are generated.
+Files that were created dynamically during installation of the package
+are not listed.
+.It Fl l Ar prefix
+Prefix each information category header (see
+.Fl q )
+shown with
+.Ar prefix .
+This is primarily of use to front-end programs that want to request a
+lot of different information fields at once for a package, but don't
+necessary want the output intermingled in such a way that they can't
+organize it.
+This lets you add a special token to the start of each field.
+.It Fl m
+Show the mtree file (if any) for each package.
+.It Fl N
+Show which packages each package was built with (exact dependencies), if any.
+.It Fl n
+Show which packages each package needs (depends upon), if any.
+.It Fl p
+Show the installation prefix for each package.
+.It Fl Q Ar variable
+Show the definition of
+.Ar variable
+from the build information for each package.
+An empty string is returned if no such variable definition is found for
+the package(s).
+.It Fl q
+Be
+.Dq quiet
+in emitting report headers and such, just dump the
+raw info (basically, assume a non-human reading).
+.It Fl R
+For each package, show the packages that require it.
+.It Fl r
+For each package, show the packages that require it.
+Continue recursively to show all dependents.
+.It Fl S
+Show the size of this package and all the packages it requires,
+in bytes.
+.It Fl s
+Show the size of this package in bytes.
+The size is calculated by adding up the size of each file of the package.
+.It Fl u
+Show information for all user-installed packages:
+automatically installed packages (as dependencies
+of other packages) are not displayed.
+See also
+.Fl a .
+.It Fl V
+Print version number and exit.
+.It Fl v
+Turn on verbose output.
+.It Fl X
+Print summary information for each package.
+The summary format is
+described in
+.Xr pkg_summary 5 .
+Its primary use is to contain all information about the contents of a
+(remote) binary package repository needed by package managing software.
+.El
+.Sh TECHNICAL DETAILS
+Package info is either extracted from package files named on the
+command line, or from already installed package information
+in
+.Pa \*[Lt]PKG_DBDIR\*[Gt]/\*[Lt]pkg-name\*[Gt] .
+.Pp
+When the
+.Fl F
+option is used,
+a filename can be given instead of a package name to query
+information on the (installed) package that file belongs to.
+The filename is resolved to a package name using the package database.
+The filename must be absolute, as in the output of
+.Dl pkg_info -aF .
+For example,
+.Dl pkg_info -Fe /path/to/file
+can be used to display the package the given file belongs to, and
+.Dl pkg_info -LF /path/to/file
+can be used to display all files belonging to the package the given
+file belongs to.
+.Sh PACKAGE WILDCARDS
+In the places where a package name/version is expected, e.g., for the
+.Fl e
+option, several forms can be used.
+Either use a package name with or without version, or specify a
+package wildcard that gets matched against all installed packages.
+.Pp
+Package wildcards use
+.Xr fnmatch 3 .
+In addition,
+.Xr csh 1
+style {,} alternates have been implemented.
+Package version numbers can also be matched in a relational manner
+using the
+.Dq \*[Ge] ,
+.Dq \*[Le] ,
+.Dq \*[Gt] ,
+and
+.Dq \*[Lt]
+operators.
+For example,
+.Dl pkg_info -e 'name\*[Ge]1.3'
+will match versions 1.3 and later of the
+.Dq name
+package.
+(Make sure to use shell quoting.)
+Additionally, ranges can be defined, by giving both a lower bound
+.Po with
+.Dq \*[Gt]
+or
+.Dq \*[Ge]
+.Pc
+as well as an upper bound
+.Po with
+.Dq \*[Lt]
+or
+. Dq \*[Le]
+.Pc .
+The lower bound has to come first.
+For example,
+.Dl pkg_info -e 'name\*[Ge]1.3\*[Lt]2.0'
+will match versions 1.3 (inclusive) to 2.0 (exclusive) of package
+.Dq name .
+.Pp
+The collating sequence of the various package version numbers is
+unusual, but strives to be consistent.
+The magic string
+.Dq alpha
+equates to
+.Dq alpha version ,
+and sorts before a beta version.
+The magic string
+.Dq beta
+equates to
+.Dq beta version ,
+and sorts before a release candidate.
+The magic string
+.Dq rc
+equates to
+.Dq release candidate ,
+and sorts before a release.
+The magic string
+.Dq pre ,
+short for
+.Dq pre-release ,
+is a synonym for
+.Dq rc .
+For example,
+.Dq name-1.3alpha2
+will sort before
+.Dq name-1.3beta1 ,
+and they both sort before
+.Dq name-1.3rc1 .
+Similarly,
+.Dq name-1.3rc3
+will sort before
+.Dq name-1.3 ,
+and after
+.Dq name-1.2.9 .
+The magic string
+.Dq pl
+equates to
+.Dq patch level ,
+and has the same value as a dot
+.Pq Sq \&.
+in the dewey-decimal ordering schemes,
+as does the underscore
+.Pq Sq _ .
+Additionally, alphabetic characters sort in the same place as
+their numeric counterparts, so that
+.Dq name-1.2e
+has the same sorting value as
+.Dq name-1.2.5 .
+.Sh ENVIRONMENT
+See
+.Xr pkg_install.conf 5
+for options, that can also be specified using the environment.
+.Sh SEE ALSO
+.Xr pkg_add 1 ,
+.Xr pkg_admin 1 ,
+.Xr pkg_create 1 ,
+.Xr pkg_delete 1 ,
+.Xr pkg_install.conf 5
+.Xr pkgsrc 7
+.Sh AUTHORS
+.Bl -tag -width indent -compact
+.It "Jordan Hubbard"
+most of the work
+.It "John Kohl"
+refined it for
+.Nx
+.It "Hubert Feyrer"
+.Nx
+wildcard dependency processing, pkgdb, depends displaying,
+pkg size display, and more.
+.El

@@ -1,0 +1,317 @@
+.\"	$NetBSD: pkg_admin.1,v 1.39 2020/12/02 10:22:39 wiz Exp $
+.\"
+.\" Copyright (c) 1999-2019 The NetBSD Foundation, Inc.
+.\" All rights reserved.
+.\"
+.\" This code is derived from software contributed to The NetBSD Foundation
+.\" by Hubert Feyrer <hubert@feyrer.de> and
+.\" by Joerg Sonnenberger <joerg@NetBSD.org>.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+.\" ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+.\" TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+.\" PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+.\" BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+.\" CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+.\" SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+.\" INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+.\" CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+.\" ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+.\" POSSIBILITY OF SUCH DAMAGE.
+.\"
+.Dd August 22, 2020
+.Dt PKG_ADMIN 1
+.Os
+.Sh NAME
+.Nm pkg_admin
+.Nd perform various administrative tasks to the pkg system
+.Sh SYNOPSIS
+.Nm
+.Op Fl bqSVv
+.Op Fl C Ar config
+.Op Fl d Ar lsdir
+.Op Fl K Ar pkg_dbdir
+.Op Fl s Ar sfx_pattern
+.Ar command Op args ...
+.Sh DESCRIPTION
+This command performs various administrative tasks around the
+.Nx
+Packages System.
+.Sh OPTIONS
+The following command-line options are supported:
+.Bl -tag -width indent
+.It Fl b
+Print only the base names when matching package names for
+.Cm lsall
+and
+.Cm lsbest .
+.It Fl C Ar config
+Read the configuration file from
+.Ar config
+instead of the system default.
+.It Fl d Ar lsdir
+Set
+.Ar lsdir
+as the path to the directory in which to find matching package names for
+.Cm lsall
+and
+.Cm lsbest .
+.It Fl K Ar pkg_dbdir
+Override the value of the
+.Dv PKG_DBDIR
+configuration option with the value
+.Ar pkg_dbdir .
+.It Fl q
+Perform checks in a quiet manner.
+In normal operation,
+.Nm
+prints a
+.Sq \&.
+to standard output to indicate progress.
+This option suppresses this progress indicator.
+.It Fl S
+Set the shell glob pattern for package suffixes when matching package
+names for
+.Cm lsall
+and
+.Cm lsbest
+to be the null suffix.
+.It Fl s Ar sfx_pattern
+Set the shell glob pattern for package suffixes when matching package
+names for
+.Cm lsall
+and
+.Cm lsbest .
+The default pattern is ".t[bg]z".
+.It Fl V
+Print version number and exit.
+.It Fl v
+Be more verbose.
+.El
+.Pp
+The following commands are supported:
+.Bl -tag -width indent
+.It Cm audit Oo Fl eis Oc Oo Fl t Ar type Oc Oo Ar pkg Oc ...
+Check the listed installed packages for vulnerabilities.
+If no package is given, check all installed packages.
+If
+.Fl e
+is given, override the
+.Dv CHECK_END_OF_LIFE
+option from
+.Xr pkg_install.conf 5
+with
+.Qq Li yes .
+If
+.Fl i
+is given,
+any advisory ignored by
+.Dv IGNORE_URL
+in
+.Xr pkg_install.conf 5
+is included but flagged as
+.Qq ignored .
+If
+.Fl s
+is given, check the signature of the pkg-vulnerabilities file before using it.
+.Fl t
+restricts the reported vulnerabilities to type
+.Ar type .
+.It Cm audit-pkg Oo Fl eis Oc Oo Fl t Ar type Oc Oo Ar pkg Oc ...
+Like
+.Cm audit ,
+but check only the given package names or patterns.
+.It Cm audit-batch Oo Fl eis Oc Oo Fl t Ar type Oc Oo Ar pkg-list Oc ...
+Like
+.Cm audit-pkg ,
+but read the package names or patterns one per line from the given files.
+.It Cm audit-history Oo Fl s Oc Oo Fl t Ar type Oc Oo Ar pkgbase Oc ...
+Print all vulnerabilities for the given base package names.
+.It Cm check Op Ar pkg ...
+Use this command to check the files belonging to some or all of the
+packages installed on the local machine against the checksum
+which was recorded in the
+.Pa +CONTENTS
+files at package installation time.
+Symbolic links also have their integrity checked against the recorded
+value at package installation time.
+If no additional argument is given, the files of all installed packages
+are checked, else only the named packages will be checked (wildcards can
+be used here, see
+.Xr pkg_info 1 ) .
+.Pp
+The packages'
+.Pa +CONTENTS
+files will be parsed and the
+checksum will be checked for every file found.
+A warning message is printed if the expected checksum differs from the
+checksum of the file on disk.
+Symbolic links are also checked, ensuring that the targets on disk are
+the same as the contents recorded at package installation time.
+.It Cm check-license Ar condition
+Check if
+.Ar condition
+can be fulfilled with the currently set of accepted licenses.
+Prints either yes or no to stdout if the condition can be parsed,
+otherwise it exits with error.
+.It Cm check-pkg-vulnerabilities Oo Fl s Oc Ar file
+Check format and hashes in the pkg-vulnerabilities file
+.Ar file .
+If
+.Fl s
+is given, also check the embedded signature.
+.It Cm check-signature Ar file ...
+Reports if
+.Ar file
+is a correctly signed package.
+.It Cm check-single-license Ar license
+Check if
+.Ar license
+is a valid license name and if it is in the set of acceptable licenses.
+Prints either yes or no to stdout if the condition can be parsed,
+otherwise it exits with error.
+.It Cm config-var Ar variable
+Print the current value of
+.Ar variable
+as used after parsing the configuration file.
+.It Cm digest Ar file ...
+Compute a SHA256 message digest of
+.Ar file .
+.It Cm dump
+Dump the contents of the package database, similar to
+.Cm pkg_info -F .
+Columns are printed for the key field used in the pkgdb - the filename -,
+and the data field - the package the file belongs to.
+.It Cm fetch-pkg-vulnerabilities Oo Fl su Oc
+Fetch a new pkg-vulnerabilities file, check the format and if
+.Fl s
+is given the signature.
+If all checks are passed, write it to pkgdb.
+If
+.Fl u
+is given, the fetch is conditional and the file transfer is only done if
+the remote version is newer than the one in pkgdb.
+.It Cm findbest Ar pattern ...
+Search the entries of
+.Dv PKG_PATH
+for packages matching
+.Ar pattern .
+Print the URL of the best matching package to stdout for each pattern.
+If a pattern is not matched, it is skipped and the command will return
+a failure.
+.It Cm gpg-sign-package pkg spkg
+Sign the binary package
+.Ar pkg
+using GPG and write the result to
+.Ar spkg .
+.It Cm lsall Ar /dir/pkgpattern
+.It Cm lsbest Ar /dir/pkgpattern
+List all/best package matching pattern in the given directory
+.Pa /dir .
+If the
+.Fl d
+flag is given, then that directory path overrides
+.Pa /dir .
+Can be used to work around limitations of /bin/sh and other
+filename globbing mechanisms.
+This option implements matching of
+pkg-wildcards against arbitrary files and directories, useful mainly in
+the build system itself.
+See
+.Xr pkg_info 1
+for a description of the pattern.
+.Pp
+Example:
+.Bd -literal
+yui# cd /usr/pkgsrc/packages/i386ELF/All/
+yui# ls unzip*
+unzip-5.40.tgz  unzip-5.41.tgz
+yui# pkg_admin lsall 'unzip*'
+/usr/pkgsrc/packages/i386ELF/All/unzip-5.40.tgz
+/usr/pkgsrc/packages/i386ELF/All/unzip-5.41.tgz
+yui# pkg_admin lsall 'unzip\*[Ge]5.40'
+/usr/pkgsrc/packages/i386ELF/All/unzip-5.40.tgz
+/usr/pkgsrc/packages/i386ELF/All/unzip-5.41.tgz
+yui# pkg_admin lsall 'unzip\*[Ge]5.41'
+/usr/pkgsrc/packages/i386ELF/All/unzip-5.41.tgz
+yui# pkg_admin lsbest 'unzip\*[Ge]5.40'
+/usr/pkgsrc/packages/i386ELF/All/unzip-5.41.tgz
+yui# pkg_admin lsall /usr/pkgsrc/packages/i386ELF/All/'{mit,unproven}-pthread*'
+/usr/pkgsrc/packages/i386ELF/All/mit-pthreads-1.60b6.tgz
+/usr/pkgsrc/packages/i386ELF/All/unproven-pthreads-0.15.tgz
+.Ed
+.It Cm pmatch Ar pattern Ar pkg
+Returns true if
+.Ar pkg
+matches
+.Ar pattern ,
+otherwise returns false.
+.It Cm rebuild
+Rebuild the package database mapping from scratch, using the
+.Pa +CONTENTS
+files of the installed packages.
+This option is only intended for recovery after system crashes
+during package installation and removal.
+.It Cm rebuild-tree
+Rebuild the +REQUIRED_BY files from scratch by reresolving all dependencies.
+.Pp
+This option is intended to be used for fixing inconsistencies between
+the records of depending and depended-on packages, such as can arise
+by the use of
+.Cm pkg_delete -f .
+.It Cm set Ar variable=value pkg ...
+Set variable with information about the installed package.
+Use
+.Cm unset
+to remove a variable.
+.Pp
+Packages that are not installed directly by the user but pulled in as
+dependencies are marked by setting
+.Dq automatic=YES .
+.It Cm x509-sign-package pkg spkg key cert
+Sign the binary package
+.Ar pkg
+using the key
+.Ar key
+and the certificate
+.Ar cert ,
+using
+.Ar spkg
+as output file.
+.It Cm unset Ar variable pkg ...
+Remove an installation variable.
+.El
+.Sh ENVIRONMENT
+See
+.Xr pkg_install.conf 5
+for options, that can also be specified using the environment.
+.Sh FILES
+.Bl -tag -width @PREFIX@/pkgdb/pkgdb.byfile.db -compact
+.It Pa @PREFIX@/pkgdb/pkgdb.byfile.db
+.It Pa @PREFIX@/pkgdb/\*[Lt]pkg\*[Gt]/+CONTENTS
+.El
+.Sh SEE ALSO
+.Xr pkg_add 1 ,
+.Xr pkg_create 1 ,
+.Xr pkg_delete 1 ,
+.Xr pkg_info 1 ,
+.Xr pkg_install.conf 5 ,
+.Xr pkgsrc 7
+.Sh HISTORY
+The
+.Nm
+command first appeared in
+.Nx 1.4 .
+.Sh AUTHORS
+The
+.Nm
+command was written by Hubert Feyrer.

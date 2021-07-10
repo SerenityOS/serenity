@@ -1,0 +1,157 @@
+$NetBSD: README,v 1.25 2020/05/24 21:51:54 nia Exp $
+
+ 0 Introduction
+ ==============
+
+libnbcompat builds and installs a portable NetBSD-compatibility library
+that supplies routines missing on operating systems that are used by
+the family of pkgsrc bootstrap tools.  Note that libnbcompat is very
+much a work-in-progress.  Only the functions that are directly used
+by the bootstrap tools are implemented in the library.  At the moment,
+this includes the following packages:
+
+	archivers/pax
+	pkgtools/mtree
+	pkgtools/pkg_install
+	textproc/nbsed
+
+A script, src2nbcompat, is also included in the sources that simplifies
+importing software from the NetBSD src module into pkgsrc.
+
+
+ 1 Updating this package
+ =======================
+
+Please take care when updating this package.  Do *not* simply commit
+changes to this package and ask for testers.  This package is too
+fundamental to the proper bootstrapping of pkgsrc to let accidental
+breakage seep in.  Proper methodology for updating this package is:
+
+    (1) Post a tarball at a publicly accessible URL containing the
+	pkgtools/libnbcompat directory.
+
+    (2) Ask on the tech-pkg@NetBSD.org mailing list for testers.
+
+    (3) Fix any breakage on non-NetBSD operating systems before
+	committing.
+
+
+ 2 Tested operating systems
+ ==========================
+
+*NOTE*
+*NOTE* This section should be kept up-to-date with the results for
+*NOTE* the most recent libnbcompat.
+*NOTE*
+
+libnbcompat-20040911 has been tested to build and install correctly
+on the following operating systems:
+
+	FreeBSD-4.8/i386		<jlam@NetBSD.org>
+	NetBSD-1.6.2/i386		<jlam@NetBSD.org>
+	Solaris 9/sparc			<salo@NetBSD.org>
+
+libnbcompat-20041024 has been tested to build and install correctly
+on the following operating systems:
+
+	FreeBSD-4.11/i386		<jschauma@NetBSD.org>
+	FreeBSD-6.1/amd64		<jschauma@NetBSD.org>
+	Darwin-8.3/powerpc		<schwarz@NetBSD.org>
+	IRIX-5.3/mipseb			<schwarz@NetBSD.org>
+	IRIX-6.5/mipseb			<jschauma@NetBSD.org>
+	Linux/i386			<schwarz@NetBSD.org>
+	RHEL4 Linux 2.6/i386		<jschauma@NetBSD.org>
+	Tru64 UNIX 5.1B-2/alpha		<rodent@NetBSD.org>
+
+libnbcompat-20070507 has been tested to build and install correctly
+on the following operating systems:
+
+	-
+
+libnbcompat-20070531 has been tested to build and install correctly
+on the following operating systems:
+
+	SunOS-5.10-sparc		<rillig@NetBSD.org>
+	NetBSD-3.0-i386			<rillig@NetBSD.org>
+	IRIX-6.5-mips			<rillig@NetBSD.org>
+
+libnbcompat-20070721 has been tested to build and install correctly
+on the following operating systems:
+
+	HPUX-11.11-hppa			<tnn@NetBSD.org>
+	Interix-3.5-i586		<tnn@NetBSD.org>
+
+libnbcompat-20130908 has been tested to build and install correctly
+on the following operating systems:
+
+	Debian GNU/kFreeBSD/amd64 7.1	<ryoon@NetBSD.org>
+	Sun Solaris/amd64 10u8		<ryoon@NetBSD.org>
+	NetBSD/amd64 6.99.23		<ryoon@NetBSD.org>
+	FreeBSD/amd64 9.1		<ryoon@NetBSD.org>
+	OpenBSD/amd64 5.3		<ryoon@NetBSD.org>
+	DragonFly/amd64 3.4.1		<ryoon@NetBSD.org>
+	Debian GNU/Linux/amd64 7.1	<ryoon@NetBSD.org>
+	CentOS Linux/amd64 6.5		<rodent@NetBSD.org>
+	OpenBSD/sparc64 5.5		<rodent@NetBSD.org>
+
+libnbcompat-20140725 has been tested to build and install correctly
+on the following operating systems:
+
+	Ubuntu GNU/Linux/amd64 12.04	<jperkin@joyent.com>
+	CentOS Linux/amd64 6.5		<rodent@NetBSD.org>
+	CentOS Linux/amd64 6.6		<rodent@NetBSD.org>
+	CentOS Linux/amd64 7.0		<rodent@NetBSD.org>
+	OpenBSD/sparc64 5.5		<rodent@NetBSD.org>
+	OpenBSD/sparc64 5.6		<rodent@NetBSD.org>
+	FreeBSD/amd64 10.1		<rodent@NetBSD.org>
+
+libnbcompat-20150419 has been tested to build and install correctly
+on the following operating systems:
+
+	NetBSD/i386 5.2.3		<tnn@NetBSD.org>
+	HP-UX/hppa 11.11		<tnn@NetBSD.org>
+	
+libnbcompat-20190608 has been tested to build and install correctly
+on the following operating systems:
+
+	NetBSD/amd64 8.99.49		<sevan@NetBSD.org>
+	Darwin/powerpc 8.11.0		<sevan@NetBSD.org>
+	FreeBSD/amd64 13-CURRENT	<sevan@NetBSD.org>
+
+libnbcompat-20200524 has been tested to build and install correctly
+on the following operating systems:
+
+	NetBSD/amd64 9.0		<nia@NetBSD.org>
+	Alpine Linux 3.11.6 x86_64	<nia@NetBSD.org>
+	IRIX 6.5.22, mipspro 7.4.3	<ky0ko@disroot.org>	
+
+ 3 Usage
+ =======
+
+This library is intended to simplify porting NetBSD software.  To that
+end, the changes to NetBSD sources to use libnbcompat are minor.  The
+procedure is:
+
+    (1) Add #include <nbcompat.h> at the top of the source files that
+	include system headers, but below the inclusion of any
+	"config.h".
+
+    (2) Surround each system header file included in the source file
+	with #if HAVE_<header_name>_H ... #endif.
+
+You may need to add additional headers present on other operating
+systems that define any system-supplied functions, e.g. <sys/vfs.h>.
+
+The src2nbcompat script included in the libncompat sources can be used
+to automate this process to some extent.  It is intended to import
+sources from a NetBSD src checkout into pkgsrc.  It will copy the
+sources from a directory and automatically insert the proper lines
+into the files.  For example, to import the pkg_install sources into
+pkgsrc, run:
+
+	src2nbcompat \
+		/usr/src/usr.sbin/pkg_install \
+		/usr/pkgsrc/pkgtools/pkg_install/files
+
+You will need to run a "cvs diff" on the imported files to check that
+any local changes are preserved across imports.

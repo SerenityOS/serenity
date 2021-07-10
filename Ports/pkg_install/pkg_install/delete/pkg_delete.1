@@ -1,0 +1,293 @@
+.\" $NetBSD: pkg_delete.1,v 1.31 2014/12/30 15:13:20 wiz Exp $
+.\"
+.\" FreeBSD install - a package for the installation and maintenance
+.\" of non-core utilities.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" Jordan K. Hubbard
+.\"
+.\"
+.\"     from FreeBSD: @(#)pkg_delete.1
+.\"
+.Dd December 27, 2014
+.Dt PKG_DELETE 1
+.Os
+.Sh NAME
+.Nm pkg_delete
+.Nd a utility for deleting previously installed software package distributions
+.Sh SYNOPSIS
+.Nm
+.Op Fl ADFfkNnORrVv
+.Op Fl K Ar pkg_dbdir
+.Op Fl P Ar destdir
+.Op Fl p Ar prefix
+.Ar pkg-name ...
+.Sh DESCRIPTION
+The
+.Nm
+command is used to delete packages that have been previously installed
+with the
+.Xr pkg_add 1
+command.
+The given packages are sorted, so that the dependencies needed by a
+package are deleted after the package.
+Before any action is executed,
+.Nm
+checks for packages that are marked as
+.Cm preserved
+or have depending packages left.
+If the
+.Fl k
+flag is given, preserved packages are skipped and not removed.
+Unless the
+.Fl f
+flag is given,
+.Nm
+stops on the first error.
+.Sh WARNING
+.Bf -emphasis
+Since the
+.Nm
+command may execute scripts or programs provided by a package file,
+your system may be susceptible to
+.Dq Trojan horses
+or other subtle
+attacks from miscreants who create dangerous package files.
+.Pp
+You are advised to verify the competence and identity of those who
+provide installable package files.
+For extra protection, examine all the package control files in the
+package record directory
+.Pa \*[Lt]PKG_DBDIR\*[Gt]/\*[Lt]pkg-name\*[Gt]/ ) .
+Pay particular
+attention to any
+.Pa +INSTALL
+or
+.Pa +DEINSTALL
+files, and inspect the
+.Pa +CONTENTS
+file for
+.Cm @cwd ,
+.Cm @mode
+(check for setuid),
+.Cm @dirrm ,
+.Cm @exec ,
+and
+.Cm @unexec
+directives, and/or use the
+.Xr pkg_info 1
+command to examine the installed package control files.
+.Ef
+.Sh OPTIONS
+The following command line options are supported:
+.Bl -tag -width indent
+.It Ar pkg-name ...
+The named packages are deinstalled, wildcards can be used, see
+.Xr pkg_info 1 .
+If no version is given, the one currently installed
+will be removed.
+If the
+.Fl F
+flag is given, one or more (absolute) filenames may be specified and
+the package database will be consulted for the package to which the
+given file belongs.
+These packages are then deinstalled.
+.It Fl A
+Recursively remove all automatically installed packages that were needed
+by the given packages and are no longer required.
+Does not remove manually installed packages; see also the
+.Fl R
+flag.
+.It Fl D
+If a deinstallation script exists for a given package, do not execute it.
+.It Fl F
+Any
+.Ar pkg-name
+given will be interpreted as pathname which is
+subsequently transformed in a (real) package name via the package
+database.
+That way, packages can be deleted by giving a filename
+instead of the package-name.
+.It Fl f
+Force removal of the package, even if a dependency is recorded or the
+deinstall script fails.
+This might break the package database; see
+.Xr pkg_admin 1
+on how to repair it.
+.It Fl ff
+Force removal of the package, even if the package is marked as a
+.Cm preserved
+package.
+Note that this is a dangerous operation.
+See also the
+.Fl k
+option.
+.It Fl K Ar pkg_dbdir
+Override the value of the
+.Dv PKG_DBDIR
+configuration option with the value
+.Ar pkg_dbdir .
+.It Fl k
+Silently skip all packages that are marked as
+.Cm preserved .
+.It Fl N
+Remove the package's registration and its entries from the package database,
+but leave the files installed.
+Don't run any deinstall scripts or
+.Cm @unexec
+lines either.
+.It Fl n
+Don't actually deinstall a package, just report the steps that
+would be taken.
+.It Fl O
+Only delete the package's entries from the package database; do not
+touch the package or its files itself.
+.It Fl P Ar destdir
+Prefix all file and directory names with
+.Ar destdir .
+For packages without install scripts this has the same behavior as
+using
+.Xr chroot 8 .
+.It Fl p Ar prefix
+Set
+.Ar prefix
+as the directory in which to delete files from any installed packages
+which do not explicitly set theirs.
+For most packages, the prefix will
+be set automatically to the installed location by
+.Xr pkg_add 1 .
+.It Fl R
+Recursively remove all packages that were needed by the given packages
+and are no longer required.
+This option overrides the
+.Fl A
+flag.
+.It Fl r
+Recursively remove all packages that require one of the packages given.
+.It Fl V
+Print version number and exit.
+.It Fl v
+Turn on verbose output.
+.El
+.Sh TECHNICAL DETAILS
+.Nm
+does pretty much what it says.
+It examines installed package records in
+.Pa \*[Lt]PKG_DBDIR\*[Gt]/\*[Lt]pkg-name\*[Gt] ,
+deletes the package contents, and finally removes the package records.
+.Pp
+If a package is required by other installed packages,
+.Nm
+will list those dependent packages and refuse to delete the package
+(unless the
+.Fl f
+option is given).
+.Pp
+If a package has been marked as a
+.Cm preserved
+package, it will not be able to be deleted
+(unless more than one occurrence of the
+.Fl f
+option is given).
+.Pp
+If a filename is given instead of a package name, the package of which
+the given file belongs to can be deleted if the
+.Fl F
+flag is given.
+The filename needs to be absolute, see the output produced by the
+.Xr pkg_info 1
+.Fl aF
+command.
+.Pp
+If a
+.Cm deinstall
+script exists for the package, it is executed before and after
+any files are removed.
+It is this script's responsibility to clean up any additional messy details
+around the package's installation, since all
+.Nm
+knows how to do is delete the files created in the original distribution.
+The
+.Ic deinstall
+script is called as:
+.Bd -filled -offset indent -compact
+.Cm deinstall
+.Aq Ar pkg-name
+.Ar DEINSTALL
+.Ed
+before deleting all files and as:
+.Bd -filled -offset indent -compact
+.Cm deinstall
+.Aq Ar pkg-name
+.Ar POST-DEINSTALL
+.Ed
+after deleting them.
+Passing the keywords
+.Ar DEINSTALL
+and
+.Ar POST-DEINSTALL
+lets you potentially write only one program/script that handles all
+aspects of installation and deletion.
+.Pp
+All scripts are called with the environment variable
+.Ev PKG_PREFIX
+set to the installation prefix (see the
+.Fl p
+option above).
+This allows a package author to write a script
+that reliably performs some action on the directory where the package
+is installed, even if the user might have changed it by specifying the
+.Fl p
+option when running
+.Nm
+or
+.Xr pkg_add 1 .
+The scripts are also called with the
+.Ev PKG_METADATA_DIR
+environment variable set to the location of the
+.Pa +*
+meta-data files, and with the
+.Ev PKG_REFCOUNT_DBDIR
+environment variable set to the location of the package reference counts
+database directory.
+If the
+.Fl P
+flag was given to
+.Nm ,
+.Ev PKG_DESTDIR
+will be set to
+.Ar destdir .
+.Sh ENVIRONMENT
+See
+.Xr pkg_install.conf 5
+for options, that can also be specified using the environment.
+.Sh SEE ALSO
+.Xr pkg_add 1 ,
+.Xr pkg_admin 1 ,
+.Xr pkg_create 1 ,
+.Xr pkg_info 1 ,
+.Xr pkg_install.conf 5
+.Xr pkgsrc 7
+.Sh AUTHORS
+.Bl -tag -width indent -compact
+.It "Jordan Hubbard"
+most of the work
+.It "John Kohl"
+refined it for
+.Nx
+.It "Hubert Feyrer"
+.Nx
+wildcard dependency processing, pkgdb, recursive "down"
+delete, etc.
+.It Joerg Sonnenberger
+Rewrote most of the code to compute correct order of deinstallation
+and to improve error handling.
+.El

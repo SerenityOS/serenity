@@ -1,0 +1,78 @@
+# $NetBSD: Makefile.in,v 1.37 2020/12/02 10:22:39 wiz Exp $
+
+srcdir=		@srcdir@
+
+pkgdbdir=	@pkgdbdir@
+mandir=		@mandir@
+datarootdir=	@datarootdir@
+sysconfdir=	@sysconfdir@
+
+cat5dir=	$(mandir)/cat5
+cat7dir=	$(mandir)/cat7
+man5dir=	$(mandir)/man5
+man7dir=	$(mandir)/man7
+
+BOOTSTRAP=	@bootstrap@
+SSL_SUPPORT=	@ssl_support@
+
+RANLIB=		@RANLIB@
+AR=		@AR@
+CC=		@CC@
+CPPFLAGS=	@CPPFLAGS@ -I. -I$(srcdir)
+DEFS=		@DEFS@ -DDEF_LOG_DIR=\"$(pkgdbdir)\"
+CFLAGS=		@CFLAGS@
+
+INSTALL=	@INSTALL@
+
+LIB=	libinstall.a
+
+OBJS=	automatic.o conflicts.o dewey.o fexec.o file.o \
+	global.o iterate.o license.o lpkg.o opattern.o \
+	parse-config.o pkgdb.o pkg_io.o plist.o remove.o \
+	str.o var.o version.o vulnerabilities-file.o xwrapper.o
+
+CPPFLAGS+=	-DSYSCONFDIR=\"$(sysconfdir)\"
+CPPFLAGS+=	-DPREFIX=\"$(prefix)\"
+
+.if !empty(BOOTSTRAP)
+CPPFLAGS+=	-DBOOTSTRAP
+.else
+OBJS+=	gpgsig.o pkg_signature.o
+.endif
+
+.if !empty(SSL_SUPPORT)
+CPPFLAGS+=	-DHAVE_SSL
+OBJS+=		pkcs7.o
+.endif
+
+all: $(LIB)
+
+.c.o:
+	$(CC) $(DEFS) $(CPPFLAGS) $(CFLAGS) -c $<
+
+$(LIB): $(OBJS)
+	$(AR) crv $@ $(OBJS)
+	$(RANLIB) $@
+
+clean:
+	rm -f $(OBJS) $(LIB)
+
+install:
+	$(INSTALL) -m 755 -d ${DESTDIR}$(man5dir)
+	$(INSTALL) -m 755 -d ${DESTDIR}$(man7dir)
+	$(INSTALL) -m 444 pkg_summary.5 ${DESTDIR}$(man5dir)/pkg_summary.5
+	$(INSTALL) -m 444 pkg_install.conf.5 ${DESTDIR}$(man5dir)/pkg_install.conf.5
+	$(INSTALL) -m 444 pkgsrc.7 ${DESTDIR}$(man7dir)/pkgsrc.7
+.if defined(MANINSTALL) && !empty(MANINSTALL:Mcatinstall)
+	$(INSTALL) -m 755 -d ${DESTDIR}$(cat5dir)
+	$(INSTALL) -m 755 -d ${DESTDIR}$(cat7dir)
+.  if defined(CATMAN_SECTION_SUFFIX) && !empty(CATMAN_SECTION_SUFFIX:M[Yy][Ee][Ss])
+	$(INSTALL) -m 444 pkg_summary.cat ${DESTDIR}$(cat5dir)/pkg_summary.5
+	$(INSTALL) -m 444 pkg_install.conf.cat ${DESTDIR}$(cat5dir)/pkg_install.conf.5
+	$(INSTALL) -m 444 pkgsrc.cat ${DESTDIR}$(cat7dir)/pkgsrc.7
+.  else
+	$(INSTALL) -m 444 pkg_summary.cat ${DESTDIR}$(cat5dir)/pkg_summary.0
+	$(INSTALL) -m 444 pkg_install.conf.cat ${DESTDIR}$(cat5dir)/pkg_install.conf.0
+	$(INSTALL) -m 444 pkgsrc.cat ${DESTDIR}$(cat7dir)/pkgsrc.0
+.  endif
+.endif

@@ -1,0 +1,458 @@
+.\" $NetBSD: pkg_create.1,v 1.27 2016/04/10 19:01:19 joerg Exp $
+.\"
+.\" FreeBSD install - a package for the installation and maintenance
+.\" of non-core utilities.
+.\"
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 1. Redistributions of source code must retain the above copyright
+.\"    notice, this list of conditions and the following disclaimer.
+.\" 2. Redistributions in binary form must reproduce the above copyright
+.\"    notice, this list of conditions and the following disclaimer in the
+.\"    documentation and/or other materials provided with the distribution.
+.\"
+.\" Jordan K. Hubbard
+.\"
+.\"
+.\"     @(#)pkg_create.1
+.\"	from FreeBSD Id: pkg_create.1,v 1.19 1997/05/02 22:00:05 max Exp
+.\"
+.\" hacked up by John Kohl for NetBSD--fixed a few bugs, extended keywords,
+.\" added dependency tracking, etc.
+.\"
+.\" [jkh] Took John's changes back and made some additional extensions for
+.\" better integration with FreeBSD's new ports collection.
+.\"
+.Dd December 27, 2014
+.Dt PKG_CREATE 1
+.Os
+.Sh NAME
+.Nm pkg_create
+.Nd a utility for creating software package distributions
+.Sh SYNOPSIS
+.Nm
+.Op Fl lOVv
+.Op Fl B Ar build-info-file
+.Op Fl b Ar build-version-file
+.Op Fl C Ar cpkgs
+.Op Fl D Ar displayfile
+.Op Fl F Ar compression
+.Op Fl g Ar group
+.Op Fl I Ar realprefix
+.Op Fl i Ar iscript
+.Op Fl K Ar pkg_dbdir
+.Op Fl k Ar dscript
+.Op Fl n Ar preserve-file
+.Op Fl P Ar dpkgs
+.Op Fl p Ar prefix
+.Op Fl S Ar size-all-file
+.Op Fl s Ar size-pkg-file
+.Op Fl T Ar buildpkgs
+.Op Fl t Ar template
+.Op Fl u Ar owner
+.Fl c Ar comment
+.Fl d Ar description
+.Fl f Ar packlist
+.Ar pkg-name
+.Sh DESCRIPTION
+The
+.Nm
+command is used to create packages that will subsequently be fed to
+one of the package extraction/info utilities.
+The input description and command line arguments for the creation of a
+package are not really meant to be human-generated, though it is easy
+enough to do so.
+It is more expected that you will use a front-end tool for
+the job rather than muddling through it yourself.
+Nonetheless, a short description of the input syntax is included in this
+document.
+.Sh OPTIONS
+The following command line options are supported:
+.Bl -tag -width indent
+.It Fl B Ar build-info-file
+Install the file
+.Ar build-info-file
+so that users of binary packages can see what
+.Xr make 1
+definitions
+were used to control the build when creating the
+binary package.
+This allows various build definitions to be retained in a binary package
+and viewed wherever it is installed, using
+.Xr pkg_info 1 .
+.It Fl b Ar build-version-file
+Install the file
+.Ar build-version-file
+so that users of binary packages can see what versions of
+the files used to control the build were used when creating the
+binary package.
+This allows some fine-grained version control information to be retained
+in a binary package and viewed wherever it is installed, using
+.Xr pkg_info 1 .
+.It Fl C Ar cpkgs
+Set the initial package conflict list to
+.Ar cpkgs .
+This is assumed to be a whitespace separated list of package names
+and is meant as a convenient shorthand for specifying multiple
+.Cm @pkgcfl
+directives in the packing list (see PACKING LIST DETAILS section below).
+.It Fl c Ar [-]desc
+Fetch package
+.Pq one line description
+from file
+.Ar desc
+or, if preceded by
+.Cm - ,
+the argument itself.
+This string should also give some idea of which version of the product
+(if any) the package represents.
+.It Fl D Ar displayfile
+Display the file after installing the package.
+Useful for things like legal notices on almost-free software, etc.
+.It Fl d Ar [-]desc
+Fetch long description for package from file
+.Ar desc
+or, if preceded by
+.Cm - ,
+the argument itself.
+.It Fl F Ar compression
+Use
+.Ar compression
+as compression algorithm.
+This overrides the heuristic to guess the compression type from the
+output name.
+Currently supported values are bzip2, gzip, none and xz.
+.It Fl f Ar packlist
+Fetch
+.Pq packing list
+for package from the file
+.Ar packlist
+or
+.Cm stdin
+if
+.Ar packlist
+is a
+.Cm -
+(dash).
+.It Fl g Ar group
+Make
+.Ar group
+the default group ownership instead of extracting it from the file system.
+.It Fl I Ar realprefix
+Provide the real prefix, as opposed to the staging prefix, for use in
+staged installations of packages.
+.It Fl i Ar iscript
+Set
+.Ar iscript
+to be the install procedure for the package.
+This can be any executable program (or shell script).
+It will be invoked automatically when the package is later installed.
+.It Fl K Ar pkg_dbdir
+Override the value of the
+.Dv PKG_DBDIR
+configuration option with the value
+.Ar pkg_dbdir .
+.It Fl k Ar dscript
+Set
+.Ar dscript
+to be the de-install procedure for the package.
+This can be any executable program (or shell script).
+It will be invoked automatically
+when the package is later (if ever) de-installed.
+.It Fl l
+Check that any symbolic links which are to be placed in the package are
+relative to the current prefix.
+This means using
+.Xr unlink 2
+and
+.Xr symlink 2
+to remove and re-link
+any symbolic links which are targeted at full path names.
+.It Fl n Ar preserve-file
+The file is used to denote that the package should not be deleted.
+This is intended for use where the deletion of packages may present
+a bootstrap problem.
+.It Fl O
+Go into a
+.Pq packing list only
+mode.
+This is used to do
+.Pq fake pkg_add
+operations when a package is installed.
+In such cases, it is necessary to know what the final, adjusted packing
+list will look like.
+.It Fl P Ar dpkgs
+Set the initial package dependency list to
+.Ar dpkgs .
+This is assumed to be a whitespace separated list of package names
+and is meant as a convenient shorthand for specifying multiple
+.Cm @pkgdep
+directives in the packing list (see PACKING LIST DETAILS section below).
+In addition, the exact versions of the packages referred to in the
+.Ar dpkgs
+list will be added to the packing list in the form of
+.Cm @blddep
+directives.
+.It Fl T Ar buildpkgs
+The exact versions of the packages referred to in the
+.Ar buildpkgs
+list will be added to the packing list in the form of
+.Cm @blddep
+directives.
+This directives are stored after those created by the
+.Fl P
+option.
+.Ar buildpkgs
+is assumed to be a whitespace separated list of package names.
+.It Fl p Ar prefix
+Set
+.Ar prefix
+as the initial directory
+.Pq base
+to start from in selecting files for
+the package.
+.It Fl S Ar size-all-file
+Store the given file for later querying with the
+.Xr pkg_info 1
+.Fl S
+flag.
+The file is expected to contain the size (in bytes) of all files of
+this package plus any required packages added up and stored as a
+ASCII string, terminated by a newline.
+.It Fl s Ar size-pkg-file
+Store the given file for later querying with the
+.Xr pkg_info 1
+.Fl s
+flag.
+The file is expected to contain the size (in bytes) of all files of
+this package added up and stored as a ASCII string, terminated by a newline.
+.It Fl t Ar template
+Use
+.Ar template
+as the input to
+.Xr mktemp 3 .
+By default, this is the string
+.Pa /tmp/instmp.XXXXXX ,
+but it may be necessary to override it in the situation where
+space in your
+.Pa /tmp
+directory is limited.
+Be sure to leave some number of
+.Sq X
+characters for
+.Xr mktemp 3
+to fill in with a unique ID.
+.It Fl u Ar owner
+Make
+.Ar owner
+the default owner instead of extracting it from the file system.
+.It Fl V
+Print version number and exit.
+.It Fl v
+Turn on verbose output.
+.El
+.Sh PACKING LIST DETAILS
+The
+.Pq packing list
+format (see
+.Fl f )
+is fairly simple, being
+nothing more than a single column of filenames to include in the
+package.
+However, since absolute pathnames are generally a bad idea
+for a package that could be installed potentially anywhere, there is
+another method of specifying where things are supposed to go
+and, optionally, what ownership and mode information they should be
+installed with.
+This is done by embedding specialized command sequences
+in the packing list.
+Briefly described, these sequences are:
+.Bl -tag -width indent -compact
+.It Cm @cwd Ar directory
+Set the internal directory pointer to point to
+.Ar directory .
+All subsequent filenames will be assumed relative to this directory.
+Note:
+.Cm @cd
+is also an alias for this command.
+.It Cm @src Ar directory
+This command is supported for compatibility only.
+It was formerly used to override
+.Cm @cwd
+during package creation.
+.It Cm @exec Ar command
+Execute
+.Ar command
+as part of the unpacking process.
+If
+.Ar command
+contains any of the following sequences somewhere in it, they will
+be expanded inline.
+For the following examples, assume that
+.Cm @cwd
+is set to
+.Pa /usr/local
+and the last extracted file was
+.Pa bin/emacs .
+.Bl -tag -width indent -compact
+.It Cm "\&%F"
+Expands to the last filename extracted (as specified), in the example case
+.Pa bin/emacs
+.It Cm "\&%D"
+Expand to the current directory prefix, as set with
+.Cm @cwd ,
+in the example case
+.Pa /usr/local .
+.It Cm "\&%B"
+Expand to the
+.Pq basename
+of the fully qualified filename, that
+is the current directory prefix, plus the last filespec, minus
+the trailing filename.
+In the example case, that would be
+.Pa /usr/local/bin .
+.It Cm "\&%f"
+Expand to the
+.Pq filename
+part of the fully qualified name, or
+the converse of
+.Cm \&%B ,
+being in the example case,
+.Pa emacs .
+.El
+.It Cm @unexec Ar command
+Execute
+.Ar command
+as part of the deinstallation process.
+Expansion of special
+.Cm \&%
+sequences is the same as for
+.Cm @exec .
+This command is not executed during the package add, as
+.Cm @exec
+is, but rather when the package is deleted.
+This is useful for deleting links and other ancillary files that were created
+as a result of adding the package, but not directly known to the package's
+table of contents (and hence not automatically removable).
+The advantage of using
+.Cm @unexec
+over a deinstallation script is that you can use the
+.Pq special sequence expansion
+to get at files regardless of where they've
+been potentially redirected (see
+.Fl p ) .
+.It Cm @mode Ar mode
+Set default permission for all subsequently extracted files to
+.Ar mode .
+Format is the same as that used by the
+.Cm chmod
+command (well, considering that it's later handed off to it, that's
+no surprise).
+Use without an arg to set back to default (extraction) permissions.
+.It Cm @option Ar option
+Set internal package options, the only currently supported one
+being
+.Ar preserve ,
+which tells pkg_add to move any existing files out of the way,
+preserving the previous contents (which are also resurrected on
+pkg_delete, so caveat emptor).
+.It Cm @owner Ar user
+Set default ownership for all subsequently extracted files to
+.Ar user .
+Use without an arg to set back to default (extraction)
+ownership.
+.It Cm @group Ar group
+Set default group ownership for all subsequently extracted files to
+.Ar group .
+Use without an arg to set back to default (extraction)
+group ownership.
+.It Cm @comment Ar string
+Embed a comment in the packing list.
+Useful in trying to document some particularly hairy sequence that
+may trip someone up later.
+.It Cm @ignore
+Used internally to tell extraction to ignore the next file (don't
+copy it anywhere), as it's used for some special purpose.
+.It Cm @name Ar name
+Set the name of the package.
+This is mandatory and is usually put at the top.
+This name is potentially different than the name of the file it came in,
+and is used when keeping track of the package for later deinstallation.
+Note that
+.Nm
+will derive this field from the
+.Ar pkg-name
+and add it automatically if none is given.
+.It Cm @pkgdir Ar name
+Declare directory
+.Pa name
+as managed.
+If it does not exist at installation time, it is created.
+If this directory is no longer referenced by packages and the last
+file or directory in it is deleted, the directory is removed as well.
+.It Cm @dirrm Ar name
+This command is supported for compatibility only.
+If directory
+.Pa name
+exists, it will be deleted at deinstall time.
+.It Cm @display Ar name
+Declare
+.Pa name
+as the file to be displayed at install time (see
+.Fl D
+above).
+.It Cm @pkgdep Ar pkgname
+Declare a dependency on the
+.Ar pkgname
+package.
+The
+.Ar pkgname
+package must be installed before this package may be
+installed, and this package must be deinstalled before the
+.Ar pkgname
+package is deinstalled.
+Multiple
+.Cm @pkgdep
+directives may be used if the package depends on multiple other packages.
+.It Cm @blddep Ar pkgname
+Declare that this package was built with the exact version
+of
+.Ar pkgname
+(since the
+.Cm @pkgdep
+directive may contain wildcards or relational
+package version information).
+.It Cm @pkgcfl Ar pkgcflname
+Declare a conflict with the
+.Ar pkgcflname
+package, as the two packages contain references to the same files,
+and so cannot co-exist on the same system.
+.El
+.Sh ENVIRONMENT
+See
+.Xr pkg_install.conf 5
+for options, that can also be specified using the environment.
+.Sh SEE ALSO
+.Xr pkg_add 1 ,
+.Xr pkg_admin 1 ,
+.Xr pkg_delete 1 ,
+.Xr pkg_info 1 ,
+.Xr pkg_install.conf 5
+.Xr pkgsrc 7
+.Sh HISTORY
+The
+.Nm
+command first appeared in
+.Fx .
+.Sh AUTHORS
+.Bl -tag -width indent -compact
+.It Jordan Hubbard
+most of the work
+.It John Kohl
+refined it for
+.Nx
+.It Hubert Feyrer
+.Nx
+wildcard dependency processing, pkgdb, pkg size recording etc.
+.El

@@ -1,0 +1,152 @@
+#!/usr/pkg/bin/wish -f
+# from FreeBSD Id: tkpkg,v 1.4 1997/02/22 16:09:13 peter Exp
+#
+set pkgname ""
+wm title . "Package Installation"
+#--------------------------------------------------------------
+# The top level main window, consisting of a bar of buttons and a list
+# of packages and a description of the current package.
+#--------------------------------------------------------------
+frame .menu -relief raised -borderwidth 1
+frame .frame -borderwidth 4
+
+scrollbar .frame.scroll -relief sunken -command ".frame.list yview"
+listbox .frame.list -yscroll ".frame.scroll set" -relief sunken -setgrid 1
+pack append .frame .frame.scroll {right filly} \
+        .frame.list {left expand fill}
+
+# build the lower window shoing the complete description of a pacage
+frame .f -borderwidth 4
+text .f.t -width 80 -height 20 -yscrollcommand ".f.s set" -relief sunken
+
+# Initially display instructions in this window.  Erase the
+# instructions and show the package description when the user clicks
+# on a package.
+# 
+.f.t insert end "Double click on a package above to see its
+complete description here."
+scrollbar .f.s -relief sunken -command ".f.t yview"
+pack append .f .f.s {right filly} .f.t {left expand fill}
+
+bind .frame.list <Double-Button-1> \
+    { do_description [selection get] }
+pack append .  .menu {top fill} \
+   .f {bottom expand fill} \
+   .frame {bottom expand fill}
+
+#----------------------------------------------------------------
+# Make menu bar:
+#----------------------------------------------------------------
+button .menu.inst -text "Install" \
+   -command "apply_to_pkg \"pkg_add -v\""
+button .menu.dein -text "Deinstall" \
+   -command "apply_to_pkg \"pkg_delete -v\""
+button .menu.installed -text "What is Installed?" \
+   -command "list_pkgs \"pkg_info -I -a |tr '	' ' '\""
+button .menu.available -text "What can I install?" \
+   -command "list_pkgs \"pkg_info -I -c [glob -nocomplain *.{tgz,tar.z,tar.gz,tar.Z}] |tr '	' ' '\""
+button .menu.cont -text "Contents?" \
+   -command "apply_to_pkg \"pkg_info -d -v\""
+button .menu.quit -text "Quit" -command "destroy ."
+button .menu.help -text "Help" -command "do_help"
+
+pack append .menu \
+  .menu.inst left \
+  .menu.dein left \
+  .menu.installed left \
+  .menu.available left \
+  .menu.cont left \
+  .menu.quit left \
+  .menu.help right
+#-------------------------------------------------------
+# Display the package description.
+#-------------------------------------------------------
+proc list_pkgs {s} {
+  set line ""
+  set f [eval "open {| sh -c \"$s\" } r"]
+  .frame.list delete 0 end
+  while {[gets $f line] > 0} {
+    .frame.list insert end $line
+  }
+  close $f
+}
+
+# display the list of available packages
+set archives [glob -nocomplain *.{tgz,tar.z,tar.gz,tar.Z}]
+if {$archives == ""} {
+  .frame.list delete 0 end
+ .frame.list insert end "Warning: no compressed tar archives files found."
+} else {
+  list_pkgs "pkg_info -I -c $archives |tr '	' ' '"
+}
+
+#-------------------------------------------------------
+# Display the package description.
+#-------------------------------------------------------
+proc do_description {s} {
+  global pkgname
+  regexp {[^ 	]*} $s filename
+  set pkgname $filename
+  .f.t delete 0.0 end
+  set cmd "pkg_info -d $filename |tr -d ''"
+  set f [eval "open {| csh -c \"$cmd\" } r"]
+  while {![eof $f]} {
+    .f.t insert end [read $f]
+  }
+}
+#-------------------------------------------------------
+# package install window.
+#-------------------------------------------------------
+proc do_help {{w .help}} {
+  catch {destroy $w}
+  toplevel $w
+  wm title $w "Help"
+  wm iconname $w "Help"
+  button $w.ok -text OK -command "destroy $w"
+  message $w.t -relief raised -bd 2 \
+    -text "You can install, deinstall and list info on the available packages.  To select a package and see its complete description, press mouse button 1 over the package name.  To install a selected package, press the Install button.  To exit, press the \"Quit\" button."
+  pack append $w $w.ok {bottom fillx} $w.t {expand fill}
+}
+#-------------------------------------------------------
+# Apply a command to a package.
+#-------------------------------------------------------
+proc apply_to_pkg {s} {
+    apply_to_pkg_err $s ""
+}
+#-------------------------------------------------------
+# Apply a command to a package, with error stream redirection instructions.
+#-------------------------------------------------------
+proc apply_to_pkg_err {s errredir} {
+  global pkgname
+  .f.t delete 0.0 end
+  if {$pkgname == ""} {
+    .f.t insert end "You must double click on a package name first!"
+  } else {
+    apply_to_pkg_int "$s $pkgname" "2>&1"
+  }
+}
+proc apply_to_pkg_int {s errredir} {
+    .f.t delete 0.0 end
+    .f.t insert end "Running: $s\n"
+    set f [eval "open {| sh -c \"$s $errredir\" } r"]
+    while {![eof $f]} {
+      .f.t insert end [read $f 64]
+    }
+}
+#-------------------------------------------------------
+# Invoke an arbitrary command.
+#-------------------------------------------------------
+proc do_command {s} {
+  .f.t delete 0.0 end
+  .f.t insert end "Running: $s\n"
+  set f [eval "open {| $s} r"]
+  while {![eof $f]} {
+    .f.t insert end [read $f 64]
+  }
+}
+# local variables:
+# mode: csh
+# compile-command: ""
+# comment-start: "# "
+# comment-start-skip: "# "
+# end:

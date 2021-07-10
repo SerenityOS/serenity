@@ -1,0 +1,24 @@
+# $NetBSD: Makefile.in,v 1.12 2016/06/30 17:42:04 wiz Exp $
+
+BOOTSTRAP=	@bootstrap@
+
+.if empty(BOOTSTRAP)
+SUBDIRS=	lib add admin create delete info
+.else
+SUBDIRS=	lib add admin create info
+.endif
+
+all:
+	@for dir in $(SUBDIRS); do \
+		( cd $$dir && $(MAKE) $@ ) || exit 1; \
+	done
+
+install clean:
+	@for dir in $(SUBDIRS); do \
+		( cd $$dir && $(MAKE) $@ ) || exit 1; \
+	done
+
+distclean: clean
+	rm -f config.log config.status configure.lineno
+	rm -f Makefile */Makefile
+	rm -f lib/config.h lib/pkg_install.conf.5 lib/pkg_install.conf.cat
