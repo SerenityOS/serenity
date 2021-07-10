@@ -17,8 +17,7 @@
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/TypedMapping.h>
 
-namespace Kernel {
-namespace ACPI {
+namespace Kernel::ACPI {
 
 static Parser* s_acpi_parser;
 
@@ -458,5 +457,4 @@ void Parser::disable_aml_interpretation()
     VERIFY_NOT_REACHED();
 }
 
-}
 }

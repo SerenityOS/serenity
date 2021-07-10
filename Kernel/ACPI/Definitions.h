@@ -11,9 +11,7 @@
 #include <AK/Vector.h>
 #include <Kernel/PhysicalAddress.h>
 
-namespace Kernel {
-
-namespace ACPI {
+namespace Kernel::ACPI {
 
 namespace FADTFlags {
 
@@ -324,8 +322,6 @@ class Parser;
 namespace StaticParsing {
 Optional<PhysicalAddress> find_rsdp();
 PhysicalAddress find_table(PhysicalAddress rsdp, const StringView& signature);
-}
-
 }
 
 }

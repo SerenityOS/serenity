@@ -6,11 +6,9 @@
 
 #pragma once
 
-namespace Kernel {
-namespace ACPI {
+namespace Kernel::ACPI {
 
 bool is_enabled();
 void initialize();
 
-}
 }

@@ -9,8 +9,7 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/Sections.h>
 
-namespace Kernel {
-namespace ACPI {
+namespace Kernel::ACPI {
 
 UNMAP_AFTER_INIT void initialize()
 {
@@ -33,5 +32,4 @@ bool is_enabled()
     return Parser::the();
 }
 
-}
 }
