@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/FileSystem/SysFS.h>
-#include <Kernel/SystemExposed.h>
+#include <Kernel/FileSystem/SysFSComponent.h>
 
 namespace Kernel {
 
