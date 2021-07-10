@@ -23,7 +23,6 @@ public:
     virtual void on_tool_button_contextmenu(GUI::ContextMenuEvent&) override;
     virtual void on_second_paint(Layer const&, GUI::PaintEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
-    virtual void on_keyup(GUI::KeyEvent&) override;
 
 private:
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
@@ -33,7 +32,6 @@ private:
     RefPtr<GUI::Menu> m_context_menu;
     GUI::ActionGroup m_thickness_actions;
     int m_thickness { 1 };
-    bool m_constrain_angle { false };
 };
 
 }

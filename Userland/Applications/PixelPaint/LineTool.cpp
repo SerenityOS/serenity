@@ -67,11 +67,11 @@ void LineTool::on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEven
     if (m_drawing_button == GUI::MouseButton::None)
         return;
 
-    if (!m_constrain_angle) {
-        m_line_end_position = layer_event.position();
-    } else {
+    if (layer_event.shift()) {
         constexpr auto ANGLE_STEP = M_PI / 8;
         m_line_end_position = constrain_line_angle(m_line_start_position, layer_event.position(), ANGLE_STEP);
+    } else {
+        m_line_end_position = layer_event.position();
     }
     m_editor->update();
 }
@@ -92,21 +92,6 @@ void LineTool::on_keydown(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
         m_drawing_button = GUI::MouseButton::None;
-        m_editor->update();
-        event.accept();
-    }
-
-    if (event.key() == Key_Shift) {
-        m_constrain_angle = true;
-        m_editor->update();
-        event.accept();
-    }
-}
-
-void LineTool::on_keyup(GUI::KeyEvent& event)
-{
-    if (event.key() == Key_Shift) {
-        m_constrain_angle = false;
         m_editor->update();
         event.accept();
     }
