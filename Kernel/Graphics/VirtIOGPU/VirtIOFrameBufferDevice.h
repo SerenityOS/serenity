@@ -19,6 +19,7 @@ class VirtIOFrameBufferDevice final : public BlockDevice {
         size_t framebuffer_offset { 0 };
         u8* framebuffer_data { nullptr };
         VirtIOGPUResourceID resource_id { 0 };
+        VirtIOGPURect dirty_rect {};
     };
 
 public:
