@@ -107,7 +107,7 @@ int main(int argc, char** argv)
     if (file_to_edit) {
         // A file name was passed, parse any possible line and column numbers included.
         FileArgument parsed_argument(file_to_edit);
-        auto file = Core::File::open(file_to_edit_full_path, Core::OpenMode::ReadWrite);
+        auto file = Core::File::open(file_to_edit_full_path, Core::OpenMode::ReadOnly);
 
         if (file.is_error())
             return 1;
