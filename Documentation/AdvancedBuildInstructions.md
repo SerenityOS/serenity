@@ -19,6 +19,14 @@ EOF
 
 This will configure your keymap to German (`de`) instead of US English. See [`Base/res/keymaps/`](../Base/res/keymaps/) for a full list. Note that the `keymap` program itself will also modify the `/etc/Keyboard.ini` config file, but this way the change will persist across image rebuilds.
 
+## Ninja build targets
+
+The `Meta/serenity.sh` script provides an abstraction over the build targets which are made available by CMake. The
+following build targets cannot be accessed through the script and have to be used directly by changing the current
+directory to `Build/i686` and then running `ninja <target>`:
+
+- `ninja grub-image`: Builds a disk image (`grub_disk_image`) with GRUB
+
 ## CMake build options
 
 There are some optional features that can be enabled during compilation that are intended to help with specific types of development work or introduce experimental features. Currently, the following build options are available:
