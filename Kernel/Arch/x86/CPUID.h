@@ -54,6 +54,7 @@ enum class CPUFeature : u32 {
     AVX = (1 << 22),
     FXSR = (1 << 23),
     LM = (1 << 24),
+    HYPERVISOR = (1 << 25),
 };
 
 }
