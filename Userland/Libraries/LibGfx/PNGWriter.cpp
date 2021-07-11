@@ -28,6 +28,8 @@ public:
 
     void add_u8(u8);
 
+    void store_type();
+
 private:
     template<typename T>
     requires(IsUnsigned<T>) void add(T);
@@ -56,6 +58,14 @@ private:
 PNGChunk::PNGChunk(String type)
     : m_type(move(type))
 {
+    store_type();
+}
+
+void PNGChunk::store_type()
+{
+    for (auto character : type()) {
+        m_data.append(&character, sizeof(character));
+    }
 }
 
 template<typename T>
@@ -121,19 +131,12 @@ void NonCompressibleBlock::update_adler(u8 data)
 
 void PNGWriter::add_chunk(PNGChunk const& png_chunk)
 {
-    ByteBuffer combined;
-    for (auto character : png_chunk.type()) {
-        combined.append(&character, sizeof(character));
-    }
-
-    combined.append(png_chunk.data().data(), png_chunk.data().size());
-
-    auto crc = BigEndian(Crypto::Checksum::CRC32({ (const u8*)combined.data(), combined.size() }).digest());
-    auto data_len = BigEndian(png_chunk.data().size());
+    auto crc = BigEndian(Crypto::Checksum::CRC32({ (const u8*)png_chunk.data().data(), png_chunk.data().size() }).digest());
+    auto data_len = BigEndian(png_chunk.data().size() - png_chunk.type().length());
 
     ByteBuffer buf;
     buf.append(&data_len, sizeof(u32));
-    buf.append(combined.data(), combined.size());
+    buf.append(png_chunk.data().data(), png_chunk.data().size());
     buf.append(&crc, sizeof(u32));
 
     m_data.append(buf.data(), buf.size());
