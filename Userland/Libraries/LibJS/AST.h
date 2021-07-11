@@ -1303,14 +1303,21 @@ public:
     {
     }
 
-    FlyString const& parameter() const { return m_parameter; }
+    CatchClause(SourceRange source_range, NonnullRefPtr<BindingPattern> parameter, NonnullRefPtr<BlockStatement> body)
+        : ASTNode(source_range)
+        , m_parameter(move(parameter))
+        , m_body(move(body))
+    {
+    }
+
+    auto& parameter() const { return m_parameter; }
     BlockStatement const& body() const { return m_body; }
 
     virtual void dump(int indent) const override;
     virtual Value execute(Interpreter&, GlobalObject&) const override;
 
 private:
-    FlyString m_parameter;
+    Variant<FlyString, NonnullRefPtr<BindingPattern>> m_parameter;
     NonnullRefPtr<BlockStatement> m_body;
 };
 

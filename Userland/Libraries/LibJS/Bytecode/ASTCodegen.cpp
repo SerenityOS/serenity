@@ -1215,10 +1215,18 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
         generator.switch_to_basic_block(handler_block);
         if (!m_finalizer)
             generator.emit<Bytecode::Op::LeaveUnwindContext>();
-        if (!m_handler->parameter().is_empty()) {
-            // FIXME: We need a separate DeclarativeEnvironment here
-            generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(m_handler->parameter()));
-        }
+        m_handler->parameter().visit(
+            [&](FlyString const& parameter) {
+                if (parameter.is_empty()) {
+                    // FIXME: We need a separate DeclarativeEnvironment here
+                    generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(parameter));
+                }
+            },
+            [&](NonnullRefPtr<BindingPattern> const&) {
+                // FIXME: Implement this path when the above DeclrativeEnvironment issue is dealt with.
+                TODO();
+            });
+
         m_handler->body().generate_bytecode(generator);
         handler_target = Bytecode::Label { handler_block };
         if (!generator.is_current_block_terminated()) {
