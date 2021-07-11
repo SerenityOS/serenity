@@ -7,13 +7,8 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
-#include <AK/Singleton.h>
-#include <AK/StringView.h>
 #include <AK/Types.h>
-#include <Kernel/Debug.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
-#include <Kernel/IO.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <LibC/sys/ioctl_numbers.h>

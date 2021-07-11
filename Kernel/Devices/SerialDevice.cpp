@@ -7,7 +7,6 @@
 
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/IO.h>
-#include <Kernel/Panic.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
