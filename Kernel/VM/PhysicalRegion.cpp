@@ -55,7 +55,7 @@ PhysicalRegion PhysicalRegion::take_pages_from_beginning(unsigned page_count)
     return taken_region;
 }
 
-NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count, bool supervisor, size_t physical_alignment)
+NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count, size_t physical_alignment)
 {
     VERIFY(m_pages);
     VERIFY(m_used != m_pages);
@@ -66,7 +66,7 @@ NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(siz
     auto first_contiguous_page = find_contiguous_free_pages(count, physical_alignment);
 
     for (size_t index = 0; index < count; index++)
-        physical_pages.append(PhysicalPage::create(m_lower.offset(PAGE_SIZE * (index + first_contiguous_page)), supervisor));
+        physical_pages.append(PhysicalPage::create(m_lower.offset(PAGE_SIZE * (index + first_contiguous_page))));
     return physical_pages;
 }
 
@@ -134,7 +134,7 @@ Optional<unsigned> PhysicalRegion::find_and_allocate_contiguous_range(size_t cou
     return {};
 }
 
-RefPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
+RefPtr<PhysicalPage> PhysicalRegion::take_free_page()
 {
     VERIFY(m_pages);
 
@@ -142,7 +142,7 @@ RefPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
     if (!free_index.has_value())
         return nullptr;
 
-    return PhysicalPage::create(m_lower.offset((PhysicalPtr)free_index.value() * PAGE_SIZE), supervisor);
+    return PhysicalPage::create(m_lower.offset((PhysicalPtr)free_index.value() * PAGE_SIZE));
 }
 
 void PhysicalRegion::free_page_at(PhysicalAddress addr)

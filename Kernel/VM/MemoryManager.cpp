@@ -445,7 +445,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         auto pt_paddr = page_tables_base.offset(pt_index * PAGE_SIZE);
         auto physical_page_index = PhysicalAddress::physical_page_index(pt_paddr.get());
         auto& physical_page_entry = m_physical_page_entries[physical_page_index];
-        auto physical_page = adopt_ref(*new (&physical_page_entry.physical_page) PhysicalPage(false, false));
+        auto physical_page = adopt_ref(*new (&physical_page_entry.physical_page) PhysicalPage(false));
         auto result = kernel_page_tables.set(virtual_page_array_current_page & ~0x1fffff, move(physical_page));
         VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 
@@ -719,9 +719,11 @@ void MemoryManager::uncommit_user_physical_pages(size_t page_count)
     m_system_memory_info.user_physical_pages_committed -= page_count;
 }
 
-void MemoryManager::deallocate_user_physical_page(PhysicalAddress paddr)
+void MemoryManager::deallocate_physical_page(PhysicalAddress paddr)
 {
     ScopedSpinLock lock(s_mm_lock);
+
+    // Are we returning a user page?
     for (auto& region : m_user_physical_regions) {
         if (!region.contains(paddr))
             continue;
@@ -736,8 +738,19 @@ void MemoryManager::deallocate_user_physical_page(PhysicalAddress paddr)
         return;
     }
 
-    dmesgln("MM: deallocate_user_physical_page couldn't figure out region for user page @ {}", paddr);
-    VERIFY_NOT_REACHED();
+    // If it's not a user page, it should be a supervisor page.
+    for (auto& region : m_super_physical_regions) {
+        if (!region.contains(paddr)) {
+            dbgln("MM: deallocate_supervisor_physical_page: {} not in {} - {}", paddr, region.lower(), region.upper());
+            continue;
+        }
+
+        region.return_page(paddr);
+        --m_system_memory_info.super_physical_pages_used;
+        return;
+    }
+
+    PANIC("MM: deallocate_user_physical_page couldn't figure out region for page @ {}", paddr);
 }
 
 RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
@@ -755,7 +768,7 @@ RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
         m_system_memory_info.user_physical_pages_uncommitted--;
     }
     for (auto& region : m_user_physical_regions) {
-        page = region.take_free_page(false);
+        page = region.take_free_page();
         if (!page.is_null()) {
             ++m_system_memory_info.user_physical_pages_used;
             break;
@@ -816,24 +829,6 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
     return page;
 }
 
-void MemoryManager::deallocate_supervisor_physical_page(PhysicalAddress paddr)
-{
-    ScopedSpinLock lock(s_mm_lock);
-    for (auto& region : m_super_physical_regions) {
-        if (!region.contains(paddr)) {
-            dbgln("MM: deallocate_supervisor_physical_page: {} not in {} - {}", paddr, region.lower(), region.upper());
-            continue;
-        }
-
-        region.return_page(paddr);
-        --m_system_memory_info.super_physical_pages_used;
-        return;
-    }
-
-    dbgln("MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ {}", paddr);
-    VERIFY_NOT_REACHED();
-}
-
 NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_physical_pages(size_t size, size_t physical_alignment)
 {
     VERIFY(!(size % PAGE_SIZE));
@@ -842,7 +837,7 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
     NonnullRefPtrVector<PhysicalPage> physical_pages;
 
     for (auto& region : m_super_physical_regions) {
-        physical_pages = region.take_contiguous_free_pages(count, true, physical_alignment);
+        physical_pages = region.take_contiguous_free_pages(count, physical_alignment);
         if (!physical_pages.is_empty())
             continue;
     }
@@ -869,7 +864,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
     RefPtr<PhysicalPage> page;
 
     for (auto& region : m_super_physical_regions) {
-        page = region.take_free_page(true);
+        page = region.take_free_page();
         if (!page.is_null())
             break;
     }

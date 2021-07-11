@@ -31,8 +31,8 @@ public:
 
     PhysicalRegion take_pages_from_beginning(unsigned);
 
-    RefPtr<PhysicalPage> take_free_page(bool supervisor);
-    NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count, bool supervisor, size_t physical_alignment = PAGE_SIZE);
+    RefPtr<PhysicalPage> take_free_page();
+    NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count, size_t physical_alignment = PAGE_SIZE);
     void return_page(PhysicalAddress);
 
 private:
