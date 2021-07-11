@@ -11,9 +11,9 @@ namespace Kernel {
 
 static bool s_loopback_initialized = false;
 
-NonnullRefPtr<LoopbackAdapter> LoopbackAdapter::create()
+RefPtr<LoopbackAdapter> LoopbackAdapter::try_create()
 {
-    return adopt_ref(*new LoopbackAdapter());
+    return adopt_ref_if_nonnull(new LoopbackAdapter());
 }
 
 LoopbackAdapter::LoopbackAdapter()

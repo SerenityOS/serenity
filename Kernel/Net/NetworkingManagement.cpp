@@ -101,8 +101,9 @@ bool NetworkingManagement::initialize()
                 m_adapters.append(adapter.release_nonnull());
         });
     }
-    auto loopback = LoopbackAdapter::create();
-    m_adapters.append(loopback);
+    auto loopback = LoopbackAdapter::try_create();
+    VERIFY(loopback);
+    m_adapters.append(*loopback);
     m_loopback_adapter = loopback;
     return true;
 }
