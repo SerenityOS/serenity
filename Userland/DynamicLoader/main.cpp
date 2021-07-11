@@ -94,13 +94,15 @@ this helper program directly.
 extern "C" {
 
 // The compiler expects a previous declaration
+void _start(int, char**, char**);
 void _entry(int, char**, char**);
 
-asm(
-    ".globl _start\n"
-    "_start:\n"
-    "push $0\n"
-    "jmp _entry@plt\n");
+NAKED void _start(int, char**, char**)
+{
+    asm(
+        "push $0\n"
+        "jmp _entry@plt\n");
+}
 
 void _entry(int argc, char** argv, char** envp)
 {
