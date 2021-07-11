@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "SlavePTY.h"
-#include "MasterPTY.h"
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/Process.h>
+#include <Kernel/TTY/MasterPTY.h>
+#include <Kernel/TTY/SlavePTY.h>
 
 namespace Kernel {
 

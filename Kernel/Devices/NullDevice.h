@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "CharacterDevice.h"
+#include <Kernel/Devices/CharacterDevice.h>
 
 namespace Kernel {
 
