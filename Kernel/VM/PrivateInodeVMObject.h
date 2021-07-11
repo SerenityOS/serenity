@@ -27,7 +27,7 @@ private:
     explicit PrivateInodeVMObject(Inode&, size_t);
     explicit PrivateInodeVMObject(const PrivateInodeVMObject&);
 
-    virtual const char* class_name() const override { return "PrivateInodeVMObject"; }
+    virtual StringView class_name() const override { return "PrivateInodeVMObject"sv; }
 
     PrivateInodeVMObject& operator=(const PrivateInodeVMObject&) = delete;
 };

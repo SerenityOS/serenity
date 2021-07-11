@@ -46,7 +46,7 @@ public:
 
     size_t size() const { return m_physical_pages.size() * PAGE_SIZE; }
 
-    virtual const char* class_name() const = 0;
+    virtual StringView class_name() const = 0;
 
     ALWAYS_INLINE void ref_region() { m_regions_count++; }
     ALWAYS_INLINE void unref_region() { m_regions_count--; }

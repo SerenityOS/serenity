@@ -21,7 +21,7 @@ private:
     explicit ContiguousVMObject(size_t, NonnullRefPtrVector<PhysicalPage>&);
     explicit ContiguousVMObject(const ContiguousVMObject&);
 
-    virtual const char* class_name() const override { return "ContiguousVMObject"; }
+    virtual StringView class_name() const override { return "ContiguousVMObject"sv; }
     virtual RefPtr<VMObject> clone() override;
 
     ContiguousVMObject& operator=(const ContiguousVMObject&) = delete;
