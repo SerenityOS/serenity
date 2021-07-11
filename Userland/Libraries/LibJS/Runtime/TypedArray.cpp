@@ -15,6 +15,32 @@
 
 namespace JS {
 
+TypedArrayBase* typed_array_from(GlobalObject& global_object, Value typed_array_value)
+{
+    auto& vm = global_object.vm();
+
+    auto* this_object = typed_array_value.to_object(global_object);
+    if (!this_object)
+        return nullptr;
+    if (!this_object->is_typed_array()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "TypedArray");
+        return nullptr;
+    }
+
+    return static_cast<TypedArrayBase*>(this_object);
+}
+
+// 23.2.4.3 ValidateTypedArray ( O ), https://tc39.es/ecma262/#sec-validatetypedarray
+void validate_typed_array(GlobalObject& global_object, TypedArrayBase& typed_array)
+{
+    auto& vm = global_object.vm();
+
+    if (!typed_array.is_typed_array())
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "TypedArray");
+    else if (typed_array.viewed_array_buffer()->is_detached())
+        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+}
+
 // 22.2.5.1.3 InitializeTypedArrayFromArrayBuffer, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraybuffer
 static void initialize_typed_array_from_array_buffer(GlobalObject& global_object, TypedArrayBase& typed_array, ArrayBuffer& array_buffer, Value byte_offset, Value length)
 {

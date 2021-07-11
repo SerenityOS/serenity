@@ -65,31 +65,23 @@ TypedArrayPrototype::~TypedArrayPrototype()
 {
 }
 
-static TypedArrayBase* typed_array_from(GlobalObject& global_object)
+static TypedArrayBase* typed_array_from_this(GlobalObject& global_object)
 {
-    auto& vm = global_object.vm();
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-    if (!this_object->is_typed_array()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "TypedArray");
-        return nullptr;
-    }
-    return static_cast<TypedArrayBase*>(this_object);
+    auto this_value = global_object.vm().this_value(global_object);
+    return typed_array_from(global_object, this_value);
 }
 
-static TypedArrayBase* validate_typed_array(GlobalObject& global_object)
+static TypedArrayBase* validate_typed_array_from_this(GlobalObject& global_object)
 {
     auto& vm = global_object.vm();
 
-    auto* typed_array = typed_array_from(global_object);
-    if (vm.exception())
+    auto* typed_array = typed_array_from_this(global_object);
+    if (!typed_array)
         return nullptr;
 
-    if (typed_array->viewed_array_buffer()->is_detached()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+    validate_typed_array(global_object, *typed_array);
+    if (vm.exception())
         return nullptr;
-    }
 
     return typed_array;
 }
@@ -111,7 +103,7 @@ static FunctionObject* callback_from_args(GlobalObject& global_object, const Str
 
 static void for_each_item(VM& vm, GlobalObject& global_object, const String& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback)
 {
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return;
 
@@ -172,7 +164,7 @@ static TypedArrayBase* typed_array_species_create(GlobalObject& global_object, T
 // 23.2.3.18 get %TypedArray%.prototype.length, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length
 JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::length_getter)
 {
-    auto typed_array = typed_array_from(global_object);
+    auto typed_array = typed_array_from_this(global_object);
     if (!typed_array)
         return {};
     auto* array_buffer = typed_array->viewed_array_buffer();
@@ -185,7 +177,7 @@ JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::length_getter)
 // 4.1 %TypedArray%.prototype.at ( index ), https://tc39.es/proposal-relative-indexing-method/#sec-%typedarray%.prototype.at
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::at)
 {
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
     auto length = typed_array->array_length();
@@ -223,7 +215,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::every)
 // 23.2.3.8 %TypedArray%.prototype.fill ( value [ , start [ , end ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
 {
-    auto typed_array = validate_typed_array(global_object);
+    auto typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -323,7 +315,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
 // 23.2.3.13 %TypedArray%.prototype.includes ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
 {
-    auto typed_array = validate_typed_array(global_object);
+    auto typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -366,7 +358,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::includes)
 // 23.2.3.14 %TypedArray%.prototype.indexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
 {
-    auto typed_array = validate_typed_array(global_object);
+    auto typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -412,7 +404,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::index_of)
 // 23.2.3.17 %TypedArray%.prototype.lastIndexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
 {
-    auto typed_array = validate_typed_array(global_object);
+    auto typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -460,7 +452,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
 // 23.2.3.20 %TypedArray%.prototype.reduce ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
 {
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -498,7 +490,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce)
 // 23.2.3.21 %TypedArray%.prototype.reduceRight ( callbackfn [ , initialValue ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reduce_right)
 {
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -550,7 +542,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::some)
 // 23.2.3.15 %TypedArray%.prototype.join ( separator ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.join
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
 {
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
     auto length = typed_array->array_length();
@@ -582,7 +574,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
 // 23.2.3.16 %TypedArray%.prototype.keys ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::keys)
 {
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
     return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::Key);
@@ -591,7 +583,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::keys)
 // 23.2.3.30 %TypedArray%.prototype.values ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.values
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::values)
 {
-    auto* typed_array = typed_array_from(global_object);
+    auto* typed_array = typed_array_from_this(global_object);
     if (!typed_array)
         return {};
     return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::Value);
@@ -600,7 +592,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::values)
 // 23.2.3.6 %TypedArray%.prototype.entries ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::entries)
 {
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
     return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::KeyAndValue);
@@ -609,7 +601,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::entries)
 // 23.2.3.1 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
 JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::buffer_getter)
 {
-    auto* typed_array = typed_array_from(global_object);
+    auto* typed_array = typed_array_from_this(global_object);
     if (!typed_array)
         return {};
     auto* array_buffer = typed_array->viewed_array_buffer();
@@ -620,7 +612,7 @@ JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::buffer_getter)
 // 23.2.3.2 get %TypedArray%.prototype.byteLength, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength
 JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::byte_length_getter)
 {
-    auto* typed_array = typed_array_from(global_object);
+    auto* typed_array = typed_array_from_this(global_object);
     if (!typed_array)
         return {};
     auto* array_buffer = typed_array->viewed_array_buffer();
@@ -633,7 +625,7 @@ JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::byte_length_getter)
 // 23.2.3.3 get %TypedArray%.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset
 JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::byte_offset_getter)
 {
-    auto* typed_array = typed_array_from(global_object);
+    auto* typed_array = typed_array_from_this(global_object);
     if (!typed_array)
         return {};
     auto* array_buffer = typed_array->viewed_array_buffer();
@@ -658,7 +650,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
 // 23.2.3.23 %TypedArray%.prototype.set ( source [ , offset ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.set
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
 {
-    auto* typed_array = typed_array_from(global_object);
+    auto* typed_array = typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -824,7 +816,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::set)
 // 23.2.3.24 %TypedArray%.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
 {
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -1014,7 +1006,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
         return {};
     }
 
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -1058,7 +1050,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
 // 23.2.3.27 %TypedArray%.prototype.subarray ( begin, end ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::subarray)
 {
-    auto* typed_array = typed_array_from(global_object);
+    auto* typed_array = typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -1115,7 +1107,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
 {
     // 1. Let O be the this value.
     // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -1157,7 +1149,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::copy_within)
 {
     // 1. Let O be the this value.
     // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -1336,7 +1328,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
 {
     // 1. Let O be the this value.
     // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -1408,7 +1400,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
 {
     // 1. Let O be the this value.
     // 2. Perform ? ValidateTypedArray(O).
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
@@ -1456,7 +1448,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
 // 23.2.3.28 %TypedArray%.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
 {
-    auto* typed_array = validate_typed_array(global_object);
+    auto* typed_array = validate_typed_array_from_this(global_object);
     if (!typed_array)
         return {};
 
