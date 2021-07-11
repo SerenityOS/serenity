@@ -10,6 +10,7 @@
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 
 using namespace TextEditor;
 
@@ -109,8 +110,10 @@ int main(int argc, char** argv)
         FileArgument parsed_argument(file_to_edit);
         auto file = Core::File::open(file_to_edit_full_path, Core::OpenMode::ReadOnly);
 
-        if (file.is_error())
+        if (file.is_error()) {
+            GUI::MessageBox::show_error(window, String::formatted("Opening \"{}\" failed: {}", file_to_edit_full_path, file.error()));
             return 1;
+        }
 
         if (!text_widget.read_file_and_close(file.value()->leak_fd(), file_to_edit_full_path))
             return 1;
