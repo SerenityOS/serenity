@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Devices/RandomDevice.h>
-#include <Kernel/Panic.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 
