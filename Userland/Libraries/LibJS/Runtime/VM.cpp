@@ -589,6 +589,36 @@ void VM::prepare_for_ordinary_call(FunctionObject& function, ExecutionContext& c
     // 15. Return calleeContext. (See NOTE above about how contexts are allocated on the C++ stack.)
 }
 
+// 10.2.1.2 OrdinaryCallBindThis ( F, calleeContext, thisArgument ), https://tc39.es/ecma262/#sec-ordinarycallbindthis
+void VM::ordinary_call_bind_this(FunctionObject& function, ExecutionContext& callee_context, Value this_argument)
+{
+    auto this_mode = function.this_mode();
+    auto* callee_realm = function.realm();
+
+    auto* local_environment = callee_context.lexical_environment;
+    auto& function_environment = verify_cast<FunctionEnvironment>(*local_environment);
+
+    // This is not completely as the spec describes it however without this stuff breaks
+    // (Could be related to the note at https://tc39.es/ecma262/#sec-runtime-semantics-instantiatearrowfunctionexpression )
+    if (!callee_realm || this_mode == FunctionObject::ThisMode::Lexical) {
+        function_environment.bind_this_value(function.global_object(), callee_context.this_value);
+        return;
+    }
+
+    Value this_value;
+    if (function.is_strict_mode()) {
+        this_value = this_argument;
+    } else if (this_argument.is_nullish()) {
+        auto& global_environment = callee_realm->environment();
+        this_value = global_environment.global_this_value();
+    } else {
+        this_value = this_argument.to_object(function.global_object());
+    }
+
+    function_environment.bind_this_value(function.global_object(), this_value);
+    callee_context.this_value = this_value;
+}
+
 Value VM::call_internal(FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments)
 {
     VERIFY(!exception());
@@ -611,11 +641,8 @@ Value VM::call_internal(FunctionObject& function, Value this_value, Optional<Mar
     if (arguments.has_value())
         callee_context.arguments.extend(arguments.value().values());
 
-    if (auto* environment = callee_context.lexical_environment) {
-        auto& function_environment = verify_cast<FunctionEnvironment>(*environment);
-        VERIFY(function_environment.this_binding_status() == FunctionEnvironment::ThisBindingStatus::Uninitialized);
-        function_environment.bind_this_value(function.global_object(), callee_context.this_value);
-    }
+    if (callee_context.lexical_environment)
+        ordinary_call_bind_this(function, callee_context, this_value);
 
     if (exception())
         return {};

@@ -260,6 +260,8 @@ public:
 private:
     VM();
 
+    void ordinary_call_bind_this(FunctionObject&, ExecutionContext&, Value this_argument);
+
     [[nodiscard]] Value call_internal(FunctionObject&, Value this_value, Optional<MarkedValueList> arguments);
     void prepare_for_ordinary_call(FunctionObject&, ExecutionContext& callee_context, Value new_target);
 
