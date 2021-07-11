@@ -7,9 +7,9 @@ test("basic functionality", () => {
     expect(Number.isInteger(5)).toBeTrue();
     expect(Number.isInteger(5.0)).toBeTrue();
     expect(Number.isInteger(5 + 1 / 10000000000000000)).toBeTrue();
-    // FIXME: values outside of i32's range should still return true
-    // expect(Number.isInteger(+2147483647 + 1)).toBeTrue();
-    // expect(Number.isInteger(-2147483648 - 1)).toBeTrue();
+    expect(Number.isInteger(+2147483647 + 1)).toBeTrue();
+    expect(Number.isInteger(-2147483648 - 1)).toBeTrue();
+    // FIXME: This should return true
     // expect(Number.isInteger(99999999999999999999999999999999999)).toBeTrue();
 
     expect(Number.isInteger(5 + 1 / 1000000000000000)).toBeFalse();
