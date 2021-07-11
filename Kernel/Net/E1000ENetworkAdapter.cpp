@@ -6,7 +6,6 @@
 
 #include <AK/MACAddress.h>
 #include <Kernel/Bus/PCI/IDs.h>
-#include <Kernel/Debug.h>
 #include <Kernel/Net/E1000ENetworkAdapter.h>
 #include <Kernel/Sections.h>
 

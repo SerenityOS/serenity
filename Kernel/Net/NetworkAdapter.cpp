@@ -4,18 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/HashTable.h>
-#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Heap/kmalloc.h>
-#include <Kernel/Lock.h>
 #include <Kernel/Net/EtherType.h>
-#include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Process.h>
-#include <Kernel/Random.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel {
