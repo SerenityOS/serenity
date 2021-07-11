@@ -37,7 +37,7 @@ private:
     RTL8168NetworkAdapter(PCI::Address, u8 irq);
 
     virtual bool handle_irq(const RegisterState&) override;
-    virtual const char* class_name() const override { return "RTL8168NetworkAdapter"; }
+    virtual StringView class_name() const override { return "RTL8168NetworkAdapter"sv; }
 
     struct [[gnu::packed]] TXDescriptor {
         volatile u16 frame_length; // top 2 bits are reserved
