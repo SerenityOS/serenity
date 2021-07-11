@@ -1955,6 +1955,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
     for (;;) {
         Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>, Empty> target { Empty() };
         if (match_identifier()) {
+            auto identifier_start = push_start();
             auto name = consume_identifier().value();
             target = create_ast_node<Identifier>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
@@ -1962,6 +1963,33 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
             check_identifier_name_for_assignment_validity(name);
             if ((declaration_kind == DeclarationKind::Let || declaration_kind == DeclarationKind::Const) && name == "let"sv)
                 syntax_error("Lexical binding may not be called 'let'");
+
+            // Check we do not have duplicates
+            auto check_declarations = [&](VariableDeclarator const& declarator) {
+                declarator.target().visit([&](NonnullRefPtr<Identifier> const& identifier) {
+                    if (identifier->string() == name)
+                        syntax_error(String::formatted("Identifier '{}' has already been declared", name), identifier_start.position()); },
+                    [&](auto const&) {});
+            };
+
+            // In any previous let scope
+            if (!m_state.let_scopes.is_empty()) {
+                for (auto& decls : m_state.let_scopes.last()) {
+                    for (auto& decl : decls.declarations()) {
+                        check_declarations(decl);
+                    }
+                }
+            }
+
+            // or this declaration
+            if (declaration_kind == DeclarationKind::Let || declaration_kind == DeclarationKind::Const) {
+                // FIXME: We should check the var_scopes here as well however this has edges cases with for loops.
+                //        See duplicated-variable-declarations.js.
+
+                for (auto& declaration : declarations) {
+                    check_declarations(declaration);
+                }
+            }
         } else if (auto pattern = parse_binding_pattern()) {
             target = pattern.release_nonnull();
 
