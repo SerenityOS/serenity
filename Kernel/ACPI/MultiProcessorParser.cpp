@@ -12,7 +12,6 @@
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
 
 namespace Kernel {
