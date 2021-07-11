@@ -97,7 +97,7 @@ KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& descriptio
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     RefPtr<InodeVMObject> vmobject;
     if (shared)
-        vmobject = SharedInodeVMObject::create_with_inode(inode());
+        vmobject = SharedInodeVMObject::try_create_with_inode(inode());
     else
         vmobject = PrivateInodeVMObject::create_with_inode(inode());
     if (!vmobject)
