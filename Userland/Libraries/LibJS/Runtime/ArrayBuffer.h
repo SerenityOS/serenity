@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Function.h>
 #include <AK/Variant.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
@@ -15,6 +16,9 @@ namespace JS {
 
 struct ClampedU8 {
 };
+
+// 25.1.1 Notation (read-modify-write modification function), https://tc39.es/ecma262/#sec-arraybuffer-notation
+using ReadWriteModifyFunction = Function<ByteBuffer(ByteBuffer, ByteBuffer)>;
 
 class ArrayBuffer : public Object {
     JS_OBJECT(ArrayBuffer, Object);
@@ -45,6 +49,8 @@ public:
     Value get_value(size_t byte_index, bool is_typed_array, Order, bool is_little_endian = true);
     template<typename type>
     Value set_value(size_t byte_index, Value value, bool is_typed_array, Order, bool is_little_endian = true);
+    template<typename T>
+    Value get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian = true);
 
 private:
     virtual void visit_edges(Visitor&) override;
@@ -188,6 +194,21 @@ Value ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] bo
 
     raw_bytes.span().copy_to(buffer_impl().span().slice(byte_index));
     return js_undefined();
+}
+
+// 25.1.2.13 GetModifySetValueInBuffer ( arrayBuffer, byteIndex, type, value, op [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getmodifysetvalueinbuffer
+template<typename T>
+Value ArrayBuffer::get_modify_set_value(size_t byte_index, Value value, ReadWriteModifyFunction operation, bool is_little_endian)
+{
+    auto raw_bytes = numeric_to_raw_bytes<T>(global_object(), value, is_little_endian);
+
+    // FIXME: Check for shared buffer
+
+    auto raw_bytes_read = buffer_impl().slice(byte_index, sizeof(T));
+    auto raw_bytes_modified = operation(raw_bytes_read, raw_bytes);
+    raw_bytes_modified.span().copy_to(buffer_impl().span().slice(byte_index));
+
+    return raw_bytes_to_numeric<T>(global_object(), raw_bytes_read, is_little_endian);
 }
 
 }
