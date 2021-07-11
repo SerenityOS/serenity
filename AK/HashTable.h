@@ -129,7 +129,7 @@ public:
                 m_buckets[i].slot()->~T();
         }
 
-        kfree(m_buckets);
+        kfree_sized(m_buckets, size_in_bytes(m_capacity));
     }
 
     HashTable(const HashTable& other)
@@ -360,22 +360,32 @@ private:
         }
     }
 
+    static size_t size_in_bytes(size_t capacity)
+    {
+        if constexpr (IsOrdered) {
+            return sizeof(BucketType) * capacity;
+        } else {
+            return sizeof(BucketType) * (capacity + 1);
+        }
+    }
+
     void rehash(size_t new_capacity)
     {
         new_capacity = max(new_capacity, static_cast<size_t>(4));
         new_capacity = kmalloc_good_size(new_capacity * sizeof(BucketType)) / sizeof(BucketType);
 
         auto* old_buckets = m_buckets;
+        auto old_capacity = m_capacity;
         Iterator old_iter = begin();
 
         if constexpr (IsOrdered) {
-            m_buckets = (BucketType*)kmalloc(sizeof(BucketType) * (new_capacity));
-            __builtin_memset(m_buckets, 0, sizeof(BucketType) * (new_capacity));
+            m_buckets = (BucketType*)kmalloc(size_in_bytes(new_capacity));
+            __builtin_memset(m_buckets, 0, size_in_bytes(new_capacity));
 
             m_collection_data = { nullptr, nullptr };
         } else {
-            m_buckets = (BucketType*)kmalloc(sizeof(BucketType) * (new_capacity + 1));
-            __builtin_memset(m_buckets, 0, sizeof(BucketType) * (new_capacity + 1));
+            m_buckets = (BucketType*)kmalloc(size_in_bytes(new_capacity));
+            __builtin_memset(m_buckets, 0, size_in_bytes(new_capacity));
         }
 
         m_capacity = new_capacity;
@@ -392,7 +402,7 @@ private:
             it->~T();
         }
 
-        kfree(old_buckets);
+        kfree_sized(old_buckets, size_in_bytes(old_capacity));
     }
 
     template<typename Finder>
