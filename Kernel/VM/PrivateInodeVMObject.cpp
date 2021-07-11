@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-RefPtr<PrivateInodeVMObject> PrivateInodeVMObject::create_with_inode(Inode& inode)
+RefPtr<PrivateInodeVMObject> PrivateInodeVMObject::try_create_with_inode(Inode& inode)
 {
     return adopt_ref_if_nonnull(new (nothrow) PrivateInodeVMObject(inode, inode.size()));
 }

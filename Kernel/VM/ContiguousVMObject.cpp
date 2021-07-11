@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-RefPtr<ContiguousVMObject> ContiguousVMObject::create_with_size(size_t size, size_t physical_alignment)
+RefPtr<ContiguousVMObject> ContiguousVMObject::try_create_with_size(size_t size, size_t physical_alignment)
 {
     auto contiguous_physical_pages = MM.allocate_contiguous_supervisor_physical_pages(size, physical_alignment);
     if (contiguous_physical_pages.is_empty())

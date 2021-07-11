@@ -631,7 +631,7 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, Str
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
         return {};
-    auto vmobject = ContiguousVMObject::create_with_size(size, physical_alignment);
+    auto vmobject = ContiguousVMObject::try_create_with_size(size, physical_alignment);
     if (!vmobject) {
         kernel_page_directory().range_allocator().deallocate(range.value());
         return {};
@@ -642,7 +642,7 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, Str
 OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
-    auto vm_object = AnonymousVMObject::create_with_size(size, strategy);
+    auto vm_object = AnonymousVMObject::try_create_with_size(size, strategy);
     if (!vm_object)
         return {};
     ScopedSpinLock lock(s_mm_lock);
@@ -654,7 +654,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, StringView nam
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
-    auto vm_object = AnonymousVMObject::create_for_physical_range(paddr, size);
+    auto vm_object = AnonymousVMObject::try_create_for_physical_range(paddr, size);
     if (!vm_object)
         return {};
     VERIFY(!(size % PAGE_SIZE));
@@ -667,7 +667,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
-    auto vm_object = AnonymousVMObject::create_for_physical_range(paddr, size);
+    auto vm_object = AnonymousVMObject::try_create_for_physical_range(paddr, size);
     if (!vm_object)
         return {};
     VERIFY(!(size % PAGE_SIZE));

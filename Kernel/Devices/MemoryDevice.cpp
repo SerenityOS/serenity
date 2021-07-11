@@ -49,7 +49,7 @@ KResultOr<Region*> MemoryDevice::mmap(Process& process, FileDescription&, const 
         return EINVAL;
     }
 
-    auto vmobject = AnonymousVMObject::create_for_physical_range(viewed_address, range.size());
+    auto vmobject = AnonymousVMObject::try_create_for_physical_range(viewed_address, range.size());
     if (!vmobject)
         return ENOMEM;
     dbgln("MemoryDevice: Mapped physical memory at {} for range of {} bytes", viewed_address, range.size());

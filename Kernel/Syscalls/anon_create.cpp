@@ -28,7 +28,7 @@ KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
     if (new_fd < 0)
         return new_fd;
 
-    auto vmobject = AnonymousVMObject::create_with_size(size, AllocationStrategy::Reserve);
+    auto vmobject = AnonymousVMObject::try_create_with_size(size, AllocationStrategy::Reserve);
     if (!vmobject)
         return ENOMEM;
 

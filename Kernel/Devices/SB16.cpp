@@ -237,7 +237,7 @@ KResultOr<size_t> SB16::write(FileDescription&, u64, const UserOrKernelBuffer& d
         auto page = MM.allocate_supervisor_physical_page();
         if (!page)
             return ENOMEM;
-        auto vmobject = AnonymousVMObject::create_with_physical_page(*page);
+        auto vmobject = AnonymousVMObject::try_create_with_physical_page(*page);
         if (!vmobject)
             return ENOMEM;
         m_dma_region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_SIZE, "SB16 DMA buffer", Region::Access::Write);
