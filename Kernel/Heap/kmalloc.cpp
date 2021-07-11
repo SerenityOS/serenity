@@ -18,8 +18,6 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/StdLib.h>
