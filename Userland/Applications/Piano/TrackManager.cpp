@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
+ * Copyright (c) 2021 JJ Roberts-White <computerfido@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +15,17 @@ TrackManager::TrackManager()
 
 TrackManager::~TrackManager()
 {
+}
+
+void TrackManager::time_forward(int amount)
+{
+    int new_value = (static_cast<int>(m_time) + amount) % roll_length;
+
+    if (new_value < 0) { // If the new time value is negaive add roll_length to wrap around
+        m_time = roll_length + new_value;
+    } else {
+        m_time = new_value;
+    }
 }
 
 void TrackManager::fill_buffer(Span<Sample> buffer)

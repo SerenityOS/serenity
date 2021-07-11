@@ -8,6 +8,7 @@
 #include "MainWidget.h"
 #include "KeysWidget.h"
 #include "KnobsWidget.h"
+#include "PlayerWidget.h"
 #include "RollWidget.h"
 #include "SamplerWidget.h"
 #include "TrackManager.h"
@@ -17,8 +18,9 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/TabWidget.h>
 
-MainWidget::MainWidget(TrackManager& track_manager)
+MainWidget::MainWidget(TrackManager& track_manager, AudioPlayerLoop& loop)
     : m_track_manager(track_manager)
+    , m_audio_loop(loop)
 {
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_spacing(2);
@@ -34,6 +36,8 @@ MainWidget::MainWidget(TrackManager& track_manager)
     m_roll_widget->set_fixed_height(300);
 
     m_tab_widget->add_tab<SamplerWidget>("Sampler", track_manager);
+
+    m_player_widget = add<PlayerWidget>(track_manager, loop);
 
     m_keys_and_knobs_container = add<GUI::Widget>();
     m_keys_and_knobs_container->set_layout<GUI::HorizontalBoxLayout>();
