@@ -472,7 +472,11 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
             ScopePusher scope(*this, ScopePusher::Var, Scope::Function);
-            auto body = parse_block_statement(is_strict);
+            bool has_binding = any_of(parameters.begin(), parameters.end(), [&](FunctionNode::Parameter const& parameter) {
+                return parameter.binding.has<NonnullRefPtr<BindingPattern>>();
+            });
+
+            auto body = parse_block_statement(is_strict, has_binding);
             scope.add_to_scope_node(body);
             return body;
         }
@@ -494,16 +498,26 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
 
     m_state.function_parameters.take_last();
 
-    if (!function_body_result.is_null()) {
-        state_rollback_guard.disarm();
-        discard_saved_state();
-        auto body = function_body_result.release_nonnull();
-        return create_ast_node<FunctionExpression>(
-            { m_state.current_token.filename(), rule_start.position(), position() }, "", move(body),
-            move(parameters), function_length, FunctionKind::Regular, is_strict, true);
+    if (function_body_result.is_null())
+        return nullptr;
+
+    state_rollback_guard.disarm();
+    discard_saved_state();
+    auto body = function_body_result.release_nonnull();
+
+    if (is_strict) {
+        for (auto& parameter : parameters) {
+            parameter.binding.visit(
+                [&](FlyString const& name) {
+                    check_identifier_name_for_assignment_validity(name, true);
+                },
+                [&](auto const&) {});
+        }
     }
 
-    return nullptr;
+    return create_ast_node<FunctionExpression>(
+        { m_state.current_token.filename(), rule_start.position(), position() }, "", move(body),
+        move(parameters), function_length, FunctionKind::Regular, is_strict, true);
 }
 
 RefPtr<Statement> Parser::try_parse_labelled_statement()
@@ -1553,7 +1567,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement()
     return parse_block_statement(dummy);
 }
 
-NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict)
+NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict, bool error_on_binding)
 {
     auto rule_start = push_start();
     ScopePusher scope(*this, ScopePusher::Let, Parser::Scope::Block);
@@ -1582,7 +1596,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict)
                 if (m_state.string_legacy_octal_escape_sequence_in_scope)
                     syntax_error("Octal escape sequence in string literal not allowed in strict mode");
 
-                if (has_binding) {
+                if (error_on_binding) {
                     syntax_error("Illegal 'use strict' directive in function with non-simple parameter list");
                 }
             }
@@ -1655,8 +1669,42 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
     m_state.function_parameters.append(parameters);
 
+    bool has_binding = any_of(parameters.begin(), parameters.end(), [&](FunctionNode::Parameter const& parameter) {
+        return parameter.binding.has<NonnullRefPtr<BindingPattern>>();
+    });
+
     bool is_strict = false;
-    auto body = parse_block_statement(is_strict);
+    auto body = parse_block_statement(is_strict, has_binding);
+
+    // If the function contains 'use strict' we need to check the parameters (again).
+    if (is_strict) {
+        Vector<StringView> parameter_names;
+        for (auto& parameter : parameters) {
+            parameter.binding.visit(
+                [&](FlyString const& parameter_name) {
+                    check_identifier_name_for_assignment_validity(parameter_name, true);
+                    for (auto& previous_name : parameter_names) {
+                        if (previous_name == parameter_name) {
+                            syntax_error(String::formatted("Duplicate parameter '{}' not allowed in strict mode", parameter_name));
+                        }
+                    }
+
+                    parameter_names.append(parameter_name);
+                },
+                [&](NonnullRefPtr<BindingPattern> const& binding) {
+                    binding->for_each_bound_name([&](auto& bound_name) {
+                        for (auto& previous_name : parameter_names) {
+                            if (previous_name == bound_name) {
+                                syntax_error(String::formatted("Duplicate parameter '{}' not allowed in strict mode", bound_name));
+                                break;
+                            }
+                        }
+                        parameter_names.append(bound_name);
+                    });
+                });
+        }
+        check_identifier_name_for_assignment_validity(name, true);
+    }
 
     m_state.function_parameters.take_last();
 
@@ -1686,8 +1734,22 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
         check_identifier_name_for_assignment_validity(parameter_name);
 
         for (auto& parameter : parameters) {
-            if (auto* ptr = parameter.binding.get_pointer<FlyString>(); !ptr || parameter_name != *ptr)
+            bool has_same_name = parameter.binding.visit(
+                [&](FlyString const& name) {
+                    return name == parameter_name;
+                },
+                [&](NonnullRefPtr<BindingPattern> const& bindings) {
+                    bool found_duplicate = false;
+                    bindings->for_each_bound_name([&](auto& bound_name) {
+                        if (bound_name == parameter_name)
+                            found_duplicate = true;
+                    });
+                    return found_duplicate;
+                });
+
+            if (!has_same_name)
                 continue;
+
             String message;
             if (parse_options & FunctionNodeParseOptions::IsArrowFunction)
                 message = String::formatted("Duplicate parameter '{}' not allowed in arrow function", parameter_name);
