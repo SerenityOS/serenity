@@ -25,23 +25,23 @@ SpreadsheetView::~SpreadsheetView()
 {
 }
 
-void SpreadsheetView::EditingDelegate::set_value(const GUI::Variant& value)
+void SpreadsheetView::EditingDelegate::set_value(GUI::Variant const& value, GUI::ModelEditingDelegate::SelectionBehavior selection_behavior)
 {
     if (value.as_string().is_null()) {
-        StringModelEditingDelegate::set_value("");
+        StringModelEditingDelegate::set_value("", selection_behavior);
         commit();
         return;
     }
 
     if (m_has_set_initial_value)
-        return StringModelEditingDelegate::set_value(value);
+        return StringModelEditingDelegate::set_value(value, selection_behavior);
 
     m_has_set_initial_value = true;
     const auto option = m_sheet.at({ (size_t)index().column(), (size_t)index().row() });
     if (option)
-        return StringModelEditingDelegate::set_value(option->source());
+        return StringModelEditingDelegate::set_value(option->source(), selection_behavior);
 
-    StringModelEditingDelegate::set_value("");
+    StringModelEditingDelegate::set_value("", selection_behavior);
 }
 
 void InfinitelyScrollableTableView::did_scroll()

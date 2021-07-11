@@ -173,14 +173,18 @@ void TableView::keydown_event(KeyEvent& event)
     if (event.is_accepted())
         return;
 
-    auto is_delete = event.key() == Key_Delete || event.key() == Key_Backspace;
-    if (is_editable() && edit_triggers() & EditTrigger::AnyKeyPressed && (event.code_point() != 0 || is_delete)) {
+    auto is_delete = event.key() == Key_Delete;
+    auto is_backspace = event.key() == Key_Backspace;
+    auto is_clear = is_delete || is_backspace;
+    if (is_editable() && edit_triggers() & EditTrigger::AnyKeyPressed && (event.code_point() != 0 || is_clear)) {
         begin_editing(cursor_index());
         if (m_editing_delegate) {
             if (is_delete)
-                m_editing_delegate->set_value(event.key() == Key_Delete ? String {} : String::empty());
+                m_editing_delegate->set_value(String {});
+            else if (is_backspace)
+                m_editing_delegate->set_value(String::empty());
             else
-                m_editing_delegate->set_value(event.text());
+                m_editing_delegate->set_value(event.text(), ModelEditingDelegate::SelectionBehavior::DoNotSelect);
         }
     }
 }
