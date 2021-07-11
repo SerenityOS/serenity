@@ -38,7 +38,7 @@ static constexpr auto page_size = 64 * KiB;
 
 // Implementation-defined limits
 // These are not concretely defined by the spec, so the values are only defined by us.
-static constexpr auto max_allowed_call_stack_depth = 512;
+static constexpr auto minimum_stack_space_to_keep_free = 32 * KiB; // Note: Value copied from LibJS/VM.h
 static constexpr auto max_allowed_executed_instructions_per_call = 256 * 1024 * 1024;
 
 }
