@@ -145,8 +145,11 @@ Optional<Range> Space::allocate_range(VirtualAddress vaddr, size_t size, size_t 
 
 Region& Space::allocate_split_region(const Region& source_region, const Range& range, size_t offset_in_vmobject)
 {
-    auto& region = add_region(Region::create_user_accessible(
-        m_process, range, source_region.vmobject(), offset_in_vmobject, KString::try_create(source_region.name()), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared()));
+    auto new_region = Region::try_create_user_accessible(
+        m_process, range, source_region.vmobject(), offset_in_vmobject, KString::try_create(source_region.name()), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared());
+    // FIXME: Handle !new_region (by propagating ENOMEM)
+    VERIFY(new_region);
+    auto& region = add_region(new_region.release_nonnull());
     region.set_syscall_region(source_region.is_syscall_region());
     region.set_mmap(source_region.is_mmap());
     region.set_stack(source_region.is_stack());
@@ -164,10 +167,12 @@ KResultOr<Region*> Space::allocate_region(Range const& range, StringView name, i
     auto vmobject = AnonymousVMObject::try_create_with_size(range.size(), strategy);
     if (!vmobject)
         return ENOMEM;
-    auto region = Region::create_user_accessible(m_process, range, vmobject.release_nonnull(), 0, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false);
+    auto region = Region::try_create_user_accessible(m_process, range, vmobject.release_nonnull(), 0, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false);
+    if (!region)
+        return ENOMEM;
     if (!region->map(page_directory()))
         return ENOMEM;
-    return &add_region(move(region));
+    return &add_region(region.release_nonnull());
 }
 
 KResultOr<Region*> Space::allocate_region_with_vmobject(Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
@@ -187,12 +192,17 @@ KResultOr<Region*> Space::allocate_region_with_vmobject(Range const& range, Nonn
         return EINVAL;
     }
     offset_in_vmobject &= PAGE_MASK;
-    auto& region = add_region(Region::create_user_accessible(m_process, range, move(vmobject), offset_in_vmobject, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
-    if (!region.map(page_directory())) {
+    auto region = Region::try_create_user_accessible(m_process, range, move(vmobject), offset_in_vmobject, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared);
+    if (!region) {
+        dbgln("allocate_region_with_vmobject: Unable to allocate Region");
+        return nullptr;
+    }
+    auto& region_ref = add_region(region.release_nonnull());
+    if (!region_ref.map(page_directory())) {
         // FIXME: What is an appropriate error code here, really?
         return ENOMEM;
     }
-    return &region;
+    return &region_ref;
 }
 
 bool Space::deallocate_region(Region& region)
