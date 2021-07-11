@@ -5,10 +5,8 @@
  */
 
 #include <AK/ScopeGuard.h>
-#include <AK/TemporaryChange.h>
 #include <AK/Time.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
-#include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
@@ -17,7 +15,6 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <Kernel/TimerQueue.h>
 
 // Remove this once SMP is stable and can be enabled by default
 #define SCHEDULE_ON_ALL_PROCESSORS 0
