@@ -219,7 +219,7 @@ private:
     void query_display_information();
     VirtIOGPUResourceID create_2d_resource(VirtIOGPURect rect);
     void delete_resource(VirtIOGPUResourceID resource_id);
-    void ensure_backing_storage(Region& region, size_t buffer_offset, size_t buffer_length, VirtIOGPUResourceID resource_id);
+    void ensure_backing_storage(Region const&, size_t buffer_offset, size_t buffer_length, VirtIOGPUResourceID resource_id);
     void detach_backing_storage(VirtIOGPUResourceID resource_id);
     void set_scanout_resource(VirtIOGPUScanoutID scanout, VirtIOGPUResourceID resource_id, VirtIOGPURect rect);
     void transfer_framebuffer_data_to_host(VirtIOGPUScanoutID scanout, VirtIOGPURect const& rect, VirtIOGPUResourceID resource_id);
