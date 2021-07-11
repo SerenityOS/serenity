@@ -137,4 +137,9 @@ void EditorWrapper::update_title()
     m_filename_label->set_text(title.to_string());
 }
 
+void EditorWrapper::set_debug_mode(bool enabled)
+{
+    m_editor->set_debug_mode(enabled);
+}
+
 }

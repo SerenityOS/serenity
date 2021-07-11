@@ -639,6 +639,10 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
         m_debugger_thread->start();
         m_stop_action->set_enabled(true);
         m_run_action->set_enabled(false);
+
+        for (auto& editor_wrapper : m_all_editor_wrappers) {
+            editor_wrapper.set_debug_mode(true);
+        }
     });
 }
 
@@ -690,6 +694,11 @@ void HackStudioWidget::initialize_debugger()
                 m_stop_action->set_enabled(false);
                 m_run_action->set_enabled(true);
                 m_debugger_thread.clear();
+
+                for (auto& editor_wrapper : m_all_editor_wrappers) {
+                    editor_wrapper.set_debug_mode(false);
+                }
+
                 HackStudioWidget::hide_action_tabs();
                 GUI::MessageBox::show(window(), "Program Exited", "Debugger", GUI::MessageBox::Type::Information);
             }));
