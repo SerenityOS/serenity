@@ -67,8 +67,12 @@ DebugInfoWidget::DebugInfoWidget()
 
     m_backtrace_view->on_selection_change = [this] {
         const auto& index = m_backtrace_view->selection().first();
-        auto& model = static_cast<BacktraceModel&>(*m_backtrace_view->model());
 
+        if (!index.is_valid()) {
+            return;
+        }
+
+        auto& model = static_cast<BacktraceModel&>(*m_backtrace_view->model());
         // Note: The reconstruction of the register set here is obviously incomplete.
         // We currently only reconstruct eip & ebp. Ideally would also reconstruct the other registers somehow.
         // (Other registers may be needed to get the values of variables who are not stored on the stack)
