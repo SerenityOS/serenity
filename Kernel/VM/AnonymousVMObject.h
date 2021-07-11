@@ -122,7 +122,7 @@ private:
     explicit AnonymousVMObject(NonnullRefPtrVector<PhysicalPage>);
     explicit AnonymousVMObject(const AnonymousVMObject&);
 
-    virtual const char* class_name() const override { return "AnonymousVMObject"; }
+    virtual StringView class_name() const override { return "AnonymousVMObject"sv; }
 
     int purge_impl();
     void update_volatile_cache();

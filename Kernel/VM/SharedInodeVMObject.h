@@ -25,7 +25,7 @@ private:
     explicit SharedInodeVMObject(Inode&, size_t);
     explicit SharedInodeVMObject(const SharedInodeVMObject&);
 
-    virtual const char* class_name() const override { return "SharedInodeVMObject"; }
+    virtual StringView class_name() const override { return "SharedInodeVMObject"sv; }
 
     SharedInodeVMObject& operator=(const SharedInodeVMObject&) = delete;
 };
