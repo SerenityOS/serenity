@@ -16,21 +16,19 @@
 #include <Kernel/Arch/x86/DescriptorTable.h>
 #include <Kernel/Arch/x86/PageDirectory.h>
 #include <Kernel/Arch/x86/TSS.h>
+#include <Kernel/Forward.h>
 
 namespace Kernel {
+
+class ProcessorInfo;
+class SchedulerPerProcessorData;
+struct MemoryManagerData;
+struct ProcessorMessageEntry;
 
 #if ARCH(X86_64)
 #    define MSR_FS_BASE 0xc0000100
 #    define MSR_GS_BASE 0xc0000101
 #endif
-
-class Thread;
-class SchedulerPerProcessorData;
-struct MemoryManagerData;
-struct ProcessorMessageEntry;
-
-struct TrapFrame;
-class ProcessorInfo;
 
 // FIXME: Find a better place for these
 extern "C" void thread_context_first_enter(void);

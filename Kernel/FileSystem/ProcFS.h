@@ -10,16 +10,12 @@
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Forward.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Lock.h>
 #include <Kernel/ProcessExposed.h>
 
 namespace Kernel {
-
-class Process;
-
-class ProcFSInode;
-class ProcFSDirectoryInode;
 
 class ProcFS final : public FileSystem {
     friend class ProcFSInode;
@@ -99,4 +95,5 @@ protected:
 
     ProcFS& m_parent_fs;
 };
+
 }

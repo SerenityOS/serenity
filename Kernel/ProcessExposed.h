@@ -21,13 +21,6 @@
 
 namespace Kernel {
 
-class ProcFS;
-class ProcFSExposedComponent;
-class ProcFSExposedDirectory;
-class ProcFSRootDirectory;
-class ProcFSBusDirectory;
-class ProcFSSystemBoolean;
-
 class ProcFSComponentRegistry {
 public:
     static ProcFSComponentRegistry& the();
@@ -130,9 +123,6 @@ protected:
     mutable Lock m_lock { "ProcFSLink" };
 };
 
-class ProcFSRootDirectory;
-class ProcFSProcessInformation;
-
 class ProcFSProcessDirectory final
     : public ProcFSExposedDirectory {
     friend class ProcFSComponentRegistry;
@@ -166,8 +156,6 @@ private:
     explicit ProcFSProcessDirectory(const Process&);
     NonnullRefPtr<Process> m_associated_process;
 };
-
-class ProcFSRootDirectory;
 
 class ProcFSBusDirectory : public ProcFSExposedDirectory {
     friend class ProcFSComponentRegistry;

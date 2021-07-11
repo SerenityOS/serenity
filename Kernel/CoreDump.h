@@ -13,8 +13,6 @@
 
 namespace Kernel {
 
-class Process;
-
 class CoreDump {
 public:
     static OwnPtr<CoreDump> create(NonnullRefPtr<Process>, const String& output_path);

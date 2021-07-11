@@ -9,12 +9,11 @@
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <Kernel/Forward.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/RangeAllocator.h>
 
 namespace Kernel {
-
-class Process;
 
 class PageDirectory : public RefCounted<PageDirectory> {
     friend class MemoryManager;

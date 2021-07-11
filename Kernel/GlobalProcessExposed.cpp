@@ -231,8 +231,6 @@ UNMAP_AFTER_INIT ProcFSNetworkDirectory::ProcFSNetworkDirectory(const ProcFSRoot
 {
 }
 
-class ProcFSSystemDirectory;
-
 class ProcFSDumpKmallocStacks : public ProcFSSystemBoolean {
 public:
     static NonnullRefPtr<ProcFSDumpKmallocStacks> must_create(const ProcFSSystemDirectory&);
