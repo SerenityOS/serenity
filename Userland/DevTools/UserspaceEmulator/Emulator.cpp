@@ -134,13 +134,15 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
         m_cpu.push32(shadow_wrap_as_initialized(argv_entries[i]));
     u32 argv = m_cpu.esp().value();
 
-    m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // (alignment)
+    while ((m_cpu.esp().value() + 4) % 16 != 0)
+        m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // (alignment)
 
     u32 argc = argv_entries.size();
     m_cpu.push32(shadow_wrap_as_initialized(envp));
     m_cpu.push32(shadow_wrap_as_initialized(argv));
     m_cpu.push32(shadow_wrap_as_initialized(argc));
-    m_cpu.push32(shadow_wrap_as_initialized<u32>(0)); // (alignment)
+
+    VERIFY(m_cpu.esp().value() % 16 == 0);
 }
 
 bool Emulator::load_elf()
