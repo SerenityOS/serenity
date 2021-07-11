@@ -150,6 +150,7 @@ private:
     bool match_statement() const;
     bool match_declaration() const;
     bool match_variable_declaration() const;
+    bool match_identifier() const;
     bool match_identifier_name() const;
     bool match_property_key() const;
     bool match(TokenType type) const;
@@ -157,6 +158,8 @@ private:
     void expected(const char* what);
     void syntax_error(const String& message, Optional<Position> = {});
     Token consume();
+    Token consume_identifier();
+    Token consume_identifier_reference();
     Token consume(TokenType type);
     Token consume_and_validate_numeric_literal();
     void consume_or_insert_semicolon();
@@ -164,6 +167,8 @@ private:
     void load_state();
     void discard_saved_state();
     Position position() const;
+
+    void check_identifier_name_for_assignment_validity(StringView);
 
     bool try_parse_arrow_function_expression_failed_at_position(const Position&) const;
     void set_try_parse_arrow_function_expression_failed_at_position(const Position&, bool);

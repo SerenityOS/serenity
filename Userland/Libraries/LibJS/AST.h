@@ -1455,6 +1455,10 @@ void BindingPattern::for_each_bound_name(C&& callback) const
             callback(alias.get<NonnullRefPtr<Identifier>>()->string());
         } else if (alias.has<NonnullRefPtr<BindingPattern>>()) {
             alias.get<NonnullRefPtr<BindingPattern>>()->for_each_bound_name(forward<C>(callback));
+        } else {
+            auto& name = entry.name;
+            if (name.has<NonnullRefPtr<Identifier>>())
+                callback(name.get<NonnullRefPtr<Identifier>>()->string());
         }
     }
 }
