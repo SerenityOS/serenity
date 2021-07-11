@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Maxime Friess <M4x1me@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -102,6 +103,75 @@ Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all()
 {
     RefPtr<Core::File> proc_all_file;
     return get_all(proc_all_file);
+}
+
+Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_all_map(RefPtr<Core::File>& proc_all_file)
+{
+    auto all = get_all(proc_all_file);
+    if (!all.has_value())
+        return {};
+
+    auto vec = all.value();
+    HashMap<pid_t, Core::ProcessStatistics> processes;
+    for (auto it = vec.begin(); it != vec.end(); it++) {
+        processes.set((*it).pid, *it);
+    }
+
+    return processes;
+}
+
+Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_all_map()
+{
+    RefPtr<Core::File> proc_all_file;
+    return get_all_map(proc_all_file);
+}
+
+template<size_t T>
+static void add_process_to_tree(HashMap<pid_t, Core::ProcessStatistics>& map, TreeNode<Core::ProcessStatistics, T>& tn, pid_t pid)
+{
+    // TODO: Find a better way to implement this (currently O(n^2))
+
+    // Get the process
+    auto proc = map.get(pid);
+    if (!proc.has_value())
+        return;
+    auto p = proc.value();
+
+    // Set the process in the treenode
+    tn.set(p);
+
+    // Iterate over al the processes, find children
+    for (auto it = map.begin(); it != map.end(); ++it) {
+        auto p2 = (*it).value;
+        // If the parent PID of the process is the same as the PID of the current process,
+        // We add it to the tree
+        if (p2.ppid == p.pid && p2.ppid != p2.pid) {
+            auto child_node = tn.add_child(p2);
+            // We add the other processes recursively
+            add_process_to_tree(map, *child_node, p2.pid);
+        }
+    }
+}
+
+Optional<Tree<Core::ProcessStatistics>> ProcessStatisticsReader::get_all_tree(RefPtr<Core::File>& proc_all_file)
+{
+    auto all = get_all_map(proc_all_file);
+    if (!all.has_value())
+        return {};
+
+    auto map = all.value();
+
+    Tree<Core::ProcessStatistics> processes;
+
+    add_process_to_tree(map, processes.root(), 0);
+
+    return processes;
+}
+
+Optional<Tree<Core::ProcessStatistics>> ProcessStatisticsReader::get_all_tree()
+{
+    RefPtr<Core::File> proc_all_file;
+    return get_all_tree(proc_all_file);
 }
 
 String ProcessStatisticsReader::username_from_uid(uid_t uid)

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Maxime Friess <M4x1me@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/Tree.h>
 #include <LibCore/File.h>
 #include <unistd.h>
 
@@ -68,6 +70,10 @@ class ProcessStatisticsReader {
 public:
     static Optional<Vector<Core::ProcessStatistics>> get_all(RefPtr<Core::File>&);
     static Optional<Vector<Core::ProcessStatistics>> get_all();
+    static Optional<HashMap<pid_t, Core::ProcessStatistics>> get_all_map(RefPtr<Core::File>& proc_all_file);
+    static Optional<HashMap<pid_t, Core::ProcessStatistics>> get_all_map();
+    static Optional<Tree<Core::ProcessStatistics>> get_all_tree(RefPtr<Core::File>&);
+    static Optional<Tree<Core::ProcessStatistics>> get_all_tree();
 
 private:
     static String username_from_uid(uid_t);
