@@ -100,7 +100,7 @@ OwnPtr<Region> Region::clone(Process& new_owner)
     if (vmobject().is_inode())
         VERIFY(vmobject().is_private_inode());
 
-    auto vmobject_clone = vmobject().clone();
+    auto vmobject_clone = vmobject().try_clone();
     if (!vmobject_clone)
         return {};
 
