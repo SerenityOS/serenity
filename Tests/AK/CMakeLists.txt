@@ -21,6 +21,7 @@ set(AK_TEST_SOURCES
     TestEndian.cpp
     TestEnumBits.cpp
     TestFind.cpp
+    TestFixedArray.cpp
     TestFormat.cpp
     TestGenericLexer.cpp
     TestHashFunctions.cpp
