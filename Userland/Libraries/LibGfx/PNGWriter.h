@@ -22,7 +22,7 @@ private:
     PNGWriter() { }
 
     Vector<u8> m_data;
-    void add_chunk(PNGChunk const&);
+    void add_chunk(PNGChunk&);
     void add_png_header();
     void add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, u8 color_type, u8 compression_method, u8 filter_method, u8 interlace_method);
     void add_IDAT_chunk(Gfx::Bitmap const&);
