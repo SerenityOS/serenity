@@ -250,7 +250,6 @@ private:
     Vector<PhysicalRegion> m_super_physical_regions;
     Optional<PhysicalRegion> m_physical_pages_region;
     PhysicalPageEntry* m_physical_page_entries { nullptr };
-    size_t m_physical_page_entries_free { 0 };
     size_t m_physical_page_entries_count { 0 };
 
     Region::List m_user_regions;
