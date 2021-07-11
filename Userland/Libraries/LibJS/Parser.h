@@ -168,7 +168,7 @@ private:
     void discard_saved_state();
     Position position() const;
 
-    void check_identifier_name_for_assignment_validity(StringView);
+    void check_identifier_name_for_assignment_validity(StringView, bool force_strict = false);
 
     bool try_parse_arrow_function_expression_failed_at_position(const Position&) const;
     void set_try_parse_arrow_function_expression_failed_at_position(const Position&, bool);

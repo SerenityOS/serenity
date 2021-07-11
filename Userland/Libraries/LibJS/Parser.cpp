@@ -405,6 +405,15 @@ NonnullRefPtr<Statement> Parser::parse_statement()
     }
 }
 
+static constexpr AK::Array<StringView, 9> strict_reserved_words = { "implements", "interface", "let", "package", "private", "protected", "public", "static", "yield" };
+
+static bool is_strict_reserved_word(StringView str)
+{
+    return any_of(strict_reserved_words.begin(), strict_reserved_words.end(), [&str](StringView const& word) {
+        return word == str;
+    });
+}
+
 RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expect_parens)
 {
     save_state();
@@ -566,6 +575,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         ? consume_identifier_reference().value().to_string()
         : "";
 
+    check_identifier_name_for_assignment_validity(class_name, true);
     if (match(TokenType::Extends)) {
         consume();
         auto [expression, should_continue_parsing] = parse_primary_expression();
@@ -763,6 +773,9 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
             set_try_parse_arrow_function_expression_failed_at_position(position(), true);
         }
         auto string = consume().value();
+        // This could be 'eval' or 'arguments' and thus needs a custom check (`eval[1] = true`)
+        if (m_state.strict_mode && (string == "let" || is_strict_reserved_word(string)))
+            syntax_error(String::formatted("Identifier must not be a reserved word in strict mode ('{}')", string));
         return { create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, string) };
     }
     case TokenType::NumericLiteral:
@@ -846,6 +859,13 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         // other engines throw ReferenceError for ++foo()
         if (!is<Identifier>(*rhs) && !is<MemberExpression>(*rhs))
             syntax_error(String::formatted("Right-hand side of prefix increment operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start);
+
+        if (m_state.strict_mode && is<Identifier>(*rhs)) {
+            auto& identifier = static_cast<Identifier&>(*rhs);
+            auto& name = identifier.string();
+            check_identifier_name_for_assignment_validity(name);
+        }
+
         return create_ast_node<UpdateExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, UpdateOp::Increment, move(rhs), true);
     }
     case TokenType::MinusMinus: {
@@ -856,6 +876,13 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
         // other engines throw ReferenceError for --foo()
         if (!is<Identifier>(*rhs) && !is<MemberExpression>(*rhs))
             syntax_error(String::formatted("Right-hand side of prefix decrement operator must be identifier or member expression, got {}", rhs->class_name()), rhs_start);
+
+        if (m_state.strict_mode && is<Identifier>(*rhs)) {
+            auto& identifier = static_cast<Identifier&>(*rhs);
+            auto& name = identifier.string();
+            check_identifier_name_for_assignment_validity(name);
+        }
+
         return create_ast_node<UpdateExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, UpdateOp::Decrement, move(rhs), true);
     }
     case TokenType::ExclamationMark:
@@ -1285,6 +1312,13 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         // other engines throw ReferenceError for foo()++
         if (!is<Identifier>(*lhs) && !is<MemberExpression>(*lhs))
             syntax_error(String::formatted("Left-hand side of postfix increment operator must be identifier or member expression, got {}", lhs->class_name()));
+
+        if (m_state.strict_mode && is<Identifier>(*lhs)) {
+            auto& identifier = static_cast<Identifier&>(*lhs);
+            auto& name = identifier.string();
+            check_identifier_name_for_assignment_validity(name);
+        }
+
         consume();
         return create_ast_node<UpdateExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, UpdateOp::Increment, move(lhs));
     case TokenType::MinusMinus:
@@ -1292,6 +1326,12 @@ NonnullRefPtr<Expression> Parser::parse_secondary_expression(NonnullRefPtr<Expre
         // other engines throw ReferenceError for foo()--
         if (!is<Identifier>(*lhs) && !is<MemberExpression>(*lhs))
             syntax_error(String::formatted("Left-hand side of postfix increment operator must be identifier or member expression, got {}", lhs->class_name()));
+
+        if (m_state.strict_mode && is<Identifier>(*lhs)) {
+            auto& identifier = static_cast<Identifier&>(*lhs);
+            auto& name = identifier.string();
+            check_identifier_name_for_assignment_validity(name);
+        }
         consume();
         return create_ast_node<UpdateExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, UpdateOp::Decrement, move(lhs));
     case TokenType::DoubleAmpersand:
@@ -1381,8 +1421,7 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
         syntax_error("Invalid left-hand side in assignment");
     } else if (m_state.strict_mode && is<Identifier>(*lhs)) {
         auto name = static_cast<const Identifier&>(*lhs).string();
-        if (name == "eval" || name == "arguments")
-            syntax_error(String::formatted("'{}' cannot be assigned to in strict mode code", name));
+        check_identifier_name_for_assignment_validity(name);
     } else if (m_state.strict_mode && is<CallExpression>(*lhs)) {
         syntax_error("Cannot assign to function call");
     }
@@ -1596,6 +1635,8 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
             name = consume_identifier().value();
         else if (is_function_expression && (match(TokenType::Yield) || match(TokenType::Await)))
             name = consume().value();
+
+        check_identifier_name_for_assignment_validity(name);
     }
     consume(TokenType::ParenOpen);
     i32 function_length = -1;
@@ -1642,6 +1683,8 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
         auto token = consume_identifier();
         auto parameter_name = token.value();
 
+        check_identifier_name_for_assignment_validity(parameter_name);
+
         for (auto& parameter : parameters) {
             if (auto* ptr = parameter.binding.get_pointer<FlyString>(); !ptr || parameter_name != *ptr)
                 continue;
@@ -1683,7 +1726,7 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
             default_value = parse_expression(2);
 
             bool is_generator = parse_options & FunctionNodeParseOptions::IsGeneratorFunction;
-            if (is_generator && default_value && default_value->fast_is<Identifier>() && static_cast<Identifier&>(*default_value).string() == "yield"sv)
+            if ((is_generator || m_state.strict_mode) && default_value && default_value->fast_is<Identifier>() && static_cast<Identifier&>(*default_value).string() == "yield"sv)
                 syntax_error("Generator function parameter initializer cannot contain a reference to an identifier named \"yield\"");
         }
         parameters.append({ move(parameter), default_value, is_rest });
@@ -1854,6 +1897,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
             target = create_ast_node<Identifier>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
                 name);
+            check_identifier_name_for_assignment_validity(name);
             if ((declaration_kind == DeclarationKind::Let || declaration_kind == DeclarationKind::Const) && name == "let"sv)
                 syntax_error("Lexical binding may not be called 'let'");
         } else if (auto pattern = parse_binding_pattern()) {
@@ -1866,6 +1910,9 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
                 });
             }
         } else if (!m_state.in_generator_function_context && match(TokenType::Yield)) {
+            if (m_state.strict_mode)
+                syntax_error("Identifier must not be a reserved word in strict mode ('yield')");
+
             target = create_ast_node<Identifier>(
                 { m_state.current_token.filename(), rule_start.position(), position() },
                 consume().value());
@@ -2491,8 +2538,6 @@ void Parser::consume_or_insert_semicolon()
     expected("Semicolon");
 }
 
-static constexpr AK::Array<StringView, 9> strict_reserved_words = { "implements", "interface", "let", "package", "private", "protected", "public", "static", "yield" };
-
 Token Parser::consume_identifier()
 {
     if (match(TokenType::Identifier))
@@ -2546,8 +2591,8 @@ Token Parser::consume(TokenType expected_type)
     }
     auto token = consume();
     if (expected_type == TokenType::Identifier) {
-        if (m_state.strict_mode && any_of(strict_reserved_words.begin(), strict_reserved_words.end(), [&](auto const& word) { return word == token.value(); }))
-            syntax_error("Identifier must not be a class-related reserved word in strict mode");
+        if (m_state.strict_mode && is_strict_reserved_word(token.value()))
+            syntax_error(String::formatted("Identifier must not be a reserved word in strict mode ('{}')", token.value()));
     }
     return token;
 }
@@ -2620,14 +2665,15 @@ void Parser::discard_saved_state()
     m_saved_state.take_last();
 }
 
-void Parser::check_identifier_name_for_assignment_validity(StringView name)
+void Parser::check_identifier_name_for_assignment_validity(StringView name, bool force_strict)
 {
+    // FIXME: this is now called from multiple places maybe the error message should be dynamic?
     if (any_of(s_reserved_words.begin(), s_reserved_words.end(), [&](auto& value) { return name == value; })) {
         syntax_error("Binding pattern target may not be a reserved word");
-    } else if (m_state.strict_mode) {
+    } else if (m_state.strict_mode || force_strict) {
         if (name.is_one_of("arguments"sv, "eval"sv))
             syntax_error("Binding pattern target may not be called 'arguments' or 'eval' in strict mode");
-        else if (name == "yield"sv)
+        else if (is_strict_reserved_word(name))
             syntax_error("Binding pattern target may not be called 'yield' in strict mode");
     }
 }
