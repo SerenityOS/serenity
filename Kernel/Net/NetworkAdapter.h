@@ -44,7 +44,7 @@ class NetworkAdapter : public RefCounted<NetworkAdapter>
 public:
     virtual ~NetworkAdapter();
 
-    virtual const char* class_name() const = 0;
+    virtual StringView class_name() const = 0;
 
     const String& name() const { return m_name; }
     MACAddress mac_address() { return m_mac_address; }
