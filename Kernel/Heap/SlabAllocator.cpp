@@ -9,7 +9,6 @@
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Sections.h>
-#include <Kernel/SpinLock.h>
 #include <Kernel/VM/Region.h>
 
 #define SANITIZE_SLABS
