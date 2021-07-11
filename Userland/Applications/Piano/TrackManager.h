@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
+ * Copyright (c) 2021, JJ Roberts-White <computerfido@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,7 +27,9 @@ public:
     Span<const Sample> buffer() const { return m_current_front_buffer; }
     int octave() const { return m_octave; }
     int octave_base() const { return (m_octave - octave_min) * 12; }
+
     int time() const { return m_time; }
+    void time_forward(int amount);
 
     void fill_buffer(Span<Sample>);
     void reset();
