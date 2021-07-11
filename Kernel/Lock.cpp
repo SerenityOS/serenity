@@ -5,7 +5,6 @@
  */
 
 #include <AK/SourceLocation.h>
-#include <AK/TemporaryChange.h>
 #include <Kernel/Debug.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Lock.h>
