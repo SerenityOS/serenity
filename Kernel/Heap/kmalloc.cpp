@@ -334,9 +334,10 @@ void* operator new[](size_t size, const std::nothrow_t&) noexcept
     return kmalloc(size);
 }
 
-void operator delete(void* ptr) noexcept
+void operator delete(void*) noexcept
 {
-    return kfree(ptr);
+    // All deletes in kernel code should have a known size.
+    VERIFY_NOT_REACHED();
 }
 
 void operator delete(void* ptr, size_t size) noexcept
@@ -344,9 +345,10 @@ void operator delete(void* ptr, size_t size) noexcept
     return kfree_sized(ptr, size);
 }
 
-void operator delete[](void* ptr) noexcept
+void operator delete[](void*) noexcept
 {
-    return kfree(ptr);
+    // All deletes in kernel code should have a known size.
+    VERIFY_NOT_REACHED();
 }
 
 void operator delete[](void* ptr, size_t size) noexcept
