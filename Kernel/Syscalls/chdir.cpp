@@ -41,6 +41,11 @@ ErrorOr<FlatPtr> Process::sys$getcwd(Userspace<char*> buffer, size_t size)
         return EINVAL;
 
     auto path = TRY(current_directory().try_serialize_absolute_path());
+
+    // NOTE: We use the overload of validate_path_against_process_veil that takes a StringView rather than a Custody
+    //       to avoid creating the absolute path KString twice.
+    TRY(VirtualFileSystem::the().validate_path_against_process_veil(path->view(), O_RDONLY | O_DIRECTORY));
+
     size_t ideal_size = path->length() + 1;
     auto size_to_copy = min(ideal_size, size);
     TRY(copy_to_user(buffer, path->characters(), size_to_copy));

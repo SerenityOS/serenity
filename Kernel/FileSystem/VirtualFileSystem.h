@@ -78,12 +78,13 @@ public:
     ErrorOr<NonnullRefPtr<Custody>> resolve_path(StringView path, Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
     ErrorOr<NonnullRefPtr<Custody>> resolve_path_without_veil(StringView path, Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
 
+    ErrorOr<void> validate_path_against_process_veil(Custody const& path, int options);
+    ErrorOr<void> validate_path_against_process_veil(StringView path, int options);
+
 private:
     friend class OpenFileDescription;
 
     UnveilNode const& find_matching_unveiled_path(StringView path);
-    ErrorOr<void> validate_path_against_process_veil(Custody const& path, int options);
-    ErrorOr<void> validate_path_against_process_veil(StringView path, int options);
 
     bool is_vfs_root(InodeIdentifier) const;
 
