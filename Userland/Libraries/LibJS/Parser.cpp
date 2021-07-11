@@ -2059,15 +2059,34 @@ NonnullRefPtr<CatchClause> Parser::parse_catch_clause()
     auto rule_start = push_start();
     consume(TokenType::Catch);
 
-    String parameter;
+    FlyString parameter;
+    RefPtr<BindingPattern> pattern_parameter;
+    auto should_expect_parameter = false;
     if (match(TokenType::ParenOpen)) {
+        should_expect_parameter = true;
         consume();
-        parameter = consume(TokenType::Identifier).value();
+        if (match_identifier_name())
+            parameter = parse_identifier()->string();
+        else
+            pattern_parameter = parse_binding_pattern();
         consume(TokenType::ParenClose);
     }
 
+    if (should_expect_parameter && parameter.is_empty() && !pattern_parameter)
+        syntax_error("Expected an identifier or a binding pattern");
+
     auto body = parse_block_statement();
-    return create_ast_node<CatchClause>({ m_state.current_token.filename(), rule_start.position(), position() }, parameter, move(body));
+    if (pattern_parameter) {
+        return create_ast_node<CatchClause>(
+            { m_state.current_token.filename(), rule_start.position(), position() },
+            pattern_parameter.release_nonnull(),
+            move(body));
+    }
+
+    return create_ast_node<CatchClause>(
+        { m_state.current_token.filename(), rule_start.position(), position() },
+        move(parameter),
+        move(body));
 }
 
 NonnullRefPtr<IfStatement> Parser::parse_if_statement()
