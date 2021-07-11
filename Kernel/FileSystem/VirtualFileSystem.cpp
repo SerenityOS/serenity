@@ -874,8 +874,11 @@ KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView pat
         return custody_or_error.error();
 
     auto& custody = custody_or_error.value();
-    if (auto result = validate_path_against_process_veil(*custody, options); result.is_error())
+    if (auto result = validate_path_against_process_veil(*custody, options); result.is_error()) {
+        if (out_parent)
+            out_parent->clear();
         return result;
+    }
 
     return custody;
 }
