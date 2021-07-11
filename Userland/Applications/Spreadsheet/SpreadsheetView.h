@@ -116,7 +116,7 @@ private:
             : m_sheet(sheet)
         {
         }
-        virtual void set_value(const GUI::Variant& value) override;
+        virtual void set_value(GUI::Variant const&, GUI::ModelEditingDelegate::SelectionBehavior) override;
 
         virtual RefPtr<Widget> create_widget() override
         {
