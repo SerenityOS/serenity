@@ -359,6 +359,7 @@ struct CommonPropertyNames {
     PropertyName register_ { "register", PropertyName::StringMayBeNumber::No };
     PropertyName return_ { "return", PropertyName::StringMayBeNumber::No };
     PropertyName throw_ { "throw", PropertyName::StringMayBeNumber::No };
+    PropertyName xor_ { "xor", PropertyName::StringMayBeNumber::No };
 #define __ENUMERATE(x) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
     ENUMERATE_STANDARD_PROPERTY_NAMES(__ENUMERATE)
 #undef __ENUMERATE

@@ -122,6 +122,7 @@ void AtomicsObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.load, load, 2, attr);
     define_native_function(vm.names.or_, or_, 3, attr);
     define_native_function(vm.names.sub, sub, 3, attr);
+    define_native_function(vm.names.xor_, xor_, 3, attr);
 
     // 25.4.15 Atomics [ @@toStringTag ], https://tc39.es/ecma262/#sec-atomics-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Atomics"), Attribute::Configurable);
@@ -216,6 +217,24 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::sub)
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
         return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_sub));
+    JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+
+    VERIFY_NOT_REACHED();
+}
+
+// 25.4.14 Atomics.xor ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.xor
+JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::xor_)
+{
+    auto* typed_array = typed_array_from(global_object, vm.argument(0));
+    if (!typed_array)
+        return {};
+
+    auto atomic_xor = [](auto* storage, auto value) { return AK::atomic_fetch_xor(storage, value); };
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    if (is<ClassName>(typed_array))                                                 \
+        return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_xor));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
