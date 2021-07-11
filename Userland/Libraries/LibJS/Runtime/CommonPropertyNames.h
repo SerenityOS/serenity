@@ -306,6 +306,7 @@ namespace JS {
     P(sqrt)                                  \
     P(startsWith)                            \
     P(sticky)                                \
+    P(store)                                 \
     P(strike)                                \
     P(stringify)                             \
     P(sub)                                   \

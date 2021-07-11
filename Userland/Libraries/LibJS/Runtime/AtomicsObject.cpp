@@ -121,6 +121,7 @@ void AtomicsObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.and_, and_, 3, attr);
     define_native_function(vm.names.load, load, 2, attr);
     define_native_function(vm.names.or_, or_, 3, attr);
+    define_native_function(vm.names.store, store, 3, attr);
     define_native_function(vm.names.sub, sub, 3, attr);
     define_native_function(vm.names.xor_, xor_, 3, attr);
 
@@ -203,6 +204,42 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
 #undef __JS_ENUMERATE
 
     VERIFY_NOT_REACHED();
+}
+
+// 25.4.10 Atomics.store ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.store
+JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::store)
+{
+    auto* typed_array = typed_array_from(global_object, vm.argument(0));
+    if (!typed_array)
+        return {};
+
+    validate_integer_typed_array(global_object, *typed_array);
+    if (vm.exception())
+        return {};
+
+    auto indexed_position = validate_atomic_access(global_object, *typed_array, vm.argument(1));
+    if (!indexed_position.has_value())
+        return {};
+
+    auto value = vm.argument(2);
+    Value value_to_set;
+    if (typed_array->content_type() == TypedArrayBase::ContentType::BigInt) {
+        value_to_set = value.to_bigint(global_object);
+        if (vm.exception())
+            return {};
+    } else {
+        value_to_set = Value(value.to_integer_or_infinity(global_object));
+        if (vm.exception())
+            return {};
+    }
+
+    if (typed_array->viewed_array_buffer()->is_detached()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return {};
+    }
+
+    typed_array->set_value_in_buffer(*indexed_position, value_to_set, ArrayBuffer::Order::SeqCst, true);
+    return value_to_set;
 }
 
 // 25.4.11 Atomics.sub ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.sub
