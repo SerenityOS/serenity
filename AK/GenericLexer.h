@@ -56,6 +56,12 @@ public:
         --m_index;
     }
 
+    constexpr void retreat(size_t count)
+    {
+        VERIFY(m_index >= count);
+        m_index -= count;
+    }
+
     constexpr char consume()
     {
         VERIFY(!is_eof());
