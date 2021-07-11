@@ -130,6 +130,22 @@ bool File::is_directory(const String& filename)
     return S_ISDIR(st.st_mode);
 }
 
+bool File::is_link() const
+{
+    struct stat stat;
+    if (fstat(fd(), &stat) < 0)
+        return false;
+    return S_ISLNK(stat.st_mode);
+}
+
+bool File::is_link(const String& filename)
+{
+    struct stat st;
+    if (lstat(filename.characters(), &st) < 0)
+        return false;
+    return S_ISLNK(st.st_mode);
+}
+
 bool File::exists(const String& filename)
 {
     struct stat st;
