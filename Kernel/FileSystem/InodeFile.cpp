@@ -99,7 +99,7 @@ KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& descriptio
     if (shared)
         vmobject = SharedInodeVMObject::try_create_with_inode(inode());
     else
-        vmobject = PrivateInodeVMObject::create_with_inode(inode());
+        vmobject = PrivateInodeVMObject::try_create_with_inode(inode());
     if (!vmobject)
         return ENOMEM;
     return process.space().allocate_region_with_vmobject(range, vmobject.release_nonnull(), offset, description.absolute_path(), prot, shared);

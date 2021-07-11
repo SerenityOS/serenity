@@ -161,7 +161,7 @@ Region& Space::allocate_split_region(const Region& source_region, const Range& r
 KResultOr<Region*> Space::allocate_region(Range const& range, StringView name, int prot, AllocationStrategy strategy)
 {
     VERIFY(range.is_valid());
-    auto vmobject = AnonymousVMObject::create_with_size(range.size(), strategy);
+    auto vmobject = AnonymousVMObject::try_create_with_size(range.size(), strategy);
     if (!vmobject)
         return ENOMEM;
     auto region = Region::create_user_accessible(m_process, range, vmobject.release_nonnull(), 0, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false);

@@ -542,7 +542,7 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
         auto old_offset = old_region->offset_in_vmobject();
         NonnullRefPtr inode = static_cast<SharedInodeVMObject&>(old_region->vmobject()).inode();
 
-        auto new_vmobject = PrivateInodeVMObject::create_with_inode(inode);
+        auto new_vmobject = PrivateInodeVMObject::try_create_with_inode(inode);
         if (!new_vmobject)
             return ENOMEM;
 
