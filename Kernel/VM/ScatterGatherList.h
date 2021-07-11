@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-/// A Scatter-Gather List type that owns its buffers
+// A Scatter-Gather List type that owns its buffers
 
 class ScatterGatherList : public RefCounted<ScatterGatherList> {
 public:
