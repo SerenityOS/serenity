@@ -7,7 +7,6 @@
 #include <Kernel/Graphics/VirtIOGPU/VirtIOFrameBufferDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/VirtIOGPU.h>
 #include <Kernel/Graphics/VirtIOGPU/VirtIOGPUConsole.h>
-#include <LibC/sys/ioctl_numbers.h>
 
 #define DEVICE_EVENTS_READ 0x0
 #define DEVICE_EVENTS_CLEAR 0x4
