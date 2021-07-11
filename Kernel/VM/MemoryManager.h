@@ -145,8 +145,7 @@ public:
     RefPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
     RefPtr<PhysicalPage> allocate_supervisor_physical_page();
     NonnullRefPtrVector<PhysicalPage> allocate_contiguous_supervisor_physical_pages(size_t size, size_t physical_alignment = PAGE_SIZE);
-    void deallocate_user_physical_page(PhysicalAddress);
-    void deallocate_supervisor_physical_page(PhysicalAddress);
+    void deallocate_physical_page(PhysicalAddress);
 
     OwnPtr<Region> allocate_contiguous_kernel_region(size_t, StringView name, Region::Access access, size_t physical_alignment = PAGE_SIZE, Region::Cacheable = Region::Cacheable::Yes);
     OwnPtr<Region> allocate_kernel_region(size_t, StringView name, Region::Access access, AllocationStrategy strategy = AllocationStrategy::Reserve, Region::Cacheable = Region::Cacheable::Yes);
