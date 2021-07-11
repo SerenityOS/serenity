@@ -18,6 +18,7 @@ public:
     explicit PNGChunk(String);
     auto const& data() const { return m_data; };
     String const& type() const { return m_type; };
+    void reserve(size_t bytes) { m_data.ensure_capacity(bytes); }
 
     template<typename T>
     void add_as_big_endian(T);
@@ -166,6 +167,7 @@ void PNGWriter::add_IEND_chunk()
 void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
 {
     PNGChunk png_chunk { "IDAT" };
+    png_chunk.reserve(bitmap.size_in_bytes());
 
     u16 CMF_FLG = 0x81d;
     png_chunk.add_as_big_endian(CMF_FLG);
