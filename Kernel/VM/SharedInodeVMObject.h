@@ -16,7 +16,7 @@ class SharedInodeVMObject final : public InodeVMObject {
     AK_MAKE_NONMOVABLE(SharedInodeVMObject);
 
 public:
-    static NonnullRefPtr<SharedInodeVMObject> create_with_inode(Inode&);
+    static RefPtr<SharedInodeVMObject> try_create_with_inode(Inode&);
     virtual RefPtr<VMObject> clone() override;
 
 private:
