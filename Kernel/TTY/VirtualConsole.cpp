@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "VirtualConsole.h"
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <Kernel/Debug.h>
@@ -17,6 +16,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/ConsoleManagement.h>
+#include <Kernel/TTY/VirtualConsole.h>
 #include <LibVT/Color.h>
 
 namespace Kernel {
