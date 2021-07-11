@@ -99,6 +99,7 @@ public:
     bool operator!=(const UnsignedBigInteger& other) const;
     bool operator<(const UnsignedBigInteger& other) const;
     bool operator>(const UnsignedBigInteger& other) const;
+    bool operator>=(UnsignedBigInteger const& other) const;
 
 private:
     friend class UnsignedBigIntegerAlgorithms;
