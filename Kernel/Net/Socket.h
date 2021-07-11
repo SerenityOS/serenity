@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
