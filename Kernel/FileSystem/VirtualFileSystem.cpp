@@ -388,16 +388,20 @@ KResult VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& base)
     // path component (the one being created) that is allowed not to
     // exist, POSIX allows mkdir'ed path to have trailing slashes.
     // Let's handle that case by trimming any trailing slashes.
-    while (path.length() > 1 && path.ends_with("/"))
-        path = path.substring_view(0, path.length() - 1);
+    path = path.trim("/"sv, TrimMode::Right);
+    if (path.is_empty()) {
+        // NOTE: This means the path was a series of slashes, which resolves to "/".
+        path = "/";
+    }
 
     RefPtr<Custody> parent_custody;
-    if (auto result = resolve_path(path, base, &parent_custody); !result.is_error())
+    auto result = resolve_path(path, base, &parent_custody);
+    if (!result.is_error())
         return EEXIST;
     else if (!parent_custody)
-        return ENOENT;
-    else if (result.error() != -ENOENT)
         return result.error();
+    // NOTE: If resolve_path fails with a non-null parent custody, the error should be ENOENT.
+    VERIFY(result.error() == -ENOENT);
 
     auto& parent_inode = parent_custody->inode();
     auto current_process = Process::current();
