@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Concepts.h>
 #include <AK/String.h>
 #include <LibCrypto/Checksum/CRC32.h>
 #include <LibGfx/Bitmap.h>
@@ -15,16 +16,22 @@ namespace Gfx {
 class PNGChunk {
 public:
     explicit PNGChunk(String);
-    Vector<u8> const& data() const { return m_data; };
+    auto const& data() const { return m_data; };
     String const& type() const { return m_type; };
+
+    template<typename T>
+    void add_as_big_endian(T);
+
+    template<typename T>
+    void add_as_little_endian(T);
+
     void add_u8(u8);
-    void add_u16_big(u16);
-    void add_u32_big(u32);
-    void add_u16_little(u16);
-    void add_u32_little(u32);
 
 private:
-    Vector<u8> m_data;
+    template<typename T>
+    requires(IsUnsigned<T>) void add(T);
+
+    ByteBuffer m_data;
     String m_type;
 };
 
@@ -41,8 +48,8 @@ private:
     void update_adler(u8);
     bool full() { return m_non_compressible_data.size() == 65535; }
     Vector<u8> m_non_compressible_data;
-    u32 m_adler_s1 { 1 };
-    u32 m_adler_s2 { 0 };
+    u16 m_adler_s1 { 1 };
+    u16 m_adler_s2 { 0 };
 };
 
 PNGChunk::PNGChunk(String type)
@@ -50,37 +57,29 @@ PNGChunk::PNGChunk(String type)
 {
 }
 
+template<typename T>
+requires(IsUnsigned<T>) void PNGChunk::add(T data)
+{
+    m_data.append(&data, sizeof(T));
+}
+
+template<typename T>
+void PNGChunk::add_as_little_endian(T data)
+{
+    auto data_out = AK::convert_between_host_and_little_endian(data);
+    add(data_out);
+}
+
+template<typename T>
+void PNGChunk::add_as_big_endian(T data)
+{
+    auto data_out = AK::convert_between_host_and_big_endian(data);
+    add(data_out);
+}
+
 void PNGChunk::add_u8(u8 data)
 {
-    m_data.append(data);
-}
-
-void PNGChunk::add_u16_little(u16 data)
-{
-    m_data.append(data & 0xff);
-    m_data.append((data >> 8) & 0xff);
-}
-
-void PNGChunk::add_u32_little(u32 data)
-{
-    m_data.append(data & 0xff);
-    m_data.append((data >> 8) & 0xff);
-    m_data.append((data >> 16) & 0xff);
-    m_data.append((data >> 24) & 0xff);
-}
-
-void PNGChunk::add_u32_big(u32 data)
-{
-    m_data.append((data >> 24) & 0xff);
-    m_data.append((data >> 16) & 0xff);
-    m_data.append((data >> 8) & 0xff);
-    m_data.append(data & 0xff);
-}
-
-void PNGChunk::add_u16_big(u16 data)
-{
-    m_data.append((data >> 8) & 0xff);
-    m_data.append(data & 0xff);
+    add(data);
 }
 
 void NonCompressibleBlock::add_byte_to_block(u8 data, PNGChunk& chunk)
@@ -95,17 +94,13 @@ void NonCompressibleBlock::add_byte_to_block(u8 data, PNGChunk& chunk)
 
 void NonCompressibleBlock::add_block_to_chunk(PNGChunk& png_chunk, bool last)
 {
-    if (last) {
-        png_chunk.add_u8(1);
-    } else {
-        png_chunk.add_u8(0);
-    }
+    png_chunk.add_u8(last);
 
-    auto len = m_non_compressible_data.size();
-    auto nlen = ~len;
+    u16 len = m_non_compressible_data.size();
+    u16 nlen = ~len;
 
-    png_chunk.add_u16_little(len);
-    png_chunk.add_u16_little(nlen);
+    png_chunk.add_as_little_endian(len);
+    png_chunk.add_as_little_endian(nlen);
 
     for (auto non_compressed_byte : m_non_compressible_data) {
         png_chunk.add_u8(non_compressed_byte);
@@ -125,11 +120,12 @@ void NonCompressibleBlock::update_adler(u8 data)
 
 void PNGWriter::add_chunk(PNGChunk const& png_chunk)
 {
-    Vector<u8> combined;
+    ByteBuffer combined;
     for (auto character : png_chunk.type()) {
-        combined.append(character);
+        combined.append(&character, sizeof(character));
     }
-    combined.extend(png_chunk.data());
+
+    combined.append(png_chunk.data().data(), png_chunk.data().size());
 
     auto crc = BigEndian(Crypto::Checksum::CRC32({ (const u8*)combined.data(), combined.size() }).digest());
     auto data_len = BigEndian(png_chunk.data().size());
@@ -151,8 +147,8 @@ void PNGWriter::add_png_header()
 void PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, u8 color_type, u8 compression_method, u8 filter_method, u8 interlace_method)
 {
     PNGChunk png_chunk { "IHDR" };
-    png_chunk.add_u32_big(width);
-    png_chunk.add_u32_big(height);
+    png_chunk.add_as_big_endian(width);
+    png_chunk.add_as_big_endian(height);
     png_chunk.add_u8(bit_depth);
     png_chunk.add_u8(color_type);
     png_chunk.add_u8(compression_method);
@@ -172,7 +168,7 @@ void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
     PNGChunk png_chunk { "IDAT" };
 
     u16 CMF_FLG = 0x81d;
-    png_chunk.add_u16_big(CMF_FLG);
+    png_chunk.add_as_big_endian(CMF_FLG);
 
     NonCompressibleBlock non_compressible_block;
 
@@ -189,8 +185,8 @@ void PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
     }
     non_compressible_block.finalize(png_chunk);
 
-    png_chunk.add_u16_big(non_compressible_block.adler_s2());
-    png_chunk.add_u16_big(non_compressible_block.adler_s1());
+    png_chunk.add_as_big_endian(non_compressible_block.adler_s2());
+    png_chunk.add_as_big_endian(non_compressible_block.adler_s1());
 
     add_chunk(png_chunk);
 }
