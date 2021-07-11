@@ -42,8 +42,8 @@ public:
     bool deallocate_region(Region& region);
     OwnPtr<Region> take_region(Region& region);
 
-    Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmobject);
-    Vector<Region*, 2> split_region_around_range(const Region& source_region, const Range&);
+    KResultOr<Region*> try_allocate_split_region(Region const& source_region, Range const&, size_t offset_in_vmobject);
+    KResultOr<Vector<Region*, 2>> try_split_region_around_range(Region const& source_region, Range const&);
 
     Region* find_region_from_range(const Range&);
     Region* find_region_containing(const Range&);

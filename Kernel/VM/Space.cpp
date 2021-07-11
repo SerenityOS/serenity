@@ -74,7 +74,10 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
         region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
 
-        auto new_regions = split_region_around_range(*region, range_to_unmap);
+        auto new_regions_or_error = try_split_region_around_range(*region, range_to_unmap);
+        if (new_regions_or_error.is_error())
+            return new_regions_or_error.error();
+        auto& new_regions = new_regions_or_error.value();
 
         // Instead we give back the unwanted VM manually.
         page_directory().range_allocator().deallocate(range_to_unmap);
@@ -119,7 +122,11 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
         region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
 
         // Otherwise just split the regions and collect them for future mapping
-        if (new_regions.try_extend(split_region_around_range(*region, range_to_unmap)))
+        auto split_regions_or_error = try_split_region_around_range(*region, range_to_unmap);
+        if (split_regions_or_error.is_error())
+            return split_regions_or_error.error();
+
+        if (new_regions.try_extend(split_regions_or_error.value()))
             return ENOMEM;
     }
     // Instead we give back the unwanted VM manually at the end.
@@ -143,12 +150,12 @@ Optional<Range> Space::allocate_range(VirtualAddress vaddr, size_t size, size_t 
     return page_directory().range_allocator().allocate_specific(vaddr, size);
 }
 
-Region& Space::allocate_split_region(const Region& source_region, const Range& range, size_t offset_in_vmobject)
+KResultOr<Region*> Space::try_allocate_split_region(Region const& source_region, Range const& range, size_t offset_in_vmobject)
 {
     auto new_region = Region::try_create_user_accessible(
         m_process, range, source_region.vmobject(), offset_in_vmobject, KString::try_create(source_region.name()), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared());
-    // FIXME: Handle !new_region (by propagating ENOMEM)
-    VERIFY(new_region);
+    if (!new_region)
+        return ENOMEM;
     auto& region = add_region(new_region.release_nonnull());
     region.set_syscall_region(source_region.is_syscall_region());
     region.set_mmap(source_region.is_mmap());
@@ -158,7 +165,7 @@ Region& Space::allocate_split_region(const Region& source_region, const Range& r
         if (source_region.should_cow(page_offset_in_source_region + i))
             region.set_should_cow(i, true);
     }
-    return region;
+    return &region;
 }
 
 KResultOr<Region*> Space::allocate_region(Range const& range, StringView name, int prot, AllocationStrategy strategy)
@@ -286,20 +293,23 @@ Region& Space::add_region(NonnullOwnPtr<Region> region)
 }
 
 // Carve out a virtual address range from a region and return the two regions on either side
-Vector<Region*, 2> Space::split_region_around_range(const Region& source_region, const Range& desired_range)
+KResultOr<Vector<Region*, 2>> Space::try_split_region_around_range(const Region& source_region, const Range& desired_range)
 {
     Range old_region_range = source_region.range();
     auto remaining_ranges_after_unmap = old_region_range.carve(desired_range);
 
     VERIFY(!remaining_ranges_after_unmap.is_empty());
-    auto make_replacement_region = [&](const Range& new_range) -> Region& {
+    auto try_make_replacement_region = [&](const Range& new_range) -> KResultOr<Region*> {
         VERIFY(old_region_range.contains(new_range));
         size_t new_range_offset_in_vmobject = source_region.offset_in_vmobject() + (new_range.base().get() - old_region_range.base().get());
-        return allocate_split_region(source_region, new_range, new_range_offset_in_vmobject);
+        return try_allocate_split_region(source_region, new_range, new_range_offset_in_vmobject);
     };
     Vector<Region*, 2> new_regions;
     for (auto& new_range : remaining_ranges_after_unmap) {
-        new_regions.unchecked_append(&make_replacement_region(new_range));
+        auto new_region_or_error = try_make_replacement_region(new_range);
+        if (new_region_or_error.is_error())
+            return new_region_or_error.error();
+        new_regions.unchecked_append(new_region_or_error.value());
     }
     return new_regions;
 }

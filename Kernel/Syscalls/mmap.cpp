@@ -341,10 +341,16 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
 
         // This vector is the region(s) adjacent to our range.
         // We need to allocate a new region for the range we wanted to change permission bits on.
-        auto adjacent_regions = space().split_region_around_range(*region, range_to_mprotect);
+        auto adjacent_regions_or_error = space().try_split_region_around_range(*region, range_to_mprotect);
+        if (adjacent_regions_or_error.is_error())
+            return adjacent_regions_or_error.error();
+        auto& adjacent_regions = adjacent_regions_or_error.value();
 
         size_t new_range_offset_in_vmobject = region->offset_in_vmobject() + (range_to_mprotect.base().get() - region->range().base().get());
-        auto& new_region = space().allocate_split_region(*region, range_to_mprotect, new_range_offset_in_vmobject);
+        auto new_region_or_error = space().try_allocate_split_region(*region, range_to_mprotect, new_range_offset_in_vmobject);
+        if (new_region_or_error.is_error())
+            return new_region_or_error.error();
+        auto& new_region = *new_region_or_error.value();
         new_region.set_readable(prot & PROT_READ);
         new_region.set_writable(prot & PROT_WRITE);
         new_region.set_executable(prot & PROT_EXEC);
@@ -399,12 +405,20 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
 
             // This vector is the region(s) adjacent to our range.
             // We need to allocate a new region for the range we wanted to change permission bits on.
-            auto adjacent_regions = space().split_region_around_range(*old_region, intersection_to_mprotect);
+            auto adjacent_regions_or_error = space().try_split_region_around_range(*old_region, intersection_to_mprotect);
+            if (adjacent_regions_or_error.is_error())
+                return adjacent_regions_or_error.error();
+            auto& adjacent_regions = adjacent_regions_or_error.value();
+
             // there should only be one
             VERIFY(adjacent_regions.size() == 1);
 
             size_t new_range_offset_in_vmobject = old_region->offset_in_vmobject() + (intersection_to_mprotect.base().get() - old_region->range().base().get());
-            auto& new_region = space().allocate_split_region(*region, intersection_to_mprotect, new_range_offset_in_vmobject);
+            auto new_region_or_error = space().try_allocate_split_region(*region, intersection_to_mprotect, new_range_offset_in_vmobject);
+            if (new_region_or_error.is_error())
+                return new_region_or_error.error();
+
+            auto& new_region = *new_region_or_error.value();
             new_region.set_readable(prot & PROT_READ);
             new_region.set_writable(prot & PROT_WRITE);
             new_region.set_executable(prot & PROT_EXEC);
