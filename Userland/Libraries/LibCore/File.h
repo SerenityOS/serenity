@@ -30,6 +30,9 @@ public:
     bool is_device() const;
     static bool is_device(const String& filename);
 
+    bool is_link() const;
+    static bool is_link(const String& filename);
+
     static bool exists(const String& filename);
     static bool ensure_parent_directories(const String& path);
 
