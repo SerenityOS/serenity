@@ -70,6 +70,7 @@
     M(ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess,                                                                              \
         "Object prototype must not be {} on a super property access")                                                                   \
     M(ObjectPrototypeWrongType, "Prototype must be an object or null")                                                                  \
+    M(OptionIsNotValidValue, "{} is not a valid value for option {}")                                                                   \
     M(PromiseExecutorNotAFunction, "Promise executor must be a function")                                                               \
     M(ProxyConstructBadReturnType, "Proxy handler's construct trap violates invariant: must return "                                    \
                                    "an object")                                                                                         \

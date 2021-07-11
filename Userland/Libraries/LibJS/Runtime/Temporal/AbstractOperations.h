@@ -12,6 +12,14 @@
 
 namespace JS::Temporal {
 
+Object* get_options_object(GlobalObject&, Value options);
+enum class OptionType {
+    Boolean,
+    String,
+    Number
+};
+Value get_option(GlobalObject&, Object& options, String const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback);
+
 struct ISODateTime {
     i32 year;
     i32 month;
