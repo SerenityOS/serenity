@@ -216,6 +216,7 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
         auto lhs = lhs_entry.get<Value>().to<type>();                                               \
         TRAP_IF_NOT(lhs.has_value());                                                               \
         TRAP_IF_NOT(rhs.has_value());                                                               \
+        __VA_ARGS__;                                                                                \
         auto result = operation(lhs.value(), rhs.value());                                          \
         dbgln_if(WASM_TRACE_DEBUG, "{}({} {}) = {}", #operation, lhs.value(), rhs.value(), result); \
         configuration.stack().peek() = Value(cast(result));                                         \
@@ -881,11 +882,11 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i32_popcnt.value():
         UNARY_NUMERIC_OPERATION(i32, __builtin_popcount);
     case Instructions::i32_add.value():
-        BINARY_NUMERIC_OPERATION(i32, +, i32);
+        BINARY_NUMERIC_OPERATION(u32, +, i32);
     case Instructions::i32_sub.value():
-        BINARY_NUMERIC_OPERATION(i32, -, i32);
+        BINARY_NUMERIC_OPERATION(u32, -, i32);
     case Instructions::i32_mul.value():
-        BINARY_NUMERIC_OPERATION(i32, *, i32);
+        BINARY_NUMERIC_OPERATION(u32, *, i32);
     case Instructions::i32_divs.value():
         BINARY_NUMERIC_OPERATION(i32, /, i32, TRAP_IF_NOT(!(Checked<i32>(lhs.value()) /= rhs.value()).has_overflow()));
     case Instructions::i32_divu.value():
@@ -901,15 +902,15 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i32_xor.value():
         BINARY_NUMERIC_OPERATION(i32, ^, i32);
     case Instructions::i32_shl.value():
-        BINARY_NUMERIC_OPERATION(i32, <<, i32);
+        BINARY_NUMERIC_OPERATION(u32, <<, i32, (rhs = rhs.value() % 32));
     case Instructions::i32_shrs.value():
-        BINARY_NUMERIC_OPERATION(i32, >>, i32);
+        BINARY_NUMERIC_OPERATION(u32, >>, i32, (rhs = rhs.value() % 32)); // FIXME: eh, shouldn't we keep lhs as signed?
     case Instructions::i32_shru.value():
-        BINARY_NUMERIC_OPERATION(u32, >>, i32);
+        BINARY_NUMERIC_OPERATION(u32, >>, i32, (rhs = rhs.value() % 32));
     case Instructions::i32_rotl.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(u32, rotl, i32);
+        BINARY_PREFIX_NUMERIC_OPERATION(u32, rotl, i32, (rhs = rhs.value() % 32));
     case Instructions::i32_rotr.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(u32, rotr, i32);
+        BINARY_PREFIX_NUMERIC_OPERATION(u32, rotr, i32, (rhs = rhs.value() % 32));
     case Instructions::i64_clz.value():
         UNARY_NUMERIC_OPERATION(i64, clz);
     case Instructions::i64_ctz.value():
@@ -917,11 +918,11 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i64_popcnt.value():
         UNARY_NUMERIC_OPERATION(i64, __builtin_popcountll);
     case Instructions::i64_add.value():
-        BINARY_NUMERIC_OPERATION(i64, +, i64);
+        BINARY_NUMERIC_OPERATION(u64, +, i64);
     case Instructions::i64_sub.value():
-        BINARY_NUMERIC_OPERATION(i64, -, i64);
+        BINARY_NUMERIC_OPERATION(u64, -, i64);
     case Instructions::i64_mul.value():
-        BINARY_NUMERIC_OPERATION(i64, *, i64);
+        BINARY_NUMERIC_OPERATION(u64, *, i64);
     case Instructions::i64_divs.value():
         OVF_CHECKED_BINARY_NUMERIC_OPERATION(i64, /, i64, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i64_divu.value():
@@ -937,15 +938,15 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i64_xor.value():
         BINARY_NUMERIC_OPERATION(i64, ^, i64);
     case Instructions::i64_shl.value():
-        BINARY_NUMERIC_OPERATION(i64, <<, i64);
+        BINARY_NUMERIC_OPERATION(u64, <<, i64, (rhs = rhs.value() % 64));
     case Instructions::i64_shrs.value():
-        BINARY_NUMERIC_OPERATION(i64, >>, i64);
+        BINARY_NUMERIC_OPERATION(u64, >>, i64, (rhs = rhs.value() % 64)); // FIXME: eh, shouldn't we keep lhs as signed?
     case Instructions::i64_shru.value():
-        BINARY_NUMERIC_OPERATION(u64, >>, i64);
+        BINARY_NUMERIC_OPERATION(u64, >>, i64, (rhs = rhs.value() % 64));
     case Instructions::i64_rotl.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(u64, rotl, i64);
+        BINARY_PREFIX_NUMERIC_OPERATION(u64, rotl, i64, (rhs = rhs.value() % 64));
     case Instructions::i64_rotr.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(u64, rotr, i64);
+        BINARY_PREFIX_NUMERIC_OPERATION(u64, rotr, i64, (rhs = rhs.value() % 64));
     case Instructions::f32_abs.value():
         UNARY_NUMERIC_OPERATION(float, fabsf);
     case Instructions::f32_neg.value():
