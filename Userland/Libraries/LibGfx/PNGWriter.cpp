@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Pierre Hoffmeister
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Aziz Berkay Yesilyurt <abyesilyurt@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,6 +15,8 @@
 namespace Gfx {
 
 class PNGChunk {
+    using data_length_type = u32;
+
 public:
     explicit PNGChunk(String);
     auto const& data() const { return m_data; };
@@ -29,6 +32,8 @@ public:
     void add_u8(u8);
 
     void store_type();
+    void store_data_length();
+    u32 crc();
 
 private:
     template<typename T>
@@ -58,6 +63,7 @@ private:
 PNGChunk::PNGChunk(String type)
     : m_type(move(type))
 {
+    add<data_length_type>(0);
     store_type();
 }
 
@@ -66,6 +72,18 @@ void PNGChunk::store_type()
     for (auto character : type()) {
         m_data.append(&character, sizeof(character));
     }
+}
+
+void PNGChunk::store_data_length()
+{
+    auto data_lenth = BigEndian(m_data.size() - sizeof(data_length_type) - m_type.length());
+    __builtin_memcpy(m_data.offset_pointer(0), &data_lenth, sizeof(u32));
+}
+
+u32 PNGChunk::crc()
+{
+    u32 crc = Crypto::Checksum::CRC32({ m_data.offset_pointer(sizeof(data_length_type)), m_data.size() - sizeof(data_length_type) }).digest();
+    return crc;
 }
 
 template<typename T>
@@ -129,17 +147,12 @@ void NonCompressibleBlock::update_adler(u8 data)
     m_adler_s2 = (m_adler_s2 + m_adler_s1) % 65521;
 }
 
-void PNGWriter::add_chunk(PNGChunk const& png_chunk)
+void PNGWriter::add_chunk(PNGChunk& png_chunk)
 {
-    auto crc = BigEndian(Crypto::Checksum::CRC32({ (const u8*)png_chunk.data().data(), png_chunk.data().size() }).digest());
-    auto data_len = BigEndian(png_chunk.data().size() - png_chunk.type().length());
-
-    ByteBuffer buf;
-    buf.append(&data_len, sizeof(u32));
-    buf.append(png_chunk.data().data(), png_chunk.data().size());
-    buf.append(&crc, sizeof(u32));
-
-    m_data.append(buf.data(), buf.size());
+    png_chunk.store_data_length();
+    u32 crc = png_chunk.crc();
+    png_chunk.add_as_big_endian(crc);
+    m_data.append(png_chunk.data().data(), png_chunk.data().size());
 }
 
 void PNGWriter::add_png_header()
