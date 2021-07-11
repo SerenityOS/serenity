@@ -117,11 +117,11 @@ AnonymousVMObject::AnonymousVMObject(PhysicalPage& page)
 }
 
 AnonymousVMObject::AnonymousVMObject(NonnullRefPtrVector<PhysicalPage> physical_pages)
-    : VMObject()
+    : VMObject(physical_pages.size())
     , m_volatile_ranges_cache({ 0, page_count() })
 {
-    for (auto& page : physical_pages) {
-        m_physical_pages.append(page);
+    for (size_t i = 0; i < physical_pages.size(); ++i) {
+        m_physical_pages[i] = physical_pages[i];
     }
 }
 
