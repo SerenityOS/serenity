@@ -91,8 +91,8 @@ if (uname -a | grep -iq WSL) || (uname -a | grep -iq microsoft); then
     # QEMU for windows does not like gl=on, so detect if we are building in wsl, and if so, disable it
     # Also, when using the GTK backend we run into this problem: https://github.com/SerenityOS/serenity/issues/7657
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=off}"
-elif [ $SERENITY_SCREENS = 1 ]; then
-    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-gtk,gl=off}"
+elif [ $SERENITY_SCREENS -gt 1 ] && "${SERENITY_QEMU_BIN}" --display help | grep -iq sdl; then
+    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=off}"
 elif ("${SERENITY_QEMU_BIN}" --display help | grep -iq sdl) && (ldconfig -p | grep -iq virglrenderer); then
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=on}"
 elif "${SERENITY_QEMU_BIN}" --display help | grep -iq cocoa; then
