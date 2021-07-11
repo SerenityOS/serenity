@@ -246,6 +246,7 @@ private:
             if (m_outline_buffer)
                 __builtin_memcpy(new_buffer, m_outline_buffer, min(new_capacity, m_outline_capacity));
             VERIFY(new_buffer);
+            kfree_sized(m_outline_buffer, m_outline_capacity);
         } else {
             new_buffer = (u8*)kmalloc(new_capacity);
             VERIFY(new_buffer);
