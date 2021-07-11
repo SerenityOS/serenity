@@ -34,8 +34,10 @@ public:
     const Vector<size_t>& breakpoint_lines() const { return code_document().breakpoint_lines(); }
     Vector<size_t>& breakpoint_lines() { return code_document().breakpoint_lines(); }
     Optional<size_t> execution_position() const { return code_document().execution_position(); }
+    bool is_program_running() const { return execution_position().has_value(); }
     void set_execution_position(size_t line_number);
     void clear_execution_position();
+    void set_debug_mode(bool);
 
     const CodeDocument& code_document() const;
     CodeDocument& code_document();

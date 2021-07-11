@@ -39,6 +39,7 @@ public:
 
     void set_mode_displayable();
     void set_mode_non_displayable();
+    void set_debug_mode(bool);
     void set_filename(const String&);
     const String& filename() const { return m_filename; }
     bool document_dirty() const { return m_document_dirty; }
