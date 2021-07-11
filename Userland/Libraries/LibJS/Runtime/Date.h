@@ -86,4 +86,8 @@ private:
     bool m_is_invalid { false };
 };
 
+Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, Value ms);
+Value make_day(GlobalObject& global_object, Value year, Value month, Value date);
+Value make_date(Value day, Value time);
+
 }

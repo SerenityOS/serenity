@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,11 +32,13 @@ private:
 };
 
 // -86400 * 10^17
-const auto INSTANT_NANOSECONDS_MIN = Crypto::SignedBigInteger::from_base(10, "-8640000000000000000000");
+const auto INSTANT_NANOSECONDS_MIN = "-8640000000000000000000"_sbigint;
 // +86400 * 10^17
-const auto INSTANT_NANOSECONDS_MAX = Crypto::SignedBigInteger::from_base(10, "8640000000000000000000");
+const auto INSTANT_NANOSECONDS_MAX = "8640000000000000000000"_sbigint;
 
 bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds);
-Object* create_temporal_instant(GlobalObject&, BigInt& nanoseconds, FunctionObject* new_target = nullptr);
+Instant* create_temporal_instant(GlobalObject&, BigInt& nanoseconds, FunctionObject* new_target = nullptr);
+Instant* to_temporal_instant(GlobalObject&, Value item);
+BigInt* parse_temporal_instant(GlobalObject&, String const& iso_string);
 
 }

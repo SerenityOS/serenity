@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,8 +8,11 @@
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/InstantConstructor.h>
+#include <LibJS/Runtime/Temporal/PlainDateTime.h>
+#include <LibJS/Runtime/Temporal/TimeZone.h>
 
 namespace JS::Temporal {
 
@@ -42,7 +46,7 @@ bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds)
 }
 
 // 8.5.2 CreateTemporalInstant ( epochNanoseconds [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalinstant
-Object* create_temporal_instant(GlobalObject& global_object, BigInt& epoch_nanoseconds, FunctionObject* new_target)
+Instant* create_temporal_instant(GlobalObject& global_object, BigInt& epoch_nanoseconds, FunctionObject* new_target)
 {
     auto& vm = global_object.vm();
 
@@ -63,6 +67,75 @@ Object* create_temporal_instant(GlobalObject& global_object, BigInt& epoch_nanos
 
     // 6. Return object.
     return object;
+}
+
+// 8.5.3 ToTemporalInstant ( item ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalinstant
+Instant* to_temporal_instant(GlobalObject& global_object, Value item)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If Type(item) is Object, then
+    if (item.is_object()) {
+        // a. If item has an [[InitializedTemporalInstant]] internal slot, then
+        if (is<Instant>(item.as_object())) {
+            // i. Return item.
+            return &static_cast<Instant&>(item.as_object());
+        }
+        // TODO:
+        // b. If item has an [[InitializedTemporalZonedDateTime]] internal slot, then
+        // i. Return ! CreateTemporalInstant(item.[[Nanoseconds]]).
+    }
+
+    // 2. Let string be ? ToString(item).
+    auto string = item.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let epochNanoseconds be ? ParseTemporalInstant(string).
+    auto* epoch_nanoseconds = parse_temporal_instant(global_object, string);
+    if (vm.exception())
+        return {};
+
+    return create_temporal_instant(global_object, *epoch_nanoseconds);
+}
+
+// 8.5.4 ParseTemporalInstant ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstant
+BigInt* parse_temporal_instant(GlobalObject& global_object, String const& iso_string)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(isoString) is String.
+
+    // 2. Let result be ? ParseTemporalInstantString(isoString).
+    auto result = parse_temporal_instant_string(global_object, iso_string);
+    if (vm.exception())
+        return {};
+
+    // 3. Let offsetString be result.[[TimeZoneOffsetString]].
+    auto& offset_string = result->time_zone_offset;
+
+    // 4. Assert: offsetString is not undefined.
+    VERIFY(offset_string.has_value());
+
+    // 5. Let utc be ? GetEpochFromISOParts(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]]).
+    auto* utc = get_epoch_from_iso_parts(global_object, result->year, result->month, result->day, result->hour, result->minute, result->second, result->millisecond, result->microsecond, result->nanosecond);
+    if (vm.exception())
+        return {};
+
+    // 6. If utc < −8.64 × 10^21 or utc > 8.64 × 10^21, then
+    if (utc->big_integer() < INSTANT_NANOSECONDS_MIN || utc->big_integer() > INSTANT_NANOSECONDS_MAX) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return {};
+    }
+
+    // 7. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(offsetString).
+    auto offset_nanoseconds = parse_time_zone_offset_string(global_object, *offset_string);
+    if (vm.exception())
+        return {};
+
+    // 8. Return utc − offsetNanoseconds.
+    return js_bigint(vm.heap(), utc->big_integer().minus(Crypto::SignedBigInteger::create_from(offset_nanoseconds)));
 }
 
 }

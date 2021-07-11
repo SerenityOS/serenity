@@ -5,7 +5,6 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Temporal/ISO8601.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
 
@@ -54,10 +53,14 @@ Value TimeZoneConstructor::construct(FunctionObject& new_target)
     String canonical;
 
     // 3. If identifier satisfies the syntax of a TimeZoneNumericUTCOffset (see 13.33), then
-    if (is_valid_time_zone_numeric_utc_offset(identifier)) {
-        // TODO:
+    if (is_valid_time_zone_numeric_utc_offset_syntax(identifier)) {
         // a. Let offsetNanoseconds be ? ParseTimeZoneOffsetString(identifier).
+        auto offset_nanoseconds = parse_time_zone_offset_string(global_object, identifier);
+        if (vm.exception())
+            return {};
+
         // b. Let canonical be ! FormatTimeZoneOffsetString(offsetNanoseconds).
+        canonical = format_time_zone_offset_string(offset_nanoseconds);
     }
     // 4. Else,
     else {
