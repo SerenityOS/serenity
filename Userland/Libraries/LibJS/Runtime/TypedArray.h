@@ -40,6 +40,10 @@ public:
     virtual size_t element_size() const = 0;
     virtual String element_name() const = 0;
 
+    // 25.1.2.6 IsUnclampedIntegerElementType ( type ), https://tc39.es/ecma262/#sec-isunclampedintegerelementtype
+    virtual bool is_unclamped_integer_element_type() const = 0;
+    // 25.1.2.7 IsBigIntElementType ( type ), https://tc39.es/ecma262/#sec-isbigintelementtype
+    virtual bool is_bigint_element_type() const = 0;
     // 25.1.2.10 GetValueFromBuffer ( arrayBuffer, byteIndex, type, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-getvaluefrombuffer
     virtual Value get_value_from_buffer(size_t byte_index, ArrayBuffer::Order, bool is_little_endian = true) const = 0;
     // 25.1.2.12 SetValueInBuffer ( arrayBuffer, byteIndex, type, value, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-setvalueinbuffer
@@ -437,6 +441,18 @@ public:
     }
 
     virtual size_t element_size() const override { return sizeof(UnderlyingBufferDataType); };
+
+    bool is_unclamped_integer_element_type() const override
+    {
+        constexpr bool is_unclamped_integer = IsSame<T, i8> || IsSame<T, u8> || IsSame<T, i16> || IsSame<T, u16> || IsSame<T, i32> || IsSame<T, u32>;
+        return is_unclamped_integer;
+    }
+
+    bool is_bigint_element_type() const override
+    {
+        constexpr bool is_bigint = IsSame<T, i64> || IsSame<T, u64>;
+        return is_bigint;
+    }
 
     Value get_value_from_buffer(size_t byte_index, ArrayBuffer::Order order, bool is_little_endian = true) const override { return viewed_array_buffer()->template get_value<T>(byte_index, true, order, is_little_endian); }
     void set_value_in_buffer(size_t byte_index, Value value, ArrayBuffer::Order order, bool is_little_endian = true) override { viewed_array_buffer()->template set_value<T>(byte_index, value, true, order, is_little_endian); }
