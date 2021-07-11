@@ -22,7 +22,6 @@
 #include <Kernel/Time/RTC.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
-#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 
