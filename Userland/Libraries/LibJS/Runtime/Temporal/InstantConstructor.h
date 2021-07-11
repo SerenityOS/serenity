@@ -28,6 +28,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(from_epoch_milliseconds);
     JS_DECLARE_NATIVE_FUNCTION(from_epoch_microseconds);
     JS_DECLARE_NATIVE_FUNCTION(from_epoch_nanoseconds);
+    JS_DECLARE_NATIVE_FUNCTION(compare);
 };
 
 }

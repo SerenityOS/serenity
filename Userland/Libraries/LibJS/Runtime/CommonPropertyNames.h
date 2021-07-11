@@ -92,6 +92,7 @@ namespace JS {
     P(console)                               \
     P(construct)                             \
     P(constructor)                           \
+    P(compare)                               \
     P(copyWithin)                            \
     P(cos)                                   \
     P(cosh)                                  \

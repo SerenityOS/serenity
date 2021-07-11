@@ -31,6 +31,7 @@ void InstantConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.fromEpochMilliseconds, from_epoch_milliseconds, 1, attr);
     define_native_function(vm.names.fromEpochMicroseconds, from_epoch_microseconds, 1, attr);
     define_native_function(vm.names.fromEpochNanoseconds, from_epoch_nanoseconds, 1, attr);
+    define_native_function(vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 }
@@ -156,6 +157,23 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_nanoseconds)
 
     // 3. Return ? CreateTemporalInstant(epochNanoseconds).
     return create_temporal_instant(global_object, *epoch_nanoseconds);
+}
+
+// 8.2.7 Temporal.Instant.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal.instant.compare
+JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::compare)
+{
+    // 1. Set one to ? ToTemporalInstant(one).
+    auto* one = to_temporal_instant(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 2. Set two to ? ToTemporalInstant(two).
+    auto* two = to_temporal_instant(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+
+    // 3. Return 𝔽(! CompareEpochNanoseconds(one.[[Nanoseconds]], two.[[Nanoseconds]])).
+    return Value(compare_epoch_nanoseconds(one->nanoseconds(), two->nanoseconds()));
 }
 
 }
