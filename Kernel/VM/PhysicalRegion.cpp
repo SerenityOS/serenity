@@ -4,21 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Bitmap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
-#include <AK/Vector.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/Random.h>
-#include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/PhysicalRegion.h>
 
 namespace Kernel {
-
-NonnullRefPtr<PhysicalRegion> PhysicalRegion::create(PhysicalAddress lower, PhysicalAddress upper)
-{
-    return adopt_ref(*new PhysicalRegion(lower, upper));
-}
 
 PhysicalRegion::PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper)
     : m_lower(lower)
@@ -44,7 +36,7 @@ unsigned PhysicalRegion::finalize_capacity()
     return size();
 }
 
-NonnullRefPtr<PhysicalRegion> PhysicalRegion::take_pages_from_beginning(unsigned page_count)
+PhysicalRegion PhysicalRegion::take_pages_from_beginning(unsigned page_count)
 {
     VERIFY(m_used == 0);
     VERIFY(page_count > 0);
@@ -59,7 +51,7 @@ NonnullRefPtr<PhysicalRegion> PhysicalRegion::take_pages_from_beginning(unsigned
     finalize_capacity();
 
     auto taken_region = create(taken_lower, taken_upper);
-    taken_region->finalize_capacity();
+    taken_region.finalize_capacity();
     return taken_region;
 }
 

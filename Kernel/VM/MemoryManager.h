@@ -16,6 +16,7 @@
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/AllocationStrategy.h>
 #include <Kernel/VM/PhysicalPage.h>
+#include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
 
@@ -245,9 +246,9 @@ private:
 
     SystemMemoryInfo m_system_memory_info;
 
-    NonnullRefPtrVector<PhysicalRegion> m_user_physical_regions;
-    NonnullRefPtrVector<PhysicalRegion> m_super_physical_regions;
-    RefPtr<PhysicalRegion> m_physical_pages_region;
+    Vector<PhysicalRegion> m_user_physical_regions;
+    Vector<PhysicalRegion> m_super_physical_regions;
+    Optional<PhysicalRegion> m_physical_pages_region;
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_free { 0 };
     size_t m_physical_page_entries_count { 0 };
