@@ -27,6 +27,7 @@ void InstantConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.temporal_instant_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.from, from, 1, attr);
     define_native_function(vm.names.fromEpochSeconds, from_epoch_seconds, 1, attr);
     define_native_function(vm.names.fromEpochMilliseconds, from_epoch_milliseconds, 1, attr);
     define_native_function(vm.names.fromEpochMicroseconds, from_epoch_microseconds, 1, attr);
@@ -66,6 +67,21 @@ Value InstantConstructor::construct(FunctionObject& new_target)
 
     // 4. Return ? CreateTemporalInstant(epochNanoseconds, NewTarget).
     return create_temporal_instant(global_object, *epoch_nanoseconds, &new_target);
+}
+
+// 8.2.2 Temporal.Instant.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.instant.from
+JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from)
+{
+    auto item = vm.argument(0);
+
+    // 1. If Type(item) is Object and item has an [[InitializedTemporalInstant]] internal slot, then
+    if (item.is_object() && is<Instant>(item.as_object())) {
+        // a. Return ? CreateTemporalInstant(item.[[Nanoseconds]]).
+        return create_temporal_instant(global_object, *js_bigint(vm.heap(), static_cast<Instant&>(item.as_object()).nanoseconds().big_integer()));
+    }
+
+    // 2. Return ? ToTemporalInstant(item).
+    return to_temporal_instant(global_object, item);
 }
 
 // 8.2.3 Temporal.Instant.fromEpochSeconds ( epochSeconds ), https://tc39.es/proposal-temporal/#sec-temporal.instant.fromepochseconds
