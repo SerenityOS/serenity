@@ -20,6 +20,7 @@
 #include <LibJS/Runtime/ArrayConstructor.h>
 #include <LibJS/Runtime/ArrayIteratorPrototype.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
+#include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/BigIntConstructor.h>
 #include <LibJS/Runtime/BigIntPrototype.h>
 #include <LibJS/Runtime/BooleanConstructor.h>
@@ -184,6 +185,7 @@ void GlobalObject::initialize_global_object()
 
     define_direct_property(vm.names.globalThis, this, attr);
     define_direct_property(vm.names.console, heap().allocate<ConsoleObject>(*this, *this), attr);
+    define_direct_property(vm.names.Atomics, heap().allocate<AtomicsObject>(*this, *this), attr);
     define_direct_property(vm.names.Math, heap().allocate<MathObject>(*this, *this), attr);
     define_direct_property(vm.names.JSON, heap().allocate<JSONObject>(*this, *this), attr);
     define_direct_property(vm.names.Reflect, heap().allocate<ReflectObject>(*this, *this), attr);
