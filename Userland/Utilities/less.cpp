@@ -369,8 +369,10 @@ int main(int argc, char** argv)
         } else if (sequence == "k" || sequence == "\e[A") {
             if (!emulate_more)
                 pager.up();
-        } else if (sequence == " ") {
+        } else if (sequence == " " || sequence == "\e[6~") {
             pager.down_page();
+        } else if (sequence == "\e[5~") {
+            pager.up_page();
         }
 
         if (quit_at_eof && pager.at_end())
