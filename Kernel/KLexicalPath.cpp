@@ -8,6 +8,8 @@
 
 namespace Kernel::KLexicalPath {
 
+static StringView const s_single_dot = "."sv;
+
 bool is_absolute(StringView const& path)
 {
     return !path.is_empty() && path[0] == '/';
@@ -29,15 +31,20 @@ bool is_canonical(StringView const& path)
     return true;
 }
 
-StringView basename(StringView const& path)
+StringView basename(StringView const& a_path)
 {
+    if (a_path == "/"sv)
+        return a_path;
+    if (a_path.is_empty())
+        return s_single_dot;
+    auto path = a_path.trim("/"sv, TrimMode::Right);
+    // NOTE: If it's empty now, it means the path was just a series of slashes.
+    if (path.is_empty())
+        return a_path.substring_view(0, 1);
     auto slash_index = path.find_last('/');
-    if (!slash_index.has_value()) {
-        VERIFY(!path.is_empty());
+    if (!slash_index.has_value())
         return path;
-    }
     auto basename = path.substring_view(*slash_index + 1);
-    VERIFY(!basename.is_empty() && basename != "."sv && basename != ".."sv);
     return basename;
 }
 
