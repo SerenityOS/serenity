@@ -173,6 +173,8 @@ public:
     void early_initialize(u32 cpu);
     void initialize(u32 cpu);
 
+    void detect_hypervisor();
+
     void idle_begin()
     {
         s_idle_cpu_mask.fetch_or(1u << m_cpu, AK::MemoryOrder::memory_order_relaxed);
