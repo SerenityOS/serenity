@@ -1,15 +1,15 @@
 # Installing build requisites on other systems
 
+### Fedora
+
+```console
+sudo dnf install binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch ccache rsync @"C Development Tools and Libraries" @Virtualization
+```
+
 ## openSUSE
 
 ```console
 sudo zypper install curl cmake mpfr-devel mpc-devel ninja gmp-devel e2fsprogs patch qemu-x86 qemu-audio-pa gcc gcc-c++ ccache rsync patterns-devel-C-C++-devel_C_C++
-```
-
-## Arch Linux / Manjaro
-
-```console
-sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra ccache rsync
 ```
 
 ## Void Linux

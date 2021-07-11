@@ -48,10 +48,15 @@ You may need the gtk+ 3.0 dev package:
 sudo apt install libpixman-1-dev libgtk-3-dev
 ```
 
-### Fedora
+### Windows
+
+If you're on Windows you can use WSL2 to build SerenityOS. Please have a look at the [Windows guide](BuildInstructionsWindows.md)
+for details.
+
+### Arch Linux / Manjaro
 
 ```console
-sudo dnf install binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch ccache rsync @"C Development Tools and Libraries" @Virtualization
+sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra ccache rsync
 ```
 
 ### Other systems
@@ -59,7 +64,6 @@ sudo dnf install binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2f
 There is also documentation for installing the build prerequisites for some less commonly used systems:
 
 * [Other Linux distributions and *NIX systems](BuildInstructionsOther.md)
-* [Windows](BuildInstructionsWindows.md)
 * [macOS](BuildInstructionsMacOS.md)
 
 ## Build
