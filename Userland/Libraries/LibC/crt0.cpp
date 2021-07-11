@@ -20,12 +20,14 @@ int main(int, char**, char**);
 
 // Tell the compiler that this may be called from somewhere else.
 int _entry(int argc, char** argv, char** env);
+void _start(int, char**, char**);
 
-asm(
-    ".globl _start\n"
-    "_start:\n"
-    "push $0\n"
-    "jmp _entry@plt\n");
+NAKED void _start(int, char**, char**)
+{
+    asm(
+        "push $0\n"
+        "jmp _entry@plt\n");
+}
 
 int _entry(int argc, char** argv, char** env)
 {
