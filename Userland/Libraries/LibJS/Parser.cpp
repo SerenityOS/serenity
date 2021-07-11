@@ -934,7 +934,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
         if (property_type == ObjectProperty::Type::Getter || property_type == ObjectProperty::Type::Setter) {
             if (!match(TokenType::ParenOpen)) {
-                syntax_error("Expected '(' for object getter or setter property");
+                expected("'(' for object getter or setter property");
                 skip_to_next_property();
                 continue;
             }
@@ -959,7 +959,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_name, function, property_type, true));
         } else if (match(TokenType::Colon)) {
             if (!property_name) {
-                syntax_error("Expected a property name");
+                expected("a property name");
                 skip_to_next_property();
                 continue;
             }
@@ -968,7 +968,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         } else if (property_name && property_value) {
             properties.append(create_ast_node<ObjectProperty>({ m_state.current_token.filename(), rule_start.position(), position() }, *property_name, *property_value, property_type, false));
         } else {
-            syntax_error("Expected a property");
+            expected("a property");
             skip_to_next_property();
             continue;
         }
@@ -1706,7 +1706,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
                 name = parse_expression(0);
                 consume(TokenType::BracketClose);
             } else {
-                syntax_error("Expected identifier or computed property name");
+                expected("identifier or computed property name");
                 return {};
             }
 
@@ -1722,7 +1722,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
                         { m_state.current_token.filename(), rule_start.position(), position() },
                         consume().value());
                 } else {
-                    syntax_error("Expected identifier or binding pattern");
+                    expected("identifier or binding pattern");
                     return {};
                 }
             }
@@ -1735,12 +1735,12 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
             } else if (match(TokenType::BracketOpen) || match(TokenType::CurlyOpen)) {
                 auto pattern = parse_binding_pattern();
                 if (!pattern) {
-                    syntax_error("Expected binding pattern");
+                    expected("binding pattern");
                     return {};
                 }
                 alias = pattern.release_nonnull();
             } else {
-                syntax_error("Expected identifier or binding pattern");
+                expected("identifier or binding pattern");
                 return {};
             }
         }
@@ -1755,7 +1755,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
 
             initializer = parse_expression(2);
             if (!initializer) {
-                syntax_error("Expected initialization expression");
+                expected("initialization expression");
                 return {};
             }
         }
@@ -1831,7 +1831,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
         }
 
         if (target.has<Empty>()) {
-            syntax_error("Expected an identifier or a binding pattern");
+            expected("identifier or a binding pattern");
             if (match(TokenType::Comma)) {
                 consume();
                 continue;
@@ -2108,7 +2108,7 @@ NonnullRefPtr<CatchClause> Parser::parse_catch_clause()
     }
 
     if (should_expect_parameter && parameter.is_empty() && !pattern_parameter)
-        syntax_error("Expected an identifier or a binding pattern");
+        expected("an identifier or a binding pattern");
 
     if (pattern_parameter)
         pattern_parameter->for_each_bound_name([this](auto& name) { check_identifier_name_for_assignment_validity(name); });
