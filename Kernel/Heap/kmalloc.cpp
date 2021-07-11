@@ -270,6 +270,12 @@ void* kmalloc(size_t size)
     return ptr;
 }
 
+void kfree_sized(void* ptr, size_t size)
+{
+    (void)size;
+    return kfree(ptr);
+}
+
 void kfree(void* ptr)
 {
     if (!ptr)
@@ -333,9 +339,9 @@ void operator delete(void* ptr) noexcept
     return kfree(ptr);
 }
 
-void operator delete(void* ptr, size_t) noexcept
+void operator delete(void* ptr, size_t size) noexcept
 {
-    return kfree(ptr);
+    return kfree_sized(ptr, size);
 }
 
 void operator delete[](void* ptr) noexcept
@@ -343,9 +349,9 @@ void operator delete[](void* ptr) noexcept
     return kfree(ptr);
 }
 
-void operator delete[](void* ptr, size_t) noexcept
+void operator delete[](void* ptr, size_t size) noexcept
 {
-    return kfree(ptr);
+    return kfree_sized(ptr, size);
 }
 
 void get_kmalloc_stats(kmalloc_stats& stats)
