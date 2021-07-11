@@ -174,7 +174,7 @@ bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_addres
 
 UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 {
-    RefPtr<PhysicalRegion> physical_region;
+    PhysicalRegion* physical_region { nullptr };
 
     // Register used memory regions that we know of.
     m_used_memory_ranges.ensure_capacity(4);
@@ -256,9 +256,9 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
                 continue;
 
             // Assign page to user physical physical_region.
-            if (physical_region.is_null() || physical_region->upper().offset(PAGE_SIZE) != addr) {
+            if (!physical_region || physical_region->upper().offset(PAGE_SIZE) != addr) {
                 m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
-                physical_region = m_user_physical_regions.last();
+                physical_region = &m_user_physical_regions.last();
             } else {
                 physical_region->expand(physical_region->lower(), addr);
             }
@@ -336,10 +336,10 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     auto physical_page_array_pages_and_page_tables_count = physical_page_array_pages + needed_page_table_count;
 
     // Now that we know how much memory we need for a contiguous array of PhysicalPage instances, find a memory region that can fit it
-    RefPtr<PhysicalRegion> found_region;
+    PhysicalRegion* found_region { nullptr };
     for (auto& region : m_user_physical_regions) {
         if (region.size() >= physical_page_array_pages_and_page_tables_count) {
-            found_region = region;
+            found_region = &region;
             break;
         }
     }
@@ -354,10 +354,10 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
 
     if (found_region->size() == physical_page_array_pages_and_page_tables_count) {
         // We're stealing the entire region
+        m_physical_pages_region = move(*found_region);
         m_user_physical_regions.remove_first_matching([&](auto& region) {
-            return region == found_region.ptr();
+            return &region == found_region;
         });
-        m_physical_pages_region = found_region.release_nonnull();
     } else {
         m_physical_pages_region = found_region->take_pages_from_beginning(physical_page_array_pages_and_page_tables_count);
     }

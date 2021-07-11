@@ -7,19 +7,17 @@
 #pragma once
 
 #include <AK/Bitmap.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
-#include <AK/RefCounted.h>
 #include <Kernel/VM/PhysicalPage.h>
 
 namespace Kernel {
 
-class PhysicalRegion : public RefCounted<PhysicalRegion> {
-    AK_MAKE_ETERNAL
-
+class PhysicalRegion {
 public:
-    static NonnullRefPtr<PhysicalRegion> create(PhysicalAddress lower, PhysicalAddress upper);
-    ~PhysicalRegion() = default;
+    static PhysicalRegion create(PhysicalAddress lower, PhysicalAddress upper)
+    {
+        return { lower, upper };
+    }
 
     void expand(PhysicalAddress lower, PhysicalAddress upper);
     unsigned finalize_capacity();
@@ -31,7 +29,7 @@ public:
     unsigned free() const { return m_pages - m_used + m_recently_returned.size(); }
     bool contains(PhysicalAddress paddr) const { return paddr >= m_lower && paddr <= m_upper; }
 
-    NonnullRefPtr<PhysicalRegion> take_pages_from_beginning(unsigned);
+    PhysicalRegion take_pages_from_beginning(unsigned);
 
     RefPtr<PhysicalPage> take_free_page(bool supervisor);
     NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count, bool supervisor, size_t physical_alignment = PAGE_SIZE);
@@ -41,7 +39,7 @@ private:
     unsigned find_contiguous_free_pages(size_t count, size_t physical_alignment = PAGE_SIZE);
     Optional<unsigned> find_and_allocate_contiguous_range(size_t count, unsigned alignment = 1);
     Optional<unsigned> find_one_free_page();
-    void free_page_at(PhysicalAddress addr);
+    void free_page_at(PhysicalAddress);
 
     PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper);
 
