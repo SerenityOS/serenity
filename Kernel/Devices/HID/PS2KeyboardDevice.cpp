@@ -5,10 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Singleton.h>
-#include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/HID/HIDManagement.h>

@@ -7,7 +7,6 @@
 #include <AK/Singleton.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
-#include <LibC/errno_numbers.h>
 
 namespace Kernel {
 
