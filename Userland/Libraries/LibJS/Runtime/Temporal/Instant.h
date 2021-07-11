@@ -41,5 +41,6 @@ Instant* create_temporal_instant(GlobalObject&, BigInt& nanoseconds, FunctionObj
 Instant* to_temporal_instant(GlobalObject&, Value item);
 BigInt* parse_temporal_instant(GlobalObject&, String const& iso_string);
 i32 compare_epoch_nanoseconds(BigInt const&, BigInt const&);
+BigInt* round_temporal_instant(GlobalObject&, BigInt const& nanoseconds, u64 increment, String const& unit, String const& rounding_mode);
 
 }
