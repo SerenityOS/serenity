@@ -923,9 +923,15 @@ NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
     case TokenType::Void:
         consume();
         return create_ast_node<UnaryExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, UnaryOp::Void, parse_expression(precedence, associativity));
-    case TokenType::Delete:
+    case TokenType::Delete: {
         consume();
-        return create_ast_node<UnaryExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, UnaryOp::Delete, parse_expression(precedence, associativity));
+        auto rhs_start = position();
+        auto rhs = parse_expression(precedence, associativity);
+        if (is<Identifier>(*rhs) && m_state.strict_mode) {
+            syntax_error("Delete of an unqualified identifier in strict mode.", rhs_start);
+        }
+        return create_ast_node<UnaryExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, UnaryOp::Delete, move(rhs));
+    }
     default:
         expected("primary expression");
         consume();
