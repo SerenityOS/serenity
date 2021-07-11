@@ -31,6 +31,7 @@ If no *path* argument is provided the current working directory is used.
 * `-o`, In long format, do not show group information
 * `-h`, `--human-readable`: Print human-readable sizes
 * `-K`, `--no-hyperlinks`: Disable hyperlinks
+* `-R`, `--recursive`: List subdirectories recursively
 
 ## Arguments
 
@@ -43,6 +44,8 @@ If no *path* argument is provided the current working directory is used.
 $ ls
 # List contents of working directory including hidden dot files
 $ ls -la
+# List contents of working directory and its subdirectories
+$ ls -R
 # List contents of /etc/ directory
 $ ls /etc
 # List contents of /etc/ directory including hidden dot files
