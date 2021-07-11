@@ -114,6 +114,176 @@ Value get_option(GlobalObject& global_object, Object& options, String const& pro
     return value;
 }
 
+// 13.8 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
+String to_temporal_rounding_mode(GlobalObject& global_object, Object& normalized_options, String const& fallback)
+{
+    auto& vm = global_object.vm();
+
+    auto option = get_option(global_object, normalized_options, "roundingMode", { OptionType::String }, { "ceil"sv, "floor"sv, "trunc"sv, "halfExpand"sv }, js_string(vm, fallback));
+    if (vm.exception())
+        return {};
+
+    VERIFY(option.is_string());
+    return option.as_string().string();
+}
+
+// 13.14 ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingincrement
+u64 to_temporal_rounding_increment(GlobalObject& global_object, Object& normalized_options, Optional<double> dividend, bool inclusive)
+{
+    auto& vm = global_object.vm();
+
+    double maximum;
+    // 1. If dividend is undefined, then
+    if (!dividend.has_value()) {
+        // a. Let maximum be +∞.
+        maximum = INFINITY;
+    }
+    // 2. Else if inclusive is true, then
+    else if (inclusive) {
+        // a. Let maximum be dividend.
+        maximum = *dividend;
+    }
+    // 3. Else if dividend is more than 1, then
+    else if (*dividend > 1) {
+        // a. Let maximum be dividend − 1.
+        maximum = *dividend - 1;
+    }
+    // 4. Else,
+    else {
+        // a. Let maximum be 1.
+        maximum = 1;
+    }
+
+    // 5. Let increment be ? GetOption(normalizedOptions, "roundingIncrement", « Number », empty, 1).
+    auto increment_value = get_option(global_object, normalized_options, "roundingIncrement", { OptionType::Number }, {}, Value(1));
+    if (vm.exception())
+        return {};
+    VERIFY(increment_value.is_number());
+    auto increment = increment_value.as_double();
+
+    // 6. If increment < 1 or increment > maximum, throw a RangeError exception.
+    if (increment < 1 || increment > maximum) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
+        return {};
+    }
+
+    // 7. Set increment to floor(ℝ(increment)).
+    auto floored_increment = static_cast<u64>(increment);
+
+    // 8. If dividend is not undefined and dividend modulo increment is not zero, then
+    if (dividend.has_value() && static_cast<u64>(*dividend) % floored_increment != 0) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, increment, "roundingIncrement");
+        return {};
+    }
+
+    // 9. Return increment.
+    return floored_increment;
+}
+
+// https://tc39.es/proposal-temporal/#table-temporal-singular-and-plural-units
+static HashMap<StringView, StringView> plural_to_singular_units = {
+    { "years"sv, "year"sv },
+    { "months"sv, "month"sv },
+    { "weeks"sv, "week"sv },
+    { "days"sv, "day"sv },
+    { "hours"sv, "hour"sv },
+    { "minutes"sv, "minute"sv },
+    { "seconds"sv, "second"sv },
+    { "milliseconds"sv, "millisecond"sv },
+    { "microseconds"sv, "microsecond"sv },
+    { "nanoseconds"sv, "nanosecond"sv }
+};
+
+// 13.18 ToSmallestTemporalUnit ( normalizedOptions, disallowedUnits, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-tosmallesttemporalunit
+Optional<String> to_smallest_temporal_unit(GlobalObject& global_object, Object& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: disallowedUnits does not contain fallback.
+
+    // 2. Let smallestUnit be ? GetOption(normalizedOptions, "smallestUnit", « String », « "year", "years", "month", "months", "week", "weeks", "day", "days", "hour", "hours", "minute", "minutes", "second", "seconds", "millisecond", "milliseconds", "microsecond", "microseconds", "nanosecond", "nanoseconds" », fallback).
+    auto smallest_unit_value = get_option(global_object, normalized_options, "smallestUnit"sv, { OptionType::String }, { "year"sv, "years"sv, "month"sv, "months"sv, "week"sv, "weeks"sv, "day"sv, "days"sv, "hour"sv, "hours"sv, "minute"sv, "minutes"sv, "second"sv, "seconds"sv, "millisecond"sv, "milliseconds"sv, "microsecond"sv, "microseconds"sv, "nanosecond"sv, "nanoseconds"sv }, fallback.has_value() ? js_string(vm, *fallback) : js_undefined());
+    if (vm.exception())
+        return {};
+
+    // OPTIMIZATION: We skip the following string-only checks for the fallback to tidy up the code a bit
+    if (smallest_unit_value.is_undefined())
+        return {};
+    VERIFY(smallest_unit_value.is_string());
+    auto smallest_unit = smallest_unit_value.as_string().string();
+
+    // 3. If smallestUnit is in the Plural column of Table 12, then
+    if (auto singular_unit = plural_to_singular_units.get(smallest_unit); singular_unit.has_value()) {
+        // a. Set smallestUnit to the corresponding Singular value of the same row.
+        smallest_unit = singular_unit.value();
+    }
+
+    // 4. If disallowedUnits contains smallestUnit, then
+    if (disallowed_units.contains_slow(smallest_unit)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, smallest_unit, "smallestUnit");
+        return {};
+    }
+
+    // 5. Return smallestUnit.
+    return smallest_unit;
+}
+
+// 13.32 RoundNumberToIncrement ( x, increment, roundingMode )
+BigInt* round_number_to_increment(GlobalObject& global_object, BigInt const& x, u64 increment, String const& rounding_mode)
+{
+    auto& heap = global_object.heap();
+
+    // 1. Assert: x and increment are mathematical values.
+    // 2. Assert: roundingMode is "ceil", "floor", "trunc", or "halfExpand".
+    VERIFY(rounding_mode == "ceil" || rounding_mode == "floor" || rounding_mode == "trunc" || rounding_mode == "halfExpand");
+
+    // OPTIMIZATION: If the increment is 1 the number is always rounded
+    if (increment == 1)
+        return js_bigint(heap, x.big_integer());
+
+    auto increment_big_int = Crypto::UnsignedBigInteger::create_from(increment);
+    // 3. Let quotient be x / increment.
+    auto division_result = x.big_integer().divided_by(increment_big_int);
+
+    // OPTIMIZATION: If theres no remainder there number is already rounded
+    if (division_result.remainder == Crypto::UnsignedBigInteger { 0 })
+        return js_bigint(heap, x.big_integer());
+
+    Crypto::SignedBigInteger rounded = move(division_result.quotient);
+    // 4. If roundingMode is "ceil", then
+    if (rounding_mode == "ceil") {
+        // a. Let rounded be −floor(−quotient).
+        if (!division_result.remainder.is_negative())
+            rounded = rounded.plus(Crypto::UnsignedBigInteger { 1 });
+    }
+    // 5. Else if roundingMode is "floor", then
+    else if (rounding_mode == "floor") {
+        // a. Let rounded be floor(quotient).
+        if (division_result.remainder.is_negative())
+            rounded = rounded.minus(Crypto::UnsignedBigInteger { 1 });
+    }
+    // 6. Else if roundingMode is "trunc", then
+    else if (rounding_mode == "trunc") {
+        // a. Let rounded be the integral part of quotient, removing any fractional digits.
+        // NOTE: This is a no-op
+    }
+    // 7. Else,
+    else {
+        // a. Let rounded be ! RoundHalfAwayFromZero(quotient).
+        if (division_result.remainder.multiplied_by(Crypto::UnsignedBigInteger { 2 }).unsigned_value() >= increment_big_int) {
+            if (division_result.remainder.is_negative())
+                rounded = rounded.minus(Crypto::UnsignedBigInteger { 1 });
+            else
+                rounded = rounded.plus(Crypto::UnsignedBigInteger { 1 });
+        }
+    }
+
+    // 8. Return rounded × increment.
+    return js_bigint(heap, rounded.multiplied_by(increment_big_int));
+}
+
 // 13.34 ParseISODateTime ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime
 Optional<ISODateTime> parse_iso_date_time(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
 {
