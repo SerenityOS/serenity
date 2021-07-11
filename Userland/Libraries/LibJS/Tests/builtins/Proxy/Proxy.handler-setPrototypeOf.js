@@ -6,9 +6,9 @@ describe("[[SetPrototypeOf]] trap normal behavior", () => {
 
         let p = new Proxy(o, { setPrototypeOf: null });
         expect(Object.setPrototypeOf(p, proto)).toBe(p);
-        let p = new Proxy(o, { setPrototypeOf: undefined });
+        p = new Proxy(o, { setPrototypeOf: undefined });
         expect(Object.setPrototypeOf(p, proto)).toBe(p);
-        let p = new Proxy(o, {});
+        p = new Proxy(o, {});
         expect(Object.setPrototypeOf(p, proto)).toBe(p);
     });
 
