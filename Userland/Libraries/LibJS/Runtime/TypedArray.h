@@ -17,6 +17,11 @@
 
 namespace JS {
 
+class TypedArrayBase;
+
+TypedArrayBase* typed_array_from(GlobalObject&, Value);
+void validate_typed_array(GlobalObject&, TypedArrayBase&);
+
 class TypedArrayBase : public Object {
     JS_OBJECT(TypedArrayBase, Object);
 
