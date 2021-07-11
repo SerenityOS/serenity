@@ -346,7 +346,7 @@ public:
     {
         clear_with_capacity();
         if (m_outline_buffer) {
-            kfree(m_outline_buffer);
+            kfree_sized(m_outline_buffer, m_capacity * sizeof(StorageType));
             m_outline_buffer = nullptr;
         }
         reset_capacity();
@@ -636,7 +636,7 @@ public:
             }
         }
         if (m_outline_buffer)
-            kfree(m_outline_buffer);
+            kfree_sized(m_outline_buffer, m_capacity * sizeof(StorageType));
         m_outline_buffer = new_buffer;
         m_capacity = new_capacity;
         return true;
