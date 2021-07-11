@@ -93,6 +93,8 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         set_feature(CPUFeature::AVX);
     if (processor_info.ecx() & (1 << 30))
         set_feature(CPUFeature::RDRAND);
+    if (processor_info.ecx() & (1u << 31))
+        set_feature(CPUFeature::HYPERVISOR);
     if (processor_info.edx() & (1 << 11)) {
         u32 stepping = processor_info.eax() & 0xf;
         u32 model = (processor_info.eax() >> 4) & 0xf;
@@ -266,6 +268,8 @@ String Processor::features_string() const
             return "avx";
         case CPUFeature::LM:
             return "lm";
+        case CPUFeature::HYPERVISOR:
+            return "hypervisor";
             // no default statement here intentionally so that we get
             // a warning if a new feature is forgotten to be added here
         }
