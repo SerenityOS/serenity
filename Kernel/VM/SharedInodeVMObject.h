@@ -17,7 +17,7 @@ class SharedInodeVMObject final : public InodeVMObject {
 
 public:
     static RefPtr<SharedInodeVMObject> try_create_with_inode(Inode&);
-    virtual RefPtr<VMObject> clone() override;
+    virtual RefPtr<VMObject> try_clone() override;
 
 private:
     virtual bool is_shared_inode() const override { return true; }

@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-RefPtr<VMObject> AnonymousVMObject::clone()
+RefPtr<VMObject> AnonymousVMObject::try_clone()
 {
     // We need to acquire our lock so we copy a sane state
     ScopedSpinLock lock(m_lock);

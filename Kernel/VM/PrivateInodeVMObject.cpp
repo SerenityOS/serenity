@@ -14,7 +14,7 @@ RefPtr<PrivateInodeVMObject> PrivateInodeVMObject::try_create_with_inode(Inode& 
     return adopt_ref_if_nonnull(new (nothrow) PrivateInodeVMObject(inode, inode.size()));
 }
 
-RefPtr<VMObject> PrivateInodeVMObject::clone()
+RefPtr<VMObject> PrivateInodeVMObject::try_clone()
 {
     return adopt_ref_if_nonnull(new (nothrow) PrivateInodeVMObject(*this));
 }

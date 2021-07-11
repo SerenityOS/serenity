@@ -22,7 +22,7 @@ private:
     explicit ContiguousVMObject(const ContiguousVMObject&);
 
     virtual StringView class_name() const override { return "ContiguousVMObject"sv; }
-    virtual RefPtr<VMObject> clone() override;
+    virtual RefPtr<VMObject> try_clone() override;
 
     ContiguousVMObject& operator=(const ContiguousVMObject&) = delete;
     ContiguousVMObject& operator=(ContiguousVMObject&&) = delete;
