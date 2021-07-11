@@ -209,9 +209,14 @@ jobs:
       run: |
         sudo apt-get purge -y clang-11
         sudo apt-get update
-        sudo apt-get install ninja-build wabt
+        sudo apt-get install ninja-build
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
+        # Install wabt tools from github packages
+        wget https://github.com/WebAssembly/wabt/releases/download/1.0.23/wabt-1.0.23-ubuntu.tar.gz
+        tar -xzf ./wabt-1.0.23-ubuntu.tar.gz
+        rm ./wabt-1.0.23-ubuntu.tar.gz
+        echo "$PWD/wabt-1.0.23/bin" >> $GITHUB_PATH
       if: ${{ runner.os == 'Linux' }}
     - name: Install macOS dependencies
       run: brew install ninja wabt
