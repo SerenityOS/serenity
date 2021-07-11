@@ -242,7 +242,9 @@ private:
         u8* new_buffer;
         new_capacity = kmalloc_good_size(new_capacity);
         if (!m_inline) {
-            new_buffer = (u8*)krealloc(m_outline_buffer, new_capacity);
+            new_buffer = (u8*)kmalloc(new_capacity);
+            if (m_outline_buffer)
+                __builtin_memcpy(new_buffer, m_outline_buffer, min(new_capacity, m_outline_capacity));
             VERIFY(new_buffer);
         } else {
             new_buffer = (u8*)kmalloc(new_capacity);
