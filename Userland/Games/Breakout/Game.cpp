@@ -10,7 +10,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/StandardCursor.h>
 #include <unistd.h>
 
@@ -33,14 +32,19 @@ Game::~Game()
 
 void Game::reset_paddle()
 {
+    update(enclosing_int_rect(m_paddle.rect));
     m_paddle.moving_left = false;
     m_paddle.moving_right = false;
     m_paddle.rect = { game_width / 2 - 40, game_height - 20, 80, 16 };
+    update(enclosing_int_rect(m_paddle.rect));
 }
 
 void Game::reset()
 {
+    update(lives_left_rect());
     m_lives = 3;
+    update(lives_left_rect());
+
     m_pause_count = 0;
     m_cheater = false;
     reset_ball();
@@ -83,12 +87,16 @@ void Game::generate_bricks()
 
     if (m_board != -1) {
         m_bricks = boards[m_board];
+
+        for (auto& brick : m_bricks)
+            update(enclosing_int_rect(brick.rect));
     } else {
         // Rainbow
         for (int row = 0; row < 7; ++row) {
             for (int column = 0; column < 10; ++column) {
                 Brick brick(row, column, colors[row]);
                 m_bricks.append(brick);
+                update(enclosing_int_rect(brick.rect));
             }
         }
     }
@@ -105,7 +113,7 @@ void Game::set_paused(bool paused)
         set_override_cursor(Gfx::StandardCursor::Hidden);
     }
 
-    update();
+    update(pause_rect());
 }
 
 void Game::timer_event(Core::TimerEvent&)
@@ -131,15 +139,11 @@ void Game::paint_event(GUI::PaintEvent& event)
             painter.fill_rect(enclosing_int_rect(brick.rect), brick.color);
     }
 
-    int msg_width = font().width(String::formatted("Lives: {}", m_lives));
-    int msg_height = font().glyph_height();
-    painter.draw_text({ (game_width - msg_width - 2), 2, msg_width, msg_height }, String::formatted("Lives: {}", m_lives), Gfx::TextAlignment::Center, Color::White);
+    painter.draw_text(lives_left_rect(), String::formatted("Lives: {}", m_lives), Gfx::TextAlignment::Center, Color::White);
 
     if (m_paused) {
         const char* msg = m_cheater ? "C H E A T E R" : "P A U S E D";
-        int msg_width = font().width(msg);
-        int msg_height = font().glyph_height();
-        painter.draw_text({ (game_width / 2) - (msg_width / 2), (game_height / 2) - (msg_height / 2), msg_width, msg_height }, msg, Gfx::TextAlignment::Center, Color::White);
+        painter.draw_text(pause_rect(), msg, Gfx::TextAlignment::Center, Color::White);
     }
 }
 
@@ -182,10 +186,12 @@ void Game::mousemove_event(GUI::MouseEvent& event)
 {
     if (m_paused)
         return;
+    update(enclosing_int_rect(m_paddle.rect));
     float new_paddle_x = event.x() - m_paddle.rect.width() / 2;
     new_paddle_x = max(0.0f, new_paddle_x);
     new_paddle_x = min(game_width - m_paddle.rect.width(), new_paddle_x);
     m_paddle.rect.set_x(new_paddle_x);
+    update(enclosing_int_rect(m_paddle.rect));
 }
 
 void Game::reset_ball()
@@ -199,17 +205,20 @@ void Game::reset_ball()
     if (get_random<u32>() % 2)
         velocity_x = velocity_x * -1;
 
+    update(enclosing_int_rect(m_ball.rect()));
     m_ball = {};
     m_ball.position = { position_x, position_y };
     m_ball.velocity = { velocity_x, velocity_y };
+    update(enclosing_int_rect(m_ball.rect()));
 }
 
 void Game::hurt()
 {
     stop_timer();
+    update(lives_left_rect());
     m_lives--;
+    update(lives_left_rect());
     if (m_lives <= 0) {
-        update();
         GUI::MessageBox::show(window(), "You lose!", "Breakout", GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK);
         reset();
     }
@@ -237,6 +246,8 @@ void Game::tick()
     auto new_ball = m_ball;
     new_ball.position += new_ball.velocity;
 
+    update(enclosing_int_rect(m_ball.rect()));
+
     if (new_ball.x() < new_ball.radius || new_ball.x() > game_width - new_ball.radius) {
         new_ball.position.set_x(m_ball.x());
         new_ball.velocity.set_x(new_ball.velocity.x() * -1);
@@ -251,6 +262,8 @@ void Game::tick()
         hurt();
         return;
     }
+
+    update(enclosing_int_rect(new_ball.rect()));
 
     if (new_ball.rect().intersects(m_paddle.rect)) {
         new_ball.position.set_y(m_ball.y());
@@ -275,6 +288,7 @@ void Game::tick()
                 new_ball.position.set_y(m_ball.y());
                 new_ball.velocity.set_y(new_ball.velocity.y() * -1);
             }
+            update(enclosing_int_rect(brick.rect));
             break;
         }
     }
@@ -293,18 +307,20 @@ void Game::tick()
     }
 
     if (m_paddle.moving_left) {
+        update(enclosing_int_rect(m_paddle.rect));
         m_paddle.rect.set_x(max(0.0f, m_paddle.rect.x() - m_paddle.speed));
+        update(enclosing_int_rect(m_paddle.rect));
     }
     if (m_paddle.moving_right) {
+        update(enclosing_int_rect(m_paddle.rect));
         m_paddle.rect.set_x(min(game_width - m_paddle.rect.width(), m_paddle.rect.x() + m_paddle.speed));
+        update(enclosing_int_rect(m_paddle.rect));
     }
 
     m_ball = new_ball;
 
     if (m_pause_count > 50)
         m_cheater = true;
-
-    update();
 }
 
 }
