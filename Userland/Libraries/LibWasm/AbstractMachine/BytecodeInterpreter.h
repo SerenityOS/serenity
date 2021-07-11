@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StackInfo.h>
 #include <LibWasm/AbstractMachine/Configuration.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
 
@@ -57,6 +58,7 @@ protected:
     }
 
     Optional<Trap> m_trap;
+    StackInfo m_stack_info;
 };
 
 struct DebuggerBytecodeInterpreter : public BytecodeInterpreter {
