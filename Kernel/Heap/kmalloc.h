@@ -42,6 +42,7 @@ void kmalloc_init();
 
 void* krealloc(void*, size_t);
 void kfree(void*);
+void kfree_sized(void*, size_t);
 
 struct kmalloc_stats {
     size_t bytes_allocated;
