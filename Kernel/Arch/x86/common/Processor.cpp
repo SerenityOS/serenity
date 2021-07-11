@@ -349,6 +349,9 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
         else
             asm volatile("fnsave %0"
                          : "=m"(s_clean_fpu_state));
+
+        if (has_feature(CPUFeature::HYPERVISOR))
+            detect_hypervisor();
     }
 
     m_info = new ProcessorInfo(*this);
@@ -358,6 +361,21 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
         VERIFY(cpu < s_processors.size());
         s_processors[cpu] = this;
     }
+}
+
+UNMAP_AFTER_INIT void Processor::detect_hypervisor()
+{
+    CPUID hypervisor_leaf_range(0x40000000);
+
+    // Get signature of hypervisor.
+    alignas(sizeof(u32)) char hypervisor_signature_buffer[13];
+    *reinterpret_cast<u32*>(hypervisor_signature_buffer) = hypervisor_leaf_range.ebx();
+    *reinterpret_cast<u32*>(hypervisor_signature_buffer + 4) = hypervisor_leaf_range.ecx();
+    *reinterpret_cast<u32*>(hypervisor_signature_buffer + 8) = hypervisor_leaf_range.edx();
+    hypervisor_signature_buffer[12] = '\0';
+    StringView hypervisor_signature(hypervisor_signature_buffer);
+
+    dmesgln("CPU[{}]: CPUID hypervisor signature '{}' ({:#x} {:#x} {:#x}), max leaf {:#x}", id(), hypervisor_signature, hypervisor_leaf_range.ebx(), hypervisor_leaf_range.ecx(), hypervisor_leaf_range.edx(), hypervisor_leaf_range.eax());
 }
 
 void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
