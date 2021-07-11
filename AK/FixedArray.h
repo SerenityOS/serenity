@@ -101,6 +101,9 @@ public:
     ConstIterator end() const { return ConstIterator::end(*this); }
     Iterator end() { return Iterator::end(*this); }
 
+    Span<T const> span() const { return { data(), size() }; }
+    Span<T> span() { return { data(), size() }; }
+
 private:
     size_t m_size { 0 };
     T* m_elements { nullptr };
