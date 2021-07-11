@@ -90,6 +90,14 @@ private:
         return { (game_width / 2) - score_width - score_margin, score_margin, score_width, font().glyph_height() };
     }
 
+    Gfx::IntRect cursor_paddle_target_rect() const
+    {
+        int radius = 3;
+        int center_x = m_player1_paddle.rect.center().x();
+        int center_y = *m_cursor_paddle_target_y + m_player1_paddle.rect.height() / 2;
+        return { center_x - radius, center_y - radius, 2 * radius, 2 * radius };
+    }
+
     Net m_net;
     Ball m_ball;
     Paddle m_player1_paddle;
