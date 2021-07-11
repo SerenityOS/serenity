@@ -25,7 +25,7 @@ private:
     void set_buffer(RefPtr<Audio::Buffer> buffer, int samples_to_use);
 
     void paint_event(GUI::PaintEvent&) override;
-    void mousedown_event(GUI::MouseEvent& event) override;
+    void context_menu_event(GUI::ContextMenuEvent& event) override;
 
     Vector<Complex<double>> m_sample_buffer;
     Vector<int> m_gfx_falling_bars;
