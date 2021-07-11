@@ -19,7 +19,10 @@ enum class OptionType {
     Number
 };
 Value get_option(GlobalObject&, Object& options, String const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback);
-
+String to_temporal_rounding_mode(GlobalObject&, Object& normalized_options, String const& fallback);
+u64 to_temporal_rounding_increment(GlobalObject&, Object& normalized_options, Optional<double> dividend, bool inclusive);
+Optional<String> to_smallest_temporal_unit(GlobalObject&, Object& normalized_options, Vector<StringView> const& disallowed_units, Optional<String> fallback);
+BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, String const& rounding_mode);
 struct ISODateTime {
     i32 year;
     i32 month;

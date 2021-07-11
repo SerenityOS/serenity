@@ -153,4 +153,45 @@ i32 compare_epoch_nanoseconds(BigInt const& epoch_nanoseconds_one, BigInt const&
     return 0;
 }
 
+// 8.5.8 RoundTemporalInstant ( ns, increment, unit, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundtemporalinstant
+BigInt* round_temporal_instant(GlobalObject& global_object, BigInt const& nanoseconds, u64 increment, String const& unit, String const& rounding_mode)
+{
+    // 1. Assert: Type(ns) is BigInt.
+
+    u64 increment_nanoseconds;
+    // 2. If unit is "hour", then
+    if (unit == "hour") {
+        // a. Let incrementNs be increment × 3.6 × 10^12.
+        increment_nanoseconds = increment * 3600000000000;
+    }
+    // 3. Else if unit is "minute", then
+    else if (unit == "minute") {
+        // a. Let incrementNs be increment × 6 × 10^10.
+        increment_nanoseconds = increment * 60000000000;
+    }
+    // 4. Else if unit is "second", then
+    else if (unit == "second") {
+        // a. Let incrementNs be increment × 10^9.
+        increment_nanoseconds = increment * 1000000000;
+    }
+    // 5. Else if unit is "millisecond", then
+    else if (unit == "millisecond") {
+        // a. Let incrementNs be increment × 10^6.
+        increment_nanoseconds = increment * 1000000;
+    }
+    // 6. Else if unit is "microsecond", then
+    else if (unit == "microsecond") {
+        // a. Let incrementNs be increment × 10^3.
+        increment_nanoseconds = increment * 1000;
+    }
+    // 7. Else,
+    else {
+        // a. Let incrementNs be increment.
+        increment_nanoseconds = increment;
+    }
+
+    // 8. Return ! RoundNumberToIncrement(ℝ(ns), incrementNs, roundingMode).
+    return round_number_to_increment(global_object, nanoseconds, increment_nanoseconds, rounding_mode);
+}
+
 }
