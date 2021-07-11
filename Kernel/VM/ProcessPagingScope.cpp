@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Arch/x86/InterruptDisabler.h>
-#include <Kernel/Panic.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/ProcessPagingScope.h>
 

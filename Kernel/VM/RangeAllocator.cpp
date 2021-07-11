@@ -7,7 +7,6 @@
 #include <AK/BinarySearch.h>
 #include <AK/Checked.h>
 #include <Kernel/Random.h>
-#include <Kernel/Thread.h>
 #include <Kernel/VM/RangeAllocator.h>
 
 #define VM_GUARD_PAGES
