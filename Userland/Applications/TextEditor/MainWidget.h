@@ -8,36 +8,16 @@
 
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
-#include <FileSystemAccessServer/ClientConnection.h>
-#include <FileSystemAccessServer/FileSystemAccessClientEndpoint.h>
-#include <FileSystemAccessServer/FileSystemAccessServerEndpoint.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibIPC/ServerConnection.h>
 #include <LibWeb/Forward.h>
 
 namespace TextEditor {
-
-class FileSystemAccessClient final
-    : public IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>
-    , public FileSystemAccessClientEndpoint {
-    C_OBJECT(FileSystemAccessClient)
-
-public:
-    virtual void die() override
-    {
-    }
-
-private:
-    explicit FileSystemAccessClient()
-        : IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, "/tmp/portal/filesystemaccess")
-    {
-    }
-};
 
 class MainWidget final : public GUI::Widget {
     C_OBJECT(MainWidget);
@@ -73,8 +53,6 @@ private:
     void set_web_view_visible(bool);
 
     virtual void drop_event(GUI::DropEvent&) override;
-
-    NonnullRefPtr<FileSystemAccessClient> m_file_system_access_client;
 
     RefPtr<GUI::TextEditor> m_editor;
     String m_path;
