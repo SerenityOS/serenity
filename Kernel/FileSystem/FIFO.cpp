@@ -7,7 +7,6 @@
 #include <AK/HashTable.h>
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
-#include <AK/StringView.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Lock.h>

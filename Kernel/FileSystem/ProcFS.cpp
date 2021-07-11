@@ -9,7 +9,6 @@
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>

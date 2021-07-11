@@ -5,7 +5,6 @@
  */
 
 #include <AK/Singleton.h>
-#include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/DevFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
