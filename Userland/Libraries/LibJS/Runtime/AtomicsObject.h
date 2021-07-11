@@ -20,6 +20,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(add);
+    JS_DECLARE_NATIVE_FUNCTION(load);
 };
 
 }

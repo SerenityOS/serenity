@@ -224,6 +224,7 @@ namespace JS {
     P(lastIndexOf)                           \
     P(length)                                \
     P(link)                                  \
+    P(load)                                  \
     P(log)                                   \
     P(log1p)                                 \
     P(log2)                                  \
