@@ -13,7 +13,7 @@
 #include <AK/Types.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileSystem.h>
-#include <Kernel/FileSystem/Forward.h>
+#include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 
 namespace Kernel {

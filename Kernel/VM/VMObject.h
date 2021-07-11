@@ -12,12 +12,10 @@
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
+#include <Kernel/Forward.h>
 #include <Kernel/Lock.h>
 
 namespace Kernel {
-
-class Inode;
-class PhysicalPage;
 
 class VMObjectDeletedHandler {
 public:

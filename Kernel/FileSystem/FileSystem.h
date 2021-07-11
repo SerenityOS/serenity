@@ -10,6 +10,7 @@
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
+#include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Lock.h>
 #include <Kernel/UnixTypes.h>
@@ -18,11 +19,6 @@
 namespace Kernel {
 
 static constexpr u32 mepoch = 476763780;
-
-class Inode;
-class FileDescription;
-class LocalSocket;
-class VMObject;
 
 class FileSystem : public RefCounted<FileSystem> {
     friend class Inode;

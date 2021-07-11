@@ -14,10 +14,9 @@
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/Forward.h>
 
 namespace Kernel {
-
-class Inode;
 
 // A specific description of a watch.
 struct WatchDescription {

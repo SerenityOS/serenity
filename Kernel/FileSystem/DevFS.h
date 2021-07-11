@@ -14,13 +14,6 @@
 
 namespace Kernel {
 
-class DevFSInode;
-class DevFSDeviceInode;
-class DevFSDirectoryInode;
-class DevFSRootDirectoryInode;
-class DevFSDevicesDirectoryInode;
-class DevFSPtsDirectoryInode;
-class Device;
 class DevFS final : public FileSystem {
     friend class DevFSInode;
     friend class DevFSRootDirectoryInode;

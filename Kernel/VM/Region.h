@@ -11,6 +11,7 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/Arch/x86/PageFault.h>
+#include <Kernel/Forward.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/KString.h>
 #include <Kernel/Sections.h>
@@ -20,9 +21,6 @@
 #include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
-
-class Inode;
-class VMObject;
 
 enum class ShouldFlushTLB {
     No,

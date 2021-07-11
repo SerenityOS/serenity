@@ -10,15 +10,13 @@
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
+#include <Kernel/Forward.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
 
-class Process;
-class Thread;
-class WaitQueue;
 struct RegisterState;
 
 extern Thread* g_finalizer;
