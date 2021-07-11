@@ -117,12 +117,9 @@ void BarsVisualizationWidget::set_buffer(RefPtr<Audio::Buffer> buffer)
     set_buffer(buffer, buffer->sample_count());
 }
 
-void BarsVisualizationWidget::mousedown_event(GUI::MouseEvent& event)
+void BarsVisualizationWidget::context_menu_event(GUI::ContextMenuEvent& event)
 {
-    Widget::mousedown_event(event);
-    if (event.button() == GUI::Right) {
-        m_context_menu->popup(event.position());
-    }
+    m_context_menu->popup(event.screen_position());
 }
 
 void BarsVisualizationWidget::set_samplerate(int samplerate)
