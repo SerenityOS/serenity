@@ -24,6 +24,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(epoch_microseconds_getter);
     JS_DECLARE_NATIVE_FUNCTION(epoch_nanoseconds_getter);
 
+    JS_DECLARE_NATIVE_FUNCTION(equals);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
 };
 
