@@ -32,6 +32,7 @@ namespace Wasm {
 
 void BytecodeInterpreter::interpret(Configuration& configuration)
 {
+    m_stack_info = {};
     m_trap.clear();
     auto& instructions = configuration.frame().expression().instructions();
     auto max_ip_value = InstructionPointer { instructions.size() };
@@ -129,7 +130,7 @@ void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruct
 
 void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAddress address)
 {
-    TRAP_IF_NOT(configuration.depth() <= Constants::max_allowed_call_stack_depth);
+    TRAP_IF_NOT(m_stack_info.size_free() >= Constants::minimum_stack_space_to_keep_free);
 
     auto instance = configuration.store().get(address);
     TRAP_IF_NOT(instance);
