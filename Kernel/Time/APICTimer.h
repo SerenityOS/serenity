@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Time/HardwareTimer.h>
