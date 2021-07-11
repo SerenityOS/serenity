@@ -16,7 +16,6 @@
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
-#include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/VM/TypedMapping.h>
 
