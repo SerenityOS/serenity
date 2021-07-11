@@ -828,7 +828,11 @@ ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(StringView p
 ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView path, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
     auto custody = TRY(resolve_path_without_veil(path, base, out_parent, options, symlink_recursion_level));
-    TRY(validate_path_against_process_veil(*custody, options));
+    if (auto result = validate_path_against_process_veil(*custody, options); result.is_error()) {
+        if (out_parent)
+            out_parent->clear();
+        return result.release_error();
+    }
     return custody;
 }
 
