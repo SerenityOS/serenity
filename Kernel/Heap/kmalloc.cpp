@@ -298,13 +298,6 @@ void kfree(void* ptr)
     --g_nested_kfree_calls;
 }
 
-void* krealloc(void* ptr, size_t new_size)
-{
-    kmalloc_verify_nospinlock_held();
-    ScopedSpinLock lock(s_lock);
-    return g_kmalloc_global->m_heap.reallocate(ptr, new_size);
-}
-
 size_t kmalloc_good_size(size_t size)
 {
     return size;

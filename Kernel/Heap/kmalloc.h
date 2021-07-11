@@ -40,7 +40,6 @@ void kmalloc_init();
 [[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc_impl(size_t);
 [[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc_eternal(size_t);
 
-void* krealloc(void*, size_t);
 void kfree(void*);
 void kfree_sized(void*, size_t);
 

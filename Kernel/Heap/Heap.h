@@ -118,34 +118,6 @@ public:
         }
     }
 
-    template<typename MainHeap>
-    void* reallocate(void* ptr, size_t new_size, MainHeap& h)
-    {
-        if (!ptr)
-            return h.allocate(new_size);
-
-        auto* a = allocation_header(ptr);
-        VERIFY((u8*)a >= m_chunks && (u8*)ptr < m_chunks + m_total_chunks * CHUNK_SIZE);
-        VERIFY((u8*)a + a->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
-
-        size_t old_size = a->allocation_size_in_chunks * CHUNK_SIZE - sizeof(AllocationHeader);
-
-        if (old_size == new_size)
-            return ptr;
-
-        auto* new_ptr = h.allocate(new_size);
-        if (new_ptr) {
-            __builtin_memcpy(new_ptr, ptr, min(old_size, new_size));
-            deallocate(ptr);
-        }
-        return new_ptr;
-    }
-
-    void* reallocate(void* ptr, size_t new_size)
-    {
-        return reallocate(ptr, new_size, *this);
-    }
-
     bool contains(const void* ptr) const
     {
         const auto* a = allocation_header(ptr);
@@ -315,17 +287,6 @@ public:
                 }
                 return;
             }
-        }
-        VERIFY_NOT_REACHED();
-    }
-
-    void* reallocate(void* ptr, size_t new_size)
-    {
-        if (!ptr)
-            return allocate(new_size);
-        for (auto* subheap = &m_heaps; subheap; subheap = subheap->next) {
-            if (subheap->heap.contains(ptr))
-                return subheap->heap.reallocate(ptr, new_size, *this);
         }
         VERIFY_NOT_REACHED();
     }
