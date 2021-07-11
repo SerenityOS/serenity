@@ -674,6 +674,12 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                     break;
                 }
 
+                //https://tc39.es/ecma262/#sec-class-definitions-static-semantics-early-errors
+                // ClassElement : static MethodDefinition
+                //   It is a Syntax Error if PropName of MethodDefinition is "prototype".
+                if (is_static && name == "prototype"sv)
+                    syntax_error("Classes may not have a static property named 'prototype'");
+
             } else {
                 expected("property key");
             }
