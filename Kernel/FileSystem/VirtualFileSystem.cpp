@@ -363,7 +363,7 @@ ErrorOr<void> VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& ba
     }
 
     RefPtr<Custody> parent_custody;
-    auto result = resolve_path(path, base, &parent_custody);
+    auto result = resolve_path_without_veil(path, base, &parent_custody);
     if (!result.is_error())
         return EEXIST;
     else if (!parent_custody)
@@ -371,6 +371,7 @@ ErrorOr<void> VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& ba
     // NOTE: If resolve_path fails with a non-null parent custody, the error should be ENOENT.
     VERIFY(result.error().code() == ENOENT);
 
+    TRY(validate_path_against_process_veil(*parent_custody, O_CREAT));
     auto& parent_inode = parent_custody->inode();
     auto& current_process = Process::current();
     if (!parent_inode.metadata().may_write(current_process))
