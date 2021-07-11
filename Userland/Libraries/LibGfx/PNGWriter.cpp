@@ -31,6 +31,9 @@ public:
 
     void add_u8(u8);
 
+    template<typename T>
+    void add(T*, size_t);
+
     void store_type();
     void store_data_length();
     u32 crc();
@@ -93,6 +96,12 @@ requires(IsUnsigned<T>) void PNGChunk::add(T data)
 }
 
 template<typename T>
+void PNGChunk::add(T* data, size_t size)
+{
+    m_data.append(data, size);
+}
+
+template<typename T>
 void PNGChunk::add_as_little_endian(T data)
 {
     auto data_out = AK::convert_between_host_and_little_endian(data);
@@ -117,7 +126,7 @@ void NonCompressibleBlock::add_byte_to_block(u8 data, PNGChunk& chunk)
     update_adler(data);
     if (full()) {
         add_block_to_chunk(chunk, false);
-        m_non_compressible_data.clear();
+        m_non_compressible_data.clear_with_capacity();
     }
 }
 
@@ -131,9 +140,7 @@ void NonCompressibleBlock::add_block_to_chunk(PNGChunk& png_chunk, bool last)
     png_chunk.add_as_little_endian(len);
     png_chunk.add_as_little_endian(nlen);
 
-    for (auto non_compressed_byte : m_non_compressible_data) {
-        png_chunk.add_u8(non_compressed_byte);
-    }
+    png_chunk.add(m_non_compressible_data.data(), m_non_compressible_data.size());
 }
 
 void NonCompressibleBlock::finalize(PNGChunk& chunk)
