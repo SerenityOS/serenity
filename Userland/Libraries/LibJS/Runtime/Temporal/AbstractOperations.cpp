@@ -13,6 +13,107 @@
 
 namespace JS::Temporal {
 
+// 13.2 GetOptionsObject ( options ), https://tc39.es/proposal-temporal/#sec-getoptionsobject
+Object* get_options_object(GlobalObject& global_object, Value options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If options is undefined, then
+    if (options.is_undefined()) {
+        // a. Return ! OrdinaryObjectCreate(null).
+        return Object::create(global_object, nullptr);
+    }
+
+    // 2. If Type(options) is Object, then
+    if (options.is_object()) {
+        // a. Return options.
+        return &options.as_object();
+    }
+
+    // 3. Throw a TypeError exception.
+    vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, "Options");
+    return {};
+}
+
+static Optional<OptionType> to_option_type(Value value)
+{
+    if (value.is_boolean())
+        return OptionType::Boolean;
+    if (value.is_string())
+        return OptionType::String;
+    if (value.is_number())
+        return OptionType::Number;
+    return {};
+}
+
+// 13.3 GetOption ( options, property, types, values, fallback ), https://tc39.es/proposal-temporal/#sec-getoption
+Value get_option(GlobalObject& global_object, Object& options, String const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(options) is Object.
+    // 2. Assert: Each element of types is Boolean, String, or Number.
+
+    // 3. Let value be ? Get(options, property).
+    auto value = options.get(property);
+    if (vm.exception())
+        return {};
+
+    // 4. If value is undefined, return fallback.
+    if (value.is_undefined())
+        return fallback;
+
+    OptionType type;
+    // 5. If types contains Type(value), then
+    if (auto value_type = to_option_type(value); value_type.has_value() && types.contains_slow(*value_type)) {
+        // a. Let type be Type(value).
+        type = *value_type;
+    }
+    // 6. Else,
+    else {
+        // a. Let type be the last element of types.
+        type = types.last();
+    }
+
+    // 7. If type is Boolean, then
+    if (type == OptionType::Boolean) {
+        // a. Set value to ! ToBoolean(value).
+        value = Value(value.to_boolean());
+    }
+    // 8. Else if type is Number, then
+    else if (type == OptionType::Number) {
+        // a. Set value to ? ToNumber(value).
+        value = value.to_number(global_object);
+        if (vm.exception())
+            return {};
+        // b. If value is NaN, throw a RangeError exception.
+        if (value.is_nan()) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, vm.names.NaN.as_string(), property);
+            return {};
+        }
+    }
+    // 9. Else,
+    else {
+        // a. Set value to ? ToString(value).
+        value = value.to_primitive_string(global_object);
+        if (vm.exception())
+            return {};
+    }
+
+    // 10. If values is not empty, then
+    if (!values.is_empty()) {
+        VERIFY(value.is_string());
+        // a. If values does not contain value, throw a RangeError exception.
+        if (!values.contains_slow(value.as_string().string())) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::OptionIsNotValidValue, value.as_string().string(), property);
+            return {};
+        }
+    }
+
+    // 11. Return value.
+    return value;
+}
+
 // 13.34 ParseISODateTime ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parseisodatetime
 Optional<ISODateTime> parse_iso_date_time(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
 {
