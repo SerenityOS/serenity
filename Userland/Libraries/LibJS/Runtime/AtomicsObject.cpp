@@ -118,6 +118,7 @@ void AtomicsObject::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.add, add, 3, attr);
+    define_native_function(vm.names.and_, and_, 3, attr);
     define_native_function(vm.names.load, load, 2, attr);
 
     // 25.4.15 Atomics [ @@toStringTag ], https://tc39.es/ecma262/#sec-atomics-@@tostringtag
@@ -136,6 +137,24 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::add)
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
         return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_add));
+    JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+
+    VERIFY_NOT_REACHED();
+}
+
+// 25.4.4 Atomics.and ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.and
+JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
+{
+    auto* typed_array = typed_array_from(global_object, vm.argument(0));
+    if (!typed_array)
+        return {};
+
+    auto atomic_and = [](auto* storage, auto value) { return AK::atomic_fetch_and(storage, value); };
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    if (is<ClassName>(typed_array))                                                 \
+        return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_and));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 

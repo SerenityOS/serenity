@@ -351,6 +351,7 @@ namespace JS {
     P(writable)
 
 struct CommonPropertyNames {
+    PropertyName and_ { "and", PropertyName::StringMayBeNumber::No };
     PropertyName catch_ { "catch", PropertyName::StringMayBeNumber::No };
     PropertyName delete_ { "delete", PropertyName::StringMayBeNumber::No };
     PropertyName for_ { "for", PropertyName::StringMayBeNumber::No };
