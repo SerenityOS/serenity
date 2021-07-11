@@ -87,7 +87,9 @@ if [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ]; then
 fi
 
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
-if (uname -a | grep -iq WSL) || (uname -a | grep -iq microsoft); then
+if [ $SERENITY_SCREENS = 1 ]; then
+    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-gtk,gl=on}"
+elif (uname -a | grep -iq WSL) || (uname -a | grep -iq microsoft); then
     # QEMU for windows does not like gl=on, so detect if we are building in wsl, and if so, disable it
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=off}"
 elif ("${SERENITY_QEMU_BIN}" --display help | grep -iq sdl) && (ldconfig -p | grep -iq virglrenderer); then
