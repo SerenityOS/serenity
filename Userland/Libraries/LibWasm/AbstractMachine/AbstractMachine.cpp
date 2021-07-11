@@ -286,6 +286,8 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                         };
                         return;
                     }
+                    if (data.init.is_empty())
+                        return;
                     auto address = main_module_instance.memories()[data.index.value()];
                     if (auto instance = m_store.get(address)) {
                         if (auto max = instance->type().limits().max(); max.has_value()) {
