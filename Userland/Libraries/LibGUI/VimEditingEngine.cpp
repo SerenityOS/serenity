@@ -415,6 +415,39 @@ Optional<TextRange> VimMotion::get_range(VimEditingEngine& engine, bool normaliz
     return { TextRange { { m_start_line, m_start_column }, { m_end_line, m_end_column } } };
 }
 
+Optional<TextRange> VimMotion::get_repeat_range(VimEditingEngine& engine, VimMotion::Unit unit, bool normalize_for_position)
+{
+    TextEditor& editor = engine.editor();
+
+    if (m_amount > 0) {
+        m_amount--;
+    } else if (m_amount < 0) {
+        m_amount++;
+    }
+    auto position = editor.cursor();
+    int amount = abs(m_amount);
+    bool forwards = m_amount >= 0;
+    VimCursor cursor { editor, position, forwards };
+
+    m_start_line = m_end_line = position.line();
+    m_start_column = m_end_column = position.column();
+
+    switch (unit) {
+    case Unit::Line: {
+        calculate_line_range(editor, normalize_for_position);
+        break;
+    }
+    case Unit::Character: {
+        calculate_character_range(cursor, amount, normalize_for_position);
+        break;
+    }
+    default:
+        return {};
+    }
+
+    return { TextRange { { m_start_line, m_start_column }, { m_end_line, m_end_column } } };
+}
+
 void VimMotion::calculate_document_range(TextEditor& editor)
 {
     if (m_amount >= 0) {
@@ -782,8 +815,15 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
 
     if (m_previous_key == KeyCode::Key_D) {
         if (event.key() == KeyCode::Key_D && !m_motion.should_consume_next_character()) {
-            yank(Line);
-            delete_line();
+            if (m_motion.amount()) {
+                auto range = m_motion.get_repeat_range(*this, VimMotion::Unit::Line);
+                VERIFY(range.has_value());
+                yank(*range, Line);
+                m_editor->delete_text_range(*range);
+            } else {
+                yank(Line);
+                delete_line();
+            }
             m_motion.reset();
             m_previous_key = {};
         } else {
@@ -804,7 +844,13 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
         }
     } else if (m_previous_key == KeyCode::Key_Y) {
         if (event.key() == KeyCode::Key_Y && !m_motion.should_consume_next_character()) {
-            yank(Line);
+            if (m_motion.amount()) {
+                auto range = m_motion.get_repeat_range(*this, VimMotion::Unit::Line);
+                VERIFY(range.has_value());
+                yank(*range, Line);
+            } else {
+                yank(Line);
+            }
             m_motion.reset();
             m_previous_key = {};
         } else {
@@ -977,10 +1023,18 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             case (KeyCode::Key_U):
                 m_editor->undo();
                 return true;
-            case (KeyCode::Key_X):
-                yank({ m_editor->cursor(), { m_editor->cursor().line(), m_editor->cursor().column() + 1 } });
-                delete_char();
+            case (KeyCode::Key_X): {
+                TextRange range = { m_editor->cursor(), { m_editor->cursor().line(), m_editor->cursor().column() + 1 } };
+                if (m_motion.amount()) {
+                    auto opt = m_motion.get_repeat_range(*this, VimMotion::Unit::Character);
+                    VERIFY(opt.has_value());
+                    range = *opt;
+                    m_motion.reset();
+                }
+                yank(range, Selection);
+                m_editor->delete_text_range(range);
                 return true;
+            }
             case (KeyCode::Key_V):
                 switch_to_visual_mode();
                 return true;
@@ -1233,10 +1287,10 @@ void VimEditingEngine::yank(YankType type)
         m_yank_buffer = m_yank_buffer.trim_whitespace(TrimMode::Left);
 }
 
-void VimEditingEngine::yank(TextRange range)
+void VimEditingEngine::yank(TextRange range, YankType yank_type)
 {
-    m_yank_type = YankType::Selection;
-    m_yank_buffer = m_editor->document().text_in_range(range);
+    m_yank_type = yank_type;
+    m_yank_buffer = m_editor->document().text_in_range(range).trim_whitespace(AK::TrimMode::Right);
 }
 
 void VimEditingEngine::put_before()
