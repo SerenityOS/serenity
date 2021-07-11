@@ -5,10 +5,8 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/Types.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/Processor.h>
-#include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 

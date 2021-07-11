@@ -11,7 +11,6 @@
 
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Process.h>
-#include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
