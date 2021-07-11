@@ -1635,7 +1635,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
             } else if (match(TokenType::BracketOpen)) {
                 consume();
                 name = parse_expression(0);
-                consume(TokenType::BracketOpen);
+                consume(TokenType::BracketClose);
             } else {
                 syntax_error("Expected identifier or computed property name");
                 return {};
