@@ -11,6 +11,7 @@ set(TEST_SOURCES
     TestLibCTime.cpp
     TestMalloc.cpp
     TestMemmem.cpp
+    TestMkDir.cpp
     TestQsort.cpp
     TestRaise.cpp
     TestRealpath.cpp
