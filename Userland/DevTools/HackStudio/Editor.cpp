@@ -43,18 +43,12 @@ Editor::Editor()
     initialize_documentation_tooltip();
     initialize_parameters_hint_tooltip();
     m_evaluate_expression_action = GUI::Action::create("Evaluate expression", { Mod_Ctrl, Key_E }, [this](auto&) {
-        if (!execution_position().has_value()) {
-            GUI::MessageBox::show(window(), "Program is not running", "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
+        VERIFY(is_program_running());
         auto dialog = EvaluateExpressionDialog::construct(window());
         dialog->exec();
     });
     m_move_execution_to_line_action = GUI::Action::create("Set execution point to line", [this](auto&) {
-        if (!execution_position().has_value()) {
-            GUI::MessageBox::show(window(), "Program must be paused", "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
+        VERIFY(is_program_running());
         auto success = Debugger::the().set_execution_position(currently_open_file(), cursor().line());
         if (success) {
             set_execution_position(cursor().line());
@@ -62,6 +56,9 @@ Editor::Editor()
             GUI::MessageBox::show(window(), "Failed to set execution position", "Error", GUI::MessageBox::Type::Error);
         }
     });
+
+    set_debug_mode(false);
+
     add_custom_context_menu_action(*m_evaluate_expression_action);
     add_custom_context_menu_action(*m_move_execution_to_line_action);
 
@@ -670,6 +667,12 @@ void Editor::handle_function_parameters_hint_request()
         code_document().file_path(),
         cursor().line(),
         cursor().column());
+}
+
+void Editor::set_debug_mode(bool enabled)
+{
+    m_evaluate_expression_action->set_enabled(enabled);
+    m_move_execution_to_line_action->set_enabled(enabled);
 }
 
 }
