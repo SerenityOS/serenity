@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
 #include <AK/RefCounted.h>
@@ -61,7 +62,6 @@ public:
     }
 
 protected:
-    VMObject();
     explicit VMObject(size_t);
     explicit VMObject(const VMObject&);
 
@@ -69,7 +69,7 @@ protected:
     void for_each_region(Callback);
 
     IntrusiveListNode<VMObject> m_list_node;
-    Vector<RefPtr<PhysicalPage>, 16> m_physical_pages;
+    FixedArray<RefPtr<PhysicalPage>> m_physical_pages;
     Lock m_paging_lock { "VMObject" };
 
     mutable SpinLock<u8> m_lock;
