@@ -51,6 +51,7 @@ static bool flag_human_readable = false;
 static bool flag_sort_by_timestamp = false;
 static bool flag_reverse_sort = false;
 static bool flag_disable_hyperlinks = false;
+static bool flag_recursive = false;
 
 static size_t terminal_rows = 0;
 static size_t terminal_columns = 0;
@@ -88,7 +89,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Vector<const char*> paths;
+    Vector<String> paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("List files in a directory.");
@@ -106,6 +107,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_hide_group, "In long format, do not show group information", nullptr, 'o');
     args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
     args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K');
+    args_parser.add_option(flag_recursive, "List subdirectories recursively", "recursive", 'R');
     args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -129,9 +131,8 @@ int main(int argc, char** argv)
         return do_file_system_object_short(path);
     };
 
-    if (paths.is_empty()) {
+    if (paths.is_empty())
         paths.append(".");
-    }
 
     quick_sort(paths, [](const String& a, const String& b) {
         return a < b;
@@ -142,11 +143,29 @@ int main(int argc, char** argv)
     for (size_t i = 0; i < paths.size(); i++) {
         auto path = paths[i];
 
+        if (flag_recursive && Core::File::is_directory(path)) {
+            size_t subdirs = 0;
+            Core::DirIterator di(path, Core::DirIterator::SkipParentAndBaseDir);
+
+            if (di.has_error()) {
+                status = 1;
+                fprintf(stderr, "%s: %s\n", path.characters(), di.error_string());
+            }
+
+            while (di.has_next()) {
+                String directory = di.next_full_path();
+                if (Core::File::is_directory(directory) && !Core::File::is_link(directory)) {
+                    ++subdirs;
+                    paths.insert(i + subdirs, move(directory));
+                }
+            }
+        }
+
         bool show_dir_separator = paths.size() > 1 && Core::File::is_directory(path) && !flag_list_directories_only;
         if (show_dir_separator) {
-            printf("%s:\n", path);
+            printf("%s:\n", path.characters());
         }
-        auto rc = do_file_system_object(path);
+        auto rc = do_file_system_object(path.characters());
         if (rc != 0)
             status = rc;
         if (show_dir_separator && i != paths.size() - 1) {
