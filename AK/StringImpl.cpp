@@ -37,11 +37,6 @@ StringImpl::~StringImpl()
         FlyString::did_destroy_impl({}, *this);
 }
 
-static inline size_t allocation_size_for_stringimpl(size_t length)
-{
-    return sizeof(StringImpl) + (sizeof(char) * length) + sizeof(char);
-}
-
 NonnullRefPtr<StringImpl> StringImpl::create_uninitialized(size_t length, char*& buffer)
 {
     VERIFY(length);

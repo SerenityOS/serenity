@@ -20,6 +20,8 @@ enum ShouldChomp {
     Chomp
 };
 
+size_t allocation_size_for_stringimpl(size_t length);
+
 class StringImpl : public RefCounted<StringImpl> {
 public:
     static NonnullRefPtr<StringImpl> create_uninitialized(size_t length, char*& buffer);
@@ -34,7 +36,7 @@ public:
 
     void operator delete(void* ptr)
     {
-        kfree(ptr);
+        kfree_sized(ptr, allocation_size_for_stringimpl(static_cast<StringImpl*>(ptr)->m_length));
     }
 
     static StringImpl& the_empty_stringimpl();
@@ -99,6 +101,11 @@ private:
     mutable bool m_fly { false };
     char m_inline_buffer[0];
 };
+
+inline size_t allocation_size_for_stringimpl(size_t length)
+{
+    return sizeof(StringImpl) + (sizeof(char) * length) + sizeof(char);
+}
 
 template<>
 struct Formatter<StringImpl> : Formatter<StringView> {
