@@ -120,6 +120,7 @@ void AtomicsObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.add, add, 3, attr);
     define_native_function(vm.names.and_, and_, 3, attr);
     define_native_function(vm.names.load, load, 2, attr);
+    define_native_function(vm.names.or_, or_, 3, attr);
 
     // 25.4.15 Atomics [ @@toStringTag ], https://tc39.es/ecma262/#sec-atomics-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Atomics"), Attribute::Configurable);
@@ -182,6 +183,24 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::load)
     }
 
     return typed_array->get_value_from_buffer(*indexed_position, ArrayBuffer::Order::SeqCst, true);
+}
+
+// 25.4.9 Atomics.or ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.or
+JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::or_)
+{
+    auto* typed_array = typed_array_from(global_object, vm.argument(0));
+    if (!typed_array)
+        return {};
+
+    auto atomic_or = [](auto* storage, auto value) { return AK::atomic_fetch_or(storage, value); };
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    if (is<ClassName>(typed_array))                                                 \
+        return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_or));
+    JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+
+    VERIFY_NOT_REACHED();
 }
 
 }
