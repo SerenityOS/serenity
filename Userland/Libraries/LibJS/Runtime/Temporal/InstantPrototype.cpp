@@ -33,6 +33,7 @@ void InstantPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.equals, equals, 1, attr);
 }
 
 static Instant* typed_this(GlobalObject& global_object)
@@ -119,6 +120,28 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_nanoseconds_getter)
 
     // 4. Return ns.
     return &ns;
+}
+
+// 8.3.12 Temporal.Instant.prototype.equals ( other ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.equals
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::equals)
+{
+    // 1. Let instant be the this value.
+    // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
+    auto* instant = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set other to ? ToTemporalInstant(other).
+    auto other = to_temporal_instant(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. If instant.[[Nanoseconds]] ≠ other.[[Nanoseconds]], return false.
+    if (instant->nanoseconds().big_integer() != other->nanoseconds().big_integer())
+        return Value(false);
+
+    // 5. Return true.
+    return Value(true);
 }
 
 // 8.3.16 Temporal.Instant.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.valueof

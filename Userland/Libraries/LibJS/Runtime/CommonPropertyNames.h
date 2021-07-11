@@ -118,6 +118,7 @@ namespace JS {
     P(epochMilliseconds)                     \
     P(epochNanoseconds)                      \
     P(epochSeconds)                          \
+    P(equals)                                \
     P(error)                                 \
     P(errors)                                \
     P(escape)                                \
