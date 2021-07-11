@@ -593,14 +593,6 @@ Region* MemoryManager::find_user_region_from_vaddr(Space& space, VirtualAddress 
     return space.find_region_containing({ vaddr, 1 });
 }
 
-Region* MemoryManager::find_region_from_vaddr(Space& space, VirtualAddress vaddr)
-{
-    ScopedSpinLock lock(s_mm_lock);
-    if (auto* region = find_user_region_from_vaddr(space, vaddr))
-        return region;
-    return kernel_region_from_vaddr(vaddr);
-}
-
 Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
 {
     ScopedSpinLock lock(s_mm_lock);

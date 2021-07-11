@@ -186,7 +186,6 @@ public:
             callback(vmobject);
     }
 
-    static Region* find_region_from_vaddr(Space&, VirtualAddress);
     static Region* find_user_region_from_vaddr(Space&, VirtualAddress);
 
     void dump_kernel_regions();
