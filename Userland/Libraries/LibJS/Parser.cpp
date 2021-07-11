@@ -881,6 +881,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
 
     NonnullRefPtrVector<ObjectProperty> properties;
     ObjectProperty::Type property_type;
+    Optional<SourceRange> invalid_object_literal_property_range;
 
     auto skip_to_next_property = [&] {
         while (!done() && !match(TokenType::Comma) && !match(TokenType::CurlyOpen))
@@ -931,8 +932,14 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 continue;
             }
         }
-
-        if (match(TokenType::ParenOpen)) {
+        if (match(TokenType::Equals)) {
+            // Not a valid object literal, but a valid assignment target
+            consume();
+            // Parse the expression and throw it away
+            auto expression = parse_expression(2);
+            if (!invalid_object_literal_property_range.has_value())
+                invalid_object_literal_property_range = expression->source_range();
+        } else if (match(TokenType::ParenOpen)) {
             VERIFY(property_name);
             u8 parse_options = FunctionNodeParseOptions::AllowSuperPropertyLookup;
             if (property_type == ObjectProperty::Type::Getter)
@@ -965,7 +972,10 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
     }
 
     consume(TokenType::CurlyClose);
-    return create_ast_node<ObjectExpression>({ m_state.current_token.filename(), rule_start.position(), position() }, properties);
+    return create_ast_node<ObjectExpression>(
+        { m_state.current_token.filename(), rule_start.position(), position() },
+        move(properties),
+        move(invalid_object_literal_property_range));
 }
 
 NonnullRefPtr<ArrayExpression> Parser::parse_array_expression()
@@ -1086,6 +1096,12 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
 {
     auto rule_start = push_start();
     auto [expression, should_continue_parsing] = parse_primary_expression();
+    auto check_for_invalid_object_property = [&](auto& expression) {
+        if (is<ObjectExpression>(*expression)) {
+            if (auto range = static_cast<ObjectExpression&>(*expression).invalid_property_range(); range.has_value())
+                syntax_error("Invalid property in object literal", range->start);
+        }
+    };
     while (match(TokenType::TemplateLiteralStart)) {
         auto template_literal = parse_template_literal(true);
         expression = create_ast_node<TaggedTemplateLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(template_literal));
@@ -1097,6 +1113,7 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
                 break;
             if (new_precedence == min_precedence && associativity == Associativity::Left)
                 break;
+            check_for_invalid_object_property(expression);
 
             Associativity new_associativity = operator_associativity(m_state.current_token.type());
             expression = parse_secondary_expression(move(expression), new_precedence, new_associativity);
@@ -1106,6 +1123,9 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
             }
         }
     }
+
+    check_for_invalid_object_property(expression);
+
     if (match(TokenType::Comma) && min_precedence <= 1) {
         NonnullRefPtrVector<Expression> expressions;
         expressions.append(expression);
