@@ -2168,10 +2168,20 @@ void TryStatement::dump(int indent) const
 void CatchClause::dump(int indent) const
 {
     print_indent(indent);
-    if (m_parameter.is_null())
-        outln("CatchClause");
-    else
-        outln("CatchClause ({})", m_parameter);
+    m_parameter.visit(
+        [&](FlyString const& parameter) {
+            if (parameter.is_null())
+                outln("CatchClause");
+            else
+                outln("CatchClause ({})", parameter);
+        },
+        [&](NonnullRefPtr<BindingPattern> const& pattern) {
+            outln("CatchClause");
+            print_indent(indent);
+            outln("(Parameter)");
+            pattern->dump(indent + 2);
+        });
+
     body().dump(indent + 1);
 }
 
@@ -2191,10 +2201,24 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
             interpreter.vm().clear_exception();
 
             HashMap<FlyString, Variable> parameters;
-            parameters.set(m_handler->parameter(), Variable { exception->value(), DeclarationKind::Var });
+            m_handler->parameter().visit(
+                [&](FlyString const& parameter) {
+                    parameters.set(parameter, Variable { exception->value(), DeclarationKind::Var });
+                },
+                [&](NonnullRefPtr<BindingPattern> const& pattern) {
+                    pattern->for_each_bound_name([&](auto& name) {
+                        parameters.set(name, Variable { Value {}, DeclarationKind::Var });
+                    });
+                });
             auto* catch_scope = interpreter.heap().allocate<DeclarativeEnvironment>(global_object, move(parameters), interpreter.vm().running_execution_context().lexical_environment);
             TemporaryChange<Environment*> scope_change(interpreter.vm().running_execution_context().lexical_environment, catch_scope);
-            result = interpreter.execute_statement(global_object, m_handler->body());
+
+            if (auto* pattern = m_handler->parameter().get_pointer<NonnullRefPtr<BindingPattern>>())
+                interpreter.vm().assign(*pattern, exception->value(), global_object, true);
+            if (interpreter.exception())
+                result = js_undefined();
+            else
+                result = interpreter.execute_statement(global_object, m_handler->body());
         }
     }
 
