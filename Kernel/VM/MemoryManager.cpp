@@ -431,7 +431,6 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     m_physical_page_entries = (PhysicalPageEntry*)range.value().base().get();
     for (size_t i = 0; i < m_physical_page_entries_count; i++)
         new (&m_physical_page_entries[i]) PageTableEntry();
-    m_physical_page_entries_free = m_physical_page_entries_count;
 
     // Now we should be able to allocate PhysicalPage instances,
     // so finish setting up the kernel page directory
