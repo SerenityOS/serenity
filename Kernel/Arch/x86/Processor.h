@@ -174,6 +174,7 @@ public:
     void initialize(u32 cpu);
 
     void detect_hypervisor();
+    void detect_hypervisor_hyperv(CPUID const& hypervisor_leaf_range);
 
     void idle_begin()
     {
