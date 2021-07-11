@@ -355,6 +355,7 @@ struct CommonPropertyNames {
     PropertyName catch_ { "catch", PropertyName::StringMayBeNumber::No };
     PropertyName delete_ { "delete", PropertyName::StringMayBeNumber::No };
     PropertyName for_ { "for", PropertyName::StringMayBeNumber::No };
+    PropertyName or_ { "or", PropertyName::StringMayBeNumber::No };
     PropertyName register_ { "register", PropertyName::StringMayBeNumber::No };
     PropertyName return_ { "return", PropertyName::StringMayBeNumber::No };
     PropertyName throw_ { "throw", PropertyName::StringMayBeNumber::No };
