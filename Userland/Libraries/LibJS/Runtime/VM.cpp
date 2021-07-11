@@ -414,7 +414,12 @@ Reference VM::get_identifier_reference(Environment* environment, FlyString const
         if (possible_match.has_value())
             return Reference { *environment, name, strict };
     }
-    return Reference { global_object.environment(), name, strict };
+
+    if (global_object.environment().has_binding(name) || !in_strict_mode()) {
+        return Reference { global_object.environment(), name, strict };
+    }
+
+    return Reference { Reference::BaseType::Unresolvable, name, strict };
 }
 
 // 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding
