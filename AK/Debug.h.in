@@ -6,10 +6,6 @@
 
 #pragma once
 
-#ifndef AUTOCOMPLETE_DEBUG
-#cmakedefine01 AUTOCOMPLETE_DEBUG
-#endif
-
 #ifndef AWAVLOADER_DEBUG
 #cmakedefine01 AWAVLOADER_DEBUG
 #endif
