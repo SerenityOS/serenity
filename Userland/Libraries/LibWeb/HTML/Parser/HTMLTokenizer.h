@@ -100,7 +100,7 @@ namespace Web::HTML {
 
 class HTMLTokenizer {
 public:
-    explicit HTMLTokenizer(const StringView& input, const String& encoding);
+    explicit HTMLTokenizer(StringView const& input, String const& encoding);
 
     enum class State {
 #define __ENUMERATE_TOKENIZER_STATE(state) state,
@@ -125,12 +125,12 @@ private:
     void skip(size_t count);
     Optional<u32> next_code_point();
     Optional<u32> peek_code_point(size_t offset) const;
-    bool consume_next_if_match(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive);
+    bool consume_next_if_match(StringView const&, CaseSensitivity = CaseSensitivity::CaseSensitive);
     void create_new_token(HTMLToken::Type);
     bool current_end_tag_token_is_appropriate() const;
     String consume_current_builder();
 
-    static const char* state_name(State state)
+    static char const* state_name(State state)
     {
         switch (state) {
 #define __ENUMERATE_TOKENIZER_STATE(state) \
@@ -148,7 +148,7 @@ private:
 
     bool consumed_as_part_of_an_attribute() const;
 
-    void restore_to(const Utf8CodePointIterator& new_iterator);
+    void restore_to(Utf8CodePointIterator const& new_iterator);
     HTMLToken::Position nth_last_position(size_t n = 0);
 
     State m_state { State::Data };

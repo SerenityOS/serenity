@@ -175,7 +175,7 @@ namespace Web::HTML {
     }                     \
     }
 
-static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
+static inline void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
     dbgln_if(TOKENIZER_TRACE_DEBUG, "Parse error (tokenization) {}", location);
 }
@@ -2618,7 +2618,7 @@ _StartOfFunction:
     }
 }
 
-bool HTMLTokenizer::consume_next_if_match(const StringView& string, CaseSensitivity case_sensitivity)
+bool HTMLTokenizer::consume_next_if_match(StringView const& string, CaseSensitivity case_sensitivity)
 {
     for (size_t i = 0; i < string.length(); ++i) {
         auto code_point = peek_code_point(i);
@@ -2658,7 +2658,7 @@ void HTMLTokenizer::create_new_token(HTMLToken::Type type)
     m_current_token.m_start_position = nth_last_position(offset);
 }
 
-HTMLTokenizer::HTMLTokenizer(const StringView& input, const String& encoding)
+HTMLTokenizer::HTMLTokenizer(StringView const& input, String const& encoding)
 {
     auto* decoder = TextCodec::decoder_for(encoding);
     VERIFY(decoder);
@@ -2704,7 +2704,7 @@ bool HTMLTokenizer::consumed_as_part_of_an_attribute() const
     return m_return_state == State::AttributeValueUnquoted || m_return_state == State::AttributeValueSingleQuoted || m_return_state == State::AttributeValueDoubleQuoted;
 }
 
-void HTMLTokenizer::restore_to(const Utf8CodePointIterator& new_iterator)
+void HTMLTokenizer::restore_to(Utf8CodePointIterator const& new_iterator)
 {
     if (new_iterator != m_prev_utf8_iterator) {
         auto diff = m_prev_utf8_iterator - new_iterator;
