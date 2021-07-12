@@ -88,6 +88,7 @@ namespace JS {
     P(clear)                                 \
     P(clz32)                                 \
     P(codePointAt)                           \
+    P(compareExchange)                       \
     P(concat)                                \
     P(configurable)                          \
     P(console)                               \
