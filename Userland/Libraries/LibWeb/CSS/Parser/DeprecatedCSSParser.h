@@ -31,7 +31,7 @@ namespace Web {
 RefPtr<CSS::CSSStyleSheet> parse_css(const CSS::DeprecatedParsingContext&, const StringView&);
 RefPtr<CSS::CSSStyleDeclaration> parse_css_declaration(const CSS::DeprecatedParsingContext&, const StringView&);
 RefPtr<CSS::StyleValue> parse_css_value(const CSS::DeprecatedParsingContext&, const StringView&, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
-Optional<CSS::Selector> parse_selector(const CSS::DeprecatedParsingContext&, const StringView&);
+RefPtr<CSS::Selector> parse_selector(const CSS::DeprecatedParsingContext&, const StringView&);
 
 RefPtr<CSS::LengthStyleValue> parse_line_width(const CSS::DeprecatedParsingContext&, const StringView&);
 RefPtr<CSS::ColorStyleValue> parse_color(const CSS::DeprecatedParsingContext&, const StringView&);
