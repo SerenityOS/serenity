@@ -27,14 +27,14 @@
 
 namespace Web {
 
-void dump_tree(const DOM::Node& node)
+void dump_tree(DOM::Node const& node)
 {
     StringBuilder builder;
     dump_tree(builder, node);
     dbgln("{}", builder.string_view());
 }
 
-void dump_tree(StringBuilder& builder, const DOM::Node& node)
+void dump_tree(StringBuilder& builder, DOM::Node const& node)
 {
     static int indent = 0;
     for (int i = 0; i < indent; ++i)
@@ -56,7 +56,7 @@ void dump_tree(StringBuilder& builder, const DOM::Node& node)
     }
     if (is<DOM::ParentNode>(node)) {
         if (!is<HTML::HTMLTemplateElement>(node)) {
-            static_cast<const DOM::ParentNode&>(node).for_each_child([](auto& child) {
+            static_cast<DOM::ParentNode const&>(node).for_each_child([](auto& child) {
                 dump_tree(child);
             });
         } else {
@@ -67,14 +67,14 @@ void dump_tree(StringBuilder& builder, const DOM::Node& node)
     --indent;
 }
 
-void dump_tree(const Layout::Node& layout_node, bool show_box_model, bool show_specified_style)
+void dump_tree(Layout::Node const& layout_node, bool show_box_model, bool show_specified_style)
 {
     StringBuilder builder;
     dump_tree(builder, layout_node, show_box_model, show_specified_style, true);
     dbgln("{}", builder.string_view());
 }
 
-void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool show_box_model, bool show_specified_style, bool interactive)
+void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool show_box_model, bool show_specified_style, bool interactive)
 {
     static size_t indent = 0;
     for (size_t i = 0; i < indent; ++i)
@@ -104,15 +104,15 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
         identifier = builder.to_string();
     }
 
-    const char* nonbox_color_on = "";
-    const char* box_color_on = "";
-    const char* positioned_color_on = "";
-    const char* floating_color_on = "";
-    const char* inline_block_color_on = "";
-    const char* line_box_color_on = "";
-    const char* fragment_color_on = "";
-    const char* flex_color_on = "";
-    const char* color_off = "";
+    char const* nonbox_color_on = "";
+    char const* box_color_on = "";
+    char const* positioned_color_on = "";
+    char const* floating_color_on = "";
+    char const* inline_block_color_on = "";
+    char const* line_box_color_on = "";
+    char const* fragment_color_on = "";
+    char const* flex_color_on = "";
+    char const* color_off = "";
 
     if (interactive) {
         nonbox_color_on = "\033[33m";
@@ -194,8 +194,8 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
         builder.append("\n");
     }
 
-    if (is<Layout::BlockBox>(layout_node) && static_cast<const Layout::BlockBox&>(layout_node).children_are_inline()) {
-        auto& block = static_cast<const Layout::BlockBox&>(layout_node);
+    if (is<Layout::BlockBox>(layout_node) && static_cast<Layout::BlockBox const&>(layout_node).children_are_inline()) {
+        auto& block = static_cast<Layout::BlockBox const&>(layout_node);
         for (size_t line_box_index = 0; line_box_index < block.line_boxes().size(); ++line_box_index) {
             auto& line_box = block.line_boxes()[line_box_index];
             for (size_t i = 0; i < indent; ++i)
@@ -223,7 +223,7 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
                 if (is<Layout::TextNode>(fragment.layout_node())) {
                     for (size_t i = 0; i < indent; ++i)
                         builder.append("  ");
-                    auto& layout_text = static_cast<const Layout::TextNode&>(fragment.layout_node());
+                    auto& layout_text = static_cast<Layout::TextNode const&>(fragment.layout_node());
                     auto fragment_text = layout_text.text_for_rendering().substring(fragment.start(), fragment.length());
                     builder.appendff("      \"{}\"\n", fragment_text);
                 }
@@ -256,21 +256,21 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
     --indent;
 }
 
-void dump_selector(const CSS::Selector& selector)
+void dump_selector(CSS::Selector const& selector)
 {
     StringBuilder builder;
     dump_selector(builder, selector);
     dbgln("{}", builder.string_view());
 }
 
-void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
+void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
 {
     builder.append("  CSS::Selector:\n");
 
     for (auto& complex_selector : selector.complex_selectors()) {
         builder.append("    ");
 
-        const char* relation_description = "";
+        char const* relation_description = "";
         switch (complex_selector.relation) {
         case CSS::Selector::ComplexSelector::Relation::None:
             relation_description = "None";
@@ -297,7 +297,7 @@ void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
 
         for (size_t i = 0; i < complex_selector.compound_selector.size(); ++i) {
             auto& simple_selector = complex_selector.compound_selector[i];
-            const char* type_description = "Unknown";
+            char const* type_description = "Unknown";
             switch (simple_selector.type) {
             case CSS::Selector::SimpleSelector::Type::Invalid:
                 type_description = "Invalid";
@@ -342,7 +342,7 @@ void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
                 break;
             }
 
-            const char* pseudo_class_description = "";
+            char const* pseudo_class_description = "";
             switch (simple_selector.pseudo_class) {
             case CSS::Selector::SimpleSelector::PseudoClass::Link:
                 pseudo_class_description = "Link";
@@ -417,34 +417,34 @@ void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
     }
 }
 
-void dump_rule(const CSS::CSSRule& rule)
+void dump_rule(CSS::CSSRule const& rule)
 {
     StringBuilder builder;
     dump_rule(builder, rule);
     dbgln("{}", builder.string_view());
 }
 
-void dump_rule(StringBuilder& builder, const CSS::CSSRule& rule)
+void dump_rule(StringBuilder& builder, CSS::CSSRule const& rule)
 {
     builder.appendff("{}:\n", rule.class_name());
     switch (rule.type()) {
     case CSS::CSSRule::Type::Style:
-        dump_style_rule(builder, verify_cast<const CSS::CSSStyleRule>(rule));
+        dump_style_rule(builder, verify_cast<CSS::CSSStyleRule const>(rule));
         break;
     case CSS::CSSRule::Type::Import:
-        dump_import_rule(builder, verify_cast<const CSS::CSSImportRule>(rule));
+        dump_import_rule(builder, verify_cast<CSS::CSSImportRule const>(rule));
         break;
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-void dump_import_rule(StringBuilder& builder, const CSS::CSSImportRule& rule)
+void dump_import_rule(StringBuilder& builder, CSS::CSSImportRule const& rule)
 {
     builder.appendff("  Document URL: {}\n", rule.url());
 }
 
-void dump_style_rule(StringBuilder& builder, const CSS::CSSStyleRule& rule)
+void dump_style_rule(StringBuilder& builder, CSS::CSSStyleRule const& rule)
 {
     for (auto& selector : rule.selectors()) {
         dump_selector(builder, selector);
@@ -455,7 +455,7 @@ void dump_style_rule(StringBuilder& builder, const CSS::CSSStyleRule& rule)
     }
 }
 
-void dump_sheet(const CSS::StyleSheet& sheet)
+void dump_sheet(CSS::StyleSheet const& sheet)
 {
     StringBuilder builder;
     dump_sheet(builder, sheet);

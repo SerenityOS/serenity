@@ -14,7 +14,7 @@
 
 namespace Web::SelectorEngine {
 
-static bool matches_hover_pseudo_class(const DOM::Element& element)
+static bool matches_hover_pseudo_class(DOM::Element const& element)
 {
     auto* hovered_node = element.document().hovered_node();
     if (!hovered_node)
@@ -24,7 +24,7 @@ static bool matches_hover_pseudo_class(const DOM::Element& element)
     return element.is_ancestor_of(*hovered_node);
 }
 
-static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::Element& element)
+static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element const& element)
 {
     switch (component.pseudo_element) {
     case CSS::Selector::SimpleSelector::PseudoElement::None:
@@ -119,12 +119,12 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
     }
     case CSS::Selector::SimpleSelector::PseudoClass::NthChild:
     case CSS::Selector::SimpleSelector::PseudoClass::NthLastChild:
-        const auto step_size = component.nth_child_pattern.step_size;
-        const auto offset = component.nth_child_pattern.offset;
+        auto const step_size = component.nth_child_pattern.step_size;
+        auto const offset = component.nth_child_pattern.offset;
         if (step_size == 0 && offset == 0)
             return false; // "If both a and b are equal to zero, the pseudo-class represents no element in the document tree."
 
-        const auto* parent = element.parent_element();
+        auto const* parent = element.parent_element();
         if (!parent)
             return false;
 
@@ -152,7 +152,7 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
         }
 
         // Like "a % b", but handles negative integers correctly.
-        const auto canonical_modulo = [](int a, int b) -> int {
+        auto const canonical_modulo = [](int a, int b) -> int {
             int c = a % b;
             if ((c < 0 && b > 0) || (c > 0 && b < 0)) {
                 c += b;
@@ -218,7 +218,7 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
     }
 }
 
-static bool matches(const CSS::Selector& selector, int component_list_index, const DOM::Element& element)
+static bool matches(CSS::Selector const& selector, int component_list_index, DOM::Element const& element)
 {
     auto& component_list = selector.complex_selectors()[component_list_index];
     for (auto& component : component_list.compound_selector) {
@@ -260,7 +260,7 @@ static bool matches(const CSS::Selector& selector, int component_list_index, con
     VERIFY_NOT_REACHED();
 }
 
-bool matches(const CSS::Selector& selector, const DOM::Element& element)
+bool matches(CSS::Selector const& selector, DOM::Element const& element)
 {
     VERIFY(!selector.complex_selectors().is_empty());
     return matches(selector, selector.complex_selectors().size() - 1, element);

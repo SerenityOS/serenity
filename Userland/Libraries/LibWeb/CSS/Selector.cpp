@@ -47,7 +47,7 @@ u32 Selector::specificity() const
     return ids * 0x10000 + classes * 0x100 + tag_names;
 }
 
-Selector::SimpleSelector::NthChildPattern Selector::SimpleSelector::NthChildPattern::parse(const StringView& args)
+Selector::SimpleSelector::NthChildPattern Selector::SimpleSelector::NthChildPattern::parse(StringView const& args)
 {
     CSS::Selector::SimpleSelector::NthChildPattern pattern;
     if (args.equals_ignoring_case("odd")) {
@@ -56,7 +56,7 @@ Selector::SimpleSelector::NthChildPattern Selector::SimpleSelector::NthChildPatt
     } else if (args.equals_ignoring_case("even")) {
         pattern.step_size = 2;
     } else {
-        const auto consume_int = [](GenericLexer& lexer) -> Optional<int> {
+        auto const consume_int = [](GenericLexer& lexer) -> Optional<int> {
             return AK::StringUtils::convert_to_int(lexer.consume_while([](char c) -> bool {
                 return isdigit(c) || c == '+' || c == '-';
             }));
@@ -81,7 +81,7 @@ Selector::SimpleSelector::NthChildPattern Selector::SimpleSelector::NthChildPatt
             step_size_or_offset = -1;
             lexer.retreat();
         } else {
-            const auto value = consume_int(lexer);
+            auto const value = consume_int(lexer);
             if (!value.has_value())
                 return {};
             step_size_or_offset = value.value();
@@ -90,12 +90,12 @@ Selector::SimpleSelector::NthChildPattern Selector::SimpleSelector::NthChildPatt
         if (lexer.consume_specific("n")) {
             lexer.ignore_while(isspace);
             if (lexer.next_is('+') || lexer.next_is('-')) {
-                const auto sign = lexer.next_is('+') ? 1 : -1;
+                auto const sign = lexer.next_is('+') ? 1 : -1;
                 lexer.ignore();
                 lexer.ignore_while(isspace);
 
                 // "An+B" pattern
-                const auto offset = consume_int(lexer);
+                auto const offset = consume_int(lexer);
                 if (!offset.has_value())
                     return {};
                 pattern.step_size = step_size_or_offset;
