@@ -40,7 +40,7 @@ public:
         return token;
     }
 
-    static HTMLToken make_start_tag(const FlyString& tag_name)
+    static HTMLToken make_start_tag(FlyString const& tag_name)
     {
         HTMLToken token;
         token.m_type = Type::StartTag;
@@ -104,7 +104,7 @@ public:
             m_tag.self_closing_acknowledged = true;
     }
 
-    StringView attribute(const FlyString& attribute_name)
+    StringView attribute(FlyString const& attribute_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
@@ -114,19 +114,19 @@ public:
         return {};
     }
 
-    bool has_attribute(const FlyString& attribute_name)
+    bool has_attribute(FlyString const& attribute_name)
     {
         return !attribute(attribute_name).is_null();
     }
 
-    void adjust_tag_name(const FlyString& old_name, const FlyString& new_name)
+    void adjust_tag_name(FlyString const& old_name, FlyString const& new_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
         if (old_name == m_tag.tag_name)
             m_tag.tag_name = new_name;
     }
 
-    void adjust_attribute_name(const FlyString& old_name, const FlyString& new_name)
+    void adjust_attribute_name(FlyString const& old_name, FlyString const& new_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
@@ -136,7 +136,7 @@ public:
         }
     }
 
-    void adjust_foreign_attribute(const FlyString& old_name, const FlyString& prefix, const FlyString& local_name, const FlyString& namespace_)
+    void adjust_foreign_attribute(FlyString const& old_name, FlyString const& prefix, FlyString const& local_name, FlyString const& namespace_)
     {
         VERIFY(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
@@ -158,10 +158,10 @@ public:
 
     String to_string() const;
 
-    const auto& start_position() const { return m_start_position; }
-    const auto& end_position() const { return m_end_position; }
+    auto const& start_position() const { return m_start_position; }
+    auto const& end_position() const { return m_end_position; }
 
-    const auto& attributes() const
+    auto const& attributes() const
     {
         VERIFY(is_start_tag() || is_end_tag());
         return m_tag.attributes;
