@@ -52,6 +52,7 @@ public:
         DragMove,
         Drop,
         ThemeChange,
+        FontsChange,
         ScreenRectsChange,
         ActionEnter,
         ActionLeave,
@@ -421,6 +422,14 @@ class ThemeChangeEvent final : public Event {
 public:
     ThemeChangeEvent()
         : Event(Type::ThemeChange)
+    {
+    }
+};
+
+class FontsChangeEvent final : public Event {
+public:
+    FontsChangeEvent()
+        : Event(Type::FontsChange)
     {
     }
 };

@@ -72,6 +72,9 @@ void WindowServerConnection::update_system_fonts(const String& default_font_quer
     Gfx::FontDatabase::set_default_font_query(default_font_query);
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
     Window::update_all_windows({});
+    Window::for_each_window({}, [](auto& window) {
+        Core::EventLoop::current().post_event(window, make<FontsChangeEvent>());
+    });
 }
 
 void WindowServerConnection::paint(i32 window_id, Gfx::IntSize const& window_size, Vector<Gfx::IntRect> const& rects)

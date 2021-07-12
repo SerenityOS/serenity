@@ -511,6 +511,21 @@ void Window::handle_theme_change_event(ThemeChangeEvent& event)
     dispatch_theme_change(*m_main_widget.ptr(), dispatch_theme_change);
 }
 
+void Window::handle_fonts_change_event(FontsChangeEvent& event)
+{
+    if (!m_main_widget)
+        return;
+    auto dispatch_fonts_change = [&](auto& widget, auto recursive) {
+        widget.dispatch_event(event, this);
+        widget.for_each_child_widget([&](auto& widget) -> IterationDecision {
+            widget.dispatch_event(event, this);
+            recursive(widget, recursive);
+            return IterationDecision::Continue;
+        });
+    };
+    dispatch_fonts_change(*m_main_widget.ptr(), dispatch_fonts_change);
+}
+
 void Window::handle_screen_rects_change_event(ScreenRectsChangeEvent& event)
 {
     if (!m_main_widget)
@@ -593,6 +608,9 @@ void Window::event(Core::Event& event)
 
     if (event.type() == Event::ThemeChange)
         return handle_theme_change_event(static_cast<ThemeChangeEvent&>(event));
+
+    if (event.type() == Event::FontsChange)
+        return handle_fonts_change_event(static_cast<FontsChangeEvent&>(event));
 
     if (event.type() == Event::ScreenRectsChange)
         return handle_screen_rects_change_event(static_cast<ScreenRectsChangeEvent&>(event));

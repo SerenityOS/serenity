@@ -295,6 +295,8 @@ void Widget::event(Core::Event& event)
         return drop_event(static_cast<DropEvent&>(event));
     case Event::ThemeChange:
         return theme_change_event(static_cast<ThemeChangeEvent&>(event));
+    case Event::FontsChange:
+        return fonts_change_event(static_cast<FontsChangeEvent&>(event));
     case Event::Enter:
         return handle_enter_event(event);
     case Event::Leave:
@@ -555,6 +557,10 @@ void Widget::drop_event(DropEvent& event)
 }
 
 void Widget::theme_change_event(ThemeChangeEvent&)
+{
+}
+
+void Widget::fonts_change_event(FontsChangeEvent&)
 {
 }
 

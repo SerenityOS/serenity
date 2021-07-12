@@ -70,6 +70,7 @@ struct TextDocumentSpan;
 class TextDocumentUndoCommand;
 class TextEditor;
 class ThemeChangeEvent;
+class FontsChangeEvent;
 class Toolbar;
 class ToolbarContainer;
 class TreeView;
