@@ -163,22 +163,22 @@ public:
     T const& last() const { return at(size() - 1); }
     T& last() { return at(size() - 1); }
 
-    template<typename Callback>
-    Optional<T> first_matching(Callback callback)
+    template<typename TUnaryPredicate>
+    Optional<T> first_matching(TUnaryPredicate predicate)
     {
         for (size_t i = 0; i < size(); ++i) {
-            if (callback(at(i))) {
+            if (predicate(at(i))) {
                 return at(i);
             }
         }
         return {};
     }
 
-    template<typename Callback>
-    Optional<T> last_matching(Callback callback)
+    template<typename TUnaryPredicate>
+    Optional<T> last_matching(TUnaryPredicate predicate)
     {
         for (ssize_t i = size() - 1; i >= 0; --i) {
-            if (callback(at(i))) {
+            if (predicate(at(i))) {
                 return at(i);
             }
         }
@@ -220,10 +220,10 @@ public:
         VERIFY(did_allocate);
     }
 
-    template<typename C, typename U = T>
-    void insert_before_matching(U&& value, C callback, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
+    template<typename TUnaryPredicate, typename U = T>
+    void insert_before_matching(U&& value, TUnaryPredicate predicate, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
     {
-        auto did_allocate = try_insert_before_matching(forward<U>(value), callback, first_index, inserted_index);
+        auto did_allocate = try_insert_before_matching(forward<U>(value), predicate, first_index, inserted_index);
         VERIFY(did_allocate);
     }
 
@@ -397,11 +397,11 @@ public:
         m_size -= count;
     }
 
-    template<typename Callback>
-    bool remove_first_matching(Callback callback)
+    template<typename TUnaryPredicate>
+    bool remove_first_matching(TUnaryPredicate predicate)
     {
         for (size_t i = 0; i < size(); ++i) {
-            if (callback(at(i))) {
+            if (predicate(at(i))) {
                 remove(i);
                 return true;
             }
@@ -409,11 +409,11 @@ public:
         return false;
     }
 
-    template<typename Callback>
-    void remove_all_matching(Callback callback)
+    template<typename TUnaryPredicate>
+    void remove_all_matching(TUnaryPredicate predicate)
     {
         for (size_t i = 0; i < size();) {
-            if (callback(at(i))) {
+            if (predicate(at(i))) {
                 remove(i);
             } else {
                 ++i;
@@ -487,11 +487,11 @@ public:
         return true;
     }
 
-    template<typename C, typename U = T>
-    [[nodiscard]] bool try_insert_before_matching(U&& value, C callback, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
+    template<typename TUnaryPredicate, typename U = T>
+    [[nodiscard]] bool try_insert_before_matching(U&& value, TUnaryPredicate predicate, size_t first_index = 0, size_t* inserted_index = nullptr) requires(CanBePlacedInsideVector<U>)
     {
         for (size_t i = first_index; i < size(); ++i) {
-            if (callback(at(i))) {
+            if (predicate(at(i))) {
                 if (!try_insert(i, forward<U>(value)))
                     return false;
                 if (inserted_index)
