@@ -237,7 +237,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-fstack-clash-protection)
 endif()
 
-add_compile_definitions(DEBUG SANITIZE_PTRS)
+add_compile_definitions(SANITIZE_PTRS)
 set(CMAKE_CXX_FLAGS_STATIC "${CMAKE_CXX_FLAGS} -static")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fpic")
 
