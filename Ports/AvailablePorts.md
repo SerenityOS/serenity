@@ -118,6 +118,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`quake`](quake/)                      | Quake                                                      | 0.65                     | https://github.com/SerenityOS/SerenityQuake                                    |
 | [`quake2`](quake2/)                    | QuakeII                                                    | 0.1                      | https://github.com/SerenityOS/SerenityQuakeII                                  |
 | [`r0`](r0/)                            | r0 (minimalistic commandline hexadecimal editor)           | 0.8                      | https://github.com/radareorg/r0                                                |
+| [`vlang`](vlang/)                      | V programming language                                     | weekly.2021.28           | https://github.com/vlang/v                                                     |
 | [`radare2`](radare2/)                  | radare2 reverse engineering framework                      | 5.4.0-git                | https://github.com/radareorg/radare2                                           |
 | [`readline`](readline/)                | GNU Readline Library                                       | 8.1                      | https://tiswww.case.edu/php/chet/readline/rltop.html                           |
 | [`rsync`](rsync/)                      | rsync                                                      | 3.1.3                    | https://rsync.samba.org/                                                       |
