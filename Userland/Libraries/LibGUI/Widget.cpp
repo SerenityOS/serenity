@@ -562,6 +562,8 @@ void Widget::theme_change_event(ThemeChangeEvent&)
 
 void Widget::fonts_change_event(FontsChangeEvent&)
 {
+    if (m_default_font)
+        set_font(nullptr);
 }
 
 void Widget::screen_rects_change_event(ScreenRectsChangeEvent&)
@@ -705,10 +707,13 @@ void Widget::set_font(const Gfx::Font* font)
     if (m_font.ptr() == font)
         return;
 
-    if (!font)
+    if (!font) {
         m_font = Gfx::FontDatabase::default_font();
-    else
+        m_default_font = true;
+    } else {
         m_font = *font;
+        m_default_font = false;
+    }
 
     did_change_font();
     update();
