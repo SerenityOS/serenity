@@ -226,12 +226,12 @@ void SoundPlayerWidgetAdvancedView::set_nonlinear_volume_slider(bool nonlinear)
 void SoundPlayerWidgetAdvancedView::drop_event(GUI::DropEvent& event)
 {
     event.accept();
-    window()->move_to_front();
 
     if (event.mime_data().has_urls()) {
         auto urls = event.mime_data().urls();
         if (urls.is_empty())
             return;
+        window()->move_to_front();
         open_file(urls.first().path());
     }
 }
