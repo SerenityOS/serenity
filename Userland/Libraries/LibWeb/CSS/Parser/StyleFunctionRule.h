@@ -24,11 +24,6 @@ public:
 
     String const& name() const { return m_name; }
     Vector<StyleComponentValueRule> const& values() const { return m_values; }
-    // FIXME: This method is a temporary hack while much of the parser still expects a string, rather than tokens.
-    String values_as_string() const
-    {
-        return "";
-    }
 
     String to_string() const;
 

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -64,8 +65,7 @@ public:
             // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
             NthChildPattern nth_child_pattern;
 
-            // FIXME: This wants to be a Selector, rather than parsing it each time it is used.
-            String not_selector {};
+            NonnullRefPtrVector<Selector> not_selector {};
         };
         PseudoClass pseudo_class;
 
