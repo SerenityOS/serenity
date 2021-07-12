@@ -132,6 +132,8 @@ void MonitorSettingsWidget::apply_settings()
                 if (!restore_result.success()) {
                     GUI::MessageBox::show(window(), String::formatted("Error restoring settings: {}", restore_result.error_msg()),
                         "Unable to restore setting", GUI::MessageBox::Type::Error);
+                } else {
+                    load_current_settings();
                 }
             }
         } else {
