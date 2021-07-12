@@ -100,8 +100,6 @@ int main(int argc, char** argv)
         }
     };
     widget.on_drop = [&](auto& event) {
-        window->move_to_front();
-
         if (!event.mime_data().has_urls())
             return;
 
@@ -110,6 +108,7 @@ int main(int argc, char** argv)
         if (urls.is_empty())
             return;
 
+        window->move_to_front();
         widget.load_from_file(urls.first().path());
 
         for (size_t i = 1; i < urls.size(); ++i) {
