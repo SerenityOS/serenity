@@ -36,13 +36,9 @@ requires(IsIntegral<T>) struct Traits<T> : public GenericTraits<T> {
 };
 
 template<typename T>
-struct Traits<T*> : public GenericTraits<T*> {
-    static unsigned hash(const T* p)
-    {
-        return int_hash((unsigned)(__PTRDIFF_TYPE__)p);
-    }
+requires(IsPointer<T>) struct Traits<T> : public GenericTraits<T> {
+    static unsigned hash(T p) { return ptr_hash((FlatPtr)p); }
     static constexpr bool is_trivial() { return true; }
-    static bool equals(const T* a, const T* b) { return a == b; }
 };
 
 }
