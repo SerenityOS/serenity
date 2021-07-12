@@ -424,29 +424,31 @@ public:
         if (!peek() || peek() == '{' || peek() == ',' || is_combinator(peek()))
             return {};
 
-        CSS::Selector::SimpleSelector::Type type;
+        CSS::Selector::SimpleSelector simple_selector;
 
         if (peek() == '*') {
-            type = CSS::Selector::SimpleSelector::Type::Universal;
+            simple_selector.type = CSS::Selector::SimpleSelector::Type::Universal;
             consume_one();
-            CSS::Selector::SimpleSelector result;
-            result.type = type;
-            return result;
+            return simple_selector;
         }
 
         if (peek() == '.') {
-            type = CSS::Selector::SimpleSelector::Type::Class;
+            simple_selector.type = CSS::Selector::SimpleSelector::Type::Class;
             consume_one();
         } else if (peek() == '#') {
-            type = CSS::Selector::SimpleSelector::Type::Id;
+            simple_selector.type = CSS::Selector::SimpleSelector::Type::Id;
             consume_one();
         } else if (isalpha(peek())) {
-            type = CSS::Selector::SimpleSelector::Type::TagName;
+            simple_selector.type = CSS::Selector::SimpleSelector::Type::TagName;
+        } else if (peek() == '[') {
+            simple_selector.type = CSS::Selector::SimpleSelector::Type::Attribute;
         } else {
-            type = CSS::Selector::SimpleSelector::Type::Universal;
+            simple_selector.type = CSS::Selector::SimpleSelector::Type::Universal;
         }
 
-        if (type != CSS::Selector::SimpleSelector::Type::Universal) {
+        if ((simple_selector.type != CSS::Selector::SimpleSelector::Type::Universal)
+            && (simple_selector.type != CSS::Selector::SimpleSelector::Type::Attribute)) {
+
             while (is_valid_selector_char(peek()))
                 buffer.append(consume_one());
             PARSE_VERIFY(!buffer.is_empty());
@@ -454,18 +456,16 @@ public:
 
         auto value = String::copy(buffer);
 
-        if (type == CSS::Selector::SimpleSelector::Type::TagName) {
+        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::TagName) {
             // Some stylesheets use uppercase tag names, so here's a hack to just lowercase them internally.
             value = value.to_lowercase();
         }
 
-        CSS::Selector::SimpleSelector simple_selector;
-        simple_selector.type = type;
         simple_selector.value = value;
         buffer.clear();
 
-        if (peek() == '[') {
-            CSS::Selector::SimpleSelector::AttributeMatchType attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::HasAttribute;
+        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Attribute) {
+            CSS::Selector::SimpleSelector::Attribute::MatchType attribute_match_type = CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute;
             String attribute_name;
             String attribute_value;
             bool in_value = false;
@@ -475,10 +475,10 @@ public:
                 char ch = consume_one();
                 if (ch == '=' || (ch == '~' && peek() == '=')) {
                     if (ch == '=') {
-                        attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch;
+                        attribute_match_type = CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch;
                     } else if (ch == '~') {
                         consume_one();
-                        attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ContainsWord;
+                        attribute_match_type = CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord;
                     }
                     attribute_name = String::copy(buffer);
                     buffer.clear();
@@ -503,9 +503,9 @@ public:
             else
                 attribute_name = String::copy(buffer);
             buffer.clear();
-            simple_selector.attribute_match_type = attribute_match_type;
-            simple_selector.attribute_name = attribute_name;
-            simple_selector.attribute_value = attribute_value;
+            simple_selector.attribute.match_type = attribute_match_type;
+            simple_selector.attribute.name = attribute_name;
+            simple_selector.attribute.value = attribute_value;
             if (expected_end_of_attribute_selector != ']') {
                 if (!consume_specific(expected_end_of_attribute_selector))
                     return {};

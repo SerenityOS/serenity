@@ -314,31 +314,8 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             case CSS::Selector::SimpleSelector::Type::TagName:
                 type_description = "TagName";
                 break;
-            }
-            const char* attribute_match_type_description = "";
-            switch (simple_selector.attribute_match_type) {
-            case CSS::Selector::SimpleSelector::AttributeMatchType::None:
-                break;
-            case CSS::Selector::SimpleSelector::AttributeMatchType::HasAttribute:
-                attribute_match_type_description = "HasAttribute";
-                break;
-            case CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch:
-                attribute_match_type_description = "ExactValueMatch";
-                break;
-            case CSS::Selector::SimpleSelector::AttributeMatchType::ContainsWord:
-                attribute_match_type_description = "ContainsWord";
-                break;
-            case CSS::Selector::SimpleSelector::AttributeMatchType::ContainsString:
-                attribute_match_type_description = "ContainsString";
-                break;
-            case CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithSegment:
-                attribute_match_type_description = "StartsWithSegment";
-                break;
-            case CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithString:
-                attribute_match_type_description = "StartsWithString";
-                break;
-            case CSS::Selector::SimpleSelector::AttributeMatchType::EndsWithString:
-                attribute_match_type_description = "EndsWithString";
+            case CSS::Selector::SimpleSelector::Type::Attribute:
+                type_description = "Attribute";
                 break;
             }
 
@@ -406,8 +383,38 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             builder.appendff("{}:{}", type_description, simple_selector.value);
             if (simple_selector.pseudo_class != CSS::Selector::SimpleSelector::PseudoClass::None)
                 builder.appendff(" pseudo_class={}", pseudo_class_description);
-            if (simple_selector.attribute_match_type != CSS::Selector::SimpleSelector::AttributeMatchType::None) {
-                builder.appendff(" [{}, name='{}', value='{}']", attribute_match_type_description, simple_selector.attribute_name, simple_selector.attribute_value);
+
+            if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Attribute) {
+                char const* attribute_match_type_description = "";
+
+                switch (simple_selector.attribute.match_type) {
+                case CSS::Selector::SimpleSelector::Attribute::MatchType::None:
+                    break;
+                case CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute:
+                    type_description = "HasAttribute";
+                    break;
+                case CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
+                    type_description = "ExactValueMatch";
+                    break;
+                case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord:
+                    type_description = "ContainsWord";
+                    break;
+                case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
+                    type_description = "ContainsString";
+                    break;
+                case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment:
+                    type_description = "StartsWithSegment";
+                    break;
+                case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
+                    type_description = "StartsWithString";
+                    break;
+                case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
+                    type_description = "EndsWithString";
+                    break;
+                }
+                break;
+
+                builder.appendff(" [{}, name='{}', value='{}']", attribute_match_type_description, simple_selector.attribute.name, simple_selector.attribute.value);
             }
 
             if (i != complex_selector.compound_selector.size() - 1)
