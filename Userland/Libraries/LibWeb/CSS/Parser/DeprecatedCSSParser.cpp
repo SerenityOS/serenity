@@ -606,7 +606,11 @@ public:
                 pseudo_class.type = CSS::Selector::SimpleSelector::PseudoClass::Type::Checked;
             } else if (pseudo_name.starts_with("not", CaseSensitivity::CaseInsensitive)) {
                 pseudo_class.type = CSS::Selector::SimpleSelector::PseudoClass::Type::Not;
-                pseudo_class.not_selector = capture_selector_args(pseudo_name);
+                auto not_selector = Web::parse_selector(m_context, capture_selector_args(pseudo_name));
+                if (not_selector) {
+                    pseudo_class.not_selector.clear();
+                    pseudo_class.not_selector.append(not_selector.release_nonnull());
+                }
             } else {
                 dbgln("Unknown pseudo class: '{}'", pseudo_name);
                 return {};
