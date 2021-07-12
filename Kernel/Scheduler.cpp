@@ -105,6 +105,33 @@ Thread& Scheduler::pull_next_runnable_thread()
     return *Processor::idle_thread();
 }
 
+Thread* Scheduler::peek_next_runnable_thread()
+{
+    auto affinity_mask = 1u << Processor::current().id();
+
+    ScopedSpinLock lock(g_ready_queues_lock);
+    auto priority_mask = g_ready_queues_mask;
+    while (priority_mask != 0) {
+        auto priority = __builtin_ffsl(priority_mask);
+        VERIFY(priority > 0);
+        auto& ready_queue = g_ready_queues[--priority];
+        for (auto& thread : ready_queue.thread_list) {
+            VERIFY(thread.m_runnable_priority == (int)priority);
+            if (thread.is_active())
+                continue;
+            if (!(thread.affinity() & affinity_mask))
+                continue;
+            return &thread;
+        }
+        priority_mask &= ~(1u << priority);
+    }
+
+    // Unlike in pull_next_runnable_thread() we don't want to fall back to
+    // the idle thread. We just want to see if we have any other thread ready
+    // to be scheduled.
+    return nullptr;
+}
+
 bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
 {
     if (thread.is_idle_thread())
@@ -425,6 +452,16 @@ void Scheduler::timer_tick(const RegisterState& regs)
 
     if (current_thread->tick())
         return;
+
+    if (!current_thread->is_idle_thread() && !peek_next_runnable_thread()) {
+        // If no other thread is ready to be scheduled we don't need to
+        // switch to the idle thread. Just give the current thread another
+        // time slice and let it run!
+        current_thread->set_ticks_left(time_slice_for(*current_thread));
+        current_thread->did_schedule();
+        dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: No other threads ready, give {} another timeslice", Processor::id(), *current_thread);
+        return;
+    }
 
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(Processor::current().in_irq());

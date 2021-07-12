@@ -44,6 +44,7 @@ public:
     static void invoke_async();
     static void notify_finalizer();
     static Thread& pull_next_runnable_thread();
+    static Thread* peek_next_runnable_thread();
     static bool dequeue_runnable_thread(Thread&, bool = false);
     static void queue_runnable_thread(Thread&);
     static void dump_scheduler_state();
