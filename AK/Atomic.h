@@ -133,6 +133,12 @@ static inline void atomic_store(volatile T** var, std::nullptr_t, MemoryOrder or
     __atomic_store_n(const_cast<V**>(var), nullptr, order);
 }
 
+template<typename T>
+static inline bool atomic_is_lock_free(volatile T* ptr = nullptr) noexcept
+{
+    return __atomic_is_lock_free(sizeof(T), ptr);
+}
+
 template<typename T, MemoryOrder DefaultMemoryOrder = AK::MemoryOrder::memory_order_seq_cst>
 class Atomic {
     T m_value { 0 };
