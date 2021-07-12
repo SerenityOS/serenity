@@ -218,7 +218,7 @@ ALWAYS_INLINE bool AbstractPosixParser::parse_bracket_expression(Vector<CompareT
 
                 // FIXME: Parse collating element, this is needed when we have locale support
                 //        This could have impact on length parameter, I guess.
-                VERIFY_NOT_REACHED();
+                set_error(Error::InvalidCollationElement);
 
                 consume(TokenType::Period, Error::InvalidCollationElement);
                 consume(TokenType::RightBracket, Error::MismatchingBracket);
@@ -227,7 +227,7 @@ ALWAYS_INLINE bool AbstractPosixParser::parse_bracket_expression(Vector<CompareT
                 consume();
                 // FIXME: Parse collating element, this is needed when we have locale support
                 //        This could have impact on length parameter, I guess.
-                VERIFY_NOT_REACHED();
+                set_error(Error::InvalidCollationElement);
 
                 consume(TokenType::EqualSign, Error::InvalidCollationElement);
                 consume(TokenType::RightBracket, Error::MismatchingBracket);
@@ -711,6 +711,13 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
             return false;
 
         if (match(TokenType::LeftParen)) {
+            enum GroupMode {
+                Normal,
+                Lookahead,
+                NegativeLookahead,
+                Lookbehind,
+                NegativeLookbehind,
+            } group_mode { Normal };
             consume();
             Optional<StringView> capture_group_name;
             bool prevent_capture_group = false;
@@ -739,16 +746,16 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
 
                 } else if (match(TokenType::EqualSign)) { // positive lookahead
                     consume();
-                    VERIFY_NOT_REACHED();
+                    group_mode = Lookahead;
                 } else if (consume("!")) { // negative lookahead
-                    VERIFY_NOT_REACHED();
+                    group_mode = NegativeLookahead;
                 } else if (consume("<")) {
                     if (match(TokenType::EqualSign)) { // positive lookbehind
                         consume();
-                        VERIFY_NOT_REACHED();
+                        group_mode = Lookbehind;
                     }
                     if (consume("!")) // negative lookbehind
-                        VERIFY_NOT_REACHED();
+                        group_mode = NegativeLookbehind;
                 } else {
                     return set_error(Error::InvalidRepetitionMarker);
                 }
@@ -766,7 +773,23 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
             if (!parse_root(capture_group_bytecode, length))
                 return set_error(Error::InvalidPattern);
 
-            bytecode.extend(move(capture_group_bytecode));
+            switch (group_mode) {
+            case Normal:
+                bytecode.extend(move(capture_group_bytecode));
+                break;
+            case Lookahead:
+                bytecode.insert_bytecode_lookaround(move(capture_group_bytecode), ByteCode::LookAroundType::LookAhead, length);
+                break;
+            case NegativeLookahead:
+                bytecode.insert_bytecode_lookaround(move(capture_group_bytecode), ByteCode::LookAroundType::NegatedLookAhead, length);
+                break;
+            case Lookbehind:
+                bytecode.insert_bytecode_lookaround(move(capture_group_bytecode), ByteCode::LookAroundType::LookBehind, length);
+                break;
+            case NegativeLookbehind:
+                bytecode.insert_bytecode_lookaround(move(capture_group_bytecode), ByteCode::LookAroundType::NegatedLookBehind, length);
+                break;
+            }
 
             consume(TokenType::RightParen, Error::MismatchingParen);
 
