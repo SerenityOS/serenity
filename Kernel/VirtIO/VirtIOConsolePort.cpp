@@ -158,7 +158,7 @@ String VirtIOConsolePort::device_name() const
 
 KResultOr<NonnullRefPtr<FileDescription>> VirtIOConsolePort::open(int options)
 {
-    if (m_open)
+    if (!m_open)
         m_console.send_open_control_message(m_port, true);
 
     return File::open(options);
