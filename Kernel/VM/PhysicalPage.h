@@ -50,10 +50,17 @@ private:
 };
 
 struct PhysicalPageEntry {
-    // This structure either holds a valid PhysicalPage
-    // or a PhysicalAllocator's free list information!
     union {
-        PhysicalPage physical_page;
+        // If it's a live PhysicalPage object:
+        struct {
+            PhysicalPage physical_page;
+        } allocated;
+
+        // If it's an entry in a PhysicalZone::Bucket's freelist.
+        struct {
+            i16 next_index;
+            i16 prev_index;
+        } freelist;
     };
 };
 

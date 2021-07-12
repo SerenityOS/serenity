@@ -260,6 +260,7 @@ set(KERNEL_SOURCES
     VM/PageDirectory.cpp
     VM/PhysicalPage.cpp
     VM/PhysicalRegion.cpp
+    VM/PhysicalZone.cpp
     VM/PrivateInodeVMObject.cpp
     VM/ProcessPagingScope.cpp
     VM/PurgeablePageRanges.cpp
