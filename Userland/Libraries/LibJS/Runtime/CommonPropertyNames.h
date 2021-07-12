@@ -213,6 +213,7 @@ namespace JS {
     P(isFinite)                              \
     P(isFrozen)                              \
     P(isInteger)                             \
+    P(isLockFree)                            \
     P(isNaN)                                 \
     P(isPrototypeOf)                         \
     P(isSafeInteger)                         \

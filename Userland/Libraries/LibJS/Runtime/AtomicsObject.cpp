@@ -122,6 +122,7 @@ void AtomicsObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.and_, and_, 3, attr);
     define_native_function(vm.names.compareExchange, compare_exchange, 4, attr);
     define_native_function(vm.names.exchange, exchange, 3, attr);
+    define_native_function(vm.names.isLockFree, is_lock_free, 1, attr);
     define_native_function(vm.names.load, load, 2, attr);
     define_native_function(vm.names.or_, or_, 3, attr);
     define_native_function(vm.names.store, store, 3, attr);
@@ -260,6 +261,24 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
 #undef __JS_ENUMERATE
 
     VERIFY_NOT_REACHED();
+}
+
+// 25.4.7 Atomics.isLockFree ( size ), https://tc39.es/ecma262/#sec-atomics.islockfree
+JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::is_lock_free)
+{
+    auto size = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    if (size == 1)
+        return Value(AK::atomic_is_lock_free<u8>());
+    if (size == 2)
+        return Value(AK::atomic_is_lock_free<u16>());
+    if (size == 4)
+        return Value(true);
+    if (size == 8)
+        return Value(AK::atomic_is_lock_free<u64>());
+    return Value(false);
 }
 
 // 25.4.8 Atomics.load ( typedArray, index ), https://tc39.es/ecma262/#sec-atomics.load
