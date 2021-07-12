@@ -33,6 +33,8 @@ public:                                                                      \
     }                                                                        \
     void operator delete(void* ptr) noexcept                                 \
     {                                                                        \
+        if (!ptr)                                                            \
+            return;                                                          \
         slab_dealloc(ptr, sizeof(type));                                     \
     }                                                                        \
                                                                              \
