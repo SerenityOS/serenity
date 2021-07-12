@@ -9,6 +9,12 @@
 #include <AK/String.h>
 #include <LibC/memory.h>
 #include <LibC/unistd.h>
+#include <LibGfx/BMPLoader.h>
+#include <LibGfx/BMPWriter.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/JPGLoader.h>
+#include <LibGfx/PNGLoader.h>
+#include <LibGfx/PNGWriter.h>
 
 SpiceAgent::SpiceAgent(int fd, ClipboardServerConnection& connection)
     : m_fd(fd)
@@ -23,11 +29,30 @@ SpiceAgent::SpiceAgent(int fd, ClipboardServerConnection& connection)
             m_just_set_clip = false;
             return;
         }
-        auto grab_buffer = ClipboardGrab::make_buffer({ ClipboardType::Text });
+        auto mime = m_clipboard_connection.get_clipboard_data().mime_type();
+        Optional<ClipboardType> type = mime_type_to_clipboard_type(mime);
+        if (!type.has_value())
+            return;
+
+        auto grab_buffer = ClipboardGrab::make_buffer({ *type });
         send_message(grab_buffer);
     };
     auto buffer = AnnounceCapabilities::make_buffer(true, { Capability::ClipboardByDemand });
     send_message(buffer);
+}
+
+Optional<SpiceAgent::ClipboardType> SpiceAgent::mime_type_to_clipboard_type(const String& mime)
+{
+    if (mime == "text/plain")
+        return ClipboardType::Text;
+    else if (mime == "image/jpeg")
+        return ClipboardType::JPG;
+    else if (mime == "image/bmp")
+        return ClipboardType::BMP;
+    else if (mime == "image/png" || mime == "image/x-serenityos")
+        return ClipboardType::PNG;
+    else
+        return {};
 }
 
 void SpiceAgent::on_message_received()
@@ -47,19 +72,50 @@ void SpiceAgent::on_message_received()
         break;
     }
     case (u32)MessageType::ClipboardRequest: {
-        auto clip_data = m_clipboard_connection.get_clipboard_data().data();
-        ByteBuffer byte_buffer = ByteBuffer::copy(clip_data.data<void>(), clip_data.size());
-        auto clipboard_buffer = Clipboard::make_buffer(ClipboardType::Text, byte_buffer);
+        auto* request_message = reinterpret_cast<ClipboardRequest*>(message->data);
+        auto clipboard = m_clipboard_connection.get_clipboard_data();
+        auto& mime = clipboard.mime_type();
+        ByteBuffer byte_buffer;
+        if (mime == "image/x-serenityos") {
+            auto bitmap = m_clipboard_connection.get_bitmap();
+            byte_buffer = Gfx::PNGWriter::encode(*bitmap);
+        } else {
+            auto clip_data = clipboard.data();
+            byte_buffer = ByteBuffer::copy(clip_data.data<void>(), clip_data.size());
+        }
+        auto clipboard_buffer = Clipboard::make_buffer((ClipboardType)request_message->type, byte_buffer);
         send_message(clipboard_buffer);
         break;
     }
     case (u32)MessageType::ClipboardGrab: {
-        auto request_buffer = ClipboardRequest::make_buffer(ClipboardType::Text);
+        auto* grab_message = reinterpret_cast<ClipboardGrab*>(message->data);
+        auto found_type = ClipboardType::None;
+        for (size_t i = 0; i < (message->size / 4); i++) {
+            auto type = (ClipboardType)grab_message->types[i];
+            if (found_type == ClipboardType::None) {
+                found_type = static_cast<ClipboardType>(type);
+            } else if (found_type == ClipboardType::Text) {
+                switch (type) {
+                case ClipboardType::PNG:
+                case ClipboardType::BMP:
+                case ClipboardType::JPG:
+                    found_type = type;
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        if (found_type == ClipboardType::None)
+            return;
+
+        auto request_buffer = ClipboardRequest::make_buffer(found_type);
         send_message(request_buffer);
         break;
     }
     case (u32)MessageType::Clipboard: {
         auto* clipboard_message = reinterpret_cast<Clipboard*>(message->data);
+        auto type = (ClipboardType)clipboard_message->type;
         auto data_buffer = ByteBuffer::create_uninitialized(message->size - sizeof(u32));
 
         const auto total_bytes = message->size - sizeof(Clipboard);
@@ -74,9 +130,25 @@ void SpiceAgent::on_message_received()
         }
 
         m_just_set_clip = true;
-        auto anon_buffer = Core::AnonymousBuffer::create_with_size(data_buffer.size());
-        memcpy(anon_buffer.data<void>(), data_buffer.data(), data_buffer.size());
-        m_clipboard_connection.async_set_clipboard_data(anon_buffer, "text/plain", {});
+        if (type == ClipboardType::Text) {
+            auto anon_buffer = Core::AnonymousBuffer::create_with_size(data_buffer.size());
+            memcpy(anon_buffer.data<void>(), data_buffer.data(), data_buffer.size());
+            m_clipboard_connection.async_set_clipboard_data(anon_buffer, "text/plain", {});
+            return;
+        } else {
+            RefPtr<Gfx::Bitmap> bitmap;
+            if (type == ClipboardType::PNG) {
+                bitmap = Gfx::load_png_from_memory(data_buffer.data(), data_buffer.size());
+            } else if (type == ClipboardType::BMP) {
+                bitmap = Gfx::load_bmp_from_memory(data_buffer.data(), data_buffer.size());
+            } else if (type == ClipboardType::JPG) {
+                bitmap = Gfx::load_jpg_from_memory(data_buffer.data(), data_buffer.size());
+            } else {
+                dbgln("Unknown clipboard type: {}", (u32)type);
+                return;
+            }
+            m_clipboard_connection.set_bitmap(*bitmap);
+        }
         break;
     }
     default:
