@@ -144,10 +144,4 @@ void _entry(int argc, char** argv, char** envp)
     ELF::DynamicLinker::linker_main(move(main_program_name), main_program_fd, is_secure, argc, argv, envp);
     VERIFY_NOT_REACHED();
 }
-
-void _fini();
-
-void _fini()
-{
-}
 }

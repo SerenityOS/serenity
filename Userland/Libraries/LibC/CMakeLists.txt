@@ -65,9 +65,13 @@ file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
 if ("${SERENITY_ARCH}" STREQUAL "i686")
     set(ASM_SOURCES "arch/i386/setjmp.S")
     set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/i386/entry.S ../LibELF/Arch/i386/plt_trampoline.S)
+    set(CRTI_SOURCE "arch/i386/crti.S")
+    set(CRTN_SOURCE "arch/i386/crtn.S")
 elseif ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(ASM_SOURCES "arch/x86_64/setjmp.S")
     set(ELF_SOURCES ${ELF_SOURCES} ../LibELF/Arch/x86_64/entry.S ../LibELF/Arch/x86_64/plt_trampoline.S)
+    set(CRTI_SOURCE "arch/x86_64/crti.S")
+    set(CRTN_SOURCE "arch/x86_64/crtn.S")
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -DSERENITY_LIBC_BUILD")
@@ -81,6 +85,18 @@ add_library(crt0_shared STATIC crt0_shared.cpp)
 add_custom_command(
     TARGET crt0_shared
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
+)
+
+add_library(crti STATIC ${CRTI_SOURCE})
+add_custom_command(
+    TARGET crti
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crti> ${CMAKE_INSTALL_PREFIX}/usr/lib/crti.o
+)
+
+add_library(crtn STATIC ${CRTN_SOURCE})
+add_custom_command(
+    TARGET crtn
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
 )
 
 set_source_files_properties (ssp.cpp PROPERTIES COMPILE_FLAGS
@@ -118,7 +134,7 @@ set_property(
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
 serenity_libc(LibC c)
-add_dependencies(LibC crt0 crt0_shared)
+add_dependencies(LibC crti crt0 crt0_shared crtn)
 target_link_libraries(LibC ssp system)
 
 # We mark LibCStatic as a dependency of LibC because this triggers the build of the LibCStatic target
