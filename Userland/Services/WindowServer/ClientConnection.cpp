@@ -1115,4 +1115,21 @@ void ClientConnection::set_flash_flush(bool enabled)
     Compositor::the().set_flash_flush(enabled);
 }
 
+void ClientConnection::set_window_parent_from_client(i32 client_id, i32 parent_id, i32 child_id)
+{
+    auto child_window = window_from_id(child_id);
+    if (!child_window)
+        did_misbehave("SetWindowParentFromClient: Bad child window ID");
+
+    auto client_connection = from_client_id(client_id);
+    if (!client_connection)
+        did_misbehave("SetWindowParentFromClient: Bad client ID");
+
+    auto parent_window = client_connection->window_from_id(parent_id);
+    if (!parent_window)
+        did_misbehave("SetWindowParentFromClient: Bad parent window ID");
+
+    child_window->set_parent_window(*parent_window);
+}
+
 }

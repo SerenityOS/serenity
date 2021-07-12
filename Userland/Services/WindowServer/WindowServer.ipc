@@ -147,4 +147,6 @@ endpoint WindowServer
     get_desktop_display_scale(u32 screen_index) => (int desktop_display_scale)
 
     set_flash_flush(bool enabled) =|
+
+    set_window_parent_from_client(i32 client_id, i32 parent_id, i32 child_id) =|
 }
