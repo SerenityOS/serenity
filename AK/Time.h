@@ -15,6 +15,14 @@
 struct timeval;
 struct timespec;
 
+// Concept to detect types which look like timespec without requiring the type.
+template<typename T>
+concept TimeSpecType = requires(T t)
+{
+    t.tv_sec;
+    t.tv_nsec;
+};
+
 namespace AK {
 
 // Month and day start at 1. Month must be >= 1 and <= 12.
@@ -241,38 +249,39 @@ inline void timespec_to_timeval(const TimespecType& ts, TimevalType& tv)
     tv.tv_usec = ts.tv_nsec / 1000;
 }
 
-template<typename TimespecType>
-inline bool operator>=(const TimespecType& a, const TimespecType& b)
+template<TimeSpecType T>
+inline bool operator>=(const T& a, const T& b)
 {
     return a.tv_sec > b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec >= b.tv_nsec);
 }
 
-template<typename TimespecType>
-inline bool operator>(const TimespecType& a, const TimespecType& b)
+template<TimeSpecType T>
+inline bool operator>(const T& a, const T& b)
 {
     return a.tv_sec > b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec > b.tv_nsec);
 }
 
-template<typename TimespecType>
-inline bool operator<(const TimespecType& a, const TimespecType& b)
+template<TimeSpecType T>
+inline bool operator<(const T& a, const T& b)
 {
     return a.tv_sec < b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec < b.tv_nsec);
 }
 
-template<typename TimespecType>
-inline bool operator<=(const TimespecType& a, const TimespecType& b)
+template<TimeSpecType T>
+inline bool operator<=(const T& a, const T& b)
+
 {
     return a.tv_sec < b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec <= b.tv_nsec);
 }
 
-template<typename TimespecType>
-inline bool operator==(const TimespecType& a, const TimespecType& b)
+template<TimeSpecType T>
+inline bool operator==(const T& a, const T& b)
 {
     return a.tv_sec == b.tv_sec && a.tv_nsec == b.tv_nsec;
 }
 
-template<typename TimespecType>
-inline bool operator!=(const TimespecType& a, const TimespecType& b)
+template<TimeSpecType T>
+inline bool operator!=(const T& a, const T& b)
 {
     return a.tv_sec != b.tv_sec || a.tv_nsec != b.tv_nsec;
 }
