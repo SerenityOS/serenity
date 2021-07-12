@@ -125,6 +125,7 @@ namespace JS {
     P(escape)                                \
     P(eval)                                  \
     P(every)                                 \
+    P(exchange)                              \
     P(exec)                                  \
     P(exp)                                   \
     P(expm1)                                 \

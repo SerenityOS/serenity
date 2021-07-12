@@ -119,6 +119,7 @@ void AtomicsObject::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.add, add, 3, attr);
     define_native_function(vm.names.and_, and_, 3, attr);
+    define_native_function(vm.names.exchange, exchange, 3, attr);
     define_native_function(vm.names.load, load, 2, attr);
     define_native_function(vm.names.or_, or_, 3, attr);
     define_native_function(vm.names.store, store, 3, attr);
@@ -159,6 +160,24 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
         return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_and));
+    JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+
+    VERIFY_NOT_REACHED();
+}
+
+// 25.4.6 Atomics.exchange ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.exchange
+JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::exchange)
+{
+    auto* typed_array = typed_array_from(global_object, vm.argument(0));
+    if (!typed_array)
+        return {};
+
+    auto atomic_exchange = [](auto* storage, auto value) { return AK::atomic_exchange(storage, value); };
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    if (is<ClassName>(typed_array))                                                 \
+        return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_exchange));
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
