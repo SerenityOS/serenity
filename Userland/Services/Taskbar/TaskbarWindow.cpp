@@ -246,7 +246,8 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
 
 void TaskbarWindow::event(Core::Event& event)
 {
-    if (event.type() == GUI::Event::MouseDown) {
+    switch (event.type()) {
+    case GUI::Event::MouseDown: {
         // If the cursor is at the edge/corner of the screen but technically not within the start button (or other taskbar buttons),
         // we adjust it so that the nearest button ends up being clicked anyways.
 
@@ -262,6 +263,11 @@ void TaskbarWindow::event(Core::Event& event)
             Window::event(adjusted_event);
             return;
         }
+        break;
+    }
+    case GUI::Event::FontsChange:
+        m_start_button->set_font(Gfx::FontDatabase::default_font().bold_variant());
+        break;
     }
     Window::event(event);
 }
