@@ -193,6 +193,9 @@ ALWAYS_INLINE bool AbstractPosixParser::parse_bracket_expression(Vector<CompareT
             } else if (values.last().type == CharacterCompareType::Char) {
                 values.append({ CharacterCompareType::RangeExpressionDummy, 0 });
 
+                if (done())
+                    return set_error(Error::MismatchingBracket);
+
                 if (match(TokenType::HyphenMinus)) {
                     consume();
                     // Valid range, add ordinary character
