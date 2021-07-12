@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1360,6 +1360,19 @@ void Shell::add_entry_to_cache(const String& entry)
         index++;
     }
     cached_path.insert(index, entry);
+}
+
+void Shell::remove_entry_from_cache(const String& entry)
+{
+    size_t index { 0 };
+    auto match = binary_search(
+        cached_path.span(),
+        entry,
+        &index,
+        [](const auto& a, const auto& b) { return strcmp(a.characters(), b.characters()); });
+
+    if (match)
+        cached_path.remove(index);
 }
 
 void Shell::highlight(Line::Editor& editor) const
