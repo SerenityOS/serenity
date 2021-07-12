@@ -86,8 +86,16 @@ if [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ]; then
     die
 fi
 
+if [ -z "$SERENITY_SPICE" ] && "${SERENITY_QEMU_BIN}" -chardev help | grep -iq qemu-vdagent; then
+    SERENITY_SPICE_SERVER_CHARDEV="-chardev qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent"
+elif "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spicevmc; then
+    SERENITY_SPICE_SERVER_CHARDEV="-chardev spicevmc,id=vdagent,name=vdagent"
+fi
+
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
-if (uname -a | grep -iq WSL) || (uname -a | grep -iq microsoft); then
+if  [ "$SERENITY_SPICE" ]; then
+    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-spice-app}"
+elif (uname -a | grep -iq WSL) || (uname -a | grep -iq microsoft); then
     # QEMU for windows does not like gl=on, so detect if we are building in wsl, and if so, disable it
     # Also, when using the GTK backend we run into this problem: https://github.com/SerenityOS/serenity/issues/7657
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=off}"
@@ -126,10 +134,12 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device $SERENITY_QEMU_DISPLAY_DEVICE
 -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
 -usb
--device virtio-serial
+$SERENITY_SPICE_SERVER_CHARDEV
+-device virtio-serial,max_ports=2
 -chardev stdio,id=stdout,mux=on
 -device virtconsole,chardev=stdout
 -device isa-debugcon,chardev=stdout
+-device virtserialport,chardev=vdagent,nr=1
 -device virtio-rng-pci
 -soundhw pcspk
 -device sb16
@@ -137,6 +147,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
 -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
 -device ich9-ahci,bus=bridge3
+-spice port=5930,agent-mouse=off,disable-ticketing=on
 "
 
 [ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
