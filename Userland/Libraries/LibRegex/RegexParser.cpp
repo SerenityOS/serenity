@@ -497,7 +497,8 @@ bool PosixBasicParser::parse_one_char_or_collation_element(ByteCode& bytecode, s
 
         consume(TokenType::RightBracket, Error::MismatchingBracket);
 
-        bytecode.insert_bytecode_compare_values(move(values));
+        if (!has_error())
+            bytecode.insert_bytecode_compare_values(move(values));
         match_length_minimum += bracket_minimum_length;
         return !has_error();
     }
@@ -617,7 +618,8 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_bracket_expression(ByteCode& stack
     if (!AbstractPosixParser::parse_bracket_expression(values, match_length_minimum))
         return false;
 
-    stack.insert_bytecode_compare_values(move(values));
+    if (!has_error())
+        stack.insert_bytecode_compare_values(move(values));
 
     return !has_error();
 }
