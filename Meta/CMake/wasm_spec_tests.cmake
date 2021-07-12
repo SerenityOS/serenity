@@ -30,6 +30,11 @@ if(INCLUDE_WASM_SPEC_TESTS)
         foreach(PATH ${WASM_TESTS})
             get_filename_component(NAME ${PATH} NAME_WLE)
             message(STATUS "Generating test cases for WebAssembly test ${NAME}...")
+            # FIXME: GH 8668. loop_0.wasm causes CI timeout
+            if (NAME STREQUAL "loop")
+                message(STATUS "Skipping generation of ${NAME} test due to timeouts")
+                continue()
+            endif()
             execute_process(
                 COMMAND env SKIP_PRETTIER=${SKIP_PRETTIER} bash ${SOURCE_DIR}/Meta/generate-libwasm-spec-test.sh "${PATH}" "${SOURCE_DIR}/Userland/Libraries/LibWasm/Tests/Spec" "${NAME}" "${WASM_SPEC_TEST_PATH}")
         endforeach()
