@@ -8,6 +8,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/HashTable.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
 #include <Kernel/Arch/x86/PageFault.h>
@@ -244,9 +245,9 @@ private:
 
     SystemMemoryInfo m_system_memory_info;
 
-    Vector<PhysicalRegion> m_user_physical_regions;
-    Vector<PhysicalRegion> m_super_physical_regions;
-    Optional<PhysicalRegion> m_physical_pages_region;
+    NonnullOwnPtrVector<PhysicalRegion> m_user_physical_regions;
+    NonnullOwnPtrVector<PhysicalRegion> m_super_physical_regions;
+    OwnPtr<PhysicalRegion> m_physical_pages_region;
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };
 

@@ -257,7 +257,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 
             // Assign page to user physical physical_region.
             if (!physical_region || physical_region->upper().offset(PAGE_SIZE) != addr) {
-                m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
+                m_user_physical_regions.append(PhysicalRegion::try_create(addr, addr).release_nonnull());
                 physical_region = &m_user_physical_regions.last();
             } else {
                 physical_region->expand(physical_region->lower(), addr);
@@ -266,9 +266,10 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     }
 
     // Append statically-allocated super physical physical_region.
-    m_super_physical_regions.append(PhysicalRegion::create(
+    m_super_physical_regions.append(PhysicalRegion::try_create(
         PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages))),
-        PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages + sizeof(super_pages))))));
+        PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages + sizeof(super_pages)))))
+                                        .release_nonnull());
 
     for (auto& region : m_super_physical_regions)
         m_system_memory_info.super_physical_pages += region.finalize_capacity();
@@ -293,11 +294,15 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         dmesgln("MM: {} range @ {} - {} (size 0x{:x})", UserMemoryRangeTypeNames[to_underlying(used_range.type)], used_range.start, used_range.end.offset(-1), used_range.end.as_ptr() - used_range.start.as_ptr());
     }
 
-    for (auto& region : m_super_physical_regions)
+    for (auto& region : m_super_physical_regions) {
         dmesgln("MM: Super physical region: {} - {} (size 0x{:x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
+        region.initialize_zones();
+    }
 
-    for (auto& region : m_user_physical_regions)
+    for (auto& region : m_user_physical_regions) {
         dmesgln("MM: User physical region: {} - {} (size 0x{:x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
+        region.initialize_zones();
+    }
 }
 
 extern "C" PageDirectoryEntry boot_pd3[1024];
@@ -337,9 +342,12 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
 
     // Now that we know how much memory we need for a contiguous array of PhysicalPage instances, find a memory region that can fit it
     PhysicalRegion* found_region { nullptr };
-    for (auto& region : m_user_physical_regions) {
+    Optional<size_t> found_region_index;
+    for (size_t i = 0; i < m_user_physical_regions.size(); ++i) {
+        auto& region = m_user_physical_regions[i];
         if (region.size() >= physical_page_array_pages_and_page_tables_count) {
             found_region = &region;
+            found_region_index = i;
             break;
         }
     }
@@ -354,12 +362,9 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
 
     if (found_region->size() == physical_page_array_pages_and_page_tables_count) {
         // We're stealing the entire region
-        m_physical_pages_region = move(*found_region);
-        m_user_physical_regions.remove_first_matching([&](auto& region) {
-            return &region == found_region;
-        });
+        m_physical_pages_region = m_user_physical_regions.take(*found_region_index);
     } else {
-        m_physical_pages_region = found_region->take_pages_from_beginning(physical_page_array_pages_and_page_tables_count);
+        m_physical_pages_region = found_region->try_take_pages_from_beginning(physical_page_array_pages_and_page_tables_count);
     }
     m_used_memory_ranges.append({ UsedMemoryRangeType::PhysicalPages, m_physical_pages_region->lower(), m_physical_pages_region->upper() });
 
@@ -445,7 +450,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         auto pt_paddr = page_tables_base.offset(pt_index * PAGE_SIZE);
         auto physical_page_index = PhysicalAddress::physical_page_index(pt_paddr.get());
         auto& physical_page_entry = m_physical_page_entries[physical_page_index];
-        auto physical_page = adopt_ref(*new (&physical_page_entry.physical_page) PhysicalPage(false));
+        auto physical_page = adopt_ref(*new (&physical_page_entry.allocated.physical_page) PhysicalPage(false));
         auto result = kernel_page_tables.set(virtual_page_array_current_page & ~0x1fffff, move(physical_page));
         VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 
@@ -465,7 +470,7 @@ PhysicalPageEntry& MemoryManager::get_physical_page_entry(PhysicalAddress physic
 
 PhysicalAddress MemoryManager::get_physical_address(PhysicalPage const& physical_page)
 {
-    PhysicalPageEntry const& physical_page_entry = *reinterpret_cast<PhysicalPageEntry const*>((u8 const*)&physical_page - __builtin_offsetof(PhysicalPageEntry, physical_page));
+    PhysicalPageEntry const& physical_page_entry = *reinterpret_cast<PhysicalPageEntry const*>((u8 const*)&physical_page - __builtin_offsetof(PhysicalPageEntry, allocated.physical_page));
     VERIFY(m_physical_page_entries);
     size_t physical_page_entry_index = &physical_page_entry - m_physical_page_entries;
     VERIFY(physical_page_entry_index < m_physical_page_entries_count);
