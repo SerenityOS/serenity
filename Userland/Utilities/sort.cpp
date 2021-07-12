@@ -41,7 +41,7 @@ int main(int argc, char** argv)
         return true;
     };
 
-    if (!files.size()) {
+    if (files.is_empty()) {
         for (;;) {
             char* buffer = nullptr;
             ssize_t buflen = 0;
