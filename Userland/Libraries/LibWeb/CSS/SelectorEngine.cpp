@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,6 +23,38 @@ static bool matches_hover_pseudo_class(DOM::Element const& element)
     if (&element == hovered_node)
         return true;
     return element.is_ancestor_of(*hovered_node);
+}
+
+static bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& attribute, DOM::Element const& element)
+{
+    switch (attribute.match_type) {
+    case CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute:
+        return element.has_attribute(attribute.name);
+        break;
+    case CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
+        return element.attribute(attribute.name) == attribute.value;
+        break;
+    case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord:
+        return element.attribute(attribute.name).split(' ').contains_slow(attribute.value);
+        break;
+    case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
+        return element.attribute(attribute.name).contains(attribute.value);
+        break;
+    case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment:
+        return element.attribute(attribute.name).split('-').first() == attribute.value;
+        break;
+    case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
+        return element.attribute(attribute.name).starts_with(attribute.value);
+        break;
+    case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
+        return element.attribute(attribute.name).ends_with(attribute.value);
+        break;
+    case CSS::Selector::SimpleSelector::Attribute::MatchType::None:
+        VERIFY_NOT_REACHED();
+        break;
+    }
+
+    return false;
 }
 
 static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element const& element)
@@ -171,39 +204,6 @@ static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element
         break;
     }
 
-    switch (component.attribute_match_type) {
-    case CSS::Selector::SimpleSelector::AttributeMatchType::HasAttribute:
-        if (!element.has_attribute(component.attribute_name))
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch:
-        if (element.attribute(component.attribute_name) != component.attribute_value)
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::AttributeMatchType::ContainsWord:
-        if (!element.attribute(component.attribute_name).split(' ').contains_slow(component.attribute_value))
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::AttributeMatchType::ContainsString:
-        if (!element.attribute(component.attribute_name).contains(component.attribute_value))
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithSegment:
-        if (element.attribute(component.attribute_name).split('-').first() != component.attribute_value)
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::AttributeMatchType::StartsWithString:
-        if (!element.attribute(component.attribute_name).starts_with(component.attribute_value))
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::AttributeMatchType::EndsWithString:
-        if (!element.attribute(component.attribute_name).ends_with(component.attribute_value))
-            return false;
-        break;
-    default:
-        break;
-    }
-
     switch (component.type) {
     case CSS::Selector::SimpleSelector::Type::Universal:
         return true;
@@ -213,6 +213,8 @@ static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element
         return element.has_class(component.value);
     case CSS::Selector::SimpleSelector::Type::TagName:
         return component.value == element.local_name();
+    case CSS::Selector::SimpleSelector::Type::Attribute:
+        return matches_attribute(component.attribute, element);
     default:
         VERIFY_NOT_REACHED();
     }

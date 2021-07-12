@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,6 +22,7 @@ public:
             TagName,
             Id,
             Class,
+            Attribute,
         };
         Type type { Type::Invalid };
 
@@ -56,20 +58,22 @@ public:
 
         FlyString value;
 
-        enum class AttributeMatchType {
-            None,
-            HasAttribute,
-            ExactValueMatch,
-            ContainsWord,      // [att~=val]
-            ContainsString,    // [att*=val]
-            StartsWithSegment, // [att|=val]
-            StartsWithString,  // [att^=val]
-            EndsWithString,    // [att$=val]
+        struct Attribute {
+            enum class MatchType {
+                None,
+                HasAttribute,
+                ExactValueMatch,
+                ContainsWord,      // [att~=val]
+                ContainsString,    // [att*=val]
+                StartsWithSegment, // [att|=val]
+                StartsWithString,  // [att^=val]
+                EndsWithString,    // [att$=val]
+            };
+            MatchType match_type { MatchType::None };
+            FlyString name;
+            String value;
         };
-
-        AttributeMatchType attribute_match_type { AttributeMatchType::None };
-        FlyString attribute_name;
-        String attribute_value;
+        Attribute attribute;
 
         struct NthChildPattern {
             int step_size = 0;

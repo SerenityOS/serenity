@@ -243,26 +243,18 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
         if (check_for_eof_or_whitespace(current_value))
             return {};
 
-        Selector::SimpleSelector::Type type;
-        String value;
+        Selector::SimpleSelector simple_selector;
         // FIXME: Handle namespace prefixes.
 
         if (current_value.is(Token::Type::Delim) && ((Token)current_value).delim() == "*") {
-
-            // FIXME: Handle selectors like `*.foo`.
-            type = Selector::SimpleSelector::Type::Universal;
-            Selector::SimpleSelector result;
-            result.type = type;
-            return result;
-        }
-
-        if (current_value.is(Token::Type::Hash)) {
+            simple_selector.type = Selector::SimpleSelector::Type::Universal;
+        } else if (current_value.is(Token::Type::Hash)) {
             if (((Token)current_value).m_hash_type != Token::HashType::Id) {
                 dbgln("Selector contains hash token that is not an id: {}", current_value.to_debug_string());
                 return {};
             }
-            type = Selector::SimpleSelector::Type::Id;
-            value = ((Token)current_value).m_value.to_string();
+            simple_selector.type = Selector::SimpleSelector::Type::Id;
+            simple_selector.value = ((Token)current_value).m_value.to_string();
         } else if (current_value.is(Token::Type::Delim) && ((Token)current_value).delim() == ".") {
             current_value = tokens.next_token();
             if (check_for_eof_or_whitespace(current_value))
@@ -273,33 +265,19 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                 return {};
             }
 
-            type = Selector::SimpleSelector::Type::Class;
-            value = current_value.token().ident().to_lowercase_string();
-        } else if (current_value.is(Token::Type::Delim) && current_value.token().delim() == "*") {
-            type = Selector::SimpleSelector::Type::Universal;
+            simple_selector.type = Selector::SimpleSelector::Type::Class;
+            simple_selector.value = current_value.token().ident().to_lowercase_string();
         } else if (current_value.is(Token::Type::Ident)) {
-            type = Selector::SimpleSelector::Type::TagName;
-            value = current_value.token().ident().to_lowercase_string();
-        } else if ((current_value.is(Token::Type::Delim) && current_value.token().delim() == ":")
-            || (current_value.is_block() && current_value.block().is_square())) {
+            simple_selector.type = Selector::SimpleSelector::Type::TagName;
+            simple_selector.value = current_value.token().ident().to_lowercase_string();
+        } else if ((current_value.is(Token::Type::Delim) && current_value.token().delim() == ":")) {
             // FIXME: This is a temporary hack until we make the Selector::SimpleSelector::Type changes.
-            type = Selector::SimpleSelector::Type::Universal;
+            simple_selector.type = Selector::SimpleSelector::Type::Universal;
             tokens.reconsume_current_input_token();
-        } else {
-            dbgln("Invalid simple selector!");
-            return {};
-        }
+        } else if (current_value.is_block() && current_value.block().is_square()) {
+            simple_selector.type = Selector::SimpleSelector::Type::Attribute;
 
-        Selector::SimpleSelector simple_selector;
-        simple_selector.type = type;
-        simple_selector.value = value;
-
-        current_value = tokens.next_token();
-        if (check_for_eof_or_whitespace(current_value))
-            return simple_selector;
-
-        // FIXME: Attribute selectors want to be their own Selector::SimpleSelector::Type according to the spec.
-        if (current_value.is_block() && current_value.block().is_square()) {
+            auto& attribute = simple_selector.attribute;
 
             Vector<StyleComponentValueRule> const& attribute_parts = current_value.block().values();
 
@@ -315,8 +293,8 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                 return {};
             }
 
-            simple_selector.attribute_match_type = Selector::SimpleSelector::AttributeMatchType::HasAttribute;
-            simple_selector.attribute_name = attribute_part.token().ident();
+            attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::HasAttribute;
+            attribute.name = attribute_part.token().ident();
 
             if (attribute_parts.size() == 1)
                 return simple_selector;
@@ -329,7 +307,7 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
             }
 
             if (delim_part.token().delim() == "=") {
-                simple_selector.attribute_match_type = Selector::SimpleSelector::AttributeMatchType::ExactValueMatch;
+                attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch;
                 attribute_index++;
             } else {
                 attribute_index++;
@@ -345,19 +323,19 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                 }
 
                 if (delim_part.token().delim() == "~") {
-                    simple_selector.attribute_match_type = Selector::SimpleSelector::AttributeMatchType::ContainsWord;
+                    attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsWord;
                     attribute_index++;
                 } else if (delim_part.token().delim() == "*") {
-                    simple_selector.attribute_match_type = Selector::SimpleSelector::AttributeMatchType::ContainsString;
+                    attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::ContainsString;
                     attribute_index++;
                 } else if (delim_part.token().delim() == "|") {
-                    simple_selector.attribute_match_type = Selector::SimpleSelector::AttributeMatchType::StartsWithSegment;
+                    attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment;
                     attribute_index++;
                 } else if (delim_part.token().delim() == "^") {
-                    simple_selector.attribute_match_type = Selector::SimpleSelector::AttributeMatchType::StartsWithString;
+                    attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::StartsWithString;
                     attribute_index++;
                 } else if (delim_part.token().delim() == "$") {
-                    simple_selector.attribute_match_type = Selector::SimpleSelector::AttributeMatchType::EndsWithString;
+                    attribute.match_type = Selector::SimpleSelector::Attribute::MatchType::EndsWithString;
                     attribute_index++;
                 }
             }
@@ -372,11 +350,17 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                 dbgln("Expected a string or ident for the value to match attribute against, got: '{}'", value_part.to_debug_string());
                 return {};
             }
-            simple_selector.attribute_value = value_part.token().is(Token::Type::Ident) ? value_part.token().ident() : value_part.token().string();
+            attribute.value = value_part.token().is(Token::Type::Ident) ? value_part.token().ident() : value_part.token().string();
 
             // FIXME: Handle case-sensitivity suffixes. https://www.w3.org/TR/selectors-4/#attribute-case
-            return simple_selector;
+        } else {
+            dbgln("Invalid simple selector!");
+            return {};
         }
+
+        current_value = tokens.next_token();
+        if (check_for_eof_or_whitespace(current_value))
+            return simple_selector;
 
         // FIXME: Pseudo-class selectors want to be their own Selector::SimpleSelector::Type according to the spec.
         if (current_value.is(Token::Type::Colon)) {
