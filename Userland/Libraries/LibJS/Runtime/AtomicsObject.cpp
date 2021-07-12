@@ -6,6 +6,7 @@
 
 #include <AK/Atomic.h>
 #include <AK/ByteBuffer.h>
+#include <AK/Endian.h>
 #include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
@@ -119,6 +120,7 @@ void AtomicsObject::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.add, add, 3, attr);
     define_native_function(vm.names.and_, and_, 3, attr);
+    define_native_function(vm.names.compareExchange, compare_exchange, 4, attr);
     define_native_function(vm.names.exchange, exchange, 3, attr);
     define_native_function(vm.names.load, load, 2, attr);
     define_native_function(vm.names.or_, or_, 3, attr);
@@ -160,6 +162,82 @@ JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::and_)
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
     if (is<ClassName>(typed_array))                                                 \
         return perform_atomic_operation<Type>(global_object, *typed_array, move(atomic_and));
+    JS_ENUMERATE_TYPED_ARRAYS
+#undef __JS_ENUMERATE
+
+    VERIFY_NOT_REACHED();
+}
+
+template<typename T>
+static Value atomic_compare_exchange_impl(GlobalObject& global_object, TypedArrayBase& typed_array)
+{
+    auto& vm = global_object.vm();
+
+    validate_integer_typed_array(global_object, typed_array);
+    if (vm.exception())
+        return {};
+
+    auto indexed_position = validate_atomic_access(global_object, typed_array, vm.argument(1));
+    if (!indexed_position.has_value())
+        return {};
+
+    Value expected;
+    Value replacement;
+    if (typed_array.content_type() == TypedArrayBase::ContentType::BigInt) {
+        expected = vm.argument(2).to_bigint(global_object);
+        if (vm.exception())
+            return {};
+        replacement = vm.argument(3).to_bigint(global_object);
+        if (vm.exception())
+            return {};
+    } else {
+        expected = Value(vm.argument(2).to_integer_or_infinity(global_object));
+        if (vm.exception())
+            return {};
+        replacement = Value(vm.argument(3).to_integer_or_infinity(global_object));
+        if (vm.exception())
+            return {};
+    }
+
+    if (typed_array.viewed_array_buffer()->is_detached()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return {};
+    }
+
+    constexpr bool is_little_endian = __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__;
+
+    auto& block = typed_array.viewed_array_buffer()->buffer();
+    auto expected_bytes = numeric_to_raw_bytes<T>(global_object, expected, is_little_endian);
+    auto replacement_bytes = numeric_to_raw_bytes<T>(global_object, replacement, is_little_endian);
+
+    // FIXME: Implement SharedArrayBuffer case.
+
+    auto raw_bytes_read = block.slice(*indexed_position, sizeof(T));
+
+    if constexpr (IsFloatingPoint<T>) {
+        VERIFY_NOT_REACHED();
+    } else {
+        using U = Conditional<IsSame<ClampedU8, T>, u8, T>;
+
+        auto* v = reinterpret_cast<U*>(block.span().slice(*indexed_position).data());
+        auto* e = reinterpret_cast<U*>(expected_bytes.data());
+        auto* r = reinterpret_cast<U*>(replacement_bytes.data());
+        (void)AK::atomic_compare_exchange_strong(v, *e, *r);
+    }
+
+    return raw_bytes_to_numeric<T>(global_object, raw_bytes_read, is_little_endian);
+}
+
+// 25.4.5 Atomics.compareExchange ( typedArray, index, expectedValue, replacementValue ), https://tc39.es/ecma262/#sec-atomics.compareexchange
+JS_DEFINE_NATIVE_FUNCTION(AtomicsObject::compare_exchange)
+{
+    auto* typed_array = typed_array_from(global_object, vm.argument(0));
+    if (!typed_array)
+        return {};
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
+    if (is<ClassName>(typed_array))                                                 \
+        return atomic_compare_exchange_impl<Type>(global_object, *typed_array);
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
