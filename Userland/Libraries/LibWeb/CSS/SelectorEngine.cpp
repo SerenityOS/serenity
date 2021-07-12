@@ -57,103 +57,75 @@ static bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& at
     return false;
 }
 
-static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element const& element)
+static bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass const& pseudo_class, DOM::Element const& element)
 {
-    switch (component.pseudo_element) {
-    case CSS::Selector::SimpleSelector::PseudoElement::None:
+    switch (pseudo_class.type) {
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::None:
         break;
-    default:
-        // FIXME: Implement pseudo-elements.
-        return false;
-    }
-
-    switch (component.pseudo_class) {
-    case CSS::Selector::SimpleSelector::PseudoClass::None:
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::Link:
-        if (!element.is_link())
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::Visited:
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Link:
+        return element.is_link();
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Visited:
         // FIXME: Maybe match this selector sometimes?
         return false;
-    case CSS::Selector::SimpleSelector::PseudoClass::Active:
-        if (!element.is_active())
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::Hover:
-        if (!matches_hover_pseudo_class(element))
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::Focus:
-        if (!element.is_focused())
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::FirstChild:
-        if (element.previous_element_sibling())
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::LastChild:
-        if (element.next_element_sibling())
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::OnlyChild:
-        if (element.previous_element_sibling() || element.next_element_sibling())
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::Empty:
-        if (element.first_child_of_type<DOM::Element>() || element.first_child_of_type<DOM::Text>())
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::Root:
-        if (!is<HTML::HTMLElement>(element))
-            return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::FirstOfType:
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Active:
+        return element.is_active();
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Hover:
+        return matches_hover_pseudo_class(element);
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Focus:
+        return element.is_focused();
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstChild:
+        return !element.previous_element_sibling();
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::LastChild:
+        return !element.next_element_sibling();
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::OnlyChild:
+        return !(element.previous_element_sibling() || element.next_element_sibling());
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Empty:
+        return !(element.first_child_of_type<DOM::Element>() || element.first_child_of_type<DOM::Text>());
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
+        return is<HTML::HTMLElement>(element);
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
         for (auto* sibling = element.previous_element_sibling(); sibling; sibling = sibling->previous_element_sibling()) {
             if (sibling->tag_name() == element.tag_name())
                 return false;
         }
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::LastOfType:
+        return true;
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::LastOfType:
         for (auto* sibling = element.next_element_sibling(); sibling; sibling = sibling->next_element_sibling()) {
             if (sibling->tag_name() == element.tag_name())
                 return false;
         }
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::Disabled:
+        return true;
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Disabled:
         if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
             return false;
         if (!element.has_attribute("disabled"))
             return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::Enabled:
+        return true;
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Enabled:
         if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
             return false;
         if (element.has_attribute("disabled"))
             return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::Checked:
+        return true;
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
         if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
             return false;
         if (!element.has_attribute("checked"))
             return false;
-        break;
-    case CSS::Selector::SimpleSelector::PseudoClass::Not: {
-        if (component.not_selector.is_empty())
+        return true;
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Not: {
+        if (pseudo_class.not_selector.is_empty())
             return false;
-        auto not_selector = Web::parse_selector(CSS::DeprecatedParsingContext(element), component.not_selector);
+        auto not_selector = Web::parse_selector(CSS::DeprecatedParsingContext(element), pseudo_class.not_selector);
         if (!not_selector.has_value())
             return false;
         auto not_matches = matches(not_selector.value(), element);
-        if (not_matches)
-            return false;
-        break;
+        return !not_matches;
     }
-    case CSS::Selector::SimpleSelector::PseudoClass::NthChild:
-    case CSS::Selector::SimpleSelector::PseudoClass::NthLastChild:
-        auto const step_size = component.nth_child_pattern.step_size;
-        auto const offset = component.nth_child_pattern.offset;
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild:
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
+        auto const step_size = pseudo_class.nth_child_pattern.step_size;
+        auto const offset = pseudo_class.nth_child_pattern.offset;
         if (step_size == 0 && offset == 0)
             return false; // "If both a and b are equal to zero, the pseudo-class represents no element in the document tree."
 
@@ -162,7 +134,7 @@ static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element
             return false;
 
         int index = 1;
-        if (component.pseudo_class == CSS::Selector::SimpleSelector::PseudoClass::NthChild) {
+        if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild) {
             for (auto* child = parent->first_child_of_type<DOM::Element>(); child && child != &element; child = child->next_element_sibling())
                 ++index;
         } else {
@@ -172,16 +144,10 @@ static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element
 
         if (step_size < 0) {
             // When "step_size" is negative, selector represents first "offset" elements in document tree.
-            if (offset <= 0 || index > offset)
-                return false;
-            else
-                break;
+            return !(offset <= 0 || index > offset);
         } else if (step_size == 1) {
             // When "step_size == 1", selector represents last "offset" elements in document tree.
-            if (offset < 0 || index < offset)
-                return false;
-            else
-                break;
+            return !(offset < 0 || index < offset);
         }
 
         // Like "a % b", but handles negative integers correctly.
@@ -201,7 +167,20 @@ static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element
         } else if (canonical_modulo(index - offset, step_size) != 0) {
             return false;
         }
+        return true;
+    }
+
+    return false;
+}
+
+static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element const& element)
+{
+    switch (component.pseudo_element) {
+    case CSS::Selector::SimpleSelector::PseudoElement::None:
         break;
+    default:
+        // FIXME: Implement pseudo-elements.
+        return false;
     }
 
     switch (component.type) {
@@ -215,6 +194,8 @@ static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element
         return component.value == element.local_name();
     case CSS::Selector::SimpleSelector::Type::Attribute:
         return matches_attribute(component.attribute, element);
+    case CSS::Selector::SimpleSelector::Type::PseudoClass:
+        return matches_pseudo_class(component.pseudo_class, element);
     default:
         VERIFY_NOT_REACHED();
     }

@@ -49,6 +49,8 @@ u32 Selector::specificity() const
 
 Selector::SimpleSelector::NthChildPattern Selector::SimpleSelector::NthChildPattern::parse(StringView const& args)
 {
+    // FIXME: Remove this when the DeprecatedCSSParser is gone.
+    // The new Parser::parse_nth_child_pattern() does the same as this, using Tokens.
     CSS::Selector::SimpleSelector::NthChildPattern pattern;
     if (args.equals_ignoring_case("odd")) {
         pattern.step_size = 2;
