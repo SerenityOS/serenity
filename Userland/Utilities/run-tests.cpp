@@ -32,10 +32,11 @@ String g_currently_running_test;
 
 class TestRunner : public ::Test::TestRunner {
 public:
-    TestRunner(String test_root, Regex<PosixExtended> exclude_regex, NonnullRefPtr<Core::ConfigFile> config, bool print_progress, bool print_json, bool print_all_output, bool print_times = true)
+    TestRunner(String test_root, Regex<PosixExtended> exclude_regex, NonnullRefPtr<Core::ConfigFile> config, Regex<PosixExtended> skip_regex, bool print_progress, bool print_json, bool print_all_output, bool print_times = true)
         : ::Test::TestRunner(move(test_root), print_times, print_progress, print_json)
         , m_exclude_regex(move(exclude_regex))
         , m_config(move(config))
+        , m_skip_regex(move(skip_regex))
         , m_print_all_output(print_all_output)
     {
         m_skip_directories = m_config->read_entry("Global", "SkipDirectories", "").split(' ');
@@ -56,6 +57,7 @@ protected:
     NonnullRefPtr<Core::ConfigFile> m_config;
     Vector<String> m_skip_directories;
     Vector<String> m_skip_files;
+    Regex<PosixExtended> m_skip_regex;
     bool m_print_all_output { false };
 };
 
@@ -83,6 +85,10 @@ bool TestRunner::should_skip_test(const LexicalPath& test_path)
         if (test_path.basename().contains(file))
             return true;
     }
+    auto result = m_skip_regex.match(test_path.basename(), PosixFlags::Global);
+    if (result.success)
+        return true;
+
     return false;
 }
 
@@ -331,7 +337,16 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    TestRunner test_runner(test_root, move(exclude_regex), move(config), print_progress, print_json, print_all_output);
+    // we need to preconfigure this, because we can't autoinitialize Regex types
+    // in the Testrunner
+    auto skip_regex_pattern = config->read_entry("Global", "SkipRegex", "$^");
+    Regex<PosixExtended> skip_regex { skip_regex_pattern, {} };
+    if (skip_regex.parser_result.error != Error::NoError) {
+        warnln("SkipRegex pattern \"{}\" is invalid", skip_regex_pattern);
+        return 1;
+    }
+
+    TestRunner test_runner(test_root, move(exclude_regex), move(config), move(skip_regex), print_progress, print_json, print_all_output);
     test_runner.run(test_glob);
 
     return test_runner.counts().tests_failed;
