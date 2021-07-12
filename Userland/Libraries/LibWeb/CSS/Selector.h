@@ -75,7 +75,7 @@ public:
             int step_size = 0;
             int offset = 0;
 
-            static NthChildPattern parse(const StringView& args);
+            static NthChildPattern parse(StringView const& args);
         };
 
         // FIXME: We don't need this field on every single SimpleSelector, but it's also annoying to malloc it somewhere.
@@ -103,7 +103,7 @@ public:
     explicit Selector(Vector<ComplexSelector>&&);
     ~Selector();
 
-    const Vector<ComplexSelector>& complex_selectors() const { return m_complex_selectors; }
+    Vector<ComplexSelector> const& complex_selectors() const { return m_complex_selectors; }
 
     u32 specificity() const;
 

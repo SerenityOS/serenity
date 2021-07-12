@@ -12,17 +12,17 @@
 
 namespace Web {
 
-void dump_tree(StringBuilder&, const DOM::Node&);
-void dump_tree(const DOM::Node&);
-void dump_tree(StringBuilder&, const Layout::Node&, bool show_box_model = false, bool show_specified_style = false, bool colorize = false);
-void dump_tree(const Layout::Node&, bool show_box_model = false, bool show_specified_style = false);
-void dump_sheet(StringBuilder&, const CSS::StyleSheet&);
-void dump_sheet(const CSS::StyleSheet&);
-void dump_rule(StringBuilder&, const CSS::CSSRule&);
-void dump_rule(const CSS::CSSRule&);
-void dump_style_rule(StringBuilder&, const CSS::CSSStyleRule&);
-void dump_import_rule(StringBuilder&, const CSS::CSSImportRule&);
-void dump_selector(StringBuilder&, const CSS::Selector&);
-void dump_selector(const CSS::Selector&);
+void dump_tree(StringBuilder&, DOM::Node const&);
+void dump_tree(DOM::Node const&);
+void dump_tree(StringBuilder&, Layout::Node const&, bool show_box_model = false, bool show_specified_style = false, bool colorize = false);
+void dump_tree(Layout::Node const&, bool show_box_model = false, bool show_specified_style = false);
+void dump_sheet(StringBuilder&, CSS::StyleSheet const&);
+void dump_sheet(CSS::StyleSheet const&);
+void dump_rule(StringBuilder&, CSS::CSSRule const&);
+void dump_rule(CSS::CSSRule const&);
+void dump_style_rule(StringBuilder&, CSS::CSSStyleRule const&);
+void dump_import_rule(StringBuilder&, CSS::CSSImportRule const&);
+void dump_selector(StringBuilder&, CSS::Selector const&);
+void dump_selector(CSS::Selector const&);
 
 }

@@ -11,6 +11,6 @@
 
 namespace Web::SelectorEngine {
 
-bool matches(const CSS::Selector&, const DOM::Element&);
+bool matches(CSS::Selector const&, DOM::Element const&);
 
 }
