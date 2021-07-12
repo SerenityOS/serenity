@@ -35,7 +35,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * Filesystem notifications
 * CPU and memory profiling
 * SoundBlaster 16 driver
-* VMWare/QEMU mouse integration
+* VMware/QEMU mouse integration
 
 ## System services
 
