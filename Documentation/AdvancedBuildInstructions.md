@@ -79,3 +79,13 @@ Outside of QEMU, Serenity will run on VirtualBox and VMware. If you're curious, 
 ## Running SerenityOS on bare metal
 
 Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](BareMetalInstallation.md)
+
+## Filesystem performance on Windows
+
+If you're using the native Windows QEMU binary, QEMU is not able to access the ext4 root partition
+of the WSL2 installation without going via the 9P network file share. The root of your WSL2 distro will begin at the
+network path `\\wsl$\{distro-name}`.
+
+Alternatively, you may prefer to copy `Build/_disk_image` and `Build/Kernel/Kernel` to a native Windows partition (e.g.
+`/mnt/c`) before running `ninja run`, in which case `SERENITY_DISK_IMAGE` will be a regular Windows path (e.g.
+`'D:\serenity\_disk_image'`).
