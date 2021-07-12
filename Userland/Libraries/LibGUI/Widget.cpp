@@ -554,6 +554,7 @@ void Widget::drag_leave_event(Event&)
 void Widget::drop_event(DropEvent& event)
 {
     dbgln("{} {:p} DROP @ {}, '{}'", class_name(), this, event.position(), event.text());
+    event.ignore();
 }
 
 void Widget::theme_change_event(ThemeChangeEvent&)
