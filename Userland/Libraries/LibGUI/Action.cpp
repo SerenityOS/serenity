@@ -149,6 +149,11 @@ NonnullRefPtr<Action> make_select_all_action(Function<void(Action&)> callback, C
     return Action::create("Select &All", { Mod_Ctrl, Key_A }, Gfx::Bitmap::load_from_file("/res/icons/16x16/select-all.png"), move(callback), parent);
 }
 
+NonnullRefPtr<Action> make_rename_action(Function<void(Action&)> callback, Core::Object* parent)
+{
+    return Action::create("Re&name", Key_F2, move(callback), parent);
+}
+
 NonnullRefPtr<Action> make_properties_action(Function<void(Action&)> callback, Core::Object* parent)
 {
     return Action::create("P&roperties", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), move(callback), parent);
