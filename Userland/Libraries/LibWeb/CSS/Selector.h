@@ -23,31 +23,49 @@ public:
             Id,
             Class,
             Attribute,
+            PseudoClass,
         };
         Type type { Type::Invalid };
 
-        enum class PseudoClass {
-            None,
-            Link,
-            Visited,
-            Hover,
-            Focus,
-            FirstChild,
-            LastChild,
-            OnlyChild,
-            Empty,
-            Root,
-            FirstOfType,
-            LastOfType,
-            NthChild,
-            NthLastChild,
-            Disabled,
-            Enabled,
-            Checked,
-            Not,
-            Active,
+        struct NthChildPattern {
+            int step_size = 0;
+            int offset = 0;
+
+            static NthChildPattern parse(StringView const& args);
         };
-        PseudoClass pseudo_class { PseudoClass::None };
+
+        struct PseudoClass {
+            enum class Type {
+                None,
+                Link,
+                Visited,
+                Hover,
+                Focus,
+                FirstChild,
+                LastChild,
+                OnlyChild,
+                Empty,
+                Root,
+                FirstOfType,
+                LastOfType,
+                NthChild,
+                NthLastChild,
+                Disabled,
+                Enabled,
+                Checked,
+                Not,
+                Active,
+            };
+            Type type { Type::None };
+
+            // FIXME: We don't need this field on every single SimpleSelector, but it's also annoying to malloc it somewhere.
+            // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
+            NthChildPattern nth_child_pattern;
+
+            // FIXME: This wants to be a Selector, rather than parsing it each time it is used.
+            String not_selector {};
+        };
+        PseudoClass pseudo_class;
 
         enum class PseudoElement {
             None,
@@ -74,19 +92,6 @@ public:
             String value;
         };
         Attribute attribute;
-
-        struct NthChildPattern {
-            int step_size = 0;
-            int offset = 0;
-
-            static NthChildPattern parse(StringView const& args);
-        };
-
-        // FIXME: We don't need this field on every single SimpleSelector, but it's also annoying to malloc it somewhere.
-        // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
-        NthChildPattern nth_child_pattern;
-        // FIXME: This wants to be a Selector, rather than parsing it each time it is used.
-        String not_selector {};
     };
 
     struct ComplexSelector {
