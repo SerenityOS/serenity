@@ -30,6 +30,6 @@ First, an attempt is made to identify a given file based on predetermined binary
 $ file Buggie.png
 Buggie.png: PNG image data, 64 x 138
 # Identify all files in the current directory, and show only the mime type.
-$ file -I *
+$ file -I *
 ```
 
