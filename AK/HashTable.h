@@ -281,10 +281,10 @@ public:
         return HashSetResult::InsertedNewEntry;
     }
 
-    template<typename Finder>
-    Iterator find(unsigned hash, Finder finder)
+    template<typename TUnaryPredicate>
+    Iterator find(unsigned hash, TUnaryPredicate predicate)
     {
-        return Iterator(lookup_with_hash(hash, move(finder)));
+        return Iterator(lookup_with_hash(hash, move(predicate)));
     }
 
     Iterator find(const T& value)
@@ -292,10 +292,10 @@ public:
         return find(TraitsForT::hash(value), [&](auto& other) { return TraitsForT::equals(value, other); });
     }
 
-    template<typename Finder>
-    ConstIterator find(unsigned hash, Finder finder) const
+    template<typename TUnaryPredicate>
+    ConstIterator find(unsigned hash, TUnaryPredicate predicate) const
     {
-        return ConstIterator(lookup_with_hash(hash, move(finder)));
+        return ConstIterator(lookup_with_hash(hash, move(predicate)));
     }
 
     ConstIterator find(const T& value) const
@@ -405,8 +405,8 @@ private:
         kfree_sized(old_buckets, size_in_bytes(old_capacity));
     }
 
-    template<typename Finder>
-    BucketType* lookup_with_hash(unsigned hash, Finder finder) const
+    template<typename TUnaryPredicate>
+    BucketType* lookup_with_hash(unsigned hash, TUnaryPredicate predicate) const
     {
         if (is_empty())
             return nullptr;
@@ -414,7 +414,7 @@ private:
         for (;;) {
             auto& bucket = m_buckets[hash % m_capacity];
 
-            if (bucket.used && finder(*bucket.slot()))
+            if (bucket.used && predicate(*bucket.slot()))
                 return &bucket;
 
             if (!bucket.used && !bucket.deleted)
