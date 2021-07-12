@@ -14,10 +14,6 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#ifndef GENERATE_DEBUG_CODE
-#    define GENERATE_DEBUG_CODE 0
-#endif
-
 struct Parameter {
     Vector<String> attributes;
     String type;
@@ -666,7 +662,7 @@ public:
         stream >> message_endpoint_magic;
         if (stream.handle_any_error()) {
 )~~~");
-        if constexpr (GENERATE_DEBUG_CODE) {
+        if constexpr (GENERATE_DEBUG) {
             endpoint_generator.append(R"~~~(
                 dbgln("Failed to read message endpoint magic");
 )~~~");
@@ -677,7 +673,7 @@ public:
 
         if (message_endpoint_magic != @endpoint.magic@) {
 )~~~");
-        if constexpr (GENERATE_DEBUG_CODE) {
+        if constexpr (GENERATE_DEBUG) {
             endpoint_generator.append(R"~~~(
                 dbgln("@endpoint.name@: Endpoint magic number message_endpoint_magic != @endpoint.magic@, not my message! (the other endpoint may have handled it)");
 )~~~");
@@ -690,7 +686,7 @@ public:
         stream >> message_id;
         if (stream.handle_any_error()) {
 )~~~");
-        if constexpr (GENERATE_DEBUG_CODE) {
+        if constexpr (GENERATE_DEBUG) {
             endpoint_generator.append(R"~~~(
                 dbgln("Failed to read message ID");
 )~~~");
@@ -725,7 +721,7 @@ public:
         endpoint_generator.append(R"~~~(
         default:
 )~~~");
-        if constexpr (GENERATE_DEBUG_CODE) {
+        if constexpr (GENERATE_DEBUG) {
             endpoint_generator.append(R"~~~(
                 dbgln("Failed to decode @endpoint.name@.({})", message_id);
 )~~~");
@@ -736,7 +732,7 @@ public:
 
         if (stream.handle_any_error()) {
 )~~~");
-        if constexpr (GENERATE_DEBUG_CODE) {
+        if constexpr (GENERATE_DEBUG) {
             endpoint_generator.append(R"~~~(
                 dbgln("Failed to read the message");
 )~~~");
@@ -879,25 +875,25 @@ private:
 
     outln("{}", generator.as_string_view());
 
-#ifdef DEBUG
-    for (auto& endpoint : endpoints) {
-        warnln("Endpoint '{}' (magic: {})", endpoint.name, endpoint.magic);
-        for (auto& message : endpoint.messages) {
-            warnln("  Message: '{}'", message.name);
-            warnln("    Sync: {}", message.is_synchronous);
-            warnln("    Inputs:");
-            for (auto& parameter : message.inputs)
-                warnln("      Parameter: {} ({})", parameter.name, parameter.type);
-            if (message.inputs.is_empty())
-                warnln("      (none)");
-            if (message.is_synchronous) {
-                warnln("    Outputs:");
-                for (auto& parameter : message.outputs)
+    if constexpr (GENERATE_DEBUG) {
+        for (auto& endpoint : endpoints) {
+            warnln("Endpoint '{}' (magic: {})", endpoint.name, endpoint.magic);
+            for (auto& message : endpoint.messages) {
+                warnln("  Message: '{}'", message.name);
+                warnln("    Sync: {}", message.is_synchronous);
+                warnln("    Inputs:");
+                for (auto& parameter : message.inputs)
                     warnln("      Parameter: {} ({})", parameter.name, parameter.type);
-                if (message.outputs.is_empty())
+                if (message.inputs.is_empty())
                     warnln("      (none)");
+                if (message.is_synchronous) {
+                    warnln("    Outputs:");
+                    for (auto& parameter : message.outputs)
+                        warnln("      Parameter: {} ({})", parameter.name, parameter.type);
+                    if (message.outputs.is_empty())
+                        warnln("      (none)");
+                }
             }
         }
     }
-#endif
 }
