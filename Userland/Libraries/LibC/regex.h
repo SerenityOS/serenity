@@ -15,6 +15,8 @@ typedef ssize_t regoff_t;
 
 typedef struct {
     void* __data;
+    // Number of capture groups, Dr.POSIX requires this.
+    size_t re_nsub;
 } regex_t;
 
 enum __Regex_Error {
