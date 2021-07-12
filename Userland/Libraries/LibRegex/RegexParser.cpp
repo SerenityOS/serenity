@@ -13,6 +13,8 @@
 
 namespace regex {
 
+static constexpr size_t s_maximum_repetition_count = 1024 * 1024;
+
 ALWAYS_INLINE bool Parser::set_error(Error error)
 {
     if (m_parser_state.error == Error::NoError) {
@@ -395,6 +397,12 @@ bool PosixBasicParser::parse_simple_re(ByteCode& bytecode, size_t& match_length_
         if (!try_skip("\\}"))
             return set_error(Error::MismatchingBrace);
 
+        if (max_limit.value_or(min_limit) < min_limit)
+            return set_error(Error::InvalidBraceContent);
+
+        if (min_limit > s_maximum_repetition_count || (max_limit.has_value() && *max_limit > s_maximum_repetition_count))
+            return set_error(Error::InvalidBraceContent);
+
         ByteCode::transform_bytecode_repetition_min_max(simple_re_bytecode, min_limit, max_limit, true);
         match_length_minimum += re_match_length_minimum * min_limit;
     } else {
@@ -533,6 +541,9 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
         auto minimum = maybe_minimum.value();
         match_length_minimum *= minimum;
 
+        if (minimum > s_maximum_repetition_count)
+            return set_error(Error::InvalidBraceContent);
+
         if (match(TokenType::Comma)) {
             consume();
         } else {
@@ -551,7 +562,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
         }
         if (!number_builder.is_empty()) {
             auto value = number_builder.build().to_uint();
-            if (!value.has_value() || minimum > value.value())
+            if (!value.has_value() || minimum > value.value() || *value > s_maximum_repetition_count)
                 return set_error(Error::InvalidBraceContent);
 
             maybe_maximum = value.value();
