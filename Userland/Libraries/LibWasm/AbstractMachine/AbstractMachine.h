@@ -130,26 +130,26 @@ public:
         }
     }
 
-    Value(Value const& value)
+    ALWAYS_INLINE Value(Value const& value)
         : m_value(AnyValueType { value.m_value })
         , m_type(value.m_type)
     {
     }
 
-    Value(Value&& value)
+    ALWAYS_INLINE Value(Value&& value)
         : m_value(move(value.m_value))
         , m_type(move(value.m_type))
     {
     }
 
-    Value& operator=(Value&& value)
+    ALWAYS_INLINE Value& operator=(Value&& value)
     {
         m_value = move(value.m_value);
         m_type = move(value.m_type);
         return *this;
     }
 
-    Value& operator=(Value const& value)
+    ALWAYS_INLINE Value& operator=(Value const& value)
     {
         m_value = value.m_value;
         m_type = value.m_type;
@@ -157,7 +157,7 @@ public:
     }
 
     template<typename T>
-    Optional<T> to()
+    ALWAYS_INLINE Optional<T> to()
     {
         Optional<T> result;
         m_value.visit(
