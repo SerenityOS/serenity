@@ -41,6 +41,7 @@ public:
     virtual ModelIndex index_at_event_position(const Gfx::IntPoint&) const override;
     virtual Gfx::IntRect content_rect(const ModelIndex&) const override;
     virtual Gfx::IntRect editing_rect(ModelIndex const&) const override;
+    virtual Gfx::IntRect paint_invalidation_rect(ModelIndex const&) const override;
 
     virtual void select_all() override;
 
@@ -61,6 +62,7 @@ private:
 
     struct ItemData {
         Gfx::IntRect text_rect;
+        Optional<Gfx::IntRect> text_rect_wrapped;
         Gfx::IntRect icon_rect;
         int icon_offset_y;
         int text_offset_y;
@@ -90,8 +92,10 @@ private:
             return icon_rect.contains(point) || text_rect.contains(point);
         }
 
-        Gfx::IntRect rect() const
+        Gfx::IntRect rect(bool wrapped = false) const
         {
+            if (wrapped && text_rect_wrapped.has_value())
+                return text_rect_wrapped->united(icon_rect);
             return text_rect.united(icon_rect);
         }
     };

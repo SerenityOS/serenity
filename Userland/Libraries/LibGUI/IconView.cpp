@@ -404,6 +404,14 @@ Gfx::IntRect IconView::editing_rect(ModelIndex const& index) const
     return item_data.text_rect.inflated(4, 4);
 }
 
+Gfx::IntRect IconView::paint_invalidation_rect(const ModelIndex& index) const
+{
+    if (!index.is_valid())
+        return {};
+    auto& item_data = get_item_data(index.row());
+    return item_data.rect(true);
+}
+
 void IconView::did_change_hovered_index(const ModelIndex& old_index, const ModelIndex& new_index)
 {
     AbstractView::did_change_hovered_index(old_index, new_index);
@@ -462,6 +470,7 @@ void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Fo
         item_data.text_rect.intersect(item_rect);
         item_data.text_rect.set_height(font.glyph_height() * item_data.wrapped_text_lines.size());
         item_data.text_rect.inflate(6, 4);
+        item_data.text_rect_wrapped = item_data.text_rect;
     } else {
         item_data.text_rect.set_width(unwrapped_text_width);
         item_data.text_rect.inflate(6, 4);
