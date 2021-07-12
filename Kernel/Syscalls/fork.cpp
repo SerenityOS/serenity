@@ -108,9 +108,9 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
             if (region == m_master_tls_region.unsafe_ptr())
                 child->m_master_tls_region = child_region;
         }
-
-        Process::register_new(*child);
     }
+
+    Process::register_new(*child);
 
     PerformanceManager::add_process_created_event(*child);
 
