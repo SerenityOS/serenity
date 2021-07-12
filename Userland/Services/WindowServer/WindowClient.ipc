@@ -3,7 +3,7 @@
 
 endpoint WindowClient
 {
-    fast_greet(Vector<Gfx::IntRect> screen_rects, u32 main_screen_index, u32 virtual_desktop_rows, u32 virtual_desktop_columns, Core::AnonymousBuffer theme_buffer, String default_font_query, String fixed_width_font_query) =|
+    fast_greet(Vector<Gfx::IntRect> screen_rects, u32 main_screen_index, u32 virtual_desktop_rows, u32 virtual_desktop_columns, Core::AnonymousBuffer theme_buffer, String default_font_query, String fixed_width_font_query, i32 client_id) =|
 
     paint(i32 window_id, Gfx::IntSize window_size, Vector<Gfx::IntRect> rects) =|
     mouse_move(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta, bool is_drag, Vector<String> mime_types) =|
