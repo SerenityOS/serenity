@@ -393,7 +393,10 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
 
                 builder.appendff(" pseudo_class={}", pseudo_class_description);
                 if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Not) {
-                    builder.appendff("({})", pseudo_class.not_selector);
+                    builder.append("(");
+                    for (auto& selector : pseudo_class.not_selector)
+                        dump_selector(builder, selector);
+                    builder.append(")");
                 } else if ((pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild)
                     || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild)) {
                     builder.appendff("(step={}, offset={})", pseudo_class.nth_child_pattern.step_size, pseudo_class.nth_child_pattern.offset);

@@ -469,7 +469,8 @@ RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_r
                     }
                 } else if (pseudo_function.name().equals_ignoring_case("not")) {
                     pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Not;
-                    pseudo_class.not_selector = pseudo_function.values_as_string();
+                    auto function_token_stream = TokenStream(pseudo_function.values());
+                    pseudo_class.not_selector = parse_a_selector(function_token_stream);
                 } else {
                     dbgln("Unknown pseudo class: '{}'()", pseudo_function.name());
                     return {};
