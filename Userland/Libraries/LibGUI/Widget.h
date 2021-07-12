@@ -361,6 +361,7 @@ private:
     bool m_updates_enabled { true };
     bool m_accepts_emoji_input { false };
     bool m_shrink_to_fit { false };
+    bool m_default_font { true };
 
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
 
