@@ -158,8 +158,6 @@ private:
 
     String m_decoded_input;
 
-    StringView m_input;
-
     Utf8View m_utf8_view;
     Utf8CodePointIterator m_utf8_iterator;
     Utf8CodePointIterator m_prev_utf8_iterator;
