@@ -54,7 +54,7 @@ ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socke
     s_connections->set(client_id, *this);
 
     auto& wm = WindowManager::the();
-    async_fast_greet(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query());
+    async_fast_greet(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), client_id);
 }
 
 ClientConnection::~ClientConnection()
