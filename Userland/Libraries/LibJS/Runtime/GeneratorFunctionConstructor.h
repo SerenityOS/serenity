@@ -21,6 +21,9 @@ public:
 
     virtual Value call() override;
     virtual Value construct(FunctionObject& new_target) override;
+
+private:
+    bool has_constructor() const override { return true; }
 };
 
 }
