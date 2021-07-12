@@ -375,6 +375,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
     desktop_context_menu->add_action(cut_action);
     desktop_context_menu->add_action(paste_action);
     desktop_context_menu->add_action(directory_view.delete_action());
+    desktop_context_menu->add_action(directory_view.rename_action());
     desktop_context_menu->add_separator();
     desktop_context_menu->add_action(properties_action);
 
@@ -393,6 +394,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
                 file_context_menu->add_action(cut_action);
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view.delete_action());
+                file_context_menu->add_action(directory_view.rename_action());
                 file_context_menu->add_separator();
 
                 if (node.full_path().ends_with(".zip", AK::CaseSensitivity::CaseInsensitive)) {
@@ -846,6 +848,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     file_menu.add_action(mkdir_action);
     file_menu.add_action(touch_action);
     file_menu.add_action(focus_dependent_delete_action);
+    file_menu.add_action(directory_view.rename_action());
     file_menu.add_separator();
     file_menu.add_action(properties_action);
     file_menu.add_separator();
@@ -1040,6 +1043,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_context_menu->add_action(cut_action);
     directory_context_menu->add_action(folder_specific_paste_action);
     directory_context_menu->add_action(directory_view.delete_action());
+    directory_context_menu->add_action(directory_view.rename_action());
     directory_context_menu->add_action(shortcut_action);
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
@@ -1059,6 +1063,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view_directory_context_menu->add_action(cut_action);
     tree_view_directory_context_menu->add_action(paste_action);
     tree_view_directory_context_menu->add_action(tree_view_delete_action);
+    tree_view_directory_context_menu->add_action(directory_view.rename_action());
     tree_view_directory_context_menu->add_separator();
     tree_view_directory_context_menu->add_action(properties_action);
     tree_view_directory_context_menu->add_separator();
@@ -1083,6 +1088,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 file_context_menu->add_action(cut_action);
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view.delete_action());
+                file_context_menu->add_action(directory_view.rename_action());
                 file_context_menu->add_action(shortcut_action);
                 file_context_menu->add_separator();
 
