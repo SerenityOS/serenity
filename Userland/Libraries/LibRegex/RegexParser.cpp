@@ -304,11 +304,11 @@ ALWAYS_INLINE bool AbstractPosixParser::parse_bracket_expression(Vector<CompareT
         }
     }
 
-    if (values.size())
+    if (!values.is_empty()) {
         match_length_minimum = 1;
-
-    if (values.first().type == CharacterCompareType::Inverse)
-        match_length_minimum = 0;
+        if (values.first().type == CharacterCompareType::Inverse)
+            match_length_minimum = 0;
+    }
 
     return true;
 }
