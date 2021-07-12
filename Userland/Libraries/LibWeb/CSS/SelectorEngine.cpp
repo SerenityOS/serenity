@@ -117,9 +117,9 @@ static bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass cons
         if (pseudo_class.not_selector.is_empty())
             return false;
         auto not_selector = Web::parse_selector(CSS::DeprecatedParsingContext(element), pseudo_class.not_selector);
-        if (!not_selector.has_value())
+        if (!not_selector)
             return false;
-        auto not_matches = matches(not_selector.value(), element);
+        auto not_matches = matches(not_selector.release_nonnull(), element);
         return !not_matches;
     }
     case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild:

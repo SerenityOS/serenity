@@ -14,14 +14,14 @@ namespace Web::DOM {
 RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
 {
     auto selector = parse_selector(CSS::DeprecatedParsingContext(*this), selector_text);
-    if (!selector.has_value())
+    if (!selector)
         return {};
 
-    dump_selector(selector.value());
+    dump_selector(selector.release_nonnull());
 
     RefPtr<Element> result;
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (SelectorEngine::matches(selector.value(), element)) {
+        if (SelectorEngine::matches(selector.release_nonnull(), element)) {
             result = element;
             return IterationDecision::Break;
         }
@@ -34,14 +34,14 @@ RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
 NonnullRefPtrVector<Element> ParentNode::query_selector_all(const StringView& selector_text)
 {
     auto selector = parse_selector(CSS::DeprecatedParsingContext(*this), selector_text);
-    if (!selector.has_value())
+    if (!selector)
         return {};
 
-    dump_selector(selector.value());
+    dump_selector(selector.release_nonnull());
 
     NonnullRefPtrVector<Element> elements;
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (SelectorEngine::matches(selector.value(), element)) {
+        if (SelectorEngine::matches(selector.release_nonnull(), element)) {
             elements.append(element);
         }
         return IterationDecision::Continue;

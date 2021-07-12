@@ -171,55 +171,55 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet(TokenStream<T>& tokens)
     return stylesheet;
 }
 
-Vector<Selector> Parser::parse_a_selector()
+NonnullRefPtrVector<Selector> Parser::parse_a_selector()
 {
     return parse_a_selector(m_token_stream);
 }
 
 template<typename T>
-Vector<Selector> Parser::parse_a_selector(TokenStream<T>& tokens)
+NonnullRefPtrVector<Selector> Parser::parse_a_selector(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_TRACE, "Parser::parse_a_selector");
 
     auto comma_separated_lists = parse_as_comma_separated_list_of_component_values(tokens);
-    Vector<Selector> selectors;
+    NonnullRefPtrVector<Selector> selectors;
 
     for (auto& selector_parts : comma_separated_lists) {
         auto stream = TokenStream(selector_parts);
         auto selector = parse_single_selector(stream);
-        if (selector.has_value())
-            selectors.append(selector.value());
+        if (selector)
+            selectors.append(selector.release_nonnull());
     }
 
     return selectors;
 }
 
-Vector<Selector> Parser::parse_a_relative_selector()
+NonnullRefPtrVector<Selector> Parser::parse_a_relative_selector()
 {
     return parse_a_relative_selector(m_token_stream);
 }
 
 template<typename T>
-Vector<Selector> Parser::parse_a_relative_selector(TokenStream<T>& tokens)
+NonnullRefPtrVector<Selector> Parser::parse_a_relative_selector(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_TRACE, "Parser::parse_a_relative_selector");
 
     auto comma_separated_lists = parse_as_comma_separated_list_of_component_values(tokens);
 
-    Vector<Selector> selectors;
+    NonnullRefPtrVector<Selector> selectors;
 
     for (auto& selector_parts : comma_separated_lists) {
         auto stream = TokenStream(selector_parts);
         auto selector = parse_single_selector(stream, true);
-        if (selector.has_value())
-            selectors.append(selector.value());
+        if (selector)
+            selectors.append(selector.release_nonnull());
     }
 
     return selectors;
 }
 
 template<typename T>
-Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_relative)
+RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_relative)
 {
     dbgln_if(CSS_PARSER_TRACE, "Parser::parse_single_selector");
 
@@ -555,7 +555,7 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
     if (!is_relative)
         selectors.first().relation = Selector::ComplexSelector::Relation::None;
 
-    return Selector(move(selectors));
+    return Selector::create(move(selectors));
 }
 
 NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(bool top_level)
@@ -1145,7 +1145,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 
     } else {
         auto prelude_stream = TokenStream(rule->m_prelude);
-        Vector<Selector> selectors = parse_a_selector(prelude_stream);
+        auto selectors = parse_a_selector(prelude_stream);
         auto declaration = convert_to_declaration(*rule->m_block);
         if (declaration && !selectors.is_empty())
             return CSSStyleRule::create(move(selectors), move(*declaration));

@@ -683,10 +683,10 @@ public:
             return;
         complex_selectors.first().relation = CSS::Selector::ComplexSelector::Relation::None;
 
-        current_rule.selectors.append(CSS::Selector(move(complex_selectors)));
+        current_rule.selectors.append(CSS::Selector::create(move(complex_selectors)));
     }
 
-    Optional<CSS::Selector> parse_individual_selector()
+    RefPtr<CSS::Selector> parse_individual_selector()
     {
         parse_selector();
         if (current_rule.selectors.is_empty())
@@ -1037,7 +1037,7 @@ private:
     NonnullRefPtrVector<CSS::CSSRule> rules;
 
     struct CurrentRule {
-        Vector<CSS::Selector> selectors;
+        NonnullRefPtrVector<CSS::Selector> selectors;
         Vector<CSS::StyleProperty> properties;
         HashMap<String, CSS::StyleProperty> custom_properties;
     };
@@ -1050,7 +1050,7 @@ private:
     StringView css;
 };
 
-Optional<CSS::Selector> parse_selector(const CSS::DeprecatedParsingContext& context, const StringView& selector_text)
+RefPtr<CSS::Selector> parse_selector(const CSS::DeprecatedParsingContext& context, const StringView& selector_text)
 {
     CSSParser parser(context, selector_text);
     return parser.parse_individual_selector();
