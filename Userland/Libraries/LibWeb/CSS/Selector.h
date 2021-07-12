@@ -24,6 +24,7 @@ public:
             Class,
             Attribute,
             PseudoClass,
+            PseudoElement,
         };
         Type type { Type::Invalid };
 
@@ -71,6 +72,8 @@ public:
             None,
             Before,
             After,
+            FirstLine,
+            FirstLetter,
         };
         PseudoElement pseudo_element { PseudoElement::None };
 
