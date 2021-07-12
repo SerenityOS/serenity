@@ -66,8 +66,8 @@ private:
         enqueue_work([this] {
             m_result = m_action(*this);
             if (m_on_complete) {
-                Core::EventLoop::current().post_event(*this, make<Core::DeferredInvocationEvent>([this, result = m_result.release_value()](auto&) {
-                    m_on_complete(result);
+                Core::EventLoop::current().post_event(*this, make<Core::DeferredInvocationEvent>([this](auto&) {
+                    m_on_complete(m_result.release_value());
                     this->remove_from_parent();
                 }));
                 Core::EventLoop::wake();
