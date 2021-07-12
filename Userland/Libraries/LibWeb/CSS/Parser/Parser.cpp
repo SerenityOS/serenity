@@ -363,10 +363,24 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                     return {};
             }
 
-            // Ignore for now, otherwise we produce a "false positive" selector
-            // and apply styles to the element itself, not its pseudo element
-            if (is_pseudo)
-                return {};
+            if (is_pseudo) {
+                auto pseudo_name = ((Token)current_value).ident();
+                simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
+
+                if (pseudo_name.equals_ignoring_case("before")) {
+                    simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::Before;
+                } else if (pseudo_name.equals_ignoring_case("after")) {
+                    simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::After;
+                } else if (pseudo_name.equals_ignoring_case("first-line")) {
+                    simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
+                } else if (pseudo_name.equals_ignoring_case("first-letter")) {
+                    simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLetter;
+                } else {
+                    return {};
+                }
+
+                return simple_selector;
+            }
 
             auto& pseudo_class = simple_selector.pseudo_class;
 
@@ -411,6 +425,22 @@ Optional<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is
                     pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Enabled;
                 } else if (pseudo_name.equals_ignoring_case("checked")) {
                     pseudo_class.type = Selector::SimpleSelector::PseudoClass::Type::Checked;
+                } else if (pseudo_name.equals_ignoring_case("before")) {
+                    // Single-colon syntax allowed for compatibility. https://www.w3.org/TR/selectors/#pseudo-element-syntax
+                    simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
+                    simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::Before;
+                } else if (pseudo_name.equals_ignoring_case("after")) {
+                    // See :before
+                    simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
+                    simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::After;
+                } else if (pseudo_name.equals_ignoring_case("first-line")) {
+                    // See :before
+                    simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
+                    simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLine;
+                } else if (pseudo_name.equals_ignoring_case("first-letter")) {
+                    // See :before
+                    simple_selector.type = Selector::SimpleSelector::Type::PseudoElement;
+                    simple_selector.pseudo_element = Selector::SimpleSelector::PseudoElement::FirstLetter;
                 } else {
                     dbgln("Unknown pseudo class: '{}'", pseudo_name);
                     return simple_selector;

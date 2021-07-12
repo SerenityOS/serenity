@@ -175,14 +175,6 @@ static bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass cons
 
 static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element const& element)
 {
-    switch (component.pseudo_element) {
-    case CSS::Selector::SimpleSelector::PseudoElement::None:
-        break;
-    default:
-        // FIXME: Implement pseudo-elements.
-        return false;
-    }
-
     switch (component.type) {
     case CSS::Selector::SimpleSelector::Type::Universal:
         return true;
@@ -196,6 +188,9 @@ static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element
         return matches_attribute(component.attribute, element);
     case CSS::Selector::SimpleSelector::Type::PseudoClass:
         return matches_pseudo_class(component.pseudo_class, element);
+    case CSS::Selector::SimpleSelector::Type::PseudoElement:
+        // FIXME: Implement pseudo-elements.
+        return false;
     default:
         VERIFY_NOT_REACHED();
     }

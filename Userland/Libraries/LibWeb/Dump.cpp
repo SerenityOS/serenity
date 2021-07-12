@@ -320,6 +320,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             case CSS::Selector::SimpleSelector::Type::PseudoClass:
                 type_description = "PseudoClass";
                 break;
+            case CSS::Selector::SimpleSelector::Type::PseudoElement:
+                type_description = "PseudoElement";
+                break;
             }
 
             builder.appendff("{}:{}", type_description, simple_selector.value);
@@ -395,6 +398,29 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                     || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild)) {
                     builder.appendff("(step={}, offset={})", pseudo_class.nth_child_pattern.step_size, pseudo_class.nth_child_pattern.offset);
                 }
+            }
+
+            if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoElement) {
+                char const* pseudo_element_description = "";
+                switch (simple_selector.pseudo_element) {
+                case CSS::Selector::SimpleSelector::PseudoElement::None:
+                    pseudo_element_description = "None";
+                    break;
+                case CSS::Selector::SimpleSelector::PseudoElement::Before:
+                    pseudo_element_description = "before";
+                    break;
+                case CSS::Selector::SimpleSelector::PseudoElement::After:
+                    pseudo_element_description = "after";
+                    break;
+                case CSS::Selector::SimpleSelector::PseudoElement::FirstLine:
+                    pseudo_element_description = "first-line";
+                    break;
+                case CSS::Selector::SimpleSelector::PseudoElement::FirstLetter:
+                    pseudo_element_description = "first-letter";
+                    break;
+                }
+
+                builder.appendff(" pseudo_element={}", pseudo_element_description);
             }
 
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Attribute) {
