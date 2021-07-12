@@ -73,7 +73,7 @@ public:
         return 0 != (m_data[index / 8] & (1u << (index % 8)));
     }
 
-    void set(size_t index, bool value) const
+    void set(size_t index, bool value)
     {
         VERIFY(index < m_size);
         if (value)
