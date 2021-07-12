@@ -538,9 +538,10 @@ void DirectoryView::handle_selection_change()
 {
     update_statusbar();
 
-    bool can_delete = !current_view().selection().is_empty() && access(path().characters(), W_OK) == 0;
-    m_delete_action->set_enabled(can_delete);
-    m_force_delete_action->set_enabled(can_delete);
+    bool can_modify = !current_view().selection().is_empty() && access(path().characters(), W_OK) == 0;
+    m_delete_action->set_enabled(can_modify);
+    m_force_delete_action->set_enabled(can_modify);
+    m_rename_action->set_enabled(can_modify);
 
     if (on_selection_change)
         on_selection_change(current_view());
@@ -591,6 +592,10 @@ void DirectoryView::setup_actions()
     });
 
     m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) { do_delete(true); }, window());
+    m_rename_action = GUI::CommonActions::make_rename_action([this](auto&) {
+        current_view().begin_editing(current_view().cursor_index());
+    },
+        window());
 
     m_force_delete_action = GUI::Action::create(
         "Delete Without Confirmation", { Mod_Shift, Key_Delete },
