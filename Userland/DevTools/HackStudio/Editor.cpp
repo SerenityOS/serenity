@@ -345,12 +345,12 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
 void Editor::drop_event(GUI::DropEvent& event)
 {
     event.accept();
-    window()->move_to_front();
 
     if (event.mime_data().has_urls()) {
         auto urls = event.mime_data().urls();
         if (urls.is_empty())
             return;
+        window()->move_to_front();
         if (urls.size() > 1) {
             GUI::MessageBox::show(window(), "HackStudio can only open one file at a time!", "One at a time please!", GUI::MessageBox::Type::Error);
             return;
