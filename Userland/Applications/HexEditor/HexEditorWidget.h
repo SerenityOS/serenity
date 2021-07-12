@@ -31,6 +31,8 @@ private:
     void update_title();
     void set_search_results_visible(bool visible);
 
+    virtual void drop_event(GUI::DropEvent&) override;
+
     RefPtr<Core::ConfigFile> m_config;
 
     RefPtr<HexEditor> m_editor;

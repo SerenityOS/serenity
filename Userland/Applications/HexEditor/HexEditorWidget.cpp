@@ -372,3 +372,16 @@ void HexEditorWidget::set_search_results_visible(bool visible)
     m_layout_search_results_action->set_checked(visible);
     m_search_results_container->set_visible(visible);
 }
+
+void HexEditorWidget::drop_event(GUI::DropEvent& event)
+{
+    event.accept();
+
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
+            return;
+        window()->move_to_front();
+        open_file(urls.first().path());
+    }
+}
