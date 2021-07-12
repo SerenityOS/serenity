@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,6 +30,7 @@
     __ENUMERATE_SHELL_BUILTIN(exit)    \
     __ENUMERATE_SHELL_BUILTIN(export)  \
     __ENUMERATE_SHELL_BUILTIN(glob)    \
+    __ENUMERATE_SHELL_BUILTIN(unalias) \
     __ENUMERATE_SHELL_BUILTIN(unset)   \
     __ENUMERATE_SHELL_BUILTIN(history) \
     __ENUMERATE_SHELL_BUILTIN(umask)   \
@@ -287,6 +288,7 @@ private:
     Optional<int> resolve_job_spec(const String&);
     void cache_path();
     void add_entry_to_cache(const String&);
+    void remove_entry_from_cache(const String&);
     void stop_all_jobs();
     const Job* m_current_job { nullptr };
     LocalFrame* find_frame_containing_local_variable(const String& name);

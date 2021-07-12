@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -65,6 +65,45 @@ int Shell::builtin_alias(int argc, const char** argv)
     }
 
     return fail ? 1 : 0;
+}
+
+int Shell::builtin_unalias(int argc, const char** argv)
+{
+    bool remove_all { false };
+    Vector<const char*> arguments;
+
+    Core::ArgsParser parser;
+    parser.set_general_help("Remove alias from the list of aliases");
+    parser.add_option(remove_all, "Remove all aliases", nullptr, 'a');
+    parser.add_positional_argument(arguments, "List of aliases to remove", "alias", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+        return 1;
+
+    if (remove_all) {
+        m_aliases.clear();
+        cache_path();
+        return 0;
+    }
+
+    if (arguments.is_empty()) {
+        warnln("unalias: not enough arguments");
+        parser.print_usage(stderr, argv[0]);
+        return 1;
+    }
+
+    bool failed { false };
+    for (auto& argument : arguments) {
+        if (!m_aliases.contains(argument)) {
+            warnln("unalias: {}: alias not found", argument);
+            failed = true;
+            continue;
+        }
+        m_aliases.remove(argument);
+        remove_entry_from_cache(argument);
+    }
+
+    return failed ? 1 : 0;
 }
 
 int Shell::builtin_bg(int argc, const char** argv)
