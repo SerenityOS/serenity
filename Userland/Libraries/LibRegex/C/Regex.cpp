@@ -26,7 +26,6 @@ struct internal_regex_t {
     size_t re_pat_errpos;
     ReError re_pat_err;
     String re_pat;
-    size_t re_nsub;
 };
 
 static internal_regex_t* impl_from(regex_t* re)
@@ -51,7 +50,7 @@ int regcomp(regex_t* reg, const char* pattern, int cflags)
 
     // Note that subsequent uses of regcomp() without regfree() _will_ leak memory
     // This could've been prevented if libc provided a reginit() or similar, but it does not.
-    reg->__data = new internal_regex_t { 0, 0, {}, 0, ReError::REG_NOERR, {}, 0 };
+    reg->__data = new internal_regex_t { 0, 0, {}, 0, ReError::REG_NOERR, {} };
 
     auto preg = impl_from(reg);
     bool is_extended = cflags & REG_EXTENDED;
@@ -76,7 +75,7 @@ int regcomp(regex_t* reg, const char* pattern, int cflags)
         return (ReError)parser_result.error;
     }
 
-    preg->re_nsub = parser_result.capture_groups_count;
+    reg->re_nsub = parser_result.capture_groups_count;
 
     return REG_NOERR;
 }
