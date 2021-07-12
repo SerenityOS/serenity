@@ -8,12 +8,13 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 
 namespace Web::CSS {
 
-class Selector {
+class Selector : public RefCounted<Selector> {
 public:
     struct SimpleSelector {
         enum class Type {
@@ -112,7 +113,11 @@ public:
         CompoundSelector compound_selector;
     };
 
-    explicit Selector(Vector<ComplexSelector>&&);
+    static NonnullRefPtr<Selector> create(Vector<ComplexSelector>&& complex_selectors)
+    {
+        return adopt_ref(*new Selector(move(complex_selectors)));
+    }
+
     ~Selector();
 
     Vector<ComplexSelector> const& complex_selectors() const { return m_complex_selectors; }
@@ -120,6 +125,8 @@ public:
     u32 specificity() const;
 
 private:
+    explicit Selector(Vector<ComplexSelector>&&);
+
     Vector<ComplexSelector> m_complex_selectors;
 };
 

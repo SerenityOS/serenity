@@ -8,6 +8,8 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullRefPtrVector.h>
+#include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
@@ -110,19 +112,19 @@ public:
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values(TokenStream<T>&);
 
     template<typename T>
-    Optional<Selector> parse_single_selector(TokenStream<T>&, bool is_relative = false);
+    RefPtr<Selector> parse_single_selector(TokenStream<T>&, bool is_relative = false);
 
     Optional<Selector::SimpleSelector::NthChildPattern> parse_nth_child_pattern(TokenStream<StyleComponentValueRule>&);
 
     // FIXME: https://www.w3.org/TR/selectors-4/
     // Contrary to the name, these parse a comma-separated list of selectors, according to the spec.
-    Vector<Selector> parse_a_selector();
+    NonnullRefPtrVector<Selector> parse_a_selector();
     template<typename T>
-    Vector<Selector> parse_a_selector(TokenStream<T>&);
+    NonnullRefPtrVector<Selector> parse_a_selector(TokenStream<T>&);
 
-    Vector<Selector> parse_a_relative_selector();
+    NonnullRefPtrVector<Selector> parse_a_relative_selector();
     template<typename T>
-    Vector<Selector> parse_a_relative_selector(TokenStream<T>&);
+    NonnullRefPtrVector<Selector> parse_a_relative_selector(TokenStream<T>&);
 
     RefPtr<StyleValue> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
 
