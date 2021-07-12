@@ -10,7 +10,7 @@
 
 __BEGIN_DECLS
 
-#ifdef DEBUG
+#ifndef NDEBUG
 __attribute__((noreturn)) void __assertion_failed(const char* msg);
 #    define __stringify_helper(x) #    x
 #    define __stringify(x) __stringify_helper(x)

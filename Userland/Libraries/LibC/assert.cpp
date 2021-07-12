@@ -16,7 +16,7 @@
 extern "C" {
 
 extern bool __stdio_is_initialized;
-#ifdef DEBUG
+#ifndef NDEBUG
 void __assertion_failed(const char* msg)
 {
     dbgln("USERSPACE({}) ASSERTION FAILED: {}", getpid(), msg);
