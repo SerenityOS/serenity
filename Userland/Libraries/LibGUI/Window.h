@@ -220,6 +220,7 @@ private:
     void handle_became_active_or_inactive_event(Core::Event&);
     void handle_close_request();
     void handle_theme_change_event(ThemeChangeEvent&);
+    void handle_fonts_change_event(FontsChangeEvent&);
     void handle_screen_rects_change_event(ScreenRectsChangeEvent&);
     void handle_drag_move_event(DragEvent&);
     void handle_left_event();
