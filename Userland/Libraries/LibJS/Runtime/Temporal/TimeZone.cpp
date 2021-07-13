@@ -210,7 +210,7 @@ String format_time_zone_offset_string(double offset_nanoseconds)
         builder.append('-');
 
     // 3. Let nanoseconds be abs(offsetNanoseconds) modulo 10^9.
-    auto nanoseconds = abs(offset) % 1000000000;
+    auto nanoseconds = AK::abs(offset) % 1000000000;
 
     // 4. Let seconds be floor(offsetNanoseconds / 10^9) modulo 60.
     auto seconds = (offset / 1000000000) % 60;
