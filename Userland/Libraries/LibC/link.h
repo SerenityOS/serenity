@@ -16,12 +16,6 @@
 
 __BEGIN_DECLS
 
-#ifdef __LP64__
-#    define ElfW(type) Elf64_##type
-#else
-#    define ElfW(type) Elf32_##type
-#endif
-
 struct dl_phdr_info {
     ElfW(Addr) dlpi_addr;
     const char* dlpi_name;
