@@ -25,13 +25,13 @@ Value evaluate(ReadonlyBytes bytes, [[maybe_unused]] PtraceRegisters const& regs
         case Operations::RegEbp: {
             ssize_t offset = 0;
             stream.read_LEB128_signed(offset);
-            return Value { Type::UnsignedIntetger, { regs.ebp + offset } };
+            return Value { Type::UnsignedInteger, { regs.ebp + offset } };
         }
 
         case Operations::FbReg: {
             ssize_t offset = 0;
             stream.read_LEB128_signed(offset);
-            return Value { Type::UnsignedIntetger, { regs.ebp + 2 * sizeof(size_t) + offset } };
+            return Value { Type::UnsignedInteger, { regs.ebp + 2 * sizeof(size_t) + offset } };
         }
 #endif
 
