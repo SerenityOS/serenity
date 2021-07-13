@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
+#include <AK/GenericLexer.h>
 #include <AK/StringView.h>
 #include <AK/Utf8View.h>
 #include <LibTextCodec/Decoder.h>
@@ -27,6 +29,69 @@ bool prescan_skip_whitespace_and_slashes(const ByteBuffer& input, size_t& positi
     while (!prescan_should_abort(input, position) && (input[position] == '\t' || input[position] == '\n' || input[position] == '\f' || input[position] == '\r' || input[position] == ' ' || input[position] == '/'))
         ++position;
     return !prescan_should_abort(input, position);
+}
+
+// https://html.spec.whatwg.org/multipage/urls-and-fetching.html#algorithm-for-extracting-a-character-encoding-from-a-meta-element
+Optional<String> extract_character_encoding_from_meta_element(String const& string)
+{
+    // Checking for "charset" is case insensitive, as is getting an encoding.
+    // Therefore, stick to lowercase from the start for simplicity.
+    auto lowercase_string = string.to_lowercase();
+    GenericLexer lexer(lowercase_string);
+
+    for (;;) {
+        auto charset_index = lexer.remaining().find("charset");
+        if (!charset_index.has_value())
+            return {};
+
+        // 7 is the length of "charset".
+        lexer.ignore(charset_index.value() + 7);
+
+        lexer.ignore_while([](char c) {
+            // FIXME: Not the exact same ASCII whitespace. The spec does not include vertical tab (\v).
+            return is_ascii_space(c);
+        });
+
+        if (lexer.peek() != '=')
+            continue;
+
+        break;
+    }
+
+    // Ignore the '='.
+    lexer.ignore();
+
+    lexer.ignore_while([](char c) {
+        // FIXME: Not the exact same ASCII whitespace. The spec does not include vertical tab (\v).
+        return is_ascii_space(c);
+    });
+
+    if (lexer.is_eof())
+        return {};
+
+    if (lexer.consume_specific('"')) {
+        auto matching_double_quote = lexer.remaining().find("\"");
+        if (!matching_double_quote.has_value())
+            return {};
+
+        auto encoding = lexer.remaining().substring_view(0, matching_double_quote.value());
+        return TextCodec::get_standardized_encoding(encoding);
+    }
+
+    if (lexer.consume_specific('\'')) {
+        auto matching_single_quote = lexer.remaining().find("'");
+        if (!matching_single_quote.has_value())
+            return {};
+
+        auto encoding = lexer.remaining().substring_view(0, matching_single_quote.value());
+        return TextCodec::get_standardized_encoding(encoding);
+    }
+
+    auto encoding = lexer.consume_until([](char c) {
+        // FIXME: Not the exact same ASCII whitespace. The spec does not include vertical tab (\v).
+        return is_ascii_space(c) || c == ';';
+    });
+    return TextCodec::get_standardized_encoding(encoding);
 }
 
 Optional<Attribute> prescan_get_attribute(const ByteBuffer& input, size_t& position)
@@ -137,21 +202,21 @@ Optional<String> run_prescan_byte_stream_algorithm(const ByteBuffer& input)
                 auto& attribute_name = attribute.value().name();
                 attribute_list.append(attribute.value().name());
 
-                if (attribute_name == "http-equiv" && attribute.value().value() == "content-type")
-                    got_pragma = true;
-                else if (attribute_name == "charset") {
+                if (attribute_name == "http-equiv") {
+                    got_pragma = attribute.value().value() == "content-type";
+                } else if (attribute_name == "content") {
+                    auto encoding = extract_character_encoding_from_meta_element(attribute.value().value());
+                    if (encoding.has_value() && !charset.has_value()) {
+                        charset = encoding.value();
+                        need_pragma = true;
+                    }
+                } else if (attribute_name == "charset") {
                     auto maybe_charset = TextCodec::get_standardized_encoding(attribute.value().value());
                     if (maybe_charset.has_value()) {
                         charset = Optional<String> { maybe_charset };
                         need_pragma = { false };
                     }
                 }
-
-                // FIXME: For attribute name "content", do this:
-                //        Apply the "algorithm for extracting a character encoding from a meta
-                //        element", giving the attribute's value as the string to parse. If a
-                //        character encoding is returned, and if charset is still set to null,
-                //        let charset be the encoding returned, and set need pragma to true.
             }
 
             if (!need_pragma.has_value() || (need_pragma.value() && !got_pragma) || !charset.has_value())
