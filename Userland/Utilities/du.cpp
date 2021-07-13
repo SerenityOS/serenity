@@ -136,11 +136,13 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
         return 1;
     }
 
+    int ret = 0;
+
     if (--max_depth >= 0 && S_ISDIR(path_stat.st_mode)) {
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
         if (di.has_error()) {
-            warnln("DirIterator: {}", di.error_string());
-            return 1;
+            warnln("du: cannot read directory '{}': {}", path, di.error_string());
+            ret = 1;
         }
         while (di.has_next()) {
             const auto child_path = di.next_full_path();
@@ -193,5 +195,5 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
         outln("\t{}\t{}", formatted_time, path);
     }
 
-    return 0;
+    return ret;
 }
