@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobi@tobyase.de>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
@@ -16,6 +18,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
 #include <LibWeb/CSS/Length.h>
+#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/Forward.h>
@@ -219,6 +222,7 @@ public:
         Position,
         CustomProperty,
         Numeric,
+        ValueList,
     };
 
     Type type() const { return m_type; }
@@ -233,6 +237,7 @@ public:
     bool is_position() const { return type() == Type::Position; }
     bool is_custom_property() const { return type() == Type::CustomProperty; }
     bool is_numeric() const { return type() == Type::Numeric; }
+    bool is_value_list() const { return type() == Type::ValueList; }
 
     virtual String to_string() const = 0;
     virtual Length to_length() const { return Length::make_auto(); }
@@ -458,6 +463,21 @@ private:
     URL m_url;
     WeakPtr<DOM::Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
+};
+
+class ValueListStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<ValueListStyleValue> create(Vector<StyleComponentValueRule>&& values) { return adopt_ref(*new ValueListStyleValue(move(values))); }
+    virtual ~ValueListStyleValue() override { }
+
+    virtual String to_string() const override;
+
+    Vector<StyleComponentValueRule> const& values() const { return m_values; }
+
+private:
+    ValueListStyleValue(Vector<StyleComponentValueRule>&&);
+
+    Vector<StyleComponentValueRule> m_values;
 };
 
 inline CSS::ValueID StyleValue::to_identifier() const

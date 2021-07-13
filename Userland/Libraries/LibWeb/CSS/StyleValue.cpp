@@ -1,11 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/Vector.h>
 #include <LibGfx/Palette.h>
+#include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/InProcessWebView.h>
@@ -167,6 +170,25 @@ void ImageStyleValue::resource_did_load()
     // FIXME: Do less than a full repaint if possible?
     if (m_document->browsing_context())
         m_document->browsing_context()->set_needs_display({});
+}
+
+ValueListStyleValue::ValueListStyleValue(Vector<StyleComponentValueRule>&& values)
+    : StyleValue(Type::ValueList)
+    , m_values(move(values))
+{
+}
+
+String ValueListStyleValue::to_string() const
+{
+    StringBuilder builder;
+    builder.appendff("List[{}](", m_values.size());
+    for (auto& value : m_values) {
+        builder.append(value.to_debug_string());
+        builder.append(",");
+    }
+
+    builder.append(")");
+    return builder.to_string();
 }
 
 }
