@@ -145,10 +145,10 @@ public:
     NonnullRefPtr<PhysicalPage> allocate_committed_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes);
     RefPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
     RefPtr<PhysicalPage> allocate_supervisor_physical_page();
-    NonnullRefPtrVector<PhysicalPage> allocate_contiguous_supervisor_physical_pages(size_t size, size_t physical_alignment = PAGE_SIZE);
+    NonnullRefPtrVector<PhysicalPage> allocate_contiguous_supervisor_physical_pages(size_t size);
     void deallocate_physical_page(PhysicalAddress);
 
-    OwnPtr<Region> allocate_contiguous_kernel_region(size_t, StringView name, Region::Access access, size_t physical_alignment = PAGE_SIZE, Region::Cacheable = Region::Cacheable::Yes);
+    OwnPtr<Region> allocate_contiguous_kernel_region(size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     OwnPtr<Region> allocate_kernel_region(size_t, StringView name, Region::Access access, AllocationStrategy strategy = AllocationStrategy::Reserve, Region::Cacheable = Region::Cacheable::Yes);
     OwnPtr<Region> allocate_kernel_region(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     OwnPtr<Region> allocate_kernel_region_identity(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);

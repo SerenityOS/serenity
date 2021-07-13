@@ -91,11 +91,8 @@ OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(unsigned pa
     return taken_region;
 }
 
-NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count, size_t physical_alignment)
+NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count)
 {
-    // FIXME: Care about alignment.
-    (void)physical_alignment;
-
     auto rounded_page_count = next_power_of_two(count);
     auto order = __builtin_ctz(rounded_page_count);
 
