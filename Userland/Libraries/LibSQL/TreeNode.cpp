@@ -182,7 +182,7 @@ bool TreeNode::insert_in_leaf(Key const& key)
 size_t TreeNode::max_keys_in_node()
 {
     auto descriptor = m_tree.descriptor();
-    auto key_size = descriptor.data_length() + sizeof(u32);
+    auto key_size = descriptor->data_length() + sizeof(u32);
     auto ret = (BLOCKSIZE - 2 * sizeof(u32)) / key_size;
     if ((ret % 2) == 0)
         --ret;

@@ -111,8 +111,8 @@ public:
     Function<void(void)> on_new_root;
 
 private:
-    BTree(Heap& heap, TupleDescriptor const&, bool unique, u32 pointer);
-    BTree(Heap& heap, TupleDescriptor const&, u32 pointer);
+    BTree(Heap& heap, NonnullRefPtr<TupleDescriptor> const&, bool unique, u32 pointer);
+    BTree(Heap& heap, NonnullRefPtr<TupleDescriptor> const&, u32 pointer);
     void initialize_root();
     TreeNode* new_root();
     OwnPtr<TreeNode> m_root { nullptr };

@@ -9,18 +9,23 @@
 
 namespace SQL {
 
-Key::Key(TupleDescriptor const& descriptor)
+Key::Key()
+    : Tuple()
+{
+}
+
+Key::Key(NonnullRefPtr<TupleDescriptor> const& descriptor)
     : Tuple(descriptor)
 {
 }
 
-Key::Key(RefPtr<IndexDef> index)
+Key::Key(NonnullRefPtr<IndexDef> index)
     : Tuple(index->to_tuple_descriptor())
     , m_index(index)
 {
 }
 
-Key::Key(TupleDescriptor const& descriptor, ByteBuffer& buffer, size_t& offset)
+Key::Key(NonnullRefPtr<TupleDescriptor> const& descriptor, ByteBuffer& buffer, size_t& offset)
     : Tuple(descriptor, buffer, offset)
 {
 }

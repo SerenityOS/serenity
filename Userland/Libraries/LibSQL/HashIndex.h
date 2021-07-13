@@ -88,7 +88,7 @@ public:
     void list_hash();
 
 private:
-    HashIndex(Heap&, TupleDescriptor const&, u32);
+    HashIndex(Heap&, NonnullRefPtr<TupleDescriptor> const&, u32);
 
     void expand();
     void write_directory_to_write_ahead_log();

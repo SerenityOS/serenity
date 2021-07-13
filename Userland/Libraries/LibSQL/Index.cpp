@@ -10,7 +10,7 @@
 
 namespace SQL {
 
-Index::Index(Heap& heap, TupleDescriptor const& descriptor, bool unique, u32 pointer)
+Index::Index(Heap& heap, NonnullRefPtr<TupleDescriptor> const& descriptor, bool unique, u32 pointer)
     : m_heap(heap)
     , m_descriptor(descriptor)
     , m_unique(unique)
@@ -18,7 +18,7 @@ Index::Index(Heap& heap, TupleDescriptor const& descriptor, bool unique, u32 poi
 {
 }
 
-Index::Index(Heap& heap, TupleDescriptor const& descriptor, u32 pointer)
+Index::Index(Heap& heap, NonnullRefPtr<TupleDescriptor> const& descriptor, u32 pointer)
     : m_heap(heap)
     , m_descriptor(descriptor)
     , m_pointer(pointer)
