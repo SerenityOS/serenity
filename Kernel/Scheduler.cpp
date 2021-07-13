@@ -217,13 +217,6 @@ bool Scheduler::pick_next()
 
     ScopedSpinLock lock(g_scheduler_lock);
 
-    auto current_thread = Thread::current();
-    if (current_thread->should_die() && current_thread->may_die_immediately()) {
-        // Ordinarily the thread would die on syscall exit, however if the thread
-        // doesn't perform any syscalls we still need to mark it for termination here.
-        current_thread->set_state(Thread::Dying);
-    }
-
     if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
         dump_thread_list();
     }
