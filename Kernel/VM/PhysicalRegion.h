@@ -30,7 +30,7 @@ public:
     PhysicalAddress lower() const { return m_lower; }
     PhysicalAddress upper() const { return m_upper; }
     unsigned size() const { return m_pages; }
-    bool contains(PhysicalAddress paddr) const { return paddr >= m_lower && paddr <= m_upper; }
+    bool contains(PhysicalAddress paddr) const { return paddr >= m_lower && paddr < m_upper; }
 
     OwnPtr<PhysicalRegion> try_take_pages_from_beginning(unsigned);
 
