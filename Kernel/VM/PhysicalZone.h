@@ -8,6 +8,7 @@
 
 #include <AK/Bitmap.h>
 #include <AK/Forward.h>
+#include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
 
@@ -31,6 +32,8 @@ public:
 
     void dump() const;
     size_t available() const { return m_page_count - (m_used_chunks / 2); }
+
+    bool is_empty() const { return !available(); }
 
     PhysicalAddress base() const { return m_base_address; }
     bool contains(PhysicalAddress paddr) const
@@ -82,6 +85,11 @@ private:
     PhysicalAddress m_base_address { 0 };
     size_t m_page_count { 0 };
     size_t m_used_chunks { 0 };
+
+    IntrusiveListNode<PhysicalZone> m_list_node;
+
+public:
+    using List = IntrusiveList<PhysicalZone, RawPtr<PhysicalZone>, &PhysicalZone::m_list_node>;
 };
 
 }

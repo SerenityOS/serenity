@@ -11,10 +11,9 @@
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/VM/PhysicalPage.h>
+#include <Kernel/VM/PhysicalZone.h>
 
 namespace Kernel {
-
-class PhysicalZone;
 
 class PhysicalRegion {
     AK_MAKE_ETERNAL
@@ -43,6 +42,9 @@ private:
     PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper);
 
     NonnullOwnPtrVector<PhysicalZone> m_zones;
+
+    PhysicalZone::List m_usable_zones;
+    PhysicalZone::List m_full_zones;
 
     PhysicalAddress m_lower;
     PhysicalAddress m_upper;
