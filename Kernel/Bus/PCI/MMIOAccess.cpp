@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
 #include <AK/Optional.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Bus/PCI/MMIOAccess.h>
@@ -128,7 +129,7 @@ u16 MMIOAccess::read16_field(Address address, u32 field)
     VERIFY(field < 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 16-bit field {:#08x} for {}", field, address);
     u16 data = 0;
-    read_possibly_unaligned_data<u16>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), data);
+    ByteReader::load<u16>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), data);
     return data;
 }
 
@@ -138,7 +139,7 @@ u32 MMIOAccess::read32_field(Address address, u32 field)
     VERIFY(field <= 0xffc);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Reading 32-bit field {:#08x} for {}", field, address);
     u32 data = 0;
-    read_possibly_unaligned_data<u32>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), data);
+    ByteReader::load<u32>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), data);
     return data;
 }
 
@@ -154,14 +155,14 @@ void MMIOAccess::write16_field(Address address, u32 field, u16 value)
     ScopedSpinLock lock(m_access_lock);
     VERIFY(field < 0xfff);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 16-bit field {:#08x}, value={:#02x} for {}", field, value, address);
-    write_possibly_unaligned_data<u16>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), value);
+    ByteReader::store<u16>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), value);
 }
 void MMIOAccess::write32_field(Address address, u32 field, u32 value)
 {
     ScopedSpinLock lock(m_access_lock);
     VERIFY(field <= 0xffc);
     dbgln_if(PCI_DEBUG, "PCI: MMIO Writing 32-bit field {:#08x}, value={:#02x} for {}", field, value, address);
-    write_possibly_unaligned_data<u32>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), value);
+    ByteReader::store<u32>(get_device_configuration_space(address).offset(field & 0xfff).as_ptr(), value);
 }
 
 void MMIOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
