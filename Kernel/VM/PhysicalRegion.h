@@ -17,6 +17,7 @@ namespace Kernel {
 class PhysicalZone;
 
 class PhysicalRegion {
+    AK_MAKE_ETERNAL
 public:
     static OwnPtr<PhysicalRegion> try_create(PhysicalAddress lower, PhysicalAddress upper)
     {
