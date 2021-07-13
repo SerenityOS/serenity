@@ -1187,8 +1187,6 @@ public:
     bool is_profiling_suppressed() const { return m_is_profiling_suppressed; }
     void set_profiling_suppressed() { m_is_profiling_suppressed = true; }
 
-    bool may_die_immediately() const { return m_may_die_immediately; }
-    void set_may_die_immediately(bool flag) { m_may_die_immediately = flag; }
     InodeIndex global_procfs_inode_index() const { return m_global_procfs_inode_index; }
 
 private:
@@ -1287,7 +1285,6 @@ private:
     Kernel::Lock* m_blocking_lock { nullptr };
     u32 m_lock_requested_count { 0 };
     IntrusiveListNode<Thread> m_blocked_threads_list_node;
-    bool m_may_die_immediately { true };
 
 #if LOCK_DEBUG
     struct HoldingLockInfo {

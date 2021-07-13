@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ScopeGuard.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/Interrupts.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
@@ -154,14 +153,6 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 {
     auto& regs = *trap->regs;
     auto current_thread = Thread::current();
-    {
-        ScopedSpinLock lock(g_scheduler_lock);
-        current_thread->set_may_die_immediately(false);
-    }
-    ScopeGuard reset_may_die_immediately = [&current_thread] {
-        ScopedSpinLock lock(g_scheduler_lock);
-        current_thread->set_may_die_immediately(true);
-    };
     VERIFY(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
     auto& process = current_thread->process();
 
