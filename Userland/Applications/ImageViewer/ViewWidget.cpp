@@ -277,7 +277,12 @@ void ViewWidget::drop_event(GUI::DropEvent& event)
 
 void ViewWidget::resize_window()
 {
-    if (window()->is_fullscreen())
+    if (window()->is_fullscreen() || window()->is_maximized())
+        return;
+
+    auto absolute_bitmap_rect = m_bitmap_rect;
+    absolute_bitmap_rect.translate_by(window()->rect().top_left());
+    if (window()->rect().contains(absolute_bitmap_rect))
         return;
 
     if (!m_bitmap)
