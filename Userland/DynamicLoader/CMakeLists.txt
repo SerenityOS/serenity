@@ -32,6 +32,12 @@ set_source_files_properties (../Libraries/LibC/ssp.cpp PROPERTIES COMPILE_FLAGS
     "-fno-stack-protector")
 
 add_executable(Loader.so ${SOURCES})
-target_link_libraries(Loader.so gcc)
+
+if (USE_CLANG_TOOLCHAIN)
+    target_link_libraries(Loader.so clang_rt.builtins-${SERENITY_CLANG_ARCH})
+else()
+    target_link_libraries(Loader.so gcc)
+endif()
+
 target_link_options(Loader.so PRIVATE LINKER:--no-dynamic-linker)
 install(TARGETS Loader.so RUNTIME DESTINATION usr/lib/)
