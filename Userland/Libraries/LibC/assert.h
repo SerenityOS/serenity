@@ -17,7 +17,7 @@ __attribute__((noreturn)) void __assertion_failed(const char* msg);
 #    define assert(expr)                                                            \
         (__builtin_expect(!(expr), 0)                                               \
                 ? __assertion_failed(#expr "\n" __FILE__ ":" __stringify(__LINE__)) \
-                : void(0))
+                : (void)0)
 
 #else
 #    define assert(expr) ((void)(0))
