@@ -105,10 +105,8 @@ NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(siz
 
 RefPtr<PhysicalPage> PhysicalRegion::take_free_page()
 {
-    if (m_usable_zones.is_empty()) {
-        dbgln("PhysicalRegion::take_free_page: No free physical pages");
+    if (m_usable_zones.is_empty())
         return nullptr;
-    }
 
     auto& zone = *m_usable_zones.first();
     auto page = zone.allocate_block(0);
