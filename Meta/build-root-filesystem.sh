@@ -33,12 +33,19 @@ umask 0022
 
 printf "installing base system... "
 if command -v rsync >/dev/null; then
-    rsync -aH --inplace "$SERENITY_SOURCE_DIR"/Base/ mnt/
-    rsync -aH --inplace Root/ mnt/
+    if rsync --chown 2>&1 | grep "missing argument" >/dev/null; then
+        rsync -aH --chown=0:0 --inplace "$SERENITY_SOURCE_DIR"/Base/ mnt/
+        rsync -aH --chown=0:0 --inplace Root/ mnt/
+    else
+        rsync -aH --inplace "$SERENITY_SOURCE_DIR"/Base/ mnt/
+        rsync -aH --inplace Root/ mnt/
+        chown -R 0:0 mnt/
+    fi
 else
     echo "Please install rsync to speed up image creation times, falling back to cp for now"
     $CP -PdR "$SERENITY_SOURCE_DIR"/Base/* mnt/
     $CP -PdR Root/* mnt/
+    chown -R 0:0 mnt/
 fi
 SERENITY_ARCH="${SERENITY_ARCH:-i686}"
 $CP "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libgcc_s.so mnt/usr/lib/
@@ -88,8 +95,6 @@ if [ -f mnt/bin/utmpupdate ]; then
     chmod 2755 mnt/bin/utmpupdate
 fi
 
-chown 0:0 mnt/boot/Kernel
-chown 0:0 mnt/res/kernel.map
 chmod 0400 mnt/res/kernel.map
 chmod 0400 mnt/boot/Kernel
 chmod 600 mnt/etc/shadow
@@ -142,7 +147,6 @@ cp -r "$SERENITY_SOURCE_DIR"/Userland/Libraries/LibJS/Tests/test-common.js mnt/h
 chmod 700 mnt/root
 chmod 700 mnt/home/anon
 chmod 700 mnt/home/nona
-chown -R 0:0 mnt/root
 chown -R 100:100 mnt/home/anon
 chown -R 200:200 mnt/home/nona
 echo "done"
