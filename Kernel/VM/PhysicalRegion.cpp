@@ -73,7 +73,6 @@ unsigned PhysicalRegion::finalize_capacity()
 
 OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(unsigned page_count)
 {
-    VERIFY(m_used == 0);
     VERIFY(page_count > 0);
     VERIFY(page_count < m_pages);
     auto taken_lower = m_lower;

@@ -32,8 +32,6 @@ public:
     PhysicalAddress lower() const { return m_lower; }
     PhysicalAddress upper() const { return m_upper; }
     unsigned size() const { return m_pages; }
-    unsigned used() const { return m_used; }
-    unsigned free() const { return m_pages - m_used; }
     bool contains(PhysicalAddress paddr) const { return paddr >= m_lower && paddr <= m_upper; }
 
     OwnPtr<PhysicalRegion> try_take_pages_from_beginning(unsigned);
@@ -46,8 +44,6 @@ private:
     PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper);
 
     NonnullOwnPtrVector<PhysicalZone> m_zones;
-
-    size_t m_used { 0 };
 
     PhysicalAddress m_lower;
     PhysicalAddress m_upper;
