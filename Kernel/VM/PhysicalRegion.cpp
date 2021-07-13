@@ -42,17 +42,24 @@ void PhysicalRegion::initialize_zones()
     size_t remaining_pages = m_pages;
     auto base_address = m_lower;
 
-    auto make_zones = [&](size_t zone_size) {
-        while (remaining_pages >= zone_size) {
-            m_zones.append(make<PhysicalZone>(base_address, zone_size));
-            dmesgln(" * Zone {:016x}-{:016x} ({} bytes)", base_address.get(), base_address.get() + zone_size * PAGE_SIZE - 1, zone_size * PAGE_SIZE);
-            base_address = base_address.offset(zone_size * PAGE_SIZE);
+    auto make_zones = [&](size_t pages_per_zone) {
+        size_t zone_count = 0;
+        auto first_address = base_address;
+        while (remaining_pages >= pages_per_zone) {
+            m_zones.append(make<PhysicalZone>(base_address, pages_per_zone));
+            base_address = base_address.offset(pages_per_zone * PAGE_SIZE);
             m_usable_zones.append(m_zones.last());
-            remaining_pages -= zone_size;
+            remaining_pages -= pages_per_zone;
+            ++zone_count;
         }
+        if (zone_count)
+            dmesgln(" * {}x PhysicalZone ({} MiB) @ {:016x}-{:016x}", zone_count, pages_per_zone / 256, first_address.get(), base_address.get() - pages_per_zone * PAGE_SIZE - 1);
     };
 
+    // First make 16 MiB zones (with 4096 pages each)
     make_zones(4096);
+
+    // Then divide any remaining space into 1 MiB zones (with 256 pages each)
     make_zones(256);
 }
 
