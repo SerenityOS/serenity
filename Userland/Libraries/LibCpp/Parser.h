@@ -33,7 +33,7 @@ public:
     String text_of_node(const ASTNode&) const;
     StringView text_of_token(const Cpp::Token& token) const;
     void print_tokens() const;
-    const Vector<String>& errors() const { return m_state.errors; }
+    const Vector<String>& errors() const { return m_errors; }
     const Preprocessor::Definitions& preprocessor_definitions() const { return m_preprocessor_definitions; }
 
     struct TodoEntry {
@@ -147,7 +147,6 @@ private:
 
     struct State {
         size_t token_index { 0 };
-        Vector<String> errors;
         NonnullRefPtrVector<ASTNode> nodes;
     };
 
@@ -200,6 +199,7 @@ private:
     State m_state;
     Vector<State> m_saved_states;
     RefPtr<TranslationUnit> m_root_node;
+    Vector<String> m_errors;
 
     Vector<TokenAndPreprocessorDefinition> m_replaced_preprocessor_tokens;
 };
