@@ -511,6 +511,15 @@ inline constexpr bool IsMoveAssignable = IsAssignable<AddLvalueReference<T>, Add
 
 template<typename T>
 inline constexpr bool IsTriviallyMoveAssignable = IsTriviallyAssignable<AddLvalueReference<T>, AddRvalueReference<T>>;
+
+template<unsigned long size, unsigned long align>
+struct AlignedStorage {
+    struct alignas(align) Storage {
+        char buffer[size];
+    };
+    using Type = Storage;
+};
+
 }
 using AK::Detail::AddConst;
 using AK::Detail::AddLvalueReference;

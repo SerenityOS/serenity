@@ -162,7 +162,7 @@ public:
     ALWAYS_INLINE T* operator->() { return &value(); }
 
 private:
-    alignas(T) u8 m_storage[sizeof(T)];
+    TypeAlignedStorage<T> m_storage;
     bool m_has_value { false };
 };
 }

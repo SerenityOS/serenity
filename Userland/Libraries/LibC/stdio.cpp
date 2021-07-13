@@ -614,7 +614,7 @@ private:
 
 extern "C" {
 
-alignas(FILE) static u8 default_streams[3][sizeof(FILE)];
+static TypeAlignedStorage<FILE> default_streams[3];
 FILE* stdin = reinterpret_cast<FILE*>(&default_streams[0]);
 FILE* stdout = reinterpret_cast<FILE*>(&default_streams[1]);
 FILE* stderr = reinterpret_cast<FILE*>(&default_streams[2]);

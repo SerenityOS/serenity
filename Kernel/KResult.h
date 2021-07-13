@@ -157,7 +157,7 @@ public:
 
 private:
     union {
-        alignas(T) char m_storage[sizeof(T)];
+        TypeAlignedStorage<T> m_storage;
         KResult m_error;
     };
     bool m_is_error { false };

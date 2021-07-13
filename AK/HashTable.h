@@ -87,10 +87,10 @@ class HashTable {
         bool used;
         bool deleted;
         bool end;
-        alignas(T) u8 storage[sizeof(T)];
+        TypeAlignedStorage<T> storage;
 
-        T* slot() { return reinterpret_cast<T*>(storage); }
-        const T* slot() const { return reinterpret_cast<const T*>(storage); }
+        T* slot() { return reinterpret_cast<T*>(&storage); }
+        const T* slot() const { return reinterpret_cast<const T*>(&storage); }
     };
 
     struct OrderedBucket {
@@ -98,9 +98,9 @@ class HashTable {
         OrderedBucket* next;
         bool used;
         bool deleted;
-        alignas(T) u8 storage[sizeof(T)];
-        T* slot() { return reinterpret_cast<T*>(storage); }
-        const T* slot() const { return reinterpret_cast<const T*>(storage); }
+        TypeAlignedStorage<T> storage;
+        T* slot() { return reinterpret_cast<T*>(&storage); }
+        const T* slot() const { return reinterpret_cast<const T*>(&storage); }
     };
 
     using BucketType = Conditional<IsOrdered, OrderedBucket, Bucket>;

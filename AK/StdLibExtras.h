@@ -125,6 +125,12 @@ constexpr bool is_constant_evaluated()
 #endif
 }
 
+template<unsigned long size, unsigned long align>
+using AlignedStorage = typename Detail::AlignedStorage<size, align>::Type;
+
+template<typename T>
+using TypeAlignedStorage = typename Detail::AlignedStorage<sizeof(T), alignof(T)>::Type;
+
 // These can't be exported into the global namespace as they would clash with the C standard library.
 
 #define __DEFINE_GENERIC_ABS(type, zero, intrinsic) \
@@ -147,6 +153,7 @@ __DEFINE_GENERIC_ABS(long double, 0.0l, fabsl);
 
 }
 
+using AK::AlignedStorage;
 using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
@@ -158,3 +165,4 @@ using AK::min;
 using AK::RawPtr;
 using AK::swap;
 using AK::to_underlying;
+using AK::TypeAlignedStorage;

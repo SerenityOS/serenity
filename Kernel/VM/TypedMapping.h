@@ -13,8 +13,8 @@ namespace Kernel {
 
 template<typename T>
 struct TypedMapping {
-    const T* ptr() const { return reinterpret_cast<const T*>(region->vaddr().offset(offset).as_ptr()); }
-    T* ptr() { return reinterpret_cast<T*>(region->vaddr().offset(offset).as_ptr()); }
+    const T* ptr() const { return region->vaddr().offset(offset).as_ptr<const T>(); }
+    T* ptr() { return region->vaddr().offset(offset).as_ptr<T>(); }
     const T* operator->() const { return ptr(); }
     T* operator->() { return ptr(); }
     const T& operator*() const { return *ptr(); }

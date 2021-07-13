@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -20,7 +21,7 @@ public:
     template<typename... Args>
     NeverDestroyed(Args&&... args)
     {
-        new (storage) T(forward<Args>(args)...);
+        new (&storage) T(forward<Args>(args)...);
     }
 
     ~NeverDestroyed() = default;
@@ -35,7 +36,7 @@ public:
     const T& get() const { return reinterpret_cast<T&>(storage); }
 
 private:
-    alignas(T) u8 storage[sizeof(T)];
+    TypeAlignedStorage<T> storage;
 };
 
 }

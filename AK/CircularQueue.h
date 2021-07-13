@@ -100,11 +100,11 @@ public:
     size_t head_index() const { return m_head; }
 
 protected:
-    T* elements() { return reinterpret_cast<T*>(m_storage); }
-    const T* elements() const { return reinterpret_cast<const T*>(m_storage); }
+    T* elements() { return reinterpret_cast<T*>(&m_storage); }
+    const T* elements() const { return reinterpret_cast<const T*>(&m_storage); }
 
     friend class ConstIterator;
-    alignas(T) u8 m_storage[sizeof(T) * Capacity];
+    AlignedStorage<sizeof(T) * Capacity, alignof(T)> m_storage;
     size_t m_size { 0 };
     size_t m_head { 0 };
 };
