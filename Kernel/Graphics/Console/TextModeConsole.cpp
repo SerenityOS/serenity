@@ -18,7 +18,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<TextModeConsole> TextModeConsole::initialize(cons
 
 UNMAP_AFTER_INIT TextModeConsole::TextModeConsole(const VGACompatibleAdapter& adapter)
     : VGAConsole(adapter, VGAConsole::Mode::TextMode, 80, 25)
-    , m_current_vga_window(m_vga_region->vaddr().offset(0x18000).as_ptr())
+    , m_current_vga_window(m_vga_region->vaddr().offset(0x18000).as_ptr<u16>())
 {
     for (size_t index = 0; index < height(); index++) {
         clear_vga_row(index);
@@ -97,6 +97,7 @@ void TextModeConsole::set_cursor(size_t x, size_t y)
     IO::out8(0x3d4, 0x0f);
     IO::out8(0x3d5, LSB(value));
 }
+
 void TextModeConsole::hide_cursor()
 {
     ScopedSpinLock main_lock(GraphicsManagement::the().main_vga_lock());
@@ -104,6 +105,7 @@ void TextModeConsole::hide_cursor()
     IO::out8(0x3D4, 0xA);
     IO::out8(0x3D5, 0x20);
 }
+
 void TextModeConsole::show_cursor()
 {
     ScopedSpinLock main_lock(GraphicsManagement::the().main_vga_lock());
@@ -115,11 +117,12 @@ void TextModeConsole::show_cursor()
 void TextModeConsole::clear(size_t x, size_t y, size_t length)
 {
     ScopedSpinLock lock(m_vga_lock);
-    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
+    u16* buf = m_current_vga_window + x + y * width();
     for (size_t index = 0; index < length; index++) {
         buf[index] = 0x0720;
     }
 }
+
 void TextModeConsole::write(size_t x, size_t y, char ch, bool critical)
 {
     write(x, y, ch, m_default_background_color, m_default_foreground_color, critical);
@@ -143,7 +146,7 @@ void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color
         return;
     }
 
-    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
+    u16* buf = m_current_vga_window + x + y * width();
     *buf = foreground << 8 | background << 12 | ch;
     m_x = x + 1;
 
@@ -165,7 +168,7 @@ void TextModeConsole::set_vga_start_row(u16 row)
     ScopedSpinLock lock(m_vga_lock);
     m_vga_start_row = row;
     m_current_vga_start_address = row * width();
-    m_current_vga_window = m_current_vga_window + row * width() * bytes_per_base_glyph();
+    m_current_vga_window = m_current_vga_window + row * width();
     IO::out8(0x3d4, 0x0c);
     IO::out8(0x3d5, MSB(m_current_vga_start_address));
     IO::out8(0x3d4, 0x0d);

@@ -42,7 +42,7 @@ private:
     mutable SpinLock<u8> m_vga_lock;
     u16 m_vga_start_row { 0 };
     u16 m_current_vga_start_address { 0 };
-    u8* m_current_vga_window { nullptr };
+    u16* m_current_vga_window { nullptr };
     u16 m_cursor_x { 0 };
     u16 m_cursor_y { 0 };
 };
