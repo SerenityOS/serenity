@@ -25,7 +25,7 @@ PhysicalZone::PhysicalZone(PhysicalAddress base_address, size_t page_count)
     for (int order = max_order; order >= 0; --order) {
         auto& bucket = m_buckets[order];
         size_t block_size = 2u << order;
-        size_t bitmap_size_for_order = ceil_div((size_t)(chunk_count / block_size), (size_t)1);
+        size_t bitmap_size_for_order = ceil_div((size_t)(chunk_count / block_size), (size_t)2);
         bucket.order = order;
         if (bitmap_size_for_order)
             bucket.bitmap.grow(bitmap_size_for_order, false);
