@@ -108,6 +108,11 @@ private:
             obj.add("bytes_in", socket.bytes_in());
             obj.add("packets_out", socket.packets_out());
             obj.add("bytes_out", socket.bytes_out());
+            if (Process::current()->is_superuser() || Process::current()->uid() == socket.origin_uid()) {
+                obj.add("origin_pid", socket.origin_pid());
+                obj.add("origin_uid", socket.origin_uid());
+                obj.add("origin_gid", socket.origin_gid());
+            }
         });
         array.finish();
         return true;
@@ -153,6 +158,11 @@ private:
             obj.add("local_port", socket.local_port());
             obj.add("peer_address", socket.peer_address().to_string());
             obj.add("peer_port", socket.peer_port());
+            if (Process::current()->is_superuser() || Process::current()->uid() == socket.origin_uid()) {
+                obj.add("origin_pid", socket.origin_pid());
+                obj.add("origin_uid", socket.origin_uid());
+                obj.add("origin_gid", socket.origin_gid());
+            }
         });
         array.finish();
         return true;
