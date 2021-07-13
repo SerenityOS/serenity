@@ -36,14 +36,6 @@ PhysicalRegion::PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper)
 {
 }
 
-void PhysicalRegion::expand(PhysicalAddress lower, PhysicalAddress upper)
-{
-    VERIFY(!m_pages);
-
-    m_lower = lower;
-    m_upper = upper;
-}
-
 void PhysicalRegion::initialize_zones()
 {
     size_t remaining_pages = m_pages;
@@ -65,9 +57,7 @@ void PhysicalRegion::initialize_zones()
 unsigned PhysicalRegion::finalize_capacity()
 {
     VERIFY(!m_pages);
-
     m_pages = (m_upper.get() - m_lower.get()) / PAGE_SIZE;
-
     return size();
 }
 
