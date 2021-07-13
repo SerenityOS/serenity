@@ -15,7 +15,7 @@ namespace Debug::Dwarf::Expression {
 
 enum class Type {
     None,
-    UnsignedIntetger,
+    UnsignedInteger,
     Register,
 };
 
