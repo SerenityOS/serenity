@@ -22,6 +22,7 @@ enum class Type {
 struct Value {
     Type type;
     union {
+        FlatPtr as_addr;
         u32 as_u32;
     } data { 0 };
 };

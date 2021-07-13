@@ -31,7 +31,7 @@ public:
     struct SourcePosition {
         FlyString file_path;
         size_t line_number { 0 };
-        Optional<u32> address_of_first_statement;
+        Optional<FlatPtr> address_of_first_statement;
 
         SourcePosition()
             : SourcePosition(String::empty(), 0)
@@ -42,7 +42,7 @@ public:
             , line_number(line_number)
         {
         }
-        SourcePosition(String file_path, size_t line_number, u32 address_of_first_statement)
+        SourcePosition(String file_path, size_t line_number, FlatPtr address_of_first_statement)
             : file_path(file_path)
             , line_number(line_number)
             , address_of_first_statement(address_of_first_statement)
@@ -65,7 +65,7 @@ public:
         String type_name;
         LocationType location_type { LocationType::None };
         union {
-            u32 address;
+            FlatPtr address;
         } location_data { 0 };
 
         union {
@@ -86,20 +86,20 @@ public:
     struct VariablesScope {
         bool is_function { false };
         String name;
-        u32 address_low { 0 };
-        u32 address_high { 0 }; // Non-inclusive - the lowest address after address_low that's not in this scope
+        FlatPtr address_low { 0 };
+        FlatPtr address_high { 0 }; // Non-inclusive - the lowest address after address_low that's not in this scope
         Vector<Dwarf::DIE> dies_of_variables;
     };
 
     NonnullOwnPtrVector<VariableInfo> get_variables_in_current_scope(PtraceRegisters const&) const;
 
-    Optional<SourcePosition> get_source_position(u32 address) const;
+    Optional<SourcePosition> get_source_position(FlatPtr address) const;
 
     struct SourcePositionWithInlines {
         Optional<SourcePosition> source_position;
         Vector<SourcePosition> inline_chain;
     };
-    SourcePositionWithInlines get_source_position_with_inlines(u32 address) const;
+    SourcePositionWithInlines get_source_position_with_inlines(FlatPtr address) const;
 
     struct SourcePositionAndAddress {
         String file;
@@ -109,9 +109,9 @@ public:
 
     Optional<SourcePositionAndAddress> get_address_from_source_position(const String& file, size_t line) const;
 
-    String name_of_containing_function(u32 address) const;
+    String name_of_containing_function(FlatPtr address) const;
     Vector<SourcePosition> source_lines_in_scope(const VariablesScope&) const;
-    Optional<VariablesScope> get_containing_function(u32 address) const;
+    Optional<VariablesScope> get_containing_function(FlatPtr address) const;
 
 private:
     void prepare_variable_scopes();

@@ -25,6 +25,7 @@ struct AttributeValue {
     } type;
 
     union {
+        FlatPtr as_addr;
         u32 as_u32;
         i32 as_i32;
         u64 as_u64;

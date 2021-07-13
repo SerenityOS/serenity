@@ -42,7 +42,7 @@ public:
     const Vector<Entry> entries() const { return m_entries; }
 
 private:
-    void add_entry(const Reader&, FlatPtr eip);
+    void add_entry(const Reader&, FlatPtr ip);
     ELFObjectInfo const* object_info_for_region(ELF::Core::MemoryRegionInfo const&);
 
     ELF::Core::ThreadInfo m_thread_info;

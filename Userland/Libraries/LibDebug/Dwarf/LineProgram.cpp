@@ -174,7 +174,7 @@ void LineProgram::handle_extended_opcode()
         break;
     }
     default:
-        dbgln_if(DWARF_DEBUG, "offset: {:p}", m_stream.offset());
+        dbgln("Encountered unknown sub opcode {} at stream offset {:p}", sub_opcode, m_stream.offset());
         VERIFY_NOT_REACHED();
     }
 }

@@ -109,7 +109,7 @@ public:
     explicit LineProgram(DwarfInfo& dwarf_info, InputMemoryStream& stream);
 
     struct LineInfo {
-        u32 address { 0 };
+        FlatPtr address { 0 };
         FlyString file;
         size_t line { 0 };
     };
@@ -176,7 +176,7 @@ private:
     Vector<FileEntry> m_source_files;
 
     // The registers of the "line program" virtual machine
-    u32 m_address { 0 };
+    FlatPtr m_address { 0 };
     size_t m_line { 0 };
     size_t m_file_index { 0 };
     bool m_is_statement { false };
