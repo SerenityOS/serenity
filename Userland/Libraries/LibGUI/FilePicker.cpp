@@ -165,7 +165,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
         auto should_open_folder = m_mode == Mode::OpenFolder;
         if (should_open_folder == node.is_directory()) {
             m_filename_textbox->set_text(node.name);
-        } else {
+        } else if (m_mode != Mode::Save) {
             m_filename_textbox->clear();
         }
     };
