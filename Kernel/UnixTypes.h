@@ -541,7 +541,7 @@ struct ucred {
     gid_t gid;
 };
 
-struct sockaddr {
+struct alignas(4) sockaddr {
     u16 sa_family;
     char sa_data[14];
 };
@@ -549,7 +549,7 @@ struct sockaddr {
 #define S_IFSOCK 0140000
 #define UNIX_PATH_MAX 108
 
-struct sockaddr_un {
+struct alignas(4) sockaddr_un {
     u16 sun_family;
     char sun_path[UNIX_PATH_MAX];
 };
