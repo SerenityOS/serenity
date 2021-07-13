@@ -35,10 +35,6 @@ ELFObjectInfo const* Backtrace::object_info_for_region(ELF::Core::MemoryRegionIn
         return nullptr;
 
     auto image = make<ELF::Image>(file_or_error.value()->bytes());
-#if !ARCH(I386)
-    // FIXME: Fix LibDebug
-    return nullptr;
-#endif
     auto info = make<ELFObjectInfo>(file_or_error.release_value(), make<Debug::DebugInfo>(move(image)));
     auto* info_ptr = info.ptr();
     m_debug_info_cache.set(path, move(info));
@@ -81,11 +77,11 @@ Backtrace::~Backtrace()
 {
 }
 
-void Backtrace::add_entry(const Reader& coredump, FlatPtr eip)
+void Backtrace::add_entry(const Reader& coredump, FlatPtr ip)
 {
-    auto* region = coredump.region_containing((FlatPtr)eip);
+    auto* region = coredump.region_containing((FlatPtr)ip);
     if (!region) {
-        m_entries.append({ eip, {}, {}, {} });
+        m_entries.append({ ip, {}, {}, {} });
         return;
     }
     auto object_name = region->object_name();
@@ -95,15 +91,9 @@ void Backtrace::add_entry(const Reader& coredump, FlatPtr eip)
     if (!object_info)
         return;
 
-#if ARCH(I386)
-    auto function_name = object_info->debug_info->elf().symbolicate(eip - region->region_start);
-    auto source_position = object_info->debug_info->get_source_position_with_inlines(eip - region->region_start);
-#else
-    // FIXME: Fix symbolication.
-    auto function_name = "";
-    Debug::DebugInfo::SourcePositionWithInlines source_position;
-#endif
-    m_entries.append({ eip, object_name, function_name, source_position });
+    auto function_name = object_info->debug_info->elf().symbolicate(ip - region->region_start);
+    auto source_position = object_info->debug_info->get_source_position_with_inlines(ip - region->region_start);
+    m_entries.append({ ip, object_name, function_name, source_position });
 }
 
 String Backtrace::Entry::to_string(bool color) const
