@@ -7,10 +7,7 @@
 #pragma once
 
 #include <AK/Bitmap.h>
-#include <AK/Forward.h>
 #include <AK/IntrusiveList.h>
-#include <AK/Types.h>
-#include <Kernel/Forward.h>
 
 namespace Kernel {
 

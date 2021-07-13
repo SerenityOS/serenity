@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "PhysicalPage.h"
 #include <AK/Format.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/PhysicalZone.h>
 
 namespace Kernel {

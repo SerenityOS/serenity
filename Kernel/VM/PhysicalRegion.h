@@ -6,9 +6,6 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/PhysicalZone.h>
