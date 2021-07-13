@@ -34,6 +34,7 @@ PhysicalRegion::PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper)
     : m_lower(lower)
     , m_upper(upper)
 {
+    m_pages = (m_upper.get() - m_lower.get()) / PAGE_SIZE;
 }
 
 void PhysicalRegion::initialize_zones()
@@ -54,13 +55,6 @@ void PhysicalRegion::initialize_zones()
     make_zones(256);
 }
 
-unsigned PhysicalRegion::finalize_capacity()
-{
-    VERIFY(!m_pages);
-    m_pages = (m_upper.get() - m_lower.get()) / PAGE_SIZE;
-    return size();
-}
-
 OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(unsigned page_count)
 {
     VERIFY(page_count > 0);
@@ -68,16 +62,9 @@ OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(unsigned pa
     auto taken_lower = m_lower;
     auto taken_upper = taken_lower.offset((PhysicalPtr)page_count * PAGE_SIZE);
     m_lower = m_lower.offset((PhysicalPtr)page_count * PAGE_SIZE);
+    m_pages = (m_upper.get() - m_lower.get()) / PAGE_SIZE;
 
-    // TODO: find a more elegant way to re-init the existing region
-    m_pages = 0;
-    finalize_capacity();
-
-    auto taken_region = try_create(taken_lower, taken_upper);
-    if (!taken_region)
-        return {};
-    taken_region->finalize_capacity();
-    return taken_region;
+    return try_create(taken_lower, taken_upper);
 }
 
 NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count)

@@ -282,10 +282,10 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
                                         .release_nonnull());
 
     for (auto& region : m_super_physical_regions)
-        m_system_memory_info.super_physical_pages += region.finalize_capacity();
+        m_system_memory_info.super_physical_pages += region.size();
 
     for (auto& region : m_user_physical_regions)
-        m_system_memory_info.user_physical_pages += region.finalize_capacity();
+        m_system_memory_info.user_physical_pages += region.size();
 
     register_reserved_ranges();
     for (auto& range : m_reserved_memory_ranges) {
