@@ -398,7 +398,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         patch_ptr = (FlatPtr*)(FlatPtr)relocation.offset();
 
     switch (relocation.type()) {
-#ifndef __LP64__
+#if ARCH(I386)
     case R_386_NONE:
 #else
     case R_X86_64_NONE:
@@ -406,7 +406,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         // Apparently most loaders will just skip these?
         // Seems if the 'link editor' generates one something is funky with your code
         break;
-#ifndef __LP64__
+#if ARCH(I386)
     case R_386_32: {
 #else
     case R_X86_64_64: {
@@ -426,7 +426,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             *patch_ptr += symbol_address.get();
         break;
     }
-#ifndef __LP64__
+#if ARCH(I386)
     case R_386_PC32: {
         auto symbol = relocation.symbol();
         auto result = lookup_symbol(symbol);
@@ -459,7 +459,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         *patch_ptr = symbol_location.get();
         break;
     }
-#ifndef __LP64__
+#if ARCH(I386)
     case R_386_RELATIVE: {
 #else
     case R_X86_64_RELATIVE: {
@@ -473,7 +473,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             *patch_ptr += (FlatPtr)m_dynamic_object->base_address().as_ptr();
         break;
     }
-#ifndef __LP64__
+#if ARCH(I386)
     case R_386_TLS_TPOFF32:
     case R_386_TLS_TPOFF: {
 #else
@@ -497,7 +497,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         *patch_ptr = negative_offset_from_tls_block_end(dynamic_object_of_symbol->tls_offset().value(), symbol_value + addend);
         break;
     }
-#ifndef __LP64__
+#if ARCH(I386)
     case R_386_JMP_SLOT: {
 #else
     case R_X86_64_JUMP_SLOT: {
