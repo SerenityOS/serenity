@@ -49,11 +49,14 @@ static void perform_self_relocations(auxv_t* auxvp)
     FlatPtr relocation_section_addr = 0;
     size_t relocation_table_size = 0;
     size_t relocation_count = 0;
+    bool use_addend = false;
     auto* dyns = reinterpret_cast<const ElfW(Dyn)*>(dynamic_section_addr);
     for (unsigned i = 0;; ++i) {
         auto& dyn = dyns[i];
         if (dyn.d_tag == DT_NULL)
             break;
+        if (dyn.d_tag == DT_RELA)
+            use_addend = true;
         if (dyn.d_tag == DT_REL || dyn.d_tag == DT_RELA)
             relocation_section_addr = base_address + dyn.d_un.d_ptr;
         else if (dyn.d_tag == DT_RELCOUNT || dyn.d_tag == DT_RELACOUNT)
@@ -73,7 +76,10 @@ static void perform_self_relocations(auxv_t* auxvp)
 #else
         VERIFY(ELF64_R_TYPE(relocation->r_info) == R_X86_64_RELATIVE);
 #endif
-        *(FlatPtr*)(base_address + relocation->r_offset) += base_address;
+        if (use_addend)
+            *(FlatPtr*)(base_address + relocation->r_offset) = base_address + relocation->r_addend;
+        else
+            *(FlatPtr*)(base_address + relocation->r_offset) += base_address;
     }
 }
 
