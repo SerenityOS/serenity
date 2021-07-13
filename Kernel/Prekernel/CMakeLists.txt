@@ -18,14 +18,18 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 add_executable(${PREKERNEL_TARGET} ${SOURCES})
 target_compile_options(${PREKERNEL_TARGET} PRIVATE -no-pie -fno-pic)
 
-target_link_options(${PREKERNEL_TARGET} PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib)
+target_link_options(${PREKERNEL_TARGET} PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib LINKER:--no-pie)
 set_target_properties(${PREKERNEL_TARGET} PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld)
 
-target_link_libraries(${PREKERNEL_TARGET} gcc supc++)
+if (USE_CLANG_TOOLCHAIN)
+    target_link_libraries(${PREKERNEL_TARGET} clang_rt.builtins-${SERENITY_CLANG_ARCH} c++abi)
+else()
+    target_link_libraries(${PREKERNEL_TARGET} gcc supc++)
+endif()
 
 add_custom_command(
     TARGET ${PREKERNEL_TARGET} POST_BUILD
-    COMMAND ${TOOLCHAIN_PREFIX}objcopy -O elf32-i386 ${CMAKE_CURRENT_BINARY_DIR}/${PREKERNEL_TARGET} ${CMAKE_CURRENT_BINARY_DIR}/Prekernel
+    COMMAND ${CMAKE_OBJCOPY} -O elf32-i386 ${CMAKE_CURRENT_BINARY_DIR}/${PREKERNEL_TARGET} ${CMAKE_CURRENT_BINARY_DIR}/Prekernel
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Prekernel
 )
 
