@@ -851,6 +851,7 @@ Optional<Token> Parser::peek(Token::Type type) const
 void Parser::save_state()
 {
     m_saved_states.append(m_state);
+    m_state.state_nodes.clear();
 }
 
 void Parser::load_state()
@@ -897,7 +898,7 @@ void Parser::error(StringView message)
 
     if (!m_saved_states.is_empty())
         return;
-    
+
     if (message.is_null() || message.is_empty())
         message = "<empty>";
     String formatted_message;
@@ -941,23 +942,19 @@ Position Parser::position() const
     return peek().start();
 }
 
-RefPtr<ASTNode> Parser::eof_node() const
-{
-    VERIFY(m_tokens.size());
-    return node_at(m_tokens.last().end());
-}
-
 RefPtr<ASTNode> Parser::node_at(Position pos) const
 {
+    VERIFY(m_saved_states.is_empty());
     auto index = index_of_node_at(pos);
     if (!index.has_value())
         return nullptr;
-    return m_state.nodes[index.value()];
+    return m_nodes[index.value()];
 }
 
 Optional<size_t> Parser::index_of_node_at(Position pos) const
 {
     VERIFY(!m_tokens.is_empty());
+    VERIFY(m_saved_states.is_empty());
     Optional<size_t> match_node_index;
 
     auto node_span = [](const ASTNode& node) {
@@ -966,12 +963,12 @@ Optional<size_t> Parser::index_of_node_at(Position pos) const
         return Position { node.end().line - node.start().line, node.start().line != node.end().line ? 0 : node.end().column - node.start().column };
     };
 
-    for (size_t node_index = 0; node_index < m_state.nodes.size(); ++node_index) {
-        auto& node = m_state.nodes[node_index];
+    for (size_t node_index = 0; node_index < m_nodes.size(); ++node_index) {
+        auto& node = m_nodes[node_index];
         if (node.start() > pos || node.end() < pos)
             continue;
 
-        if (!match_node_index.has_value() || (node_span(node) <= node_span(m_state.nodes[match_node_index.value()])))
+        if (!match_node_index.has_value() || (node_span(node) <= node_span(m_nodes[match_node_index.value()])))
             match_node_index = node_index;
     }
     return match_node_index;
