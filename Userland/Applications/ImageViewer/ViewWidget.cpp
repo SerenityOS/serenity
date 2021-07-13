@@ -130,7 +130,7 @@ void ViewWidget::set_scale(int scale)
     m_bitmap_rect.set_size(new_size);
 
     if (on_scale_change)
-        on_scale_change(m_scale, m_bitmap_rect);
+        on_scale_change(m_scale);
 
     relayout();
 }
