@@ -309,10 +309,6 @@ extern "C" PageDirectoryEntry boot_pd3[1024];
 
 UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
 {
-    // No physical memory region should be using any memory yet!
-    for (auto& region : m_user_physical_regions)
-        VERIFY(region.used() == 0);
-
     // We assume that the physical page range is contiguous and doesn't contain huge gaps!
     PhysicalAddress highest_physical_address;
     for (auto& range : m_used_memory_ranges) {
