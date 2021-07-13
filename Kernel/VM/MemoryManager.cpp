@@ -460,7 +460,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         auto result = kernel_page_tables.set(virtual_page_array_current_page & ~0x1fffff, move(physical_page));
         VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 
-        virtual_page_array_current_page += (PAGE_SIZE / sizeof(PhysicalPageEntry)) * PAGE_SIZE;
+        virtual_page_array_current_page += (PAGE_SIZE / sizeof(PageTableEntry)) * PAGE_SIZE;
     }
 
     dmesgln("MM: Physical page entries: {}", range.value());
