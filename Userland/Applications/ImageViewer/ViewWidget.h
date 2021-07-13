@@ -34,6 +34,7 @@ public:
     int toolbar_height() { return m_toolbar_height; }
     bool scaled_for_first_image() { return m_scaled_for_first_image; }
     void set_scaled_for_first_image(bool val) { m_scaled_for_first_image = val; }
+    void resize_window();
 
     void clear();
     void flip(Gfx::Orientation);
@@ -41,7 +42,7 @@ public:
     void navigate(Directions);
     void load_from_file(const String&);
 
-    Function<void(int, Gfx::IntRect)> on_scale_change;
+    Function<void(int)> on_scale_change;
     Function<void()> on_doubleclick;
     Function<void(const GUI::DropEvent&)> on_drop;
     Function<void(const Gfx::Bitmap*)> on_image_change;
@@ -60,7 +61,6 @@ private:
     void set_bitmap(const Gfx::Bitmap* bitmap);
 
     void relayout();
-    void resize_window();
     void reset_view();
     void animate();
 
