@@ -1,0 +1,27 @@
+diff --color -rupN e15/build/platform.simulator.mak serenityEpsilon/build/platform.simulator.mak
+--- e15/build/platform.simulator.mak	2021-07-13 17:28:39.449969530 +0200
++++ serenityEpsilon/build/platform.simulator.mak	2021-07-13 13:01:26.466106000 +0200
+@@ -1,6 +1,7 @@
+ USE_LIBA = 0
+ ION_KEYBOARD_LAYOUT = layout_B2
+ EPSILON_GETOPT = 1
++SHOULD_USE_DYNAMIC_SDL = 0
+ 
+ SFLAGS += -fPIE
+ 
+diff --color -rupN e15/ion/src/simulator/external/Makefile serenityEpsilon/ion/src/simulator/external/Makefile
+--- e15/ion/src/simulator/external/Makefile	2021-07-13 17:28:39.493302861 +0200
++++ serenityEpsilon/ion/src/simulator/external/Makefile	2021-07-13 13:02:07.986107000 +0200
+@@ -99,8 +99,12 @@ endif
+ # Ignore warnings from external sources
+ SDL_SFLAGS += -w
+ 
++ifeq ($(SHOULD_USE_DYNAMIC_SDL),0)
+ include ion/src/simulator/external/config.$(TARGET).mak
++endif
+ 
+ $(call object_for,$(sdl_src)): SFLAGS += $(SDL_SFLAGS)
+ 
++ifeq ($(SHOULD_USE_DYNAMIC_SDL),0)
+ ion_src += $(sdl_src)
++endif
