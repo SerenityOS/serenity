@@ -155,6 +155,12 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     auto current_thread = Thread::current();
     VERIFY(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
     auto& process = current_thread->process();
+    if (process.is_dying()) {
+        // It's possible this thread is just about to make a syscall while another is
+        // is killing our process.
+        current_thread->die_if_needed();
+        return;
+    }
 
     if (auto tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
         tracer->set_trace_syscalls(false);

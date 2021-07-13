@@ -581,7 +581,7 @@ void Process::finalize()
     // allow us to take references anymore.
     ProcFSComponentRegistry::the().unregister_process(*this);
 
-    m_dead = true;
+    m_state.store(State::Dead, AK::MemoryOrder::memory_order_release);
 
     {
         // FIXME: PID/TID BUG
@@ -626,6 +626,15 @@ void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal
 
 void Process::die()
 {
+    auto expected = State::Running;
+    if (!m_state.compare_exchange_strong(expected, State::Dying, AK::memory_order_acquire)) {
+        // It's possible that another thread calls this at almost the same time
+        // as we can't always instantly kill other threads (they may be blocked)
+        // So if we already were called then other threads should stop running
+        // momentarily and we only really need to service the first thread
+        return;
+    }
+
     // Let go of the TTY, otherwise a slave PTY may keep the master PTY from
     // getting an EOF when the last process using the slave PTY dies.
     // If the master PTY owner relies on an EOF to know when to wait() on a
