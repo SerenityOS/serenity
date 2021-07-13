@@ -25,9 +25,7 @@ In practice, this means cloning and building the project to somewhere such as `/
 
 ## Setting up build tools
 
-Please see the general build instructions for a list of tools you need to install in your WSL Linux environment. As a
-special exception you should _not_ install QEMU in the Linux environment and instead use the instructions from the next
-section to set up QEMU on your host system.
+Please see the general build instructions for a list of tools you need to install in your WSL Linux environment.
 
 ## Setting up QEMU
 
