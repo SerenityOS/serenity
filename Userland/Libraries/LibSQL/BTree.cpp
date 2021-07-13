@@ -10,13 +10,13 @@
 
 namespace SQL {
 
-BTree::BTree(Heap& heap, TupleDescriptor const& descriptor, bool unique, u32 pointer)
+BTree::BTree(Heap& heap, NonnullRefPtr<TupleDescriptor> const& descriptor, bool unique, u32 pointer)
     : Index(heap, descriptor, unique, pointer)
     , m_root(nullptr)
 {
 }
 
-BTree::BTree(Heap& heap, TupleDescriptor const& descriptor, u32 pointer)
+BTree::BTree(Heap& heap, NonnullRefPtr<TupleDescriptor> const& descriptor, u32 pointer)
     : BTree(heap, descriptor, true, pointer)
 {
 }

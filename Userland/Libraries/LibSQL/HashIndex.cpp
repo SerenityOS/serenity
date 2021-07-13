@@ -85,7 +85,7 @@ void HashBucket::serialize(ByteBuffer& buffer) const
 {
     dbgln_if(SQL_DEBUG, "Serializing bucket: pointer {}, index #{}, local depth {} size {}",
         pointer(), index(), local_depth(), size());
-    dbgln_if(SQL_DEBUG, "key_length: {} max_entries: {}", m_hash_index.descriptor().data_length(), max_entries_in_bucket());
+    dbgln_if(SQL_DEBUG, "key_length: {} max_entries: {}", m_hash_index.descriptor()->data_length(), max_entries_in_bucket());
     serialize_to(buffer, local_depth());
     serialize_to(buffer, size());
     dbgln_if(SQL_DEBUG, "buffer size after prolog {}", buffer.size());
@@ -117,7 +117,7 @@ void HashBucket::inflate()
 
 size_t HashBucket::max_entries_in_bucket() const
 {
-    auto key_size = m_hash_index.descriptor().data_length() + sizeof(u32);
+    auto key_size = m_hash_index.descriptor()->data_length() + sizeof(u32);
     return (BLOCKSIZE - 2 * sizeof(u32)) / key_size;
 }
 
@@ -194,7 +194,7 @@ void HashBucket::list_bucket()
     }
 }
 
-HashIndex::HashIndex(Heap& heap, TupleDescriptor const& descriptor, u32 first_node)
+HashIndex::HashIndex(Heap& heap, NonnullRefPtr<TupleDescriptor> const& descriptor, u32 first_node)
     : Index(heap, descriptor, true, first_node)
     , m_nodes()
     , m_buckets()

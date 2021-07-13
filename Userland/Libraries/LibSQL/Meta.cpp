@@ -102,11 +102,11 @@ void IndexDef::append_column(String name, SQLType sql_type, Order sort_order)
     m_key_definition.append(part);
 }
 
-TupleDescriptor IndexDef::to_tuple_descriptor() const
+NonnullRefPtr<TupleDescriptor> IndexDef::to_tuple_descriptor() const
 {
-    TupleDescriptor ret;
+    NonnullRefPtr<TupleDescriptor> ret = adopt_ref(*new TupleDescriptor);
     for (auto& part : m_key_definition) {
-        ret.append({ part.name(), part.type(), part.sort_order() });
+        ret->append({ part.name(), part.type(), part.sort_order() });
     }
     return ret;
 }
@@ -145,11 +145,11 @@ TableDef::TableDef(SchemaDef* schema, String name)
 {
 }
 
-TupleDescriptor TableDef::to_tuple_descriptor() const
+NonnullRefPtr<TupleDescriptor> TableDef::to_tuple_descriptor() const
 {
-    TupleDescriptor ret;
+    NonnullRefPtr<TupleDescriptor> ret = adopt_ref(*new TupleDescriptor);
     for (auto& part : m_columns) {
-        ret.append({ part.name(), part.type(), Order::Ascending });
+        ret->append({ part.name(), part.type(), Order::Ascending });
     }
     return ret;
 }

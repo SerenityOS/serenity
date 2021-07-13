@@ -107,7 +107,7 @@ public:
     [[nodiscard]] size_t size() const { return m_key_definition.size(); }
     void append_column(String, SQLType, Order = Order::Ascending);
     Key key() const override;
-    [[nodiscard]] TupleDescriptor to_tuple_descriptor() const;
+    [[nodiscard]] NonnullRefPtr<TupleDescriptor> to_tuple_descriptor() const;
     static NonnullRefPtr<IndexDef> index_def();
     static Key make_key(TableDef const& table_def);
 
@@ -132,7 +132,7 @@ public:
     size_t num_indexes() { return m_indexes.size(); }
     NonnullRefPtrVector<ColumnDef> columns() const { return m_columns; }
     NonnullRefPtrVector<IndexDef> indexes() const { return m_indexes; }
-    [[nodiscard]] TupleDescriptor to_tuple_descriptor() const;
+    [[nodiscard]] NonnullRefPtr<TupleDescriptor> to_tuple_descriptor() const;
 
     static NonnullRefPtr<IndexDef> index_def();
     static Key make_key(SchemaDef const& schema_def);
