@@ -8,6 +8,7 @@
 
 #include "Region.h"
 #include "ValueWithShadow.h"
+#include <AK/ByteReader.h>
 #include <LibX86/Instruction.h>
 #include <LibX86/Interpreter.h>
 
@@ -1223,7 +1224,8 @@ ALWAYS_INLINE u16 SoftCPU::read16()
     if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
         update_code_cache();
 
-    u16 value = *reinterpret_cast<const u16*>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()]);
+    u16 value;
+    ByteReader::load<u16>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()], value);
     m_eip += 2;
     return value;
 }
@@ -1233,7 +1235,9 @@ ALWAYS_INLINE u32 SoftCPU::read32()
     if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
         update_code_cache();
 
-    u32 value = *reinterpret_cast<const u32*>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()]);
+    u32 value;
+    ByteReader::load<u32>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()], value);
+
     m_eip += 4;
     return value;
 }
@@ -1243,7 +1247,9 @@ ALWAYS_INLINE u64 SoftCPU::read64()
     if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
         update_code_cache();
 
-    auto value = *reinterpret_cast<const u64*>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()]);
+    u64 value;
+    ByteReader::load<u64>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()], value);
+
     m_eip += 8;
     return value;
 }
