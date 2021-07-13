@@ -111,11 +111,6 @@ void ViewWidget::set_scale(int scale)
     if (m_bitmap.is_null())
         return;
 
-    if (m_scale == scale) {
-        update();
-        return;
-    }
-
     if (scale < 10)
         scale = 10;
     if (scale > 1000)
