@@ -894,6 +894,10 @@ Vector<Token> Parser::tokens_in_range(Position start, Position end) const
 void Parser::error(StringView message)
 {
     LOG_SCOPE();
+
+    if (!m_saved_states.is_empty())
+        return;
+    
     if (message.is_null() || message.is_empty())
         message = "<empty>";
     String formatted_message;
@@ -907,7 +911,7 @@ void Parser::error(StringView message)
             m_tokens[m_state.token_index].start().column);
     }
 
-    m_state.errors.append(formatted_message);
+    m_errors.append(formatted_message);
 }
 
 bool Parser::match_expression()
