@@ -34,7 +34,7 @@ jobs:
         uses: tim-actions/commit-message-checker-with-regex@v0.3.1
         with:
           commits: ${{ steps.get-pr-commits.outputs.commits }}
-          pattern: '^\S.*?: .+'
+          pattern: '^\S.*?\S: .+'
           error: 'Missing category in commit title (if this is a fix up of a previous commit, it should be squashed)'
 
       - name: Check first word of title for capitalization
