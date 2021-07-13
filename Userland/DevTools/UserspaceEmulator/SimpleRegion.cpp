@@ -5,6 +5,7 @@
  */
 
 #include "SimpleRegion.h"
+#include <AK/ByteReader.h>
 #include <string.h>
 
 namespace UserspaceEmulator {
@@ -26,77 +27,98 @@ SimpleRegion::~SimpleRegion()
 ValueWithShadow<u8> SimpleRegion::read8(FlatPtr offset)
 {
     VERIFY(offset < size());
-    return { *reinterpret_cast<const u8*>(m_data + offset), *reinterpret_cast<const u8*>(m_shadow_data + offset) };
+    return { m_data[offset], m_shadow_data[offset] };
 }
 
 ValueWithShadow<u16> SimpleRegion::read16(u32 offset)
 {
     VERIFY(offset + 1 < size());
-    return { *reinterpret_cast<const u16*>(m_data + offset), *reinterpret_cast<const u16*>(m_shadow_data + offset) };
+
+    u16 value, shadow;
+    ByteReader::load<u16>(m_data + offset, value);
+    ByteReader::load<u16>(m_shadow_data + offset, shadow);
+
+    return { value, shadow };
 }
 
 ValueWithShadow<u32> SimpleRegion::read32(u32 offset)
 {
     VERIFY(offset + 3 < size());
-    return { *reinterpret_cast<const u32*>(m_data + offset), *reinterpret_cast<const u32*>(m_shadow_data + offset) };
+
+    u32 value, shadow;
+    ByteReader::load<u32>(m_data + offset, value);
+    ByteReader::load<u32>(m_shadow_data + offset, shadow);
+
+    return { value, shadow };
 }
 
 ValueWithShadow<u64> SimpleRegion::read64(u32 offset)
 {
     VERIFY(offset + 7 < size());
-    return { *reinterpret_cast<const u64*>(m_data + offset), *reinterpret_cast<const u64*>(m_shadow_data + offset) };
+
+    u64 value, shadow;
+    ByteReader::load<u64>(m_data + offset, value);
+    ByteReader::load<u64>(m_shadow_data + offset, shadow);
+
+    return { value, shadow };
 }
 
 ValueWithShadow<u128> SimpleRegion::read128(u32 offset)
 {
     VERIFY(offset + 15 < size());
-    return { *reinterpret_cast<const u128*>(m_data + offset), *reinterpret_cast<const u128*>(m_shadow_data + offset) };
+    u128 value, shadow;
+    ByteReader::load(m_data + offset, value);
+    ByteReader::load(m_shadow_data + offset, shadow);
+    return { value, shadow };
 }
 
 ValueWithShadow<u256> SimpleRegion::read256(u32 offset)
 {
     VERIFY(offset + 31 < size());
-    return { *reinterpret_cast<const u256*>(m_data + offset), *reinterpret_cast<const u256*>(m_shadow_data + offset) };
+    u256 value, shadow;
+    ByteReader::load(m_data + offset, value);
+    ByteReader::load(m_shadow_data + offset, shadow);
+    return { value, shadow };
 }
 
 void SimpleRegion::write8(u32 offset, ValueWithShadow<u8> value)
 {
     VERIFY(offset < size());
-    *reinterpret_cast<u8*>(m_data + offset) = value.value();
-    *reinterpret_cast<u8*>(m_shadow_data + offset) = value.shadow();
+    m_data[offset] = value.value();
+    m_shadow_data[offset] = value.shadow();
 }
 
 void SimpleRegion::write16(u32 offset, ValueWithShadow<u16> value)
 {
     VERIFY(offset + 1 < size());
-    *reinterpret_cast<u16*>(m_data + offset) = value.value();
-    *reinterpret_cast<u16*>(m_shadow_data + offset) = value.shadow();
+    ByteReader::store(m_data + offset, value.value());
+    ByteReader::store(m_shadow_data + offset, value.shadow());
 }
 
 void SimpleRegion::write32(u32 offset, ValueWithShadow<u32> value)
 {
     VERIFY(offset + 3 < size());
-    *reinterpret_cast<u32*>(m_data + offset) = value.value();
-    *reinterpret_cast<u32*>(m_shadow_data + offset) = value.shadow();
+    ByteReader::store(m_data + offset, value.value());
+    ByteReader::store(m_shadow_data + offset, value.shadow());
 }
 
 void SimpleRegion::write64(u32 offset, ValueWithShadow<u64> value)
 {
     VERIFY(offset + 7 < size());
-    *reinterpret_cast<u64*>(m_data + offset) = value.value();
-    *reinterpret_cast<u64*>(m_shadow_data + offset) = value.shadow();
+    ByteReader::store(m_data + offset, value.value());
+    ByteReader::store(m_shadow_data + offset, value.shadow());
 }
 void SimpleRegion::write128(u32 offset, ValueWithShadow<u128> value)
 {
     VERIFY(offset + 15 < size());
-    *reinterpret_cast<u128*>(m_data + offset) = value.value();
-    *reinterpret_cast<u128*>(m_shadow_data + offset) = value.shadow();
+    ByteReader::store(m_data + offset, value.value());
+    ByteReader::store(m_shadow_data + offset, value.shadow());
 }
 void SimpleRegion::write256(u32 offset, ValueWithShadow<u256> value)
 {
     VERIFY(offset + 31 < size());
-    *reinterpret_cast<u256*>(m_data + offset) = value.value();
-    *reinterpret_cast<u256*>(m_shadow_data + offset) = value.shadow();
+    ByteReader::store(m_data + offset, value.value());
+    ByteReader::store(m_shadow_data + offset, value.shadow());
 }
 
 u8* SimpleRegion::cacheable_ptr(u32 offset)
