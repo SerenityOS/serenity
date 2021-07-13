@@ -12,9 +12,10 @@
 namespace Kernel {
 
 class PhysicalPage {
+    AK_MAKE_NONCOPYABLE(PhysicalPage);
+    AK_MAKE_NONMOVABLE(PhysicalPage);
+
     friend class MemoryManager;
-    friend class PageDirectory;
-    friend class VMObject;
 
 public:
     PhysicalAddress paddr() const;
