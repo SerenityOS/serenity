@@ -226,7 +226,7 @@ static void parse_variable_location(Dwarf::DIE const& variable_die, DebugInfo::V
         auto value = Dwarf::Expression::evaluate(expression_bytes, regs);
 
         if (value.type != Dwarf::Expression::Type::None) {
-            VERIFY(value.type == Dwarf::Expression::Type::UnsignedIntetger);
+            VERIFY(value.type == Dwarf::Expression::Type::UnsignedInteger);
             variable_info.location_type = DebugInfo::VariableInfo::LocationType::Address;
             variable_info.location_data.address = value.data.as_u32;
         }
