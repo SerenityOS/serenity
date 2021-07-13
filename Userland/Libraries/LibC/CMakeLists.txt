@@ -132,7 +132,7 @@ set_property(
         PROPERTY ADDITIONAL_CLEAN_FILES ${TEMP_OBJ_FILES}
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++ -nolibc")
 serenity_libc(LibC c)
 add_dependencies(LibC crti crt0 crt0_shared crtn)
 target_link_libraries(LibC ssp system)
