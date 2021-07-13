@@ -443,6 +443,16 @@ void Scheduler::timer_tick(const RegisterState& regs)
         return; // TODO: This prevents scheduling on other CPUs!
 #endif
 
+    if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
+        dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::id(), *current_thread);
+        {
+            ScopedSpinLock scheduler_lock(g_scheduler_lock);
+            current_thread->set_state(Thread::Dying);
+        }
+        VERIFY(!Processor::current().in_critical());
+        Processor::current().invoke_scheduler_async();
+        return;
+    }
     if (current_thread->tick())
         return;
 
