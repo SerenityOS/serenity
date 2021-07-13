@@ -25,7 +25,6 @@ public:
 
     ~PhysicalRegion();
 
-    void expand(PhysicalAddress lower, PhysicalAddress upper);
     unsigned finalize_capacity();
     void initialize_zones();
 

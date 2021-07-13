@@ -174,8 +174,6 @@ bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_addres
 
 UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 {
-    PhysicalRegion* physical_region { nullptr };
-
     // Register used memory regions that we know of.
     m_used_memory_ranges.ensure_capacity(4);
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
@@ -192,6 +190,13 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 
     auto* mmap_begin = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
     auto* mmap_end = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr) + multiboot_info_ptr->mmap_length);
+
+    struct ContiguousPhysicalRange {
+        PhysicalAddress lower;
+        PhysicalAddress upper;
+    };
+
+    Vector<ContiguousPhysicalRange> contiguous_physical_ranges;
 
     for (auto* mmap = mmap_begin; mmap < mmap_end; mmap++) {
         dmesgln("MM: Multiboot mmap: address={:p}, length={}, type={}", mmap->addr, mmap->len, mmap->type);
@@ -255,14 +260,19 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
             if (should_skip)
                 continue;
 
-            // Assign page to user physical physical_region.
-            if (!physical_region || physical_region->upper().offset(PAGE_SIZE) != addr) {
-                m_user_physical_regions.append(PhysicalRegion::try_create(addr, addr).release_nonnull());
-                physical_region = &m_user_physical_regions.last();
+            if (contiguous_physical_ranges.is_empty() || contiguous_physical_ranges.last().upper.offset(PAGE_SIZE) != addr) {
+                contiguous_physical_ranges.append(ContiguousPhysicalRange {
+                    .lower = addr,
+                    .upper = addr,
+                });
             } else {
-                physical_region->expand(physical_region->lower(), addr);
+                contiguous_physical_ranges.last().upper = addr;
             }
         }
+    }
+
+    for (auto& range : contiguous_physical_ranges) {
+        m_user_physical_regions.append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull());
     }
 
     // Append statically-allocated super physical physical_region.
