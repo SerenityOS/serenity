@@ -1295,33 +1295,49 @@ void VimEditingEngine::yank(TextRange range, YankType yank_type)
 
 void VimEditingEngine::put_before()
 {
+    auto amount = m_motion.amount() ? m_motion.amount() : 1;
+    m_motion.reset();
     if (m_yank_type == YankType::Line) {
         move_to_logical_line_beginning();
-        StringBuilder sb = StringBuilder(m_yank_buffer.length() + 1);
-        sb.append(m_yank_buffer);
-        sb.append_code_point(0x0A);
+        StringBuilder sb = StringBuilder(amount * (m_yank_buffer.length() + 1));
+        for (auto i = 0; i < amount; i++) {
+            sb.append(m_yank_buffer);
+            sb.append_code_point(0x0A);
+        }
         m_editor->insert_at_cursor_or_replace_selection(sb.to_string());
         m_editor->set_cursor({ m_editor->cursor().line(), m_editor->current_line().first_non_whitespace_column() });
     } else {
-        m_editor->insert_at_cursor_or_replace_selection(m_yank_buffer);
+        StringBuilder sb = StringBuilder(m_yank_buffer.length() * amount);
+        for (auto i = 0; i < amount; i++) {
+            sb.append(m_yank_buffer);
+        }
+        m_editor->insert_at_cursor_or_replace_selection(sb.to_string());
         move_one_left();
     }
 }
 
 void VimEditingEngine::put_after()
 {
+    auto amount = m_motion.amount() ? m_motion.amount() : 1;
+    m_motion.reset();
     if (m_yank_type == YankType::Line) {
         move_to_logical_line_end();
         StringBuilder sb = StringBuilder(m_yank_buffer.length() + 1);
-        sb.append_code_point(0x0A);
-        sb.append(m_yank_buffer);
+        for (auto i = 0; i < amount; i++) {
+            sb.append_code_point(0x0A);
+            sb.append(m_yank_buffer);
+        }
         m_editor->insert_at_cursor_or_replace_selection(sb.to_string());
         m_editor->set_cursor({ m_editor->cursor().line(), m_editor->current_line().first_non_whitespace_column() });
     } else {
         // FIXME: If attempting to put on the last column a line,
         // the buffer will bne placed on the next line due to the move_one_left/right behaviour.
         move_one_right();
-        m_editor->insert_at_cursor_or_replace_selection(m_yank_buffer);
+        StringBuilder sb = StringBuilder(m_yank_buffer.length() * amount);
+        for (auto i = 0; i < amount; i++) {
+            sb.append(m_yank_buffer);
+        }
+        m_editor->insert_at_cursor_or_replace_selection(sb.to_string());
         move_one_left();
     }
 }
