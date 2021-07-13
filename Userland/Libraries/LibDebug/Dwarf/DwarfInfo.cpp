@@ -47,7 +47,7 @@ void DwarfInfo::populate_compilation_units()
 
         debug_info_stream >> compilation_unit_header;
         VERIFY(compilation_unit_header.common.version <= 5);
-        VERIFY(compilation_unit_header.address_size() == sizeof(u32));
+        VERIFY(compilation_unit_header.address_size() == sizeof(FlatPtr));
 
         u32 length_after_header = compilation_unit_header.length() - (compilation_unit_header.header_size() - offsetof(CompilationUnitHeader, common.version));
 
@@ -102,11 +102,11 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         break;
     }
     case AttributeDataForm::Addr: {
-        u32 address;
+        FlatPtr address;
         debug_info_stream >> address;
         VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
-        value.data.as_u32 = address;
+        value.data.as_addr = address;
         break;
     }
     case AttributeDataForm::SData: {
@@ -250,7 +250,6 @@ void DwarfInfo::build_cached_dies() const
         if (!start.has_value() || !end.has_value())
             return {};
 
-        VERIFY(sizeof(FlatPtr) == sizeof(u32));
         VERIFY(start->type == Dwarf::AttributeValue::Type::UnsignedNumber);
 
         // DW_AT_high_pc attribute can have different meanings depending on the attribute form.
@@ -258,7 +257,7 @@ void DwarfInfo::build_cached_dies() const
 
         uint32_t range_end = 0;
         if (end->form == Dwarf::AttributeDataForm::Addr)
-            range_end = end->data.as_u32;
+            range_end = end->data.as_addr;
         else
             range_end = start->data.as_u32 + end->data.as_u32;
 

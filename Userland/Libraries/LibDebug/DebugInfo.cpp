@@ -60,9 +60,9 @@ void DebugInfo::parse_scopes_impl(Dwarf::DIE const& die)
             dbgln_if(SPAM_DEBUG, "DWARF: Couldn't find attribute LowPc for scope");
             return;
         }
-        scope.address_low = child.get_attribute(Dwarf::Attribute::LowPc).value().data.as_u32;
+        scope.address_low = child.get_attribute(Dwarf::Attribute::LowPc).value().data.as_addr;
         // The attribute name HighPc is confusing. In this context, it seems to actually be a positive offset from LowPc
-        scope.address_high = scope.address_low + child.get_attribute(Dwarf::Attribute::HighPc).value().data.as_u32;
+        scope.address_high = scope.address_low + child.get_attribute(Dwarf::Attribute::HighPc).value().data.as_addr;
 
         child.for_each_child([&](Dwarf::DIE const& variable_entry) {
             if (!(variable_entry.tag() == Dwarf::EntryTag::Variable
@@ -78,7 +78,6 @@ void DebugInfo::parse_scopes_impl(Dwarf::DIE const& die)
 
 void DebugInfo::prepare_lines()
 {
-
     Vector<Dwarf::LineProgram::LineInfo> all_lines;
     m_dwarf_info.for_each_compilation_unit([&all_lines](Dwarf::CompilationUnit const& unit) {
         all_lines.extend(unit.line_program().lines());
@@ -115,7 +114,7 @@ void DebugInfo::prepare_lines()
     });
 }
 
-Optional<DebugInfo::SourcePosition> DebugInfo::get_source_position(u32 target_address) const
+Optional<DebugInfo::SourcePosition> DebugInfo::get_source_position(FlatPtr target_address) const
 {
     if (m_sorted_lines.is_empty())
         return {};
@@ -219,7 +218,7 @@ static void parse_variable_location(Dwarf::DIE const& variable_die, DebugInfo::V
     switch (location_info.value().type) {
     case Dwarf::AttributeValue::Type::UnsignedNumber:
         variable_info.location_type = DebugInfo::VariableInfo::LocationType::Address;
-        variable_info.location_data.address = location_info.value().data.as_u32;
+        variable_info.location_data.address = location_info.value().data.as_addr;
         break;
     case Dwarf::AttributeValue::Type::DwarfExpression: {
         auto expression_bytes = ReadonlyBytes { location_info.value().data.as_raw_bytes.bytes, location_info.value().data.as_raw_bytes.length };
@@ -228,7 +227,7 @@ static void parse_variable_location(Dwarf::DIE const& variable_die, DebugInfo::V
         if (value.type != Dwarf::Expression::Type::None) {
             VERIFY(value.type == Dwarf::Expression::Type::UnsignedInteger);
             variable_info.location_type = DebugInfo::VariableInfo::LocationType::Address;
-            variable_info.location_data.address = value.data.as_u32;
+            variable_info.location_data.address = value.data.as_addr;
         }
         break;
     }
@@ -349,7 +348,7 @@ bool DebugInfo::is_variable_tag_supported(Dwarf::EntryTag const& tag)
         || tag == Dwarf::EntryTag::ArrayType;
 }
 
-String DebugInfo::name_of_containing_function(u32 address) const
+String DebugInfo::name_of_containing_function(FlatPtr address) const
 {
     auto function = get_containing_function(address);
     if (!function.has_value())
@@ -357,7 +356,7 @@ String DebugInfo::name_of_containing_function(u32 address) const
     return function.value().name;
 }
 
-Optional<DebugInfo::VariablesScope> DebugInfo::get_containing_function(u32 address) const
+Optional<DebugInfo::VariablesScope> DebugInfo::get_containing_function(FlatPtr address) const
 {
     for (const auto& scope : m_scopes) {
         if (!scope.is_function || address < scope.address_low || address >= scope.address_high)
@@ -386,7 +385,7 @@ DebugInfo::SourcePosition DebugInfo::SourcePosition::from_line_info(Dwarf::LineP
     return { line.file, line.line, line.address };
 }
 
-DebugInfo::SourcePositionWithInlines DebugInfo::get_source_position_with_inlines(u32 address) const
+DebugInfo::SourcePositionWithInlines DebugInfo::get_source_position_with_inlines(FlatPtr address) const
 {
     // If the address is in an "inline chain", this is the inner-most inlined position.
     auto inner_source_position = get_source_position(address);
