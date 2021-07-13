@@ -4,12 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/ProcessStatisticsReader.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
@@ -24,6 +26,16 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/proc/all", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/etc/passwd", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
         return 1;
@@ -33,6 +45,7 @@ int main(int argc, char** argv)
     bool flag_list = false;
     bool flag_tcp = false;
     bool flag_udp = false;
+    bool flag_program = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display network connections");
@@ -40,9 +53,24 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_list, "Display only listening sockets", "list", 'l');
     args_parser.add_option(flag_tcp, "Display only TCP network connections", "tcp", 't');
     args_parser.add_option(flag_udp, "Display only UDP network connections", "udp", 'u');
+    args_parser.add_option(flag_program, "Show the PID and name of the program to which each socket belongs", "program", 'p');
     args_parser.parse(argc, argv);
 
     bool has_protocol_flag = (flag_tcp || flag_udp);
+
+    uid_t current_uid = getuid();
+
+    HashMap<pid_t, String> programs;
+
+    if (flag_program) {
+        auto processes = Core::ProcessStatisticsReader::get_all();
+        if (!processes.has_value())
+            return 1;
+
+        for (auto& proc : processes.value().processes) {
+            programs.set(proc.pid, proc.name);
+        }
+    }
 
     enum class Alignment {
         Left,
@@ -64,6 +92,7 @@ int main(int argc, char** argv)
     int local_address_column = -1;
     int peer_address_column = -1;
     int state_column = -1;
+    int program_column = -1;
 
     auto add_column = [&](auto title, auto alignment, auto width) {
         columns.append({ title, alignment, width, {} });
@@ -75,7 +104,8 @@ int main(int argc, char** argv)
     bytes_out_column = add_column("Bytes-Out", Alignment::Right, 9);
     local_address_column = add_column("Local Address", Alignment::Left, 20);
     peer_address_column = add_column("Peer Address", Alignment::Left, 20);
-    state_column = add_column("State", Alignment::Left, 9);
+    state_column = add_column("State", Alignment::Left, 11);
+    program_column = flag_program ? add_column("PID/Program", Alignment::Left, 11) : -1;
 
     auto print_column = [](auto& column, auto& string) {
         if (!column.width) {
@@ -89,7 +119,19 @@ int main(int argc, char** argv)
         }
     };
 
+    auto get_formatted_program = [&](pid_t pid) {
+        if (pid == -1)
+            return String("-");
+
+        auto program = programs.get(pid);
+        return String::formatted("{}/{}", pid, program.value());
+    };
+
     if (!has_protocol_flag || flag_tcp || flag_udp) {
+        if (flag_program && current_uid != 0) {
+            outln("(Some processes could not be identified, non-owned process info will not be shown)");
+        }
+
         out("Active Internet connections ");
 
         if (flag_all) {
@@ -134,6 +176,7 @@ int main(int argc, char** argv)
             auto local_port = if_object.get("local_port").to_string();
             auto formatted_local_address = String::formatted("{}:{}", local_address, local_port);
             auto state = if_object.get("state").to_string();
+            auto origin_pid = (if_object.has("origin_pid")) ? if_object.get("origin_pid").to_u32() : -1;
 
             if (!flag_all && ((state == "Listen" && !flag_list) || (state != "Listen" && flag_list)))
                 continue;
@@ -150,6 +193,8 @@ int main(int argc, char** argv)
                 columns[peer_address_column].buffer = formatted_peer_address;
             if (state_column != -1)
                 columns[state_column].buffer = state;
+            if (flag_program && program_column != -1)
+                columns[program_column].buffer = get_formatted_program(origin_pid);
 
             for (auto& column : columns)
                 print_column(column, column.buffer);
@@ -180,6 +225,7 @@ int main(int argc, char** argv)
             auto local_port = if_object.get("local_port").to_string();
             auto peer_address = if_object.get("peer_address").to_string();
             auto peer_port = if_object.get("peer_port").to_string();
+            auto origin_pid = (if_object.has("origin_pid")) ? if_object.get("origin_pid").to_u32() : -1;
 
             if (protocol_column != -1)
                 columns[protocol_column].buffer = "udp";
@@ -193,6 +239,8 @@ int main(int argc, char** argv)
                 columns[peer_address_column].buffer = String::formatted("{}:{}", peer_address, peer_port);
             if (state_column != -1)
                 columns[state_column].buffer = "-";
+            if (flag_program && program_column != -1)
+                columns[program_column].buffer = get_formatted_program(origin_pid);
 
             for (auto& column : columns)
                 print_column(column, column.buffer);
