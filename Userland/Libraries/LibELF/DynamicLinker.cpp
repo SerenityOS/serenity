@@ -214,40 +214,40 @@ static void initialize_libc(DynamicObject& libc)
     // because it uses getenv() internally, so `environ` has to be initialized before we call `__libc_init`.
     auto res = libc.lookup_symbol("environ"sv);
     VERIFY(res.has_value());
-    *((char***)res.value().address.as_ptr()) = s_envp;
+    *(res.value().address.as_ptr<char**>()) = s_envp;
 
     res = libc.lookup_symbol("__environ_is_malloced"sv);
     VERIFY(res.has_value());
-    *((bool*)res.value().address.as_ptr()) = false;
+    *(res.value().address.as_ptr<bool>()) = false;
 
     res = libc.lookup_symbol("exit"sv);
     VERIFY(res.has_value());
-    s_libc_exit = (LibCExitFunction)res.value().address.as_ptr();
+    s_libc_exit = *res.value().address.as_ptr<LibCExitFunction>();
 
     res = libc.lookup_symbol("__dl_iterate_phdr"sv);
     VERIFY(res.has_value());
-    *((DlIteratePhdrFunction*)res.value().address.as_ptr()) = __dl_iterate_phdr;
+    *res.value().address.as_ptr<DlIteratePhdrFunction>() = __dl_iterate_phdr;
 
     res = libc.lookup_symbol("__dlclose"sv);
     VERIFY(res.has_value());
-    *((DlCloseFunction*)res.value().address.as_ptr()) = __dlclose;
+    *res.value().address.as_ptr<DlCloseFunction>() = __dlclose;
 
     res = libc.lookup_symbol("__dlopen"sv);
     VERIFY(res.has_value());
-    *((DlOpenFunction*)res.value().address.as_ptr()) = __dlopen;
+    *res.value().address.as_ptr<DlOpenFunction>() = __dlopen;
 
     res = libc.lookup_symbol("__dlsym"sv);
     VERIFY(res.has_value());
-    *((DlSymFunction*)res.value().address.as_ptr()) = __dlsym;
+    *res.value().address.as_ptr<DlSymFunction>() = __dlsym;
 
     res = libc.lookup_symbol("__dladdr"sv);
     VERIFY(res.has_value());
-    *((DlAddrFunction*)res.value().address.as_ptr()) = __dladdr;
+    *res.value().address.as_ptr<DlAddrFunction>() = __dladdr;
 
     res = libc.lookup_symbol("__libc_init"sv);
     VERIFY(res.has_value());
     typedef void libc_init_func();
-    ((libc_init_func*)res.value().address.as_ptr())();
+    res.value().address.as_ptr<libc_init_func>()();
 }
 
 template<typename Callback>
