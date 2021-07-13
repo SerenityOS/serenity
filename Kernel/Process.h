@@ -148,6 +148,12 @@ class Process
         Process& m_process;
     };
 
+    enum class State : u8 {
+        Running = 0,
+        Dying,
+        Dead
+    };
+
 public:
     inline static Process* current()
     {
@@ -201,7 +207,8 @@ public:
     bool should_core_dump() const { return m_should_dump_core; }
     void set_dump_core(bool dump_core) { m_should_dump_core = dump_core; }
 
-    bool is_dead() const { return m_dead; }
+    bool is_dying() const { return m_state.load(AK::MemoryOrder::memory_order_acquire) != State::Running; }
+    bool is_dead() const { return m_state.load(AK::MemoryOrder::memory_order_acquire) == State::Dead; }
 
     bool is_stopped() const { return m_is_stopped; }
     bool set_stopped(bool stopped) { return m_is_stopped.exchange(stopped); }
@@ -670,7 +677,7 @@ private:
     mutable RecursiveSpinLock m_thread_list_lock;
 
     const bool m_is_kernel_process;
-    bool m_dead { false };
+    Atomic<State> m_state { State::Running };
     bool m_profiling { false };
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_stopped { false };
     bool m_should_dump_core { false };
