@@ -37,14 +37,14 @@ class Index : public Core::Object {
 public:
     ~Index() override = default;
 
-    TupleDescriptor descriptor() const { return m_descriptor; }
+    NonnullRefPtr<TupleDescriptor> descriptor() const { return m_descriptor; }
     [[nodiscard]] bool duplicates_allowed() const { return !m_unique; }
     [[nodiscard]] bool unique() const { return m_unique; }
     [[nodiscard]] u32 pointer() const { return m_pointer; }
 
 protected:
-    Index(Heap& heap, TupleDescriptor const&, bool unique, u32 pointer);
-    Index(Heap& heap, TupleDescriptor const&, u32 pointer);
+    Index(Heap& heap, NonnullRefPtr<TupleDescriptor> const&, bool unique, u32 pointer);
+    Index(Heap& heap, NonnullRefPtr<TupleDescriptor> const&, u32 pointer);
 
     [[nodiscard]] Heap const& heap() const { return m_heap; }
     [[nodiscard]] Heap& heap() { return m_heap; }
@@ -55,7 +55,7 @@ protected:
 
 private:
     Heap& m_heap;
-    TupleDescriptor m_descriptor;
+    NonnullRefPtr<TupleDescriptor> m_descriptor;
     bool m_unique { false };
     u32 m_pointer { 0 };
 };
