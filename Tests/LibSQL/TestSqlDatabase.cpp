@@ -24,7 +24,6 @@ void insert_and_verify(int);
 NonnullRefPtr<SQL::SchemaDef> setup_schema(SQL::Database& db)
 {
     auto schema = SQL::SchemaDef::construct("TestSchema");
-    EXPECT(schema != nullptr);
     db.add_schema(schema);
     return schema;
 }
@@ -33,7 +32,6 @@ NonnullRefPtr<SQL::SchemaDef> setup_table(SQL::Database& db)
 {
     auto schema = setup_schema(db);
     auto table = SQL::TableDef::construct(schema, "TestTable");
-    EXPECT(table != nullptr);
     db.add_table(table);
     table->append_column("TextColumn", SQL::SQLType::Text);
     table->append_column("IntColumn", SQL::SQLType::Integer);

@@ -16,7 +16,6 @@ struct Object : public RefCounted<Object> {
 TEST_CASE(basics)
 {
     auto object = adopt_ref(*new Object);
-    EXPECT(object.ptr() != nullptr);
     EXPECT_EQ(object->ref_count(), 1u);
     object->ref();
     EXPECT_EQ(object->ref_count(), 2u);

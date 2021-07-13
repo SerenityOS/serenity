@@ -326,7 +326,7 @@ static long long hex_to_ll(const char* hex)
 
 int main()
 {
-    printf("Running %lu testcases...\n", NUM_TESTCASES);
+    printf("Running %zu testcases...\n", NUM_TESTCASES);
     printf("%3s(%-5s): %16s(%2s) %16s(%2s) %16s(%2s) %16s(%2s) – %s\n", "num", "name", "correct", "cs", "builtin", "cs", "old_strtod", "cs", "new_strtod", "cs", "teststring");
 
     int successes = 0;
@@ -336,7 +336,7 @@ int main()
         if (tc.should_consume == -1) {
             tc.should_consume = strlen(tc.test_string);
         }
-        printf("%3lu(%-5s):", i, tc.test_name);
+        printf("%3zu(%-5s):", i, tc.test_name);
         printf(" %s(%2d)", tc.hex, tc.should_consume);
         long long expect_ll = hex_to_ll(tc.hex);
 
@@ -350,7 +350,7 @@ int main()
             fails += 1;
         }
     }
-    printf("Out of %lu tests, saw %d successes and %d fails.\n", NUM_TESTCASES, successes, fails);
+    printf("Out of %zu tests, saw %d successes and %d fails.\n", NUM_TESTCASES, successes, fails);
     if (fails != 0) {
         printf("FAIL\n");
         return 1;
