@@ -25,7 +25,6 @@ public:
 
     ~PhysicalRegion();
 
-    unsigned finalize_capacity();
     void initialize_zones();
 
     PhysicalAddress lower() const { return m_lower; }
