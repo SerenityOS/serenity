@@ -24,7 +24,6 @@ public:
     NonnullRefPtr<TranslationUnit> parse();
     bool eof() const;
 
-    RefPtr<ASTNode> eof_node() const;
     RefPtr<ASTNode> node_at(Position) const;
     Optional<size_t> index_of_node_at(Position) const;
     Optional<Token> token_at(Position) const;
@@ -147,7 +146,7 @@ private:
 
     struct State {
         size_t token_index { 0 };
-        NonnullRefPtrVector<ASTNode> nodes;
+        NonnullRefPtrVector<ASTNode> state_nodes;
     };
 
     void error(StringView message = {});
@@ -157,9 +156,13 @@ private:
     create_ast_node(ASTNode& parent, const Position& start, Optional<Position> end, Args&&... args)
     {
         auto node = adopt_ref(*new T(&parent, start, end, m_filename, forward<Args>(args)...));
-        if (!parent.is_dummy_node()) {
-            m_state.nodes.append(node);
+
+        if (m_saved_states.is_empty()) {
+            m_nodes.append(node);
+        } else {
+            m_state.state_nodes.append(node);
         }
+
         return node;
     }
 
@@ -167,7 +170,7 @@ private:
     create_root_ast_node(const Position& start, Position end)
     {
         auto node = adopt_ref(*new TranslationUnit(nullptr, start, end, m_filename));
-        m_state.nodes.append(node);
+        m_nodes.append(node);
         m_root_node = node;
         return node;
     }
@@ -200,6 +203,7 @@ private:
     Vector<State> m_saved_states;
     RefPtr<TranslationUnit> m_root_node;
     Vector<String> m_errors;
+    NonnullRefPtrVector<ASTNode> m_nodes;
 
     Vector<TokenAndPreprocessorDefinition> m_replaced_preprocessor_tokens;
 };
