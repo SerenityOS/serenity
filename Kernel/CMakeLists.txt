@@ -349,19 +349,32 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-80387 -mno-mmx -mno-sse -mno-sse2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-asynchronous-unwind-tables")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nodefaultlibs -nostdlib -nostdinc -nostdinc++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nodefaultlibs -nostdlib")
 
 # Apply any flags that are only available on >= GCC 11.1
-if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 11.1)
+if (NOT USE_CLANG_TOOLCHAIN AND CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 11.1)
     # Zero any registers used within a function on return (to reduce data lifetime and ROP gadgets).
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fzero-call-used-regs=used-gpr")
 endif()
 
+if (NOT USE_CLANG_TOOLCHAIN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdinc -nostdinc++")
+endif()
+
+macro (set_new_alignment alignment)
+    if (USE_CLANG_TOOLCHAIN)
+        add_compile_options(-faligned-allocation)
+        add_compile_options(-fnew-alignment=${alignment})
+    else()
+        add_compile_options(-faligned-new=${alignment})
+    endif()
+endmacro()
+
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -mno-red-zone")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new=8")
+    set_new_alignment(8)
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new=4")
+    set_new_alignment(4)
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-pie")
@@ -412,16 +425,26 @@ add_compile_definitions(KERNEL)
 #       It's needed because CLion doesn't understand the way we switch compilers mid-build.
 add_compile_definitions(__serenity__)
 
+if (USE_CLANG_TOOLCHAIN)
+    add_link_options(LINKER:-z,notext)
+    add_link_options(LINKER:--build-id=none)
+endif()
+
 add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
 
 if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
     include_directories(/usr/local/include/c++/${GCC_VERSION}/)
+elseif (USE_CLANG_TOOLCHAIN)
+    include_directories("${TOOLCHAIN_ROOT}/include/c++/v1")
 else()
     if (NOT EXISTS ${TOOLCHAIN_ROOT}/${SERENITY_ARCH}-pc-serenity/include/c++/${GCC_VERSION}/)
         message(FATAL_ERROR "Toolchain version ${GCC_VERSION} appears to be missing! Please run: Meta/serenity.sh rebuild-toolchain")
     endif()
     include_directories(${TOOLCHAIN_ROOT}/${SERENITY_ARCH}-pc-serenity/include/c++/${GCC_VERSION}/)
     include_directories(${TOOLCHAIN_ROOT}/${SERENITY_ARCH}-pc-serenity/include/c++/${GCC_VERSION}/${SERENITY_ARCH}-pc-serenity/)
+endif()
+
+if (NOT USE_CLANG_TOOLCHAIN)
     link_directories(${TOOLCHAIN_ROOT}/${SERENITY_ARCH}-pc-serenity/lib)
     link_directories(${TOOLCHAIN_ROOT}/lib/gcc/${SERENITY_ARCH}-pc-serenity/${GCC_VERSION}/)
 endif()
@@ -447,7 +470,13 @@ if (ENABLE_KERNEL_LTO)
     check_ipo_supported()
     set_property(TARGET Kernel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
-target_link_libraries(Kernel kernel_heap gcc)
+
+if (USE_CLANG_TOOLCHAIN)
+    target_link_libraries(Kernel kernel_heap clang_rt.builtins-${SERENITY_CLANG_ARCH})
+else()
+    target_link_libraries(Kernel kernel_heap gcc)
+endif()
+
 add_dependencies(Kernel kernel_heap)
 
 add_custom_command(
