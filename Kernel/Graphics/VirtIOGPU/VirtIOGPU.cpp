@@ -88,8 +88,8 @@ void VirtIOGPU::clear_pending_events(u32 event_bitmask)
 void VirtIOGPU::query_display_information()
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUCtrlHeader*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPURespDisplayInfo*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *(m_scratch_space->vaddr().as_ptr<VirtIOGPUCtrlHeader>());
+    auto& response = *(m_scratch_space->vaddr().offset(sizeof(request)).as_ptr<VirtIOGPURespDisplayInfo>());
 
     populate_virtio_gpu_request_header(request, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_GET_DISPLAY_INFO, VIRTIO_GPU_FLAG_FENCE);
 
@@ -108,8 +108,8 @@ void VirtIOGPU::query_display_information()
 VirtIOGPUResourceID VirtIOGPU::create_2d_resource(VirtIOGPURect rect)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUResourceCreate2D*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *(m_scratch_space->vaddr().as_ptr<VirtIOGPUResourceCreate2D>());
+    auto& response = *((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr<VirtIOGPUCtrlHeader>()));
 
     populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_RESOURCE_CREATE_2D, VIRTIO_GPU_FLAG_FENCE);
 
@@ -136,9 +136,9 @@ void VirtIOGPU::ensure_backing_storage(Region const& region, size_t buffer_offse
     size_t num_mem_regions = buffer_length / PAGE_SIZE;
 
     // Send request
-    auto& request = *reinterpret_cast<VirtIOGPUResourceAttachBacking*>(m_scratch_space->vaddr().as_ptr());
+    auto& request = *(m_scratch_space->vaddr().as_ptr<VirtIOGPUResourceAttachBacking>());
     const size_t header_block_size = sizeof(request) + num_mem_regions * sizeof(VirtIOGPUMemEntry);
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(header_block_size).as_ptr()));
+    auto& response = *((m_scratch_space->vaddr().offset(header_block_size).as_ptr<VirtIOGPUCtrlHeader>()));
 
     populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
@@ -157,8 +157,8 @@ void VirtIOGPU::ensure_backing_storage(Region const& region, size_t buffer_offse
 void VirtIOGPU::detach_backing_storage(VirtIOGPUResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUResourceDetachBacking*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *(m_scratch_space->vaddr().as_ptr<VirtIOGPUResourceDetachBacking>());
+    auto& response = *((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr<VirtIOGPUCtrlHeader>()));
 
     populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_RESOURCE_DETACH_BACKING, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
@@ -172,8 +172,8 @@ void VirtIOGPU::detach_backing_storage(VirtIOGPUResourceID resource_id)
 void VirtIOGPU::set_scanout_resource(VirtIOGPUScanoutID scanout, VirtIOGPUResourceID resource_id, VirtIOGPURect rect)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUSetScanOut*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *(m_scratch_space->vaddr().as_ptr<VirtIOGPUSetScanOut>());
+    auto& response = *((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr<VirtIOGPUCtrlHeader>()));
 
     populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_SET_SCANOUT, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
@@ -189,8 +189,8 @@ void VirtIOGPU::set_scanout_resource(VirtIOGPUScanoutID scanout, VirtIOGPUResour
 void VirtIOGPU::transfer_framebuffer_data_to_host(VirtIOGPUScanoutID scanout, VirtIOGPURect const& dirty_rect, VirtIOGPUResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUTransferToHost2D*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *(m_scratch_space->vaddr().as_ptr<VirtIOGPUTransferToHost2D>());
+    auto& response = *((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr<VirtIOGPUCtrlHeader>()));
 
     populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D, VIRTIO_GPU_FLAG_FENCE);
     request.offset = (dirty_rect.x + (dirty_rect.y * m_scanouts[scanout.value()].display_info.rect.width)) * sizeof(u32);
@@ -205,8 +205,8 @@ void VirtIOGPU::transfer_framebuffer_data_to_host(VirtIOGPUScanoutID scanout, Vi
 void VirtIOGPU::flush_displayed_image(VirtIOGPURect const& dirty_rect, VirtIOGPUResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtIOGPUResourceFlush*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *(m_scratch_space->vaddr().as_ptr<VirtIOGPUResourceFlush>());
+    auto& response = *((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr<VirtIOGPUCtrlHeader>()));
 
     populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_RESOURCE_FLUSH, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();
@@ -259,8 +259,8 @@ VirtIOGPUResourceID VirtIOGPU::allocate_resource_id()
 void VirtIOGPU::delete_resource(VirtIOGPUResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
-    auto& request = *reinterpret_cast<VirtioGPUResourceUnref*>(m_scratch_space->vaddr().as_ptr());
-    auto& response = *reinterpret_cast<VirtIOGPUCtrlHeader*>((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr()));
+    auto& request = *(m_scratch_space->vaddr().as_ptr<VirtioGPUResourceUnref>());
+    auto& response = *((m_scratch_space->vaddr().offset(sizeof(request)).as_ptr<VirtIOGPUCtrlHeader>()));
 
     populate_virtio_gpu_request_header(request.header, VirtIOGPUCtrlType::VIRTIO_GPU_CMD_RESOURCE_UNREF, VIRTIO_GPU_FLAG_FENCE);
     request.resource_id = resource_id.value();

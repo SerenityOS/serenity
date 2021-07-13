@@ -864,7 +864,7 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
     }
 
     auto cleanup_region = MM.allocate_kernel_region(physical_pages[0].paddr(), PAGE_SIZE * count, "MemoryManager Allocation Sanitization", Region::Access::Read | Region::Access::Write);
-    fast_u32_fill((u32*)cleanup_region->vaddr().as_ptr(), 0, (PAGE_SIZE * count) / sizeof(u32));
+    fast_u32_fill(cleanup_region->vaddr().as_ptr<u32>(), 0, (PAGE_SIZE * count) / sizeof(u32));
     m_system_memory_info.super_physical_pages_used += count;
     return physical_pages;
 }

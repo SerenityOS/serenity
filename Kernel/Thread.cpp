@@ -1209,8 +1209,8 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     m_thread_specific_range = range.value();
 
     SmapDisabler disabler;
-    auto* thread_specific_data = (ThreadSpecificData*)region_or_error.value()->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();
-    auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
+    auto* thread_specific_data = region_or_error.value()->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr<ThreadSpecificData>();
+    auto* thread_local_storage = (u8*)thread_specific_data - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
     m_thread_specific_data = VirtualAddress(thread_specific_data);
     thread_specific_data->self = thread_specific_data;
 

@@ -423,7 +423,7 @@ UNMAP_AFTER_INIT void UHCIController::setup_schedule()
     m_dummy_qh->terminate_with_stray_descriptor(piix4_td_hack);
     m_dummy_qh->terminate_element_link_ptr();
 
-    u32* framelist = reinterpret_cast<u32*>(m_framelist->vaddr().as_ptr());
+    u32* framelist = m_framelist->vaddr().as_ptr<u32>();
     for (int frame = 0; frame < UHCI_NUMBER_OF_FRAMES; frame++) {
         // Each frame pointer points to iso_td % NUM_ISO_TDS
         framelist[frame] = m_iso_td_list.at(frame % UHCI_NUMBER_OF_ISOCHRONOUS_TDS)->paddr();
