@@ -134,7 +134,7 @@ static void do_random_tests()
         0xffffffff,
     };
     dbgln("Doing a few random syscalls with:");
-    for (unsigned long& interesting_value : interesting_values) {
+    for (const auto& interesting_value : interesting_values) {
         dbgln("  {0} ({0:p})", interesting_value);
     }
     for (size_t i = 0; i < fuzz_syscall_count; ++i) {
