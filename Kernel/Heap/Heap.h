@@ -20,33 +20,25 @@ class Heap {
 
     struct AllocationHeader {
         size_t allocation_size_in_chunks;
-#if ARCH(X86_64)
-        // FIXME: Get rid of this somehow
-        size_t alignment_dummy;
-#endif
-        u8 data[0];
+        alignas(void*) u8 data[];
     };
 
     static_assert(CHUNK_SIZE >= sizeof(AllocationHeader));
 
-    ALWAYS_INLINE AllocationHeader* allocation_header(void* ptr)
+    ALWAYS_INLINE FlatPtr allocation_header(const void* ptr) const
     {
-        return (AllocationHeader*)((((u8*)ptr) - sizeof(AllocationHeader)));
-    }
-    ALWAYS_INLINE const AllocationHeader* allocation_header(const void* ptr) const
-    {
-        return (const AllocationHeader*)((((const u8*)ptr) - sizeof(AllocationHeader)));
+        return (FlatPtr)ptr - sizeof(AllocationHeader);
     }
 
     static size_t calculate_chunks(size_t memory_size)
     {
-        return (sizeof(u8) * memory_size) / (sizeof(u8) * CHUNK_SIZE + 1);
+        return (memory_size) / (CHUNK_SIZE + 1);
     }
 
 public:
     Heap(u8* memory, size_t memory_size)
         : m_total_chunks(calculate_chunks(memory_size))
-        , m_chunks(memory)
+        , m_chunks(reinterpret_cast<FlatPtr>(memory))
         , m_bitmap(memory + m_total_chunks * CHUNK_SIZE, m_total_chunks)
     {
         // To keep the alignment of the memory passed in, place the bitmap
@@ -100,35 +92,36 @@ public:
     {
         if (!ptr)
             return;
-        auto* a = allocation_header(ptr);
-        VERIFY((u8*)a >= m_chunks && (u8*)ptr < m_chunks + m_total_chunks * CHUNK_SIZE);
-        FlatPtr start = ((FlatPtr)a - (FlatPtr)m_chunks) / CHUNK_SIZE;
+        FlatPtr a = allocation_header(ptr);
+        VERIFY(a >= m_chunks && (FlatPtr)ptr < m_chunks + m_total_chunks * CHUNK_SIZE);
+        FlatPtr start = (a - m_chunks) / CHUNK_SIZE;
 
         // First, verify that the start of the allocation at `ptr` is actually allocated.
         VERIFY(m_bitmap.get(start));
+        AllocationHeader* ah = (AllocationHeader*)a;
 
-        VERIFY((u8*)a + a->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
-        m_bitmap.set_range_and_verify_that_all_bits_flip(start, a->allocation_size_in_chunks, false);
+        VERIFY(a + ah->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
+        m_bitmap.set_range_and_verify_that_all_bits_flip(start, ah->allocation_size_in_chunks, false);
 
-        VERIFY(m_allocated_chunks >= a->allocation_size_in_chunks);
-        m_allocated_chunks -= a->allocation_size_in_chunks;
+        VERIFY(m_allocated_chunks >= ah->allocation_size_in_chunks);
+        m_allocated_chunks -= ah->allocation_size_in_chunks;
 
         if constexpr (HEAP_SCRUB_BYTE_FREE != 0) {
-            __builtin_memset(a, HEAP_SCRUB_BYTE_FREE, a->allocation_size_in_chunks * CHUNK_SIZE);
+            __builtin_memset((void*)a, HEAP_SCRUB_BYTE_FREE, ah->allocation_size_in_chunks * CHUNK_SIZE);
         }
     }
 
     bool contains(const void* ptr) const
     {
-        const auto* a = allocation_header(ptr);
-        if ((const u8*)a < m_chunks)
+        FlatPtr a = allocation_header(ptr);
+        if (a < m_chunks)
             return false;
-        if ((const u8*)ptr >= m_chunks + m_total_chunks * CHUNK_SIZE)
+        if ((FlatPtr)ptr >= m_chunks + m_total_chunks * CHUNK_SIZE)
             return false;
         return true;
     }
 
-    u8* memory() const { return m_chunks; }
+    void* memory() const { return (void*)m_chunks; }
 
     size_t total_chunks() const { return m_total_chunks; }
     size_t total_bytes() const { return m_total_chunks * CHUNK_SIZE; }
@@ -140,7 +133,7 @@ public:
 private:
     size_t m_total_chunks { 0 };
     size_t m_allocated_chunks { 0 };
-    u8* m_chunks { nullptr };
+    FlatPtr m_chunks = 0;
     Bitmap m_bitmap;
 };
 
@@ -297,8 +290,7 @@ public:
 
         // Place the SubHeap structure at the beginning of the new memory block
         memory_size -= sizeof(SubHeap);
-        SubHeap* new_heap = (SubHeap*)memory;
-        new (new_heap) SubHeap(memory_size, (u8*)(new_heap + 1), memory_size);
+        SubHeap* new_heap = new (memory) SubHeap(memory_size, (u8*)((FlatPtr)memory + sizeof(SubHeap)), memory_size);
 
         // Add the subheap to the list (but leave the main heap where it is)
         SubHeap* next_heap = m_heaps.next;
