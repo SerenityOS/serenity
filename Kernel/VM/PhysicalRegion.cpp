@@ -74,7 +74,7 @@ NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(siz
     auto order = __builtin_ctz(rounded_page_count);
 
     Optional<PhysicalAddress> page_base;
-    for (auto& zone : m_zones) {
+    for (auto& zone : m_usable_zones) {
         page_base = zone.allocate_block(order);
         if (page_base.has_value()) {
             if (zone.is_empty()) {
