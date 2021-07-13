@@ -52,7 +52,7 @@ int main()
         exit(1);
     }
 
-    bool enable_num_lock = keyboard_settings_config->read_bool_entry("StartupEnable", "NumLock", false);
+    bool enable_num_lock = keyboard_settings_config->read_bool_entry("StartupEnable", "NumLock", true);
 
     auto keyboard_device_or_error = Core::File::open("/dev/keyboard0", Core::OpenMode::ReadOnly);
     if (keyboard_device_or_error.is_error()) {
