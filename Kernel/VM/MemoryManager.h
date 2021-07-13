@@ -105,6 +105,7 @@ extern RecursiveSpinLock s_mm_lock;
 
 class MemoryManager {
     AK_MAKE_ETERNAL
+    friend class PageDirectory;
     friend class AnonymousVMObject;
     friend class Region;
     friend class VMObject;
