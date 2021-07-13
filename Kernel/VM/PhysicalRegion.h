@@ -13,7 +13,10 @@
 namespace Kernel {
 
 class PhysicalRegion {
-    AK_MAKE_ETERNAL
+    AK_MAKE_ETERNAL;
+    AK_MAKE_NONCOPYABLE(PhysicalRegion);
+    AK_MAKE_NONMOVABLE(PhysicalRegion);
+
 public:
     static OwnPtr<PhysicalRegion> try_create(PhysicalAddress lower, PhysicalAddress upper)
     {
