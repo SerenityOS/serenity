@@ -47,6 +47,7 @@ void PhysicalRegion::initialize_zones()
             m_zones.append(make<PhysicalZone>(base_address, zone_size));
             dmesgln(" * Zone {:016x}-{:016x} ({} bytes)", base_address.get(), base_address.get() + zone_size * PAGE_SIZE - 1, zone_size * PAGE_SIZE);
             base_address = base_address.offset(zone_size * PAGE_SIZE);
+            m_usable_zones.append(m_zones.last());
             remaining_pages -= zone_size;
         }
     };
@@ -75,9 +76,13 @@ NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(siz
     Optional<PhysicalAddress> page_base;
     for (auto& zone : m_zones) {
         page_base = zone.allocate_block(order);
-
-        if (page_base.has_value())
+        if (page_base.has_value()) {
+            if (zone.is_empty()) {
+                // We've exhausted this zone, move it to the full zones list.
+                m_full_zones.append(zone);
+            }
             break;
+        }
     }
 
     if (!page_base.has_value())
@@ -93,21 +98,34 @@ NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(siz
 
 RefPtr<PhysicalPage> PhysicalRegion::take_free_page()
 {
-    for (auto& zone : m_zones) {
-        auto page = zone.allocate_block(0);
-        if (page.has_value())
-            return PhysicalPage::create(page.value());
+    if (m_usable_zones.is_empty()) {
+        dbgln("PhysicalRegion::take_free_page: No free physical pages");
+        return nullptr;
     }
 
-    dbgln("PhysicalRegion::take_free_page: No free physical pages");
-    return nullptr;
+    auto& zone = *m_usable_zones.first();
+    auto page = zone.allocate_block(0);
+    VERIFY(page.has_value());
+
+    if (zone.is_empty()) {
+        // We've exhausted this zone, move it to the full zones list.
+        m_full_zones.append(zone);
+    }
+
+    return PhysicalPage::create(page.value());
 }
 
 void PhysicalRegion::return_page(PhysicalAddress paddr)
 {
+    // FIXME: Find a way to avoid looping over the zones here.
+    //        (Do some math on the address to find the right zone index.)
+    //        The main thing that gets in the way of this is non-uniform zone sizes.
+    //        Perhaps it would be better if all zones had the same size.
     for (auto& zone : m_zones) {
         if (zone.contains(paddr)) {
             zone.deallocate_block(paddr, 0);
+            if (m_full_zones.contains(zone))
+                m_usable_zones.append(zone);
             return;
         }
     }
