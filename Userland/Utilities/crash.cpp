@@ -207,7 +207,7 @@ int main(int argc, char** argv)
                 return Crash::Failure::UnexpectedError;
 
             u8* bad_esp = bad_stack + 2048;
-#ifndef __LP64__
+#if ARCH(I386)
             asm volatile("mov %%eax, %%esp" ::"a"(bad_esp));
             asm volatile("pushl $0");
 #else

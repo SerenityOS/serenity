@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Platform.h>
 #include <bits/stdint.h>
 #include <sys/cdefs.h>
 
@@ -18,7 +19,7 @@ __BEGIN_DECLS
 #define PRIi8 "d"
 #define PRIi16 "d"
 #define PRIi32 "d"
-#ifndef __LP64__
+#if ARCH(I386)
 #    define PRIi64 "lld"
 #else
 #    define PRIi64 "ld"
@@ -27,14 +28,14 @@ __BEGIN_DECLS
 #define PRIo8 "o"
 #define PRIo16 "o"
 #define PRIo32 "o"
-#ifndef __LP64__
+#if ARCH(I386)
 #    define PRIo64 "llo"
 #else
 #    define PRIo64 "lo"
 #endif
 #define PRIu16 "u"
 #define PRIu32 "u"
-#ifndef __LP64__
+#if ARCH(I386)
 #    define PRIu64 "llu"
 #    define PRIuPTR "x"
 #else
@@ -47,7 +48,7 @@ __BEGIN_DECLS
 #define PRIX16 "hX"
 #define PRIx32 "x"
 #define PRIX32 "X"
-#ifndef __LP64__
+#if ARCH(I386)
 #    define PRIx64 "llx"
 #    define PRIX64 "llX"
 #    define PRIxPTR "x"
