@@ -639,15 +639,7 @@ Vector<i32> FlacLoaderPlugin::decode_custom_lpc(FlacSubframeHeader& subframe, In
         coefficients.unchecked_append(coefficient);
     }
 
-    if constexpr (AFLACLOADER_DEBUG) {
-        StringBuilder coefficients_formatted;
-        coefficients_formatted.append("[ ");
-        for (auto coeff : coefficients) {
-            coefficients_formatted.append(String::formatted("{}, ", coeff));
-        }
-        coefficients_formatted.append("]");
-        dbgln("{}-bit {} shift coefficients: {}", lpc_precision, lpc_shift, coefficients_formatted.to_string());
-    }
+    dbgln_if(AFLACLOADER_DEBUG, "{}-bit {} shift coefficients: {}", lpc_precision, lpc_shift, coefficients);
 
     // decode residual
     // FIXME: This order may be incorrect, the LPC is applied to the residual, probably leading to incorrect results.
