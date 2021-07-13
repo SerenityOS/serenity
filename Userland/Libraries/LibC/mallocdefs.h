@@ -16,13 +16,13 @@
 
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
-static constexpr unsigned short size_classes[] = { 8, 16, 32, 64, 128, 256, 504, 1016, 2032, 4088, 8184, 16376, 32752, 0 };
+static constexpr unsigned short size_classes[] = { 16, 32, 64, 128, 256, 496, 1008, 2032, 4080, 8176, 16368, 32752, 0 };
 static constexpr size_t num_size_classes = (sizeof(size_classes) / sizeof(unsigned short)) - 1;
 
 consteval bool check_size_classes_alignment()
 {
     for (size_t i = 0; i < num_size_classes; i++) {
-        if ((size_classes[i] % 8) != 0)
+        if ((size_classes[i] % 16) != 0)
             return false;
     }
     return true;
@@ -63,7 +63,7 @@ struct ChunkedBlock : public CommonHeader {
     size_t m_next_lazy_freelist_index { 0 };
     FreelistEntry* m_freelist { nullptr };
     size_t m_free_chunks { 0 };
-    [[gnu::aligned(8)]] unsigned char m_slot[0];
+    [[gnu::aligned(16)]] unsigned char m_slot[0];
 
     void* chunk(size_t index)
     {
