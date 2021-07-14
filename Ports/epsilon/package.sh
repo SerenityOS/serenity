@@ -5,6 +5,9 @@ files="https://github.com/numworks/epsilon/archive/refs/tags/${version}.tar.gz $
 auth_type=sha256
 makeopts="PLATFORM=simulator TARGET=serenity SERENITY_INSTALL_ROOT=${SERENITY_INSTALL_ROOT}"
 depends="SDL2 libpng libjpeg freetype"
+launcher_name=Epsilon
+launcher_category=Utilities
+launcher_command=/usr/local/bin/epsilon.elf
 
 install() {
     run cp output/release/simulator/serenity/epsilon.elf ${SERENITY_INSTALL_ROOT}/usr/local/bin/
