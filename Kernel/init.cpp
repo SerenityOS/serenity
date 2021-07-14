@@ -123,6 +123,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
     kmalloc_init();
     slab_alloc_init();
 
+    load_kernel_symbol_table();
+
     ConsoleDevice::initialize();
     s_bsp_processor.initialize(0);
 
@@ -263,8 +265,6 @@ void init_stage2(void*)
     }
 
     Process::current()->set_root_directory(VirtualFileSystem::the().root_custody());
-
-    load_kernel_symbol_table();
 
     // Switch out of early boot mode.
     g_in_early_boot = false;
