@@ -505,10 +505,13 @@ public:
     auto& store() const { return m_store; }
     auto& store() { return m_store; }
 
+    void enable_instruction_count_limit() { m_should_limit_instruction_count = true; }
+
 private:
     Optional<InstantiationError> allocate_all_initial_phase(Module const&, ModuleInstance&, Vector<ExternValue>&, Vector<Value>& global_values);
     Optional<InstantiationError> allocate_all_final_phase(Module const&, ModuleInstance&, Vector<Vector<Reference>>& elements);
     Store m_store;
+    bool m_should_limit_instruction_count { false };
 };
 
 class Linker {
