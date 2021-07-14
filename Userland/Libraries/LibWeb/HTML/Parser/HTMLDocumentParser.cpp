@@ -436,9 +436,10 @@ HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropria
 NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(const HTMLToken& token, const FlyString& namespace_)
 {
     auto element = create_element(document(), token.tag_name(), namespace_);
-    for (auto& attribute : token.m_tag.attributes) {
+    token.for_each_attribute([&](auto& attribute) {
         element->set_attribute(attribute.local_name, attribute.value);
-    }
+        return IterationDecision::Continue;
+    });
     return element;
 }
 
@@ -1117,11 +1118,11 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         log_parse_error();
         if (m_stack_of_open_elements.contains(HTML::TagNames::template_))
             return;
-        for (auto& attribute : token.m_tag.attributes) {
-            if (current_node().has_attribute(attribute.local_name))
-                continue;
-            current_node().set_attribute(attribute.local_name, attribute.value);
-        }
+        token.for_each_attribute([&](auto& attribute) {
+            if (!current_node().has_attribute(attribute.local_name))
+                current_node().set_attribute(attribute.local_name, attribute.value);
+            return IterationDecision::Continue;
+        });
         return;
     }
     if (token.is_start_tag() && token.tag_name().is_one_of(HTML::TagNames::base, HTML::TagNames::basefont, HTML::TagNames::bgsound, HTML::TagNames::link, HTML::TagNames::meta, HTML::TagNames::noframes, HTML::TagNames::script, HTML::TagNames::style, HTML::TagNames::template_, HTML::TagNames::title)) {
@@ -1144,11 +1145,11 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         }
         m_frameset_ok = false;
         auto& body_element = m_stack_of_open_elements.elements().at(1);
-        for (auto& attribute : token.m_tag.attributes) {
-            if (body_element.has_attribute(attribute.local_name))
-                continue;
-            body_element.set_attribute(attribute.local_name, attribute.value);
-        }
+        token.for_each_attribute([&](auto& attribute) {
+            if (!body_element.has_attribute(attribute.local_name))
+                body_element.set_attribute(attribute.local_name, attribute.value);
+            return IterationDecision::Continue;
+        });
         return;
     }
 

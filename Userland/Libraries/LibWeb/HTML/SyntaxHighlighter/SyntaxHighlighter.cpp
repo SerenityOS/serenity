@@ -132,7 +132,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
                 { palette.syntax_keyword(), {}, false, true },
                 token->is_start_tag() ? AugmentedTokenKind::OpenTag : AugmentedTokenKind::CloseTag);
 
-            for (auto& attribute : token->attributes()) {
+            token->for_each_attribute([&](auto& attribute) {
                 highlight(
                     attribute.name_start_position.line,
                     attribute.name_start_position.column + token_start_offset,
@@ -147,7 +147,8 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
                     attribute.value_end_position.column + token_start_offset,
                     { palette.syntax_string(), {} },
                     AugmentedTokenKind::AttributeValue);
-            }
+                return IterationDecision::Continue;
+            });
         } else if (token->is_doctype()) {
             highlight(
                 token->start_position().line,

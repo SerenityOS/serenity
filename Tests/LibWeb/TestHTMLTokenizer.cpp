@@ -61,7 +61,7 @@ using Token = Web::HTML::HTMLToken;
 
 #define EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(count) \
     VERIFY(last_token.has_value());             \
-    EXPECT_EQ(last_token->attributes().size(), (size_t)count);
+    EXPECT_EQ(last_token->attribute_count(), (size_t)(count));
 
 static Vector<Token> run_tokenizer(StringView const& input)
 {
