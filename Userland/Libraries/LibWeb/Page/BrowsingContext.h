@@ -80,6 +80,7 @@ public:
     bool cursor_blink_state() const { return m_cursor_blink_state; }
 
     String selected_text() const;
+    void select_all();
 
     void did_edit(Badge<EditEventHandler>);
 
