@@ -18,6 +18,11 @@ CalendarPrototype::CalendarPrototype(GlobalObject& global_object)
 void CalendarPrototype::initialize(GlobalObject& global_object)
 {
     Object::initialize(global_object);
+
+    auto& vm = this->vm();
+
+    // 12.4.2 Temporal.Calendar.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype-@@tostringtag
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.Calendar"), Attribute::Configurable);
 }
 
 }
