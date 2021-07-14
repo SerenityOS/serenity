@@ -29,9 +29,9 @@
 
 namespace GUI {
 
-Optional<String> FilePicker::get_open_filepath(Window* parent_window, const String& window_title, const StringView& path, bool folder)
+Optional<String> FilePicker::get_open_filepath(Window* parent_window, const String& window_title, const StringView& path, bool folder, bool center_within_parent_window)
 {
-    auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, "", path);
+    auto picker = FilePicker::construct(parent_window, folder ? Mode::OpenFolder : Mode::Open, "", path, center_within_parent_window);
 
     if (!window_title.is_null())
         picker->set_title(window_title);
@@ -47,9 +47,9 @@ Optional<String> FilePicker::get_open_filepath(Window* parent_window, const Stri
     return {};
 }
 
-Optional<String> FilePicker::get_save_filepath(Window* parent_window, const String& title, const String& extension, const StringView& path)
+Optional<String> FilePicker::get_save_filepath(Window* parent_window, const String& title, const String& extension, const StringView& path, bool center_within_parent_window)
 {
-    auto picker = FilePicker::construct(parent_window, Mode::Save, String::formatted("{}.{}", title, extension), path);
+    auto picker = FilePicker::construct(parent_window, Mode::Save, String::formatted("{}.{}", title, extension), path, center_within_parent_window);
 
     if (picker->exec() == Dialog::ExecOK) {
         String file_path = picker->selected_file();
@@ -62,8 +62,8 @@ Optional<String> FilePicker::get_save_filepath(Window* parent_window, const Stri
     return {};
 }
 
-FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filename, const StringView& path)
-    : Dialog(parent_window)
+FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filename, const StringView& path, bool center_within_parent_window)
+    : Dialog(parent_window, center_within_parent_window)
     , m_model(FileSystemModel::create())
     , m_mode(mode)
 {
