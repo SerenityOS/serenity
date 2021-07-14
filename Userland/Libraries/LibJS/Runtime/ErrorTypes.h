@@ -166,8 +166,9 @@
     M(StringNonGlobalRegExp, "RegExp argument is non-global")                                                                           \
     M(StringRawCannotConvert, "Cannot convert property 'raw' to object from {}")                                                        \
     M(StringRepeatCountMustBe, "repeat count must be a {} number")                                                                      \
-    M(TemporalInvalidISODate, "Invalid ISO date")                                                                                       \
+    M(TemporalInvalidCalendarIdentifier, "Invalid calendar identifier '{}'")                                                            \
     M(TemporalInvalidEpochNanoseconds, "Invalid epoch nanoseconds value, must be in range -86400 * 10^17 to 86400 * 10^17")             \
+    M(TemporalInvalidISODate, "Invalid ISO date")                                                                                       \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \

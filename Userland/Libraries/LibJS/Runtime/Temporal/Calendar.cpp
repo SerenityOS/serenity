@@ -4,10 +4,54 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
+#include <LibJS/Runtime/Temporal/CalendarConstructor.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Temporal {
+
+// 12 Temporal.Calendar Objects, https://tc39.es/proposal-temporal/#sec-temporal-calendar-objects
+Calendar::Calendar(String identifier, Object& prototype)
+    : Object(prototype)
+    , m_identifier(move(identifier))
+{
+}
+
+// 12.1.1 CreateTemporalCalendar ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalcalendar
+Calendar* create_temporal_calendar(GlobalObject& global_object, String const& identifier, FunctionObject* new_target)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: ! IsBuiltinCalendar(identifier) is true.
+    VERIFY(is_builtin_calendar(identifier));
+
+    // 2. If newTarget is not provided, set newTarget to %Temporal.Calendar%.
+    if (!new_target)
+        new_target = global_object.temporal_calendar_constructor();
+
+    // 3. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Calendar.prototype%", « [[InitializedTemporalCalendar]], [[Identifier]] »).
+    // 4. Set object.[[Identifier]] to identifier.
+    auto* object = ordinary_create_from_constructor<Calendar>(global_object, *new_target, &GlobalObject::temporal_calendar_prototype, identifier);
+    if (vm.exception())
+        return {};
+
+    // 5. Return object.
+    return object;
+}
+
+// 12.1.2 IsBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-isbuiltincalendar
+// NOTE: This is the minimum IsBuiltinCalendar implementation for engines without ECMA-402.
+bool is_builtin_calendar(String const& identifier)
+{
+    // 1. If id is not "iso8601", return false.
+    if (identifier != "iso8601"sv)
+        return false;
+
+    // 2. Return true.
+    return true;
+}
 
 // 12.1.30 IsISOLeapYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isisoleapyear
 bool is_iso_leap_year(i32 year)

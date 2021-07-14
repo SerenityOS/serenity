@@ -123,6 +123,8 @@ set(SOURCES
     Runtime/SymbolPrototype.cpp
     Runtime/Temporal/AbstractOperations.cpp
     Runtime/Temporal/Calendar.cpp
+    Runtime/Temporal/CalendarConstructor.cpp
+    Runtime/Temporal/CalendarPrototype.cpp
     Runtime/Temporal/Instant.cpp
     Runtime/Temporal/InstantConstructor.cpp
     Runtime/Temporal/InstantPrototype.cpp
