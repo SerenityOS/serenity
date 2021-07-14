@@ -37,7 +37,7 @@ private:
     }
 
     size_t m_length { 0 };
-    char m_characters[0];
+    char m_characters[];
 };
 
 }
