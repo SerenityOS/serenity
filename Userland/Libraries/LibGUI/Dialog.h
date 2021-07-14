@@ -20,6 +20,21 @@ public:
         ExecYes = 3,
         ExecNo = 4,
     };
+    enum ScreenPosition {
+        CenterWithinParent = 0,
+
+        Center = 1,
+        CenterLeft = 2,
+        CenterRight = 3,
+
+        TopLeft = 4,
+        TopCenter = 5,
+        TopRight = 6,
+
+        BottomLeft = 7,
+        BottomCenter = 8,
+        BottomRight = 9,
+    };
 
     virtual ~Dialog() override;
 
@@ -33,11 +48,12 @@ public:
     virtual void close() override;
 
 protected:
-    explicit Dialog(Window* parent_window);
+    explicit Dialog(Window* parent_window, ScreenPosition screen_position = CenterWithinParent);
 
 private:
     OwnPtr<Core::EventLoop> m_event_loop;
     int m_result { ExecAborted };
+    int m_screen_position { CenterWithinParent };
 };
 
 }
