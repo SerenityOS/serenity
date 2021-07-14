@@ -417,4 +417,9 @@ String OutOfProcessWebView::selected_text()
     return client().get_selected_text();
 }
 
+void OutOfProcessWebView::select_all()
+{
+    client().async_select_all();
+}
+
 }

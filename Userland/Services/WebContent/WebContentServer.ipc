@@ -31,4 +31,5 @@ endpoint WebContentServer
     js_console_input(String js_source) =|
 
     get_selected_text() => (String selection)
+    select_all() =|
 }
