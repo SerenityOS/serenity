@@ -42,12 +42,13 @@ String HTMLToken::to_string() const
         builder.append(" { name: '");
         builder.append(tag_name());
         builder.append("', { ");
-        for (auto& attribute : m_tag.attributes) {
+        for_each_attribute([&](auto& attribute) {
             builder.append(attribute.local_name);
             builder.append("=\"");
             builder.append(attribute.value);
             builder.append("\" ");
-        }
+            return IterationDecision::Continue;
+        });
         builder.append("} }");
     }
 

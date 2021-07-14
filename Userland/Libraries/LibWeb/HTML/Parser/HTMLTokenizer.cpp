@@ -996,8 +996,8 @@ _StartOfFunction:
                 }
                 ON('/')
                 {
-                    if (!m_current_token.m_tag.attributes.is_empty())
-                        m_current_token.m_tag.attributes.last().name_end_position = nth_last_position(1);
+                    if (m_current_token.has_attributes())
+                        m_current_token.last_attribute().name_end_position = nth_last_position(1);
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('>')
@@ -1014,14 +1014,14 @@ _StartOfFunction:
                     HTMLToken::Attribute new_attribute;
                     new_attribute.name_start_position = nth_last_position(1);
                     m_current_builder.append_code_point(current_input_character.value());
-                    m_current_token.m_tag.attributes.append(new_attribute);
+                    m_current_token.add_attribute(move(new_attribute));
                     SWITCH_TO_WITH_UNCLEAN_BUILDER(AttributeName);
                 }
                 ANYTHING_ELSE
                 {
                     HTMLToken::Attribute new_attribute;
                     new_attribute.name_start_position = nth_last_position(1);
-                    m_current_token.m_tag.attributes.append(move(new_attribute));
+                    m_current_token.add_attribute(move(new_attribute));
                     RECONSUME_IN(AttributeName);
                 }
             }
@@ -1051,28 +1051,28 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
+                    m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('/')
                 {
-                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
+                    m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('>')
                 {
-                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
+                    m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON_EOF
                 {
-                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
+                    m_current_token.last_attribute().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('=')
                 {
-                    m_current_token.m_tag.attributes.last().name_end_position = nth_last_position(1);
-                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
+                    m_current_token.last_attribute().name_end_position = nth_last_position(1);
+                    m_current_token.last_attribute().local_name = consume_current_builder();
                     SWITCH_TO(BeforeAttributeValue);
                 }
                 ON_ASCII_UPPER_ALPHA
@@ -1122,7 +1122,7 @@ _StartOfFunction:
                 }
                 ON('=')
                 {
-                    m_current_token.m_tag.attributes.last().name_end_position = nth_last_position(1);
+                    m_current_token.last_attribute().name_end_position = nth_last_position(1);
                     SWITCH_TO(BeforeAttributeValue);
                 }
                 ON('>')
@@ -1136,8 +1136,8 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_tag.attributes.append({});
-                    m_current_token.m_tag.attributes.last().name_start_position = m_source_positions.last();
+                    m_current_token.add_attribute({});
+                    m_current_token.last_attribute().name_start_position = m_source_positions.last();
                     RECONSUME_IN(AttributeName);
                 }
             }
@@ -1145,7 +1145,7 @@ _StartOfFunction:
 
             BEGIN_STATE(BeforeAttributeValue)
             {
-                m_current_token.m_tag.attributes.last().value_start_position = nth_last_position(1);
+                m_current_token.last_attribute().value_start_position = nth_last_position(1);
                 ON_WHITESPACE
                 {
                     continue;
@@ -1174,12 +1174,12 @@ _StartOfFunction:
             {
                 ON('"')
                 {
-                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
+                    m_current_token.last_attribute().value = consume_current_builder();
                     SWITCH_TO(AfterAttributeValueQuoted);
                 }
                 ON('&')
                 {
-                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
+                    m_current_token.last_attribute().value = consume_current_builder();
                     m_return_state = State::AttributeValueDoubleQuoted;
                     SWITCH_TO(CharacterReference);
                 }
@@ -1206,12 +1206,12 @@ _StartOfFunction:
             {
                 ON('\'')
                 {
-                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
+                    m_current_token.last_attribute().value = consume_current_builder();
                     SWITCH_TO(AfterAttributeValueQuoted);
                 }
                 ON('&')
                 {
-                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
+                    m_current_token.last_attribute().value = consume_current_builder();
                     m_return_state = State::AttributeValueSingleQuoted;
                     SWITCH_TO(CharacterReference);
                 }
@@ -1238,20 +1238,20 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
-                    m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(2);
+                    m_current_token.last_attribute().value = consume_current_builder();
+                    m_current_token.last_attribute().value_end_position = nth_last_position(2);
                     SWITCH_TO(BeforeAttributeName);
                 }
                 ON('&')
                 {
-                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
+                    m_current_token.last_attribute().value = consume_current_builder();
                     m_return_state = State::AttributeValueUnquoted;
                     SWITCH_TO(CharacterReference);
                 }
                 ON('>')
                 {
-                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
-                    m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(1);
+                    m_current_token.last_attribute().value = consume_current_builder();
+                    m_current_token.last_attribute().value_end_position = nth_last_position(1);
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON(0)
@@ -1301,7 +1301,7 @@ _StartOfFunction:
 
             BEGIN_STATE(AfterAttributeValueQuoted)
             {
-                m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(1);
+                m_current_token.last_attribute().value_end_position = nth_last_position(1);
                 ON_WHITESPACE
                 {
                     SWITCH_TO(BeforeAttributeName);
