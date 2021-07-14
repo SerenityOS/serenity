@@ -42,9 +42,6 @@ public:
 
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
 
-    GUI::Action& select_all_action() { return *m_select_all_action; }
-    GUI::Action& copy_action() { return *m_copy_action; }
-
     String selected_text() const;
     void select_all();
 
@@ -99,9 +96,6 @@ private:
     bool m_should_show_line_box_borders { false };
 
     NonnullOwnPtr<Page> m_page;
-
-    RefPtr<GUI::Action> m_copy_action;
-    RefPtr<GUI::Action> m_select_all_action;
 };
 
 }

@@ -7,7 +7,6 @@
 #include <AK/URL.h>
 #include <LibCore/File.h>
 #include <LibCore/MimeData.h>
-#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/InputBox.h>
@@ -38,14 +37,6 @@ InProcessWebView::InProcessWebView()
     set_should_hide_unnecessary_scrollbars(true);
     set_background_role(ColorRole::Base);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
-
-    m_copy_action = GUI::CommonActions::make_copy_action([this](auto&) {
-        GUI::Clipboard::the().set_plain_text(selected_text());
-    });
-
-    m_select_all_action = GUI::CommonActions::make_select_all_action([this](auto&) {
-        select_all();
-    });
 }
 
 InProcessWebView::~InProcessWebView()
