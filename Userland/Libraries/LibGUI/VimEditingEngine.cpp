@@ -794,6 +794,16 @@ bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
     if (EditingEngine::on_key(event))
         return true;
 
+    if (event.ctrl()) {
+        switch (event.key()) {
+        case KeyCode::Key_W:
+            m_editor->delete_previous_word();
+            return true;
+        default:
+            break;
+        }
+    }
+
     if (event.key() == KeyCode::Key_Escape || (event.ctrl() && event.key() == KeyCode::Key_LeftBracket) || (event.ctrl() && event.key() == KeyCode::Key_C)) {
         if (m_editor->cursor().column() > 0)
             move_one_left();

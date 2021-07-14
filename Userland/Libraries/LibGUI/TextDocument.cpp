@@ -674,6 +674,39 @@ TextPosition TextDocument::first_word_break_after(const TextPosition& position) 
     return target;
 }
 
+TextPosition TextDocument::first_word_before(const TextPosition& position, bool start_at_column_before) const
+{
+    if (position.column() == 0) {
+        if (position.line() == 0) {
+            return TextPosition(0, 0);
+        }
+        auto previous_line = this->line(position.line() - 1);
+        return TextPosition(position.line() - 1, previous_line.length());
+    }
+
+    auto target = position;
+    auto line = this->line(target.line());
+    if (target.column() == line.length())
+        start_at_column_before = 1;
+
+    auto nonblank_passed = !is_ascii_blank(line.code_points()[target.column() - start_at_column_before]);
+    while (target.column() > 0) {
+        auto prev_code_point = line.code_points()[target.column() - 1];
+        nonblank_passed |= !is_ascii_blank(prev_code_point);
+
+        if (nonblank_passed && is_ascii_blank(prev_code_point)) {
+            break;
+        } else if (is_ascii_punctuation(prev_code_point)) {
+            target.set_column(target.column() - 1);
+            break;
+        }
+
+        target.set_column(target.column() - 1);
+    }
+
+    return target;
+}
+
 void TextDocument::undo()
 {
     if (!can_undo())

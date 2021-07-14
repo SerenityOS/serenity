@@ -883,6 +883,12 @@ void TextEditor::keydown_event(KeyEvent& event)
     event.ignore();
 }
 
+void TextEditor::delete_previous_word()
+{
+    TextRange to_erase(document().first_word_before(m_cursor, true), m_cursor);
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
+}
+
 void TextEditor::delete_current_line()
 {
     if (has_selection())
