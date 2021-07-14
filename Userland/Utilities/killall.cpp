@@ -19,11 +19,11 @@ static void print_usage_and_exit()
 
 static int kill_all(const String& process_name, const unsigned signum)
 {
-    auto processes = Core::ProcessStatisticsReader::get_all();
-    if (!processes.has_value())
+    auto all_processes = Core::ProcessStatisticsReader::get_all();
+    if (!all_processes.has_value())
         return 1;
 
-    for (auto& process : processes.value()) {
+    for (auto& process : all_processes.value().processes) {
         if (process.name == process_name) {
             int ret = kill(process.pid, signum);
             if (ret < 0)

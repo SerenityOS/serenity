@@ -273,7 +273,8 @@ bool generate_profile(pid_t& pid)
 
     auto all_processes = Core::ProcessStatisticsReader::get_all();
     if (all_processes.has_value()) {
-        if (auto it = all_processes.value().find_if([&](auto& entry) { return entry.pid == pid; }); it != all_processes.value().end())
+        auto& processes = all_processes->processes;
+        if (auto it = processes.find_if([&](auto& entry) { return entry.pid == pid; }); it != processes.end())
             process_name = it->name;
         else
             process_name = "(unknown)";

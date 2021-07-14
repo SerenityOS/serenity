@@ -93,7 +93,7 @@ int main()
 
         String what = "n/a";
 
-        for (auto& process : process_statistics.value()) {
+        for (auto& process : process_statistics.value().processes) {
             if (process.tty == tty && process.pid == process.pgid)
                 what = process.name;
         }

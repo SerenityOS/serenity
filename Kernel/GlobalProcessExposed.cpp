@@ -406,10 +406,10 @@ private:
     ProcFSOverallProcesses();
     virtual bool output(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
+        JsonObjectSerializer<KBufferBuilder> json { builder };
 
         // Keep this in sync with CProcessStatistics.
-        auto build_process = [&](const Process& process) {
+        auto build_process = [&](JsonArraySerializer<KBufferBuilder>& array, const Process& process) {
             auto process_object = array.add_object();
 
             if (process.is_user_process()) {
@@ -488,11 +488,19 @@ private:
         };
 
         ScopedSpinLock lock(g_scheduler_lock);
-        auto processes = Process::all_processes();
-        build_process(*Scheduler::colonel());
-        for (auto& process : processes)
-            build_process(process);
-        array.finish();
+        {
+            {
+                auto array = json.add_array("processes");
+                auto processes = Process::all_processes();
+                build_process(array, *Scheduler::colonel());
+                for (auto& process : processes)
+                    build_process(array, process);
+            }
+
+            auto total_ticks_scheduled = Scheduler::get_total_ticks_scheduled();
+            json.add("total_ticks", total_ticks_scheduled.total);
+            json.add("total_ticks_kernel", total_ticks_scheduled.total_kernel);
+        }
         return true;
     }
 };
