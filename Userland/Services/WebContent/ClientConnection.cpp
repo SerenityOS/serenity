@@ -243,4 +243,9 @@ void ClientConnection::js_console_input(const String& js_source)
         m_console_client->handle_input(js_source);
 }
 
+Messages::WebContentServer::GetSelectedTextResponse ClientConnection::get_selected_text()
+{
+    return page().focused_context().selected_text();
+}
+
 }
