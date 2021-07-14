@@ -75,18 +75,17 @@ namespace Web::HTML {
         goto new_state;                                                 \
     } while (0)
 
-#define FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE                               \
-    do {                                                                                 \
-        for (auto code_point : m_temporary_buffer) {                                     \
-            if (consumed_as_part_of_an_attribute()) {                                    \
-                m_current_builder.append_code_point(code_point);                         \
-            } else {                                                                     \
-                create_new_token(HTMLToken::Type::Character);                            \
-                m_current_builder.append_code_point(code_point);                         \
-                m_current_token.m_comment_or_character.data = consume_current_builder(); \
-                m_queued_tokens.enqueue(move(m_current_token));                          \
-            }                                                                            \
-        }                                                                                \
+#define FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE       \
+    do {                                                         \
+        for (auto code_point : m_temporary_buffer) {             \
+            if (consumed_as_part_of_an_attribute()) {            \
+                m_current_builder.append_code_point(code_point); \
+            } else {                                             \
+                create_new_token(HTMLToken::Type::Character);    \
+                m_current_token.set_code_point(code_point);      \
+                m_queued_tokens.enqueue(move(m_current_token));  \
+            }                                                    \
+        }                                                        \
     } while (0)
 
 #define DONT_CONSUME_NEXT_INPUT_CHARACTER \
@@ -142,13 +141,12 @@ namespace Web::HTML {
         return m_queued_tokens.dequeue();               \
     } while (0)
 
-#define EMIT_CHARACTER(code_point)                                               \
-    do {                                                                         \
-        create_new_token(HTMLToken::Type::Character);                            \
-        m_current_builder.append_code_point(code_point);                         \
-        m_current_token.m_comment_or_character.data = consume_current_builder(); \
-        m_queued_tokens.enqueue(move(m_current_token));                          \
-        return m_queued_tokens.dequeue();                                        \
+#define EMIT_CHARACTER(code_point)                      \
+    do {                                                \
+        create_new_token(HTMLToken::Type::Character);   \
+        m_current_token.set_code_point(code_point);     \
+        m_queued_tokens.enqueue(move(m_current_token)); \
+        return m_queued_tokens.dequeue();               \
     } while (0)
 
 #define EMIT_CURRENT_CHARACTER \
