@@ -71,7 +71,7 @@ There is also documentation for installing the build prerequisites for some less
 In order to build SerenityOS you will first need to build the toolchain by running the following command:
 
 ```console
-$ Meta/serenity.sh rebuild-toolchain
+Meta/serenity.sh rebuild-toolchain
 ```
 
 Later on, when you use `git pull` to get the latest changes, there's (usually) no need to rebuild the toolchain.
@@ -79,7 +79,7 @@ Later on, when you use `git pull` to get the latest changes, there's (usually) n
 Run the following command to build and run SerenityOS:
 
 ```console
-$ Meta/serenity.sh run
+Meta/serenity.sh run
 ```
 
 This will compile all of SerenityOS and install the built files into the `Build/i686/Root` directory inside your Git
