@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/RedBlackTree.h>
 #include <AK/Traits.h>
-#include <AK/Vector.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/Range.h>
 
@@ -31,9 +31,9 @@ public:
     bool contains(Range const& range) const { return m_total_range.contains(range); }
 
 private:
-    void carve_at_index(int, Range const&);
+    void carve_at_iterator(auto&, Range const&);
 
-    Vector<Range> m_available_ranges;
+    RedBlackTree<FlatPtr, Range> m_available_ranges;
     Range m_total_range;
     mutable SpinLock<u8> m_lock;
 };

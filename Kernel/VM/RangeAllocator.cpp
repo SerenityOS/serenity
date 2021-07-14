@@ -21,14 +21,17 @@ RangeAllocator::RangeAllocator()
 void RangeAllocator::initialize_with_range(VirtualAddress base, size_t size)
 {
     m_total_range = { base, size };
-    m_available_ranges.append({ base, size });
+    m_available_ranges.insert(base.get(), Range { base, size });
 }
 
 void RangeAllocator::initialize_from_parent(RangeAllocator const& parent_allocator)
 {
     ScopedSpinLock lock(parent_allocator.m_lock);
     m_total_range = parent_allocator.m_total_range;
-    m_available_ranges = parent_allocator.m_available_ranges;
+    m_available_ranges.clear();
+    for (auto it = parent_allocator.m_available_ranges.begin(); !it.is_end(); ++it) {
+        m_available_ranges.insert(it.key(), *it);
+    }
 }
 
 RangeAllocator::~RangeAllocator()
@@ -44,16 +47,17 @@ void RangeAllocator::dump() const
     }
 }
 
-void RangeAllocator::carve_at_index(int index, Range const& range)
+void RangeAllocator::carve_at_iterator(auto& it, Range const& range)
 {
     VERIFY(m_lock.is_locked());
-    auto remaining_parts = m_available_ranges[index].carve(range);
+    auto remaining_parts = (*it).carve(range);
     VERIFY(remaining_parts.size() >= 1);
     VERIFY(m_total_range.contains(remaining_parts[0]));
-    m_available_ranges[index] = remaining_parts[0];
+    m_available_ranges.remove(it.key());
+    m_available_ranges.insert(remaining_parts[0].base().get(), remaining_parts[0]);
     if (remaining_parts.size() == 2) {
         VERIFY(m_total_range.contains(remaining_parts[1]));
-        m_available_ranges.insert(index + 1, move(remaining_parts[1]));
+        m_available_ranges.insert(remaining_parts[1].base().get(), remaining_parts[1]);
     }
 }
 
@@ -105,8 +109,9 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
         return {};
 
     ScopedSpinLock lock(m_lock);
-    for (size_t i = 0; i < m_available_ranges.size(); ++i) {
-        auto& available_range = m_available_ranges[i];
+
+    for (auto it = m_available_ranges.begin(); !it.is_end(); ++it) {
+        auto& available_range = *it;
         // FIXME: This check is probably excluding some valid candidates when using a large alignment.
         if (available_range.size() < (effective_size + alignment))
             continue;
@@ -114,14 +119,15 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
         FlatPtr initial_base = available_range.base().offset(offset_from_effective_base).get();
         FlatPtr aligned_base = round_up_to_power_of_two(initial_base, alignment);
 
-        Range allocated_range(VirtualAddress(aligned_base), size);
+        Range const allocated_range(VirtualAddress(aligned_base), size);
+
         VERIFY(m_total_range.contains(allocated_range));
 
         if (available_range == allocated_range) {
-            m_available_ranges.remove(i);
+            m_available_ranges.remove(it.key());
             return allocated_range;
         }
-        carve_at_index(i, allocated_range);
+        carve_at_iterator(it, allocated_range);
         return allocated_range;
     }
     dmesgln("RangeAllocator: Failed to allocate anywhere: size={}, alignment={}", size, alignment);
@@ -140,15 +146,15 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     VERIFY(m_total_range.contains(allocated_range));
 
     ScopedSpinLock lock(m_lock);
-    for (size_t i = 0; i < m_available_ranges.size(); ++i) {
-        auto& available_range = m_available_ranges[i];
+    for (auto it = m_available_ranges.begin(); !it.is_end(); ++it) {
+        auto& available_range = *it;
         if (!available_range.contains(base, size))
             continue;
         if (available_range == allocated_range) {
-            m_available_ranges.remove(i);
+            m_available_ranges.remove(it.key());
             return allocated_range;
         }
-        carve_at_index(i, allocated_range);
+        carve_at_iterator(it, allocated_range);
         return allocated_range;
     }
     return {};
@@ -163,33 +169,27 @@ void RangeAllocator::deallocate(Range const& range)
     VERIFY(range.base() < range.end());
     VERIFY(!m_available_ranges.is_empty());
 
-    size_t nearby_index = 0;
-    auto* existing_range = binary_search(
-        m_available_ranges.span(),
-        range,
-        &nearby_index,
-        [](auto& a, auto& b) { return a.base().get() - b.end().get(); });
+    Range merged_range = range;
 
-    size_t inserted_index = 0;
-    if (existing_range) {
-        existing_range->m_size += range.size();
-        inserted_index = nearby_index;
-    } else {
-        m_available_ranges.insert_before_matching(
-            Range(range), [&](auto& entry) {
-                return entry.base() >= range.end();
-            },
-            nearby_index, &inserted_index);
+    {
+        // Try merging with preceding range.
+        auto* preceding_range = m_available_ranges.find_largest_not_above(range.base().get());
+        if (preceding_range && preceding_range->end() == range.base()) {
+            preceding_range->m_size += range.size();
+            merged_range = *preceding_range;
+        } else {
+            m_available_ranges.insert(range.base().get(), range);
+        }
     }
 
-    if (inserted_index < (m_available_ranges.size() - 1)) {
-        // We already merged with previous. Try to merge with next.
-        auto& inserted_range = m_available_ranges[inserted_index];
-        auto& next_range = m_available_ranges[inserted_index + 1];
-        if (inserted_range.end() == next_range.base()) {
-            inserted_range.m_size += next_range.size();
-            m_available_ranges.remove(inserted_index + 1);
-            return;
+    {
+        // Try merging with following range.
+        auto* following_range = m_available_ranges.find_largest_not_above(range.end().get());
+        if (following_range && merged_range.end() == following_range->base()) {
+            auto* existing_range = m_available_ranges.find_largest_not_above(range.base().get());
+            VERIFY(existing_range->base() == merged_range.base());
+            existing_range->m_size += following_range->size();
+            m_available_ranges.remove(following_range->base().get());
         }
     }
 }
