@@ -2221,10 +2221,12 @@ String parse_ampersand_string(const StringView& raw_text, Optional<size_t>* unde
 
     for (size_t i = 0; i < raw_text.length(); ++i) {
         if (raw_text[i] == '&') {
-            if (i != (raw_text.length() - 1) && raw_text[i + 1] == '&')
+            if (i != (raw_text.length() - 1) && raw_text[i + 1] == '&') {
                 builder.append(raw_text[i]);
-            else if (underline_offset && !(*underline_offset).has_value())
+                ++i;
+            } else if (underline_offset && !(*underline_offset).has_value()) {
                 *underline_offset = i;
+            }
             continue;
         }
         builder.append(raw_text[i]);
