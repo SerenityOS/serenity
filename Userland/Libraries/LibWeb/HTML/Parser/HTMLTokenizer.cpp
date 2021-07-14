@@ -1351,18 +1351,17 @@ _StartOfFunction:
             {
                 ON('-')
                 {
-                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CommentEnd);
+                    SWITCH_TO(CommentEnd);
                 }
                 ON('>')
                 {
                     log_parse_error();
-                    consume_current_builder();
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
                     log_parse_error();
-                    m_queued_tokens.enqueue(move(m_current_token));
+                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1393,7 +1392,8 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_queued_tokens.enqueue(move(m_current_token));
+                    m_current_token.m_comment_or_character.data = consume_current_builder();
+                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1413,7 +1413,7 @@ _StartOfFunction:
                 }
                 ON('!')
                 {
-                    SWITCH_TO(CommentEndBang);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CommentEndBang);
                 }
                 ON('-')
                 {
@@ -1423,7 +1423,8 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_queued_tokens.enqueue(move(m_current_token));
+                    m_current_token.m_comment_or_character.data = consume_current_builder();
+                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1439,17 +1440,19 @@ _StartOfFunction:
                 ON('-')
                 {
                     m_current_builder.append("--!");
-                    SWITCH_TO(CommentEndDash);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CommentEndDash);
                 }
                 ON('>')
                 {
                     log_parse_error();
+                    m_current_token.m_comment_or_character.data = consume_current_builder();
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
                     log_parse_error();
-                    m_queued_tokens.enqueue(move(m_current_token));
+                    m_current_token.m_comment_or_character.data = consume_current_builder();
+                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1469,7 +1472,8 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_queued_tokens.enqueue(move(m_current_token));
+                    m_current_token.m_comment_or_character.data = consume_current_builder();
+                    EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1503,7 +1507,7 @@ _StartOfFunction:
             {
                 ON('-')
                 {
-                    SWITCH_TO(CommentLessThanSignBangDash);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CommentLessThanSignBangDash);
                 }
                 ANYTHING_ELSE
                 {
@@ -1516,7 +1520,7 @@ _StartOfFunction:
             {
                 ON('-')
                 {
-                    SWITCH_TO(CommentLessThanSignBangDashDash);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CommentLessThanSignBangDashDash);
                 }
                 ANYTHING_ELSE
                 {
