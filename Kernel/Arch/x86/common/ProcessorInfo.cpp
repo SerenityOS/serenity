@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/CPUID.h>
@@ -56,14 +57,16 @@ ProcessorInfo::ProcessorInfo(Processor& processor)
     u32 max_extended_leaf = CPUID(0x80000000).eax();
 
     if (max_extended_leaf >= 0x80000004) {
-        alignas(u32) char buffer[48];
-        u32* bufptr = reinterpret_cast<u32*>(buffer);
+        char buffer[49];
+        buffer[48] = '\0';
+        char* bufptr = buffer;
         auto copy_brand_string_part_to_buffer = [&](u32 i) {
             CPUID cpuid(0x80000002 + i);
-            *bufptr++ = cpuid.eax();
-            *bufptr++ = cpuid.ebx();
-            *bufptr++ = cpuid.ecx();
-            *bufptr++ = cpuid.edx();
+            ByteReader::store((u8*)bufptr + 0, cpuid.eax());
+            ByteReader::store((u8*)bufptr + 4, cpuid.ebx());
+            ByteReader::store((u8*)bufptr + 8, cpuid.ecx());
+            ByteReader::store((u8*)bufptr + 12, cpuid.edx());
+            bufptr += 16;
         };
         copy_brand_string_part_to_buffer(0);
         copy_brand_string_part_to_buffer(1);

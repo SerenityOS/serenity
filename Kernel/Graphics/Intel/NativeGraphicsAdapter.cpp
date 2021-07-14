@@ -279,7 +279,7 @@ void IntelNativeGraphicsAdapter::write_to_register(IntelGraphics::RegisterIndex 
     VERIFY(m_registers_region);
     ScopedSpinLock lock(m_registers_lock);
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics {}: Write to {} value of {:x}", pci_address(), convert_register_index_to_string(index), value);
-    auto* reg = (volatile u32*)m_registers_region->vaddr().offset(index).as_ptr();
+    auto* reg = m_registers_region->vaddr().offset(index).as_ptr<volatile u32>();
     *reg = value;
 }
 u32 IntelNativeGraphicsAdapter::read_from_register(IntelGraphics::RegisterIndex index) const
@@ -287,7 +287,7 @@ u32 IntelNativeGraphicsAdapter::read_from_register(IntelGraphics::RegisterIndex 
     VERIFY(m_control_lock.is_locked());
     VERIFY(m_registers_region);
     ScopedSpinLock lock(m_registers_lock);
-    auto* reg = (volatile u32*)m_registers_region->vaddr().offset(index).as_ptr();
+    auto* reg = m_registers_region->vaddr().offset(index).as_ptr<volatile u32>();
     u32 value = *reg;
     dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics {}: Read from {} value of {:x}", pci_address(), convert_register_index_to_string(index), value);
     return value;
