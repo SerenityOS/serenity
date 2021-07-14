@@ -309,8 +309,8 @@ end_of_print_and_halt_function:
 real_start:
     cli
     cld
-    mov $end_of_kernel_image, %esi
-    cmp $0xc2000000, %esi
+    mov $(end_of_kernel_image - KERNEL_BASE), %esi
+    cmp $KERNEL_PD_OFFSET, %esi
     jbe kernel_not_too_large
     
     movl $(kernel_image_too_big_string - KERNEL_BASE), %esi
