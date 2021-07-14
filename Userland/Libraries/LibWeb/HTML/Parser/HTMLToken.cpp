@@ -40,7 +40,7 @@ String HTMLToken::to_string() const
 
     if (type() == HTMLToken::Type::StartTag || type() == HTMLToken::Type::EndTag) {
         builder.append(" { name: '");
-        builder.append(m_tag.tag_name);
+        builder.append(tag_name());
         builder.append("', { ");
         for (auto& attribute : m_tag.attributes) {
             builder.append(attribute.local_name);
