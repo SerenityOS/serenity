@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <AK/Function.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
@@ -150,6 +151,62 @@ public:
             m_tag.self_closing_acknowledged = true;
     }
 
+    bool has_attributes() const
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        return !m_tag.attributes.is_empty();
+    }
+
+    size_t attribute_count() const
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        return m_tag.attributes.size();
+    }
+
+    void add_attribute(Attribute attribute)
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        m_tag.attributes.append(move(attribute));
+    }
+
+    Attribute const& last_attribute() const
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        VERIFY(!m_tag.attributes.is_empty());
+        return m_tag.attributes.last();
+    }
+
+    Attribute& last_attribute()
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        VERIFY(!m_tag.attributes.is_empty());
+        return m_tag.attributes.last();
+    }
+
+    void drop_attributes()
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        m_tag.attributes.clear();
+    }
+
+    void for_each_attribute(Function<IterationDecision(Attribute const&)> callback) const
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        for (auto& attribute : m_tag.attributes) {
+            if (callback(attribute) == IterationDecision::Break)
+                break;
+        }
+    }
+
+    void for_each_attribute(Function<IterationDecision(Attribute&)> callback)
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        for (auto& attribute : m_tag.attributes) {
+            if (callback(attribute) == IterationDecision::Break)
+                break;
+        }
+    }
+
     StringView attribute(FlyString const& attribute_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
@@ -175,29 +232,24 @@ public:
     void adjust_attribute_name(FlyString const& old_name, FlyString const& new_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
-        for (auto& attribute : m_tag.attributes) {
-            if (old_name == attribute.local_name) {
+        for_each_attribute([&](Attribute& attribute) {
+            if (old_name == attribute.local_name)
                 attribute.local_name = new_name;
-            }
-        }
+            return IterationDecision::Continue;
+        });
     }
 
     void adjust_foreign_attribute(FlyString const& old_name, FlyString const& prefix, FlyString const& local_name, FlyString const& namespace_)
     {
         VERIFY(is_start_tag() || is_end_tag());
-        for (auto& attribute : m_tag.attributes) {
+        for_each_attribute([&](Attribute& attribute) {
             if (old_name == attribute.local_name) {
                 attribute.prefix = prefix;
                 attribute.local_name = local_name;
                 attribute.namespace_ = namespace_;
             }
-        }
-    }
-
-    void drop_attributes()
-    {
-        VERIFY(is_start_tag() || is_end_tag());
-        m_tag.attributes.clear();
+            return IterationDecision::Continue;
+        });
     }
 
     Type type() const { return m_type; }
@@ -206,12 +258,6 @@ public:
 
     Position const& start_position() const { return m_start_position; }
     Position const& end_position() const { return m_end_position; }
-
-    Vector<Attribute> const& attributes() const
-    {
-        VERIFY(is_start_tag() || is_end_tag());
-        return m_tag.attributes;
-    }
 
 private:
     Type m_type { Type::Invalid };
