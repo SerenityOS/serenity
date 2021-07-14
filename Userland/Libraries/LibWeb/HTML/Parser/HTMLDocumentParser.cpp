@@ -1570,7 +1570,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::image) {
         // Parse error. Change the token's tag name to HTML::TagNames::img and reprocess it. (Don't ask.)
         log_parse_error();
-        token.m_tag.tag_name = "img";
+        token.set_tag_name("img");
         process_using_the_rules_for(m_insertion_mode, token);
         return;
     }

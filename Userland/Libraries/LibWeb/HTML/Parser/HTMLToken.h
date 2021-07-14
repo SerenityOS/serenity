@@ -58,7 +58,7 @@ public:
     {
         HTMLToken token;
         token.m_type = Type::StartTag;
-        token.m_tag.tag_name = tag_name;
+        token.set_tag_name(tag_name);
         return token;
     }
 
@@ -114,16 +114,28 @@ public:
         m_comment_or_character.data = move(comment);
     }
 
-    String tag_name() const
+    String const& tag_name() const
     {
         VERIFY(is_start_tag() || is_end_tag());
         return m_tag.tag_name;
+    }
+
+    void set_tag_name(String name)
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        m_tag.tag_name = move(name);
     }
 
     bool is_self_closing() const
     {
         VERIFY(is_start_tag() || is_end_tag());
         return m_tag.self_closing;
+    }
+
+    void set_self_closing(bool self_closing)
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        m_tag.self_closing = self_closing;
     }
 
     bool has_acknowledged_self_closing_flag() const
@@ -156,8 +168,8 @@ public:
     void adjust_tag_name(FlyString const& old_name, FlyString const& new_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
-        if (old_name == m_tag.tag_name)
-            m_tag.tag_name = new_name;
+        if (old_name == tag_name())
+            set_tag_name(new_name);
     }
 
     void adjust_attribute_name(FlyString const& old_name, FlyString const& new_name)

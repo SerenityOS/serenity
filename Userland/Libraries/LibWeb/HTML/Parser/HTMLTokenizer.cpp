@@ -305,19 +305,19 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     m_current_token.m_end_position = nth_last_position(1);
                     SWITCH_TO(BeforeAttributeName);
                 }
                 ON('/')
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     m_current_token.m_end_position = nth_last_position(0);
                     SWITCH_TO(SelfClosingStartTag);
                 }
                 ON('>')
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     m_current_token.m_end_position = nth_last_position(1);
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
@@ -1031,7 +1031,7 @@ _StartOfFunction:
             {
                 ON('>')
                 {
-                    m_current_token.m_tag.self_closing = true;
+                    m_current_token.set_self_closing(true);
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
@@ -1858,7 +1858,7 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (!current_end_tag_token_is_appropriate()) {
                         m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                         m_queued_tokens.enqueue(HTMLToken::make_character('/'));
@@ -1870,7 +1870,7 @@ _StartOfFunction:
                 }
                 ON('/')
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (!current_end_tag_token_is_appropriate()) {
                         m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                         m_queued_tokens.enqueue(HTMLToken::make_character('/'));
@@ -1882,7 +1882,7 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (!current_end_tag_token_is_appropriate()) {
                         m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                         m_queued_tokens.enqueue(HTMLToken::make_character('/'));
@@ -1973,7 +1973,7 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (!current_end_tag_token_is_appropriate()) {
                         m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                         m_queued_tokens.enqueue(HTMLToken::make_character('/'));
@@ -1985,7 +1985,7 @@ _StartOfFunction:
                 }
                 ON('/')
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (!current_end_tag_token_is_appropriate()) {
                         m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                         m_queued_tokens.enqueue(HTMLToken::make_character('/'));
@@ -1997,7 +1997,7 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (!current_end_tag_token_is_appropriate()) {
                         m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                         m_queued_tokens.enqueue(HTMLToken::make_character('/'));
@@ -2188,7 +2188,7 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (current_end_tag_token_is_appropriate())
                         SWITCH_TO(BeforeAttributeName);
 
@@ -2203,7 +2203,7 @@ _StartOfFunction:
                 }
                 ON('/')
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (current_end_tag_token_is_appropriate())
                         SWITCH_TO(SelfClosingStartTag);
 
@@ -2218,7 +2218,7 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (current_end_tag_token_is_appropriate())
                         SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
 
@@ -2524,7 +2524,7 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (current_end_tag_token_is_appropriate())
                         SWITCH_TO(BeforeAttributeName);
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
@@ -2537,7 +2537,7 @@ _StartOfFunction:
                 }
                 ON('/')
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (current_end_tag_token_is_appropriate())
                         SWITCH_TO(SelfClosingStartTag);
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
@@ -2550,7 +2550,7 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    m_current_token.m_tag.tag_name = consume_current_builder();
+                    m_current_token.set_tag_name(consume_current_builder());
                     if (current_end_tag_token_is_appropriate())
                         SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
