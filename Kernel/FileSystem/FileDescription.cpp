@@ -96,7 +96,7 @@ Thread::FileBlocker::BlockFlags FileDescription::should_unblock(Thread::FileBloc
         unblock_flags |= BlockFlags::Write;
     // TODO: Implement Thread::FileBlocker::BlockFlags::Exception
 
-    if (has_flag(block_flags, BlockFlags::SocketFlags)) {
+    if (has_any_flag(block_flags, BlockFlags::SocketFlags)) {
         auto* sock = socket();
         VERIFY(sock);
         if (has_flag(block_flags, BlockFlags::Accept) && sock->can_accept())

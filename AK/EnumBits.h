@@ -78,4 +78,10 @@
     {                                                                      \
         using Type = UnderlyingType<Enum>;                                 \
         return static_cast<Type>(value & mask) == static_cast<Type>(mask); \
+    }                                                                      \
+                                                                           \
+    Prefix constexpr bool has_any_flag(Enum value, Enum mask)              \
+    {                                                                      \
+        using Type = UnderlyingType<Enum>;                                 \
+        return static_cast<Type>(value & mask) != 0;                       \
     }
