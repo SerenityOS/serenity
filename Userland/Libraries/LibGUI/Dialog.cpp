@@ -10,8 +10,9 @@
 
 namespace GUI {
 
-Dialog::Dialog(Window* parent_window)
+Dialog::Dialog(Window* parent_window, bool center_within_parent_window)
     : Window(parent_window)
+    , m_center_within_parent_window(center_within_parent_window)
 {
     set_modal(true);
     set_minimizable(false);
@@ -25,7 +26,7 @@ int Dialog::exec()
 {
     VERIFY(!m_event_loop);
     m_event_loop = make<Core::EventLoop>();
-    if (parent() && is<Window>(parent())) {
+    if (m_center_within_parent_window && parent() && is<Window>(parent())) {
         auto& parent_window = *static_cast<Window*>(parent());
         if (parent_window.is_visible()) {
             center_within(parent_window);
