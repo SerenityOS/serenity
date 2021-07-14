@@ -139,7 +139,6 @@ $SERENITY_SPICE_SERVER_CHARDEV
 -chardev stdio,id=stdout,mux=on
 -device virtconsole,chardev=stdout
 -device isa-debugcon,chardev=stdout
--device virtserialport,chardev=vdagent,nr=1
 -device virtio-rng-pci
 -soundhw pcspk
 -device sb16
@@ -147,8 +146,14 @@ $SERENITY_SPICE_SERVER_CHARDEV
 -device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
 -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
 -device ich9-ahci,bus=bridge3
--spice port=5930,agent-mouse=off,disable-ticketing=on
 "
+
+if "${SERENITY_QEMU_BIN}" --help | grep -iq spice; then
+    SERENITY_COMMON_QEMU_ARGS="$SERENITY_COMMON_QEMU_ARGS
+    -spice port=5930,agent-mouse=off,disable-ticketing=on
+    -device virtserialport,chardev=vdagent,nr=1
+    "
+fi
 
 [ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
