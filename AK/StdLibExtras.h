@@ -16,6 +16,10 @@ constexpr auto round_up_to_power_of_two(T value, U power_of_two) requires(IsInte
     return ((value - 1) & ~(power_of_two - 1)) + power_of_two;
 }
 
+// HACK: clang-format does not format this correctly because of the requires clause above.
+// Disabling formatting for that doesn't help either.
+//
+// clang-format off
 namespace std {
 
 // NOTE: This is in the "std" namespace since some compiler features rely on it.
@@ -27,6 +31,7 @@ constexpr T&& move(T& arg)
 }
 
 }
+// clang-format on
 
 using std::move;
 
