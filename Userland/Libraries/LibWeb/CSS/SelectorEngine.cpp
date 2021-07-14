@@ -35,13 +35,13 @@ static bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& at
         return element.attribute(attribute.name) == attribute.value;
         break;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord:
-        return element.attribute(attribute.name).split(' ').contains_slow(attribute.value);
+        return element.attribute(attribute.name).split_view(' ').contains_slow(attribute.value);
         break;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
         return element.attribute(attribute.name).contains(attribute.value);
         break;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment:
-        return element.attribute(attribute.name).split('-').first() == attribute.value;
+        return element.attribute(attribute.name).split_view('-').first() == attribute.value;
         break;
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
         return element.attribute(attribute.name).starts_with(attribute.value);
