@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <max.wipfli@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,6 +28,22 @@ public:
         Comment,
         Character,
         EndOfFile,
+    };
+
+    struct Position {
+        size_t line { 0 };
+        size_t column { 0 };
+    };
+
+    struct AttributeBuilder {
+        String prefix;
+        String local_name;
+        String namespace_;
+        String value;
+        Position name_start_position;
+        Position value_start_position;
+        Position name_end_position;
+        Position value_end_position;
     };
 
     static HTMLToken make_character(u32 code_point)
@@ -158,32 +175,16 @@ public:
 
     String to_string() const;
 
-    auto const& start_position() const { return m_start_position; }
-    auto const& end_position() const { return m_end_position; }
+    Position const& start_position() const { return m_start_position; }
+    Position const& end_position() const { return m_end_position; }
 
-    auto const& attributes() const
+    Vector<Attribute> const& attributes() const
     {
         VERIFY(is_start_tag() || is_end_tag());
         return m_tag.attributes;
     }
 
 private:
-    struct Position {
-        size_t line { 0 };
-        size_t column { 0 };
-    };
-
-    struct AttributeBuilder {
-        String prefix;
-        String local_name;
-        String namespace_;
-        String value;
-        Position name_start_position;
-        Position value_start_position;
-        Position name_end_position;
-        Position value_end_position;
-    };
-
     Type m_type { Type::Invalid };
 
     // Type::DOCTYPE
