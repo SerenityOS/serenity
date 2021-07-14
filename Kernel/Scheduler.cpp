@@ -51,6 +51,7 @@ struct ThreadReadyQueue {
 };
 static SpinLock<u8> g_ready_queues_lock;
 static u32 g_ready_queues_mask;
+static TotalTicksScheduled g_total_ticks_scheduled;
 static constexpr u32 g_ready_queue_buckets = sizeof(g_ready_queues_mask) * 8;
 READONLY_AFTER_INIT static ThreadReadyQueue* g_ready_queues; // g_ready_queue_buckets entries
 static void dump_thread_list(bool = false);
@@ -446,18 +447,22 @@ void Scheduler::timer_tick(const RegisterState& regs)
         return; // TODO: This prevents scheduling on other CPUs!
 #endif
 
-    if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
-        dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::id(), *current_thread);
-        {
-            ScopedSpinLock scheduler_lock(g_scheduler_lock);
+    {
+        ScopedSpinLock scheduler_lock(g_scheduler_lock);
+        if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
+            dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::id(), *current_thread);
             current_thread->set_state(Thread::Dying);
+            Processor::current().invoke_scheduler_async();
+            return;
         }
-        VERIFY(!Processor::current().in_critical());
-        Processor::current().invoke_scheduler_async();
-        return;
+
+        g_total_ticks_scheduled.total++;
+        if (current_thread->previous_mode() == Thread::PreviousMode::KernelMode)
+            g_total_ticks_scheduled.total_kernel++;
+
+        if (current_thread->tick())
+            return;
     }
-    if (current_thread->tick())
-        return;
 
     if (!current_thread->is_idle_thread() && !peek_next_runnable_thread()) {
         // If no other thread is ready to be scheduled we don't need to
@@ -538,6 +543,12 @@ bool Scheduler::is_initialized()
 {
     // The scheduler is initialized iff the idle thread exists
     return Processor::idle_thread() != nullptr;
+}
+
+TotalTicksScheduled Scheduler::get_total_ticks_scheduled()
+{
+    ScopedSpinLock scheduler_lock(g_scheduler_lock);
+    return g_total_ticks_scheduled;
 }
 
 void dump_thread_list(bool with_stack_traces)

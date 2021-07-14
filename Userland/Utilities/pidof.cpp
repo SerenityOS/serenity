@@ -16,11 +16,11 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
 {
     bool displayed_at_least_one = false;
 
-    auto processes = Core::ProcessStatisticsReader::get_all();
-    if (!processes.has_value())
+    auto all_processes = Core::ProcessStatisticsReader::get_all();
+    if (!all_processes.has_value())
         return 1;
 
-    for (auto& it : processes.value()) {
+    for (auto& it : all_processes.value().processes) {
         if (it.name == process_name) {
             if (!omit_pid || it.pid != pid) {
                 out(displayed_at_least_one ? " {}" : "{}", it.pid);
