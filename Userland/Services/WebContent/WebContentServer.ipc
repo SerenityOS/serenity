@@ -29,4 +29,6 @@ endpoint WebContentServer
     inspect_dom_tree() =|
     js_console_initialize() =|
     js_console_input(String js_source) =|
+
+    get_selected_text() => (String selection)
 }

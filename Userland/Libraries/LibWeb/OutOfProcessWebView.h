@@ -35,6 +35,8 @@ public:
     void js_console_initialize();
     void js_console_input(const String& js_source);
 
+    String selected_text();
+
     void notify_server_did_layout(Badge<WebContentClient>, const Gfx::IntSize& content_size);
     void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id);
     void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, const Gfx::IntRect&);
