@@ -26,6 +26,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.Calendar"), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_accessor(vm.names.id, id_getter, {}, Attribute::Configurable);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 }
@@ -41,6 +42,16 @@ static Calendar* typed_this(GlobalObject& global_object)
         return {};
     }
     return static_cast<Calendar*>(this_object);
+}
+
+// 12.4.3 get Temporal.Calendar.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.calendar.prototype.id
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
+{
+    // 1. Let calendar be the this value.
+    auto calendar = vm.this_value(global_object);
+
+    // 2. Return ? ToString(calendar).
+    return js_string(vm, calendar.to_string(global_object));
 }
 
 // 12.4.23 Temporal.Calendar.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tostring
