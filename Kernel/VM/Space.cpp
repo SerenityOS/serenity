@@ -156,16 +156,18 @@ KResultOr<Region*> Space::try_allocate_split_region(Region const& source_region,
         m_process, range, source_region.vmobject(), offset_in_vmobject, KString::try_create(source_region.name()), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared());
     if (!new_region)
         return ENOMEM;
-    auto& region = add_region(new_region.release_nonnull());
-    region.set_syscall_region(source_region.is_syscall_region());
-    region.set_mmap(source_region.is_mmap());
-    region.set_stack(source_region.is_stack());
+    auto* region = add_region(new_region.release_nonnull());
+    if (!region)
+        return ENOMEM;
+    region->set_syscall_region(source_region.is_syscall_region());
+    region->set_mmap(source_region.is_mmap());
+    region->set_stack(source_region.is_stack());
     size_t page_offset_in_source_region = (offset_in_vmobject - source_region.offset_in_vmobject()) / PAGE_SIZE;
-    for (size_t i = 0; i < region.page_count(); ++i) {
+    for (size_t i = 0; i < region->page_count(); ++i) {
         if (source_region.should_cow(page_offset_in_source_region + i))
-            region.set_should_cow(i, true);
+            region->set_should_cow(i, true);
     }
-    return &region;
+    return region;
 }
 
 KResultOr<Region*> Space::allocate_region(Range const& range, StringView name, int prot, AllocationStrategy strategy)
@@ -179,7 +181,10 @@ KResultOr<Region*> Space::allocate_region(Range const& range, StringView name, i
         return ENOMEM;
     if (!region->map(page_directory()))
         return ENOMEM;
-    return &add_region(region.release_nonnull());
+    auto* added_region = add_region(region.release_nonnull());
+    if (!added_region)
+        return ENOMEM;
+    return added_region;
 }
 
 KResultOr<Region*> Space::allocate_region_with_vmobject(Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
@@ -202,14 +207,16 @@ KResultOr<Region*> Space::allocate_region_with_vmobject(Range const& range, Nonn
     auto region = Region::try_create_user_accessible(m_process, range, move(vmobject), offset_in_vmobject, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared);
     if (!region) {
         dbgln("allocate_region_with_vmobject: Unable to allocate Region");
-        return nullptr;
+        return ENOMEM;
     }
-    auto& region_ref = add_region(region.release_nonnull());
-    if (!region_ref.map(page_directory())) {
+    auto* added_region = add_region(region.release_nonnull());
+    if (!added_region)
+        return ENOMEM;
+    if (!added_region->map(page_directory())) {
         // FIXME: What is an appropriate error code here, really?
         return ENOMEM;
     }
-    return &region_ref;
+    return added_region;
 }
 
 bool Space::deallocate_region(Region& region)
@@ -284,12 +291,12 @@ Vector<Region*> Space::find_regions_intersecting(const Range& range)
     return regions;
 }
 
-Region& Space::add_region(NonnullOwnPtr<Region> region)
+Region* Space::add_region(NonnullOwnPtr<Region> region)
 {
     auto* ptr = region.ptr();
     ScopedSpinLock lock(m_lock);
-    m_regions.insert(region->vaddr().get(), move(region));
-    return *ptr;
+    auto success = m_regions.try_insert(region->vaddr().get(), move(region));
+    return success ? ptr : nullptr;
 }
 
 // Carve out a virtual address range from a region and return the two regions on either side

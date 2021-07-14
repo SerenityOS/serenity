@@ -102,8 +102,13 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
                 return ENOMEM;
             }
 
-            auto& child_region = child->space().add_region(region_clone.release_nonnull());
-            child_region.map(child->space().page_directory(), ShouldFlushTLB::No);
+            auto* child_region = child->space().add_region(region_clone.release_nonnull());
+            if (!child_region) {
+                dbgln("fork: Cannot add region, insufficient memory");
+                // TODO: tear down new process?
+                return ENOMEM;
+            }
+            child_region->map(child->space().page_directory(), ShouldFlushTLB::No);
 
             if (region == m_master_tls_region.unsafe_ptr())
                 child->m_master_tls_region = child_region;
