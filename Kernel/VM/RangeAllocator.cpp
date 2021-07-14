@@ -24,7 +24,7 @@ void RangeAllocator::initialize_with_range(VirtualAddress base, size_t size)
     m_available_ranges.append({ base, size });
 }
 
-void RangeAllocator::initialize_from_parent(const RangeAllocator& parent_allocator)
+void RangeAllocator::initialize_from_parent(RangeAllocator const& parent_allocator)
 {
     ScopedSpinLock lock(parent_allocator.m_lock);
     m_total_range = parent_allocator.m_total_range;
@@ -44,7 +44,7 @@ void RangeAllocator::dump() const
     }
 }
 
-void RangeAllocator::carve_at_index(int index, const Range& range)
+void RangeAllocator::carve_at_index(int index, Range const& range)
 {
     VERIFY(m_lock.is_locked());
     auto remaining_parts = m_available_ranges[index].carve(range);
@@ -153,7 +153,7 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     return {};
 }
 
-void RangeAllocator::deallocate(const Range& range)
+void RangeAllocator::deallocate(Range const& range)
 {
     ScopedSpinLock lock(m_lock);
     VERIFY(m_total_range.contains(range));
