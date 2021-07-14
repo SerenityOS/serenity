@@ -45,7 +45,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::instant)
 }
 
 // 2.2.1 SystemTimeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal-systemtimezone
-Object* system_time_zone(GlobalObject& global_object)
+TimeZone* system_time_zone(GlobalObject& global_object)
 {
     // 1. Let identifier be ! DefaultTimeZone().
     auto identifier = default_time_zone();
@@ -78,7 +78,7 @@ BigInt* system_utc_epoch_nanoseconds(GlobalObject& global_object)
 }
 
 // 2.2.3 SystemInstant ( )
-Object* system_instant(GlobalObject& global_object)
+Instant* system_instant(GlobalObject& global_object)
 {
     // 1. Let ns be ! SystemUTCEpochNanoseconds().
     auto* ns = system_utc_epoch_nanoseconds(global_object);
