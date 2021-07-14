@@ -92,6 +92,9 @@ void Layer::set_name(String name)
 
 RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
 {
+    if (selection.is_empty()) {
+        return {};
+    }
     auto selection_rect = selection.bounding_rect();
 
     auto result = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, selection_rect.size());
