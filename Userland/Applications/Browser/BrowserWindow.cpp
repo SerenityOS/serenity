@@ -189,6 +189,15 @@ void BrowserWindow::build_menus()
             GUI::Clipboard::the().set_plain_text(selected_text);
     });
 
+    m_select_all_action = GUI::CommonActions::make_select_all_action([this](auto&) {
+        auto& tab = active_tab();
+
+        if (tab.m_type == Tab::Type::InProcessWebView)
+            tab.m_page_view->select_all();
+        else
+            tab.m_web_content_view->select_all();
+    });
+
     m_view_source_action = GUI::Action::create(
         "View &Source", { Mod_Ctrl, Key_U }, [this](auto&) {
             auto& tab = active_tab();

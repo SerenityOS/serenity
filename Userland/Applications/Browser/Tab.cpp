@@ -333,6 +333,7 @@ Tab::Tab(BrowserWindow& window, Type type)
     m_page_context_menu->add_action(window.reload_action());
     m_page_context_menu->add_separator();
     m_page_context_menu->add_action(window.copy_selection_action());
+    m_page_context_menu->add_action(window.select_all_action());
     m_page_context_menu->add_separator();
     m_page_context_menu->add_action(window.view_source_action());
     m_page_context_menu->add_action(window.inspect_dom_tree_action());
