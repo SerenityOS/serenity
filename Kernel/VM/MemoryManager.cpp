@@ -157,7 +157,7 @@ UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()
     m_reserved_memory_ranges.append(ContiguousReservedMemoryRange { range.start, m_physical_memory_ranges.last().start.get() + m_physical_memory_ranges.last().length - range.start.get() });
 }
 
-bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_address, const Range& range) const
+bool MemoryManager::is_allowed_to_mmap_to_userspace(PhysicalAddress start_address, Range const& range) const
 {
     VERIFY(!m_reserved_memory_ranges.is_empty());
     for (auto& current_range : m_reserved_memory_ranges) {
@@ -493,7 +493,7 @@ PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
 
     auto* pd = quickmap_pd(const_cast<PageDirectory&>(page_directory), page_directory_table_index);
-    const PageDirectoryEntry& pde = pd[page_directory_index];
+    PageDirectoryEntry const& pde = pd[page_directory_index];
     if (!pde.is_present())
         return nullptr;
 
@@ -616,7 +616,7 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
     return find_user_region_from_vaddr(*page_directory->space(), vaddr);
 }
 
-PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
+PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
 {
     VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(s_mm_lock);
@@ -689,7 +689,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress pa
     return allocate_kernel_region_with_vmobject(range.value(), *vm_object, name, access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(const Range& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
+OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(Range const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     ScopedSpinLock lock(s_mm_lock);
     auto region = Region::try_create_kernel_only(range, vmobject, 0, KString::try_create(name), access, cacheable);
@@ -915,7 +915,7 @@ void MemoryManager::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     Processor::flush_tlb_local(vaddr, page_count);
 }
 
-void MemoryManager::flush_tlb(const PageDirectory* page_directory, VirtualAddress vaddr, size_t page_count)
+void MemoryManager::flush_tlb(PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
 {
     Processor::flush_tlb(page_directory, vaddr, page_count);
 }
@@ -1008,7 +1008,7 @@ void MemoryManager::unquickmap_page()
     mm_data.m_quickmap_in_use.unlock(mm_data.m_quickmap_prev_flags);
 }
 
-bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress vaddr) const
+bool MemoryManager::validate_user_stack(Process const& process, VirtualAddress vaddr) const
 {
     if (!is_user_address(vaddr))
         return false;

@@ -121,7 +121,7 @@ public:
         return Processor::current().get_mm_data();
     }
 
-    PageFaultResponse handle_page_fault(const PageFault&);
+    PageFaultResponse handle_page_fault(PageFault const&);
 
     void set_page_writable_direct(VirtualAddress, bool);
 
@@ -131,7 +131,7 @@ public:
     static void enter_process_paging_scope(Process&);
     static void enter_space(Space&);
 
-    bool validate_user_stack(const Process&, VirtualAddress) const;
+    bool validate_user_stack(Process const&, VirtualAddress) const;
 
     enum class ShouldZeroFill {
         No,
@@ -151,7 +151,7 @@ public:
     OwnPtr<Region> allocate_kernel_region(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     OwnPtr<Region> allocate_kernel_region_identity(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     OwnPtr<Region> allocate_kernel_region_with_vmobject(VMObject&, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
-    OwnPtr<Region> allocate_kernel_region_with_vmobject(const Range&, VMObject&, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
+    OwnPtr<Region> allocate_kernel_region_with_vmobject(Range const&, VMObject&, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
 
     struct SystemMemoryInfo {
         PhysicalSize user_physical_pages { 0 };
@@ -193,8 +193,8 @@ public:
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
-    const Vector<UsedMemoryRange>& used_memory_ranges() { return m_used_memory_ranges; }
-    bool is_allowed_to_mmap_to_userspace(PhysicalAddress, const Range&) const;
+    Vector<UsedMemoryRange> const& used_memory_ranges() { return m_used_memory_ranges; }
+    bool is_allowed_to_mmap_to_userspace(PhysicalAddress, Range const&) const;
 
     PhysicalPageEntry& get_physical_page_entry(PhysicalAddress);
     PhysicalAddress get_physical_address(PhysicalPage const&);
@@ -214,7 +214,7 @@ private:
     void protect_kernel_image();
     void parse_memory_map();
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);
-    static void flush_tlb(const PageDirectory*, VirtualAddress, size_t page_count = 1);
+    static void flush_tlb(PageDirectory const*, VirtualAddress, size_t page_count = 1);
 
     static Region* kernel_region_from_vaddr(VirtualAddress);
 
@@ -286,7 +286,7 @@ inline bool is_user_range(VirtualAddress vaddr, size_t size)
     return is_user_address(vaddr) && is_user_address(vaddr.offset(size));
 }
 
-inline bool is_user_range(const Range& range)
+inline bool is_user_range(Range const& range)
 {
     return is_user_range(range.base(), range.size());
 }
