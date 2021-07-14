@@ -263,9 +263,13 @@ Optional<JsonValue> JsonParser::parse_number()
         value = JsonValue((double)whole + ((double)fraction / divider));
     } else {
 #endif
-        auto to_unsigned_result = number_string.to_uint();
+        auto to_unsigned_result = number_string.to_uint<u64>();
         if (to_unsigned_result.has_value()) {
-            value = JsonValue(to_unsigned_result.value());
+            auto number = *to_unsigned_result;
+            if (number <= NumericLimits<u32>::max())
+                value = JsonValue((u32)number);
+            else
+                value = JsonValue(number);
         } else {
             auto number = number_string.to_int<i64>();
             if (!number.has_value())

@@ -105,3 +105,12 @@ TEST_CASE(json_duplicate_keys)
     json.set("test", "baz");
     EXPECT_EQ(json.to_string(), "{\"test\":\"baz\"}");
 }
+
+TEST_CASE(json_u64_roundtrip)
+{
+    auto big_value = 0xffffffffffffffffull;
+    auto json = JsonValue(big_value).to_string();
+    auto value = JsonValue::from_string(json);
+    EXPECT_EQ_FORCE(value.has_value(), true);
+    EXPECT_EQ(value->as_u64(), big_value);
+}
