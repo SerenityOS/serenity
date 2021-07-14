@@ -45,14 +45,12 @@ private:
     {
         switch (m_graph_type) {
         case GraphType::CPU: {
-            unsigned busy;
-            unsigned idle;
-            if (get_cpu_usage(busy, idle)) {
-                unsigned busy_diff = busy - m_last_cpu_busy;
-                unsigned idle_diff = idle - m_last_cpu_idle;
+            u64 busy, idle, scheduled_diff;
+            if (get_cpu_usage(busy, idle, scheduled_diff)) {
+                auto busy_diff = busy - m_last_cpu_busy;
                 m_last_cpu_busy = busy;
                 m_last_cpu_idle = idle;
-                float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
+                float cpu = scheduled_diff > 0 ? (float)busy_diff / (float)scheduled_diff : 0;
                 m_history.enqueue(cpu);
                 m_tooltip = String::formatted("CPU usage: {:.1}%", 100 * cpu);
             } else {
@@ -120,16 +118,21 @@ private:
         }
     }
 
-    bool get_cpu_usage(unsigned& busy, unsigned& idle)
+    bool get_cpu_usage(u64& busy, u64& idle, u64& scheduled_diff)
     {
         busy = 0;
         idle = 0;
+        scheduled_diff = 0;
 
         auto all_processes = Core::ProcessStatisticsReader::get_all(m_proc_all);
-        if (!all_processes.has_value() || all_processes.value().is_empty())
+        if (!all_processes.has_value() || all_processes.value().processes.is_empty())
             return false;
 
-        for (auto& it : all_processes.value()) {
+        if (m_last_total_sum.has_value())
+            scheduled_diff = all_processes->total_ticks_scheduled - m_last_total_sum.value();
+        m_last_total_sum = all_processes->total_ticks_scheduled;
+
+        for (auto& it : all_processes.value().processes) {
             for (auto& jt : it.threads) {
                 if (it.pid == 0)
                     idle += jt.ticks_user + jt.ticks_kernel;
@@ -174,8 +177,9 @@ private:
     Gfx::Color m_graph_color;
     Gfx::Color m_graph_error_color;
     CircularQueue<float, history_size> m_history;
-    unsigned m_last_cpu_busy { 0 };
-    unsigned m_last_cpu_idle { 0 };
+    u64 m_last_cpu_busy { 0 };
+    u64 m_last_cpu_idle { 0 };
+    Optional<u64> m_last_total_sum;
     String m_tooltip;
     RefPtr<Core::File> m_proc_all;
     RefPtr<Core::File> m_proc_mem;

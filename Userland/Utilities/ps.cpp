@@ -83,14 +83,15 @@ int main(int argc, char** argv)
         cmd_column = add_column("CMD", Alignment::Left);
     }
 
-    auto processes = Core::ProcessStatisticsReader::get_all();
-    if (!processes.has_value())
+    auto all_processes = Core::ProcessStatisticsReader::get_all();
+    if (!all_processes.has_value())
         return 1;
 
-    quick_sort(processes.value(), [](auto& a, auto& b) { return a.pid < b.pid; });
+    auto& processes = all_processes.value().processes;
+    quick_sort(processes, [](auto& a, auto& b) { return a.pid < b.pid; });
 
     Vector<Vector<String>> rows;
-    rows.ensure_capacity(1 + processes.value().size());
+    rows.ensure_capacity(1 + processes.size());
 
     Vector<String> header;
     header.ensure_capacity(columns.size());
@@ -98,7 +99,7 @@ int main(int argc, char** argv)
         header.append(column.title);
     rows.append(move(header));
 
-    for (auto const& process : processes.value()) {
+    for (auto const& process : processes) {
         auto tty = process.tty;
 
         if (!every_process_flag && tty != this_tty)

@@ -146,11 +146,11 @@ int main(int argc, char* argv[])
     }
 
     outln("{:28} {:>4} {:>4} {:10} {:>4} {}", "COMMAND", "PID", "PGID", "USER", "FD", "NAME");
-    auto processes = Core::ProcessStatisticsReader::get_all();
-    if (!processes.has_value())
+    auto all_processes = Core::ProcessStatisticsReader::get_all();
+    if (!all_processes.has_value())
         return 1;
     if (arg_pid == -1) {
-        for (auto& process : processes.value()) {
+        for (auto& process : all_processes.value().processes) {
             if (process.pid == 0)
                 continue;
             auto open_files = get_open_files_by_pid(process.pid);
@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
             return 0;
 
         for (auto& file : open_files) {
-            display_entry(file, *processes->find_if([&](auto& entry) { return entry.pid == arg_pid; }));
+            display_entry(file, *all_processes->processes.find_if([&](auto& entry) { return entry.pid == arg_pid; }));
         }
     }
 

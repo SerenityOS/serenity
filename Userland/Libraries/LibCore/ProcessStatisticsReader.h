@@ -64,10 +64,16 @@ struct ProcessStatistics {
     String username;
 };
 
+struct AllProcessesStatistics {
+    Vector<ProcessStatistics> processes;
+    u64 total_ticks_scheduled;
+    u64 total_ticks_scheduled_kernel;
+};
+
 class ProcessStatisticsReader {
 public:
-    static Optional<Vector<Core::ProcessStatistics>> get_all(RefPtr<Core::File>&);
-    static Optional<Vector<Core::ProcessStatistics>> get_all();
+    static Optional<AllProcessesStatistics> get_all(RefPtr<Core::File>&);
+    static Optional<AllProcessesStatistics> get_all();
 
 private:
     static String username_from_uid(uid_t);
