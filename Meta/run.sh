@@ -148,7 +148,7 @@ $SERENITY_SPICE_SERVER_CHARDEV
 -device ich9-ahci,bus=bridge3
 "
 
-if "${SERENITY_QEMU_BIN}" --help | grep -iq spice; then
+if "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spice; then
     SERENITY_COMMON_QEMU_ARGS="$SERENITY_COMMON_QEMU_ARGS
     -spice port=5930,agent-mouse=off,disable-ticketing=on
     -device virtserialport,chardev=vdagent,nr=1
