@@ -60,7 +60,7 @@ String default_time_zone()
 }
 
 // 11.6.2 CreateTemporalTimeZone ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltimezone
-Object* create_temporal_time_zone(GlobalObject& global_object, String const& identifier, FunctionObject* new_target)
+TimeZone* create_temporal_time_zone(GlobalObject& global_object, String const& identifier, FunctionObject* new_target)
 {
     auto& vm = global_object.vm();
 
