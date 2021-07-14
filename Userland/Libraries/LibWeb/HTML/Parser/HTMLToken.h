@@ -97,6 +97,18 @@ public:
         }
     }
 
+    String const& comment() const
+    {
+        VERIFY(is_comment());
+        return m_comment_or_character.data;
+    }
+
+    void set_comment(String comment)
+    {
+        VERIFY(is_comment());
+        m_comment_or_character.data = move(comment);
+    }
+
     String tag_name() const
     {
         VERIFY(is_start_tag() || is_end_tag());

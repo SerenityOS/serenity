@@ -406,7 +406,7 @@ _StartOfFunction:
             {
                 ON('>')
                 {
-                    m_current_token.m_comment_or_character.data = consume_current_builder();
+                    m_current_token.set_comment(consume_current_builder());
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
@@ -1392,7 +1392,7 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_current_token.m_comment_or_character.data = consume_current_builder();
+                    m_current_token.set_comment(consume_current_builder());
                     EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
@@ -1408,7 +1408,7 @@ _StartOfFunction:
             {
                 ON('>')
                 {
-                    m_current_token.m_comment_or_character.data = consume_current_builder();
+                    m_current_token.set_comment(consume_current_builder());
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON('!')
@@ -1423,7 +1423,7 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_current_token.m_comment_or_character.data = consume_current_builder();
+                    m_current_token.set_comment(consume_current_builder());
                     EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
@@ -1445,13 +1445,13 @@ _StartOfFunction:
                 ON('>')
                 {
                     log_parse_error();
-                    m_current_token.m_comment_or_character.data = consume_current_builder();
+                    m_current_token.set_comment(consume_current_builder());
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
                 {
                     log_parse_error();
-                    m_current_token.m_comment_or_character.data = consume_current_builder();
+                    m_current_token.set_comment(consume_current_builder());
                     EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
@@ -1472,7 +1472,7 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_current_token.m_comment_or_character.data = consume_current_builder();
+                    m_current_token.set_comment(consume_current_builder());
                     EMIT_CURRENT_TOKEN;
                     EMIT_EOF;
                 }
