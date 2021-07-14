@@ -27,6 +27,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.toJSON, to_json, 0, attr);
 }
 
 static Calendar* typed_this(GlobalObject& global_object)
@@ -53,6 +54,16 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_string)
 
     // 3. Return calendar.[[Identifier]].
     return js_string(vm, calendar->identifier());
+}
+
+// 12.4.24 Temporal.Calendar.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tojson
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_json)
+{
+    // 1. Let calendar be the this value.
+    auto calendar = vm.this_value(global_object);
+
+    // 2. Return ? ToString(calendar).
+    return js_string(vm, calendar.to_string(global_object));
 }
 
 }
