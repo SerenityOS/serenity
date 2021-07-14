@@ -38,7 +38,7 @@ private:
 bool is_valid_time_zone_name(String const& time_zone);
 String canonicalize_time_zone_name(String const& time_zone);
 String default_time_zone();
-Object* create_temporal_time_zone(GlobalObject&, String const& identifier, FunctionObject* new_target = nullptr);
+TimeZone* create_temporal_time_zone(GlobalObject&, String const& identifier, FunctionObject* new_target = nullptr);
 double parse_time_zone_offset_string(GlobalObject&, String const&);
 String format_time_zone_offset_string(double offset_nanoseconds);
 
