@@ -159,14 +159,14 @@ private:
         auto& obj = json.value().as_object();
         unsigned kmalloc_allocated = obj.get("kmalloc_allocated").to_u32();
         unsigned kmalloc_available = obj.get("kmalloc_available").to_u32();
-        unsigned user_physical_allocated = obj.get("user_physical_allocated").to_u32();
-        unsigned user_physical_committed = obj.get("user_physical_committed").to_u32();
-        unsigned user_physical_uncommitted = obj.get("user_physical_uncommitted").to_u32();
+        auto user_physical_allocated = obj.get("user_physical_allocated").to_u64();
+        auto user_physical_committed = obj.get("user_physical_committed").to_u64();
+        auto user_physical_uncommitted = obj.get("user_physical_uncommitted").to_u64();
         unsigned kmalloc_bytes_total = kmalloc_allocated + kmalloc_available;
         unsigned kmalloc_pages_total = (kmalloc_bytes_total + PAGE_SIZE - 1) / PAGE_SIZE;
-        unsigned total_userphysical_and_swappable_pages = kmalloc_pages_total + user_physical_allocated + user_physical_committed + user_physical_uncommitted;
-        allocated = kmalloc_allocated + ((u64)(user_physical_allocated + user_physical_committed) * PAGE_SIZE);
-        available = (u64)(total_userphysical_and_swappable_pages * PAGE_SIZE) - allocated;
+        u64 total_userphysical_and_swappable_pages = kmalloc_pages_total + user_physical_allocated + user_physical_committed + user_physical_uncommitted;
+        allocated = kmalloc_allocated + ((user_physical_allocated + user_physical_committed) * PAGE_SIZE);
+        available = (total_userphysical_and_swappable_pages * PAGE_SIZE) - allocated;
         return true;
     }
 
