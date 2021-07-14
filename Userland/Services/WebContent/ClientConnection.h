@@ -51,6 +51,7 @@ private:
     virtual void inspect_dom_tree() override;
     virtual void js_console_initialize() override;
     virtual void js_console_input(String const&) override;
+    virtual Messages::WebContentServer::GetSelectedTextResponse get_selected_text() override;
 
     void flush_pending_paint_requests();
 
