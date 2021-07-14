@@ -1271,10 +1271,9 @@ Optional<float> Parser::try_parse_float(StringView string)
     return is_negative ? -value : value;
 }
 
-RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
+RefPtr<StyleValue> Parser::parse_single_css_value(PropertyID property_id, StyleComponentValueRule const& component_value)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_css_value");
-
+    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_single_css_value '{}'", component_value.to_debug_string());
     // FIXME: This is mostly copied from the old, deprecated parser. It is probably not to spec.
 
     auto takes_integer_value = [](PropertyID property_id) -> bool {
@@ -1287,11 +1286,9 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         Length::Type type = Length::Type::Undefined;
         Optional<float> numeric_value;
 
-        auto token = tokens.next_token();
-
-        if (token.is(Token::Type::Dimension)) {
-            auto length_string = token.token().m_value.string_view();
-            auto unit_string = token.token().m_unit.string_view();
+        if (component_value.is(Token::Type::Dimension)) {
+            auto length_string = component_value.token().m_value.string_view();
+            auto unit_string = component_value.token().m_unit.string_view();
 
             if (unit_string.equals_ignoring_case("%")) {
                 type = Length::Type::Percentage;
@@ -1328,8 +1325,8 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
             }
 
             numeric_value = try_parse_float(length_string);
-        } else if (token.is(Token::Type::Number)) {
-            auto value_string = token.token().m_value.string_view();
+        } else if (component_value.is(Token::Type::Number)) {
+            auto value_string = component_value.token().m_value.string_view();
             if (value_string == "0") {
                 type = Length::Type::Px;
                 numeric_value = 0;
@@ -1345,31 +1342,27 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         return Length(numeric_value.value(), type);
     };
 
-    auto token = tokens.next_token();
-
-    if (takes_integer_value(property_id) && token.is(Token::Type::Number)) {
-        auto number = token.token();
+    if (takes_integer_value(property_id) && component_value.is(Token::Type::Number)) {
+        auto number = component_value.token();
         if (number.m_number_type == Token::NumberType::Integer) {
             return LengthStyleValue::create(Length::make_px(number.integer()));
         }
     }
 
-    if (token.is(Token::Type::Dimension) || token.is(Token::Type::Number)) {
-        tokens.reconsume_current_input_token();
-
+    if (component_value.is(Token::Type::Dimension) || component_value.is(Token::Type::Number)) {
         auto length = parse_length();
         if (length.has_value())
             return LengthStyleValue::create(length.value());
 
-        auto value_string = token.token().m_value.string_view();
+        auto value_string = component_value.token().m_value.string_view();
         auto float_number = try_parse_float(value_string);
         if (float_number.has_value())
             return NumericStyleValue::create(float_number.value());
         return nullptr;
     }
 
-    if (token.is(Token::Type::Ident)) {
-        auto ident = token.token().ident();
+    if (component_value.is(Token::Type::Ident)) {
+        auto ident = component_value.token().ident();
         if (ident.equals_ignoring_case("inherit"))
             return InheritStyleValue::create();
         if (ident.equals_ignoring_case("initial"))
@@ -1378,11 +1371,11 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
             return LengthStyleValue::create(Length::make_auto());
     }
 
-    if (token.is_function() && token.function().name().equals_ignoring_case("var")) {
+    if (component_value.is_function() && component_value.function().name().equals_ignoring_case("var")) {
         // FIXME: Handle fallback value as second parameter
         // https://www.w3.org/TR/css-variables-1/#using-variables
-        if (!token.function().values().is_empty()) {
-            auto& property_name_token = token.function().values().first();
+        if (!component_value.function().values().is_empty()) {
+            auto& property_name_token = component_value.function().values().first();
             if (property_name_token.is(Token::Type::Ident))
                 return CustomStyleValue::create(property_name_token.token().ident());
             else
@@ -1390,21 +1383,21 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         }
     }
 
-    if (token.is(Token::Type::Ident)) {
-        auto value_id = value_id_from_string(token.token().ident());
+    if (component_value.is(Token::Type::Ident)) {
+        auto value_id = value_id_from_string(component_value.token().ident());
         if (value_id != ValueID::Invalid)
             return IdentifierStyleValue::create(value_id);
     }
 
     auto parse_css_color = [&]() -> Optional<Color> {
-        if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("transparent"))
+        if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("transparent"))
             return Color::from_rgba(0x00000000);
 
         // FIXME: Handle all the different color notations.
         // https://www.w3.org/TR/css-color-3/
         // Right now, this uses non-CSS-specific parsing, and assumes the whole color value is one token,
         // which is isn't if it's a function-style syntax.
-        auto color = Color::from_string(token.token().m_value.to_string().to_lowercase());
+        auto color = Color::from_string(component_value.token().m_value.to_string().to_lowercase());
         if (color.has_value())
             return color;
 
@@ -1415,10 +1408,39 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     if (color.has_value())
         return ColorStyleValue::create(color.value());
 
-    if (token.is(Token::Type::String))
-        return StringStyleValue::create(token.token().string());
+    if (component_value.is(Token::Type::String))
+        return StringStyleValue::create(component_value.token().string());
 
     return {};
+}
+
+RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
+{
+    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_css_value");
+
+    Vector<StyleComponentValueRule> component_values;
+
+    while (tokens.has_next_token()) {
+        auto& token = tokens.next_token();
+
+        if (token.is(Token::Type::Semicolon)) {
+            tokens.reconsume_current_input_token();
+            break;
+        }
+
+        if (token.is(Token::Type::Whitespace))
+            continue;
+
+        component_values.append(token);
+    }
+
+    if (component_values.is_empty())
+        return {};
+
+    if (component_values.size() == 1)
+        return parse_single_css_value(property_id, component_values.first());
+
+    return ValueListStyleValue::create(move(component_values));
 }
 
 Optional<Selector::SimpleSelector::NthChildPattern> Parser::parse_nth_child_pattern(TokenStream<StyleComponentValueRule>& values)

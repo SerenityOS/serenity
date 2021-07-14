@@ -177,6 +177,8 @@ private:
 
     static Optional<float> try_parse_float(StringView string);
 
+    RefPtr<StyleValue> parse_single_css_value(PropertyID, StyleComponentValueRule const&);
+
     ParsingContext m_context;
 
     Tokenizer m_tokenizer;
