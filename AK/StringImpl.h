@@ -99,7 +99,7 @@ private:
     mutable unsigned m_hash { 0 };
     mutable bool m_has_hash { false };
     mutable bool m_fly { false };
-    char m_inline_buffer[0];
+    char m_inline_buffer[];
 };
 
 inline size_t allocation_size_for_stringimpl(size_t length)
