@@ -446,10 +446,19 @@ public:
         insert(key, V(value));
     }
 
+    [[nodiscard]] bool try_insert(K key, V&& value)
+    {
+        auto* node = new (nothrow) Node(key, move(value));
+        if (!node)
+            return false;
+        BaseTree::insert(node);
+        return true;
+    }
+
     void insert(K key, V&& value)
     {
-        auto* node = new Node(key, move(value));
-        BaseTree::insert(node);
+        auto success = try_insert(key, move(value));
+        VERIFY(success);
     }
 
     using Iterator = RedBlackTreeIterator<RedBlackTree, V>;
