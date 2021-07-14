@@ -16,7 +16,7 @@ namespace Core {
 
 HashMap<uid_t, String> ProcessStatisticsReader::s_usernames;
 
-Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPtr<Core::File>& proc_all_file)
+Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::File>& proc_all_file)
 {
     if (proc_all_file) {
         if (!proc_all_file->seek(0, Core::SeekMode::SetPosition)) {
@@ -31,13 +31,14 @@ Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPt
         }
     }
 
-    Vector<Core::ProcessStatistics> processes;
+    AllProcessesStatistics all_processes_statistics;
 
     auto file_contents = proc_all_file->read_all();
     auto json = JsonValue::from_string(file_contents);
     if (!json.has_value())
         return {};
-    json.value().as_array().for_each([&](auto& value) {
+    auto& json_obj = json.value().as_object();
+    json_obj.get("processes").as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
         Core::ProcessStatistics process;
 
@@ -92,13 +93,15 @@ Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPt
 
         // and synthetic data last
         process.username = username_from_uid(process.uid);
-        processes.append(move(process));
+        all_processes_statistics.processes.append(move(process));
     });
 
-    return processes;
+    all_processes_statistics.total_ticks_scheduled = json_obj.get("total_ticks").to_u64();
+    all_processes_statistics.total_ticks_scheduled_kernel = json_obj.get("total_ticks_kernel").to_u64();
+    return all_processes_statistics;
 }
 
-Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all()
+Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all()
 {
     RefPtr<Core::File> proc_all_file;
     return get_all(proc_all_file);

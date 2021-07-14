@@ -36,12 +36,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto processes = Core::ProcessStatisticsReader::get_all();
-    if (!processes.has_value())
+    auto all_processes = Core::ProcessStatisticsReader::get_all();
+    if (!all_processes.has_value())
         return 1;
 
     Vector<pid_t> matches;
-    for (auto& it : processes.value()) {
+    for (auto& it : all_processes.value().processes) {
         auto result = re.match(it.name, PosixFlags::Global);
         if (result.success ^ invert_match) {
             matches.append(it.pid);

@@ -54,9 +54,9 @@ struct ThreadData {
     unsigned inode_faults;
     unsigned zero_faults;
     unsigned cow_faults;
-    unsigned times_scheduled;
+    u64 ticks_scheduled;
 
-    unsigned times_scheduled_since_prev { 0 };
+    u64 ticks_scheduled_since_prev { 0 };
     unsigned cpu_percent { 0 };
     unsigned cpu_percent_decimal { 0 };
 
@@ -83,7 +83,8 @@ struct Traits<PidAndTid> : public GenericTraits<PidAndTid> {
 
 struct Snapshot {
     HashMap<PidAndTid, ThreadData> map;
-    u32 sum_times_scheduled { 0 };
+    u64 total_ticks_scheduled { 0 };
+    u64 total_ticks_scheduled_kernel { 0 };
 };
 
 static Snapshot get_snapshot()
@@ -93,9 +94,8 @@ static Snapshot get_snapshot()
         return {};
 
     Snapshot snapshot;
-    for (auto& process : all_processes.value()) {
+    for (auto& process : all_processes.value().processes) {
         for (auto& thread : process.threads) {
-            snapshot.sum_times_scheduled += thread.times_scheduled;
             ThreadData thread_data;
             thread_data.tid = thread.tid;
             thread_data.pid = process.pid;
@@ -115,7 +115,7 @@ static Snapshot get_snapshot()
             thread_data.inode_faults = thread.inode_faults;
             thread_data.zero_faults = thread.zero_faults;
             thread_data.cow_faults = thread.cow_faults;
-            thread_data.times_scheduled = thread.times_scheduled;
+            thread_data.ticks_scheduled = (u64)thread.ticks_user + (u64)thread.ticks_kernel;
             thread_data.priority = thread.priority;
             thread_data.state = thread.state;
             thread_data.username = process.username;
@@ -123,6 +123,9 @@ static Snapshot get_snapshot()
             snapshot.map.set({ process.pid, thread.tid }, move(thread_data));
         }
     }
+
+    snapshot.total_ticks_scheduled = all_processes->total_ticks_scheduled;
+    snapshot.total_ticks_scheduled_kernel = all_processes->total_ticks_scheduled_kernel;
 
     return snapshot;
 }
@@ -217,7 +220,7 @@ int main(int argc, char** argv)
         }
 
         auto current = get_snapshot();
-        auto sum_diff = current.sum_times_scheduled - prev.sum_times_scheduled;
+        auto total_scheduled_diff = current.total_ticks_scheduled - prev.total_ticks_scheduled;
 
         printf("\033[3J\033[H\033[2J");
         printf("\033[47;30m%6s %3s %3s  %-9s  %-13s  %6s  %6s  %4s  %s\033[K\033[0m\n",
@@ -234,15 +237,14 @@ int main(int argc, char** argv)
             auto pid_and_tid = it.key;
             if (pid_and_tid.pid == 0)
                 continue;
-            u32 times_scheduled_now = it.value.times_scheduled;
             auto jt = prev.map.find(pid_and_tid);
             if (jt == prev.map.end())
                 continue;
-            u32 times_scheduled_before = (*jt).value.times_scheduled;
-            u32 times_scheduled_diff = times_scheduled_now - times_scheduled_before;
-            it.value.times_scheduled_since_prev = times_scheduled_diff;
-            it.value.cpu_percent = sum_diff > 0 ? ((times_scheduled_diff * 100) / sum_diff) : 0;
-            it.value.cpu_percent_decimal = sum_diff > 0 ? (((times_scheduled_diff * 1000) / sum_diff) % 10) : 0;
+            auto ticks_scheduled_before = (*jt).value.ticks_scheduled;
+            auto ticks_scheduled_diff = it.value.ticks_scheduled - ticks_scheduled_before;
+            it.value.ticks_scheduled_since_prev = ticks_scheduled_diff;
+            it.value.cpu_percent = total_scheduled_diff > 0 ? ((ticks_scheduled_diff * 100) / total_scheduled_diff) : 0;
+            it.value.cpu_percent_decimal = total_scheduled_diff > 0 ? (((ticks_scheduled_diff * 1000) / total_scheduled_diff) % 10) : 0;
             threads.append(&it.value);
         }
 
@@ -265,8 +267,9 @@ int main(int argc, char** argv)
             case TopOption::SortBy::Name:
                 return p2->name > p1->name;
             case TopOption::SortBy::Cpu:
+                return p2->cpu_percent * 10 + p2->cpu_percent_decimal < p1->cpu_percent * 10 + p1->cpu_percent_decimal;
             default:
-                return p2->times_scheduled_since_prev < p1->times_scheduled_since_prev;
+                return p2->ticks_scheduled_since_prev < p1->ticks_scheduled_since_prev;
             }
         });
 
