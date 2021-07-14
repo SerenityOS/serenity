@@ -522,23 +522,6 @@ pae_supported:
     mov $stack_top, %esp
     and $-16, %esp
 
-    /* jmp to an address above the 3GB mark */
-    movl $1f,%eax
-    jmp *%eax
-1:
-    movl %cr3, %eax
-    movl %eax, %cr3
-
-    /* unmap the 0-1MB range, which isn't used after jmp-ing up here */
-    movl $256, %ecx
-    movl $(boot_pd0_pt0 - KERNEL_BASE), %edi
-    xorl %eax, %eax
-
-1:
-    movl %eax, 0(%edi)
-    addl $8, %edi
-    loop 1b
-
     /* jump into C++ land */
     addl $KERNEL_BASE, %ebx
     movl %ebx, multiboot_info_ptr
@@ -556,7 +539,27 @@ pae_supported:
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
+
+    mov %cr3, %rax
+    mov %rax, %cr3
+#else
+    /* jmp to an address above the 3GB mark */
+    movl $1f,%eax
+    jmp *%eax
+1:
+    movl %cr3, %eax
+    movl %eax, %cr3
 #endif
+
+    /* unmap the 0-1MB range, which isn't used after jmp-ing up here */
+    movl $256, %ecx
+    movl $(boot_pd0_pt0 - KERNEL_BASE), %edi
+    xorl %eax, %eax
+
+1:
+    movl %eax, 0(%edi)
+    addl $8, %edi
+    loop 1b
 
     call init
 #if ARCH(X86_64)
