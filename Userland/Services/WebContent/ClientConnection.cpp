@@ -248,4 +248,10 @@ Messages::WebContentServer::GetSelectedTextResponse ClientConnection::get_select
     return page().focused_context().selected_text();
 }
 
+void ClientConnection::select_all()
+{
+    page().focused_context().select_all();
+    page().client().page_did_change_selection();
+}
+
 }

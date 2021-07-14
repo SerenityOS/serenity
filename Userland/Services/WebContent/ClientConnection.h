@@ -52,6 +52,7 @@ private:
     virtual void js_console_initialize() override;
     virtual void js_console_input(String const&) override;
     virtual Messages::WebContentServer::GetSelectedTextResponse get_selected_text() override;
+    virtual void select_all() override;
 
     void flush_pending_paint_requests();
 
