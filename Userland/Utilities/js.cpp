@@ -431,8 +431,8 @@ static void print_temporal_instant(JS::Object const& object, HashTable<JS::Objec
 {
     auto& instant = static_cast<JS::Temporal::Instant const&>(object);
     print_type("Temporal.Instant");
+    out(" ");
     // FIXME: Print human readable date and time, like in print_date() - ideally handling arbitrarily large values since we get a bigint.
-    out("\n  nanoseconds: ");
     print_value(&instant.nanoseconds(), seen_objects);
 }
 
@@ -440,7 +440,7 @@ static void print_temporal_time_zone(JS::Object const& object, HashTable<JS::Obj
 {
     auto& time_zone = static_cast<JS::Temporal::TimeZone const&>(object);
     print_type("Temporal.TimeZone");
-    out("\n  identifier: ");
+    out(" ");
     print_value(JS::js_string(object.vm(), time_zone.identifier()), seen_objects);
     if (time_zone.offset_nanoseconds().has_value()) {
         out("\n  offset (ns): ");
