@@ -643,6 +643,21 @@ int main(int argc, char** argv)
         statusbar.set_override_text({});
     };
 
+    window->on_close_request = [&] {
+
+        auto result = GUI::MessageBox::show(window, "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+        if (result == GUI::MessageBox::ExecYes) {
+            save_image_as_action->activate();
+            if (window->is_modified())
+                return GUI::Window::CloseRequestDecision::StayOpen;
+            return GUI::Window::CloseRequestDecision::Close;
+        }
+
+        if (result == GUI::MessageBox::ExecNo)
+            return GUI::Window::CloseRequestDecision::Close;
+
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
     window->show();
     return app->exec();
 }
