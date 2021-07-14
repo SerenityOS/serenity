@@ -12,6 +12,9 @@ namespace AK {
 
 template<Integral K>
 class BaseRedBlackTree {
+    AK_MAKE_NONCOPYABLE(BaseRedBlackTree);
+    AK_MAKE_NONMOVABLE(BaseRedBlackTree);
+
 public:
     [[nodiscard]] size_t size() const { return m_size; }
     [[nodiscard]] bool is_empty() const { return m_size == 0; }
