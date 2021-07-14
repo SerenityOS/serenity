@@ -29,8 +29,7 @@ describe("normal behavior", () => {
 
     test("basic functionality", () => {
         const calendar = new Temporal.Calendar("iso8601");
-        // FIXME: Enable this once Temporal.Calendar.prototype.id is implemented
-        // expect(calendar.id).toBe("iso8601");
+        expect(calendar.id).toBe("iso8601");
         expect(typeof calendar).toBe("object");
         expect(calendar).toBeInstanceOf(Temporal.Calendar);
         expect(Object.getPrototypeOf(calendar)).toBe(Temporal.Calendar.prototype);
