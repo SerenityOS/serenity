@@ -106,6 +106,8 @@ public:
     TextPosition first_word_break_before(const TextPosition&, bool start_at_column_before) const;
     TextPosition first_word_break_after(const TextPosition&) const;
 
+    TextPosition first_word_before(const TextPosition&, bool start_at_column_before) const;
+
     void add_to_undo_stack(NonnullOwnPtr<TextDocumentUndoCommand>);
 
     bool can_undo() const { return m_undo_stack.can_undo(); }
