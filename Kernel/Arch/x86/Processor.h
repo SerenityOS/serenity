@@ -35,8 +35,7 @@ extern "C" void thread_context_first_enter(void);
 extern "C" void exit_kernel_thread(void);
 extern "C" void do_assume_context(Thread* thread, u32 flags);
 
-struct [[gnu::aligned(16)]] FPUState
-{
+struct alignas(16) FPUState {
     u8 buffer[512];
 };
 
