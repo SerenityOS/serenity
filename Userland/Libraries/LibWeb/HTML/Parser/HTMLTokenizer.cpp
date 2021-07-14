@@ -2561,6 +2561,8 @@ _StartOfFunction:
                 {
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                     m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    // NOTE: The spec doesn't mention this, but it seems that m_current_token (an end tag) is just dropped in this case.
+                    m_current_builder.clear();
                     for (auto code_point : m_temporary_buffer)
                         m_queued_tokens.enqueue(HTMLToken::make_character(code_point));
                     RECONSUME_IN(ScriptData);
