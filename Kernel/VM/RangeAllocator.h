@@ -28,11 +28,7 @@ public:
 
     void dump() const;
 
-    bool contains(Range const& range) const
-    {
-        ScopedSpinLock lock(m_lock);
-        return m_total_range.contains(range);
-    }
+    bool contains(Range const& range) const { return m_total_range.contains(range); }
 
 private:
     void carve_at_index(int, Range const&);
