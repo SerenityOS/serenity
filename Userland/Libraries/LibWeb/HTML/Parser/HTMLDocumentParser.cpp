@@ -258,15 +258,15 @@ void HTMLDocumentParser::process_using_the_rules_for(InsertionMode mode, HTMLTok
 
 DOM::QuirksMode HTMLDocumentParser::which_quirks_mode(const HTMLToken& doctype_token) const
 {
-    if (doctype_token.m_doctype.force_quirks)
+    if (doctype_token.doctype_data().force_quirks)
         return DOM::QuirksMode::Yes;
 
     // NOTE: The tokenizer puts the name into lower case for us.
-    if (doctype_token.m_doctype.name != "html")
+    if (doctype_token.doctype_data().name != "html")
         return DOM::QuirksMode::Yes;
 
-    auto const& public_identifier = doctype_token.m_doctype.public_identifier;
-    auto const& system_identifier = doctype_token.m_doctype.system_identifier;
+    auto const& public_identifier = doctype_token.doctype_data().public_identifier;
+    auto const& system_identifier = doctype_token.doctype_data().system_identifier;
 
     if (public_identifier.equals_ignoring_case("-//W3O//DTD W3 HTML Strict 3.0//EN//"))
         return DOM::QuirksMode::Yes;
@@ -285,7 +285,7 @@ DOM::QuirksMode HTMLDocumentParser::which_quirks_mode(const HTMLToken& doctype_t
             return DOM::QuirksMode::Yes;
     }
 
-    if (doctype_token.m_doctype.missing_system_identifier) {
+    if (doctype_token.doctype_data().missing_system_identifier) {
         if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//", CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Yes;
 
@@ -299,7 +299,7 @@ DOM::QuirksMode HTMLDocumentParser::which_quirks_mode(const HTMLToken& doctype_t
     if (public_identifier.starts_with("-//W3C//DTD XHTML 1.0 Transitional//", CaseSensitivity::CaseInsensitive))
         return DOM::QuirksMode::Limited;
 
-    if (!doctype_token.m_doctype.missing_system_identifier) {
+    if (!doctype_token.doctype_data().missing_system_identifier) {
         if (public_identifier.starts_with("-//W3C//DTD HTML 4.01 Frameset//", CaseSensitivity::CaseInsensitive))
             return DOM::QuirksMode::Limited;
 
@@ -324,9 +324,9 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
 
     if (token.is_doctype()) {
         auto doctype = adopt_ref(*new DOM::DocumentType(document()));
-        doctype->set_name(token.m_doctype.name);
-        doctype->set_public_id(token.m_doctype.public_identifier);
-        doctype->set_system_id(token.m_doctype.system_identifier);
+        doctype->set_name(token.doctype_data().name);
+        doctype->set_public_id(token.doctype_data().public_identifier);
+        doctype->set_system_id(token.doctype_data().system_identifier);
         document().append_child(move(doctype));
         document().set_quirks_mode(which_quirks_mode(token));
         m_insertion_mode = InsertionMode::BeforeHTML;
