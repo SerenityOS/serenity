@@ -332,6 +332,8 @@ Tab::Tab(BrowserWindow& window, Type type)
     m_page_context_menu->add_action(window.go_forward_action());
     m_page_context_menu->add_action(window.reload_action());
     m_page_context_menu->add_separator();
+    m_page_context_menu->add_action(window.copy_selection_action());
+    m_page_context_menu->add_separator();
     m_page_context_menu->add_action(window.view_source_action());
     m_page_context_menu->add_action(window.inspect_dom_tree_action());
     hooks().on_context_menu_request = [&](auto& screen_position) {

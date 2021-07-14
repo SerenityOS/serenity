@@ -17,6 +17,7 @@
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
@@ -174,6 +175,19 @@ void BrowserWindow::build_menus()
     go_menu.add_action(*m_go_home_action);
     go_menu.add_separator();
     go_menu.add_action(*m_reload_action);
+
+    m_copy_selection_action = GUI::CommonActions::make_copy_action([this](auto&) {
+        auto& tab = active_tab();
+        String selected_text;
+
+        if (tab.m_type == Tab::Type::InProcessWebView)
+            selected_text = tab.m_page_view->selected_text();
+        else
+            selected_text = tab.m_web_content_view->selected_text();
+
+        if (!selected_text.is_empty())
+            GUI::Clipboard::the().set_plain_text(selected_text);
+    });
 
     m_view_source_action = GUI::Action::create(
         "View &Source", { Mod_Ctrl, Key_U }, [this](auto&) {
