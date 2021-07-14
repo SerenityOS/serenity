@@ -275,6 +275,42 @@ String BrowsingContext::selected_text() const
     return builder.to_string();
 }
 
+void BrowsingContext::select_all()
+{
+    if (!m_document)
+        return;
+    auto* layout_root = m_document->layout_node();
+    if (!layout_root)
+        return;
+
+    const Layout::Node* first_layout_node = layout_root;
+
+    for (;;) {
+        auto* next = first_layout_node->next_in_pre_order();
+        if (!next)
+            break;
+        first_layout_node = next;
+        if (is<Layout::TextNode>(*first_layout_node))
+            break;
+    }
+
+    const Layout::Node* last_layout_node = first_layout_node;
+
+    for (const Layout::Node* layout_node = first_layout_node; layout_node; layout_node = layout_node->next_in_pre_order()) {
+        if (is<Layout::TextNode>(*layout_node))
+            last_layout_node = layout_node;
+    }
+
+    VERIFY(first_layout_node);
+    VERIFY(last_layout_node);
+
+    int last_layout_node_index_in_node = 0;
+    if (is<Layout::TextNode>(*last_layout_node))
+        last_layout_node_index_in_node = verify_cast<Layout::TextNode>(*last_layout_node).text_for_rendering().length() - 1;
+
+    layout_root->set_selection({ { first_layout_node, 0 }, { last_layout_node, last_layout_node_index_in_node } });
+}
+
 void BrowsingContext::register_viewport_client(ViewportClient& client)
 {
     auto result = m_viewport_clients.set(&client);
