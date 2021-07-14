@@ -586,18 +586,23 @@ int main(int argc, char** argv)
         return image_editor;
     };
 
-    tab_widget.on_tab_close_click = [&](auto& widget) {
-        auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
+     tab_widget.on_tab_close_click = [&](auto& widget) {
+        auto result = GUI::MessageBox::show(window, "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+        if (result == GUI::Dialog::ExecResult::ExecYes)
+            save_image_as_action->activate();
+        if (result == GUI::Dialog::ExecResult::ExecNo) {
+            auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
 
-        if (tab_widget.children().size() == 1) {
-            layer_list_widget.set_image(nullptr);
-            layer_properties_widget.set_layer(nullptr);
+            if (tab_widget.children().size() == 1) {
+                layer_list_widget.set_image(nullptr);
+                layer_properties_widget.set_layer(nullptr);
+            }
+
+            tab_widget.deferred_invoke([&](auto&) {
+                tab_widget.remove_tab(image_editor);
+            });
         }
-
-        tab_widget.deferred_invoke([&](auto&) {
-            tab_widget.remove_tab(image_editor);
-        });
-    };
+    };   
 
     tab_widget.on_change = [&](auto& widget) {
         auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
