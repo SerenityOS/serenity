@@ -35,7 +35,7 @@ public:
         size_t column { 0 };
     };
 
-    struct AttributeBuilder {
+    struct Attribute {
         String prefix;
         String local_name;
         String namespace_;
@@ -206,7 +206,7 @@ private:
         String tag_name;
         bool self_closing { false };
         bool self_closing_acknowledged { false };
-        Vector<AttributeBuilder> attributes;
+        Vector<Attribute> attributes;
     } m_tag;
 
     // Type::Comment

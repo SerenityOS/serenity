@@ -1013,7 +1013,7 @@ _StartOfFunction:
                 ON('=')
                 {
                     log_parse_error();
-                    auto new_attribute = HTMLToken::AttributeBuilder();
+                    HTMLToken::Attribute new_attribute;
                     new_attribute.name_start_position = nth_last_position(1);
                     m_current_builder.append_code_point(current_input_character.value());
                     m_current_token.m_tag.attributes.append(new_attribute);
@@ -1021,7 +1021,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    auto new_attribute = HTMLToken::AttributeBuilder();
+                    HTMLToken::Attribute new_attribute;
                     new_attribute.name_start_position = nth_last_position(1);
                     m_current_token.m_tag.attributes.append(move(new_attribute));
                     RECONSUME_IN(AttributeName);
@@ -1138,7 +1138,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_tag.attributes.append(HTMLToken::AttributeBuilder());
+                    m_current_token.m_tag.attributes.append({});
                     m_current_token.m_tag.attributes.last().name_start_position = m_source_positions.last();
                     RECONSUME_IN(AttributeName);
                 }
