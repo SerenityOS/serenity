@@ -414,16 +414,13 @@ add_dependencies(${KERNEL_TARGET} kernel_heap)
 add_custom_command(
     TARGET ${KERNEL_TARGET} POST_BUILD
     COMMAND ${TOOLCHAIN_PREFIX}objcopy -O elf32-i386 ${CMAKE_CURRENT_BINARY_DIR}/${KERNEL_TARGET} ${CMAKE_CURRENT_BINARY_DIR}/Kernel
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel
+    COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
+    COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
 )
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel" DESTINATION boot)
-
-add_custom_command(
-    TARGET ${KERNEL_TARGET} POST_BUILD
-    COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
-)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/kernel.map DESTINATION res)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kernel.map" DESTINATION res)
 
 serenity_install_headers(Kernel)
 serenity_install_sources(Kernel)

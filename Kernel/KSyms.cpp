@@ -18,6 +18,10 @@ FlatPtr g_lowest_kernel_symbol_address = 0xffffffff;
 FlatPtr g_highest_kernel_symbol_address = 0;
 bool g_kernel_symbols_available = false;
 
+extern "C" {
+__attribute__((section(".kernel_symbols"))) char kernel_symbols[5 * MiB] {};
+}
+
 static KernelSymbol* s_symbols;
 static size_t s_symbol_count = 0;
 
@@ -50,7 +54,7 @@ const KernelSymbol* symbolicate_kernel_address(FlatPtr address)
     return nullptr;
 }
 
-UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(const KBuffer& buffer)
+UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(ReadonlyBytes const& buffer)
 {
     g_lowest_kernel_symbol_address = 0xffffffff;
     g_highest_kernel_symbol_address = 0;
@@ -68,7 +72,7 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(const KBuffer& buffer
 
     size_t current_symbol_index = 0;
 
-    while (bufptr < buffer.end_pointer()) {
+    while ((u8 const*)bufptr < buffer.data() + buffer.size()) {
         for (size_t i = 0; i < 8; ++i)
             address = (address << 4) | parse_hex_digit(*(bufptr++));
         bufptr += 3;
@@ -166,13 +170,11 @@ void dump_backtrace()
 
 UNMAP_AFTER_INIT void load_kernel_symbol_table()
 {
-    auto result = VirtualFileSystem::the().open("/res/kernel.map", O_RDONLY, 0, VirtualFileSystem::the().root_custody());
-    if (!result.is_error()) {
-        auto description = result.value();
-        auto buffer = description->read_entire_file();
-        if (!buffer.is_error())
-            load_kernel_symbols_from_data(*buffer.value());
-    }
+    auto kernel_symbols_size = strnlen(kernel_symbols, sizeof(kernel_symbols));
+    // If we're hitting this VERIFY the kernel symbol file has grown beyond
+    // the array size of kernel_symbols. Try making the array larger.
+    VERIFY(kernel_symbols_size != sizeof(kernel_symbols));
+    load_kernel_symbols_from_data({ kernel_symbols, kernel_symbols_size });
 }
 
 }

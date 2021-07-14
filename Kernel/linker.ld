@@ -9,6 +9,7 @@ PHDRS
   text PT_LOAD ;
   data PT_LOAD ;
   bss PT_LOAD ;
+  ksyms PT_LOAD ;
 }
 
 SECTIONS
@@ -93,4 +94,9 @@ SECTIONS
     } :bss
 
     end_of_kernel_image = .;
+
+    .ksyms ALIGN(4K) : AT (ADDR(.ksyms) - KERNEL_VIRTUAL_BASE)
+    {
+        *(.kernel_symbols)
+    } :ksyms
 }
