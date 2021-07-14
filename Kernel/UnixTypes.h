@@ -549,7 +549,7 @@ struct alignas(4) sockaddr {
 #define S_IFSOCK 0140000
 #define UNIX_PATH_MAX 108
 
-struct alignas(4) sockaddr_un {
+struct sockaddr_un {
     u16 sun_family;
     char sun_path[UNIX_PATH_MAX];
 };

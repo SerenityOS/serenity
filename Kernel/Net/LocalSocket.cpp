@@ -151,20 +151,15 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
     VERIFY(!m_bound);
     if (address_size != sizeof(sockaddr_un))
         return EINVAL;
-    u16 sa_family_copy;
-    auto* user_address = reinterpret_cast<const sockaddr*>(address.unsafe_userspace_ptr());
-    if (!copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)))
+    sockaddr_un safe_copy;
+    if (!copy_from_user(&safe_copy, address.unsafe_userspace_ptr(), sizeof(sockaddr_un)))
         return EFAULT;
-    if (sa_family_copy != AF_LOCAL)
+    if (safe_copy.sun_family != AF_LOCAL)
         return EINVAL;
     if (is_connected())
         return EISCONN;
 
-    const auto& local_address = *reinterpret_cast<const sockaddr_un*>(user_address);
-    char safe_address[sizeof(local_address.sun_path) + 1] = { 0 };
-    if (!copy_from_user(&safe_address[0], &local_address.sun_path[0], sizeof(safe_address) - 1))
-        return EFAULT;
-    safe_address[sizeof(safe_address) - 1] = '\0';
+    StringView safe_address { safe_copy.sun_path, strnlen(safe_copy.sun_path, sizeof(safe_copy.sun_path)) };
 
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({})", this, safe_address);
 
@@ -178,8 +173,8 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
     if (!m_file->inode()->socket())
         return ECONNREFUSED;
 
-    m_address.sun_family = sa_family_copy;
-    memcpy(m_address.sun_path, safe_address, sizeof(m_address.sun_path));
+    // TODO: can we omit this copy and copy into internal structure above?
+    m_address = safe_copy;
 
     VERIFY(m_connect_side_fd == &description);
     set_connect_side_role(Role::Connecting);
