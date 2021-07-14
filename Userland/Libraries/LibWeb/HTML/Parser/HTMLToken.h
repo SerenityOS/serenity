@@ -50,10 +50,7 @@ public:
     {
         HTMLToken token;
         token.m_type = Type::Character;
-        StringBuilder builder;
-        // FIXME: This narrows code_point to char, should this be append_code_point() instead?
-        builder.append(code_point);
-        token.m_comment_or_character.data = builder.to_string();
+        token.set_code_point(code_point);
         return token;
     }
 
@@ -95,6 +92,14 @@ public:
         default:
             return false;
         }
+    }
+
+    void set_code_point(u32 code_point)
+    {
+        VERIFY(is_character());
+        StringBuilder builder;
+        builder.append_code_point(code_point);
+        m_comment_or_character.data = builder.to_string();
     }
 
     String const& comment() const
