@@ -150,7 +150,7 @@ Tab::Tab(BrowserWindow& window, Type type)
         view().set_focus(true);
     };
 
-    m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste & Go", [this](auto&) {
+    m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste && Go", [this](auto&) {
         m_location_box->set_text(GUI::Clipboard::the().data());
         m_location_box->on_return_pressed();
     }));
