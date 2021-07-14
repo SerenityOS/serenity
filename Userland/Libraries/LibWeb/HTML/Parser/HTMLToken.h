@@ -47,6 +47,17 @@ public:
         Position value_end_position;
     };
 
+    struct DoctypeData {
+        // NOTE: "Missing" is a distinct state from the empty string.
+        String name;
+        String public_identifier;
+        String system_identifier;
+        bool missing_name { true };
+        bool missing_public_identifier { true };
+        bool missing_system_identifier { true };
+        bool force_quirks { false };
+    };
+
     static HTMLToken make_character(u32 code_point)
     {
         HTMLToken token;
@@ -252,6 +263,18 @@ public:
         });
     }
 
+    DoctypeData const& doctype_data() const
+    {
+        VERIFY(is_doctype());
+        return m_doctype;
+    }
+
+    DoctypeData& doctype_data()
+    {
+        VERIFY(is_doctype());
+        return m_doctype;
+    }
+
     Type type() const { return m_type; }
 
     String to_string() const;
@@ -263,17 +286,7 @@ private:
     Type m_type { Type::Invalid };
 
     // Type::DOCTYPE
-    struct {
-        // NOTE: "Missing" is a distinct state from the empty string.
-
-        String name;
-        bool missing_name { true };
-        String public_identifier;
-        bool missing_public_identifier { true };
-        String system_identifier;
-        bool missing_system_identifier { true };
-        bool force_quirks { false };
-    } m_doctype;
+    DoctypeData m_doctype;
 
     // Type::StartTag
     // Type::EndTag
