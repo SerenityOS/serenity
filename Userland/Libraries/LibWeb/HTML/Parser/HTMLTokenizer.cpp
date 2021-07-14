@@ -59,6 +59,7 @@ namespace Web::HTML {
 
 #define SWITCH_TO_AND_EMIT_CURRENT_TOKEN(new_state)     \
     do {                                                \
+        VERIFY(m_current_builder.is_empty());           \
         will_switch_to(State::new_state);               \
         m_state = State::new_state;                     \
         will_emit(m_current_token);                     \
@@ -135,6 +136,7 @@ namespace Web::HTML {
 
 #define EMIT_CURRENT_TOKEN                              \
     do {                                                \
+        VERIFY(m_current_builder.is_empty());           \
         will_emit(m_current_token);                     \
         m_queued_tokens.enqueue(move(m_current_token)); \
         return m_queued_tokens.dequeue();               \
