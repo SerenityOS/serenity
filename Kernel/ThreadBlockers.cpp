@@ -580,10 +580,13 @@ void Thread::WaitBlockCondition::finalize()
     // Clear the list of threads here so we can drop the references to them
     m_processes.clear();
 
-    // No more waiters, drop the last reference immediately. This may
-    // cause us to be destructed ourselves!
-    VERIFY(m_process.ref_count() > 0);
-    m_process.unref();
+    // NOTE: Kernel processes don't have a leaked ref on them.
+    if (!is_kernel_mode()) {
+        // No more waiters, drop the last reference immediately. This may
+        // cause us to be destructed ourselves!
+        VERIFY(m_process.ref_count() > 0);
+        m_process.unref();
+    }
 }
 
 Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, KResultOr<siginfo_t>& result)

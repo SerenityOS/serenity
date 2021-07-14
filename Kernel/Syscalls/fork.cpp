@@ -119,9 +119,10 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_first_thread->set_state(Thread::State::Runnable);
 
     auto child_pid = child->pid().value();
-    // We need to leak one reference so we don't destroy the Process,
-    // which will be dropped by Process::reap
+
+    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockCondition::finalize().
     (void)child.leak_ref();
+
     return child_pid;
 }
 

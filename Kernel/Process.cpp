@@ -181,6 +181,10 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
 
     register_new(*process);
     error = 0;
+
+    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockCondition::finalize().
+    (void)process.leak_ref();
+
     return process;
 }
 
