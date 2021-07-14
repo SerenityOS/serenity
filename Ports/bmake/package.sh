@@ -6,12 +6,10 @@ useconfigure="true"
 files="https://www.crufty.net/ftp/pub/sjg/bmake-${version}.tar.gz bmake-${version}.tar.gz"
 workdir=${port}
 configopts="--without-makefile --with-default-sys-path=/usr/local/share/mk"
-depends="regex"
 
 build() {
-	export CFLAGS=-I${DESTDIR}/usr/local/include
 	export DESTDIR
-	run sed -i 's/LIBS=\"\"/LIBS=\${DESTDIR}\/usr\/local\/lib\/libregex.a/g' ./make-bootstrap.sh
+	run sed -i 's/LIBS=\"\"/LIBS=-lregex/g' ./make-bootstrap.sh
 	run bash ./make-bootstrap.sh
 }
 
