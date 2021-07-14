@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,7 +33,7 @@ static StyleSheet& default_stylesheet()
 {
     static StyleSheet* sheet;
     if (!sheet) {
-        extern const char default_stylesheet_source[];
+        extern char const default_stylesheet_source[];
         String css = default_stylesheet_source;
         sheet = parse_css(CSS::DeprecatedParsingContext(), css).leak_ref();
     }
@@ -43,7 +44,7 @@ static StyleSheet& quirks_mode_stylesheet()
 {
     static StyleSheet* sheet;
     if (!sheet) {
-        extern const char quirks_mode_stylesheet_source[];
+        extern char const quirks_mode_stylesheet_source[];
         String css = quirks_mode_stylesheet_source;
         sheet = parse_css(CSS::DeprecatedParsingContext(), css).leak_ref();
     }
@@ -61,7 +62,7 @@ void StyleResolver::for_each_stylesheet(Callback callback) const
     }
 }
 
-Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& element) const
+Vector<MatchingRule> StyleResolver::collect_matching_rules(DOM::Element const& element) const
 {
     Vector<MatchingRule> matching_rules;
 
@@ -70,7 +71,7 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& e
         if (!is<CSSStyleSheet>(sheet))
             return;
         size_t rule_index = 0;
-        static_cast<const CSSStyleSheet&>(sheet).for_each_effective_style_rule([&](auto& rule) {
+        static_cast<CSSStyleSheet const&>(sheet).for_each_effective_style_rule([&](auto& rule) {
             size_t selector_index = 0;
             for (auto& selector : rule.selectors()) {
                 if (SelectorEngine::matches(selector, element)) {
@@ -135,7 +136,7 @@ bool StyleResolver::is_inherited_property(CSS::PropertyID property_id)
     return inherited_properties.contains(property_id);
 }
 
-static Vector<String> split_on_whitespace(const StringView& string)
+static Vector<String> split_on_whitespace(StringView const& string)
 {
     if (string.is_empty())
         return {};
@@ -170,7 +171,7 @@ static bool contains(Edge a, Edge b)
     return a == b || b == Edge::All;
 }
 
-static inline void set_property_border_width(StyleProperties& style, const StyleValue& value, Edge edge)
+static inline void set_property_border_width(StyleProperties& style, StyleValue const& value, Edge edge)
 {
     VERIFY(value.is_length());
     if (contains(Edge::Top, edge))
@@ -183,7 +184,7 @@ static inline void set_property_border_width(StyleProperties& style, const Style
         style.set_property(CSS::PropertyID::BorderLeftWidth, value);
 }
 
-static inline void set_property_border_color(StyleProperties& style, const StyleValue& value, Edge edge)
+static inline void set_property_border_color(StyleProperties& style, StyleValue const& value, Edge edge)
 {
     VERIFY(value.is_color());
     if (contains(Edge::Top, edge))
@@ -196,7 +197,7 @@ static inline void set_property_border_color(StyleProperties& style, const Style
         style.set_property(CSS::PropertyID::BorderLeftColor, value);
 }
 
-static inline void set_property_border_style(StyleProperties& style, const StyleValue& value, Edge edge)
+static inline void set_property_border_style(StyleProperties& style, StyleValue const& value, Edge edge)
 {
     VERIFY(value.type() == CSS::StyleValue::Type::Identifier);
     if (contains(Edge::Top, edge))
@@ -209,7 +210,7 @@ static inline void set_property_border_style(StyleProperties& style, const Style
         style.set_property(CSS::PropertyID::BorderLeftStyle, value);
 }
 
-static inline bool is_background_repeat_property(const StyleValue& value)
+static inline bool is_background_repeat_property(StyleValue const& value)
 {
     if (!value.is_identifier())
         return false;
@@ -227,7 +228,7 @@ static inline bool is_background_repeat_property(const StyleValue& value)
     }
 }
 
-static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value, DOM::Document& document, bool is_internally_generated_pseudo_property = false)
+static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document, bool is_internally_generated_pseudo_property = false)
 {
     CSS::DeprecatedParsingContext context(document);
 
@@ -571,7 +572,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Background) {
-        if (value.is_identifier() && static_cast<const IdentifierStyleValue&>(value).id() == CSS::ValueID::None) {
+        if (value.is_identifier() && static_cast<IdentifierStyleValue const&>(value).id() == CSS::ValueID::None) {
             style.set_property(CSS::PropertyID::BackgroundColor, ColorStyleValue::create(Color::Transparent));
             return;
         }
@@ -827,7 +828,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-StyleResolver::CustomPropertyResolutionTuple StyleResolver::resolve_custom_property_with_specificity(DOM::Element& element, const String& custom_property_name) const
+StyleResolver::CustomPropertyResolutionTuple StyleResolver::resolve_custom_property_with_specificity(DOM::Element& element, String const& custom_property_name) const
 {
     if (auto maybe_property = element.resolve_custom_property(custom_property_name); maybe_property.has_value())
         return maybe_property.value();
@@ -855,7 +856,7 @@ StyleResolver::CustomPropertyResolutionTuple StyleResolver::resolve_custom_prope
     return parent_resolved;
 }
 
-Optional<StyleProperty> StyleResolver::resolve_custom_property(DOM::Element& element, const String& custom_property_name) const
+Optional<StyleProperty> StyleResolver::resolve_custom_property(DOM::Element& element, String const& custom_property_name) const
 {
     auto resolved_with_specificity = resolve_custom_property_with_specificity(element, custom_property_name);
 
@@ -882,7 +883,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& elemen
         for (auto& property : match.rule->declaration().properties()) {
             auto property_value = property.value;
             if (property.value->is_custom_property()) {
-                auto prop = reinterpret_cast<const CSS::CustomStyleValue*>(property.value.ptr());
+                auto prop = reinterpret_cast<CSS::CustomStyleValue const*>(property.value.ptr());
                 auto custom_prop_name = prop->custom_property_name();
                 auto resolved = resolve_custom_property(element, custom_prop_name);
                 if (resolved.has_value()) {

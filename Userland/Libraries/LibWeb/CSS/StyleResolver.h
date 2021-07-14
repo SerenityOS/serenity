@@ -28,18 +28,18 @@ public:
     ~StyleResolver();
 
     DOM::Document& document() { return m_document; }
-    const DOM::Document& document() const { return m_document; }
+    DOM::Document const& document() const { return m_document; }
 
     NonnullRefPtr<StyleProperties> resolve_style(DOM::Element&) const;
 
-    Vector<MatchingRule> collect_matching_rules(const DOM::Element&) const;
+    Vector<MatchingRule> collect_matching_rules(DOM::Element const&) const;
     void sort_matching_rules(Vector<MatchingRule>&) const;
     struct CustomPropertyResolutionTuple {
         Optional<StyleProperty> style {};
         u32 specificity { 0 };
     };
-    CustomPropertyResolutionTuple resolve_custom_property_with_specificity(DOM::Element&, const String&) const;
-    Optional<StyleProperty> resolve_custom_property(DOM::Element&, const String&) const;
+    CustomPropertyResolutionTuple resolve_custom_property_with_specificity(DOM::Element&, String const&) const;
+    Optional<StyleProperty> resolve_custom_property(DOM::Element&, String const&) const;
 
     static bool is_inherited_property(CSS::PropertyID);
 
