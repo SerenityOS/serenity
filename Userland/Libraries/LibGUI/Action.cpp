@@ -151,7 +151,7 @@ NonnullRefPtr<Action> make_select_all_action(Function<void(Action&)> callback, C
 
 NonnullRefPtr<Action> make_rename_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("Re&name", Key_F2, move(callback), parent);
+    return Action::create("Re&name", Key_F2, Gfx::Bitmap::load_from_file("/res/icons/16x16/rename.png"), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_properties_action(Function<void(Action&)> callback, Core::Object* parent)
