@@ -37,6 +37,9 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.nanoseconds, nanoseconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.sign, sign_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.blank, blank_getter, {}, Attribute::Configurable);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
 static Duration* typed_this(GlobalObject& global_object)
@@ -213,6 +216,14 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::blank_getter)
 
     // 5. Return false.
     return Value(false);
+}
+
+// 7.3.25 Temporal.Duration.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.valueof
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::value_of)
+{
+    // 1. Throw a TypeError exception.
+    vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.Duration", "a primitive value");
+    return {};
 }
 
 }
