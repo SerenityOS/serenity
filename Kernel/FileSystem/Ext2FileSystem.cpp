@@ -718,6 +718,13 @@ void Ext2FS::flush_writes()
     //        for their (child name lookup) and (block list) caches.
     Vector<InodeIndex> unused_inodes;
     for (auto& it : m_inode_cache) {
+        // NOTE: If we're asked to look up an inode by number (via get_inode) and it turns out
+        //       to not exist, we remember the fact that it doesn't exist by caching a nullptr.
+        //       This seems like a reasonable time to uncache ideas about unknown inodes, so do that.
+        if (!it.value) {
+            unused_inodes.append(it.key);
+            continue;
+        }
         if (it.value->ref_count() != 1)
             continue;
         if (it.value->has_watchers())
