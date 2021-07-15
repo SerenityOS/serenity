@@ -196,7 +196,7 @@ protected:
             }
             if (nread == 0) {
                 if (bytes.is_empty()) {
-                    deferred_invoke([this](auto&) { die(); });
+                    deferred_invoke([this](auto&) { shutdown(); });
                 }
                 return false;
             }
