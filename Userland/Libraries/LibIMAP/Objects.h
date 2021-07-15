@@ -239,6 +239,8 @@ public:
     {
     }
 
+    AK::Variant<BodyStructureData, MultiPartBodyStructureData> const& data() const { return m_data; }
+
 private:
     AK::Variant<BodyStructureData, MultiPartBodyStructureData> m_data;
 };
