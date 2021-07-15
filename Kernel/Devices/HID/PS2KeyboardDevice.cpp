@@ -32,10 +32,10 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
         return;
     }
 
-    if (m_modifiers == (Mod_Alt | Mod_Shift) && byte == 0x58) {
+    if ((m_modifiers == (Mod_Alt | Mod_Shift) || m_modifiers == (Mod_Ctrl | Mod_Alt | Mod_Shift)) && byte == 0x58) {
         // Alt+Shift+F12 pressed, dump some kernel state to the debug console.
         ConsoleManagement::the().switch_to_debug();
-        Scheduler::dump_scheduler_state();
+        Scheduler::dump_scheduler_state(m_modifiers == (Mod_Ctrl | Mod_Alt | Mod_Shift));
     }
 
     dbgln_if(KEYBOARD_DEBUG, "Keyboard::irq_handle_byte_read: {:#02x} {}", ch, (pressed ? "down" : "up"));
