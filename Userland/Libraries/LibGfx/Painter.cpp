@@ -155,7 +155,7 @@ void Painter::fill_rect_with_dither_pattern(const IntRect& a_rect, Color color_a
 
     for (int i = 0; i < rect.height(); ++i) {
         for (int j = 0; j < rect.width(); ++j) {
-            bool checkboard_use_a = (i & 1) ^ (j & 1);
+            bool checkboard_use_a = ((rect.left() + i) & 1) ^ ((rect.top() + j) & 1);
             if (checkboard_use_a && !color_a.alpha())
                 continue;
             if (!checkboard_use_a && !color_b.alpha())
