@@ -2103,7 +2103,7 @@ void HTMLDocumentParser::handle_in_table_text(HTMLToken& token)
             return;
         }
 
-        m_pending_table_character_tokens.append(token);
+        m_pending_table_character_tokens.append(move(token));
         return;
     }
 
