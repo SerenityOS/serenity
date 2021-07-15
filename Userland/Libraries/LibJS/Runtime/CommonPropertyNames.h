@@ -101,6 +101,7 @@ namespace JS {
     P(count)                                 \
     P(countReset)                            \
     P(create)                                \
+    P(days)                                  \
     P(debug)                                 \
     P(decodeURI)                             \
     P(decodeURIComponent)                    \
