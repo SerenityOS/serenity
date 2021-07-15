@@ -101,7 +101,6 @@ void FileSystemModel::Node::traverse_if_needed()
     while (di.has_next()) {
         child_names.append(di.next_path());
     }
-    quick_sort(child_names);
 
     NonnullOwnPtrVector<Node> directory_children;
     NonnullOwnPtrVector<Node> file_children;
