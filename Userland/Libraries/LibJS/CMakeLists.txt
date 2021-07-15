@@ -106,6 +106,8 @@ set(SOURCES
     Runtime/RegExpConstructor.cpp
     Runtime/RegExpObject.cpp
     Runtime/RegExpPrototype.cpp
+    Runtime/RegExpStringIterator.cpp
+    Runtime/RegExpStringIteratorPrototype.cpp
     Runtime/Set.cpp
     Runtime/SetConstructor.cpp
     Runtime/SetIterator.cpp
