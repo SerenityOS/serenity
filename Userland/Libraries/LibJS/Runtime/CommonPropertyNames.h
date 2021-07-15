@@ -352,7 +352,8 @@ namespace JS {
     P(valueOf)                               \
     P(values)                                \
     P(warn)                                  \
-    P(writable)
+    P(writable)                              \
+    P(years)
 
 struct CommonPropertyNames {
     PropertyName and_ { "and", PropertyName::StringMayBeNumber::No };
