@@ -17,6 +17,9 @@ public:
     explicit DurationPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~DurationPrototype() override = default;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(years_getter);
 };
 
 }
