@@ -59,6 +59,15 @@
 #endif
 #define NAKED __attribute__((naked))
 
+#ifdef DISALLOW
+#    undef DISALLOW
+#endif
+#ifdef __clang__
+#    define DISALLOW(message) __attribute__((diagnose_if(1, message, "error")))
+#else
+#    define DISALLOW(message) __attribute__((error(message)))
+#endif
+
 // GCC doesn't have __has_feature but clang does
 #ifndef __has_feature
 #    define __has_feature(...) 0
