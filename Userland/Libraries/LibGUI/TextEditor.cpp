@@ -929,6 +929,13 @@ void TextEditor::delete_previous_char()
     execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
 }
 
+void TextEditor::delete_from_line_start_to_cursor()
+{
+    TextPosition start(m_cursor.line(), current_line().first_non_whitespace_column());
+    TextRange to_erase(start, m_cursor);
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
+}
+
 void TextEditor::do_delete()
 {
     if (!is_editable())
