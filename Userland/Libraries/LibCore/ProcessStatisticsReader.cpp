@@ -37,6 +37,7 @@ Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::F
     auto json = JsonValue::from_string(file_contents);
     if (!json.has_value())
         return {};
+
     auto& json_obj = json.value().as_object();
     json_obj.get("processes").as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
@@ -74,8 +75,8 @@ Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::F
             thread.times_scheduled = thread_object.get("times_scheduled").to_u32();
             thread.name = thread_object.get("name").to_string();
             thread.state = thread_object.get("state").to_string();
-            thread.ticks_user = thread_object.get("ticks_user").to_u32();
-            thread.ticks_kernel = thread_object.get("ticks_kernel").to_u32();
+            thread.time_user = thread_object.get("time_user").to_u64();
+            thread.time_kernel = thread_object.get("time_kernel").to_u64();
             thread.cpu = thread_object.get("cpu").to_u32();
             thread.priority = thread_object.get("priority").to_u32();
             thread.syscall_count = thread_object.get("syscall_count").to_u32();
@@ -96,8 +97,8 @@ Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::F
         all_processes_statistics.processes.append(move(process));
     });
 
-    all_processes_statistics.total_ticks_scheduled = json_obj.get("total_ticks").to_u64();
-    all_processes_statistics.total_ticks_scheduled_kernel = json_obj.get("total_ticks_kernel").to_u64();
+    all_processes_statistics.total_time_scheduled = json_obj.get("total_time").to_u64();
+    all_processes_statistics.total_time_scheduled_kernel = json_obj.get("total_time_kernel").to_u64();
     return all_processes_statistics;
 }
 

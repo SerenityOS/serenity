@@ -469,8 +469,8 @@ private:
                 thread_object.add("tid", thread.tid().value());
                 thread_object.add("name", thread.name());
                 thread_object.add("times_scheduled", thread.times_scheduled());
-                thread_object.add("ticks_user", thread.ticks_in_user());
-                thread_object.add("ticks_kernel", thread.ticks_in_kernel());
+                thread_object.add("time_user", thread.time_in_user());
+                thread_object.add("time_kernel", thread.time_in_kernel());
                 thread_object.add("state", thread.state_string());
                 thread_object.add("cpu", thread.cpu());
                 thread_object.add("priority", thread.priority());
@@ -497,9 +497,9 @@ private:
                     build_process(array, process);
             }
 
-            auto total_ticks_scheduled = Scheduler::get_total_ticks_scheduled();
-            json.add("total_ticks", total_ticks_scheduled.total);
-            json.add("total_ticks_kernel", total_ticks_scheduled.total_kernel);
+            auto total_time_scheduled = Scheduler::get_total_time_scheduled();
+            json.add("total_time", total_time_scheduled.total);
+            json.add("total_time_kernel", total_time_scheduled.total_kernel);
         }
         return true;
     }

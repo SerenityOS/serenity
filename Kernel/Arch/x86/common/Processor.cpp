@@ -612,7 +612,10 @@ void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
         trap.next_trap = current_trap;
         current_trap = &trap;
         // The cs register of this trap tells us where we will return back to
-        current_thread->set_previous_mode(((trap.regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode);
+        auto new_previous_mode = ((trap.regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode;
+        if (current_thread->set_previous_mode(new_previous_mode) && trap.prev_irq_level == 0) {
+            current_thread->update_time_scheduled(Scheduler::current_time(), new_previous_mode == Thread::PreviousMode::KernelMode, false);
+        }
     } else {
         trap.next_trap = nullptr;
     }
@@ -627,25 +630,29 @@ void Processor::exit_trap(TrapFrame& trap)
 
     smp_process_pending_messages();
 
-    if (!m_in_irq && !m_in_critical)
-        check_invoke_scheduler();
-
     auto* current_thread = Processor::current_thread();
     if (current_thread) {
         auto& current_trap = current_thread->current_trap();
         current_trap = trap.next_trap;
+        Thread::PreviousMode new_previous_mode;
         if (current_trap) {
             VERIFY(current_trap->regs);
             // If we have another higher level trap then we probably returned
             // from an interrupt or irq handler. The cs register of the
             // new/higher level trap tells us what the mode prior to it was
-            current_thread->set_previous_mode(((current_trap->regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode);
+            new_previous_mode = ((current_trap->regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode;
         } else {
             // If we don't have a higher level trap then we're back in user mode.
-            // Unless we're a kernel process, in which case we're always in kernel mode
-            current_thread->set_previous_mode(current_thread->process().is_kernel_process() ? Thread::PreviousMode::KernelMode : Thread::PreviousMode::UserMode);
+            // Which means that the previous mode prior to being back in user mode was kernel mode
+            new_previous_mode = Thread::PreviousMode::KernelMode;
         }
+
+        if (current_thread->set_previous_mode(new_previous_mode))
+            current_thread->update_time_scheduled(Scheduler::current_time(), true, false);
     }
+
+    if (!m_in_irq && !m_in_critical)
+        check_invoke_scheduler();
 }
 
 void Processor::check_invoke_scheduler()

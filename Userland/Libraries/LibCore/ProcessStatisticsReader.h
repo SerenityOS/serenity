@@ -15,8 +15,8 @@ namespace Core {
 struct ThreadStatistics {
     pid_t tid;
     unsigned times_scheduled;
-    unsigned ticks_user;
-    unsigned ticks_kernel;
+    u64 time_user;
+    u64 time_kernel;
     unsigned syscall_count;
     unsigned inode_faults;
     unsigned zero_faults;
@@ -66,8 +66,8 @@ struct ProcessStatistics {
 
 struct AllProcessesStatistics {
     Vector<ProcessStatistics> processes;
-    u64 total_ticks_scheduled;
-    u64 total_ticks_scheduled_kernel;
+    u64 total_time_scheduled;
+    u64 total_time_scheduled_kernel;
 };
 
 class ProcessStatisticsReader {

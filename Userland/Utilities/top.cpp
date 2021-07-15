@@ -54,9 +54,9 @@ struct ThreadData {
     unsigned inode_faults;
     unsigned zero_faults;
     unsigned cow_faults;
-    u64 ticks_scheduled;
+    u64 time_scheduled;
 
-    u64 ticks_scheduled_since_prev { 0 };
+    u64 time_scheduled_since_prev { 0 };
     unsigned cpu_percent { 0 };
     unsigned cpu_percent_decimal { 0 };
 
@@ -83,8 +83,8 @@ struct Traits<PidAndTid> : public GenericTraits<PidAndTid> {
 
 struct Snapshot {
     HashMap<PidAndTid, ThreadData> map;
-    u64 total_ticks_scheduled { 0 };
-    u64 total_ticks_scheduled_kernel { 0 };
+    u64 total_time_scheduled { 0 };
+    u64 total_time_scheduled_kernel { 0 };
 };
 
 static Snapshot get_snapshot()
@@ -115,7 +115,7 @@ static Snapshot get_snapshot()
             thread_data.inode_faults = thread.inode_faults;
             thread_data.zero_faults = thread.zero_faults;
             thread_data.cow_faults = thread.cow_faults;
-            thread_data.ticks_scheduled = (u64)thread.ticks_user + (u64)thread.ticks_kernel;
+            thread_data.time_scheduled = (u64)thread.time_user + (u64)thread.time_kernel;
             thread_data.priority = thread.priority;
             thread_data.state = thread.state;
             thread_data.username = process.username;
@@ -124,8 +124,8 @@ static Snapshot get_snapshot()
         }
     }
 
-    snapshot.total_ticks_scheduled = all_processes->total_ticks_scheduled;
-    snapshot.total_ticks_scheduled_kernel = all_processes->total_ticks_scheduled_kernel;
+    snapshot.total_time_scheduled = all_processes->total_time_scheduled;
+    snapshot.total_time_scheduled_kernel = all_processes->total_time_scheduled_kernel;
 
     return snapshot;
 }
@@ -220,7 +220,7 @@ int main(int argc, char** argv)
         }
 
         auto current = get_snapshot();
-        auto total_scheduled_diff = current.total_ticks_scheduled - prev.total_ticks_scheduled;
+        auto total_scheduled_diff = current.total_time_scheduled - prev.total_time_scheduled;
 
         printf("\033[3J\033[H\033[2J");
         printf("\033[47;30m%6s %3s %3s  %-9s  %-13s  %6s  %6s  %4s  %s\033[K\033[0m\n",
@@ -240,11 +240,11 @@ int main(int argc, char** argv)
             auto jt = prev.map.find(pid_and_tid);
             if (jt == prev.map.end())
                 continue;
-            auto ticks_scheduled_before = (*jt).value.ticks_scheduled;
-            auto ticks_scheduled_diff = it.value.ticks_scheduled - ticks_scheduled_before;
-            it.value.ticks_scheduled_since_prev = ticks_scheduled_diff;
-            it.value.cpu_percent = total_scheduled_diff > 0 ? ((ticks_scheduled_diff * 100) / total_scheduled_diff) : 0;
-            it.value.cpu_percent_decimal = total_scheduled_diff > 0 ? (((ticks_scheduled_diff * 1000) / total_scheduled_diff) % 10) : 0;
+            auto time_scheduled_before = (*jt).value.time_scheduled;
+            auto time_scheduled_diff = it.value.time_scheduled - time_scheduled_before;
+            it.value.time_scheduled_since_prev = time_scheduled_diff;
+            it.value.cpu_percent = total_scheduled_diff > 0 ? ((time_scheduled_diff * 100) / total_scheduled_diff) : 0;
+            it.value.cpu_percent_decimal = total_scheduled_diff > 0 ? (((time_scheduled_diff * 1000) / total_scheduled_diff) % 10) : 0;
             threads.append(&it.value);
         }
 
@@ -269,7 +269,7 @@ int main(int argc, char** argv)
             case TopOption::SortBy::Cpu:
                 return p2->cpu_percent * 10 + p2->cpu_percent_decimal < p1->cpu_percent * 10 + p1->cpu_percent_decimal;
             default:
-                return p2->ticks_scheduled_since_prev < p1->ticks_scheduled_since_prev;
+                return p2->time_scheduled_since_prev < p1->time_scheduled_since_prev;
             }
         });
 
