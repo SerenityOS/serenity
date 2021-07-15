@@ -10,6 +10,8 @@
 
 namespace JS {
 
+Value regexp_exec(GlobalObject& global_object, Object& regexp_object, String const& string);
+
 class RegExpPrototype final : public Object {
     JS_OBJECT(RegExpPrototype, Object);
 
