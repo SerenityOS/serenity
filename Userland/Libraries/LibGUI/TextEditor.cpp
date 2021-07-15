@@ -912,6 +912,23 @@ void TextEditor::delete_current_line()
     execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
 }
 
+void TextEditor::delete_previous_char()
+{
+    if (!is_editable())
+        return;
+
+    if (has_selection())
+        return delete_selection();
+
+    TextRange to_erase({ m_cursor.line(), m_cursor.column() - 1 }, m_cursor);
+    if (m_cursor.column() == 0 && m_cursor.line() != 0) {
+        size_t prev_line_len = line(m_cursor.line() - 1).length();
+        to_erase.set_start({ m_cursor.line() - 1, prev_line_len });
+    }
+
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
+}
+
 void TextEditor::do_delete()
 {
     if (!is_editable())
