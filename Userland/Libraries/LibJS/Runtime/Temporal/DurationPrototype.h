@@ -21,6 +21,7 @@ public:
 private:
     JS_DECLARE_NATIVE_FUNCTION(years_getter);
     JS_DECLARE_NATIVE_FUNCTION(months_getter);
+    JS_DECLARE_NATIVE_FUNCTION(weeks_getter);
 };
 
 }
