@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/RegExpConstructor.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/RegExpPrototype.h>
+#include <LibJS/Runtime/RegExpStringIterator.h>
 #include <LibJS/Token.h>
 
 namespace JS {
@@ -32,6 +33,7 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.exec, exec, 1, attr);
 
     define_native_function(*vm.well_known_symbol_match(), symbol_match, 1, attr);
+    define_native_function(*vm.well_known_symbol_match_all(), symbol_match_all, 1, attr);
     define_native_function(*vm.well_known_symbol_replace(), symbol_replace, 2, attr);
     define_native_function(*vm.well_known_symbol_search(), symbol_search, 1, attr);
     define_native_function(*vm.well_known_symbol_split(), symbol_split, 2, attr);
@@ -505,6 +507,55 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 
         ++n;
     }
+}
+
+// 22.2.5.8 RegExp.prototype [ @@matchAll ] ( string ), https://tc39.es/ecma262/#sec-regexp-prototype-matchall
+JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
+{
+    auto* regexp_object = this_object_from(vm, global_object);
+    if (!regexp_object)
+        return {};
+
+    auto string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    auto* constructor = species_constructor(global_object, *regexp_object, *global_object.regexp_constructor());
+    if (vm.exception())
+        return {};
+
+    auto flags_value = regexp_object->get(vm.names.flags);
+    if (vm.exception())
+        return {};
+    auto flags = flags_value.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    bool global = flags.find('g').has_value();
+    bool unicode = flags.find('u').has_value();
+
+    MarkedValueList arguments(vm.heap());
+    arguments.append(regexp_object);
+    arguments.append(js_string(vm, move(flags)));
+    auto matcher_value = vm.construct(*constructor, *constructor, move(arguments));
+    if (vm.exception())
+        return {};
+    auto* matcher = matcher_value.to_object(global_object);
+    if (!matcher)
+        return {};
+
+    auto last_index_value = regexp_object->get(vm.names.lastIndex);
+    if (vm.exception())
+        return {};
+    auto last_index = last_index_value.to_length(global_object);
+    if (vm.exception())
+        return {};
+
+    matcher->set(vm.names.lastIndex, Value(last_index), true);
+    if (vm.exception())
+        return {};
+
+    return RegExpStringIterator::create(global_object, *matcher, move(string), global, unicode);
 }
 
 // 22.2.5.10 RegExp.prototype [ @@replace ] ( string, replaceValue ), https://tc39.es/ecma262/#sec-regexp.prototype-@@replace
