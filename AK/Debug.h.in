@@ -142,6 +142,10 @@
 #cmakedefine01 FILE_WATCHER_DEBUG
 #endif
 
+#ifndef FTP_DEBUG
+#cmakedefine01 FTP_DEBUG
+#endif
+
 #ifndef GEMINI_DEBUG
 #cmakedefine01 GEMINI_DEBUG
 #endif

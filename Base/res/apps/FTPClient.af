@@ -1,0 +1,4 @@
+[App]
+Name=FTPClient
+Executable=/bin/FTPClient
+Category=Internet
