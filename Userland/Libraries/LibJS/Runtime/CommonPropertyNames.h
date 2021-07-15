@@ -244,6 +244,7 @@ namespace JS {
     P(months)                                \
     P(multiline)                             \
     P(name)                                  \
+    P(nanoseconds)                           \
     P(next)                                  \
     P(now)                                   \
     P(of)                                    \
