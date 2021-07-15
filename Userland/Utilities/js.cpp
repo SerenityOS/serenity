@@ -42,6 +42,7 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
+#include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/TypedArray.h>
@@ -436,6 +437,13 @@ static void print_temporal_calendar(JS::Object const& object, HashTable<JS::Obje
     print_value(JS::js_string(object.vm(), calendar.identifier()), seen_objects);
 }
 
+static void print_temporal_duration(JS::Object const& object, HashTable<JS::Object*>&)
+{
+    auto& duration = static_cast<JS::Temporal::Duration const&>(object);
+    print_type("Temporal.Duration");
+    out(" \033[34;1m{} y, {} M, {} w, {} d, {} h, {} m, {} s, {} ms, {} us, {} ns\033[0m", duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds());
+}
+
 static void print_temporal_instant(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& instant = static_cast<JS::Temporal::Instant const&>(object);
@@ -516,6 +524,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_primitive_wrapper_object("Boolean", object, seen_objects);
         if (is<JS::Temporal::Calendar>(object))
             return print_temporal_calendar(object, seen_objects);
+        if (is<JS::Temporal::Duration>(object))
+            return print_temporal_duration(object, seen_objects);
         if (is<JS::Temporal::Instant>(object))
             return print_temporal_instant(object, seen_objects);
         if (is<JS::Temporal::TimeZone>(object))
