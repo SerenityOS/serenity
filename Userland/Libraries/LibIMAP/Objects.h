@@ -11,7 +11,6 @@
 #include <AK/Tuple.h>
 #include <AK/Variant.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
 #include <utility>
 
@@ -762,48 +761,6 @@ struct ContinueRequest {
     String data;
 };
 
-template<typename Result>
-class Promise : public Core::Object {
-    C_OBJECT(Promise);
-
-private:
-    Optional<Result> m_pending;
-
-public:
-    Function<void(Result&)> on_resolved;
-
-    void resolve(Result&& result)
-    {
-        m_pending = move(result);
-        if (on_resolved)
-            on_resolved(m_pending.value());
-    }
-
-    bool is_resolved()
-    {
-        return m_pending.has_value();
-    };
-
-    Result await()
-    {
-        while (!is_resolved()) {
-            Core::EventLoop::current().pump();
-        }
-        return m_pending.release_value();
-    }
-
-    // Converts a Promise<A> to a Promise<B> using a function func: A -> B
-    template<typename T>
-    RefPtr<Promise<T>> map(T func(Result&))
-    {
-        RefPtr<Promise<T>> new_promise = Promise<T>::construct();
-        on_resolved = [new_promise, func](Result& result) mutable {
-            auto t = func(result);
-            new_promise->resolve(move(t));
-        };
-        return new_promise;
-    }
-};
 using Response = Variant<SolidResponse, ContinueRequest>;
 }
 

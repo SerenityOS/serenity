@@ -7,10 +7,14 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <LibCore/Promise.h>
 #include <LibIMAP/Parser.h>
 #include <LibTLS/TLSv12.h>
 
 namespace IMAP {
+template<typename T>
+using Promise = Core::Promise<T>;
+
 class Client {
     friend class Parser;
 
