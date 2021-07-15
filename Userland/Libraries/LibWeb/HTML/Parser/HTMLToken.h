@@ -19,6 +19,7 @@ namespace Web::HTML {
 class HTMLTokenizer;
 
 class HTMLToken {
+    AK_MAKE_NONCOPYABLE(HTMLToken);
 
 public:
     enum class Type {
@@ -78,6 +79,9 @@ public:
         : m_type(type)
     {
     }
+
+    HTMLToken(HTMLToken&& other) = default;
+    HTMLToken& operator=(HTMLToken&& other) = default;
 
     bool is_doctype() const { return m_type == Type::DOCTYPE; }
     bool is_start_tag() const { return m_type == Type::StartTag; }
