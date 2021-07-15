@@ -356,8 +356,10 @@ endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -fno-pic -mno-red-zone")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new=8")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fPIE")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new=4")
 endif()
 
 # Kernel Undefined Behavior Sanitizer (KUBSAN)
