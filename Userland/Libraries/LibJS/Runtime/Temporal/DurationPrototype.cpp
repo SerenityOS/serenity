@@ -36,6 +36,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.microseconds, microseconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.nanoseconds, nanoseconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.sign, sign_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.blank, blank_getter, {}, Attribute::Configurable);
 }
 
 static Duration* typed_this(GlobalObject& global_object)
@@ -192,6 +193,26 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::sign_getter)
 
     // 3. Return ! DurationSign(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
     return Value(duration_sign(duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds()));
+}
+
+// 7.3.14 get Temporal.Duration.prototype.blank, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.blank
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::blank_getter)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let sign be ! DurationSign(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
+    auto sign = duration_sign(duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds());
+
+    // 4. If sign = 0, return true.
+    if (sign == 0)
+        return Value(true);
+
+    // 5. Return false.
+    return Value(false);
 }
 
 }
