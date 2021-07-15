@@ -38,11 +38,9 @@ UNMAP_AFTER_INIT void Thread::initialize()
 
 KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process)
 {
-    // FIXME: Once we have aligned + nothrow operator new, we can avoid the manual kfree.
-    FPUState* fpu_state = (FPUState*)kmalloc_aligned<16>(sizeof(FPUState));
+    auto fpu_state = try_make<FPUState>();
     if (!fpu_state)
         return ENOMEM;
-    ArmedScopeGuard fpu_guard([fpu_state]() { kfree_aligned(fpu_state); });
 
     auto kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, {}, Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
     if (!kernel_stack_region)
@@ -53,18 +51,17 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
     if (!block_timer)
         return ENOMEM;
 
-    auto thread = adopt_ref_if_nonnull(new (nothrow) Thread(move(process), kernel_stack_region.release_nonnull(), block_timer.release_nonnull(), fpu_state));
+    auto thread = adopt_ref_if_nonnull(new (nothrow) Thread(move(process), kernel_stack_region.release_nonnull(), block_timer.release_nonnull(), fpu_state.release_nonnull()));
     if (!thread)
         return ENOMEM;
-    fpu_guard.disarm();
 
     return thread.release_nonnull();
 }
 
-Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, FPUState* fpu_state)
+Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, NonnullOwnPtr<FPUState> fpu_state)
     : m_process(move(process))
     , m_kernel_stack_region(move(kernel_stack_region))
-    , m_fpu_state(fpu_state)
+    , m_fpu_state(move(fpu_state))
     , m_name(m_process->name())
     , m_block_timer(block_timer)
     , m_global_procfs_inode_index(ProcFSComponentRegistry::the().allocate_inode_index())
@@ -533,7 +530,6 @@ void Thread::finalize()
     if (m_dump_backtrace_on_finalization)
         dbgln("{}", backtrace());
 
-    kfree_aligned(m_fpu_state);
     drop_thread_count(false);
 }
 

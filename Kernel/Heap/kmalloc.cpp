@@ -301,6 +301,16 @@ size_t kmalloc_good_size(size_t size)
     return size;
 }
 
+[[gnu::malloc, gnu::alloc_size(1), gnu::alloc_align(2)]] static void* kmalloc_aligned_cxx(size_t size, size_t alignment)
+{
+    VERIFY(alignment <= 4096);
+    void* ptr = kmalloc(size + alignment + sizeof(ptrdiff_t));
+    size_t max_addr = (size_t)ptr + alignment;
+    void* aligned_ptr = (void*)(max_addr - (max_addr % alignment));
+    ((ptrdiff_t*)aligned_ptr)[-1] = (ptrdiff_t)((u8*)aligned_ptr - (u8*)ptr);
+    return aligned_ptr;
+}
+
 void* operator new(size_t size)
 {
     void* ptr = kmalloc(size);
@@ -311,6 +321,18 @@ void* operator new(size_t size)
 void* operator new(size_t size, const std::nothrow_t&) noexcept
 {
     return kmalloc(size);
+}
+
+void* operator new(size_t size, std::align_val_t al)
+{
+    void* ptr = kmalloc_aligned_cxx(size, (size_t)al);
+    VERIFY(ptr);
+    return ptr;
+}
+
+void* operator new(size_t size, std::align_val_t al, const std::nothrow_t&) noexcept
+{
+    return kmalloc_aligned_cxx(size, (size_t)al);
 }
 
 void* operator new[](size_t size)
@@ -334,6 +356,11 @@ void operator delete(void*) noexcept
 void operator delete(void* ptr, size_t size) noexcept
 {
     return kfree_sized(ptr, size);
+}
+
+void operator delete(void* ptr, size_t, std::align_val_t) noexcept
+{
+    return kfree_aligned(ptr);
 }
 
 void operator delete[](void*) noexcept
