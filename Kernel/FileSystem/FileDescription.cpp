@@ -157,6 +157,20 @@ KResultOr<off_t> FileDescription::seek(off_t offset, int whence)
     return m_current_offset;
 }
 
+KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, u64 offset, size_t count)
+{
+    if (Checked<u64>::addition_would_overflow(offset, count))
+        return EOVERFLOW;
+    return m_file->read(*this, offset, buffer, count);
+}
+
+KResultOr<size_t> FileDescription::write(u64 offset, UserOrKernelBuffer const& data, size_t data_size)
+{
+    if (Checked<u64>::addition_would_overflow(offset, data_size))
+        return EOVERFLOW;
+    return m_file->write(*this, offset, data, data_size);
+}
+
 KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count)
 {
     Locker locker(m_lock);
