@@ -114,6 +114,18 @@ void Game::draw_cards()
     update();
 }
 
+void Game::ensure_top_card_is_visible(NonnullRefPtr<CardStack> stack)
+{
+    if (stack->is_empty())
+        return;
+
+    auto& top_card = stack->peek();
+    if (top_card.is_upside_down()) {
+        top_card.set_upside_down(false);
+        update(top_card.rect());
+    }
+}
+
 void Game::detect_full_stacks()
 {
     auto& completed_stack = stack(Completed);
@@ -142,6 +154,8 @@ void Game::detect_full_stacks()
                 for (size_t j = 0; j < Card::card_count; j++) {
                     completed_stack.push(current_pile.pop());
                 }
+
+                ensure_top_card_is_visible(current_pile);
 
                 update_score(101);
             }
@@ -300,6 +314,8 @@ void Game::mouseup_event(GUI::MouseEvent& event)
                     update_score(-1);
 
                     detect_full_stacks();
+
+                    ensure_top_card_is_visible(*m_focused_stack);
 
                     rebound = false;
                     break;
