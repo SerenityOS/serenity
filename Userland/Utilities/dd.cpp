@@ -39,8 +39,8 @@ static String split_at_equals(const char* argument)
 {
     String string_value(argument);
 
-    auto values = string_value.split('=');
-    if (values.size() != 2) {
+    auto values = string_value.split_limit('=', 2);
+    if (values.size() < 2) {
         warnln("Unable to parse: {}", argument);
         return {};
     } else {
