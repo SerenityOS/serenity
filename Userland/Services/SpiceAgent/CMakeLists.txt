@@ -11,3 +11,4 @@ set(SOURCES
 
 serenity_bin(SpiceAgent)
 target_link_libraries(SpiceAgent LibGfx LibCore LibIPC)
+add_dependencies(SpiceAgent Clipboard)
