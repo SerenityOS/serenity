@@ -190,37 +190,6 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
 
-    if (m_new_game_animation) {
-        if (m_new_game_animation_delay < new_game_animation_delay) {
-            ++m_new_game_animation_delay;
-        } else {
-            m_new_game_animation_delay = 0;
-            auto& current_pile = stack(piles.at(m_new_game_animation_pile));
-
-            // for first 4 piles, draw 6 cards
-            // for last 6 piles, draw 5 cards
-            size_t cards_to_draw = m_new_game_animation_pile < 4 ? 6 : 5;
-
-            if (current_pile.count() < (cards_to_draw - 1)) {
-                auto card = m_new_deck.take_last();
-                card->set_upside_down(true);
-                current_pile.push(card);
-            } else {
-                current_pile.push(m_new_deck.take_last());
-                ++m_new_game_animation_pile;
-            }
-
-            if (m_new_game_animation_pile == piles.size()) {
-                VERIFY(m_new_deck.size() == 50);
-                while (!m_new_deck.is_empty())
-                    stack(Stock).push(m_new_deck.take_last());
-                m_new_game_animation = false;
-                m_waiting_for_new_game = true;
-                stop_timer();
-            }
-        }
-    }
-
     if (!m_focused_cards.is_empty()) {
         for (auto& focused_card : m_focused_cards)
             focused_card.clear(painter, s_background_color);
@@ -355,7 +324,41 @@ void Game::mousemove_event(GUI::MouseEvent& event)
 void Game::timer_event(Core::TimerEvent&)
 {
     if (m_new_game_animation) {
-        update();
+        if (m_new_game_animation_delay < new_game_animation_delay) {
+            ++m_new_game_animation_delay;
+        } else {
+            m_new_game_animation_delay = 0;
+            auto& current_pile = stack(piles.at(m_new_game_animation_pile));
+
+            // for first 4 piles, draw 6 cards
+            // for last 6 piles, draw 5 cards
+            size_t cards_to_draw = m_new_game_animation_pile < 4 ? 6 : 5;
+
+            if (current_pile.count() < (cards_to_draw - 1)) {
+                auto card = m_new_deck.take_last();
+                card->set_upside_down(true);
+                current_pile.push(card);
+            } else {
+                current_pile.push(m_new_deck.take_last());
+                ++m_new_game_animation_pile;
+            }
+
+            update(current_pile.bounding_box());
+
+            if (m_new_game_animation_pile == piles.size()) {
+                VERIFY(m_new_deck.size() == 50);
+
+                auto& stock_pile = stack(Stock);
+                while (!m_new_deck.is_empty())
+                    stock_pile.push(m_new_deck.take_last());
+
+                update(stock_pile.bounding_box());
+
+                m_new_game_animation = false;
+                m_waiting_for_new_game = true;
+                stop_timer();
+            }
+        }
     }
 }
 
