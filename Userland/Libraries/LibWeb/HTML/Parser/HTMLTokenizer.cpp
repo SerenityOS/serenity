@@ -1910,6 +1910,8 @@ _StartOfFunction:
                 {
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                     m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    // NOTE: The spec doesn't mention this, but it seems that m_current_token (an end tag) is just dropped in this case.
+                    m_current_builder.clear();
                     for (auto code_point : m_temporary_buffer)
                         m_queued_tokens.enqueue(HTMLToken::make_character(code_point));
                     RECONSUME_IN(RCDATA);
@@ -2023,6 +2025,8 @@ _StartOfFunction:
                 {
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                     m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    // NOTE: The spec doesn't mention this, but it seems that m_current_token (an end tag) is just dropped in this case.
+                    m_current_builder.clear();
                     for (auto code_point : m_temporary_buffer)
                         m_queued_tokens.enqueue(HTMLToken::make_character(code_point));
                     RECONSUME_IN(RAWTEXT);
@@ -2192,6 +2196,8 @@ _StartOfFunction:
 
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                     m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    // NOTE: The spec doesn't mention this, but it seems that m_current_token (an end tag) is just dropped in this case.
+                    m_current_builder.clear();
                     for (auto code_point : m_temporary_buffer) {
                         m_queued_tokens.enqueue(HTMLToken::make_character(code_point));
                     }
@@ -2205,6 +2211,8 @@ _StartOfFunction:
 
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                     m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    // NOTE: The spec doesn't mention this, but it seems that m_current_token (an end tag) is just dropped in this case.
+                    m_current_builder.clear();
                     for (auto code_point : m_temporary_buffer) {
                         m_queued_tokens.enqueue(HTMLToken::make_character(code_point));
                     }
@@ -2218,6 +2226,8 @@ _StartOfFunction:
 
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                     m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    // NOTE: The spec doesn't mention this, but it seems that m_current_token (an end tag) is just dropped in this case.
+                    m_current_builder.clear();
                     for (auto code_point : m_temporary_buffer) {
                         m_queued_tokens.enqueue(HTMLToken::make_character(code_point));
                     }
@@ -2239,6 +2249,8 @@ _StartOfFunction:
                 {
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                     m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    // NOTE: The spec doesn't mention this, but it seems that m_current_token (an end tag) is just dropped in this case.
+                    m_current_builder.clear();
                     for (auto code_point : m_temporary_buffer) {
                         m_queued_tokens.enqueue(HTMLToken::make_character(code_point));
                     }
@@ -2519,6 +2531,8 @@ _StartOfFunction:
                         SWITCH_TO(BeforeAttributeName);
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                     m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    // NOTE: The spec doesn't mention this, but it seems that m_current_token (an end tag) is just dropped in this case.
+                    m_current_builder.clear();
                     for (auto code_point : m_temporary_buffer)
                         m_queued_tokens.enqueue(HTMLToken::make_character(code_point));
                     RECONSUME_IN(ScriptData);
@@ -2530,6 +2544,8 @@ _StartOfFunction:
                         SWITCH_TO(SelfClosingStartTag);
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                     m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    // NOTE: The spec doesn't mention this, but it seems that m_current_token (an end tag) is just dropped in this case.
+                    m_current_builder.clear();
                     for (auto code_point : m_temporary_buffer)
                         m_queued_tokens.enqueue(HTMLToken::make_character(code_point));
                     RECONSUME_IN(ScriptData);
@@ -2541,6 +2557,8 @@ _StartOfFunction:
                         SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                     m_queued_tokens.enqueue(HTMLToken::make_character('<'));
                     m_queued_tokens.enqueue(HTMLToken::make_character('/'));
+                    // NOTE: The spec doesn't mention this, but it seems that m_current_token (an end tag) is just dropped in this case.
+                    m_current_builder.clear();
                     for (auto code_point : m_temporary_buffer)
                         m_queued_tokens.enqueue(HTMLToken::make_character(code_point));
                     RECONSUME_IN(ScriptData);
