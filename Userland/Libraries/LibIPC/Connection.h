@@ -132,6 +132,8 @@ public:
 
     virtual void die() { }
 
+    bool is_open() const { return m_socket->is_open(); }
+
 protected:
     Core::LocalSocket& socket() { return *m_socket; }
 
