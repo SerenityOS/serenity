@@ -284,7 +284,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     create_new_token(HTMLToken::Type::Comment);
-                    m_current_token.m_start_position = nth_last_position(2);
+                    m_current_token.set_start_position({}, nth_last_position(2));
                     RECONSUME_IN(BogusComment);
                 }
                 ON_EOF
@@ -306,44 +306,44 @@ _StartOfFunction:
                 ON_WHITESPACE
                 {
                     m_current_token.set_tag_name(consume_current_builder());
-                    m_current_token.m_end_position = nth_last_position(1);
+                    m_current_token.set_end_position({}, nth_last_position(1));
                     SWITCH_TO(BeforeAttributeName);
                 }
                 ON('/')
                 {
                     m_current_token.set_tag_name(consume_current_builder());
-                    m_current_token.m_end_position = nth_last_position(0);
+                    m_current_token.set_end_position({}, nth_last_position(0));
                     SWITCH_TO(SelfClosingStartTag);
                 }
                 ON('>')
                 {
                     m_current_token.set_tag_name(consume_current_builder());
-                    m_current_token.m_end_position = nth_last_position(1);
+                    m_current_token.set_end_position({}, nth_last_position(1));
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
                     m_current_builder.append_code_point(to_ascii_lowercase(current_input_character.value()));
-                    m_current_token.m_end_position = nth_last_position(0);
+                    m_current_token.set_end_position({}, nth_last_position(0));
                     continue;
                 }
                 ON(0)
                 {
                     log_parse_error();
                     m_current_builder.append_code_point(0xFFFD);
-                    m_current_token.m_end_position = nth_last_position(0);
+                    m_current_token.set_end_position({}, nth_last_position(0));
                     continue;
                 }
                 ON_EOF
                 {
                     log_parse_error();
-                    m_current_token.m_end_position = nth_last_position(0);
+                    m_current_token.set_end_position({}, nth_last_position(0));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
                 {
                     m_current_builder.append_code_point(current_input_character.value());
-                    m_current_token.m_end_position = nth_last_position(0);
+                    m_current_token.set_end_position({}, nth_last_position(0));
                     continue;
                 }
             }
@@ -382,7 +382,7 @@ _StartOfFunction:
                 DONT_CONSUME_NEXT_INPUT_CHARACTER;
                 if (consume_next_if_match("--")) {
                     create_new_token(HTMLToken::Type::Comment);
-                    m_current_token.m_start_position = nth_last_position(4);
+                    m_current_token.set_start_position({}, nth_last_position(4));
                     SWITCH_TO(CommentStart);
                 }
                 if (consume_next_if_match("DOCTYPE", CaseSensitivity::CaseInsensitive)) {
@@ -2679,7 +2679,7 @@ void HTMLTokenizer::create_new_token(HTMLToken::Type type)
         break;
     }
 
-    m_current_token.m_start_position = nth_last_position(offset);
+    m_current_token.set_start_position({}, nth_last_position(offset));
 }
 
 HTMLTokenizer::HTMLTokenizer(StringView const& input, String const& encoding)
@@ -2712,7 +2712,7 @@ void HTMLTokenizer::will_emit(HTMLToken& token)
 {
     if (token.is_start_tag())
         m_last_emitted_start_tag_name = token.tag_name();
-    token.m_end_position = nth_last_position(0);
+    token.set_end_position({}, nth_last_position(0));
 }
 
 bool HTMLTokenizer::current_end_tag_token_is_appropriate() const
