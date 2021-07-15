@@ -987,6 +987,7 @@ public:
 
     void exit(void* = nullptr);
 
+    void update_time_scheduled(u64, bool, bool);
     bool tick();
     void set_ticks_left(u32 t) { m_ticks_left = t; }
     u32 ticks_left() const { return m_ticks_left; }
@@ -1112,15 +1113,22 @@ public:
     static constexpr u32 default_kernel_stack_size = 65536;
     static constexpr u32 default_userspace_stack_size = 1 * MiB;
 
-    u32 ticks_in_user() const { return m_ticks_in_user; }
-    u32 ticks_in_kernel() const { return m_ticks_in_kernel; }
+    u64 time_in_user() const { return m_total_time_scheduled_user; }
+    u64 time_in_kernel() const { return m_total_time_scheduled_kernel; }
 
     enum class PreviousMode : u8 {
         KernelMode = 0,
         UserMode
     };
     PreviousMode previous_mode() const { return m_previous_mode; }
-    void set_previous_mode(PreviousMode mode) { m_previous_mode = mode; }
+    bool set_previous_mode(PreviousMode mode)
+    {
+        if (m_previous_mode == mode)
+            return false;
+        m_previous_mode = mode;
+        return true;
+    }
+
     TrapFrame*& current_trap() { return m_current_trap; }
 
     RecursiveSpinLock& get_lock() const { return m_lock; }
@@ -1270,6 +1278,9 @@ private:
     IntrusiveListNode<Thread> m_ready_queue_node;
     Atomic<u32> m_cpu { 0 };
     u32 m_cpu_affinity { THREAD_AFFINITY_DEFAULT };
+    Optional<u64> m_last_time_scheduled;
+    u64 m_total_time_scheduled_user { 0 };
+    u64 m_total_time_scheduled_kernel { 0 };
     u32 m_ticks_left { 0 };
     u32 m_times_scheduled { 0 };
     u32 m_ticks_in_user { 0 };
@@ -1302,7 +1313,7 @@ private:
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_is_active { false };
     bool m_is_joinable { true };
     bool m_handling_page_fault { false };
-    PreviousMode m_previous_mode { PreviousMode::UserMode };
+    PreviousMode m_previous_mode { PreviousMode::KernelMode }; // We always start out in kernel mode
 
     unsigned m_syscall_count { 0 };
     unsigned m_inode_faults { 0 };

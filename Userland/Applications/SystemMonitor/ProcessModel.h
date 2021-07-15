@@ -88,8 +88,8 @@ private:
         pid_t ppid;
         pid_t pgid;
         pid_t sid;
-        unsigned ticks_user;
-        unsigned ticks_kernel;
+        u64 time_user;
+        u64 time_kernel;
         bool kernel;
         String executable;
         String name;
@@ -129,7 +129,7 @@ private:
     Vector<int> m_tids;
     RefPtr<Core::File> m_proc_all;
     GUI::Icon m_kernel_process_icon;
-    u64 m_total_ticks_scheduled { 0 };
-    u64 m_total_ticks_scheduled_kernel { 0 };
-    bool m_has_total_ticks { false };
+    u64 m_total_time_scheduled { 0 };
+    u64 m_total_time_scheduled_kernel { 0 };
+    bool m_has_total_scheduled_time { false };
 };

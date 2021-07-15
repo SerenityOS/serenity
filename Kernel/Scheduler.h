@@ -24,7 +24,7 @@ extern WaitQueue* g_finalizer_wait_queue;
 extern Atomic<bool> g_finalizer_has_work;
 extern RecursiveSpinLock g_scheduler_lock;
 
-struct TotalTicksScheduled {
+struct TotalTimeScheduled {
     u64 total { 0 };
     u64 total_kernel { 0 };
 };
@@ -54,7 +54,9 @@ public:
     static void queue_runnable_thread(Thread&);
     static void dump_scheduler_state(bool = false);
     static bool is_initialized();
-    static TotalTicksScheduled get_total_ticks_scheduled();
+    static TotalTimeScheduled get_total_time_scheduled();
+    static void add_time_scheduled(u64, bool);
+    static u64 (*current_time)();
 };
 
 }

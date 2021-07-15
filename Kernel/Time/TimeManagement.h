@@ -80,6 +80,8 @@ private:
     void set_system_timer(HardwareTimerBase&);
     static void system_timer_tick(const RegisterState&);
 
+    static u64 scheduling_current_time(bool);
+
     // Variables between m_update1 and m_update2 are synchronized
     Atomic<u32> m_update1 { 0 };
     u32 m_ticks_this_second { 0 };
@@ -91,6 +93,7 @@ private:
 
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
     bool m_can_query_precise_time { false };
+    bool m_updating_time { false }; // may only be accessed from the BSP!
 
     RefPtr<HardwareTimerBase> m_system_timer;
     RefPtr<HardwareTimerBase> m_time_keeper_timer;
