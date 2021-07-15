@@ -55,9 +55,19 @@ void Lock::lock(Mode mode)
         if (m_holder != current_thread) {
             block(*current_thread, mode, lock, 1);
             did_block = true;
+            // If we blocked then m_mode should have been updated to what we requested
+            VERIFY(m_mode == mode);
         }
 
-        VERIFY(m_shared_holders.is_empty());
+        if (m_mode == Mode::Exclusive) {
+            VERIFY(m_holder == current_thread);
+            VERIFY(m_shared_holders.is_empty());
+        } else if (did_block && mode == Mode::Shared) {
+            // Only if we blocked trying to acquire a shared lock the lock would have been converted
+            VERIFY(!m_holder);
+            VERIFY(!m_shared_holders.is_empty());
+            VERIFY(m_shared_holders.find(current_thread) != m_shared_holders.end());
+        }
 
         if constexpr (LOCK_TRACE_DEBUG) {
             if (mode == Mode::Exclusive)
@@ -66,10 +76,12 @@ void Lock::lock(Mode mode)
                 dbgln("Lock::lock @ {} ({}): acquire exclusive (requested {}), currently exclusive, holding: {}", this, m_name, mode_to_string(mode), m_times_locked);
         }
 
-        VERIFY(mode == Mode::Exclusive || mode == Mode::Shared);
         VERIFY(m_times_locked > 0);
-        if (!did_block)
+        if (!did_block) {
+            // if we didn't block we must still be an exclusive lock
+            VERIFY(m_mode == Mode::Exclusive);
             m_times_locked++;
+        }
 
 #if LOCK_DEBUG
         current_thread->holding_lock(*this, 1, location);
@@ -78,29 +90,40 @@ void Lock::lock(Mode mode)
     }
     case Mode::Shared: {
         VERIFY(!m_holder);
-        if (mode == Mode::Exclusive && m_shared_holders.size() == 1) {
-            auto it = m_shared_holders.begin();
-            if (it->key == current_thread) {
-                it->value++;
-                m_times_locked++;
-                m_mode = Mode::Exclusive;
-                m_holder = current_thread;
-                m_shared_holders.clear();
-                dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}): acquire {}, converted shared to exclusive lock, locks held {}", this, m_name, mode_to_string(mode), m_times_locked);
-                return;
+        if (mode == Mode::Exclusive) {
+            if (m_shared_holders.size() == 1) {
+                auto it = m_shared_holders.begin();
+                if (it->key == current_thread) {
+                    it->value++;
+                    m_times_locked++;
+                    m_mode = Mode::Exclusive;
+                    m_holder = current_thread;
+                    m_shared_holders.clear();
+                    dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}): acquire {}, converted shared to exclusive lock, locks held {}", this, m_name, mode_to_string(mode), m_times_locked);
+                    return;
+                }
             }
-        }
-        if (mode != Mode::Shared) {
+
             block(*current_thread, mode, lock, 1);
             did_block = true;
+            VERIFY(m_mode == mode);
         }
 
         dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}): acquire {}, currently shared, locks held {}", this, m_name, mode_to_string(mode), m_times_locked);
 
         VERIFY(m_times_locked > 0);
-        if (did_block) {
-            VERIFY(m_shared_holders.contains(current_thread));
-        } else {
+        if (m_mode == Mode::Shared) {
+            VERIFY(!m_holder);
+            VERIFY(!did_block || m_shared_holders.contains(current_thread));
+        } else if (did_block) {
+            VERIFY(mode == Mode::Exclusive);
+            VERIFY(m_holder == current_thread);
+            VERIFY(m_shared_holders.is_empty());
+        }
+
+        if (!did_block) {
+            // if we didn't block we must still be a shared lock
+            VERIFY(m_mode == Mode::Shared);
             m_times_locked++;
             VERIFY(!m_shared_holders.is_empty());
             auto it = m_shared_holders.find(current_thread);
@@ -307,24 +330,47 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
     ScopedSpinLock lock(m_lock);
     switch (mode) {
     case Mode::Exclusive: {
-        if (m_mode != Mode::Unlocked) {
+        auto previous_mode = m_mode;
+        bool need_to_block = false;
+        if (m_mode == Mode::Exclusive && m_holder != current_thread)
+            need_to_block = true;
+        else if (m_mode == Mode::Shared && (m_shared_holders.size() != 1 || !m_shared_holders.contains(current_thread)))
+            need_to_block = true;
+        if (need_to_block) {
             block(*current_thread, Mode::Exclusive, lock, lock_count);
             did_block = true;
+            // If we blocked then m_mode should have been updated to what we requested
+            VERIFY(m_mode == Mode::Exclusive);
         }
 
-        dbgln_if(LOCK_RESTORE_DEBUG, "Lock::restore_lock @ {}: restoring {} with lock count {}, was unlocked", this, mode_to_string(mode), lock_count);
+        dbgln_if(LOCK_RESTORE_DEBUG, "Lock::restore_lock @ {}: restoring {} with lock count {}, was {}", this, mode_to_string(mode), lock_count, mode_to_string(previous_mode));
 
+        VERIFY(m_mode != Mode::Shared);
         VERIFY(m_shared_holders.is_empty());
         if (did_block) {
-            VERIFY(m_mode == Mode::Exclusive);
             VERIFY(m_times_locked > 0);
             VERIFY(m_holder == current_thread);
         } else {
-            m_mode = Mode::Exclusive;
-            VERIFY(m_times_locked == 0);
-            m_times_locked = lock_count;
-            VERIFY(!m_holder);
-            m_holder = current_thread;
+            if (m_mode == Mode::Unlocked) {
+                m_mode = Mode::Exclusive;
+                VERIFY(m_times_locked == 0);
+                m_times_locked = lock_count;
+                VERIFY(!m_holder);
+                m_holder = current_thread;
+            } else if (m_mode == Mode::Shared) {
+                // Upgrade the shared lock to an exclusive lock
+                VERIFY(!m_holder);
+                VERIFY(m_shared_holders.size() == 1);
+                VERIFY(m_shared_holders.contains(current_thread));
+                m_mode = Mode::Exclusive;
+                m_holder = current_thread;
+                m_shared_holders.clear();
+            } else {
+                VERIFY(m_mode == Mode::Exclusive);
+                VERIFY(m_holder == current_thread);
+                VERIFY(m_times_locked > 0);
+                m_times_locked += lock_count;
+            }
         }
 
 #if LOCK_DEBUG
@@ -334,9 +380,11 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
     }
     case Mode::Shared: {
         auto previous_mode = m_mode;
-        if (m_mode != Mode::Unlocked && m_mode != Mode::Shared) {
+        if (m_mode == Mode::Exclusive && m_holder != current_thread) {
             block(*current_thread, Mode::Shared, lock, lock_count);
             did_block = true;
+            // If we blocked then m_mode should have been updated to what we requested
+            VERIFY(m_mode == Mode::Shared);
         }
 
         dbgln_if(LOCK_RESTORE_DEBUG, "Lock::restore_lock @ {}: restoring {} with lock count {}, was {}",
@@ -344,15 +392,29 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
 
         VERIFY(!m_holder);
         if (did_block) {
-            VERIFY(m_mode == Mode::Shared);
             VERIFY(m_times_locked > 0);
             VERIFY(m_shared_holders.contains(current_thread));
         } else {
-            m_mode = Mode::Shared;
-            m_times_locked += lock_count;
-            auto set_result = m_shared_holders.set(current_thread, lock_count);
-            // There may be other shared lock holders already, but we should not have an entry yet
-            VERIFY(set_result == AK::HashSetResult::InsertedNewEntry);
+            if (m_mode == Mode::Unlocked) {
+                m_mode = Mode::Shared;
+                m_times_locked += lock_count;
+                auto set_result = m_shared_holders.set(current_thread, lock_count);
+                // There may be other shared lock holders already, but we should not have an entry yet
+                VERIFY(set_result == AK::HashSetResult::InsertedNewEntry);
+            } else if (m_mode == Mode::Shared) {
+                m_times_locked += lock_count;
+                if (auto it = m_shared_holders.find(current_thread); it != m_shared_holders.end()) {
+                    it->value += lock_count;
+                } else {
+                    auto set_result = m_shared_holders.set(current_thread, lock_count);
+                    // There may be other shared lock holders already, but we should not have an entry yet
+                    VERIFY(set_result == AK::HashSetResult::InsertedNewEntry);
+                }
+            } else {
+                VERIFY(m_mode == Mode::Exclusive);
+                VERIFY(m_holder == current_thread);
+                m_times_locked += lock_count;
+            }
         }
 
 #if LOCK_DEBUG

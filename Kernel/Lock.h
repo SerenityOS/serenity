@@ -41,7 +41,20 @@ public:
 
     void unlock();
     [[nodiscard]] Mode force_unlock_if_locked(u32&);
-    [[nodiscard]] bool is_locked() const { return m_mode != Mode::Unlocked; }
+    [[nodiscard]] bool is_locked() const
+    {
+        ScopedSpinLock lock(m_lock);
+        return m_mode != Mode::Unlocked;
+    }
+    [[nodiscard]] bool own_lock() const
+    {
+        ScopedSpinLock lock(m_lock);
+        if (m_mode == Mode::Exclusive)
+            return m_holder == Thread::current();
+        if (m_mode == Mode::Shared)
+            return m_shared_holders.contains(Thread::current());
+        return false;
+    }
 
     [[nodiscard]] const char* name() const { return m_name; }
 
@@ -89,7 +102,7 @@ private:
     BlockedThreadList m_blocked_threads_list_exclusive;
     BlockedThreadList m_blocked_threads_list_shared;
 
-    SpinLock<u8> m_lock;
+    mutable SpinLock<u8> m_lock;
 };
 
 class Locker {
