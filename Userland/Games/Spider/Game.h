@@ -67,6 +67,7 @@ private:
     void start_timer_if_necessary();
     void update_score(int delta);
     void draw_cards();
+    void ensure_top_card_is_visible(NonnullRefPtr<CardStack> stack);
     void detect_full_stacks();
     void detect_victory();
 
