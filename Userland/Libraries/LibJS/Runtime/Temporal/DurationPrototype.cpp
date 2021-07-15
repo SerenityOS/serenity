@@ -26,6 +26,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.Duration"), Attribute::Configurable);
 
     define_native_accessor(vm.names.years, years_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.months, months_getter, {}, Attribute::Configurable);
 }
 
 static Duration* typed_this(GlobalObject& global_object)
@@ -52,6 +53,19 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::years_getter)
 
     // 3. Return duration.[[Years]].
     return Value(duration->years());
+}
+
+// 7.3.4 get Temporal.Duration.prototype.months, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.months
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::months_getter)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return duration.[[Months]].
+    return Value(duration->months());
 }
 
 }
