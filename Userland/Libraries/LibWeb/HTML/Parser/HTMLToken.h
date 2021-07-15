@@ -19,8 +19,6 @@ namespace Web::HTML {
 class HTMLTokenizer;
 
 class HTMLToken {
-    friend class HTMLDocumentParser;
-    friend class HTMLTokenizer;
 
 public:
     enum class Type {
