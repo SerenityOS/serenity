@@ -101,17 +101,29 @@ void Game::draw_cards()
 
     update_score(-1);
 
+    auto original_stock_rect = stock_pile.bounding_box();
     for (auto pile : piles) {
         auto& current_pile = stack(pile);
 
         auto card = stock_pile.pop();
         card->set_upside_down(false);
         current_pile.push(card);
+
+        update(current_pile.bounding_box());
     }
+    update(original_stock_rect);
 
     detect_full_stacks();
+}
 
-    update();
+void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)
+{
+    for (auto& stack : m_stacks) {
+        if (intersecting_card.rect().intersects(stack.bounding_box()))
+            update(stack.bounding_box());
+    }
+
+    update(intersecting_card.rect());
 }
 
 void Game::ensure_top_card_is_visible(NonnullRefPtr<CardStack> stack)
@@ -151,9 +163,14 @@ void Game::detect_full_stacks()
                 break;
             } else if (card.value() == Card::card_count - 1) {
                 // we have a full set
+                auto original_current_rect = current_pile.bounding_box();
+
                 for (size_t j = 0; j < Card::card_count; j++) {
                     completed_stack.push(current_pile.pop());
                 }
+
+                update(original_current_rect);
+                update(completed_stack.bounding_box());
 
                 ensure_top_card_is_visible(current_pile);
 
@@ -276,11 +293,15 @@ void Game::mouseup_event(GUI::MouseEvent& event)
             if (stack.bounding_box().intersects(focused_card.rect())) {
                 if (stack.is_allowed_to_push(m_focused_cards.at(0), m_focused_cards.size(), Cards::CardStack::Any)) {
                     for (auto& to_intersect : m_focused_cards) {
+                        mark_intersecting_stacks_dirty(to_intersect);
                         stack.push(to_intersect);
                         m_focused_stack->pop();
                     }
 
                     update_score(-1);
+
+                    update(m_focused_stack->bounding_box());
+                    update(stack.bounding_box());
 
                     detect_full_stacks();
 
@@ -294,12 +315,14 @@ void Game::mouseup_event(GUI::MouseEvent& event)
     }
 
     if (rebound) {
+        for (auto& to_intersect : m_focused_cards)
+            mark_intersecting_stacks_dirty(to_intersect);
+
         m_focused_stack->rebound_cards();
+        update(m_focused_stack->bounding_box());
     }
 
     m_mouse_down = false;
-
-    update();
 }
 
 void Game::mousemove_event(GUI::MouseEvent& event)
@@ -314,9 +337,10 @@ void Game::mousemove_event(GUI::MouseEvent& event)
     int dy = click_location.dy_relative_to(m_mouse_down_location);
 
     for (auto& to_intersect : m_focused_cards) {
+        mark_intersecting_stacks_dirty(to_intersect);
         to_intersect.rect().translate_by(dx, dy);
+        update(to_intersect.rect());
     }
-    update();
 
     m_mouse_down_location = click_location;
 }
