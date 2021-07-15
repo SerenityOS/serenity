@@ -52,9 +52,15 @@ String HTMLToken::to_string() const
         builder.append("} }");
     }
 
-    if (type() == HTMLToken::Type::Comment || type() == HTMLToken::Type::Character) {
+    if (is_comment()) {
         builder.append(" { data: '");
-        builder.append(m_comment_or_character.data);
+        builder.append(comment());
+        builder.append("' }");
+    }
+
+    if (is_character()) {
+        builder.append(" { data: '");
+        builder.append_code_point(code_point());
         builder.append("' }");
     }
 
