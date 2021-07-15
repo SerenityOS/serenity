@@ -116,10 +116,11 @@ BlockBasedFileSystem::~BlockBasedFileSystem()
 
 KResult BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
 {
-    Locker locker(m_lock);
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_block {}, size={}", index, count);
+
+    Locker locker(m_cache_lock);
 
     if (!allow_cache) {
         flush_specific_block_if_needed(index);
@@ -148,7 +149,6 @@ KResult BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBu
 
 bool BlockBasedFileSystem::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
 {
-    Locker locker(m_lock);
     auto base_offset = index.value() * m_logical_block_size;
     auto nread = file_description().read(buffer, base_offset, m_logical_block_size);
     VERIFY(!nread.is_error());
@@ -158,7 +158,6 @@ bool BlockBasedFileSystem::raw_read(BlockIndex index, UserOrKernelBuffer& buffer
 
 bool BlockBasedFileSystem::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
 {
-    Locker locker(m_lock);
     auto base_offset = index.value() * m_logical_block_size;
     auto nwritten = file_description().write(base_offset, buffer, m_logical_block_size);
     VERIFY(!nwritten.is_error());
@@ -168,7 +167,6 @@ bool BlockBasedFileSystem::raw_write(BlockIndex index, const UserOrKernelBuffer&
 
 bool BlockBasedFileSystem::raw_read_blocks(BlockIndex index, size_t count, UserOrKernelBuffer& buffer)
 {
-    Locker locker(m_lock);
     auto current = buffer;
     for (auto block = index.value(); block < (index.value() + count); block++) {
         if (!raw_read(BlockIndex { block }, current))
@@ -180,7 +178,6 @@ bool BlockBasedFileSystem::raw_read_blocks(BlockIndex index, size_t count, UserO
 
 bool BlockBasedFileSystem::raw_write_blocks(BlockIndex index, size_t count, const UserOrKernelBuffer& buffer)
 {
-    Locker locker(m_lock);
     auto current = buffer;
     for (auto block = index.value(); block < (index.value() + count); block++) {
         if (!raw_write(block, current))
@@ -192,7 +189,6 @@ bool BlockBasedFileSystem::raw_write_blocks(BlockIndex index, size_t count, cons
 
 KResult BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)
 {
-    Locker locker(m_lock);
     VERIFY(m_logical_block_size);
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_blocks {}, count={}", index, count);
     for (unsigned i = 0; i < count; ++i) {
@@ -205,10 +201,11 @@ KResult BlockBasedFileSystem::write_blocks(BlockIndex index, unsigned count, con
 
 KResult BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* buffer, size_t count, size_t offset, bool allow_cache) const
 {
-    Locker locker(m_lock);
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::read_block {}", index);
+
+    Locker locker(m_cache_lock);
 
     if (!allow_cache) {
         const_cast<BlockBasedFileSystem*>(this)->flush_specific_block_if_needed(index);
@@ -237,7 +234,6 @@ KResult BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* b
 
 KResult BlockBasedFileSystem::read_blocks(BlockIndex index, unsigned count, UserOrKernelBuffer& buffer, bool allow_cache) const
 {
-    Locker locker(m_lock);
     VERIFY(m_logical_block_size);
     if (!count)
         return EINVAL;
@@ -256,7 +252,7 @@ KResult BlockBasedFileSystem::read_blocks(BlockIndex index, unsigned count, User
 
 void BlockBasedFileSystem::flush_specific_block_if_needed(BlockIndex index)
 {
-    Locker locker(m_lock);
+    Locker locker(m_cache_lock);
     if (!cache().is_dirty())
         return;
     Vector<CacheEntry*, 32> cleaned_entries;
@@ -276,7 +272,7 @@ void BlockBasedFileSystem::flush_specific_block_if_needed(BlockIndex index)
 
 void BlockBasedFileSystem::flush_writes_impl()
 {
-    Locker locker(m_lock);
+    Locker locker(m_cache_lock);
     if (!cache().is_dirty())
         return;
     u32 count = 0;

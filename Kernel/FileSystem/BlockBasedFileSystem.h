@@ -42,6 +42,7 @@ private:
     DiskCache& cache() const;
     void flush_specific_block_if_needed(BlockIndex index);
 
+    mutable Lock m_cache_lock;
     mutable OwnPtr<DiskCache> m_cache;
 };
 
