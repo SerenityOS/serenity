@@ -18,6 +18,12 @@ class Document;
 
 class Parser final : public RefCounted<Parser> {
 public:
+    enum class LinearizationResult {
+        Error,
+        NotLinearized,
+        Linearized,
+    };
+
     static Vector<Command> parse_graphics_commands(ReadonlyBytes const&);
 
     Parser(Badge<Document>, ReadonlyBytes const&);
@@ -83,7 +89,7 @@ private:
     explicit Parser(ReadonlyBytes const&);
 
     bool parse_header();
-    bool initialize_linearization_dict();
+    LinearizationResult initialize_linearization_dict();
     bool initialize_linearized_xref_table();
     bool initialize_non_linearized_xref_table();
     bool initialize_hint_tables();
