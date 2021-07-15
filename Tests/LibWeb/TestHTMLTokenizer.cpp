@@ -14,13 +14,13 @@ using Token = Web::HTML::HTMLToken;
 
 #define BEGIN_ENUMERATION(tokens)          \
     auto current_token = (tokens).begin(); \
-    Optional<Token> last_token;
+    [[maybe_unused]] Token* last_token;
 
 #define END_ENUMERATION() \
     EXPECT(current_token.is_end());
 
-#define NEXT_TOKEN()             \
-    last_token = *current_token; \
+#define NEXT_TOKEN()              \
+    last_token = &*current_token; \
     ++current_token;
 
 #define EXPECT_START_TAG_TOKEN(_tag_name)                    \
@@ -56,11 +56,11 @@ using Token = Web::HTML::HTMLToken;
     NEXT_TOKEN();
 
 #define EXPECT_TAG_TOKEN_ATTRIBUTE(name, value) \
-    VERIFY(last_token.has_value());             \
+    VERIFY(last_token);                         \
     EXPECT_EQ(last_token->attribute(#name), #value);
 
 #define EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(count) \
-    VERIFY(last_token.has_value());             \
+    VERIFY(last_token);                         \
     EXPECT_EQ(last_token->attribute_count(), (size_t)(count));
 
 static Vector<Token> run_tokenizer(StringView const& input)
