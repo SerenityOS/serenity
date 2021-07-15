@@ -567,6 +567,29 @@ void Thread::finalize_dying_threads()
     }
 }
 
+void Thread::update_time_scheduled(u64 current_scheduler_time, bool is_kernel, bool no_longer_running)
+{
+    if (m_last_time_scheduled.has_value()) {
+        u64 delta;
+        if (current_scheduler_time >= m_last_time_scheduled.value())
+            delta = current_scheduler_time - m_last_time_scheduled.value();
+        else
+            delta = m_last_time_scheduled.value() - current_scheduler_time; // the unlikely event that the clock wrapped
+        if (delta != 0) {
+            // Add it to the global total *before* updating the thread's value!
+            Scheduler::add_time_scheduled(delta, is_kernel);
+
+            auto& total_time = is_kernel ? m_total_time_scheduled_kernel : m_total_time_scheduled_user;
+            ScopedSpinLock scheduler_lock(g_scheduler_lock);
+            total_time += delta;
+        }
+    }
+    if (no_longer_running)
+        m_last_time_scheduled = {};
+    else
+        m_last_time_scheduled = current_scheduler_time;
+}
+
 bool Thread::tick()
 {
     if (previous_mode() == PreviousMode::KernelMode) {

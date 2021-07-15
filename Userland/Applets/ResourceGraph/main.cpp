@@ -129,15 +129,15 @@ private:
             return false;
 
         if (m_last_total_sum.has_value())
-            scheduled_diff = all_processes->total_ticks_scheduled - m_last_total_sum.value();
-        m_last_total_sum = all_processes->total_ticks_scheduled;
+            scheduled_diff = all_processes->total_time_scheduled - m_last_total_sum.value();
+        m_last_total_sum = all_processes->total_time_scheduled;
 
         for (auto& it : all_processes.value().processes) {
             for (auto& jt : it.threads) {
                 if (it.pid == 0)
-                    idle += jt.ticks_user + jt.ticks_kernel;
+                    idle += jt.time_user + jt.time_kernel;
                 else
-                    busy += jt.ticks_user + jt.ticks_kernel;
+                    busy += jt.time_user + jt.time_kernel;
             }
         }
         return true;
