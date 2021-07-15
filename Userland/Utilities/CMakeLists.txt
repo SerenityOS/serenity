@@ -53,6 +53,7 @@ endforeach()
 
 target_link_libraries(aplay LibAudio)
 target_link_libraries(avol LibAudio)
+target_link_libraries(test-bencode LibTorrent)
 target_link_libraries(bt LibSymbolication)
 target_link_libraries(checksum LibCrypto)
 target_link_libraries(chres LibGUI)
