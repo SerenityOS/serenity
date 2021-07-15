@@ -14,6 +14,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
@@ -276,6 +277,29 @@ int main(int argc, char* argv[])
     help_menu.add_action(GUI::CommonActions::make_about_action("Help", app_icon, window));
 
     window->set_menubar(move(menubar));
+
+    auto context_menu = GUI::Menu::construct();
+    context_menu->add_action(*go_back_action);
+    context_menu->add_action(*go_forward_action);
+    context_menu->add_action(*go_home_action);
+    context_menu->add_separator();
+
+    RefPtr<GUI::Action> copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
+        auto selected_text = page_view.selected_text();
+        if (!selected_text.is_empty())
+            GUI::Clipboard::the().set_plain_text(selected_text);
+    });
+    context_menu->add_action(*copy_action);
+
+    RefPtr<GUI::Action> select_all_function = GUI::CommonActions::make_select_all_action([&](auto&) {
+        page_view.select_all();
+    });
+    context_menu->add_action(*select_all_function);
+
+    page_view.on_context_menu_request = [&](auto& screen_position) {
+        copy_action->set_enabled(!page_view.selected_text().is_empty());
+        context_menu->popup(screen_position);
+    };
 
     if (start_page) {
         URL url = URL::create_with_url_or_path(start_page);
