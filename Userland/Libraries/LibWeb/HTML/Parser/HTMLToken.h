@@ -9,9 +9,10 @@
 
 #include <AK/FlyString.h>
 #include <AK/Function.h>
+#include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <AK/Utf8View.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 
 namespace Web::HTML {
@@ -22,7 +23,7 @@ class HTMLToken {
     AK_MAKE_NONCOPYABLE(HTMLToken);
 
 public:
-    enum class Type {
+    enum class Type : u8 {
         Invalid,
         DOCTYPE,
         StartTag,
@@ -78,10 +79,24 @@ public:
     HTMLToken(Type type)
         : m_type(type)
     {
+        switch (m_type) {
+        case Type::Character:
+            m_data.set(0u);
+            break;
+        case Type::DOCTYPE:
+            m_data.set(OwnPtr<DoctypeData> {});
+            break;
+        case Type::StartTag:
+        case Type::EndTag:
+            m_data.set(OwnPtr<Vector<Attribute>>());
+            break;
+        default:
+            break;
+        }
     }
 
-    HTMLToken(HTMLToken&& other) = default;
-    HTMLToken& operator=(HTMLToken&& other) = default;
+    HTMLToken(HTMLToken&&) = default;
+    HTMLToken& operator=(HTMLToken&&) = default;
 
     bool is_doctype() const { return m_type == Type::DOCTYPE; }
     bool is_start_tag() const { return m_type == Type::StartTag; }
@@ -93,9 +108,7 @@ public:
     u32 code_point() const
     {
         VERIFY(is_character());
-        Utf8View view(m_comment_or_character.data);
-        VERIFY(view.length() == 1);
-        return *view.begin();
+        return m_data.get<u32>();
     }
 
     bool is_parser_whitespace() const
@@ -118,101 +131,105 @@ public:
     void set_code_point(u32 code_point)
     {
         VERIFY(is_character());
-        StringBuilder builder;
-        builder.append_code_point(code_point);
-        m_comment_or_character.data = builder.to_string();
+        m_data.get<u32>() = code_point;
     }
 
     String const& comment() const
     {
         VERIFY(is_comment());
-        return m_comment_or_character.data;
+        return m_string_data;
     }
 
     void set_comment(String comment)
     {
         VERIFY(is_comment());
-        m_comment_or_character.data = move(comment);
+        m_string_data = move(comment);
     }
 
     String const& tag_name() const
     {
         VERIFY(is_start_tag() || is_end_tag());
-        return m_tag.tag_name;
+        return m_string_data;
     }
 
     void set_tag_name(String name)
     {
         VERIFY(is_start_tag() || is_end_tag());
-        m_tag.tag_name = move(name);
+        m_string_data = move(name);
     }
 
     bool is_self_closing() const
     {
         VERIFY(is_start_tag() || is_end_tag());
-        return m_tag.self_closing;
+        return m_tag_self_closing;
     }
 
     void set_self_closing(bool self_closing)
     {
         VERIFY(is_start_tag() || is_end_tag());
-        m_tag.self_closing = self_closing;
+        m_tag_self_closing = self_closing;
     }
 
     bool has_acknowledged_self_closing_flag() const
     {
         VERIFY(is_self_closing());
-        return m_tag.self_closing_acknowledged;
+        return m_tag_self_closing_acknowledged;
     }
 
     void acknowledge_self_closing_flag_if_set()
     {
         if (is_self_closing())
-            m_tag.self_closing_acknowledged = true;
+            m_tag_self_closing_acknowledged = true;
     }
 
     bool has_attributes() const
     {
         VERIFY(is_start_tag() || is_end_tag());
-        return !m_tag.attributes.is_empty();
+        auto* ptr = tag_attributes();
+        return ptr && !ptr->is_empty();
     }
 
     size_t attribute_count() const
     {
         VERIFY(is_start_tag() || is_end_tag());
-        return m_tag.attributes.size();
+        if (auto* ptr = tag_attributes())
+            return ptr->size();
+        return 0;
     }
 
     void add_attribute(Attribute attribute)
     {
         VERIFY(is_start_tag() || is_end_tag());
-        m_tag.attributes.append(move(attribute));
+        ensure_tag_attributes().append(move(attribute));
     }
 
     Attribute const& last_attribute() const
     {
         VERIFY(is_start_tag() || is_end_tag());
-        VERIFY(!m_tag.attributes.is_empty());
-        return m_tag.attributes.last();
+        VERIFY(has_attributes());
+        return tag_attributes()->last();
     }
 
     Attribute& last_attribute()
     {
         VERIFY(is_start_tag() || is_end_tag());
-        VERIFY(!m_tag.attributes.is_empty());
-        return m_tag.attributes.last();
+        VERIFY(has_attributes());
+        return tag_attributes()->last();
     }
 
     void drop_attributes()
     {
         VERIFY(is_start_tag() || is_end_tag());
-        m_tag.attributes.clear();
+        m_data.get<OwnPtr<Vector<Attribute>>>().clear();
     }
 
     void for_each_attribute(Function<IterationDecision(Attribute const&)> callback) const
     {
         VERIFY(is_start_tag() || is_end_tag());
-        for (auto& attribute : m_tag.attributes) {
+        auto* ptr = tag_attributes();
+        if (!ptr)
+            return;
+        for (auto& attribute : *ptr) {
             if (callback(attribute) == IterationDecision::Break)
                 break;
         }
@@ -221,7 +238,10 @@ public:
     void for_each_attribute(Function<IterationDecision(Attribute&)> callback)
     {
         VERIFY(is_start_tag() || is_end_tag());
-        for (auto& attribute : m_tag.attributes) {
+        auto* ptr = tag_attributes();
+        if (!ptr)
+            return;
+        for (auto& attribute : *ptr) {
             if (callback(attribute) == IterationDecision::Break)
                 break;
         }
@@ -230,7 +250,11 @@ public:
     StringView attribute(FlyString const& attribute_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
-        for (auto& attribute : m_tag.attributes) {
+
+        auto* ptr = tag_attributes();
+        if (!ptr)
+            return {};
+        for (auto& attribute : *ptr) {
             if (attribute_name == attribute.local_name)
                 return attribute.value;
         }
@@ -275,13 +299,18 @@ public:
     DoctypeData const& doctype_data() const
     {
         VERIFY(is_doctype());
-        return m_doctype;
+        auto* ptr = m_data.get<OwnPtr<DoctypeData>>().ptr();
+        VERIFY(ptr);
+        return *ptr;
     }
 
     DoctypeData& doctype_data()
     {
         VERIFY(is_doctype());
-        return m_doctype;
+        auto& ptr = m_data.get<OwnPtr<DoctypeData>>();
+        if (!ptr)
+            ptr = make<DoctypeData>();
+        return *ptr;
     }
 
     Type type() const { return m_type; }
@@ -295,25 +324,35 @@ public:
     void set_end_position(Badge<HTMLTokenizer>, Position end_position) { m_end_position = end_position; }
 
 private:
+    Vector<Attribute> const* tag_attributes() const
+    {
+        return m_data.get<OwnPtr<Vector<Attribute>>>().ptr();
+    }
+
+    Vector<Attribute>* tag_attributes()
+    {
+        return m_data.get<OwnPtr<Vector<Attribute>>>().ptr();
+    }
+
+    Vector<Attribute>& ensure_tag_attributes()
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        auto& ptr = m_data.get<OwnPtr<Vector<Attribute>>>();
+        if (!ptr)
+            ptr = make<Vector<Attribute>>();
+        return *ptr;
+    }
+
     Type m_type { Type::Invalid };
 
-    // Type::DOCTYPE
-    DoctypeData m_doctype;
+    // Type::StartTag and Type::EndTag
+    bool m_tag_self_closing { false };
+    bool m_tag_self_closing_acknowledged { false };
 
-    // Type::StartTag
-    // Type::EndTag
-    struct {
-        String tag_name;
-        bool self_closing { false };
-        bool self_closing_acknowledged { false };
-        Vector<Attribute> attributes;
-    } m_tag;
+    // Type::Comment (comment data), Type::StartTag and Type::EndTag (tag name)
+    String m_string_data;
 
-    // Type::Comment
-    // Type::Character
-    struct {
-        String data;
-    } m_comment_or_character;
+    Variant<Empty, u32, OwnPtr<DoctypeData>, OwnPtr<Vector<Attribute>>> m_data { Empty {} };
 
     Position m_start_position;
     Position m_end_position;
