@@ -95,7 +95,7 @@ bool Parser::parse_header()
         return false;
 
     char minor_ver = m_reader.read();
-    if (minor_ver < '0' || major_ver > '7')
+    if (minor_ver < '0' || minor_ver > '7')
         return false;
     consume_eol();
 
