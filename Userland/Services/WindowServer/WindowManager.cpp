@@ -1527,6 +1527,13 @@ void WindowManager::process_key_event(KeyEvent& event)
         return;
     }
 
+    if (event.type() == Event::KeyDown && event.key() == Key_F4 && event.modifiers() & Mod_Alt) {
+        if (auto window = m_current_window_stack->active_window(); window) {
+            window->request_close();
+            return;
+        }
+    }
+
     // FIXME: This is fragile, the kernel should send a signal when we switch back to the WindowManager's framebuffer
     if (event.type() == Event::KeyDown && (event.modifiers() & Mod_Alt) && (event.key() == Key_ExclamationPoint || event.key() == Key_1)) {
         Compositor::the().invalidate_screen();
