@@ -1192,7 +1192,7 @@ public:
     String backtrace();
 
 private:
-    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>, FPUState*);
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>, NonnullOwnPtr<FPUState>);
 
     IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
@@ -1318,7 +1318,7 @@ private:
     unsigned m_ipv4_socket_read_bytes { 0 };
     unsigned m_ipv4_socket_write_bytes { 0 };
 
-    FPUState* m_fpu_state { nullptr };
+    OwnPtr<FPUState> m_fpu_state;
     State m_state { Invalid };
     String m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };

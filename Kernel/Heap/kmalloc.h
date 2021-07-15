@@ -34,6 +34,8 @@ struct nothrow_t {
 };
 
 extern const nothrow_t nothrow;
+
+enum class align_val_t : size_t {};
 };
 
 void kmalloc_init();
@@ -59,10 +61,16 @@ inline void* operator new[](size_t, void* p) { return p; }
 
 [[nodiscard]] void* operator new(size_t size);
 [[nodiscard]] void* operator new(size_t size, const std::nothrow_t&) noexcept;
+[[nodiscard]] void* operator new(size_t size, std::align_val_t);
+[[nodiscard]] void* operator new(size_t size, std::align_val_t, const std::nothrow_t&) noexcept;
+
 void operator delete(void* ptr) noexcept;
 void operator delete(void* ptr, size_t) noexcept;
+void operator delete(void* ptr, size_t, std::align_val_t) noexcept;
+
 [[nodiscard]] void* operator new[](size_t size);
 [[nodiscard]] void* operator new[](size_t size, const std::nothrow_t&) noexcept;
+
 void operator delete[](void* ptrs) noexcept;
 void operator delete[](void* ptr, size_t) noexcept;
 
