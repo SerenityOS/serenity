@@ -989,6 +989,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         }
 
         if (!is_reacting_to_tree_view_selection_change) {
+            directories_model->update();
             auto new_index = directories_model->index(new_path, GUI::FileSystemModel::Column::Name);
             if (new_index.is_valid()) {
                 tree_view.expand_all_parents_of(new_index);
