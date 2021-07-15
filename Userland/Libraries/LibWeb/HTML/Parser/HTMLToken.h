@@ -62,18 +62,23 @@ public:
 
     static HTMLToken make_character(u32 code_point)
     {
-        HTMLToken token;
-        token.m_type = Type::Character;
+        HTMLToken token { Type::Character };
         token.set_code_point(code_point);
         return token;
     }
 
     static HTMLToken make_start_tag(FlyString const& tag_name)
     {
-        HTMLToken token;
-        token.m_type = Type::StartTag;
+        HTMLToken token { Type::StartTag };
         token.set_tag_name(tag_name);
         return token;
+    }
+
+    HTMLToken() = default;
+
+    HTMLToken(Type type)
+        : m_type(type)
+    {
     }
 
     bool is_doctype() const { return m_type == Type::DOCTYPE; }

@@ -2665,8 +2665,7 @@ bool HTMLTokenizer::consume_next_if_match(StringView const& string, CaseSensitiv
 
 void HTMLTokenizer::create_new_token(HTMLToken::Type type)
 {
-    m_current_token = {};
-    m_current_token.m_type = type;
+    m_current_token = { type };
     size_t offset = 0;
     switch (type) {
     case HTMLToken::Type::StartTag:
