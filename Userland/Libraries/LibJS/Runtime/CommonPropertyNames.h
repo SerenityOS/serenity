@@ -353,6 +353,7 @@ namespace JS {
     P(valueOf)                               \
     P(values)                                \
     P(warn)                                  \
+    P(weeks)                                 \
     P(writable)                              \
     P(years)
 
