@@ -1623,12 +1623,18 @@ RefPtr<Inode> Ext2FSInode::lookup(StringView name)
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): Looking up '{}'", identifier(), name);
     if (populate_lookup_cache().is_error())
         return {};
-    Locker locker(m_lock);
-    auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key == name; });
-    if (it != m_lookup_cache.end())
-        return fs().get_inode({ fsid(), (*it).value });
-    dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): '{}' not found", identifier(), name);
-    return {};
+
+    InodeIndex inode_index;
+    {
+        Locker locker(m_lock);
+        auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key == name; });
+        if (it == m_lookup_cache.end()) {
+            dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): '{}' not found", identifier(), name);
+            return {};
+        }
+        inode_index = it->value;
+    }
+    return fs().get_inode({ fsid(), inode_index });
 }
 
 void Ext2FSInode::one_ref_left()
