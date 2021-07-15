@@ -16,7 +16,7 @@ namespace Core {
 
 HashMap<uid_t, String> ProcessStatisticsReader::s_usernames;
 
-Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPtr<Core::File>& proc_all_file)
+Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all(RefPtr<Core::File>& proc_all_file)
 {
     if (proc_all_file) {
         if (!proc_all_file->seek(0, Core::SeekMode::SetPosition)) {
@@ -31,13 +31,15 @@ Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPt
         }
     }
 
-    Vector<Core::ProcessStatistics> processes;
+    AllProcessesStatistics all_processes_statistics;
 
     auto file_contents = proc_all_file->read_all();
     auto json = JsonValue::from_string(file_contents);
     if (!json.has_value())
         return {};
-    json.value().as_array().for_each([&](auto& value) {
+
+    auto& json_obj = json.value().as_object();
+    json_obj.get("processes").as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
         Core::ProcessStatistics process;
 
@@ -73,8 +75,8 @@ Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPt
             thread.times_scheduled = thread_object.get("times_scheduled").to_u32();
             thread.name = thread_object.get("name").to_string();
             thread.state = thread_object.get("state").to_string();
-            thread.ticks_user = thread_object.get("ticks_user").to_u32();
-            thread.ticks_kernel = thread_object.get("ticks_kernel").to_u32();
+            thread.time_user = thread_object.get("time_user").to_u64();
+            thread.time_kernel = thread_object.get("time_kernel").to_u64();
             thread.cpu = thread_object.get("cpu").to_u32();
             thread.priority = thread_object.get("priority").to_u32();
             thread.syscall_count = thread_object.get("syscall_count").to_u32();
@@ -92,13 +94,15 @@ Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPt
 
         // and synthetic data last
         process.username = username_from_uid(process.uid);
-        processes.append(move(process));
+        all_processes_statistics.processes.append(move(process));
     });
 
-    return processes;
+    all_processes_statistics.total_time_scheduled = json_obj.get("total_time").to_u64();
+    all_processes_statistics.total_time_scheduled_kernel = json_obj.get("total_time_kernel").to_u64();
+    return all_processes_statistics;
 }
 
-Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all()
+Optional<AllProcessesStatistics> ProcessStatisticsReader::get_all()
 {
     RefPtr<Core::File> proc_all_file;
     return get_all(proc_all_file);

@@ -406,10 +406,10 @@ private:
     ProcFSOverallProcesses();
     virtual bool output(KBufferBuilder& builder) override
     {
-        JsonArraySerializer array { builder };
+        JsonObjectSerializer<KBufferBuilder> json { builder };
 
         // Keep this in sync with CProcessStatistics.
-        auto build_process = [&](const Process& process) {
+        auto build_process = [&](JsonArraySerializer<KBufferBuilder>& array, const Process& process) {
             auto process_object = array.add_object();
 
             if (process.is_user_process()) {
@@ -469,8 +469,8 @@ private:
                 thread_object.add("tid", thread.tid().value());
                 thread_object.add("name", thread.name());
                 thread_object.add("times_scheduled", thread.times_scheduled());
-                thread_object.add("ticks_user", thread.ticks_in_user());
-                thread_object.add("ticks_kernel", thread.ticks_in_kernel());
+                thread_object.add("time_user", thread.time_in_user());
+                thread_object.add("time_kernel", thread.time_in_kernel());
                 thread_object.add("state", thread.state_string());
                 thread_object.add("cpu", thread.cpu());
                 thread_object.add("priority", thread.priority());
@@ -488,11 +488,19 @@ private:
         };
 
         ScopedSpinLock lock(g_scheduler_lock);
-        auto processes = Process::all_processes();
-        build_process(*Scheduler::colonel());
-        for (auto& process : processes)
-            build_process(process);
-        array.finish();
+        {
+            {
+                auto array = json.add_array("processes");
+                auto processes = Process::all_processes();
+                build_process(array, *Scheduler::colonel());
+                for (auto& process : processes)
+                    build_process(array, process);
+            }
+
+            auto total_time_scheduled = Scheduler::get_total_time_scheduled();
+            json.add("total_time", total_time_scheduled.total);
+            json.add("total_time_kernel", total_time_scheduled.total_kernel);
+        }
         return true;
     }
 };

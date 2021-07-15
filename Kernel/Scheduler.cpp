@@ -53,6 +53,14 @@ static SpinLock<u8> g_ready_queues_lock;
 static u32 g_ready_queues_mask;
 static constexpr u32 g_ready_queue_buckets = sizeof(g_ready_queues_mask) * 8;
 READONLY_AFTER_INIT static ThreadReadyQueue* g_ready_queues; // g_ready_queue_buckets entries
+
+static TotalTimeScheduled g_total_time_scheduled;
+static SpinLock<u8> g_total_time_scheduled_lock;
+
+// The Scheduler::current_time function provides a current time for scheduling purposes,
+// which may not necessarily relate to wall time
+u64 (*Scheduler::current_time)();
+
 static void dump_thread_list();
 
 static inline u32 thread_priority_to_priority_index(u32 thread_priority)
@@ -330,6 +338,13 @@ bool Scheduler::context_switch(Thread* thread)
 void Scheduler::enter_current(Thread& prev_thread, bool is_first)
 {
     VERIFY(g_scheduler_lock.own_lock());
+
+    // We already recorded the scheduled time when entering the trap, so this merely accounts for the kernel time since then
+    auto scheduler_time = Scheduler::current_time();
+    prev_thread.update_time_scheduled(scheduler_time, true, true);
+    auto* current_thread = Thread::current();
+    current_thread->update_time_scheduled(scheduler_time, true, false);
+
     prev_thread.set_active(false);
     if (prev_thread.state() == Thread::Dying) {
         // If the thread we switched from is marked as dying, then notify
@@ -339,7 +354,6 @@ void Scheduler::enter_current(Thread& prev_thread, bool is_first)
     } else if (!is_first) {
         // Check if we have any signals we should deliver (even if we don't
         // end up switching to another thread).
-        auto current_thread = Thread::current();
         if (!current_thread->is_in_block() && current_thread->previous_mode() != Thread::PreviousMode::KernelMode) {
             ScopedSpinLock lock(current_thread->get_lock());
             if (current_thread->state() == Thread::Running && current_thread->pending_signals_for_state()) {
@@ -388,9 +402,29 @@ Process* Scheduler::colonel()
     return s_colonel_process;
 }
 
+static u64 current_time_tsc()
+{
+    return read_tsc();
+}
+
+static u64 current_time_monotonic()
+{
+    // We always need a precise timestamp here, we cannot rely on a coarse timestamp
+    return (u64)TimeManagement::the().monotonic_time(TimePrecision::Precise).to_nanoseconds();
+}
+
 UNMAP_AFTER_INIT void Scheduler::initialize()
 {
     VERIFY(Processor::is_initialized()); // sanity check
+
+    // Figure out a good scheduling time source
+    if (Processor::current().has_feature(CPUFeature::TSC)) {
+        // TODO: only use if TSC is running at a constant frequency?
+        current_time = current_time_tsc;
+    } else {
+        // TODO: Using HPET is rather slow, can we use any other time source that may be faster?
+        current_time = current_time_monotonic;
+    }
 
     RefPtr<Thread> idle_thread;
     g_finalizer_wait_queue = new WaitQueue;
@@ -425,6 +459,14 @@ UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
     return idle_thread;
 }
 
+void Scheduler::add_time_scheduled(u64 time_to_add, bool is_kernel)
+{
+    ScopedSpinLock lock(g_total_time_scheduled_lock);
+    g_total_time_scheduled.total += time_to_add;
+    if (is_kernel)
+        g_total_time_scheduled.total_kernel += time_to_add;
+}
+
 void Scheduler::timer_tick(const RegisterState& regs)
 {
     VERIFY_INTERRUPTS_DISABLED();
@@ -443,16 +485,21 @@ void Scheduler::timer_tick(const RegisterState& regs)
         return; // TODO: This prevents scheduling on other CPUs!
 #endif
 
+    if (current_thread->process().is_kernel_process()) {
+        // Because the previous mode when entering/exiting kernel threads never changes
+        // we never update the time scheduled. So we need to update it manually on the
+        // timer interrupt
+        current_thread->update_time_scheduled(current_time(), true, false);
+    }
+
     if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
+        ScopedSpinLock scheduler_lock(g_scheduler_lock);
         dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::id(), *current_thread);
-        {
-            ScopedSpinLock scheduler_lock(g_scheduler_lock);
-            current_thread->set_state(Thread::Dying);
-        }
-        VERIFY(!Processor::current().in_critical());
+        current_thread->set_state(Thread::Dying);
         Processor::current().invoke_scheduler_async();
         return;
     }
+
     if (current_thread->tick())
         return;
 
@@ -535,6 +582,12 @@ bool Scheduler::is_initialized()
 {
     // The scheduler is initialized iff the idle thread exists
     return Processor::idle_thread() != nullptr;
+}
+
+TotalTimeScheduled Scheduler::get_total_time_scheduled()
+{
+    ScopedSpinLock lock(g_total_time_scheduled_lock);
+    return g_total_time_scheduled;
 }
 
 void dump_thread_list()
