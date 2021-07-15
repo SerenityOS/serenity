@@ -25,6 +25,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(days_getter);
     JS_DECLARE_NATIVE_FUNCTION(hours_getter);
     JS_DECLARE_NATIVE_FUNCTION(minutes_getter);
+    JS_DECLARE_NATIVE_FUNCTION(seconds_getter);
 };
 
 }

@@ -271,6 +271,7 @@ namespace JS {
     P(revoke)                                \
     P(round)                                 \
     P(seal)                                  \
+    P(seconds)                               \
     P(set)                                   \
     P(setBigInt64)                           \
     P(setBigUint64)                          \
