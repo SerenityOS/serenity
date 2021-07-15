@@ -1189,6 +1189,8 @@ public:
 
     InodeIndex global_procfs_inode_index() const { return m_global_procfs_inode_index; }
 
+    String backtrace();
+
 private:
     Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>, FPUState*);
 
@@ -1255,7 +1257,6 @@ private:
 
     LockMode unlock_process_if_locked(u32&);
     void relock_process(LockMode, u32);
-    String backtrace();
     void reset_fpu_state();
 
     mutable RecursiveSpinLock m_lock;

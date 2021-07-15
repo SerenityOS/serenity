@@ -53,7 +53,7 @@ static SpinLock<u8> g_ready_queues_lock;
 static u32 g_ready_queues_mask;
 static constexpr u32 g_ready_queue_buckets = sizeof(g_ready_queues_mask) * 8;
 READONLY_AFTER_INIT static ThreadReadyQueue* g_ready_queues; // g_ready_queue_buckets entries
-static void dump_thread_list();
+static void dump_thread_list(bool = false);
 
 static inline u32 thread_priority_to_priority_index(u32 thread_priority)
 {
@@ -526,9 +526,9 @@ void Scheduler::idle_loop(void*)
     }
 }
 
-void Scheduler::dump_scheduler_state()
+void Scheduler::dump_scheduler_state(bool with_stack_traces)
 {
-    dump_thread_list();
+    dump_thread_list(with_stack_traces);
 }
 
 bool Scheduler::is_initialized()
@@ -537,7 +537,7 @@ bool Scheduler::is_initialized()
     return Processor::idle_thread() != nullptr;
 }
 
-void dump_thread_list()
+void dump_thread_list(bool with_stack_traces)
 {
     dbgln("Scheduler thread list for processor {}:", Processor::id());
 
@@ -580,6 +580,8 @@ void dump_thread_list()
                 thread.times_scheduled());
             break;
         }
+        if (with_stack_traces)
+            dbgln("{}", thread.backtrace());
     });
 }
 
