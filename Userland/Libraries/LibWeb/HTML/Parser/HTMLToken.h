@@ -304,7 +304,7 @@ public:
         return *ptr;
     }
 
-    DoctypeData& doctype_data()
+    DoctypeData& ensure_doctype_data()
     {
         VERIFY(is_doctype());
         auto& ptr = m_data.get<OwnPtr<DoctypeData>>();
