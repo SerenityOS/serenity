@@ -78,6 +78,7 @@
 
 #define JS_ENUMERATE_TEMPORAL_OBJECTS                                          \
     __JS_ENUMERATE(Calendar, calendar, CalendarPrototype, CalendarConstructor) \
+    __JS_ENUMERATE(Duration, duration, DurationPrototype, DurationConstructor) \
     __JS_ENUMERATE(Instant, instant, InstantPrototype, InstantConstructor)     \
     __JS_ENUMERATE(TimeZone, time_zone, TimeZonePrototype, TimeZoneConstructor)
 
