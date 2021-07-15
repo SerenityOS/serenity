@@ -16,6 +16,8 @@
 
 namespace Web::HTML {
 
+class HTMLTokenizer;
+
 class HTMLToken {
     friend class HTMLDocumentParser;
     friend class HTMLTokenizer;
@@ -281,6 +283,9 @@ public:
 
     Position const& start_position() const { return m_start_position; }
     Position const& end_position() const { return m_end_position; }
+
+    void set_start_position(Badge<HTMLTokenizer>, Position start_position) { m_start_position = start_position; }
+    void set_end_position(Badge<HTMLTokenizer>, Position end_position) { m_end_position = end_position; }
 
 private:
     Type m_type { Type::Invalid };
