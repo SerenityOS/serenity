@@ -1030,7 +1030,7 @@ int main(int argc, char** argv)
                 case CompleteProperty:
                     // something came after the property access, reset to initial
                 case Initial:
-                    if (js_token.is_identifier_name()) {
+                    if (js_token.type() == JS::TokenType::Identifier) {
                         // ...<name>...
                         mode = CompleteVariable;
                         variable_name = js_token.value();
