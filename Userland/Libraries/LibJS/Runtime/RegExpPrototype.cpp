@@ -292,7 +292,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
 }
 
 // 22.2.5.2.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
-static Value regexp_exec(GlobalObject& global_object, Object& regexp_object, String const& string)
+Value regexp_exec(GlobalObject& global_object, Object& regexp_object, String const& string)
 {
     auto& vm = global_object.vm();
 
