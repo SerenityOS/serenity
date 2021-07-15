@@ -51,6 +51,10 @@ public:
     KResultOr<size_t> write(const UserOrKernelBuffer& data, size_t);
     KResult stat(::stat&);
 
+    // NOTE: These ignore the current offset of this file description.
+    KResultOr<size_t> read(UserOrKernelBuffer&, u64 offset, size_t);
+    KResultOr<size_t> write(u64 offset, UserOrKernelBuffer const&, size_t);
+
     KResult chmod(mode_t);
 
     bool can_read() const;
