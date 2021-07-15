@@ -29,6 +29,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.months, months_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.weeks, weeks_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.days, days_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.hours, hours_getter, {}, Attribute::Configurable);
 }
 
 static Duration* typed_this(GlobalObject& global_object)
@@ -94,6 +95,19 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::days_getter)
 
     // 3. Return duration.[[Days]].
     return Value(duration->days());
+}
+
+// 7.3.7 get Temporal.Duration.prototype.hours, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.hours
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::hours_getter)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return duration.[[Hours]].
+    return Value(duration->hours());
 }
 
 }

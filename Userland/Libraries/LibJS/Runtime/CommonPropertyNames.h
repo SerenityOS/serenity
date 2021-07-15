@@ -197,6 +197,7 @@ namespace JS {
     P(hasIndices)                            \
     P(hasOwn)                                \
     P(hasOwnProperty)                        \
+    P(hours)                                 \
     P(hypot)                                 \
     P(id)                                    \
     P(ignoreCase)                            \
