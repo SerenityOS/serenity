@@ -799,6 +799,9 @@ bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
         case KeyCode::Key_W:
             m_editor->delete_previous_word();
             return true;
+        case KeyCode::Key_H:
+            m_editor->delete_previous_char();
+            return true;
         default:
             break;
         }
