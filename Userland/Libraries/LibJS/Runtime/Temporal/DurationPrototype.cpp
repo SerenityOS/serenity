@@ -34,6 +34,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.seconds, seconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.milliseconds, milliseconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.microseconds, microseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.nanoseconds, nanoseconds_getter, {}, Attribute::Configurable);
 }
 
 static Duration* typed_this(GlobalObject& global_object)
@@ -164,6 +165,19 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::microseconds_getter)
 
     // 3. Return duration.[[Microseconds]].
     return Value(duration->microseconds());
+}
+
+// 7.3.12 get Temporal.Duration.prototype.nanoseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.nanoseconds
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::nanoseconds_getter)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return duration.[[Nanoseconds]].
+    return Value(duration->nanoseconds());
 }
 
 }
