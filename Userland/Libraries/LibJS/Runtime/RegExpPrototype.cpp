@@ -5,7 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Function.h>
+#include <AK/Utf8View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
@@ -87,7 +89,34 @@ static String escape_regexp_pattern(const RegExpObject& regexp_object)
     return pattern;
 }
 
-static void increment_last_index(GlobalObject& global_object, Object& regexp_object)
+// 22.2.5.2.3 AdvanceStringIndex ( S, index, unicode ), https://tc39.es/ecma262/#sec-advancestringindex
+size_t advance_string_index(String const& string, size_t index, bool unicode)
+{
+    if (!unicode)
+        return index + 1;
+
+    Utf8View view(string);
+
+    if (index + 1 >= view.length())
+        return index + 1;
+
+    auto it = view.begin();
+    for (size_t i = 0; i < index; ++i)
+        ++it;
+
+    // See https://tc39.es/ecma262/#sec-codepointat for details on [[CodeUnitCount]].
+    auto code_unit_count = 1;
+    if (is_unicode_surrogate(*it)) {
+        ++it;
+
+        if ((it != view.end()) && is_unicode_surrogate(*it))
+            code_unit_count = 2;
+    }
+
+    return index + code_unit_count;
+}
+
+static void increment_last_index(GlobalObject& global_object, Object& regexp_object, String const& string, bool unicode)
 {
     auto& vm = global_object.vm();
 
@@ -98,10 +127,7 @@ static void increment_last_index(GlobalObject& global_object, Object& regexp_obj
     if (vm.exception())
         return;
 
-    // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
-    //        Once implemented, step (8a) of the @@replace algorithm must also be implemented.
-    ++last_index;
-
+    last_index = advance_string_index(string, last_index, unicode);
     regexp_object.set(vm.names.lastIndex, Value(last_index), true);
 }
 
@@ -194,6 +220,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     auto& regex = regexp_object.regex();
     bool global = regex.options().has_flag_set(ECMAScriptFlags::Global);
     bool sticky = regex.options().has_flag_set(ECMAScriptFlags::Sticky);
+    bool unicode = regex.options().has_flag_set(ECMAScriptFlags::Unicode);
     bool has_indices = regexp_object.flags().find('d').has_value();
 
     if (!global && !sticky)
@@ -226,8 +253,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
             return js_null();
         }
 
-        // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
-        ++last_index;
+        last_index = advance_string_index(string, last_index, unicode);
     }
 
     auto& match = result.matches[0];
@@ -472,6 +498,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     if (vm.exception())
         return {};
 
+    auto unicode_value = regexp_object->get(vm.names.unicode);
+    if (vm.exception())
+        return {};
+    bool unicode = unicode_value.to_boolean();
+
     size_t n = 0;
 
     while (true) {
@@ -500,7 +531,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
             return {};
 
         if (match_str.is_empty()) {
-            increment_last_index(global_object, *regexp_object);
+            increment_last_index(global_object, *regexp_object, s, unicode);
             if (vm.exception())
                 return {};
         }
@@ -586,7 +617,14 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         return {};
 
     bool global = global_value.to_boolean();
+    bool unicode = false;
+
     if (global) {
+        auto unicode_value = regexp_object->get(vm.names.unicode);
+        if (vm.exception())
+            return {};
+        unicode = unicode_value.to_boolean();
+
         regexp_object->set(vm.names.lastIndex, Value(0), true);
         if (vm.exception())
             return {};
@@ -617,7 +655,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             return {};
 
         if (match_str.is_empty()) {
-            increment_last_index(global_object, *regexp_object);
+            increment_last_index(global_object, *regexp_object, string, unicode);
             if (vm.exception())
                 return {};
         }
@@ -793,6 +831,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto flags = flags_object.to_string(global_object);
     if (vm.exception())
         return {};
+
+    bool unicode = flags.find('u').has_value();
     auto new_flags = flags.find('y').has_value() ? move(flags) : String::formatted("{}y", flags);
 
     MarkedValueList arguments(vm.heap());
@@ -839,8 +879,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         if (vm.exception())
             return {};
         if (result.is_null()) {
-            // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
-            ++next_search_from;
+            next_search_from = advance_string_index(string, next_search_from, unicode);
             continue;
         }
 
@@ -853,8 +892,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         last_index = min(last_index, string.length());
 
         if (last_index == last_match_end) {
-            // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
-            ++next_search_from;
+            next_search_from = advance_string_index(string, next_search_from, unicode);
             continue;
         }
 

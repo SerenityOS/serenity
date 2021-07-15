@@ -75,8 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
         if (vm.exception())
             return {};
 
-        // FIXME: Implement AdvanceStringIndex to take Unicode code points into account - https://tc39.es/ecma262/#sec-advancestringindex
-        ++last_index;
+        last_index = advance_string_index(iterator.string(), last_index, iterator.unicode());
 
         iterator.regexp_object().set(vm.names.lastIndex, Value(last_index), true);
         if (vm.exception())

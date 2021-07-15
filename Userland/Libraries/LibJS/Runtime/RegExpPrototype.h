@@ -11,6 +11,7 @@
 namespace JS {
 
 Value regexp_exec(GlobalObject& global_object, Object& regexp_object, String const& string);
+size_t advance_string_index(String const& string, size_t index, bool unicode);
 
 class RegExpPrototype final : public Object {
     JS_OBJECT(RegExpPrototype, Object);
