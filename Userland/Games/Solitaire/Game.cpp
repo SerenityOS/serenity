@@ -61,7 +61,35 @@ void Game::timer_event(Core::TimerEvent&)
         if (m_animation.tick())
             update(m_animation.card()->rect());
     } else if (m_new_game_animation) {
-        update();
+        if (m_new_game_animation_delay < new_game_animation_delay) {
+            ++m_new_game_animation_delay;
+        } else {
+            m_new_game_animation_delay = 0;
+            auto& current_pile = stack(piles.at(m_new_game_animation_pile));
+
+            if (current_pile.count() < m_new_game_animation_pile) {
+                auto card = m_new_deck.take_last();
+                card->set_upside_down(true);
+                current_pile.push(card);
+            } else {
+                current_pile.push(m_new_deck.take_last());
+                ++m_new_game_animation_pile;
+            }
+
+            update(current_pile.bounding_box());
+
+            if (m_new_game_animation_pile == piles.size()) {
+                auto& stock_pile = stack(Stock);
+                while (!m_new_deck.is_empty())
+                    stock_pile.push(m_new_deck.take_last());
+
+                update(stock_pile.bounding_box());
+
+                m_new_game_animation = false;
+                m_waiting_for_new_game = true;
+                stop_timer();
+            }
+        }
     }
 }
 
@@ -521,32 +549,6 @@ void Game::paint_event(GUI::PaintEvent& event)
     if (m_game_over_animation) {
         m_animation.draw(painter);
         return;
-    }
-
-    if (m_new_game_animation) {
-        if (m_new_game_animation_delay < new_game_animation_delay) {
-            ++m_new_game_animation_delay;
-        } else {
-            m_new_game_animation_delay = 0;
-            auto& current_pile = stack(piles.at(m_new_game_animation_pile));
-
-            if (current_pile.count() < m_new_game_animation_pile) {
-                auto card = m_new_deck.take_last();
-                card->set_upside_down(true);
-                current_pile.push(card);
-            } else {
-                current_pile.push(m_new_deck.take_last());
-                ++m_new_game_animation_pile;
-            }
-
-            if (m_new_game_animation_pile == piles.size()) {
-                while (!m_new_deck.is_empty())
-                    stack(Stock).push(m_new_deck.take_last());
-                m_new_game_animation = false;
-                m_waiting_for_new_game = true;
-                stop_timer();
-            }
-        }
     }
 
     if (!m_focused_cards.is_empty()) {
