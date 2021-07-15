@@ -35,6 +35,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.milliseconds, milliseconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.microseconds, microseconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.nanoseconds, nanoseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.sign, sign_getter, {}, Attribute::Configurable);
 }
 
 static Duration* typed_this(GlobalObject& global_object)
@@ -178,6 +179,19 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::nanoseconds_getter)
 
     // 3. Return duration.[[Nanoseconds]].
     return Value(duration->nanoseconds());
+}
+
+// 7.3.13 get Temporal.Duration.prototype.sign, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.sign
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::sign_getter)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ! DurationSign(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
+    return Value(duration_sign(duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds()));
 }
 
 }
