@@ -236,6 +236,7 @@ namespace JS {
     P(max)                                   \
     P(message)                               \
     P(min)                                   \
+    P(months)                                \
     P(multiline)                             \
     P(name)                                  \
     P(next)                                  \
