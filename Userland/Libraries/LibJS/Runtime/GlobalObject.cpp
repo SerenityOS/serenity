@@ -59,6 +59,7 @@
 #include <LibJS/Runtime/ReflectObject.h>
 #include <LibJS/Runtime/RegExpConstructor.h>
 #include <LibJS/Runtime/RegExpPrototype.h>
+#include <LibJS/Runtime/RegExpStringIteratorPrototype.h>
 #include <LibJS/Runtime/SetConstructor.h>
 #include <LibJS/Runtime/SetIteratorPrototype.h>
 #include <LibJS/Runtime/SetPrototype.h>
