@@ -71,6 +71,7 @@ namespace JS {
     P(atanh)                                 \
     P(big)                                   \
     P(bind)                                  \
+    P(blank)                                 \
     P(blink)                                 \
     P(bold)                                  \
     P(buffer)                                \
