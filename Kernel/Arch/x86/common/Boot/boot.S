@@ -519,20 +519,32 @@ pae_supported:
     movl %eax, %cr0
 
     /* set up stack */
-    mov $stack_top, %esp
+    mov $(stack_top - KERNEL_BASE), %esp
     and $-16, %esp
-
-    /* jump into C++ land */
-    addl $KERNEL_BASE, %ebx
-    movl %ebx, multiboot_info_ptr
 
 #if ARCH(X86_64)
     /* Now we are in 32-bit compatibility mode, We still need to load a 64-bit GDT */
-    lgdt gdt64ptr
-    ljmpl $code64_sel, $1f
+    mov $(gdt64ptr - KERNEL_BASE), %eax
+    lgdt (%eax)
+    ljmpl $code64_sel, $(1f - KERNEL_BASE)
 
 .code64
 1:
+    movl %ebx, %ebx
+    movabs $KERNEL_BASE, %rax
+    addq %rax, %rbx
+    movabs $multiboot_info_ptr, %rax
+    movq %rbx, (%rax)
+
+    movabs $gdt64ptr, %rax
+    lgdt (%rax)
+    movabs $1f, %rax
+    jmp *%rax
+
+1:
+    movabs $KERNEL_BASE, %rax
+    addq %rax, %rsp
+
     mov $0, %ax
     mov %ax, %ss
     mov %ax, %ds
@@ -542,11 +554,17 @@ pae_supported:
 
     mov %cr3, %rax
     mov %rax, %cr3
+
 #else
+    addl $KERNEL_BASE, %ebx
+    movl %ebx, multiboot_info_ptr
+
     /* jmp to an address above the 3GB mark */
-    movl $1f,%eax
+    movl $1f, %eax
     jmp *%eax
 1:
+    add $KERNEL_BASE, %esp
+
     movl %cr3, %eax
     movl %eax, %cr3
 #endif
@@ -561,10 +579,12 @@ pae_supported:
     addl $8, %edi
     loop 1b
 
-    call init
 #if ARCH(X86_64)
+    movabs $init, %rax
+    call *%rax
     add $4, %rsp
 #else
+    call init
     add $4, %esp
 #endif
 
