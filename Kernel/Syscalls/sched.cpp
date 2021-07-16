@@ -11,7 +11,7 @@ namespace Kernel {
 KResultOr<FlatPtr> Process::sys$yield()
 {
     REQUIRE_PROMISE(stdio);
-    Thread::current()->yield_without_holding_big_lock();
+    Thread::current()->yield_and_release_relock_big_lock();
     return 0;
 }
 

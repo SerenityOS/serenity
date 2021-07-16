@@ -45,14 +45,18 @@ bool Parser::initialize()
     if (!parse_header())
         return {};
 
-    if (!initialize_linearization_dict())
+    const auto result = initialize_linearization_dict();
+    if (result == LinearizationResult::Error)
         return {};
+
+    if (result == LinearizationResult::NotLinearized)
+        return initialize_non_linearized_xref_table();
 
     bool is_linearized = m_linearization_dictionary.has_value();
     if (is_linearized) {
         // The file may have been linearized at one point, but could have been updated afterwards,
         // which means it is no longer a linearized PDF file.
-        is_linearized = is_linearized && m_linearization_dictionary.value().length_of_file == m_reader.bytes().size();
+        is_linearized = m_linearization_dictionary.value().length_of_file == m_reader.bytes().size();
 
         if (!is_linearized) {
             // FIXME: The file shouldn't be treated as linearized, yet the xref tables are still
@@ -95,7 +99,7 @@ bool Parser::parse_header()
         return false;
 
     char minor_ver = m_reader.read();
-    if (minor_ver < '0' || major_ver > '7')
+    if (minor_ver < '0' || minor_ver > '7')
         return false;
     consume_eol();
 
@@ -113,21 +117,24 @@ bool Parser::parse_header()
     return true;
 }
 
-bool Parser::initialize_linearization_dict()
+Parser::LinearizationResult Parser::initialize_linearization_dict()
 {
     // parse_header() is called immediately before this, so we are at the right location
     auto dict_value = m_document->resolve(parse_indirect_value());
     if (!dict_value || !dict_value.is_object())
-        return false;
+        return LinearizationResult::Error;
 
     auto dict_object = dict_value.as_object();
     if (!dict_object->is_dict())
-        return false;
+        return LinearizationResult::NotLinearized;
 
     auto dict = object_cast<DictObject>(dict_object);
 
+    if (!dict->contains(CommonNames::Linearized))
+        return LinearizationResult::NotLinearized;
+
     if (!dict->contains(CommonNames::L, CommonNames::H, CommonNames::O, CommonNames::E, CommonNames::N, CommonNames::T))
-        return true;
+        return LinearizationResult::Error;
 
     auto length_of_file = dict->get_value(CommonNames::L);
     auto hint_table = dict->get_value(CommonNames::H);
@@ -144,17 +151,17 @@ bool Parser::initialize_linearization_dict()
         || !number_of_pages.is_int_type<u16>()
         || !offset_of_main_xref_table.is_int_type<u32>()
         || (first_page && !first_page.is_int_type<u32>())) {
-        return true;
+        return LinearizationResult::Error;
     }
 
     auto hint_table_object = hint_table.as_object();
     if (!hint_table_object->is_array())
-        return true;
+        return LinearizationResult::Error;
 
     auto hint_table_array = object_cast<ArrayObject>(hint_table_object);
     auto hint_table_size = hint_table_array->size();
     if (hint_table_size != 2 && hint_table_size != 4)
-        return true;
+        return LinearizationResult::Error;
 
     auto primary_hint_stream_offset = hint_table_array->at(0);
     auto primary_hint_stream_length = hint_table_array->at(1);
@@ -170,7 +177,7 @@ bool Parser::initialize_linearization_dict()
         || !primary_hint_stream_length.is_int_type<u32>()
         || (overflow_hint_stream_offset && !overflow_hint_stream_offset.is_int_type<u32>())
         || (overflow_hint_stream_length && !overflow_hint_stream_length.is_int_type<u32>())) {
-        return true;
+        return LinearizationResult::Error;
     }
 
     m_linearization_dictionary = LinearizationDictionary {
@@ -186,7 +193,7 @@ bool Parser::initialize_linearization_dict()
         first_page ? first_page.as_int_type<u32>() : NumericLimits<u32>::max(),
     };
 
-    return true;
+    return LinearizationResult::Linearized;
 }
 
 bool Parser::initialize_linearized_xref_table()
@@ -1023,7 +1030,7 @@ RefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
     ReadonlyBytes bytes;
 
     auto maybe_length = dict->get(CommonNames::Length);
-    if (maybe_length.has_value()) {
+    if (maybe_length.has_value() && (!maybe_length->is_ref() || m_xref_table)) {
         // The PDF writer has kindly provided us with the direct length of the stream
         m_reader.save();
         auto length = m_document->resolve_to<int>(maybe_length.value());

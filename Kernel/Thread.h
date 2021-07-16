@@ -819,7 +819,7 @@ public:
         while (state() == Thread::Stopped) {
             lock.unlock();
             // We shouldn't be holding the big lock here
-            yield_while_not_holding_big_lock();
+            yield_assuming_not_holding_big_lock();
             lock.lock();
         }
     }
@@ -905,7 +905,7 @@ public:
             // Yield to the scheduler, and wait for us to resume unblocked.
             VERIFY(!g_scheduler_lock.own_lock());
             VERIFY(Processor::current().in_critical());
-            yield_while_not_holding_big_lock();
+            yield_assuming_not_holding_big_lock();
             VERIFY(Processor::current().in_critical());
 
             ScopedSpinLock block_lock2(m_block_lock);
@@ -1192,7 +1192,7 @@ public:
     String backtrace();
 
 private:
-    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>, FPUState*);
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>, NonnullOwnPtr<FPUState>);
 
     IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
@@ -1318,7 +1318,7 @@ private:
     unsigned m_ipv4_socket_read_bytes { 0 };
     unsigned m_ipv4_socket_write_bytes { 0 };
 
-    FPUState* m_fpu_state { nullptr };
+    OwnPtr<FPUState> m_fpu_state;
     State m_state { Invalid };
     String m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
@@ -1341,8 +1341,8 @@ private:
 
     bool m_is_profiling_suppressed { false };
 
-    void yield_without_holding_big_lock();
-    void yield_while_not_holding_big_lock();
+    void yield_and_release_relock_big_lock();
+    void yield_assuming_not_holding_big_lock();
     void drop_thread_count(bool);
 };
 

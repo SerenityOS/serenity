@@ -28,6 +28,8 @@ public:
     void set_done() { m_done = true; }
 
 private:
+    virtual void visit_edges(Cell::Visitor&) override;
+
     Object& m_regexp_object;
     String m_string;
     bool m_global { false };

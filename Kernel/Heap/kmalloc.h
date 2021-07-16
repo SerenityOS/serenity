@@ -34,6 +34,8 @@ struct nothrow_t {
 };
 
 extern const nothrow_t nothrow;
+
+enum class align_val_t : size_t {};
 };
 
 void kmalloc_init();
@@ -59,11 +61,18 @@ inline void* operator new[](size_t, void* p) { return p; }
 
 [[nodiscard]] void* operator new(size_t size);
 [[nodiscard]] void* operator new(size_t size, const std::nothrow_t&) noexcept;
-void operator delete(void* ptr) noexcept;
+[[nodiscard]] void* operator new(size_t size, std::align_val_t);
+[[nodiscard]] void* operator new(size_t size, std::align_val_t, const std::nothrow_t&) noexcept;
+
+void operator delete(void* ptr) noexcept DISALLOW("All deletes in the kernel should have a known size.");
 void operator delete(void* ptr, size_t) noexcept;
+void operator delete(void* ptr, std::align_val_t) noexcept DISALLOW("All deletes in the kernel should have a known size.");
+void operator delete(void* ptr, size_t, std::align_val_t) noexcept;
+
 [[nodiscard]] void* operator new[](size_t size);
 [[nodiscard]] void* operator new[](size_t size, const std::nothrow_t&) noexcept;
-void operator delete[](void* ptrs) noexcept;
+
+void operator delete[](void* ptrs) noexcept DISALLOW("All deletes in the kernel should have a known size.");
 void operator delete[](void* ptr, size_t) noexcept;
 
 [[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc(size_t);
