@@ -525,7 +525,13 @@ KResult VirtualFileSystem::rename(StringView old_path, StringView new_path, Cust
     if (old_parent_custody->is_readonly() || new_parent_custody->is_readonly())
         return EROFS;
 
+    auto old_basename = KLexicalPath::basename(old_path);
+    if (old_basename.is_empty() || old_basename == "."sv || old_basename == ".."sv)
+        return EINVAL;
+
     auto new_basename = KLexicalPath::basename(new_path);
+    if (new_basename.is_empty() || new_basename == "."sv || new_basename == ".."sv)
+        return EINVAL;
 
     if (!new_custody_or_error.is_error()) {
         auto& new_custody = *new_custody_or_error.value();
@@ -546,7 +552,7 @@ KResult VirtualFileSystem::rename(StringView old_path, StringView new_path, Cust
     if (auto result = new_parent_inode.add_child(old_inode, new_basename, old_inode.mode()); result.is_error())
         return result;
 
-    if (auto result = old_parent_inode.remove_child(KLexicalPath::basename(old_path)); result.is_error())
+    if (auto result = old_parent_inode.remove_child(old_basename); result.is_error())
         return result;
 
     return KSuccess;
