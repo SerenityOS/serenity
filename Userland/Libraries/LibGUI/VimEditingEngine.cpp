@@ -995,6 +995,7 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             }
             case (KeyCode::Key_P):
                 put_before();
+                break;
             default:
                 break;
             }
