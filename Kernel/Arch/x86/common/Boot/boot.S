@@ -34,7 +34,7 @@ boot_pd0_pt0:
 .skip 4096 * 4
 .global boot_pd3_pts
 boot_pd3_pts:
-.skip 4096 * 16
+.skip 4096 * (KERNEL_PD_OFFSET >> 21)
 .global boot_pd3_pt1023
 boot_pd3_pt1023:
 .skip 4096
@@ -65,33 +65,16 @@ pdpt
     2: n/a      (2-3GB)
     3: boot_pd3 (3-4GB)
 
-boot_pd0 : 512 pde's
+boot_pd0 : 512 PDEs
 
     0: boot_pd0_pt0 (0-2MB) (id 512 4KB pages)
 
-boot_pd3 : 512 pde's
+boot_pd3 : 512 PDEs
 
-    0: boot_pd3_pts[0] (3072-3074MB) (pseudo 512 4KB pages)
-    1: boot_pd3_pts[1] (3074-3076MB) (pseudo 512 4KB pages)
-    2: boot_pd3_pts[2] (3076-3078MB) (pseudo 512 4KB pages)
-    3: boot_pd3_pts[3] (3078-3080MB) (pseudo 512 4KB pages)
-    4: boot_pd3_pts[4] (3080-3082MB) (pseudo 512 4KB pages)
-    5: boot_pd3_pts[5] (3082-3084MB) (pseudo 512 4KB pages)
-    6: boot_pd3_pts[6] (3084-3086MB) (pseudo 512 4KB pages)
-    7: boot_pd3_pts[7] (3086-3088MB) (pseudo 512 4KB pages)
-    
-    8: boot_pd3_pts[8] (3088-3090MB) (pseudo 512 4KB pages)
-    9: boot_pd3_pts[9] (3090-3076MB) (pseudo 512 4KB pages)
-    10: boot_pd3_pts[10] (3092-3094MB) (pseudo 512 4KB pages)
-    11: boot_pd3_pts[11] (3094-3096MB) (pseudo 512 4KB pages)
-    12: boot_pd3_pts[12] (3096-3098MB) (pseudo 512 4KB pages)
-    13: boot_pd3_pts[13] (3098-3100MB) (pseudo 512 4KB pages)
-    14: boot_pd3_pts[14] (3100-3102MB) (pseudo 512 4KB pages)
-    15: boot_pd3_pts[15] (3102-3104MB) (pseudo 512 4KB pages)
+    boot_pd3_pts[*] (KERNEL_BASE to KERNEL_BASE + KERNEL_PD_OFFSET) (pseudo 512 4KB pages)
+    last entry: boot_pd3_pt1023 (4094-4096MB) (for page table mappings)
 
-    16: boot_pd3_pt1023 (4094-4096MB) (for page table mappings)
-
-the 9 page tables each contain 512 pte's that map individual 4KB pages
+the page tables each contain 512 PTEs that map individual 4KB pages
 
 */
 
@@ -445,7 +428,7 @@ pae_supported:
     orl $0x3, 0(%edi)
 
     /* add boot_pd3_pts to boot_pd3 */
-    movl $16, %ecx
+    movl $(KERNEL_PD_OFFSET >> 21), %ecx
     movl $(boot_pd3 - KERNEL_BASE), %edi
     movl $(boot_pd3_pts - KERNEL_BASE), %eax
 
@@ -470,8 +453,8 @@ pae_supported:
     addl $4096, %eax
     loop 1b
 
-    /* pseudo identity map the 3072-3104MB range */
-    movl $(512 * 16), %ecx
+    /* pseudo identity map the KERNEL_BASE to KERNEL_BASE + KERNEL_PD_OFFSET range */
+    movl $(512 * (KERNEL_PD_OFFSET >> 21)), %ecx
     movl $(boot_pd3_pts - KERNEL_BASE), %edi
     xorl %eax, %eax
 
