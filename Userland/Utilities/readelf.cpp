@@ -58,6 +58,8 @@ static const char* object_machine_type_to_string(ElfW(Half) type)
         return "Intel 80860";
     case EM_MIPS:
         return "MIPS R3000 Big-Endian only";
+    case EM_X86_64:
+        return "Advanced Micro Devices X86-64";
     default:
         return "(?)";
     }
@@ -224,6 +226,7 @@ static const char* object_symbol_binding_to_string(ElfW(Word) type)
 static const char* object_relocation_type_to_string(ElfW(Word) type)
 {
     switch (type) {
+#if ARCH(I386)
     case R_386_NONE:
         return "R_386_NONE";
     case R_386_32:
@@ -246,6 +249,20 @@ static const char* object_relocation_type_to_string(ElfW(Word) type)
         return "R_386_TLS_TPOFF";
     case R_386_TLS_TPOFF32:
         return "R_386_TLS_TPOFF32";
+#else
+    case R_X86_64_NONE:
+        return "R_X86_64_NONE";
+    case R_X86_64_64:
+        return "R_X86_64";
+    case R_X86_64_GLOB_DAT:
+        return "R_x86_64_GLOB_DAT";
+    case R_X86_64_JUMP_SLOT:
+        return "R_X86_64_JUMP_SLOT";
+    case R_X86_64_RELATIVE:
+        return "R_X86_64_RELATIVE";
+    case R_X86_64_TPOFF64:
+        return "R_X86_64_TPOFF64";
+#endif
     default:
         return "(?)";
     }
