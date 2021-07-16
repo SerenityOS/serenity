@@ -114,7 +114,8 @@ public:
 
     Function<void(int done, int total)> on_thumbnail_progress;
     Function<void()> on_complete;
-    Function<void(int error, const char* error_string)> on_error;
+    Function<void(int error, const char* error_string)> on_directory_change_error;
+    Function<void(int error, const char* error_string)> on_rename_error;
 
     virtual int tree_column() const override { return Column::Name; }
     virtual int row_count(const ModelIndex& = ModelIndex()) const override;
