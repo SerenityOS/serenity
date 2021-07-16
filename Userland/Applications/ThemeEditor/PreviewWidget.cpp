@@ -49,6 +49,11 @@ private:
         m_statusbar->set_text("Status bar");
         m_editor = add<GUI::TextEditor>();
         m_editor->set_text("Text editor\nwith multiple\nlines.");
+
+        for_each_child_widget([](auto& child) {
+            child.set_focus_policy(GUI::FocusPolicy::NoFocus);
+            return IterationDecision::Continue;
+        });
     }
 
     virtual void resize_event(GUI::ResizeEvent&) override
