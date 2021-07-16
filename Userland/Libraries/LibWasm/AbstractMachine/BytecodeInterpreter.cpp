@@ -1126,17 +1126,15 @@ void DebuggerBytecodeInterpreter::interpret(Configuration& configuration, Instru
         }
     }
 
-    ScopeGuard guard { [&] {
-        if (post_interpret_hook) {
-            auto result = post_interpret_hook(configuration, ip, instruction, *this);
-            if (!result) {
-                m_trap = Trap { "Trapped by user request" };
-                return;
-            }
-        }
-    } };
-
     BytecodeInterpreter::interpret(configuration, ip, instruction);
+
+    if (post_interpret_hook) {
+        auto result = post_interpret_hook(configuration, ip, instruction, *this);
+        if (!result) {
+            m_trap = Trap { "Trapped by user request" };
+            return;
+        }
+    }
 }
 
 }
