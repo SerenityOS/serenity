@@ -180,8 +180,6 @@ void Thread::block(Kernel::Mutex& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock,
     VERIFY(!s_mm_lock.own_lock());
 
     ScopedSpinLock block_lock(m_block_lock);
-    VERIFY(!m_in_block);
-    m_in_block = true;
 
     ScopedSpinLock scheduler_lock(g_scheduler_lock);
 
@@ -195,7 +193,14 @@ void Thread::block(Kernel::Mutex& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock,
     default:
         VERIFY_NOT_REACHED();
     }
-    VERIFY(!m_blocking_lock);
+
+    // If we're blocking on the big-lock we may actually be in the process
+    // of unblocking from another lock. If that's the case m_blocking_lock
+    // is already set
+    auto& big_lock = process().big_lock();
+    VERIFY((&lock == &big_lock && m_blocking_lock != &big_lock) || !m_blocking_lock);
+
+    auto previous_blocking_lock = m_blocking_lock;
     m_blocking_lock = &lock;
     m_lock_requested_count = lock_count;
 
@@ -208,7 +213,6 @@ void Thread::block(Kernel::Mutex& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock,
 
     dbgln_if(THREAD_DEBUG, "Thread {} blocking on Mutex {}", *this, &lock);
 
-    auto& big_lock = process().big_lock();
     for (;;) {
         // Yield to the scheduler, and wait for us to resume unblocked.
         VERIFY(!g_scheduler_lock.own_lock());
@@ -230,8 +234,7 @@ void Thread::block(Kernel::Mutex& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock,
         }
 
         VERIFY(!m_blocking_lock);
-        VERIFY(m_in_block);
-        m_in_block = false;
+        m_blocking_lock = previous_blocking_lock;
         break;
     }
 
