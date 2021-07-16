@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -222,6 +222,7 @@ bool Token::is_identifier_name() const
         || m_type == TokenType::Class
         || m_type == TokenType::Const
         || m_type == TokenType::Continue
+        || m_type == TokenType::Debugger
         || m_type == TokenType::Default
         || m_type == TokenType::Delete
         || m_type == TokenType::Do
@@ -236,7 +237,6 @@ bool Token::is_identifier_name() const
         || m_type == TokenType::Import
         || m_type == TokenType::In
         || m_type == TokenType::Instanceof
-        || m_type == TokenType::Interface
         || m_type == TokenType::Let
         || m_type == TokenType::New
         || m_type == TokenType::NullLiteral
@@ -250,6 +250,7 @@ bool Token::is_identifier_name() const
         || m_type == TokenType::Var
         || m_type == TokenType::Void
         || m_type == TokenType::While
+        || m_type == TokenType::With
         || m_type == TokenType::Yield;
 }
 
