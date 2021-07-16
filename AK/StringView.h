@@ -43,6 +43,29 @@ public:
         , m_length(bytes.size())
     {
     }
+#if __has_builtin(__builtin_strnlen)
+    template<typename T, size_t S>
+    ALWAYS_INLINE StringView(T (&characters)[S])
+        : m_characters((const char*)characters)
+        , m_length(__builtin_strnlen(characters, S))
+    {
+        VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, m_length));
+    }
+#else
+    template<typename T, size_t S>
+    ALWAYS_INLINE StringView(T (&characters)[S])
+        : m_characters((const char*)characters)
+        , m_length(S - 1)
+    {
+        for (size_t i = 0; i < S; ++i) {
+            if (characters[i] == '\0') {
+                m_length = i;
+                break;
+            }
+        }
+        VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, m_length));
+    }
+#endif
 
     StringView(const ByteBuffer&);
     StringView(const String&);

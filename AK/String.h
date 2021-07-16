@@ -93,6 +93,27 @@ public:
     {
     }
 
+#if __has_builtin(__builtin_strnlen)
+    template<typename T, size_t S>
+    String(T (&characters)[S], ShouldChomp shouldChomp = NoChomp)
+        : m_impl(StringImpl::create((const char*)characters, __builtin_strnlen(characters, S), shouldChomp))
+    {
+    }
+#else
+    template<typename T, size_t S>
+    String(T (&characters)[S], ShouldChomp shouldChomp = NoChomp)
+    {
+        size_t length = S;
+        for (size_t i = 0; i < S; ++i) {
+            if (characters[i] == '\0') {
+                length = i;
+                break;
+            }
+        }
+        m_impl = StringImpl::create((const char*)characters, length, shouldChomp);
+    }
+#endif
+
     String(const FlyString&);
 
     [[nodiscard]] static String repeated(char, size_t count);
