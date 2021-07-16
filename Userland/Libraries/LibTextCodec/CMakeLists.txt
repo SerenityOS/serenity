@@ -1,5 +1,6 @@
 set(SOURCES
     Decoder.cpp
+    ShiftJISConverter.cpp
 )
 
 serenity_lib(LibTextCodec textcodec)

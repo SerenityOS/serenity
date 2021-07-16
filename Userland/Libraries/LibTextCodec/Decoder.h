@@ -58,6 +58,11 @@ public:
     virtual String to_utf8(const StringView&) override;
 };
 
+class ShiftJISEncoder final : public Decoder {
+public:
+    virtual String to_utf8(StringView const&) override;
+};
+
 Decoder* decoder_for(const String& encoding);
 Optional<String> get_standardized_encoding(const String& encoding);
 bool is_standardized_encoding(const String& encoding);
