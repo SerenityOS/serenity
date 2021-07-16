@@ -219,9 +219,9 @@ void Thread::block(Kernel::Lock& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock, 
         if (&lock != &big_lock && big_lock.own_lock()) {
             // We're locking another lock and already hold the big lock...
             // We need to release the big lock
-            yield_without_holding_big_lock();
+            yield_and_release_relock_big_lock();
         } else {
-            yield_while_not_holding_big_lock();
+            yield_assuming_not_holding_big_lock();
         }
         VERIFY(Processor::current().in_critical());
 
@@ -414,9 +414,10 @@ void Thread::exit(void* exit_value)
     die_if_needed();
 }
 
-void Thread::yield_while_not_holding_big_lock()
+void Thread::yield_assuming_not_holding_big_lock()
 {
     VERIFY(!g_scheduler_lock.own_lock());
+    VERIFY(!process().big_lock().own_lock());
     // Disable interrupts here. This ensures we don't accidentally switch contexts twice
     InterruptDisabler disable;
     Scheduler::yield(); // flag a switch
@@ -426,7 +427,7 @@ void Thread::yield_while_not_holding_big_lock()
     Processor::current().restore_critical(prev_crit, prev_flags);
 }
 
-void Thread::yield_without_holding_big_lock()
+void Thread::yield_and_release_relock_big_lock()
 {
     VERIFY(!g_scheduler_lock.own_lock());
     // Disable interrupts here. This ensures we don't accidentally switch contexts twice
@@ -594,7 +595,7 @@ void Thread::check_dispatch_pending_signal()
 
     switch (result) {
     case DispatchSignalResult::Yield:
-        yield_while_not_holding_big_lock();
+        yield_assuming_not_holding_big_lock();
         break;
     default:
         break;
@@ -701,7 +702,7 @@ void Thread::send_urgent_signal_to_self(u8 signal)
         result = dispatch_signal(signal);
     }
     if (result == DispatchSignalResult::Yield)
-        yield_without_holding_big_lock();
+        yield_and_release_relock_big_lock();
 }
 
 DispatchSignalResult Thread::dispatch_one_pending_signal()
