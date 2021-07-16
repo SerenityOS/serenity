@@ -578,6 +578,14 @@ int main(int argc, char** argv)
         // NOTE: We invoke the above hook directly here to make sure the tab title is set up.
         image_editor.on_image_title_change(image->title());
 
+        image_editor.on_drop_event = [&](auto event) {
+            event.accept();
+            if (event.mime_data().has_urls()) {
+                auto path = event.mime_data().urls().first().path();
+                open_image_file(path);
+            }
+        };
+
         if (image->layer_count())
             image_editor.set_active_layer(&image->layer(0));
 

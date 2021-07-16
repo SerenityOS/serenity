@@ -9,6 +9,7 @@
 #include "Layer.h"
 #include "MoveTool.h"
 #include "Tool.h"
+#include <LibCore/MimeData.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/DisjointRectSet.h>
@@ -247,6 +248,12 @@ void ImageEditor::keyup_event(GUI::KeyEvent& event)
 {
     if (m_active_tool)
         m_active_tool->on_keyup(event);
+}
+
+void ImageEditor::drop_event(GUI::DropEvent& event)
+{
+    if (on_drop_event)
+        on_drop_event(event);
 }
 
 void ImageEditor::set_active_layer(Layer* layer)
