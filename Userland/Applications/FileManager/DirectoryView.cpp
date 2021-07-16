@@ -214,7 +214,7 @@ const GUI::FileSystemModel::Node& DirectoryView::node(const GUI::ModelIndex& ind
 
 void DirectoryView::setup_model()
 {
-    m_model->on_error = [this](int, const char* error_string) {
+    m_model->on_directory_change_error = [this](int, const char* error_string) {
         auto failed_path = m_model->root_path();
         auto error_message = String::formatted("Could not read {}:\n{}", failed_path, error_string);
         m_error_label->set_text(error_message);
@@ -227,6 +227,10 @@ void DirectoryView::setup_model()
 
         if (on_path_change)
             on_path_change(failed_path, false, false);
+    };
+
+    m_model->on_rename_error = [this](int, const char* error_string) {
+        GUI::MessageBox::show_error(window(), String::formatted("Unable to rename file: {}", error_string));
     };
 
     m_model->on_complete = [this] {
