@@ -25,7 +25,6 @@ namespace Web::Bindings {
 WebAssemblyObject::WebAssemblyObject(JS::GlobalObject& global_object)
     : Object(*global_object.object_prototype())
 {
-    s_abstract_machine.enable_instruction_count_limit();
 }
 
 void WebAssemblyObject::initialize(JS::GlobalObject& global_object)

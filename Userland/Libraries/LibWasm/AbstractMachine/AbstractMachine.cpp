@@ -128,8 +128,6 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
     module.for_each_section_of_type<GlobalSection>([&](auto& global_section) {
         for (auto& entry : global_section.entries()) {
             Configuration config { m_store };
-            if (m_should_limit_instruction_count)
-                config.enable_instruction_count_limit();
             config.set_frame(Frame {
                 auxiliary_instance,
                 Vector<Value> {},
@@ -155,8 +153,6 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
             Vector<Reference> references;
             for (auto& entry : segment.init) {
                 Configuration config { m_store };
-                if (m_should_limit_instruction_count)
-                    config.enable_instruction_count_limit();
                 config.set_frame(Frame {
                     main_module_instance,
                     Vector<Value> {},
@@ -208,8 +204,6 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                 return IterationDecision::Break;
             }
             Configuration config { m_store };
-            if (m_should_limit_instruction_count)
-                config.enable_instruction_count_limit();
             config.set_frame(Frame {
                 main_module_instance,
                 Vector<Value> {},
@@ -268,8 +262,6 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
             segment.value().visit(
                 [&](DataSection::Data::Active const& data) {
                     Configuration config { m_store };
-                    if (m_should_limit_instruction_count)
-                        config.enable_instruction_count_limit();
                     config.set_frame(Frame {
                         main_module_instance,
                         Vector<Value> {},
@@ -447,8 +439,6 @@ Result AbstractMachine::invoke(FunctionAddress address, Vector<Value> arguments)
 Result AbstractMachine::invoke(Interpreter& interpreter, FunctionAddress address, Vector<Value> arguments)
 {
     Configuration configuration { m_store };
-    if (m_should_limit_instruction_count)
-        configuration.enable_instruction_count_limit();
     return configuration.call(interpreter, address, move(arguments));
 }
 
