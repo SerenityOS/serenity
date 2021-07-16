@@ -61,6 +61,9 @@ public:
     Result call(Interpreter&, FunctionAddress, Vector<Value> arguments);
     Result execute(Interpreter&);
 
+    void enable_instruction_count_limit() { m_should_limit_instruction_count = true; }
+    bool should_limit_instruction_count() const { return m_should_limit_instruction_count; }
+
     void dump_stack();
 
 private:
@@ -69,6 +72,7 @@ private:
     Stack m_stack;
     size_t m_depth { 0 };
     InstructionPointer m_ip;
+    bool m_should_limit_instruction_count { false };
 };
 
 }
