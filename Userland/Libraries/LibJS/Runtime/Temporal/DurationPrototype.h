@@ -31,6 +31,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(nanoseconds_getter);
     JS_DECLARE_NATIVE_FUNCTION(sign_getter);
     JS_DECLARE_NATIVE_FUNCTION(blank_getter);
+    JS_DECLARE_NATIVE_FUNCTION(with);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
 };
 
