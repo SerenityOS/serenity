@@ -512,14 +512,16 @@ int main(int argc, char* argv[])
             if (debug)
                 launch_repl();
 
-            if (result.is_trap())
-                warnln("Execution trapped!");
-            if (!result.values().is_empty())
-                warnln("Returned:");
-            for (auto& value : result.values()) {
-                Wasm::Printer printer { stream };
-                g_stdout.write("  -> "sv.bytes());
-                g_printer.print(value);
+            if (result.is_trap()) {
+                warnln("Execution trapped: {}", result.trap().reason);
+            } else {
+                if (!result.values().is_empty())
+                    warnln("Returned:");
+                for (auto& value : result.values()) {
+                    Wasm::Printer printer { stream };
+                    g_stdout.write("  -> "sv.bytes());
+                    g_printer.print(value);
+                }
             }
         }
     }

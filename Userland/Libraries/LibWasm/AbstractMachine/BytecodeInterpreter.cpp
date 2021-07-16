@@ -37,12 +37,15 @@ void BytecodeInterpreter::interpret(Configuration& configuration)
     auto& instructions = configuration.frame().expression().instructions();
     auto max_ip_value = InstructionPointer { instructions.size() };
     auto& current_ip_value = configuration.ip();
+    auto const should_limit_instruction_count = configuration.should_limit_instruction_count();
     u64 executed_instructions = 0;
 
     while (current_ip_value < max_ip_value) {
-        if (executed_instructions++ >= Constants::max_allowed_executed_instructions_per_call) [[unlikely]] {
-            m_trap = Trap { "Exceeded maximum allowed number of instructions" };
-            return;
+        if (should_limit_instruction_count) {
+            if (executed_instructions++ >= Constants::max_allowed_executed_instructions_per_call) [[unlikely]] {
+                m_trap = Trap { "Exceeded maximum allowed number of instructions" };
+                return;
+            }
         }
         auto& instruction = instructions[current_ip_value.value()];
         auto old_ip = current_ip_value;
@@ -1123,17 +1126,15 @@ void DebuggerBytecodeInterpreter::interpret(Configuration& configuration, Instru
         }
     }
 
-    ScopeGuard guard { [&] {
-        if (post_interpret_hook) {
-            auto result = post_interpret_hook(configuration, ip, instruction, *this);
-            if (!result) {
-                m_trap = Trap { "Trapped by user request" };
-                return;
-            }
-        }
-    } };
-
     BytecodeInterpreter::interpret(configuration, ip, instruction);
+
+    if (post_interpret_hook) {
+        auto result = post_interpret_hook(configuration, ip, instruction, *this);
+        if (!result) {
+            m_trap = Trap { "Trapped by user request" };
+            return;
+        }
+    }
 }
 
 }
