@@ -160,7 +160,7 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
         return;
     }
 
-    global_object.set(name, value, true);
+    global_object.set(name, value, Object::ShouldThrowExceptions::Yes);
 }
 
 bool VM::delete_variable(FlyString const& name)
@@ -298,7 +298,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
                         continue;
                     if (seen_names.contains(object_property.key.to_display_string()))
                         continue;
-                    rest_object->set(object_property.key, object->get(object_property.key), true);
+                    rest_object->set(object_property.key, object->get(object_property.key), Object::ShouldThrowExceptions::Yes);
                     if (exception())
                         return;
                 }

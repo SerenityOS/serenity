@@ -34,7 +34,7 @@ Optional<Variable> ObjectEnvironment::get_from_environment(FlyString const& name
 
 bool ObjectEnvironment::put_into_environment(FlyString const& name, Variable variable)
 {
-    return m_binding_object.set(name, variable.value, false);
+    return m_binding_object.set(name, variable.value, Object::ShouldThrowExceptions::No);
 }
 
 bool ObjectEnvironment::delete_from_environment(FlyString const& name)
@@ -98,7 +98,7 @@ void ObjectEnvironment::set_mutable_binding(GlobalObject& global_object, FlyStri
         global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
         return;
     }
-    m_binding_object.set(name, value, strict);
+    m_binding_object.set(name, value, strict ? Object::ShouldThrowExceptions::Yes : Object::ShouldThrowExceptions::No);
 }
 
 // 9.1.1.2.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s

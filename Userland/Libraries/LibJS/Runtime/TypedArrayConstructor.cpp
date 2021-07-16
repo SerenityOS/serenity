@@ -101,7 +101,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
             } else {
                 mapped_value = k_value;
             }
-            target_object->set(k, mapped_value, true);
+            target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes);
             if (vm.exception())
                 return {};
         }
@@ -130,7 +130,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
         } else {
             mapped_value = k_value;
         }
-        target_object->set(k, mapped_value, true);
+        target_object->set(k, mapped_value, Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
     }
@@ -153,7 +153,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
     if (vm.exception())
         return {};
     for (size_t k = 0; k < length; ++k) {
-        auto success = new_object->set(k, vm.argument(k), true);
+        auto success = new_object->set(k, vm.argument(k), Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
         if (!success) {
