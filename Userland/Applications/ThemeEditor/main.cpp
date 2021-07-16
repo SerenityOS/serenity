@@ -118,7 +118,8 @@ int main(int argc, char** argv)
         preview_widget.set_preview_palette(preview_palette);
     };
 
-    window->resize(480, 500);
+    window->resize(480, 385);
+    window->set_resizable(false);
     window->set_menubar(menubar);
     window->show();
     window->set_title("Theme Editor");
