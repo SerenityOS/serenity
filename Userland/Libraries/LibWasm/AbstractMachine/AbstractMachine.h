@@ -130,26 +130,26 @@ public:
         }
     }
 
-    Value(Value const& value)
+    ALWAYS_INLINE Value(Value const& value)
         : m_value(AnyValueType { value.m_value })
         , m_type(value.m_type)
     {
     }
 
-    Value(Value&& value)
+    ALWAYS_INLINE Value(Value&& value)
         : m_value(move(value.m_value))
         , m_type(move(value.m_type))
     {
     }
 
-    Value& operator=(Value&& value)
+    ALWAYS_INLINE Value& operator=(Value&& value)
     {
         m_value = move(value.m_value);
         m_type = move(value.m_type);
         return *this;
     }
 
-    Value& operator=(Value const& value)
+    ALWAYS_INLINE Value& operator=(Value const& value)
     {
         m_value = value.m_value;
         m_type = value.m_type;
@@ -157,7 +157,7 @@ public:
     }
 
     template<typename T>
-    Optional<T> to()
+    ALWAYS_INLINE Optional<T> to()
     {
         Optional<T> result;
         m_value.visit(
@@ -505,10 +505,13 @@ public:
     auto& store() const { return m_store; }
     auto& store() { return m_store; }
 
+    void enable_instruction_count_limit() { m_should_limit_instruction_count = true; }
+
 private:
     Optional<InstantiationError> allocate_all_initial_phase(Module const&, ModuleInstance&, Vector<ExternValue>&, Vector<Value>& global_values);
     Optional<InstantiationError> allocate_all_final_phase(Module const&, ModuleInstance&, Vector<Vector<Reference>>& elements);
     Store m_store;
+    bool m_should_limit_instruction_count { false };
 };
 
 class Linker {

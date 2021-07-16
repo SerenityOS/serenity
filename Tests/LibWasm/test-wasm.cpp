@@ -34,6 +34,7 @@ public:
     explicit WebAssemblyModule(JS::Object& prototype)
         : JS::Object(prototype)
     {
+        m_machine.enable_instruction_count_limit();
     }
 
     static Wasm::AbstractMachine& machine() { return m_machine; }
