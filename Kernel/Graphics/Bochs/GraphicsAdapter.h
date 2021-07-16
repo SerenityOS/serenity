@@ -17,14 +17,12 @@
 
 namespace Kernel {
 
-class BochsFramebufferDevice;
 class GraphicsManagement;
 struct BochsDisplayMMIORegisters;
 
 class BochsGraphicsAdapter final : public GraphicsDevice
     , public PCI::DeviceController {
     AK_MAKE_ETERNAL
-    friend class BochsFramebufferDevice;
     friend class GraphicsManagement;
 
 public:
