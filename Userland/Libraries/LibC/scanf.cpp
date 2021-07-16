@@ -383,6 +383,9 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
 
     int elements_matched = 0;
 
+    va_list copy;
+    __builtin_va_copy(copy, ap);
+
     while (!format_lexer.is_eof()) {
         format_lexer.ignore_while(isspace);
         if (!format_lexer.next_is('%')) {
@@ -537,7 +540,7 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
             }
         }
 
-        auto* ap_or_null = !suppress_assignment ? (va_list*)&ap : nullptr;
+        auto* ap_or_null = !suppress_assignment ? (va_list*)&copy : nullptr;
 
         // Now try to read.
         switch (conversion_specifier) {
@@ -616,6 +619,7 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
         }
         }
     }
+    va_end(copy);
 
     return elements_matched;
 }
