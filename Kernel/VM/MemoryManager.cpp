@@ -31,6 +31,8 @@ extern FlatPtr start_of_ro_after_init;
 extern FlatPtr end_of_ro_after_init;
 extern FlatPtr start_of_unmap_after_init;
 extern FlatPtr end_of_unmap_after_init;
+extern FlatPtr start_of_kernel_ksyms;
+extern FlatPtr end_of_kernel_ksyms;
 
 extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 extern size_t multiboot_copy_boot_modules_count;
@@ -114,7 +116,7 @@ UNMAP_AFTER_INIT void MemoryManager::protect_readonly_after_init_memory()
     }
 }
 
-void MemoryManager::unmap_memory_after_init()
+void MemoryManager::unmap_text_after_init()
 {
     ScopedSpinLock mm_lock(s_mm_lock);
     ScopedSpinLock page_lock(kernel_page_directory().get_lock());
@@ -130,7 +132,24 @@ void MemoryManager::unmap_memory_after_init()
     }
 
     dmesgln("Unmapped {} KiB of kernel text after init! :^)", (end - start) / KiB);
-    //Processor::halt();
+}
+
+void MemoryManager::unmap_ksyms_after_init()
+{
+    ScopedSpinLock mm_lock(s_mm_lock);
+    ScopedSpinLock page_lock(kernel_page_directory().get_lock());
+
+    auto start = page_round_down((FlatPtr)&start_of_kernel_ksyms);
+    auto end = page_round_up((FlatPtr)&end_of_kernel_ksyms);
+
+    // Unmap the entire .ksyms section
+    for (auto i = start; i < end; i += PAGE_SIZE) {
+        auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
+        pte.clear();
+        flush_tlb(&kernel_page_directory(), VirtualAddress(i));
+    }
+
+    dmesgln("Unmapped {} KiB of kernel symbols after init! :^)", (end - start) / KiB);
 }
 
 UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges()

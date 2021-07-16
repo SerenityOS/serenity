@@ -34,7 +34,7 @@ boot_pd0_pt0:
 .skip 4096 * 4
 .global boot_pd3_pts
 boot_pd3_pts:
-.skip 4096 * 16
+.skip 4096 * (KERNEL_PD_OFFSET >> 21)
 .global boot_pd3_pt1023
 boot_pd3_pt1023:
 .skip 4096
@@ -65,33 +65,16 @@ pdpt
     2: n/a      (2-3GB)
     3: boot_pd3 (3-4GB)
 
-boot_pd0 : 512 pde's
+boot_pd0 : 512 PDEs
 
     0: boot_pd0_pt0 (0-2MB) (id 512 4KB pages)
 
-boot_pd3 : 512 pde's
+boot_pd3 : 512 PDEs
 
-    0: boot_pd3_pts[0] (3072-3074MB) (pseudo 512 4KB pages)
-    1: boot_pd3_pts[1] (3074-3076MB) (pseudo 512 4KB pages)
-    2: boot_pd3_pts[2] (3076-3078MB) (pseudo 512 4KB pages)
-    3: boot_pd3_pts[3] (3078-3080MB) (pseudo 512 4KB pages)
-    4: boot_pd3_pts[4] (3080-3082MB) (pseudo 512 4KB pages)
-    5: boot_pd3_pts[5] (3082-3084MB) (pseudo 512 4KB pages)
-    6: boot_pd3_pts[6] (3084-3086MB) (pseudo 512 4KB pages)
-    7: boot_pd3_pts[7] (3086-3088MB) (pseudo 512 4KB pages)
-    
-    8: boot_pd3_pts[8] (3088-3090MB) (pseudo 512 4KB pages)
-    9: boot_pd3_pts[9] (3090-3076MB) (pseudo 512 4KB pages)
-    10: boot_pd3_pts[10] (3092-3094MB) (pseudo 512 4KB pages)
-    11: boot_pd3_pts[11] (3094-3096MB) (pseudo 512 4KB pages)
-    12: boot_pd3_pts[12] (3096-3098MB) (pseudo 512 4KB pages)
-    13: boot_pd3_pts[13] (3098-3100MB) (pseudo 512 4KB pages)
-    14: boot_pd3_pts[14] (3100-3102MB) (pseudo 512 4KB pages)
-    15: boot_pd3_pts[15] (3102-3104MB) (pseudo 512 4KB pages)
+    boot_pd3_pts[*] (KERNEL_BASE to KERNEL_BASE + KERNEL_PD_OFFSET) (pseudo 512 4KB pages)
+    last entry: boot_pd3_pt1023 (4094-4096MB) (for page table mappings)
 
-    16: boot_pd3_pt1023 (4094-4096MB) (for page table mappings)
-
-the 9 page tables each contain 512 pte's that map individual 4KB pages
+the page tables each contain 512 PTEs that map individual 4KB pages
 
 */
 
@@ -309,8 +292,8 @@ end_of_print_and_halt_function:
 real_start:
     cli
     cld
-    mov $end_of_kernel_image, %esi
-    cmp $0xc2000000, %esi
+    mov $(end_of_kernel_image - KERNEL_BASE), %esi
+    cmp $KERNEL_PD_OFFSET, %esi
     jbe kernel_not_too_large
     
     movl $(kernel_image_too_big_string - KERNEL_BASE), %esi
@@ -445,7 +428,7 @@ pae_supported:
     orl $0x3, 0(%edi)
 
     /* add boot_pd3_pts to boot_pd3 */
-    movl $16, %ecx
+    movl $(KERNEL_PD_OFFSET >> 21), %ecx
     movl $(boot_pd3 - KERNEL_BASE), %edi
     movl $(boot_pd3_pts - KERNEL_BASE), %eax
 
@@ -470,8 +453,8 @@ pae_supported:
     addl $4096, %eax
     loop 1b
 
-    /* pseudo identity map the 3072-3104MB range */
-    movl $(512 * 16), %ecx
+    /* pseudo identity map the KERNEL_BASE to KERNEL_BASE + KERNEL_PD_OFFSET range */
+    movl $(512 * (KERNEL_PD_OFFSET >> 21)), %ecx
     movl $(boot_pd3_pts - KERNEL_BASE), %edi
     xorl %eax, %eax
 
@@ -519,15 +502,55 @@ pae_supported:
     movl %eax, %cr0
 
     /* set up stack */
-    mov $stack_top, %esp
+    mov $(stack_top - KERNEL_BASE), %esp
     and $-16, %esp
 
+#if ARCH(X86_64)
+    /* Now we are in 32-bit compatibility mode, We still need to load a 64-bit GDT */
+    mov $(gdt64ptr - KERNEL_BASE), %eax
+    lgdt (%eax)
+    ljmpl $code64_sel, $(1f - KERNEL_BASE)
+
+.code64
+1:
+    movl %ebx, %ebx
+    movabs $KERNEL_BASE, %rax
+    addq %rax, %rbx
+    movabs $multiboot_info_ptr, %rax
+    movq %rbx, (%rax)
+
+    movabs $gdt64ptr, %rax
+    lgdt (%rax)
+    movabs $1f, %rax
+    jmp *%rax
+
+1:
+    movabs $KERNEL_BASE, %rax
+    addq %rax, %rsp
+
+    mov $0, %ax
+    mov %ax, %ss
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+
+    mov %cr3, %rax
+    mov %rax, %cr3
+
+#else
+    addl $KERNEL_BASE, %ebx
+    movl %ebx, multiboot_info_ptr
+
     /* jmp to an address above the 3GB mark */
-    movl $1f,%eax
+    movl $1f, %eax
     jmp *%eax
 1:
+    add $KERNEL_BASE, %esp
+
     movl %cr3, %eax
     movl %eax, %cr3
+#endif
 
     /* unmap the 0-1MB range, which isn't used after jmp-ing up here */
     movl $256, %ecx
@@ -539,29 +562,12 @@ pae_supported:
     addl $8, %edi
     loop 1b
 
-    /* jump into C++ land */
-    addl $KERNEL_BASE, %ebx
-    movl %ebx, multiboot_info_ptr
-
 #if ARCH(X86_64)
-    /* Now we are in 32-bit compatibility mode, We still need to load a 64-bit GDT */
-    lgdt gdt64ptr
-    ljmpl $code64_sel, $1f
-
-.code64
-1:
-    mov $0, %ax
-    mov %ax, %ss
-    mov %ax, %ds
-    mov %ax, %es
-    mov %ax, %fs
-    mov %ax, %gs
-#endif
-
-    call init
-#if ARCH(X86_64)
+    movabs $init, %rax
+    call *%rax
     add $4, %rsp
 #else
+    call init
     add $4, %esp
 #endif
 

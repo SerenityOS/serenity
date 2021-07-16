@@ -273,7 +273,10 @@ void init_stage2(void*)
     MM.protect_readonly_after_init_memory();
 
     // NOTE: Everything marked UNMAP_AFTER_INIT becomes inaccessible after this point.
-    MM.unmap_memory_after_init();
+    MM.unmap_text_after_init();
+
+    // NOTE: Everything in the .ksyms section becomes inaccessible after this point.
+    MM.unmap_ksyms_after_init();
 
     int error;
 

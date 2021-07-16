@@ -41,14 +41,14 @@ public:
         KeyAndValue,
     };
 
-    enum class PutOwnPropertyMode {
-        Put,
-        DefineProperty,
-    };
-
     enum class IntegrityLevel {
         Sealed,
         Frozen,
+    };
+
+    enum class ShouldThrowExceptions {
+        No,
+        Yes,
     };
 
     // Please DO NOT make up your own non-standard methods unless you
@@ -74,7 +74,7 @@ public:
     // 7.3 Operations on Objects, https://tc39.es/ecma262/#sec-operations-on-objects
 
     Value get(PropertyName const&) const;
-    bool set(PropertyName const&, Value, bool throw_exceptions);
+    bool set(PropertyName const&, Value, ShouldThrowExceptions);
     bool create_data_property(PropertyName const&, Value);
     bool create_method_property(PropertyName const&, Value);
     bool create_data_property_or_throw(PropertyName const&, Value);
