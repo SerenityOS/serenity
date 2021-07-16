@@ -65,6 +65,8 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ClientConnection& clie
     HTTP::HttpRequest request;
     if (method.equals_ignoring_case("post"))
         request.set_method(HTTP::HttpRequest::Method::POST);
+    else if (method.equals_ignoring_case("put"))
+        request.set_method(HTTP::HttpRequest::Method::PUT);
     else
         request.set_method(HTTP::HttpRequest::Method::GET);
     request.set_url(url);

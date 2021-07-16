@@ -28,6 +28,8 @@ String HttpRequest::method_name() const
         return "HEAD";
     case Method::POST:
         return "POST";
+    case Method::PUT:
+        return "PUT";
     default:
         VERIFY_NOT_REACHED();
     }

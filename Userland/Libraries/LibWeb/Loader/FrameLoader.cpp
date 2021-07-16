@@ -198,6 +198,8 @@ void FrameLoader::load_html(const StringView& html, const URL& url)
     HTML::HTMLDocumentParser parser(document, html, "utf-8");
     parser.run(url);
     browsing_context().set_document(&parser.document());
+    if (auto* page = browsing_context().page())
+        page->client().page_did_finish_loading(url);
 }
 
 // FIXME: Use an actual templating engine (our own one when it's built, preferably
