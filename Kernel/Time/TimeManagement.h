@@ -31,7 +31,6 @@ class TimeManagement {
 
 public:
     TimeManagement();
-    static bool initialized();
     static void initialize(u32 cpu);
     static TimeManagement& the();
 

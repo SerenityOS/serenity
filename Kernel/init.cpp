@@ -144,13 +144,14 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
     InterruptManagement::initialize();
     ACPI::initialize();
 
+    // Initialize TimeManagement before using randomness!
+    TimeManagement::initialize(0);
+
     __stack_chk_guard = get_fast_random<u32>();
 
     ProcFSComponentRegistry::initialize();
     Thread::initialize();
     Process::initialize();
-
-    TimeManagement::initialize(0);
 
     Scheduler::initialize();
 
