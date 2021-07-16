@@ -40,7 +40,7 @@ public:
     [[nodiscard]] u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
     [[nodiscard]] const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
 
-    [[nodiscard]] VirtualAddress page_base() const { return VirtualAddress(m_address & 0xfffff000); }
+    [[nodiscard]] VirtualAddress page_base() const { return VirtualAddress(m_address & ~(FlatPtr)0xfffu); }
 
 private:
     FlatPtr m_address { 0 };
