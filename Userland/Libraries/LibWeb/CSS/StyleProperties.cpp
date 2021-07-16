@@ -298,6 +298,26 @@ Optional<float> StyleProperties::flex_shrink_factor() const
     auto numeric = verify_cast<CSS::NumericStyleValue>(value.value().ptr());
     return numeric->value();
 }
+Optional<CSS::JustifyContent> StyleProperties::justify_content() const
+{
+    auto value = property(CSS::PropertyID::JustifyContent);
+    if (!value.has_value())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::FlexStart:
+        return CSS::JustifyContent::FlexStart;
+    case CSS::ValueID::FlexEnd:
+        return CSS::JustifyContent::FlexEnd;
+    case CSS::ValueID::Center:
+        return CSS::JustifyContent::Center;
+    case CSS::ValueID::SpaceBetween:
+        return CSS::JustifyContent::SpaceBetween;
+    case CSS::ValueID::SpaceAround:
+        return CSS::JustifyContent::SpaceAround;
+    default:
+        return {};
+    }
+}
 
 Optional<CSS::Position> StyleProperties::position() const
 {
