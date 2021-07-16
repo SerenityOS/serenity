@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Utf8View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -33,7 +34,7 @@ void StringObject::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     Object::initialize(global_object);
-    define_direct_property(vm.names.length, Value(m_string.string().length()), 0);
+    define_direct_property(vm.names.length, Value(Utf8View(m_string.string()).length()), 0);
 }
 
 void StringObject::visit_edges(Cell::Visitor& visitor)
