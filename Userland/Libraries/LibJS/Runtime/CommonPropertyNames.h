@@ -246,6 +246,7 @@ namespace JS {
     P(multiline)                             \
     P(name)                                  \
     P(nanoseconds)                           \
+    P(negated)                               \
     P(next)                                  \
     P(now)                                   \
     P(of)                                    \
