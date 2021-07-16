@@ -796,7 +796,13 @@ void HackStudioWidget::configure_project_tree_view()
 
     m_project_tree_view->on_selection_change = [this] {
         m_open_selected_action->set_enabled(!m_project_tree_view->selection().is_empty());
-        m_delete_action->set_enabled(!m_project_tree_view->selection().is_empty());
+
+        auto selections = m_project_tree_view->selection().indices();
+        auto it = selections.find_if([&](auto selected_file) {
+            return access(m_project->model().full_path(selected_file.parent()).characters(), W_OK) == 0;
+        });
+        bool has_permissions = it != selections.end();
+        m_delete_action->set_enabled(!m_project_tree_view->selection().is_empty() && has_permissions);
     };
 
     m_project_tree_view->on_activation = [this](auto& index) {
