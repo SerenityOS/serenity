@@ -24,6 +24,7 @@ public:
     void set_execution_position(size_t line) { m_execution_position = line; }
     void clear_execution_position() { m_execution_position.clear(); }
     const String& file_path() const { return m_file_path; }
+    const String& language_name() const { return m_language_name; };
     Language language() const { return m_language; }
 
     virtual bool is_code_document() const override final { return true; }
@@ -33,6 +34,7 @@ private:
     explicit CodeDocument(Client* client = nullptr);
 
     String m_file_path;
+    String m_language_name;
     Language m_language { Language::Unknown };
     Vector<size_t> m_breakpoint_lines;
     Optional<size_t> m_execution_position;

@@ -66,4 +66,13 @@ TEST_CASE(has_flag)
     auto intro = VideoIntro::Hello | VideoIntro::Friends;
     EXPECT(has_flag(intro, VideoIntro::Friends));
     EXPECT(!has_flag(intro, VideoIntro::Well));
+    EXPECT(!has_flag(intro, VideoIntro::CompleteIntro));
+}
+
+TEST_CASE(has_any_flag)
+{
+    auto intro = VideoIntro::Hello | VideoIntro::Friends;
+    EXPECT(has_any_flag(intro, VideoIntro::Friends));
+    EXPECT(!has_any_flag(intro, VideoIntro::Well));
+    EXPECT(has_any_flag(intro, VideoIntro::CompleteIntro));
 }

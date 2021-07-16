@@ -112,7 +112,7 @@ KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params
             FD_SET(selected_fds[i], &fds_write);
             marked_fd_count++;
         }
-        if (params.exceptfds && has_flag(fd_entry.unblocked_flags, BlockFlags::Exception)) {
+        if (params.exceptfds && has_any_flag(fd_entry.unblocked_flags, BlockFlags::Exception)) {
             FD_SET(selected_fds[i], &fds_except);
             marked_fd_count++;
         }
@@ -207,7 +207,7 @@ KResultOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> u
         if (fds_entry.unblocked_flags == BlockFlags::None)
             continue;
 
-        if (has_flag(fds_entry.unblocked_flags, BlockFlags::Exception)) {
+        if (has_any_flag(fds_entry.unblocked_flags, BlockFlags::Exception)) {
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::ReadHangUp))
                 pfd.revents |= POLLRDHUP;
             if (has_flag(fds_entry.unblocked_flags, BlockFlags::WriteError))

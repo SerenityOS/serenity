@@ -20,5 +20,6 @@ enum class Language {
 
 Language language_from_file_extension(const String&);
 Language language_from_name(const String&);
+String language_name_from_file_extension(const String&);
 
 }

@@ -50,7 +50,7 @@ void FileResult::activate() const
 void TerminalResult::activate() const
 {
     pid_t pid;
-    char const* argv[] = { "Terminal", "-e", title().characters(), nullptr };
+    char const* argv[] = { "Terminal", "-k", "-e", title().characters(), nullptr };
 
     if ((errno = posix_spawn(&pid, "/bin/Terminal", nullptr, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");

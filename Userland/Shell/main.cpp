@@ -93,12 +93,14 @@ int main(int argc, char** argv)
     bool skip_rc_files = false;
     const char* format = nullptr;
     bool should_format_live = false;
+    bool keep_open = false;
 
     Core::ArgsParser parser;
     parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
     parser.add_option(skip_rc_files, "Skip running shellrc files", "skip-shellrc", 0);
     parser.add_option(format, "Format the given file into stdout and exit", "format", 0, "file");
     parser.add_option(should_format_live, "Enable live formatting", "live-formatting", 'f');
+    parser.add_option(keep_open, "Keep the shell open after running the specified command or file", "keep-open", 0);
     parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
     parser.add_positional_argument(script_args, "Extra arguments to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
 
@@ -141,6 +143,11 @@ int main(int argc, char** argv)
     auto execute_file = file_to_read_from && "-"sv != file_to_read_from;
     attempt_interactive = !execute_file;
 
+    if (keep_open && !command_to_run && !execute_file) {
+        warnln("Option --keep-open can only be used in combination with -c or when specifying a file to execute.");
+        return 1;
+    }
+
     initialize();
 
     shell->set_live_formatting(should_format_live);
@@ -168,13 +175,18 @@ int main(int argc, char** argv)
 
     if (command_to_run) {
         dbgln("sh -c '{}'\n", command_to_run);
-        return shell->run_command(command_to_run);
+        auto result = shell->run_command(command_to_run);
+        if (!keep_open)
+            return result;
     }
 
     if (execute_file) {
-        if (shell->run_file(file_to_read_from))
-            return 0;
-        return 1;
+        auto result = shell->run_file(file_to_read_from);
+        if (!keep_open) {
+            if (result)
+                return 0;
+            return 1;
+        }
     }
 
     shell->add_child(*editor);
