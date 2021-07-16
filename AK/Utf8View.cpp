@@ -185,24 +185,24 @@ bool Utf8View::contains(u32 needle) const
 Utf8View Utf8View::trim(const Utf8View& characters, TrimMode mode) const
 {
     size_t substring_start = 0;
-    size_t substring_length = length();
+    size_t substring_length = byte_length();
 
     if (mode == TrimMode::Left || mode == TrimMode::Both) {
-        for (auto code_point : *this) {
+        for (auto code_point = begin(); code_point != end(); ++code_point) {
             if (substring_length == 0)
                 return {};
-            if (!characters.contains(code_point))
+            if (!characters.contains(*code_point))
                 break;
-            ++substring_start;
-            --substring_length;
+            substring_start += code_point.underlying_code_point_length_in_bytes();
+            substring_length -= code_point.underlying_code_point_length_in_bytes();
         }
     }
 
     if (mode == TrimMode::Right || mode == TrimMode::Both) {
         size_t seen_whitespace_length = 0;
-        for (auto code_point : *this) {
-            if (characters.contains(code_point))
-                seen_whitespace_length++;
+        for (auto code_point = begin(); code_point != end(); ++code_point) {
+            if (characters.contains(*code_point))
+                seen_whitespace_length += code_point.underlying_code_point_length_in_bytes();
             else
                 seen_whitespace_length = 0;
         }

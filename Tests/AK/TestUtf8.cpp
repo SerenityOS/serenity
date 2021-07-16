@@ -182,3 +182,38 @@ TEST_CASE(decode_invalid_ut8)
         VERIFY(i == expected_size);
     }
 }
+
+TEST_CASE(trim)
+{
+    Utf8View whitespace { " " };
+    {
+        Utf8View view { "word" };
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Both).as_string(), "word");
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Left).as_string(), "word");
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Right).as_string(), "word");
+    }
+    {
+        Utf8View view { "   word" };
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Both).as_string(), "word");
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Left).as_string(), "word");
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Right).as_string(), "   word");
+    }
+    {
+        Utf8View view { "word   " };
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Both).as_string(), "word");
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Left).as_string(), "word   ");
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Right).as_string(), "word");
+    }
+    {
+        Utf8View view { "   word   " };
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Both).as_string(), "word");
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Left).as_string(), "word   ");
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Right).as_string(), "   word");
+    }
+    {
+        Utf8View view { "\u180E" };
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Both).as_string(), "\u180E");
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Left).as_string(), "\u180E");
+        EXPECT_EQ(view.trim(whitespace, TrimMode::Right).as_string(), "\u180E");
+    }
+}
