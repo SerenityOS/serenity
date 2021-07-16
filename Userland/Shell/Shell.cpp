@@ -1759,10 +1759,11 @@ void Shell::notify_child_event()
             }
             if (child_pid == 0) {
                 // If the child existed, but wasn't dead.
-                if (job.is_suspended() && job.shell_did_continue()) {
-                    // The job was suspended, and we sent it a SIGCONT.
+                if (job.is_suspended() || job.shell_did_continue()) {
+                    // The job was suspended, and someone sent it a SIGCONT.
                     job.set_is_suspended(false);
-                    job.set_shell_did_continue(false);
+                    if (job.shell_did_continue())
+                        job.set_shell_did_continue(false);
                     found_child = true;
                 }
                 continue;
