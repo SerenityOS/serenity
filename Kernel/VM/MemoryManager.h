@@ -126,7 +126,8 @@ public:
     void set_page_writable_direct(VirtualAddress, bool);
 
     void protect_readonly_after_init_memory();
-    void unmap_memory_after_init();
+    void unmap_text_after_init();
+    void unmap_ksyms_after_init();
 
     static void enter_process_paging_scope(Process&);
     static void enter_space(Space&);
