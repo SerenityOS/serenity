@@ -93,10 +93,13 @@ SECTIONS
         *(.heap)
     } :bss
 
-    end_of_kernel_image = .;
 
     .ksyms ALIGN(4K) : AT (ADDR(.ksyms) - KERNEL_VIRTUAL_BASE)
     {
+        start_of_kernel_ksyms = .;
         *(.kernel_symbols)
+        end_of_kernel_ksyms = .;
     } :ksyms
+
+    end_of_kernel_image = .;
 }
