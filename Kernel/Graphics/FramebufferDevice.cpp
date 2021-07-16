@@ -43,9 +43,20 @@ KResultOr<Region*> FramebufferDevice::mmap(Process& process, FileDescription&, c
     m_userspace_real_framebuffer_vmobject = vmobject;
 
     m_real_framebuffer_vmobject = AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, page_round_up(framebuffer_size_in_bytes()));
+    if (!m_real_framebuffer_vmobject)
+        return ENOMEM;
+
     m_swapped_framebuffer_vmobject = AnonymousVMObject::try_create_with_size(page_round_up(framebuffer_size_in_bytes()), AllocationStrategy::AllocateNow);
+    if (!m_swapped_framebuffer_vmobject)
+        return ENOMEM;
+
     m_real_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, page_round_up(framebuffer_size_in_bytes()), "Framebuffer", Region::Access::Read | Region::Access::Write);
+    if (!m_real_framebuffer_region)
+        return ENOMEM;
+
     m_swapped_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, page_round_up(framebuffer_size_in_bytes()), "Framebuffer Swap (Blank)", Region::Access::Read | Region::Access::Write);
+    if (!m_swapped_framebuffer_region)
+        return ENOMEM;
 
     RefPtr<VMObject> chosen_vmobject;
     if (m_graphical_writes_enabled) {
