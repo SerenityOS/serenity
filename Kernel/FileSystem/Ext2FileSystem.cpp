@@ -1079,25 +1079,21 @@ Ext2FS::FeaturesReadOnly Ext2FS::get_features_readonly() const
 
 KResult Ext2FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_lock);
     VERIFY(is_directory());
 
     u8 buffer[max_block_size];
     auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
 
     auto block_size = fs().block_size();
-    bool allow_cache = true;
-
-    if (m_block_list.is_empty())
-        m_block_list = compute_block_list();
+    auto file_size = size();
 
     // Directory entries are guaranteed not to span multiple blocks,
     // so we can iterate over blocks separately.
-    for (auto& block_index : m_block_list) {
-        VERIFY(block_index.value() != 0);
-        if (auto result = fs().read_block(block_index, &buf, block_size, 0, allow_cache); result.is_error()) {
-            return result;
-        }
+
+    for (u64 offset = 0; offset < file_size; offset += block_size) {
+        if (auto result = read_bytes(offset, block_size, buf, nullptr); result.is_error())
+            return result.error();
+
         auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer);
         auto* entries_end = reinterpret_cast<ext2_dir_entry_2*>(buffer + block_size);
         while (entry < entries_end) {
