@@ -688,51 +688,53 @@ void Ext2FS::flush_block_group_descriptor_table()
 
 void Ext2FS::flush_writes()
 {
-    Locker locker(m_lock);
-    if (m_super_block_dirty) {
-        flush_super_block();
-        m_super_block_dirty = false;
-    }
-    if (m_block_group_descriptors_dirty) {
-        flush_block_group_descriptor_table();
-        m_block_group_descriptors_dirty = false;
-    }
-    for (auto& cached_bitmap : m_cached_bitmaps) {
-        if (cached_bitmap->dirty) {
-            auto buffer = UserOrKernelBuffer::for_kernel_buffer(cached_bitmap->buffer.data());
-            if (auto result = write_block(cached_bitmap->bitmap_block_index, buffer, block_size()); result.is_error()) {
-                dbgln("Ext2FS[{}]::flush_writes(): Failed to write blocks: {}", fsid(), result.error());
-            }
-            cached_bitmap->dirty = false;
-            dbgln_if(EXT2_DEBUG, "Ext2FS[{}]::flush_writes(): Flushed bitmap block {}", fsid(), cached_bitmap->bitmap_block_index);
+    {
+        Locker locker(m_lock);
+        if (m_super_block_dirty) {
+            flush_super_block();
+            m_super_block_dirty = false;
         }
+        if (m_block_group_descriptors_dirty) {
+            flush_block_group_descriptor_table();
+            m_block_group_descriptors_dirty = false;
+        }
+        for (auto& cached_bitmap : m_cached_bitmaps) {
+            if (cached_bitmap->dirty) {
+                auto buffer = UserOrKernelBuffer::for_kernel_buffer(cached_bitmap->buffer.data());
+                if (auto result = write_block(cached_bitmap->bitmap_block_index, buffer, block_size()); result.is_error()) {
+                    dbgln("Ext2FS[{}]::flush_writes(): Failed to write blocks: {}", fsid(), result.error());
+                }
+                cached_bitmap->dirty = false;
+                dbgln_if(EXT2_DEBUG, "Ext2FS[{}]::flush_writes(): Flushed bitmap block {}", fsid(), cached_bitmap->bitmap_block_index);
+            }
+        }
+
+        // Uncache Inodes that are only kept alive by the index-to-inode lookup cache.
+        // We don't uncache Inodes that are being watched by at least one InodeWatcher.
+
+        // FIXME: It would be better to keep a capped number of Inodes around.
+        //        The problem is that they are quite heavy objects, and use a lot of heap memory
+        //        for their (child name lookup) and (block list) caches.
+        Vector<InodeIndex> unused_inodes;
+        for (auto& it : m_inode_cache) {
+            // NOTE: If we're asked to look up an inode by number (via get_inode) and it turns out
+            //       to not exist, we remember the fact that it doesn't exist by caching a nullptr.
+            //       This seems like a reasonable time to uncache ideas about unknown inodes, so do that.
+            if (!it.value) {
+                unused_inodes.append(it.key);
+                continue;
+            }
+            if (it.value->ref_count() != 1)
+                continue;
+            if (it.value->has_watchers())
+                continue;
+            unused_inodes.append(it.key);
+        }
+        for (auto index : unused_inodes)
+            uncache_inode(index);
     }
 
     BlockBasedFileSystem::flush_writes();
-
-    // Uncache Inodes that are only kept alive by the index-to-inode lookup cache.
-    // We don't uncache Inodes that are being watched by at least one InodeWatcher.
-
-    // FIXME: It would be better to keep a capped number of Inodes around.
-    //        The problem is that they are quite heavy objects, and use a lot of heap memory
-    //        for their (child name lookup) and (block list) caches.
-    Vector<InodeIndex> unused_inodes;
-    for (auto& it : m_inode_cache) {
-        // NOTE: If we're asked to look up an inode by number (via get_inode) and it turns out
-        //       to not exist, we remember the fact that it doesn't exist by caching a nullptr.
-        //       This seems like a reasonable time to uncache ideas about unknown inodes, so do that.
-        if (!it.value) {
-            unused_inodes.append(it.key);
-            continue;
-        }
-        if (it.value->ref_count() != 1)
-            continue;
-        if (it.value->has_watchers())
-            continue;
-        unused_inodes.append(it.key);
-    }
-    for (auto index : unused_inodes)
-        uncache_inode(index);
 }
 
 Ext2FSInode::Ext2FSInode(Ext2FS& fs, InodeIndex index)
