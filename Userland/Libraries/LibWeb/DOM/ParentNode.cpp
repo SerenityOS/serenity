@@ -17,11 +17,11 @@ RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
     if (!selector)
         return {};
 
-    dump_selector(selector.release_nonnull());
+    dump_selector(*selector);
 
     RefPtr<Element> result;
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (SelectorEngine::matches(selector.release_nonnull(), element)) {
+        if (SelectorEngine::matches(*selector, element)) {
             result = element;
             return IterationDecision::Break;
         }
@@ -37,11 +37,11 @@ NonnullRefPtrVector<Element> ParentNode::query_selector_all(const StringView& se
     if (!selector)
         return {};
 
-    dump_selector(selector.release_nonnull());
+    dump_selector(*selector);
 
     NonnullRefPtrVector<Element> elements;
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (SelectorEngine::matches(selector.release_nonnull(), element)) {
+        if (SelectorEngine::matches(*selector, element)) {
             elements.append(element);
         }
         return IterationDecision::Continue;
