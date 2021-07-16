@@ -48,7 +48,7 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
 
             this->resource().add_random_event(value, i % 32);
         }
-    } else if (TimeManagement::the().can_query_precise_time()) {
+    } else if (TimeManagement::initialized() && TimeManagement::the().can_query_precise_time()) {
         // Add HPET as entropy source if we don't have anything better.
         dmesgln("KernelRng: Using HPET as entropy source");
 
