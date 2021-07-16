@@ -272,6 +272,10 @@
     "inherited": false,
     "initial": "auto"
   },
+  "justify-content": {
+    "inherited": false,
+    "initial": "flex-start"
+  },
   "left": {
     "inherited": false,
     "initial": "auto"
