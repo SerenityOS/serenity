@@ -33,6 +33,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(blank_getter);
     JS_DECLARE_NATIVE_FUNCTION(with);
     JS_DECLARE_NATIVE_FUNCTION(negated);
+    JS_DECLARE_NATIVE_FUNCTION(abs);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
 };
 

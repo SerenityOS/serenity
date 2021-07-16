@@ -7,6 +7,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/DurationPrototype.h>
+#include <math.h>
 
 namespace JS::Temporal {
 
@@ -41,6 +42,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.with, with, 1, attr);
     define_native_function(vm.names.negated, negated, 0, attr);
+    define_native_function(vm.names.abs, abs, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
@@ -309,6 +311,19 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::negated)
 
     // 3. Return ? CreateTemporalDuration(−duration.[[Years]], −duration.[[Months]], −duration.[[Weeks]], −duration.[[Days]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]]).
     return create_temporal_duration(global_object, -duration->years(), -duration->months(), -duration->weeks(), -duration->days(), -duration->hours(), -duration->minutes(), -duration->seconds(), -duration->milliseconds(), -duration->microseconds(), -duration->nanoseconds());
+}
+
+// 7.3.17 Temporal.Duration.prototype.abs ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.abs
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::abs)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? CreateTemporalDuration(abs(duration.[[Years]]), abs(duration.[[Months]]), abs(duration.[[Weeks]]), abs(duration.[[Days]]), abs(duration.[[Hours]]), abs(duration.[[Minutes]]), abs(duration.[[Seconds]]), abs(duration.[[Milliseconds]]), abs(duration.[[Microseconds]]), abs(duration.[[Nanoseconds]])).
+    return create_temporal_duration(global_object, fabs(duration->years()), fabs(duration->months()), fabs(duration->weeks()), fabs(duration->days()), fabs(duration->hours()), fabs(duration->minutes()), fabs(duration->seconds()), fabs(duration->milliseconds()), fabs(duration->microseconds()), fabs(duration->nanoseconds()));
 }
 
 // 7.3.25 Temporal.Duration.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.valueof
