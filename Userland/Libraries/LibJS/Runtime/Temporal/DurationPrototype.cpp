@@ -40,6 +40,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.with, with, 1, attr);
+    define_native_function(vm.names.negated, negated, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
@@ -295,6 +296,19 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::with)
 
     // 24. Return ? CreateTemporalDuration(years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds).
     return create_temporal_duration(global_object, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds);
+}
+
+// 7.3.16 Temporal.Duration.prototype.negated ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.negated
+JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::negated)
+{
+    // 1. Let duration be the this value.
+    // 2. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
+    auto* duration = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? CreateTemporalDuration(−duration.[[Years]], −duration.[[Months]], −duration.[[Weeks]], −duration.[[Days]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]]).
+    return create_temporal_duration(global_object, -duration->years(), -duration->months(), -duration->weeks(), -duration->days(), -duration->hours(), -duration->minutes(), -duration->seconds(), -duration->milliseconds(), -duration->microseconds(), -duration->nanoseconds());
 }
 
 // 7.3.25 Temporal.Duration.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.valueof
