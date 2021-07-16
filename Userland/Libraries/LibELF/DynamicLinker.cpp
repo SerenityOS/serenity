@@ -34,7 +34,7 @@ namespace ELF {
 
 static HashMap<String, NonnullRefPtr<ELF::DynamicLoader>> s_loaders;
 static String s_main_program_name;
-static HashMap<String, NonnullRefPtr<ELF::DynamicObject>> s_global_objects;
+static OrderedHashMap<String, NonnullRefPtr<ELF::DynamicObject>> s_global_objects;
 
 using EntryPointFunction = int (*)(int, char**, char**);
 using LibCExitFunction = void (*)(int);
