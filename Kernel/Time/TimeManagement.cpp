@@ -131,6 +131,11 @@ u64 TimeManagement::uptime_ms() const
     return ms;
 }
 
+bool TimeManagement::initialized()
+{
+    return s_the.is_initialized();
+}
+
 UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
 {
     if (cpu == 0) {
