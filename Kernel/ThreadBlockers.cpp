@@ -581,7 +581,7 @@ void Thread::WaitBlockCondition::finalize()
     m_processes.clear();
 
     // NOTE: Kernel processes don't have a leaked ref on them.
-    if (!is_kernel_mode()) {
+    if (!m_process.is_kernel_process()) {
         // No more waiters, drop the last reference immediately. This may
         // cause us to be destructed ourselves!
         VERIFY(m_process.ref_count() > 0);
