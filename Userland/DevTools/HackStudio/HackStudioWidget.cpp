@@ -469,7 +469,6 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
                         "Removal failed",
                         GUI::MessageBox::Type::Error);
                 }
-                break;
             }
         }
     });
