@@ -144,6 +144,16 @@ Tab::Tab(BrowserWindow& window, Type type)
     m_location_box = toolbar.add<GUI::TextBox>();
     m_location_box->set_placeholder("Address");
 
+    m_location_box->on_control_return_pressed = [this] {
+        StringBuilder pre_url;
+        pre_url.append("www.");
+        pre_url.append(m_location_box->text());
+        pre_url.append(".com");
+        auto url = url_from_user_input(pre_url.to_string());
+        load(url);
+        view().set_focus(true);
+    };    
+
     m_location_box->on_return_pressed = [this] {
         auto url = url_from_user_input(m_location_box->text());
         load(url);
