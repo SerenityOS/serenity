@@ -84,9 +84,9 @@ class HashTable {
     static constexpr size_t load_factor_in_percent = 60;
 
     struct Bucket {
-        bool used;
-        bool deleted;
-        bool end;
+        bool used : 1;
+        bool deleted : 1;
+        bool end : 1;
         alignas(T) u8 storage[sizeof(T)];
 
         T* slot() { return reinterpret_cast<T*>(storage); }
@@ -96,8 +96,8 @@ class HashTable {
     struct OrderedBucket {
         OrderedBucket* previous;
         OrderedBucket* next;
-        bool used;
-        bool deleted;
+        bool used : 1;
+        bool deleted : 1;
         alignas(T) u8 storage[sizeof(T)];
         T* slot() { return reinterpret_cast<T*>(storage); }
         const T* slot() const { return reinterpret_cast<const T*>(storage); }
