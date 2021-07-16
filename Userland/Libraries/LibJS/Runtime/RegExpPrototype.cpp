@@ -128,7 +128,7 @@ static void increment_last_index(GlobalObject& global_object, Object& regexp_obj
         return;
 
     last_index = advance_string_index(string, last_index, unicode);
-    regexp_object.set(vm.names.lastIndex, Value(last_index), true);
+    regexp_object.set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes);
 }
 
 // 1.1.2.1 Match Records, https://tc39.es/proposal-regexp-match-indices/#sec-match-records
@@ -231,7 +231,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     while (true) {
         if (last_index > string.length()) {
             if (global || sticky) {
-                regexp_object.set(vm.names.lastIndex, Value(0), true);
+                regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
                 if (vm.exception())
                     return {};
             }
@@ -246,7 +246,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
             break;
 
         if (sticky) {
-            regexp_object.set(vm.names.lastIndex, Value(0), true);
+            regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
             if (vm.exception())
                 return {};
 
@@ -265,7 +265,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     // FIXME: Do code point index correction if the Unicode flag is set.
 
     if (global || sticky) {
-        regexp_object.set(vm.names.lastIndex, Value(end_index), true);
+        regexp_object.set(vm.names.lastIndex, Value(end_index), Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
     }
@@ -490,7 +490,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
         return result;
     }
 
-    regexp_object->set(vm.names.lastIndex, Value(0), true);
+    regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
     if (vm.exception())
         return {};
 
@@ -582,7 +582,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     if (vm.exception())
         return {};
 
-    matcher->set(vm.names.lastIndex, Value(last_index), true);
+    matcher->set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes);
     if (vm.exception())
         return {};
 
@@ -625,7 +625,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             return {};
         unicode = unicode_value.to_boolean();
 
-        regexp_object->set(vm.names.lastIndex, Value(0), true);
+        regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
     }
@@ -779,7 +779,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     if (vm.exception())
         return {};
     if (!same_value(previous_last_index, Value(0))) {
-        regexp_object->set(vm.names.lastIndex, Value(0), true);
+        regexp_object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
     }
@@ -792,7 +792,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     if (vm.exception())
         return {};
     if (!same_value(current_last_index, previous_last_index)) {
-        regexp_object->set(vm.names.lastIndex, previous_last_index, true);
+        regexp_object->set(vm.names.lastIndex, previous_last_index, Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
     }
@@ -871,7 +871,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     size_t next_search_from = 0; // 'q' in the spec.
 
     while (next_search_from < string.length()) {
-        splitter->set(vm.names.lastIndex, Value(next_search_from), true);
+        splitter->set(vm.names.lastIndex, Value(next_search_from), Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
 

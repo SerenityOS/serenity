@@ -137,7 +137,7 @@ RegExpObject* regexp_create(GlobalObject& global_object, Value pattern, Value fl
             return {};
     }
     auto* object = RegExpObject::create(global_object, move(p), move(f));
-    object->set(vm.names.lastIndex, Value(0), true);
+    object->set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
     if (vm.exception())
         return {};
     return object;

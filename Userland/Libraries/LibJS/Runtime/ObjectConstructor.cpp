@@ -506,7 +506,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
                 return {};
 
             // b. Perform ? Set(to, nextKey, propValue, true).
-            to->set(property_name, prop_value, true);
+            to->set(property_name, prop_value, Object::ShouldThrowExceptions::Yes);
             if (vm.exception())
                 return {};
         }

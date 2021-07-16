@@ -267,7 +267,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::fill)
     }
 
     for (; k < final; ++k) {
-        typed_array->set(k, value, true);
+        typed_array->set(k, value, Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
     }
@@ -868,7 +868,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::slice)
         if (typed_array->element_name() != new_array->element_name()) {
             for (i32 n = 0; k < final; ++k, ++n) {
                 auto k_value = typed_array->get(k);
-                new_array->set(n, k_value, true);
+                new_array->set(n, k_value, Object::ShouldThrowExceptions::Yes);
             }
         } else {
             auto element_size = typed_array->element_size();
@@ -1033,7 +1033,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::sort)
 
     u32 j;
     for (j = 0; j < items.size(); ++j) {
-        typed_array->set(j, items[j], true);
+        typed_array->set(j, items[j], Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
     }
@@ -1132,10 +1132,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::reverse)
         auto upper_value = typed_array->get(upper);
 
         // f. Perform ! Set(O, lowerP, upperValue, true).
-        typed_array->set(lower, upper_value, true);
+        typed_array->set(lower, upper_value, Object::ShouldThrowExceptions::Yes);
 
         // g. Perform ! Set(O, upperP, lowerValue, true).
-        typed_array->set(upper, lower_value, true);
+        typed_array->set(upper, lower_value, Object::ShouldThrowExceptions::Yes);
 
         // h. Set lower to lower + 1.
     }
@@ -1385,7 +1385,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::filter)
     // 11. For each element e of kept, do
     for (auto& value : kept) {
         // a. Perform ! Set(A, ! ToString(𝔽(n)), e, true).
-        filter_array->set(index, value, true);
+        filter_array->set(index, value, Object::ShouldThrowExceptions::Yes);
 
         // b. Set n to n + 1.
         ++index;
@@ -1434,7 +1434,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::map)
             return {};
 
         // d. Perform ? Set(A, Pk, mappedValue, true).
-        return_array->set(i, mapped_value, true);
+        return_array->set(i, mapped_value, Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
 

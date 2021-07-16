@@ -76,7 +76,9 @@ Value ArrayConstructor::construct(FunctionObject& new_target)
                 return {};
             }
         }
-        array->set(vm.names.length, Value(int_length), true);
+        array->set(vm.names.length, Value(int_length), Object::ShouldThrowExceptions::Yes);
+        if (vm.exception())
+            return {};
         return array;
     }
 
@@ -139,7 +141,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
                 return {};
 
             if (!next) {
-                array_object.set(vm.names.length, Value(k), true);
+                array_object.set(vm.names.length, Value(k), Object::ShouldThrowExceptions::Yes);
                 if (vm.exception())
                     return {};
                 return array;
@@ -204,7 +206,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
         array_object.create_data_property_or_throw(k, mapped_value);
     }
 
-    array_object.set(vm.names.length, Value(length), true);
+    array_object.set(vm.names.length, Value(length), Object::ShouldThrowExceptions::Yes);
     if (vm.exception())
         return {};
 
@@ -240,7 +242,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
         if (vm.exception())
             return {};
     }
-    array_object.set(vm.names.length, Value(vm.argument_count()), true);
+    array_object.set(vm.names.length, Value(vm.argument_count()), Object::ShouldThrowExceptions::Yes);
     if (vm.exception())
         return {};
     return array;

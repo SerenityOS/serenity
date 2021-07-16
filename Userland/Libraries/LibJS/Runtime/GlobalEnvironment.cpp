@@ -225,7 +225,7 @@ void GlobalEnvironment::create_global_function_binding(FlyString const& name, Va
     global_object.define_property_or_throw(name, desc);
     if (vm.exception())
         return;
-    global_object.set(name, value, false);
+    global_object.set(name, value, Object::ShouldThrowExceptions::Yes);
     if (vm.exception())
         return;
     if (!m_var_names.contains_slow(name))

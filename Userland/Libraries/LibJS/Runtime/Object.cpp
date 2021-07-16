@@ -92,7 +92,7 @@ Value Object::get(PropertyName const& property_name) const
 // 7.3.3 GetV ( V, P ) is defined as Value::get().
 
 // 7.3.4 Set ( O, P, V, Throw ), https://tc39.es/ecma262/#sec-set-o-p-v-throw
-bool Object::set(PropertyName const& property_name, Value value, bool throw_exceptions)
+bool Object::set(PropertyName const& property_name, Value value, ShouldThrowExceptions throw_exceptions)
 {
     VERIFY(!value.is_empty());
     auto& vm = this->vm();
@@ -110,7 +110,7 @@ bool Object::set(PropertyName const& property_name, Value value, bool throw_exce
         return {};
 
     // 5. If success is false and Throw is true, throw a TypeError exception.
-    if (!success && throw_exceptions) {
+    if (!success && throw_exceptions == ShouldThrowExceptions::Yes) {
         // FIXME: Improve/contextualize error message
         vm.throw_exception<TypeError>(global_object(), ErrorType::ObjectSetReturnedFalse);
         return {};
