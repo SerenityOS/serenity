@@ -15,17 +15,8 @@ namespace Gfx {
 template<typename T>
 void Point<T>::constrain(Rect<T> const& rect)
 {
-    if (x() < rect.left()) {
-        set_x(rect.left());
-    } else if (x() > rect.right()) {
-        set_x(rect.right());
-    }
-
-    if (y() < rect.top()) {
-        set_y(rect.top());
-    } else if (y() > rect.bottom()) {
-        set_y(rect.bottom());
-    }
+    m_x = AK::clamp<T>(x(), rect.left(), rect.right());
+    m_y = AK::clamp<T>(y(), rect.top(), rect.bottom());
 }
 
 template<>
