@@ -211,11 +211,18 @@ void Thread::block(Kernel::Lock& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock, 
 
     dbgln_if(THREAD_DEBUG, "Thread {} blocking on Lock {}", *this, &lock);
 
+    auto& big_lock = process().big_lock();
     for (;;) {
         // Yield to the scheduler, and wait for us to resume unblocked.
         VERIFY(!g_scheduler_lock.own_lock());
         VERIFY(Processor::current().in_critical());
-        yield_while_not_holding_big_lock(); // We might hold the big lock though!
+        if (&lock != &big_lock && big_lock.own_lock()) {
+            // We're locking another lock and already hold the big lock...
+            // We need to release the big lock
+            yield_without_holding_big_lock();
+        } else {
+            yield_while_not_holding_big_lock();
+        }
         VERIFY(Processor::current().in_critical());
 
         ScopedSpinLock block_lock2(m_block_lock);
