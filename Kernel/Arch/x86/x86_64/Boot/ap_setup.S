@@ -92,12 +92,16 @@ apic_ap_start32:
     movl %eax, %cr0
 
     /* load the temporary 64-bit gdt from boot that points above 3GB */
-    lgdt gdt64ptr
+    mov $(gdt64ptr - KERNEL_BASE), %eax
+    lgdt (%eax)
 
     /* jump above 3GB into our identity mapped area now */
     ljmpl $code64_sel, $(apic_ap_start64 - apic_ap_start + 0xc0008000)
 .code64
 apic_ap_start64:
+    movabs $gdt64ptr, %rax
+    lgdt (%rax)
+
     mov $0, %ax
     mov %ax, %ss
     mov %ax, %ds
