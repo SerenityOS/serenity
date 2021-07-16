@@ -246,6 +246,7 @@ namespace JS {
     P(multiline)                             \
     P(name)                                  \
     P(nanoseconds)                           \
+    P(negated)                               \
     P(next)                                  \
     P(now)                                   \
     P(of)                                    \
@@ -362,6 +363,7 @@ namespace JS {
     P(values)                                \
     P(warn)                                  \
     P(weeks)                                 \
+    P(with)                                  \
     P(writable)                              \
     P(years)
 

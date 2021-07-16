@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS::Temporal {
@@ -43,8 +44,22 @@ private:
     double m_nanoseconds;  // [[Nanoseconds]]
 };
 
+struct PartialDuration {
+    Optional<double> years;
+    Optional<double> months;
+    Optional<double> weeks;
+    Optional<double> days;
+    Optional<double> hours;
+    Optional<double> minutes;
+    Optional<double> seconds;
+    Optional<double> milliseconds;
+    Optional<double> microseconds;
+    Optional<double> nanoseconds;
+};
+
 i8 duration_sign(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 bool is_valid_duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
+PartialDuration to_partial_duration(GlobalObject&, Value temporal_duration_like);
 Duration* create_temporal_duration(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject* new_target = nullptr);
 
 }
