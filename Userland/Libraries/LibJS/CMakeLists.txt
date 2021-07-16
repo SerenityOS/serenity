@@ -125,6 +125,9 @@ set(SOURCES
     Runtime/Temporal/Calendar.cpp
     Runtime/Temporal/CalendarConstructor.cpp
     Runtime/Temporal/CalendarPrototype.cpp
+    Runtime/Temporal/Duration.cpp
+    Runtime/Temporal/DurationConstructor.cpp
+    Runtime/Temporal/DurationPrototype.cpp
     Runtime/Temporal/Instant.cpp
     Runtime/Temporal/InstantConstructor.cpp
     Runtime/Temporal/InstantPrototype.cpp

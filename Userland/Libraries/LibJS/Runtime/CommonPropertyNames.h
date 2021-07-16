@@ -71,6 +71,7 @@ namespace JS {
     P(atanh)                                 \
     P(big)                                   \
     P(bind)                                  \
+    P(blank)                                 \
     P(blink)                                 \
     P(bold)                                  \
     P(buffer)                                \
@@ -101,6 +102,7 @@ namespace JS {
     P(count)                                 \
     P(countReset)                            \
     P(create)                                \
+    P(days)                                  \
     P(debug)                                 \
     P(decodeURI)                             \
     P(decodeURIComponent)                    \
@@ -196,6 +198,7 @@ namespace JS {
     P(hasIndices)                            \
     P(hasOwn)                                \
     P(hasOwnProperty)                        \
+    P(hours)                                 \
     P(hypot)                                 \
     P(id)                                    \
     P(ignoreCase)                            \
@@ -235,9 +238,14 @@ namespace JS {
     P(map)                                   \
     P(max)                                   \
     P(message)                               \
+    P(microseconds)                          \
+    P(milliseconds)                          \
     P(min)                                   \
+    P(minutes)                               \
+    P(months)                                \
     P(multiline)                             \
     P(name)                                  \
+    P(nanoseconds)                           \
     P(next)                                  \
     P(now)                                   \
     P(of)                                    \
@@ -267,6 +275,7 @@ namespace JS {
     P(revoke)                                \
     P(round)                                 \
     P(seal)                                  \
+    P(seconds)                               \
     P(set)                                   \
     P(setBigInt64)                           \
     P(setBigUint64)                          \
@@ -352,7 +361,9 @@ namespace JS {
     P(valueOf)                               \
     P(values)                                \
     P(warn)                                  \
-    P(writable)
+    P(weeks)                                 \
+    P(writable)                              \
+    P(years)
 
 struct CommonPropertyNames {
     PropertyName and_ { "and", PropertyName::StringMayBeNumber::No };
