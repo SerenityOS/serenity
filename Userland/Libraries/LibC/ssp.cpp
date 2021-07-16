@@ -17,8 +17,8 @@
 
 extern "C" {
 
-extern u32 __stack_chk_guard;
-u32 __stack_chk_guard = (u32)0xc6c7c8c9;
+extern size_t __stack_chk_guard;
+size_t __stack_chk_guard = (size_t)0xc6c7c8c9;
 
 __attribute__((noreturn)) void __stack_chk_fail()
 {
