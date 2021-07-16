@@ -29,6 +29,8 @@ extern FlatPtr start_of_unmap_after_init;
 extern FlatPtr end_of_unmap_after_init;
 extern FlatPtr start_of_ro_after_init;
 extern FlatPtr end_of_ro_after_init;
+extern FlatPtr start_of_kernel_ksyms;
+extern FlatPtr end_of_kernel_ksyms;
 
 namespace Kernel {
 
@@ -333,6 +335,11 @@ void page_fault_handler(TrapFrame* trap)
     if (fault_address >= (FlatPtr)&start_of_unmap_after_init && fault_address < (FlatPtr)&end_of_unmap_after_init) {
         dump(regs);
         PANIC("Attempt to access UNMAP_AFTER_INIT section");
+    }
+
+    if (fault_address >= (FlatPtr)&start_of_kernel_ksyms && fault_address < (FlatPtr)&end_of_kernel_ksyms) {
+        dump(regs);
+        PANIC("Attempt to access KSYMS section");
     }
 
     PageFault fault { regs.exception_code, VirtualAddress { fault_address } };
