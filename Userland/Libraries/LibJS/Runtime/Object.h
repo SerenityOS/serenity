@@ -41,11 +41,6 @@ public:
         KeyAndValue,
     };
 
-    enum class PutOwnPropertyMode {
-        Put,
-        DefineProperty,
-    };
-
     enum class IntegrityLevel {
         Sealed,
         Frozen,
