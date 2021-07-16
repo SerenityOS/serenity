@@ -103,7 +103,7 @@ static int allocate_dirp_buffer(DIR* dirp)
     for (;;) {
         ssize_t nread = syscall(SC_get_dir_entries, dirp->fd, dirp->buffer, size_to_allocate);
         if (nread < 0) {
-            if (nread == -EINVAL) {
+            if (nread == -EFAULT) {
                 size_to_allocate *= 2;
                 char* new_buffer = (char*)realloc(dirp->buffer, size_to_allocate);
                 if (new_buffer) {
