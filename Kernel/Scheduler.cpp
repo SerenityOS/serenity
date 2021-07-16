@@ -229,7 +229,10 @@ bool Scheduler::pick_next()
             thread_to_schedule,
             thread_to_schedule.regs().cs, thread_to_schedule.regs().eip);
 #else
-        PANIC("Scheduler::pick_next() not implemented");
+        dbgln("Scheduler[{}]: Switch to {} @ {:04x}:{:016x}",
+            Processor::id(),
+            thread_to_schedule,
+            thread_to_schedule.regs().cs, thread_to_schedule.regs().rip);
 #endif
     }
 
