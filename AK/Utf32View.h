@@ -94,9 +94,7 @@ public:
 
     Utf32View substring_view(size_t offset, size_t length) const
     {
-        if (length == 0)
-            return {};
-        VERIFY(offset < m_length);
+        VERIFY(offset <= m_length);
         VERIFY(!Checked<size_t>::addition_would_overflow(offset, length));
         VERIFY((offset + length) <= m_length);
         return Utf32View(m_code_points + offset, length);
