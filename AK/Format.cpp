@@ -442,7 +442,7 @@ void FormatBuilder::put_hexdump(ReadonlyBytes bytes, size_t width, char fill)
         if (width > 0) {
             if (i % width == 0 && i) {
                 put_char_view(i);
-                put_literal("\n");
+                put_literal("\n"sv);
             }
         }
         put_u64(bytes[i], 16, false, false, true, Align::Right, 2);
