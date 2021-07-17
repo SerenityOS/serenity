@@ -48,6 +48,7 @@ public:
 protected:
     virtual void do_run_single_test(const String& test_path) override;
     virtual Vector<String> get_test_paths() const override;
+    virtual const Vector<String>* get_failed_test_names() const override { return &m_failed_test_names; }
 
     virtual FileResult run_test_file(const String& test_path);
 
@@ -57,6 +58,7 @@ protected:
     NonnullRefPtr<Core::ConfigFile> m_config;
     Vector<String> m_skip_directories;
     Vector<String> m_skip_files;
+    Vector<String> m_failed_test_names;
     Regex<PosixExtended> m_skip_regex;
     bool m_print_all_output { false };
 };
@@ -120,6 +122,7 @@ void TestRunner::do_run_single_test(const String& test_path)
     bool crashed_or_failed = test_result.result == Test::Result::Fail || test_result.result == Test::Result::Crashed;
     bool print_stdout_stderr = crashed_or_failed || m_print_all_output;
     if (crashed_or_failed) {
+        m_failed_test_names.append(test_path);
         print_modifiers({ Test::BG_RED, Test::FG_BLACK, Test::FG_BOLD });
         out("{}", test_result.result == Test::Result::Fail ? " FAIL  " : "CRASHED");
         print_modifiers({ Test::CLEAR });
