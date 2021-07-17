@@ -14,7 +14,6 @@
 #include <LibPDF/Parser.h>
 #include <LibTextCodec/Decoder.h>
 #include <ctype.h>
-#include <math.h>
 
 namespace PDF {
 

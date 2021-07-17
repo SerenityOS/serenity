@@ -22,7 +22,6 @@
 #include <LibGUI/Window.h>
 #include <LibProtocol/RequestClient.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-#include <math.h>
 
 namespace Browser {
 

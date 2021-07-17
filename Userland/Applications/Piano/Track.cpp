@@ -7,6 +7,7 @@
  */
 
 #include "Track.h"
+#include <AK/Math.h>
 #include <AK/NumericLimits.h>
 #include <LibAudio/Loader.h>
 #include <math.h>
@@ -176,7 +177,7 @@ Audio::Frame Track::square(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
     double square_step = pos * 2 * M_PI;
-    double w = sin(m_pos[note]) >= 0 ? 1 : -1;
+    double w = AK::sin(m_pos[note]) >= 0 ? 1 : -1;
     m_pos[note] += square_step;
     return w;
 }
@@ -185,7 +186,7 @@ Audio::Frame Track::triangle(size_t note)
 {
     double triangle_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
-    double w = fabs(fmod((4 * t) + 1, 4) - 2) - 1;
+    double w = AK::fabs(AK::fmod((4 * t) + 1, 4.) - 2) - 1.;
     m_pos[note] += triangle_step;
     return w;
 }

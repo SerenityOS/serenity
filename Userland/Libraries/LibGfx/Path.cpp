@@ -6,11 +6,11 @@
 
 #include <AK/Function.h>
 #include <AK/HashTable.h>
+#include <AK/Math.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
-#include <math.h>
 
 namespace Gfx {
 
@@ -21,8 +21,8 @@ void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, d
     double rx = radii.x();
     double ry = radii.y();
 
-    double x_axis_rotation_c = cos(x_axis_rotation);
-    double x_axis_rotation_s = sin(x_axis_rotation);
+    double x_axis_rotation_c = AK::cos(x_axis_rotation);
+    double x_axis_rotation_s = AK::sin(x_axis_rotation);
 
     // Find the last point
     FloatPoint last_point { 0, 0 };
@@ -61,24 +61,24 @@ void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, d
     auto y1p = -x_axis_rotation_s * x_avg + x_axis_rotation_c * y_avg;
 
     // Step 2: Compute (cx', cy')
-    double x1p_sq = pow(x1p, 2.0);
-    double y1p_sq = pow(y1p, 2.0);
-    double rx_sq = pow(rx, 2.0);
-    double ry_sq = pow(ry, 2.0);
+    double x1p_sq = x1p * x1p;
+    double y1p_sq = y1p * y1p;
+    double rx_sq = rx * rx;
+    double ry_sq = ry * ry;
 
     // Step 3 of out-of-range radii correction
     double lambda = x1p_sq / rx_sq + y1p_sq / ry_sq;
     double multiplier;
 
     if (lambda > 1.0) {
-        auto lambda_sqrt = sqrt(lambda);
+        auto lambda_sqrt = AK::sqrt(lambda);
         rx *= lambda_sqrt;
         ry *= lambda_sqrt;
         multiplier = 0.0;
     } else {
         double numerator = rx_sq * ry_sq - rx_sq * y1p_sq - ry_sq * x1p_sq;
         double denominator = rx_sq * y1p_sq + ry_sq * x1p_sq;
-        multiplier = sqrt(numerator / denominator);
+        multiplier = AK::sqrt(numerator / denominator);
     }
 
     if (large_arc == sweep)
@@ -93,8 +93,8 @@ void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, d
     double cx = x_axis_rotation_c * cxp - x_axis_rotation_s * cyp + x_avg;
     double cy = x_axis_rotation_s * cxp + x_axis_rotation_c * cyp + y_avg;
 
-    double theta_1 = atan2((y1p - cyp) / ry, (x1p - cxp) / rx);
-    double theta_2 = atan2((-y1p - cyp) / ry, (-x1p - cxp) / rx);
+    double theta_1 = AK::atan2((y1p - cyp) / ry, (x1p - cxp) / rx);
+    double theta_2 = AK::atan2((-y1p - cyp) / ry, (-x1p - cxp) / rx);
 
     auto theta_delta = theta_2 - theta_1;
 

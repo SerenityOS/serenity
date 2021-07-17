@@ -17,7 +17,6 @@
 #include <LibELF/Image.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/Instruction.h>
-#include <math.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
