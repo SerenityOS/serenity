@@ -151,7 +151,7 @@ private:
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual InodeMetadata metadata() const override;
 
-    NonnullRefPtrVector<DevFSDirectoryInode> m_subfolders;
+    NonnullRefPtrVector<DevFSDirectoryInode> m_subdirectories;
     NonnullRefPtrVector<DevFSLinkInode> m_links;
     DevFS& m_parent_fs;
 };

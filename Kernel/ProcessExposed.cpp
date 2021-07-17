@@ -52,9 +52,9 @@ ProcFSExposedDirectory::ProcFSExposedDirectory(StringView name)
 {
 }
 
-ProcFSExposedDirectory::ProcFSExposedDirectory(StringView name, const ProcFSExposedDirectory& parent_folder)
+ProcFSExposedDirectory::ProcFSExposedDirectory(StringView name, const ProcFSExposedDirectory& parent_directory)
     : ProcFSExposedComponent(name)
-    , m_parent_folder(parent_folder)
+    , m_parent_directory(parent_directory)
 {
 }
 
@@ -157,10 +157,10 @@ KResult ProcFSProcessInformation::refresh_data(FileDescription& description) con
     // For process-specific inodes, hold the process's ptrace lock across refresh
     // and refuse to load data if the process is not dumpable.
     // Without this, files opened before a process went non-dumpable could still be used for dumping.
-    auto parent_folder = const_cast<ProcFSProcessInformation&>(*this).m_parent_folder.strong_ref();
-    if (parent_folder.is_null())
+    auto parent_directory = const_cast<ProcFSProcessInformation&>(*this).m_parent_directory.strong_ref();
+    if (parent_directory.is_null())
         return KResult(EINVAL);
-    auto process = parent_folder->associated_process();
+    auto process = parent_directory->associated_process();
     if (!process)
         return KResult(ESRCH);
     process->ptrace_lock().lock();
@@ -245,11 +245,11 @@ RefPtr<ProcFSExposedComponent> ProcFSExposedDirectory::lookup(StringView name)
 KResult ProcFSExposedDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(ProcFSComponentRegistry::the().get_lock());
-    auto parent_folder = m_parent_folder.strong_ref();
-    if (parent_folder.is_null())
+    auto parent_directory = m_parent_directory.strong_ref();
+    if (parent_directory.is_null())
         return KResult(EINVAL);
     callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, parent_folder->component_index() }, 0 });
+    callback({ "..", { fsid, parent_directory->component_index() }, 0 });
 
     for (auto& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };

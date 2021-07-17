@@ -52,9 +52,9 @@ public:
 
 protected:
     explicit SysFSDirectory(StringView name);
-    SysFSDirectory(StringView name, SysFSDirectory const& parent_folder);
+    SysFSDirectory(StringView name, SysFSDirectory const& parent_directory);
     NonnullRefPtrVector<SysFSComponent> m_components;
-    RefPtr<SysFSDirectory> m_parent_folder;
+    RefPtr<SysFSDirectory> m_parent_directory;
 };
 
 }

@@ -227,9 +227,9 @@ KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem:
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
 
-    for (auto& folder : m_subfolders) {
-        InodeIdentifier identifier = { fsid(), folder.index() };
-        callback({ folder.name(), identifier, 0 });
+    for (auto& directory : m_subdirectories) {
+        InodeIdentifier identifier = { fsid(), directory.index() };
+        callback({ directory.name(), identifier, 0 });
     }
     for (auto& link : m_links) {
         InodeIdentifier identifier = { fsid(), link.index() };
@@ -245,9 +245,9 @@ KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem:
 RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
 {
     Locker locker(m_parent_fs.m_lock);
-    for (auto& subfolder : m_subfolders) {
-        if (subfolder.name() == name)
-            return subfolder;
+    for (auto& subdirectory : m_subdirectories) {
+        if (subdirectory.name() == name)
+            return subdirectory;
     }
     for (auto& link : m_links) {
         if (link.name() == name)
@@ -268,8 +268,8 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView
     InodeMetadata metadata;
     metadata.mode = mode;
     if (metadata.is_directory()) {
-        for (auto& folder : m_subfolders) {
-            if (folder.name() == name)
+        for (auto& directory : m_subdirectories) {
+            if (directory.name() == name)
                 return EEXIST;
         }
         if (name != "pts")
@@ -277,11 +277,11 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView
         auto new_directory_inode = adopt_ref_if_nonnull(new (nothrow) DevFSPtsDirectoryInode(m_parent_fs));
         if (!new_directory_inode)
             return ENOMEM;
-        if (!m_subfolders.try_ensure_capacity(m_subfolders.size() + 1))
+        if (!m_subdirectories.try_ensure_capacity(m_subdirectories.size() + 1))
             return ENOMEM;
         if (!m_parent_fs.m_nodes.try_ensure_capacity(m_parent_fs.m_nodes.size() + 1))
             return ENOMEM;
-        m_subfolders.append(*new_directory_inode);
+        m_subdirectories.append(*new_directory_inode);
         m_parent_fs.m_nodes.append(*new_directory_inode);
         return KResult(KSuccess);
     }
