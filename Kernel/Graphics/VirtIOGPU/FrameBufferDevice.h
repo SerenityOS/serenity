@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/Graphics/VirtIOGPU/VirtIOGPU.h>
+#include <Kernel/Graphics/VirtIOGPU/GPU.h>
 #include <Kernel/VirtIO/VirtIO.h>
 #include <Kernel/VirtIO/VirtIOQueue.h>
 
