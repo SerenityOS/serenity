@@ -390,10 +390,10 @@ pae_supported:
     movl $(boot_pdpt - KERNEL_BASE), %edi
 #if ARCH(X86_64)
     movl $((boot_pd0 - KERNEL_BASE) + 3), 0(%edi)
-    movl $((boot_pd3 - KERNEL_BASE) + 3), 24(%edi)
+    movl $((boot_pd3 - KERNEL_BASE) + 3), (8 * (KERNEL_BASE >> 30))(%edi)
 #else
     movl $((boot_pd0 - KERNEL_BASE) + 1), 0(%edi)
-    movl $((boot_pd3 - KERNEL_BASE) + 1), 24(%edi)
+    movl $((boot_pd3 - KERNEL_BASE) + 1), (8 * (KERNEL_BASE >> 30))(%edi)
 #endif
 
     /* clear pd0 */
