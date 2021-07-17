@@ -26,9 +26,16 @@ Client& Client::the()
 Result Client::request_file(i32 parent_window_id, String const& path, Core::OpenMode mode)
 {
     m_promise = Core::Promise<Result>::construct();
-    auto window_server_client_id = GUI::WindowServerConnection::the().expose_client_id();
+    auto parent_window_server_client_id = GUI::WindowServerConnection::the().expose_client_id();
+    auto child_window_server_client_id = expose_window_server_client_id();
 
-    async_request_file(window_server_client_id, parent_window_id, path, mode);
+    GUI::WindowServerConnection::the().async_add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+
+    ScopeGuard guard([parent_window_id, child_window_server_client_id] {
+        GUI::WindowServerConnection::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+    });
+
+    async_request_file(parent_window_server_client_id, parent_window_id, path, mode);
 
     return m_promise->await();
 }
@@ -36,9 +43,16 @@ Result Client::request_file(i32 parent_window_id, String const& path, Core::Open
 Result Client::open_file(i32 parent_window_id)
 {
     m_promise = Core::Promise<Result>::construct();
-    auto window_server_client_id = GUI::WindowServerConnection::the().expose_client_id();
+    auto parent_window_server_client_id = GUI::WindowServerConnection::the().expose_client_id();
+    auto child_window_server_client_id = expose_window_server_client_id();
 
-    async_prompt_open_file(window_server_client_id, parent_window_id, Core::StandardPaths::home_directory(), Core::OpenMode::ReadOnly);
+    GUI::WindowServerConnection::the().async_add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+
+    ScopeGuard guard([parent_window_id, child_window_server_client_id] {
+        GUI::WindowServerConnection::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+    });
+
+    async_prompt_open_file(parent_window_server_client_id, parent_window_id, Core::StandardPaths::home_directory(), Core::OpenMode::ReadOnly);
 
     return m_promise->await();
 }
@@ -46,9 +60,16 @@ Result Client::open_file(i32 parent_window_id)
 Result Client::save_file(i32 parent_window_id, String const& name, String const ext)
 {
     m_promise = Core::Promise<Result>::construct();
-    auto window_server_client_id = GUI::WindowServerConnection::the().expose_client_id();
+    auto parent_window_server_client_id = GUI::WindowServerConnection::the().expose_client_id();
+    auto child_window_server_client_id = expose_window_server_client_id();
 
-    async_prompt_save_file(window_server_client_id, parent_window_id, name.is_null() ? "Untitled" : name, ext.is_null() ? "txt" : ext, Core::StandardPaths::home_directory(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+    GUI::WindowServerConnection::the().async_add_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+
+    ScopeGuard guard([parent_window_id, child_window_server_client_id] {
+        GUI::WindowServerConnection::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
+    });
+
+    async_prompt_save_file(parent_window_server_client_id, parent_window_id, name.is_null() ? "Untitled" : name, ext.is_null() ? "txt" : ext, Core::StandardPaths::home_directory(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
 
     return m_promise->await();
 }
