@@ -290,18 +290,6 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
 
     [[maybe_unused]] auto& directory_view = desktop_widget.add<DirectoryView>(DirectoryView::Mode::Desktop);
 
-    auto copy_action = GUI::CommonActions::make_copy_action(
-        [&](auto&) {
-            auto paths = directory_view.selected_file_paths();
-
-            if (paths.is_empty())
-                VERIFY_NOT_REACHED();
-
-            do_copy(paths, FileUtils::FileOperation::Copy);
-        },
-        window);
-    copy_action->set_enabled(false);
-
     auto cut_action = GUI::CommonActions::make_cut_action(
         [&](auto&) {
             auto paths = directory_view.selected_file_paths();
@@ -313,6 +301,18 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
         },
         window);
     cut_action->set_enabled(false);
+
+    auto copy_action = GUI::CommonActions::make_copy_action(
+        [&](auto&) {
+            auto paths = directory_view.selected_file_paths();
+
+            if (paths.is_empty())
+                VERIFY_NOT_REACHED();
+
+            do_copy(paths, FileUtils::FileOperation::Copy);
+        },
+        window);
+    copy_action->set_enabled(false);
 
     auto unzip_archive_action
         = GUI::Action::create(
@@ -327,8 +327,8 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
             window);
 
     directory_view.on_selection_change = [&](const GUI::AbstractView& view) {
-        copy_action->set_enabled(!view.selection().is_empty());
         cut_action->set_enabled(!view.selection().is_empty());
+        copy_action->set_enabled(!view.selection().is_empty());
     };
 
     auto properties_action = GUI::CommonActions::make_properties_action(
@@ -371,8 +371,8 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
     desktop_view_context_menu->add_action(display_properties_action);
 
     auto desktop_context_menu = GUI::Menu::construct("Directory View Directory");
-    desktop_context_menu->add_action(copy_action);
     desktop_context_menu->add_action(cut_action);
+    desktop_context_menu->add_action(copy_action);
     desktop_context_menu->add_action(paste_action);
     desktop_context_menu->add_action(directory_view.delete_action());
     desktop_context_menu->add_action(directory_view.rename_action());
@@ -390,8 +390,8 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
                 desktop_context_menu->popup(event.screen_position());
             } else {
                 file_context_menu = GUI::Menu::construct("Directory View File");
-                file_context_menu->add_action(copy_action);
                 file_context_menu->add_action(cut_action);
+                file_context_menu->add_action(copy_action);
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view.delete_action());
                 file_context_menu->add_action(directory_view.rename_action());
@@ -650,22 +650,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         directory_view.current_view().select_all();
     });
 
-    auto copy_action = GUI::CommonActions::make_copy_action(
-        [&](auto&) {
-            auto paths = directory_view.selected_file_paths();
-
-            if (paths.is_empty())
-                paths = tree_view_selected_file_paths();
-
-            if (paths.is_empty())
-                VERIFY_NOT_REACHED();
-
-            do_copy(paths, FileUtils::FileOperation::Copy);
-            refresh_tree_view();
-        },
-        window);
-    copy_action->set_enabled(false);
-
     auto cut_action = GUI::CommonActions::make_cut_action(
         [&](auto&) {
             auto paths = directory_view.selected_file_paths();
@@ -681,6 +665,22 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         },
         window);
     cut_action->set_enabled(false);
+
+    auto copy_action = GUI::CommonActions::make_copy_action(
+        [&](auto&) {
+            auto paths = directory_view.selected_file_paths();
+
+            if (paths.is_empty())
+                paths = tree_view_selected_file_paths();
+
+            if (paths.is_empty())
+                VERIFY_NOT_REACHED();
+
+            do_copy(paths, FileUtils::FileOperation::Copy);
+            refresh_tree_view();
+        },
+        window);
+    copy_action->set_enabled(false);
 
     auto open_in_new_window_action
         = GUI::Action::create(
@@ -857,8 +857,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     }));
 
     auto& edit_menu = menubar->add_menu("&Edit");
-    edit_menu.add_action(copy_action);
     edit_menu.add_action(cut_action);
+    edit_menu.add_action(copy_action);
     edit_menu.add_action(paste_action);
     edit_menu.add_separator();
     edit_menu.add_action(select_all_action);
@@ -922,8 +922,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(focus_dependent_delete_action);
 
     main_toolbar.add_separator();
-    main_toolbar.add_action(copy_action);
     main_toolbar.add_action(cut_action);
+    main_toolbar.add_action(copy_action);
     main_toolbar.add_action(paste_action);
 
     main_toolbar.add_separator();
@@ -1031,16 +1031,16 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     directory_view.on_selection_change = [&](GUI::AbstractView& view) {
         auto& selection = view.selection();
-        copy_action->set_enabled(!selection.is_empty());
         cut_action->set_enabled(!selection.is_empty());
+        copy_action->set_enabled(!selection.is_empty());
         focus_dependent_delete_action->set_enabled((!tree_view.selection().is_empty() && tree_view.is_focused())
             || !directory_view.current_view().selection().is_empty());
     };
 
     directory_context_menu->add_action(open_in_new_window_action);
     directory_context_menu->add_action(open_in_new_terminal_action);
-    directory_context_menu->add_action(copy_action);
     directory_context_menu->add_action(cut_action);
+    directory_context_menu->add_action(copy_action);
     directory_context_menu->add_action(folder_specific_paste_action);
     directory_context_menu->add_action(directory_view.delete_action());
     directory_context_menu->add_action(directory_view.rename_action());
@@ -1059,8 +1059,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     tree_view_directory_context_menu->add_action(open_in_new_window_action);
     tree_view_directory_context_menu->add_action(open_in_new_terminal_action);
-    tree_view_directory_context_menu->add_action(copy_action);
     tree_view_directory_context_menu->add_action(cut_action);
+    tree_view_directory_context_menu->add_action(copy_action);
     tree_view_directory_context_menu->add_action(paste_action);
     tree_view_directory_context_menu->add_action(tree_view_delete_action);
     tree_view_directory_context_menu->add_action(directory_view.rename_action());
@@ -1084,8 +1084,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 directory_context_menu->popup(event.screen_position());
             } else {
                 file_context_menu = GUI::Menu::construct("Directory View File");
-                file_context_menu->add_action(copy_action);
                 file_context_menu->add_action(cut_action);
+                file_context_menu->add_action(copy_action);
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view.delete_action());
                 file_context_menu->add_action(directory_view.rename_action());
@@ -1129,8 +1129,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             return;
         TemporaryChange change(is_reacting_to_tree_view_selection_change, true);
         directory_view.open(path);
-        copy_action->set_enabled(!tree_view.selection().is_empty());
         cut_action->set_enabled(!tree_view.selection().is_empty());
+        copy_action->set_enabled(!tree_view.selection().is_empty());
         directory_view.delete_action().set_enabled(!tree_view.selection().is_empty());
     };
 
