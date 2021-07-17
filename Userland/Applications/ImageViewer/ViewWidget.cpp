@@ -111,11 +111,6 @@ void ViewWidget::set_scale(int scale)
     if (m_bitmap.is_null())
         return;
 
-    if (m_scale == scale) {
-        update();
-        return;
-    }
-
     if (scale < 10)
         scale = 10;
     if (scale > 1000)
@@ -130,7 +125,7 @@ void ViewWidget::set_scale(int scale)
     m_bitmap_rect.set_size(new_size);
 
     if (on_scale_change)
-        on_scale_change(m_scale, m_bitmap_rect);
+        on_scale_change(m_scale);
 
     relayout();
 }
@@ -282,7 +277,12 @@ void ViewWidget::drop_event(GUI::DropEvent& event)
 
 void ViewWidget::resize_window()
 {
-    if (window()->is_fullscreen())
+    if (window()->is_fullscreen() || window()->is_maximized())
+        return;
+
+    auto absolute_bitmap_rect = m_bitmap_rect;
+    absolute_bitmap_rect.translate_by(window()->rect().top_left());
+    if (window()->rect().contains(absolute_bitmap_rect))
         return;
 
     if (!m_bitmap)
