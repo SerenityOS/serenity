@@ -39,8 +39,8 @@ public:
 
     KResultOr<Region*> allocate_region_with_vmobject(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
     KResultOr<Region*> allocate_region(const Range&, StringView name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
-    bool deallocate_region(Region& region);
-    OwnPtr<Region> take_region(Region& region);
+    void deallocate_region(Region& region);
+    NonnullOwnPtr<Region> take_region(Region& region);
 
     KResultOr<Region*> try_allocate_split_region(Region const& source_region, Range const&, size_t offset_in_vmobject);
     KResultOr<Vector<Region*, 2>> try_split_region_around_range(Region const& source_region, Range const&);

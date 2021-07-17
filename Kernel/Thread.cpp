@@ -404,9 +404,7 @@ void Thread::exit(void* exit_value)
     [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
     if (m_thread_specific_range.has_value()) {
         auto* region = process().space().find_region_from_range(m_thread_specific_range.value());
-        VERIFY(region);
-        if (!process().space().deallocate_region(*region))
-            dbgln("Failed to unmap TLS range, exiting thread anyway.");
+        process().space().deallocate_region(*region);
     }
     die_if_needed();
 }
