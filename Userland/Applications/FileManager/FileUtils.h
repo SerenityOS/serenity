@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,15 +10,16 @@
 #include <AK/String.h>
 #include <LibCore/Forward.h>
 #include <LibGUI/Forward.h>
-#include <sys/stat.h>
 
-namespace FileUtils {
+namespace FileManager {
 
 enum class FileOperation {
     Copy = 0,
-    Cut
+    Move,
+    Delete,
 };
 
-void delete_path(const String&, GUI::Window*);
-void delete_paths(const Vector<String>&, bool should_confirm, GUI::Window*);
+void delete_paths(Vector<String> const&, bool should_confirm, GUI::Window*);
+
+void run_file_operation(FileOperation, Vector<String> const& sources, String const& destination, GUI::Window*);
 }

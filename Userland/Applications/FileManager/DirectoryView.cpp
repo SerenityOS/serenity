@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,62 +44,7 @@ void spawn_terminal(String const& directory)
     posix_spawn_file_actions_destroy(&spawn_actions);
 }
 
-enum class FileOperation {
-    Copy,
-};
-
-static HashTable<RefPtr<GUI::Window>> file_operation_windows;
-
-static void run_file_operation([[maybe_unused]] FileOperation operation, const String& source, const String& destination, GUI::Window* parent_window)
-{
-    int pipe_fds[2];
-    if (pipe(pipe_fds) < 0) {
-        perror("pipe");
-        VERIFY_NOT_REACHED();
-    }
-
-    pid_t child_pid = fork();
-    if (child_pid < 0) {
-        perror("fork");
-        VERIFY_NOT_REACHED();
-    }
-
-    if (!child_pid) {
-        if (close(pipe_fds[0]) < 0) {
-            perror("close");
-            _exit(1);
-        }
-        if (dup2(pipe_fds[1], STDOUT_FILENO) < 0) {
-            perror("dup2");
-            _exit(1);
-        }
-        if (execlp("/bin/FileOperation", "/bin/FileOperation", "Copy", source.characters(), LexicalPath::dirname(destination).characters(), nullptr) < 0) {
-            perror("execlp");
-            _exit(1);
-        }
-        VERIFY_NOT_REACHED();
-    } else {
-        if (close(pipe_fds[1]) < 0) {
-            perror("close");
-            _exit(1);
-        }
-    }
-
-    auto window = GUI::Window::construct();
-    file_operation_windows.set(window);
-
-    auto pipe_input_file = Core::File::construct();
-    pipe_input_file->open(pipe_fds[0], Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
-
-    window->set_title("Copying Files...");
-    window->set_main_widget<FileOperationProgressWidget>(pipe_input_file);
-    window->resize(320, 190);
-    if (parent_window)
-        window->center_within(*parent_window);
-    window->show();
-}
-
-NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(const LauncherHandler&)> launch_handler)
+NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(LauncherHandler const&)> launch_handler)
 {
     auto icon = GUI::FileIconProvider::icon_for_executable(details().executable).bitmap_for_size(16);
     return GUI::Action::create(details().name, move(icon), [this, launch_handler = move(launch_handler)](auto&) {
@@ -106,7 +52,7 @@ NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(c
     });
 }
 
-RefPtr<LauncherHandler> DirectoryView::get_default_launch_handler(const NonnullRefPtrVector<LauncherHandler>& handlers)
+RefPtr<LauncherHandler> DirectoryView::get_default_launch_handler(NonnullRefPtrVector<LauncherHandler> const& handlers)
 {
     // If this is an application, pick it first
     for (size_t i = 0; i < handlers.size(); i++) {
@@ -131,7 +77,7 @@ RefPtr<LauncherHandler> DirectoryView::get_default_launch_handler(const NonnullR
     return {};
 }
 
-NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(const URL& url)
+NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(URL const& url)
 {
     NonnullRefPtrVector<LauncherHandler> handlers;
     for (auto& h : Desktop::Launcher::get_handlers_with_details_for_url(url)) {
@@ -140,12 +86,12 @@ NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(const UR
     return handlers;
 }
 
-NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(const String& path)
+NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(String const& path)
 {
     return get_launch_handlers(URL::create_with_file_protocol(path));
 }
 
-void DirectoryView::handle_activation(const GUI::ModelIndex& index)
+void DirectoryView::handle_activation(GUI::ModelIndex const& index)
 {
     if (!index.is_valid())
         return;
@@ -207,14 +153,14 @@ DirectoryView::DirectoryView(Mode mode)
     set_view_mode(ViewMode::Icon);
 }
 
-const GUI::FileSystemModel::Node& DirectoryView::node(const GUI::ModelIndex& index) const
+GUI::FileSystemModel::Node const& DirectoryView::node(GUI::ModelIndex const& index) const
 {
     return model().node(m_sorting_model->map_to_source(index));
 }
 
 void DirectoryView::setup_model()
 {
-    m_model->on_error = [this](int, const char* error_string) {
+    m_model->on_error = [this](int, char const* error_string) {
         auto failed_path = m_model->root_path();
         auto error_message = String::formatted("Could not read {}:\n{}", failed_path, error_string);
         m_error_label->set_text(error_message);
@@ -419,7 +365,7 @@ void DirectoryView::open(String const& path)
     model().set_root_path(real_path);
 }
 
-void DirectoryView::set_status_message(const StringView& message)
+void DirectoryView::set_status_message(StringView const& message)
 {
     if (on_status_message)
         on_status_message(message);
@@ -473,7 +419,7 @@ void DirectoryView::update_statusbar()
     size_t selected_byte_count = 0;
 
     current_view().selection().for_each_index([&](auto& index) {
-        const auto& node = this->node(index);
+        auto const& node = this->node(index);
         selected_byte_count += node.size;
     });
 
@@ -495,17 +441,17 @@ void DirectoryView::set_should_show_dotfiles(bool show_dotfiles)
     m_model->set_should_show_dotfiles(show_dotfiles);
 }
 
-void DirectoryView::launch(const URL&, const LauncherHandler& launcher_handler) const
+void DirectoryView::launch(URL const&, LauncherHandler const& launcher_handler) const
 {
     pid_t child;
     if (launcher_handler.details().launcher_type == Desktop::Launcher::LauncherType::Application) {
-        const char* argv[] = { launcher_handler.details().name.characters(), nullptr };
+        char const* argv[] = { launcher_handler.details().name.characters(), nullptr };
         posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
         if (disown(child) < 0)
             perror("disown");
     } else {
         for (auto& path : selected_file_paths()) {
-            const char* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
+            char const* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
             posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
             if (disown(child) < 0)
                 perror("disown");
@@ -518,7 +464,7 @@ Vector<String> DirectoryView::selected_file_paths() const
     Vector<String> paths;
     auto& view = current_view();
     auto& model = *view.model();
-    view.selection().for_each_index([&](const GUI::ModelIndex& index) {
+    view.selection().for_each_index([&](GUI::ModelIndex const& index) {
         auto parent_index = model.parent_index(index);
         auto name_index = model.index(index.row(), GUI::FileSystemModel::Column::Name, parent_index);
         auto path = name_index.data(GUI::ModelRole::Custom).to_string();
@@ -531,7 +477,7 @@ void DirectoryView::do_delete(bool should_confirm)
 {
     auto paths = selected_file_paths();
     VERIFY(!paths.is_empty());
-    FileUtils::delete_paths(paths, should_confirm, window());
+    delete_paths(paths, should_confirm, window());
 }
 
 void DirectoryView::handle_selection_change()
@@ -549,7 +495,7 @@ void DirectoryView::handle_selection_change()
 
 void DirectoryView::setup_actions()
 {
-    m_mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
+    m_mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](GUI::Action const&) {
         String value;
         if (GUI::InputBox::show(window(), value, "Enter name:", "New directory") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
@@ -561,7 +507,7 @@ void DirectoryView::setup_actions()
         }
     });
 
-    m_touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
+    m_touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](GUI::Action const&) {
         String value;
         if (GUI::InputBox::show(window(), value, "Enter name:", "New file") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_file_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", path(), value));
@@ -603,7 +549,7 @@ void DirectoryView::setup_actions()
         window());
 }
 
-void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEvent& event)
+void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent const& event)
 {
     if (!event.mime_data().has_urls())
         return;
@@ -618,6 +564,7 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
         return;
 
     bool had_accepted_drop = false;
+    Vector<String> paths_to_copy;
     for (auto& url_to_copy : urls) {
         if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
             continue;
@@ -625,9 +572,13 @@ void DirectoryView::handle_drop(const GUI::ModelIndex& index, const GUI::DropEve
         if (url_to_copy.path() == new_path)
             continue;
 
-        run_file_operation(FileOperation::Copy, url_to_copy.path(), new_path, window());
+        paths_to_copy.append(url_to_copy.path());
         had_accepted_drop = true;
     }
+
+    if (!paths_to_copy.is_empty())
+        run_file_operation(FileOperation::Copy, paths_to_copy, target_node.full_path(), window());
+
     if (had_accepted_drop && on_accepted_drop)
         on_accepted_drop();
 }

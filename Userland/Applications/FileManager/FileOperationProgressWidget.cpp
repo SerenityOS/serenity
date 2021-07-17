@@ -5,6 +5,7 @@
  */
 
 #include "FileOperationProgressWidget.h"
+#include "FileUtils.h"
 #include <Applications/FileManager/FileOperationProgressGML.h>
 #include <LibCore/File.h>
 #include <LibCore/Notifier.h>
@@ -17,13 +18,15 @@
 
 namespace FileManager {
 
-FileOperationProgressWidget::FileOperationProgressWidget(NonnullRefPtr<Core::File> helper_pipe)
-    : m_helper_pipe(move(helper_pipe))
+FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation, NonnullRefPtr<Core::File> helper_pipe)
+    : m_operation(operation)
+    , m_helper_pipe(move(helper_pipe))
 {
     load_from_gml(file_operation_progress_gml);
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("button");
 
+    // FIXME: Show a different animation for deletions
     auto& file_copy_animation = *find_descendant_of_type_named<GUI::ImageWidget>("file_copy_animation");
     file_copy_animation.load_from_file("/res/graphics/file-flying-animation.gif");
     file_copy_animation.animate();
@@ -39,11 +42,31 @@ FileOperationProgressWidget::FileOperationProgressWidget(NonnullRefPtr<Core::Fil
         window()->close();
     };
 
+    auto& files_copied_label = *find_descendant_of_type_named<GUI::Label>("files_copied_label");
+    auto& current_file_action_label = *find_descendant_of_type_named<GUI::Label>("current_file_action_label");
+
+    switch (m_operation) {
+    case FileOperation::Copy:
+        files_copied_label.set_text("Copying files...");
+        current_file_action_label.set_text("Copying: ");
+        break;
+    case FileOperation::Move:
+        files_copied_label.set_text("Moving files...");
+        current_file_action_label.set_text("Moving: ");
+        break;
+    case FileOperation::Delete:
+        files_copied_label.set_text("Deleting files...");
+        current_file_action_label.set_text("Deleting: ");
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
     m_notifier = Core::Notifier::construct(m_helper_pipe->fd(), Core::Notifier::Read);
     m_notifier->on_ready_to_read = [this] {
         auto line = m_helper_pipe->read_line();
         if (line.is_null()) {
-            did_error("Read from pipe returned null.");
+            did_error("Read from pipe returned null."sv);
             return;
         }
 
@@ -51,12 +74,12 @@ FileOperationProgressWidget::FileOperationProgressWidget(NonnullRefPtr<Core::Fil
         VERIFY(!parts.is_empty());
 
         if (parts[0] == "ERROR"sv) {
-            did_error(line.substring(6));
+            did_error(line.substring_view(6));
             return;
         }
 
         if (parts[0] == "WARN"sv) {
-            did_error(line.substring(5));
+            did_error(line.substring_view(5));
             return;
         }
 
@@ -92,7 +115,7 @@ void FileOperationProgressWidget::did_finish()
     window()->close();
 }
 
-void FileOperationProgressWidget::did_error(const String message)
+void FileOperationProgressWidget::did_error(StringView const& message)
 {
     // FIXME: Communicate more with the user about errors.
     close_pipe();
@@ -134,7 +157,7 @@ String FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_
     return String::formatted("{} hours and {} minutes", hours_remaining, minutes_remaining);
 }
 
-void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byte_count, size_t files_done, size_t total_file_count, [[maybe_unused]] off_t current_file_done, [[maybe_unused]] off_t current_file_size, const StringView& current_filename)
+void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byte_count, size_t files_done, size_t total_file_count, [[maybe_unused]] off_t current_file_done, [[maybe_unused]] off_t current_file_size, StringView const& current_filename)
 {
     auto& files_copied_label = *find_descendant_of_type_named<GUI::Label>("files_copied_label");
     auto& current_file_label = *find_descendant_of_type_named<GUI::Label>("current_file_label");
@@ -143,7 +166,20 @@ void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byt
 
     current_file_label.set_text(current_filename);
 
-    files_copied_label.set_text(String::formatted("Copying file {} of {}", files_done, total_file_count));
+    switch (m_operation) {
+    case FileOperation::Copy:
+        files_copied_label.set_text(String::formatted("Copying file {} of {}", files_done, total_file_count));
+        break;
+    case FileOperation::Move:
+        files_copied_label.set_text(String::formatted("Moving file {} of {}", files_done, total_file_count));
+        break;
+    case FileOperation::Delete:
+        files_copied_label.set_text(String::formatted("Deleting file {} of {}", files_done, total_file_count));
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
     estimated_time_label.set_text(estimate_time(bytes_done, total_byte_count));
 
     if (total_byte_count) {
