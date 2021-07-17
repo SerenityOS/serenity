@@ -178,6 +178,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
             m_client->handle_user_input_in_server(m_text_box->text());
         m_text_box->add_current_text_to_history();
         m_text_box->clear();
+        m_text_box->document().undo_stack().clear();
     };
     m_text_box->set_history_enabled(true);
     m_text_box->set_placeholder("Message");
