@@ -32,7 +32,7 @@ private:
     MACAddress m_destination;
     MACAddress m_source;
     NetworkOrdered<u16> m_ether_type;
-    u32 m_payload[0];
+    u32 m_payload[];
 };
 
 static_assert(sizeof(EthernetFrameHeader) == 14);
