@@ -384,7 +384,7 @@ KResult Ext2FSInode::shrink_triply_indirect_block(BlockBasedFileSystem::BlockInd
 
 KResult Ext2FSInode::flush_block_list()
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
 
     if (m_block_list.is_empty()) {
         m_raw_inode.i_blocks = 0;
@@ -752,7 +752,7 @@ u64 Ext2FSInode::size() const
 
 InodeMetadata Ext2FSInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = identifier();
     metadata.size = size();
@@ -779,7 +779,7 @@ InodeMetadata Ext2FSInode::metadata() const
 
 void Ext2FSInode::flush_metadata()
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::flush_metadata(): Flushing inode", identifier());
     fs().write_ext2_inode(index(), m_raw_inode);
     if (is_directory()) {
@@ -829,7 +829,7 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
 
 KResultOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
-    Locker inode_locker(m_lock);
+    Locker inode_locker(m_inode_lock);
     VERIFY(offset >= 0);
     if (m_raw_inode.i_size == 0)
         return 0;
@@ -979,7 +979,7 @@ KResultOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const Use
     if (count == 0)
         return 0;
 
-    Locker inode_locker(m_lock);
+    Locker inode_locker(m_inode_lock);
 
     if (auto result = prepare_to_write_data(); result.is_error())
         return result;
@@ -1106,7 +1106,7 @@ KResult Ext2FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEn
 
 KResult Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     auto block_size = fs().block_size();
 
     // Calculate directory size and record length of entries so that
@@ -1173,7 +1173,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(const String& name, mo
 
 KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     VERIFY(is_directory());
 
     if (name.length() > EXT2_NAME_LEN)
@@ -1219,7 +1219,7 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
 
 KResult Ext2FSInode::remove_child(const StringView& name)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::remove_child(): Removing '{}'", identifier(), name);
     VERIFY(is_directory());
 
@@ -1599,7 +1599,7 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
 
 KResult Ext2FSInode::populate_lookup_cache() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     if (!m_lookup_cache.is_empty())
         return KSuccess;
     HashMap<String, InodeIndex> children;
@@ -1626,7 +1626,7 @@ RefPtr<Inode> Ext2FSInode::lookup(StringView name)
 
     InodeIndex inode_index;
     {
-        Locker locker(m_lock);
+        Locker locker(m_inode_lock);
         auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key == name; });
         if (it == m_lookup_cache.end()) {
             dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): '{}' not found", identifier(), name);
@@ -1644,7 +1644,7 @@ void Ext2FSInode::one_ref_left()
 
 KResult Ext2FSInode::set_atime(time_t t)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
     m_raw_inode.i_atime = t;
@@ -1654,7 +1654,7 @@ KResult Ext2FSInode::set_atime(time_t t)
 
 KResult Ext2FSInode::set_ctime(time_t t)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
     m_raw_inode.i_ctime = t;
@@ -1664,7 +1664,7 @@ KResult Ext2FSInode::set_ctime(time_t t)
 
 KResult Ext2FSInode::set_mtime(time_t t)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
     m_raw_inode.i_mtime = t;
@@ -1674,7 +1674,7 @@ KResult Ext2FSInode::set_mtime(time_t t)
 
 KResult Ext2FSInode::increment_link_count()
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
     constexpr size_t max_link_count = 65535;
@@ -1687,7 +1687,7 @@ KResult Ext2FSInode::increment_link_count()
 
 KResult Ext2FSInode::decrement_link_count()
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
     VERIFY(m_raw_inode.i_links_count);
@@ -1712,7 +1712,7 @@ void Ext2FS::uncache_inode(InodeIndex index)
 KResultOr<size_t> Ext2FSInode::directory_entry_count() const
 {
     VERIFY(is_directory());
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     if (auto result = populate_lookup_cache(); result.is_error())
         return KResultOr<size_t>(result);
     return m_lookup_cache.size();
@@ -1720,7 +1720,7 @@ KResultOr<size_t> Ext2FSInode::directory_entry_count() const
 
 KResult Ext2FSInode::chmod(mode_t mode)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     if (m_raw_inode.i_mode == mode)
         return KSuccess;
     m_raw_inode.i_mode = mode;
@@ -1730,7 +1730,7 @@ KResult Ext2FSInode::chmod(mode_t mode)
 
 KResult Ext2FSInode::chown(uid_t uid, gid_t gid)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     if (m_raw_inode.i_uid == uid && m_raw_inode.i_gid == gid)
         return KSuccess;
     m_raw_inode.i_uid = uid;
@@ -1741,7 +1741,7 @@ KResult Ext2FSInode::chown(uid_t uid, gid_t gid)
 
 KResult Ext2FSInode::truncate(u64 size)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     if (static_cast<u64>(m_raw_inode.i_size) == size)
         return KSuccess;
     if (auto result = resize(size); result.is_error())
@@ -1752,7 +1752,7 @@ KResult Ext2FSInode::truncate(u64 size)
 
 KResultOr<int> Ext2FSInode::get_block_address(int index)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
 
     if (m_block_list.is_empty())
         m_block_list = compute_block_list();
