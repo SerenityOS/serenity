@@ -55,6 +55,7 @@ protected:
 
     virtual Vector<String> get_test_paths() const = 0;
     virtual void do_run_single_test(const String&) = 0;
+    virtual const Vector<String>* get_failed_test_names() const { return nullptr; }
 
     String m_test_root;
     bool m_print_times;
@@ -213,6 +214,9 @@ inline void TestRunner::print_test_results() const
         outln("{}ms", static_cast<int>(m_total_elapsed_time_in_ms));
     } else {
         outln("{:>.3}s", m_total_elapsed_time_in_ms / 1000.0);
+    }
+    if (auto* failed_tests = get_failed_test_names(); failed_tests && !failed_tests->is_empty()) {
+        outln("Failed tests: {}", *failed_tests);
     }
     outln();
 }
