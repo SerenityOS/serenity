@@ -25,6 +25,11 @@ describe("errors", () => {
 describe("normal behavior", () => {
     test("basic functionality", () => {
         [1, 2].reduceRight(function () {
+            expect(this).not.toBeUndefined();
+        });
+
+        [1, 2].reduceRight(function () {
+            "use strict";
             expect(this).toBeUndefined();
         });
 

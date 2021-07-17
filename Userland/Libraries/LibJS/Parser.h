@@ -52,7 +52,7 @@ public:
     NonnullRefPtr<Declaration> parse_declaration();
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement();
-    NonnullRefPtr<BlockStatement> parse_block_statement(bool& is_strict);
+    NonnullRefPtr<BlockStatement> parse_block_statement(bool& is_strict, bool error_on_binding = false);
     NonnullRefPtr<ReturnStatement> parse_return_statement();
     NonnullRefPtr<VariableDeclaration> parse_variable_declaration(bool for_loop_variable_declaration = false);
     NonnullRefPtr<Statement> parse_for_statement();
@@ -168,7 +168,7 @@ private:
     void discard_saved_state();
     Position position() const;
 
-    void check_identifier_name_for_assignment_validity(StringView);
+    void check_identifier_name_for_assignment_validity(StringView, bool force_strict = false);
 
     bool try_parse_arrow_function_expression_failed_at_position(const Position&) const;
     void set_try_parse_arrow_function_expression_failed_at_position(const Position&, bool);

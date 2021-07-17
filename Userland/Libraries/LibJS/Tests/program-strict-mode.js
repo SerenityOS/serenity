@@ -15,4 +15,12 @@ test("basic functionality", () => {
         "use strict";
         expect(isStrictMode()).toBeTrue();
     })();
+
+    function a() {
+        expect(isStrictMode()).toBeTrue();
+    }
+
+    a();
+
+    eval("expect(isStrictMode()).toBeTrue()");
 });

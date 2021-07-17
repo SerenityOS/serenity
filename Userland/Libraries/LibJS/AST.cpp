@@ -111,7 +111,7 @@ Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global
         func_env->create_immutable_binding(global_object, name(), false);
     }
 
-    auto closure = OrdinaryFunctionObject::create(global_object, name(), body(), parameters(), function_length(), func_env, kind(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
+    auto closure = OrdinaryFunctionObject::create(global_object, name(), body(), parameters(), function_length(), func_env, kind(), is_strict_mode(), is_arrow_function());
 
     if (has_identifier)
         func_env->initialize_binding(global_object, name(), closure);
@@ -161,12 +161,8 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         return { this_value, callee };
     }
 
-    if (interpreter.vm().in_strict_mode()) {
-        // If we are in strict mode, |this| should never be bound to global object by default.
-        return { js_undefined(), m_callee->execute(interpreter, global_object) };
-    }
-
-    return { &global_object, m_callee->execute(interpreter, global_object) };
+    // [[Call]] will handle that in non-strict mode the this value becomes the global value
+    return { js_undefined(), m_callee->execute(interpreter, global_object) };
 }
 
 // 13.3.8.1 Runtime Semantics: ArgumentListEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
