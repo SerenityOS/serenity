@@ -141,10 +141,11 @@ class PageDirectoryPointerTable {
 public:
     PageDirectoryEntry* directory(size_t index)
     {
+        VERIFY(index <= (NumericLimits<size_t>::max() << 30));
         return (PageDirectoryEntry*)(PhysicalAddress::physical_page_base(raw[index]));
     }
 
-    u64 raw[4];
+    u64 raw[512];
 };
 
 }
