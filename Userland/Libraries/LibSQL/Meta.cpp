@@ -16,7 +16,7 @@ SchemaDef::SchemaDef(String name)
 }
 
 SchemaDef::SchemaDef(Key const& key)
-    : Relation(key["schema_name"].to_string().value())
+    : Relation(key["schema_name"].to_string())
 {
 }
 

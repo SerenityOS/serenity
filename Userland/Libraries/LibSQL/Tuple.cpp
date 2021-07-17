@@ -51,7 +51,7 @@ void Tuple::deserialize(ByteBuffer& buffer, size_t& offset)
     dbgln_if(SQL_DEBUG, "pointer: {}", m_pointer);
     m_data.clear();
     for (auto& part : *m_descriptor) {
-        m_data.empend(part.type, buffer, offset);
+        m_data.append(Value::deserialize_from(buffer, offset));
         dbgln_if(SQL_DEBUG, "Deserialized element {} = {}", part.name, m_data.last().to_string());
     }
 }
@@ -64,11 +64,11 @@ void Tuple::serialize(ByteBuffer& buffer) const
     for (auto ix = 0u; ix < m_descriptor->size(); ix++) {
         auto& key_part = m_data[ix];
         if constexpr (SQL_DEBUG) {
-            auto str_opt = key_part.to_string();
+            auto key_string = key_part.to_string();
             auto& key_part_definition = (*m_descriptor)[ix];
-            dbgln("Serialized part {} = {}", key_part_definition.name, (str_opt.has_value()) ? str_opt.value() : "(null)");
+            dbgln("Serialized part {} = {}", key_part_definition.name, key_string);
         }
-        key_part.serialize(buffer);
+        key_part.serialize_to(buffer);
     }
 }
 
@@ -165,8 +165,7 @@ String Tuple::to_string() const
         if (!builder.is_empty()) {
             builder.append('|');
         }
-        auto str_opt = part.to_string();
-        builder.append((str_opt.has_value()) ? str_opt.value() : "(null)");
+        builder.append(part.to_string());
     }
     if (pointer() != 0) {
         builder.appendff(":{}", pointer());
@@ -178,7 +177,7 @@ Vector<String> Tuple::to_string_vector() const
 {
     Vector<String> ret;
     for (auto& value : m_data) {
-        ret.append(value.to_string().value());
+        ret.append(value.to_string());
     }
     return ret;
 }
