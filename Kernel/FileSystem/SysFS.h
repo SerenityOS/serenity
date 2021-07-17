@@ -33,10 +33,10 @@ public:
     void register_new_component(SysFSComponent&);
 
     SysFSDirectory& root_folder() { return m_root_folder; }
-    Lock& get_lock() { return m_lock; }
+    Mutex& get_lock() { return m_lock; }
 
 private:
-    Lock m_lock;
+    Mutex m_lock;
     NonnullRefPtr<SysFSRootDirectory> m_root_folder;
 };
 

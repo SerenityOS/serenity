@@ -9,14 +9,14 @@
 namespace Kernel {
 
 extern String* g_hostname;
-extern Lock* g_hostname_lock;
+extern Mutex* g_hostname_lock;
 
 KResultOr<FlatPtr> Process::sys$gethostname(Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(stdio);
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
-    Locker locker(*g_hostname_lock, Lock::Mode::Shared);
+    Locker locker(*g_hostname_lock, Mutex::Mode::Shared);
     if (size < (g_hostname->length() + 1))
         return ENAMETOOLONG;
     if (!copy_to_user(buffer, g_hostname->characters(), g_hostname->length() + 1))
@@ -29,7 +29,7 @@ KResultOr<FlatPtr> Process::sys$sethostname(Userspace<const char*> hostname, siz
     REQUIRE_NO_PROMISES;
     if (!is_superuser())
         return EPERM;
-    Locker locker(*g_hostname_lock, Lock::Mode::Exclusive);
+    Locker locker(*g_hostname_lock, Mutex::Mode::Exclusive);
     if (length > 64)
         return ENAMETOOLONG;
     auto copied_hostname = copy_string_from_user(hostname, length);

@@ -21,7 +21,7 @@
 #include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Storage/StorageDevice.h>
@@ -158,7 +158,7 @@ protected:
     u64 m_current_request_block_index { 0 };
     bool m_current_request_flushing_cache { false };
     SpinLock<u8> m_request_lock;
-    Lock m_lock { "IDEChannel" };
+    Mutex m_lock { "IDEChannel" };
 
     IOAddressGroup m_io_group;
     NonnullRefPtr<IDEController> m_parent_controller;

@@ -8,7 +8,7 @@
 
 #include <AK/Badge.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 
 namespace Kernel {
 
@@ -43,7 +43,7 @@ private:
     // ^CharacterDevice
     virtual StringView class_name() const override { return "PTYMultiplexer"; }
 
-    Lock m_lock { "PTYMultiplexer" };
+    Mutex m_lock { "PTYMultiplexer" };
     Vector<unsigned> m_freelist;
 };
 

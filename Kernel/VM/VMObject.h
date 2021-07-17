@@ -14,7 +14,7 @@
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <Kernel/Forward.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 
 namespace Kernel {
 
@@ -70,7 +70,7 @@ protected:
 
     IntrusiveListNode<VMObject> m_list_node;
     FixedArray<RefPtr<PhysicalPage>> m_physical_pages;
-    Lock m_paging_lock { "VMObject" };
+    Mutex m_paging_lock { "VMObject" };
 
     mutable SpinLock<u8> m_lock;
 

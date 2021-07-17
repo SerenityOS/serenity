@@ -26,7 +26,7 @@ static Lockable<LocalSocket::List>& all_sockets()
 
 void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
 {
-    Locker locker(all_sockets().lock(), Lock::Mode::Shared);
+    Locker locker(all_sockets().lock(), Mutex::Mode::Shared);
     for (auto& socket : all_sockets().resource())
         callback(socket);
 }

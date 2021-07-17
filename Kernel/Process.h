@@ -22,7 +22,7 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/StdLib.h>
@@ -469,8 +469,8 @@ public:
         return m_thread_count.load(AK::MemoryOrder::memory_order_relaxed);
     }
 
-    Lock& big_lock() { return m_big_lock; }
-    Lock& ptrace_lock() { return m_ptrace_lock; }
+    Mutex& big_lock() { return m_big_lock; }
+    Mutex& ptrace_lock() { return m_ptrace_lock; }
 
     Custody& root_directory();
     Custody& root_directory_relative_to_global_root();
@@ -696,8 +696,8 @@ private:
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
 
-    Lock m_big_lock { "Process" };
-    Lock m_ptrace_lock { "ptrace" };
+    Mutex m_big_lock { "Process" };
+    Mutex m_ptrace_lock { "ptrace" };
 
     RefPtr<Timer> m_alarm_timer;
 

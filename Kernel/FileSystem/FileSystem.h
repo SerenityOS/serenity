@@ -12,7 +12,7 @@
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
@@ -69,7 +69,7 @@ protected:
     void set_block_size(u64 size) { m_block_size = size; }
     void set_fragment_size(size_t size) { m_fragment_size = size; }
 
-    mutable Lock m_lock { "FS" };
+    mutable Mutex m_lock { "FS" };
 
 private:
     unsigned m_fsid { 0 };

@@ -135,7 +135,7 @@ private:
     ProtocolVersion m_remote_protocol_version { ProtocolVersion::v9P2000 };
     size_t m_max_message_size { 4 * KiB };
 
-    Lock m_send_lock { "Plan9FS send" };
+    Mutex m_send_lock { "Plan9FS send" };
     Plan9FSBlockCondition m_completion_blocker;
     HashMap<u16, NonnullRefPtr<ReceiveCompletion>> m_completions;
 

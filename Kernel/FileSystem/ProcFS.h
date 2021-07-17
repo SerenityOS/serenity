@@ -12,7 +12,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KBufferBuilder.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/ProcessExposed.h>
 
 namespace Kernel {

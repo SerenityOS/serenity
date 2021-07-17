@@ -44,7 +44,7 @@ RecursiveSpinLock g_processes_lock;
 static Atomic<pid_t> next_pid;
 READONLY_AFTER_INIT Process::List* g_processes;
 READONLY_AFTER_INIT String* g_hostname;
-READONLY_AFTER_INIT Lock* g_hostname_lock;
+READONLY_AFTER_INIT Mutex* g_hostname_lock;
 READONLY_AFTER_INIT HashMap<String, OwnPtr<Module>>* g_modules;
 READONLY_AFTER_INIT Region* g_signal_trampoline_region;
 
@@ -66,7 +66,7 @@ UNMAP_AFTER_INIT void Process::initialize()
     g_processes = new Process::List();
     g_process_groups = new ProcessGroup::List();
     g_hostname = new String("courage");
-    g_hostname_lock = new Lock;
+    g_hostname_lock = new Mutex;
 
     create_signal_trampoline();
 }

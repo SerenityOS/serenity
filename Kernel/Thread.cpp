@@ -172,7 +172,7 @@ Thread::~Thread()
     }
 }
 
-void Thread::block(Kernel::Lock& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock, u32 lock_count)
+void Thread::block(Kernel::Mutex& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock, u32 lock_count)
 {
     VERIFY(!Processor::current().in_irq());
     VERIFY(this == Thread::current());
@@ -206,7 +206,7 @@ void Thread::block(Kernel::Lock& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock, 
 
     lock_lock.unlock();
 
-    dbgln_if(THREAD_DEBUG, "Thread {} blocking on Lock {}", *this, &lock);
+    dbgln_if(THREAD_DEBUG, "Thread {} blocking on Mutex {}", *this, &lock);
 
     auto& big_lock = process().big_lock();
     for (;;) {
@@ -238,7 +238,7 @@ void Thread::block(Kernel::Lock& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock, 
     lock_lock.lock();
 }
 
-u32 Thread::unblock_from_lock(Kernel::Lock& lock)
+u32 Thread::unblock_from_lock(Kernel::Mutex& lock)
 {
     ScopedSpinLock block_lock(m_block_lock);
     VERIFY(m_blocking_lock == &lock);
@@ -253,7 +253,7 @@ u32 Thread::unblock_from_lock(Kernel::Lock& lock)
         VERIFY(g_scheduler_lock.own_lock());
         VERIFY(m_block_lock.own_lock());
         VERIFY(m_blocking_lock == &lock);
-        dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Lock {}", *this, &lock);
+        dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Mutex {}", *this, &lock);
         m_blocking_lock = nullptr;
         if (Thread::current() == this) {
             set_state(Thread::Running);
@@ -491,7 +491,7 @@ const char* Thread::state_string() const
     case Thread::Blocked: {
         ScopedSpinLock block_lock(m_block_lock);
         if (m_blocking_lock)
-            return "Lock";
+            return "Mutex";
         if (m_blocker)
             return m_blocker->state_string();
         VERIFY_NOT_REACHED();
@@ -512,7 +512,7 @@ void Thread::finalize()
         ScopedSpinLock list_lock(m_holding_locks_lock);
         for (auto& info : m_holding_locks_list) {
             const auto& location = info.source_location;
-            dbgln(" - Lock: \"{}\" @ {} locked in function \"{}\" at \"{}:{}\" with a count of: {}", info.lock->name(), info.lock, location.function_name(), location.filename(), location.line_number(), info.count);
+            dbgln(" - Mutex: \"{}\" @ {} locked in function \"{}\" at \"{}:{}\" with a count of: {}", info.lock->name(), info.lock, location.function_name(), location.filename(), location.line_number(), info.count);
         }
         VERIFY_NOT_REACHED();
     }

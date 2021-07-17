@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/Storage/AHCIPort.h>
 #include <Kernel/Storage/StorageDevice.h>
 

@@ -116,7 +116,7 @@ class Thread
     AK_MAKE_NONCOPYABLE(Thread);
     AK_MAKE_NONMOVABLE(Thread);
 
-    friend class Lock;
+    friend class Mutex;
     friend class Process;
     friend class ProtectedProcessBase;
     friend class Scheduler;
@@ -824,7 +824,7 @@ public:
         }
     }
 
-    void block(Kernel::Lock&, ScopedSpinLock<SpinLock<u8>>&, u32);
+    void block(Kernel::Mutex&, ScopedSpinLock<SpinLock<u8>>&, u32);
 
     template<typename BlockerType, class... Args>
     [[nodiscard]] BlockResult block(const BlockTimeout& timeout, Args&&... args)
@@ -957,7 +957,7 @@ public:
         return result;
     }
 
-    u32 unblock_from_lock(Kernel::Lock&);
+    u32 unblock_from_lock(Kernel::Mutex&);
     void unblock_from_blocker(Blocker&);
     void unblock(u8 signal = 0);
 
@@ -1126,7 +1126,7 @@ public:
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
 #if LOCK_DEBUG
-    void holding_lock(Lock& lock, int refs_delta, const SourceLocation& location)
+    void holding_lock(Mutex& lock, int refs_delta, const SourceLocation& location)
     {
         VERIFY(refs_delta != 0);
         m_holding_locks.fetch_add(refs_delta, AK::MemoryOrder::memory_order_relaxed);
@@ -1283,13 +1283,13 @@ private:
     Optional<Range> m_thread_specific_range;
     Array<SignalActionData, NSIG> m_signal_action_data;
     Blocker* m_blocker { nullptr };
-    Kernel::Lock* m_blocking_lock { nullptr };
+    Kernel::Mutex* m_blocking_lock { nullptr };
     u32 m_lock_requested_count { 0 };
     IntrusiveListNode<Thread> m_blocked_threads_list_node;
 
 #if LOCK_DEBUG
     struct HoldingLockInfo {
-        Lock* lock;
+        Mutex* lock;
         SourceLocation source_location;
         unsigned count;
     };

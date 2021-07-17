@@ -7,16 +7,16 @@
 #include <AK/SourceLocation.h>
 #include <Kernel/Debug.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {
 
 #if LOCK_DEBUG
-void Lock::lock(Mode mode, const SourceLocation& location)
+void Mutex::lock(Mode mode, const SourceLocation& location)
 #else
-void Lock::lock(Mode mode)
+void Mutex::lock(Mode mode)
 #endif
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
@@ -30,7 +30,7 @@ void Lock::lock(Mode mode)
     Mode current_mode = m_mode;
     switch (current_mode) {
     case Mode::Unlocked: {
-        dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ ({}) {}: acquire {}, currently unlocked", this, m_name, mode_to_string(mode));
+        dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ ({}) {}: acquire {}, currently unlocked", this, m_name, mode_to_string(mode));
         m_mode = mode;
         VERIFY(!m_holder);
         VERIFY(m_shared_holders.is_empty());
@@ -71,9 +71,9 @@ void Lock::lock(Mode mode)
 
         if constexpr (LOCK_TRACE_DEBUG) {
             if (mode == Mode::Exclusive)
-                dbgln("Lock::lock @ {} ({}): acquire {}, currently exclusive, holding: {}", this, m_name, mode_to_string(mode), m_times_locked);
+                dbgln("Mutex::lock @ {} ({}): acquire {}, currently exclusive, holding: {}", this, m_name, mode_to_string(mode), m_times_locked);
             else
-                dbgln("Lock::lock @ {} ({}): acquire exclusive (requested {}), currently exclusive, holding: {}", this, m_name, mode_to_string(mode), m_times_locked);
+                dbgln("Mutex::lock @ {} ({}): acquire exclusive (requested {}), currently exclusive, holding: {}", this, m_name, mode_to_string(mode), m_times_locked);
         }
 
         VERIFY(m_times_locked > 0);
@@ -99,7 +99,7 @@ void Lock::lock(Mode mode)
                     m_mode = Mode::Exclusive;
                     m_holder = current_thread;
                     m_shared_holders.clear();
-                    dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}): acquire {}, converted shared to exclusive lock, locks held {}", this, m_name, mode_to_string(mode), m_times_locked);
+                    dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}): acquire {}, converted shared to exclusive lock, locks held {}", this, m_name, mode_to_string(mode), m_times_locked);
                     return;
                 }
             }
@@ -109,7 +109,7 @@ void Lock::lock(Mode mode)
             VERIFY(m_mode == mode);
         }
 
-        dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}): acquire {}, currently shared, locks held {}", this, m_name, mode_to_string(mode), m_times_locked);
+        dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}): acquire {}, currently shared, locks held {}", this, m_name, mode_to_string(mode), m_times_locked);
 
         VERIFY(m_times_locked > 0);
         if (m_mode == Mode::Shared) {
@@ -143,7 +143,7 @@ void Lock::lock(Mode mode)
     }
 }
 
-void Lock::unlock()
+void Mutex::unlock()
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
@@ -153,9 +153,9 @@ void Lock::unlock()
     Mode current_mode = m_mode;
     if constexpr (LOCK_TRACE_DEBUG) {
         if (current_mode == Mode::Shared)
-            dbgln("Lock::unlock @ {} ({}): release {}, locks held: {}", this, m_name, mode_to_string(current_mode), m_times_locked);
+            dbgln("Mutex::unlock @ {} ({}): release {}, locks held: {}", this, m_name, mode_to_string(current_mode), m_times_locked);
         else
-            dbgln("Lock::unlock @ {} ({}): release {}, holding: {}", this, m_name, mode_to_string(current_mode), m_times_locked);
+            dbgln("Mutex::unlock @ {} ({}): release {}, holding: {}", this, m_name, mode_to_string(current_mode), m_times_locked);
     }
 
     VERIFY(current_mode != Mode::Unlocked);
@@ -200,21 +200,21 @@ void Lock::unlock()
     }
 }
 
-void Lock::block(Thread& current_thread, Mode mode, ScopedSpinLock<SpinLock<u8>>& lock, u32 requested_locks)
+void Mutex::block(Thread& current_thread, Mode mode, ScopedSpinLock<SpinLock<u8>>& lock, u32 requested_locks)
 {
     auto& blocked_thread_list = thread_list_for_mode(mode);
     VERIFY(!blocked_thread_list.contains(current_thread));
     blocked_thread_list.append(current_thread);
 
-    dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}) waiting...", this, m_name);
+    dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}) waiting...", this, m_name);
     current_thread.block(*this, lock, requested_locks);
-    dbgln_if(LOCK_TRACE_DEBUG, "Lock::lock @ {} ({}) waited", this, m_name);
+    dbgln_if(LOCK_TRACE_DEBUG, "Mutex::lock @ {} ({}) waited", this, m_name);
 
     VERIFY(blocked_thread_list.contains(current_thread));
     blocked_thread_list.remove(current_thread);
 }
 
-void Lock::unblock_waiters(Mode previous_mode)
+void Mutex::unblock_waiters(Mode previous_mode)
 {
     VERIFY(m_times_locked == 0);
     VERIFY(m_mode == Mode::Unlocked);
@@ -253,7 +253,7 @@ void Lock::unblock_waiters(Mode previous_mode)
     }
 }
 
-auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
+auto Mutex::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
@@ -268,7 +268,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
             return Mode::Unlocked;
         }
 
-        dbgln_if(LOCK_RESTORE_DEBUG, "Lock::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}", this, m_times_locked);
+        dbgln_if(LOCK_RESTORE_DEBUG, "Mutex::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}", this, m_times_locked);
 #if LOCK_DEBUG
         m_holder->holding_lock(*this, -(int)m_times_locked, {});
 #endif
@@ -288,7 +288,7 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
             return Mode::Unlocked;
         }
 
-        dbgln_if(LOCK_RESTORE_DEBUG, "Lock::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}, total locks: {}",
+        dbgln_if(LOCK_RESTORE_DEBUG, "Mutex::force_unlock_if_locked @ {}: unlocking exclusive with lock count: {}, total locks: {}",
             this, it->value, m_times_locked);
 
         VERIFY(it->value > 0);
@@ -317,9 +317,9 @@ auto Lock::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
 }
 
 #if LOCK_DEBUG
-void Lock::restore_lock(Mode mode, u32 lock_count, const SourceLocation& location)
+void Mutex::restore_lock(Mode mode, u32 lock_count, const SourceLocation& location)
 #else
-void Lock::restore_lock(Mode mode, u32 lock_count)
+void Mutex::restore_lock(Mode mode, u32 lock_count)
 #endif
 {
     VERIFY(mode != Mode::Unlocked);
@@ -343,7 +343,7 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
             VERIFY(m_mode == Mode::Exclusive);
         }
 
-        dbgln_if(LOCK_RESTORE_DEBUG, "Lock::restore_lock @ {}: restoring {} with lock count {}, was {}", this, mode_to_string(mode), lock_count, mode_to_string(previous_mode));
+        dbgln_if(LOCK_RESTORE_DEBUG, "Mutex::restore_lock @ {}: restoring {} with lock count {}, was {}", this, mode_to_string(mode), lock_count, mode_to_string(previous_mode));
 
         VERIFY(m_mode != Mode::Shared);
         VERIFY(m_shared_holders.is_empty());
@@ -387,7 +387,7 @@ void Lock::restore_lock(Mode mode, u32 lock_count)
             VERIFY(m_mode == Mode::Shared);
         }
 
-        dbgln_if(LOCK_RESTORE_DEBUG, "Lock::restore_lock @ {}: restoring {} with lock count {}, was {}",
+        dbgln_if(LOCK_RESTORE_DEBUG, "Mutex::restore_lock @ {}: restoring {} with lock count {}, was {}",
             this, mode_to_string(mode), lock_count, mode_to_string(previous_mode));
 
         VERIFY(!m_holder);

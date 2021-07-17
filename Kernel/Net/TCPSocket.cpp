@@ -23,7 +23,7 @@ namespace Kernel {
 
 void TCPSocket::for_each(Function<void(const TCPSocket&)> callback)
 {
-    Locker locker(sockets_by_tuple().lock(), Lock::Mode::Shared);
+    Locker locker(sockets_by_tuple().lock(), Mutex::Mode::Shared);
     for (auto& it : sockets_by_tuple().resource())
         callback(*it.value);
 }
@@ -68,7 +68,7 @@ Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 
 RefPtr<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
 {
-    Locker locker(sockets_by_tuple().lock(), Lock::Mode::Shared);
+    Locker locker(sockets_by_tuple().lock(), Mutex::Mode::Shared);
 
     auto exact_match = sockets_by_tuple().resource().get(tuple);
     if (exact_match.has_value())
@@ -91,7 +91,7 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
     auto tuple = IPv4SocketTuple(new_local_address, new_local_port, new_peer_address, new_peer_port);
 
     {
-        Locker locker(sockets_by_tuple().lock(), Lock::Mode::Shared);
+        Locker locker(sockets_by_tuple().lock(), Mutex::Mode::Shared);
         if (sockets_by_tuple().resource().contains(tuple))
             return {};
     }
@@ -545,7 +545,7 @@ void TCPSocket::retransmit_packets()
     if (routing_decision.is_zero())
         return;
 
-    Locker locker(m_not_acked_lock, Lock::Mode::Shared);
+    Locker locker(m_not_acked_lock, Mutex::Mode::Shared);
     for (auto& packet : m_not_acked) {
         packet.tx_counter++;
 

@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Debug.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
@@ -224,7 +224,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
     {
         NonnullRefPtrVector<IPv4Socket> icmp_sockets;
         {
-            Locker locker(IPv4Socket::all_sockets().lock(), Lock::Mode::Shared);
+            Locker locker(IPv4Socket::all_sockets().lock(), Mutex::Mode::Shared);
             for (auto* socket : IPv4Socket::all_sockets().resource()) {
                 if (socket->protocol() != (unsigned)IPv4Protocol::ICMP)
                     continue;

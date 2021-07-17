@@ -19,7 +19,7 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 
 namespace Kernel {
 
@@ -109,7 +109,7 @@ protected:
     void did_modify_contents();
     void did_delete_self();
 
-    mutable Lock m_lock { "Inode" };
+    mutable Mutex m_lock { "Inode" };
 
 private:
     FileSystem& m_file_system;

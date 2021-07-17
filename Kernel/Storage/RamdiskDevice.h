@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {
@@ -30,7 +30,7 @@ public:
 
     bool is_slave() const;
 
-    Lock m_lock { "RamdiskDevice" };
+    Mutex m_lock { "RamdiskDevice" };
 
     NonnullOwnPtr<Region> m_region;
 };

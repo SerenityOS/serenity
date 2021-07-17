@@ -84,7 +84,7 @@ private:
     {
     }
     WeakPtr<ProcFSProcessDirectory> m_process_folder;
-    mutable Lock m_lock;
+    mutable Mutex m_lock;
 };
 
 KResultOr<size_t> ProcFSProcessStacks::entries_count() const
@@ -193,7 +193,7 @@ private:
     {
     }
     WeakPtr<ProcFSProcessDirectory> m_process_folder;
-    mutable Lock m_lock;
+    mutable Mutex m_lock;
 };
 
 KResultOr<size_t> ProcFSProcessFileDescriptions::entries_count() const

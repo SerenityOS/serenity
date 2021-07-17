@@ -66,7 +66,7 @@ public:
 private:
     explicit InodeWatcher() { }
 
-    mutable Lock m_lock;
+    mutable Mutex m_lock;
 
     struct Event {
         int wd { 0 };

@@ -86,7 +86,7 @@ private:
     Mount* find_mount_for_host(InodeIdentifier);
     Mount* find_mount_for_guest(InodeIdentifier);
 
-    Lock m_lock { "VFSLock" };
+    Mutex m_lock { "VFSLock" };
 
     RefPtr<Inode> m_root_inode;
     Vector<Mount, 16> m_mounts;
