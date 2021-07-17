@@ -145,12 +145,18 @@ bool Ext2FS::initialize()
         }
     }
 
+    m_root_inode = static_ptr_cast<Ext2FSInode>(get_inode({ fsid(), EXT2_ROOT_INO }));
+    if (!m_root_inode) {
+        dbgln("Ext2FS: failed to acquire root inode");
+        return false;
+    }
+
     return true;
 }
 
 NonnullRefPtr<Inode> Ext2FS::root_inode() const
 {
-    return *get_inode({ fsid(), EXT2_ROOT_INO });
+    return *m_root_inode;
 }
 
 bool Ext2FS::find_block_containing_inode(InodeIndex inode, BlockIndex& block_index, unsigned& offset) const
@@ -1778,7 +1784,7 @@ unsigned Ext2FS::free_inode_count() const
     return super_block().s_free_inodes_count;
 }
 
-KResult Ext2FS::prepare_to_unmount() const
+KResult Ext2FS::prepare_to_unmount()
 {
     MutexLocker locker(m_lock);
 
@@ -1788,6 +1794,7 @@ KResult Ext2FS::prepare_to_unmount() const
     }
 
     m_inode_cache.clear();
+    m_root_inode = nullptr;
     return KSuccess;
 }
 }

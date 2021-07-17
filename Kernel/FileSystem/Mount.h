@@ -23,6 +23,7 @@ public:
     Inode& guest() { return *m_guest; }
 
     FileSystem const& guest_fs() const { return *m_guest_fs; }
+    FileSystem& guest_fs() { return *m_guest_fs; }
 
     String absolute_path() const;
 
