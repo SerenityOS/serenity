@@ -113,7 +113,7 @@ then
     exit 1
 fi
 
-if [ "$SYSTEM_NAME" != "Darwin" ]; then
+if [ "$SYSTEM_NAME" != "Darwin" ] && [ -z "$BUILD_ONLY_BINUTILS" ]; then
     for lib in gmp mpc mpfr; do
         buildstep dependencies echo "Checking whether the $lib library and headers are available..."
         if ! ${CC:-cc} -I /usr/local/include -L /usr/local/lib -l$lib -o /dev/null -xc - >/dev/null <<PROGRAM
@@ -185,16 +185,18 @@ pushd "$DIR/Tarballs"
         echo "Skipped downloading binutils"
     fi
 
-    md5=""
-    if [ -e "$GCC_PKG" ]; then
-        md5="$($MD5SUM ${GCC_PKG} | cut -f1 -d' ')"
-        echo "gc md5='$md5'"
-    fi
-    if [ "$md5" != ${GCC_MD5SUM} ] ; then
-        rm -f $GCC_PKG
-        curl -LO "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
-    else
-        echo "Skipped downloading gcc"
+    if [ -z "$BUILD_ONLY_BINUTILS" ]; then
+        md5=""
+        if [ -e "$GCC_PKG" ]; then
+            md5="$($MD5SUM ${GCC_PKG} | cut -f1 -d' ')"
+            echo "gc md5='$md5'"
+        fi
+        if [ "$md5" != ${GCC_MD5SUM} ] ; then
+            rm -f $GCC_PKG
+            curl -LO "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
+        else
+            echo "Skipped downloading gcc"
+        fi
     fi
 
     if [ -d ${BINUTILS_NAME} ]; then
@@ -216,30 +218,33 @@ pushd "$DIR/Tarballs"
         $MD5SUM "$DIR"/Patches/binutils.patch > .patch.applied
     popd
 
-    if [ -d ${GCC_NAME} ]; then
-        # Drop the previously patched extracted dir
-        rm -rf "${GCC_NAME}"
-        # Also drop the build dir
-        rm -rf "$DIR/Build/$ARCH/$GCC_NAME"
-    fi
-    echo "Extracting gcc..."
-    tar -xzf $GCC_PKG
-    pushd $GCC_NAME
-        if [ "$git_patch" = "1" ]; then
-            git init > /dev/null
-            git add . > /dev/null
-            git commit -am "BASE" > /dev/null
-            git apply "$DIR"/Patches/gcc.patch > /dev/null
-        else
-            patch -p1 < "$DIR/Patches/gcc.patch" > /dev/null
-        fi
-        $MD5SUM "$DIR/Patches/gcc.patch" > .patch.applied
-    popd
 
-    if [ "$SYSTEM_NAME" = "Darwin" ]; then
-        pushd "gcc-${GCC_VERSION}"
-        ./contrib/download_prerequisites
+    if [ -z "$BUILD_ONLY_BINUTILS" ]; then
+        if [ -d ${GCC_NAME} ]; then
+            # Drop the previously patched extracted dir
+            rm -rf "${GCC_NAME}"
+            # Also drop the build dir
+            rm -rf "$DIR/Build/$ARCH/$GCC_NAME"
+        fi
+        echo "Extracting gcc..."
+        tar -xzf $GCC_PKG
+        pushd $GCC_NAME
+            if [ "$git_patch" = "1" ]; then
+                git init > /dev/null
+                git add . > /dev/null
+                git commit -am "BASE" > /dev/null
+                git apply "$DIR"/Patches/gcc.patch > /dev/null
+            else
+                patch -p1 < "$DIR/Patches/gcc.patch" > /dev/null
+            fi
+            $MD5SUM "$DIR/Patches/gcc.patch" > .patch.applied
         popd
+
+        if [ "$SYSTEM_NAME" = "Darwin" ]; then
+            pushd "gcc-${GCC_VERSION}"
+            ./contrib/download_prerequisites
+            popd
+        fi
     fi
 popd
 
@@ -282,6 +287,9 @@ pushd "$DIR/Build/$ARCH"
         buildstep "binutils/build" "$MAKE" -j "$MAKEJOBS" || exit 1
         buildstep "binutils/install" "$MAKE" install || exit 1
     popd
+
+    # We only came here to get GNU binutils, so there's no point in proceeding.
+    [ -n "$BUILD_ONLY_BINUTILS" ] && exit 0
 
     echo "XXX serenity libc, libm and libpthread headers"
     mkdir -p "$BUILD"

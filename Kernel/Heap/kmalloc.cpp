@@ -25,7 +25,7 @@
 
 #define CHUNK_SIZE 32
 #define POOL_SIZE (2 * MiB)
-#define ETERNAL_RANGE_SIZE (3 * MiB)
+#define ETERNAL_RANGE_SIZE (4 * MiB)
 
 namespace std {
 const nothrow_t nothrow;

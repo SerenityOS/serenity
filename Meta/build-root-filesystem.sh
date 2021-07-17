@@ -47,8 +47,12 @@ else
     $CP -PdR Root/* mnt/
     chown -R 0:0 mnt/
 fi
+
 SERENITY_ARCH="${SERENITY_ARCH:-i686}"
-$CP "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libgcc_s.so mnt/usr/lib/
+if [ "$USE_CLANG_TOOLCHAIN" != "ON" ]; then
+    $CP "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libgcc_s.so mnt/usr/lib/
+fi
+
 # If umask was 027 or similar when the repo was cloned,
 # file permissions in Base/ are too restrictive. Restore
 # the permissions needed in the image.
