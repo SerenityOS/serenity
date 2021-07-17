@@ -33,10 +33,6 @@ void RangeAllocator::initialize_from_parent(RangeAllocator const& parent_allocat
     }
 }
 
-RangeAllocator::~RangeAllocator()
-{
-}
-
 void RangeAllocator::dump() const
 {
     VERIFY(m_lock.is_locked());
