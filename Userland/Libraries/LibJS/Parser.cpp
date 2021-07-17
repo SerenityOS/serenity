@@ -559,6 +559,22 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
     if (match(TokenType::Extends)) {
         consume();
         auto [expression, should_continue_parsing] = parse_primary_expression();
+
+        // Basically a (much) simplified parse_secondary_expression().
+        for (;;) {
+            if (match(TokenType::TemplateLiteralStart)) {
+                auto template_literal = parse_template_literal(true);
+                expression = create_ast_node<TaggedTemplateLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(template_literal));
+                continue;
+            }
+            if (match(TokenType::BracketOpen) || match(TokenType::Period) || match(TokenType::ParenOpen)) {
+                auto precedence = g_operator_precedence.get(m_state.current_token.type());
+                expression = parse_secondary_expression(move(expression), precedence);
+                continue;
+            }
+            break;
+        }
+
         super_class = move(expression);
         (void)should_continue_parsing;
     }
