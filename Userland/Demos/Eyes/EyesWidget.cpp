@@ -5,12 +5,12 @@
  */
 
 #include "EyesWidget.h"
+#include <AK/Math.h>
 #include <AK/StdLibExtraDetails.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Palette.h>
-#include <math.h>
 
 EyesWidget::~EyesWidget()
 {
@@ -79,7 +79,7 @@ Gfx::IntPoint EyesWidget::pupil_center(Gfx::IntRect& eyeball_bounds) const
     auto mouse_vector = m_mouse_position - eyeball_bounds.center();
     double dx = mouse_vector.x();
     double dy = mouse_vector.y();
-    double mouse_distance = sqrt(dx * dx + dy * dy);
+    double mouse_distance = AK::hypot(dx, dy);
 
     if (mouse_distance == 0.0)
         return eyeball_bounds.center();
@@ -93,14 +93,14 @@ Gfx::IntPoint EyesWidget::pupil_center(Gfx::IntRect& eyeball_bounds) const
     if (dx != 0 && AK::abs(dx) >= AK::abs(dy)) {
         double slope = dy / dx;
         double slope_squared = slope * slope;
-        max_distance_along_this_direction = 0.25 * sqrt(
+        max_distance_along_this_direction = 0.25 * AK::sqrt(
             (slope_squared + 1) /
             (1 / width_squared + slope_squared / height_squared)
         );
     } else if (dy != 0 && AK::abs(dy) >= AK::abs(dx)) {
         double slope = dx / dy;
         double slope_squared = slope * slope;
-        max_distance_along_this_direction = 0.25 * sqrt(
+        max_distance_along_this_direction = 0.25 * AK::sqrt(
             (slope_squared + 1) /
             (slope_squared / width_squared + 1 / height_squared)
         );

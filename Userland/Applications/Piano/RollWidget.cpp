@@ -8,11 +8,11 @@
 
 #include "RollWidget.h"
 #include "TrackManager.h"
+#include <AK/Math.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
-#include <math.h>
 
 constexpr int note_height = 20;
 constexpr int max_note_width = note_height * 2;
@@ -47,7 +47,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
     if (m_num_notes < time_signature_notes)
         m_num_notes = time_signature_notes;
     else
-        m_num_notes = time_signature_notes * pow(2, static_cast<int>(log2(m_num_notes / time_signature_notes)));
+        m_num_notes = time_signature_notes * AK::exp2(AK::log2(m_num_notes / time_signature_notes));
     m_note_width = static_cast<double>(m_roll_width) / m_num_notes;
 
     // This calculates the minimum number of rows needed. We account for a
@@ -62,9 +62,9 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
     int key_pattern_index = (notes_per_octave - 1) - (note_offset % notes_per_octave);
 
     int x_offset = horizontal_scrollbar().value();
-    int horizontal_note_offset_remainder = fmod(x_offset, m_note_width);
+    int horizontal_note_offset_remainder = static_cast<int>(AK::fmod((double)x_offset, m_note_width));
     int horizontal_paint_area = widget_inner_rect().width() + horizontal_note_offset_remainder;
-    if (fmod(horizontal_paint_area, m_note_width) != 0)
+    if (AK::fmod((double)horizontal_paint_area, m_note_width) != 0.)
         horizontal_paint_area += m_note_width;
     int horizontal_notes_to_paint = horizontal_paint_area / m_note_width;
 

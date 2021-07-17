@@ -9,6 +9,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/CheckedFormatString.h>
+#include <AK/Math.h>
 #include <LibTest/CrashTest.h>
 
 namespace AK {
@@ -89,7 +90,7 @@ void current_test_case_did_fail();
         auto expect_close_lhs = a;                                                                              \
         auto expect_close_rhs = b;                                                                              \
         auto expect_close_diff = static_cast<double>(expect_close_lhs) - static_cast<double>(expect_close_rhs); \
-        if (fabs(expect_close_diff) > 0.0000005) {                                                              \
+        if (AK::fabs(expect_close_diff) > 0.0000005) {                                                          \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_APPROXIMATE({}, {})"                             \
                          " failed with lhs={}, rhs={}, (lhs-rhs)={}",                                           \
                 __FILE__, __LINE__, #a, #b, expect_close_lhs, expect_close_rhs, expect_close_diff);             \

@@ -7,7 +7,6 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Widget.h>
-#include <math.h>
 #include <unistd.h>
 
 #pragma once

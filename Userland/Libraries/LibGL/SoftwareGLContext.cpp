@@ -18,7 +18,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector4.h>
-#include <math.h>
 
 using AK::dbgln;
 
