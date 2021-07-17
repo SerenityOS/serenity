@@ -141,16 +141,19 @@ KResult DevFSInode::truncate(u64)
 
 StringView DevFSLinkInode::name() const
 {
-    return m_name;
+    return m_name->view();
 }
+
 DevFSLinkInode::~DevFSLinkInode()
 {
 }
-DevFSLinkInode::DevFSLinkInode(DevFS& fs, String name)
+
+DevFSLinkInode::DevFSLinkInode(DevFS& fs, NonnullOwnPtr<KString> name)
     : DevFSInode(fs)
-    , m_name(name)
+    , m_name(move(name))
 {
 }
+
 KResultOr<size_t> DevFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     Locker locker(m_inode_lock);
@@ -291,7 +294,10 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView
             if (link.name() == name)
                 return EEXIST;
         }
-        auto new_link_inode = adopt_ref_if_nonnull(new (nothrow) DevFSLinkInode(m_parent_fs, name));
+        auto name_kstring = KString::try_create(name);
+        if (!name_kstring)
+            return ENOMEM;
+        auto new_link_inode = adopt_ref_if_nonnull(new (nothrow) DevFSLinkInode(m_parent_fs, name_kstring.release_nonnull()));
         if (!new_link_inode)
             return ENOMEM;
         if (!m_links.try_ensure_capacity(m_links.size() + 1))
