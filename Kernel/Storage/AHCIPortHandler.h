@@ -11,7 +11,7 @@
 #include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>

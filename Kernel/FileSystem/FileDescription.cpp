@@ -219,7 +219,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> FileDescription::read_entire_file()
 
 KResultOr<size_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, size_t size)
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_lock, Mutex::Mode::Shared);
     if (!is_directory())
         return ENOTDIR;
 

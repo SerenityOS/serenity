@@ -12,7 +12,7 @@
 #include <AK/Time.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/KResult.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/UnixTypes.h>
 
@@ -99,7 +99,7 @@ public:
     gid_t acceptor_gid() const { return m_acceptor.gid; }
     const RefPtr<NetworkAdapter> bound_interface() const { return m_bound_interface; }
 
-    Lock& lock() { return m_lock; }
+    Mutex& lock() { return m_lock; }
 
     // ^File
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override final;
@@ -137,7 +137,7 @@ protected:
 private:
     virtual bool is_socket() const final { return true; }
 
-    Lock m_lock { "Socket" };
+    Mutex m_lock { "Socket" };
 
     int m_domain { 0 };
     int m_type { 0 };

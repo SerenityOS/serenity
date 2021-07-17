@@ -240,7 +240,7 @@ private:
 
     // Synchronous commands
     WaitQueue m_outstanding_request;
-    Lock m_operation_lock;
+    Mutex m_operation_lock;
     OwnPtr<Region> m_scratch_space;
 };
 

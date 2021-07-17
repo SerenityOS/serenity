@@ -16,20 +16,20 @@
 
 namespace Kernel {
 
-class Lock {
+class Mutex {
     friend class Thread;
 
-    AK_MAKE_NONCOPYABLE(Lock);
-    AK_MAKE_NONMOVABLE(Lock);
+    AK_MAKE_NONCOPYABLE(Mutex);
+    AK_MAKE_NONMOVABLE(Mutex);
 
 public:
     using Mode = LockMode;
 
-    Lock(const char* name = nullptr)
+    Mutex(const char* name = nullptr)
         : m_name(name)
     {
     }
-    ~Lock() = default;
+    ~Mutex() = default;
 
 #if LOCK_DEBUG
     void lock(Mode mode = Mode::Exclusive, const SourceLocation& location = SourceLocation::current());
@@ -108,9 +108,9 @@ private:
 class Locker {
 public:
 #if LOCK_DEBUG
-    ALWAYS_INLINE explicit Locker(Lock& l, Lock::Mode mode = Lock::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
+    ALWAYS_INLINE explicit Locker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
 #else
-    ALWAYS_INLINE explicit Locker(Lock& l, Lock::Mode mode = Lock::Mode::Exclusive)
+    ALWAYS_INLINE explicit Locker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive)
 #endif
         : m_lock(l)
     {
@@ -134,9 +134,9 @@ public:
     }
 
 #if LOCK_DEBUG
-    ALWAYS_INLINE void lock(Lock::Mode mode = Lock::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
+    ALWAYS_INLINE void lock(Mutex::Mode mode = Mutex::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
 #else
-    ALWAYS_INLINE void lock(Lock::Mode mode = Lock::Mode::Exclusive)
+    ALWAYS_INLINE void lock(Mutex::Mode mode = Mutex::Mode::Exclusive)
 #endif
     {
         VERIFY(!m_locked);
@@ -149,11 +149,11 @@ public:
 #endif
     }
 
-    Lock& get_lock() { return m_lock; }
-    const Lock& get_lock() const { return m_lock; }
+    Mutex& get_lock() { return m_lock; }
+    const Mutex& get_lock() const { return m_lock; }
 
 private:
-    Lock& m_lock;
+    Mutex& m_lock;
     bool m_locked { true };
 };
 
@@ -165,7 +165,7 @@ public:
         : m_resource(move(resource))
     {
     }
-    [[nodiscard]] Lock& lock() { return m_lock; }
+    [[nodiscard]] Mutex& lock() { return m_lock; }
     [[nodiscard]] T& resource() { return m_resource; }
 
     [[nodiscard]] T lock_and_copy()
@@ -176,7 +176,7 @@ public:
 
 private:
     T m_resource;
-    Lock m_lock;
+    Mutex m_lock;
 };
 
 class ScopedLockRelease {
@@ -185,7 +185,7 @@ class ScopedLockRelease {
 public:
     ScopedLockRelease& operator=(ScopedLockRelease&&) = delete;
 
-    ScopedLockRelease(Lock& lock)
+    ScopedLockRelease(Mutex& lock)
         : m_lock(&lock)
         , m_previous_mode(lock.force_unlock_if_locked(m_previous_recursions))
     {
@@ -193,23 +193,23 @@ public:
 
     ScopedLockRelease(ScopedLockRelease&& from)
         : m_lock(exchange(from.m_lock, nullptr))
-        , m_previous_mode(exchange(from.m_previous_mode, Lock::Mode::Unlocked))
+        , m_previous_mode(exchange(from.m_previous_mode, Mutex::Mode::Unlocked))
         , m_previous_recursions(exchange(from.m_previous_recursions, 0))
     {
     }
 
     ~ScopedLockRelease()
     {
-        if (m_lock && m_previous_mode != Lock::Mode::Unlocked)
+        if (m_lock && m_previous_mode != Mutex::Mode::Unlocked)
             m_lock->restore_lock(m_previous_mode, m_previous_recursions);
     }
 
     void restore_lock()
     {
         VERIFY(m_lock);
-        if (m_previous_mode != Lock::Mode::Unlocked) {
+        if (m_previous_mode != Mutex::Mode::Unlocked) {
             m_lock->restore_lock(m_previous_mode, m_previous_recursions);
-            m_previous_mode = Lock::Mode::Unlocked;
+            m_previous_mode = Mutex::Mode::Unlocked;
             m_previous_recursions = 0;
         }
     }
@@ -217,13 +217,13 @@ public:
     void do_not_restore()
     {
         VERIFY(m_lock);
-        m_previous_mode = Lock::Mode::Unlocked;
+        m_previous_mode = Mutex::Mode::Unlocked;
         m_previous_recursions = 0;
     }
 
 private:
-    Lock* m_lock;
-    Lock::Mode m_previous_mode;
+    Mutex* m_lock;
+    Mutex::Mode m_previous_mode;
     u32 m_previous_recursions;
 };
 

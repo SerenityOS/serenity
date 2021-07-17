@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/KBuffer.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
@@ -66,7 +66,7 @@ private:
     size_t m_read_buffer_index { 0 };
     size_t m_space_for_writing { 0 };
     bool m_empty { true };
-    mutable Lock m_lock { "DoubleBuffer" };
+    mutable Mutex m_lock { "DoubleBuffer" };
 };
 
 }

@@ -8,7 +8,7 @@
 
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/FileSystem/File.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/WaitQueue.h>
 
@@ -61,7 +61,7 @@ private:
 
     WaitQueue m_read_open_queue;
     WaitQueue m_write_open_queue;
-    Lock m_open_lock;
+    Mutex m_open_lock;
 };
 
 }

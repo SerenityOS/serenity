@@ -63,7 +63,7 @@ unsigned TmpFS::next_inode_index()
 
 RefPtr<Inode> TmpFS::get_inode(InodeIdentifier identifier) const
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_lock, Mutex::Mode::Shared);
     VERIFY(identifier.fsid() == fsid());
 
     auto it = m_inodes.find(identifier.index());
@@ -105,14 +105,14 @@ RefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
 
 InodeMetadata TmpFSInode::metadata() const
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_lock, Mutex::Mode::Shared);
 
     return m_metadata;
 }
 
 KResult TmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_lock, Mutex::Mode::Shared);
 
     if (!is_directory())
         return ENOTDIR;
@@ -129,7 +129,7 @@ KResult TmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEnt
 
 KResultOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, FileDescription*) const
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_lock, Mutex::Mode::Shared);
     VERIFY(!is_directory());
     VERIFY(offset >= 0);
 
@@ -198,7 +198,7 @@ KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserO
 
 RefPtr<Inode> TmpFSInode::lookup(StringView name)
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_lock, Mutex::Mode::Shared);
     VERIFY(is_directory());
 
     if (name == ".")
@@ -214,7 +214,7 @@ RefPtr<Inode> TmpFSInode::lookup(StringView name)
 
 KResultOr<size_t> TmpFSInode::directory_entry_count() const
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_lock, Mutex::Mode::Shared);
     VERIFY(is_directory());
     return 2 + m_children.size();
 }
