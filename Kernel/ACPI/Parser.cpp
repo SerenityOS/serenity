@@ -61,12 +61,12 @@ UNMAP_AFTER_INIT ACPISysFSComponent::ACPISysFSComponent(String name, PhysicalAdd
 
 UNMAP_AFTER_INIT void ACPISysFSDirectory::initialize()
 {
-    auto acpi_folder = adopt_ref(*new (nothrow) ACPISysFSDirectory());
-    SysFSComponentRegistry::the().register_new_component(acpi_folder);
+    auto acpi_directory = adopt_ref(*new (nothrow) ACPISysFSDirectory());
+    SysFSComponentRegistry::the().register_new_component(acpi_directory);
 }
 
 UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory()
-    : SysFSDirectory("acpi", SysFSComponentRegistry::the().root_folder())
+    : SysFSDirectory("acpi", SysFSComponentRegistry::the().root_directory())
 {
     NonnullRefPtrVector<SysFSComponent> components;
     size_t ssdt_count = 0;

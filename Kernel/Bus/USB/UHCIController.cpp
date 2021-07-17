@@ -70,7 +70,7 @@ static constexpr u8 UHCI_NUMBER_OF_ISOCHRONOUS_TDS = 128;
 static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 
 class ProcFSUSBBusDirectory;
-static ProcFSUSBBusDirectory* s_procfs_usb_bus_folder;
+static ProcFSUSBBusDirectory* s_procfs_usb_bus_directory;
 
 class ProcFSUSBDeviceInformation : public ProcFSGlobalInformation {
     friend class ProcFSUSBBusDirectory;
@@ -144,11 +144,11 @@ KResultOr<size_t> ProcFSUSBBusDirectory::entries_count() const
 KResult ProcFSUSBBusDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     ScopedSpinLock lock(m_lock);
-    auto parent_folder = m_parent_folder.strong_ref();
-    // Note: if the parent folder is null, it means something bad happened as this should not happen for the USB folder.
-    VERIFY(parent_folder);
+    auto parent_directory = m_parent_directory.strong_ref();
+    // Note: if the parent directory is null, it means something bad happened as this should not happen for the USB directory.
+    VERIFY(parent_directory);
     callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, parent_folder->component_index() }, 0 });
+    callback({ "..", { fsid, parent_directory->component_index() }, 0 });
 
     for (auto& device_node : m_device_nodes) {
         InodeIdentifier identifier = { fsid, device_node.component_index() };
@@ -192,16 +192,16 @@ void ProcFSUSBBusDirectory::unplug(USB::Device& deleted_device)
     device_node->m_list_node.remove();
 }
 
-UNMAP_AFTER_INIT ProcFSUSBBusDirectory::ProcFSUSBBusDirectory(const ProcFSBusDirectory& buses_folder)
-    : ProcFSExposedDirectory("usb"sv, buses_folder)
+UNMAP_AFTER_INIT ProcFSUSBBusDirectory::ProcFSUSBBusDirectory(const ProcFSBusDirectory& buses_directory)
+    : ProcFSExposedDirectory("usb"sv, buses_directory)
 {
 }
 
 UNMAP_AFTER_INIT void ProcFSUSBBusDirectory::initialize()
 {
-    auto folder = adopt_ref(*new ProcFSUSBBusDirectory(ProcFSComponentRegistry::the().buses_folder()));
-    ProcFSComponentRegistry::the().register_new_bus_folder(folder);
-    s_procfs_usb_bus_folder = folder;
+    auto directory = adopt_ref(*new ProcFSUSBBusDirectory(ProcFSComponentRegistry::the().buses_directory()));
+    ProcFSComponentRegistry::the().register_new_bus_directory(directory);
+    s_procfs_usb_bus_directory = directory;
 }
 
 NonnullRefPtr<ProcFSUSBDeviceInformation> ProcFSUSBDeviceInformation::create(USB::Device& device)
@@ -717,14 +717,14 @@ void UHCIController::spawn_port_proc()
                                 dmesgln("UHCI: Device creation failed on port 1 ({})", device.error());
 
                             m_devices.at(0) = device.value();
-                            VERIFY(s_procfs_usb_bus_folder);
-                            s_procfs_usb_bus_folder->plug(device.value());
+                            VERIFY(s_procfs_usb_bus_directory);
+                            s_procfs_usb_bus_directory->plug(device.value());
                         } else {
                             // FIXME: Clean up (and properly) the RefPtr to the device in m_devices
-                            VERIFY(s_procfs_usb_bus_folder);
+                            VERIFY(s_procfs_usb_bus_directory);
                             VERIFY(m_devices.at(0));
                             dmesgln("UHCI: Device detach detected on Root Port 1");
-                            s_procfs_usb_bus_folder->unplug(*m_devices.at(0));
+                            s_procfs_usb_bus_directory->unplug(*m_devices.at(0));
                         }
                     }
                 } else {
@@ -755,14 +755,14 @@ void UHCIController::spawn_port_proc()
                                 dmesgln("UHCI: Device creation failed on port 2 ({})", device.error());
 
                             m_devices.at(1) = device.value();
-                            VERIFY(s_procfs_usb_bus_folder);
-                            s_procfs_usb_bus_folder->plug(device.value());
+                            VERIFY(s_procfs_usb_bus_directory);
+                            s_procfs_usb_bus_directory->plug(device.value());
                         } else {
                             // FIXME: Clean up (and properly) the RefPtr to the device in m_devices
-                            VERIFY(s_procfs_usb_bus_folder);
+                            VERIFY(s_procfs_usb_bus_directory);
                             VERIFY(m_devices.at(1));
                             dmesgln("UHCI: Device detach detected on Root Port 2");
-                            s_procfs_usb_bus_folder->unplug(*m_devices.at(1));
+                            s_procfs_usb_bus_directory->unplug(*m_devices.at(1));
                         }
                     }
                 }

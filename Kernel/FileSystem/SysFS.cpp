@@ -25,14 +25,14 @@ UNMAP_AFTER_INIT void SysFSComponentRegistry::initialize()
 }
 
 UNMAP_AFTER_INIT SysFSComponentRegistry::SysFSComponentRegistry()
-    : m_root_folder(SysFSRootDirectory::create())
+    : m_root_directory(SysFSRootDirectory::create())
 {
 }
 
 UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SysFSComponent& component)
 {
     Locker locker(m_lock);
-    m_root_folder->m_components.append(component);
+    m_root_directory->m_components.append(component);
 }
 
 NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
@@ -64,7 +64,7 @@ NonnullRefPtr<SysFS> SysFS::create()
 }
 
 SysFS::SysFS()
-    : m_root_inode(SysFSComponentRegistry::the().root_folder().to_inode(*this))
+    : m_root_inode(SysFSComponentRegistry::the().root_directory().to_inode(*this))
 {
 }
 

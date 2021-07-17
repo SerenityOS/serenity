@@ -32,12 +32,12 @@ public:
     SysFSComponentRegistry();
     void register_new_component(SysFSComponent&);
 
-    SysFSDirectory& root_folder() { return m_root_folder; }
+    SysFSDirectory& root_directory() { return m_root_directory; }
     Mutex& get_lock() { return m_lock; }
 
 private:
     Mutex m_lock;
-    NonnullRefPtr<SysFSRootDirectory> m_root_folder;
+    NonnullRefPtr<SysFSRootDirectory> m_root_directory;
 };
 
 class SysFS final : public FileSystem {

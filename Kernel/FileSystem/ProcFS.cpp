@@ -32,33 +32,33 @@ UNMAP_AFTER_INIT void ProcFSComponentRegistry::initialize()
 }
 
 UNMAP_AFTER_INIT ProcFSComponentRegistry::ProcFSComponentRegistry()
-    : m_root_folder(ProcFSRootDirectory::must_create())
+    : m_root_directory(ProcFSRootDirectory::must_create())
 {
 }
 
-const ProcFSBusDirectory& ProcFSComponentRegistry::buses_folder() const
+const ProcFSBusDirectory& ProcFSComponentRegistry::buses_directory() const
 {
-    return *m_root_folder->m_buses_folder;
+    return *m_root_directory->m_buses_directory;
 }
 
-void ProcFSComponentRegistry::register_new_bus_folder(ProcFSExposedDirectory& new_bus_folder)
+void ProcFSComponentRegistry::register_new_bus_directory(ProcFSExposedDirectory& new_bus_directory)
 {
-    VERIFY(!m_root_folder->m_buses_folder.is_null());
-    m_root_folder->m_buses_folder->m_components.append(new_bus_folder);
+    VERIFY(!m_root_directory->m_buses_directory.is_null());
+    m_root_directory->m_buses_directory->m_components.append(new_bus_directory);
 }
 
 void ProcFSComponentRegistry::register_new_process(Process& new_process)
 {
     Locker locker(m_lock);
-    m_root_folder->m_process_folders.append(ProcFSProcessDirectory::create(new_process));
+    m_root_directory->m_process_directories.append(ProcFSProcessDirectory::create(new_process));
 }
 
 void ProcFSComponentRegistry::unregister_process(Process& deleted_process)
 {
-    auto process_folder = m_root_folder->process_folder_for(deleted_process).release_nonnull();
-    process_folder->prepare_for_deletion();
-    process_folder->m_list_node.remove();
-    dbgln_if(PROCFS_DEBUG, "ProcFSExposedDirectory ref_count now: {}", process_folder->ref_count());
+    auto process_directory = m_root_directory->process_directory_for(deleted_process).release_nonnull();
+    process_directory->prepare_for_deletion();
+    process_directory->m_list_node.remove();
+    dbgln_if(PROCFS_DEBUG, "ProcFSExposedDirectory ref_count now: {}", process_directory->ref_count());
 }
 
 RefPtr<ProcFS> ProcFS::create()
@@ -112,7 +112,7 @@ ProcFSInode::~ProcFSInode()
 }
 
 ProcFS::ProcFS()
-    : m_root_inode(ProcFSComponentRegistry::the().root_folder().to_inode(*this))
+    : m_root_inode(ProcFSComponentRegistry::the().root_directory().to_inode(*this))
 {
 }
 

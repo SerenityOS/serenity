@@ -95,9 +95,9 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_32_bit_entry_initialization_va
 
 UNMAP_AFTER_INIT void BIOSSysFSDirectory::initialize()
 {
-    auto bios_folder = adopt_ref(*new (nothrow) BIOSSysFSDirectory());
-    SysFSComponentRegistry::the().register_new_component(bios_folder);
-    bios_folder->create_components();
+    auto bios_directory = adopt_ref(*new (nothrow) BIOSSysFSDirectory());
+    SysFSComponentRegistry::the().register_new_component(bios_directory);
+    bios_directory->create_components();
 }
 
 void BIOSSysFSDirectory::create_components()
@@ -135,7 +135,7 @@ OwnPtr<KBuffer> BIOSSysFSDirectory::smbios_structure_table() const
 }
 
 UNMAP_AFTER_INIT BIOSSysFSDirectory::BIOSSysFSDirectory()
-    : SysFSDirectory("bios", SysFSComponentRegistry::the().root_folder())
+    : SysFSDirectory("bios", SysFSComponentRegistry::the().root_directory())
 {
     auto entry_32bit = find_dmi_entry32bit_point();
     m_dmi_entry_point = entry_32bit.value();
