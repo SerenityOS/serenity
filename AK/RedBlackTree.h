@@ -406,7 +406,7 @@ public:
     [[nodiscard]] bool is_end() const { return !m_node; }
     [[nodiscard]] bool is_begin() const { return !m_prev; }
 
-    auto key() const { return m_node->key; }
+    [[nodiscard]] auto key() const { return m_node->key; }
 
 private:
     friend TreeType;
@@ -420,7 +420,7 @@ private:
 };
 
 template<Integral K, typename V>
-class RedBlackTree : public BaseRedBlackTree<K> {
+class RedBlackTree final : public BaseRedBlackTree<K> {
 public:
     RedBlackTree() = default;
     virtual ~RedBlackTree() override
@@ -430,7 +430,7 @@ public:
 
     using BaseTree = BaseRedBlackTree<K>;
 
-    V* find(K key)
+    [[nodiscard]] V* find(K key)
     {
         auto* node = static_cast<Node*>(BaseTree::find(this->m_root, key));
         if (!node)
@@ -438,7 +438,7 @@ public:
         return &node->value;
     }
 
-    V* find_largest_not_above(K key)
+    [[nodiscard]] V* find_largest_not_above(K key)
     {
         auto* node = static_cast<Node*>(BaseTree::find_largest_not_above(this->m_root, key));
         if (!node)

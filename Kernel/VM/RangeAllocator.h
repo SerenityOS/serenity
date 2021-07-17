@@ -16,7 +16,7 @@ namespace Kernel {
 class RangeAllocator {
 public:
     RangeAllocator();
-    ~RangeAllocator();
+    ~RangeAllocator() = default;
 
     void initialize_with_range(VirtualAddress, size_t);
     void initialize_from_parent(RangeAllocator const&);

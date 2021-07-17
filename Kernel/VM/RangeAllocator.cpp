@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/BinarySearch.h>
 #include <AK/Checked.h>
 #include <Kernel/Random.h>
 #include <Kernel/VM/RangeAllocator.h>
@@ -32,10 +31,6 @@ void RangeAllocator::initialize_from_parent(RangeAllocator const& parent_allocat
     for (auto it = parent_allocator.m_available_ranges.begin(); !it.is_end(); ++it) {
         m_available_ranges.insert(it.key(), *it);
     }
-}
-
-RangeAllocator::~RangeAllocator()
-{
 }
 
 void RangeAllocator::dump() const
@@ -143,7 +138,9 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     VERIFY((size % PAGE_SIZE) == 0);
 
     Range const allocated_range(base, size);
-    VERIFY(m_total_range.contains(allocated_range));
+    if (!m_total_range.contains(allocated_range)) {
+        return {};
+    }
 
     ScopedSpinLock lock(m_lock);
     for (auto it = m_available_ranges.begin(); !it.is_end(); ++it) {
