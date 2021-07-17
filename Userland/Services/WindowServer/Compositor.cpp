@@ -904,6 +904,7 @@ void Compositor::remove_overlay(Overlay& overlay)
     if (!current_render_rect.is_empty())
         invalidate_screen(current_render_rect);
     m_overlay_list.remove(overlay);
+    overlay_rects_changed();
 }
 
 void Compositor::ScreenData::draw_cursor(Screen& screen, const Gfx::IntRect& cursor_rect)
