@@ -31,7 +31,7 @@ DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, con
     const ELF::Image* elf = nullptr;
 
     if (containing_function.value().address_low >= 0xc0000000) {
-        auto file_or_error = MappedFile::map("/boot/Kernel");
+        auto file_or_error = MappedFile::map("/boot/Kernel.debug");
         if (file_or_error.is_error())
             return;
         kernel_elf = make<ELF::Image>(file_or_error.value()->bytes());

@@ -42,7 +42,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     FlatPtr base_address = 0;
     if (m_node.address() >= 0xc0000000) {
         if (!m_kernel_file) {
-            auto file_or_error = MappedFile::map("/boot/Kernel");
+            auto file_or_error = MappedFile::map("/boot/Kernel.debug");
             if (file_or_error.is_error())
                 return;
             m_kernel_file = file_or_error.release_value();
