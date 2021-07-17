@@ -941,7 +941,7 @@ RefPtr<Inode> Plan9FSInode::lookup(StringView name)
     return Plan9FSInode::create(fs(), newfid);
 }
 
-KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
 {
     // TODO
     return ENOTIMPL;

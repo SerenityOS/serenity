@@ -254,7 +254,7 @@ KResult TmpFSInode::chown(uid_t uid, gid_t gid)
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
+KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
 {
     Locker locker(m_inode_lock);
 

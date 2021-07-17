@@ -158,7 +158,7 @@ KResultOr<size_t> ProcFSInode::write_bytes(off_t offset, size_t count, const Use
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
 
-KResultOr<NonnullRefPtr<Inode>> ProcFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> ProcFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
 {
     return EROFS;
 }

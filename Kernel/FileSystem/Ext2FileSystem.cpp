@@ -1164,7 +1164,7 @@ KResult Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries)
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
+KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(StringView name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
 {
     if (::is_directory(mode))
         return fs().create_directory(*this, name, mode, uid, gid);

@@ -104,7 +104,7 @@ KResultOr<size_t> DevFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffe
     VERIFY_NOT_REACHED();
 }
 
-KResultOr<NonnullRefPtr<Inode>> DevFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> DevFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
 {
     return EROFS;
 }
@@ -262,7 +262,7 @@ RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
     }
     return nullptr;
 }
-KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const String& name, mode_t mode, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView name, mode_t mode, dev_t, uid_t, gid_t)
 {
     Locker locker(m_parent_fs.m_lock);
 

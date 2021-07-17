@@ -130,7 +130,7 @@ KResultOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, UserOrKern
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
 
-KResultOr<NonnullRefPtr<Inode>> SysFSInode::create_child(String const&, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
 {
     return EROFS;
 }

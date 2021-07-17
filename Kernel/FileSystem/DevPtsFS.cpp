@@ -169,7 +169,7 @@ KResult DevPtsFSInode::add_child(Inode&, const StringView&, mode_t)
     return EROFS;
 }
 
-KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
 {
     return EROFS;
 }
