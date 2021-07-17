@@ -79,6 +79,8 @@ void Client::on_tls_ready_to_receive()
     m_buffer += data.value();
     if (m_buffer[m_buffer.size() - 1] == '\n') {
         // Don't try parsing until we have a complete line.
+        dbgln("IMAP: Received response: {}", StringView { m_buffer.data(), m_buffer.size() });
+
         auto response = m_parser.parse(move(m_buffer), m_expecting_response);
         handle_parsed_response(move(response));
         m_buffer.clear();
@@ -286,6 +288,8 @@ void Client::send_next_command()
         buffer.append(" ", 1);
         buffer.append(arg.bytes().data(), arg.length());
     }
+
+    dbgln("IMAP: Sending command: {}", StringView { buffer.data(), buffer.size() });
 
     send_raw(buffer);
     m_expecting_response = true;
