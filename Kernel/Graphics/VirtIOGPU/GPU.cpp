@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Graphics/VirtIOGPU/FrameBufferDevice.h>
-#include <Kernel/Graphics/VirtIOGPU/VirtIOGPU.h>
+#include <Kernel/Graphics/VirtIOGPU/GPU.h>
 #include <Kernel/Graphics/VirtIOGPU/Console.h>
 
 #define DEVICE_EVENTS_READ 0x0
