@@ -529,6 +529,11 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(const MatchInput& input, MatchSt
 
 ALWAYS_INLINE bool OpCode_Compare::compare_string(const MatchInput& input, MatchState& state, const char* str, size_t length, bool& had_zero_length_match)
 {
+    if (length == 0) {
+        had_zero_length_match = true;
+        return true;
+    }
+
     if (input.view.is_u8_view()) {
         auto str_view1 = StringView(str, length);
         auto str_view2 = StringView(&input.view.u8view()[state.string_position], length);
@@ -541,8 +546,17 @@ ALWAYS_INLINE bool OpCode_Compare::compare_string(const MatchInput& input, Match
 
         if (string_equals) {
             state.string_position += length;
-            if (length == 0)
-                had_zero_length_match = true;
+            return true;
+        }
+    } else {
+        bool equals;
+        if (input.regex_options & AllFlags::Insensitive)
+            TODO();
+        else
+            equals = __builtin_memcmp(str, &input.view.u32view().code_points()[state.string_position], length) == 0;
+
+        if (equals) {
+            state.string_position += length;
             return true;
         }
     }
