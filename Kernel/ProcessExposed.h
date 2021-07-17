@@ -47,7 +47,6 @@ private:
 
 class ProcFSExposedComponent : public RefCounted<ProcFSExposedComponent> {
 public:
-    virtual KResultOr<size_t> entries_count() const { VERIFY_NOT_REACHED(); };
     StringView name() const { return m_name->view(); }
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const { VERIFY_NOT_REACHED(); }
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
@@ -88,7 +87,6 @@ class ProcFSExposedDirectory
     friend class ProcFSComponentRegistry;
 
 public:
-    virtual KResultOr<size_t> entries_count() const override { return m_components.size(); };
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
     void add_component(const ProcFSExposedComponent&);
