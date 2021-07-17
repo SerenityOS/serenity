@@ -420,7 +420,7 @@ private:
 };
 
 template<Integral K, typename V>
-class RedBlackTree : public BaseRedBlackTree<K> {
+class RedBlackTree final : public BaseRedBlackTree<K> {
 public:
     RedBlackTree() = default;
     virtual ~RedBlackTree() override
