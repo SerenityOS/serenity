@@ -851,20 +851,6 @@ void Plan9FSInode::flush_metadata()
     // Do nothing.
 }
 
-KResultOr<size_t> Plan9FSInode::directory_entry_count() const
-{
-    size_t count = 0;
-    KResult result = traverse_as_directory([&count](auto&) {
-        count++;
-        return true;
-    });
-
-    if (result.is_error())
-        return result;
-
-    return count;
-}
-
 KResult Plan9FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     KResult result = KSuccess;

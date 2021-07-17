@@ -1709,15 +1709,6 @@ void Ext2FS::uncache_inode(InodeIndex index)
     m_inode_cache.remove(index);
 }
 
-KResultOr<size_t> Ext2FSInode::directory_entry_count() const
-{
-    VERIFY(is_directory());
-    Locker locker(m_inode_lock);
-    if (auto result = populate_lookup_cache(); result.is_error())
-        return KResultOr<size_t>(result);
-    return m_lookup_cache.size();
-}
-
 KResult Ext2FSInode::chmod(mode_t mode)
 {
     Locker locker(m_inode_lock);

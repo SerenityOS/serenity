@@ -212,13 +212,6 @@ RefPtr<Inode> TmpFSInode::lookup(StringView name)
     return fs().get_inode(it->value.inode->identifier());
 }
 
-KResultOr<size_t> TmpFSInode::directory_entry_count() const
-{
-    Locker locker(m_inode_lock, Mutex::Mode::Shared);
-    VERIFY(is_directory());
-    return 2 + m_children.size();
-}
-
 void TmpFSInode::notify_watchers()
 {
     set_metadata_dirty(true);

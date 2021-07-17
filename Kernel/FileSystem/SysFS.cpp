@@ -145,11 +145,6 @@ KResult SysFSInode::remove_child(StringView const&)
     return EROFS;
 }
 
-KResultOr<size_t> SysFSInode::directory_entry_count() const
-{
-    VERIFY_NOT_REACHED();
-}
-
 KResult SysFSInode::chmod(mode_t)
 {
     return EPERM;
@@ -204,12 +199,6 @@ RefPtr<Inode> SysFSDirectoryInode::lookup(StringView name)
     if (!component)
         return {};
     return component->to_inode(m_parent_fs);
-}
-
-KResultOr<size_t> SysFSDirectoryInode::directory_entry_count() const
-{
-    Locker locker(m_inode_lock);
-    return m_associated_component->entries_count();
 }
 
 }

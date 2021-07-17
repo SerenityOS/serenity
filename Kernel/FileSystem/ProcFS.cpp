@@ -173,11 +173,6 @@ KResult ProcFSInode::remove_child(const StringView&)
     return EROFS;
 }
 
-KResultOr<size_t> ProcFSInode::directory_entry_count() const
-{
-    VERIFY_NOT_REACHED();
-}
-
 KResult ProcFSInode::chmod(mode_t)
 {
     return EPERM;
@@ -232,12 +227,6 @@ RefPtr<Inode> ProcFSDirectoryInode::lookup(StringView name)
     if (!component)
         return {};
     return component->to_inode(m_parent_fs);
-}
-
-KResultOr<size_t> ProcFSDirectoryInode::directory_entry_count() const
-{
-    Locker locker(m_inode_lock);
-    return m_associated_component->entries_count();
 }
 
 NonnullRefPtr<ProcFSLinkInode> ProcFSLinkInode::create(const ProcFS& procfs, const ProcFSExposedComponent& component)
