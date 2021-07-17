@@ -30,8 +30,11 @@ DevFS::DevFS()
 
 void DevFS::notify_new_device(Device& device)
 {
+    auto name = KString::try_create(device.device_name());
+    VERIFY(name);
+
     Locker locker(m_lock);
-    auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device));
+    auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device, name.release_nonnull()));
     m_nodes.append(new_device_inode);
     m_root_inode->m_devices.append(new_device_inode);
 }
@@ -335,14 +338,17 @@ KResultOr<size_t> DevFSRootDirectoryInode::directory_entry_count() const
     return m_devices.size() + DevFSDirectoryInode::directory_entry_count().value();
 }
 
-DevFSDeviceInode::DevFSDeviceInode(DevFS& fs, const Device& device)
+DevFSDeviceInode::DevFSDeviceInode(DevFS& fs, Device const& device, NonnullOwnPtr<KString> name)
     : DevFSInode(fs)
     , m_attached_device(device)
+    , m_name(move(name))
 {
 }
+
 DevFSDeviceInode::~DevFSDeviceInode()
 {
 }
+
 KResult DevFSDeviceInode::chown(uid_t uid, gid_t gid)
 {
     Locker locker(m_inode_lock);
@@ -353,10 +359,7 @@ KResult DevFSDeviceInode::chown(uid_t uid, gid_t gid)
 
 StringView DevFSDeviceInode::name() const
 {
-    Locker locker(m_inode_lock);
-    if (m_cached_name.is_null() || m_cached_name.is_empty())
-        const_cast<DevFSDeviceInode&>(*this).m_cached_name = m_attached_device->device_name();
-    return m_cached_name;
+    return m_name->view();
 }
 
 KResultOr<size_t> DevFSDeviceInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
