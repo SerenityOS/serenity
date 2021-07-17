@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/BinarySearch.h>
 #include <AK/Checked.h>
 #include <Kernel/Random.h>
 #include <Kernel/VM/RangeAllocator.h>
