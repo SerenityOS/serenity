@@ -49,7 +49,7 @@ public:
     static NonnullRefPtr<SysFS> create();
 
     virtual bool initialize() override;
-    virtual char const* class_name() const override { return "SysFS"; }
+    virtual StringView class_name() const override { return "SysFS"sv; }
 
     virtual NonnullRefPtr<Inode> root_inode() const override;
 

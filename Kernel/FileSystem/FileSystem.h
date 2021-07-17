@@ -32,7 +32,7 @@ public:
     static void lock_all();
 
     virtual bool initialize() = 0;
-    virtual const char* class_name() const = 0;
+    virtual StringView class_name() const = 0;
     virtual NonnullRefPtr<Inode> root_inode() const = 0;
     virtual bool supports_watchers() const { return false; }
 

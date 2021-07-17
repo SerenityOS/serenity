@@ -23,7 +23,7 @@ public:
     static NonnullRefPtr<DevFS> create();
 
     virtual bool initialize() override;
-    virtual const char* class_name() const override { return "DevFS"; }
+    virtual StringView class_name() const override { return "DevFS"sv; }
 
     void notify_new_device(Device&);
     void notify_device_removal(Device&);

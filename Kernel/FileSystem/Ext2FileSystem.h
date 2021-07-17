@@ -128,7 +128,7 @@ private:
 
     bool flush_super_block();
 
-    virtual const char* class_name() const override;
+    virtual StringView class_name() const override { return "Ext2FS"sv; }
     virtual NonnullRefPtr<Inode> root_inode() const override;
     RefPtr<Inode> get_inode(InodeIdentifier) const;
     KResultOr<NonnullRefPtr<Inode>> create_inode(Ext2FSInode& parent_inode, const String& name, mode_t, dev_t, uid_t, gid_t);

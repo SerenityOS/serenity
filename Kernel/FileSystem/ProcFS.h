@@ -26,7 +26,7 @@ public:
     static RefPtr<ProcFS> create();
 
     virtual bool initialize() override;
-    virtual const char* class_name() const override { return "ProcFS"; }
+    virtual StringView class_name() const override { return "ProcFS"sv; }
 
     virtual NonnullRefPtr<Inode> root_inode() const override;
 

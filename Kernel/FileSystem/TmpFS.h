@@ -24,7 +24,7 @@ public:
     static RefPtr<TmpFS> create();
     virtual bool initialize() override;
 
-    virtual const char* class_name() const override { return "TmpFS"; }
+    virtual StringView class_name() const override { return "TmpFS"sv; }
 
     virtual bool supports_watchers() const override { return true; }
 

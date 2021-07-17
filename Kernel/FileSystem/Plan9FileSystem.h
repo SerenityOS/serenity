@@ -113,7 +113,7 @@ private:
     };
     friend class Blocker;
 
-    virtual const char* class_name() const override { return "Plan9FS"; }
+    virtual StringView class_name() const override { return "Plan9FS"sv; }
 
     bool is_complete(const ReceiveCompletion&);
     KResult post_message(Message&, RefPtr<ReceiveCompletion>);
