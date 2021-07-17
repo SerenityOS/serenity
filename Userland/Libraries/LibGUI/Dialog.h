@@ -33,11 +33,12 @@ public:
     virtual void close() override;
 
 protected:
-    explicit Dialog(Window* parent_window);
+    explicit Dialog(Window* parent_window, bool center_within_parent_window = true);
 
 private:
     OwnPtr<Core::EventLoop> m_event_loop;
     int m_result { ExecAborted };
+    bool m_center_within_parent_window { true };
 };
 
 }

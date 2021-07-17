@@ -28,8 +28,8 @@ public:
         Save
     };
 
-    static Optional<String> get_open_filepath(Window* parent_window, const String& window_title = {}, const StringView& path = Core::StandardPaths::home_directory(), bool folder = false);
-    static Optional<String> get_save_filepath(Window* parent_window, const String& title, const String& extension, const StringView& path = Core::StandardPaths::home_directory());
+    static Optional<String> get_open_filepath(Window* parent_window, const String& window_title = {}, const StringView& path = Core::StandardPaths::home_directory(), bool folder = false, bool center_within_parent_window = true);
+    static Optional<String> get_save_filepath(Window* parent_window, const String& title, const String& extension, const StringView& path = Core::StandardPaths::home_directory(), bool center_within_parent_window = true);
 
     virtual ~FilePicker() override;
 
@@ -43,7 +43,7 @@ private:
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
 
-    FilePicker(Window* parent_window, Mode type = Mode::Open, const StringView& filename = "Untitled", const StringView& path = Core::StandardPaths::home_directory());
+    FilePicker(Window* parent_window, Mode type = Mode::Open, const StringView& filename = "Untitled", const StringView& path = Core::StandardPaths::home_directory(), bool center_within_parent_window = true);
 
     static String ok_button_name(Mode mode)
     {
