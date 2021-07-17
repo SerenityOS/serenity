@@ -97,13 +97,13 @@ public:
     virtual ~DevFSLinkInode() override;
 
 protected:
-    DevFSLinkInode(DevFS&, String);
+    DevFSLinkInode(DevFS&, NonnullOwnPtr<KString>);
     // ^Inode
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, FileDescription*) override;
 
-    const String m_name;
+    NonnullOwnPtr<KString> m_name;
     String m_link;
 };
 
