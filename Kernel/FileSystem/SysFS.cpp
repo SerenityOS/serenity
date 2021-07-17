@@ -110,7 +110,7 @@ RefPtr<Inode> SysFSInode::lookup(StringView)
 
 InodeMetadata SysFSInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
@@ -130,7 +130,7 @@ KResultOr<size_t> SysFSInode::write_bytes(off_t offset, size_t count, UserOrKern
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
 
-KResultOr<NonnullRefPtr<Inode>> SysFSInode::create_child(String const&, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
 {
     return EROFS;
 }
@@ -143,11 +143,6 @@ KResult SysFSInode::add_child(Inode&, StringView const&, mode_t)
 KResult SysFSInode::remove_child(StringView const&)
 {
     return EROFS;
-}
-
-KResultOr<size_t> SysFSInode::directory_entry_count() const
-{
-    VERIFY_NOT_REACHED();
 }
 
 KResult SysFSInode::chmod(mode_t)
@@ -181,7 +176,7 @@ SysFSDirectoryInode::~SysFSDirectoryInode()
 }
 InodeMetadata SysFSDirectoryInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXOTH;
@@ -204,12 +199,6 @@ RefPtr<Inode> SysFSDirectoryInode::lookup(StringView name)
     if (!component)
         return {};
     return component->to_inode(m_parent_fs);
-}
-
-KResultOr<size_t> SysFSDirectoryInode::directory_entry_count() const
-{
-    Locker locker(m_lock);
-    return m_associated_component->entries_count();
 }
 
 }

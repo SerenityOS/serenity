@@ -136,13 +136,6 @@ KResult DevPtsFSInode::traverse_as_directory(Function<bool(FileSystem::Directory
     return KSuccess;
 }
 
-KResultOr<size_t> DevPtsFSInode::directory_entry_count() const
-{
-    VERIFY(identifier().index() == 1);
-
-    return 2 + s_ptys->size();
-}
-
 RefPtr<Inode> DevPtsFSInode::lookup(StringView name)
 {
     VERIFY(identifier().index() == 1);
@@ -169,7 +162,7 @@ KResult DevPtsFSInode::add_child(Inode&, const StringView&, mode_t)
     return EROFS;
 }
 
-KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
 {
     return EROFS;
 }

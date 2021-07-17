@@ -698,7 +698,7 @@ KResult Plan9FSInode::ensure_open_for_mode(int mode)
     u8 p9_mode = 0;
 
     {
-        Locker locker(m_lock);
+        Locker locker(m_inode_lock);
 
         // If it's already open in this mode, we're done.
         if ((m_open_mode & mode) == mode)
@@ -851,20 +851,6 @@ void Plan9FSInode::flush_metadata()
     // Do nothing.
 }
 
-KResultOr<size_t> Plan9FSInode::directory_entry_count() const
-{
-    size_t count = 0;
-    KResult result = traverse_as_directory([&count](auto&) {
-        count++;
-        return true;
-    });
-
-    if (result.is_error())
-        return result;
-
-    return count;
-}
-
 KResult Plan9FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     KResult result = KSuccess;
@@ -941,7 +927,7 @@ RefPtr<Inode> Plan9FSInode::lookup(StringView name)
     return Plan9FSInode::create(fs(), newfid);
 }
 
-KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
 {
     // TODO
     return ENOTIMPL;

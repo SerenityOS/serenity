@@ -8,7 +8,7 @@
 
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/Storage/Partition/DiskPartition.h>
 #include <Kernel/Storage/StorageController.h>
 

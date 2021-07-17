@@ -74,7 +74,7 @@ private:
     virtual bool output(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        Locker locker(arp_table().lock(), Lock::Mode::Shared);
+        Locker locker(arp_table().lock(), Mutex::Mode::Shared);
         for (auto& it : arp_table().resource()) {
             auto obj = array.add_object();
             obj.add("mac_address", it.value.to_string());
@@ -247,7 +247,7 @@ public:
 
 private:
     ProcFSDumpKmallocStacks();
-    mutable Lock m_lock;
+    mutable Mutex m_lock;
 };
 
 class ProcFSUBSanDeadly : public ProcFSSystemBoolean {
@@ -266,7 +266,7 @@ public:
 
 private:
     ProcFSUBSanDeadly();
-    mutable Lock m_lock;
+    mutable Mutex m_lock;
 };
 
 class ProcFSCapsLockRemap : public ProcFSSystemBoolean {
@@ -285,7 +285,7 @@ public:
 
 private:
     ProcFSCapsLockRemap();
-    mutable Lock m_lock;
+    mutable Mutex m_lock;
 };
 
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSDumpKmallocStacks> ProcFSDumpKmallocStacks::must_create(const ProcFSSystemDirectory&)

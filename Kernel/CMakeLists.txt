@@ -130,7 +130,7 @@ set(KERNEL_SOURCES
     KLexicalPath.cpp
     KString.cpp
     KSyms.cpp
-    Lock.cpp
+    Mutex.cpp
     Net/E1000ENetworkAdapter.cpp
     Net/E1000NetworkAdapter.cpp
     Net/IPv4Socket.cpp

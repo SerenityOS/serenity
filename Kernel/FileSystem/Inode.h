@@ -19,7 +19,7 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 
 namespace Kernel {
 
@@ -56,10 +56,9 @@ public:
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const = 0;
     virtual RefPtr<Inode> lookup(StringView name) = 0;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) = 0;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) = 0;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) = 0;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) = 0;
     virtual KResult remove_child(const StringView& name) = 0;
-    virtual KResultOr<size_t> directory_entry_count() const = 0;
     virtual KResult chmod(mode_t) = 0;
     virtual KResult chown(uid_t, gid_t) = 0;
     virtual KResult truncate(u64) { return KSuccess; }
@@ -88,7 +87,6 @@ public:
 
     void set_shared_vmobject(SharedInodeVMObject&);
     RefPtr<SharedInodeVMObject> shared_vmobject() const;
-    bool is_shared_vmobject(const SharedInodeVMObject&) const;
 
     static void sync();
 
@@ -109,7 +107,7 @@ protected:
     void did_modify_contents();
     void did_delete_self();
 
-    mutable Lock m_lock { "Inode" };
+    mutable Mutex m_inode_lock { "Inode" };
 
 private:
     FileSystem& m_file_system;

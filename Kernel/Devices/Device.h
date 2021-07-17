@@ -19,7 +19,7 @@
 #include <AK/HashMap.h>
 #include <Kernel/Devices/AsyncDeviceRequest.h>
 #include <Kernel/FileSystem/File.h>
-#include <Kernel/Lock.h>
+#include <Kernel/Mutex.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

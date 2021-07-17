@@ -63,7 +63,7 @@ unsigned TmpFS::next_inode_index()
 
 RefPtr<Inode> TmpFS::get_inode(InodeIdentifier identifier) const
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_lock, Mutex::Mode::Shared);
     VERIFY(identifier.fsid() == fsid());
 
     auto it = m_inodes.find(identifier.index());
@@ -105,14 +105,14 @@ RefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
 
 InodeMetadata TmpFSInode::metadata() const
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_inode_lock, Mutex::Mode::Shared);
 
     return m_metadata;
 }
 
 KResult TmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_inode_lock, Mutex::Mode::Shared);
 
     if (!is_directory())
         return ENOTDIR;
@@ -129,7 +129,7 @@ KResult TmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEnt
 
 KResultOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, FileDescription*) const
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_inode_lock, Mutex::Mode::Shared);
     VERIFY(!is_directory());
     VERIFY(offset >= 0);
 
@@ -149,7 +149,7 @@ KResultOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernel
 
 KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& buffer, FileDescription*)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     VERIFY(!is_directory());
     VERIFY(offset >= 0);
 
@@ -198,7 +198,7 @@ KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserO
 
 RefPtr<Inode> TmpFSInode::lookup(StringView name)
 {
-    Locker locker(m_lock, Lock::Mode::Shared);
+    Locker locker(m_inode_lock, Mutex::Mode::Shared);
     VERIFY(is_directory());
 
     if (name == ".")
@@ -210,13 +210,6 @@ RefPtr<Inode> TmpFSInode::lookup(StringView name)
     if (it == m_children.end())
         return {};
     return fs().get_inode(it->value.inode->identifier());
-}
-
-KResultOr<size_t> TmpFSInode::directory_entry_count() const
-{
-    Locker locker(m_lock, Lock::Mode::Shared);
-    VERIFY(is_directory());
-    return 2 + m_children.size();
 }
 
 void TmpFSInode::notify_watchers()
@@ -237,7 +230,7 @@ void TmpFSInode::flush_metadata()
 
 KResult TmpFSInode::chmod(mode_t mode)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
 
     m_metadata.mode = mode;
     notify_watchers();
@@ -246,7 +239,7 @@ KResult TmpFSInode::chmod(mode_t mode)
 
 KResult TmpFSInode::chown(uid_t uid, gid_t gid)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
 
     m_metadata.uid = uid;
     m_metadata.gid = gid;
@@ -254,9 +247,9 @@ KResult TmpFSInode::chown(uid_t uid, gid_t gid)
     return KSuccess;
 }
 
-KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(const String& name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
+KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, uid_t uid, gid_t gid)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
 
     // TODO: Support creating devices on TmpFS.
     if (dev != 0)
@@ -283,7 +276,7 @@ KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(const String& name, mod
 
 KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     VERIFY(is_directory());
     VERIFY(child.fsid() == fsid());
 
@@ -297,7 +290,7 @@ KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
 
 KResult TmpFSInode::remove_child(const StringView& name)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     VERIFY(is_directory());
 
     if (name == "." || name == "..")
@@ -315,7 +308,7 @@ KResult TmpFSInode::remove_child(const StringView& name)
 
 KResult TmpFSInode::truncate(u64 size)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     VERIFY(!is_directory());
 
     if (size == 0)
@@ -345,7 +338,7 @@ KResult TmpFSInode::truncate(u64 size)
 
 KResult TmpFSInode::set_atime(time_t time)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
 
     m_metadata.atime = time;
     set_metadata_dirty(true);
@@ -355,7 +348,7 @@ KResult TmpFSInode::set_atime(time_t time)
 
 KResult TmpFSInode::set_ctime(time_t time)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
 
     m_metadata.ctime = time;
     notify_watchers();
@@ -364,7 +357,7 @@ KResult TmpFSInode::set_ctime(time_t time)
 
 KResult TmpFSInode::set_mtime(time_t t)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
 
     m_metadata.mtime = t;
     notify_watchers();

@@ -156,7 +156,7 @@ private:
     bool m_direct : 1 { false };
     FIFO::Direction m_fifo_direction { FIFO::Direction::Neither };
 
-    Lock m_lock { "FileDescription" };
+    Mutex m_lock { "FileDescription" };
 };
 
 }

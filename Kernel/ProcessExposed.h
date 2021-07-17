@@ -38,10 +38,10 @@ public:
     void unregister_process(Process&);
 
     ProcFSRootDirectory& root_folder() { return *m_root_folder; }
-    Lock& get_lock() { return m_lock; }
+    Mutex& get_lock() { return m_lock; }
 
 private:
-    Lock m_lock;
+    Mutex m_lock;
     NonnullRefPtr<ProcFSRootDirectory> m_root_folder;
 };
 
@@ -120,7 +120,7 @@ protected:
     virtual bool acquire_link(KBufferBuilder& builder) = 0;
     explicit ProcFSExposedLink(StringView name);
     ProcFSExposedLink(StringView name, InodeIndex preallocated_index);
-    mutable Lock m_lock { "ProcFSLink" };
+    mutable Mutex m_lock { "ProcFSLink" };
 };
 
 class ProcFSProcessDirectory final

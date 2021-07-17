@@ -138,7 +138,7 @@ RefPtr<Inode> ProcFSInode::lookup(StringView)
 
 InodeMetadata ProcFSInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = m_associated_component->required_mode();
@@ -158,7 +158,7 @@ KResultOr<size_t> ProcFSInode::write_bytes(off_t offset, size_t count, const Use
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
 
-KResultOr<NonnullRefPtr<Inode>> ProcFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> ProcFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
 {
     return EROFS;
 }
@@ -171,11 +171,6 @@ KResult ProcFSInode::add_child(Inode&, const StringView&, mode_t)
 KResult ProcFSInode::remove_child(const StringView&)
 {
     return EROFS;
-}
-
-KResultOr<size_t> ProcFSInode::directory_entry_count() const
-{
-    VERIFY_NOT_REACHED();
 }
 
 KResult ProcFSInode::chmod(mode_t)
@@ -209,7 +204,7 @@ ProcFSDirectoryInode::~ProcFSDirectoryInode()
 }
 InodeMetadata ProcFSDirectoryInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFDIR | m_associated_component->required_mode();
@@ -234,12 +229,6 @@ RefPtr<Inode> ProcFSDirectoryInode::lookup(StringView name)
     return component->to_inode(m_parent_fs);
 }
 
-KResultOr<size_t> ProcFSDirectoryInode::directory_entry_count() const
-{
-    Locker locker(m_lock);
-    return m_associated_component->entries_count();
-}
-
 NonnullRefPtr<ProcFSLinkInode> ProcFSLinkInode::create(const ProcFS& procfs, const ProcFSExposedComponent& component)
 {
     return adopt_ref(*new (nothrow) ProcFSLinkInode(procfs, component));
@@ -251,7 +240,7 @@ ProcFSLinkInode::ProcFSLinkInode(const ProcFS& fs, const ProcFSExposedComponent&
 }
 InodeMetadata ProcFSLinkInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFLNK | m_associated_component->required_mode();

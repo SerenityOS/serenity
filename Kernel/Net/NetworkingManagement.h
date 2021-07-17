@@ -40,7 +40,7 @@ private:
 
     NonnullRefPtrVector<NetworkAdapter> m_adapters;
     RefPtr<NetworkAdapter> m_loopback_adapter;
-    mutable Lock m_lock { "Networking" };
+    mutable Mutex m_lock { "Networking" };
 };
 
 }

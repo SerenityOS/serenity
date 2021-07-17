@@ -202,7 +202,7 @@ private:
         int tx_counter { 0 };
     };
 
-    mutable Lock m_not_acked_lock { "TCPSocket unacked packets" };
+    mutable Mutex m_not_acked_lock { "TCPSocket unacked packets" };
     SinglyLinkedList<OutgoingPacket> m_not_acked;
     size_t m_not_acked_size { 0 };
 

@@ -55,6 +55,7 @@ public:
     }
 
     [[nodiscard]] String copy_into_string(size_t size) const;
+    [[nodiscard]] KResultOr<NonnullOwnPtr<KString>> try_copy_into_kstring(size_t) const;
     [[nodiscard]] bool write(const void* src, size_t offset, size_t len);
     [[nodiscard]] bool write(const void* src, size_t len)
     {

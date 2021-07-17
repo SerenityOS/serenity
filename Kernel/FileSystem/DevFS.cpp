@@ -30,8 +30,11 @@ DevFS::DevFS()
 
 void DevFS::notify_new_device(Device& device)
 {
+    auto name = KString::try_create(device.device_name());
+    VERIFY(name);
+
     Locker locker(m_lock);
-    auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device));
+    auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device, name.release_nonnull()));
     m_nodes.append(new_device_inode);
     m_root_inode->m_devices.append(new_device_inode);
 }
@@ -104,7 +107,7 @@ KResultOr<size_t> DevFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffe
     VERIFY_NOT_REACHED();
 }
 
-KResultOr<NonnullRefPtr<Inode>> DevFSInode::create_child(const String&, mode_t, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> DevFSInode::create_child(StringView, mode_t, dev_t, uid_t, gid_t)
 {
     return EROFS;
 }
@@ -117,11 +120,6 @@ KResult DevFSInode::add_child(Inode&, const StringView&, mode_t)
 KResult DevFSInode::remove_child(const StringView&)
 {
     return EROFS;
-}
-
-KResultOr<size_t> DevFSInode::directory_entry_count() const
-{
-    VERIFY_NOT_REACHED();
 }
 
 KResult DevFSInode::chmod(mode_t)
@@ -139,30 +137,33 @@ KResult DevFSInode::truncate(u64)
     return EPERM;
 }
 
-String DevFSLinkInode::name() const
+StringView DevFSLinkInode::name() const
 {
-    return m_name;
+    return m_name->view();
 }
+
 DevFSLinkInode::~DevFSLinkInode()
 {
 }
-DevFSLinkInode::DevFSLinkInode(DevFS& fs, String name)
+
+DevFSLinkInode::DevFSLinkInode(DevFS& fs, NonnullOwnPtr<KString> name)
     : DevFSInode(fs)
-    , m_name(name)
+    , m_name(move(name))
 {
 }
+
 KResultOr<size_t> DevFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelBuffer& buffer, FileDescription*) const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     VERIFY(offset == 0);
-    VERIFY(!m_link.is_null());
-    if (!buffer.write(((const u8*)m_link.substring_view(0).characters_without_null_termination()) + offset, m_link.length()))
+    VERIFY(m_link);
+    if (!buffer.write(m_link->characters() + offset, m_link->length()))
         return EFAULT;
-    return m_link.length();
+    return m_link->length();
 }
+
 InodeMetadata DevFSLinkInode::metadata() const
 {
-    Locker locker(m_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), index() };
     metadata.mode = S_IFLNK | 0555;
@@ -172,12 +173,17 @@ InodeMetadata DevFSLinkInode::metadata() const
     metadata.mtime = mepoch;
     return metadata;
 }
-KResultOr<size_t> DevFSLinkInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription*)
+
+KResultOr<size_t> DevFSLinkInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, FileDescription*)
 {
-    Locker locker(m_lock);
+    auto kstring_or_error = buffer.try_copy_into_kstring(count);
+    if (kstring_or_error.is_error())
+        return kstring_or_error.error();
+
+    Locker locker(m_inode_lock);
     VERIFY(offset == 0);
     VERIFY(buffer.is_kernel_buffer());
-    m_link = buffer.copy_into_string(count);
+    m_link = kstring_or_error.release_value();
     return count;
 }
 
@@ -188,9 +194,9 @@ DevFSDirectoryInode::DevFSDirectoryInode(DevFS& fs)
 DevFSDirectoryInode::~DevFSDirectoryInode()
 {
 }
+
 InodeMetadata DevFSDirectoryInode::metadata() const
 {
-    Locker locker(m_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), 1 };
     metadata.mode = 0040555;
@@ -202,18 +208,12 @@ InodeMetadata DevFSDirectoryInode::metadata() const
 }
 KResult DevFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
 {
-    Locker locker(m_lock);
     return EINVAL;
 }
+
 RefPtr<Inode> DevFSDirectoryInode::lookup(StringView)
 {
-    Locker locker(m_lock);
     return nullptr;
-}
-KResultOr<size_t> DevFSDirectoryInode::directory_entry_count() const
-{
-    Locker locker(m_lock);
-    return m_devices.size();
 }
 
 DevFSRootDirectoryInode::DevFSRootDirectoryInode(DevFS& fs)
@@ -261,7 +261,7 @@ RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
     }
     return nullptr;
 }
-KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const String& name, mode_t mode, dev_t, uid_t, gid_t)
+KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView name, mode_t mode, dev_t, uid_t, gid_t)
 {
     Locker locker(m_parent_fs.m_lock);
 
@@ -290,7 +290,10 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const Stri
             if (link.name() == name)
                 return EEXIST;
         }
-        auto new_link_inode = adopt_ref_if_nonnull(new (nothrow) DevFSLinkInode(m_parent_fs, name));
+        auto name_kstring = KString::try_create(name);
+        if (!name_kstring)
+            return ENOMEM;
+        auto new_link_inode = adopt_ref_if_nonnull(new (nothrow) DevFSLinkInode(m_parent_fs, name_kstring.release_nonnull()));
         if (!new_link_inode)
             return ENOMEM;
         if (!m_links.try_ensure_capacity(m_links.size() + 1))
@@ -309,7 +312,6 @@ DevFSRootDirectoryInode::~DevFSRootDirectoryInode()
 }
 InodeMetadata DevFSRootDirectoryInode::metadata() const
 {
-    Locker locker(m_parent_fs.m_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), 1 };
     metadata.mode = 0040555;
@@ -319,39 +321,34 @@ InodeMetadata DevFSRootDirectoryInode::metadata() const
     metadata.mtime = mepoch;
     return metadata;
 }
-KResultOr<size_t> DevFSRootDirectoryInode::directory_entry_count() const
-{
-    Locker locker(m_parent_fs.m_lock);
-    return m_devices.size() + DevFSDirectoryInode::directory_entry_count().value();
-}
 
-DevFSDeviceInode::DevFSDeviceInode(DevFS& fs, const Device& device)
+DevFSDeviceInode::DevFSDeviceInode(DevFS& fs, Device const& device, NonnullOwnPtr<KString> name)
     : DevFSInode(fs)
     , m_attached_device(device)
+    , m_name(move(name))
 {
 }
+
 DevFSDeviceInode::~DevFSDeviceInode()
 {
 }
+
 KResult DevFSDeviceInode::chown(uid_t uid, gid_t gid)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     m_uid = uid;
     m_gid = gid;
     return KSuccess;
 }
 
-String DevFSDeviceInode::name() const
+StringView DevFSDeviceInode::name() const
 {
-    Locker locker(m_lock);
-    if (m_cached_name.is_null() || m_cached_name.is_empty())
-        const_cast<DevFSDeviceInode&>(*this).m_cached_name = m_attached_device->device_name();
-    return m_cached_name;
+    return m_name->view();
 }
 
 KResultOr<size_t> DevFSDeviceInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     VERIFY(!!description);
     if (!m_attached_device->can_read(*description, offset))
         return 0;
@@ -363,7 +360,7 @@ KResultOr<size_t> DevFSDeviceInode::read_bytes(off_t offset, size_t count, UserO
 
 InodeMetadata DevFSDeviceInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), index() };
     metadata.mode = (m_attached_device->is_block_device() ? S_IFBLK : S_IFCHR) | m_attached_device->required_mode();
@@ -377,7 +374,7 @@ InodeMetadata DevFSDeviceInode::metadata() const
 }
 KResultOr<size_t> DevFSDeviceInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription* description)
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     VERIFY(!!description);
     if (!m_attached_device->can_write(*description, offset))
         return 0;
@@ -393,7 +390,7 @@ DevFSPtsDirectoryInode::DevFSPtsDirectoryInode(DevFS& fs)
 }
 KResult DevFSPtsDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
     return KSuccess;
@@ -407,7 +404,6 @@ DevFSPtsDirectoryInode::~DevFSPtsDirectoryInode()
 }
 InodeMetadata DevFSPtsDirectoryInode::metadata() const
 {
-    Locker locker(m_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), index() };
     metadata.mode = 0040555;
@@ -416,10 +412,6 @@ InodeMetadata DevFSPtsDirectoryInode::metadata() const
     metadata.size = 0;
     metadata.mtime = mepoch;
     return metadata;
-}
-KResultOr<size_t> DevFSPtsDirectoryInode::directory_entry_count() const
-{
-    return 0;
 }
 
 }

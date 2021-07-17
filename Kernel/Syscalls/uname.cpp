@@ -11,11 +11,11 @@ namespace Kernel {
 KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
 {
     extern String* g_hostname;
-    extern Lock* g_hostname_lock;
+    extern Mutex* g_hostname_lock;
 
     REQUIRE_PROMISE(stdio);
 
-    Locker locker(*g_hostname_lock, Lock::Mode::Shared);
+    Locker locker(*g_hostname_lock, Mutex::Mode::Shared);
     if (g_hostname->length() + 1 > sizeof(utsname::nodename))
         return ENAMETOOLONG;
 
