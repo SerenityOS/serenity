@@ -21,6 +21,17 @@ public:
 
 private:
     SysFSRootDirectory();
+    RefPtr<SysFSBusDirectory> m_buses_directory;
+};
+
+class SysFSBusDirectory : public SysFSDirectory {
+    friend class SysFSComponentRegistry;
+
+public:
+    static NonnullRefPtr<SysFSBusDirectory> must_create(SysFSRootDirectory const&);
+
+private:
+    explicit SysFSBusDirectory(SysFSRootDirectory const&);
 };
 
 class SysFSComponentRegistry {
@@ -34,6 +45,9 @@ public:
 
     SysFSDirectory& root_directory() { return m_root_directory; }
     Mutex& get_lock() { return m_lock; }
+
+    void register_new_bus_directory(SysFSDirectory&);
+    SysFSBusDirectory& buses_directory();
 
 private:
     Mutex m_lock;

@@ -30,9 +30,6 @@ public:
     InodeIndex allocate_inode_index() const;
 
     ProcFSComponentRegistry();
-    void register_new_bus_directory(ProcFSExposedDirectory&);
-
-    const ProcFSBusDirectory& buses_directory() const;
 
     void register_new_process(Process&);
     void unregister_process(Process&);
@@ -157,16 +154,6 @@ private:
     RefPtr<Process> m_associated_process;
 };
 
-class ProcFSBusDirectory : public ProcFSExposedDirectory {
-    friend class ProcFSComponentRegistry;
-
-public:
-    static NonnullRefPtr<ProcFSBusDirectory> must_create(const ProcFSRootDirectory& parent_directory);
-
-private:
-    ProcFSBusDirectory(const ProcFSRootDirectory& parent_directory);
-};
-
 class ProcFSRootDirectory final : public ProcFSExposedDirectory {
     friend class ProcFSComponentRegistry;
 
@@ -181,7 +168,6 @@ private:
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     ProcFSRootDirectory();
 
-    RefPtr<ProcFSBusDirectory> m_buses_directory;
     IntrusiveList<ProcFSProcessDirectory, RefPtr<ProcFSProcessDirectory>, &ProcFSProcessDirectory::m_list_node> m_process_directories;
 };
 

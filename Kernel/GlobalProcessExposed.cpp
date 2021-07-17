@@ -813,12 +813,6 @@ UNMAP_AFTER_INIT ProcFSProfile::ProcFSProfile()
 {
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<ProcFSBusDirectory> ProcFSBusDirectory::must_create(const ProcFSRootDirectory& parent_directory)
-{
-    auto directory = adopt_ref(*new (nothrow) ProcFSBusDirectory(parent_directory));
-    return directory;
-}
-
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemDirectory> ProcFSSystemDirectory::must_create(const ProcFSRootDirectory& parent_directory)
 {
     auto directory = adopt_ref(*new (nothrow) ProcFSSystemDirectory(parent_directory));
@@ -828,10 +822,6 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemDirectory> ProcFSSystemDirectory::mus
     return directory;
 }
 
-UNMAP_AFTER_INIT ProcFSBusDirectory::ProcFSBusDirectory(const ProcFSRootDirectory& parent_directory)
-    : ProcFSExposedDirectory("bus"sv, parent_directory)
-{
-}
 UNMAP_AFTER_INIT ProcFSSystemDirectory::ProcFSSystemDirectory(const ProcFSRootDirectory& parent_directory)
     : ProcFSExposedDirectory("sys"sv, parent_directory)
 {
@@ -856,9 +846,6 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_cr
     directory->m_components.append(ProcFSProfile::must_create());
 
     directory->m_components.append(ProcFSNetworkDirectory::must_create(*directory));
-    auto buses_directory = ProcFSBusDirectory::must_create(*directory);
-    directory->m_components.append(buses_directory);
-    directory->m_buses_directory = buses_directory;
     directory->m_components.append(ProcFSSystemDirectory::must_create(*directory));
     return directory;
 }
