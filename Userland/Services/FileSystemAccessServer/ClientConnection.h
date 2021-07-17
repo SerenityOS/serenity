@@ -10,6 +10,7 @@
 #include <FileSystemAccessServer/FileSystemAccessClientEndpoint.h>
 #include <FileSystemAccessServer/FileSystemAccessServerEndpoint.h>
 #include <LibCore/Forward.h>
+#include <LibGUI/Forward.h>
 #include <LibIPC/ClientConnection.h>
 
 namespace FileSystemAccessServer {
@@ -25,12 +26,12 @@ public:
     virtual void die() override;
 
 private:
-    virtual Messages::FileSystemAccessServer::RequestFileResponse request_file(String const&, Core::OpenMode const&) override;
-    virtual Messages::FileSystemAccessServer::PromptOpenFileResponse prompt_open_file(String const&, Core::OpenMode const&) override;
-    virtual Messages::FileSystemAccessServer::PromptSaveFileResponse prompt_save_file(String const&, String const&, String const&, Core::OpenMode const&) override;
+    virtual void request_file(i32, i32, String const&, Core::OpenMode const&) override;
+    virtual void prompt_open_file(i32, i32, String const&, Core::OpenMode const&) override;
+    virtual void prompt_save_file(i32, i32, String const&, String const&, String const&, Core::OpenMode const&) override;
 
-    template<typename T>
-    T prompt_helper(Optional<String> const&, Core::OpenMode const&);
+    void prompt_helper(Optional<String> const&, Core::OpenMode const&);
+    RefPtr<GUI::Window> create_dummy_child_window(i32, i32);
 
     HashMap<String, Core::OpenMode> m_approved_files;
 };
