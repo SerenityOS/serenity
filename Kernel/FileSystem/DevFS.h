@@ -46,7 +46,7 @@ class DevFSInode : public Inode {
     friend class DevFSRootDirectoryInode;
 
 public:
-    virtual String name() const = 0;
+    virtual StringView name() const = 0;
 
 protected:
     DevFSInode(DevFS&);
@@ -69,7 +69,7 @@ class DevFSDeviceInode : public DevFSInode {
     friend class DevFSRootDirectoryInode;
 
 public:
-    virtual String name() const override;
+    virtual StringView name() const override;
     virtual ~DevFSDeviceInode() override;
 
 private:
@@ -93,7 +93,7 @@ class DevFSLinkInode : public DevFSInode {
     friend class DevFSRootDirectoryInode;
 
 public:
-    virtual String name() const override;
+    virtual StringView name() const override;
     virtual ~DevFSLinkInode() override;
 
 protected:
@@ -131,7 +131,7 @@ class DevFSPtsDirectoryInode final : public DevFSDirectoryInode {
 
 public:
     virtual ~DevFSPtsDirectoryInode() override;
-    virtual String name() const override { return "pts"; };
+    virtual StringView name() const override { return "pts"; };
 
 private:
     explicit DevFSPtsDirectoryInode(DevFS&);
@@ -146,7 +146,7 @@ class DevFSRootDirectoryInode final : public DevFSDirectoryInode {
 
 public:
     virtual ~DevFSRootDirectoryInode() override;
-    virtual String name() const override { return "."; }
+    virtual StringView name() const override { return "."; }
 
 private:
     explicit DevFSRootDirectoryInode(DevFS&);
