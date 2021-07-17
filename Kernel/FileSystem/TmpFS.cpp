@@ -30,10 +30,9 @@ bool TmpFS::initialize()
     return !m_root_inode.is_null();
 }
 
-NonnullRefPtr<Inode> TmpFS::root_inode() const
+Inode& TmpFS::root_inode()
 {
     VERIFY(!m_root_inode.is_null());
-
     return *m_root_inode;
 }
 

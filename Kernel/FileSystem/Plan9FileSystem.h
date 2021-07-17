@@ -26,7 +26,7 @@ public:
 
     virtual bool supports_watchers() const override { return false; }
 
-    virtual NonnullRefPtr<Inode> root_inode() const override;
+    virtual Inode& root_inode() override;
 
     u16 allocate_tag() { return m_next_tag++; }
     u32 allocate_fid() { return m_next_fid++; }

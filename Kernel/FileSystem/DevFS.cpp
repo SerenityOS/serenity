@@ -61,7 +61,7 @@ bool DevFS::initialize()
     return true;
 }
 
-NonnullRefPtr<Inode> DevFS::root_inode() const
+Inode& DevFS::root_inode()
 {
     return *m_root_inode;
 }

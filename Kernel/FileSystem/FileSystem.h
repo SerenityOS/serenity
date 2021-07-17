@@ -33,7 +33,7 @@ public:
 
     virtual bool initialize() = 0;
     virtual StringView class_name() const = 0;
-    virtual NonnullRefPtr<Inode> root_inode() const = 0;
+    virtual Inode& root_inode() = 0;
     virtual bool supports_watchers() const { return false; }
 
     bool is_readonly() const { return m_readonly; }

@@ -243,7 +243,7 @@ Plan9FS::ProtocolVersion Plan9FS::parse_protocol_version(const StringView& s) co
     return ProtocolVersion::v9P2000;
 }
 
-NonnullRefPtr<Inode> Plan9FS::root_inode() const
+Inode& Plan9FS::root_inode()
 {
     return *m_root_inode;
 }
