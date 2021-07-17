@@ -28,7 +28,6 @@
 #include <LibGfx/Palette.h>
 #include <LibSyntax/Highlighter.h>
 #include <fcntl.h>
-#include <math.h>
 #include <stdio.h>
 #include <unistd.h>
 

@@ -5,9 +5,9 @@
  */
 
 #include "SampleWidget.h"
+#include <AK/Math.h>
 #include <LibAudio/Buffer.h>
 #include <LibGUI/Painter.h>
-#include <math.h>
 
 SampleWidget::SampleWidget()
 {
@@ -34,7 +34,7 @@ void SampleWidget::paint_event(GUI::PaintEvent& event)
     if (m_buffer) {
         int samples_per_pixel = m_buffer->sample_count() / frame_inner_rect().width();
         for (int sample_index = 0; sample_index < m_buffer->sample_count() && (x - x_offset) < frame_inner_rect().width(); ++sample_index) {
-            float sample = fabsf((float)m_buffer->samples()[sample_index].left);
+            float sample = AK::fabs((float)m_buffer->samples()[sample_index].left);
 
             sample_max = max(sample, sample_max);
             ++count;

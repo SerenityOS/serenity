@@ -11,7 +11,6 @@
 #include <LibCompress/Zlib.h>
 #include <LibGfx/PNGLoader.h>
 #include <fcntl.h>
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>

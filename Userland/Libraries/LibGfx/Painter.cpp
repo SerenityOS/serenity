@@ -14,6 +14,7 @@
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
 #include <AK/Function.h>
+#include <AK/Math.h>
 #include <AK/Memory.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
@@ -25,7 +26,6 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
 #include <LibGfx/TextDirection.h>
-#include <math.h>
 #include <stdio.h>
 
 #if defined(__GNUC__) && !defined(__clang__)
@@ -492,11 +492,11 @@ void Painter::draw_ellipse_intersecting(const IntRect& rect, Color color, int th
     double increment = M_PI / number_samples;
 
     auto ellipse_x = [&](double theta) -> int {
-        return (cos(theta) * rect.width() / sqrt(2)) + rect.center().x();
+        return (AK::cos(theta) * rect.width() / AK::sqrt(2.)) + rect.center().x();
     };
 
     auto ellipse_y = [&](double theta) -> int {
-        return (sin(theta) * rect.height() / sqrt(2)) + rect.center().y();
+        return (AK::sin(theta) * rect.height() / AK::sqrt(2.)) + rect.center().y();
     };
 
     for (auto theta = 0.0; theta < 2 * M_PI; theta += increment) {
@@ -1920,8 +1920,8 @@ void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, cons
     FloatPoint current_point = relative_start;
     FloatPoint next_point = { 0, 0 };
 
-    auto sin_x_axis = sinf(x_axis_rotation);
-    auto cos_x_axis = cosf(x_axis_rotation);
+    auto sin_x_axis = AK::sin(x_axis_rotation);
+    auto cos_x_axis = AK::cos(x_axis_rotation);
     auto rotate_point = [sin_x_axis, cos_x_axis](FloatPoint& p) {
         auto original_x = p.x();
         auto original_y = p.y();
@@ -1931,8 +1931,8 @@ void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, cons
     };
 
     for (double theta = theta_1; theta <= ((double)theta_1 + (double)theta_delta); theta += theta_step) {
-        next_point.set_x(a * cosf(theta));
-        next_point.set_y(b * sinf(theta));
+        next_point.set_x(a * AK::cos<float>(theta));
+        next_point.set_y(b * AK::sin<float>(theta));
         rotate_point(next_point);
 
         callback(current_point + center, next_point + center);

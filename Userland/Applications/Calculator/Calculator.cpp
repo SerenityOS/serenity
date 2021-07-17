@@ -6,7 +6,7 @@
 
 #include "Calculator.h"
 #include <AK/Assertions.h>
-#include <math.h>
+#include <AK/Math.h>
 
 Calculator::Calculator()
 {
@@ -37,7 +37,7 @@ double Calculator::begin_operation(Operation operation, double argument)
             m_has_error = true;
             return argument;
         }
-        res = sqrt(argument);
+        res = AK::sqrt(argument);
         clear_operation();
         break;
     case Operation::Inverse:

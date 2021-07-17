@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/Math.h>
 #include <AK/String.h>
-#include <math.h>
 
 namespace Gfx {
 template<typename T>
@@ -121,7 +121,7 @@ public:
 
     constexpr T length() const
     {
-        return sqrt(m_x * m_x + m_y * m_y + m_z * m_z);
+        return AK::sqrt(m_x * m_x + m_y * m_y + m_z * m_z);
     }
 
     String to_string() const
