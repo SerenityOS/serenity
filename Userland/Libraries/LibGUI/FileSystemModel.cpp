@@ -367,8 +367,8 @@ void FileSystemModel::set_root_path(String root_path)
     update();
 
     if (m_root->has_error()) {
-        if (on_error)
-            on_error(m_root->error(), m_root->error_string());
+        if (on_directory_change_error)
+            on_directory_change_error(m_root->error(), m_root->error_string());
     } else if (on_complete) {
         on_complete();
     }
@@ -676,8 +676,8 @@ void FileSystemModel::set_data(const ModelIndex& index, const Variant& data)
     auto new_full_path = String::formatted("{}/{}", dirname, data.to_string());
     int rc = rename(node.full_path().characters(), new_full_path.characters());
     if (rc < 0) {
-        if (on_error)
-            on_error(errno, strerror(errno));
+        if (on_rename_error)
+            on_rename_error(errno, strerror(errno));
     }
 }
 
