@@ -64,7 +64,7 @@ Optional<String> FilePicker::get_save_filepath(Window* parent_window, const Stri
 
 FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filename, const StringView& path)
     : Dialog(parent_window)
-    , m_model(FileSystemModel::create())
+    , m_model(FileSystemModel::create(path))
     , m_mode(mode)
 {
     switch (m_mode) {
@@ -232,7 +232,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
         m_common_location_buttons.append({ path, button });
     }
 
-    set_path(path);
+    m_location_textbox->set_icon(FileIconProvider::icon_for_path(path).bitmap_for_size(16));
 }
 
 FilePicker::~FilePicker()
