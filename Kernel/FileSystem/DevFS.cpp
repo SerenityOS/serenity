@@ -160,9 +160,9 @@ KResultOr<size_t> DevFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelB
         return EFAULT;
     return m_link.length();
 }
+
 InodeMetadata DevFSLinkInode::metadata() const
 {
-    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), index() };
     metadata.mode = S_IFLNK | 0555;
@@ -172,6 +172,7 @@ InodeMetadata DevFSLinkInode::metadata() const
     metadata.mtime = mepoch;
     return metadata;
 }
+
 KResultOr<size_t> DevFSLinkInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription*)
 {
     Locker locker(m_inode_lock);
@@ -188,9 +189,9 @@ DevFSDirectoryInode::DevFSDirectoryInode(DevFS& fs)
 DevFSDirectoryInode::~DevFSDirectoryInode()
 {
 }
+
 InodeMetadata DevFSDirectoryInode::metadata() const
 {
-    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), 1 };
     metadata.mode = 0040555;
@@ -202,14 +203,14 @@ InodeMetadata DevFSDirectoryInode::metadata() const
 }
 KResult DevFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
 {
-    Locker locker(m_inode_lock);
     return EINVAL;
 }
+
 RefPtr<Inode> DevFSDirectoryInode::lookup(StringView)
 {
-    Locker locker(m_inode_lock);
     return nullptr;
 }
+
 KResultOr<size_t> DevFSDirectoryInode::directory_entry_count() const
 {
     Locker locker(m_inode_lock);
@@ -309,7 +310,6 @@ DevFSRootDirectoryInode::~DevFSRootDirectoryInode()
 }
 InodeMetadata DevFSRootDirectoryInode::metadata() const
 {
-    Locker locker(m_parent_fs.m_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), 1 };
     metadata.mode = 0040555;
@@ -407,7 +407,6 @@ DevFSPtsDirectoryInode::~DevFSPtsDirectoryInode()
 }
 InodeMetadata DevFSPtsDirectoryInode::metadata() const
 {
-    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), index() };
     metadata.mode = 0040555;
