@@ -362,6 +362,9 @@ public:
     void set_moving_to_another_stack(bool value) { m_moving_to_another_stack = value; }
     bool is_moving_to_another_stack() const { return m_moving_to_another_stack; }
 
+    void set_stealable(bool value) { m_stealable = value; }
+    bool is_stealable() const { return m_stealable; }
+
 private:
     Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
@@ -418,6 +421,7 @@ private:
     bool m_pinned { false };
     bool m_moving_to_another_stack { false };
     bool m_invalidate_last_render_rects { false };
+    bool m_stealable { false };
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };

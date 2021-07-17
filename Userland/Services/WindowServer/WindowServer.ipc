@@ -150,4 +150,5 @@ endpoint WindowServer
 
     set_window_parent_from_client(i32 client_id, i32 parent_id, i32 child_id) =|
     get_window_rect_from_client(i32 client_id, i32 window_id) => (Gfx::IntRect rect)
+    set_window_stealing(bool allowed, i32 window_id) =|
 }
