@@ -6,12 +6,12 @@
 
 #pragma once
 
-#define TTYDEF_IFLAG (ICRNL)
+#define TTYDEF_IFLAG (ICRNL | IGNBRK | IGNPAR | IUTF8)
 #define TTYDEF_OFLAG (OPOST | ONLCR)
-#define TTYDEF_LFLAG_NOECHO (ISIG | ICANON)
-#define TTYDEF_LFLAG_ECHO (TTYDEF_LFLAG_NOECHO | ECHO | ECHOE | ECHOK | ECHONL)
+#define TTYDEF_LFLAG_NOECHO (ISIG | ICANON | IEXTEN)
+#define TTYDEF_LFLAG_ECHO (TTYDEF_LFLAG_NOECHO | ECHO | ECHOE | ECHOKE | ECHONL)
 #define TTYDEF_LFLAG TTYDEF_LFLAG_ECHO
-#define TTYDEF_CFLAG (0)
+#define TTYDEF_CFLAG (CS8 | CREAD)
 #define TTYDEF_SPEED (B9600)
 
 #define CTRL(c) (c & 0x1F)
@@ -46,25 +46,28 @@
 #    endif
 #    include <sys/cdefs.h>
 
+#    define TTYDEF_CC          \
+        [VINTR] = CINTR,       \
+        [VQUIT] = CQUIT,       \
+        [VERASE] = CERASE,     \
+        [VKILL] = CKILL,       \
+        [VEOF] = CEOF,         \
+        [VTIME] = CTIME,       \
+        [VMIN] = CMIN,         \
+        [VSWTC] = CSWTC,       \
+        [VSTART] = CSTART,     \
+        [VSTOP] = CSTOP,       \
+        [VSUSP] = CSUSP,       \
+        [VEOL] = CEOL,         \
+        [VREPRINT] = CREPRINT, \
+        [VDISCARD] = CDISCARD, \
+        [VWERASE] = CWERASE,   \
+        [VLNEXT] = CLNEXT,     \
+        [VEOL2] = CEOL2
+
 __BEGIN_DECLS
 static const cc_t ttydefchars[NCCS] = {
-    [VINTR] = CINTR,
-    [VQUIT] = CQUIT,
-    [VERASE] = CERASE,
-    [VKILL] = CKILL,
-    [VEOF] = CEOF,
-    [VTIME] = CTIME,
-    [VMIN] = CMIN,
-    [VSWTC] = CSWTC,
-    [VSTART] = CSTART,
-    [VSTOP] = CSTOP,
-    [VSUSP] = CSUSP,
-    [VEOL] = CEOL,
-    [VREPRINT] = CREPRINT,
-    [VDISCARD] = CDISCARD,
-    [VWERASE] = CWERASE,
-    [VLNEXT] = CLNEXT,
-    [VEOL2] = CEOL2
+    TTYDEF_CC
 };
 __END_DECLS
 #endif

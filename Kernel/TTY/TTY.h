@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,8 @@
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/UnixTypes.h>
+#define TTYDEFCHARS
+#include <LibC/sys/ttydefaults.h>
 
 #define TTY_BUFFER_SIZE 1024
 
@@ -40,20 +43,58 @@ public:
         return 0;
     }
 
-    int set_termios(const termios&);
+    int set_termios(const termios& new_termios, bool force = false);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
     bool should_flush_on_signal() const { return !(m_termios.c_lflag & NOFLSH); }
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
     bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
+    bool extended_processing_enabled() const { return m_termios.c_lflag & IEXTEN; }
 
-    void set_default_termios();
+    const termios& get_termios() const { return m_termios; }
     void hang_up();
 
     // ^Device
     virtual mode_t required_mode() const override { return 0620; }
 
+    static constexpr termios DEFAULT_TERMIOS = {
+        .c_iflag = TTYDEF_IFLAG,
+        .c_oflag = TTYDEF_OFLAG,
+        .c_cflag = TTYDEF_CFLAG,
+        .c_lflag = TTYDEF_LFLAG,
+        .c_cc = { TTYDEF_CC },
+        .c_ispeed = TTYDEF_SPEED,
+        .c_ospeed = TTYDEF_SPEED
+    };
+
 protected:
+    enum class Parity {
+        None,
+        Even,
+        Odd
+    };
+
+    enum class StopBits {
+        One,
+        Two,
+    };
+
+    enum class CharacterSize {
+        FiveBits,
+        SixBits,
+        SevenBits,
+        EightBits
+    };
+
     virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) = 0;
+    virtual int change_baud(speed_t, speed_t) { return 0; }
+    virtual int change_parity(Parity) { return 0; }
+    virtual int change_stop_bits(StopBits) { return 0; }
+    virtual int change_character_size(CharacterSize) { return 0; }
+    virtual int change_receiver_enabled(bool) { return 0; }
+    virtual int change_ignore_modem_status(bool) { return 0; }
+    virtual void discard_input_buffer() { }
+    virtual void discard_output_buffer() { }
+
     void set_size(unsigned short columns, unsigned short rows);
 
     TTY(unsigned major, unsigned minor);
@@ -66,8 +107,14 @@ protected:
     void erase_character();
     void kill_line();
     void flush_input();
+    void flush_output();
+
+    void reload_termios();
+
+    bool should_skip_erasing_byte(u8) const;
 
     bool is_eol(u8) const;
+    bool is_eol2(u8) const;
     bool is_eof(u8) const;
     bool is_kill(u8) const;
     bool is_erase(u8) const;
@@ -86,13 +133,18 @@ private:
     template<typename Functor>
     void process_output(u8, Functor put_char);
 
+    bool is_special_character_at(size_t bit_index) const
+    {
+        return m_special_character_bitmask[bit_index / 8] & (1 << (bit_index % 8));
+    }
+
     CircularDeque<u8, TTY_BUFFER_SIZE> m_input_buffer;
     // FIXME: use something like AK::Bitmap but which takes a size template parameter
     u8 m_special_character_bitmask[TTY_BUFFER_SIZE / 8];
 
     WeakPtr<Process> m_original_process_parent;
     WeakPtr<ProcessGroup> m_pg;
-    termios m_termios;
+    termios m_termios { DEFAULT_TERMIOS };
     unsigned short m_rows { 0 };
     unsigned short m_columns { 0 };
 };

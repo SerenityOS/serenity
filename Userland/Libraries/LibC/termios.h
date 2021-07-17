@@ -83,40 +83,34 @@ void cfmakeraw(struct termios*);
 #define ONLRET 0000040
 #define OFILL 0000100
 #define OFDEL 0000200
-#if defined __USE_MISC || defined __USE_XOPEN
-#    define NLDLY 0000400
-#    define NL0 0000000
-#    define NL1 0000400
-#    define CRDLY 0003000
-#    define CR0 0000000
-#    define CR1 0001000
-#    define CR2 0002000
-#    define CR3 0003000
-#    define TABDLY 0014000
-#    define TAB0 0000000
-#    define TAB1 0004000
-#    define TAB2 0010000
-#    define TAB3 0014000
-#    define BSDLY 0020000
-#    define BS0 0000000
-#    define BS1 0020000
-#    define FFDLY 0100000
-#    define FF0 0000000
-#    define FF1 0100000
-#endif
+#define NLDLY 0000400
+#define NL0 0000000
+#define NL1 0000400
+#define CRDLY 0003000
+#define CR0 0000000
+#define CR1 0001000
+#define CR2 0002000
+#define CR3 0003000
+#define TABDLY 0014000
+#define TAB0 0000000
+#define TAB1 0004000
+#define TAB2 0010000
+#define TAB3 0014000
+#define BSDLY 0020000
+#define BS0 0000000
+#define BS1 0020000
+#define FFDLY 0100000
+#define FF0 0000000
+#define FF1 0100000
 
 #define VTDLY 0040000
 #define VT0 0000000
 #define VT1 0040000
 
-#ifdef __USE_MISC
-#    define XTABS 0014000
-#endif
+#define XTABS 0014000
 
 /* c_cflag bit meaning */
-#ifdef __USE_MISC
-#    define CBAUD 0010017
-#endif
+#define CBAUD 0010017
 #define B0 0000000 /* hang up */
 #define B50 0000001
 #define B75 0000002
@@ -133,10 +127,8 @@ void cfmakeraw(struct termios*);
 #define B9600 0000015
 #define B19200 0000016
 #define B38400 0000017
-#ifdef __USE_MISC
-#    define EXTA B19200
-#    define EXTB B38400
-#endif
+#define EXTA B19200
+#define EXTB B38400
 #define CSIZE 0000060
 #define CS5 0000000
 #define CS6 0000020
@@ -148,9 +140,7 @@ void cfmakeraw(struct termios*);
 #define PARODD 0001000
 #define HUPCL 0002000
 #define CLOCAL 0004000
-#ifdef __USE_MISC
-#    define CBAUDEX 0010000
-#endif
+#define CBAUDEX 0010000
 #define B57600 0010001
 #define B115200 0010002
 #define B230400 0010003
@@ -167,35 +157,27 @@ void cfmakeraw(struct termios*);
 #define B3500000 0010016
 #define B4000000 0010017
 #define __MAX_BAUD B4000000
-#ifdef __USE_MISC
-#    define CIBAUD 002003600000  /* input baud rate (not used) */
-#    define CMSPAR 010000000000  /* mark or space (stick) parity */
-#    define CRTSCTS 020000000000 /* flow control */
-#endif
+#define CIBAUD 002003600000  /* input baud rate (not used) */
+#define CMSPAR 010000000000  /* mark or space (stick) parity */
+#define CRTSCTS 020000000000 /* flow control */
 
 /* c_lflag bits */
 #define ISIG 0000001
 #define ICANON 0000002
-#if defined __USE_MISC || (defined __USE_XOPEN && !defined __USE_XOPEN2K)
-#    define XCASE 0000004
-#endif
+#define XCASE 0000004
 #define ECHO 0000010
 #define ECHOE 0000020
 #define ECHOK 0000040
 #define ECHONL 0000100
 #define NOFLSH 0000200
 #define TOSTOP 0000400
-#ifdef __USE_MISC
-#    define ECHOCTL 0001000
-#    define ECHOPRT 0002000
-#    define ECHOKE 0004000
-#    define FLUSHO 0010000
-#    define PENDIN 0040000
-#endif
+#define ECHOCTL 0001000
+#define ECHOPRT 0002000
+#define ECHOKE 0004000
+#define FLUSHO 0010000
+#define PENDIN 0040000
 #define IEXTEN 0100000
-#ifdef __USE_MISC
-#    define EXTPROC 0200000
-#endif
+#define EXTPROC 0200000
 
 /* tcflow() and TCXONC use these */
 #define TCOOFF 0

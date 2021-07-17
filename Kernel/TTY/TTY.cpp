@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,23 +23,10 @@ namespace Kernel {
 TTY::TTY(unsigned major, unsigned minor)
     : CharacterDevice(major, minor)
 {
-    set_default_termios();
 }
 
 TTY::~TTY()
 {
-}
-
-void TTY::set_default_termios()
-{
-    memset(&m_termios, 0, sizeof(m_termios));
-    m_termios.c_iflag = TTYDEF_IFLAG;
-    m_termios.c_oflag = TTYDEF_OFLAG;
-    m_termios.c_cflag = TTYDEF_CFLAG;
-    m_termios.c_lflag = TTYDEF_LFLAG;
-    m_termios.c_ispeed = TTYDEF_SPEED;
-    m_termios.c_ospeed = TTYDEF_SPEED;
-    memcpy(m_termios.c_cc, ttydefchars, sizeof(ttydefchars));
 }
 
 KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
@@ -55,9 +43,7 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
     auto result = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
         size_t bytes_written = 0;
         for (; bytes_written < data_size; ++bytes_written) {
-            auto bit_index = m_input_buffer.head_index();
-            bool is_special_character = m_special_character_bitmask[bit_index / 8] & (1 << (bit_index % 8));
-            if (in_canonical_mode() && is_special_character) {
+            if (in_canonical_mode() && is_special_character_at(m_input_buffer.head_index())) {
                 u8 ch = m_input_buffer.dequeue();
                 if (ch == '\0') {
                     // EOF
@@ -143,8 +129,9 @@ bool TTY::can_read(const FileDescription&, size_t) const
 {
     if (in_canonical_mode()) {
         return m_available_lines > 0;
+    } else {
+        return !m_input_buffer.is_empty();
     }
-    return !m_input_buffer.is_empty();
 }
 
 bool TTY::can_write(const FileDescription&, size_t) const
@@ -152,9 +139,24 @@ bool TTY::can_write(const FileDescription&, size_t) const
     return true;
 }
 
+constexpr static bool is_utf8_continuation_byte(u8 byte)
+{
+    return (byte & 0xc0) == 0x80;
+}
+
+bool TTY::should_skip_erasing_byte(u8 ch) const
+{
+    return (m_termios.c_iflag & IUTF8) && is_utf8_continuation_byte(ch);
+}
+
 bool TTY::is_eol(u8 ch) const
 {
     return ch == m_termios.c_cc[VEOL];
+}
+
+bool TTY::is_eol2(u8 ch) const
+{
+    return extended_processing_enabled() && ch == m_termios.c_cc[VEOL2];
 }
 
 bool TTY::is_eof(u8 ch) const
@@ -174,11 +176,13 @@ bool TTY::is_erase(u8 ch) const
 
 bool TTY::is_werase(u8 ch) const
 {
-    return ch == m_termios.c_cc[VWERASE];
+    return extended_processing_enabled() && ch == m_termios.c_cc[VWERASE];
 }
 
 void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
 {
+    // FIXME: add support for parity checking once we have serial TTYs.
+    //        0xFF bytes that escape parity errors should not be stripped.
     if (m_termios.c_iflag & ISTRIP)
         ch &= 0x7F;
 
@@ -236,11 +240,11 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
             m_input_buffer.enqueue('\0');
             return;
         }
-        if (is_kill(ch) && m_termios.c_lflag & ECHOK) {
+        if (is_kill(ch)) {
             kill_line();
             return;
         }
-        if (is_erase(ch) && m_termios.c_lflag & ECHOE) {
+        if (is_erase(ch)) {
             do_backspace();
             return;
         }
@@ -259,7 +263,7 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
             return;
         }
 
-        if (is_eol(ch)) {
+        if (is_eol(ch) || is_eol2(ch)) {
             set_special_bit();
             m_available_lines++;
         }
@@ -272,59 +276,78 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
 
 bool TTY::can_do_backspace() const
 {
-    // can't do back space if we're empty. Plus, we don't want to
+    // Can't do backspace if we're empty. Plus, we don't want to
     // remove any lines "committed" by newlines or ^D.
-    if (!m_input_buffer.is_empty() && !is_eol(m_input_buffer.last()) && m_input_buffer.last() != '\0') {
-        return true;
-    }
-    return false;
+    size_t tail_index = (m_input_buffer.head_index() + m_input_buffer.size() - 1) % TTY_BUFFER_SIZE;
+    return !m_input_buffer.is_empty() && !is_special_character_at(tail_index);
 }
 
+// Erase a character by removing it from the input buffer.
+// If ECHOE is set, a space surrounded '\b' characters is echoed.
+// Otherwise, the ERASE character is echoed.
 void TTY::do_backspace()
 {
-    if (can_do_backspace()) {
+    // If we have a multibyte UTF-8 sequence, we want to remove all bytes of it
+    // from the buffer, but only want to emit a single erase character.
+    while (can_do_backspace() && should_skip_erasing_byte(m_input_buffer.last()))
         m_input_buffer.dequeue_end();
-        // We deliberately don't process the output here.
-        echo(8);
-        echo(' ');
-        echo(8);
 
-        evaluate_block_conditions();
-    }
+    if (!can_do_backspace())
+        return;
+
+    m_input_buffer.dequeue_end();
+    if (m_termios.c_lflag & ECHOE)
+        erase_character();
+    else
+        echo(m_termios.c_cc[VERASE]);
+    evaluate_block_conditions();
 }
 
-// TODO: Currently, both erase_word() and kill_line work by sending
-// a lot of VERASE characters; this is done because Terminal.cpp
-// doesn't currently support VWERASE and VKILL. When these are
-// implemented we could just send a VKILL or VWERASE.
-
+// Erase a word by removing it from the input buffer.
+// The echoing works as in do_backspace().
 void TTY::erase_word()
 {
-    //Note: if we have leading whitespace before the word
-    //we want to delete we have to also delete that.
-    bool first_char = false;
+    // If we have leading whitespace before the word, we have to also delete that.
+    bool is_trailing_whitespace = true;
     bool did_dequeue = false;
     while (can_do_backspace()) {
         u8 ch = m_input_buffer.last();
-        if (ch == ' ' && first_char)
+        if (ch == ' ' && !is_trailing_whitespace)
             break;
         if (ch != ' ')
-            first_char = true;
+            is_trailing_whitespace = false;
         m_input_buffer.dequeue_end();
         did_dequeue = true;
-        erase_character();
+
+        // Handle multibyte UTF-8 sequences correctly.
+        if (!should_skip_erasing_byte(ch)) {
+            if (m_termios.c_lflag & ECHOE)
+                erase_character();
+            else
+                echo(m_termios.c_cc[VERASE]);
+        }
     }
     if (did_dequeue)
         evaluate_block_conditions();
 }
 
+// Erase an entire line of input by removing it from the input buffer.
+// If ECHOKE is set, a space surrounded by '\b' is emitted for each character we delete.
+// If ECHOK is set, the ECHOK is emitted once, followed by a newline.
 void TTY::kill_line()
 {
     bool did_dequeue = false;
     while (can_do_backspace()) {
-        m_input_buffer.dequeue_end();
+        u8 ch = m_input_buffer.dequeue_end();
         did_dequeue = true;
-        erase_character();
+        if (!should_skip_erasing_byte(ch) && m_termios.c_lflag & ECHOKE)
+            erase_character();
+    }
+
+    if (!(m_termios.c_lflag & ECHOKE)) {
+        echo(m_termios.c_cc[VKILL]);
+        if (m_termios.c_lflag & ECHOK)
+            echo_with_processing('\n');
     }
     if (did_dequeue)
         evaluate_block_conditions();
@@ -333,17 +356,19 @@ void TTY::kill_line()
 void TTY::erase_character()
 {
     // We deliberately don't process the output here.
-    echo(m_termios.c_cc[VERASE]);
+    echo('\b');
     echo(' ');
-    echo(m_termios.c_cc[VERASE]);
+    echo('\b');
 }
 
 void TTY::generate_signal(int signal)
 {
     if (!pgid())
         return;
-    if (should_flush_on_signal())
+    if (should_flush_on_signal()) {
         flush_input();
+        flush_output();
+    }
     dbgln_if(TTY_DEBUG, "{}: Send signal {} to everyone in pgrp {}", tty_name(), signal, pgid().value());
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
@@ -353,42 +378,61 @@ void TTY::generate_signal(int signal)
     });
 }
 
+// In this context, flush means to discard any unprocessed data.
+
 void TTY::flush_input()
 {
     m_available_lines = 0;
     m_input_buffer.clear();
+    discard_input_buffer();
     evaluate_block_conditions();
 }
 
-int TTY::set_termios(const termios& t)
+void TTY::flush_output()
+{
+    discard_output_buffer();
+}
+
+// Subclasses can call this once they're ready to setup the various serial parameters.
+void TTY::reload_termios()
+{
+    set_termios(m_termios, true);
+}
+
+int TTY::set_termios(const termios& new_termios, bool force_set)
 {
     int rc = 0;
-    m_termios = t;
+
+    // We intentionally do not return early from this function, so as to keep programs in a (somewhat) working state
+    // even if one of the options it sets isn't implemented.
+    auto attempt = [&](int call_rc) {
+        if (call_rc < 0)
+            rc = call_rc;
+    };
 
     dbgln_if(TTY_DEBUG, "{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}, OPOST={}, ONLCR={}",
         tty_name(),
         should_echo_input(),
         should_generate_signals(),
         in_canonical_mode(),
-        ((m_termios.c_lflag & ECHOE) != 0),
-        ((m_termios.c_lflag & ECHOK) != 0),
-        ((m_termios.c_lflag & ECHONL) != 0),
-        ((m_termios.c_iflag & ISTRIP) != 0),
-        ((m_termios.c_iflag & ICRNL) != 0),
-        ((m_termios.c_iflag & INLCR) != 0),
-        ((m_termios.c_iflag & IGNCR) != 0),
-        ((m_termios.c_oflag & OPOST) != 0),
-        ((m_termios.c_oflag & ONLCR) != 0));
+        ((new_termios.c_lflag & ECHOE) != 0),
+        ((new_termios.c_lflag & ECHOK) != 0),
+        ((new_termios.c_lflag & ECHONL) != 0),
+        ((new_termios.c_iflag & ISTRIP) != 0),
+        ((new_termios.c_iflag & ICRNL) != 0),
+        ((new_termios.c_iflag & INLCR) != 0),
+        ((new_termios.c_iflag & IGNCR) != 0),
+        ((new_termios.c_oflag & OPOST) != 0),
+        ((new_termios.c_oflag & ONLCR) != 0));
 
+    // We deliberately don't return early for unimplemented flags, so that we can get all debug messages
     struct FlagDescription {
         tcflag_t value;
         StringView name;
     };
 
     static constexpr FlagDescription unimplemented_iflags[] = {
-        { IGNBRK, "IGNBRK" },
         { BRKINT, "BRKINT" },
-        { IGNPAR, "IGNPAR" },
         { PARMRK, "PARMRK" },
         { INPCK, "INPCK" },
         { IGNCR, "IGNCR" },
@@ -396,11 +440,10 @@ int TTY::set_termios(const termios& t)
         { IXON, "IXON" },
         { IXANY, "IXANY" },
         { IXOFF, "IXOFF" },
-        { IMAXBEL, "IMAXBEL" },
-        { IUTF8, "IUTF8" }
+        { IMAXBEL, "IMAXBEL" }
     };
     for (auto flag : unimplemented_iflags) {
-        if (m_termios.c_iflag & flag.value) {
+        if (new_termios.c_iflag & flag.value) {
             dbgln("FIXME: iflag {} unimplemented", flag.name);
             rc = -ENOTIMPL;
         }
@@ -414,43 +457,72 @@ int TTY::set_termios(const termios& t)
         { OFDEL, "OFDEL" }
     };
     for (auto flag : unimplemented_oflags) {
-        if (m_termios.c_oflag & flag.value) {
+        if (new_termios.c_oflag & flag.value) {
             dbgln("FIXME: oflag {} unimplemented", flag.name);
             rc = -ENOTIMPL;
         }
     }
 
     static constexpr FlagDescription unimplemented_cflags[] = {
-        { CSIZE, "CSIZE" },
-        { CS5, "CS5" },
-        { CS6, "CS6" },
-        { CS7, "CS7" },
-        { CS8, "CS8" },
-        { CSTOPB, "CSTOPB" },
-        { CREAD, "CREAD" },
-        { PARENB, "PARENB" },
-        { PARODD, "PARODD" },
-        { HUPCL, "HUPCL" },
-        { CLOCAL, "CLOCAL" }
+        { HUPCL, "HUPCL" }
     };
     for (auto flag : unimplemented_cflags) {
-        if (m_termios.c_cflag & flag.value) {
+        if (new_termios.c_cflag & flag.value) {
             dbgln("FIXME: cflag {} unimplemented", flag.name);
             rc = -ENOTIMPL;
         }
     }
 
-    static constexpr FlagDescription unimplemented_lflags[] = {
-        { TOSTOP, "TOSTOP" },
-        { IEXTEN, "IEXTEN" }
-    };
-    for (auto flag : unimplemented_lflags) {
-        if (m_termios.c_lflag & flag.value) {
-            dbgln("FIXME: lflag {} unimplemented", flag.name);
-            rc = -ENOTIMPL;
+    if (force_set || new_termios.c_ispeed != m_termios.c_ispeed || new_termios.c_ospeed != m_termios.c_ospeed)
+        attempt(change_baud(new_termios.c_ispeed, new_termios.c_ospeed));
+
+    static_assert(__builtin_popcount(CSIZE) == 2, "There are 4 character sizes, so CSIZE should be a 2-bit bitmask.");
+    static_assert((CS5 & ~CSIZE) == 0, "CS5 must be contained within the CSIZE bitmask.");
+    static_assert((CS6 & ~CSIZE) == 0, "CS6 must be contained within the CSIZE bitmask.");
+    static_assert((CS7 & ~CSIZE) == 0, "CS7 must be contained within the CSIZE bitmask.");
+    static_assert((CS8 & ~CSIZE) == 0, "CS8 must be contained within the CSIZE bitmask.");
+
+    if (force_set || (new_termios.c_cflag & CSIZE) != (m_termios.c_cflag & CSIZE)) {
+        switch (new_termios.c_cflag & CSIZE) {
+        case CS5:
+            attempt(change_character_size(CharacterSize::FiveBits));
+            break;
+        case CS6:
+            attempt(change_character_size(CharacterSize::SixBits));
+            break;
+        case CS7:
+            attempt(change_character_size(CharacterSize::SevenBits));
+            break;
+        case CS8:
+            attempt(change_character_size(CharacterSize::EightBits));
+            break;
         }
     }
 
+    if (force_set || (new_termios.c_cflag & CSTOPB) != (m_termios.c_cflag & CSTOPB)) {
+        if (new_termios.c_cflag & CSTOPB)
+            attempt(change_stop_bits(StopBits::Two));
+        else
+            attempt(change_stop_bits(StopBits::One));
+    }
+
+    if (force_set || (new_termios.c_cflag & CREAD) != (m_termios.c_cflag & CREAD))
+        attempt(change_receiver_enabled(new_termios.c_cflag & CREAD));
+
+    if (force_set || (new_termios.c_cflag & PARENB) != (m_termios.c_cflag & PARENB) || (new_termios.c_cflag & PARODD) != (m_termios.c_cflag & PARODD)) {
+        if (!(new_termios.c_cflag & PARENB))
+            attempt(change_parity(Parity::None));
+        else if (new_termios.c_cflag & PARODD)
+            attempt(change_parity(Parity::Odd));
+        else
+            attempt(change_parity(Parity::Even));
+        // FIXME: Add sticky parity handling (not POSIX, but other systems support it).
+    }
+
+    if (force_set || (new_termios.c_cflag & CLOCAL) != (m_termios.c_cflag & CLOCAL))
+        attempt(change_ignore_modem_status(new_termios.c_cflag & CLOCAL));
+
+    m_termios = new_termios;
     return rc;
 }
 
@@ -518,10 +590,14 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return rc;
     }
     case TCFLSH:
-        // Serenity's TTY implementation does not use an output buffer, so ignore TCOFLUSH.
-        if (arg == TCIFLUSH || arg == TCIOFLUSH) {
+        if (arg == TCIOFLUSH) {
             flush_input();
-        } else if (arg != TCOFLUSH) {
+            flush_output();
+        } else if (arg == TCIFLUSH) {
+            flush_input();
+        } else if (arg == TCOFLUSH) {
+            flush_output();
+        } else {
             return -EINVAL;
         }
         return 0;

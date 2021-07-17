@@ -23,6 +23,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     set_gid(process->gid());
     DevPtsFS::register_slave_pty(*this);
     set_size(80, 25);
+    TTY::reload_termios();
 }
 
 SlavePTY::~SlavePTY()
@@ -38,10 +39,8 @@ String const& SlavePTY::tty_name() const
 
 void SlavePTY::echo(u8 ch)
 {
-    if (should_echo_input()) {
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
-        [[maybe_unused]] auto result = m_master->on_slave_write(buffer, 1);
-    }
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
+    [[maybe_unused]] auto result = m_master->on_slave_write(buffer, 1);
 }
 
 void SlavePTY::on_master_write(const UserOrKernelBuffer& buffer, size_t size)

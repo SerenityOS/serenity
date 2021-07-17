@@ -127,6 +127,7 @@ UNMAP_AFTER_INIT void VirtualConsole::initialize()
         m_lines.append({ true, 0 });
     }
     VERIFY(m_cells);
+    TTY::reload_termios();
 }
 
 void VirtualConsole::refresh_after_resolution_change()
