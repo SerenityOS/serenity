@@ -11,6 +11,11 @@
 
 namespace Kernel {
 
+enum class MayReturnToFreeList : bool {
+    No,
+    Yes
+};
+
 class PhysicalPage {
     AK_MAKE_NONCOPYABLE(PhysicalPage);
     AK_MAKE_NONMOVABLE(PhysicalPage);
@@ -31,7 +36,7 @@ public:
             free_this();
     }
 
-    static NonnullRefPtr<PhysicalPage> create(PhysicalAddress, bool may_return_to_freelist = true);
+    static NonnullRefPtr<PhysicalPage> create(PhysicalAddress, MayReturnToFreeList may_return_to_freelist = MayReturnToFreeList::Yes);
 
     u32 ref_count() const { return m_ref_count.load(AK::memory_order_consume); }
 
@@ -39,13 +44,13 @@ public:
     bool is_lazy_committed_page() const;
 
 private:
-    explicit PhysicalPage(bool may_return_to_freelist = true);
+    explicit PhysicalPage(MayReturnToFreeList may_return_to_freelist);
     ~PhysicalPage() = default;
 
     void free_this();
 
     Atomic<u32> m_ref_count { 1 };
-    bool m_may_return_to_freelist { true };
+    MayReturnToFreeList m_may_return_to_freelist { MayReturnToFreeList::Yes };
 };
 
 struct PhysicalPageEntry {

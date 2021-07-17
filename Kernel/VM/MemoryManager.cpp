@@ -475,7 +475,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         auto pt_paddr = page_tables_base.offset(pt_index * PAGE_SIZE);
         auto physical_page_index = PhysicalAddress::physical_page_index(pt_paddr.get());
         auto& physical_page_entry = m_physical_page_entries[physical_page_index];
-        auto physical_page = adopt_ref(*new (&physical_page_entry.allocated.physical_page) PhysicalPage(false));
+        auto physical_page = adopt_ref(*new (&physical_page_entry.allocated.physical_page) PhysicalPage(MayReturnToFreeList::No));
         auto result = kernel_page_tables.set(virtual_page_array_current_page & ~0x1fffff, move(physical_page));
         VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 
