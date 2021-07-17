@@ -73,8 +73,7 @@ public:
     virtual ~DevFSDeviceInode() override;
 
 private:
-    String determine_name() const;
-    DevFSDeviceInode(DevFS&, const Device&);
+    DevFSDeviceInode(DevFS&, Device const&, NonnullOwnPtr<KString> name);
     // ^Inode
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
     virtual InodeMetadata metadata() const override;
@@ -82,7 +81,7 @@ private:
     virtual KResult chown(uid_t, gid_t) override;
 
     NonnullRefPtr<Device> m_attached_device;
-    String m_cached_name;
+    NonnullOwnPtr<KString> m_name;
 
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
