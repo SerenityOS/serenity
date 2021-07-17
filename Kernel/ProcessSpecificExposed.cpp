@@ -88,7 +88,7 @@ private:
 
 KResult ProcFSProcessStacks::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     auto parent_directory = m_process_directory.strong_ref();
     if (parent_directory.is_null())
         return KResult(EINVAL);
@@ -108,7 +108,7 @@ KResult ProcFSProcessStacks::traverse_as_directory(unsigned fsid, Function<bool(
 
 RefPtr<ProcFSExposedComponent> ProcFSProcessStacks::lookup(StringView name)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     auto parent_directory = m_process_directory.strong_ref();
     if (parent_directory.is_null())
         return nullptr;
@@ -184,7 +184,7 @@ private:
 
 KResult ProcFSProcessFileDescriptions::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     auto parent_directory = m_process_directory.strong_ref();
     if (parent_directory.is_null())
         return KResult(EINVAL);
@@ -208,7 +208,7 @@ KResult ProcFSProcessFileDescriptions::traverse_as_directory(unsigned fsid, Func
 }
 RefPtr<ProcFSExposedComponent> ProcFSProcessFileDescriptions::lookup(StringView name)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     auto parent_directory = m_process_directory.strong_ref();
     if (parent_directory.is_null())
         return nullptr;

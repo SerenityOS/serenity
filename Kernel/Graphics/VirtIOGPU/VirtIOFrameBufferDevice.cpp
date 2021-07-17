@@ -42,7 +42,7 @@ void VirtIOFrameBufferDevice::create_framebuffer()
     }
     m_framebuffer_sink_vmobject = AnonymousVMObject::try_create_with_physical_pages(move(pages));
 
-    Locker locker(m_gpu.operation_lock());
+    MutexLocker locker(m_gpu.operation_lock());
     m_current_buffer = &buffer_from_index(m_last_set_buffer_index.load());
     create_buffer(m_main_buffer, 0, m_buffer_size);
     create_buffer(m_back_buffer, m_buffer_size, m_buffer_size);
@@ -108,7 +108,7 @@ bool VirtIOFrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
 
     auto& info = display_info();
 
-    Locker locker(m_gpu.operation_lock());
+    MutexLocker locker(m_gpu.operation_lock());
 
     info.rect = {
         .x = 0,
@@ -123,7 +123,7 @@ bool VirtIOFrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
 void VirtIOFrameBufferDevice::set_buffer(int buffer_index)
 {
     auto& buffer = buffer_index == 0 ? m_main_buffer : m_back_buffer;
-    Locker locker(m_gpu.operation_lock());
+    MutexLocker locker(m_gpu.operation_lock());
     if (&buffer == m_current_buffer)
         return;
     m_current_buffer = &buffer;
@@ -183,7 +183,7 @@ int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr a
             return -EFAULT;
         if (m_are_writes_active && user_flush_rects.count > 0) {
             auto& buffer = buffer_from_index(user_flush_rects.buffer_index);
-            Locker locker(m_gpu.operation_lock());
+            MutexLocker locker(m_gpu.operation_lock());
             for (unsigned i = 0; i < user_flush_rects.count; i++) {
                 FBRect user_dirty_rect;
                 if (!copy_from_user(&user_dirty_rect, &user_flush_rects.rects[i]))

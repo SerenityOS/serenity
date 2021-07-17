@@ -126,7 +126,7 @@ bool get_good_random_bytes(u8* buffer, size_t buffer_size, bool allow_wait, bool
     if (can_wait && allow_wait) {
         for (;;) {
             {
-                Locker locker(KernelRng::the().lock());
+                MutexLocker locker(KernelRng::the().lock());
                 if (kernel_rng.resource().get_random_bytes(buffer, buffer_size)) {
                     result = true;
                     break;

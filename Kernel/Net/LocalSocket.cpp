@@ -26,7 +26,7 @@ static Lockable<LocalSocket::List>& all_sockets()
 
 void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
 {
-    Locker locker(all_sockets().lock(), Mutex::Mode::Shared);
+    MutexLocker locker(all_sockets().lock(), Mutex::Mode::Shared);
     for (auto& socket : all_sockets().resource())
         callback(socket);
 }
@@ -70,7 +70,7 @@ LocalSocket::LocalSocket(int type)
     : Socket(AF_LOCAL, type, 0)
 {
     {
-        Locker locker(all_sockets().lock());
+        MutexLocker locker(all_sockets().lock());
         all_sockets().resource().append(*this);
     }
 
@@ -91,7 +91,7 @@ LocalSocket::LocalSocket(int type)
 
 LocalSocket::~LocalSocket()
 {
-    Locker locker(all_sockets().lock());
+    MutexLocker locker(all_sockets().lock());
     all_sockets().resource().remove(*this);
 }
 
@@ -214,7 +214,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
 
 KResult LocalSocket::listen(size_t backlog)
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
     if (type() != SOCK_STREAM)
         return EOPNOTSUPP;
     set_backlog(backlog);
@@ -465,7 +465,7 @@ NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(const FileDe
 
 KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescription& passing_description)
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
     auto role = this->role(socket_description);
     if (role != Role::Connected && role != Role::Accepted)
         return EINVAL;
@@ -480,7 +480,7 @@ KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescr
 
 KResultOr<NonnullRefPtr<FileDescription>> LocalSocket::recvfd(const FileDescription& socket_description)
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
     auto role = this->role(socket_description);
     if (role != Role::Connected && role != Role::Accepted)
         return EINVAL;

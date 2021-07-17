@@ -31,7 +31,7 @@ UNMAP_AFTER_INIT SysFSComponentRegistry::SysFSComponentRegistry()
 
 UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SysFSComponent& component)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     m_root_directory->m_components.append(component);
 }
 
@@ -42,7 +42,7 @@ NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
 
 KResult SysFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(SysFSComponentRegistry::the().get_lock());
+    MutexLocker locker(SysFSComponentRegistry::the().get_lock());
     callback({ ".", { fsid, component_index() }, 0 });
     callback({ "..", { fsid, 0 }, 0 });
 
@@ -113,7 +113,7 @@ RefPtr<Inode> SysFSInode::lookup(StringView)
 
 InodeMetadata SysFSInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
@@ -180,7 +180,7 @@ SysFSDirectoryInode::~SysFSDirectoryInode()
 
 InodeMetadata SysFSDirectoryInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXOTH;
@@ -192,13 +192,13 @@ InodeMetadata SysFSDirectoryInode::metadata() const
 }
 KResult SysFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_parent_fs.m_lock);
+    MutexLocker locker(m_parent_fs.m_lock);
     return m_associated_component->traverse_as_directory(m_parent_fs.fsid(), move(callback));
 }
 
 RefPtr<Inode> SysFSDirectoryInode::lookup(StringView name)
 {
-    Locker locker(m_parent_fs.m_lock);
+    MutexLocker locker(m_parent_fs.m_lock);
     auto component = m_associated_component->lookup(name);
     if (!component)
         return {};

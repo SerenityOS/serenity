@@ -38,7 +38,7 @@ VirtIOGPU::VirtIOGPU(PCI::Address address)
         }
         VERIFY(success);
         finish_init();
-        Locker locker(m_operation_lock);
+        MutexLocker locker(m_operation_lock);
         // Get display information using VIRTIO_GPU_CMD_GET_DISPLAY_INFO
         query_display_information();
     } else {
@@ -244,7 +244,7 @@ void VirtIOGPU::populate_virtio_gpu_request_header(VirtIOGPUCtrlHeader& header, 
 
 void VirtIOGPU::flush_dirty_window(VirtIOGPUScanoutID scanout, VirtIOGPURect const& dirty_rect, VirtIOGPUResourceID resource_id)
 {
-    Locker locker(m_operation_lock);
+    MutexLocker locker(m_operation_lock);
     transfer_framebuffer_data_to_host(scanout, dirty_rect, resource_id);
     flush_displayed_image(dirty_rect, resource_id);
 }

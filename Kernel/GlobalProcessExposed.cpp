@@ -74,7 +74,7 @@ private:
     virtual bool output(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        Locker locker(arp_table().lock(), Mutex::Mode::Shared);
+        MutexLocker locker(arp_table().lock(), Mutex::Mode::Shared);
         for (auto& it : arp_table().resource()) {
             auto obj = array.add_object();
             obj.add("mac_address", it.value.to_string());
@@ -236,12 +236,12 @@ public:
     static NonnullRefPtr<ProcFSDumpKmallocStacks> must_create(const ProcFSSystemDirectory&);
     virtual bool value() const override
     {
-        Locker locker(m_lock);
+        MutexLocker locker(m_lock);
         return g_dump_kmalloc_stacks;
     }
     virtual void set_value(bool new_value) override
     {
-        Locker locker(m_lock);
+        MutexLocker locker(m_lock);
         g_dump_kmalloc_stacks = new_value;
     }
 
@@ -255,12 +255,12 @@ public:
     static NonnullRefPtr<ProcFSUBSanDeadly> must_create(const ProcFSSystemDirectory&);
     virtual bool value() const override
     {
-        Locker locker(m_lock);
+        MutexLocker locker(m_lock);
         return AK::UBSanitizer::g_ubsan_is_deadly;
     }
     virtual void set_value(bool new_value) override
     {
-        Locker locker(m_lock);
+        MutexLocker locker(m_lock);
         AK::UBSanitizer::g_ubsan_is_deadly = new_value;
     }
 
@@ -274,12 +274,12 @@ public:
     static NonnullRefPtr<ProcFSCapsLockRemap> must_create(const ProcFSSystemDirectory&);
     virtual bool value() const override
     {
-        Locker locker(m_lock);
+        MutexLocker locker(m_lock);
         return g_caps_lock_remapped_to_ctrl.load();
     }
     virtual void set_value(bool new_value) override
     {
-        Locker locker(m_lock);
+        MutexLocker locker(m_lock);
         g_caps_lock_remapped_to_ctrl.exchange(new_value);
     }
 
@@ -852,7 +852,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_cr
 
 KResult ProcFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(ProcFSComponentRegistry::the().get_lock());
+    MutexLocker locker(ProcFSComponentRegistry::the().get_lock());
     callback({ ".", { fsid, component_index() }, 0 });
     callback({ "..", { fsid, 0 }, 0 });
 

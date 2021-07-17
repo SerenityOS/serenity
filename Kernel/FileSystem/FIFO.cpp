@@ -41,7 +41,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction(FIFO::Direction d
 
 KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction_blocking(FIFO::Direction direction)
 {
-    Locker locker(m_open_lock);
+    MutexLocker locker(m_open_lock);
 
     auto description = open_direction(direction);
     if (description.is_error())
@@ -73,7 +73,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction_blocking(FIFO::Di
 FIFO::FIFO(uid_t uid)
     : m_uid(uid)
 {
-    Locker locker(all_fifos().lock());
+    MutexLocker locker(all_fifos().lock());
     all_fifos().resource().set(this);
     m_fifo_id = ++s_next_fifo_id;
 
@@ -85,7 +85,7 @@ FIFO::FIFO(uid_t uid)
 
 FIFO::~FIFO()
 {
-    Locker locker(all_fifos().lock());
+    MutexLocker locker(all_fifos().lock());
     all_fifos().resource().remove(this);
 }
 

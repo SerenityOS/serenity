@@ -15,7 +15,7 @@ KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
 
     REQUIRE_PROMISE(stdio);
 
-    Locker locker(*g_hostname_lock, Mutex::Mode::Shared);
+    MutexLocker locker(*g_hostname_lock, Mutex::Mode::Shared);
     if (g_hostname->length() + 1 > sizeof(utsname::nodename))
         return ENAMETOOLONG;
 

@@ -27,13 +27,13 @@ InodeWatcher::~InodeWatcher()
 
 bool InodeWatcher::can_read(const FileDescription&, size_t) const
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     return !m_queue.is_empty();
 }
 
 KResultOr<size_t> InodeWatcher::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t buffer_size)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (m_queue.is_empty())
         // can_read will catch the blocking case.
         return EAGAIN;
@@ -72,7 +72,7 @@ KResultOr<size_t> InodeWatcher::read(FileDescription&, u64, UserOrKernelBuffer& 
 
 KResult InodeWatcher::close()
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     for (auto& entry : m_wd_to_watches) {
         auto& inode = const_cast<Inode&>(entry.value->inode);
@@ -91,7 +91,7 @@ String InodeWatcher::absolute_path(const FileDescription&) const
 
 void InodeWatcher::notify_inode_event(Badge<Inode>, InodeIdentifier inode_id, InodeWatcherEvent::Type event_type, String const& name)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     auto it = m_inode_to_watches.find(inode_id);
     if (it == m_inode_to_watches.end())
@@ -107,7 +107,7 @@ void InodeWatcher::notify_inode_event(Badge<Inode>, InodeIdentifier inode_id, In
 
 KResultOr<int> InodeWatcher::register_inode(Inode& inode, unsigned event_mask)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     if (m_inode_to_watches.find(inode.identifier()) != m_inode_to_watches.end())
         return EEXIST;
@@ -135,7 +135,7 @@ KResultOr<int> InodeWatcher::register_inode(Inode& inode, unsigned event_mask)
 
 KResult InodeWatcher::unregister_by_wd(int wd)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     auto it = m_wd_to_watches.find(wd);
     if (it == m_wd_to_watches.end())
@@ -152,7 +152,7 @@ KResult InodeWatcher::unregister_by_wd(int wd)
 
 void InodeWatcher::unregister_by_inode(Badge<Inode>, InodeIdentifier identifier)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     auto it = m_inode_to_watches.find(identifier);
     if (it == m_inode_to_watches.end())

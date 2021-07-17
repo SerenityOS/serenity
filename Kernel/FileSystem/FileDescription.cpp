@@ -109,7 +109,7 @@ Thread::FileBlocker::BlockFlags FileDescription::should_unblock(Thread::FileBloc
 
 KResult FileDescription::stat(::stat& buffer)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     // FIXME: This is due to the Device class not overriding File::stat().
     if (m_inode)
         return m_inode->metadata().stat(buffer);
@@ -118,7 +118,7 @@ KResult FileDescription::stat(::stat& buffer)
 
 KResultOr<off_t> FileDescription::seek(off_t offset, int whence)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (!m_file->is_seekable())
         return ESPIPE;
 
@@ -173,7 +173,7 @@ KResultOr<size_t> FileDescription::write(u64 offset, UserOrKernelBuffer const& d
 
 KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (Checked<off_t>::addition_would_overflow(m_current_offset, count))
         return EOVERFLOW;
     auto nread_or_error = m_file->read(*this, offset(), buffer, count);
@@ -187,7 +187,7 @@ KResultOr<size_t> FileDescription::read(UserOrKernelBuffer& buffer, size_t count
 
 KResultOr<size_t> FileDescription::write(const UserOrKernelBuffer& data, size_t size)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (Checked<off_t>::addition_would_overflow(m_current_offset, size))
         return EOVERFLOW;
     auto nwritten_or_error = m_file->write(*this, offset(), data, size);
@@ -219,7 +219,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> FileDescription::read_entire_file()
 
 KResultOr<size_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, size_t size)
 {
-    Locker locker(m_lock, Mutex::Mode::Shared);
+    MutexLocker locker(m_lock, Mutex::Mode::Shared);
     if (!is_directory())
         return ENOTDIR;
 
@@ -379,13 +379,13 @@ InodeMetadata FileDescription::metadata() const
 
 KResultOr<Region*> FileDescription::mmap(Process& process, const Range& range, u64 offset, int prot, bool shared)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     return m_file->mmap(process, *this, range, offset, prot, shared);
 }
 
 KResult FileDescription::truncate(u64 length)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     return m_file->truncate(length);
 }
 
@@ -422,7 +422,7 @@ const Socket* FileDescription::socket() const
 
 void FileDescription::set_file_flags(u32 flags)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     m_is_blocking = !(flags & O_NONBLOCK);
     m_should_append = flags & O_APPEND;
     m_direct = flags & O_DIRECT;
@@ -431,13 +431,13 @@ void FileDescription::set_file_flags(u32 flags)
 
 KResult FileDescription::chmod(mode_t mode)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     return m_file->chmod(*this, mode);
 }
 
 KResult FileDescription::chown(uid_t uid, gid_t gid)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     return m_file->chown(*this, uid, gid);
 }
 

@@ -51,7 +51,7 @@ InodeIdentifier VirtualFileSystem::root_inode_id() const
 
 KResult VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int flags)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     auto& inode = mount_point.inode();
     dbgln("VirtualFileSystem: Mounting {} at {} (inode: {}) with flags {}",
@@ -67,7 +67,7 @@ KResult VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int flags
 
 KResult VirtualFileSystem::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     dbgln("VirtualFileSystem: Bind-mounting {} at {}", source.try_create_absolute_path(), mount_point.try_create_absolute_path());
     // FIXME: check that this is not already a mount point
@@ -78,7 +78,7 @@ KResult VirtualFileSystem::bind_mount(Custody& source, Custody& mount_point, int
 
 KResult VirtualFileSystem::remount(Custody& mount_point, int new_flags)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     dbgln("VirtualFileSystem: Remounting {}", mount_point.try_create_absolute_path());
 
@@ -92,7 +92,7 @@ KResult VirtualFileSystem::remount(Custody& mount_point, int new_flags)
 
 KResult VirtualFileSystem::unmount(Inode& guest_inode)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     dbgln("VirtualFileSystem: unmount called with inode {}", guest_inode.identifier());
 
     for (size_t i = 0; i < m_mounts.size(); ++i) {

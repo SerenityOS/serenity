@@ -35,7 +35,7 @@ StringView RamdiskDevice::class_name() const
 
 void RamdiskDevice::start_request(AsyncBlockDeviceRequest& request)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     u8* base = m_region->vaddr().as_ptr();
     size_t size = m_region->size();

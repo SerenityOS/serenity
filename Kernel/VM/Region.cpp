@@ -539,7 +539,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, Scoped
     VERIFY(!s_mm_lock.own_lock());
     VERIFY(!g_scheduler_lock.own_lock());
 
-    Locker locker(vmobject().m_paging_lock);
+    MutexLocker locker(vmobject().m_paging_lock);
 
     mm_lock.lock();
 

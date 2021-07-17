@@ -53,7 +53,7 @@ size_t InodeVMObject::amount_dirty() const
 
 int InodeVMObject::release_all_clean_pages()
 {
-    Locker locker(m_paging_lock);
+    MutexLocker locker(m_paging_lock);
     return release_all_clean_pages_impl();
 }
 

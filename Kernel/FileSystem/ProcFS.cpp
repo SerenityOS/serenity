@@ -38,7 +38,7 @@ UNMAP_AFTER_INIT ProcFSComponentRegistry::ProcFSComponentRegistry()
 
 void ProcFSComponentRegistry::register_new_process(Process& new_process)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     m_root_directory->m_process_directories.append(ProcFSProcessDirectory::create(new_process));
 }
 
@@ -127,7 +127,7 @@ RefPtr<Inode> ProcFSInode::lookup(StringView)
 
 InodeMetadata ProcFSInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = m_associated_component->required_mode();
@@ -193,7 +193,7 @@ ProcFSDirectoryInode::~ProcFSDirectoryInode()
 }
 InodeMetadata ProcFSDirectoryInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFDIR | m_associated_component->required_mode();
@@ -205,13 +205,13 @@ InodeMetadata ProcFSDirectoryInode::metadata() const
 }
 KResult ProcFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_parent_fs.m_lock);
+    MutexLocker locker(m_parent_fs.m_lock);
     return m_associated_component->traverse_as_directory(m_parent_fs.fsid(), move(callback));
 }
 
 RefPtr<Inode> ProcFSDirectoryInode::lookup(StringView name)
 {
-    Locker locker(m_parent_fs.m_lock);
+    MutexLocker locker(m_parent_fs.m_lock);
     auto component = m_associated_component->lookup(name);
     if (!component)
         return {};
@@ -229,7 +229,7 @@ ProcFSLinkInode::ProcFSLinkInode(const ProcFS& fs, const ProcFSExposedComponent&
 }
 InodeMetadata ProcFSLinkInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFLNK | m_associated_component->required_mode();
