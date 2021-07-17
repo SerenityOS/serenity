@@ -8,6 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/Vector.h>
 
 TEST_CASE(is_integral_works_properly)
 {
@@ -305,4 +306,20 @@ TEST_CASE(hex_dump)
     EXPECT_EQ(String::formatted("{:>4hex-dump}", "0000"), "30303030    0000");
     EXPECT_EQ(String::formatted("{:>2hex-dump}", "0000"), "3030    00\n3030    00");
     EXPECT_EQ(String::formatted("{:*>4hex-dump}", "0000"), "30303030****0000");
+}
+
+TEST_CASE(vector_format)
+{
+    {
+        Vector<int> v { 1, 2, 3, 4 };
+        EXPECT_EQ(String::formatted("{}", v), "[ 1, 2, 3, 4 ]");
+    }
+    {
+        Vector<StringView> v { "1"sv, "2"sv, "3"sv, "4"sv };
+        EXPECT_EQ(String::formatted("{}", v), "[ 1, 2, 3, 4 ]");
+    }
+    {
+        Vector<Vector<String>> v { { "1"sv, "2"sv }, { "3"sv, "4"sv } };
+        EXPECT_EQ(String::formatted("{}", v), "[ [ 1, 2 ], [ 3, 4 ] ]");
+    }
 }
