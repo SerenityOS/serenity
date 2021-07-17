@@ -126,8 +126,6 @@ protected:
 };
 
 class SysFSUSBBusDirectory final : public SysFSDirectory {
-    friend class SysFSComponentsRegistrar;
-
 public:
     static void initialize();
     void plug(USB::Device&);
