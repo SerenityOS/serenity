@@ -138,7 +138,7 @@ RefPtr<Inode> ProcFSInode::lookup(StringView)
 
 InodeMetadata ProcFSInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = m_associated_component->required_mode();
@@ -209,7 +209,7 @@ ProcFSDirectoryInode::~ProcFSDirectoryInode()
 }
 InodeMetadata ProcFSDirectoryInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFDIR | m_associated_component->required_mode();
@@ -236,7 +236,7 @@ RefPtr<Inode> ProcFSDirectoryInode::lookup(StringView name)
 
 KResultOr<size_t> ProcFSDirectoryInode::directory_entry_count() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     return m_associated_component->entries_count();
 }
 
@@ -251,7 +251,7 @@ ProcFSLinkInode::ProcFSLinkInode(const ProcFS& fs, const ProcFSExposedComponent&
 }
 InodeMetadata ProcFSLinkInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFLNK | m_associated_component->required_mode();

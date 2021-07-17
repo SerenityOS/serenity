@@ -110,7 +110,7 @@ RefPtr<Inode> SysFSInode::lookup(StringView)
 
 InodeMetadata SysFSInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
@@ -181,7 +181,7 @@ SysFSDirectoryInode::~SysFSDirectoryInode()
 }
 InodeMetadata SysFSDirectoryInode::metadata() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXOTH;
@@ -208,7 +208,7 @@ RefPtr<Inode> SysFSDirectoryInode::lookup(StringView name)
 
 KResultOr<size_t> SysFSDirectoryInode::directory_entry_count() const
 {
-    Locker locker(m_lock);
+    Locker locker(m_inode_lock);
     return m_associated_component->entries_count();
 }
 
