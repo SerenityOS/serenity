@@ -160,7 +160,7 @@ public:
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) override;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
     virtual KResultOr<size_t> directory_entry_count() const override;

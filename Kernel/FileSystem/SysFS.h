@@ -75,7 +75,7 @@ protected:
     virtual void flush_metadata() override;
     virtual InodeMetadata metadata() const override;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*) override;
-    virtual KResultOr<NonnullRefPtr<Inode>> create_child(String const& name, mode_t, dev_t, uid_t, gid_t) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) override;
     virtual KResult add_child(Inode&, StringView const& name, mode_t) override;
     virtual KResult remove_child(StringView const& name) override;
     virtual KResultOr<size_t> directory_entry_count() const override;
