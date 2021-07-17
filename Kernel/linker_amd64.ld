@@ -1,6 +1,6 @@
-ENTRY(start)
+ENTRY(init)
 
-KERNEL_VIRTUAL_BASE = 0xc0000000;
+KERNEL_VIRTUAL_BASE = 0x1000000000;
 
 PHDRS
 {
@@ -14,7 +14,7 @@ PHDRS
 
 SECTIONS
 {
-    . = KERNEL_VIRTUAL_BASE + 0x00100000;
+    . = KERNEL_VIRTUAL_BASE + 0x00200000;
 
     start_of_kernel_image = .;
 

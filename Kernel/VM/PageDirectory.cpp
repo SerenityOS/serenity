@@ -28,12 +28,13 @@ RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
     return cr3_map().get(cr3).value_or({});
 }
 
+extern "C" FlatPtr kernel_base;
 #if ARCH(X86_64)
-extern "C" PageDirectoryEntry boot_pml4t[1024];
+extern "C" void* boot_pml4t;
 #endif
-extern "C" PageDirectoryEntry* boot_pdpt[4];
-extern "C" PageDirectoryEntry boot_pd0[1024];
-extern "C" PageDirectoryEntry boot_pd3[1024];
+extern "C" void* boot_pdpt;
+extern "C" void* boot_pd0;
+extern "C" void* boot_pd_kernel;
 
 UNMAP_AFTER_INIT PageDirectory::PageDirectory()
 {
@@ -51,13 +52,13 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 #endif
     PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((FlatPtr)boot_pdpt));
     PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((FlatPtr)boot_pd0));
-    PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((FlatPtr)boot_pd3));
+    PhysicalAddress boot_pd_kernel_paddr(virtual_to_low_physical((FlatPtr)boot_pd_kernel));
     dmesgln("MM: boot_pdpt @ {}", boot_pdpt_paddr);
     dmesgln("MM: boot_pd0 @ {}", boot_pd0_paddr);
-    dmesgln("MM: boot_pd3 @ {}", boot_pd3_paddr);
+    dmesgln("MM: boot_pd_kernel @ {}", boot_pd_kernel_paddr);
     m_directory_table = PhysicalPage::create(boot_pdpt_paddr, MayReturnToFreeList::No);
     m_directory_pages[0] = PhysicalPage::create(boot_pd0_paddr, MayReturnToFreeList::No);
-    m_directory_pages[3] = PhysicalPage::create(boot_pd3_paddr, MayReturnToFreeList::No);
+    m_directory_pages[(kernel_base >> 30) & 0x1ff] = PhysicalPage::create(boot_pd_kernel_paddr, MayReturnToFreeList::No);
 }
 
 PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
@@ -83,17 +84,16 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
     m_directory_table = MM.allocate_user_physical_page();
     if (!m_directory_table)
         return;
-    m_directory_pages[0] = MM.allocate_user_physical_page();
-    if (!m_directory_pages[0])
-        return;
-    m_directory_pages[1] = MM.allocate_user_physical_page();
-    if (!m_directory_pages[1])
-        return;
-    m_directory_pages[2] = MM.allocate_user_physical_page();
-    if (!m_directory_pages[2])
-        return;
+    auto kernel_pd_index = (kernel_base >> 30) & 0xffu;
+    for (size_t i = 0; i < 4; i++) {
+        if (i == kernel_pd_index)
+            continue;
+        m_directory_pages[i] = MM.allocate_user_physical_page();
+        if (!m_directory_pages[i])
+            return;
+    }
     // Share the top 1 GiB of kernel-only mappings (>=3GiB or >=KERNEL_BASE)
-    m_directory_pages[3] = MM.kernel_page_directory().m_directory_pages[3];
+    m_directory_pages[kernel_pd_index] = MM.kernel_page_directory().m_directory_pages[kernel_pd_index];
 
 #if ARCH(X86_64)
     {
@@ -105,17 +105,15 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
 
     {
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*m_directory_table);
+        for (size_t i = 0; i < sizeof(m_directory_pages) / sizeof(m_directory_pages[0]); i++) {
+            if (m_directory_pages[i]) {
 #if ARCH(I386)
-        table.raw[0] = (FlatPtr)m_directory_pages[0]->paddr().as_ptr() | 1;
-        table.raw[1] = (FlatPtr)m_directory_pages[1]->paddr().as_ptr() | 1;
-        table.raw[2] = (FlatPtr)m_directory_pages[2]->paddr().as_ptr() | 1;
-        table.raw[3] = (FlatPtr)m_directory_pages[3]->paddr().as_ptr() | 1;
+                table.raw[i] = (FlatPtr)m_directory_pages[i]->paddr().as_ptr() | 1;
 #else
-        table.raw[0] = (FlatPtr)m_directory_pages[0]->paddr().as_ptr() | 7;
-        table.raw[1] = (FlatPtr)m_directory_pages[1]->paddr().as_ptr() | 7;
-        table.raw[2] = (FlatPtr)m_directory_pages[2]->paddr().as_ptr() | 7;
-        table.raw[3] = (FlatPtr)m_directory_pages[3]->paddr().as_ptr() | 7;
+                table.raw[i] = (FlatPtr)m_directory_pages[i]->paddr().as_ptr() | 7;
 #endif
+            }
+        }
 
         // 2 ** MAXPHYADDR - 1
         // Where MAXPHYADDR = physical_address_bit_width
@@ -137,10 +135,8 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
         //    when writing out the PDPT pointer to CR3.
         // The reason we're not checking the page directory's physical address directly is because
         // we're checking for sign extension when putting it into a PDPTE. See issue #4584.
-        VERIFY((table.raw[0] & ~pdpte_bit_flags) <= max_physical_address);
-        VERIFY((table.raw[1] & ~pdpte_bit_flags) <= max_physical_address);
-        VERIFY((table.raw[2] & ~pdpte_bit_flags) <= max_physical_address);
-        VERIFY((table.raw[3] & ~pdpte_bit_flags) <= max_physical_address);
+        for (auto table_entry : table.raw)
+            VERIFY((table_entry & ~pdpte_bit_flags) <= max_physical_address);
 
         MM.unquickmap_page();
     }

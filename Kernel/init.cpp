@@ -5,6 +5,7 @@
  */
 
 #include <AK/Types.h>
+#include <Bootloader/BootInfo.h>
 #include <Kernel/ACPI/DynamicParser.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
@@ -77,7 +78,6 @@ extern "C" u8* end_of_kernel_image;
 multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 size_t multiboot_copy_boot_modules_count;
 
-extern "C" const char kernel_cmdline[4096];
 READONLY_AFTER_INIT bool g_in_early_boot;
 
 namespace Kernel {
@@ -89,7 +89,7 @@ static void setup_serial_debug();
 // We declare them here to ensure their signatures don't accidentally change.
 extern "C" void init_finished(u32 cpu) __attribute__((used));
 extern "C" [[noreturn]] void init_ap(FlatPtr cpu, Processor* processor_info);
-extern "C" [[noreturn]] void init();
+extern "C" [[noreturn]] void init(Bootloader::BootInfo const&);
 
 READONLY_AFTER_INIT VirtualConsole* tty0;
 
@@ -105,10 +105,41 @@ static Processor s_bsp_processor; // global but let's keep it "private"
 // Once multi-tasking is ready, we spawn a new thread that starts in the
 // init_stage2() function. Initialization continues there.
 
-extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
+extern "C" {
+u8* start_of_bootloader_image;
+u8* end_of_bootloader_image;
+FlatPtr kernel_base;
+void* gdt64ptr;
+__attribute__((section(".boot_text"))) void* code64_sel;
+#if ARCH(X86_64)
+FlatPtr boot_pml4t;
+#endif
+FlatPtr boot_pdpt;
+FlatPtr boot_pd0;
+FlatPtr boot_pd_kernel;
+FlatPtr boot_pd_kernel_pt1023;
+const char* kernel_cmdline;
+}
+
+extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(Bootloader::BootInfo const& boot_info)
 {
     g_in_early_boot = true;
     setup_serial_debug();
+
+    multiboot_info_ptr = boot_info.multiboot_info_ptr;
+    start_of_bootloader_image = boot_info.start_of_bootloader_image;
+    end_of_bootloader_image = boot_info.end_of_bootloader_image;
+    kernel_base = boot_info.kernel_base;
+    gdt64ptr = boot_info.gdt64ptr;
+    code64_sel = boot_info.code64_sel;
+#if ARCH(X86_64)
+    boot_pml4t = boot_info.boot_pml4t;
+#endif
+    boot_pdpt = boot_info.boot_pdpt;
+    boot_pd0 = boot_info.boot_pd0;
+    boot_pd_kernel = boot_info.boot_pd_kernel;
+    boot_pd_kernel_pt1023 = boot_info.boot_pd_kernel_pt1023;
+    kernel_cmdline = boot_info.kernel_cmdline;
 
     // We need to copy the command line before kmalloc is initialized,
     // as it may overwrite parts of multiboot!

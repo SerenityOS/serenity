@@ -96,7 +96,8 @@ apic_ap_start32:
     lgdt (%eax)
 
     /* jump above 3GB into our identity mapped area now */
-    ljmpl $code64_sel, $(apic_ap_start64 - apic_ap_start + 0xc0008000)
+    // FIXME: uncomment this
+    //ljmpl $code64_sel, $(apic_ap_start64 - apic_ap_start + 0xc0008000)
 .code64
 apic_ap_start64:
     movabs $gdt64ptr, %rax

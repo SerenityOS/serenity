@@ -1,4 +1,3 @@
-#define _BOOTLOADER
 #include <AK/Platform.h>
 #include <Kernel/Sections.h>
 
@@ -26,17 +25,17 @@ boot_pdpt:
 .global boot_pd0
 boot_pd0:
 .skip 4096
-.global boot_pd3
-boot_pd3:
-.skip 4096
-.global boot_pd0_pt0
-boot_pd0_pt0:
-.skip 4096 * 4
-.global boot_pd3_pts
-boot_pd3_pts:
+.global boot_pd0_pts
+boot_pd0_pts:
 .skip 4096 * (KERNEL_PD_OFFSET >> 21)
-.global boot_pd3_pt1023
-boot_pd3_pt1023:
+.global boot_pd_kernel
+boot_pd_kernel:
+.skip 4096
+.global boot_pd_kernel_pts
+boot_pd_kernel_pts:
+.skip 4096 * (KERNEL_PD_OFFSET >> 21)
+.global boot_pd_kernel_pt1023
+boot_pd_kernel_pt1023:
 .skip 4096
 
 .section .boot_text, "ax"
@@ -46,6 +45,9 @@ boot_pd3_pt1023:
 
 .extern init
 .type init, @function
+
+.global reload_cr3
+.type reload_cr3, @function
 
 .extern multiboot_info_ptr
 .type multiboot_info_ptr, @object
@@ -63,16 +65,11 @@ pdpt
     0: boot_pd0 (0-1GB)
     1: n/a      (1-2GB)
     2: n/a      (2-3GB)
-    3: boot_pd3 (3-4GB)
+    3: n/a      (3-4GB)
 
 boot_pd0 : 512 PDEs
 
-    0: boot_pd0_pt0 (0-2MB) (id 512 4KB pages)
-
-boot_pd3 : 512 PDEs
-
-    boot_pd3_pts[*] (KERNEL_BASE to KERNEL_BASE + KERNEL_PD_OFFSET) (pseudo 512 4KB pages)
-    last entry: boot_pd3_pt1023 (4094-4096MB) (for page table mappings)
+    boot_pd0_pts (0MB - KERNEL_PD_OFFSET) (id 512 4KB pages)
 
 the page tables each contain 512 PTEs that map individual 4KB pages
 
@@ -116,11 +113,11 @@ print_and_halt:
 .equ EXITING_PROTECTED_MODE_CODE_LOCATION, 0x10000
 .equ REAL_MODE_CODE, 0x500
 .equ PROTECTED_MODE_16_BIT_CODE, 0x600
-    mov %esp, %ebp
-    mov 4(%ebp), %edi
+    movl %esp, %ebp
+    movl 4(%ebp), %edi
 
     /* Copy string to low memory section  */
-    mov %edi, %esi
+    movl %edi, %esi
     xor %ecx, %ecx
 
     pushl %eax
@@ -142,8 +139,8 @@ check_string_length_exit:
     rep movsb
 
     /* Copy gdt_table_real_mode to low memory section  */
-    movl $(gdt_table_real_mode - KERNEL_BASE), %eax
-    movl $(gdt_table_real_mode_end - KERNEL_BASE), %ebx
+    movl $gdt_table_real_mode, %eax
+    movl $gdt_table_real_mode_end, %ebx
 
     movl %ebx, %ecx
     sub %eax, %ecx
@@ -152,8 +149,8 @@ check_string_length_exit:
     rep movsb
 
     /* Copy protected_mode_16_bit to real_mode to low memory section  */
-    movl $(protected_mode_16_bit - KERNEL_BASE), %eax
-    movl $(real_mode - KERNEL_BASE), %ebx
+    movl $protected_mode_16_bit, %eax
+    movl $real_mode, %ebx
 
     movl %ebx, %ecx
     sub %eax, %ecx
@@ -162,8 +159,8 @@ check_string_length_exit:
     rep movsb
 
     /* Copy real_mode to end_of_print_and_halt_function to low memory section  */
-    movl $(real_mode - KERNEL_BASE), %eax
-    movl $(end_of_print_and_halt_function - KERNEL_BASE), %ebx
+    movl $real_mode, %eax
+    movl $end_of_print_and_halt_function, %ebx
 
     movl %ebx, %ecx
     sub %eax, %ecx
@@ -173,8 +170,8 @@ check_string_length_exit:
 
 
     /* Copy all opcodes from exiting_real_mode label to protected_mode_16_bit label to low memory RAM  */
-    movl $(exiting_real_mode - KERNEL_BASE), %eax
-    movl $(protected_mode_16_bit - KERNEL_BASE), %ebx
+    movl $exiting_real_mode, %eax
+    movl $protected_mode_16_bit, %ebx
 
     movl %ebx, %ecx
     sub %eax, %ecx
@@ -292,11 +289,11 @@ end_of_print_and_halt_function:
 real_start:
     cli
     cld
-    mov $(end_of_kernel_image - KERNEL_BASE), %esi
+    mov $end_of_bootloader_image, %esi
     cmp $KERNEL_PD_OFFSET, %esi
     jbe kernel_not_too_large
     
-    movl $(kernel_image_too_big_string - KERNEL_BASE), %esi
+    movl $kernel_image_too_big_string, %esi
     pushl %esi
     call print_and_halt
     /* We should not return, but just in case, halt */
@@ -314,7 +311,7 @@ kernel_not_too_large:
     jnz pae_supported     /* If the bit is not set, there is no PAE capability. */
 
     /* Since there is no PAE capability, halt with an error message */
-    movl $(no_pae_string - KERNEL_BASE), %esi
+    movl $no_pae_string, %esi
     pushl %esi
     call print_and_halt
     /* We should not return, but just in case, halt */
@@ -329,7 +326,7 @@ pae_supported:
     jnz long_mode_supported             /* If LM-bit is not enabled, there is no long mode. */
 
     /* Since there is no long mode, halt with an error message */
-    movl $(no_long_mode_string - KERNEL_BASE), %esi
+    movl $no_long_mode_string, %esi
     pushl %esi
     call print_and_halt
     /* We should not return, but just in case, halt */
@@ -363,74 +360,53 @@ pae_supported:
     addl $16, %esi
     movl (%esi), %esi
     movl $1024, %ecx
-    movl $(kernel_cmdline - KERNEL_BASE), %edi
+    movl $kernel_cmdline, %edi
     rep movsl
 
 #if ARCH(X86_64)
     /* clear pml4t */
-    movl $(boot_pml4t - KERNEL_BASE), %edi
+    movl $boot_pml4t, %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
     /* set up pml4t[0] */
-    movl $(boot_pml4t - KERNEL_BASE), %edi
-    movl $(boot_pdpt - KERNEL_BASE), 0(%edi)
+    movl $boot_pml4t, %edi
+    movl $boot_pdpt, 0(%edi)
     /* R/W + Present */
     orl $0x3, 0(%edi)
 #endif
 
     /* clear pdpt */
-    movl $(boot_pdpt - KERNEL_BASE), %edi
+    movl $boot_pdpt, %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
     /* set up pdpt[0] and pdpt[3] */
-    movl $(boot_pdpt - KERNEL_BASE), %edi
+    movl $boot_pdpt, %edi
 #if ARCH(X86_64)
-    movl $((boot_pd0 - KERNEL_BASE) + 3), 0(%edi)
-    movl $((boot_pd3 - KERNEL_BASE) + 3), 24(%edi)
+    movl $(boot_pd0 + 3), 0(%edi)
 #else
-    movl $((boot_pd0 - KERNEL_BASE) + 1), 0(%edi)
-    movl $((boot_pd3 - KERNEL_BASE) + 1), 24(%edi)
+    movl $(boot_pd0 + 1), 0(%edi)
 #endif
 
     /* clear pd0 */
-    movl $(boot_pd0 - KERNEL_BASE), %edi
+    movl $boot_pd0, %edi
     movl $1024, %ecx
     xorl %eax, %eax
     rep stosl
 
-    /* clear pd3 */
-    movl $(boot_pd3 - KERNEL_BASE), %edi
-    movl $1024, %ecx
+    /* clear pd0's PTs */
+    movl $boot_pd0_pts, %edi
+    movl $(1024 * (KERNEL_PD_OFFSET >> 21)), %ecx
     xorl %eax, %eax
     rep stosl
 
-    /* clear pd0's pt's */
-    movl $(boot_pd0_pt0 - KERNEL_BASE), %edi
-    movl $(1024 * 4), %ecx
-    xorl %eax, %eax
-    rep stosl
-
-    /* clear pd3's pt's */
-    movl $(boot_pd3_pts - KERNEL_BASE), %edi
-    movl $(1024 * 17), %ecx
-    xorl %eax, %eax
-    rep stosl
-
-    /* add boot_pd0_pt0 to boot_pd0 */
-    movl $(boot_pd0 - KERNEL_BASE), %edi
-    movl $(boot_pd0_pt0 - KERNEL_BASE), %eax
-    movl %eax, 0(%edi)
-    /* R/W + Present */
-    orl $0x3, 0(%edi)
-
-    /* add boot_pd3_pts to boot_pd3 */
+    /* add boot_pd0_pts to boot_pd0 */
     movl $(KERNEL_PD_OFFSET >> 21), %ecx
-    movl $(boot_pd3 - KERNEL_BASE), %edi
-    movl $(boot_pd3_pts - KERNEL_BASE), %eax
+    movl $boot_pd0, %edi
+    movl $boot_pd0_pts, %eax
 
 1:
     movl %eax, 0(%edi)
@@ -440,22 +416,9 @@ pae_supported:
     addl $4096, %eax
     loop 1b
 
-    /* identity map the 0 to 2MB range */
-    movl $512, %ecx
-    movl $(boot_pd0_pt0 - KERNEL_BASE), %edi
-    xorl %eax, %eax
-
-1:
-    movl %eax, 0(%edi)
-    /* R/W + Present */
-    orl $0x3, 0(%edi)
-    addl $8, %edi
-    addl $4096, %eax
-    loop 1b
-
-    /* pseudo identity map the KERNEL_BASE to KERNEL_BASE + KERNEL_PD_OFFSET range */
+    /* identity map the 0MB to KERNEL_PD_OFFSET range */
     movl $(512 * (KERNEL_PD_OFFSET >> 21)), %ecx
-    movl $(boot_pd3_pts - KERNEL_BASE), %edi
+    movl $boot_pd0_pts, %edi
     xorl %eax, %eax
 
 1:
@@ -465,19 +428,13 @@ pae_supported:
     addl $8, %edi
     addl $4096, %eax
     loop 1b
-
-    /* create an empty page table for the top 2MB at the 4GB mark */
-    movl $(boot_pd3 - KERNEL_BASE), %edi
-    movl $(boot_pd3_pt1023 - KERNEL_BASE), 4088(%edi)
-    orl $0x3, 4088(%edi)
-    movl $0, 4092(%edi)
 
 #if ARCH(X86_64)
     /* point CR3 to PML4T */
-    movl $(boot_pml4t - KERNEL_BASE), %eax
+    movl $boot_pml4t, %eax
 #else
     /* point CR3 to PDPT */
-    movl $(boot_pdpt - KERNEL_BASE), %eax
+    movl $boot_pdpt, %eax
 #endif
 
     movl %eax, %cr3
@@ -502,31 +459,19 @@ pae_supported:
     movl %eax, %cr0
 
     /* set up stack */
-    mov $(stack_top - KERNEL_BASE), %esp
+    mov $stack_top, %esp
     and $-16, %esp
 
 #if ARCH(X86_64)
     /* Now we are in 32-bit compatibility mode, We still need to load a 64-bit GDT */
-    mov $(gdt64ptr - KERNEL_BASE), %eax
+    mov $gdt64ptr, %eax
     lgdt (%eax)
-    ljmpl $code64_sel, $(1f - KERNEL_BASE)
+    ljmpl $code64_sel, $1f
 
 .code64
 1:
     movl %ebx, %ebx
-    movabs $KERNEL_BASE, %rax
-    addq %rax, %rbx
-    movabs $multiboot_info_ptr, %rax
-    movq %rbx, (%rax)
-
-    movabs $gdt64ptr, %rax
-    lgdt (%rax)
-    movabs $1f, %rax
-    jmp *%rax
-
-1:
-    movabs $KERNEL_BASE, %rax
-    addq %rax, %rsp
+    movq %rbx, multiboot_info_ptr
 
     mov $0, %ax
     mov %ax, %ss
@@ -534,44 +479,28 @@ pae_supported:
     mov %ax, %es
     mov %ax, %fs
     mov %ax, %gs
-
-    mov %cr3, %rax
-    mov %rax, %cr3
-
 #else
-    addl $KERNEL_BASE, %ebx
     movl %ebx, multiboot_info_ptr
-
-    /* jmp to an address above the 3GB mark */
-    movl $1f, %eax
-    jmp *%eax
-1:
-    add $KERNEL_BASE, %esp
-
-    movl %cr3, %eax
-    movl %eax, %cr3
 #endif
 
-    /* unmap the 0-1MB range, which isn't used after jmp-ing up here */
-    movl $256, %ecx
-    movl $(boot_pd0_pt0 - KERNEL_BASE), %edi
-    xorl %eax, %eax
-
-1:
-    movl %eax, 0(%edi)
-    addl $8, %edi
-    loop 1b
-
-#if ARCH(X86_64)
-    movabs $init, %rax
-    call *%rax
-    add $4, %rsp
-#else
+    call reload_cr3
     call init
-    add $4, %esp
-#endif
 
     cli
 loop:
     hlt
     jmp loop
+
+reload_cr3:
+#if ARCH(X86_64)
+    pushq %rax
+    mov %cr3, %rax
+    mov %rax, %cr3
+    popq %rax
+#else
+    pushl %eax
+    movl %cr3, %eax
+    movl %eax, %cr3
+    popl %eax
+#endif
+    ret

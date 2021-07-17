@@ -84,7 +84,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
     regions.append(RegionWithSymbols {
         .base = 0xc0000000,
         .size = 0x3fffffff,
-        .path = "/boot/Kernel",
+        .path = "/boot/Kernel.debug",
         .is_relative = false });
 
     {

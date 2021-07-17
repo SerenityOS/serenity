@@ -256,7 +256,7 @@ public:
 #if ARCH(I386)
             get_gs() == GDT_SELECTOR_PROC &&
 #endif
-            read_gs_u32(__builtin_offsetof(Processor, m_self)) != 0;
+            read_gs_ptr(__builtin_offsetof(Processor, m_self)) != 0;
     }
 
     ALWAYS_INLINE void set_scheduler_data(SchedulerPerProcessorData& scheduler_data)
@@ -298,7 +298,7 @@ public:
     ALWAYS_INLINE static void set_current_thread(Thread& current_thread)
     {
         // See comment in Processor::current_thread
-        write_gs_u32(__builtin_offsetof(Processor, m_current_thread), FlatPtr(&current_thread));
+        write_gs_ptr(__builtin_offsetof(Processor, m_current_thread), FlatPtr(&current_thread));
     }
 
     ALWAYS_INLINE static Thread* idle_thread()
