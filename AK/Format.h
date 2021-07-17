@@ -351,15 +351,15 @@ requires(HasFormatter<T>) struct Formatter<Vector<T>> : StandardFormatter {
         m_precision = m_precision.value_or(NumericLimits<size_t>::max());
 
         Formatter<T> content_fmt;
-        builder.put_literal("[ ");
+        builder.put_literal("[ "sv);
         bool first = true;
         for (auto& content : value) {
             if (!first)
-                builder.put_literal(", ");
+                builder.put_literal(", "sv);
             first = false;
             content_fmt.format(builder, content);
         }
-        builder.put_literal(" ]");
+        builder.put_literal(" ]"sv);
     }
 };
 
