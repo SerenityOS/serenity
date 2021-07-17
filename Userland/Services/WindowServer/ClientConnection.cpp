@@ -1132,4 +1132,17 @@ void ClientConnection::set_window_parent_from_client(i32 client_id, i32 parent_i
     child_window->set_parent_window(*parent_window);
 }
 
+Messages::WindowServer::GetWindowRectFromClientResponse ClientConnection::get_window_rect_from_client(i32 client_id, i32 window_id)
+{
+    auto client_connection = from_client_id(client_id);
+    if (!client_connection)
+        did_misbehave("GetWindowRectFromClient: Bad client ID");
+
+    auto window = client_connection->window_from_id(window_id);
+    if (!window)
+        did_misbehave("GetWindowRectFromClient: Bad window ID");
+
+    return window->rect();
+}
+
 }

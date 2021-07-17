@@ -165,6 +165,7 @@ private:
     virtual Messages::WindowServer::GetDesktopDisplayScaleResponse get_desktop_display_scale(u32) override;
     virtual void set_flash_flush(bool) override;
     virtual void set_window_parent_from_client(i32, i32, i32) override;
+    virtual Messages::WindowServer::GetWindowRectFromClientResponse get_window_rect_from_client(i32, i32) override;
 
     Window* window_from_id(i32 window_id);
 
