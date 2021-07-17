@@ -280,6 +280,7 @@ serenity_component(
 )
 
 add_subdirectory(AK)
+add_subdirectory(Bootloader)
 add_subdirectory(Kernel)
 add_subdirectory(Userland)
 add_subdirectory(Tests)
