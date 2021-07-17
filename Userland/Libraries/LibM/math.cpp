@@ -317,9 +317,9 @@ static FloatT internal_gamma(FloatT x) NOEXCEPT
     // These constants were obtained through use of WolframAlpha
     constexpr long long max_integer_whose_factorial_fits = (Extractor::mantissa_bits == FloatExtractor<long double>::mantissa_bits ? 20 : (Extractor::mantissa_bits == FloatExtractor<double>::mantissa_bits ? 18 : (Extractor::mantissa_bits == FloatExtractor<float>::mantissa_bits ? 10 : 0)));
     static_assert(max_integer_whose_factorial_fits != 0, "internal_gamma needs to be aware of the integer factorial that fits in this floating point type.");
-    if (rintl(x) == (long double)x && x <= max_integer_whose_factorial_fits) {
+    if ((int)x == x && x <= max_integer_whose_factorial_fits + 1) {
         long long result = 1;
-        for (long long cursor = 1; cursor <= min(max_integer_whose_factorial_fits, (long long)x); cursor++)
+        for (long long cursor = 2; cursor < (long long)x; cursor++)
             result *= cursor;
         return (FloatT)result;
     }
@@ -811,6 +811,10 @@ long double asinl(long double x) NOEXCEPT
     value += i * product_odd<9>() / product_even<10>() / 11;
     i *= squared;
     value += i * product_odd<11>() / product_even<12>() / 13;
+    i *= squared;
+    value += i * product_odd<13>() / product_even<14>() / 15;
+    i *= squared;
+    value += i * product_odd<15>() / product_even<16>() / 17;
     return value;
 }
 
