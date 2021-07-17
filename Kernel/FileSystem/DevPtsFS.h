@@ -25,7 +25,7 @@ public:
     virtual bool initialize() override;
     virtual StringView class_name() const override { return "DevPtsFS"sv; }
 
-    virtual NonnullRefPtr<Inode> root_inode() const override;
+    virtual Inode& root_inode() override;
 
     static void register_slave_pty(SlavePTY&);
     static void unregister_slave_pty(SlavePTY&);

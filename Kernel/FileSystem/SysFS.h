@@ -65,7 +65,7 @@ public:
     virtual bool initialize() override;
     virtual StringView class_name() const override { return "SysFS"sv; }
 
-    virtual NonnullRefPtr<Inode> root_inode() const override;
+    virtual Inode& root_inode() override;
 
 private:
     SysFS();

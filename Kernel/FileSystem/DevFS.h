@@ -28,7 +28,7 @@ public:
     void notify_new_device(Device&);
     void notify_device_removal(Device&);
 
-    virtual NonnullRefPtr<Inode> root_inode() const override;
+    virtual Inode& root_inode() override;
 
 private:
     DevFS();

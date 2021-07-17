@@ -64,7 +64,7 @@ bool ProcFS::initialize()
     return true;
 }
 
-NonnullRefPtr<Inode> ProcFS::root_inode() const
+Inode& ProcFS::root_inode()
 {
     return *m_root_inode;
 }

@@ -51,7 +51,7 @@ static InodeIndex pty_index_to_inode_index(unsigned pty_index)
     return pty_index + 2;
 }
 
-NonnullRefPtr<Inode> DevPtsFS::root_inode() const
+Inode& DevPtsFS::root_inode()
 {
     return *m_root_inode;
 }

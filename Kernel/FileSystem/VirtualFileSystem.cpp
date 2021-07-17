@@ -121,13 +121,13 @@ bool VirtualFileSystem::mount_root(FileSystem& fs)
 
     Mount mount { fs, nullptr, root_mount_flags };
 
-    auto root_inode = fs.root_inode();
-    if (!root_inode->is_directory()) {
-        dmesgln("VirtualFileSystem: root inode ({}) for / is not a directory :(", root_inode->identifier());
+    auto& root_inode = fs.root_inode();
+    if (!root_inode.is_directory()) {
+        dmesgln("VirtualFileSystem: root inode ({}) for / is not a directory :(", root_inode.identifier());
         return false;
     }
 
-    m_root_inode = move(root_inode);
+    m_root_inode = root_inode;
     dmesgln("VirtualFileSystem: mounted root from {} ({})", fs.class_name(), static_cast<FileBackedFileSystem&>(fs).file_description().absolute_path());
 
     m_mounts.append(move(mount));
@@ -172,7 +172,7 @@ KResult VirtualFileSystem::traverse_directory_inode(Inode& dir_inode, Function<b
             resolved_inode = entry.inode;
 
         // FIXME: This is now broken considering chroot and bind mounts.
-        bool is_root_inode = dir_inode.identifier() == dir_inode.fs().root_inode()->identifier();
+        bool is_root_inode = dir_inode.identifier() == dir_inode.fs().root_inode().identifier();
         if (is_root_inode && !is_vfs_root(dir_inode.identifier()) && entry.name == "..") {
             auto mount = find_mount_for_guest(dir_inode.identifier());
             VERIFY(mount);

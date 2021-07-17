@@ -80,7 +80,7 @@ bool SysFS::initialize()
     return true;
 }
 
-NonnullRefPtr<Inode> SysFS::root_inode() const
+Inode& SysFS::root_inode()
 {
     return *m_root_inode;
 }

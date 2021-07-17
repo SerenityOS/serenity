@@ -154,7 +154,7 @@ bool Ext2FS::initialize()
     return true;
 }
 
-NonnullRefPtr<Inode> Ext2FS::root_inode() const
+Ext2FSInode& Ext2FS::root_inode()
 {
     return *m_root_inode;
 }

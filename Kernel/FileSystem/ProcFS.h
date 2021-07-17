@@ -28,7 +28,7 @@ public:
     virtual bool initialize() override;
     virtual StringView class_name() const override { return "ProcFS"sv; }
 
-    virtual NonnullRefPtr<Inode> root_inode() const override;
+    virtual Inode& root_inode() override;
 
 private:
     ProcFS();

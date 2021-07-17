@@ -28,7 +28,7 @@ public:
 
     virtual bool supports_watchers() const override { return true; }
 
-    virtual NonnullRefPtr<Inode> root_inode() const override;
+    virtual Inode& root_inode() override;
 
 private:
     TmpFS();
