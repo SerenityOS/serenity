@@ -139,7 +139,7 @@ KResult DevFSInode::truncate(u64)
     return EPERM;
 }
 
-String DevFSLinkInode::name() const
+StringView DevFSLinkInode::name() const
 {
     return m_name;
 }
@@ -341,7 +341,7 @@ KResult DevFSDeviceInode::chown(uid_t uid, gid_t gid)
     return KSuccess;
 }
 
-String DevFSDeviceInode::name() const
+StringView DevFSDeviceInode::name() const
 {
     Locker locker(m_inode_lock);
     if (m_cached_name.is_null() || m_cached_name.is_empty())
