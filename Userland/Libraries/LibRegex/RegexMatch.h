@@ -8,14 +8,14 @@
 
 #include "RegexOptions.h"
 
-#include "AK/FlyString.h"
-#include "AK/HashMap.h"
-#include "AK/MemMem.h"
-#include "AK/String.h"
-#include "AK/StringBuilder.h"
-#include "AK/StringView.h"
-#include "AK/Utf32View.h"
-#include "AK/Vector.h"
+#include <AK/FlyString.h>
+#include <AK/HashMap.h>
+#include <AK/MemMem.h>
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
+#include <AK/StringView.h>
+#include <AK/Utf32View.h>
+#include <AK/Vector.h>
 
 namespace regex {
 
