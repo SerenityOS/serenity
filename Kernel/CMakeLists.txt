@@ -418,10 +418,14 @@ add_custom_command(
     COMMAND ${CMAKE_OBJCOPY} -O elf32-i386 ${CMAKE_CURRENT_BINARY_DIR}/${KERNEL_TARGET} ${CMAKE_CURRENT_BINARY_DIR}/Kernel
     COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
     COMMAND ${CMAKE_COMMAND} -E env OBJCOPY=${CMAKE_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
+    COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
+    COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
+    COMMAND ${CMAKE_OBJCOPY} --add-gnu-debuglink=Kernel.debug Kernel
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel.map
 )
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel" DESTINATION boot)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel.debug" DESTINATION boot)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kernel.map" DESTINATION res)
 
 serenity_install_headers(Kernel)
