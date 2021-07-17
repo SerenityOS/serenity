@@ -82,7 +82,7 @@ public:
             builder.appendff(", next ip: {}", state.instruction_position + opcode.size());
         }
 
-        out(m_file, " | {:20}", builder.to_string());
+        outln(m_file, " | {:20}", builder.to_string());
 
         if (is<OpCode_Compare>(opcode)) {
             for (auto& line : to<OpCode_Compare>(opcode).variable_arguments_to_string(input)) {
