@@ -88,7 +88,6 @@ public:
 
     void set_shared_vmobject(SharedInodeVMObject&);
     RefPtr<SharedInodeVMObject> shared_vmobject() const;
-    bool is_shared_vmobject(const SharedInodeVMObject&) const;
 
     static void sync();
 
