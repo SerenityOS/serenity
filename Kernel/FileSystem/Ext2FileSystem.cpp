@@ -148,11 +148,6 @@ bool Ext2FS::initialize()
     return true;
 }
 
-const char* Ext2FS::class_name() const
-{
-    return "Ext2FS";
-}
-
 NonnullRefPtr<Inode> Ext2FS::root_inode() const
 {
     return *get_inode({ fsid(), EXT2_ROOT_INO });

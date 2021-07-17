@@ -23,7 +23,7 @@ public:
     static NonnullRefPtr<DevPtsFS> create();
 
     virtual bool initialize() override;
-    virtual const char* class_name() const override { return "DevPtsFS"; }
+    virtual StringView class_name() const override { return "DevPtsFS"sv; }
 
     virtual NonnullRefPtr<Inode> root_inode() const override;
 
