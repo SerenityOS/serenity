@@ -1,14 +1,20 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copytight (c) 2021, Maxime Friess <M4x1me@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Function.h>
 #include <AK/QuickSort.h>
+#include <AK/String.h>
+#include <AK/Tuple.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <stdio.h>
 #include <unistd.h>
+
+#define TREE_SPACING 2
 
 int main(int argc, char** argv)
 {
@@ -50,10 +56,12 @@ int main(int argc, char** argv)
 
     bool every_process_flag = false;
     bool full_format_flag = false;
+    bool show_as_tree = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(every_process_flag, "Show every process", nullptr, 'e');
     args_parser.add_option(full_format_flag, "Full format", nullptr, 'f');
+    args_parser.add_option(show_as_tree, "Show processes as a tree", nullptr, 't');
     args_parser.parse(argc, argv);
 
     Vector<Column> columns;
@@ -83,26 +91,13 @@ int main(int argc, char** argv)
         cmd_column = add_column("CMD", Alignment::Left);
     }
 
-    auto processes = Core::ProcessStatisticsReader::get_all();
-    if (!processes.has_value())
-        return 1;
-
-    quick_sort(processes.value(), [](auto& a, auto& b) { return a.pid < b.pid; });
-
     Vector<Vector<String>> rows;
-    rows.ensure_capacity(1 + processes.value().size());
 
-    Vector<String> header;
-    header.ensure_capacity(columns.size());
-    for (auto& column : columns)
-        header.append(column.title);
-    rows.append(move(header));
-
-    for (auto const& process : processes.value()) {
+    auto add_row = [&](auto process, auto offset) {
         auto tty = process.tty;
 
         if (!every_process_flag && tty != this_tty)
-            continue;
+            return false;
 
         if (tty.starts_with("/dev/"))
             tty = tty.characters() + 5;
@@ -125,9 +120,72 @@ int main(int argc, char** argv)
         if (state_column != -1)
             row[state_column] = state;
         if (cmd_column != -1)
-            row[cmd_column] = process.name;
+            row[cmd_column] = String::formatted("{1:>{0}}", TREE_SPACING * offset + process.name.length(), process.name);
 
         rows.append(move(row));
+        return true;
+    };
+
+    Vector<String> header;
+    header.ensure_capacity(columns.size());
+    for (auto& column : columns)
+        header.append(column.title);
+
+    if (show_as_tree) {
+        auto processes = Core::ProcessStatisticsReader::get_all_tree();
+        if (!processes.has_value())
+            return 1;
+
+        processes.value().root().sort([](auto& a, auto& b) { return a.pid < b.pid; });
+
+        rows.ensure_capacity(1 + processes.value().root().size());
+        rows.append(move(header));
+
+        size_t min_depth = SIZE_MAX;
+        if (!every_process_flag) {
+            // We first have to iterate once, to find the minimum depth that will appear, to compensate for it
+            // in the display.
+            // TODO: I think we could do better.
+            Function<void(TreeNode<Core::ProcessStatistics, 0>&, size_t)> find_min = [&](TreeNode<Core::ProcessStatistics, 0>& node, size_t depth) {
+                auto tty = node.value().tty;
+
+                if (every_process_flag || tty == this_tty)
+                    min_depth = min(min_depth, depth);
+
+                for (size_t i = 0; i < node.num_children(); i++) {
+                    find_min(*node.child_at(i), depth + 1);
+                }
+            };
+            find_min(processes.value().root(), 0);
+        } else {
+            min_depth = 0;
+        }
+
+        // We have to use Function here, because the lambda calls itself.
+        // TODO: Improve that ?
+        Function<void(TreeNode<Core::ProcessStatistics, 0>&, size_t)> add_treenode = [&](TreeNode<Core::ProcessStatistics, 0>& node, size_t depth) {
+            add_row(node.value(), depth - min_depth);
+
+            for (size_t i = 0; i < node.num_children(); i++) {
+                add_treenode(*node.child_at(i), depth + 1);
+            }
+        };
+
+        add_treenode(processes.value().root(), 0);
+
+    } else {
+        auto processes = Core::ProcessStatisticsReader::get_all();
+        if (!processes.has_value())
+            return 1;
+
+        quick_sort(processes.value(), [](auto& a, auto& b) { return a.pid < b.pid; });
+
+        rows.ensure_capacity(1 + processes.value().size());
+        rows.append(move(header));
+
+        for (auto const& process : processes.value()) {
+            add_row(process, 0);
+        }
     }
 
     for (size_t i = 0; i < columns.size(); i++) {
