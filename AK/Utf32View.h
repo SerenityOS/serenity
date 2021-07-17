@@ -9,6 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 
 namespace AK {
 
@@ -100,6 +101,43 @@ public:
         VERIFY(!Checked<size_t>::addition_would_overflow(offset, length));
         VERIFY((offset + length) <= m_length);
         return Utf32View(m_code_points + offset, length);
+    }
+
+    Vector<Utf32View> lines(bool consider_cr) const
+    {
+        if (is_empty())
+            return {};
+
+        Vector<Utf32View> views;
+        size_t substart = 0;
+        bool last_ch_was_cr = false;
+        bool split_view = false;
+        for (size_t i = 0; i < length(); ++i) {
+            u32 ch = m_code_points[i];
+            if (ch == static_cast<u32>('\n')) {
+                split_view = true;
+                if (last_ch_was_cr) {
+                    substart = i + 1;
+                    split_view = false;
+                }
+            }
+            if (consider_cr && (ch == static_cast<u32>('\r'))) {
+                split_view = true;
+                last_ch_was_cr = true;
+            } else {
+                last_ch_was_cr = false;
+            }
+            if (split_view) {
+                size_t sublen = i - substart;
+                views.append(substring_view(substart, sublen));
+                substart = i + 1;
+            }
+            split_view = false;
+        }
+        size_t taillen = length() - substart;
+        if (taillen != 0)
+            views.append(substring_view(substart, taillen));
+        return views;
     }
 
 private:
