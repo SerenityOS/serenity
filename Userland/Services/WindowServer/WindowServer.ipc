@@ -149,4 +149,5 @@ endpoint WindowServer
     set_flash_flush(bool enabled) =|
 
     set_window_parent_from_client(i32 client_id, i32 parent_id, i32 child_id) =|
+    get_window_rect_from_client(i32 client_id, i32 window_id) => (Gfx::IntRect rect)
 }
