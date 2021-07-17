@@ -29,6 +29,26 @@ String UserOrKernelBuffer::copy_into_string(size_t size) const
     return String(ReadonlyBytes { m_buffer, size });
 }
 
+KResultOr<NonnullOwnPtr<KString>> UserOrKernelBuffer::try_copy_into_kstring(size_t size) const
+{
+    if (!m_buffer)
+        return EINVAL;
+    if (is_user_address(VirtualAddress(m_buffer))) {
+        char* buffer;
+        auto kstring = KString::try_create_uninitialized(size, buffer);
+        if (!kstring)
+            return ENOMEM;
+        if (!copy_from_user(buffer, m_buffer, size))
+            return EFAULT;
+        return kstring.release_nonnull();
+    }
+
+    auto kstring = KString::try_create(ReadonlyBytes { m_buffer, size });
+    if (!kstring)
+        return ENOMEM;
+    return kstring.release_nonnull();
+}
+
 bool UserOrKernelBuffer::write(const void* src, size_t offset, size_t len)
 {
     if (!m_buffer)
