@@ -143,7 +143,9 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     VERIFY((size % PAGE_SIZE) == 0);
 
     Range const allocated_range(base, size);
-    VERIFY(m_total_range.contains(allocated_range));
+    if (!m_total_range.contains(allocated_range)) {
+        return {};
+    }
 
     ScopedSpinLock lock(m_lock);
     for (auto it = m_available_ranges.begin(); !it.is_end(); ++it) {
