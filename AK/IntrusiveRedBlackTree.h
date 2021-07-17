@@ -83,6 +83,7 @@ public:
         }
         [[nodiscard]] bool is_end() const { return !m_node; }
         [[nodiscard]] bool is_begin() const { return !m_prev; }
+        [[nodiscard]] auto key() const { return m_node->key; }
 
     private:
         friend class IntrusiveRedBlackTree;
@@ -159,7 +160,7 @@ public:
         VERIFY(!is_in_tree());
     }
 
-    bool is_in_tree()
+    [[nodiscard]] bool is_in_tree() const
     {
         return m_in_tree;
     }
