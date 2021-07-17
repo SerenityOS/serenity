@@ -61,7 +61,6 @@ class ProcFSProcessStacks final : public ProcFSExposedDirectory {
     // therefore, we don't use m_components so when we are done with the ProcFSThreadStack object,
     // It should be deleted (as soon as possible)
 public:
-    virtual KResultOr<size_t> entries_count() const override;
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
@@ -86,18 +85,6 @@ private:
     WeakPtr<ProcFSProcessDirectory> m_process_directory;
     mutable Mutex m_lock;
 };
-
-KResultOr<size_t> ProcFSProcessStacks::entries_count() const
-{
-    Locker locker(m_lock);
-    auto parent_folder = m_process_folder.strong_ref();
-    if (parent_folder.is_null())
-        return KResult(EINVAL);
-    auto process = parent_folder->associated_process();
-    if (process.is_null())
-        return KResult(ESRCH);
-    return process->thread_count();
-}
 
 KResult ProcFSProcessStacks::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
@@ -171,7 +158,6 @@ class ProcFSProcessFileDescriptions final : public ProcFSExposedDirectory {
     // therefore, we don't use m_components so when we are done with the ProcFSProcessFileDescription object,
     // It should be deleted (as soon as possible)
 public:
-    virtual KResultOr<size_t> entries_count() const override;
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
@@ -196,17 +182,6 @@ private:
     mutable Mutex m_lock;
 };
 
-KResultOr<size_t> ProcFSProcessFileDescriptions::entries_count() const
-{
-    Locker locker(m_lock);
-    auto parent_folder = m_process_folder.strong_ref();
-    if (parent_folder.is_null())
-        return KResult(EINVAL);
-    auto process = parent_folder->associated_process();
-    if (process.is_null())
-        return KResult(ESRCH);
-    return process->fds().open_count();
-}
 KResult ProcFSProcessFileDescriptions::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     Locker locker(m_lock);

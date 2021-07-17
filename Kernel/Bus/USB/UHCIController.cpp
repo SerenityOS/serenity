@@ -123,7 +123,6 @@ public:
     void plug(USB::Device&);
     void unplug(USB::Device&);
 
-    virtual KResultOr<size_t> entries_count() const override;
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
@@ -136,11 +135,6 @@ private:
     mutable SpinLock<u8> m_lock;
 };
 
-KResultOr<size_t> ProcFSUSBBusDirectory::entries_count() const
-{
-    ScopedSpinLock lock(m_lock);
-    return m_device_nodes.size_slow();
-}
 KResult ProcFSUSBBusDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     ScopedSpinLock lock(m_lock);
