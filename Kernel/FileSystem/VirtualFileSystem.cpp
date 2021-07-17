@@ -747,11 +747,15 @@ KResult VirtualFileSystem::rmdir(StringView path, Custody& base)
             return EACCES;
     }
 
-    KResultOr<size_t> dir_count_result = inode.directory_entry_count();
-    if (dir_count_result.is_error())
-        return dir_count_result.result();
+    size_t child_count = 0;
+    auto traversal_result = inode.traverse_as_directory([&child_count](auto&) {
+        ++child_count;
+        return true;
+    });
+    if (traversal_result.is_error())
+        return traversal_result;
 
-    if (dir_count_result.value() != 2)
+    if (child_count != 2)
         return ENOTEMPTY;
 
     if (custody.is_readonly())
