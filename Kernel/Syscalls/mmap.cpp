@@ -334,7 +334,6 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
         // Remove the old region from our regions tree, since were going to add another region
         // with the exact same start address, but dont deallocate it yet
         auto region = space().take_region(*old_region);
-        VERIFY(region);
 
         // Unmap the old region here, specifying that we *don't* want the VM deallocated.
         region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
@@ -398,7 +397,6 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
             // Remove the old region from our regions tree, since were going to add another region
             // with the exact same start address, but dont deallocate it yet
             auto region = space().take_region(*old_region);
-            VERIFY(region);
 
             // Unmap the old region here, specifying that we *don't* want the VM deallocated.
             region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
@@ -564,8 +562,7 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
 
         // Unmap without deallocating the VM range since we're going to reuse it.
         old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
-        bool success = space().deallocate_region(*old_region);
-        VERIFY(success);
+        space().deallocate_region(*old_region);
 
         auto new_region_or_error = space().allocate_region_with_vmobject(range, new_vmobject.release_nonnull(), old_offset, old_name->view(), old_prot, false);
         if (new_region_or_error.is_error())

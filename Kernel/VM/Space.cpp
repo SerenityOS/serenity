@@ -57,8 +57,7 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
 
         PerformanceManager::add_unmap_perf_event(*Process::current(), whole_region->range());
 
-        bool success = deallocate_region(*whole_region);
-        VERIFY(success);
+        deallocate_region(*whole_region);
         return KSuccess;
     }
 
@@ -69,7 +68,6 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
         // Remove the old region from our regions tree, since were going to add another region
         // with the exact same start address, but dont deallocate it yet
         auto region = take_region(*old_region);
-        VERIFY(region);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
         region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
@@ -108,15 +106,13 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
     for (auto* old_region : regions) {
         // if it's a full match we can delete the complete old region
         if (old_region->range().intersect(range_to_unmap).size() == old_region->size()) {
-            bool res = deallocate_region(*old_region);
-            VERIFY(res);
+            deallocate_region(*old_region);
             continue;
         }
 
         // Remove the old region from our regions tree, since were going to add another region
         // with the exact same start address, but dont deallocate it yet
         auto region = take_region(*old_region);
-        VERIFY(region);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
         region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
@@ -219,25 +215,21 @@ KResultOr<Region*> Space::allocate_region_with_vmobject(Range const& range, Nonn
     return added_region;
 }
 
-bool Space::deallocate_region(Region& region)
+void Space::deallocate_region(Region& region)
 {
-    return take_region(region);
+    take_region(region);
 }
 
-OwnPtr<Region> Space::take_region(Region& region)
+NonnullOwnPtr<Region> Space::take_region(Region& region)
 {
     ScopedSpinLock lock(m_lock);
 
     if (m_region_lookup_cache.region.unsafe_ptr() == &region)
         m_region_lookup_cache.region = nullptr;
-    // FIXME: currently we traverse the RBTree twice, once to check if the region in the tree starting at region.vaddr()
-    //  is the same region and once to actually remove it, maybe we can add some kind of remove_if()?
-    auto found_region = m_regions.find(region.vaddr().get());
-    if (!found_region)
-        return {};
-    if (found_region->ptr() != &region)
-        return {};
-    return m_regions.unsafe_remove(region.vaddr().get());
+
+    auto found_region = m_regions.unsafe_remove(region.vaddr().get());
+    VERIFY(found_region.ptr() == &region);
+    return found_region;
 }
 
 Region* Space::find_region_from_range(const Range& range)
