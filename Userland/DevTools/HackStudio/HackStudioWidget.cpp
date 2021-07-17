@@ -983,7 +983,7 @@ void HackStudioWidget::configure_project_tree_view()
             return access(m_project->model().full_path(selected_file.parent()).characters(), W_OK) == 0;
         });
         bool has_permissions = it != selections.end();
-        m_delete_action->set_enabled(!m_project_tree_view->selection().is_empty() && has_permissions);
+        m_delete_action->set_enabled(has_permissions);
     };
 
     m_project_tree_view->on_activation = [this](auto& index) {
