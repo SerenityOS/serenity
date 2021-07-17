@@ -395,13 +395,16 @@ KResult VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& base)
     }
 
     RefPtr<Custody> parent_custody;
-    auto result = resolve_path(path, base, &parent_custody);
+    auto result = resolve_path_without_veil(path, base, &parent_custody);
     if (!result.is_error())
         return EEXIST;
     else if (!parent_custody)
         return result.error();
     // NOTE: If resolve_path fails with a non-null parent custody, the error should be ENOENT.
     VERIFY(result.error() == -ENOENT);
+
+    if (auto validation_result = validate_path_against_process_veil(*parent_custody, O_CREAT); validation_result.is_error())
+        return validation_result;
 
     auto& parent_inode = parent_custody->inode();
     auto current_process = Process::current();
@@ -878,8 +881,11 @@ KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(StringView pat
         return custody_or_error.error();
 
     auto& custody = custody_or_error.value();
-    if (auto result = validate_path_against_process_veil(*custody, options); result.is_error())
+    if (auto result = validate_path_against_process_veil(*custody, options); result.is_error()) {
+        if (out_parent)
+            out_parent->clear();
         return result;
+    }
 
     return custody;
 }
