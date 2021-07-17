@@ -46,6 +46,7 @@ ColumnDef::ColumnDef(Relation* parent, size_t column_number, String name, SQLTyp
     : Relation(move(name), parent)
     , m_index(column_number)
     , m_type(sql_type)
+    , m_default(Value(sql_type))
 {
 }
 
@@ -57,6 +58,12 @@ Key ColumnDef::key() const
     key["column_name"] = name();
     key["column_type"] = (int)type();
     return key;
+}
+
+void ColumnDef::set_default_value(const Value& default_value)
+{
+    VERIFY(default_value.type() == type());
+    m_default = default_value;
 }
 
 Key ColumnDef::make_key(TableDef const& table_def)
