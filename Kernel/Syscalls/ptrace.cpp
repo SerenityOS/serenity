@@ -37,7 +37,7 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
     if (!peer)
         return ESRCH;
 
-    Locker ptrace_locker(peer->process().ptrace_lock());
+    MutexLocker ptrace_locker(peer->process().ptrace_lock());
 
     if ((peer->process().uid() != caller.euid())
         || (peer->process().uid() != peer->process().euid())) // Disallow tracing setuid processes

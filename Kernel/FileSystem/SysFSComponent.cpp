@@ -28,7 +28,7 @@ SysFSComponent::SysFSComponent(StringView name)
 
 KResult SysFSDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(SysFSComponentRegistry::the().get_lock());
+    MutexLocker locker(SysFSComponentRegistry::the().get_lock());
     VERIFY(m_parent_directory);
     callback({ ".", { fsid, component_index() }, 0 });
     callback({ "..", { fsid, m_parent_directory->component_index() }, 0 });

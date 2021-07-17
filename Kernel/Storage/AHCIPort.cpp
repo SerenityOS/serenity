@@ -95,7 +95,7 @@ void AHCIPort::handle_interrupt()
         } else {
             g_io_work->queue([this]() {
                 dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request handled", representative_port_index());
-                Locker locker(m_lock);
+                MutexLocker locker(m_lock);
                 VERIFY(m_current_request);
                 VERIFY(m_current_scatter_list);
                 if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
@@ -123,7 +123,7 @@ bool AHCIPort::is_interrupts_enabled() const
 
 void AHCIPort::recover_from_fatal_error()
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     ScopedSpinLock lock(m_hard_lock);
     dmesgln("{}: AHCI Port {} fatal error, shutting down!", m_parent_handler->hba_controller()->pci_address(), representative_port_index());
     dmesgln("{}: AHCI Port {} fatal error, SError {}", m_parent_handler->hba_controller()->pci_address(), representative_port_index(), (u32)m_port_registers.serr);
@@ -207,7 +207,7 @@ void AHCIPort::eject()
 
 bool AHCIPort::reset()
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     ScopedSpinLock lock(m_hard_lock);
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Resetting", representative_port_index());
@@ -232,7 +232,7 @@ bool AHCIPort::reset()
 
 bool AHCIPort::initialize_without_reset()
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     ScopedSpinLock lock(m_hard_lock);
     dmesgln("AHCI Port {}: {}", representative_port_index(), try_disambiguate_sata_status());
     return initialize(lock);
@@ -450,7 +450,7 @@ Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_li
 
 void AHCIPort::start_request(AsyncBlockDeviceRequest& request)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request start", representative_port_index());
     VERIFY(!m_current_request);
     VERIFY(!m_current_scatter_list);
@@ -653,7 +653,7 @@ bool AHCIPort::identify_device(ScopedSpinLock<SpinLock<u8>>& main_lock)
 
 bool AHCIPort::shutdown()
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     ScopedSpinLock lock(m_hard_lock);
     rebase();
     set_interface_state(AHCI::DeviceDetectionInitialization::DisableInterface);

@@ -475,7 +475,7 @@ void Plan9FS::Plan9FSBlockCondition::try_unblock(Plan9FS::Blocker& blocker)
 
 bool Plan9FS::is_complete(const ReceiveCompletion& completion)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (m_completions.contains(completion.tag)) {
         // If it's still in the map then it can't be complete
         VERIFY(!completion.completed);
@@ -495,12 +495,12 @@ KResult Plan9FS::post_message(Message& message, RefPtr<ReceiveCompletion> comple
     size_t size = buffer.size();
     auto& description = file_description();
 
-    Locker locker(m_send_lock);
+    MutexLocker locker(m_send_lock);
 
     if (completion) {
         // Save the completion record *before* we send the message. This
         // ensures that it exists when the thread reads the response
-        Locker locker(m_lock);
+        MutexLocker locker(m_lock);
         auto tag = completion->tag;
         m_completions.set(tag, completion.release_nonnull());
         // TODO: What if there is a collision? Do we need to wait until
@@ -569,7 +569,7 @@ KResult Plan9FS::read_and_dispatch_one_message()
     if (result.is_error())
         return result;
 
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     auto optional_completion = m_completions.get(header.tag);
     if (optional_completion.has_value()) {
@@ -647,7 +647,7 @@ void Plan9FS::thread_main()
         auto result = read_and_dispatch_one_message();
         if (result.is_error()) {
             // If we fail to read, wake up everyone with an error.
-            Locker locker(m_lock);
+            MutexLocker locker(m_lock);
 
             for (auto& it : m_completions) {
                 it.value->result = result;
@@ -698,7 +698,7 @@ KResult Plan9FSInode::ensure_open_for_mode(int mode)
     u8 p9_mode = 0;
 
     {
-        Locker locker(m_inode_lock);
+        MutexLocker locker(m_inode_lock);
 
         // If it's already open in this mode, we're done.
         if ((m_open_mode & mode) == mode)

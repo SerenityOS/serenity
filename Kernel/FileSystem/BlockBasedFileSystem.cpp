@@ -120,7 +120,7 @@ KResult BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBu
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_block {}, size={}", index, count);
 
-    Locker locker(m_cache_lock);
+    MutexLocker locker(m_cache_lock);
 
     if (!allow_cache) {
         flush_specific_block_if_needed(index);
@@ -205,7 +205,7 @@ KResult BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuffer* b
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::read_block {}", index);
 
-    Locker locker(m_cache_lock);
+    MutexLocker locker(m_cache_lock);
 
     if (!allow_cache) {
         const_cast<BlockBasedFileSystem*>(this)->flush_specific_block_if_needed(index);
@@ -252,7 +252,7 @@ KResult BlockBasedFileSystem::read_blocks(BlockIndex index, unsigned count, User
 
 void BlockBasedFileSystem::flush_specific_block_if_needed(BlockIndex index)
 {
-    Locker locker(m_cache_lock);
+    MutexLocker locker(m_cache_lock);
     if (!cache().is_dirty())
         return;
     Vector<CacheEntry*, 32> cleaned_entries;
@@ -272,7 +272,7 @@ void BlockBasedFileSystem::flush_specific_block_if_needed(BlockIndex index)
 
 void BlockBasedFileSystem::flush_writes_impl()
 {
-    Locker locker(m_cache_lock);
+    MutexLocker locker(m_cache_lock);
     if (!cache().is_dirty())
         return;
     u32 count = 0;

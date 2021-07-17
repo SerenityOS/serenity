@@ -19,7 +19,7 @@ NonnullRefPtr<DevFS> DevFS::create()
 DevFS::DevFS()
     : m_root_inode(adopt_ref(*new DevFSRootDirectoryInode(*this)))
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     Device::for_each([&](Device& device) {
         // FIXME: Find a better way to not add MasterPTYs or SlavePTYs!
         if (device.is_master_pty() || (device.is_character_device() && device.major() == 201))
@@ -33,7 +33,7 @@ void DevFS::notify_new_device(Device& device)
     auto name = KString::try_create(device.device_name());
     VERIFY(name);
 
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device, name.release_nonnull()));
     m_nodes.append(new_device_inode);
     m_root_inode->m_devices.append(new_device_inode);
@@ -41,7 +41,7 @@ void DevFS::notify_new_device(Device& device)
 
 size_t DevFS::allocate_inode_index()
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     m_next_inode_index = m_next_inode_index.value() + 1;
     VERIFY(m_next_inode_index > 0);
     return 1 + m_next_inode_index.value();
@@ -68,7 +68,7 @@ NonnullRefPtr<Inode> DevFS::root_inode() const
 
 RefPtr<Inode> DevFS::get_inode(InodeIdentifier inode_id) const
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (inode_id.index() == 1)
         return m_root_inode;
     for (auto& node : m_nodes) {
@@ -154,7 +154,7 @@ DevFSLinkInode::DevFSLinkInode(DevFS& fs, NonnullOwnPtr<KString> name)
 
 KResultOr<size_t> DevFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelBuffer& buffer, FileDescription*) const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     VERIFY(offset == 0);
     VERIFY(m_link);
     if (!buffer.write(m_link->characters() + offset, m_link->length()))
@@ -180,7 +180,7 @@ KResultOr<size_t> DevFSLinkInode::write_bytes(off_t offset, size_t count, UserOr
     if (kstring_or_error.is_error())
         return kstring_or_error.error();
 
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     VERIFY(offset == 0);
     VERIFY(buffer.is_kernel_buffer());
     m_link = kstring_or_error.release_value();
@@ -223,7 +223,7 @@ DevFSRootDirectoryInode::DevFSRootDirectoryInode(DevFS& fs)
 }
 KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_parent_fs.m_lock);
+    MutexLocker locker(m_parent_fs.m_lock);
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
 
@@ -244,7 +244,7 @@ KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem:
 }
 RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
 {
-    Locker locker(m_parent_fs.m_lock);
+    MutexLocker locker(m_parent_fs.m_lock);
     for (auto& subdirectory : m_subdirectories) {
         if (subdirectory.name() == name)
             return subdirectory;
@@ -263,7 +263,7 @@ RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
 }
 KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView name, mode_t mode, dev_t, uid_t, gid_t)
 {
-    Locker locker(m_parent_fs.m_lock);
+    MutexLocker locker(m_parent_fs.m_lock);
 
     InodeMetadata metadata;
     metadata.mode = mode;
@@ -335,7 +335,7 @@ DevFSDeviceInode::~DevFSDeviceInode()
 
 KResult DevFSDeviceInode::chown(uid_t uid, gid_t gid)
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     m_uid = uid;
     m_gid = gid;
     return KSuccess;
@@ -348,7 +348,7 @@ StringView DevFSDeviceInode::name() const
 
 KResultOr<size_t> DevFSDeviceInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
     if (!m_attached_device->can_read(*description, offset))
         return 0;
@@ -360,7 +360,7 @@ KResultOr<size_t> DevFSDeviceInode::read_bytes(off_t offset, size_t count, UserO
 
 InodeMetadata DevFSDeviceInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), index() };
     metadata.mode = (m_attached_device->is_block_device() ? S_IFBLK : S_IFCHR) | m_attached_device->required_mode();
@@ -374,7 +374,7 @@ InodeMetadata DevFSDeviceInode::metadata() const
 }
 KResultOr<size_t> DevFSDeviceInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription* description)
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
     if (!m_attached_device->can_write(*description, offset))
         return 0;
@@ -390,7 +390,7 @@ DevFSPtsDirectoryInode::DevFSPtsDirectoryInode(DevFS& fs)
 }
 KResult DevFSPtsDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
     return KSuccess;

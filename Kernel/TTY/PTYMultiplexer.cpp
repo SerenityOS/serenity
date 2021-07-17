@@ -36,7 +36,7 @@ UNMAP_AFTER_INIT PTYMultiplexer::~PTYMultiplexer()
 
 KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (m_freelist.is_empty())
         return EBUSY;
     auto master_index = m_freelist.take_last();
@@ -54,7 +54,7 @@ KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
 
 void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     m_freelist.append(index);
     dbgln_if(PTMX_DEBUG, "PTYMultiplexer: {} added to freelist", index);
 }

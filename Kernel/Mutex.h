@@ -105,12 +105,12 @@ private:
     mutable SpinLock<u8> m_lock;
 };
 
-class Locker {
+class MutexLocker {
 public:
 #if LOCK_DEBUG
-    ALWAYS_INLINE explicit Locker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
+    ALWAYS_INLINE explicit MutexLocker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
 #else
-    ALWAYS_INLINE explicit Locker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive)
+    ALWAYS_INLINE explicit MutexLocker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive)
 #endif
         : m_lock(l)
     {
@@ -121,7 +121,7 @@ public:
 #endif
     }
 
-    ALWAYS_INLINE ~Locker()
+    ALWAYS_INLINE ~MutexLocker()
     {
         if (m_locked)
             unlock();
@@ -170,7 +170,7 @@ public:
 
     [[nodiscard]] T lock_and_copy()
     {
-        Locker locker(m_lock);
+        MutexLocker locker(m_lock);
         return m_resource;
     }
 

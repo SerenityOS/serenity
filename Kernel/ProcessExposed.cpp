@@ -198,7 +198,7 @@ KResult ProcFSProcessInformation::refresh_data(FileDescription& description) con
 KResultOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     VERIFY(offset == 0);
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     KBufferBuilder builder;
     if (!const_cast<ProcFSExposedLink&>(*this).acquire_link(builder))
         return KResult(EFAULT);
@@ -244,7 +244,7 @@ RefPtr<ProcFSExposedComponent> ProcFSExposedDirectory::lookup(StringView name)
 
 KResult ProcFSExposedDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(ProcFSComponentRegistry::the().get_lock());
+    MutexLocker locker(ProcFSComponentRegistry::the().get_lock());
     auto parent_directory = m_parent_directory.strong_ref();
     if (parent_directory.is_null())
         return KResult(EINVAL);

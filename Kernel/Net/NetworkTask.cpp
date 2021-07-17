@@ -224,7 +224,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
     {
         NonnullRefPtrVector<IPv4Socket> icmp_sockets;
         {
-            Locker locker(IPv4Socket::all_sockets().lock(), Mutex::Mode::Shared);
+            MutexLocker locker(IPv4Socket::all_sockets().lock(), Mutex::Mode::Shared);
             for (auto* socket : IPv4Socket::all_sockets().resource()) {
                 if (socket->protocol() != (unsigned)IPv4Protocol::ICMP)
                     continue;
@@ -312,7 +312,7 @@ void flush_delayed_tcp_acks()
 {
     Vector<RefPtr<TCPSocket>, 32> remaining_sockets;
     for (auto& socket : *delayed_ack_sockets) {
-        Locker locker(socket->lock());
+        MutexLocker locker(socket->lock());
         if (socket->should_delay_next_ack()) {
             remaining_sockets.append(socket);
             continue;
@@ -395,7 +395,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
         return;
     }
 
-    Locker locker(socket->lock());
+    MutexLocker locker(socket->lock());
 
     VERIFY(socket->type() == SOCK_STREAM);
     VERIFY(socket->local_port() == tcp_packet.destination_port());
@@ -426,7 +426,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
                 dmesgln("handle_tcp: couldn't create client socket");
                 return;
             }
-            Locker locker(client->lock());
+            MutexLocker locker(client->lock());
             dbgln_if(TCP_DEBUG, "handle_tcp: created new client socket with tuple {}", client->tuple().to_string());
             client->set_sequence_number(1000);
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
@@ -624,13 +624,13 @@ void retransmit_tcp_packets()
     // in case retransmit_packets() realizes that it wants to close the socket.
     NonnullRefPtrVector<TCPSocket, 16> sockets;
     {
-        Locker locker(TCPSocket::sockets_for_retransmit().lock(), LockMode::Shared);
+        MutexLocker locker(TCPSocket::sockets_for_retransmit().lock(), LockMode::Shared);
         for (auto& socket : TCPSocket::sockets_for_retransmit().resource())
             sockets.append(*socket);
     }
 
     for (auto& socket : sockets) {
-        Locker socket_locker(socket.lock());
+        MutexLocker socket_locker(socket.lock());
         socket.retransmit_packets();
     }
 }

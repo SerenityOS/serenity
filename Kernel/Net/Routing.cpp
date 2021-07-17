@@ -106,7 +106,7 @@ Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 
 void update_arp_table(const IPv4Address& ip_addr, const MACAddress& addr)
 {
-    Locker locker(arp_table().lock());
+    MutexLocker locker(arp_table().lock());
     arp_table().resource().set(ip_addr, addr);
     s_arp_table_block_condition->unblock(ip_addr, addr);
 
@@ -221,7 +221,7 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
         return { adapter, multicast_ethernet_address(target) };
 
     {
-        Locker locker(arp_table().lock());
+        MutexLocker locker(arp_table().lock());
         auto addr = arp_table().resource().get(next_hop_ip);
         if (addr.has_value()) {
             dbgln_if(ROUTING_DEBUG, "Routing: Using cached ARP entry for {} ({})", next_hop_ip, addr.value().to_string());

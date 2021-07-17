@@ -45,7 +45,7 @@ KResultOr<size_t> DoubleBuffer::write(const UserOrKernelBuffer& data, size_t siz
 {
     if (!size || m_storage.is_null())
         return 0;
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     size_t bytes_to_write = min(size, m_space_for_writing);
     u8* write_ptr = m_write_buffer->data + m_write_buffer->size;
     if (!data.read(write_ptr, bytes_to_write))
@@ -61,7 +61,7 @@ KResultOr<size_t> DoubleBuffer::read(UserOrKernelBuffer& data, size_t size)
 {
     if (!size || m_storage.is_null())
         return 0;
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (m_read_buffer_index >= m_read_buffer->size && m_write_buffer->size != 0)
         flip();
     if (m_read_buffer_index >= m_read_buffer->size)
@@ -80,7 +80,7 @@ KResultOr<size_t> DoubleBuffer::peek(UserOrKernelBuffer& data, size_t size)
 {
     if (!size || m_storage.is_null())
         return 0;
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (m_read_buffer_index >= m_read_buffer->size && m_write_buffer->size != 0) {
         flip();
     }

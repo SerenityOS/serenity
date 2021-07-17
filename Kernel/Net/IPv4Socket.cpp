@@ -66,13 +66,13 @@ IPv4Socket::IPv4Socket(int type, int protocol)
     if (m_buffer_mode == BufferMode::Bytes) {
         m_scratch_buffer = KBuffer::create_with_size(65536);
     }
-    Locker locker(all_sockets().lock());
+    MutexLocker locker(all_sockets().lock());
     all_sockets().resource().set(this);
 }
 
 IPv4Socket::~IPv4Socket()
 {
-    Locker locker(all_sockets().lock());
+    MutexLocker locker(all_sockets().lock());
     all_sockets().resource().remove(this);
 }
 
@@ -121,7 +121,7 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
 
 KResult IPv4Socket::listen(size_t backlog)
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
     auto result = allocate_local_port_if_needed();
     if (result.error_or_port.is_error() && result.error_or_port.error() != -ENOPROTOOPT)
         return result.error_or_port.error();
@@ -176,7 +176,7 @@ bool IPv4Socket::can_write(const FileDescription&, size_t) const
 
 PortAllocationResult IPv4Socket::allocate_local_port_if_needed()
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
     if (m_local_port)
         return { m_local_port, false };
     auto port_or_error = protocol_allocate_local_port();
@@ -188,7 +188,7 @@ PortAllocationResult IPv4Socket::allocate_local_port_if_needed()
 
 KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer& data, size_t data_length, [[maybe_unused]] int flags, Userspace<const sockaddr*> addr, socklen_t addr_length)
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
 
     if (addr && addr_length != sizeof(sockaddr_in))
         return EINVAL;
@@ -247,7 +247,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
 
 KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>)
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
     if (m_receive_buffer.is_empty()) {
         if (protocol_is_disconnected())
             return 0;
@@ -283,7 +283,7 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
 
 KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, Time& packet_timestamp)
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
     ReceivedPacket packet;
     {
         if (m_receive_queue.is_empty()) {
@@ -398,7 +398,7 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKerne
 
 bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, ReadonlyBytes packet, const Time& packet_timestamp)
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
 
     if (is_shut_down_for_reading())
         return false;
