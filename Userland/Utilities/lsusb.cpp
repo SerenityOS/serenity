@@ -23,7 +23,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/proc/bus/usb", "r") < 0) {
+    if (unveil("/sys/bus/usb", "r") < 0) {
         perror("unveil");
         return 1;
     }
@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     args.set_general_help("List USB devices.");
     args.parse(argc, argv);
 
-    Core::DirIterator usb_devices("/proc/bus/usb", Core::DirIterator::SkipDots);
+    Core::DirIterator usb_devices("/sys/bus/usb", Core::DirIterator::SkipDots);
 
     RefPtr<USBDB::Database> usb_db = USBDB::Database::open();
     if (!usb_db) {

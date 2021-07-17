@@ -36,17 +36,6 @@ UNMAP_AFTER_INIT ProcFSComponentRegistry::ProcFSComponentRegistry()
 {
 }
 
-const ProcFSBusDirectory& ProcFSComponentRegistry::buses_directory() const
-{
-    return *m_root_directory->m_buses_directory;
-}
-
-void ProcFSComponentRegistry::register_new_bus_directory(ProcFSExposedDirectory& new_bus_directory)
-{
-    VERIFY(!m_root_directory->m_buses_directory.is_null());
-    m_root_directory->m_buses_directory->m_components.append(new_bus_directory);
-}
-
 void ProcFSComponentRegistry::register_new_process(Process& new_process)
 {
     Locker locker(m_lock);
