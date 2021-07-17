@@ -47,7 +47,7 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 #if ARCH(X86_64)
     PhysicalAddress boot_pml4t_paddr(virtual_to_low_physical((FlatPtr)boot_pml4t));
     dmesgln("MM: boot_pml4t @ {}", boot_pml4t_paddr);
-    m_pml4t = PhysicalPage::create(boot_pml4t_paddr, false);
+    m_pml4t = PhysicalPage::create(boot_pml4t_paddr, MayReturnToFreeList::No);
 #endif
     PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((FlatPtr)boot_pdpt));
     PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((FlatPtr)boot_pd0));
@@ -55,9 +55,9 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
     dmesgln("MM: boot_pdpt @ {}", boot_pdpt_paddr);
     dmesgln("MM: boot_pd0 @ {}", boot_pd0_paddr);
     dmesgln("MM: boot_pd3 @ {}", boot_pd3_paddr);
-    m_directory_table = PhysicalPage::create(boot_pdpt_paddr, false);
-    m_directory_pages[0] = PhysicalPage::create(boot_pd0_paddr, false);
-    m_directory_pages[3] = PhysicalPage::create(boot_pd3_paddr, false);
+    m_directory_table = PhysicalPage::create(boot_pdpt_paddr, MayReturnToFreeList::No);
+    m_directory_pages[0] = PhysicalPage::create(boot_pd0_paddr, MayReturnToFreeList::No);
+    m_directory_pages[3] = PhysicalPage::create(boot_pd3_paddr, MayReturnToFreeList::No);
 }
 
 PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
