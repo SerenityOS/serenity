@@ -436,7 +436,6 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         unquickmap_page();
 
         // Hook the page table into the kernel page directory
-        VERIFY(((virtual_page_base_for_this_pt >> 30) & 0x3) == 3);
         PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((FlatPtr)boot_pd3));
 
         u32 page_directory_index = (virtual_page_base_for_this_pt >> 21) & 0x1ff;
@@ -507,7 +506,7 @@ PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(s_mm_lock.own_lock());
     VERIFY(page_directory.get_lock().own_lock());
-    u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
+    u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
 
@@ -524,7 +523,7 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(s_mm_lock.own_lock());
     VERIFY(page_directory.get_lock().own_lock());
-    u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
+    u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
 
@@ -565,7 +564,7 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(s_mm_lock.own_lock());
     VERIFY(page_directory.get_lock().own_lock());
-    u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
+    u32 page_directory_table_index = (vaddr.get() >> 30) & 0x1ff;
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
 
