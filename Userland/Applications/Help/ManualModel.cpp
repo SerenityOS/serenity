@@ -10,7 +10,6 @@
 #include "ManualSectionNode.h"
 #include <AK/ByteBuffer.h>
 #include <LibCore/File.h>
-#include <LibGUI/FilteringProxyModel.h>
 
 static ManualSectionNode s_sections[] = {
     { "1", "User programs" },
@@ -171,9 +170,4 @@ TriState ManualModel::data_matches(const GUI::ModelIndex& index, const GUI::Vari
         return TriState::False;
 
     return view_result.value().contains(term.as_string()) ? TriState::True : TriState::False;
-}
-
-void ManualModel::update()
-{
-    did_update();
 }

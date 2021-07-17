@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "GalleryWidget.h"
 #include "DemoWizardDialog.h"
 #include "GalleryModels.h"
+#include "GalleryWidget.h"
 #include <AK/StringBuilder.h>
 #include <Demos/WidgetGallery/BasicsTabGML.h>
 #include <Demos/WidgetGallery/CursorsTabGML.h>
@@ -22,10 +22,10 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SeparatorWidget.h>
-#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
+#include <LibGUI/ViewModel.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
@@ -286,12 +286,12 @@ GalleryWidget::GalleryWidget()
     m_cursors_tableview->set_column_headers_visible(false);
     m_cursors_tableview->set_highlight_key_column(false);
 
-    auto sorting_proxy_model = GUI::SortingProxyModel::create(MouseCursorModel::create());
-    sorting_proxy_model->set_sort_role(GUI::ModelRole::Display);
+    auto view_model = GUI::ViewModel::create(MouseCursorModel::create());
+    view_model->set_sort_role(GUI::ModelRole::Display);
 
-    m_cursors_tableview->set_model(sorting_proxy_model);
+    m_cursors_tableview->set_model(view_model);
     m_cursors_tableview->set_key_column_and_sort_order(MouseCursorModel::Column::Name, GUI::SortOrder::Ascending);
-    m_cursors_tableview->model()->update();
+    m_cursors_tableview->model()->invalidate();
     m_cursors_tableview->set_column_width(0, 25);
 
     m_cursors_tableview->on_activation = [&](const GUI::ModelIndex& index) {
@@ -359,12 +359,12 @@ GalleryWidget::GalleryWidget()
     m_icons_tableview->set_column_headers_visible(false);
     m_icons_tableview->set_highlight_key_column(false);
 
-    auto sorting_proxy_icons_model = GUI::SortingProxyModel::create(FileIconsModel::create());
-    sorting_proxy_icons_model->set_sort_role(GUI::ModelRole::Display);
+    auto icons_view_model = GUI::ViewModel::create(FileIconsModel::create());
+    icons_view_model->set_sort_role(GUI::ModelRole::Display);
 
-    m_icons_tableview->set_model(sorting_proxy_icons_model);
+    m_icons_tableview->set_model(icons_view_model);
     m_icons_tableview->set_key_column_and_sort_order(FileIconsModel::Column::Name, GUI::SortOrder::Ascending);
-    m_icons_tableview->model()->update();
+    m_icons_tableview->model()->invalidate();
     m_icons_tableview->set_column_width(0, 36);
     m_icons_tableview->set_column_width(1, 20);
 }

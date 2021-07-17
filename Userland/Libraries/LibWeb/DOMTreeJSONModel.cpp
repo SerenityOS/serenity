@@ -152,11 +152,6 @@ GUI::Variant DOMTreeJSONModel::data(const GUI::ModelIndex& index, GUI::ModelRole
     return {};
 }
 
-void DOMTreeJSONModel::update()
-{
-    did_update();
-}
-
 void DOMTreeJSONModel::map_dom_nodes_to_parent(JsonObject const* parent, JsonObject const* node)
 {
     m_dom_node_to_parent_map.set(node, parent);

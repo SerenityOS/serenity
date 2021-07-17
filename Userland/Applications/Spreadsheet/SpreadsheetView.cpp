@@ -144,7 +144,7 @@ void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
 
 void SpreadsheetView::update_with_model()
 {
-    m_table_view->model()->update();
+    m_table_view->model()->invalidate();
     m_table_view->update();
 }
 
@@ -241,7 +241,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         }
 
         if (positions.is_empty()) {
-            auto& index = m_table_view->cursor_index();
+            auto index = m_table_view->cursor_index();
             Position position { (size_t)index.column(), (size_t)index.row() };
             positions.append(move(position));
         }

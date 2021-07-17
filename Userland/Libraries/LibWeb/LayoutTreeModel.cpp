@@ -135,9 +135,4 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole 
     return {};
 }
 
-void LayoutTreeModel::update()
-{
-    did_update();
-}
-
 }

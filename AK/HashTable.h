@@ -342,6 +342,16 @@ public:
         }
     }
 
+    template<typename TUnaryPredicate>
+    void remove_all_matching(TUnaryPredicate predicate)
+    {
+        for (auto& entry : *this) {
+            if (predicate(entry)) {
+                remove(entry);
+            }
+        }
+    }
+
 private:
     void insert_during_rehash(T&& value)
     {

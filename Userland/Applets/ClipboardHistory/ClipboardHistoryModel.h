@@ -32,7 +32,6 @@ private:
     virtual String column_name(int) const override;
     virtual int column_count(const GUI::ModelIndex&) const override { return Column::__Count; }
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
-    virtual void update() override;
 
     Vector<GUI::Clipboard::DataAndType> m_history_items;
     size_t m_history_limit { 20 };

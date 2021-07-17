@@ -97,11 +97,6 @@ GUI::Variant ClipboardHistoryModel::data(const GUI::ModelIndex& index, GUI::Mode
     }
 }
 
-void ClipboardHistoryModel::update()
-{
-    did_update();
-}
-
 void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
 {
     m_history_items.remove_first_matching([&](GUI::Clipboard::DataAndType& existing) {
@@ -112,7 +107,7 @@ void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
         m_history_items.take_last();
 
     m_history_items.prepend(item);
-    update();
+    invalidate();
 }
 
 void ClipboardHistoryModel::remove_item(int index)

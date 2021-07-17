@@ -35,7 +35,6 @@ set(SOURCES
     FilePicker.cpp
     FilePickerDialogGML.h
     FileSystemModel.cpp
-    FilteringProxyModel.cpp
     FontPicker.cpp
     FontPickerDialogGML.h
     Frame.cpp
@@ -68,6 +67,7 @@ set(SOURCES
     Notification.cpp
     OpacitySlider.cpp
     Painter.cpp
+    PersistentModelIndex.cpp
     ProcessChooser.cpp
     Progressbar.cpp
     RadioButton.cpp
@@ -80,7 +80,6 @@ set(SOURCES
     SeparatorWidget.cpp
     Shortcut.cpp
     Slider.cpp
-    SortingProxyModel.cpp
     SpinBox.cpp
     Splitter.cpp
     StackWidget.cpp
@@ -95,6 +94,7 @@ set(SOURCES
     TreeView.cpp
     UndoStack.cpp
     Variant.cpp
+    ViewModel.cpp
     VimEditingEngine.cpp
     Widget.cpp
     Window.cpp

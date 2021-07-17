@@ -10,6 +10,7 @@
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ModelSelection.h>
+#include <LibGUI/PersistentModelIndex.h>
 #include <LibGfx/TextElision.h>
 
 namespace GUI {
@@ -117,8 +118,8 @@ public:
 
     virtual void scroll_into_view(const ModelIndex&, [[maybe_unused]] bool scroll_horizontally = true, [[maybe_unused]] bool scroll_vertically = true) { }
 
-    const ModelIndex& cursor_index() const { return m_cursor_index; }
-    const ModelIndex& selection_start_index() const { return m_selection_start_index; }
+    ModelIndex cursor_index() const { return m_cursor_index; }
+    ModelIndex selection_start_index() const { return m_selection_start_index; }
     void set_cursor(ModelIndex, SelectionUpdate, bool scroll_cursor_into_view = true);
 
     bool is_tab_key_navigation_enabled() const { return m_tab_key_navigation_enabled; }
@@ -173,7 +174,6 @@ protected:
 
     bool m_editable { false };
     bool m_searchable { true };
-    ModelIndex m_edit_index;
     RefPtr<Widget> m_edit_widget;
     Gfx::IntRect m_edit_widget_content_rect;
     OwnPtr<ModelEditingDelegate> m_editing_delegate;
@@ -181,20 +181,22 @@ protected:
     Gfx::IntPoint m_left_mousedown_position;
     bool m_might_drag { false };
 
-    ModelIndex m_hovered_index;
-    ModelIndex m_highlighted_search_index;
-
     int m_key_column { -1 };
     SortOrder m_sort_order;
 
+    PersistentModelIndex m_edit_index;
+    PersistentModelIndex m_hovered_index;
+    PersistentModelIndex m_highlighted_search_index;
+
 private:
+    PersistentModelIndex m_selection_start_index;
+    PersistentModelIndex m_cursor_index;
+    PersistentModelIndex m_drop_candidate_index;
+
     RefPtr<Model> m_model;
     ModelSelection m_selection;
-    ModelIndex m_selection_start_index;
     String m_searching;
     RefPtr<Core::Timer> m_searching_timer;
-    ModelIndex m_cursor_index;
-    ModelIndex m_drop_candidate_index;
     SelectionBehavior m_selection_behavior { SelectionBehavior::SelectItems };
     SelectionMode m_selection_mode { SelectionMode::SingleSelection };
     unsigned m_edit_triggers { EditTrigger::DoubleClicked | EditTrigger::EditKeyPressed };

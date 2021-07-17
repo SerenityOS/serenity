@@ -51,7 +51,7 @@ public:
         }
         return {};
     }
-    virtual void update() override
+    virtual void update()
     {
         m_cursors.clear();
 
@@ -131,7 +131,7 @@ public:
         }
         return {};
     }
-    virtual void update() override
+    virtual void update()
     {
         m_icon_sets.clear();
 

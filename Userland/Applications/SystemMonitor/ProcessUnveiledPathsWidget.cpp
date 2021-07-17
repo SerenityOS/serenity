@@ -7,8 +7,8 @@
 #include "ProcessUnveiledPathsWidget.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/JsonArrayModel.h>
-#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
+#include <LibGUI/ViewModel.h>
 
 ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget()
 {
@@ -21,7 +21,7 @@ ProcessUnveiledPathsWidget::ProcessUnveiledPathsWidget()
     pid_unveil_fields.empend("permissions", "Permissions", Gfx::TextAlignment::CenterLeft);
 
     m_model = GUI::JsonArrayModel::create({}, move(pid_unveil_fields));
-    m_table_view->set_model(GUI::SortingProxyModel::create(*m_model));
+    m_table_view->set_model(GUI::ViewModel::create(*m_model));
 }
 
 ProcessUnveiledPathsWidget::~ProcessUnveiledPathsWidget()

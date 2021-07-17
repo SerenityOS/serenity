@@ -61,11 +61,6 @@ GUI::Variant OutlineModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     }
 }
 
-void OutlineModel::update()
-{
-    did_update();
-}
-
 GUI::ModelIndex OutlineModel::parent_index(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())

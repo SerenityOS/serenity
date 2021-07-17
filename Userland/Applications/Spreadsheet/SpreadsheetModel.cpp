@@ -104,17 +104,17 @@ RefPtr<Core::MimeData> SheetModel::mime_data(const GUI::ModelSelection& selectio
     auto mime_data = GUI::Model::mime_data(selection);
 
     bool first = true;
-    const GUI::ModelIndex* cursor = nullptr;
+    GUI::ModelIndex cursor;
     const_cast<SheetModel*>(this)->for_each_view([&](const GUI::AbstractView& view) {
         if (!first)
             return;
-        cursor = &view.cursor_index();
+        cursor = view.cursor_index();
         first = false;
     });
 
-    VERIFY(cursor);
+    VERIFY(cursor.is_valid());
 
-    Position cursor_position { (size_t)cursor->column(), (size_t)cursor->row() };
+    Position cursor_position { (size_t)cursor.column(), (size_t)cursor.row() };
     auto new_data = String::formatted("{}\n{}",
         cursor_position.to_url(m_sheet).to_string(),
         StringView(mime_data->data("text/x-spreadsheet-data")));
@@ -146,7 +146,7 @@ void SheetModel::set_data(const GUI::ModelIndex& index, const GUI::Variant& valu
 
     auto& cell = m_sheet->ensure({ (size_t)index.column(), (size_t)index.row() });
     cell.set_data(value.to_string());
-    update();
+    invalidate();
 }
 
 void SheetModel::update()
