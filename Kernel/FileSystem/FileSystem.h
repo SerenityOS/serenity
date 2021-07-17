@@ -43,7 +43,7 @@ public:
     virtual unsigned total_inode_count() const { return 0; }
     virtual unsigned free_inode_count() const { return 0; }
 
-    virtual KResult prepare_to_unmount() const { return KSuccess; }
+    virtual KResult prepare_to_unmount() { return KSuccess; }
 
     struct DirectoryEntryView {
         DirectoryEntryView(const StringView& name, InodeIdentifier, u8 file_type);

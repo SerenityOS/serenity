@@ -99,7 +99,7 @@ public:
     virtual unsigned total_inode_count() const override;
     virtual unsigned free_inode_count() const override;
 
-    virtual KResult prepare_to_unmount() const override;
+    virtual KResult prepare_to_unmount() override;
 
     virtual bool supports_watchers() const override { return true; }
 
@@ -183,6 +183,7 @@ private:
     KResult update_bitmap_block(BlockIndex bitmap_block, size_t bit_index, bool new_state, u32& super_block_counter, u16& group_descriptor_counter);
 
     Vector<OwnPtr<CachedBitmap>> m_cached_bitmaps;
+    RefPtr<Ext2FSInode> m_root_inode;
 };
 
 inline Ext2FS& Ext2FSInode::fs()
