@@ -54,7 +54,7 @@ ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socke
     s_connections->set(client_id, *this);
 
     auto& wm = WindowManager::the();
-    async_fast_greet(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query());
+    async_fast_greet(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), client_id);
 }
 
 ClientConnection::~ClientConnection()
@@ -1113,6 +1113,49 @@ void ClientConnection::set_window_modified(i32 window_id, bool modified)
 void ClientConnection::set_flash_flush(bool enabled)
 {
     Compositor::the().set_flash_flush(enabled);
+}
+
+void ClientConnection::set_window_parent_from_client(i32 client_id, i32 parent_id, i32 child_id)
+{
+    auto child_window = window_from_id(child_id);
+    if (!child_window)
+        did_misbehave("SetWindowParentFromClient: Bad child window ID");
+
+    auto client_connection = from_client_id(client_id);
+    if (!client_connection)
+        did_misbehave("SetWindowParentFromClient: Bad client ID");
+
+    auto parent_window = client_connection->window_from_id(parent_id);
+    if (!parent_window)
+        did_misbehave("SetWindowParentFromClient: Bad parent window ID");
+
+    if (parent_window->is_stealable()) {
+        child_window->set_parent_window(*parent_window);
+    } else {
+        did_misbehave("SetWindowParentFromClient: Window is not stealable");
+    }
+}
+
+Messages::WindowServer::GetWindowRectFromClientResponse ClientConnection::get_window_rect_from_client(i32 client_id, i32 window_id)
+{
+    auto client_connection = from_client_id(client_id);
+    if (!client_connection)
+        did_misbehave("GetWindowRectFromClient: Bad client ID");
+
+    auto window = client_connection->window_from_id(window_id);
+    if (!window)
+        did_misbehave("GetWindowRectFromClient: Bad window ID");
+
+    return window->rect();
+}
+
+void ClientConnection::set_window_stealing(bool allowed, i32 window_id)
+{
+    auto window = window_from_id(window_id);
+    if (!window)
+        did_misbehave("SetWindowStealing: Bad window ID");
+
+    window->set_stealable(allowed);
 }
 
 }

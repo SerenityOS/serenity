@@ -9,6 +9,7 @@
 #include "CookieJar.h"
 #include "Tab.h"
 #include "WindowActions.h"
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
@@ -69,7 +70,17 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/home", "rwc") < 0) {
+    if (unveil(LexicalPath::join(Core::StandardPaths::config_directory(), "BrowserContentFilters.txt").string().characters(), "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(LexicalPath::join(Core::StandardPaths::config_directory(), "bookmarks.json").string().characters(), "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(LexicalPath::join(Core::StandardPaths::config_directory(), "Browser.ini").string().characters(), "rwc") < 0) {
         perror("unveil");
         return 1;
     }
@@ -94,7 +105,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/portal/request", "rw") < 0) {
+    if (unveil("/tmp/portal/filesystemaccess", "rw") < 0) {
         perror("unveil");
         return 1;
     }

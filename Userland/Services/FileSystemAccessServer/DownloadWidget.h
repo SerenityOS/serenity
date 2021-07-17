@@ -9,12 +9,14 @@
 #include <AK/URL.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/FileStream.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Widget.h>
 #include <LibProtocol/Request.h>
+#include <LibProtocol/RequestClient.h>
 
-namespace Browser {
+namespace FileSystemAccessServer {
 
 class DownloadWidget final : public GUI::Widget {
     C_OBJECT(DownloadWidget);
@@ -23,13 +25,14 @@ public:
     virtual ~DownloadWidget() override;
 
 private:
-    explicit DownloadWidget(const URL&);
+    DownloadWidget(URL const&, String const& destination_path);
 
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
     void did_finish(bool success);
 
     URL m_url;
     String m_destination_path;
+    NonnullRefPtr<Protocol::RequestClient> m_protocol_client;
     RefPtr<Protocol::Request> m_download;
     RefPtr<GUI::Progressbar> m_progressbar;
     RefPtr<GUI::Label> m_progress_label;

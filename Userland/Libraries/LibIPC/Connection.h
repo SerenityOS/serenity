@@ -132,6 +132,8 @@ public:
 
     virtual void die() { }
 
+    bool is_open() const { return m_socket->is_open(); }
+
 protected:
     Core::LocalSocket& socket() { return *m_socket; }
 
@@ -194,7 +196,7 @@ protected:
             }
             if (nread == 0) {
                 if (bytes.is_empty()) {
-                    deferred_invoke([this](auto&) { die(); });
+                    deferred_invoke([this](auto&) { shutdown(); });
                 }
                 return false;
             }

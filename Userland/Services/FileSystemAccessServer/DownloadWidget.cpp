@@ -7,44 +7,32 @@
 #include "DownloadWidget.h"
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/CheckBox.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Window.h>
-#include <LibProtocol/RequestClient.h>
-#include <LibWeb/Loader/ResourceLoader.h>
 #include <math.h>
 
-namespace Browser {
+namespace FileSystemAccessServer {
 
-DownloadWidget::DownloadWidget(const URL& url)
+DownloadWidget::DownloadWidget(URL const& url, String const& destination_path)
     : m_url(url)
+    , m_destination_path(destination_path)
+    , m_protocol_client(Protocol::RequestClient::construct())
 {
-    {
-        StringBuilder builder;
-        builder.append(Core::StandardPaths::downloads_directory());
-        builder.append('/');
-        builder.append(m_url.basename());
-        m_destination_path = builder.to_string();
-    }
-
-    auto browser_config = Core::ConfigFile::get_for_app("Browser");
-    auto close_on_finish = browser_config->read_bool_entry("Preferences", "CloseDownloadWidgetOnFinish", false);
-
     m_elapsed_timer.start();
-    m_download = Web::ResourceLoader::the().protocol_client().start_request("GET", url);
+    m_download = m_protocol_client->start_request("GET", url.to_string());
     VERIFY(m_download);
     m_download->on_progress = [this](Optional<u32> total_size, u32 downloaded_size) {
-        did_progress(total_size.value(), downloaded_size);
+        if (total_size.has_value())
+            did_progress(total_size.value(), downloaded_size);
     };
 
     {
@@ -88,12 +76,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     destination_label.set_fixed_height(16);
 
     m_close_on_finish_checkbox = add<GUI::CheckBox>("Close when finished");
-    m_close_on_finish_checkbox->set_checked(close_on_finish);
-
-    m_close_on_finish_checkbox->on_checked = [&](bool checked) {
-        auto browser_config = Core::ConfigFile::get_for_app("Browser");
-        browser_config->write_bool_entry("Preferences", "CloseDownloadWidgetOnFinish", checked);
-    };
+    m_close_on_finish_checkbox->set_checked(false);
 
     auto& button_container = add<GUI::Widget>();
     auto& button_container_layout = button_container.set_layout<GUI::HorizontalBoxLayout>();
@@ -172,8 +155,11 @@ void DownloadWidget::did_finish(bool success)
         return;
     }
 
-    if (m_close_on_finish_checkbox->is_checked())
+    // TODO: Crashes here
+    if (m_close_on_finish_checkbox->is_checked()) {
         window()->close();
+        return;
+    }
 }
 
 }
