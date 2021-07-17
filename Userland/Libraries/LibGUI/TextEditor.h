@@ -144,6 +144,7 @@ public:
     Function<void()> on_mousedown;
     Function<void()> on_return_pressed;
     Function<void()> on_shift_return_pressed;
+    Function<void()> on_ctrl_return_pressed;
     Function<void()> on_escape_pressed;
     Function<void()> on_up_pressed;
     Function<void()> on_down_pressed;
