@@ -88,10 +88,11 @@ public:
             return new_views;
         }
 
-        // FIXME: line splitting for Utf32View needed
-        Vector<RegexStringView> views;
-        views.append(m_u32view.value());
-        return views;
+        auto views = u32view().lines(false);
+        Vector<RegexStringView> new_views;
+        for (auto& view : views)
+            new_views.append(move(view));
+        return new_views;
     }
 
     RegexStringView substring_view(size_t offset, size_t length) const
