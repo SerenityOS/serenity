@@ -201,7 +201,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
 
     auto& object = json.value().as_object();
 
-    auto file_or_error = MappedFile::map("/boot/Kernel");
+    auto file_or_error = MappedFile::map("/boot/Kernel.debug");
     OwnPtr<ELF::Image> kernel_elf;
     if (!file_or_error.is_error())
         kernel_elf = make<ELF::Image>(file_or_error.value()->bytes());
