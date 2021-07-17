@@ -122,7 +122,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
     m_regs.cr3 = m_process->space().page_directory().cr3();
 
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
-    m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
+    m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & ~(FlatPtr)0x7u;
 
     if (m_process->is_kernel_process()) {
 #if ARCH(I386)
