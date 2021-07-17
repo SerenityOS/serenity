@@ -21,7 +21,6 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TabWidget.h>
