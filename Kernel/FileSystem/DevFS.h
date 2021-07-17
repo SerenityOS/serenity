@@ -104,7 +104,7 @@ protected:
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, FileDescription*) override;
 
     NonnullOwnPtr<KString> m_name;
-    String m_link;
+    OwnPtr<KString> m_link;
 };
 
 class DevFSDirectoryInode : public DevFSInode {

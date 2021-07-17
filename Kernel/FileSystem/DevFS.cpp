@@ -158,10 +158,10 @@ KResultOr<size_t> DevFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelB
 {
     Locker locker(m_inode_lock);
     VERIFY(offset == 0);
-    VERIFY(!m_link.is_null());
-    if (!buffer.write(((const u8*)m_link.substring_view(0).characters_without_null_termination()) + offset, m_link.length()))
+    VERIFY(m_link);
+    if (!buffer.write(m_link->characters() + offset, m_link->length()))
         return EFAULT;
-    return m_link.length();
+    return m_link->length();
 }
 
 InodeMetadata DevFSLinkInode::metadata() const
@@ -176,12 +176,16 @@ InodeMetadata DevFSLinkInode::metadata() const
     return metadata;
 }
 
-KResultOr<size_t> DevFSLinkInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription*)
+KResultOr<size_t> DevFSLinkInode::write_bytes(off_t offset, size_t count, UserOrKernelBuffer const& buffer, FileDescription*)
 {
+    auto kstring_or_error = buffer.try_copy_into_kstring(count);
+    if (kstring_or_error.is_error())
+        return kstring_or_error.error();
+
     Locker locker(m_inode_lock);
     VERIFY(offset == 0);
     VERIFY(buffer.is_kernel_buffer());
-    m_link = buffer.copy_into_string(count);
+    m_link = kstring_or_error.release_value();
     return count;
 }
 
