@@ -272,10 +272,4 @@ RefPtr<SharedInodeVMObject> Inode::shared_vmobject() const
     return m_shared_vmobject.strong_ref();
 }
 
-bool Inode::is_shared_vmobject(const SharedInodeVMObject& other) const
-{
-    Locker locker(m_lock);
-    return m_shared_vmobject.unsafe_ptr() == &other;
-}
-
 }
