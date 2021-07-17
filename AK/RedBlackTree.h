@@ -406,7 +406,7 @@ public:
     [[nodiscard]] bool is_end() const { return !m_node; }
     [[nodiscard]] bool is_begin() const { return !m_prev; }
 
-    auto key() const { return m_node->key; }
+    [[nodiscard]] auto key() const { return m_node->key; }
 
 private:
     friend TreeType;
