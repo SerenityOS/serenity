@@ -59,7 +59,6 @@ protected:
     virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
     virtual void did_seek(FileDescription&, off_t) override;
-    virtual KResultOr<size_t> directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResult truncate(u64) override;
@@ -91,7 +90,6 @@ protected:
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
-    virtual KResultOr<size_t> directory_entry_count() const override;
 
     ProcFS& m_parent_fs;
 };

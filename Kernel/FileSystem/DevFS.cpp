@@ -122,11 +122,6 @@ KResult DevFSInode::remove_child(const StringView&)
     return EROFS;
 }
 
-KResultOr<size_t> DevFSInode::directory_entry_count() const
-{
-    VERIFY_NOT_REACHED();
-}
-
 KResult DevFSInode::chmod(mode_t)
 {
     return EPERM;
@@ -219,12 +214,6 @@ KResult DevFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::Dir
 RefPtr<Inode> DevFSDirectoryInode::lookup(StringView)
 {
     return nullptr;
-}
-
-KResultOr<size_t> DevFSDirectoryInode::directory_entry_count() const
-{
-    Locker locker(m_inode_lock);
-    return m_devices.size();
 }
 
 DevFSRootDirectoryInode::DevFSRootDirectoryInode(DevFS& fs)
@@ -332,11 +321,6 @@ InodeMetadata DevFSRootDirectoryInode::metadata() const
     metadata.mtime = mepoch;
     return metadata;
 }
-KResultOr<size_t> DevFSRootDirectoryInode::directory_entry_count() const
-{
-    Locker locker(m_parent_fs.m_lock);
-    return m_devices.size() + DevFSDirectoryInode::directory_entry_count().value();
-}
 
 DevFSDeviceInode::DevFSDeviceInode(DevFS& fs, Device const& device, NonnullOwnPtr<KString> name)
     : DevFSInode(fs)
@@ -428,10 +412,6 @@ InodeMetadata DevFSPtsDirectoryInode::metadata() const
     metadata.size = 0;
     metadata.mtime = mepoch;
     return metadata;
-}
-KResultOr<size_t> DevFSPtsDirectoryInode::directory_entry_count() const
-{
-    return 0;
 }
 
 }

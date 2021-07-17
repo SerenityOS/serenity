@@ -58,7 +58,6 @@ protected:
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) override;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) override;
     virtual KResult remove_child(const StringView& name) override;
-    virtual KResultOr<size_t> directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResult truncate(u64) override;
@@ -119,7 +118,6 @@ protected:
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
-    virtual KResultOr<size_t> directory_entry_count() const override;
 
     NonnullRefPtrVector<DevFSDeviceInode> m_devices;
 };
@@ -137,7 +135,6 @@ private:
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual InodeMetadata metadata() const override;
-    virtual KResultOr<size_t> directory_entry_count() const override;
 };
 
 class DevFSRootDirectoryInode final : public DevFSDirectoryInode {
@@ -153,7 +150,6 @@ private:
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual InodeMetadata metadata() const override;
-    virtual KResultOr<size_t> directory_entry_count() const override;
 
     NonnullRefPtrVector<DevFSDirectoryInode> m_subfolders;
     NonnullRefPtrVector<DevFSLinkInode> m_links;

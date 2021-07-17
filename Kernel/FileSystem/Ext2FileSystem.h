@@ -52,7 +52,6 @@ private:
     virtual KResult set_mtime(time_t) override;
     virtual KResult increment_link_count() override;
     virtual KResult decrement_link_count() override;
-    virtual KResultOr<size_t> directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResult truncate(u64) override;

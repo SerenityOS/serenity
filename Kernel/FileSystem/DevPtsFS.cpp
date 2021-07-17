@@ -136,13 +136,6 @@ KResult DevPtsFSInode::traverse_as_directory(Function<bool(FileSystem::Directory
     return KSuccess;
 }
 
-KResultOr<size_t> DevPtsFSInode::directory_entry_count() const
-{
-    VERIFY(identifier().index() == 1);
-
-    return 2 + s_ptys->size();
-}
-
 RefPtr<Inode> DevPtsFSInode::lookup(StringView name)
 {
     VERIFY(identifier().index() == 1);
