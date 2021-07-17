@@ -884,6 +884,12 @@ void TextEditor::keydown_event(KeyEvent& event)
     event.ignore();
 }
 
+void TextEditor::delete_previous_word()
+{
+    TextRange to_erase(document().first_word_before(m_cursor, true), m_cursor);
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
+}
+
 void TextEditor::delete_current_line()
 {
     if (has_selection())
@@ -904,6 +910,30 @@ void TextEditor::delete_current_line()
 
     TextRange erased_range(start, end);
     execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+}
+
+void TextEditor::delete_previous_char()
+{
+    if (!is_editable())
+        return;
+
+    if (has_selection())
+        return delete_selection();
+
+    TextRange to_erase({ m_cursor.line(), m_cursor.column() - 1 }, m_cursor);
+    if (m_cursor.column() == 0 && m_cursor.line() != 0) {
+        size_t prev_line_len = line(m_cursor.line() - 1).length();
+        to_erase.set_start({ m_cursor.line() - 1, prev_line_len });
+    }
+
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
+}
+
+void TextEditor::delete_from_line_start_to_cursor()
+{
+    TextPosition start(m_cursor.line(), current_line().first_non_whitespace_column());
+    TextRange to_erase(start, m_cursor);
+    execute<RemoveTextCommand>(document().text_in_range(to_erase), to_erase);
 }
 
 void TextEditor::do_delete()

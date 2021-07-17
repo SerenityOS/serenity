@@ -135,6 +135,9 @@ public:
     void paste();
     void do_delete();
     void delete_current_line();
+    void delete_previous_word();
+    void delete_previous_char();
+    void delete_from_line_start_to_cursor();
     void select_all();
     virtual void undo();
     virtual void redo();
