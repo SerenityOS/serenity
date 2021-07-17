@@ -354,8 +354,10 @@ requires(HasFormatter<T>) struct Formatter<Vector<T>> : StandardFormatter {
         builder.put_literal("[ "sv);
         bool first = true;
         for (auto& content : value) {
-            if (!first)
+            if (!first) {
                 builder.put_literal(", "sv);
+                content_fmt = Formatter<T> {};
+            }
             first = false;
             content_fmt.format(builder, content);
         }
