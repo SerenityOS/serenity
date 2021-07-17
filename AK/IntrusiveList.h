@@ -9,6 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/BitCast.h>
 #include <AK/Forward.h>
+#include <AK/Noncopyable.h>
 #include <AK/StdLibExtras.h>
 
 namespace AK {
@@ -45,6 +46,9 @@ private:
 
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
 class IntrusiveList {
+    AK_MAKE_NONCOPYABLE(IntrusiveList);
+    AK_MAKE_NONMOVABLE(IntrusiveList);
+
 public:
     IntrusiveList() = default;
     ~IntrusiveList();
