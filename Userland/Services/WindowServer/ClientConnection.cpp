@@ -1129,7 +1129,11 @@ void ClientConnection::set_window_parent_from_client(i32 client_id, i32 parent_i
     if (!parent_window)
         did_misbehave("SetWindowParentFromClient: Bad parent window ID");
 
-    child_window->set_parent_window(*parent_window);
+    if (parent_window->is_stealable_by_client(this->client_id())) {
+        child_window->set_parent_window(*parent_window);
+    } else {
+        did_misbehave("SetWindowParentFromClient: Window is not stealable");
+    }
 }
 
 Messages::WindowServer::GetWindowRectFromClientResponse ClientConnection::get_window_rect_from_client(i32 client_id, i32 window_id)
@@ -1143,6 +1147,38 @@ Messages::WindowServer::GetWindowRectFromClientResponse ClientConnection::get_wi
         did_misbehave("GetWindowRectFromClient: Bad window ID");
 
     return window->rect();
+}
+
+void ClientConnection::add_window_stealing_for_client(i32 client_id, i32 window_id)
+{
+    auto window = window_from_id(window_id);
+    if (!window)
+        did_misbehave("AddWindowStealingForClient: Bad window ID");
+
+    if (!from_client_id(client_id))
+        did_misbehave("AddWindowStealingForClient: Bad client ID");
+
+    window->add_stealing_for_client(client_id);
+}
+
+void ClientConnection::remove_window_stealing_for_client(i32 client_id, i32 window_id)
+{
+    auto window = window_from_id(window_id);
+    if (!window)
+        did_misbehave("RemoveWindowStealingForClient: Bad window ID");
+
+    // Don't check if the client exists, it may have died
+
+    window->remove_stealing_for_client(client_id);
+}
+
+void ClientConnection::remove_window_stealing(i32 window_id)
+{
+    auto window = window_from_id(window_id);
+    if (!window)
+        did_misbehave("RemoveWindowStealing: Bad window ID");
+
+    window->remove_all_stealing();
 }
 
 }

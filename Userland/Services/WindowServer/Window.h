@@ -362,6 +362,16 @@ public:
     void set_moving_to_another_stack(bool value) { m_moving_to_another_stack = value; }
     bool is_moving_to_another_stack() const { return m_moving_to_another_stack; }
 
+    void add_stealing_for_client(i32 client_id) { m_stealable_by_client_ids.append(move(client_id)); }
+    void remove_stealing_for_client(i32 client_id)
+    {
+        m_stealable_by_client_ids.remove_all_matching([client_id](i32 approved_client_id) {
+            return approved_client_id == client_id;
+        });
+    }
+    void remove_all_stealing() { m_stealable_by_client_ids.clear(); }
+    bool is_stealable_by_client(i32 client_id) const { return m_stealable_by_client_ids.contains_slow(client_id); }
+
 private:
     Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
@@ -418,6 +428,7 @@ private:
     bool m_pinned { false };
     bool m_moving_to_another_stack { false };
     bool m_invalidate_last_render_rects { false };
+    Vector<i32> m_stealable_by_client_ids;
     WindowTileType m_tiled { WindowTileType::None };
     Gfx::IntRect m_untiled_rect;
     bool m_occluded { false };
