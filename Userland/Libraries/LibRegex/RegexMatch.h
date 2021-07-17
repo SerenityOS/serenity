@@ -10,6 +10,7 @@
 
 #include "AK/FlyString.h"
 #include "AK/HashMap.h"
+#include "AK/MemMem.h"
 #include "AK/String.h"
 #include "AK/StringBuilder.h"
 #include "AK/StringView.h"
@@ -88,9 +89,19 @@ public:
             return new_views;
         }
 
-        // FIXME: line splitting for Utf32View needed
         Vector<RegexStringView> views;
-        views.append(m_u32view.value());
+        auto view = u32view();
+        u32 newline = '\n';
+        while (!view.is_empty()) {
+            auto position = AK::memmem_optional(view.code_points(), view.length() * sizeof(u32), &newline, sizeof(u32));
+            if (!position.has_value())
+                break;
+            auto offset = position.value() / sizeof(u32);
+            views.append(view.substring_view(0, offset));
+            view = view.substring_view(offset + 1, view.length() - offset - 1);
+        }
+        if (!view.is_empty())
+            views.append(view);
         return views;
     }
 
