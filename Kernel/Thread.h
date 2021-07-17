@@ -991,8 +991,8 @@ public:
     void set_ticks_left(u32 t) { m_ticks_left = t; }
     u32 ticks_left() const { return m_ticks_left; }
 
-    u32 kernel_stack_base() const { return m_kernel_stack_base; }
-    u32 kernel_stack_top() const { return m_kernel_stack_top; }
+    FlatPtr kernel_stack_base() const { return m_kernel_stack_base; }
+    FlatPtr kernel_stack_top() const { return m_kernel_stack_top; }
 
     void set_state(State, u8 = 0);
 
@@ -1276,8 +1276,8 @@ private:
     u32 m_ticks_in_kernel { 0 };
     u32 m_pending_signals { 0 };
     u32 m_signal_mask { 0 };
-    u32 m_kernel_stack_base { 0 };
-    u32 m_kernel_stack_top { 0 };
+    FlatPtr m_kernel_stack_base { 0 };
+    FlatPtr m_kernel_stack_top { 0 };
     OwnPtr<Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
     Optional<Range> m_thread_specific_range;
