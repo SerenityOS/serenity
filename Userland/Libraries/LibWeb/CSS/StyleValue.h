@@ -195,6 +195,14 @@ enum class Repeat : u8 {
     Space,
 };
 
+enum class JustifyContent {
+    FlexStart,
+    FlexEnd,
+    Center,
+    SpaceBetween,
+    SpaceAround,
+};
+
 class StyleValue : public RefCounted<StyleValue> {
 public:
     virtual ~StyleValue();

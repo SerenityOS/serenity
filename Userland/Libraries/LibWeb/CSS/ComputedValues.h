@@ -29,6 +29,7 @@ public:
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
     static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
+    static CSS::JustifyContent justify_content() { return CSS::JustifyContent::FlexStart; }
     static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
 };
 
@@ -61,6 +62,7 @@ public:
     FlexBasisData flex_basis() const { return m_noninherited.flex_basis; }
     Optional<float> flex_grow_factor() const { return m_noninherited.flex_grow_factor; }
     Optional<float> flex_shrink_factor() const { return m_noninherited.flex_shrink_factor; }
+    CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
     const CSS::Length& width() const { return m_noninherited.width; }
     const CSS::Length& min_width() const { return m_noninherited.min_width; }
     const CSS::Length& max_width() const { return m_noninherited.max_width; }
@@ -141,6 +143,7 @@ protected:
         CSS::FlexBasisData flex_basis {};
         Optional<float> flex_grow_factor;
         Optional<float> flex_shrink_factor;
+        CSS::JustifyContent justify_content { InitialValues::justify_content() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
     } m_noninherited;
@@ -190,6 +193,7 @@ public:
     void set_flex_basis(FlexBasisData value) { m_noninherited.flex_basis = value; }
     void set_flex_grow_factor(Optional<float> value) { m_noninherited.flex_grow_factor = value; }
     void set_flex_shrink_factor(Optional<float> value) { m_noninherited.flex_shrink_factor = value; }
+    void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
 };
 
 }

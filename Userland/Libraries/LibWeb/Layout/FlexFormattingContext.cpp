@@ -646,12 +646,33 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         }
 
         // 12.2.
-        // FIXME: Support justify-content
+        float space_between_items = 0;
+        float space_before_first_item = 0;
+        auto number_of_items = flex_line.items.size();
+
+        switch (box.computed_values().justify_content()) {
+        case CSS::JustifyContent::FlexStart:
+            break;
+        case CSS::JustifyContent::FlexEnd:
+            space_before_first_item = main_available_size - used_main_space;
+            break;
+        case CSS::JustifyContent::Center:
+            space_before_first_item = (main_available_size - used_main_space) / 2.0f;
+            break;
+        case CSS::JustifyContent::SpaceBetween:
+            space_between_items = remaining_free_space / (number_of_items - 1);
+            break;
+        case CSS::JustifyContent::SpaceAround:
+            space_between_items = remaining_free_space / number_of_items;
+            space_before_first_item = space_between_items / 2.0f;
+            break;
+        }
+
         // FIXME: Support reverse
-        float main_offset = 0;
+        float main_offset = space_before_first_item;
         for (auto& flex_item : flex_line.items) {
             flex_item->main_offset = main_offset;
-            main_offset += flex_item->main_size;
+            main_offset += flex_item->main_size + space_between_items;
         }
     }
 
