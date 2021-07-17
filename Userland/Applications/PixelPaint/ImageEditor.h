@@ -63,6 +63,7 @@ public:
     Function<void(Color)> on_secondary_color_change;
 
     Function<void(Layer*)> on_active_layer_change;
+    Function<void(GUI::DropEvent&)> on_drop_event;
 
     Function<void(String const&)> on_image_title_change;
 
@@ -86,6 +87,7 @@ private:
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
 
     virtual void image_did_change(Gfx::IntRect const&) override;
     virtual void image_select_layer(Layer*) override;
