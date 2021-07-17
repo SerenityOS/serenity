@@ -7,12 +7,12 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/Math.h>
 #include <AK/StdLibExtras.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Orientation.h>
 #include <LibIPC/Forward.h>
-#include <math.h>
 
 namespace Gfx {
 
@@ -223,7 +223,7 @@ public:
     {
         if (*this == other)
             return 0;
-        return sqrtf(powf(m_x - other.m_x, 2.0f) + powf(m_y - other.m_y, 2.0f));
+        return AK::hypot<float>(m_x - other.m_x, m_y - other.m_y);
     }
 
     [[nodiscard]] Point absolute_relative_distance_to(Point const& other) const
