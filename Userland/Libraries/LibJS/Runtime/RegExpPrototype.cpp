@@ -7,6 +7,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Function.h>
+#include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -226,6 +227,19 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     if (!global && !sticky)
         last_index = 0;
 
+    Vector<u32> codepoints;
+    Utf32View utf32_view;
+
+    if (unicode) {
+        Utf8View utf8_view(string);
+        codepoints.ensure_capacity(utf8_view.length());
+
+        for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it)
+            codepoints.append(*it);
+
+        utf32_view = Utf32View(codepoints.data(), codepoints.size());
+    }
+
     RegexResult result;
 
     while (true) {
@@ -240,7 +254,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
         }
 
         regex.start_offset = last_index;
-        result = regex.match(string);
+        result = unicode ? regex.match(utf32_view) : regex.match(string);
 
         if (result.success)
             break;
