@@ -125,6 +125,9 @@ TEST_CASE(complex_string_specifiers)
     EXPECT_EQ(String::formatted("{:9}", "abcd"), "abcd     ");
     EXPECT_EQ(String::formatted("{:>9}", "abcd"), "     abcd");
     EXPECT_EQ(String::formatted("{:^9}", "abcd"), "  abcd   ");
+    EXPECT_EQ(String::formatted("{:4.6}", "a"), "a   ");
+    EXPECT_EQ(String::formatted("{:4.6}", "abcdef"), "abcdef");
+    EXPECT_EQ(String::formatted("{:4.6}", "abcdefghi"), "abcdef");
 }
 
 TEST_CASE(cast_integer_to_character)
