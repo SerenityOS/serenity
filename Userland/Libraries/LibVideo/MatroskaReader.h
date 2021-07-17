@@ -8,10 +8,10 @@
 
 #include "MatroskaDocument.h"
 #include <AK/Debug.h>
+#include <AK/Math.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <math.h>
 
 namespace Video {
 
@@ -122,7 +122,7 @@ private:
                 u8 next_octet = read_octet();
                 result = (result << 8u) | next_octet;
             }
-            result -= pow(2, length * 7 - 1) - 1;
+            result -= AK::exp2<i64>(length * 7 - 1) - 1;
             return result;
         }
 

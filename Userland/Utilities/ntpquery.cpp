@@ -292,7 +292,7 @@ int main(int argc, char** argv)
     NtpTimestamp T3 = transmit_timestamp;
     NtpTimestamp T4 = destination_timestamp;
     auto timestamp_difference_in_seconds = [](NtpTimestamp from, NtpTimestamp to) {
-        return static_cast<int64_t>(to - from) / pow(2.0, 32);
+        return static_cast<i64>(to - from) >> 32;
     };
 
     // The network round-trip time of the request.

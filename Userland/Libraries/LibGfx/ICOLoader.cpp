@@ -13,7 +13,6 @@
 #include <AK/Types.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/PNGLoader.h>
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
