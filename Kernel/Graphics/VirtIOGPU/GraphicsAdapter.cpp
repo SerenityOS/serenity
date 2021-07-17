@@ -7,7 +7,7 @@
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/Graphics/VirtIOGPU/VirtIOGPU.h>
+#include <Kernel/Graphics/VirtIOGPU/GPU.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
