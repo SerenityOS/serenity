@@ -34,6 +34,22 @@ public:
         }
         return sz;
     }
+
+    [[nodiscard]] int compare_ignoring_names(TupleDescriptor const& other) const
+    {
+        if (size() != other.size())
+            return (int)size() - (int)other.size();
+        for (auto ix = 0u; ix < size(); ++ix) {
+            auto elem = (*this)[ix];
+            auto other_elem = other[ix];
+            if ((elem.type != other_elem.type) || (elem.order != other_elem.order)) {
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+    using Vector<TupleElement>::operator==;
 };
 
 }
