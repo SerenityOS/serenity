@@ -63,7 +63,7 @@ public:
 
         for (size_t idx = 0; idx < nread; ++idx) {
             const auto index = (m_total_written - seekback + idx) % Capacity;
-            bytes[idx] = m_queue.m_storage[index];
+            bytes[idx] = ((u8*)&m_queue.m_storage)[index];
         }
 
         return nread;
@@ -105,7 +105,7 @@ public:
     {
         VERIFY(count <= remaining_contigous_space());
 
-        Bytes bytes { m_queue.m_storage + (m_queue.head_index() + m_queue.size()) % Capacity, count };
+        Bytes bytes { (u8*)&m_queue.m_storage + (m_queue.head_index() + m_queue.size()) % Capacity, count };
 
         m_queue.m_size += count;
         m_total_written += count;

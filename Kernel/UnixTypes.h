@@ -541,7 +541,7 @@ struct ucred {
     gid_t gid;
 };
 
-struct sockaddr {
+struct alignas(4) sockaddr {
     u16 sa_family;
     char sa_data[14];
 };

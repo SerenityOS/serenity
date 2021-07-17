@@ -763,12 +763,12 @@ private:
     StorageType* inline_buffer()
     {
         static_assert(inline_capacity > 0);
-        return reinterpret_cast<StorageType*>(m_inline_buffer_storage);
+        return reinterpret_cast<StorageType*>(&m_inline_buffer_storage);
     }
     StorageType const* inline_buffer() const
     {
         static_assert(inline_capacity > 0);
-        return reinterpret_cast<StorageType const*>(m_inline_buffer_storage);
+        return reinterpret_cast<StorageType const*>(&m_inline_buffer_storage);
     }
 
     StorageType& raw_last() { return raw_at(size() - 1); }
@@ -778,7 +778,7 @@ private:
     size_t m_size { 0 };
     size_t m_capacity { 0 };
 
-    alignas(StorageType) unsigned char m_inline_buffer_storage[sizeof(StorageType) * inline_capacity];
+    AlignedStorage<sizeof(StorageType) * inline_capacity, alignof(StorageType)> m_inline_buffer_storage;
     StorageType* m_outline_buffer { nullptr };
 };
 

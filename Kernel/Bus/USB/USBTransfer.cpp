@@ -37,7 +37,7 @@ void Transfer::set_setup_packet(const USBRequestData& request)
     // of handing out physical pointers that we can directly write to,
     // we set the address of the setup packet to be the first 8 bytes of
     // the data buffer, which we then set to the physical address.
-    auto* request_data = reinterpret_cast<USBRequestData*>(buffer().as_ptr());
+    auto* request_data = buffer().as_ptr<USBRequestData>();
 
     request_data->request_type = request.request_type;
     request_data->request = request.request;

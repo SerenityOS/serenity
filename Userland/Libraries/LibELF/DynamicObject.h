@@ -422,7 +422,7 @@ inline void DynamicObject::for_each_symbol(F func) const
 template<IteratorFunction<DynamicObject::DynamicEntry&> F>
 inline void DynamicObject::for_each_dynamic_entry(F func) const
 {
-    auto* dyns = reinterpret_cast<const ElfW(Dyn)*>(m_dynamic_address.as_ptr());
+    auto* dyns = m_dynamic_address.as_ptr<const ElfW(Dyn)>();
     for (unsigned i = 0;; ++i) {
         auto&& dyn = DynamicEntry(dyns[i]);
         if (dyn.tag() == DT_NULL)
@@ -448,7 +448,7 @@ inline void DynamicObject::for_each_needed_library(F func) const
         if (entry.tag() != DT_NEEDED)
             return;
         ElfW(Word) offset = entry.val();
-        StringView name { (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr() };
+        StringView name { m_base_address.offset(m_string_table_offset).offset(offset).as_ptr<const char>() };
         func(name);
     });
 }

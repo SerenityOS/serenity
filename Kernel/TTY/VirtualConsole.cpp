@@ -374,14 +374,14 @@ void VirtualConsole::echo(u8 ch)
 
 VirtualConsole::Cell& VirtualConsole::cell_at(size_t x, size_t y)
 {
-    auto* ptr = (VirtualConsole::Cell*)(m_cells->vaddr().as_ptr());
+    auto* ptr = m_cells->vaddr().as_ptr<Cell>();
     ptr += (y * columns()) + x;
     return *ptr;
 }
 
 void VirtualConsole::clear()
 {
-    auto* cell = (Cell*)m_cells->vaddr().as_ptr();
+    auto* cell = m_cells->vaddr().as_ptr<Cell>();
     for (size_t y = 0; y < rows(); y++) {
         m_lines[y].dirty = true;
         for (size_t x = 0; x < columns(); x++) {
