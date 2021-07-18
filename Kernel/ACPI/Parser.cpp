@@ -28,7 +28,7 @@ Parser* Parser::the()
 
 UNMAP_AFTER_INIT NonnullRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(String name, PhysicalAddress paddr, size_t table_size)
 {
-    return adopt_ref(*new (nothrow) ACPISysFSComponent(name, paddr, table_size));
+    return adopt_ref(*new ACPISysFSComponent(name, paddr, table_size));
 }
 
 KResultOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const
@@ -61,7 +61,7 @@ UNMAP_AFTER_INIT ACPISysFSComponent::ACPISysFSComponent(String name, PhysicalAdd
 
 UNMAP_AFTER_INIT void ACPISysFSDirectory::initialize()
 {
-    auto acpi_directory = adopt_ref(*new (nothrow) ACPISysFSDirectory());
+    auto acpi_directory = adopt_ref(*new ACPISysFSDirectory());
     SysFSComponentRegistry::the().register_new_component(acpi_directory);
 }
 

@@ -22,7 +22,7 @@ public:
     // Note: We pass const ProcFSProcessStacks& to enforce creation with this type of directory
     static NonnullRefPtr<ProcFSThreadStack> create(const ProcFSProcessDirectory& process_directory, const ProcFSProcessStacks&, const Thread& thread)
     {
-        return adopt_ref(*new (nothrow) ProcFSThreadStack(process_directory, thread));
+        return adopt_ref(*new ProcFSThreadStack(process_directory, thread));
     }
 
 private:
@@ -66,7 +66,7 @@ public:
 
     static NonnullRefPtr<ProcFSProcessStacks> create(const ProcFSProcessDirectory& parent_directory)
     {
-        auto directory = adopt_ref(*new (nothrow) ProcFSProcessStacks(parent_directory));
+        auto directory = adopt_ref(*new ProcFSProcessStacks(parent_directory));
         return directory;
     }
 
@@ -132,7 +132,7 @@ public:
     // Note: we pass const ProcFSProcessFileDescriptions& just to enforce creation of this in the correct directory.
     static NonnullRefPtr<ProcFSProcessFileDescription> create(unsigned fd_number, const FileDescription& fd, InodeIndex preallocated_index, const ProcFSProcessFileDescriptions&)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessFileDescription(fd_number, fd, preallocated_index));
+        return adopt_ref(*new ProcFSProcessFileDescription(fd_number, fd, preallocated_index));
     }
 
 private:
@@ -163,7 +163,7 @@ public:
 
     static NonnullRefPtr<ProcFSProcessFileDescriptions> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessFileDescriptions(parent_directory));
+        return adopt_ref(*new ProcFSProcessFileDescriptions(parent_directory));
     }
 
     virtual void prepare_for_deletion() override
@@ -235,7 +235,7 @@ class ProcFSProcessPledge final : public ProcFSProcessInformation {
 public:
     static NonnullRefPtr<ProcFSProcessPledge> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessPledge(parent_directory));
+        return adopt_ref(*new ProcFSProcessPledge(parent_directory));
     }
 
 private:
@@ -273,7 +273,7 @@ class ProcFSProcessUnveil final : public ProcFSProcessInformation {
 public:
     static NonnullRefPtr<ProcFSProcessUnveil> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessUnveil(parent_directory));
+        return adopt_ref(*new ProcFSProcessUnveil(parent_directory));
     }
 
 private:
@@ -317,7 +317,7 @@ class ProcFSProcessPerformanceEvents final : public ProcFSProcessInformation {
 public:
     static NonnullRefPtr<ProcFSProcessPerformanceEvents> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessPerformanceEvents(parent_directory));
+        return adopt_ref(*new ProcFSProcessPerformanceEvents(parent_directory));
     }
 
 private:
@@ -346,7 +346,7 @@ class ProcFSProcessOverallFileDescriptions final : public ProcFSProcessInformati
 public:
     static NonnullRefPtr<ProcFSProcessOverallFileDescriptions> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessOverallFileDescriptions(parent_directory));
+        return adopt_ref(*new ProcFSProcessOverallFileDescriptions(parent_directory));
     }
 
 private:
@@ -398,7 +398,7 @@ class ProcFSProcessRoot final : public ProcFSExposedLink {
 public:
     static NonnullRefPtr<ProcFSProcessRoot> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessRoot(parent_directory));
+        return adopt_ref(*new ProcFSProcessRoot(parent_directory));
     }
 
 private:
@@ -425,7 +425,7 @@ class ProcFSProcessVirtualMemory final : public ProcFSProcessInformation {
 public:
     static NonnullRefPtr<ProcFSProcessRoot> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessVirtualMemory(parent_directory));
+        return adopt_ref(*new ProcFSProcessVirtualMemory(parent_directory));
     }
 
 private:
@@ -489,7 +489,7 @@ class ProcFSProcessCurrentWorkDirectory final : public ProcFSExposedLink {
 public:
     static NonnullRefPtr<ProcFSProcessCurrentWorkDirectory> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessCurrentWorkDirectory(parent_directory));
+        return adopt_ref(*new ProcFSProcessCurrentWorkDirectory(parent_directory));
     }
 
 private:
@@ -517,7 +517,7 @@ class ProcFSProcessBinary final : public ProcFSExposedLink {
 public:
     static NonnullRefPtr<ProcFSProcessBinary> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessBinary(parent_directory));
+        return adopt_ref(*new ProcFSProcessBinary(parent_directory));
     }
 
     virtual mode_t required_mode() const override

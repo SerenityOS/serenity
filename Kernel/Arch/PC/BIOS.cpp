@@ -21,7 +21,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<DMIEntryPointExposedBlob> DMIEntryPointExposedBlob::create(PhysicalAddress dmi_entry_point, size_t blob_size)
 {
-    return adopt_ref(*new (nothrow) DMIEntryPointExposedBlob(dmi_entry_point, blob_size));
+    return adopt_ref(*new DMIEntryPointExposedBlob(dmi_entry_point, blob_size));
 }
 
 UNMAP_AFTER_INIT BIOSSysFSComponent::BIOSSysFSComponent(String name)
@@ -59,7 +59,7 @@ OwnPtr<KBuffer> DMIEntryPointExposedBlob::try_to_generate_buffer() const
 
 UNMAP_AFTER_INIT NonnullRefPtr<SMBIOSExposedTable> SMBIOSExposedTable::create(PhysicalAddress smbios_structure_table, size_t smbios_structure_table_length)
 {
-    return adopt_ref(*new (nothrow) SMBIOSExposedTable(smbios_structure_table, smbios_structure_table_length));
+    return adopt_ref(*new SMBIOSExposedTable(smbios_structure_table, smbios_structure_table_length));
 }
 
 UNMAP_AFTER_INIT SMBIOSExposedTable::SMBIOSExposedTable(PhysicalAddress smbios_structure_table, size_t smbios_structure_table_length)
@@ -95,7 +95,7 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_32_bit_entry_initialization_va
 
 UNMAP_AFTER_INIT void BIOSSysFSDirectory::initialize()
 {
-    auto bios_directory = adopt_ref(*new (nothrow) BIOSSysFSDirectory());
+    auto bios_directory = adopt_ref(*new BIOSSysFSDirectory());
     SysFSComponentRegistry::the().register_new_component(bios_directory);
     bios_directory->create_components();
 }

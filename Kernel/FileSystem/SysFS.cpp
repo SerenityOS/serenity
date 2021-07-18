@@ -37,7 +37,7 @@ UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SysFSCompon
 
 NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
 {
-    return adopt_ref(*new (nothrow) SysFSRootDirectory);
+    return adopt_ref(*new SysFSRootDirectory);
 }
 
 KResult SysFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
@@ -63,7 +63,7 @@ SysFSRootDirectory::SysFSRootDirectory()
 
 NonnullRefPtr<SysFS> SysFS::create()
 {
-    return adopt_ref(*new (nothrow) SysFS);
+    return adopt_ref(*new SysFS);
 }
 
 SysFS::SysFS()
@@ -87,7 +87,7 @@ Inode& SysFS::root_inode()
 
 NonnullRefPtr<SysFSInode> SysFSInode::create(SysFS const& fs, SysFSComponent const& component)
 {
-    return adopt_ref(*new (nothrow) SysFSInode(fs, component));
+    return adopt_ref(*new SysFSInode(fs, component));
 }
 
 SysFSInode::SysFSInode(SysFS const& fs, SysFSComponent const& component)
@@ -165,7 +165,7 @@ KResult SysFSInode::truncate(u64)
 
 NonnullRefPtr<SysFSDirectoryInode> SysFSDirectoryInode::create(SysFS const& sysfs, SysFSComponent const& component)
 {
-    return adopt_ref(*new (nothrow) SysFSDirectoryInode(sysfs, component));
+    return adopt_ref(*new SysFSDirectoryInode(sysfs, component));
 }
 
 SysFSDirectoryInode::SysFSDirectoryInode(SysFS const& fs, SysFSComponent const& component)
@@ -217,7 +217,7 @@ void SysFSComponentRegistry::register_new_bus_directory(SysFSDirectory& new_bus_
 
 UNMAP_AFTER_INIT NonnullRefPtr<SysFSBusDirectory> SysFSBusDirectory::must_create(SysFSRootDirectory const& parent_directory)
 {
-    auto directory = adopt_ref(*new (nothrow) SysFSBusDirectory(parent_directory));
+    auto directory = adopt_ref(*new SysFSBusDirectory(parent_directory));
     return directory;
 }
 

@@ -13,7 +13,7 @@ static bool s_loopback_initialized = false;
 
 RefPtr<LoopbackAdapter> LoopbackAdapter::try_create()
 {
-    return adopt_ref_if_nonnull(new LoopbackAdapter());
+    return adopt_ref_if_nonnull(new (nothrow) LoopbackAdapter());
 }
 
 LoopbackAdapter::LoopbackAdapter()

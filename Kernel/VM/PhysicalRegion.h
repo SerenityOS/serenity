@@ -20,7 +20,7 @@ class PhysicalRegion {
 public:
     static OwnPtr<PhysicalRegion> try_create(PhysicalAddress lower, PhysicalAddress upper)
     {
-        return adopt_own_if_nonnull(new PhysicalRegion { lower, upper });
+        return adopt_own_if_nonnull(new (nothrow) PhysicalRegion { lower, upper });
     }
 
     ~PhysicalRegion();

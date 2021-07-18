@@ -197,7 +197,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSUDP> ProcFSUDP::must_create()
 
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSNetworkDirectory> ProcFSNetworkDirectory::must_create(const ProcFSRootDirectory& parent_directory)
 {
-    auto directory = adopt_ref(*new (nothrow) ProcFSNetworkDirectory(parent_directory));
+    auto directory = adopt_ref(*new ProcFSNetworkDirectory(parent_directory));
     directory->m_components.append(ProcFSAdapters::must_create());
     directory->m_components.append(ProcFSARP::must_create());
     directory->m_components.append(ProcFSTCP::must_create());
@@ -815,7 +815,7 @@ UNMAP_AFTER_INIT ProcFSProfile::ProcFSProfile()
 
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemDirectory> ProcFSSystemDirectory::must_create(const ProcFSRootDirectory& parent_directory)
 {
-    auto directory = adopt_ref(*new (nothrow) ProcFSSystemDirectory(parent_directory));
+    auto directory = adopt_ref(*new ProcFSSystemDirectory(parent_directory));
     directory->m_components.append(ProcFSDumpKmallocStacks::must_create(directory));
     directory->m_components.append(ProcFSUBSanDeadly::must_create(directory));
     directory->m_components.append(ProcFSCapsLockRemap::must_create(directory));
@@ -829,7 +829,7 @@ UNMAP_AFTER_INIT ProcFSSystemDirectory::ProcFSSystemDirectory(const ProcFSRootDi
 
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_create()
 {
-    auto directory = adopt_ref(*new (nothrow) ProcFSRootDirectory);
+    auto directory = adopt_ref(*new ProcFSRootDirectory);
     directory->m_components.append(ProcFSSelfProcessDirectory::must_create());
     directory->m_components.append(ProcFSDiskUsage::must_create());
     directory->m_components.append(ProcFSMemoryStatus::must_create());

@@ -370,7 +370,7 @@ void Capability::write32(u32 field, u32 value)
 
 UNMAP_AFTER_INIT NonnullRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirectory::create(const SysFSDirectory& parent_directory, Address address)
 {
-    return adopt_ref(*new (nothrow) PCIDeviceSysFSDirectory(parent_directory, address));
+    return adopt_ref(*new PCIDeviceSysFSDirectory(parent_directory, address));
 }
 
 UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(const SysFSDirectory& parent_directory, Address address)
@@ -388,7 +388,7 @@ UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(const SysFSDir
 
 UNMAP_AFTER_INIT void PCIBusSysFSDirectory::initialize()
 {
-    auto pci_directory = adopt_ref(*new (nothrow) PCIBusSysFSDirectory());
+    auto pci_directory = adopt_ref(*new PCIBusSysFSDirectory());
     SysFSComponentRegistry::the().register_new_component(pci_directory);
 }
 
@@ -403,7 +403,7 @@ UNMAP_AFTER_INIT PCIBusSysFSDirectory::PCIBusSysFSDirectory()
 
 NonnullRefPtr<PCIDeviceAttributeSysFSComponent> PCIDeviceAttributeSysFSComponent::create(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width)
 {
-    return adopt_ref(*new (nothrow) PCIDeviceAttributeSysFSComponent(name, device, offset, field_bytes_width));
+    return adopt_ref(*new PCIDeviceAttributeSysFSComponent(name, device, offset, field_bytes_width));
 }
 
 PCIDeviceAttributeSysFSComponent::PCIDeviceAttributeSysFSComponent(String name, const PCIDeviceSysFSDirectory& device, size_t offset, size_t field_bytes_width)

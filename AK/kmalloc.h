@@ -37,10 +37,19 @@ inline size_t malloc_good_size(size_t size) { return size; }
 #endif
 
 #ifdef KERNEL
-#    define AK_MAKE_ETERNAL                                               \
-    public:                                                               \
-        void* operator new(size_t size) { return kmalloc_eternal(size); } \
-                                                                          \
+#    define AK_MAKE_ETERNAL                                                           \
+    public:                                                                           \
+        [[nodiscard]] void* operator new(size_t size)                                 \
+        {                                                                             \
+            void* ptr = kmalloc_eternal(size);                                        \
+            VERIFY(ptr);                                                              \
+            return ptr;                                                               \
+        }                                                                             \
+        [[nodiscard]] void* operator new(size_t size, const std::nothrow_t&) noexcept \
+        {                                                                             \
+            return kmalloc_eternal(size);                                             \
+        }                                                                             \
+                                                                                      \
     private:
 #else
 #    define AK_MAKE_ETERNAL

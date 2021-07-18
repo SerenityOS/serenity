@@ -71,7 +71,7 @@ Inode& ProcFS::root_inode()
 
 NonnullRefPtr<ProcFSInode> ProcFSInode::create(const ProcFS& fs, const ProcFSExposedComponent& component)
 {
-    return adopt_ref(*new (nothrow) ProcFSInode(fs, component));
+    return adopt_ref(*new ProcFSInode(fs, component));
 }
 
 ProcFSInode::ProcFSInode(const ProcFS& fs, const ProcFSExposedComponent& component)
@@ -179,7 +179,7 @@ KResult ProcFSInode::truncate(u64)
 
 NonnullRefPtr<ProcFSDirectoryInode> ProcFSDirectoryInode::create(const ProcFS& procfs, const ProcFSExposedComponent& component)
 {
-    return adopt_ref(*new (nothrow) ProcFSDirectoryInode(procfs, component));
+    return adopt_ref(*new ProcFSDirectoryInode(procfs, component));
 }
 
 ProcFSDirectoryInode::ProcFSDirectoryInode(const ProcFS& fs, const ProcFSExposedComponent& component)
@@ -219,7 +219,7 @@ RefPtr<Inode> ProcFSDirectoryInode::lookup(StringView name)
 
 NonnullRefPtr<ProcFSLinkInode> ProcFSLinkInode::create(const ProcFS& procfs, const ProcFSExposedComponent& component)
 {
-    return adopt_ref(*new (nothrow) ProcFSLinkInode(procfs, component));
+    return adopt_ref(*new ProcFSLinkInode(procfs, component));
 }
 
 ProcFSLinkInode::ProcFSLinkInode(const ProcFS& fs, const ProcFSExposedComponent& component)
