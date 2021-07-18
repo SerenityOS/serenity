@@ -636,7 +636,7 @@ Region* MemoryManager::find_user_region_from_vaddr(Space& space, VirtualAddress 
     return find_user_region_from_vaddr_no_lock(space, vaddr);
 }
 
-void MemoryManager::validate_syscall_preconditions(Space& space, RegisterState& regs)
+void MemoryManager::validate_syscall_preconditions(Space& space, RegisterState const& regs)
 {
     // We take the space lock once here and then use the no_lock variants
     // to avoid excessive spinlock recursion in this extemely common path.
