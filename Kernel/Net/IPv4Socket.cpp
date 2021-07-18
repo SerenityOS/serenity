@@ -26,11 +26,11 @@
 
 namespace Kernel {
 
-static AK::Singleton<Lockable<HashTable<IPv4Socket*>>> s_table;
+static AK::Singleton<ProtectedValue<HashTable<IPv4Socket*>>> s_table;
 
 using BlockFlags = Thread::FileDescriptionBlocker::BlockFlags;
 
-Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
+ProtectedValue<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {
     return *s_table;
 }
@@ -77,14 +77,17 @@ IPv4Socket::IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> recei
     if (m_buffer_mode == BufferMode::Bytes) {
         VERIFY(m_scratch_buffer);
     }
-    MutexLocker locker(all_sockets().lock());
-    all_sockets().resource().set(this);
+
+    all_sockets().with_exclusive([&](auto& table) {
+        table.set(this);
+    });
 }
 
 IPv4Socket::~IPv4Socket()
 {
-    MutexLocker locker(all_sockets().lock());
-    all_sockets().resource().remove(this);
+    all_sockets().with_exclusive([&](auto& table) {
+        table.remove(this);
+    });
 }
 
 void IPv4Socket::get_local_address(sockaddr* address, socklen_t* address_size)

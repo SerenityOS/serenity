@@ -10,7 +10,7 @@
 #include <AK/SinglyLinkedListWithCount.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/KBuffer.h>
-#include <Kernel/Locking/Lockable.h>
+#include <Kernel/Locking/ProtectedValue.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/IPv4SocketTuple.h>
 #include <Kernel/Net/Socket.h>
@@ -31,7 +31,7 @@ public:
     static KResultOr<NonnullRefPtr<Socket>> create(int type, int protocol);
     virtual ~IPv4Socket() override;
 
-    static Lockable<HashTable<IPv4Socket*>>& all_sockets();
+    static ProtectedValue<HashTable<IPv4Socket*>>& all_sockets();
 
     virtual KResult close() override;
     virtual KResult bind(Userspace<const sockaddr*>, socklen_t) override;

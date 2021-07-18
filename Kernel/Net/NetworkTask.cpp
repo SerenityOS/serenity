@@ -223,14 +223,10 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
 
     {
         NonnullRefPtrVector<IPv4Socket> icmp_sockets;
-        {
-            MutexLocker locker(IPv4Socket::all_sockets().lock(), Mutex::Mode::Shared);
-            for (auto* socket : IPv4Socket::all_sockets().resource()) {
-                if (socket->protocol() != (unsigned)IPv4Protocol::ICMP)
-                    continue;
+        IPv4Socket::all_sockets().for_each_shared([&](const auto& socket) {
+            if (socket->protocol() == (unsigned)IPv4Protocol::ICMP)
                 icmp_sockets.append(*socket);
-            }
-        }
+        });
         for (auto& socket : icmp_sockets)
             socket.did_receive(ipv4_packet.source(), 0, { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
     }
