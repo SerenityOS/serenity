@@ -44,6 +44,21 @@ private:
     double m_nanoseconds;  // [[Nanoseconds]]
 };
 
+// Used by ToTemporalDurationRecord to temporarily hold values
+struct TemporalDuration {
+    double years;
+    double months;
+    double weeks;
+    double days;
+    double hours;
+    double minutes;
+    double seconds;
+    double milliseconds;
+    double microseconds;
+    double nanoseconds;
+};
+
+// Used by ToPartialDuration to temporarily hold values
 struct PartialDuration {
     Optional<double> years;
     Optional<double> months;
@@ -82,6 +97,8 @@ auto temporal_duration_like_properties = [](VM& vm) {
     };
 };
 
+Duration* to_temporal_duration(GlobalObject&, Value item);
+TemporalDuration to_temporal_duration_record(GlobalObject&, Object& temporal_duration_like);
 i8 duration_sign(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 bool is_valid_duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 PartialDuration to_partial_duration(GlobalObject&, Value temporal_duration_like);
