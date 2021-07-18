@@ -83,6 +83,7 @@ public:
 
     const u32* code_points() const { return m_code_points; }
     bool is_empty() const { return m_length == 0; }
+    bool is_null() const { return !m_code_points; }
     size_t length() const { return m_length; }
 
     size_t iterator_offset(const Utf32CodePointIterator& it) const
