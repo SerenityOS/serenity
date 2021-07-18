@@ -99,34 +99,34 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
     }
 
     if (c_match_preallocation_count) {
-        output.matches.ensure_capacity(c_match_preallocation_count);
-        output.capture_group_matches.ensure_capacity(c_match_preallocation_count);
-        output.named_capture_group_matches.ensure_capacity(c_match_preallocation_count);
+        state.matches.ensure_capacity(c_match_preallocation_count);
+        state.capture_group_matches.ensure_capacity(c_match_preallocation_count);
+        state.named_capture_group_matches.ensure_capacity(c_match_preallocation_count);
 
         auto& capture_groups_count = m_pattern.parser_result.capture_groups_count;
         auto& named_capture_groups_count = m_pattern.parser_result.named_capture_groups_count;
 
         for (size_t j = 0; j < c_match_preallocation_count; ++j) {
-            output.matches.empend();
-            output.capture_group_matches.unchecked_append({});
-            output.capture_group_matches.at(j).ensure_capacity(capture_groups_count);
+            state.matches.empend();
+            state.capture_group_matches.unchecked_append({});
+            state.capture_group_matches.at(j).ensure_capacity(capture_groups_count);
             for (size_t k = 0; k < capture_groups_count; ++k)
-                output.capture_group_matches.at(j).unchecked_append({});
+                state.capture_group_matches.at(j).unchecked_append({});
 
-            output.named_capture_group_matches.unchecked_append({});
-            output.named_capture_group_matches.at(j).ensure_capacity(named_capture_groups_count);
+            state.named_capture_group_matches.unchecked_append({});
+            state.named_capture_group_matches.at(j).ensure_capacity(named_capture_groups_count);
         }
     }
 
-    auto append_match = [](auto& input, auto& state, auto& output, auto& start_position) {
-        if (output.matches.size() == input.match_index)
-            output.matches.empend();
+    auto append_match = [](auto& input, auto& state, auto& start_position) {
+        if (state.matches.size() == input.match_index)
+            state.matches.empend();
 
         VERIFY(start_position + state.string_position - start_position <= input.view.length());
         if (input.regex_options.has_flag_set(AllFlags::StringCopyMatches)) {
-            output.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position).to_string(), input.line, start_position, input.global_offset + start_position };
+            state.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position).to_string(), input.line, start_position, input.global_offset + start_position };
         } else { // let the view point to the original string ...
-            output.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position), input.line, start_position, input.global_offset + start_position };
+            state.matches.at(input.match_index) = { input.view.substring_view(start_position, state.string_position - start_position), input.line, start_position, input.global_offset + start_position };
         }
     };
 
@@ -171,7 +171,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                     output = move(temp_output);
                     if (!match_count) {
                         // Nothing was *actually* matched, so append an empty match.
-                        append_match(input, state, output, view_index);
+                        append_match(input, state, view_index);
                         ++match_count;
                     }
                 }
@@ -219,21 +219,21 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                 ++match_count;
 
                 if (continue_search) {
-                    append_match(input, state, output, view_index);
+                    append_match(input, state, view_index);
 
                     bool has_zero_length = state.string_position == view_index;
                     view_index = state.string_position - (has_zero_length ? 0 : 1);
                     continue;
 
                 } else if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
-                    append_match(input, state, output, view_index);
+                    append_match(input, state, view_index);
                     break;
 
                 } else if (state.string_position < view_length) {
                     return { false, 0, {}, {}, {}, output.operations };
                 }
 
-                append_match(input, state, output, view_index);
+                append_match(input, state, view_index);
                 break;
             }
 
@@ -253,7 +253,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 
     MatchOutput output_copy;
     if (match_count) {
-        output_copy.capture_group_matches = output.capture_group_matches;
+        output_copy.capture_group_matches = state.capture_group_matches;
         // Make sure there are as many capture matches as there are actual matches.
         if (output_copy.capture_group_matches.size() < match_count)
             output_copy.capture_group_matches.resize(match_count);
@@ -264,12 +264,12 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                 matches.template remove_all_matching([](auto& match) { return match.view.is_null(); });
         }
 
-        output_copy.named_capture_group_matches = output.named_capture_group_matches;
+        output_copy.named_capture_group_matches = state.named_capture_group_matches;
         // Make sure there are as many capture matches as there are actual matches.
         if (output_copy.named_capture_group_matches.size() < match_count)
             output_copy.named_capture_group_matches.resize(match_count);
 
-        output_copy.matches = output.matches;
+        output_copy.matches = state.matches;
     } else {
         output_copy.capture_group_matches.clear_with_capacity();
         output_copy.named_capture_group_matches.clear_with_capacity();

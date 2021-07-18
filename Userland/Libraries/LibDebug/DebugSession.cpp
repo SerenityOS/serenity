@@ -422,7 +422,7 @@ void DebugSession::update_loaded_libs()
         auto rc = re.search(vm_name, result);
         if (!rc)
             return {};
-        auto lib_name = result.capture_group_matches.at(0).at(0).view.u8view().to_string();
+        auto lib_name = result.capture_group_matches.at(0).at(0).view.string_view().to_string();
         if (lib_name.starts_with("/"))
             return lib_name;
         return String::formatted("/usr/lib/{}", lib_name);

@@ -359,7 +359,7 @@ String CppComprehensionEngine::document_path_from_include_path(const StringView&
         if (!library_include.search(include_path, result))
             return {};
 
-        auto path = result.capture_group_matches.at(0).at(0).view.u8view();
+        auto path = result.capture_group_matches.at(0).at(0).view.string_view();
         return String::formatted("/usr/include/{}", path);
     };
 
@@ -368,7 +368,7 @@ String CppComprehensionEngine::document_path_from_include_path(const StringView&
         if (!user_defined_include.search(include_path, result))
             return {};
 
-        return result.capture_group_matches.at(0).at(0).view.u8view();
+        return result.capture_group_matches.at(0).at(0).view.string_view();
     };
 
     auto result = document_path_for_library_include(include_path);
