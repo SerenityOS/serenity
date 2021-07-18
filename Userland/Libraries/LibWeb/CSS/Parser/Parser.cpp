@@ -1271,17 +1271,36 @@ Optional<float> Parser::try_parse_float(StringView string)
     return is_negative ? -value : value;
 }
 
-RefPtr<StyleValue> Parser::parse_single_css_value(PropertyID property_id, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_keyword_or_custom_value(ParsingContext const&, StyleComponentValueRule const& component_value)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_single_css_value '{}'", component_value.to_debug_string());
-    // FIXME: This is mostly copied from the old, deprecated parser. It is probably not to spec.
+    if (component_value.is(Token::Type::Ident)) {
+        auto ident = component_value.token().ident();
+        if (ident.equals_ignoring_case("inherit"))
+            return InheritStyleValue::create();
+        if (ident.equals_ignoring_case("initial"))
+            return InitialStyleValue::create();
+        if (ident.equals_ignoring_case("auto"))
+            return LengthStyleValue::create(Length::make_auto());
+        // FIXME: Implement `unset` keyword
+    }
 
-    auto takes_integer_value = [](PropertyID property_id) -> bool {
-        return property_id == PropertyID::ZIndex
-            || property_id == PropertyID::FontWeight
-            || property_id == PropertyID::Custom;
-    };
+    if (component_value.is_function() && component_value.function().name().equals_ignoring_case("var")) {
+        // FIXME: Handle fallback value as second parameter
+        // https://www.w3.org/TR/css-variables-1/#using-variables
+        if (!component_value.function().values().is_empty()) {
+            auto& property_name_token = component_value.function().values().first();
+            if (property_name_token.is(Token::Type::Ident))
+                return CustomStyleValue::create(property_name_token.token().ident());
+            else
+                dbgln("First argument to var() function was not an ident: '{}'", property_name_token.to_debug_string());
+        }
+    }
 
+    return {};
+}
+
+RefPtr<StyleValue> Parser::parse_length_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
+{
     auto parse_length = [&]() -> Optional<Length> {
         Length::Type type = Length::Type::Undefined;
         Optional<float> numeric_value;
@@ -1320,7 +1339,7 @@ RefPtr<StyleValue> Parser::parse_single_css_value(PropertyID property_id, StyleC
                 type = Length::Type::In;
             } else if (unit_string.equals_ignoring_case("Q")) {
                 type = Length::Type::Q;
-            } else if (m_context.in_quirks_mode()) {
+            } else if (context.in_quirks_mode()) {
                 type = Length::Type::Px;
             }
 
@@ -1330,10 +1349,14 @@ RefPtr<StyleValue> Parser::parse_single_css_value(PropertyID property_id, StyleC
             if (value_string == "0") {
                 type = Length::Type::Px;
                 numeric_value = 0;
-            } else if (m_context.in_quirks_mode()) {
+            } else if (context.in_quirks_mode()) {
                 type = Length::Type::Px;
                 numeric_value = try_parse_float(value_string);
             }
+        } else if (component_value.is(Token::Type::Percentage)) {
+            type = Length::Type::Percentage;
+            auto value_string = component_value.token().m_value.string_view();
+            numeric_value = try_parse_float(value_string);
         }
 
         if (!numeric_value.has_value())
@@ -1342,53 +1365,46 @@ RefPtr<StyleValue> Parser::parse_single_css_value(PropertyID property_id, StyleC
         return Length(numeric_value.value(), type);
     };
 
-    if (takes_integer_value(property_id) && component_value.is(Token::Type::Number)) {
-        auto number = component_value.token();
-        if (number.m_number_type == Token::NumberType::Integer) {
-            return LengthStyleValue::create(Length::make_px(number.integer()));
-        }
-    }
-
-    if (component_value.is(Token::Type::Dimension) || component_value.is(Token::Type::Number)) {
+    if (component_value.is(Token::Type::Dimension) || component_value.is(Token::Type::Number) || component_value.is(Token::Type::Percentage)) {
         auto length = parse_length();
         if (length.has_value())
             return LengthStyleValue::create(length.value());
-
-        auto value_string = component_value.token().m_value.string_view();
-        auto float_number = try_parse_float(value_string);
-        if (float_number.has_value())
-            return NumericStyleValue::create(float_number.value());
-        return nullptr;
     }
 
-    if (component_value.is(Token::Type::Ident)) {
-        auto ident = component_value.token().ident();
-        if (ident.equals_ignoring_case("inherit"))
-            return InheritStyleValue::create();
-        if (ident.equals_ignoring_case("initial"))
-            return InitialStyleValue::create();
-        if (ident.equals_ignoring_case("auto"))
-            return LengthStyleValue::create(Length::make_auto());
-    }
+    return {};
+}
 
-    if (component_value.is_function() && component_value.function().name().equals_ignoring_case("var")) {
-        // FIXME: Handle fallback value as second parameter
-        // https://www.w3.org/TR/css-variables-1/#using-variables
-        if (!component_value.function().values().is_empty()) {
-            auto& property_name_token = component_value.function().values().first();
-            if (property_name_token.is(Token::Type::Ident))
-                return CustomStyleValue::create(property_name_token.token().ident());
-            else
-                dbgln("First argument to var() function was not an ident: '{}'", property_name_token.to_debug_string());
+RefPtr<StyleValue> Parser::parse_numeric_value(ParsingContext const&, StyleComponentValueRule const& component_value)
+{
+    if (component_value.is(Token::Type::Number)) {
+        auto number = component_value.token();
+        if (number.m_number_type == Token::NumberType::Integer) {
+            // FIXME: This seems wrong, but it's how the old parser did things, as well as it
+            // whitelisting ZIndex, FontWeight and Custom PropertyIDs to allow this.
+            return LengthStyleValue::create(Length::make_px(number.integer()));
+        } else {
+            auto float_value = try_parse_float(number.m_value.string_view());
+            if (float_value.has_value())
+                return NumericStyleValue::create(float_value.value());
         }
     }
 
+    return {};
+}
+
+RefPtr<StyleValue> Parser::parse_identifier_value(ParsingContext const&, StyleComponentValueRule const& component_value)
+{
     if (component_value.is(Token::Type::Ident)) {
         auto value_id = value_id_from_string(component_value.token().ident());
         if (value_id != ValueID::Invalid)
             return IdentifierStyleValue::create(value_id);
     }
 
+    return {};
+}
+
+RefPtr<StyleValue> Parser::parse_color_value(ParsingContext const&, StyleComponentValueRule const& component_value)
+{
     auto parse_css_color = [&]() -> Optional<Color> {
         if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("transparent"))
             return Color::from_rgba(0x00000000);
@@ -1408,6 +1424,11 @@ RefPtr<StyleValue> Parser::parse_single_css_value(PropertyID property_id, StyleC
     if (color.has_value())
         return ColorStyleValue::create(color.value());
 
+    return {};
+}
+
+RefPtr<StyleValue> Parser::parse_string_value(ParsingContext const&, StyleComponentValueRule const& component_value)
+{
     if (component_value.is(Token::Type::String))
         return StringStyleValue::create(component_value.token().string());
 
@@ -1438,9 +1459,48 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         return {};
 
     if (component_values.size() == 1)
-        return parse_single_css_value(property_id, component_values.first());
+        return parse_css_value(m_context, property_id, component_values.first());
 
     return ValueListStyleValue::create(move(component_values));
+}
+
+RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, PropertyID property_id, StyleComponentValueRule const& component_value)
+{
+    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_css_value '{}'", component_value.to_debug_string());
+
+    // FIXME: Figure out if we still need takes_integer_value, and if so, move this information
+    // into Properties.json.
+    auto takes_integer_value = [](PropertyID property_id) -> bool {
+        return property_id == PropertyID::ZIndex
+            || property_id == PropertyID::FontWeight
+            || property_id == PropertyID::Custom;
+    };
+    if (takes_integer_value(property_id) && component_value.is(Token::Type::Number)) {
+        auto number = component_value.token();
+        if (number.m_number_type == Token::NumberType::Integer) {
+            return LengthStyleValue::create(Length::make_px(number.integer()));
+        }
+    }
+
+    if (auto keyword_or_custom = parse_keyword_or_custom_value(context, component_value))
+        return keyword_or_custom;
+
+    if (auto length = parse_length_value(context, component_value))
+        return length;
+
+    if (auto numeric = parse_numeric_value(context, component_value))
+        return numeric;
+
+    if (auto identifier = parse_identifier_value(context, component_value))
+        return identifier;
+
+    if (auto color = parse_color_value(context, component_value))
+        return color;
+
+    if (auto string = parse_string_value(context, component_value))
+        return string;
+
+    return {};
 }
 
 Optional<Selector::SimpleSelector::NthChildPattern> Parser::parse_nth_child_pattern(TokenStream<StyleComponentValueRule>& values)
