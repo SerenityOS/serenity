@@ -54,7 +54,7 @@ enum class NeedsBigProcessLock {
     S(geteuid, NeedsBigProcessLock::Yes)                    \
     S(getegid, NeedsBigProcessLock::Yes)                    \
     S(getgid, NeedsBigProcessLock::Yes)                     \
-    S(getpid, NeedsBigProcessLock::Yes)                     \
+    S(getpid, NeedsBigProcessLock::No)                      \
     S(getppid, NeedsBigProcessLock::Yes)                    \
     S(getresuid, NeedsBigProcessLock::Yes)                  \
     S(getresgid, NeedsBigProcessLock::Yes)                  \
