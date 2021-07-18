@@ -6,11 +6,14 @@
 
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
+#include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
+
+extern u8* end_of_kernel_image;
 
 namespace Kernel {
 
@@ -28,16 +31,19 @@ RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
     return cr3_map().get(cr3).value_or({});
 }
 
+extern "C" FlatPtr kernel_base;
 #if ARCH(X86_64)
-extern "C" PageDirectoryEntry boot_pml4t[1024];
+extern "C" void* boot_pml4t;
 #endif
-extern "C" PageDirectoryEntry* boot_pdpt[4];
-extern "C" PageDirectoryEntry boot_pd0[1024];
-extern "C" PageDirectoryEntry boot_pd3[1024];
+extern "C" void* boot_pdpt;
+extern "C" void* boot_pd0;
+extern "C" void* boot_pd_kernel;
 
 UNMAP_AFTER_INIT PageDirectory::PageDirectory()
 {
-    m_range_allocator.initialize_with_range(VirtualAddress(KERNEL_BASE + KERNEL_PD_OFFSET), KERNEL_PD_END - (KERNEL_BASE + KERNEL_PD_OFFSET));
+    // make sure this starts in a new page directory to make MemoryManager::initialize_physical_pages() happy
+    FlatPtr start_of_range = ((FlatPtr)&end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000;
+    m_range_allocator.initialize_with_range(VirtualAddress(start_of_range), KERNEL_PD_END - start_of_range);
     m_identity_range_allocator.initialize_with_range(VirtualAddress(FlatPtr(0x00000000)), 0x00200000);
 }
 
@@ -51,13 +57,13 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 #endif
     PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((FlatPtr)boot_pdpt));
     PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((FlatPtr)boot_pd0));
-    PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((FlatPtr)boot_pd3));
+    PhysicalAddress boot_pd_kernel_paddr(virtual_to_low_physical((FlatPtr)boot_pd_kernel));
     dmesgln("MM: boot_pdpt @ {}", boot_pdpt_paddr);
     dmesgln("MM: boot_pd0 @ {}", boot_pd0_paddr);
-    dmesgln("MM: boot_pd3 @ {}", boot_pd3_paddr);
+    dmesgln("MM: boot_pd_kernel @ {}", boot_pd_kernel_paddr);
     m_directory_table = PhysicalPage::create(boot_pdpt_paddr, MayReturnToFreeList::No);
     m_directory_pages[0] = PhysicalPage::create(boot_pd0_paddr, MayReturnToFreeList::No);
-    m_directory_pages[3] = PhysicalPage::create(boot_pd3_paddr, MayReturnToFreeList::No);
+    m_directory_pages[(kernel_base >> 30) & 0x1ff] = PhysicalPage::create(boot_pd_kernel_paddr, MayReturnToFreeList::No);
 }
 
 PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
@@ -83,15 +89,13 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
     m_directory_table = MM.allocate_user_physical_page();
     if (!m_directory_table)
         return;
-    auto kernel_pd_index = (KERNEL_BASE >> 30) & 0xffu;
-    for (size_t i = 0; i < 4; i++) {
-        if (i == kernel_pd_index)
-            continue;
+    auto kernel_pd_index = (kernel_base >> 30) & 0x1ffu;
+    for (size_t i = 0; i < kernel_pd_index; i++) {
         m_directory_pages[i] = MM.allocate_user_physical_page();
         if (!m_directory_pages[i])
             return;
     }
-    // Share the top 1 GiB of kernel-only mappings (>=3GiB or >=KERNEL_BASE)
+    // Share the top 1 GiB of kernel-only mappings (>=kernel_base)
     m_directory_pages[kernel_pd_index] = MM.kernel_page_directory().m_directory_pages[kernel_pd_index];
 
 #if ARCH(X86_64)

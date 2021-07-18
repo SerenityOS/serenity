@@ -22,6 +22,8 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
+extern u8* start_of_bootloader_image;
+extern u8* end_of_bootloader_image;
 extern u8* start_of_kernel_image;
 extern u8* end_of_kernel_image;
 extern FlatPtr start_of_kernel_text;
@@ -33,6 +35,9 @@ extern FlatPtr start_of_unmap_after_init;
 extern FlatPtr end_of_unmap_after_init;
 extern FlatPtr start_of_kernel_ksyms;
 extern FlatPtr end_of_kernel_ksyms;
+
+extern "C" void* boot_pd_kernel;
+extern "C" void* boot_pd_kernel_pt1023;
 
 extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 extern size_t multiboot_copy_boot_modules_count;
@@ -196,6 +201,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     // Register used memory regions that we know of.
     m_used_memory_ranges.ensure_capacity(4);
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
+    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Bootloader, PhysicalAddress(virtual_to_low_physical(FlatPtr(start_of_bootloader_image))), PhysicalAddress(page_round_up(virtual_to_low_physical(FlatPtr(end_of_bootloader_image)))) });
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical(FlatPtr(&start_of_kernel_image))), PhysicalAddress(page_round_up(virtual_to_low_physical(FlatPtr(&end_of_kernel_image)))) });
 
     if (multiboot_info_ptr->flags & 0x4) {
@@ -334,8 +340,6 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     }
 }
 
-extern "C" PageDirectoryEntry boot_pd3[1024];
-
 UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
 {
     // We assume that the physical page range is contiguous and doesn't contain huge gaps!
@@ -436,10 +440,10 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         unquickmap_page();
 
         // Hook the page table into the kernel page directory
-        PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((FlatPtr)boot_pd3));
+        PhysicalAddress boot_pd_kernel_paddr(virtual_to_low_physical((FlatPtr)boot_pd_kernel));
 
         u32 page_directory_index = (virtual_page_base_for_this_pt >> 21) & 0x1ff;
-        auto* pd = reinterpret_cast<PageDirectoryEntry*>(quickmap_page(boot_pd3_paddr));
+        auto* pd = reinterpret_cast<PageDirectoryEntry*>(quickmap_page(boot_pd_kernel_paddr));
         PageDirectoryEntry& pde = pd[page_directory_index];
 
         VERIFY(!pde.is_present()); // Nothing should be using this PD yet
@@ -909,7 +913,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
         return {};
     }
 
-    fast_u32_fill((u32*)page->paddr().offset(KERNEL_BASE).as_ptr(), 0, PAGE_SIZE / sizeof(u32));
+    fast_u32_fill((u32*)page->paddr().offset(kernel_base).as_ptr(), 0, PAGE_SIZE / sizeof(u32));
     ++m_system_memory_info.super_physical_pages_used;
     return page;
 }
@@ -939,13 +943,11 @@ void MemoryManager::flush_tlb(PageDirectory const* page_directory, VirtualAddres
     Processor::flush_tlb(page_directory, vaddr, page_count);
 }
 
-extern "C" PageTableEntry boot_pd3_pt1023[1024];
-
 PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t pdpt_index)
 {
     VERIFY(s_mm_lock.own_lock());
     auto& mm_data = get_data();
-    auto& pte = boot_pd3_pt1023[(KERNEL_QUICKMAP_PD - KERNEL_PT1024_BASE) / PAGE_SIZE];
+    auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[(KERNEL_QUICKMAP_PD - KERNEL_PT1024_BASE) / PAGE_SIZE];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
     if (pte.physical_page_base() != pd_paddr.get()) {
         pte.set_physical_page_base(pd_paddr.get());
@@ -971,7 +973,7 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
     VERIFY(s_mm_lock.own_lock());
     auto& mm_data = get_data();
-    auto& pte = boot_pd3_pt1023[(KERNEL_QUICKMAP_PT - KERNEL_PT1024_BASE) / PAGE_SIZE];
+    auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[(KERNEL_QUICKMAP_PT - KERNEL_PT1024_BASE) / PAGE_SIZE];
     if (pte.physical_page_base() != pt_paddr.get()) {
         pte.set_physical_page_base(pt_paddr.get());
         pte.set_present(true);
@@ -1002,7 +1004,7 @@ u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
     VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::id() * PAGE_SIZE);
     u32 pte_idx = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
 
-    auto& pte = boot_pd3_pt1023[pte_idx];
+    auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[pte_idx];
     if (pte.physical_page_base() != physical_address.get()) {
         pte.set_physical_page_base(physical_address.get());
         pte.set_present(true);
@@ -1021,7 +1023,7 @@ void MemoryManager::unquickmap_page()
     VERIFY(mm_data.m_quickmap_in_use.is_locked());
     VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::id() * PAGE_SIZE);
     u32 pte_idx = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
-    auto& pte = boot_pd3_pt1023[pte_idx];
+    auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[pte_idx];
     pte.clear();
     flush_tlb_local(vaddr);
     mm_data.m_quickmap_in_use.unlock(mm_data.m_quickmap_prev_flags);
