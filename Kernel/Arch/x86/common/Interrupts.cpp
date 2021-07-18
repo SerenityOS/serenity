@@ -228,13 +228,7 @@ void handle_crash(RegisterState& regs, const char* description, int signal, bool
         PANIC("Crash in ring 0");
     }
 
-    FlatPtr ip;
-#if ARCH(I386)
-    ip = regs.eip;
-#else
-    ip = regs.rip;
-#endif
-    process->crash(signal, ip, out_of_memory);
+    process->crash(signal, regs.ip(), out_of_memory);
 }
 
 EH_ENTRY_NO_CODE(6, illegal_instruction);
@@ -316,12 +310,7 @@ void page_fault_handler(TrapFrame* trap)
             current_thread->set_handling_page_fault(false);
     };
 
-    VirtualAddress userspace_sp;
-#if ARCH(I386)
-    userspace_sp = VirtualAddress { regs.userspace_esp };
-#else
-    userspace_sp = VirtualAddress { regs.userspace_rsp };
-#endif
+    VirtualAddress userspace_sp = VirtualAddress { regs.userspace_sp() };
     if (!faulted_in_kernel && !MM.validate_user_stack(current_thread->process(), userspace_sp)) {
         dbgln("Invalid stack pointer: {}", userspace_sp);
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);

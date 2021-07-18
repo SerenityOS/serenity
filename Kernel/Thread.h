@@ -108,6 +108,24 @@ struct ThreadRegisters {
     FlatPtr rflags;
 #endif
     FlatPtr cr3;
+
+    FlatPtr ip() const
+    {
+#if ARCH(I386)
+        return eip;
+#else
+        return rip;
+#endif
+    }
+
+    FlatPtr sp() const
+    {
+#if ARCH(I386)
+        return esp;
+#else
+        return rsp;
+#endif
+    }
 };
 
 class Thread

@@ -13,12 +13,7 @@ namespace Kernel {
 KResultOr<FlatPtr> Process::sys$get_stack_bounds(Userspace<FlatPtr*> user_stack_base, Userspace<size_t*> user_stack_size)
 {
     auto& regs = Thread::current()->get_register_dump_from_stack();
-    FlatPtr stack_pointer;
-#if ARCH(I386)
-    stack_pointer = regs.userspace_esp;
-#else
-    stack_pointer = regs.userspace_rsp;
-#endif
+    FlatPtr stack_pointer = regs.userspace_sp();
     auto* stack_region = space().find_region_containing(Range { VirtualAddress(stack_pointer), 1 });
 
     // The syscall handler should have killed us if we had an invalid stack pointer.
