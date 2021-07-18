@@ -22,8 +22,8 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
-extern u8* start_of_bootloader_image;
-extern u8* end_of_bootloader_image;
+extern u8* start_of_prekernel_image;
+extern u8* end_of_prekernel_image;
 extern u8* start_of_kernel_image;
 extern u8* end_of_kernel_image;
 extern FlatPtr start_of_kernel_text;
@@ -201,7 +201,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     // Register used memory regions that we know of.
     m_used_memory_ranges.ensure_capacity(4);
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
-    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Bootloader, PhysicalAddress(virtual_to_low_physical(FlatPtr(start_of_bootloader_image))), PhysicalAddress(page_round_up(virtual_to_low_physical(FlatPtr(end_of_bootloader_image)))) });
+    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Prekernel, PhysicalAddress(virtual_to_low_physical(FlatPtr(start_of_prekernel_image))), PhysicalAddress(page_round_up(virtual_to_low_physical(FlatPtr(end_of_prekernel_image)))) });
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical(FlatPtr(&start_of_kernel_image))), PhysicalAddress(page_round_up(virtual_to_low_physical(FlatPtr(&end_of_kernel_image)))) });
 
     if (multiboot_info_ptr->flags & 0x4) {

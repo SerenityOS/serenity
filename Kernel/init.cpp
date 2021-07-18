@@ -106,8 +106,8 @@ static Processor s_bsp_processor; // global but let's keep it "private"
 // init_stage2() function. Initialization continues there.
 
 extern "C" {
-u8 const* start_of_bootloader_image;
-u8 const* end_of_bootloader_image;
+u8 const* start_of_prekernel_image;
+u8 const* end_of_prekernel_image;
 __attribute__((section(".boot_bss"))) FlatPtr kernel_base;
 #if ARCH(X86_64)
 extern "C" u32 gdt64ptr;
@@ -127,8 +127,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     setup_serial_debug();
 
     multiboot_info_ptr = boot_info.multiboot_info_ptr;
-    start_of_bootloader_image = boot_info.start_of_prekernel_image;
-    end_of_bootloader_image = boot_info.end_of_prekernel_image;
+    start_of_prekernel_image = boot_info.start_of_prekernel_image;
+    end_of_prekernel_image = boot_info.end_of_prekernel_image;
     kernel_base = boot_info.kernel_base;
 #if ARCH(X86_64)
     gdt64ptr = boot_info.gdt64ptr;
