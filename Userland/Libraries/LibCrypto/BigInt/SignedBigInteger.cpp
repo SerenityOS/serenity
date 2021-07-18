@@ -280,9 +280,19 @@ bool SignedBigInteger::operator<(const SignedBigInteger& other) const
     return m_unsigned_data < other.m_unsigned_data;
 }
 
+bool SignedBigInteger::operator<=(const SignedBigInteger& other) const
+{
+    return *this < other || *this == other;
+}
+
 bool SignedBigInteger::operator>(const SignedBigInteger& other) const
 {
     return *this != other && !(*this < other);
+}
+
+bool SignedBigInteger::operator>=(const SignedBigInteger& other) const
+{
+    return !(*this < other);
 }
 
 }
