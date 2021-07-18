@@ -81,6 +81,14 @@ public:
         return { end_ptr(), 0 };
     }
 
+    u32 at(size_t index) const
+    {
+        VERIFY(index < m_length);
+        return m_code_points[index];
+    }
+
+    u32 operator[](size_t index) const { return at(index); }
+
     const u32* code_points() const { return m_code_points; }
     bool is_empty() const { return m_length == 0; }
     bool is_null() const { return !m_code_points; }
