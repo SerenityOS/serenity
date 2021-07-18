@@ -13,7 +13,7 @@
 
 namespace JS::Temporal {
 
-// 2 The Temporal.now Object, https://tc39.es/proposal-temporal/#sec-temporal-now-object
+// 2 The Temporal.Now Object, https://tc39.es/proposal-temporal/#sec-temporal-now-object
 Now::Now(GlobalObject& global_object)
     : Object(*global_object.object_prototype())
 {
@@ -30,14 +30,14 @@ void Now::initialize(GlobalObject& global_object)
     define_native_function(vm.names.instant, instant, 0, attr);
 }
 
-// 2.1.1 Temporal.now.timeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.timezone
+// 2.1.1 Temporal.Now.timeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.timezone
 JS_DEFINE_NATIVE_FUNCTION(Now::time_zone)
 {
     // 1. Return ! SystemTimeZone().
     return system_time_zone(global_object);
 }
 
-// 2.1.2 Temporal.now.instant ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.instant
+// 2.1.2 Temporal.Now.instant ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.instant
 JS_DEFINE_NATIVE_FUNCTION(Now::instant)
 {
     // 1. Return ! SystemInstant().

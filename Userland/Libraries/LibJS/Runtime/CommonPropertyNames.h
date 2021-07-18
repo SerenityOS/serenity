@@ -37,6 +37,7 @@ namespace JS {
     P(Math)                                  \
     P(NEGATIVE_INFINITY)                     \
     P(NaN)                                   \
+    P(Now)                                   \
     P(Number)                                \
     P(PI)                                    \
     P(POSITIVE_INFINITY)                     \
