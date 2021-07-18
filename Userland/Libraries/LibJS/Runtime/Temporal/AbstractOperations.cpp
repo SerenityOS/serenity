@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/DateTimeLexer.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
+#include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
@@ -301,6 +303,7 @@ Optional<ISODateTime> parse_iso_date_time(GlobalObject& global_object, [[maybe_u
     Optional<StringView> fraction_part;
     Optional<StringView> calendar_part;
     TODO();
+
     // 3. Let year be the part of isoString produced by the DateYear production.
     // 4. If the first code unit of year is 0x2212 (MINUS SIGN), replace it with the code unit 0x002D (HYPHEN-MINUS).
     String normalized_year;
@@ -420,10 +423,19 @@ Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_obj
     return TemporalInstant { .year = result->year, .month = result->month, .day = result->day, .hour = result->hour, .minute = result->minute, .second = result->second, .millisecond = result->millisecond, .microsecond = result->microsecond, .nanosecond = result->nanosecond, .time_zone_offset = move(time_zone_result->offset) };
 }
 
+// 13.40 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
+Optional<TemporalDuration> parse_temporal_duration_string(GlobalObject& global_object, String const& iso_string)
+{
+    (void)global_object;
+    (void)iso_string;
+    TODO();
+}
+
 // 13.43 ParseTemporalTimeZoneString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
 Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
 {
     auto& vm = global_object.vm();
+
     // 1. Assert: Type(isoString) is String.
 
     // 2. If isoString does not satisfy the syntax of a TemporalTimeZoneString (see 13.33), then

@@ -25,6 +25,9 @@ void DurationConstructor::initialize(GlobalObject& global_object)
     // 7.2.1 Temporal.Duration.prototype, https://tc39.es/proposal-temporal/#sec-temporal-duration-prototype
     define_direct_property(vm.names.prototype, global_object.temporal_duration_prototype(), 0);
 
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.from, from, 1, attr);
+
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 }
 
@@ -97,6 +100,23 @@ Value DurationConstructor::construct(FunctionObject& new_target)
 
     // 12. Return ? CreateTemporalDuration(y, mo, w, d, h, m, s, ms, mis, ns, NewTarget).
     return create_temporal_duration(global_object, y, mo, w, d, h, m, s, ms, mis, ns, &new_target);
+}
+
+// 7.2.2 Temporal.Duration.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.duration.from
+JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::from)
+{
+    auto item = vm.argument(0);
+
+    // 1. If Type(item) is Object and item has an [[InitializedTemporalDuration]] internal slot, then
+    if (item.is_object() && is<Duration>(item.as_object())) {
+        auto& duration = static_cast<Duration&>(item.as_object());
+
+        // a. Return ? CreateTemporalDuration(item.[[Years]], item.[[Months]], item.[[Weeks]], item.[[Days]], item.[[Hours]], item.[[Minutes]], item.[[Seconds]], item.[[Milliseconds]], item.[[Microseconds]], item.[[Nanoseconds]]).
+        return create_temporal_duration(global_object, duration.years(), duration.months(), duration.weeks(), duration.days(), duration.hours(), duration.minutes(), duration.seconds(), duration.milliseconds(), duration.microseconds(), duration.nanoseconds());
+    }
+
+    // 2. Return ? ToTemporalDuration(item).
+    return to_temporal_duration(global_object, item);
 }
 
 }

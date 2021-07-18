@@ -199,6 +199,7 @@ namespace Temporal {
     class PrototypeName;
 JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
+struct TemporalDuration;
 };
 
 template<class T>
