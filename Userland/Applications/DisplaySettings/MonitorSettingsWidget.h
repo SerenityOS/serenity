@@ -34,11 +34,16 @@ private:
     void create_frame();
     void create_resolution_list();
     void load_current_settings();
+    void selected_screen_index_changed();
+
+    size_t m_selected_screen_index { 0 };
 
     WindowServer::ScreenLayout m_screen_layout;
+    Vector<String> m_screens;
     Vector<Gfx::IntSize> m_resolutions;
 
     RefPtr<DisplaySettings::MonitorWidget> m_monitor_widget;
+    RefPtr<GUI::ComboBox> m_screen_combo;
     RefPtr<GUI::ComboBox> m_resolution_combo;
     RefPtr<GUI::RadioButton> m_display_scale_radio_1x;
     RefPtr<GUI::RadioButton> m_display_scale_radio_2x;
