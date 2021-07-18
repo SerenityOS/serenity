@@ -13,7 +13,7 @@ extern Mutex* g_hostname_lock;
 
 KResultOr<FlatPtr> Process::sys$gethostname(Userspace<char*> buffer, size_t size)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     REQUIRE_PROMISE(stdio);
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
@@ -27,7 +27,7 @@ KResultOr<FlatPtr> Process::sys$gethostname(Userspace<char*> buffer, size_t size
 
 KResultOr<FlatPtr> Process::sys$sethostname(Userspace<const char*> hostname, size_t length)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     REQUIRE_NO_PROMISES;
     if (!is_superuser())
         return EPERM;

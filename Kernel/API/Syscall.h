@@ -64,8 +64,8 @@ enum class NeedsBigProcessLock {
     S(get_dir_entries, NeedsBigProcessLock::Yes)            \
     S(getcwd, NeedsBigProcessLock::Yes)                     \
     S(gettimeofday, NeedsBigProcessLock::Yes)               \
-    S(gethostname, NeedsBigProcessLock::Yes)                \
-    S(sethostname, NeedsBigProcessLock::Yes)                \
+    S(gethostname, NeedsBigProcessLock::No)                 \
+    S(sethostname, NeedsBigProcessLock::No)                 \
     S(chdir, NeedsBigProcessLock::Yes)                      \
     S(uname, NeedsBigProcessLock::Yes)                      \
     S(set_mmap_name, NeedsBigProcessLock::Yes)              \
