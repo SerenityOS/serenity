@@ -22,6 +22,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
 #include <Kernel/Locking/Mutex.h>
+#include <Kernel/Locking/ProtectedValue.h>
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/ProcessGroup.h>
@@ -33,6 +34,7 @@
 
 namespace Kernel {
 
+ProtectedValue<String>& hostname();
 Time kgettimeofday();
 
 #define ENUMERATE_PLEDGE_PROMISES         \
