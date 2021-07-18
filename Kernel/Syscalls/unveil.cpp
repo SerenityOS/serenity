@@ -26,6 +26,7 @@ static void update_intermediate_node_permissions(UnveilNode& root_node, UnveilAc
 
 KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     Syscall::SC_unveil_params params;
     if (!copy_from_user(&params, user_params))
         return EFAULT;

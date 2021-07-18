@@ -98,6 +98,7 @@ KResult Process::do_killself(int signal)
 
 KResultOr<FlatPtr> Process::sys$kill(pid_t pid_or_pgid, int signal)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (pid_or_pgid == pid().value())
         REQUIRE_PROMISE(stdio);
     else
@@ -125,6 +126,7 @@ KResultOr<FlatPtr> Process::sys$kill(pid_t pid_or_pgid, int signal)
 
 KResultOr<FlatPtr> Process::sys$killpg(pid_t pgrp, int signum)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
     if (signum < 1 || signum >= 32)
         return EINVAL;

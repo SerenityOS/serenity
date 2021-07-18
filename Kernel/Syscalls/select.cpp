@@ -16,6 +16,7 @@ using BlockFlags = Thread::FileBlocker::BlockFlags;
 
 KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     Syscall::SC_select_params params {};
 
@@ -129,6 +130,7 @@ KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params
 
 KResultOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_poll_params params;

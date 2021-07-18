@@ -7,11 +7,17 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
+#include <Kernel/Thread.h>
 
 namespace Kernel {
 
 void Process::sys$exit(int status)
 {
+    // FIXME: We have callers from kernel which don't aquire the big process lock.
+    if (Thread::current()->previous_mode() == Thread::PreviousMode::UserMode) {
+        VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    }
+
     {
         ProtectedDataMutationScope scope { *this };
         m_termination_status = status;

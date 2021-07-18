@@ -13,6 +13,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$realpath(Userspace<const Syscall::SC_realpath_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
 
     Syscall::SC_realpath_params params;

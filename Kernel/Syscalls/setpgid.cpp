@@ -12,6 +12,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$getsid(pid_t pid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
     if (pid == 0)
         return sid().value();
@@ -26,6 +27,7 @@ KResultOr<FlatPtr> Process::sys$getsid(pid_t pid)
 
 KResultOr<FlatPtr> Process::sys$setsid()
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
     InterruptDisabler disabler;
     bool found_process_with_same_pgid_as_my_pid = false;
@@ -45,6 +47,7 @@ KResultOr<FlatPtr> Process::sys$setsid()
 
 KResultOr<FlatPtr> Process::sys$getpgid(pid_t pid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
     if (pid == 0)
         return pgid().value();
@@ -57,6 +60,7 @@ KResultOr<FlatPtr> Process::sys$getpgid(pid_t pid)
 
 KResultOr<FlatPtr> Process::sys$getpgrp()
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     return pgid().value();
 }
@@ -77,6 +81,7 @@ SessionID Process::get_sid_from_pgid(ProcessGroupID pgid)
 
 KResultOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
     ScopedSpinLock lock(g_processes_lock); // FIXME: Use a ProcessHandle
     ProcessID pid = specified_pid ? ProcessID(specified_pid) : this->pid();

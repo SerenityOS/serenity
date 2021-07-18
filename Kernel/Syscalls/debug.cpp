@@ -13,18 +13,21 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$dump_backtrace()
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     dump_backtrace();
     return 0;
 }
 
 KResultOr<FlatPtr> Process::sys$dbgputch(u8 ch)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     dbgputch(ch);
     return 0;
 }
 
 KResultOr<FlatPtr> Process::sys$dbgputstr(Userspace<const u8*> characters, size_t size)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     if (size == 0)
         return 0;
 

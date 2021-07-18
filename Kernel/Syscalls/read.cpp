@@ -14,6 +14,7 @@ using BlockFlags = Thread::FileBlocker::BlockFlags;
 
 KResultOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     if (iov_count < 0)
         return EINVAL;
@@ -70,6 +71,7 @@ KResultOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov
 
 KResultOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     if (size == 0)
         return 0;

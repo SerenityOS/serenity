@@ -10,6 +10,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$disown(ProcessID pid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(proc);
     auto process = Process::from_pid(pid);
     if (!process)

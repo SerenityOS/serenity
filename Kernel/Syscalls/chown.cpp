@@ -11,6 +11,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(chown);
     auto description = fds().file_description(fd);
     if (!description)
@@ -20,6 +21,7 @@ KResultOr<FlatPtr> Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 
 KResultOr<FlatPtr> Process::sys$chown(Userspace<const Syscall::SC_chown_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(chown);
     Syscall::SC_chown_params params;
     if (!copy_from_user(&params, user_params))

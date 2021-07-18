@@ -11,18 +11,21 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$getpid()
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     return pid().value();
 }
 
 KResultOr<FlatPtr> Process::sys$getppid()
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     return m_ppid.value();
 }
 
 KResultOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t buffer_size)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     if (m_name.length() + 1 > buffer_size)
         return ENAMETOOLONG;
@@ -34,6 +37,7 @@ KResultOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t
 
 KResultOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
     if (user_name_length > 256)
         return ENAMETOOLONG;
@@ -49,6 +53,7 @@ KResultOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_nam
 
 KResultOr<FlatPtr> Process::sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     Syscall::SC_set_coredump_metadata_params params;
     if (!copy_from_user(&params, user_params))
         return EFAULT;

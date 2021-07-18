@@ -19,6 +19,7 @@ u64 g_profiling_event_mask;
 
 KResultOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_NO_PROMISES;
 
     if (pid == -1) {
@@ -68,6 +69,7 @@ KResultOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
 
 KResultOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_NO_PROMISES;
 
     if (pid == -1) {
@@ -97,6 +99,7 @@ KResultOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
 
 KResultOr<FlatPtr> Process::sys$profiling_free_buffer(pid_t pid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_NO_PROMISES;
 
     if (pid == -1) {

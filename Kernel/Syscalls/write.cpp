@@ -13,6 +13,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     if (iov_count < 0)
         return EINVAL;
@@ -98,6 +99,7 @@ KResultOr<FlatPtr> Process::do_write(FileDescription& description, const UserOrK
 
 KResultOr<FlatPtr> Process::sys$write(int fd, Userspace<const u8*> data, size_t size)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     if (size == 0)
         return 0;

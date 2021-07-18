@@ -11,6 +11,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$sync()
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     VirtualFileSystem::sync();
     return 0;

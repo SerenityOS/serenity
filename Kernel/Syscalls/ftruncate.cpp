@@ -11,6 +11,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$ftruncate(int fd, Userspace<off_t*> userspace_length)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     off_t length;
     if (!copy_from_user(&length, userspace_length))

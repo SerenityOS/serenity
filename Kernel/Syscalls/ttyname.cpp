@@ -13,6 +13,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(tty);
     auto description = fds().file_description(fd);
     if (!description)
@@ -29,6 +30,7 @@ KResultOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t 
 
 KResultOr<FlatPtr> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(tty);
     auto description = fds().file_description(fd);
     if (!description)

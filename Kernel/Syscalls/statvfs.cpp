@@ -71,6 +71,7 @@ KResultOr<FlatPtr> Process::do_statvfs(String path, statvfs* buf)
 
 KResultOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
 
     Syscall::SC_statvfs_params params;
@@ -85,6 +86,7 @@ KResultOr<FlatPtr> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_para
 
 KResultOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
     auto description = fds().file_description(fd);

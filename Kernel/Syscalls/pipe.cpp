@@ -12,6 +12,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     if (fds().open_count() + 2 > fds().max_open())
         return EMFILE;
