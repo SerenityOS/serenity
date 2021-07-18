@@ -1051,7 +1051,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         m_context_menu_href = m_hovered_href;
 
         // Ask LaunchServer for a list of programs that can handle the right-clicked URL.
-        auto handlers = Desktop::Launcher::get_handlers_for_url(m_hovered_href);
+        auto handlers = Desktop::Launcher::get_handlers_with_details_for_url(m_hovered_href);
         if (handlers.is_empty()) {
             m_context_menu->popup(event.screen_position());
             return;
@@ -1064,12 +1064,21 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         // Then add them to the context menu.
         // FIXME: Adapt this code when we actually support calling LaunchServer with a specific handler in mind.
         for (auto& handler : handlers) {
-            auto af = Desktop::AppFile::get_for_app(LexicalPath::basename(handler));
+            auto af = Desktop::AppFile::get_for_app(LexicalPath::basename(handler.executable));
             if (!af->is_valid())
                 continue;
-            auto action = GUI::Action::create(String::formatted("&Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
-                Desktop::Launcher::open(m_context_menu_href, handler);
-            });
+            auto handler_executable = handler.executable;
+            auto action = [&]() {
+                switch (handler.launcher_type) {
+                case Desktop::Launcher::LauncherType::Application:
+                    return GUI::Action::create(String::formatted("&Open {}", af->name()), af->icon().bitmap_for_size(16), [handler_executable](auto&) {
+                        Desktop::Launcher::launch(handler_executable);
+                    });
+                default:
+                    return GUI::Action::create(String::formatted("&Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler_executable](auto&) {
+                        Desktop::Launcher::open(m_context_menu_href, handler_executable);
+                    });
+                } }();
 
             if (context_menu_default_action.is_null()) {
                 context_menu_default_action = action;
