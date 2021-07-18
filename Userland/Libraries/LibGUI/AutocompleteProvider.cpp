@@ -69,7 +69,10 @@ public:
 
         return {};
     }
-    virtual void update() override {};
+    virtual void update() override
+    {
+        did_update();
+    };
 
     void set_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions) { m_suggestions = move(suggestions); }
 
