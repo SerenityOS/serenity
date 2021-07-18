@@ -72,10 +72,12 @@ TEST_CASE(test_efault)
     ptrdiff_t distance = two_page - one_page;
     EXPECT_EFAULT(read, one_page, (u32)distance + 1024);
 
-    // Test every kernel page just because.
-    constexpr auto user_range_ceiling = 0xbe000000u;
+    constexpr auto user_range_ceiling = (sizeof(void*) == 4 ? 0xbe000000u : 0x1ffe000000);
     u8* jerk_page = nullptr;
-    for (u64 kernel_address = user_range_ceiling; kernel_address <= 0xffffffff; kernel_address += PAGE_SIZE) {
+
+    // Test every kernel page just because.
+    constexpr auto kernel_range_ceiling = (sizeof(void*) == 4 ? 0xffffffffu : 0x203fffffff);
+    for (u64 kernel_address = user_range_ceiling; kernel_address <= kernel_range_ceiling; kernel_address += PAGE_SIZE) {
         jerk_page = (u8*)mmap((void*)kernel_address, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_FIXED, 0, 0);
         EXPECT_EQ(jerk_page, MAP_FAILED);
         EXPECT_EQ(errno, EFAULT);
