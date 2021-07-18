@@ -1,0 +1,63 @@
+--- gc-8.0.4/include/private/gcconfig.h	2021-07-18 14:43:53.788653408 +0100
++++ gc-8.0.4/include/private/gcconfig.h	2021-07-18 15:06:15.820347094 +0100
+@@ -147,6 +147,11 @@
+     EXTERN_C_BEGIN
+ # endif
+ 
++/* And one for SerenityOS: */
++# if defined(__serenity__)
++#   define SERENITY
++# endif
++
+ /* Determine the machine type: */
+ # if defined(__native_client__)
+ #    define NACL
+@@ -697,6 +702,15 @@
+ #   define mach_type_known
+ # endif
+ 
++# if defined(SERENITY) && defined(__i386__)
++#    define I386
++#    define mach_type_known
++# endif
++# if defined(SERENITY) && defined(__x86_64__)
++#    define X86_64
++#    define mach_type_known
++# endif
++
+ /* Feel free to add more clauses here */
+ 
+ /* Or manually define the machine type here.  A machine type is         */
+@@ -1728,6 +1742,23 @@
+ #       define NO_DYLD_BIND_FULLY_IMAGE
+ #     endif
+ #   endif /* DARWIN */
++#   ifdef SERENITY
++#     define OS_TYPE "SERENITY"
++#     define nullptr NULL
++      EXTERN_C_END
++#     include <limits.h>
++#     include <serenity.h>
++      EXTERN_C_BEGIN
++#     define GETPAGESIZE() (unsigned)PAGE_SIZE
++      extern int __data_start[];
++#     define DATASTART ((ptr_t)__data_start)
++      extern int _end[];
++#     define DATAEND ((ptr_t)(&_end))
++      static uintptr_t user_stack_base __attribute__((unused));
++      static size_t user_stack_size __attribute__((unused));
++#     define STACKBOTTOM ((ptr_t)(get_stack_bounds(&user_stack_base, &user_stack_size), user_stack_base))
++#     define USE_MMAP_ANON
++#   endif
+ # endif
+ 
+ # ifdef NS32K
+@@ -3052,7 +3083,7 @@
+ #if defined(SVR4) || defined(LINUX) || defined(IRIX5) || defined(HPUX) \
+     || defined(OPENBSD) || defined(NETBSD) || defined(FREEBSD) \
+     || defined(DGUX) || defined(BSD) || defined(HAIKU) || defined(HURD) \
+-    || defined(AIX) || defined(DARWIN) || defined(OSF1)
++    || defined(AIX) || defined(DARWIN) || defined(OSF1) || defined(SERENITY)
+ # define UNIX_LIKE      /* Basic Unix-like system calls work.   */
+ #endif
+ 

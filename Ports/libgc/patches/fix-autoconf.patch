@@ -1,0 +1,36 @@
+--- gc-8.0.4/config.sub	2021-07-18 15:15:41.843097593 +0100
++++ gc-8.0.4/config.sub	2021-07-18 15:16:03.426008851 +0100
+@@ -1393,7 +1393,8 @@
+ 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
+ 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+-	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* | -tirtos*)
++	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* | -tirtos* \
++	      | -serenity* )
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)
+--- gc-8.0.4/configure.ac	2021-07-18 15:18:49.189327250 +0100
++++ gc-8.0.4/configure.ac	2021-07-18 15:21:06.742750276 +0100
+@@ -262,6 +262,9 @@
+         AM_CFLAGS="$AM_CFLAGS -pthread"
+         THREADDLLIBS="-lpthread -lrt"
+         ;;
++      *-*-serenity*)
++        # The default THREADDLLIBS.
++        ;;
+       *)
+         AS_IF([test x$default_threadlibs != xtrue],
+               [ AC_MSG_ERROR(
+--- gc-8.0.4/configure	2021-07-18 15:18:53.695308723 +0100
++++ gc-8.0.4/configure	2021-07-18 15:20:18.406960407 +0100
+@@ -16471,6 +16471,9 @@
+         AM_CFLAGS="$AM_CFLAGS -pthread"
+         THREADDLLIBS="-lpthread -lrt"
+         ;;
++      *-*-serenity*)
++        # The default THREADDLLIBS.
++        ;;
+       *)
+         if test x$default_threadlibs != xtrue; then :
+    as_fn_error $? "Pthreads not supported by the GC on this platform" "$LINENO" 5
