@@ -43,12 +43,19 @@ public:
 
     void did_receive_screen_rects(Badge<WindowServerConnection>, const Vector<Gfx::IntRect, 4>&, size_t, unsigned, unsigned);
 
+    template<typename F>
+    void on_receive_screen_rects(F&& callback)
+    {
+        m_receive_rects_callbacks.append(forward<F>(callback));
+    }
+
 private:
     Vector<Gfx::IntRect, default_screen_rect_count> m_rects;
     size_t m_main_screen_index { 0 };
     Gfx::IntRect m_bounding_rect;
     unsigned m_virtual_desktop_rows { 1 };
     unsigned m_virtual_desktop_columns { 1 };
+    Vector<Function<void(Desktop&)>> m_receive_rects_callbacks;
 };
 
 }
