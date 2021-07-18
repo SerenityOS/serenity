@@ -10,9 +10,9 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$yield()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(stdio);
-    Thread::current()->yield_and_release_relock_big_lock();
+    Thread::current()->yield_assuming_not_holding_big_lock();
     return 0;
 }
 
