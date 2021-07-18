@@ -6,7 +6,6 @@
 
 #include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/Process.h>
-#include <Kernel/Thread.h>
 #include <LibC/limits.h>
 
 namespace Kernel {
