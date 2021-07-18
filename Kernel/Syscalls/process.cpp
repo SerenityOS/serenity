@@ -11,7 +11,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$getpid()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     REQUIRE_PROMISE(stdio);
     return pid().value();
 }
