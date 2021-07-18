@@ -9,6 +9,7 @@
 #include <AK/StdLibExtras.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Locking/Lockable.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
