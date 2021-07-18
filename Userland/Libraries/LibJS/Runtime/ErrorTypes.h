@@ -172,6 +172,7 @@
     M(TemporalInvalidDurationPropertyValue, "Invalid value for duration property '{}': must be an integer, got {}")                     \
     M(TemporalInvalidEpochNanoseconds, "Invalid epoch nanoseconds value, must be in range -86400 * 10^17 to 86400 * 10^17")             \
     M(TemporalInvalidISODate, "Invalid ISO date")                                                                                       \
+    M(TemporalInvalidPlainDate, "Invalid plain date")                                                                                   \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \

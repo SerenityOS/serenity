@@ -6,8 +6,10 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/CalendarConstructor.h>
+#include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Temporal {
@@ -51,6 +53,98 @@ bool is_builtin_calendar(String const& identifier)
 
     // 2. Return true.
     return true;
+}
+
+// 12.1.3 GetBuiltinCalendar ( id )
+Calendar* get_builtin_calendar(GlobalObject& global_object, String const& identifier)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If ! IsBuiltinCalendar(id) is false, throw a RangeError exception.
+    if (!is_builtin_calendar(identifier)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarIdentifier, identifier);
+        return {};
+    }
+
+    // 2. Return ? Construct(%Temporal.Calendar%, « id »).
+    MarkedValueList arguments(vm.heap());
+    arguments.append(js_string(vm, identifier));
+    auto calendar = vm.construct(*global_object.temporal_calendar_constructor(), *global_object.temporal_calendar_constructor(), move(arguments));
+    if (vm.exception())
+        return {};
+    return static_cast<Calendar*>(&calendar.as_object());
+}
+
+// 12.1.4 GetISO8601Calendar ( )
+Calendar* get_iso8601_calendar(GlobalObject& global_object)
+{
+    // 1. Return ? GetBuiltinCalendar("iso8601").
+    return get_builtin_calendar(global_object, "iso8601");
+}
+
+// 12.1.21 ToTemporalCalendar ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendar
+Object* to_temporal_calendar(GlobalObject& global_object, Value temporal_calendar_like)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If Type(temporalCalendarLike) is Object, then
+    if (temporal_calendar_like.is_object()) {
+        auto& temporal_calendar_like_object = temporal_calendar_like.as_object();
+        // a. If temporalCalendarLike has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
+        // TODO: The rest of the Temporal built-ins
+        if (is<PlainDate>(temporal_calendar_like_object)) {
+            // i. Return temporalCalendarLike.[[Calendar]].
+            return &static_cast<PlainDate&>(temporal_calendar_like_object).calendar();
+        }
+
+        // b. If ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
+        auto has_property = temporal_calendar_like_object.has_property(vm.names.calendar);
+        if (vm.exception())
+            return {};
+        if (!has_property)
+            return &temporal_calendar_like_object;
+
+        // c. Set temporalCalendarLike to ? Get(temporalCalendarLike, "calendar").
+        temporal_calendar_like = temporal_calendar_like_object.get(vm.names.calendar);
+        if (vm.exception())
+            return {};
+        // d. If Type(temporalCalendarLike) is Object and ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
+        if (temporal_calendar_like.is_object()) {
+            has_property = temporal_calendar_like.as_object().has_property(vm.names.calendar);
+            if (vm.exception())
+                return {};
+            if (!has_property)
+                return &temporal_calendar_like.as_object();
+        }
+    }
+
+    // 2. Let identifier be ? ToString(temporalCalendarLike).
+    auto identifier = temporal_calendar_like.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. If ! IsBuiltinCalendar(identifier) is false, then
+    if (!is_builtin_calendar(identifier)) {
+        // a. Let identifier be ? ParseTemporalCalendarString(identifier).
+        identifier = parse_temporal_calendar_string(global_object, identifier);
+        if (vm.exception())
+            return {};
+    }
+
+    // 4. Return ? CreateTemporalCalendar(identifier).
+    return create_temporal_calendar(global_object, identifier);
+}
+
+// 12.1.22 ToTemporalCalendarWithISODefault ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendarwithisodefault
+Object* to_temporal_calendar_with_iso_default(GlobalObject& global_object, Value temporal_calendar_like)
+{
+    // 1. If temporalCalendarLike is undefined, then
+    if (temporal_calendar_like.is_undefined()) {
+        // a. Return ? GetISO8601Calendar().
+        return get_iso8601_calendar(global_object);
+    }
+    // 2. Return ? ToTemporalCalendar(temporalCalendarLike).
+    return to_temporal_calendar(global_object, temporal_calendar_like);
 }
 
 // 12.1.30 IsISOLeapYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isisoleapyear

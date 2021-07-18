@@ -135,6 +135,8 @@ set(SOURCES
     Runtime/Temporal/InstantPrototype.cpp
     Runtime/Temporal/Now.cpp
     Runtime/Temporal/PlainDate.cpp
+    Runtime/Temporal/PlainDateConstructor.cpp
+    Runtime/Temporal/PlainDatePrototype.cpp
     Runtime/Temporal/PlainDateTime.cpp
     Runtime/Temporal/PlainTime.cpp
     Runtime/Temporal/Temporal.cpp

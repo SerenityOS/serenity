@@ -78,6 +78,7 @@ namespace JS {
     P(buffer)                                \
     P(byteLength)                            \
     P(byteOffset)                            \
+    P(calendar)                              \
     P(call)                                  \
     P(callee)                                \
     P(caller)                                \

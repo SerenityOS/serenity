@@ -30,6 +30,10 @@ private:
 
 Calendar* create_temporal_calendar(GlobalObject&, String const& identifier, FunctionObject* new_target = nullptr);
 bool is_builtin_calendar(String const& identifier);
+Calendar* get_builtin_calendar(GlobalObject&, String const& identifier);
+Calendar* get_iso8601_calendar(GlobalObject&);
+Object* to_temporal_calendar(GlobalObject&, Value);
+Object* to_temporal_calendar_with_iso_default(GlobalObject&, Value);
 bool is_iso_leap_year(i32 year);
 i32 iso_days_in_month(i32 year, i32 month);
 
