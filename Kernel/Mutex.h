@@ -11,7 +11,7 @@
 #include <AK/HashMap.h>
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
-#include <Kernel/LockMode.h>
+#include <Kernel/Locking/LockMode.h>
 #include <Kernel/WaitQueue.h>
 
 namespace Kernel {
