@@ -196,9 +196,6 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
         PANIC("Syscall from process with IOPL != 0");
     }
 
-    // NOTE: We take the big process lock before inspecting memory regions.
-    process.big_lock().lock();
-
     MM.validate_syscall_preconditions(process.space(), regs);
 
     FlatPtr function;
@@ -206,6 +203,9 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     FlatPtr arg2;
     FlatPtr arg3;
     regs.capture_syscall_params(function, arg1, arg2, arg3);
+
+    process.big_lock().lock();
+
 
     auto result = Syscall::handle(regs, function, arg1, arg2, arg3);
     if (result.is_error()) {
