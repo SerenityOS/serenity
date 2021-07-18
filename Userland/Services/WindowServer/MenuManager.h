@@ -23,8 +23,6 @@ public:
     MenuManager();
     virtual ~MenuManager() override;
 
-    void refresh();
-
     bool is_open(const Menu&) const;
     bool has_open_menu() const { return !m_open_menu_stack.is_empty(); }
 
@@ -54,6 +52,8 @@ private:
 
     virtual void event(Core::Event&) override;
     void handle_mouse_event(MouseEvent&);
+
+    void refresh();
 
     WeakPtr<Menu> m_current_menu;
     WeakPtr<Window> m_previous_input_window;

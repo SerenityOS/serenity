@@ -94,8 +94,6 @@ void AppletManager::add_applet(Window& applet)
     });
 
     relayout();
-
-    MenuManager::the().refresh();
 }
 
 void AppletManager::relayout()

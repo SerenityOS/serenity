@@ -43,6 +43,7 @@ void MenuManager::refresh()
 {
     ClientConnection::for_each_client([&](ClientConnection& client) {
         client.for_each_menu([&](Menu& menu) {
+            dbgln("MenuManager::refresh {}", &menu);
             menu.redraw();
             return IterationDecision::Continue;
         });
@@ -220,7 +221,6 @@ void MenuManager::close_everyone()
     }
     m_open_menu_stack.clear();
     clear_current_menu();
-    refresh();
 }
 
 void MenuManager::close_everyone_not_in_lineage(Menu& menu)
@@ -247,7 +247,6 @@ void MenuManager::close_menus(const Vector<Menu&>& menus)
             return entry == &menu;
         });
     }
-    refresh();
 }
 
 static void collect_menu_subtree(Menu& menu, Vector<Menu&>& menus)
@@ -313,8 +312,6 @@ void MenuManager::open_menu(Menu& menu, bool as_current_menu)
         // other menu is current
         set_current_menu(&menu);
     }
-
-    refresh();
 }
 
 void MenuManager::clear_current_menu()
