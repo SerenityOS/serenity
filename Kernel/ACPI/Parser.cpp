@@ -408,8 +408,8 @@ UNMAP_AFTER_INIT static PhysicalAddress search_table_in_xsdt(PhysicalAddress xsd
     auto xsdt = map_typed<Structures::XSDT>(xsdt_address);
 
     for (size_t i = 0; i < ((xsdt->h.length - sizeof(Structures::SDTHeader)) / sizeof(u64)); ++i) {
-        if (match_table_signature(PhysicalAddress((FlatPtr)xsdt->table_ptrs[i]), signature))
-            return PhysicalAddress((FlatPtr)xsdt->table_ptrs[i]);
+        if (match_table_signature(PhysicalAddress((PhysicalPtr)xsdt->table_ptrs[i]), signature))
+            return PhysicalAddress((PhysicalPtr)xsdt->table_ptrs[i]);
     }
     return {};
 }
@@ -431,8 +431,8 @@ UNMAP_AFTER_INIT static PhysicalAddress search_table_in_rsdt(PhysicalAddress rsd
     auto rsdt = map_typed<Structures::RSDT>(rsdt_address);
 
     for (u32 i = 0; i < ((rsdt->h.length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
-        if (match_table_signature(PhysicalAddress((FlatPtr)rsdt->table_ptrs[i]), signature))
-            return PhysicalAddress((FlatPtr)rsdt->table_ptrs[i]);
+        if (match_table_signature(PhysicalAddress((PhysicalPtr)rsdt->table_ptrs[i]), signature))
+            return PhysicalAddress((PhysicalPtr)rsdt->table_ptrs[i]);
     }
     return {};
 }
