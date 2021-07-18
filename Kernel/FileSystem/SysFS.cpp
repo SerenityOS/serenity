@@ -170,7 +170,6 @@ NonnullRefPtr<SysFSDirectoryInode> SysFSDirectoryInode::create(SysFS const& sysf
 
 SysFSDirectoryInode::SysFSDirectoryInode(SysFS const& fs, SysFSComponent const& component)
     : SysFSInode(fs, component)
-    , m_parent_fs(const_cast<SysFS&>(fs))
 {
 }
 
@@ -192,17 +191,17 @@ InodeMetadata SysFSDirectoryInode::metadata() const
 }
 KResult SysFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    MutexLocker locker(m_parent_fs.m_lock);
-    return m_associated_component->traverse_as_directory(m_parent_fs.fsid(), move(callback));
+    MutexLocker locker(fs().m_lock);
+    return m_associated_component->traverse_as_directory(fs().fsid(), move(callback));
 }
 
 RefPtr<Inode> SysFSDirectoryInode::lookup(StringView name)
 {
-    MutexLocker locker(m_parent_fs.m_lock);
+    MutexLocker locker(fs().m_lock);
     auto component = m_associated_component->lookup(name);
     if (!component)
         return {};
-    return component->to_inode(m_parent_fs);
+    return component->to_inode(fs());
 }
 
 SysFSBusDirectory& SysFSComponentRegistry::buses_directory()

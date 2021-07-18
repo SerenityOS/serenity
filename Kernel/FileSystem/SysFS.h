@@ -106,14 +106,15 @@ public:
     static NonnullRefPtr<SysFSDirectoryInode> create(SysFS const&, SysFSComponent const&);
     virtual ~SysFSDirectoryInode() override;
 
+    SysFS& fs() { return static_cast<SysFS&>(Inode::fs()); }
+    SysFS const& fs() const { return static_cast<SysFS const&>(Inode::fs()); }
+
 protected:
     SysFSDirectoryInode(SysFS const&, SysFSComponent const&);
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
-
-    SysFS& m_parent_fs;
 };
 
 }
