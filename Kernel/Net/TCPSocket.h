@@ -11,6 +11,7 @@
 #include <AK/SinglyLinkedList.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/KResult.h>
+#include <Kernel/Locking/Lockable.h>
 #include <Kernel/Net/IPv4Socket.h>
 
 namespace Kernel {
