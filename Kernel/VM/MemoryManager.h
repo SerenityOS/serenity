@@ -134,7 +134,8 @@ public:
     static void enter_process_paging_scope(Process&);
     static void enter_space(Space&);
 
-    bool validate_user_stack(Process const&, VirtualAddress) const;
+    bool validate_user_stack_no_lock(Space&, VirtualAddress) const;
+    bool validate_user_stack(Space&, VirtualAddress) const;
 
     enum class ShouldZeroFill {
         No,

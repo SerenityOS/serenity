@@ -33,7 +33,7 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
     if (user_sp.has_overflow())
         return EOVERFLOW;
 
-    if (!MM.validate_user_stack(*this, VirtualAddress(user_sp.value() - 4)))
+    if (!MM.validate_user_stack(this->space(), VirtualAddress(user_sp.value() - 4)))
         return EFAULT;
 
     // FIXME: return EAGAIN if Thread::all_threads().size() is greater than PTHREAD_THREADS_MAX
