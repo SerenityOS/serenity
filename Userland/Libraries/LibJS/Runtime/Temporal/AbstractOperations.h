@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 
 #include <AK/Forward.h>
 #include <AK/String.h>
+#include <LibJS/Forward.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS::Temporal {
@@ -58,6 +60,7 @@ Optional<String> to_smallest_temporal_unit(GlobalObject&, Object& normalized_opt
 BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, String const& rounding_mode);
 Optional<ISODateTime> parse_iso_date_time(GlobalObject&, String const& iso_string);
 Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject&, String const& iso_string);
+Optional<TemporalDuration> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
 Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject&, String const& iso_string);
 
 }

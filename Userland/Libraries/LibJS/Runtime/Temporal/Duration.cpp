@@ -6,6 +6,8 @@
 
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/DurationConstructor.h>
 
@@ -25,6 +27,114 @@ Duration::Duration(double years, double months, double weeks, double days, doubl
     , m_microseconds(microseconds)
     , m_nanoseconds(nanoseconds)
 {
+}
+
+// 7.5.1 ToTemporalDuration ( item ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalduration
+Duration* to_temporal_duration(GlobalObject& global_object, Value item)
+{
+    auto& vm = global_object.vm();
+
+    Optional<TemporalDuration> result;
+
+    // 1. If Type(item) is Object, then
+    if (item.is_object()) {
+        // a. If item has an [[InitializedTemporalDuration]] internal slot, then
+        if (is<Duration>(item.as_object())) {
+            // i. Return item.
+            return &static_cast<Duration&>(item.as_object());
+        }
+        // b. Let result be ? ToTemporalDurationRecord(item).
+        result = to_temporal_duration_record(global_object, item.as_object());
+        if (vm.exception())
+            return {};
+    }
+    // 2. Else,
+    else {
+        // a. Let string be ? ToString(item).
+        auto string = item.to_string(global_object);
+        if (vm.exception())
+            return {};
+
+        // b. Let result be ? ParseTemporalDurationString(string).
+        result = parse_temporal_duration_string(global_object, string);
+        if (vm.exception())
+            return {};
+    }
+
+    // 3. Return ? CreateTemporalDuration(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]]).
+    return create_temporal_duration(global_object, result->years, result->months, result->weeks, result->days, result->hours, result->minutes, result->seconds, result->milliseconds, result->microseconds, result->nanoseconds);
+}
+
+// 7.5.2 ToTemporalDurationRecord ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldurationrecord
+TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object& temporal_duration_like)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(temporalDurationLike) is Object.
+
+    // 2. If temporalDurationLike has an [[InitializedTemporalDuration]] internal slot, then
+    if (is<Duration>(temporal_duration_like)) {
+        auto& duration = static_cast<Duration&>(temporal_duration_like);
+
+        // a. Return the Record { [[Years]]: temporalDurationLike.[[Years]], [[Months]]: temporalDurationLike.[[Months]], [[Weeks]]: temporalDurationLike.[[Weeks]], [[Days]]: temporalDurationLike.[[Days]], [[Hours]]: temporalDurationLike.[[Hours]], [[Minutes]]: temporalDurationLike.[[Minutes]], [[Seconds]]: temporalDurationLike.[[Seconds]], [[Milliseconds]]: temporalDurationLike.[[Milliseconds]], [[Microseconds]]: temporalDurationLike.[[Microseconds]], [[Nanoseconds]]: temporalDurationLike.[[Nanoseconds]] }.
+        return TemporalDuration { .years = duration.years(), .months = duration.months(), .weeks = duration.weeks(), .days = duration.days(), .hours = duration.hours(), .minutes = duration.minutes(), .seconds = duration.seconds(), .milliseconds = duration.milliseconds(), .microseconds = duration.microseconds(), .nanoseconds = duration.nanoseconds() };
+    }
+
+    // 3. Let result be a new Record with all the internal slots given in the Internal Slot column in Table 7.
+    auto result = TemporalDuration {};
+
+    // 4. Let any be false.
+    auto any = false;
+
+    // 5. For each row of Table 7, except the header row, in table order, do
+    for (auto& [internal_slot, property] : temporal_duration_like_properties<TemporalDuration, double>(vm)) {
+        // a. Let prop be the Property value of the current row.
+
+        // b. Let val be ? Get(temporalDurationLike, prop).
+        auto value = temporal_duration_like.get(property);
+        if (vm.exception())
+            return {};
+
+        // c. If val is not undefined, then
+        if (!value.is_undefined()) {
+            // i. Set any to true.
+            any = true;
+        }
+
+        // TODO: This is not in the spec but it seems to be implied, and is also what the polyfill does.
+        //       I think the steps d, e, and f should be conditional based on c - otherwise we call ToNumber(undefined),
+        //       get NaN and immediately fail the floor(val) ≠ val check, making the `any` flag pointless. See:
+        //       - https://github.com/tc39/proposal-temporal/blob/4b4dbd427d4b0468a3b064ca7082f25b209923bc/polyfill/lib/ecmascript.mjs#L556-L607
+        //       - https://github.com/tc39/proposal-temporal/blob/4b4dbd427d4b0468a3b064ca7082f25b209923bc/polyfill/lib/ecmascript.mjs#L876-L893
+        else {
+            continue;
+        }
+
+        // d. Let val be ? ToNumber(val).
+        value = value.to_number(global_object);
+        if (vm.exception())
+            return {};
+
+        // e. If floor(val) ≠ val, then
+        if (floor(value.as_double()) != value.as_double()) {
+            // i. Throw a RangeError exception.
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValue, property.as_string(), value.to_string_without_side_effects());
+            return {};
+        }
+
+        // f. Set result's internal slot whose name is the Internal Slot value of the current row to val.
+        result.*internal_slot = value.as_double();
+    }
+
+    // 6. If any is false, then
+    if (!any) {
+        // a. Throw a TypeError exception.
+        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalInvalidDurationLikeObject);
+        return {};
+    }
+
+    // 7. Return result.
+    return result;
 }
 
 // 7.5.3 DurationSign ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds )
