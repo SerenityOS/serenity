@@ -7,7 +7,7 @@
 #pragma once
 
 #include "ScreenLayout.h"
-#include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibGfx/Bitmap.h>
@@ -58,14 +58,15 @@ private:
     unsigned m_scroll_step_size { 1 };
 };
 
+struct CompositorScreenData;
 struct ScreenFBData;
 
-class Screen {
+class Screen : public RefCounted<Screen> {
 public:
     template<typename... Args>
     static Screen* create(Args&&... args)
     {
-        auto screen = adopt_own(*new Screen(forward<Args>(args)...));
+        auto screen = adopt_ref(*new Screen(forward<Args>(args)...));
         if (!screen->is_opened())
             return nullptr;
         auto* screen_ptr = screen.ptr();
@@ -155,7 +156,7 @@ public:
 
     int width() const { return m_virtual_rect.width(); }
     int height() const { return m_virtual_rect.height(); }
-    int scale_factor() const { return m_info.scale_factor; }
+    int scale_factor() const { return screen_layout_info().scale_factor; }
 
     Gfx::RGBA32* scanline(int buffer_index, int y);
 
@@ -169,12 +170,16 @@ public:
     void flush_display(int buffer_index);
     void flush_display_front_buffer(int front_buffer_index, Gfx::IntRect&);
 
+    CompositorScreenData& compositor_screen_data() { return *m_compositor_screen_data; }
+
 private:
-    Screen(ScreenLayout::Screen&);
+    Screen(size_t);
     bool open_device();
     void close_device();
     void init();
+    void scale_factor_changed();
     bool set_resolution(bool initial);
+    void constrain_pending_flush_rects();
     static void update_indices()
     {
         for (size_t i = 0; i < s_screens.size(); i++)
@@ -185,7 +190,12 @@ private:
 
     bool is_opened() const { return m_framebuffer_fd >= 0; }
 
-    static NonnullOwnPtrVector<Screen, default_screen_count> s_screens;
+    void set_index(size_t index) { m_index = index; }
+    void update_virtual_rect();
+    ScreenLayout::Screen& screen_layout_info() { return s_layout.screens[m_index]; }
+    ScreenLayout::Screen const& screen_layout_info() const { return s_layout.screens[m_index]; }
+
+    static NonnullRefPtrVector<Screen, default_screen_count> s_screens;
     static Screen* s_main_screen;
     static Gfx::IntRect s_bounding_screens_rect;
     static ScreenLayout s_layout;
@@ -203,8 +213,7 @@ private:
     Gfx::IntRect m_virtual_rect;
     int m_framebuffer_fd { -1 };
     NonnullOwnPtr<ScreenFBData> m_framebuffer_data;
-
-    ScreenLayout::Screen& m_info;
+    NonnullOwnPtr<CompositorScreenData> m_compositor_screen_data;
 };
 
 inline Gfx::RGBA32* Screen::scanline(int buffer_index, int y)

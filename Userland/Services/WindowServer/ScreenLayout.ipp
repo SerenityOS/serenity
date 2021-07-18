@@ -105,21 +105,124 @@ bool ScreenLayout::is_valid(String* error_msg) const
     return true;
 }
 
-void ScreenLayout::normalize()
+bool ScreenLayout::normalize()
 {
+    // Check for any overlaps and try to move screens
+    Vector<Gfx::IntRect, 8> screen_virtual_rects;
+    for (auto& screen : screens)
+        screen_virtual_rects.append(screen.virtual_rect());
+
+    bool did_change = false;
+    for (;;) {
+        // Separate any overlapping screens
+        if (Gfx::IntRect::disperse(screen_virtual_rects)) {
+            did_change = true;
+            continue;
+        }
+
+        // Check if all screens are still reachable
+        Vector<Gfx::IntRect*, 8> reachable_rects;
+
+        auto recalculate_reachable = [&]() {
+            reachable_rects = { &screen_virtual_rects[main_screen_index] };
+            bool did_reach_another;
+            do {
+                did_reach_another = false;
+                auto& latest_reachable_rect = *reachable_rects[reachable_rects.size() - 1];
+                for (auto& rect : screen_virtual_rects) {
+                    if (&rect == &latest_reachable_rect || reachable_rects.contains_slow(&rect))
+                        continue;
+                    if (rect.is_adjacent(latest_reachable_rect)) {
+                        reachable_rects.append(&rect);
+                        did_reach_another = true;
+                        break;
+                    }
+                }
+            } while (did_reach_another);
+        };
+
+        recalculate_reachable();
+        if (reachable_rects.size() != screen_virtual_rects.size()) {
+            // Some screens were not reachable, try to move one somewhere closer
+            for (auto& screen_rect : screen_virtual_rects) {
+                if (reachable_rects.contains_slow(&screen_rect))
+                    continue;
+
+                float closest_distance = 0;
+                Gfx::IntRect* closest_rect = nullptr;
+                for (auto& screen_rect2 : screen_virtual_rects) {
+                    if (&screen_rect2 == &screen_rect)
+                        continue;
+                    if (!reachable_rects.contains_slow(&screen_rect2))
+                        continue;
+                    auto distance = screen_rect.outside_center_point_distance_to(screen_rect2);
+                    if (!closest_rect || distance < closest_distance) {
+                        closest_distance = distance;
+                        closest_rect = &screen_rect2;
+                    }
+                }
+                VERIFY(closest_rect); // We should always have one!
+                VERIFY(closest_rect != &screen_rect);
+
+                // Move the screen_rect closer to closest_rect
+                auto is_adjacent_to_reachable = [&]() {
+                    for (auto* rect : reachable_rects) {
+                        if (rect == &screen_rect)
+                            continue;
+                        if (screen_rect.is_adjacent(*rect))
+                            return true;
+                    }
+                    return false;
+                };
+
+                // Move it until we're touching a reachable screen
+                do {
+                    auto outside_center_points = screen_rect.closest_outside_center_points(*closest_rect);
+                    int delta_x = 0;
+                    if (outside_center_points[0].x() < outside_center_points[1].x())
+                        delta_x = 1;
+                    else if (outside_center_points[0].x() > outside_center_points[1].x())
+                        delta_x = -1;
+                    int delta_y = 0;
+                    if (outside_center_points[0].y() < outside_center_points[1].y())
+                        delta_y = 1;
+                    else if (outside_center_points[0].y() > outside_center_points[1].y())
+                        delta_y = -1;
+                    VERIFY(delta_x != 0 || delta_y != 0);
+                    screen_rect.translate_by(delta_x, delta_y);
+                } while (!is_adjacent_to_reachable());
+
+                recalculate_reachable();
+                did_change = true;
+                break; // We only try to move one at at time
+            }
+
+            // Moved the screen, re-evaluate
+            continue;
+        }
+        break;
+    }
+
     int smallest_x = 0;
     int smallest_y = 0;
-    for (size_t i = 0; i < screens.size(); i++) {
-        auto& screen = screens[i];
-        if (i == 0 || screen.location.x() < smallest_x)
-            smallest_x = screen.location.x();
-        if (i == 0 || screen.location.y() < smallest_y)
-            smallest_y = screen.location.y();
+    for (size_t i = 0; i < screen_virtual_rects.size(); i++) {
+        auto& rect = screen_virtual_rects[i];
+        if (i == 0 || rect.x() < smallest_x)
+            smallest_x = rect.x();
+        if (i == 0 || rect.y() < smallest_y)
+            smallest_y = rect.y();
     }
     if (smallest_x != 0 || smallest_y != 0) {
-        for (auto& screen : screens)
-            screen.location.translate_by(-smallest_x, -smallest_y);
+        for (auto& rect : screen_virtual_rects)
+            rect.translate_by(-smallest_x, -smallest_y);
+        did_change = true;
     }
+
+    for (size_t i = 0; i < screens.size(); i++)
+        screens[i].location = screen_virtual_rects[i].location();
+
+    VERIFY(is_valid());
+    return did_change;
 }
 
 bool ScreenLayout::load_config(const Core::ConfigFile& config_file, String* error_msg)
@@ -213,11 +316,24 @@ bool ScreenLayout::try_auto_add_framebuffer(String const& device_path)
         resolution.height = main_screen.resolution.height();
     }
 
+    auto append_screen = [&](Gfx::IntRect const& new_screen_rect) {
+        screens.append({ .device = device_path,
+            .location = new_screen_rect.location(),
+            .resolution = new_screen_rect.size(),
+            .scale_factor = 1 });
+    };
+
+    if (screens.is_empty()) {
+        append_screen({ 0, 0, (int)resolution.width, (int)resolution.height });
+        return true;
+    }
+
     auto original_screens = move(screens);
     screens = original_screens;
     ArmedScopeGuard screens_guard([&] {
         screens = move(original_screens);
     });
+
     // Now that we know the current resolution, try to find a location that we can add onto
     // TODO: make this a little more sophisticated in case a more complex layout is already configured
     for (auto& screen : screens) {
@@ -240,13 +356,7 @@ bool ScreenLayout::try_auto_add_framebuffer(String const& device_path)
         }
 
         if (!collision) {
-            screens.append({
-                .device = device_path,
-                .location = new_screen_rect.location(),
-                .resolution = new_screen_rect.size(),
-                .scale_factor = 1
-            });
-
+            append_screen(new_screen_rect);
             if (is_valid()) {
                 // We got lucky!
                 screens_guard.disarm();

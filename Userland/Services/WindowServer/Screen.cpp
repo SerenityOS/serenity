@@ -19,7 +19,7 @@
 
 namespace WindowServer {
 
-NonnullOwnPtrVector<Screen, default_screen_count> Screen::s_screens;
+NonnullRefPtrVector<Screen, default_screen_count> Screen::s_screens;
 Screen* Screen::s_main_screen { nullptr };
 Gfx::IntRect Screen::s_bounding_screens_rect {};
 ScreenLayout Screen::s_layout;
@@ -55,39 +55,137 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
     if (!screen_layout.is_valid(&error_msg))
         return false;
 
+    if (screen_layout == s_layout)
+        return true;
+
+    bool place_cursor_on_main_screen = find_by_location(ScreenInput::the().cursor_location()) == nullptr;
+
+    HashMap<size_t, size_t> current_to_new_indices_map;
+    HashMap<size_t, size_t> new_to_current_indices_map;
+    HashMap<size_t, NonnullRefPtr<Screen>> devices_no_longer_used;
+    for (size_t i = 0; i < s_layout.screens.size(); i++) {
+        auto& screen = s_layout.screens[i];
+        bool found = false;
+        for (size_t j = 0; j < screen_layout.screens.size(); j++) {
+            auto& new_screen = screen_layout.screens[j];
+            if (new_screen.device == screen.device) {
+                current_to_new_indices_map.set(i, j);
+                new_to_current_indices_map.set(j, i);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+            devices_no_longer_used.set(i, s_screens[i]);
+    }
+    HashMap<Screen*, size_t> screens_with_resolution_change;
+    HashMap<Screen*, size_t> screens_with_scale_change;
+    for (auto& it : current_to_new_indices_map) {
+        auto& screen = s_layout.screens[it.key];
+        auto& new_screen = screen_layout.screens[it.value];
+        if (screen.resolution != new_screen.resolution)
+            screens_with_resolution_change.set(&s_screens[it.key], it.value);
+        if (screen.scale_factor != new_screen.scale_factor)
+            screens_with_scale_change.set(&s_screens[it.key], it.value);
+    }
+
     auto screens_backup = move(s_screens);
     auto layout_backup = move(s_layout);
-    for (auto& old_screen : screens_backup)
-        old_screen.close_device();
+
+    for (auto& it : screens_with_resolution_change) {
+        auto& existing_screen = *it.key;
+        dbgln("Closing device {} in preparation for resolution change", layout_backup.screens[existing_screen.index()].device);
+        existing_screen.close_device();
+    }
 
     AK::ArmedScopeGuard rollback([&] {
         for (auto& screen : s_screens)
             screen.close_device();
         s_screens = move(screens_backup);
         s_layout = move(layout_backup);
-        for (auto& old_screen : screens_backup) {
-            if (!old_screen.open_device()) {
-                // Don't set error_msg here, it should already be set
-                dbgln("Rolling back screen layout failed: could not open device");
+        for (size_t i = 0; i < s_screens.size(); i++) {
+            auto& old_screen = s_screens[i];
+            // Restore the original screen index in case it changed
+            old_screen.set_index(i);
+            if (i == s_layout.main_screen_index)
+                old_screen.make_main_screen();
+            bool changed_scale = screens_with_scale_change.contains(&old_screen);
+            if (screens_with_resolution_change.contains(&old_screen)) {
+                if (old_screen.open_device()) {
+                    // The resolution was changed, so we also implicitly applied the new scale factor
+                    changed_scale = false;
+                } else {
+                    // Don't set error_msg here, it should already be set
+                    dbgln("Rolling back screen layout failed: could not open device");
+                }
             }
+
+            old_screen.update_virtual_rect();
+            if (changed_scale)
+                old_screen.scale_factor_changed();
         }
         update_bounding_rect();
     });
     s_layout = move(screen_layout);
     for (size_t index = 0; index < s_layout.screens.size(); index++) {
-        auto* screen = WindowServer::Screen::create(s_layout.screens[index]);
-        if (!screen) {
-            error_msg = String::formatted("Error creating screen #{}", index);
+        Screen* screen;
+        bool need_to_open_device;
+        if (auto it = new_to_current_indices_map.find(index); it != new_to_current_indices_map.end()) {
+            // Re-use the existing screen instance
+            screen = &screens_backup[it->value];
+            s_screens.append(*screen);
+            screen->set_index(index);
+
+            need_to_open_device = screens_with_resolution_change.contains(screen);
+        } else {
+            screen = WindowServer::Screen::create(index);
+            if (!screen) {
+                error_msg = String::formatted("Error creating screen #{}", index);
+                return false;
+            }
+
+            need_to_open_device = true;
+        }
+
+        if (need_to_open_device && !screen->open_device()) {
+            error_msg = String::formatted("Error opening device for screen #{}", index);
             return false;
         }
 
+        screen->update_virtual_rect();
+        if (!need_to_open_device && screens_with_scale_change.contains(screen))
+            screen->scale_factor_changed();
+
+        VERIFY(screen);
+        VERIFY(index == screen->index());
+
         if (s_layout.main_screen_index == index)
             screen->make_main_screen();
-
-        screen->open_device();
     }
 
     rollback.disarm();
+
+    if (place_cursor_on_main_screen) {
+        ScreenInput::the().set_cursor_location(Screen::main().rect().center());
+    } else {
+        auto cursor_location = ScreenInput::the().cursor_location();
+        if (!find_by_location(cursor_location)) {
+            // Cursor is off screen, try to find the closest location on another screen
+            float closest_distance = 0;
+            Optional<Gfx::IntPoint> closest_point;
+            for (auto& screen : s_screens) {
+                auto closest_point_on_screen_rect = screen.rect().closest_to(cursor_location);
+                auto distance = closest_point_on_screen_rect.distance_from(cursor_location);
+                if (!closest_point.has_value() || distance < closest_distance) {
+                    closest_distance = distance;
+                    closest_point = closest_point_on_screen_rect;
+                }
+            }
+            ScreenInput::the().set_cursor_location(closest_point.value()); // We should always have one
+        }
+    }
+
     update_bounding_rect();
     update_scale_factors_in_use();
     return true;
@@ -108,17 +206,13 @@ void Screen::update_scale_factors_in_use()
     });
 }
 
-Screen::Screen(ScreenLayout::Screen& screen_info)
-    : m_virtual_rect(screen_info.location, { screen_info.resolution.width() / screen_info.scale_factor, screen_info.resolution.height() / screen_info.scale_factor })
+Screen::Screen(size_t screen_index)
+    : m_index(screen_index)
     , m_framebuffer_data(adopt_own(*new ScreenFBData()))
-    , m_info(screen_info)
+    , m_compositor_screen_data(Compositor::create_screen_data({}))
 {
+    update_virtual_rect();
     open_device();
-
-    // If the cursor is not in a valid screen (yet), force it into one
-    dbgln("Screen() current physical cursor location: {} rect: {}", ScreenInput::the().cursor_location(), rect());
-    if (!find_by_location(ScreenInput::the().cursor_location()))
-        ScreenInput::the().set_cursor_location(rect().center());
 }
 
 Screen::~Screen()
@@ -129,9 +223,10 @@ Screen::~Screen()
 bool Screen::open_device()
 {
     close_device();
-    m_framebuffer_fd = open(m_info.device.characters(), O_RDWR | O_CLOEXEC);
+    auto& info = screen_layout_info();
+    m_framebuffer_fd = open(info.device.characters(), O_RDWR | O_CLOEXEC);
     if (m_framebuffer_fd < 0) {
-        perror(String::formatted("failed to open {}", m_info.device).characters());
+        perror(String::formatted("failed to open {}", info.device).characters());
         return false;
     }
 
@@ -154,6 +249,19 @@ void Screen::close_device()
         m_framebuffer = nullptr;
         m_size_in_bytes = 0;
     }
+}
+
+void Screen::update_virtual_rect()
+{
+    auto& screen_info = screen_layout_info();
+    m_virtual_rect = { screen_info.location, { screen_info.resolution.width() / screen_info.scale_factor, screen_info.resolution.height() / screen_info.scale_factor } };
+    dbgln("update_virtual_rect for screen #{}: {}", index(), m_virtual_rect);
+}
+
+void Screen::scale_factor_changed()
+{
+    // Flush rects are affected by the screen factor
+    constrain_pending_flush_rects();
 }
 
 void Screen::init()
@@ -208,12 +316,13 @@ bool Screen::set_resolution(bool initial)
     if (!initial)
         screen_with_cursor = &ScreenInput::the().cursor_location_screen();
 
-    FBResolution physical_resolution { 0, (unsigned)m_info.resolution.width(), (unsigned)m_info.resolution.height() };
+    auto& info = screen_layout_info();
+    FBResolution physical_resolution { 0, (unsigned)info.resolution.width(), (unsigned)info.resolution.height() };
     int rc = fb_set_resolution(m_framebuffer_fd, &physical_resolution);
     dbgln_if(WSSCREEN_DEBUG, "Screen #{}: fb_set_resolution() - return code {}", index(), rc);
 
     auto on_change_resolution = [&]() {
-        if (initial || physical_resolution.width != (unsigned)m_info.resolution.width() || physical_resolution.height != (unsigned)m_info.resolution.height()) {
+        if (initial || physical_resolution.width != (unsigned)info.resolution.width() || physical_resolution.height != (unsigned)info.resolution.height()) {
             if (m_framebuffer) {
                 size_t previous_size_in_bytes = m_size_in_bytes;
                 int rc = munmap(m_framebuffer, previous_size_in_bytes);
@@ -240,8 +349,15 @@ bool Screen::set_resolution(bool initial)
             }
         }
 
-        m_info.resolution = { physical_resolution.width, physical_resolution.height };
+        info.resolution = { physical_resolution.width, physical_resolution.height };
         m_pitch = physical_resolution.pitch;
+
+        update_virtual_rect();
+
+        // Since pending flush rects are affected by the scale factor
+        // update even if only the scale factor changed
+        constrain_pending_flush_rects();
+
         if (this == screen_with_cursor) {
             auto& screen_input = ScreenInput::the();
             screen_input.set_cursor_location(screen_input.cursor_location().constrained(rect()));
@@ -254,7 +370,7 @@ bool Screen::set_resolution(bool initial)
     }
     if (rc == -1) {
         int err = errno;
-        dbgln("Screen #{}: Failed to set resolution {}: {}", index(), m_info.resolution, strerror(err));
+        dbgln("Screen #{}: Failed to set resolution {}: {}", index(), info.resolution, strerror(err));
         on_change_resolution();
         return false;
     }
@@ -345,6 +461,30 @@ void ScreenInput::on_receive_keyboard_data(::KeyEvent kernel_event)
     Core::EventLoop::current().post_event(WindowManager::the(), move(message));
 }
 
+void Screen::constrain_pending_flush_rects()
+{
+    auto& fb_data = *m_framebuffer_data;
+    if (fb_data.pending_flush_rects.is_empty())
+        return;
+    Gfx::IntRect screen_rect({}, rect().size());
+    Gfx::DisjointRectSet rects;
+    for (auto& fb_rect : fb_data.pending_flush_rects) {
+        Gfx::IntRect rect { (int)fb_rect.x, (int)fb_rect.y, (int)fb_rect.width, (int)fb_rect.height };
+        auto intersected_rect = rect.intersected(screen_rect);
+        if (!intersected_rect.is_empty())
+            rects.add(intersected_rect);
+    }
+    fb_data.pending_flush_rects.clear_with_capacity();
+    for (auto& rect : rects.rects()) {
+        fb_data.pending_flush_rects.append({
+            x : (unsigned)rect.x(),
+            y : (unsigned)rect.y(),
+            width : (unsigned)rect.width(),
+            height : (unsigned)rect.height()
+        });
+    }
+}
+
 void Screen::queue_flush_display_rect(Gfx::IntRect const& flush_region)
 {
     // NOTE: we don't scale until in Screen::flush_display so that when
@@ -396,6 +536,7 @@ void Screen::flush_display(int buffer_index)
     // Now that we have a final set of rects, apply the scale factor
     auto scale_factor = this->scale_factor();
     for (auto& flush_rect : fb_data.pending_flush_rects) {
+        VERIFY(Gfx::IntRect({}, m_virtual_rect.size()).contains({ (int)flush_rect.x, (int)flush_rect.y, (int)flush_rect.width, (int)flush_rect.height }));
         flush_rect.x *= scale_factor;
         flush_rect.y *= scale_factor;
         flush_rect.width *= scale_factor;
@@ -425,6 +566,7 @@ void Screen::flush_display_front_buffer(int front_buffer_index, Gfx::IntRect& re
         .height = (unsigned)(rect.height() * scale_factor)
     };
 
+    VERIFY(Gfx::IntRect({}, m_virtual_rect.size()).contains(rect));
     if (fb_flush_buffers(m_framebuffer_fd, front_buffer_index, &flush_rect, 1) < 0) {
         int err = errno;
         if (err == ENOTSUP)

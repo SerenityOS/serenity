@@ -82,32 +82,52 @@ int main(int, char**)
         AK::HashTable<String> fb_devices_configured;
         WindowServer::ScreenLayout screen_layout;
         String error_msg;
-        if (!screen_layout.load_config(*wm_config, &error_msg)) {
+
+        auto add_unconfigured_devices = [&]() {
+            // Enumerate the /dev/fbX devices and try to set up any ones we find that we haven't already used
+            Core::DirIterator di("/dev", Core::DirIterator::SkipParentAndBaseDir);
+            while (di.has_next()) {
+                auto path = di.next_path();
+                if (!path.starts_with("fb"))
+                    continue;
+                auto full_path = String::formatted("/dev/{}", path);
+                if (!Core::File::is_device(full_path))
+                    continue;
+                if (fb_devices_configured.find(full_path) != fb_devices_configured.end())
+                    continue;
+                if (!screen_layout.try_auto_add_framebuffer(full_path))
+                    dbgln("Could not auto-add framebuffer device {} to screen layout", full_path);
+            }
+        };
+
+        auto apply_and_generate_generic_screen_layout = [&]() {
+            screen_layout = {};
+            fb_devices_configured = {};
+            add_unconfigured_devices();
+            if (!WindowServer::Screen::apply_layout(move(screen_layout), error_msg)) {
+                dbgln("Failed to apply generated fallback screen layout: {}", error_msg);
+                return false;
+            }
+
+            dbgln("Applied generated fallback screen layout!");
+            return true;
+        };
+
+        if (screen_layout.load_config(*wm_config, &error_msg)) {
+            for (auto& screen_info : screen_layout.screens)
+                fb_devices_configured.set(screen_info.device);
+
+            add_unconfigured_devices();
+
+            if (!WindowServer::Screen::apply_layout(move(screen_layout), error_msg)) {
+                dbgln("Error applying screen layout: {}", error_msg);
+                if (!apply_and_generate_generic_screen_layout())
+                    return 1;
+            }
+        } else {
             dbgln("Error loading screen configuration: {}", error_msg);
-            return 1;
-        }
-
-        for (auto& screen_info : screen_layout.screens)
-            fb_devices_configured.set(screen_info.device);
-
-        // Enumerate the /dev/fbX devices and try to set up any ones we find that we haven't already used
-        Core::DirIterator di("/dev", Core::DirIterator::SkipParentAndBaseDir);
-        while (di.has_next()) {
-            auto path = di.next_path();
-            if (!path.starts_with("fb"))
-                continue;
-            auto full_path = String::formatted("/dev/{}", path);
-            if (!Core::File::is_device(full_path))
-                continue;
-            if (fb_devices_configured.find(full_path) != fb_devices_configured.end())
-                continue;
-            if (!screen_layout.try_auto_add_framebuffer(full_path))
-                dbgln("Could not auto-add framebuffer device {} to screen layout", full_path);
-        }
-
-        if (!WindowServer::Screen::apply_layout(move(screen_layout), error_msg)) {
-            dbgln("Error applying screen layout: {}", error_msg);
-            return 1;
+            if (!apply_and_generate_generic_screen_layout())
+                return 1;
         }
     }
 
