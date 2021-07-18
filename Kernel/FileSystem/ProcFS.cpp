@@ -184,7 +184,6 @@ NonnullRefPtr<ProcFSDirectoryInode> ProcFSDirectoryInode::create(const ProcFS& p
 
 ProcFSDirectoryInode::ProcFSDirectoryInode(const ProcFS& fs, const ProcFSExposedComponent& component)
     : ProcFSInode(fs, component)
-    , m_parent_fs(const_cast<ProcFS&>(fs))
 {
 }
 
@@ -205,17 +204,17 @@ InodeMetadata ProcFSDirectoryInode::metadata() const
 }
 KResult ProcFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    MutexLocker locker(m_parent_fs.m_lock);
-    return m_associated_component->traverse_as_directory(m_parent_fs.fsid(), move(callback));
+    MutexLocker locker(fs().m_lock);
+    return m_associated_component->traverse_as_directory(fs().fsid(), move(callback));
 }
 
 RefPtr<Inode> ProcFSDirectoryInode::lookup(StringView name)
 {
-    MutexLocker locker(m_parent_fs.m_lock);
+    MutexLocker locker(fs().m_lock);
     auto component = m_associated_component->lookup(name);
     if (!component)
         return {};
-    return component->to_inode(m_parent_fs);
+    return component->to_inode(fs());
 }
 
 NonnullRefPtr<ProcFSLinkInode> ProcFSLinkInode::create(const ProcFS& procfs, const ProcFSExposedComponent& component)
