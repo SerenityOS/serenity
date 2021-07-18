@@ -1405,17 +1405,171 @@ RefPtr<StyleValue> Parser::parse_identifier_value(ParsingContext const&, StyleCo
 
 RefPtr<StyleValue> Parser::parse_color_value(ParsingContext const&, StyleComponentValueRule const& component_value)
 {
+    // https://www.w3.org/TR/css-color-3/
     auto parse_css_color = [&]() -> Optional<Color> {
-        if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("transparent"))
-            return Color::from_rgba(0x00000000);
+        if (component_value.is(Token::Type::Ident)) {
+            auto ident = component_value.token().ident();
+            if (ident.equals_ignoring_case("transparent"))
+                return Color::from_rgba(0x00000000);
 
-        // FIXME: Handle all the different color notations.
-        // https://www.w3.org/TR/css-color-3/
-        // Right now, this uses non-CSS-specific parsing, and assumes the whole color value is one token,
-        // which is isn't if it's a function-style syntax.
-        auto color = Color::from_string(component_value.token().m_value.to_string().to_lowercase());
-        if (color.has_value())
-            return color;
+            auto color = Color::from_string(ident.to_string().to_lowercase());
+            if (color.has_value())
+                return color;
+
+        } else if (component_value.is(Token::Type::Hash)) {
+            // FIXME: Read it directly
+            auto color = Color::from_string(String::formatted("#{}", component_value.token().m_value.to_string().to_lowercase()));
+            if (color.has_value())
+                return color;
+
+        } else if (component_value.is_function()) {
+            auto& function = component_value.function();
+            auto& values = function.values();
+
+            Vector<Token> params;
+            for (size_t i = 0; i < values.size(); ++i) {
+                auto& value = values.at(i);
+                if (value.is(Token::Type::Whitespace))
+                    continue;
+
+                if (value.is(Token::Type::Percentage) || value.is(Token::Type::Number)) {
+                    params.append(value.token());
+                    // Eat following comma and whitespace
+                    while ((i + 1) < values.size()) {
+                        auto& next = values.at(i + 1);
+                        if (next.is(Token::Type::Whitespace))
+                            i++;
+                        else if (next.is(Token::Type::Comma))
+                            break;
+
+                        return {};
+                    }
+                }
+            }
+
+            if (function.name().equals_ignoring_case("rgb")) {
+                if (params.size() != 3)
+                    return {};
+
+                auto r_val = params[0];
+                auto g_val = params[1];
+                auto b_val = params[2];
+
+                if (r_val.is(Token::NumberType::Integer)
+                    && g_val.is(Token::NumberType::Integer)
+                    && b_val.is(Token::NumberType::Integer)) {
+
+                    auto maybe_r = r_val.m_value.string_view().to_uint<u8>();
+                    auto maybe_g = g_val.m_value.string_view().to_uint<u8>();
+                    auto maybe_b = b_val.m_value.string_view().to_uint<u8>();
+                    if (maybe_r.has_value() && maybe_g.has_value() && maybe_b.has_value())
+                        return Color(maybe_r.value(), maybe_g.value(), maybe_b.value());
+
+                } else if (r_val.is(Token::Type::Percentage)
+                    && g_val.is(Token::Type::Percentage)
+                    && b_val.is(Token::Type::Percentage)) {
+
+                    auto maybe_r = try_parse_float(r_val.m_value.string_view());
+                    auto maybe_g = try_parse_float(g_val.m_value.string_view());
+                    auto maybe_b = try_parse_float(b_val.m_value.string_view());
+                    if (maybe_r.has_value() && maybe_g.has_value() && maybe_b.has_value()) {
+                        u8 r = clamp(lroundf(maybe_r.value() * 2.55f), 0, 255);
+                        u8 g = clamp(lroundf(maybe_g.value() * 2.55f), 0, 255);
+                        u8 b = clamp(lroundf(maybe_b.value() * 2.55f), 0, 255);
+                        return Color(r, g, b);
+                    }
+                }
+            } else if (function.name().equals_ignoring_case("rgba")) {
+                if (params.size() != 4)
+                    return {};
+
+                auto r_val = params[0];
+                auto g_val = params[1];
+                auto b_val = params[2];
+                auto a_val = params[3];
+
+                if (r_val.is(Token::NumberType::Integer)
+                    && g_val.is(Token::NumberType::Integer)
+                    && b_val.is(Token::NumberType::Integer)
+                    && a_val.is(Token::Type::Number)) {
+
+                    auto maybe_r = r_val.m_value.string_view().to_uint<u8>();
+                    auto maybe_g = g_val.m_value.string_view().to_uint<u8>();
+                    auto maybe_b = b_val.m_value.string_view().to_uint<u8>();
+                    auto maybe_a = try_parse_float(a_val.m_value.string_view());
+                    if (maybe_r.has_value() && maybe_g.has_value() && maybe_b.has_value() && maybe_a.has_value()) {
+                        u8 a = clamp(lroundf(maybe_a.value() * 255.0f), 0, 255);
+                        return Color(maybe_r.value(), maybe_g.value(), maybe_b.value(), a);
+                    }
+
+                } else if (r_val.is(Token::Type::Percentage)
+                    && g_val.is(Token::Type::Percentage)
+                    && b_val.is(Token::Type::Percentage)
+                    && a_val.is(Token::Type::Number)) {
+
+                    auto maybe_r = try_parse_float(r_val.m_value.string_view());
+                    auto maybe_g = try_parse_float(g_val.m_value.string_view());
+                    auto maybe_b = try_parse_float(b_val.m_value.string_view());
+                    auto maybe_a = try_parse_float(a_val.m_value.string_view());
+                    if (maybe_r.has_value() && maybe_g.has_value() && maybe_b.has_value() && maybe_a.has_value()) {
+                        u8 r = clamp(lroundf(maybe_r.value() * 2.55f), 0, 255);
+                        u8 g = clamp(lroundf(maybe_g.value() * 2.55f), 0, 255);
+                        u8 b = clamp(lroundf(maybe_b.value() * 2.55f), 0, 255);
+                        u8 a = clamp(lroundf(maybe_a.value() * 255.0f), 0, 255);
+                        return Color(r, g, b, a);
+                    }
+                }
+            } else if (function.name().equals_ignoring_case("hsl")) {
+                if (params.size() != 3)
+                    return {};
+
+                auto h_val = params[0];
+                auto s_val = params[1];
+                auto l_val = params[2];
+
+                if (h_val.is(Token::Type::Number)
+                    && s_val.is(Token::Type::Percentage)
+                    && l_val.is(Token::Type::Percentage)) {
+
+                    auto maybe_h = try_parse_float(h_val.m_value.string_view());
+                    auto maybe_s = try_parse_float(s_val.m_value.string_view());
+                    auto maybe_l = try_parse_float(l_val.m_value.string_view());
+                    if (maybe_h.has_value() && maybe_s.has_value() && maybe_l.has_value()) {
+                        float h = maybe_h.value();
+                        float s = maybe_s.value() / 100.0f;
+                        float l = maybe_l.value() / 100.0f;
+                        return Color::from_hsl(h, s, l);
+                    }
+                }
+            } else if (function.name().equals_ignoring_case("hsla")) {
+                if (params.size() != 4)
+                    return {};
+
+                auto h_val = params[0];
+                auto s_val = params[1];
+                auto l_val = params[2];
+                auto a_val = params[3];
+
+                if (h_val.is(Token::Type::Number)
+                    && s_val.is(Token::Type::Percentage)
+                    && l_val.is(Token::Type::Percentage)
+                    && a_val.is(Token::Type::Number)) {
+
+                    auto maybe_h = try_parse_float(h_val.m_value.string_view());
+                    auto maybe_s = try_parse_float(s_val.m_value.string_view());
+                    auto maybe_l = try_parse_float(l_val.m_value.string_view());
+                    auto maybe_a = try_parse_float(a_val.m_value.string_view());
+                    if (maybe_h.has_value() && maybe_s.has_value() && maybe_l.has_value() && maybe_a.has_value()) {
+                        float h = maybe_h.value();
+                        float s = maybe_s.value() / 100.0f;
+                        float l = maybe_l.value() / 100.0f;
+                        float a = maybe_a.value();
+                        return Color::from_hsla(h, s, l, a);
+                    }
+                }
+            }
+            return {};
+        }
 
         return {};
     };

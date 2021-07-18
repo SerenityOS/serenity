@@ -76,6 +76,8 @@ public:
         return m_value.string_view();
     }
 
+    bool is(NumberType number_type) const { return is(Token::Type::Number) && m_number_type == number_type; }
+
     int integer() const
     {
         VERIFY(m_type == Type::Number && m_number_type == NumberType::Integer);
