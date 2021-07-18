@@ -157,4 +157,9 @@ void ClientConnection::prompt_helper(Optional<String> const& user_picked_file, C
     }
 }
 
+Messages::FileSystemAccessServer::ExposeWindowServerClientIdResponse ClientConnection::expose_window_server_client_id()
+{
+    return GUI::WindowServerConnection::the().expose_client_id();
+}
+
 }
