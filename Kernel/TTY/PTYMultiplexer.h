@@ -8,7 +8,7 @@
 
 #include <AK/Badge.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/Mutex.h>
+#include <Kernel/Locking/Mutex.h>
 
 namespace Kernel {
 

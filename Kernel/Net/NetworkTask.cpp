@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Debug.h>
-#include <Kernel/Mutex.h>
+#include <Kernel/Locking/Mutex.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/EthernetFrameHeader.h>

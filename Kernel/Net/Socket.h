@@ -12,7 +12,7 @@
 #include <AK/Time.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/KResult.h>
-#include <Kernel/Mutex.h>
+#include <Kernel/Locking/Mutex.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/UnixTypes.h>
 

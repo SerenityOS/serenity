@@ -14,8 +14,8 @@
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/Region.h>
-#include <Kernel/Mutex.h>
 
 namespace Kernel::Memory {
 

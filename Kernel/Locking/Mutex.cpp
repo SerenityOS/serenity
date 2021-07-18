@@ -9,7 +9,7 @@
 #endif
 #include <Kernel/Debug.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Mutex.h>
+#include <Kernel/Locking/Mutex.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/Thread.h>
 
