@@ -16,7 +16,7 @@ class RequestClient;
 }
 
 namespace Web {
-
+class FileSystemAccessClient;
 #if ARCH(I386)
 #    define CPU_STRING "x86"
 #else
@@ -54,6 +54,7 @@ private:
     int m_pending_loads { 0 };
 
     RefPtr<Protocol::RequestClient> m_protocol_client;
+    NonnullRefPtr<FileSystemAccessClient> m_file_system_access_client;
     String m_user_agent;
 };
 

@@ -7,16 +7,35 @@
 #include <AK/Base64.h>
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
+#include <FileSystemAccessServer/FileSystemAccessClientEndpoint.h>
+#include <FileSystemAccessServer/FileSystemAccessServerEndpoint.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibIPC/ServerConnection.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/LoadRequest.h>
 #include <LibWeb/Loader/Resource.h>
 #include <LibWeb/Loader/ResourceLoader.h>
-
 namespace Web {
+
+class FileSystemAccessClient final
+    : public IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>
+    , public FileSystemAccessClientEndpoint {
+    C_OBJECT(FileSystemAccessClient)
+
+public:
+    virtual void die() override
+    {
+    }
+
+private:
+    explicit FileSystemAccessClient()
+        : IPC::ServerConnection<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, "/tmp/portal/filesystemaccess")
+    {
+    }
+};
 
 ResourceLoader& ResourceLoader::the()
 {
@@ -28,6 +47,7 @@ ResourceLoader& ResourceLoader::the()
 
 ResourceLoader::ResourceLoader()
     : m_protocol_client(Protocol::RequestClient::construct())
+    , m_file_system_access_client(FileSystemAccessClient::construct())
     , m_user_agent(default_user_agent)
 {
 }
@@ -132,12 +152,25 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
 
     if (url.protocol() == "file") {
         auto f = Core::File::construct();
+
+        // Try direct access first
         f->set_filename(url.path());
         if (!f->open(Core::OpenMode::ReadOnly)) {
-            dbgln("ResourceLoader::load: Error: {}", f->error_string());
-            if (error_callback)
-                error_callback(f->error_string(), {});
-            return;
+            // Retry using FileSystemAccessServer
+            auto response = m_file_system_access_client->request_file(url.path(), Core::OpenMode::ReadOnly);
+            if (response.error() != 0) {
+                dbgln("Loading {} using FileSystemAccessServer failed: {}", url.to_string(), strerror(response.error()));
+                if (error_callback)
+                    error_callback(String::formatted("Loading \"{}\" failed: {}", url.to_string(), strerror(response.error())), {});
+                return;
+            }
+
+            if (!f->open(response.fd()->take_fd(), Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes)) {
+                dbgln("ResourceLoader::load: Error: {}", f->error_string());
+                if (error_callback)
+                    error_callback(f->error_string(), {});
+                return;
+            }
         }
 
         auto data = f->read_all();
