@@ -27,7 +27,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/KString.h>
-#include <Kernel/LockMode.h>
+#include <Kernel/Locking/LockMode.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/TimerQueue.h>
