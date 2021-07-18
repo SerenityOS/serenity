@@ -54,17 +54,33 @@ void MonitorSettingsWidget::create_frame()
 
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 
+    m_screen_combo = *find_descendant_of_type_named<GUI::ComboBox>("screen_combo");
+    m_screen_combo->set_only_allow_values_from_model(true);
+    m_screen_combo->set_model(*GUI::ItemListModel<String>::create(m_screens));
+    m_screen_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
+        m_selected_screen_index = index.row();
+        selected_screen_index_changed();
+    };
+
     m_resolution_combo = *find_descendant_of_type_named<GUI::ComboBox>("resolution_combo");
     m_resolution_combo->set_only_allow_values_from_model(true);
     m_resolution_combo->set_model(*GUI::ItemListModel<Gfx::IntSize>::create(m_resolutions));
     m_resolution_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
-        m_monitor_widget->set_desktop_resolution(m_resolutions.at(index.row()));
+        auto& selected_screen = m_screen_layout.screens[m_selected_screen_index];
+        selected_screen.resolution = m_resolutions.at(index.row());
+        // Try to auto re-arrange things if there are overlaps or disconnected screens
+        m_screen_layout.normalize();
+        m_monitor_widget->set_desktop_resolution(selected_screen.resolution);
         m_monitor_widget->update();
     };
 
     m_display_scale_radio_1x = *find_descendant_of_type_named<GUI::RadioButton>("scale_1x");
     m_display_scale_radio_1x->on_checked = [this](bool checked) {
         if (checked) {
+            auto& selected_screen = m_screen_layout.screens[m_selected_screen_index];
+            selected_screen.scale_factor = 1;
+            // Try to auto re-arrange things if there are overlaps or disconnected screens
+            m_screen_layout.normalize();
             m_monitor_widget->set_desktop_scale_factor(1);
             m_monitor_widget->update();
         }
@@ -72,6 +88,10 @@ void MonitorSettingsWidget::create_frame()
     m_display_scale_radio_2x = *find_descendant_of_type_named<GUI::RadioButton>("scale_2x");
     m_display_scale_radio_2x->on_checked = [this](bool checked) {
         if (checked) {
+            auto& selected_screen = m_screen_layout.screens[m_selected_screen_index];
+            selected_screen.scale_factor = 2;
+            // Try to auto re-arrange things if there are overlaps or disconnected screens
+            m_screen_layout.normalize();
             m_monitor_widget->set_desktop_scale_factor(2);
             m_monitor_widget->update();
         }
@@ -81,7 +101,22 @@ void MonitorSettingsWidget::create_frame()
 void MonitorSettingsWidget::load_current_settings()
 {
     m_screen_layout = GUI::WindowServerConnection::the().get_screen_layout();
-    auto& screen = m_screen_layout.screens[m_screen_layout.main_screen_index];
+
+    m_screens.clear();
+    for (size_t i = 0; i < m_screen_layout.screens.size(); i++) {
+        if (i == m_screen_layout.main_screen_index)
+            m_screens.append(String::formatted("{}: {} (main screen)", i + 1, m_screen_layout.screens[i].device));
+        else
+            m_screens.append(String::formatted("{}: {}", i + 1, m_screen_layout.screens[i].device));
+    }
+    m_selected_screen_index = m_screen_layout.main_screen_index;
+    m_screen_combo->set_selected_index(m_selected_screen_index);
+    selected_screen_index_changed();
+}
+
+void MonitorSettingsWidget::selected_screen_index_changed()
+{
+    auto& screen = m_screen_layout.screens[m_selected_screen_index];
     if (screen.scale_factor != 1 && screen.scale_factor != 2) {
         dbgln("unexpected ScaleFactor {}, setting to 1", screen.scale_factor);
         screen.scale_factor = 1;
@@ -100,11 +135,6 @@ void MonitorSettingsWidget::load_current_settings()
 
 void MonitorSettingsWidget::apply_settings()
 {
-    // TODO: implement multi-screen support
-    auto& main_screen = m_screen_layout.screens[m_screen_layout.main_screen_index];
-    main_screen.resolution = m_monitor_widget->desktop_resolution();
-    main_screen.scale_factor = (m_display_scale_radio_2x->is_checked() ? 2 : 1);
-
     // Fetch the latest configuration again, in case it has been changed by someone else.
     // This isn't technically race free, but if the user automates changing settings we can't help...
     auto current_layout = GUI::WindowServerConnection::the().get_screen_layout();
