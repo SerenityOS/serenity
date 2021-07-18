@@ -67,7 +67,7 @@ enum class NeedsBigProcessLock {
     S(gethostname, NeedsBigProcessLock::No)                 \
     S(sethostname, NeedsBigProcessLock::No)                 \
     S(chdir, NeedsBigProcessLock::Yes)                      \
-    S(uname, NeedsBigProcessLock::Yes)                      \
+    S(uname, NeedsBigProcessLock::No)                       \
     S(set_mmap_name, NeedsBigProcessLock::Yes)              \
     S(readlink, NeedsBigProcessLock::Yes)                   \
     S(write, NeedsBigProcessLock::Yes)                      \
