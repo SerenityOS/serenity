@@ -263,6 +263,11 @@ public:
     Window* hovered_window() const { return m_hovered_window.ptr(); }
 
     void switch_to_window_stack(WindowStack&, Window* = nullptr, bool show_overlay = true);
+    void switch_to_window_stack(u32 row, u32 col, Window* carry = nullptr, bool show_overlay = true)
+    {
+        if (row < window_stack_rows() && col < window_stack_columns())
+            switch_to_window_stack(m_window_stacks[row][col], carry, show_overlay);
+    }
 
     size_t window_stack_rows() const { return m_window_stacks.size(); }
     size_t window_stack_columns() const { return m_window_stacks[0].size(); }

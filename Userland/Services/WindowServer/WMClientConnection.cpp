@@ -154,6 +154,11 @@ void WMClientConnection::set_manager_window(i32 window_id)
     WindowManager::the().greet_window_manager(*this);
 }
 
+void WMClientConnection::set_virtual_desktop(u32 row, u32 col)
+{
+    WindowManager::the().switch_to_window_stack(row, col);
+}
+
 void WMClientConnection::set_window_taskbar_rect(i32 client_id, i32 window_id, Gfx::IntRect const& rect)
 {
     // Because the Taskbar (which should be the only user of this API) does not own the
