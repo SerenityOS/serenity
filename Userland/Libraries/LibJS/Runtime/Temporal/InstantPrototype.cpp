@@ -200,7 +200,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     if (vm.exception())
         return {};
 
-    // 15. Return ? CreateTemporalInstant(roundedNs).
+    // 15. Return ! CreateTemporalInstant(roundedNs).
     return create_temporal_instant(global_object, *rounded_ns);
 }
 
