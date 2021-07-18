@@ -72,7 +72,7 @@ private:
 #else
     RefPtr<PhysicalPage> m_directory_pages[4];
 #endif
-    HashMap<u32, RefPtr<PhysicalPage>> m_page_tables;
+    HashMap<FlatPtr, RefPtr<PhysicalPage>> m_page_tables;
     RecursiveSpinLock m_lock;
     bool m_valid { false };
 };
