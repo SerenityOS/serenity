@@ -533,21 +533,36 @@ bool Process::dump_perfcore()
     VERIFY(is_dumpable());
     VERIFY(m_perf_event_buffer);
     dbgln("Generating perfcore for pid: {}", pid().value());
-    auto description_or_error = VirtualFileSystem::the().open(String::formatted("perfcore.{}", pid().value()), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
-    if (description_or_error.is_error())
+
+    // Try to generate a filename which isn't already used.
+    auto base_filename = String::formatted("{}_{}", name(), pid().value());
+    auto description_or_error = VirtualFileSystem::the().open(String::formatted("{}.profile", base_filename), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
+    for (size_t attempt = 1; attempt < 10 && description_or_error.is_error(); ++attempt)
+        description_or_error = VirtualFileSystem::the().open(String::formatted("{}.{}.profile", base_filename, attempt), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { uid(), gid() });
+    if (description_or_error.is_error()) {
+        dbgln("Failed to generate perfcore for pid {}: Could not generate filename for the perfcore file.", pid().value());
         return false;
-    auto& description = description_or_error.value();
+    }
+
+    auto& description = *description_or_error.value();
     KBufferBuilder builder;
-    if (!m_perf_event_buffer->to_json(builder))
+    if (!m_perf_event_buffer->to_json(builder)) {
+        dbgln("Failed to generate perfcore for pid {}: Could not serialize performance events to JSON.", pid().value());
         return false;
+    }
 
     auto json = builder.build();
-    if (!json)
+    if (!json) {
+        dbgln("Failed to generate perfcore for pid {}: Could not allocate buffer.", pid().value());
         return false;
+    }
     auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(json->data());
-    if (description->write(json_buffer, json->size()).is_error())
+    if (description.write(json_buffer, json->size()).is_error()) {
         return false;
-    dbgln("Wrote perfcore to {}", description->absolute_path());
+        dbgln("Failed to generate perfcore for pid {}: Cound not write to perfcore file.", pid().value());
+    }
+
+    dbgln("Wrote perfcore for pid {} to {}", pid().value(), description.absolute_path());
     return true;
 }
 
