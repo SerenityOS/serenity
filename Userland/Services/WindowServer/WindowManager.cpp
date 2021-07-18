@@ -605,7 +605,6 @@ void WindowManager::notify_rect_changed(Window& window, Gfx::IntRect const& old_
     if (window.type() == WindowType::Applet)
         AppletManager::the().relayout();
 
-    MenuManager::the().refresh();
     reevaluate_hovered_window(&window);
 }
 
