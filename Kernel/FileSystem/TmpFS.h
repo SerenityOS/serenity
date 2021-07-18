@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
-#include <AK/Optional.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/KBuffer.h>
@@ -75,18 +73,23 @@ private:
     TmpFSInode(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent);
     static RefPtr<TmpFSInode> create(TmpFS&, InodeMetadata metadata, InodeIdentifier parent);
     static RefPtr<TmpFSInode> create_root(TmpFS&);
-
     void notify_watchers();
+
+    struct Child {
+        NonnullOwnPtr<KString> name;
+        NonnullRefPtr<TmpFSInode> inode;
+        IntrusiveListNode<Child> list_node {};
+        using List = IntrusiveList<Child, RawPtr<Child>, &Child::list_node>;
+    };
+
+    Child* find_child_by_name(StringView);
 
     InodeMetadata m_metadata;
     InodeIdentifier m_parent;
 
     OwnPtr<KBuffer> m_content;
-    struct Child {
-        String name;
-        NonnullRefPtr<TmpFSInode> inode;
-    };
-    HashMap<String, Child> m_children;
+
+    Child::List m_children;
 };
 
 }
