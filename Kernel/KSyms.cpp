@@ -118,7 +118,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
     if (use_ksyms) {
         FlatPtr copied_stack_ptr[2];
         for (FlatPtr* stack_ptr = (FlatPtr*)base_pointer; stack_ptr && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (FlatPtr*)copied_stack_ptr[0]) {
-            if ((FlatPtr)stack_ptr < KERNEL_BASE)
+            if ((FlatPtr)stack_ptr < kernel_base)
                 break;
 
             void* fault_at;

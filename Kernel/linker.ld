@@ -1,4 +1,4 @@
-ENTRY(start)
+ENTRY(init)
 
 KERNEL_VIRTUAL_BASE = 0xc0000000;
 

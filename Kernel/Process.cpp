@@ -370,7 +370,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
     if (out_of_memory) {
         dbgln("\033[31;1mOut of memory\033[m, killing: {}", *this);
     } else {
-        if (ip >= KERNEL_BASE && g_kernel_symbols_available) {
+        if (ip >= kernel_base && g_kernel_symbols_available) {
             auto* symbol = symbolicate_kernel_address(ip);
             dbgln("\033[31;1m{:p}  {} +{}\033[0m\n", ip, (symbol ? symbol->name : "(k?)"), (symbol ? ip - symbol->address : 0));
         } else {

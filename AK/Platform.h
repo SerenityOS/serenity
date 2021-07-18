@@ -88,7 +88,7 @@
 #    define PAGE_SIZE sysconf(_SC_PAGESIZE)
 #endif
 
-#ifndef _BOOTLOADER
+#ifdef __cplusplus
 ALWAYS_INLINE int count_trailing_zeroes_32(unsigned int val)
 {
 #    if defined(__GNUC__) || defined(__clang__)

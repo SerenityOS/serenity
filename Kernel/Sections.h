@@ -7,21 +7,21 @@
 #pragma once
 
 #include <AK/Platform.h>
+#ifdef __cplusplus
+#    include <AK/Types.h>
+#endif
 
 #define READONLY_AFTER_INIT __attribute__((section(".ro_after_init")))
 #define UNMAP_AFTER_INIT NEVER_INLINE __attribute__((section(".unmap_after_init")))
 
-#define KERNEL_BASE 0xC0000000
-#define KERNEL_PD_OFFSET 0x3000000
-#define KERNEL_PD_END (KERNEL_BASE + 0x31000000)
-#define KERNEL_PT1024_BASE (KERNEL_BASE + 0x3FE00000)
+#ifdef __cplusplus
+extern "C" FlatPtr kernel_base;
+#endif
+
+#define KERNEL_PD_END (kernel_base + 0x31000000)
+#define KERNEL_PT1024_BASE (kernel_base + 0x3FE00000)
 #define KERNEL_QUICKMAP_PT (KERNEL_PT1024_BASE + 0x6000)
 #define KERNEL_QUICKMAP_PD (KERNEL_PT1024_BASE + 0x7000)
 #define KERNEL_QUICKMAP_PER_CPU_BASE (KERNEL_PT1024_BASE + 0x8000)
-#define KERNEL_PHYSICAL_PAGES_BASE (KERNEL_BASE + KERNEL_PD_OFFSET)
-
-#ifdef __cplusplus
-static_assert(KERNEL_BASE % 0x1000000 == 0);
-#endif
 
 #define USER_RANGE_CEILING 0xBE000000
