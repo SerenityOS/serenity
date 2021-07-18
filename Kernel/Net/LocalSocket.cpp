@@ -9,8 +9,8 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/Locking/Lockable.h>
 #include <Kernel/Locking/Mutex.h>
+#include <Kernel/Locking/ProtectedValue.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/StdLib.h>
@@ -19,18 +19,18 @@
 
 namespace Kernel {
 
-static AK::Singleton<Lockable<LocalSocket::List>> s_list;
+static AK::Singleton<ProtectedValue<LocalSocket::List>> s_list;
 
-static Lockable<LocalSocket::List>& all_sockets()
+static ProtectedValue<LocalSocket::List>& all_sockets()
 {
     return *s_list;
 }
 
 void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
 {
-    MutexLocker locker(all_sockets().lock(), Mutex::Mode::Shared);
-    for (auto& socket : all_sockets().resource())
+    all_sockets().for_each_shared([&](const auto& socket) {
         callback(socket);
+    });
 }
 
 KResultOr<NonnullRefPtr<Socket>> LocalSocket::create(int type)
@@ -80,11 +80,6 @@ LocalSocket::LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, No
     , m_for_client(move(client_buffer))
     , m_for_server(move(server_buffer))
 {
-    {
-        MutexLocker locker(all_sockets().lock());
-        all_sockets().resource().append(*this);
-    }
-
     auto current_process = Process::current();
     m_prebind_uid = current_process->euid();
     m_prebind_gid = current_process->egid();
@@ -97,13 +92,18 @@ LocalSocket::LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, No
         evaluate_block_conditions();
     });
 
+    all_sockets().with_exclusive([&](auto& list) {
+        list.append(*this);
+    });
+
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) created with type={}", this, type);
 }
 
 LocalSocket::~LocalSocket()
 {
-    MutexLocker locker(all_sockets().lock());
-    all_sockets().resource().remove(*this);
+    all_sockets().with_exclusive([&](auto& list) {
+        list.remove(*this);
+    });
 }
 
 void LocalSocket::get_local_address(sockaddr* address, socklen_t* address_size)
