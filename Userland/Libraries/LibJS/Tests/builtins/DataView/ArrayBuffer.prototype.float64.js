@@ -4,5 +4,5 @@ test("basic functionality", () => {
     view.setFloat64(0, 6865415254.161212);
     expect(view.getFloat64(0)).toBe(6865415254.161212);
     view.setFloat64(0, 6865415254.161212, true);
-    expect(view.getFloat64(0)).toBe(4.2523296908380055e94);
+    expect(view.getFloat64(0)).toBe(4.2523296908380052e94);
 });
