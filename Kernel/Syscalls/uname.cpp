@@ -11,14 +11,7 @@ namespace Kernel {
 KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this)
-    extern String* g_hostname;
-    extern Mutex* g_hostname_lock;
-
     REQUIRE_PROMISE(stdio);
-
-    MutexLocker locker(*g_hostname_lock, Mutex::Mode::Shared);
-    if (g_hostname->length() + 1 > sizeof(utsname::nodename))
-        return ENAMETOOLONG;
 
     utsname buf {};
     memcpy(buf.sysname, "SerenityOS", 11);
@@ -30,7 +23,9 @@ KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
     memcpy(buf.machine, "x86_64", 7);
 #endif
 
-    memcpy(buf.nodename, g_hostname->characters(), g_hostname->length() + 1);
+    hostname().with_shared([&](const auto& name) {
+        memcpy(buf.nodename, name.characters(), name.length() + 1);
+    });
 
     if (!copy_to_user(user_buf, &buf))
         return EFAULT;
