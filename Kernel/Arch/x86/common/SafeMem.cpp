@@ -261,12 +261,8 @@ NEVER_INLINE Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32* v
 
 bool handle_safe_access_fault(RegisterState& regs, FlatPtr fault_address)
 {
-    FlatPtr ip;
-#if ARCH(I386)
-    ip = regs.eip;
-#else
-    ip = regs.rip;
-#endif
+    FlatPtr ip = regs.ip();
+    ;
     if (ip >= (FlatPtr)&start_of_safemem_text && ip < (FlatPtr)&end_of_safemem_text) {
         // If we detect that the fault happened in safe_memcpy() safe_strnlen(),
         // or safe_memset() then resume at the appropriate _faulted label
