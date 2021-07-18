@@ -417,7 +417,7 @@ private:
 
                 StringBuilder result;
                 for (auto& e : match.capture_group_matches[0])
-                    result.append(e.view.u8view());
+                    result.append(e.view.string_view());
 
                 return result.build();
             }
