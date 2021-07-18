@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libffi
-version=3.3
+version=3.4.2
 useconfigure=true
-files="ftp://sourceware.org/pub/libffi/libffi-${version}.tar.gz libffi-${version}.tar.gz 72fba7922703ddfa7a028d513ac15a85c8d54c8d67f55fa5a4802885dc652056"
+files="https://github.com/libffi/libffi/releases/download/v${version}/libffi-${version}.tar.gz libffi-${version}.tar.gz 540fb721619a6aba3bdeef7d940d8e9e0e6d2c193595bc243241b77ff9e93620"
 auth_type=sha256

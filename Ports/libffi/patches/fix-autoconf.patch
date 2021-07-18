@@ -1,12 +1,13 @@
---- a/config.sub	2019-10-31 17:49:54.000000000 +0300
-+++ b/config.sub	2020-09-10 17:03:14.219589932 +0300
-@@ -1417,7 +1417,8 @@
- 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
- 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
- 	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* \
--	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox*)
-+	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox* \
-+	      | -serenity* )
- 	# Remember, each alternative MUST END IN *, to match a version number.
+diff --git a/config.sub b/config.sub
+index 14b5150..b541768 100644
+--- a/config.sub
++++ b/config.sub
+@@ -1722,7 +1722,7 @@ case $os in
+ 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
+ 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+ 	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
+-	     | nsk* | powerunix* | genode* | zvmoe* )
++	     | nsk* | powerunix* | genode* | zvmoe* | serenity* )
  		;;
- 	-qnx*)
+ 	# This one is extra strict with allowed versions
+ 	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)
