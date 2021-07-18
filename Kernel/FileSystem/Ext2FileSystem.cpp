@@ -1294,15 +1294,15 @@ bool Ext2FS::write_ext2_inode(InodeIndex inode, const ext2_inode& e2inode)
 
 auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> KResultOr<Vector<BlockIndex>>
 {
-    MutexLocker locker(m_lock);
     dbgln_if(EXT2_DEBUG, "Ext2FS: allocate_blocks(preferred group: {}, count {})", preferred_group_index, count);
     if (count == 0)
         return Vector<BlockIndex> {};
 
     Vector<BlockIndex> blocks;
-    dbgln_if(EXT2_DEBUG, "Ext2FS: allocate_blocks:");
-    blocks.ensure_capacity(count);
+    if (!blocks.try_ensure_capacity(count))
+        return ENOMEM;
 
+    MutexLocker locker(m_lock);
     auto group_index = preferred_group_index;
 
     if (!group_descriptor(preferred_group_index).bg_free_blocks_count) {
@@ -1310,7 +1310,6 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
     }
 
     while (blocks.size() < count) {
-
         bool found_a_group = false;
         if (group_descriptor(group_index).bg_free_blocks_count) {
             found_a_group = true;
