@@ -149,7 +149,7 @@ set(KERNEL_SOURCES
     Memory/VirtualRange.cpp
     Memory/VirtualRangeAllocator.cpp
     MiniStdLib.cpp
-    Mutex.cpp
+    Locking/Mutex.cpp
     Net/E1000ENetworkAdapter.cpp
     Net/E1000NetworkAdapter.cpp
     Net/IPv4Socket.cpp

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Mutex.h>
+#include <Kernel/Locking/Mutex.h>
 #include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {

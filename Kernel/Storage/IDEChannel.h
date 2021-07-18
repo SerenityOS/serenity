@@ -21,8 +21,8 @@
 #include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/PhysicalPage.h>
-#include <Kernel/Mutex.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Storage/StorageDevice.h>

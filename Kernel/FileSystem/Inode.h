@@ -19,7 +19,7 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
-#include <Kernel/Mutex.h>
+#include <Kernel/Locking/Mutex.h>
 
 namespace Kernel {
 

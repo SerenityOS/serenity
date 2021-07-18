@@ -9,8 +9,8 @@
 #include <AK/RefPtr.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/PhysicalPage.h>
-#include <Kernel/Mutex.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::ACPI {
