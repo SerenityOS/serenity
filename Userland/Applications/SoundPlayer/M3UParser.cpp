@@ -62,7 +62,7 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
             line = line.trim_whitespace();
             M3UEntry entry {};
             if (line.starts_with('#') && has_exteded_info_tag) {
-                if (line.starts_with("#EXTINF")) {
+                if (line.starts_with("#EXTINF:")) {
                     auto data = line.substring_view(8);
                     auto separator = data.find(',');
                     VERIFY(separator.has_value());
@@ -73,23 +73,23 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
                     VERIFY(!display_name.is_empty() && !display_name.is_null() && !display_name.is_empty());
                     metadata_for_next_file.track_display_title = display_name;
                     //TODO: support the alternative, non-standard #EXTINF value of a key=value dictionary
-                } else if (line.starts_with("#PLAYLIST")) {
+                } else if (line.starts_with("#PLAYLIST:")) {
                     auto name = line.substring_view(10);
                     VERIFY(!name.is_empty());
                     m_parsed_playlist_title = name;
-                } else if (line.starts_with("#EXTGRP")) {
+                } else if (line.starts_with("#EXTGRP:")) {
                     auto name = line.substring_view(8);
                     VERIFY(!name.is_empty());
                     metadata_for_next_file.group_name = name;
-                } else if (line.starts_with("#EXTALB")) {
+                } else if (line.starts_with("#EXTALB:")) {
                     auto name = line.substring_view(8);
                     VERIFY(!name.is_empty());
                     metadata_for_next_file.album_title = name;
-                } else if (line.starts_with("#EXTART")) {
+                } else if (line.starts_with("#EXTART:")) {
                     auto name = line.substring_view(8);
                     VERIFY(!name.is_empty());
                     metadata_for_next_file.album_artist = name;
-                } else if (line.starts_with("#EXTGENRE")) {
+                } else if (line.starts_with("#EXTGENRE:")) {
                     auto name = line.substring_view(10);
                     VERIFY(!name.is_empty());
                     metadata_for_next_file.album_genre = name;
