@@ -18,6 +18,7 @@ namespace WindowServer {
 
 class Animation;
 class ClientConnection;
+class Compositor;
 class Cursor;
 class MultiScaleBitmaps;
 class Window;
@@ -31,8 +32,62 @@ enum class WallpaperMode {
     Unchecked
 };
 
+struct CompositorScreenData {
+    RefPtr<Gfx::Bitmap> m_front_bitmap;
+    RefPtr<Gfx::Bitmap> m_back_bitmap;
+    RefPtr<Gfx::Bitmap> m_temp_bitmap;
+    OwnPtr<Gfx::Painter> m_back_painter;
+    OwnPtr<Gfx::Painter> m_front_painter;
+    OwnPtr<Gfx::Painter> m_temp_painter;
+    RefPtr<Gfx::Bitmap> m_cursor_back_bitmap;
+    OwnPtr<Gfx::Painter> m_cursor_back_painter;
+    Gfx::IntRect m_last_cursor_rect;
+    OwnPtr<ScreenNumberOverlay> m_screen_number_overlay;
+    OwnPtr<WindowStackSwitchOverlay> m_window_stack_switch_overlay;
+    bool m_buffers_are_flipped { false };
+    bool m_screen_can_set_buffer { false };
+    bool m_has_flipped { false };
+    bool m_cursor_back_is_valid { false };
+    bool m_have_flush_rects { false };
+
+    Gfx::DisjointRectSet m_flush_rects;
+    Gfx::DisjointRectSet m_flush_transparent_rects;
+    Gfx::DisjointRectSet m_flush_special_rects;
+
+    Gfx::Painter& overlay_painter() { return *m_temp_painter; }
+
+    void init_bitmaps(Compositor&, Screen&);
+    void flip_buffers(Screen&);
+    void draw_cursor(Screen&, const Gfx::IntRect&);
+    bool restore_cursor_back(Screen&, Gfx::IntRect&);
+
+    template<typename F>
+    IterationDecision for_each_intersected_flushing_rect(Gfx::IntRect const& intersecting_rect, F f)
+    {
+        auto iterate_flush_rects = [&](Gfx::DisjointRectSet const& flush_rects) {
+            for (auto& rect : flush_rects.rects()) {
+                auto intersection = intersecting_rect.intersected(rect);
+                if (intersection.is_empty())
+                    continue;
+                IterationDecision decision = f(intersection);
+                if (decision != IterationDecision::Continue)
+                    return decision;
+            }
+            return IterationDecision::Continue;
+        };
+        auto decision = iterate_flush_rects(m_flush_rects);
+        if (decision != IterationDecision::Continue)
+            return decision;
+        // We do not have to iterate m_flush_special_rects here as these
+        // technically should be removed anyway. m_flush_rects and
+        // m_flush_transparent_rects should cover everything already
+        return iterate_flush_rects(m_flush_transparent_rects);
+    }
+};
+
 class Compositor final : public Core::Object {
     C_OBJECT(Compositor)
+    friend struct CompositorScreenData;
     friend class Overlay;
 
 public:
@@ -127,6 +182,11 @@ public:
 
     void set_flash_flush(bool b) { m_flash_flush = b; }
 
+    static NonnullOwnPtr<CompositorScreenData> create_screen_data(Badge<Screen>)
+    {
+        return adopt_own(*new CompositorScreenData());
+    }
+
 private:
     Compositor();
     void init_bitmaps();
@@ -159,61 +219,6 @@ private:
     bool m_invalidated_window { false };
     bool m_invalidated_cursor { false };
     bool m_overlay_rects_changed { false };
-
-    struct ScreenData {
-        RefPtr<Gfx::Bitmap> m_front_bitmap;
-        RefPtr<Gfx::Bitmap> m_back_bitmap;
-        RefPtr<Gfx::Bitmap> m_temp_bitmap;
-        OwnPtr<Gfx::Painter> m_back_painter;
-        OwnPtr<Gfx::Painter> m_front_painter;
-        OwnPtr<Gfx::Painter> m_temp_painter;
-        RefPtr<Gfx::Bitmap> m_cursor_back_bitmap;
-        OwnPtr<Gfx::Painter> m_cursor_back_painter;
-        Gfx::IntRect m_last_cursor_rect;
-        OwnPtr<ScreenNumberOverlay> m_screen_number_overlay;
-        OwnPtr<WindowStackSwitchOverlay> m_window_stack_switch_overlay;
-        bool m_buffers_are_flipped { false };
-        bool m_screen_can_set_buffer { false };
-        bool m_has_flipped { false };
-        bool m_cursor_back_is_valid { false };
-        bool m_have_flush_rects { false };
-
-        Gfx::DisjointRectSet m_flush_rects;
-        Gfx::DisjointRectSet m_flush_transparent_rects;
-        Gfx::DisjointRectSet m_flush_special_rects;
-
-        Gfx::Painter& overlay_painter() { return *m_temp_painter; }
-
-        void init_bitmaps(Compositor&, Screen&);
-        void flip_buffers(Screen&);
-        void draw_cursor(Screen&, const Gfx::IntRect&);
-        bool restore_cursor_back(Screen&, Gfx::IntRect&);
-
-        template<typename F>
-        IterationDecision for_each_intersected_flushing_rect(Gfx::IntRect const& intersecting_rect, F f)
-        {
-            auto iterate_flush_rects = [&](Gfx::DisjointRectSet const& flush_rects) {
-                for (auto& rect : flush_rects.rects()) {
-                    auto intersection = intersecting_rect.intersected(rect);
-                    if (intersection.is_empty())
-                        continue;
-                    IterationDecision decision = f(intersection);
-                    if (decision != IterationDecision::Continue)
-                        return decision;
-                }
-                return IterationDecision::Continue;
-            };
-            auto decision = iterate_flush_rects(m_flush_rects);
-            if (decision != IterationDecision::Continue)
-                return decision;
-            // We do not have to iterate m_flush_special_rects here as these
-            // technically should be removed anyway. m_flush_rects and
-            // m_flush_transparent_rects should cover everything already
-            return iterate_flush_rects(m_flush_transparent_rects);
-        }
-    };
-    friend struct ScreenData;
-    Vector<ScreenData, default_screen_count> m_screen_data;
 
     IntrusiveList<Overlay, RawPtr<Overlay>, &Overlay::m_list_node> m_overlay_list;
     Gfx::DisjointRectSet m_overlay_rects;
