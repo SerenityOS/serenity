@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
@@ -77,20 +76,22 @@ protected:
 
     void receive();
 
+    static constexpr size_t number_of_rx_descriptors = 32;
+    static constexpr size_t number_of_tx_descriptors = 8;
+
     IOAddress m_io_base;
     VirtualAddress m_mmio_base;
     OwnPtr<Region> m_rx_descriptors_region;
     OwnPtr<Region> m_tx_descriptors_region;
-    NonnullOwnPtrVector<Region> m_rx_buffers_regions;
-    NonnullOwnPtrVector<Region> m_tx_buffers_regions;
+    OwnPtr<Region> m_rx_buffer_region;
+    OwnPtr<Region> m_tx_buffer_region;
+    Array<void*, number_of_rx_descriptors> m_rx_buffers;
+    Array<void*, number_of_tx_descriptors> m_tx_buffers;
     OwnPtr<Region> m_mmio_region;
     u8 m_interrupt_line { 0 };
     bool m_has_eeprom { false };
     bool m_use_mmio { false };
     EntropySource m_entropy_source;
-
-    static constexpr size_t number_of_rx_descriptors = 32;
-    static constexpr size_t number_of_tx_descriptors = 8;
 
     WaitQueue m_wait_queue;
 };
