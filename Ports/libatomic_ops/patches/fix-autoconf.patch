@@ -1,0 +1,12 @@
+--- libatomic_ops-7.6.10/config.sub	2021-07-18 14:24:53.950762337 +0100
++++ libatomic_ops-7.6.10/config.sub	2021-07-18 14:25:19.341651925 +0100
+@@ -1393,7 +1393,8 @@
+ 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
+ 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+-	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* | -tirtos*)
++	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* | -tirtos* \
++	      | -serenity* )
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)
