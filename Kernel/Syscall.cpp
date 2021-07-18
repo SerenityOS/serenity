@@ -108,8 +108,26 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
     auto& process = current_thread->process();
     current_thread->did_syscall();
 
+    if (function >= Function::__Count) {
+        dbgln("Unknown syscall {} requested ({:08x}, {:08x}, {:08x})", function, arg1, arg2, arg3);
+        return ENOSYS;
+    }
+
+    const auto syscall_metadata = s_syscall_table[function];
+    if (syscall_metadata.handler == nullptr) {
+        dbgln("Null syscall {} requested, you probably need to rebuild this program!", function);
+        return ENOSYS;
+    }
+
+    MutexLocker mutex_locker;
+    const auto needs_big_lock = syscall_metadata.needs_lock == NeedsBigProcessLock::Yes;
+    if (needs_big_lock) {
+        mutex_locker.attach_and_lock(process.big_lock());
+    };
+
     if (function == SC_exit || function == SC_exit_thread) {
         // These syscalls need special handling since they never return to the caller.
+        // In these cases the process big lock will get released on the exit of the thread.
 
         if (auto* tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
             regs.set_return_reg(0);
@@ -129,23 +147,16 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
         }
     }
 
+    KResultOr<FlatPtr> result { FlatPtr(nullptr) };
     if (function == SC_fork || function == SC_sigreturn) {
         // These syscalls want the RegisterState& rather than individual parameters.
-        auto handler = (HandlerWithRegisterState)s_syscall_table[function].handler;
-        return (process.*(handler))(regs);
+        auto handler = (HandlerWithRegisterState)syscall_metadata.handler;
+        result = (process.*(handler))(regs);
+    } else {
+        result = (process.*(syscall_metadata.handler))(arg1, arg2, arg3);
     }
 
-    if (function >= Function::__Count) {
-        dbgln("Unknown syscall {} requested ({:08x}, {:08x}, {:08x})", function, arg1, arg2, arg3);
-        return ENOSYS;
-    }
-
-    if (s_syscall_table[function].handler == nullptr) {
-        dbgln("Null syscall {} requested, you probably need to rebuild this program!", function);
-        return ENOSYS;
-    }
-
-    return (process.*(s_syscall_table[function].handler))(arg1, arg2, arg3);
+    return result;
 }
 
 }
@@ -204,17 +215,13 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     FlatPtr arg3;
     regs.capture_syscall_params(function, arg1, arg2, arg3);
 
-    process.big_lock().lock();
-
-
     auto result = Syscall::handle(regs, function, arg1, arg2, arg3);
+
     if (result.is_error()) {
         regs.set_return_reg(result.error());
     } else {
         regs.set_return_reg(result.value());
     }
-
-    process.big_lock().unlock();
 
     if (auto tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
         tracer->set_trace_syscalls(false);
