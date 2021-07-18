@@ -76,7 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from)
 
     // 1. If Type(item) is Object and item has an [[InitializedTemporalInstant]] internal slot, then
     if (item.is_object() && is<Instant>(item.as_object())) {
-        // a. Return ? CreateTemporalInstant(item.[[Nanoseconds]]).
+        // a. Return ! CreateTemporalInstant(item.[[Nanoseconds]]).
         return create_temporal_instant(global_object, *js_bigint(vm.heap(), static_cast<Instant&>(item.as_object()).nanoseconds().big_integer()));
     }
 
@@ -106,7 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_seconds)
         return {};
     }
 
-    // 5. Return ? CreateTemporalInstant(epochNanoseconds).
+    // 5. Return ! CreateTemporalInstant(epochNanoseconds).
     return create_temporal_instant(global_object, *epoch_nanoseconds);
 }
 
@@ -132,7 +132,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_milliseconds)
         return {};
     }
 
-    // 5. Return ? CreateTemporalInstant(epochNanoseconds).
+    // 5. Return ! CreateTemporalInstant(epochNanoseconds).
     return create_temporal_instant(global_object, *epoch_nanoseconds);
 }
 
@@ -153,7 +153,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_microseconds)
         return {};
     }
 
-    // 4. Return ? CreateTemporalInstant(epochNanoseconds).
+    // 4. Return ! CreateTemporalInstant(epochNanoseconds).
     return create_temporal_instant(global_object, *epoch_nanoseconds);
 }
 
@@ -171,7 +171,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantConstructor::from_epoch_nanoseconds)
         return {};
     }
 
-    // 3. Return ? CreateTemporalInstant(epochNanoseconds).
+    // 3. Return ! CreateTemporalInstant(epochNanoseconds).
     return create_temporal_instant(global_object, *epoch_nanoseconds);
 }
 

@@ -96,6 +96,7 @@ Instant* to_temporal_instant(GlobalObject& global_object, Value item)
     if (vm.exception())
         return {};
 
+    // 4. Return ! CreateTemporalInstant(ℤ(epochNanoseconds)).
     return create_temporal_instant(global_object, *epoch_nanoseconds);
 }
 
@@ -186,7 +187,10 @@ BigInt* round_temporal_instant(GlobalObject& global_object, BigInt const& nanose
     }
     // 7. Else,
     else {
-        // a. Let incrementNs be increment.
+        // a. Assert: unit is "nanosecond".
+        VERIFY(unit == "nanosecond");
+
+        // b. Let incrementNs be increment.
         increment_nanoseconds = increment;
     }
 
