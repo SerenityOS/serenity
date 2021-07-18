@@ -460,8 +460,6 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         case TCPFlags::ACK | TCPFlags::RST:
-            socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
-            send_delayed_tcp_ack(socket);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::RSTDuringConnect);
             socket->set_setup_state(Socket::SetupState::Completed);
