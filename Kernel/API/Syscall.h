@@ -126,7 +126,7 @@ enum class NeedsBigProcessLock {
     S(getsockopt, NeedsBigProcessLock::Yes)                 \
     S(setsockopt, NeedsBigProcessLock::Yes)                 \
     S(create_thread, NeedsBigProcessLock::Yes)              \
-    S(gettid, NeedsBigProcessLock::Yes)                     \
+    S(gettid, NeedsBigProcessLock::No)                      \
     S(rename, NeedsBigProcessLock::Yes)                     \
     S(ftruncate, NeedsBigProcessLock::Yes)                  \
     S(exit_thread, NeedsBigProcessLock::Yes)                \
