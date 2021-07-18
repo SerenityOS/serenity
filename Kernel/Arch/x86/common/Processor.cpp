@@ -546,14 +546,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             // to be ebp.
             ProcessPagingScope paging_scope(thread.process());
             auto& regs = thread.regs();
-            FlatPtr* stack_top;
-            FlatPtr sp;
-#if ARCH(I386)
-            sp = regs.esp;
-#else
-            sp = regs.rsp;
-#endif
-            stack_top = reinterpret_cast<FlatPtr*>(sp);
+            FlatPtr* stack_top = reinterpret_cast<FlatPtr*>(regs.sp());
             if (is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
                 if (!copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]))
                     frame_ptr = 0;
@@ -562,11 +555,9 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
                 if (!safe_memcpy(&frame_ptr, &((FlatPtr*)stack_top)[0], sizeof(FlatPtr), fault_at))
                     frame_ptr = 0;
             }
-#if ARCH(I386)
-            ip = regs.eip;
-#else
-            ip = regs.rip;
-#endif
+
+            ip = regs.ip();
+
             // TODO: We need to leave the scheduler lock here, but we also
             //       need to prevent the target thread from being run while
             //       we walk the stack
@@ -1222,12 +1213,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     // the scheduler lock. We don't want to enable interrupts at this point
     // as we're still in the middle of a context switch. Doing so could
     // trigger a context switch within a context switch, leading to a crash.
-    FlatPtr flags;
-#if ARCH(I386)
-    flags = trap->regs->eflags;
-#else
-    flags = trap->regs->rflags;
-#endif
+    FlatPtr flags = trap->regs->flags();
     Scheduler::leave_on_first_switch(flags & ~0x200);
 }
 

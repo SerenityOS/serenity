@@ -235,7 +235,7 @@ bool Scheduler::pick_next()
         dbgln("Scheduler[{}]: Switch to {} @ {:04x}:{:08x}",
             Processor::id(),
             thread_to_schedule,
-            thread_to_schedule.regs().cs, thread_to_schedule.regs().eip);
+            thread_to_schedule.regs().cs, thread_to_schedule.regs().ip());
 #else
         dbgln("Scheduler[{}]: Switch to {} @ {:04x}:{:016x}",
             Processor::id(),
@@ -295,13 +295,16 @@ bool Scheduler::context_switch(Thread* thread)
             from_thread->set_state(Thread::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
+        const auto msg =
 #    if ARCH(I386)
-        dbgln("Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:08x}", Processor::id(), from_thread->tid().value(),
-            thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().eip);
+            "Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:08x}";
 #    else
-        dbgln("Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:16x}", Processor::id(), from_thread->tid().value(),
-            thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().rip);
+            "Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:16x}";
 #    endif
+
+        dbgln(msg,
+            Processor::id(), from_thread->tid().value(),
+            thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().ip());
 #endif
     }
 
@@ -322,14 +325,8 @@ bool Scheduler::context_switch(Thread* thread)
     VERIFY(thread == Thread::current());
 
     if (thread->process().is_user_process()) {
-        FlatPtr flags;
         auto& regs = Thread::current()->get_register_dump_from_stack();
-#if ARCH(I386)
-        flags = regs.eflags;
-#else
-        flags = regs.rflags;
-#endif
-        auto iopl = get_iopl_from_eflags(flags);
+        auto iopl = get_iopl_from_eflags(regs.flags());
         if (iopl != 0) {
             PANIC("Switched to thread {} with non-zero IOPL={}", Thread::current()->tid().value(), iopl);
         }
@@ -604,15 +601,9 @@ void dump_thread_list(bool with_stack_traces)
     };
 
     auto get_eip = [](Thread& thread) -> u32 {
-#if ARCH(I386)
         if (!thread.current_trap())
-            return thread.regs().eip;
-        return thread.get_register_dump_from_stack().eip;
-#else
-        if (!thread.current_trap())
-            return thread.regs().rip;
-        return thread.get_register_dump_from_stack().rip;
-#endif
+            return thread.regs().ip();
+        return thread.get_register_dump_from_stack().ip();
     };
 
     Thread::for_each([&](Thread& thread) {

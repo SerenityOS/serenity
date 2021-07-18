@@ -107,11 +107,7 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
         // These syscalls need special handling since they never return to the caller.
 
         if (auto* tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
-#if ARCH(I386)
-            regs.eax = 0;
-#else
-            regs.rax = 0;
-#endif
+            regs.set_return_reg(0);
             tracer->set_trace_syscalls(false);
             process.tracer_trap(*current_thread, regs); // this triggers SIGTRAP and stops the thread!
         }
@@ -232,31 +228,17 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
         handle_crash(regs, "Syscall from non-syscall region", SIGSEGV);
     }
 
-#if ARCH(I386)
-    auto function = regs.eax;
-    auto arg1 = regs.edx;
-    auto arg2 = regs.ecx;
-    auto arg3 = regs.ebx;
-#else
-    auto function = regs.rax;
-    auto arg1 = regs.rdx;
-    auto arg2 = regs.rcx;
-    auto arg3 = regs.rbx;
-#endif
+    FlatPtr function;
+    FlatPtr arg1;
+    FlatPtr arg2;
+    FlatPtr arg3;
+    regs.capture_syscall_params(function, arg1, arg2, arg3);
 
     auto result = Syscall::handle(regs, function, arg1, arg2, arg3);
     if (result.is_error()) {
-#if ARCH(I386)
-        regs.eax = result.error();
-#else
-        regs.rax = result.error();
-#endif
+        regs.set_return_reg(result.error());
     } else {
-#if ARCH(I386)
-        regs.eax = result.value();
-#else
-        regs.rax = result.value();
-#endif
+        regs.set_return_reg(result.value());
     }
 
     process.big_lock().unlock();
