@@ -18,6 +18,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<const Syscall::SC_create_thread_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
 
     Syscall::SC_create_thread_params params;
@@ -91,6 +92,7 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
 
 void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stack_location, size_t stack_size)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
 
     if (this->thread_count() == 1) {
@@ -114,6 +116,7 @@ void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stac
 
 KResultOr<FlatPtr> Process::sys$detach_thread(pid_t tid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
     auto thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
@@ -128,6 +131,7 @@ KResultOr<FlatPtr> Process::sys$detach_thread(pid_t tid)
 
 KResultOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_value)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
 
     auto thread = Thread::from_tid(tid);
@@ -161,6 +165,7 @@ KResultOr<FlatPtr> Process::sys$join_thread(pid_t tid, Userspace<void**> exit_va
 
 KResultOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
 
     if (signal < 0 || signal >= 32)
@@ -182,6 +187,7 @@ KResultOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
 
 KResultOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<const char*> user_name, size_t user_name_length)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     auto name = copy_string_from_user(user_name, user_name_length);
     if (name.is_null())
@@ -201,6 +207,7 @@ KResultOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<const char*
 
 KResultOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buffer_size)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(thread);
     if (buffer_size == 0)
         return EINVAL;
@@ -221,6 +228,7 @@ KResultOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buff
 
 KResultOr<FlatPtr> Process::sys$gettid()
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     return Thread::current()->tid().value();
 }

@@ -12,6 +12,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);
     dbgln_if(IO_DEBUG, "sys$fcntl: fd={}, cmd={}, arg={}", fd, cmd, arg);
     auto description = fds().file_description(fd);

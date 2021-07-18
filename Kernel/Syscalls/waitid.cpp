@@ -20,6 +20,7 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
 
 KResultOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
 
     Syscall::SC_waitid_params params;

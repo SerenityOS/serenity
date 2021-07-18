@@ -12,6 +12,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);
 
     if (!TimeManagement::is_valid_clock_id(clock_id))
@@ -26,6 +27,7 @@ KResultOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<time
 
 KResultOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> user_ts)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(settime);
 
     if (!is_superuser())
@@ -47,6 +49,7 @@ KResultOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<cons
 
 KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_clock_nanosleep_params params;
@@ -89,6 +92,7 @@ KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_cloc
 
 KResultOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval*> user_old_delta)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     if (user_old_delta) {
         timespec old_delta_ts = TimeManagement::the().remaining_epoch_time_adjustment();
         timeval old_delta;
@@ -114,6 +118,7 @@ KResultOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, Us
 
 KResultOr<FlatPtr> Process::sys$gettimeofday(Userspace<timeval*> user_tv)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);
     auto tv = kgettimeofday().to_timeval();
     if (!copy_to_user(user_tv, &tv))

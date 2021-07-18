@@ -14,6 +14,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     Syscall::SC_open_params params;
     if (!copy_from_user(&params, user_params))
         return EFAULT;
@@ -77,6 +78,7 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
 
 KResultOr<FlatPtr> Process::sys$close(int fd)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     auto description = fds().file_description(fd);
     dbgln_if(IO_DEBUG, "sys$close({}) {}", fd, description.ptr());

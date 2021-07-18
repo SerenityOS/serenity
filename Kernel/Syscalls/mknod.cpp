@@ -12,6 +12,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$mknod(Userspace<const Syscall::SC_mknod_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(dpath);
     Syscall::SC_mknod_params params;
     if (!copy_from_user(&params, user_params))
