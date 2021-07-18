@@ -73,6 +73,14 @@ void FrameBufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset,
     if (&buffer == m_current_buffer)
         flush_displayed_image(info.rect, buffer);
 
+    // Make sure we constrain the existing dirty rect (if any)
+    if (buffer.dirty_rect.width != 0 || buffer.dirty_rect.height != 0) {
+        auto dirty_right = buffer.dirty_rect.x + buffer.dirty_rect.width;
+        auto dirty_bottom = buffer.dirty_rect.y + buffer.dirty_rect.height;
+        buffer.dirty_rect.width = min(dirty_right, info.rect.x + info.rect.width) - buffer.dirty_rect.x;
+        buffer.dirty_rect.height = min(dirty_bottom, info.rect.y + info.rect.height) - buffer.dirty_rect.y;
+    }
+
     info.enabled = 1;
 }
 
