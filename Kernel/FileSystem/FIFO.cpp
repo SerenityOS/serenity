@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Atomic.h>
 #include <AK/HashTable.h>
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
@@ -23,7 +24,7 @@ static Lockable<HashTable<FIFO*>>& all_fifos()
     return *s_table;
 }
 
-static int s_next_fifo_id = 1;
+static Atomic<int> s_next_fifo_id = 1;
 
 RefPtr<FIFO> FIFO::try_create(uid_t uid)
 {
