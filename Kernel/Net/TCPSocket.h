@@ -11,7 +11,7 @@
 #include <AK/SinglyLinkedList.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/KResult.h>
-#include <Kernel/Locking/Lockable.h>
+#include <Kernel/Locking/ProtectedValue.h>
 #include <Kernel/Net/IPv4Socket.h>
 
 namespace Kernel {
@@ -142,10 +142,10 @@ public:
 
     bool should_delay_next_ack() const;
 
-    static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
+    static ProtectedValue<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
     static RefPtr<TCPSocket> from_tuple(const IPv4SocketTuple& tuple);
 
-    static Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
+    static ProtectedValue<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
 
     RefPtr<TCPSocket> create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
     void set_originator(TCPSocket& originator) { m_originator = originator; }
@@ -153,7 +153,7 @@ public:
     void release_to_originator();
     void release_for_accept(RefPtr<TCPSocket>);
 
-    static Lockable<HashTable<TCPSocket*>>& sockets_for_retransmit();
+    static ProtectedValue<HashTable<TCPSocket*>>& sockets_for_retransmit();
     void retransmit_packets();
 
     virtual KResult close() override;

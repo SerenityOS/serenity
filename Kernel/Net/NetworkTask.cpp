@@ -6,6 +6,7 @@
 
 #include <Kernel/Debug.h>
 #include <Kernel/Locking/Mutex.h>
+#include <Kernel/Locking/ProtectedValue.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
@@ -639,11 +640,9 @@ void retransmit_tcp_packets()
     // We must keep the sockets alive until after we've unlocked the hash table
     // in case retransmit_packets() realizes that it wants to close the socket.
     NonnullRefPtrVector<TCPSocket, 16> sockets;
-    {
-        MutexLocker locker(TCPSocket::sockets_for_retransmit().lock(), LockMode::Shared);
-        for (auto& socket : TCPSocket::sockets_for_retransmit().resource())
-            sockets.append(*socket);
-    }
+    TCPSocket::sockets_for_retransmit().for_each_shared([&](const auto& socket) {
+        sockets.append(*socket);
+    });
 
     for (auto& socket : sockets) {
         MutexLocker socket_locker(socket.lock());
