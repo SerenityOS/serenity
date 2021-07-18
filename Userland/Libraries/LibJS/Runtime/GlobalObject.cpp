@@ -75,6 +75,8 @@
 #include <LibJS/Runtime/Temporal/DurationPrototype.h>
 #include <LibJS/Runtime/Temporal/InstantConstructor.h>
 #include <LibJS/Runtime/Temporal/InstantPrototype.h>
+#include <LibJS/Runtime/Temporal/PlainDateConstructor.h>
+#include <LibJS/Runtime/Temporal/PlainDatePrototype.h>
 #include <LibJS/Runtime/Temporal/Temporal.h>
 #include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
 #include <LibJS/Runtime/Temporal/TimeZonePrototype.h>
