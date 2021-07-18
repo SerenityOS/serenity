@@ -19,6 +19,7 @@
 #include <LibWeb/CSS/Parser/StyleRule.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
 #include <LibWeb/CSS/Selector.h>
+#include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
 
@@ -26,7 +27,6 @@ class CSSStyleSheet;
 class CSSRule;
 class CSSStyleRule;
 struct StyleProperty;
-class StyleValue;
 enum class PropertyID;
 
 class ParsingContext {
@@ -127,16 +127,7 @@ public:
     NonnullRefPtrVector<Selector> parse_a_relative_selector(TokenStream<T>&);
 
     RefPtr<StyleValue> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
-
-    // FIXME: https://drafts.csswg.org/css-backgrounds-3/
-    static Optional<String> as_valid_background_repeat(String input) { return input; }
-    static Optional<String> as_valid_background_attachment(String input) { return input; }
-    static Optional<String> as_valid_background_position(String input) { return input; }
-    static Optional<String> as_valid_background_clip(String input) { return input; }
-    static Optional<String> as_valid_background_origin(String input) { return input; }
-    static Optional<String> as_valid_background_size(String input) { return input; }
-    static Optional<String> as_valid_border_style(String input) { return input; }
-    static Optional<String> as_valid_border_image_repeat(String input) { return input; }
+    static RefPtr<StyleValue> parse_css_value(ParsingContext const&, PropertyID, StyleComponentValueRule const&);
 
 private:
     [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(bool top_level);
@@ -177,7 +168,12 @@ private:
 
     static Optional<float> try_parse_float(StringView string);
 
-    RefPtr<StyleValue> parse_single_css_value(PropertyID, StyleComponentValueRule const&);
+    static RefPtr<StyleValue> parse_keyword_or_custom_value(ParsingContext const&, StyleComponentValueRule const&);
+    static RefPtr<StyleValue> parse_length_value(ParsingContext const&, StyleComponentValueRule const&);
+    static RefPtr<StyleValue> parse_numeric_value(ParsingContext const&, StyleComponentValueRule const&);
+    static RefPtr<StyleValue> parse_identifier_value(ParsingContext const&, StyleComponentValueRule const&);
+    static RefPtr<StyleValue> parse_color_value(ParsingContext const&, StyleComponentValueRule const&);
+    static RefPtr<StyleValue> parse_string_value(ParsingContext const&, StyleComponentValueRule const&);
 
     ParsingContext m_context;
 
