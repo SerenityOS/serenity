@@ -551,6 +551,63 @@ public:
         return {};
     }
 
+    template<typename Container>
+    static bool disperse(Container& rects)
+    {
+        auto has_intersecting = [&]() {
+            for (auto& rect : rects) {
+                for (auto& other_rect : rects) {
+                    if (&rect == &other_rect)
+                        continue;
+                    if (rect.intersects(other_rect))
+                        return true;
+                }
+            }
+            return false;
+        };
+
+        if (!has_intersecting())
+            return false;
+
+        auto calc_delta = [&](Rect<T> const& rect) -> Point<T> {
+            auto rect_center = rect.center();
+            Point<T> center_sum;
+            for (auto& other_rect : rects) {
+                if (&other_rect == &rect)
+                    continue;
+                if (rect.intersects(other_rect))
+                    center_sum += rect_center - other_rect.center();
+            }
+            double m = sqrt((double)center_sum.x() * (double)center_sum.x() + (double)center_sum.y() * (double)center_sum.y());
+            if (m != 0.0)
+                return { (double)center_sum.x() / m + 0.5, (double)center_sum.y() / m + 0.5 };
+            return {};
+        };
+
+        Vector<Point<T>, 8> deltas;
+        do {
+            bool changes = false;
+
+            deltas.clear_with_capacity();
+            for (auto& rect : rects) {
+                auto delta = calc_delta(rect);
+                if (!delta.is_null())
+                    changes = true;
+                deltas.append(delta);
+            }
+
+            // TODO: If we have no changes we would loop infinitely!
+            // Figure out some way to resolve this. Maybe randomly moving an intersecting rect?
+            VERIFY(changes);
+
+            size_t i = 0;
+            for (auto& rect : rects)
+                rect.translate_by(deltas[i++]);
+
+        } while (has_intersecting());
+        return true;
+    }
+
     [[nodiscard]] bool is_adjacent(Rect<T> const& other) const
     {
         if (is_empty() || other.is_empty())
