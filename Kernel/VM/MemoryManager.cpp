@@ -1032,13 +1032,21 @@ void MemoryManager::unquickmap_page()
     mm_data.m_quickmap_in_use.unlock(mm_data.m_quickmap_prev_flags);
 }
 
-bool MemoryManager::validate_user_stack(Process const& process, VirtualAddress vaddr) const
+bool MemoryManager::validate_user_stack_no_lock(Space& space, VirtualAddress vaddr) const
 {
+    VERIFY(space.get_lock().own_lock());
+
     if (!is_user_address(vaddr))
         return false;
-    ScopedSpinLock lock(s_mm_lock);
-    auto* region = find_user_region_from_vaddr(const_cast<Process&>(process).space(), vaddr);
+
+    auto* region = find_user_region_from_vaddr(space, vaddr);
     return region && region->is_user() && region->is_stack();
+}
+
+bool MemoryManager::validate_user_stack(Space& space, VirtualAddress vaddr) const
+{
+    ScopedSpinLock lock(space.get_lock());
+    return validate_user_stack_no_lock(space, vaddr);
 }
 
 void MemoryManager::register_vmobject(VMObject& vmobject)

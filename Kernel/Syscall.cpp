@@ -200,7 +200,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 #else
     userspace_sp = VirtualAddress { regs.userspace_rsp };
 #endif
-    if (!MM.validate_user_stack(process, userspace_sp)) {
+    if (!MM.validate_user_stack(process.space(), userspace_sp)) {
         dbgln("Invalid stack pointer: {:p}", userspace_sp);
         handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
     }
