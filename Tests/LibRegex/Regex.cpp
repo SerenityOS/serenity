@@ -458,10 +458,12 @@ TEST_CASE(a_star)
     String haystack = "[Window]\nOpacity=255\nAudibleBeep=0\n";
     EXPECT_EQ(re.search(haystack.view(), result, PosixFlags::Multiline), true);
     EXPECT_EQ(result.count, 32u);
-    EXPECT_EQ(result.matches.at(0).view.length(), 0u);
-    EXPECT_EQ(result.matches.at(10).view.length(), 1u);
-    EXPECT_EQ(result.matches.at(10).view, "a");
-    EXPECT_EQ(result.matches.at(31).view.length(), 0u);
+    if (result.count == 32u) {
+        EXPECT_EQ(result.matches.at(0).view.length(), 0u);
+        EXPECT_EQ(result.matches.at(10).view.length(), 1u);
+        EXPECT_EQ(result.matches.at(10).view, "a");
+        EXPECT_EQ(result.matches.at(31).view.length(), 0u);
+    }
 }
 
 TEST_CASE(simple_period_end_benchmark)
@@ -624,5 +626,7 @@ TEST_CASE(case_insensitive_match)
     auto result = re.match("AEKFCD");
 
     EXPECT_EQ(result.success, true);
-    EXPECT_EQ(result.matches.at(0).column, 4ul);
+    if (result.success) {
+        EXPECT_EQ(result.matches.at(0).column, 4ul);
+    }
 }
