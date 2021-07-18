@@ -14,10 +14,10 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KLexicalPath.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Memory/ProcessPagingScope.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
-#include <Kernel/SpinLock.h>
 #include <LibC/elf.h>
 #include <LibELF/CoreDump.h>
 

@@ -11,7 +11,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
-#include <Kernel/SpinLock.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/UnixTypes.h>
 

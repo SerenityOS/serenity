@@ -12,13 +12,13 @@
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/ScatterGatherList.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
-#include <Kernel/SpinLock.h>
 #include <Kernel/Storage/AHCI.h>
 #include <Kernel/Storage/AHCIPortHandler.h>
 #include <Kernel/Storage/StorageDevice.h>
