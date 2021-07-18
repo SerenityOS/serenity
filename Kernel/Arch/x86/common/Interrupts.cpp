@@ -210,7 +210,7 @@ static void dump(const RegisterState& regs)
 #endif
 }
 
-void handle_crash(RegisterState& regs, const char* description, int signal, bool out_of_memory)
+void handle_crash(RegisterState const& regs, char const* description, int signal, bool out_of_memory)
 {
     auto process = Process::current();
     if (!process) {
