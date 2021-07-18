@@ -14,12 +14,12 @@
 #include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/VMObject.h>
-#include <Kernel/SpinLock.h>
 
 namespace Kernel::Memory {
 

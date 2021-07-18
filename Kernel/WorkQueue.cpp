@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <Kernel/SpinLock.h>
 #include <Kernel/WaitQueue.h>
 #include <Kernel/WorkQueue.h>
 

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Atomic.h>
-#include <Kernel/SpinLock.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {

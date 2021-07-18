@@ -8,10 +8,10 @@
 // please look at Documentation/Kernel/AHCILocking.md
 
 #include <AK/Atomic.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/ScatterGatherList.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/SpinLock.h>
 #include <Kernel/Storage/AHCIPort.h>
 #include <Kernel/Storage/ATA.h>
 #include <Kernel/Storage/SATADiskDevice.h>
