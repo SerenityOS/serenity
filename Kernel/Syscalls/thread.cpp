@@ -228,7 +228,7 @@ KResultOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buff
 
 KResultOr<FlatPtr> Process::sys$gettid()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     REQUIRE_PROMISE(stdio);
     return Thread::current()->tid().value();
 }
