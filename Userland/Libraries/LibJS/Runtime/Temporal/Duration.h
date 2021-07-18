@@ -57,6 +57,31 @@ struct PartialDuration {
     Optional<double> nanoseconds;
 };
 
+// Table 7: Properties of a TemporalDurationLike, https://tc39.es/proposal-temporal/#table-temporal-temporaldurationlike-properties
+
+template<typename StructT, typename ValueT>
+struct TemporalDurationLikeProperty {
+    ValueT StructT::*internal_slot { nullptr };
+    PropertyName property;
+};
+
+template<typename StructT, typename ValueT>
+auto temporal_duration_like_properties = [](VM& vm) {
+    using PropertyT = TemporalDurationLikeProperty<StructT, ValueT>;
+    return AK::Array<PropertyT, 10> {
+        PropertyT { &StructT::days, vm.names.days },
+        PropertyT { &StructT::hours, vm.names.hours },
+        PropertyT { &StructT::microseconds, vm.names.microseconds },
+        PropertyT { &StructT::milliseconds, vm.names.milliseconds },
+        PropertyT { &StructT::minutes, vm.names.minutes },
+        PropertyT { &StructT::months, vm.names.months },
+        PropertyT { &StructT::nanoseconds, vm.names.nanoseconds },
+        PropertyT { &StructT::seconds, vm.names.seconds },
+        PropertyT { &StructT::weeks, vm.names.weeks },
+        PropertyT { &StructT::years, vm.names.years },
+    };
+};
+
 i8 duration_sign(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 bool is_valid_duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 PartialDuration to_partial_duration(GlobalObject&, Value temporal_duration_like);
