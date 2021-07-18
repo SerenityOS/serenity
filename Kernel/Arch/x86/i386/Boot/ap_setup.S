@@ -1,4 +1,3 @@
-#define _BOOTLOADER
 #include <Kernel/Sections.h>
 
 .extern init_ap
@@ -110,7 +109,7 @@ apic_ap_start32_2:
 
     /* push the Processor pointer this CPU is going to use */
     movl (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %eax
-    addl $KERNEL_BASE, %eax
+    addl kernel_base, %eax
     movl 0(%eax, %esi, 4), %eax
     push %eax
 

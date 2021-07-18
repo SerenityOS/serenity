@@ -86,7 +86,7 @@ public:
     void set_mmap(bool mmap) { m_mmap = mmap; }
 
     bool is_user() const { return !is_kernel(); }
-    bool is_kernel() const { return vaddr().get() < 0x00800000 || vaddr().get() >= KERNEL_BASE; }
+    bool is_kernel() const { return vaddr().get() < 0x00800000 || vaddr().get() >= kernel_base; }
 
     PageFaultResponse handle_fault(const PageFault&, ScopedSpinLock<RecursiveSpinLock>&);
 
