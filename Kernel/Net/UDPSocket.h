@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/KResult.h>
+#include <Kernel/Locking/Lockable.h>
 #include <Kernel/Net/IPv4Socket.h>
 
 namespace Kernel {

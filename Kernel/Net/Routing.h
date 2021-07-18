@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <Kernel/Locking/Lockable.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Thread.h>
 
