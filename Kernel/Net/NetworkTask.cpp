@@ -30,6 +30,7 @@ static void handle_icmp(EthernetFrameHeader const&, IPv4Packet const&, Time cons
 static void handle_udp(IPv4Packet const&, Time const& packet_timestamp);
 static void handle_tcp(IPv4Packet const&, Time const& packet_timestamp);
 static void send_delayed_tcp_ack(RefPtr<TCPSocket> socket);
+static void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, RefPtr<NetworkAdapter> adapter);
 static void flush_delayed_tcp_acks();
 static void retransmit_tcp_packets();
 
@@ -328,6 +329,39 @@ void flush_delayed_tcp_acks()
     }
 }
 
+void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, RefPtr<NetworkAdapter> adapter)
+{
+    auto routing_decision = route_to(ipv4_packet.source(), ipv4_packet.destination(), adapter);
+    if (routing_decision.is_zero())
+        return;
+
+    auto ipv4_payload_offset = routing_decision.adapter->ipv4_payload_offset();
+
+    const size_t options_size = 0;
+    const size_t tcp_header_size = sizeof(TCPPacket) + options_size;
+    const size_t buffer_size = ipv4_payload_offset + tcp_header_size;
+
+    auto packet = routing_decision.adapter->acquire_packet_buffer(buffer_size);
+    if (!packet)
+        return;
+    routing_decision.adapter->fill_in_ipv4_header(*packet, ipv4_packet.destination(),
+        routing_decision.next_hop, ipv4_packet.source(), IPv4Protocol::TCP,
+        buffer_size - ipv4_payload_offset, 64);
+    memset(packet->buffer.data() + ipv4_payload_offset, 0, sizeof(TCPPacket));
+    auto& rst_packet = *(TCPPacket*)(packet->buffer.data() + ipv4_payload_offset);
+    rst_packet.set_source_port(tcp_packet.destination_port());
+    rst_packet.set_destination_port(tcp_packet.source_port());
+    rst_packet.set_window_size(0);
+    rst_packet.set_sequence_number(0);
+    rst_packet.set_ack_number(tcp_packet.sequence_number() + 1);
+    rst_packet.set_data_offset(tcp_header_size / sizeof(u32));
+    rst_packet.set_flags(TCPFlags::RST | TCPFlags::ACK);
+    rst_packet.set_checksum(TCPSocket::compute_tcp_checksum(ipv4_packet.source(), ipv4_packet.destination(), rst_packet, 0));
+
+    routing_decision.adapter->send_packet({ packet->buffer.data(), packet->buffer.size() });
+    routing_decision.adapter->release_packet_buffer(*packet);
+}
+
 void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
 {
     if (ipv4_packet.payload_size() < sizeof(TCPPacket)) {
@@ -377,20 +411,8 @@ void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
 
     auto socket = TCPSocket::from_tuple(tuple);
     if (!socket) {
-        dbgln("handle_tcp: No TCP socket for tuple {}", tuple.to_string());
-        dbgln("handle_tcp: source={}:{}, destination={}:{}, seq_no={}, ack_no={}, flags={:#04x} ({}{}{}{}), window_size={}, payload_size={}",
-            ipv4_packet.source().to_string(), tcp_packet.source_port(),
-            ipv4_packet.destination().to_string(),
-            tcp_packet.destination_port(),
-            tcp_packet.sequence_number(),
-            tcp_packet.ack_number(),
-            tcp_packet.flags(),
-            tcp_packet.has_syn() ? "SYN " : "",
-            tcp_packet.has_ack() ? "ACK " : "",
-            tcp_packet.has_fin() ? "FIN " : "",
-            tcp_packet.has_rst() ? "RST " : "",
-            tcp_packet.window_size(),
-            payload_size);
+        dbgln("handle_tcp: No TCP socket for tuple {}. Sending RST.", tuple.to_string());
+        send_tcp_rst(ipv4_packet, tcp_packet, adapter);
         return;
     }
 

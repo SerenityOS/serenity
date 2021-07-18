@@ -159,14 +159,14 @@ public:
 
     virtual bool can_write(const FileDescription&, size_t) const override;
 
+    static NetworkOrdered<u16> compute_tcp_checksum(IPv4Address const& source, IPv4Address const& destination, TCPPacket const&, u16 payload_size);
+
 protected:
     void set_direction(Direction direction) { m_direction = direction; }
 
 private:
     explicit TCPSocket(int protocol);
     virtual StringView class_name() const override { return "TCPSocket"; }
-
-    static NetworkOrdered<u16> compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket&, u16 payload_size);
 
     virtual void shut_down_for_writing() override;
 
