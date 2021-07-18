@@ -99,6 +99,7 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
                 entry.path = line;
                 entry.extended_info = metadata_for_next_file;
                 vec->append(entry);
+                metadata_for_next_file = {};
             }
         }
     } else {
