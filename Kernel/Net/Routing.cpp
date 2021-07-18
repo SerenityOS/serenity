@@ -7,6 +7,7 @@
 #include <AK/HashMap.h>
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Locking/ProtectedValue.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
@@ -15,7 +16,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<Lockable<HashMap<IPv4Address, MACAddress>>> s_arp_table;
+static AK::Singleton<ProtectedValue<HashMap<IPv4Address, MACAddress>>> s_arp_table;
 
 class ARPTableBlocker : public Thread::Blocker {
 public:
@@ -70,7 +71,9 @@ protected:
     {
         VERIFY(b.blocker_type() == Thread::Blocker::Type::Routing);
         auto& blocker = static_cast<ARPTableBlocker&>(b);
-        auto val = s_arp_table->resource().get(blocker.ip_addr());
+        auto val = arp_table().with_shared([&](const auto& table) -> auto {
+            return table.get(blocker.ip_addr());
+        });
         if (!val.has_value())
             return true;
         return blocker.unblock(true, blocker.ip_addr(), val.value());
@@ -90,7 +93,9 @@ ARPTableBlocker::ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr
 void ARPTableBlocker::not_blocking(bool timeout_in_past)
 {
     VERIFY(timeout_in_past || !m_should_block);
-    auto addr = s_arp_table->resource().get(ip_addr());
+    auto addr = arp_table().with_shared([&](const auto& table) -> auto {
+        return table.get(ip_addr());
+    });
 
     ScopedSpinLock lock(m_lock);
     if (!m_did_unblock) {
@@ -99,25 +104,27 @@ void ARPTableBlocker::not_blocking(bool timeout_in_past)
     }
 }
 
-Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
+ProtectedValue<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
     return *s_arp_table;
 }
 
 void update_arp_table(const IPv4Address& ip_addr, const MACAddress& addr, UpdateArp update)
 {
-    MutexLocker locker(arp_table().lock());
-    if (update == UpdateArp::Set)
-        arp_table().resource().set(ip_addr, addr);
-    if (update == UpdateArp::Delete)
-        arp_table().resource().remove(ip_addr);
+    arp_table().with_exclusive([&](auto& table) {
+        if (update == UpdateArp::Set)
+            table.set(ip_addr, addr);
+        if (update == UpdateArp::Delete)
+            table.remove(ip_addr);
+    });
     s_arp_table_block_condition->unblock(ip_addr, addr);
 
     if constexpr (ROUTING_DEBUG) {
-        dmesgln("ARP table ({} entries):", arp_table().resource().size());
-        for (auto& it : arp_table().resource()) {
-            dmesgln("{} :: {}", it.value.to_string(), it.key.to_string());
-        }
+        arp_table().with_shared([&](const auto& table) {
+            dmesgln("ARP table ({} entries):", table.size());
+            for (auto& it : table)
+                dmesgln("{} :: {}", it.value.to_string(), it.key.to_string());
+        });
     }
 }
 
@@ -224,8 +231,9 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
         return { adapter, multicast_ethernet_address(target) };
 
     {
-        MutexLocker locker(arp_table().lock());
-        auto addr = arp_table().resource().get(next_hop_ip);
+        auto addr = arp_table().with_shared([&](const auto& table) -> auto {
+            return table.get(next_hop_ip);
+        });
         if (addr.has_value()) {
             dbgln_if(ROUTING_DEBUG, "Routing: Using cached ARP entry for {} ({})", next_hop_ip, addr.value().to_string());
             return { adapter, addr.value() };
