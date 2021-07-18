@@ -15,6 +15,7 @@ namespace Kernel {
 // do, we should be able of the caveats that Linux has dealt with.
 KResultOr<FlatPtr> Process::sys$getrandom(Userspace<void*> buffer, size_t buffer_size, [[maybe_unused]] unsigned flags)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);
     if (buffer_size > NumericLimits<ssize_t>::max())
         return EINVAL;

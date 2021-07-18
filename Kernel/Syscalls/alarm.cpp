@@ -11,6 +11,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$alarm(unsigned seconds)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(stdio);
     unsigned previous_alarm_remaining = 0;
     if (m_alarm_timer) {

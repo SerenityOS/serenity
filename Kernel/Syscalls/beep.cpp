@@ -11,6 +11,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$beep()
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     PCSpeaker::tone_on(440);
     auto result = Thread::current()->sleep(Time::from_nanoseconds(200'000'000));
     PCSpeaker::tone_off();

@@ -11,6 +11,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     auto events_buffer = current_perf_events_buffer();
     if (!events_buffer) {
         if (!create_perf_events_buffer_if_needed())

@@ -13,6 +13,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$chroot(Userspace<const char*> user_path, size_t path_length, int mount_flags)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     if (!is_superuser())
         return EPERM;
     REQUIRE_PROMISE(chroot);

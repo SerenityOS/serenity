@@ -33,6 +33,15 @@ enum class NeedsBigProcessLock {
     No
 };
 
+// Declare all syscalls and associated  metadata.
+//
+// NOTE: When declaring a new syscall or modifying an existing, please
+// ensure that the proper assert is present at the top of the syscall
+// implementation to both verify and document to any readers if the
+// syscall aquires the big process lock or not. The asserts are:
+//   - VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+//   - VERIFY_NO_PROCESS_BIG_LOCK(this)
+//
 #define ENUMERATE_SYSCALLS(S)                               \
     S(yield, NeedsBigProcessLock::Yes)                      \
     S(open, NeedsBigProcessLock::Yes)                       \

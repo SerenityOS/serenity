@@ -14,6 +14,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
     auto description = fds().file_description(fd);
     if (!description)
@@ -27,6 +28,7 @@ KResultOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
 
 KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
     Syscall::SC_stat_params params;
     if (!copy_from_user(&params, user_params))

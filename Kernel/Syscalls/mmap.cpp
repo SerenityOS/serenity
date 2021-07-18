@@ -127,6 +127,7 @@ static bool validate_inode_mmap_prot(const Process& process, int prot, const Ino
 
 KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_mmap_params params;
@@ -282,6 +283,7 @@ static KResultOr<Range> expand_range_to_page_boundaries(FlatPtr address, size_t 
 
 KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int prot)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
     if (prot & PROT_EXEC) {
@@ -436,6 +438,7 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
 
 KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int advice)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
     auto range_or_error = expand_range_to_page_boundaries(address, size);
@@ -485,6 +488,7 @@ KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, i
 
 KResultOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_set_mmap_name_params params;
@@ -519,6 +523,7 @@ KResultOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mm
 
 KResultOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
     auto result = space().unmap_mmap_range(VirtualAddress { addr }, size);
@@ -529,6 +534,7 @@ KResultOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
 
 KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_mremap_params params {};
@@ -578,6 +584,7 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
 
 KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data, size_t size)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
     if (!size || size % PAGE_SIZE != 0)
@@ -639,6 +646,7 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
 
 KResultOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (space().enforces_syscall_regions())
         return EPERM;
 

@@ -931,6 +931,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
 
 KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     REQUIRE_PROMISE(exec);
 
     // NOTE: Be extremely careful with allocating any kernel memory in exec().

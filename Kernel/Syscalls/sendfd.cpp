@@ -12,6 +12,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(sendfd);
     auto socket_description = fds().file_description(sockfd);
     if (!socket_description)
@@ -34,6 +35,7 @@ KResultOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
 
 KResultOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(recvfd);
     auto socket_description = fds().file_description(sockfd);
     if (!socket_description)

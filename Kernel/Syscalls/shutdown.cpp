@@ -14,6 +14,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$reboot()
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (!is_superuser())
         return EPERM;
 
@@ -34,6 +35,7 @@ KResultOr<FlatPtr> Process::sys$reboot()
 
 KResultOr<FlatPtr> Process::sys$halt()
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (!is_superuser())
         return EPERM;
 

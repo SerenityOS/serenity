@@ -10,6 +10,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$seteuid(uid_t new_euid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
 
     if (new_euid != uid() && new_euid != suid() && !is_superuser())
@@ -26,6 +27,7 @@ KResultOr<FlatPtr> Process::sys$seteuid(uid_t new_euid)
 
 KResultOr<FlatPtr> Process::sys$setegid(gid_t new_egid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
 
     if (new_egid != gid() && new_egid != sgid() && !is_superuser())
@@ -41,6 +43,7 @@ KResultOr<FlatPtr> Process::sys$setegid(gid_t new_egid)
 
 KResultOr<FlatPtr> Process::sys$setuid(uid_t new_uid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
 
     if (new_uid != uid() && new_uid != euid() && !is_superuser())
@@ -58,6 +61,7 @@ KResultOr<FlatPtr> Process::sys$setuid(uid_t new_uid)
 
 KResultOr<FlatPtr> Process::sys$setgid(gid_t new_gid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
 
     if (new_gid != gid() && new_gid != egid() && !is_superuser())
@@ -75,6 +79,7 @@ KResultOr<FlatPtr> Process::sys$setgid(gid_t new_gid)
 
 KResultOr<FlatPtr> Process::sys$setreuid(uid_t new_ruid, uid_t new_euid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
 
     if (new_ruid == (uid_t)-1)
@@ -100,6 +105,7 @@ KResultOr<FlatPtr> Process::sys$setreuid(uid_t new_ruid, uid_t new_euid)
 
 KResultOr<FlatPtr> Process::sys$setresuid(uid_t new_ruid, uid_t new_euid, uid_t new_suid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
 
     if (new_ruid == (uid_t)-1)
@@ -125,6 +131,7 @@ KResultOr<FlatPtr> Process::sys$setresuid(uid_t new_ruid, uid_t new_euid, uid_t 
 
 KResultOr<FlatPtr> Process::sys$setresgid(gid_t new_rgid, gid_t new_egid, gid_t new_sgid)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
 
     if (new_rgid == (gid_t)-1)
@@ -150,6 +157,7 @@ KResultOr<FlatPtr> Process::sys$setresgid(gid_t new_rgid, gid_t new_egid, gid_t 
 
 KResultOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<const gid_t*> user_gids)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(id);
     if (!is_superuser())
         return EPERM;

@@ -17,6 +17,7 @@ extern HashMap<String, OwnPtr<Module>>* g_modules;
 
 KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, size_t path_length)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (!is_superuser())
         return EPERM;
 
@@ -146,6 +147,7 @@ KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, si
 
 KResultOr<FlatPtr> Process::sys$module_unload(Userspace<const char*> user_name, size_t name_length)
 {
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     if (!is_superuser())
         return EPERM;
 
