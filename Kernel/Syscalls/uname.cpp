@@ -10,7 +10,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
+    VERIFY_NO_PROCESS_BIG_LOCK(this)
     extern String* g_hostname;
     extern Mutex* g_hostname_lock;
 
