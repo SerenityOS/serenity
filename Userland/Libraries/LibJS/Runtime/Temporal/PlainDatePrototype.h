@@ -17,6 +17,9 @@ public:
     explicit PlainDatePrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~PlainDatePrototype() override = default;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
 };
 
 }
