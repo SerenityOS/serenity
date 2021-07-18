@@ -69,7 +69,7 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
 {
     constexpr FlatPtr userspace_range_base = 0x00800000;
-    constexpr FlatPtr userspace_range_ceiling = USER_RANGE_CEILING;
+    FlatPtr userspace_range_ceiling = USER_RANGE_CEILING;
 
     ScopedSpinLock lock(s_mm_lock);
     if (parent_range_allocator) {
