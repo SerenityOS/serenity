@@ -169,9 +169,6 @@ jobs:
         sudo cat fsmount/home/anon/test-results.log
         if ! sudo grep -q "Failed: 0" fsmount/home/anon/test-results.log
         then
-          if ${{ matrix.arch == 'x86_64' }}; then
-            exit 0 # We do not fail the job if were running on the x86_64 build, this should be removed once all tests pass
-          fi
           echo "::error :^( Tests failed, failing job"
           exit 1
         fi
