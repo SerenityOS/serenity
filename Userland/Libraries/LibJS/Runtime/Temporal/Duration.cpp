@@ -87,25 +87,8 @@ PartialDuration to_partial_duration(GlobalObject& global_object, Value temporal_
     // 3. Let any be false.
     auto any = false;
 
-    struct PartialDurationProperty {
-        Optional<double> PartialDuration::*internal_slot { nullptr };
-        PropertyName property;
-    };
-    auto properties = AK::Array<PartialDurationProperty, 10> {
-        PartialDurationProperty { &PartialDuration::years, vm.names.years },
-        PartialDurationProperty { &PartialDuration::months, vm.names.months },
-        PartialDurationProperty { &PartialDuration::weeks, vm.names.weeks },
-        PartialDurationProperty { &PartialDuration::days, vm.names.days },
-        PartialDurationProperty { &PartialDuration::hours, vm.names.hours },
-        PartialDurationProperty { &PartialDuration::minutes, vm.names.minutes },
-        PartialDurationProperty { &PartialDuration::seconds, vm.names.seconds },
-        PartialDurationProperty { &PartialDuration::milliseconds, vm.names.milliseconds },
-        PartialDurationProperty { &PartialDuration::microseconds, vm.names.microseconds },
-        PartialDurationProperty { &PartialDuration::nanoseconds, vm.names.nanoseconds },
-    };
-
     // 4. For each row of Table 7, except the header row, in table order, do
-    for (auto& [internal_slot, property] : properties) {
+    for (auto& [internal_slot, property] : temporal_duration_like_properties<PartialDuration, Optional<double>>(vm)) {
         // a. Let property be the Property value of the current row.
 
         // b. Let value be ? Get(temporalDurationLike, property).
