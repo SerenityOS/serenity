@@ -119,9 +119,8 @@ KResult TmpFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEnt
     callback({ ".", identifier(), 0 });
     callback({ "..", m_parent, 0 });
 
-    for (auto& it : m_children) {
-        auto& entry = it.value;
-        callback({ entry.name, entry.inode->identifier(), 0 });
+    for (auto& child : m_children) {
+        callback({ child.name->view(), child.inode->identifier(), 0 });
     }
     return KSuccess;
 }
@@ -205,10 +204,19 @@ RefPtr<Inode> TmpFSInode::lookup(StringView name)
     if (name == "..")
         return fs().get_inode(m_parent);
 
-    auto it = m_children.find(name);
-    if (it == m_children.end())
+    auto* child = find_child_by_name(name);
+    if (!child)
         return {};
-    return fs().get_inode(it->value.inode->identifier());
+    return child->inode;
+}
+
+TmpFSInode::Child* TmpFSInode::find_child_by_name(StringView name)
+{
+    for (auto& child : m_children) {
+        if (child.name->view() == name)
+            return &child;
+    }
+    return nullptr;
 }
 
 void TmpFSInode::notify_watchers()
@@ -273,21 +281,29 @@ KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t
     return child.release_nonnull();
 }
 
-KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
+KResult TmpFSInode::add_child(Inode& child, StringView const& name, mode_t)
 {
-    MutexLocker locker(m_inode_lock);
     VERIFY(is_directory());
     VERIFY(child.fsid() == fsid());
 
     if (name.length() > NAME_MAX)
         return ENAMETOOLONG;
 
-    m_children.set(name, { name, static_cast<TmpFSInode&>(child) });
+    auto name_kstring = KString::try_create(name);
+    if (!name_kstring)
+        return ENOMEM;
+
+    auto* child_entry = new (nothrow) Child { name_kstring.release_nonnull(), static_cast<TmpFSInode&>(child) };
+    if (!child_entry)
+        return ENOMEM;
+
+    MutexLocker locker(m_inode_lock);
+    m_children.append(*child_entry);
     did_add_child(child.identifier(), name);
     return KSuccess;
 }
 
-KResult TmpFSInode::remove_child(const StringView& name)
+KResult TmpFSInode::remove_child(StringView const& name)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(is_directory());
@@ -295,12 +311,13 @@ KResult TmpFSInode::remove_child(const StringView& name)
     if (name == "." || name == "..")
         return KSuccess;
 
-    auto it = m_children.find(name);
-    if (it == m_children.end())
+    auto* child = find_child_by_name(name);
+    if (!child)
         return ENOENT;
-    auto child_id = it->value.inode->identifier();
-    it->value.inode->did_delete_self();
-    m_children.remove(it);
+
+    auto child_id = child->inode->identifier();
+    child->inode->did_delete_self();
+    m_children.remove(*child);
     did_remove_child(child_id, name);
     return KSuccess;
 }
