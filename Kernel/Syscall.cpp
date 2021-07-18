@@ -90,8 +90,13 @@ UNMAP_AFTER_INIT void initialize()
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 typedef KResultOr<FlatPtr> (Process::*Handler)(FlatPtr, FlatPtr, FlatPtr);
 typedef KResultOr<FlatPtr> (Process::*HandlerWithRegisterState)(RegisterState&);
-#define __ENUMERATE_SYSCALL(x) reinterpret_cast<Handler>(&Process::sys$##x),
-static const Handler s_syscall_table[] = {
+struct HandlerMetadata {
+    Handler handler;
+    NeedsBigProcessLock needs_lock;
+};
+
+#define __ENUMERATE_SYSCALL(sys_call, needs_lock) { reinterpret_cast<Handler>(&Process::sys$##sys_call), needs_lock },
+static const HandlerMetadata s_syscall_table[] = {
     ENUMERATE_SYSCALLS(__ENUMERATE_SYSCALL)
 };
 #undef __ENUMERATE_SYSCALL
@@ -126,7 +131,7 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
 
     if (function == SC_fork || function == SC_sigreturn) {
         // These syscalls want the RegisterState& rather than individual parameters.
-        auto handler = (HandlerWithRegisterState)s_syscall_table[function];
+        auto handler = (HandlerWithRegisterState)s_syscall_table[function].handler;
         return (process.*(handler))(regs);
     }
 
@@ -135,12 +140,12 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
         return ENOSYS;
     }
 
-    if (s_syscall_table[function] == nullptr) {
+    if (s_syscall_table[function].handler == nullptr) {
         dbgln("Null syscall {} requested, you probably need to rebuild this program!", function);
         return ENOSYS;
     }
 
-    return (process.*(s_syscall_table[function]))(arg1, arg2, arg3);
+    return (process.*(s_syscall_table[function].handler))(arg1, arg2, arg3);
 }
 
 }

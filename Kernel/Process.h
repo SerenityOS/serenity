@@ -882,6 +882,12 @@ inline ProcessID Thread::pid() const
     } while (0)
 }
 
+#define VERIFY_PROCESS_BIG_LOCK_ACQUIRED(process) \
+    VERIFY(process->big_lock().own_lock());
+
+#define VERIFY_NO_PROCESS_BIG_LOCK(process) \
+    VERIFY(!process->big_lock().own_lock());
+
 inline static String copy_string_from_user(const Kernel::Syscall::StringArgument& string)
 {
     return copy_string_from_user(string.characters, string.length);
