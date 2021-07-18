@@ -199,39 +199,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     // NOTE: We take the big process lock before inspecting memory regions.
     process.big_lock().lock();
 
-    VirtualAddress userspace_sp;
-#if ARCH(I386)
-    userspace_sp = VirtualAddress { regs.userspace_esp };
-#else
-    userspace_sp = VirtualAddress { regs.userspace_rsp };
-#endif
-    if (!MM.validate_user_stack(process.space(), userspace_sp)) {
-        dbgln("Invalid stack pointer: {:p}", userspace_sp);
-        handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
-    }
-
-    VirtualAddress ip;
-#if ARCH(I386)
-    ip = VirtualAddress { regs.eip };
-#else
-    ip = VirtualAddress { regs.rip };
-#endif
-
-    auto* calling_region = MM.find_user_region_from_vaddr(process.space(), ip);
-    if (!calling_region) {
-        dbgln("Syscall from {:p} which has no associated region", ip);
-        handle_crash(regs, "Syscall from unknown region", SIGSEGV);
-    }
-
-    if (calling_region->is_writable()) {
-        dbgln("Syscall from writable memory at {:p}", ip);
-        handle_crash(regs, "Syscall from writable memory", SIGSEGV);
-    }
-
-    if (process.space().enforces_syscall_regions() && !calling_region->is_syscall_region()) {
-        dbgln("Syscall from non-syscall region");
-        handle_crash(regs, "Syscall from non-syscall region", SIGSEGV);
-    }
+    MM.validate_syscall_preconditions(process.space(), regs);
 
     FlatPtr function;
     FlatPtr arg1;

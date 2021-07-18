@@ -624,10 +624,55 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
     return nullptr;
 }
 
+Region* MemoryManager::find_user_region_from_vaddr_no_lock(Space& space, VirtualAddress vaddr)
+{
+    VERIFY(space.get_lock().own_lock());
+    return space.find_region_containing({ vaddr, 1 });
+}
+
 Region* MemoryManager::find_user_region_from_vaddr(Space& space, VirtualAddress vaddr)
 {
     ScopedSpinLock lock(space.get_lock());
-    return space.find_region_containing({ vaddr, 1 });
+    return find_user_region_from_vaddr_no_lock(space, vaddr);
+}
+
+void MemoryManager::validate_syscall_preconditions(Space& space, RegisterState& regs)
+{
+    // We take the space lock once here and then use the no_lock variants
+    // to avoid excessive spinlock recursion in this extemely common path.
+    ScopedSpinLock lock(space.get_lock());
+
+    auto unlock_and_handle_crash = [&lock, &regs](const char* description, int signal) {
+        lock.unlock();
+        handle_crash(regs, description, signal);
+    };
+
+    {
+        VirtualAddress userspace_sp = VirtualAddress { regs.userspace_sp() };
+        if (!MM.validate_user_stack_no_lock(space, userspace_sp)) {
+            dbgln("Invalid stack pointer: {:p}", userspace_sp);
+            unlock_and_handle_crash("Bad stack on syscall entry", SIGSTKFLT);
+        }
+    }
+
+    {
+        VirtualAddress ip = VirtualAddress { regs.ip() };
+        auto* calling_region = MM.find_user_region_from_vaddr_no_lock(space, ip);
+        if (!calling_region) {
+            dbgln("Syscall from {:p} which has no associated region", ip);
+            unlock_and_handle_crash("Syscall from unknown region", SIGSEGV);
+        }
+
+        if (calling_region->is_writable()) {
+            dbgln("Syscall from writable memory at {:p}", ip);
+            unlock_and_handle_crash("Syscall from writable memory", SIGSEGV);
+        }
+
+        if (space.enforces_syscall_regions() && !calling_region->is_syscall_region()) {
+            dbgln("Syscall from non-syscall region");
+            unlock_and_handle_crash("Syscall from non-syscall region", SIGSEGV);
+        }
+    }
 }
 
 Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
@@ -1039,7 +1084,7 @@ bool MemoryManager::validate_user_stack_no_lock(Space& space, VirtualAddress vad
     if (!is_user_address(vaddr))
         return false;
 
-    auto* region = find_user_region_from_vaddr(space, vaddr);
+    auto* region = find_user_region_from_vaddr_no_lock(space, vaddr);
     return region && region->is_user() && region->is_stack();
 }
 

@@ -189,6 +189,8 @@ public:
     }
 
     static Region* find_user_region_from_vaddr(Space&, VirtualAddress);
+    static Region* find_user_region_from_vaddr_no_lock(Space&, VirtualAddress);
+    static void validate_syscall_preconditions(Space&, RegisterState&);
 
     void dump_kernel_regions();
 
