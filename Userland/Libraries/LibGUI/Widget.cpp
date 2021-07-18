@@ -1135,7 +1135,7 @@ bool Widget::has_pending_drop() const
 
 bool Widget::is_visible_for_timer_purposes() const
 {
-    return is_visible();
+    return is_visible() && Object::is_visible_for_timer_purposes();
 }
 
 }
