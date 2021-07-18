@@ -32,33 +32,22 @@ UNMAP_AFTER_INIT void ProcFSComponentRegistry::initialize()
 }
 
 UNMAP_AFTER_INIT ProcFSComponentRegistry::ProcFSComponentRegistry()
-    : m_root_folder(ProcFSRootDirectory::must_create())
+    : m_root_directory(ProcFSRootDirectory::must_create())
 {
-}
-
-const ProcFSBusDirectory& ProcFSComponentRegistry::buses_folder() const
-{
-    return *m_root_folder->m_buses_folder;
-}
-
-void ProcFSComponentRegistry::register_new_bus_folder(ProcFSExposedDirectory& new_bus_folder)
-{
-    VERIFY(!m_root_folder->m_buses_folder.is_null());
-    m_root_folder->m_buses_folder->m_components.append(new_bus_folder);
 }
 
 void ProcFSComponentRegistry::register_new_process(Process& new_process)
 {
-    Locker locker(m_lock);
-    m_root_folder->m_process_folders.append(ProcFSProcessDirectory::create(new_process));
+    MutexLocker locker(m_lock);
+    m_root_directory->m_process_directories.append(ProcFSProcessDirectory::create(new_process));
 }
 
 void ProcFSComponentRegistry::unregister_process(Process& deleted_process)
 {
-    auto process_folder = m_root_folder->process_folder_for(deleted_process).release_nonnull();
-    process_folder->prepare_for_deletion();
-    process_folder->m_list_node.remove();
-    dbgln_if(PROCFS_DEBUG, "ProcFSExposedDirectory ref_count now: {}", process_folder->ref_count());
+    auto process_directory = m_root_directory->process_directory_for(deleted_process).release_nonnull();
+    process_directory->prepare_for_deletion();
+    process_directory->m_list_node.remove();
+    dbgln_if(PROCFS_DEBUG, "ProcFSExposedDirectory ref_count now: {}", process_directory->ref_count());
 }
 
 RefPtr<ProcFS> ProcFS::create()
@@ -75,7 +64,7 @@ bool ProcFS::initialize()
     return true;
 }
 
-NonnullRefPtr<Inode> ProcFS::root_inode() const
+Inode& ProcFS::root_inode()
 {
     return *m_root_inode;
 }
@@ -112,7 +101,7 @@ ProcFSInode::~ProcFSInode()
 }
 
 ProcFS::ProcFS()
-    : m_root_inode(ProcFSComponentRegistry::the().root_folder().to_inode(*this))
+    : m_root_inode(ProcFSComponentRegistry::the().root_directory().to_inode(*this))
 {
 }
 
@@ -138,7 +127,7 @@ RefPtr<Inode> ProcFSInode::lookup(StringView)
 
 InodeMetadata ProcFSInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = m_associated_component->required_mode();
@@ -195,7 +184,6 @@ NonnullRefPtr<ProcFSDirectoryInode> ProcFSDirectoryInode::create(const ProcFS& p
 
 ProcFSDirectoryInode::ProcFSDirectoryInode(const ProcFS& fs, const ProcFSExposedComponent& component)
     : ProcFSInode(fs, component)
-    , m_parent_fs(const_cast<ProcFS&>(fs))
 {
 }
 
@@ -204,7 +192,7 @@ ProcFSDirectoryInode::~ProcFSDirectoryInode()
 }
 InodeMetadata ProcFSDirectoryInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFDIR | m_associated_component->required_mode();
@@ -216,17 +204,17 @@ InodeMetadata ProcFSDirectoryInode::metadata() const
 }
 KResult ProcFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_parent_fs.m_lock);
-    return m_associated_component->traverse_as_directory(m_parent_fs.fsid(), move(callback));
+    MutexLocker locker(fs().m_lock);
+    return m_associated_component->traverse_as_directory(fs().fsid(), move(callback));
 }
 
 RefPtr<Inode> ProcFSDirectoryInode::lookup(StringView name)
 {
-    Locker locker(m_parent_fs.m_lock);
+    MutexLocker locker(fs().m_lock);
     auto component = m_associated_component->lookup(name);
     if (!component)
         return {};
-    return component->to_inode(m_parent_fs);
+    return component->to_inode(fs());
 }
 
 NonnullRefPtr<ProcFSLinkInode> ProcFSLinkInode::create(const ProcFS& procfs, const ProcFSExposedComponent& component)
@@ -240,7 +228,7 @@ ProcFSLinkInode::ProcFSLinkInode(const ProcFS& fs, const ProcFSExposedComponent&
 }
 InodeMetadata ProcFSLinkInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFLNK | m_associated_component->required_mode();

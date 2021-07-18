@@ -28,10 +28,10 @@ SysFSComponent::SysFSComponent(StringView name)
 
 KResult SysFSDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(SysFSComponentRegistry::the().get_lock());
-    VERIFY(m_parent_folder);
+    MutexLocker locker(SysFSComponentRegistry::the().get_lock());
+    VERIFY(m_parent_directory);
     callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, m_parent_folder->component_index() }, 0 });
+    callback({ "..", { fsid, m_parent_directory->component_index() }, 0 });
 
     for (auto& component : m_components) {
         InodeIdentifier identifier = { fsid, component.component_index() };
@@ -55,9 +55,9 @@ SysFSDirectory::SysFSDirectory(StringView name)
 {
 }
 
-SysFSDirectory::SysFSDirectory(StringView name, SysFSDirectory const& parent_folder)
+SysFSDirectory::SysFSDirectory(StringView name, SysFSDirectory const& parent_directory)
     : SysFSComponent(name)
-    , m_parent_folder(parent_folder)
+    , m_parent_directory(parent_directory)
 {
 }
 

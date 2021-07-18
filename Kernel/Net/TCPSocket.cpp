@@ -23,7 +23,7 @@ namespace Kernel {
 
 void TCPSocket::for_each(Function<void(const TCPSocket&)> callback)
 {
-    Locker locker(sockets_by_tuple().lock(), Mutex::Mode::Shared);
+    MutexLocker locker(sockets_by_tuple().lock(), Mutex::Mode::Shared);
     for (auto& it : sockets_by_tuple().resource())
         callback(*it.value);
 }
@@ -41,7 +41,7 @@ void TCPSocket::set_state(State new_state)
         m_role = Role::Connected;
 
     if (new_state == State::Closed) {
-        Locker locker(closing_sockets().lock());
+        MutexLocker locker(closing_sockets().lock());
         closing_sockets().resource().remove(tuple());
 
         if (m_originator)
@@ -68,7 +68,7 @@ Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 
 RefPtr<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
 {
-    Locker locker(sockets_by_tuple().lock(), Mutex::Mode::Shared);
+    MutexLocker locker(sockets_by_tuple().lock(), Mutex::Mode::Shared);
 
     auto exact_match = sockets_by_tuple().resource().get(tuple);
     if (exact_match.has_value())
@@ -91,7 +91,7 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
     auto tuple = IPv4SocketTuple(new_local_address, new_local_port, new_peer_address, new_peer_port);
 
     {
-        Locker locker(sockets_by_tuple().lock(), Mutex::Mode::Shared);
+        MutexLocker locker(sockets_by_tuple().lock(), Mutex::Mode::Shared);
         if (sockets_by_tuple().resource().contains(tuple))
             return {};
     }
@@ -109,7 +109,7 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
     client->set_direction(Direction::Incoming);
     client->set_originator(*this);
 
-    Locker locker(sockets_by_tuple().lock());
+    MutexLocker locker(sockets_by_tuple().lock());
     m_pending_release_for_accept.set(tuple, client);
     sockets_by_tuple().resource().set(tuple, client);
 
@@ -139,7 +139,7 @@ TCPSocket::TCPSocket(int protocol)
 
 TCPSocket::~TCPSocket()
 {
-    Locker locker(sockets_by_tuple().lock());
+    MutexLocker locker(sockets_by_tuple().lock());
     sockets_by_tuple().resource().remove(tuple());
 
     dequeue_for_retransmit();
@@ -246,7 +246,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     m_packets_out++;
     m_bytes_out += buffer_size;
     if (tcp_packet.has_syn() || payload_size > 0) {
-        Locker locker(m_not_acked_lock);
+        MutexLocker locker(m_not_acked_lock);
         m_not_acked.append({ m_sequence_number, move(packet), ipv4_payload_offset, *routing_decision.adapter });
         m_not_acked_size += payload_size;
         enqueue_for_retransmit();
@@ -265,7 +265,7 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
         dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket: receive_tcp_packet: {}", ack_number);
 
         int removed = 0;
-        Locker locker(m_not_acked_lock);
+        MutexLocker locker(m_not_acked_lock);
         while (!m_not_acked.is_empty()) {
             auto& packet = m_not_acked.first();
 
@@ -369,7 +369,7 @@ KResult TCPSocket::protocol_bind()
 KResult TCPSocket::protocol_listen(bool did_allocate_port)
 {
     if (!did_allocate_port) {
-        Locker socket_locker(sockets_by_tuple().lock());
+        MutexLocker socket_locker(sockets_by_tuple().lock());
         if (sockets_by_tuple().resource().contains(tuple()))
             return EADDRINUSE;
         sockets_by_tuple().resource().set(tuple(), this);
@@ -383,7 +383,7 @@ KResult TCPSocket::protocol_listen(bool did_allocate_port)
 
 KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock should_block)
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
 
     auto routing_decision = route_to(peer_address(), local_address());
     if (routing_decision.is_zero())
@@ -434,7 +434,7 @@ KResultOr<u16> TCPSocket::protocol_allocate_local_port()
     constexpr u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
     u16 first_scan_port = first_ephemeral_port + get_good_random<u16>() % ephemeral_port_range_size;
 
-    Locker locker(sockets_by_tuple().lock());
+    MutexLocker locker(sockets_by_tuple().lock());
     for (u16 port = first_scan_port;;) {
         IPv4SocketTuple proposed_tuple(local_address(), port, peer_address(), peer_port());
 
@@ -482,7 +482,7 @@ void TCPSocket::shut_down_for_writing()
 
 KResult TCPSocket::close()
 {
-    Locker socket_locker(lock());
+    MutexLocker socket_locker(lock());
     auto result = IPv4Socket::close();
     if (state() == State::CloseWait) {
         dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN from CloseWait and moving into LastAck");
@@ -491,7 +491,7 @@ KResult TCPSocket::close()
     }
 
     if (state() != State::Closed && state() != State::Listen) {
-        Locker locker(closing_sockets().lock());
+        MutexLocker locker(closing_sockets().lock());
         closing_sockets().resource().set(tuple(), *this);
     }
     return result;
@@ -506,13 +506,13 @@ Lockable<HashTable<TCPSocket*>>& TCPSocket::sockets_for_retransmit()
 
 void TCPSocket::enqueue_for_retransmit()
 {
-    Locker locker(sockets_for_retransmit().lock());
+    MutexLocker locker(sockets_for_retransmit().lock());
     sockets_for_retransmit().resource().set(this);
 }
 
 void TCPSocket::dequeue_for_retransmit()
 {
-    Locker locker(sockets_for_retransmit().lock());
+    MutexLocker locker(sockets_for_retransmit().lock());
     sockets_for_retransmit().resource().remove(this);
 }
 
@@ -545,7 +545,7 @@ void TCPSocket::retransmit_packets()
     if (routing_decision.is_zero())
         return;
 
-    Locker locker(m_not_acked_lock, Mutex::Mode::Shared);
+    MutexLocker locker(m_not_acked_lock, Mutex::Mode::Shared);
     for (auto& packet : m_not_acked) {
         packet.tx_counter++;
 
@@ -590,7 +590,7 @@ bool TCPSocket::can_write(const FileDescription& file_description, size_t size) 
     if (!file_description.is_blocking())
         return true;
 
-    Locker lock(m_not_acked_lock);
+    MutexLocker lock(m_not_acked_lock);
     return m_not_acked_size + size <= m_send_window_size;
 }
 

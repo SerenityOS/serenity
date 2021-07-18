@@ -20,7 +20,6 @@ namespace Kernel {
 
 class SysFSComponent : public RefCounted<SysFSComponent> {
 public:
-    virtual KResultOr<size_t> entries_count() const { VERIFY_NOT_REACHED(); };
     virtual StringView name() const { return m_name->view(); }
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const { VERIFY_NOT_REACHED(); }
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
@@ -44,7 +43,6 @@ private:
 
 class SysFSDirectory : public SysFSComponent {
 public:
-    virtual KResultOr<size_t> entries_count() const override { return m_components.size(); };
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<SysFSComponent> lookup(StringView name) override;
 
@@ -52,9 +50,9 @@ public:
 
 protected:
     explicit SysFSDirectory(StringView name);
-    SysFSDirectory(StringView name, SysFSDirectory const& parent_folder);
+    SysFSDirectory(StringView name, SysFSDirectory const& parent_directory);
     NonnullRefPtrVector<SysFSComponent> m_components;
-    RefPtr<SysFSDirectory> m_parent_folder;
+    RefPtr<SysFSDirectory> m_parent_directory;
 };
 
 }

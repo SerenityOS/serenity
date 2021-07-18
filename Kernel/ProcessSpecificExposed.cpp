@@ -19,15 +19,15 @@ namespace Kernel {
 class ProcFSProcessStacks;
 class ProcFSThreadStack final : public ProcFSProcessInformation {
 public:
-    // Note: We pass const ProcFSProcessStacks& to enforce creation with this type of folder
-    static NonnullRefPtr<ProcFSThreadStack> create(const ProcFSProcessDirectory& process_folder, const ProcFSProcessStacks&, const Thread& thread)
+    // Note: We pass const ProcFSProcessStacks& to enforce creation with this type of directory
+    static NonnullRefPtr<ProcFSThreadStack> create(const ProcFSProcessDirectory& process_directory, const ProcFSProcessStacks&, const Thread& thread)
     {
-        return adopt_ref(*new (nothrow) ProcFSThreadStack(process_folder, thread));
+        return adopt_ref(*new (nothrow) ProcFSThreadStack(process_directory, thread));
     }
 
 private:
-    explicit ProcFSThreadStack(const ProcFSProcessDirectory& process_folder, const Thread& thread)
-        : ProcFSProcessInformation(String::formatted("{}", thread.tid()), process_folder)
+    explicit ProcFSThreadStack(const ProcFSProcessDirectory& process_directory, const Thread& thread)
+        : ProcFSProcessInformation(String::formatted("{}", thread.tid()), process_directory)
         , m_associated_thread(thread)
     {
     }
@@ -54,61 +54,48 @@ private:
 };
 
 class ProcFSProcessStacks final : public ProcFSExposedDirectory {
-    // Note: This folder is special, because everything that is created here is dynamic!
+    // Note: This directory is special, because everything that is created here is dynamic!
     // This means we don't register anything in the m_components Vector, and every inode
     // is created in runtime when called to get it
     // Every ProcFSThreadStack (that represents a thread stack) is created only as a temporary object
     // therefore, we don't use m_components so when we are done with the ProcFSThreadStack object,
     // It should be deleted (as soon as possible)
 public:
-    virtual KResultOr<size_t> entries_count() const override;
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
-    static NonnullRefPtr<ProcFSProcessStacks> create(const ProcFSProcessDirectory& parent_folder)
+    static NonnullRefPtr<ProcFSProcessStacks> create(const ProcFSProcessDirectory& parent_directory)
     {
-        auto folder = adopt_ref(*new (nothrow) ProcFSProcessStacks(parent_folder));
-        return folder;
+        auto directory = adopt_ref(*new (nothrow) ProcFSProcessStacks(parent_directory));
+        return directory;
     }
 
     virtual void prepare_for_deletion() override
     {
         ProcFSExposedDirectory::prepare_for_deletion();
-        m_process_folder.clear();
+        m_process_directory.clear();
     }
 
 private:
-    ProcFSProcessStacks(const ProcFSProcessDirectory& parent_folder)
-        : ProcFSExposedDirectory("stacks"sv, parent_folder)
-        , m_process_folder(parent_folder)
+    ProcFSProcessStacks(const ProcFSProcessDirectory& parent_directory)
+        : ProcFSExposedDirectory("stacks"sv, parent_directory)
+        , m_process_directory(parent_directory)
     {
     }
-    WeakPtr<ProcFSProcessDirectory> m_process_folder;
+    WeakPtr<ProcFSProcessDirectory> m_process_directory;
     mutable Mutex m_lock;
 };
 
-KResultOr<size_t> ProcFSProcessStacks::entries_count() const
-{
-    Locker locker(m_lock);
-    auto parent_folder = m_process_folder.strong_ref();
-    if (parent_folder.is_null())
-        return KResult(EINVAL);
-    auto process = parent_folder->associated_process();
-    if (process.is_null())
-        return KResult(ESRCH);
-    return process->thread_count();
-}
-
 KResult ProcFSProcessStacks::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_lock);
-    auto parent_folder = m_process_folder.strong_ref();
-    if (parent_folder.is_null())
+    MutexLocker locker(m_lock);
+    auto parent_directory = m_process_directory.strong_ref();
+    if (parent_directory.is_null())
         return KResult(EINVAL);
     callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, parent_folder->component_index() }, 0 });
+    callback({ "..", { fsid, parent_directory->component_index() }, 0 });
 
-    auto process = parent_folder->associated_process();
+    auto process = parent_directory->associated_process();
     if (process.is_null())
         return KResult(ESRCH);
     process->for_each_thread([&](const Thread& thread) {
@@ -121,11 +108,11 @@ KResult ProcFSProcessStacks::traverse_as_directory(unsigned fsid, Function<bool(
 
 RefPtr<ProcFSExposedComponent> ProcFSProcessStacks::lookup(StringView name)
 {
-    Locker locker(m_lock);
-    auto parent_folder = m_process_folder.strong_ref();
-    if (parent_folder.is_null())
+    MutexLocker locker(m_lock);
+    auto parent_directory = m_process_directory.strong_ref();
+    if (parent_directory.is_null())
         return nullptr;
-    auto process = parent_folder->associated_process();
+    auto process = parent_directory->associated_process();
     if (process.is_null())
         return nullptr;
     RefPtr<ProcFSThreadStack> procfd_stack;
@@ -133,7 +120,7 @@ RefPtr<ProcFSExposedComponent> ProcFSProcessStacks::lookup(StringView name)
     process->for_each_thread([&](const Thread& thread) {
         int tid = thread.tid().value();
         if (name == String::number(tid)) {
-            procfd_stack = ProcFSThreadStack::create(*parent_folder, *this, thread);
+            procfd_stack = ProcFSThreadStack::create(*parent_directory, *this, thread);
         }
     });
     return procfd_stack;
@@ -142,7 +129,7 @@ RefPtr<ProcFSExposedComponent> ProcFSProcessStacks::lookup(StringView name)
 class ProcFSProcessFileDescriptions;
 class ProcFSProcessFileDescription final : public ProcFSExposedLink {
 public:
-    // Note: we pass const ProcFSProcessFileDescriptions& just to enforce creation of this in the correct folder.
+    // Note: we pass const ProcFSProcessFileDescriptions& just to enforce creation of this in the correct directory.
     static NonnullRefPtr<ProcFSProcessFileDescription> create(unsigned fd_number, const FileDescription& fd, InodeIndex preallocated_index, const ProcFSProcessFileDescriptions&)
     {
         return adopt_ref(*new (nothrow) ProcFSProcessFileDescription(fd_number, fd, preallocated_index));
@@ -164,59 +151,47 @@ private:
 };
 
 class ProcFSProcessFileDescriptions final : public ProcFSExposedDirectory {
-    // Note: This folder is special, because everything that is created here is dynamic!
+    // Note: This directory is special, because everything that is created here is dynamic!
     // This means we don't register anything in the m_components Vector, and every inode
     // is created in runtime when called to get it
     // Every ProcFSProcessFileDescription (that represents a file descriptor) is created only as a temporary object
     // therefore, we don't use m_components so when we are done with the ProcFSProcessFileDescription object,
     // It should be deleted (as soon as possible)
 public:
-    virtual KResultOr<size_t> entries_count() const override;
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
 
-    static NonnullRefPtr<ProcFSProcessFileDescriptions> create(const ProcFSProcessDirectory& parent_folder)
+    static NonnullRefPtr<ProcFSProcessFileDescriptions> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessFileDescriptions(parent_folder));
+        return adopt_ref(*new (nothrow) ProcFSProcessFileDescriptions(parent_directory));
     }
 
     virtual void prepare_for_deletion() override
     {
         ProcFSExposedDirectory::prepare_for_deletion();
-        m_process_folder.clear();
+        m_process_directory.clear();
     }
 
 private:
-    explicit ProcFSProcessFileDescriptions(const ProcFSProcessDirectory& parent_folder)
-        : ProcFSExposedDirectory("fd"sv, parent_folder)
-        , m_process_folder(parent_folder)
+    explicit ProcFSProcessFileDescriptions(const ProcFSProcessDirectory& parent_directory)
+        : ProcFSExposedDirectory("fd"sv, parent_directory)
+        , m_process_directory(parent_directory)
     {
     }
-    WeakPtr<ProcFSProcessDirectory> m_process_folder;
+    WeakPtr<ProcFSProcessDirectory> m_process_directory;
     mutable Mutex m_lock;
 };
 
-KResultOr<size_t> ProcFSProcessFileDescriptions::entries_count() const
-{
-    Locker locker(m_lock);
-    auto parent_folder = m_process_folder.strong_ref();
-    if (parent_folder.is_null())
-        return KResult(EINVAL);
-    auto process = parent_folder->associated_process();
-    if (process.is_null())
-        return KResult(ESRCH);
-    return process->fds().open_count();
-}
 KResult ProcFSProcessFileDescriptions::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_lock);
-    auto parent_folder = m_process_folder.strong_ref();
-    if (parent_folder.is_null())
+    MutexLocker locker(m_lock);
+    auto parent_directory = m_process_directory.strong_ref();
+    if (parent_directory.is_null())
         return KResult(EINVAL);
     callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, parent_folder->component_index() }, 0 });
+    callback({ "..", { fsid, parent_directory->component_index() }, 0 });
 
-    auto process = parent_folder->associated_process();
+    auto process = parent_directory->associated_process();
     if (process.is_null())
         return KResult(ESRCH);
     size_t count = 0;
@@ -233,11 +208,11 @@ KResult ProcFSProcessFileDescriptions::traverse_as_directory(unsigned fsid, Func
 }
 RefPtr<ProcFSExposedComponent> ProcFSProcessFileDescriptions::lookup(StringView name)
 {
-    Locker locker(m_lock);
-    auto parent_folder = m_process_folder.strong_ref();
-    if (parent_folder.is_null())
+    MutexLocker locker(m_lock);
+    auto parent_directory = m_process_directory.strong_ref();
+    if (parent_directory.is_null())
         return nullptr;
-    auto process = parent_folder->associated_process();
+    auto process = parent_directory->associated_process();
     if (process.is_null())
         return nullptr;
     RefPtr<ProcFSProcessFileDescription> procfd_fd;
@@ -258,22 +233,22 @@ RefPtr<ProcFSExposedComponent> ProcFSProcessFileDescriptions::lookup(StringView 
 
 class ProcFSProcessPledge final : public ProcFSProcessInformation {
 public:
-    static NonnullRefPtr<ProcFSProcessPledge> create(const ProcFSProcessDirectory& parent_folder)
+    static NonnullRefPtr<ProcFSProcessPledge> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessPledge(parent_folder));
+        return adopt_ref(*new (nothrow) ProcFSProcessPledge(parent_directory));
     }
 
 private:
-    explicit ProcFSProcessPledge(const ProcFSProcessDirectory& parent_folder)
-        : ProcFSProcessInformation("pledge"sv, parent_folder)
+    explicit ProcFSProcessPledge(const ProcFSProcessDirectory& parent_directory)
+        : ProcFSProcessInformation("pledge"sv, parent_directory)
     {
     }
     virtual bool output(KBufferBuilder& builder) override
     {
-        auto parent_folder = m_parent_folder.strong_ref();
-        if (parent_folder.is_null())
+        auto parent_directory = m_parent_directory.strong_ref();
+        if (parent_directory.is_null())
             return false;
-        auto process = parent_folder->associated_process();
+        auto process = parent_directory->associated_process();
         if (process.is_null())
             return false;
         JsonObjectSerializer obj { builder };
@@ -296,22 +271,22 @@ private:
 
 class ProcFSProcessUnveil final : public ProcFSProcessInformation {
 public:
-    static NonnullRefPtr<ProcFSProcessUnveil> create(const ProcFSProcessDirectory& parent_folder)
+    static NonnullRefPtr<ProcFSProcessUnveil> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessUnveil(parent_folder));
+        return adopt_ref(*new (nothrow) ProcFSProcessUnveil(parent_directory));
     }
 
 private:
-    explicit ProcFSProcessUnveil(const ProcFSProcessDirectory& parent_folder)
-        : ProcFSProcessInformation("unveil"sv, parent_folder)
+    explicit ProcFSProcessUnveil(const ProcFSProcessDirectory& parent_directory)
+        : ProcFSProcessInformation("unveil"sv, parent_directory)
     {
     }
     virtual bool output(KBufferBuilder& builder) override
     {
-        auto parent_folder = m_parent_folder.strong_ref();
-        if (parent_folder.is_null())
+        auto parent_directory = m_parent_directory.strong_ref();
+        if (parent_directory.is_null())
             return false;
-        auto process = parent_folder->associated_process();
+        auto process = parent_directory->associated_process();
         if (process.is_null())
             return false;
         JsonArraySerializer array { builder };
@@ -340,23 +315,23 @@ private:
 
 class ProcFSProcessPerformanceEvents final : public ProcFSProcessInformation {
 public:
-    static NonnullRefPtr<ProcFSProcessPerformanceEvents> create(const ProcFSProcessDirectory& parent_folder)
+    static NonnullRefPtr<ProcFSProcessPerformanceEvents> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessPerformanceEvents(parent_folder));
+        return adopt_ref(*new (nothrow) ProcFSProcessPerformanceEvents(parent_directory));
     }
 
 private:
-    explicit ProcFSProcessPerformanceEvents(const ProcFSProcessDirectory& parent_folder)
-        : ProcFSProcessInformation("perf_events"sv, parent_folder)
+    explicit ProcFSProcessPerformanceEvents(const ProcFSProcessDirectory& parent_directory)
+        : ProcFSProcessInformation("perf_events"sv, parent_directory)
     {
     }
     virtual bool output(KBufferBuilder& builder) override
     {
         InterruptDisabler disabler;
-        auto parent_folder = m_parent_folder.strong_ref();
-        if (parent_folder.is_null())
+        auto parent_directory = m_parent_directory.strong_ref();
+        if (parent_directory.is_null())
             return false;
-        auto process = parent_folder->associated_process();
+        auto process = parent_directory->associated_process();
         if (process.is_null())
             return false;
         if (!process->perf_events()) {
@@ -369,23 +344,23 @@ private:
 
 class ProcFSProcessOverallFileDescriptions final : public ProcFSProcessInformation {
 public:
-    static NonnullRefPtr<ProcFSProcessOverallFileDescriptions> create(const ProcFSProcessDirectory& parent_folder)
+    static NonnullRefPtr<ProcFSProcessOverallFileDescriptions> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessOverallFileDescriptions(parent_folder));
+        return adopt_ref(*new (nothrow) ProcFSProcessOverallFileDescriptions(parent_directory));
     }
 
 private:
-    explicit ProcFSProcessOverallFileDescriptions(const ProcFSProcessDirectory& parent_folder)
-        : ProcFSProcessInformation("fds"sv, parent_folder)
+    explicit ProcFSProcessOverallFileDescriptions(const ProcFSProcessDirectory& parent_directory)
+        : ProcFSProcessInformation("fds"sv, parent_directory)
     {
     }
     virtual bool output(KBufferBuilder& builder) override
     {
-        auto parent_folder = m_parent_folder.strong_ref();
-        if (parent_folder.is_null())
+        auto parent_directory = m_parent_directory.strong_ref();
+        if (parent_directory.is_null())
             return false;
         JsonArraySerializer array { builder };
-        auto process = parent_folder->associated_process();
+        auto process = parent_directory->associated_process();
         if (process.is_null())
             return false;
         if (process->fds().open_count() == 0) {
@@ -421,23 +396,23 @@ private:
 
 class ProcFSProcessRoot final : public ProcFSExposedLink {
 public:
-    static NonnullRefPtr<ProcFSProcessRoot> create(const ProcFSProcessDirectory& parent_folder)
+    static NonnullRefPtr<ProcFSProcessRoot> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessRoot(parent_folder));
+        return adopt_ref(*new (nothrow) ProcFSProcessRoot(parent_directory));
     }
 
 private:
-    explicit ProcFSProcessRoot(const ProcFSProcessDirectory& parent_folder)
+    explicit ProcFSProcessRoot(const ProcFSProcessDirectory& parent_directory)
         : ProcFSExposedLink("root"sv)
-        , m_parent_process_directory(parent_folder)
+        , m_parent_process_directory(parent_directory)
     {
     }
     virtual bool acquire_link(KBufferBuilder& builder) override
     {
-        auto parent_folder = m_parent_process_directory.strong_ref();
-        if (parent_folder.is_null())
+        auto parent_directory = m_parent_process_directory.strong_ref();
+        if (parent_directory.is_null())
             return false;
-        auto process = parent_folder->associated_process();
+        auto process = parent_directory->associated_process();
         if (process.is_null())
             return false;
         builder.append_bytes(process->root_directory_relative_to_global_root().absolute_path().to_byte_buffer());
@@ -448,22 +423,22 @@ private:
 
 class ProcFSProcessVirtualMemory final : public ProcFSProcessInformation {
 public:
-    static NonnullRefPtr<ProcFSProcessRoot> create(const ProcFSProcessDirectory& parent_folder)
+    static NonnullRefPtr<ProcFSProcessRoot> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessVirtualMemory(parent_folder));
+        return adopt_ref(*new (nothrow) ProcFSProcessVirtualMemory(parent_directory));
     }
 
 private:
-    explicit ProcFSProcessVirtualMemory(const ProcFSProcessDirectory& parent_folder)
-        : ProcFSProcessInformation("vm"sv, parent_folder)
+    explicit ProcFSProcessVirtualMemory(const ProcFSProcessDirectory& parent_directory)
+        : ProcFSProcessInformation("vm"sv, parent_directory)
     {
     }
     virtual bool output(KBufferBuilder& builder) override
     {
-        auto parent_folder = m_parent_folder.strong_ref();
-        if (parent_folder.is_null())
+        auto parent_directory = m_parent_directory.strong_ref();
+        if (parent_directory.is_null())
             return false;
-        auto process = parent_folder->associated_process();
+        auto process = parent_directory->associated_process();
         if (process.is_null())
             return false;
         JsonArraySerializer array { builder };
@@ -512,23 +487,23 @@ private:
 
 class ProcFSProcessCurrentWorkDirectory final : public ProcFSExposedLink {
 public:
-    static NonnullRefPtr<ProcFSProcessCurrentWorkDirectory> create(const ProcFSProcessDirectory& parent_folder)
+    static NonnullRefPtr<ProcFSProcessCurrentWorkDirectory> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessCurrentWorkDirectory(parent_folder));
+        return adopt_ref(*new (nothrow) ProcFSProcessCurrentWorkDirectory(parent_directory));
     }
 
 private:
-    explicit ProcFSProcessCurrentWorkDirectory(const ProcFSProcessDirectory& parent_folder)
+    explicit ProcFSProcessCurrentWorkDirectory(const ProcFSProcessDirectory& parent_directory)
         : ProcFSExposedLink("cwd"sv)
-        , m_parent_process_directory(parent_folder)
+        , m_parent_process_directory(parent_directory)
     {
     }
     virtual bool acquire_link(KBufferBuilder& builder) override
     {
-        auto parent_folder = m_parent_process_directory.strong_ref();
-        if (parent_folder.is_null())
+        auto parent_directory = m_parent_process_directory.strong_ref();
+        if (parent_directory.is_null())
             return false;
-        auto process = parent_folder->associated_process();
+        auto process = parent_directory->associated_process();
         if (process.is_null())
             return false;
         builder.append_bytes(process->current_directory().absolute_path().bytes());
@@ -540,17 +515,17 @@ private:
 
 class ProcFSProcessBinary final : public ProcFSExposedLink {
 public:
-    static NonnullRefPtr<ProcFSProcessBinary> create(const ProcFSProcessDirectory& parent_folder)
+    static NonnullRefPtr<ProcFSProcessBinary> create(const ProcFSProcessDirectory& parent_directory)
     {
-        return adopt_ref(*new (nothrow) ProcFSProcessBinary(parent_folder));
+        return adopt_ref(*new (nothrow) ProcFSProcessBinary(parent_directory));
     }
 
     virtual mode_t required_mode() const override
     {
-        auto parent_folder = m_parent_process_directory.strong_ref();
-        if (parent_folder.is_null())
+        auto parent_directory = m_parent_process_directory.strong_ref();
+        if (parent_directory.is_null())
             return false;
-        auto process = parent_folder->associated_process();
+        auto process = parent_directory->associated_process();
         if (process.is_null())
             return false;
         if (!process->executable())
@@ -559,17 +534,17 @@ public:
     }
 
 private:
-    explicit ProcFSProcessBinary(const ProcFSProcessDirectory& parent_folder)
+    explicit ProcFSProcessBinary(const ProcFSProcessDirectory& parent_directory)
         : ProcFSExposedLink("exe"sv)
-        , m_parent_process_directory(parent_folder)
+        , m_parent_process_directory(parent_directory)
     {
     }
     virtual bool acquire_link(KBufferBuilder& builder) override
     {
-        auto parent_folder = m_parent_process_directory.strong_ref();
-        if (parent_folder.is_null())
+        auto parent_directory = m_parent_process_directory.strong_ref();
+        if (parent_directory.is_null())
             return false;
-        auto process = parent_folder->associated_process();
+        auto process = parent_directory->associated_process();
         if (process.is_null())
             return false;
         auto* custody = process->executable();
@@ -626,7 +601,7 @@ void ProcFSProcessDirectory::prepare_for_deletion()
 }
 
 ProcFSProcessDirectory::ProcFSProcessDirectory(const Process& process)
-    : ProcFSExposedDirectory(String::formatted("{:d}", process.pid().value()), ProcFSComponentRegistry::the().root_folder())
+    : ProcFSExposedDirectory(String::formatted("{:d}", process.pid().value()), ProcFSComponentRegistry::the().root_directory())
     , m_associated_process(process)
 {
 }

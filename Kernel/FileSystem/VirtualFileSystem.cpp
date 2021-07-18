@@ -51,7 +51,7 @@ InodeIdentifier VirtualFileSystem::root_inode_id() const
 
 KResult VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int flags)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     auto& inode = mount_point.inode();
     dbgln("VirtualFileSystem: Mounting {} at {} (inode: {}) with flags {}",
@@ -67,7 +67,7 @@ KResult VirtualFileSystem::mount(FileSystem& fs, Custody& mount_point, int flags
 
 KResult VirtualFileSystem::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     dbgln("VirtualFileSystem: Bind-mounting {} at {}", source.try_create_absolute_path(), mount_point.try_create_absolute_path());
     // FIXME: check that this is not already a mount point
@@ -78,7 +78,7 @@ KResult VirtualFileSystem::bind_mount(Custody& source, Custody& mount_point, int
 
 KResult VirtualFileSystem::remount(Custody& mount_point, int new_flags)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
 
     dbgln("VirtualFileSystem: Remounting {}", mount_point.try_create_absolute_path());
 
@@ -92,7 +92,7 @@ KResult VirtualFileSystem::remount(Custody& mount_point, int new_flags)
 
 KResult VirtualFileSystem::unmount(Inode& guest_inode)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     dbgln("VirtualFileSystem: unmount called with inode {}", guest_inode.identifier());
 
     for (size_t i = 0; i < m_mounts.size(); ++i) {
@@ -121,13 +121,13 @@ bool VirtualFileSystem::mount_root(FileSystem& fs)
 
     Mount mount { fs, nullptr, root_mount_flags };
 
-    auto root_inode = fs.root_inode();
-    if (!root_inode->is_directory()) {
-        dmesgln("VirtualFileSystem: root inode ({}) for / is not a directory :(", root_inode->identifier());
+    auto& root_inode = fs.root_inode();
+    if (!root_inode.is_directory()) {
+        dmesgln("VirtualFileSystem: root inode ({}) for / is not a directory :(", root_inode.identifier());
         return false;
     }
 
-    m_root_inode = move(root_inode);
+    m_root_inode = root_inode;
     dmesgln("VirtualFileSystem: mounted root from {} ({})", fs.class_name(), static_cast<FileBackedFileSystem&>(fs).file_description().absolute_path());
 
     m_mounts.append(move(mount));
@@ -172,7 +172,7 @@ KResult VirtualFileSystem::traverse_directory_inode(Inode& dir_inode, Function<b
             resolved_inode = entry.inode;
 
         // FIXME: This is now broken considering chroot and bind mounts.
-        bool is_root_inode = dir_inode.identifier() == dir_inode.fs().root_inode()->identifier();
+        bool is_root_inode = dir_inode.identifier() == dir_inode.fs().root_inode().identifier();
         if (is_root_inode && !is_vfs_root(dir_inode.identifier()) && entry.name == "..") {
             auto mount = find_mount_for_guest(dir_inode.identifier());
             VERIFY(mount);

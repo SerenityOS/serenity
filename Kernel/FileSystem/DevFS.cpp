@@ -19,7 +19,7 @@ NonnullRefPtr<DevFS> DevFS::create()
 DevFS::DevFS()
     : m_root_inode(adopt_ref(*new DevFSRootDirectoryInode(*this)))
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     Device::for_each([&](Device& device) {
         // FIXME: Find a better way to not add MasterPTYs or SlavePTYs!
         if (device.is_master_pty() || (device.is_character_device() && device.major() == 201))
@@ -33,7 +33,7 @@ void DevFS::notify_new_device(Device& device)
     auto name = KString::try_create(device.device_name());
     VERIFY(name);
 
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device, name.release_nonnull()));
     m_nodes.append(new_device_inode);
     m_root_inode->m_devices.append(new_device_inode);
@@ -41,7 +41,7 @@ void DevFS::notify_new_device(Device& device)
 
 size_t DevFS::allocate_inode_index()
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     m_next_inode_index = m_next_inode_index.value() + 1;
     VERIFY(m_next_inode_index > 0);
     return 1 + m_next_inode_index.value();
@@ -61,14 +61,14 @@ bool DevFS::initialize()
     return true;
 }
 
-NonnullRefPtr<Inode> DevFS::root_inode() const
+Inode& DevFS::root_inode()
 {
     return *m_root_inode;
 }
 
 RefPtr<Inode> DevFS::get_inode(InodeIdentifier inode_id) const
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (inode_id.index() == 1)
         return m_root_inode;
     for (auto& node : m_nodes) {
@@ -154,7 +154,7 @@ DevFSLinkInode::DevFSLinkInode(DevFS& fs, NonnullOwnPtr<KString> name)
 
 KResultOr<size_t> DevFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelBuffer& buffer, FileDescription*) const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     VERIFY(offset == 0);
     VERIFY(m_link);
     if (!buffer.write(m_link->characters() + offset, m_link->length()))
@@ -180,7 +180,7 @@ KResultOr<size_t> DevFSLinkInode::write_bytes(off_t offset, size_t count, UserOr
     if (kstring_or_error.is_error())
         return kstring_or_error.error();
 
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     VERIFY(offset == 0);
     VERIFY(buffer.is_kernel_buffer());
     m_link = kstring_or_error.release_value();
@@ -218,18 +218,18 @@ RefPtr<Inode> DevFSDirectoryInode::lookup(StringView)
 
 DevFSRootDirectoryInode::DevFSRootDirectoryInode(DevFS& fs)
     : DevFSDirectoryInode(fs)
-    , m_parent_fs(fs)
 {
 }
+
 KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_parent_fs.m_lock);
+    MutexLocker locker(fs().m_lock);
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
 
-    for (auto& folder : m_subfolders) {
-        InodeIdentifier identifier = { fsid(), folder.index() };
-        callback({ folder.name(), identifier, 0 });
+    for (auto& directory : m_subdirectories) {
+        InodeIdentifier identifier = { fsid(), directory.index() };
+        callback({ directory.name(), identifier, 0 });
     }
     for (auto& link : m_links) {
         InodeIdentifier identifier = { fsid(), link.index() };
@@ -244,10 +244,10 @@ KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem:
 }
 RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
 {
-    Locker locker(m_parent_fs.m_lock);
-    for (auto& subfolder : m_subfolders) {
-        if (subfolder.name() == name)
-            return subfolder;
+    MutexLocker locker(fs().m_lock);
+    for (auto& subdirectory : m_subdirectories) {
+        if (subdirectory.name() == name)
+            return subdirectory;
     }
     for (auto& link : m_links) {
         if (link.name() == name)
@@ -263,26 +263,26 @@ RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
 }
 KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView name, mode_t mode, dev_t, uid_t, gid_t)
 {
-    Locker locker(m_parent_fs.m_lock);
+    MutexLocker locker(fs().m_lock);
 
     InodeMetadata metadata;
     metadata.mode = mode;
     if (metadata.is_directory()) {
-        for (auto& folder : m_subfolders) {
-            if (folder.name() == name)
+        for (auto& directory : m_subdirectories) {
+            if (directory.name() == name)
                 return EEXIST;
         }
         if (name != "pts")
             return EROFS;
-        auto new_directory_inode = adopt_ref_if_nonnull(new (nothrow) DevFSPtsDirectoryInode(m_parent_fs));
+        auto new_directory_inode = adopt_ref_if_nonnull(new (nothrow) DevFSPtsDirectoryInode(fs()));
         if (!new_directory_inode)
             return ENOMEM;
-        if (!m_subfolders.try_ensure_capacity(m_subfolders.size() + 1))
+        if (!m_subdirectories.try_ensure_capacity(m_subdirectories.size() + 1))
             return ENOMEM;
-        if (!m_parent_fs.m_nodes.try_ensure_capacity(m_parent_fs.m_nodes.size() + 1))
+        if (!fs().m_nodes.try_ensure_capacity(fs().m_nodes.size() + 1))
             return ENOMEM;
-        m_subfolders.append(*new_directory_inode);
-        m_parent_fs.m_nodes.append(*new_directory_inode);
+        m_subdirectories.append(*new_directory_inode);
+        fs().m_nodes.append(*new_directory_inode);
         return KResult(KSuccess);
     }
     if (metadata.is_symlink()) {
@@ -293,15 +293,15 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView
         auto name_kstring = KString::try_create(name);
         if (!name_kstring)
             return ENOMEM;
-        auto new_link_inode = adopt_ref_if_nonnull(new (nothrow) DevFSLinkInode(m_parent_fs, name_kstring.release_nonnull()));
+        auto new_link_inode = adopt_ref_if_nonnull(new (nothrow) DevFSLinkInode(fs(), name_kstring.release_nonnull()));
         if (!new_link_inode)
             return ENOMEM;
         if (!m_links.try_ensure_capacity(m_links.size() + 1))
             return ENOMEM;
-        if (!m_parent_fs.m_nodes.try_ensure_capacity(m_parent_fs.m_nodes.size() + 1))
+        if (!fs().m_nodes.try_ensure_capacity(fs().m_nodes.size() + 1))
             return ENOMEM;
         m_links.append(*new_link_inode);
-        m_parent_fs.m_nodes.append(*new_link_inode);
+        fs().m_nodes.append(*new_link_inode);
         return new_link_inode.release_nonnull();
     }
     return EROFS;
@@ -335,7 +335,7 @@ DevFSDeviceInode::~DevFSDeviceInode()
 
 KResult DevFSDeviceInode::chown(uid_t uid, gid_t gid)
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     m_uid = uid;
     m_gid = gid;
     return KSuccess;
@@ -348,7 +348,7 @@ StringView DevFSDeviceInode::name() const
 
 KResultOr<size_t> DevFSDeviceInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
     if (!m_attached_device->can_read(*description, offset))
         return 0;
@@ -360,7 +360,7 @@ KResultOr<size_t> DevFSDeviceInode::read_bytes(off_t offset, size_t count, UserO
 
 InodeMetadata DevFSDeviceInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), index() };
     metadata.mode = (m_attached_device->is_block_device() ? S_IFBLK : S_IFCHR) | m_attached_device->required_mode();
@@ -374,7 +374,7 @@ InodeMetadata DevFSDeviceInode::metadata() const
 }
 KResultOr<size_t> DevFSDeviceInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription* description)
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
     if (!m_attached_device->can_write(*description, offset))
         return 0;
@@ -390,7 +390,7 @@ DevFSPtsDirectoryInode::DevFSPtsDirectoryInode(DevFS& fs)
 }
 KResult DevFSPtsDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
     return KSuccess;

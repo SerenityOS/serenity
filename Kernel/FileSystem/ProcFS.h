@@ -28,7 +28,7 @@ public:
     virtual bool initialize() override;
     virtual StringView class_name() const override { return "ProcFS"sv; }
 
-    virtual NonnullRefPtr<Inode> root_inode() const override;
+    virtual Inode& root_inode() override;
 
 private:
     ProcFS();
@@ -84,14 +84,15 @@ public:
     static NonnullRefPtr<ProcFSDirectoryInode> create(const ProcFS&, const ProcFSExposedComponent&);
     virtual ~ProcFSDirectoryInode() override;
 
+    ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
+    ProcFS const& fs() const { return static_cast<ProcFS const&>(Inode::fs()); }
+
 protected:
     ProcFSDirectoryInode(const ProcFS&, const ProcFSExposedComponent&);
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
-
-    ProcFS& m_parent_fs;
 };
 
 }

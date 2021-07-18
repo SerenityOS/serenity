@@ -25,14 +25,14 @@ UNMAP_AFTER_INIT void SysFSComponentRegistry::initialize()
 }
 
 UNMAP_AFTER_INIT SysFSComponentRegistry::SysFSComponentRegistry()
-    : m_root_folder(SysFSRootDirectory::create())
+    : m_root_directory(SysFSRootDirectory::create())
 {
 }
 
 UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SysFSComponent& component)
 {
-    Locker locker(m_lock);
-    m_root_folder->m_components.append(component);
+    MutexLocker locker(m_lock);
+    m_root_directory->m_components.append(component);
 }
 
 NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
@@ -42,7 +42,7 @@ NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
 
 KResult SysFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(SysFSComponentRegistry::the().get_lock());
+    MutexLocker locker(SysFSComponentRegistry::the().get_lock());
     callback({ ".", { fsid, component_index() }, 0 });
     callback({ "..", { fsid, 0 }, 0 });
 
@@ -56,6 +56,9 @@ KResult SysFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(F
 SysFSRootDirectory::SysFSRootDirectory()
     : SysFSDirectory(".")
 {
+    auto buses_directory = SysFSBusDirectory::must_create(*this);
+    m_components.append(buses_directory);
+    m_buses_directory = buses_directory;
 }
 
 NonnullRefPtr<SysFS> SysFS::create()
@@ -64,7 +67,7 @@ NonnullRefPtr<SysFS> SysFS::create()
 }
 
 SysFS::SysFS()
-    : m_root_inode(SysFSComponentRegistry::the().root_folder().to_inode(*this))
+    : m_root_inode(SysFSComponentRegistry::the().root_directory().to_inode(*this))
 {
 }
 
@@ -77,7 +80,7 @@ bool SysFS::initialize()
     return true;
 }
 
-NonnullRefPtr<Inode> SysFS::root_inode() const
+Inode& SysFS::root_inode()
 {
     return *m_root_inode;
 }
@@ -110,7 +113,7 @@ RefPtr<Inode> SysFSInode::lookup(StringView)
 
 InodeMetadata SysFSInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
@@ -167,16 +170,16 @@ NonnullRefPtr<SysFSDirectoryInode> SysFSDirectoryInode::create(SysFS const& sysf
 
 SysFSDirectoryInode::SysFSDirectoryInode(SysFS const& fs, SysFSComponent const& component)
     : SysFSInode(fs, component)
-    , m_parent_fs(const_cast<SysFS&>(fs))
 {
 }
 
 SysFSDirectoryInode::~SysFSDirectoryInode()
 {
 }
+
 InodeMetadata SysFSDirectoryInode::metadata() const
 {
-    Locker locker(m_inode_lock);
+    MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXOTH;
@@ -188,17 +191,39 @@ InodeMetadata SysFSDirectoryInode::metadata() const
 }
 KResult SysFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    Locker locker(m_parent_fs.m_lock);
-    return m_associated_component->traverse_as_directory(m_parent_fs.fsid(), move(callback));
+    MutexLocker locker(fs().m_lock);
+    return m_associated_component->traverse_as_directory(fs().fsid(), move(callback));
 }
 
 RefPtr<Inode> SysFSDirectoryInode::lookup(StringView name)
 {
-    Locker locker(m_parent_fs.m_lock);
+    MutexLocker locker(fs().m_lock);
     auto component = m_associated_component->lookup(name);
     if (!component)
         return {};
-    return component->to_inode(m_parent_fs);
+    return component->to_inode(fs());
+}
+
+SysFSBusDirectory& SysFSComponentRegistry::buses_directory()
+{
+    return *m_root_directory->m_buses_directory;
+}
+
+void SysFSComponentRegistry::register_new_bus_directory(SysFSDirectory& new_bus_directory)
+{
+    VERIFY(!m_root_directory->m_buses_directory.is_null());
+    m_root_directory->m_buses_directory->m_components.append(new_bus_directory);
+}
+
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSBusDirectory> SysFSBusDirectory::must_create(SysFSRootDirectory const& parent_directory)
+{
+    auto directory = adopt_ref(*new (nothrow) SysFSBusDirectory(parent_directory));
+    return directory;
+}
+
+UNMAP_AFTER_INIT SysFSBusDirectory::SysFSBusDirectory(SysFSRootDirectory const& parent_directory)
+    : SysFSDirectory("bus"sv, parent_directory)
+{
 }
 
 }

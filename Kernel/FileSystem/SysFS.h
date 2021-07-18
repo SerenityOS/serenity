@@ -21,6 +21,17 @@ public:
 
 private:
     SysFSRootDirectory();
+    RefPtr<SysFSBusDirectory> m_buses_directory;
+};
+
+class SysFSBusDirectory : public SysFSDirectory {
+    friend class SysFSComponentRegistry;
+
+public:
+    static NonnullRefPtr<SysFSBusDirectory> must_create(SysFSRootDirectory const&);
+
+private:
+    explicit SysFSBusDirectory(SysFSRootDirectory const&);
 };
 
 class SysFSComponentRegistry {
@@ -32,12 +43,15 @@ public:
     SysFSComponentRegistry();
     void register_new_component(SysFSComponent&);
 
-    SysFSDirectory& root_folder() { return m_root_folder; }
+    SysFSDirectory& root_directory() { return m_root_directory; }
     Mutex& get_lock() { return m_lock; }
+
+    void register_new_bus_directory(SysFSDirectory&);
+    SysFSBusDirectory& buses_directory();
 
 private:
     Mutex m_lock;
-    NonnullRefPtr<SysFSRootDirectory> m_root_folder;
+    NonnullRefPtr<SysFSRootDirectory> m_root_directory;
 };
 
 class SysFS final : public FileSystem {
@@ -51,7 +65,7 @@ public:
     virtual bool initialize() override;
     virtual StringView class_name() const override { return "SysFS"sv; }
 
-    virtual NonnullRefPtr<Inode> root_inode() const override;
+    virtual Inode& root_inode() override;
 
 private:
     SysFS();
@@ -92,14 +106,15 @@ public:
     static NonnullRefPtr<SysFSDirectoryInode> create(SysFS const&, SysFSComponent const&);
     virtual ~SysFSDirectoryInode() override;
 
+    SysFS& fs() { return static_cast<SysFS&>(Inode::fs()); }
+    SysFS const& fs() const { return static_cast<SysFS const&>(Inode::fs()); }
+
 protected:
     SysFSDirectoryInode(SysFS const&, SysFSComponent const&);
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
-
-    SysFS& m_parent_fs;
 };
 
 }

@@ -51,7 +51,7 @@ void Socket::set_setup_state(SetupState new_setup_state)
 
 RefPtr<Socket> Socket::accept()
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (m_pending.is_empty())
         return nullptr;
     dbgln_if(SOCKET_DEBUG, "Socket({}) de-queueing connection", this);
@@ -69,7 +69,7 @@ RefPtr<Socket> Socket::accept()
 KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
 {
     dbgln_if(SOCKET_DEBUG, "Socket({}) queueing connection", this);
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     if (m_pending.size() >= m_backlog)
         return ECONNREFUSED;
     if (!m_pending.try_append(peer))
@@ -241,7 +241,7 @@ KResultOr<size_t> Socket::write(FileDescription& description, u64, const UserOrK
 
 KResult Socket::shutdown(int how)
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
     if (type() == SOCK_STREAM && !is_connected())
         return ENOTCONN;
     if (m_role == Role::Listener)
@@ -264,7 +264,7 @@ KResult Socket::stat(::stat& st) const
 
 void Socket::set_connected(bool connected)
 {
-    Locker locker(lock());
+    MutexLocker locker(lock());
     if (m_connected == connected)
         return;
     m_connected = connected;

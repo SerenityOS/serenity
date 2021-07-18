@@ -550,8 +550,6 @@ void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
         VERIFY_NOT_REACHED();
     if (m_mode != Mode::Default && m_mode != Mode::String && m_mode != Mode::Character && m_mode != Mode::HexDump)
         VERIFY_NOT_REACHED();
-    if (m_width.has_value() && m_precision.has_value())
-        VERIFY_NOT_REACHED();
 
     m_width = m_width.value_or(0);
     m_precision = m_precision.value_or(NumericLimits<size_t>::max());

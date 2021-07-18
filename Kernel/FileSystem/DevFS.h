@@ -28,7 +28,7 @@ public:
     void notify_new_device(Device&);
     void notify_device_removal(Device&);
 
-    virtual NonnullRefPtr<Inode> root_inode() const override;
+    virtual Inode& root_inode() override;
 
 private:
     DevFS();
@@ -47,6 +47,9 @@ class DevFSInode : public Inode {
 
 public:
     virtual StringView name() const = 0;
+
+    DevFS& fs() { return static_cast<DevFS&>(Inode::fs()); }
+    DevFS const& fs() const { return static_cast<DevFS const&>(Inode::fs()); }
 
 protected:
     DevFSInode(DevFS&);
@@ -151,9 +154,8 @@ private:
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual InodeMetadata metadata() const override;
 
-    NonnullRefPtrVector<DevFSDirectoryInode> m_subfolders;
+    NonnullRefPtrVector<DevFSDirectoryInode> m_subdirectories;
     NonnullRefPtrVector<DevFSLinkInode> m_links;
-    DevFS& m_parent_fs;
 };
 
 }

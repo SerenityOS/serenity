@@ -107,7 +107,7 @@ UNMAP_AFTER_INIT IDEChannel::~IDEChannel()
 
 void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool is_slave, u16 capabilities)
 {
-    Locker locker(m_lock);
+    MutexLocker locker(m_lock);
     VERIFY(m_current_request.is_null());
 
     dbgln_if(PATA_DEBUG, "IDEChannel::start_request");
@@ -134,7 +134,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     // before Processor::deferred_call_queue returns!
     g_io_work->queue([this, result]() {
         dbgln_if(PATA_DEBUG, "IDEChannel::complete_current_request result: {}", (int)result);
-        Locker locker(m_lock);
+        MutexLocker locker(m_lock);
         VERIFY(m_current_request);
         auto current_request = m_current_request;
         m_current_request.clear();
@@ -222,7 +222,7 @@ bool IDEChannel::handle_irq(const RegisterState&)
     // This is important so that we can safely access the buffers, which could
     // trigger page faults
     g_io_work->queue([this]() {
-        Locker locker(m_lock);
+        MutexLocker locker(m_lock);
         ScopedSpinLock lock(m_request_lock);
         if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
             dbgln_if(PATA_DEBUG, "IDEChannel: Read block {}/{}", m_current_request_block_index, m_current_request->block_count());
