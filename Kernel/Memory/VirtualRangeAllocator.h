@@ -8,8 +8,8 @@
 
 #include <AK/RedBlackTree.h>
 #include <AK/Traits.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Memory/VirtualRange.h>
-#include <Kernel/SpinLock.h>
 
 namespace Kernel::Memory {
 

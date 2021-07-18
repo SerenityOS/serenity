@@ -7,8 +7,8 @@
 #include <AK/Singleton.h>
 #include <Kernel/ConsoleDevice.h>
 #include <Kernel/IO.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Sections.h>
-#include <Kernel/SpinLock.h>
 #include <Kernel/kstdio.h>
 
 // Output bytes to kernel debug port 0xE9 (Bochs console). It's very handy.

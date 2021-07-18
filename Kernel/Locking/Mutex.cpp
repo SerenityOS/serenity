@@ -10,7 +10,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/SpinLock.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {

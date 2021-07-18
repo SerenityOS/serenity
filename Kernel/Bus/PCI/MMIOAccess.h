@@ -12,11 +12,11 @@
 #include <AK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/VMObject.h>
-#include <Kernel/SpinLock.h>
 
 namespace Kernel {
 namespace PCI {

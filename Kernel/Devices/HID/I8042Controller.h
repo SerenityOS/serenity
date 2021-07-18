@@ -9,7 +9,7 @@
 #include <AK/RefCounted.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Devices/HID/MouseDevice.h>
-#include <Kernel/SpinLock.h>
+#include <Kernel/Locking/SpinLock.h>
 
 namespace Kernel {
 

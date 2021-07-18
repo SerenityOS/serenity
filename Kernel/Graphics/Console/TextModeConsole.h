@@ -9,7 +9,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Types.h>
 #include <Kernel/Graphics/Console/VGAConsole.h>
-#include <Kernel/SpinLock.h>
+#include <Kernel/Locking/SpinLock.h>
 
 namespace Kernel::Graphics {
 class TextModeConsole final : public VGAConsole {

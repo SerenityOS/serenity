@@ -10,7 +10,7 @@
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
-#include <Kernel/SpinLock.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/kstdio.h>
 

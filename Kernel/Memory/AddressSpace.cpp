@@ -5,13 +5,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/InodeVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
-#include <Kernel/SpinLock.h>
 
 namespace Kernel::Memory {
 

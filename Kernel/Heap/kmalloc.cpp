@@ -16,11 +16,11 @@
 #include <Kernel/Heap/Heap.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Sections.h>
-#include <Kernel/SpinLock.h>
 #include <Kernel/StdLib.h>
 
 #define CHUNK_SIZE 32

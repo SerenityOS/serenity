@@ -8,8 +8,8 @@
 
 #include <AK/Atomic.h>
 #include <AK/RefCounted.h>
+#include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Memory/VMObject.h>
-#include <Kernel/SpinLock.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {
