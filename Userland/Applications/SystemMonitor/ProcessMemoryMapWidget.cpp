@@ -52,8 +52,8 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget()
     Vector<GUI::JsonArrayModel::FieldSpec> pid_vm_fields;
     pid_vm_fields.empend(
         "Address", Gfx::TextAlignment::CenterLeft,
-        [](auto& object) { return String::formatted("{:p}", object.get("address").to_u32()); },
-        [](auto& object) { return object.get("address").to_u32(); });
+        [](auto& object) { return String::formatted("{:p}", object.get("address").to_u64()); },
+        [](auto& object) { return object.get("address").to_u64(); });
     pid_vm_fields.empend("size", "Size", Gfx::TextAlignment::CenterRight);
     pid_vm_fields.empend("amount_resident", "Resident", Gfx::TextAlignment::CenterRight);
     pid_vm_fields.empend("amount_dirty", "Dirty", Gfx::TextAlignment::CenterRight);
