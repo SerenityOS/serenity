@@ -76,10 +76,11 @@
     __JS_ENUMERATE(Float32Array, float32_array, Float32ArrayPrototype, Float32ArrayConstructor, float)                          \
     __JS_ENUMERATE(Float64Array, float64_array, Float64ArrayPrototype, Float64ArrayConstructor, double)
 
-#define JS_ENUMERATE_TEMPORAL_OBJECTS                                          \
-    __JS_ENUMERATE(Calendar, calendar, CalendarPrototype, CalendarConstructor) \
-    __JS_ENUMERATE(Duration, duration, DurationPrototype, DurationConstructor) \
-    __JS_ENUMERATE(Instant, instant, InstantPrototype, InstantConstructor)     \
+#define JS_ENUMERATE_TEMPORAL_OBJECTS                                               \
+    __JS_ENUMERATE(Calendar, calendar, CalendarPrototype, CalendarConstructor)      \
+    __JS_ENUMERATE(Duration, duration, DurationPrototype, DurationConstructor)      \
+    __JS_ENUMERATE(Instant, instant, InstantPrototype, InstantConstructor)          \
+    __JS_ENUMERATE(PlainDate, plain_date, PlainDatePrototype, PlainDateConstructor) \
     __JS_ENUMERATE(TimeZone, time_zone, TimeZonePrototype, TimeZoneConstructor)
 
 #define JS_ENUMERATE_ITERATOR_PROTOTYPES                         \

@@ -41,4 +41,32 @@ BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, i32 mont
     return js_bigint(vm.heap(), Crypto::SignedBigInteger::create_from(static_cast<i64>(ms.as_double())).multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }).plus(Crypto::SignedBigInteger::create_from((i64)microsecond * 1000)).plus(Crypto::SignedBigInteger(nanosecond)));
 }
 
+// -864 * 10^19 - 864 * 10^14
+const auto DATETIME_NANOSECONDS_MIN = "-8640086400000000000000"_sbigint;
+// +864 * 10^19 + 864 * 10^14
+const auto DATETIME_NANOSECONDS_MAX = "8640086400000000000000"_sbigint;
+
+// 5.5.2 ISODateTimeWithinLimits ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits
+bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, i32 month, i32 day, i32 hour, i32 minute, i32 second, i32 millisecond, i32 microsecond, i32 nanosecond)
+{
+    // 1. Assert: year, month, day, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
+
+    // 2. Let ns be ! GetEpochFromISOParts(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond).
+    auto ns = get_epoch_from_iso_parts(global_object, year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
+
+    // 3. If ns ≤ -8.64 × 10^21 - 8.64 × 10^16, then
+    if (ns->big_integer() <= DATETIME_NANOSECONDS_MIN) {
+        // a. Return false.
+        return false;
+    }
+
+    // 4. If ns ≥ 8.64 × 10^21 + 8.64 × 10^16, then
+    if (ns->big_integer() >= DATETIME_NANOSECONDS_MAX) {
+        // a. Return false.
+        return false;
+    }
+    // 5. Return true.
+    return true;
+}
+
 }
