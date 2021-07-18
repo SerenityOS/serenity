@@ -350,7 +350,14 @@ String TextDocument::text_in_range(const TextRange& a_range) const
         auto& line = this->line(i);
         size_t selection_start_column_on_line = range.start().line() == i ? range.start().column() : 0;
         size_t selection_end_column_on_line = range.end().line() == i ? range.end().column() : line.length();
-        builder.append(Utf32View(line.code_points() + selection_start_column_on_line, selection_end_column_on_line - selection_start_column_on_line));
+
+        if (!line.is_empty()) {
+            builder.append(
+                Utf32View(
+                    line.code_points() + selection_start_column_on_line,
+                    selection_end_column_on_line - selection_start_column_on_line));
+        }
+
         if (i != range.end().line())
             builder.append('\n');
     }
@@ -892,12 +899,16 @@ void TextDocument::remove(const TextRange& unnormalized_range)
     } else {
         // Delete across a newline, merging lines.
         VERIFY(range.start().line() == range.end().line() - 1);
+
         auto& first_line = line(range.start().line());
         auto& second_line = line(range.end().line());
+
         Vector<u32> code_points;
         code_points.append(first_line.code_points(), range.start().column());
-        code_points.append(second_line.code_points() + range.end().column(), second_line.length() - range.end().column());
+        if (!second_line.is_empty())
+            code_points.append(second_line.code_points() + range.end().column(), second_line.length() - range.end().column());
         first_line.set_text(*this, move(code_points));
+
         remove_line(range.end().line());
     }
 
