@@ -33,7 +33,7 @@ public:
     {
         if (g_profiling_all_threads) {
             VERIFY(g_global_perf_events);
-            [[maybe_unused]] auto rc = g_global_perf_events->append_with_eip_and_ebp(
+            [[maybe_unused]] auto rc = g_global_perf_events->append_with_ip_and_bp(
                 process.pid(), 0, 0, 0, PERF_EVENT_PROCESS_EXIT, 0, 0, 0, nullptr);
         }
     }
@@ -61,15 +61,9 @@ public:
         if (current_thread.is_profiling_suppressed())
             return;
         if (auto* event_buffer = current_thread.process().current_perf_events_buffer()) {
-#if ARCH(I386)
-            [[maybe_unused]] auto rc = event_buffer->append_with_eip_and_ebp(
+            [[maybe_unused]] auto rc = event_buffer->append_with_ip_and_bp(
                 current_thread.pid(), current_thread.tid(),
-                regs.eip, regs.ebp, PERF_EVENT_SAMPLE, lost_time, 0, 0, nullptr);
-#else
-            [[maybe_unused]] auto rc = event_buffer->append_with_eip_and_ebp(
-                current_thread.pid(), current_thread.tid(),
-                regs.rip, regs.rbp, PERF_EVENT_SAMPLE, lost_time, 0, 0, nullptr);
-#endif
+                regs.ip(), regs.bp(), PERF_EVENT_SAMPLE, lost_time, 0, 0, nullptr);
         }
     }
 
@@ -119,15 +113,9 @@ public:
         if (thread.is_profiling_suppressed())
             return;
         if (auto* event_buffer = thread.process().current_perf_events_buffer()) {
-#if ARCH(I386)
-            [[maybe_unused]] auto rc = event_buffer->append_with_eip_and_ebp(
+            [[maybe_unused]] auto rc = event_buffer->append_with_ip_and_bp(
                 thread.pid(), thread.tid(),
-                regs.eip, regs.ebp, PERF_EVENT_PAGE_FAULT, 0, 0, 0, nullptr);
-#else
-            [[maybe_unused]] auto rc = event_buffer->append_with_eip_and_ebp(
-                thread.pid(), thread.tid(),
-                regs.rip, regs.rbp, PERF_EVENT_PAGE_FAULT, 0, 0, 0, nullptr);
-#endif
+                regs.ip(), regs.bp(), PERF_EVENT_PAGE_FAULT, 0, 0, 0, nullptr);
         }
     }
 

@@ -25,16 +25,16 @@ NEVER_INLINE KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, Flat
     FlatPtr ebp;
     asm volatile("movl %%ebp, %%eax"
                  : "=a"(ebp));
-    return append_with_eip_and_ebp(current_thread->pid(), current_thread->tid(), 0, ebp, type, 0, arg1, arg2, arg3);
+    return append_with_ip_and_bp(current_thread->pid(), current_thread->tid(), 0, ebp, type, 0, arg1, arg2, arg3);
 }
 
-static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(FlatPtr ebp, FlatPtr eip)
+static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(FlatPtr bp, FlatPtr ip)
 {
     Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> backtrace;
-    if (eip != 0)
-        backtrace.append(eip);
+    if (ip != 0)
+        backtrace.append(ip);
     FlatPtr stack_ptr_copy;
-    FlatPtr stack_ptr = (FlatPtr)ebp;
+    FlatPtr stack_ptr = bp;
     // FIXME: Figure out how to remove this SmapDisabler without breaking profile stacks.
     SmapDisabler disabler;
     while (stack_ptr) {
@@ -54,8 +54,8 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
     return backtrace;
 }
 
-KResult PerformanceEventBuffer::append_with_eip_and_ebp(ProcessID pid, ThreadID tid,
-    u32 eip, u32 ebp, int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3)
+KResult PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid,
+    FlatPtr ip, FlatPtr bp, int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3)
 {
     if (count() >= capacity())
         return ENOBUFS;
@@ -139,7 +139,7 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(ProcessID pid, ThreadID 
         return EINVAL;
     }
 
-    auto backtrace = raw_backtrace(ebp, eip);
+    auto backtrace = raw_backtrace(bp, ip);
     event.stack_size = min(sizeof(event.stack) / sizeof(FlatPtr), static_cast<size_t>(backtrace.size()));
     memcpy(event.stack, backtrace.data(), event.stack_size * sizeof(FlatPtr));
 
@@ -269,17 +269,17 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
     else
         executable = String::formatted("<{}>", process.name());
 
-    [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), 0, 0, 0,
+    [[maybe_unused]] auto rc = append_with_ip_and_bp(process.pid(), 0, 0, 0,
         event_type == ProcessEventType::Create ? PERF_EVENT_PROCESS_CREATE : PERF_EVENT_PROCESS_EXEC,
         0, process.pid().value(), 0, executable);
 
     process.for_each_thread([&](auto& thread) {
-        [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), thread.tid().value(),
+        [[maybe_unused]] auto rc = append_with_ip_and_bp(process.pid(), thread.tid().value(),
             0, 0, PERF_EVENT_THREAD_CREATE, 0, 0, 0, nullptr);
     });
 
     for (auto& region : process.space().regions()) {
-        [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), 0,
+        [[maybe_unused]] auto rc = append_with_ip_and_bp(process.pid(), 0,
             0, 0, PERF_EVENT_MMAP, 0, region->range().base().get(), region->range().size(), region->name());
     }
 }
