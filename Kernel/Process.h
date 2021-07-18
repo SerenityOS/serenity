@@ -21,8 +21,8 @@
 #include <Kernel/FileSystem/UnveilNode.h>
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
+#include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/AddressSpace.h>
-#include <Kernel/Mutex.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/StdLib.h>

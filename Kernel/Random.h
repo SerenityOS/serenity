@@ -10,7 +10,7 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
-#include <Kernel/Mutex.h>
+#include <Kernel/Locking/Mutex.h>
 #include <Kernel/StdLib.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Cipher/Cipher.h>
