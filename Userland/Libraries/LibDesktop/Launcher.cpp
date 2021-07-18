@@ -91,6 +91,11 @@ bool Launcher::seal_allowlist()
     return true;
 }
 
+bool Launcher::launch(const String& handler_name)
+{
+    return connection().launch(handler_name);
+}
+
 bool Launcher::open(const URL& url, const String& handler_name)
 {
     return connection().open_url(url, handler_name);
