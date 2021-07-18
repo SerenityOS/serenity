@@ -15,6 +15,23 @@
         fixed_height: 20
     }
 
+    @GUI::Widget {
+        shrink_to_fit: true
+        layout: @GUI::HorizontalBoxLayout {
+            margins: [16, 8, 8, 6]
+        }
+
+        @GUI::Label {
+            text: "Screen:"
+            text_alignment: "CenterLeft"
+            fixed_width: 95
+        }
+
+        @GUI::ComboBox {
+            name: "screen_combo"
+        }
+    }
+
     @GUI::GroupBox {
         layout: @GUI::VerticalBoxLayout {
             margins: [16, 24, 16, 6]
