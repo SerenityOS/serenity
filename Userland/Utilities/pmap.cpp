@@ -55,12 +55,16 @@ int main(int argc, char** argv)
 
     Vector<JsonValue> sorted_regions = json.value().as_array().values();
     quick_sort(sorted_regions, [](auto& a, auto& b) {
-        return a.as_object().get("address").to_u32() < b.as_object().get("address").to_u32();
+        return a.as_object().get("address").to_u64() < b.as_object().get("address").to_u64();
     });
 
     for (auto& value : sorted_regions) {
         auto& map = value.as_object();
-        auto address = map.get("address").to_uint();
+#if ARCH(I386)
+        auto address = map.get("address").to_u32();
+#else
+        auto address = map.get("address").to_u64();
+#endif
         auto size = map.get("size").to_string();
 
         auto access = String::formatted("{}{}{}{}{}",
@@ -70,7 +74,11 @@ int main(int argc, char** argv)
             (map.get("shared").to_bool() ? "s" : "-"),
             (map.get("syscall").to_bool() ? "c" : "-"));
 
+#if ARCH(I386)
         out("{:08x}  ", address);
+#else
+        out("{:16x}  ", address);
+#endif
         out("{:>10} ", size);
         if (extended) {
             auto resident = map.get("amount_resident").to_string();
