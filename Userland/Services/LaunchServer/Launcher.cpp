@@ -154,6 +154,15 @@ Vector<String> Launcher::handlers_with_details_for_url(const URL& url)
     return handlers;
 }
 
+bool Launcher::launch(const String& handler_name)
+{
+    auto handler_optional = m_handlers.get(handler_name);
+    if (!handler_optional.has_value())
+        return false;
+
+    return spawn(handler_optional.value().executable, {});
+}
+
 bool Launcher::open_url(const URL& url, const String& handler_name)
 {
     if (!handler_name.is_null())
@@ -336,4 +345,5 @@ bool Launcher::open_file_url(const URL& url)
 
     return open_with_user_preferences(m_file_handlers, extension, additional_parameters, default_handler);
 }
+
 }

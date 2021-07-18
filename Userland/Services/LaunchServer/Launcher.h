@@ -39,6 +39,7 @@ public:
 
     void load_handlers(const String& af_dir = Desktop::AppFile::APP_FILES_DIRECTORY);
     void load_config(const Core::ConfigFile&);
+    bool launch(const String& string);
     bool open_url(const URL&, const String& handler_name);
     Vector<String> handlers_for_url(const URL&);
     Vector<String> handlers_with_details_for_url(const URL&);

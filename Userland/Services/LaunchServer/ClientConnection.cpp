@@ -28,6 +28,21 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
+Messages::LaunchServer::LaunchResponse ClientConnection::launch(String const& handler_name)
+{
+    auto allowed = any_of(m_allowlist.begin(), m_allowlist.end(), [&](auto& allowed_handler) {
+        return allowed_handler.handler_name == handler_name;
+    });
+
+    if (!m_allowlist.is_empty() && !allowed) {
+        // You are not on the list, go home!
+        did_misbehave(String::formatted("Client requested a handler that was not on the list: '{}'", handler_name).characters());
+        return nullptr;
+    }
+
+    return Launcher::the().launch(handler_name);
+}
+
 Messages::LaunchServer::OpenUrlResponse ClientConnection::open_url(URL const& url, String const& handler_name)
 {
     if (!m_allowlist.is_empty()) {

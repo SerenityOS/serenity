@@ -22,6 +22,7 @@ public:
 private:
     explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
 
+    virtual Messages::LaunchServer::LaunchResponse launch(String const&) override;
     virtual Messages::LaunchServer::OpenUrlResponse open_url(URL const&, String const&) override;
     virtual Messages::LaunchServer::GetHandlersForUrlResponse get_handlers_for_url(URL const&) override;
     virtual Messages::LaunchServer::GetHandlersWithDetailsForUrlResponse get_handlers_with_details_for_url(URL const&) override;
