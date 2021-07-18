@@ -39,6 +39,9 @@ void Desktop::did_receive_screen_rects(Badge<WindowServerConnection>, const Vect
 
     m_virtual_desktop_rows = virtual_desktop_rows;
     m_virtual_desktop_columns = virtual_desktop_columns;
+
+    for (auto& callback : m_receive_rects_callbacks)
+        callback(*this);
 }
 
 void Desktop::set_background_color(const StringView& background_color)
