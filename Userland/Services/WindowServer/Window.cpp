@@ -486,6 +486,7 @@ void Window::set_pinned(bool pinned)
     update_window_menu_items();
 
     window_stack().move_pinned_windows_to_front();
+    Compositor::the().invalidate_occlusions();
 }
 void Window::set_vertically_maximized()
 {
