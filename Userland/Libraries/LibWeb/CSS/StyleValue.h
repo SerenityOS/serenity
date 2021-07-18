@@ -239,6 +239,11 @@ public:
     bool is_numeric() const { return type() == Type::Numeric; }
     bool is_value_list() const { return type() == Type::ValueList; }
 
+    bool is_builtin_or_dynamic() const
+    {
+        return is_inherit() || is_initial() || is_custom_property();
+    }
+
     virtual String to_string() const = 0;
     virtual Length to_length() const { return Length::make_auto(); }
     virtual Color to_color(const DOM::Document&) const { return {}; }
