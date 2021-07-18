@@ -75,33 +75,11 @@ const Gfx::Bitmap* Compositor::cursor_bitmap_for_screenshot(Badge<ClientConnecti
 
 const Gfx::Bitmap& Compositor::front_bitmap_for_screenshot(Badge<ClientConnection>, Screen& screen) const
 {
-    return *m_screen_data[screen.index()].m_front_bitmap;
+    return *screen.compositor_screen_data().m_front_bitmap;
 }
 
-void Compositor::ScreenData::init_bitmaps(Compositor& compositor, Screen& screen)
+void CompositorScreenData::init_bitmaps(Compositor& compositor, Screen& screen)
 {
-    m_has_flipped = false;
-    m_have_flush_rects = false;
-    m_buffers_are_flipped = false;
-    m_screen_can_set_buffer = screen.can_set_buffer();
-
-    auto size = screen.size();
-
-    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(0, 0));
-    m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
-    m_front_painter->translate(-screen.rect().location());
-
-    if (m_screen_can_set_buffer)
-        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(1, 0));
-    else
-        m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
-    m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
-    m_back_painter->translate(-screen.rect().location());
-
-    m_temp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
-    m_temp_painter = make<Gfx::Painter>(*m_temp_bitmap);
-    m_temp_painter->translate(-screen.rect().location());
-
     // Recreate the screen-number overlay as the Screen instances may have changed, or get rid of it if we no longer need it
     if (compositor.showing_screen_numbers()) {
         m_screen_number_overlay = compositor.create_overlay<ScreenNumberOverlay>(screen);
@@ -109,13 +87,40 @@ void Compositor::ScreenData::init_bitmaps(Compositor& compositor, Screen& screen
     } else {
         m_screen_number_overlay = nullptr;
     }
+
+    m_has_flipped = false;
+    m_have_flush_rects = false;
+    m_buffers_are_flipped = false;
+    m_screen_can_set_buffer = screen.can_set_buffer();
+
+    m_flush_rects.clear_with_capacity();
+    m_flush_transparent_rects.clear_with_capacity();
+    m_flush_special_rects.clear_with_capacity();
+
+    auto size = screen.size();
+    m_front_bitmap = nullptr;
+    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(0, 0));
+    m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
+    m_front_painter->translate(-screen.rect().location());
+
+    m_back_bitmap = nullptr;
+    if (m_screen_can_set_buffer)
+        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(1, 0));
+    else
+        m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
+    m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
+    m_back_painter->translate(-screen.rect().location());
+
+    m_temp_bitmap = nullptr;
+    m_temp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
+    m_temp_painter = make<Gfx::Painter>(*m_temp_bitmap);
+    m_temp_painter->translate(-screen.rect().location());
 }
 
 void Compositor::init_bitmaps()
 {
-    m_screen_data.resize(Screen::count());
     Screen::for_each([&](auto& screen) {
-        m_screen_data[screen.index()].init_bitmaps(*this, screen);
+        screen.compositor_screen_data().init_bitmaps(*this, screen);
         return IterationDecision::Continue;
     });
 
@@ -233,12 +238,14 @@ void Compositor::compose()
 
     auto& cursor_screen = ScreenInput::the().cursor_location_screen();
 
-    for (auto& screen_data : m_screen_data) {
+    Screen::for_each([&](auto& screen) {
+        auto& screen_data = screen.compositor_screen_data();
         screen_data.m_have_flush_rects = false;
         screen_data.m_flush_rects.clear_with_capacity();
         screen_data.m_flush_transparent_rects.clear_with_capacity();
         screen_data.m_flush_special_rects.clear_with_capacity();
-    }
+        return IterationDecision::Continue;
+    });
 
     auto cursor_rect = current_cursor_rect();
 
@@ -249,8 +256,7 @@ void Compositor::compose()
         if (&screen == &cursor_screen && !previous_cursor_screen && !need_to_draw_cursor && rect.intersects(cursor_rect)) {
             // Restore what's behind the cursor if anything touches the area of the cursor
             need_to_draw_cursor = true;
-            auto& screen_data = m_screen_data[cursor_screen.index()];
-            if (screen_data.restore_cursor_back(cursor_screen, previous_cursor_rect))
+            if (cursor_screen.compositor_screen_data().restore_cursor_back(cursor_screen, previous_cursor_rect))
                 previous_cursor_screen = &screen;
         }
     };
@@ -259,15 +265,14 @@ void Compositor::compose()
         // Cursor moved to another screen, restore on the cursor's background on the previous screen
         need_to_draw_cursor = true;
         if (m_current_cursor_screen) {
-            auto& screen_data = m_screen_data[m_current_cursor_screen->index()];
-            if (screen_data.restore_cursor_back(*m_current_cursor_screen, previous_cursor_rect))
+            if (m_current_cursor_screen->compositor_screen_data().restore_cursor_back(*m_current_cursor_screen, previous_cursor_rect))
                 previous_cursor_screen = m_current_cursor_screen;
         }
         m_current_cursor_screen = &cursor_screen;
     }
 
     auto prepare_rect = [&](Screen& screen, const Gfx::IntRect& rect) {
-        auto& screen_data = m_screen_data[screen.index()];
+        auto& screen_data = screen.compositor_screen_data();
         dbgln_if(COMPOSE_DEBUG, "    -> flush opaque: {}", rect);
         VERIFY(!screen_data.m_flush_rects.intersects(rect));
         VERIFY(!screen_data.m_flush_transparent_rects.intersects(rect));
@@ -277,7 +282,7 @@ void Compositor::compose()
     };
 
     auto prepare_transparency_rect = [&](Screen& screen, const Gfx::IntRect& rect) {
-        auto& screen_data = m_screen_data[screen.index()];
+        auto& screen_data = screen.compositor_screen_data();
         dbgln_if(COMPOSE_DEBUG, "   -> flush transparent: {}", rect);
         VERIFY(!screen_data.m_flush_rects.intersects(rect));
         for (auto& r : screen_data.m_flush_transparent_rects.rects()) {
@@ -290,7 +295,7 @@ void Compositor::compose()
         check_restore_cursor_back(screen, rect);
     };
 
-    if (!m_screen_data[cursor_screen.index()].m_cursor_back_bitmap || m_invalidated_cursor)
+    if (!cursor_screen.compositor_screen_data().m_cursor_back_bitmap || m_invalidated_cursor)
         check_restore_cursor_back(cursor_screen, cursor_rect);
 
     auto paint_wallpaper = [&](Screen& screen, Gfx::Painter& painter, const Gfx::IntRect& rect, const Gfx::IntRect& screen_rect) {
@@ -321,7 +326,7 @@ void Compositor::compose()
             auto screen_rect = screen.rect();
             auto screen_render_rect = screen_rect.intersected(render_rect);
             if (!screen_render_rect.is_empty()) {
-                auto& back_painter = *m_screen_data[screen.index()].m_back_painter;
+                auto& back_painter = *screen.compositor_screen_data().m_back_painter;
                 dbgln_if(COMPOSE_DEBUG, "  render wallpaper opaque: {} on screen #{}", screen_render_rect, screen.index());
                 prepare_rect(screen, render_rect);
                 paint_wallpaper(screen, back_painter, render_rect, screen_rect);
@@ -452,7 +457,7 @@ void Compositor::compose()
                     dbgln_if(COMPOSE_DEBUG, "    render opaque: {} on screen #{}", screen_render_rect, screen->index());
 
                     prepare_rect(*screen, screen_render_rect);
-                    auto& back_painter = *m_screen_data[screen->index()].m_back_painter;
+                    auto& back_painter = *screen->compositor_screen_data().m_back_painter;
                     Gfx::PainterStateSaver saver(back_painter);
                     back_painter.add_clip_rect(screen_render_rect);
                     compose_window_rect(*screen, back_painter, screen_render_rect);
@@ -473,7 +478,7 @@ void Compositor::compose()
                         continue;
                     dbgln_if(COMPOSE_DEBUG, "    render wallpaper: {} on screen #{}", screen_render_rect, screen->index());
 
-                    auto& temp_painter = *m_screen_data[screen->index()].m_temp_painter;
+                    auto& temp_painter = *screen->compositor_screen_data().m_temp_painter;
                     prepare_transparency_rect(*screen, screen_render_rect);
                     paint_wallpaper(*screen, temp_painter, screen_render_rect, screen_rect);
                 }
@@ -491,7 +496,7 @@ void Compositor::compose()
                     dbgln_if(COMPOSE_DEBUG, "    render transparent: {} on screen #{}", screen_render_rect, screen->index());
 
                     prepare_transparency_rect(*screen, screen_render_rect);
-                    auto& temp_painter = *m_screen_data[screen->index()].m_temp_painter;
+                    auto& temp_painter = *screen->compositor_screen_data().m_temp_painter;
                     Gfx::PainterStateSaver saver(temp_painter);
                     temp_painter.add_clip_rect(screen_render_rect);
                     compose_window_rect(*screen, temp_painter, screen_render_rect);
@@ -520,7 +525,7 @@ void Compositor::compose()
         VERIFY(![&]() {
             bool is_overlapping = false;
             Screen::for_each([&](auto& screen) {
-                auto& screen_data = m_screen_data[screen.index()];
+                auto& screen_data = screen.compositor_screen_data();
                 auto& flush_transparent_rects = screen_data.m_flush_transparent_rects;
                 auto& flush_rects = screen_data.m_flush_rects;
                 for (auto& rect_transparent : flush_transparent_rects.rects()) {
@@ -545,7 +550,7 @@ void Compositor::compose()
         // Copy anything rendered to the temporary buffer to the back buffer
         Screen::for_each([&](auto& screen) {
             auto screen_rect = screen.rect();
-            auto& screen_data = m_screen_data[screen.index()];
+            auto& screen_data = screen.compositor_screen_data();
             for (auto& rect : screen_data.m_flush_transparent_rects.rects())
                 screen_data.m_back_painter->blit(rect.location(), *screen_data.m_temp_bitmap, rect.translated(-screen_rect.location()));
             return IterationDecision::Continue;
@@ -558,7 +563,7 @@ void Compositor::compose()
 
     if (!m_animations.is_empty()) {
         Screen::for_each([&](auto& screen) {
-            auto& screen_data = m_screen_data[screen.index()];
+            auto& screen_data = screen.compositor_screen_data();
             update_animations(screen, screen_data.m_flush_special_rects);
             if (!screen_data.m_flush_special_rects.is_empty())
                 screen_data.m_have_flush_rects = true;
@@ -570,7 +575,7 @@ void Compositor::compose()
     }
 
     if (need_to_draw_cursor) {
-        auto& screen_data = m_screen_data[cursor_screen.index()];
+        auto& screen_data = cursor_screen.compositor_screen_data();
         screen_data.draw_cursor(cursor_screen, cursor_rect);
     }
 
@@ -582,7 +587,7 @@ void Compositor::compose()
 
 void Compositor::flush(Screen& screen)
 {
-    auto& screen_data = m_screen_data[screen.index()];
+    auto& screen_data = screen.compositor_screen_data();
 
     bool device_can_flush_buffers = screen.can_device_flush_buffers();
     if (!screen_data.m_have_flush_rects && (!screen_data.m_screen_can_set_buffer || screen_data.m_has_flipped)) {
@@ -795,7 +800,7 @@ bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callba
     return true;
 }
 
-void Compositor::ScreenData::flip_buffers(Screen& screen)
+void CompositorScreenData::flip_buffers(Screen& screen)
 {
     VERIFY(m_screen_can_set_buffer);
     swap(m_front_bitmap, m_back_bitmap);
@@ -863,7 +868,7 @@ void Compositor::render_overlays()
     // NOTE: overlays should always be rendered to the temporary buffer!
     for (auto& overlay : m_overlay_list) {
         for (auto* screen : overlay.m_screens) {
-            auto& screen_data = m_screen_data[screen->index()];
+            auto& screen_data = screen->compositor_screen_data();
             auto& painter = screen_data.overlay_painter();
             screen_data.for_each_intersected_flushing_rect(overlay.current_render_rect(), [&](auto& intersected_overlay_rect) {
                 Gfx::PainterStateSaver saver(painter);
@@ -906,7 +911,7 @@ void Compositor::remove_overlay(Overlay& overlay)
     m_overlay_list.remove(overlay);
 }
 
-void Compositor::ScreenData::draw_cursor(Screen& screen, const Gfx::IntRect& cursor_rect)
+void CompositorScreenData::draw_cursor(Screen& screen, const Gfx::IntRect& cursor_rect)
 {
     auto& wm = WindowManager::the();
 
@@ -928,7 +933,7 @@ void Compositor::ScreenData::draw_cursor(Screen& screen, const Gfx::IntRect& cur
     m_cursor_back_is_valid = true;
 }
 
-bool Compositor::ScreenData::restore_cursor_back(Screen& screen, Gfx::IntRect& last_cursor_rect)
+bool CompositorScreenData::restore_cursor_back(Screen& screen, Gfx::IntRect& last_cursor_rect)
 {
     if (!m_cursor_back_is_valid || !m_cursor_back_bitmap || m_cursor_back_bitmap->scale() != m_back_bitmap->scale())
         return false;
@@ -970,17 +975,19 @@ void Compositor::decrement_display_link_count(Badge<ClientConnection>)
 
 void Compositor::invalidate_current_screen_number_rects()
 {
-    for (auto& screen_data : m_screen_data) {
+    Screen::for_each([&](auto& screen) {
+        auto& screen_data = screen.compositor_screen_data();
         if (screen_data.m_screen_number_overlay)
             screen_data.m_screen_number_overlay->invalidate();
-    }
+        return IterationDecision::Continue;
+    });
 }
 
 void Compositor::increment_show_screen_number(Badge<ClientConnection>)
 {
     if (m_show_screen_number_count++ == 0) {
         Screen::for_each([&](auto& screen) {
-            auto& screen_data = m_screen_data[screen.index()];
+            auto& screen_data = screen.compositor_screen_data();
             VERIFY(!screen_data.m_screen_number_overlay);
             screen_data.m_screen_number_overlay = create_overlay<ScreenNumberOverlay>(screen);
             screen_data.m_screen_number_overlay->set_enabled(true);
@@ -992,8 +999,10 @@ void Compositor::decrement_show_screen_number(Badge<ClientConnection>)
 {
     if (--m_show_screen_number_count == 0) {
         invalidate_current_screen_number_rects();
-        for (auto& screen_data : m_screen_data)
-            screen_data.m_screen_number_overlay = nullptr;
+        Screen::for_each([&](auto& screen) {
+            screen.compositor_screen_data().m_screen_number_overlay = nullptr;
+            return IterationDecision::Continue;
+        });
     }
 }
 
@@ -1369,7 +1378,7 @@ void Compositor::unregister_animation(Badge<Animation>, Animation& animation)
 
 void Compositor::update_animations(Screen& screen, Gfx::DisjointRectSet& flush_rects)
 {
-    auto& painter = *m_screen_data[screen.index()].m_back_painter;
+    auto& painter = *screen.compositor_screen_data().m_back_painter;
     for (RefPtr<Animation> animation : m_animations) {
         animation->update({}, painter, screen, flush_rects);
     }
@@ -1379,7 +1388,7 @@ void Compositor::create_window_stack_switch_overlay(WindowStack& target_stack)
 {
     stop_window_stack_switch_overlay_timer();
     Screen::for_each([&](auto& screen) {
-        auto& screen_data = m_screen_data[screen.index()];
+        auto& screen_data = screen.compositor_screen_data();
         screen_data.m_window_stack_switch_overlay = nullptr; // delete it first
         screen_data.m_window_stack_switch_overlay = create_overlay<WindowStackSwitchOverlay>(screen, target_stack);
         screen_data.m_window_stack_switch_overlay->set_enabled(true);
@@ -1390,8 +1399,7 @@ void Compositor::create_window_stack_switch_overlay(WindowStack& target_stack)
 void Compositor::remove_window_stack_switch_overlays()
 {
     Screen::for_each([&](auto& screen) {
-        auto& screen_data = m_screen_data[screen.index()];
-        screen_data.m_window_stack_switch_overlay = nullptr;
+        screen.compositor_screen_data().m_window_stack_switch_overlay = nullptr;
         return IterationDecision::Continue;
     });
 }
@@ -1413,8 +1421,7 @@ void Compositor::start_window_stack_switch_overlay_timer()
     }
     bool have_overlay = false;
     Screen::for_each([&](auto& screen) {
-        auto& screen_data = m_screen_data[screen.index()];
-        if (screen_data.m_window_stack_switch_overlay) {
+        if (screen.compositor_screen_data().m_window_stack_switch_overlay) {
             have_overlay = true;
             return IterationDecision::Break;
         }
