@@ -218,12 +218,12 @@ RefPtr<Inode> DevFSDirectoryInode::lookup(StringView)
 
 DevFSRootDirectoryInode::DevFSRootDirectoryInode(DevFS& fs)
     : DevFSDirectoryInode(fs)
-    , m_parent_fs(fs)
 {
 }
+
 KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    MutexLocker locker(m_parent_fs.m_lock);
+    MutexLocker locker(fs().m_lock);
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
 
@@ -244,7 +244,7 @@ KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem:
 }
 RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
 {
-    MutexLocker locker(m_parent_fs.m_lock);
+    MutexLocker locker(fs().m_lock);
     for (auto& subdirectory : m_subdirectories) {
         if (subdirectory.name() == name)
             return subdirectory;
@@ -263,7 +263,7 @@ RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
 }
 KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView name, mode_t mode, dev_t, uid_t, gid_t)
 {
-    MutexLocker locker(m_parent_fs.m_lock);
+    MutexLocker locker(fs().m_lock);
 
     InodeMetadata metadata;
     metadata.mode = mode;
@@ -274,15 +274,15 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView
         }
         if (name != "pts")
             return EROFS;
-        auto new_directory_inode = adopt_ref_if_nonnull(new (nothrow) DevFSPtsDirectoryInode(m_parent_fs));
+        auto new_directory_inode = adopt_ref_if_nonnull(new (nothrow) DevFSPtsDirectoryInode(fs()));
         if (!new_directory_inode)
             return ENOMEM;
         if (!m_subdirectories.try_ensure_capacity(m_subdirectories.size() + 1))
             return ENOMEM;
-        if (!m_parent_fs.m_nodes.try_ensure_capacity(m_parent_fs.m_nodes.size() + 1))
+        if (!fs().m_nodes.try_ensure_capacity(fs().m_nodes.size() + 1))
             return ENOMEM;
         m_subdirectories.append(*new_directory_inode);
-        m_parent_fs.m_nodes.append(*new_directory_inode);
+        fs().m_nodes.append(*new_directory_inode);
         return KResult(KSuccess);
     }
     if (metadata.is_symlink()) {
@@ -293,15 +293,15 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView
         auto name_kstring = KString::try_create(name);
         if (!name_kstring)
             return ENOMEM;
-        auto new_link_inode = adopt_ref_if_nonnull(new (nothrow) DevFSLinkInode(m_parent_fs, name_kstring.release_nonnull()));
+        auto new_link_inode = adopt_ref_if_nonnull(new (nothrow) DevFSLinkInode(fs(), name_kstring.release_nonnull()));
         if (!new_link_inode)
             return ENOMEM;
         if (!m_links.try_ensure_capacity(m_links.size() + 1))
             return ENOMEM;
-        if (!m_parent_fs.m_nodes.try_ensure_capacity(m_parent_fs.m_nodes.size() + 1))
+        if (!fs().m_nodes.try_ensure_capacity(fs().m_nodes.size() + 1))
             return ENOMEM;
         m_links.append(*new_link_inode);
-        m_parent_fs.m_nodes.append(*new_link_inode);
+        fs().m_nodes.append(*new_link_inode);
         return new_link_inode.release_nonnull();
     }
     return EROFS;

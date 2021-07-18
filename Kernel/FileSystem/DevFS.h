@@ -48,6 +48,9 @@ class DevFSInode : public Inode {
 public:
     virtual StringView name() const = 0;
 
+    DevFS& fs() { return static_cast<DevFS&>(Inode::fs()); }
+    DevFS const& fs() const { return static_cast<DevFS const&>(Inode::fs()); }
+
 protected:
     DevFSInode(DevFS&);
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
@@ -153,7 +156,6 @@ private:
 
     NonnullRefPtrVector<DevFSDirectoryInode> m_subdirectories;
     NonnullRefPtrVector<DevFSLinkInode> m_links;
-    DevFS& m_parent_fs;
 };
 
 }
