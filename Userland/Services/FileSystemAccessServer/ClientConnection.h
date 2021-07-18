@@ -33,6 +33,8 @@ private:
     void prompt_helper(Optional<String> const&, Core::OpenMode const&);
     RefPtr<GUI::Window> create_dummy_child_window(i32, i32);
 
+    virtual Messages::FileSystemAccessServer::ExposeWindowServerClientIdResponse expose_window_server_client_id() override;
+
     HashMap<String, Core::OpenMode> m_approved_files;
 };
 
