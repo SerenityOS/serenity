@@ -27,7 +27,7 @@ void Temporal::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_direct_property(vm.names.now, heap().allocate<Now>(global_object, global_object), attr);
+    define_direct_property(vm.names.Now, heap().allocate<Now>(global_object, global_object), attr);
     define_direct_property(vm.names.Calendar, global_object.temporal_calendar_constructor(), attr);
     define_direct_property(vm.names.Duration, global_object.temporal_duration_constructor(), attr);
     define_direct_property(vm.names.Instant, global_object.temporal_instant_constructor(), attr);
