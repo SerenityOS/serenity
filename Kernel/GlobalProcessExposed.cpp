@@ -76,12 +76,11 @@ private:
     virtual bool output(KBufferBuilder& builder) override
     {
         JsonArraySerializer array { builder };
-        MutexLocker locker(arp_table().lock(), Mutex::Mode::Shared);
-        for (auto& it : arp_table().resource()) {
+        arp_table().for_each_shared([&](const auto& it) {
             auto obj = array.add_object();
             obj.add("mac_address", it.value.to_string());
             obj.add("ip_address", it.key.to_string());
-        }
+        });
         array.finish();
         return true;
     }
