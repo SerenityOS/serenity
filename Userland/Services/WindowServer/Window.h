@@ -333,6 +333,10 @@ public:
     Gfx::DisjointRectSet& opaque_rects() { return m_opaque_rects; }
     Gfx::DisjointRectSet& transparency_rects() { return m_transparency_rects; }
     Gfx::DisjointRectSet& transparency_wallpaper_rects() { return m_transparency_wallpaper_rects; }
+    // The affected transparency rects are the rectangles of other windows (above or below)
+    // that also need to be marked dirty whenever a window's dirty rect in a transparency
+    // area needs to be rendered
+    auto& affected_transparency_rects() { return m_affected_transparency_rects; }
 
     Menubar* menubar() { return m_menubar; }
     const Menubar* menubar() const { return m_menubar; }
@@ -402,6 +406,7 @@ private:
     Gfx::DisjointRectSet m_opaque_rects;
     Gfx::DisjointRectSet m_transparency_rects;
     Gfx::DisjointRectSet m_transparency_wallpaper_rects;
+    HashMap<Window*, Gfx::DisjointRectSet> m_affected_transparency_rects;
     WindowType m_type { WindowType::Normal };
     bool m_global_cursor_tracking_enabled { false };
     bool m_automatic_cursor_tracking_enabled { false };
