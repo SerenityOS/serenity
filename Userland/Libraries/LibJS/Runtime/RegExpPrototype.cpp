@@ -240,7 +240,12 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
         }
 
         regex.start_offset = last_index;
-        result = regex.match(string);
+        // FIXME: JavaScript strings are UTF-16, update this if the backing storage
+        //        encoding changes for spec compliance reasons.
+        if (unicode)
+            result = regex.match(Utf8View { string });
+        else
+            result = regex.match(string);
 
         if (result.success)
             break;
