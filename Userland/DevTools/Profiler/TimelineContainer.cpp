@@ -6,13 +6,12 @@
 
 #include "TimelineContainer.h"
 #include "TimelineView.h"
-#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Layout.h>
 
 namespace Profiler {
 
 TimelineContainer::TimelineContainer(GUI::Widget& header_container, TimelineView& timeline_view)
 {
-    set_layout<GUI::HorizontalBoxLayout>();
     set_should_hide_unnecessary_scrollbars(true);
     m_header_container = header_container;
     m_timeline_view = timeline_view;
@@ -22,7 +21,6 @@ TimelineContainer::TimelineContainer(GUI::Widget& header_container, TimelineView
     timeline_view.move_to_back();
     update_widget_sizes();
     update_widget_positions();
-    set_shrink_to_fit(true);
 
     m_timeline_view->on_scale_change = [this] {
         update_widget_positions();
