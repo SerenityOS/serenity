@@ -8,6 +8,7 @@
 #include <AK/Checked.h>
 #include <AK/Function.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf16View.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -29,6 +30,14 @@ static Optional<String> ak_string_from(VM& vm, GlobalObject& global_object)
     if (vm.exception())
         return {};
     return this_value.to_string(global_object);
+}
+
+static Vector<u16> utf16_string_from(VM& vm, GlobalObject& global_object)
+{
+    auto this_value = require_object_coercible(global_object, vm.this_value(global_object));
+    if (vm.exception())
+        return {};
+    return this_value.to_utf16_string(global_object);
 }
 
 static Optional<size_t> split_match(const String& haystack, size_t start, const String& needle)
@@ -119,15 +128,18 @@ static Value this_string_value(GlobalObject& global_object, Value value)
 // 22.1.3.1 String.prototype.charAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charat
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
 {
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
+    auto string = utf16_string_from(vm, global_object);
+    if (vm.exception())
         return {};
     auto position = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};
-    if (position < 0 || position >= string->length())
+
+    Utf16View utf16_string_view { string };
+    if (position < 0 || position >= utf16_string_view.length_in_code_units())
         return js_string(vm, String::empty());
-    return js_string(vm, string->substring(position, 1));
+
+    return js_string(vm, utf16_string_view.substring_view(position, 1));
 }
 
 // 22.1.3.2 String.prototype.charCodeAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charcodeat
