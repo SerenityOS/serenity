@@ -63,13 +63,13 @@ public:
             }
         }
         template<typename GlyphCb>
-        RefPtr<Gfx::Bitmap> raster(float x_scale, float y_scale, GlyphCb glyph_callback) const
+        RefPtr<Gfx::Bitmap> rasterize(float x_scale, float y_scale, GlyphCb glyph_callback) const
         {
             switch (m_type) {
             case Type::Simple:
-                return raster_simple(x_scale, y_scale);
+                return rasterize_simple(x_scale, y_scale);
             case Type::Composite:
-                return raster_composite(x_scale, y_scale, glyph_callback);
+                return rasterize_composite(x_scale, y_scale, glyph_callback);
             }
             VERIFY_NOT_REACHED();
         }
@@ -101,10 +101,10 @@ public:
             u32 m_offset { 0 };
         };
 
-        void raster_inner(Rasterizer&, Gfx::AffineTransform&) const;
-        RefPtr<Gfx::Bitmap> raster_simple(float x_scale, float y_scale) const;
+        void rasterize_impl(Rasterizer& rasterizer, Gfx::AffineTransform& affine) const;
+        RefPtr<Gfx::Bitmap> rasterize_simple(float x_scale, float y_scale) const;
         template<typename GlyphCb>
-        RefPtr<Gfx::Bitmap> raster_composite(float x_scale, float y_scale, GlyphCb glyph_callback) const
+        RefPtr<Gfx::Bitmap> rasterize_composite(float x_scale, float y_scale, GlyphCb glyph_callback) const
         {
             u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 1;
             u32 height = (u32)(ceilf((m_ymax - m_ymin) * y_scale)) + 1;
@@ -119,7 +119,7 @@ public:
                 auto item = opt_item.value();
                 auto affine_here = affine.multiply(item.affine);
                 auto glyph = glyph_callback(item.glyph_id);
-                glyph.raster_inner(rasterizer, affine_here);
+                glyph.rasterize_impl(rasterizer, affine_here);
             }
             return rasterizer.accumulate();
         }
