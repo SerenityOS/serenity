@@ -7,7 +7,8 @@ configopts="--without-xlib --without-joystick --without-network"
 auth_type=sha256
 launcher_name=vitetris
 launcher_category=Games
-launcher_command="Terminal -e tetris"
+launcher_command=tetris
+launcher_run_in_terminal=true
 
 configure() {
     run chmod +x "$configscript"

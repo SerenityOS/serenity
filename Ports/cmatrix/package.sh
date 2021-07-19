@@ -9,7 +9,8 @@ files="https://github.com/abishekvashok/cmatrix/archive/refs/heads/master.zip cm
 auth_type=sha256
 launcher_name=cmatrix
 launcher_category=Games
-launcher_command="Terminal -e cmatrix"
+launcher_command=cmatrix
+launcher_run_in_terminal=true
 
 configure() {
     run cmake $configopts

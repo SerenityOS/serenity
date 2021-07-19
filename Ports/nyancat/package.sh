@@ -6,4 +6,5 @@ files="https://github.com/klange/nyancat/archive/master.tar.gz nyancat-git.tar.g
 auth_type=sha256
 launcher_name=Nyancat
 launcher_category=Games
-launcher_command="Terminal -e nyancat"
+launcher_command=nyancat
+launcher_run_in_terminal=true
