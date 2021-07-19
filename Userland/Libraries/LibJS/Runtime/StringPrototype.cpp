@@ -338,20 +338,27 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::ends_with)
 // 22.1.3.8 String.prototype.indexOf ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.indexof
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 {
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
-        return {};
-    auto needle = vm.argument(0).to_string(global_object);
+    auto string = utf16_string_from(vm, global_object);
     if (vm.exception())
         return {};
-    size_t from = 0;
+
+    auto search_string = vm.argument(0).to_utf16_string(global_object);
+    if (vm.exception())
+        return {};
+
+    Utf16View utf16_string_view { string };
+    Utf16View utf16_search_view { search_string };
+
+    size_t start = 0;
     if (vm.argument_count() > 1) {
-        double from_argument = vm.argument(1).to_integer_or_infinity(global_object);
+        auto position = vm.argument(1).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
-        from = clamp(from_argument, static_cast<double>(0), static_cast<double>(string->length()));
+        start = clamp(position, static_cast<double>(0), static_cast<double>(utf16_string_view.length_in_code_units()));
     }
-    return Value((i32)string->find(needle, from).value_or(-1));
+
+    auto index = string_index_of(utf16_string_view, utf16_search_view, start);
+    return index.has_value() ? Value(*index) : Value(-1);
 }
 
 // 22.1.3.26 String.prototype.toLowerCase ( ), https://tc39.es/ecma262/#sec-string.prototype.tolowercase

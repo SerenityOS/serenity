@@ -21,3 +21,11 @@ test("basic functionality", () => {
     expect(s.indexOf("e", 0)).toBe(1);
     expect(s.indexOf("e", 2)).toBe(9);
 });
+
+test("UTF-16", () => {
+    var s = "😀";
+    expect(s.indexOf("😀")).toBe(0);
+    expect(s.indexOf("\ud83d")).toBe(0);
+    expect(s.indexOf("\ude00")).toBe(1);
+    expect(s.indexOf("a")).toBe(-1);
+});
