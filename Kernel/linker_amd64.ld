@@ -4,6 +4,7 @@ KERNEL_VIRTUAL_BASE = 0x2000000000;
 
 PHDRS
 {
+  boot_bss PT_LOAD ;
   text PT_LOAD ;
   data PT_LOAD ;
   bss PT_LOAD ;
@@ -15,6 +16,11 @@ SECTIONS
     . = KERNEL_VIRTUAL_BASE + 0x00200000;
 
     start_of_kernel_image = .;
+
+    .boot_bss ALIGN(4K) (NOLOAD) : AT (ADDR(.boot_bss) - KERNEL_VIRTUAL_BASE)
+    {
+        *(.super_pages)
+    } :boot_bss
 
     .text ALIGN(4K) : AT (ADDR(.text) - KERNEL_VIRTUAL_BASE)
     {

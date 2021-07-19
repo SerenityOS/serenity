@@ -300,6 +300,9 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         m_user_physical_regions.append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull());
     }
 
+    // Super pages are guaranteed to be in the first 16MB of physical memory
+    VERIFY(virtual_to_low_physical((FlatPtr)super_pages) + sizeof(super_pages) < 0x1000000);
+
     // Append statically-allocated super physical physical_region.
     m_super_physical_regions.append(PhysicalRegion::try_create(
         PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages))),
