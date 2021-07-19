@@ -106,18 +106,26 @@ private:
 };
 
 class MutexLocker {
+    AK_MAKE_NONCOPYABLE(MutexLocker);
+
 public:
+    ALWAYS_INLINE explicit MutexLocker()
+        : m_lock(nullptr)
+        , m_locked(false)
+    {
+    }
+
 #if LOCK_DEBUG
     ALWAYS_INLINE explicit MutexLocker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
 #else
     ALWAYS_INLINE explicit MutexLocker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive)
 #endif
-        : m_lock(l)
+        : m_lock(&l)
     {
 #if LOCK_DEBUG
-        m_lock.lock(mode, location);
+        m_lock->lock(mode, location);
 #else
-        m_lock.lock(mode);
+        m_lock->lock(mode);
 #endif
     }
 
@@ -126,11 +134,30 @@ public:
         if (m_locked)
             unlock();
     }
+
     ALWAYS_INLINE void unlock()
     {
+        VERIFY(m_lock);
         VERIFY(m_locked);
         m_locked = false;
-        m_lock.unlock();
+        m_lock->unlock();
+    }
+
+#if LOCK_DEBUG
+    ALWAYS_INLINE void attach_and_lock(Mutex& lock, Mutex::Mode mode = Mutex::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
+#else
+    ALWAYS_INLINE void attach_and_lock(Mutex& lock, Mutex::Mode mode = Mutex::Mode::Exclusive)
+#endif
+    {
+        VERIFY(!m_locked);
+        m_lock = &lock;
+        m_locked = true;
+
+#if LOCK_DEBUG
+        m_lock->lock(mode, location);
+#else
+        m_lock->lock(mode);
+#endif
     }
 
 #if LOCK_DEBUG
@@ -139,21 +166,19 @@ public:
     ALWAYS_INLINE void lock(Mutex::Mode mode = Mutex::Mode::Exclusive)
 #endif
     {
+        VERIFY(m_lock);
         VERIFY(!m_locked);
         m_locked = true;
 
 #if LOCK_DEBUG
-        m_lock.lock(mode, location);
+        m_lock->lock(mode, location);
 #else
-        m_lock.lock(mode);
+        m_lock->lock(mode);
 #endif
     }
 
-    Mutex& get_lock() { return m_lock; }
-    const Mutex& get_lock() const { return m_lock; }
-
 private:
-    Mutex& m_lock;
+    Mutex* m_lock;
     bool m_locked { true };
 };
 
