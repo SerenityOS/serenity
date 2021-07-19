@@ -523,7 +523,7 @@ Gfx::IntRect WindowFrame::rect() const
 
 Gfx::IntRect WindowFrame::constrained_render_rect_to_screen(const Gfx::IntRect& render_rect) const
 {
-    if (m_window.is_maximized() || m_window.tiled() != WindowTileType::None)
+    if (m_window.is_maximized() || m_window.tiled() != WindowTileType::None || m_window.is_fullscreen())
         return render_rect.intersected(Screen::closest_to_rect(rect()).rect());
     return render_rect;
 }

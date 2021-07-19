@@ -902,10 +902,11 @@ void Window::set_fullscreen(bool fullscreen)
     Gfx::IntRect new_window_rect = m_rect;
     if (m_fullscreen) {
         m_saved_nonfullscreen_rect = m_rect;
-        new_window_rect = Screen::main().rect(); // TODO: We should support fullscreen on any screen
+        new_window_rect = Screen::closest_to_rect(m_rect).rect();
     } else if (!m_saved_nonfullscreen_rect.is_empty()) {
         new_window_rect = m_saved_nonfullscreen_rect;
     }
+    window_stack().window_fullscreen_state_changed(*this);
 
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(new_window_rect));
     set_rect(new_window_rect);

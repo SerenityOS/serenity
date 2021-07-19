@@ -81,6 +81,9 @@ public:
 
     void set_all_occluded(bool);
 
+    bool has_fullscreen_windows() const { return m_fullscreen_windows_count != 0; }
+    void window_fullscreen_state_changed(Window const&);
+
 private:
     WeakPtr<Window> m_active_window;
     WeakPtr<Window> m_active_input_window;
@@ -91,6 +94,7 @@ private:
     unsigned m_column { 0 };
     Gfx::IntPoint m_transition_offset;
     WindowStack* m_stationary_window_stack { nullptr };
+    size_t m_fullscreen_windows_count { 0 };
 };
 
 template<typename Callback>

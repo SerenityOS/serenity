@@ -1308,14 +1308,7 @@ void WindowManager::reevaluate_hovered_window(Window* updated_window)
             return;
     }
 
-    Window* hovered_window = nullptr;
-    if (auto* fullscreen_window = active_fullscreen_window()) {
-        if (fullscreen_window->hit_test(cursor_location).has_value())
-            hovered_window = fullscreen_window;
-    } else {
-        hovered_window = current_window_stack().window_at(cursor_location);
-    }
-
+    Window* hovered_window = current_window_stack().window_at(cursor_location);
     if (set_hovered_window(hovered_window)) {
         if (currently_hovered && m_resize_candidate == currently_hovered)
             clear_resize_candidate();
@@ -1346,8 +1339,6 @@ void WindowManager::clear_resize_candidate()
 
 Gfx::IntRect WindowManager::desktop_rect(Screen& screen) const
 {
-    if (active_fullscreen_window())
-        return Screen::main().rect(); // TODO: we should support fullscreen windows on any screen
     auto screen_rect = screen.rect();
     if (screen.is_main_screen())
         screen_rect.set_height(screen.height() - 28);

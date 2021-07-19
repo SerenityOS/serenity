@@ -24,6 +24,10 @@ void WindowStack::add(Window& window)
     VERIFY(!window.is_on_any_window_stack({}));
     m_windows.append(window);
     window.set_window_stack({}, this);
+    if (window.is_fullscreen()) {
+        m_fullscreen_windows_count++;
+        VERIFY(m_fullscreen_windows_count != 0);
+    }
 
     move_pinned_windows_to_front();
 }
@@ -33,6 +37,10 @@ void WindowStack::add_to_back(Window& window)
     VERIFY(!window.is_on_any_window_stack({}));
     m_windows.prepend(window);
     window.set_window_stack({}, this);
+    if (window.is_fullscreen()) {
+        m_fullscreen_windows_count++;
+        VERIFY(m_fullscreen_windows_count != 0);
+    }
 }
 
 void WindowStack::remove(Window& window)
@@ -46,6 +54,10 @@ void WindowStack::remove(Window& window)
         m_active_input_window = nullptr;
     if (m_active_input_tracking_window == &window)
         m_active_input_tracking_window = nullptr;
+    if (window.is_fullscreen()) {
+        VERIFY(m_fullscreen_windows_count > 0);
+        m_fullscreen_windows_count--;
+    }
 }
 
 void WindowStack::move_to_front(Window& window)
@@ -153,6 +165,18 @@ Optional<HitTestResult> WindowStack::hit_test(Gfx::IntPoint const& position) con
     },
         const_cast<WindowStack*>(this));
     return result;
+}
+
+void WindowStack::window_fullscreen_state_changed(Window const& window)
+{
+    VERIFY(m_windows.contains(window));
+    if (window.is_fullscreen()) {
+        m_fullscreen_windows_count++;
+        VERIFY(m_fullscreen_windows_count != 0);
+    } else {
+        VERIFY(m_fullscreen_windows_count > 0);
+        m_fullscreen_windows_count--;
+    }
 }
 
 }

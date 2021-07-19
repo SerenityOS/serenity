@@ -195,20 +195,6 @@ public:
     void start_window_move(Window&, MouseEvent const&);
     void start_window_move(Window&, Gfx::IntPoint const&);
 
-    Window const* active_fullscreen_window() const
-    {
-        if (active_window() && active_window()->is_fullscreen())
-            return active_window();
-        return nullptr;
-    };
-
-    Window* active_fullscreen_window()
-    {
-        if (active_window() && active_window()->is_fullscreen())
-            return active_window();
-        return nullptr;
-    }
-
     bool update_theme(String theme_path, String theme_name);
     void invalidate_after_theme_or_font_change();
 
@@ -451,7 +437,42 @@ inline IterationDecision WindowManager::for_each_visible_window_from_back_to_fro
     WindowStack* transitioning_to_window_stack = nullptr;
     if (!window_stack)
         window_stack = &get_rendering_window_stacks(transitioning_to_window_stack);
-    auto for_each_window = [&]<WindowType window_type>() {
+    bool has_fullscreen_windows = window_stack->has_fullscreen_windows() || (transitioning_to_window_stack && transitioning_to_window_stack->has_fullscreen_windows());
+    auto for_each_window = [&]<WindowType window_type, bool below_first_fullscreen = false>()
+    {
+        if constexpr (window_type == WindowType::Normal) {
+            if (has_fullscreen_windows) {
+                // For WindowType::Normal windows we want to render everything below the first fullscreen
+                // window below the task bar, but everything from the first fullscreen window on
+                // above the task bar.
+                static_assert(!is_stationary_window_type(WindowType::Normal));
+                auto decision = IterationDecision::Continue;
+                bool found_fullscreen = false;
+                auto divide_on_fullscreen = [&](auto& window) {
+                    if constexpr (below_first_fullscreen) {
+                        // Iterate only below the first fullscreen window
+                        if (window.is_fullscreen())
+                            return IterationDecision::Break;
+                    } else {
+                        // Iterate from the first fullscreen window (inclusive)
+                        if (!found_fullscreen) {
+                            if (window.is_fullscreen())
+                                found_fullscreen = true;
+                            else
+                                return IterationDecision::Continue;
+                        }
+                    }
+                    decision = callback(window);
+                    return decision;
+                };
+                window_stack->for_each_visible_window_of_type_from_back_to_front(window_type, divide_on_fullscreen);
+                if (decision == IterationDecision::Continue && transitioning_to_window_stack) {
+                    found_fullscreen = false;
+                    transitioning_to_window_stack->for_each_visible_window_of_type_from_back_to_front(window_type, divide_on_fullscreen);
+                }
+                return decision;
+            }
+        }
         if constexpr (is_stationary_window_type(window_type)) {
             auto& stationary_stack = window_stack->stationary_window_stack();
             return stationary_stack.for_each_visible_window_of_type_from_back_to_front(window_type, callback);
@@ -464,7 +485,7 @@ inline IterationDecision WindowManager::for_each_visible_window_from_back_to_fro
     };
     if (for_each_window.template operator()<WindowType::Desktop>() == IterationDecision::Break)
         return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Normal>() == IterationDecision::Break)
+    if (for_each_window.template operator()<WindowType::Normal, true>() == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::ToolWindow>() == IterationDecision::Break)
         return IterationDecision::Break;
@@ -472,6 +493,10 @@ inline IterationDecision WindowManager::for_each_visible_window_from_back_to_fro
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::AppletArea>() == IterationDecision::Break)
         return IterationDecision::Break;
+    if (has_fullscreen_windows) {
+        if (for_each_window.template operator()<WindowType::Normal, false>() == IterationDecision::Break)
+            return IterationDecision::Break;
+    }
     if (for_each_window.template operator()<WindowType::Notification>() == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Tooltip>() == IterationDecision::Break)
@@ -488,7 +513,60 @@ inline IterationDecision WindowManager::for_each_visible_window_from_front_to_ba
     WindowStack* transitioning_to_window_stack = nullptr;
     if (!window_stack)
         window_stack = &get_rendering_window_stacks(transitioning_to_window_stack);
-    auto for_each_window = [&]<WindowType window_type>() {
+    bool has_fullscreen_windows = window_stack->has_fullscreen_windows() || (transitioning_to_window_stack && transitioning_to_window_stack->has_fullscreen_windows());
+    auto for_each_window = [&]<WindowType window_type, bool first_fullscreen_and_above = false>()
+    {
+        if constexpr (window_type == WindowType::Normal) {
+            if (has_fullscreen_windows) {
+                // For WindowType::Normal windows we want to render everything from the first fullscreen on
+                // above the task bar, but everything below the first fullscreen window below the task bar.
+                // Because we're going from front to back, we need to first find the first fullscreen window
+                // by iterating from back to front
+                Window* first_fullscreen = nullptr;
+                auto check_for_first_fullscreen = [&](auto& window) {
+                    if (window.is_fullscreen()) {
+                        first_fullscreen = &window;
+                        return IterationDecision::Break;
+                    }
+                    return IterationDecision::Continue;
+                };
+                window_stack->for_each_visible_window_of_type_from_back_to_front(window_type, check_for_first_fullscreen);
+                if (!first_fullscreen && transitioning_to_window_stack)
+                    transitioning_to_window_stack->for_each_visible_window_of_type_from_back_to_front(window_type, check_for_first_fullscreen);
+                VERIFY(first_fullscreen); // Since has_fullscreen_windows was true we should have at least one!
+
+                static_assert(!is_stationary_window_type(WindowType::Normal));
+                auto decision = IterationDecision::Continue;
+                bool found_fullscreen = false;
+                auto divide_on_fullscreen = [&](auto& window) {
+                    if constexpr (first_fullscreen_and_above) {
+                        // Iterate until we find the first fullscreen window (inclusive)
+                        VERIFY(!found_fullscreen);
+                        if (&window == first_fullscreen)
+                            found_fullscreen = true;
+                    } else {
+                        // Iterate after we find the first fullscreen (exclusive)
+                        if (!found_fullscreen) {
+                            if (&window == first_fullscreen)
+                                found_fullscreen = true;
+                            return IterationDecision::Continue;
+                        }
+                    }
+                    decision = callback(window);
+                    if constexpr (first_fullscreen_and_above) {
+                        if (found_fullscreen)
+                            return IterationDecision::Break;
+                    }
+                    return decision;
+                };
+                window_stack->for_each_visible_window_of_type_from_front_to_back(window_type, divide_on_fullscreen);
+                if (decision == IterationDecision::Continue && transitioning_to_window_stack) {
+                    found_fullscreen = false;
+                    transitioning_to_window_stack->for_each_visible_window_of_type_from_front_to_back(window_type, divide_on_fullscreen);
+                }
+                return decision;
+            }
+        }
         if constexpr (is_stationary_window_type(window_type)) {
             auto& stationary_stack = window_stack->stationary_window_stack();
             return stationary_stack.for_each_visible_window_of_type_from_front_to_back(window_type, callback);
@@ -507,13 +585,17 @@ inline IterationDecision WindowManager::for_each_visible_window_from_front_to_ba
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Notification>() == IterationDecision::Break)
         return IterationDecision::Break;
+    if (has_fullscreen_windows) {
+        if (for_each_window.template operator()<WindowType::Normal, true>() == IterationDecision::Break)
+            return IterationDecision::Break;
+    }
     if (for_each_window.template operator()<WindowType::AppletArea>() == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::Taskbar>() == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_window.template operator()<WindowType::ToolWindow>() == IterationDecision::Break)
         return IterationDecision::Break;
-    if (for_each_window.template operator()<WindowType::Normal>() == IterationDecision::Break)
+    if (for_each_window.template operator()<WindowType::Normal, false>() == IterationDecision::Break)
         return IterationDecision::Break;
     return for_each_window.template operator()<WindowType::Desktop>();
 }
