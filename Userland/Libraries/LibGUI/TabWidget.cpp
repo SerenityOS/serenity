@@ -412,6 +412,7 @@ void TabWidget::update_bar()
 {
     auto invalidation_rect = bar_rect();
     invalidation_rect.set_height(invalidation_rect.height() + 1);
+    invalidation_rect.set_right(button_rect(static_cast<int>(m_tabs.size() - 1)).right());
     update(invalidation_rect);
 }
 
