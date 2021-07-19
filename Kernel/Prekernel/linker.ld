@@ -3,7 +3,6 @@ ENTRY(start)
 PHDRS
 {
   boot_text PT_LOAD ;
-  boot_bss PT_LOAD ;
   text PT_LOAD ;
   data PT_LOAD ;
   bss PT_LOAD ;
@@ -17,20 +16,12 @@ SECTIONS
 
     .boot_text ALIGN(4K) : AT (ADDR(.boot_text))
     {
-        KEEP(*(.boot_text))
         KEEP(*(.multiboot))
     } :boot_text
 
-    .boot_bss ALIGN(4K) (NOLOAD) : AT (ADDR(.boot_bss))
-    {
-        KEEP(*(.page_tables))
-        KEEP(*(.stack))
-        *(.super_pages)
-    } :boot_bss
-
     .text ALIGN(4K) : AT (ADDR(.text))
     {
-        start_of_kernel_text = .;
+        start_of_prekernel_text = .;
         *(.text*)
     } :text
 
@@ -48,6 +39,8 @@ SECTIONS
     {
         *(COMMON)
         *(.bss)
+        *(.stack)
+        *(.page_tables)
     } :bss
 
     end_of_prekernel_image = .;
