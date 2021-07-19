@@ -2,3 +2,6 @@
 Name=GML Playground
 Executable=/bin/Playground
 Category=Development
+
+[Launcher]
+FileTypes=gml
