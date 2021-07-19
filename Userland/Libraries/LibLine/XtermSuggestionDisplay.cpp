@@ -5,6 +5,7 @@
  */
 
 #include <AK/BinarySearch.h>
+#include <AK/FileStream.h>
 #include <AK/Function.h>
 #include <AK/StringBuilder.h>
 #include <LibLine/SuggestionDisplay.h>
@@ -16,6 +17,8 @@ namespace Line {
 void XtermSuggestionDisplay::display(const SuggestionManager& manager)
 {
     did_display();
+
+    OutputFileStream stderr_stream { stderr };
 
     size_t longest_suggestion_length = 0;
     size_t longest_suggestion_byte_length = 0;
@@ -30,9 +33,9 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
     size_t num_printed = 0;
     size_t lines_used = 1;
 
-    VT::save_cursor();
-    VT::clear_lines(0, m_lines_used_for_last_suggestions);
-    VT::restore_cursor();
+    VT::save_cursor(stderr_stream);
+    VT::clear_lines(0, m_lines_used_for_last_suggestions, stderr_stream);
+    VT::restore_cursor(stderr_stream);
 
     auto spans_entire_line { false };
     Vector<StringMetrics::LineMetrics> lines;
@@ -45,14 +48,13 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
         // We should make enough space for the biggest entry in
         // the suggestion list to fit in the prompt line.
         auto start = max_line_count - m_prompt_lines_at_suggestion_initiation;
-        for (size_t i = start; i < max_line_count; ++i) {
-            fputc('\n', stderr);
-        }
+        for (size_t i = start; i < max_line_count; ++i)
+            stderr_stream.write("\n"sv.bytes());
         lines_used += max_line_count;
         longest_suggestion_length = 0;
     }
 
-    VT::move_absolute(max_line_count + m_origin_row, 1);
+    VT::move_absolute(max_line_count + m_origin_row, 1, stderr_stream);
 
     if (m_pages.is_empty()) {
         size_t num_printed = 0;
@@ -89,14 +91,13 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
     auto page_index = fit_to_page_boundary(manager.next_index());
 
     manager.set_start_index(m_pages[page_index].start);
-
     manager.for_each_suggestion([&](auto& suggestion, auto index) {
         size_t next_column = num_printed + suggestion.text_view.length() + longest_suggestion_length + 2;
 
         if (next_column > m_num_columns) {
             auto lines = (suggestion.text_view.length() + m_num_columns - 1) / m_num_columns;
             lines_used += lines;
-            fputc('\n', stderr);
+            stderr_stream.write("\n"sv.bytes());
             num_printed = 0;
         }
 
@@ -107,22 +108,19 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
 
         // Only apply color to the selection if something is *actually* added to the buffer.
         if (manager.is_current_suggestion_complete() && index == manager.next_index()) {
-            VT::apply_style({ Style::Foreground(Style::XtermColor::Blue) });
-            fflush(stderr);
+            VT::apply_style({ Style::Foreground(Style::XtermColor::Blue) }, stderr_stream);
         }
 
         if (spans_entire_line) {
             num_printed += m_num_columns;
-            fprintf(stderr, "%s", suggestion.text_string.characters());
+            stderr_stream.write(suggestion.text_string.bytes());
         } else {
-            fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_byte_length) + 2, suggestion.text_string.characters());
+            stderr_stream.write(String::formatted("{: <{}}", suggestion.text_string, longest_suggestion_byte_length + 2).bytes());
             num_printed += longest_suggestion_length + 2;
         }
 
-        if (manager.is_current_suggestion_complete() && index == manager.next_index()) {
-            VT::apply_style(Style::reset_style());
-            fflush(stderr);
-        }
+        if (manager.is_current_suggestion_complete() && index == manager.next_index())
+            VT::apply_style(Style::reset_style(), stderr_stream);
         return IterationDecision::Continue;
     });
 
@@ -140,17 +138,14 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
 
         if (string.length() > m_num_columns - 1) {
             // This would overflow into the next line, so just don't print an indicator.
-            fflush(stderr);
             return;
         }
 
-        VT::move_absolute(m_origin_row + lines_used, m_num_columns - string.length() - 1);
-        VT::apply_style({ Style::Background(Style::XtermColor::Green) });
-        fputs(string.characters(), stderr);
-        VT::apply_style(Style::reset_style());
+        VT::move_absolute(m_origin_row + lines_used, m_num_columns - string.length() - 1, stderr_stream);
+        VT::apply_style({ Style::Background(Style::XtermColor::Green) }, stderr_stream);
+        stderr_stream.write(string.bytes());
+        VT::apply_style(Style::reset_style(), stderr_stream);
     }
-
-    fflush(stderr);
 }
 
 bool XtermSuggestionDisplay::cleanup()
@@ -158,7 +153,8 @@ bool XtermSuggestionDisplay::cleanup()
     did_cleanup();
 
     if (m_lines_used_for_last_suggestions) {
-        VT::clear_lines(0, m_lines_used_for_last_suggestions);
+        OutputFileStream stderr_stream { stderr };
+        VT::clear_lines(0, m_lines_used_for_last_suggestions, stderr_stream);
         m_lines_used_for_last_suggestions = 0;
         return true;
     }

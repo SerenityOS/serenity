@@ -8,8 +8,10 @@
 #include "Editor.h"
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <AK/FileStream.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
+#include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
@@ -578,11 +580,13 @@ void Editor::interrupted()
         return;
 
     m_finish = false;
-    reposition_cursor(true);
-    if (m_suggestion_display->cleanup())
-        reposition_cursor(true);
-    fprintf(stderr, "\n");
-    fflush(stderr);
+    {
+        OutputFileStream stderr_stream { stderr };
+        reposition_cursor(stderr_stream, true);
+        if (m_suggestion_display->cleanup())
+            reposition_cursor(stderr_stream, true);
+        stderr_stream.write("\n"sv.bytes());
+    }
     m_buffer.clear();
     m_chars_touched_in_the_middle = buffer().size();
     m_is_editing = false;
@@ -619,9 +623,11 @@ void Editor::handle_resize_event(bool reset_origin)
 
     set_origin(m_origin_row, 1);
 
-    reposition_cursor(true);
+    OutputFileStream stderr_stream { stderr };
+
+    reposition_cursor(stderr_stream, true);
     m_suggestion_display->redisplay(m_suggestion_manager, m_num_lines, m_num_columns);
-    reposition_cursor();
+    reposition_cursor(stderr_stream);
 
     if (m_is_searching)
         m_search_editor->resized();
@@ -630,9 +636,11 @@ void Editor::handle_resize_event(bool reset_origin)
 void Editor::really_quit_event_loop()
 {
     m_finish = false;
-    reposition_cursor(true);
-    fprintf(stderr, "\n");
-    fflush(stderr);
+    {
+        OutputFileStream stderr_stream { stderr };
+        reposition_cursor(stderr_stream, true);
+        stderr_stream.write("\n"sv.bytes());
+    }
     auto string = line();
     m_buffer.clear();
     m_chars_touched_in_the_middle = buffer().size();
@@ -693,11 +701,14 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
     reset();
     strip_styles(true);
 
-    auto prompt_lines = max(current_prompt_metrics().line_metrics.size(), 1ul) - 1;
-    for (size_t i = 0; i < prompt_lines; ++i)
-        putc('\n', stderr);
+    {
+        OutputFileStream stderr_stream { stderr };
+        auto prompt_lines = max(current_prompt_metrics().line_metrics.size(), 1ul) - 1;
+        for (size_t i = 0; i < prompt_lines; ++i)
+            stderr_stream.write("\n"sv.bytes());
 
-    VT::move_relative(-prompt_lines, 0);
+        VT::move_relative(-static_cast<int>(prompt_lines), 0, stderr_stream);
+    }
 
     set_origin();
 
@@ -1089,7 +1100,8 @@ void Editor::handle_read_event()
             for (auto& view : completion_result.insert)
                 insert(view);
 
-            reposition_cursor();
+            OutputFileStream stderr_stream { stderr };
+            reposition_cursor(stderr_stream);
 
             if (completion_result.style_to_apply.has_value()) {
                 // Apply the style of the last suggestion.
@@ -1111,7 +1123,7 @@ void Editor::handle_read_event()
             if (m_times_tab_pressed > 1) {
                 if (m_suggestion_manager.count() > 0) {
                     if (m_suggestion_display->cleanup())
-                        reposition_cursor();
+                        reposition_cursor(stderr_stream);
 
                     m_suggestion_display->set_initial_prompt_lines(m_prompt_lines_at_suggestion_initiation);
 
@@ -1166,7 +1178,8 @@ void Editor::cleanup_suggestions()
         // We probably have some suggestions drawn,
         // let's clean them up.
         if (m_suggestion_display->cleanup()) {
-            reposition_cursor();
+            OutputFileStream stderr_stream { stderr };
+            reposition_cursor(stderr_stream);
             m_refresh_needed = true;
         }
         m_suggestion_manager.reset();
@@ -1239,15 +1252,26 @@ void Editor::cleanup()
     if (new_lines < shown_lines)
         m_extra_forward_lines = max(shown_lines - new_lines, m_extra_forward_lines);
 
-    reposition_cursor(true);
+    OutputFileStream stderr_stream { stderr };
+    reposition_cursor(stderr_stream, true);
     auto current_line = num_lines() - 1;
-    VT::clear_lines(current_line, m_extra_forward_lines);
+    VT::clear_lines(current_line, m_extra_forward_lines, stderr_stream);
     m_extra_forward_lines = 0;
-    reposition_cursor();
+    reposition_cursor(stderr_stream);
 };
 
 void Editor::refresh_display()
 {
+    DuplexMemoryStream output_stream;
+    ScopeGuard flush_stream {
+        [&] {
+            auto buffer = output_stream.copy_into_contiguous_buffer();
+            if (buffer.is_empty())
+                return;
+            fwrite(buffer.data(), sizeof(char), buffer.size(), stderr);
+        }
+    };
+
     auto has_cleaned_up = false;
     // Someone changed the window size, figure it out
     // and react to it, we might need to redraw.
@@ -1272,20 +1296,19 @@ void Editor::refresh_display()
     if (m_origin_row + current_num_lines > m_num_lines) {
         if (current_num_lines > m_num_lines) {
             for (size_t i = 0; i < m_num_lines; ++i)
-                putc('\n', stderr);
+                output_stream.write("\n"sv.bytes());
             m_origin_row = 0;
         } else {
             auto old_origin_row = m_origin_row;
             m_origin_row = m_num_lines - current_num_lines + 1;
             for (size_t i = 0; i < old_origin_row - m_origin_row; ++i)
-                putc('\n', stderr);
+                output_stream.write("\n"sv.bytes());
         }
-        fflush(stderr);
     }
     // Do not call hook on pure cursor movement.
     if (m_cached_prompt_valid && !m_refresh_needed && m_pending_chars.size() == 0) {
         // Probably just moving around.
-        reposition_cursor();
+        reposition_cursor(output_stream);
         m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
         m_drawn_end_of_line_offset = m_buffer.size();
         return;
@@ -1298,15 +1321,12 @@ void Editor::refresh_display()
         if (!m_refresh_needed && m_cursor == m_buffer.size()) {
             // Just write the characters out and continue,
             // no need to refresh the entire line.
-            char null = 0;
-            m_pending_chars.append(&null, 1);
-            fputs((char*)m_pending_chars.data(), stderr);
+            output_stream.write(m_pending_chars);
             m_pending_chars.clear();
             m_drawn_cursor = m_cursor;
             m_drawn_end_of_line_offset = m_buffer.size();
             m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
             m_drawn_spans = m_current_spans;
-            fflush(stderr);
             return;
         }
     }
@@ -1328,11 +1348,11 @@ void Editor::refresh_display()
                 style.unify_with(applicable_style.value);
 
             // Disable any style that should be turned off.
-            VT::apply_style(style, false);
+            VT::apply_style(style, output_stream, false);
 
             // Reapply styles for overlapping spans that include this one.
             style = find_applicable_style(i);
-            VT::apply_style(style, true);
+            VT::apply_style(style, output_stream, true);
         }
         if (starts.size() || anchored_starts.size()) {
             Style style;
@@ -1344,11 +1364,11 @@ void Editor::refresh_display()
                 style.unify_with(applicable_style.value);
 
             // Set new styles.
-            VT::apply_style(style, true);
+            VT::apply_style(style, output_stream, true);
         }
     };
 
-    auto print_character_at = [this](size_t i) {
+    auto print_character_at = [&](size_t i) {
         StringBuilder builder;
         auto c = m_buffer[i];
         bool should_print_masked = is_ascii_control(c) && c != '\n';
@@ -1361,26 +1381,26 @@ void Editor::refresh_display()
             builder.append(Utf32View { &c, 1 });
 
         if (should_print_masked)
-            fputs("\033[7m", stderr);
+            output_stream.write("\033[7m"sv.bytes());
 
-        fputs(builder.to_string().characters(), stderr);
+        output_stream.write(builder.string_view().bytes());
 
         if (should_print_masked)
-            fputs("\033[27m", stderr);
+            output_stream.write("\033[27m"sv.bytes());
     };
 
     // If there have been no changes to previous sections of the line (style or text)
     // just append the new text with the appropriate styles.
     if (!m_always_refresh && m_cached_prompt_valid && m_chars_touched_in_the_middle == 0 && m_drawn_spans.contains_up_to_offset(m_current_spans, m_drawn_cursor)) {
         auto initial_style = find_applicable_style(m_drawn_end_of_line_offset);
-        VT::apply_style(initial_style);
+        VT::apply_style(initial_style, output_stream);
 
         for (size_t i = m_drawn_end_of_line_offset; i < m_buffer.size(); ++i) {
             apply_styles(i);
             print_character_at(i);
         }
 
-        VT::apply_style(Style::reset_style());
+        VT::apply_style(Style::reset_style(), output_stream);
         m_pending_chars.clear();
         m_refresh_needed = false;
         m_cached_buffer_metrics = actual_rendered_string_metrics(buffer_view());
@@ -1416,18 +1436,18 @@ void Editor::refresh_display()
     if (!has_cleaned_up) {
         cleanup();
     }
-    VT::move_absolute(m_origin_row, m_origin_column);
+    VT::move_absolute(m_origin_row, m_origin_column, output_stream);
 
-    fputs(m_new_prompt.characters(), stderr);
+    output_stream.write(m_new_prompt.bytes());
 
-    VT::clear_to_end_of_line();
+    VT::clear_to_end_of_line(output_stream);
     StringBuilder builder;
     for (size_t i = 0; i < m_buffer.size(); ++i) {
         apply_styles(i);
         print_character_at(i);
     }
 
-    VT::apply_style(Style::reset_style()); // don't bleed to EOL
+    VT::apply_style(Style::reset_style(), output_stream); // don't bleed to EOL
 
     m_pending_chars.clear();
     m_refresh_needed = false;
@@ -1437,8 +1457,7 @@ void Editor::refresh_display()
     m_drawn_end_of_line_offset = m_buffer.size();
     m_cached_prompt_valid = true;
 
-    reposition_cursor();
-    fflush(stderr);
+    reposition_cursor(output_stream);
 }
 
 void Editor::strip_styles(bool strip_anchored)
@@ -1454,7 +1473,7 @@ void Editor::strip_styles(bool strip_anchored)
     m_refresh_needed = true;
 }
 
-void Editor::reposition_cursor(bool to_end)
+void Editor::reposition_cursor(OutputStream& stream, bool to_end)
 {
     auto cursor = m_cursor;
     auto saved_cursor = m_cursor;
@@ -1470,18 +1489,17 @@ void Editor::reposition_cursor(bool to_end)
     ensure_free_lines_from_origin(line);
 
     VERIFY(column + m_origin_column <= m_num_columns);
-    VT::move_absolute(line + m_origin_row, column + m_origin_column);
+    VT::move_absolute(line + m_origin_row, column + m_origin_column, stream);
 
     m_cursor = saved_cursor;
 }
 
-void VT::move_absolute(u32 row, u32 col)
+void VT::move_absolute(u32 row, u32 col, OutputStream& stream)
 {
-    fprintf(stderr, "\033[%d;%dH", row, col);
-    fflush(stderr);
+    stream.write(String::formatted("\033[{};{}H", row, col).bytes());
 }
 
-void VT::move_relative(int row, int col)
+void VT::move_relative(int row, int col, OutputStream& stream)
 {
     char x_op = 'A', y_op = 'D';
 
@@ -1495,9 +1513,9 @@ void VT::move_relative(int row, int col)
         col = -col;
 
     if (row > 0)
-        fprintf(stderr, "\033[%d%c", row, x_op);
+        stream.write(String::formatted("\033[{}{}", row, x_op).bytes());
     if (col > 0)
-        fprintf(stderr, "\033[%d%c", col, y_op);
+        stream.write(String::formatted("\033[{}{}", col, y_op).bytes());
 }
 
 Style Editor::find_applicable_style(size_t offset) const
@@ -1623,52 +1641,52 @@ String Style::to_string() const
     return builder.build();
 }
 
-void VT::apply_style(const Style& style, bool is_starting)
+void VT::apply_style(const Style& style, OutputStream& stream, bool is_starting)
 {
     if (is_starting) {
-        fprintf(stderr,
-            "\033[%d;%d;%dm%s%s%s",
+        stream.write(String::formatted("\033[{};{};{}m{}{}{}",
             style.bold() ? 1 : 22,
             style.underline() ? 4 : 24,
             style.italic() ? 3 : 23,
-            style.background().to_vt_escape().characters(),
-            style.foreground().to_vt_escape().characters(),
-            style.hyperlink().to_vt_escape(true).characters());
+            style.background().to_vt_escape(),
+            style.foreground().to_vt_escape(),
+            style.hyperlink().to_vt_escape(true))
+                         .bytes());
     } else {
-        fprintf(stderr, "%s", style.hyperlink().to_vt_escape(false).characters());
+        stream.write(style.hyperlink().to_vt_escape(false).bytes());
     }
 }
 
-void VT::clear_lines(size_t count_above, size_t count_below)
+void VT::clear_lines(size_t count_above, size_t count_below, OutputStream& stream)
 {
     if (count_below + count_above == 0) {
-        fputs("\033[2K", stderr);
+        stream.write("\033[2K"sv.bytes());
     } else {
         // Go down count_below lines.
         if (count_below > 0)
-            fprintf(stderr, "\033[%dB", (int)count_below);
+            stream.write(String::formatted("\033[{}B", count_below).bytes());
         // Then clear lines going upwards.
-        for (size_t i = count_below + count_above; i > 0; --i)
-            fputs(i == 1 ? "\033[2K" : "\033[2K\033[A", stderr);
+        for (size_t i = count_below + count_above; i > 0; --i) {
+            stream.write("\033[2K"sv.bytes());
+            if (i != 1)
+                stream.write("\033[A"sv.bytes());
+        }
     }
 }
 
-void VT::save_cursor()
+void VT::save_cursor(OutputStream& stream)
 {
-    fputs("\033[s", stderr);
-    fflush(stderr);
+    stream.write("\033[s"sv.bytes());
 }
 
-void VT::restore_cursor()
+void VT::restore_cursor(OutputStream& stream)
 {
-    fputs("\033[u", stderr);
-    fflush(stderr);
+    stream.write("\033[u"sv.bytes());
 }
 
-void VT::clear_to_end_of_line()
+void VT::clear_to_end_of_line(OutputStream& stream)
 {
-    fputs("\033[K", stderr);
-    fflush(stderr);
+    stream.write("\033[K"sv.bytes());
 }
 
 StringMetrics Editor::actual_rendered_string_metrics(const StringView& string)
