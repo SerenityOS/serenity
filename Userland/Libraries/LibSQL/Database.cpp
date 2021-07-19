@@ -51,8 +51,11 @@ Key Database::get_schema_key(String const& schema_name)
     return key;
 }
 
-RefPtr<SchemaDef> Database::get_schema(String const& schema_name)
+RefPtr<SchemaDef> Database::get_schema(String const& schema)
 {
+    auto schema_name = schema;
+    if (schema.is_null() || schema.is_empty())
+        schema_name = "default";
     Key key = get_schema_key(schema_name);
     auto schema_def_opt = m_schema_cache.get(key.hash());
     if (schema_def_opt.has_value())
@@ -83,7 +86,10 @@ Key Database::get_table_key(String const& schema_name, String const& table_name)
 
 RefPtr<TableDef> Database::get_table(String const& schema, String const& name)
 {
-    Key key = get_table_key(schema, name);
+    auto schema_name = schema;
+    if (schema.is_null() || schema.is_empty())
+        schema_name = "default";
+    Key key = get_table_key(schema_name, name);
     auto table_def_opt = m_table_cache.get(key.hash());
     if (table_def_opt.has_value())
         return table_def_opt.value();

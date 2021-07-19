@@ -9,13 +9,13 @@
 
 namespace SQL::AST {
 
-RefPtr<SQLResult> CreateTable::execute(NonnullRefPtr<Database> database) const
+RefPtr<SQLResult> CreateTable::execute(ExecutionContext& context) const
 {
     auto schema_name = (!m_schema_name.is_null() && !m_schema_name.is_empty()) ? m_schema_name : "default";
-    auto schema_def = database->get_schema(schema_name);
+    auto schema_def = context.database->get_schema(schema_name);
     if (!schema_def)
         return SQLResult::construct(SQLCommand::Create, SQLErrorCode::SchemaDoesNotExist, m_schema_name);
-    auto table_def = database->get_table(schema_name, m_table_name);
+    auto table_def = context.database->get_table(schema_name, m_table_name);
     if (table_def) {
         if (m_is_error_if_table_exists) {
             return SQLResult::construct(SQLCommand::Create, SQLErrorCode::TableExists, m_table_name);
@@ -37,7 +37,7 @@ RefPtr<SQLResult> CreateTable::execute(NonnullRefPtr<Database> database) const
         }
         table_def->append_column(column.name(), type);
     }
-    database->add_table(*table_def);
+    context.database->add_table(*table_def);
     return SQLResult::construct(SQLCommand::Create, 0, 1);
 }
 
