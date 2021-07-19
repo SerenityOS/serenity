@@ -750,15 +750,19 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
 // 3.1 String.prototype.at ( index ), https://tc39.es/proposal-relative-indexing-method/#sec-string.prototype.at
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
 {
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
+    auto string = utf16_string_from(vm, global_object);
+    if (vm.exception())
         return {};
-    auto length = string->length();
+
+    Utf16View utf16_string_view { string };
+    auto length = utf16_string_view.length_in_code_units();
+
     auto relative_index = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};
     if (Value(relative_index).is_infinity())
         return js_undefined();
+
     Checked<size_t> index { 0 };
     if (relative_index >= 0) {
         index += relative_index;
@@ -768,7 +772,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
     }
     if (index.has_overflow() || index.value() >= length)
         return js_undefined();
-    return js_string(vm, String::formatted("{}", (*string)[index.value()]));
+
+    return js_string(vm, utf16_string_view.substring_view(index.value(), 1));
 }
 
 // 22.1.3.33 String.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-string.prototype-@@iterator

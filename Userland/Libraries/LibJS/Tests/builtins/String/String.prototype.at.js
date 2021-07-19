@@ -13,3 +13,11 @@ test("basic functionality", () => {
     expect(string.at(-4)).toBeUndefined();
     expect(string.at(-Infinity)).toBeUndefined();
 });
+
+test("UTF-16", () => {
+    var s = "😀";
+    expect(s).toHaveLength(2);
+    expect(s.at(0)).toBe("\ud83d");
+    expect(s.at(1)).toBe("\ude00");
+    expect(s.at(2)).toBeUndefined();
+});
