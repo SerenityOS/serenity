@@ -258,8 +258,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
 // 22.1.3.22 String.prototype.startsWith ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.startswith
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
 {
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
+    auto string = utf16_string_from(vm, global_object);
+    if (vm.exception())
         return {};
 
     auto search_string_value = vm.argument(0);
@@ -272,12 +272,16 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
         return {};
     }
 
-    auto search_string = search_string_value.to_string(global_object);
+    auto search_string = search_string_value.to_utf16_string(global_object);
     if (vm.exception())
         return {};
 
-    auto string_length = string->length();
-    auto search_string_length = search_string.length();
+    Utf16View utf16_string_view { string };
+    auto string_length = utf16_string_view.length_in_code_units();
+
+    Utf16View utf16_search_view { search_string };
+    auto search_length = utf16_search_view.length_in_code_units();
+
     size_t start = 0;
     if (!vm.argument(1).is_undefined()) {
         auto position = vm.argument(1).to_integer_or_infinity(global_object);
@@ -285,11 +289,16 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
             return {};
         start = clamp(position, static_cast<double>(0), static_cast<double>(string_length));
     }
-    if (start + search_string_length > string_length)
-        return Value(false);
-    if (search_string_length == 0)
+
+    if (search_length == 0)
         return Value(true);
-    return Value(string->substring(start, search_string_length) == search_string);
+
+    size_t end = start + search_length;
+    if (end > string_length)
+        return Value(false);
+
+    utf16_string_view = utf16_string_view.substring_view(start, end - start);
+    return Value(utf16_string_view == utf16_search_view);
 }
 
 // 22.1.3.6 String.prototype.endsWith ( searchString [ , endPosition ] ), https://tc39.es/ecma262/#sec-string.prototype.endswith

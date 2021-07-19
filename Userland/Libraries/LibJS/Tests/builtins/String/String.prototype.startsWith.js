@@ -34,3 +34,11 @@ test("basic functionality", () => {
     expect(s.startsWith("", -1)).toBeTrue();
     expect(s.startsWith("", 42)).toBeTrue();
 });
+
+test("UTF-16", () => {
+    var s = "😀";
+    expect(s.startsWith("😀")).toBeTrue();
+    expect(s.startsWith("\ud83d")).toBeTrue();
+    expect(s.startsWith("\ude00")).toBeFalse();
+    expect(s.startsWith("a")).toBeFalse();
+});
