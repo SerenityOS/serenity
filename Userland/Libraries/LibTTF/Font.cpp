@@ -410,14 +410,14 @@ ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y_scal
 }
 
 // FIXME: "loca" and "glyf" are not available for CFF fonts.
-RefPtr<Gfx::Bitmap> Font::raster_glyph(u32 glyph_id, float x_scale, float y_scale) const
+RefPtr<Gfx::Bitmap> Font::rasterize_glyph(u32 glyph_id, float x_scale, float y_scale) const
 {
     if (glyph_id >= glyph_count()) {
         glyph_id = 0;
     }
     auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
     auto glyph = m_glyf.glyph(glyph_offset);
-    return glyph.raster(x_scale, y_scale, [&](u16 glyph_id) {
+    return glyph.rasterize(x_scale, y_scale, [&](u16 glyph_id) {
         if (glyph_id >= glyph_count()) {
             glyph_id = 0;
         }
@@ -513,13 +513,13 @@ ALWAYS_INLINE int ScaledFont::unicode_view_width(T const& view) const
     return longest_width;
 }
 
-RefPtr<Gfx::Bitmap> ScaledFont::raster_glyph(u32 glyph_id) const
+RefPtr<Gfx::Bitmap> ScaledFont::rasterize_glyph(u32 glyph_id) const
 {
     auto glyph_iterator = m_cached_glyph_bitmaps.find(glyph_id);
     if (glyph_iterator != m_cached_glyph_bitmaps.end())
         return glyph_iterator->value;
 
-    auto glyph_bitmap = m_font->raster_glyph(glyph_id, m_x_scale, m_y_scale);
+    auto glyph_bitmap = m_font->rasterize_glyph(glyph_id, m_x_scale, m_y_scale);
     m_cached_glyph_bitmaps.set(glyph_id, glyph_bitmap);
     return glyph_bitmap;
 }
@@ -527,7 +527,7 @@ RefPtr<Gfx::Bitmap> ScaledFont::raster_glyph(u32 glyph_id) const
 Gfx::Glyph ScaledFont::glyph(u32 code_point) const
 {
     auto id = glyph_id_for_code_point(code_point);
-    auto bitmap = raster_glyph(id);
+    auto bitmap = rasterize_glyph(id);
     auto metrics = glyph_metrics(id);
     return Gfx::Glyph(bitmap, metrics.left_side_bearing, metrics.advance_width, metrics.ascender);
 }

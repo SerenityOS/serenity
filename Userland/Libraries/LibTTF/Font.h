@@ -50,7 +50,7 @@ public:
 
     ScaledFontMetrics metrics(float x_scale, float y_scale) const;
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const;
-    RefPtr<Gfx::Bitmap> raster_glyph(u32 glyph_id, float x_scale, float y_scale) const;
+    RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id, float x_scale, float y_scale) const;
     u32 glyph_count() const;
     u16 units_per_em() const;
     u32 glyph_id_for_code_point(u32 code_point) const { return m_cmap.glyph_id_for_code_point(code_point); }
@@ -115,7 +115,7 @@ public:
     u32 glyph_id_for_code_point(u32 code_point) const { return m_font->glyph_id_for_code_point(code_point); }
     ScaledFontMetrics metrics() const { return m_font->metrics(m_x_scale, m_y_scale); }
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id) const { return m_font->glyph_metrics(glyph_id, m_x_scale, m_y_scale); }
-    RefPtr<Gfx::Bitmap> raster_glyph(u32 glyph_id) const;
+    RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id) const;
 
     // Gfx::Font implementation
     virtual NonnullRefPtr<Font> clone() const override { return *this; } // FIXME: clone() should not need to be implemented

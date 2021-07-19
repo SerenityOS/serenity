@@ -380,7 +380,7 @@ static void get_ttglyph_offsets(ReadonlyBytes const& slice, u32 num_points, u32 
     *y_offset = *x_offset + x_size;
 }
 
-void Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& affine) const
+void Glyf::Glyph::rasterize_impl(Rasterizer& rasterizer, Gfx::AffineTransform& affine) const
 {
     // Get offset for flags, x, and y.
     u16 num_points = be_u16(m_slice.offset_pointer((m_num_contours - 1) * 2)) + 1;
@@ -476,13 +476,13 @@ void Glyf::Glyph::raster_inner(Rasterizer& rasterizer, Gfx::AffineTransform& aff
     rasterizer.draw_path(path);
 }
 
-RefPtr<Gfx::Bitmap> Glyf::Glyph::raster_simple(float x_scale, float y_scale) const
+RefPtr<Gfx::Bitmap> Glyf::Glyph::rasterize_simple(float x_scale, float y_scale) const
 {
     u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 2;
     u32 height = (u32)(ceilf((m_ymax - m_ymin) * y_scale)) + 2;
     Rasterizer rasterizer(Gfx::IntSize(width, height));
     auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -m_ymax);
-    raster_inner(rasterizer, affine);
+    rasterize_impl(rasterizer, affine);
     return rasterizer.accumulate();
 }
 
