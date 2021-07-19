@@ -61,4 +61,8 @@ test("multi-byte code point", () => {
     expect("_\u180E".trim()).toBe("_\u180E");
     expect("\u180E".trim()).toBe("\u180E");
     expect("\u180E_".trim()).toBe("\u180E_");
+
+    expect("_😀".trim()).toBe("_😀");
+    expect("😀".trim()).toBe("😀");
+    expect("😀_".trim()).toBe("😀_");
 });
