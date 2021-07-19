@@ -38,7 +38,7 @@ boot_pd_kernel_pts:
 boot_pd_kernel_pt1023:
 .skip 4096
 
-.section .boot_text, "ax"
+.section .text
 
 .global start
 .type start, @function
