@@ -107,16 +107,16 @@ static Processor s_bsp_processor; // global but let's keep it "private"
 // init_stage2() function. Initialization continues there.
 
 extern "C" {
-u8 const* start_of_prekernel_image;
-u8 const* end_of_prekernel_image;
+PhysicalAddress start_of_prekernel_image;
+PhysicalAddress end_of_prekernel_image;
 __attribute__((section(".boot_bss"))) FlatPtr kernel_base;
 #if ARCH(X86_64)
-FlatPtr boot_pml4t;
+PhysicalAddress boot_pml4t;
 #endif
-FlatPtr boot_pdpt;
-FlatPtr boot_pd0;
-FlatPtr boot_pd_kernel;
-FlatPtr boot_pd_kernel_pt1023;
+PhysicalAddress boot_pdpt;
+PhysicalAddress boot_pd0;
+PhysicalAddress boot_pd_kernel;
+PageTableEntry* boot_pd_kernel_pt1023;
 const char* kernel_cmdline;
 }
 
@@ -124,20 +124,20 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 {
     g_in_early_boot = true;
 
-    multiboot_info_ptr = boot_info.multiboot_info_ptr;
-    start_of_prekernel_image = boot_info.start_of_prekernel_image;
-    end_of_prekernel_image = boot_info.end_of_prekernel_image;
+    multiboot_info_ptr = (multiboot_info_t*)boot_info.multiboot_info_ptr;
+    start_of_prekernel_image = PhysicalAddress { boot_info.start_of_prekernel_image };
+    end_of_prekernel_image = PhysicalAddress { boot_info.end_of_prekernel_image };
     kernel_base = boot_info.kernel_base;
 #if ARCH(X86_64)
     gdt64ptr = boot_info.gdt64ptr;
     code64_sel = boot_info.code64_sel;
-    boot_pml4t = boot_info.boot_pml4t;
+    boot_pml4t = PhysicalAddress { boot_info.boot_pml4t };
 #endif
-    boot_pdpt = boot_info.boot_pdpt;
-    boot_pd0 = boot_info.boot_pd0;
-    boot_pd_kernel = boot_info.boot_pd_kernel;
-    boot_pd_kernel_pt1023 = boot_info.boot_pd_kernel_pt1023;
-    kernel_cmdline = boot_info.kernel_cmdline;
+    boot_pdpt = PhysicalAddress { boot_info.boot_pdpt };
+    boot_pd0 = PhysicalAddress { boot_info.boot_pd0 };
+    boot_pd_kernel = PhysicalAddress { boot_info.boot_pd_kernel };
+    boot_pd_kernel_pt1023 = (PageTableEntry*)boot_info.boot_pd_kernel_pt1023;
+    kernel_cmdline = (char const*)boot_info.kernel_cmdline;
 
     setup_serial_debug();
 
