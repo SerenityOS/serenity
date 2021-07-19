@@ -20,6 +20,7 @@ void XtermSuggestionDisplay::display(const SuggestionManager& manager)
     size_t longest_suggestion_length = 0;
     size_t longest_suggestion_byte_length = 0;
 
+    manager.set_start_index(0);
     manager.for_each_suggestion([&](auto& suggestion, auto) {
         longest_suggestion_length = max(longest_suggestion_length, suggestion.text_view.length());
         longest_suggestion_byte_length = max(longest_suggestion_byte_length, suggestion.text_string.length());
