@@ -128,13 +128,14 @@ void TaskbarWindow::create_quick_launch_bar()
         if (!af->is_valid())
             continue;
         auto app_executable = af->executable();
+        auto app_run_in_terminal = af->run_in_terminal();
         const int button_size = 24;
         auto& button = quick_launch_bar.add<GUI::Button>();
         button.set_fixed_size(button_size, button_size);
         button.set_button_style(Gfx::ButtonStyle::Coolbar);
         button.set_icon(af->icon().bitmap_for_size(16));
         button.set_tooltip(af->name());
-        button.on_click = [app_executable](auto) {
+        button.on_click = [app_executable, app_run_in_terminal](auto) {
             pid_t pid = fork();
             if (pid < 0) {
                 perror("fork");
@@ -143,7 +144,10 @@ void TaskbarWindow::create_quick_launch_bar()
                     perror("chdir");
                     exit(1);
                 }
-                execl(app_executable.characters(), app_executable.characters(), nullptr);
+                if (app_run_in_terminal)
+                    execl("/bin/Terminal", "Terminal", "-e", app_executable.characters(), nullptr);
+                else
+                    execl(app_executable.characters(), app_executable.characters(), nullptr);
                 perror("execl");
                 VERIFY_NOT_REACHED();
             } else {

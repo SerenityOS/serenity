@@ -70,6 +70,7 @@ struct AppMetadata {
     String executable;
     String name;
     String category;
+    bool run_in_terminal;
 };
 Vector<AppMetadata> g_apps;
 
@@ -89,7 +90,7 @@ Vector<String> discover_apps_and_categories()
     HashTable<String> seen_app_categories;
     Desktop::AppFile::for_each([&](auto af) {
         if (access(af->executable().characters(), X_OK) == 0) {
-            g_apps.append({ af->executable(), af->name(), af->category() });
+            g_apps.append({ af->executable(), af->name(), af->category(), af->run_in_terminal() });
             seen_app_categories.set(af->category());
         }
     });
@@ -173,10 +174,17 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         auto parent_menu = app_category_menus.get(app.category).value_or(system_menu.ptr());
         parent_menu->add_action(GUI::Action::create(app.name, icon, [app_identifier](auto&) {
             dbgln("Activated app with ID {}", app_identifier);
-            const auto& bin = g_apps[app_identifier].executable;
+            auto& app = g_apps[app_identifier];
+            char const* argv[4] { nullptr, nullptr, nullptr, nullptr };
+            if (app.run_in_terminal) {
+                argv[0] = "/bin/Terminal";
+                argv[1] = "-e";
+                argv[2] = app.executable.characters();
+            } else {
+                argv[0] = app.executable.characters();
+            }
             pid_t child_pid;
-            const char* argv[] = { bin.characters(), nullptr };
-            if ((errno = posix_spawn(&child_pid, bin.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
+            if ((errno = posix_spawn(&child_pid, argv[0], nullptr, nullptr, const_cast<char**>(argv), environ))) {
                 perror("posix_spawn");
             } else {
                 if (disown(child_pid) < 0)
