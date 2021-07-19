@@ -478,12 +478,12 @@ void Glyf::Glyph::rasterize_impl(Rasterizer& rasterizer, Gfx::AffineTransform co
     rasterizer.draw_path(path);
 }
 
-RefPtr<Gfx::Bitmap> Glyf::Glyph::rasterize_simple(float x_scale, float y_scale) const
+RefPtr<Gfx::Bitmap> Glyf::Glyph::rasterize_simple(i16 font_ascender, i16 font_descender, float x_scale, float y_scale) const
 {
     u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 2;
-    u32 height = (u32)(ceilf((m_ymax - m_ymin) * y_scale)) + 2;
+    u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 2;
     Rasterizer rasterizer(Gfx::IntSize(width, height));
-    auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -m_ymax);
+    auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -font_ascender);
     rasterize_impl(rasterizer, affine);
     return rasterizer.accumulate();
 }

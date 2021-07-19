@@ -63,13 +63,13 @@ public:
             }
         }
         template<typename GlyphCb>
-        RefPtr<Gfx::Bitmap> rasterize(float x_scale, float y_scale, GlyphCb glyph_callback) const
+        RefPtr<Gfx::Bitmap> rasterize(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, GlyphCb glyph_callback) const
         {
             switch (m_type) {
             case Type::Simple:
-                return rasterize_simple(x_scale, y_scale);
+                return rasterize_simple(font_ascender, font_descender, x_scale, y_scale);
             case Type::Composite:
-                return rasterize_composite(x_scale, y_scale, glyph_callback);
+                return rasterize_composite(font_ascender, font_descender, x_scale, y_scale, glyph_callback);
             }
             VERIFY_NOT_REACHED();
         }
@@ -102,14 +102,14 @@ public:
         };
 
         void rasterize_impl(Rasterizer&, Gfx::AffineTransform const&) const;
-        RefPtr<Gfx::Bitmap> rasterize_simple(float x_scale, float y_scale) const;
+        RefPtr<Gfx::Bitmap> rasterize_simple(i16 ascender, i16 descender, float x_scale, float y_scale) const;
         template<typename GlyphCb>
-        RefPtr<Gfx::Bitmap> rasterize_composite(float x_scale, float y_scale, GlyphCb glyph_callback) const
+        RefPtr<Gfx::Bitmap> rasterize_composite(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, GlyphCb glyph_callback) const
         {
             u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 1;
-            u32 height = (u32)(ceilf((m_ymax - m_ymin) * y_scale)) + 1;
+            u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 1;
             Rasterizer rasterizer(Gfx::IntSize(width, height));
-            auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -m_ymax);
+            auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -font_ascender);
             ComponentIterator component_iterator(m_slice);
             while (true) {
                 auto opt_item = component_iterator.next();

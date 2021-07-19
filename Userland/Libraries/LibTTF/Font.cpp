@@ -425,7 +425,7 @@ RefPtr<Gfx::Bitmap> Font::rasterize_glyph(u32 glyph_id, float x_scale, float y_s
     }
     auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
     auto glyph = m_glyf.glyph(glyph_offset);
-    return glyph.rasterize(x_scale, y_scale, [&](u16 glyph_id) {
+    return glyph.rasterize(m_os2.typographic_ascender(), m_os2.typographic_descender(), x_scale, y_scale, [&](u16 glyph_id) {
         if (glyph_id >= glyph_count()) {
             glyph_id = 0;
         }
