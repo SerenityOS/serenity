@@ -82,6 +82,11 @@ String AppFile::category() const
     return m_config->read_entry("App", "Category").trim_whitespace();
 }
 
+bool AppFile::run_in_terminal() const
+{
+    return m_config->read_bool_entry("App", "RunInTerminal", false);
+}
+
 Vector<String> AppFile::launcher_file_types() const
 {
     Vector<String> file_types;
