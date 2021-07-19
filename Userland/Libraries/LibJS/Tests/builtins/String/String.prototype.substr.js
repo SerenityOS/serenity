@@ -17,3 +17,14 @@ test("basic functionality", () => {
     expect("hello friends".substr(-7)).toBe("friends");
     expect("hello friends".substr(-3, -5)).toBe("");
 });
+
+test("UTF-16", () => {
+    var s = "😀";
+    expect(s).toHaveLength(2);
+    expect(s.substr()).toBe("😀");
+    expect(s.substr(0)).toBe("😀");
+    expect(s.substr(0, 2)).toBe("😀");
+    expect(s.substr(0, 1)).toBe("\ud83d");
+    expect(s.substr(1, 1)).toBe("\ude00");
+    expect(s.substr(2, 1)).toBe("");
+});
