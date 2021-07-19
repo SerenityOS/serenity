@@ -145,15 +145,18 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
 // 22.1.3.2 String.prototype.charCodeAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charcodeat
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_code_at)
 {
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
+    auto string = utf16_string_from(vm, global_object);
+    if (vm.exception())
         return {};
     auto position = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};
-    if (position < 0 || position >= string->length())
+
+    Utf16View utf16_string_view { string };
+    if (position < 0 || position >= utf16_string_view.length_in_code_units())
         return js_nan();
-    return Value((*string)[position]);
+
+    return Value(utf16_string_view.code_unit_at(position));
 }
 
 // 22.1.3.3 String.prototype.codePointAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.codepointat
