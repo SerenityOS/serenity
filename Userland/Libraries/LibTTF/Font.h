@@ -73,7 +73,7 @@ private:
 
     static Result<NonnullRefPtr<Font>, String> try_load_from_offset(ReadonlyBytes, unsigned index = 0);
 
-    Font(ReadonlyBytes bytes, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf)
+    Font(ReadonlyBytes bytes, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf, OS2&& os2)
         : m_buffer(move(bytes))
         , m_head(move(head))
         , m_name(move(name))
@@ -83,6 +83,7 @@ private:
         , m_loca(move(loca))
         , m_glyf(move(glyf))
         , m_cmap(move(cmap))
+        , m_os2(move(os2))
     {
     }
 
@@ -99,6 +100,7 @@ private:
     Loca m_loca;
     Glyf m_glyf;
     Cmap m_cmap;
+    OS2 m_os2;
 };
 
 class ScaledFont : public Gfx::Font {

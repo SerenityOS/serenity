@@ -274,6 +274,7 @@ Result<NonnullRefPtr<Font>, String> Font::try_load_from_offset(ReadonlyBytes buf
     Optional<ReadonlyBytes> opt_cmap_slice = {};
     Optional<ReadonlyBytes> opt_loca_slice = {};
     Optional<ReadonlyBytes> opt_glyf_slice = {};
+    Optional<ReadonlyBytes> opt_os2_slice = {};
 
     Optional<Head> opt_head = {};
     Optional<Name> opt_name = {};
@@ -282,6 +283,7 @@ Result<NonnullRefPtr<Font>, String> Font::try_load_from_offset(ReadonlyBytes buf
     Optional<Hmtx> opt_hmtx = {};
     Optional<Cmap> opt_cmap = {};
     Optional<Loca> opt_loca = {};
+    Optional<OS2> opt_os2 = {};
 
     auto num_tables = be_u16(buffer.offset_pointer(offset + (u32)Offsets::NumTables));
     if (buffer.size() < offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord)
@@ -318,6 +320,8 @@ Result<NonnullRefPtr<Font>, String> Font::try_load_from_offset(ReadonlyBytes buf
             opt_loca_slice = buffer_here;
         } else if (tag == tag_from_str("glyf")) {
             opt_glyf_slice = buffer_here;
+        } else if (tag == tag_from_str("OS/2")) {
+            opt_os2_slice = buffer_here;
         }
     }
 
@@ -353,6 +357,10 @@ Result<NonnullRefPtr<Font>, String> Font::try_load_from_offset(ReadonlyBytes buf
         return String { "Could not load Glyf" };
     auto glyf = Glyf(opt_glyf_slice.value());
 
+    if (!opt_os2_slice.has_value())
+        return String { "Could not load OS/2" };
+    auto os2 = OS2(opt_os2_slice.value());
+
     // Select cmap table. FIXME: Do this better. Right now, just looks for platform "Windows"
     // and corresponding encoding "Unicode full repertoire", or failing that, "Unicode BMP"
     for (u32 i = 0; i < cmap.num_subtables(); i++) {
@@ -373,7 +381,7 @@ Result<NonnullRefPtr<Font>, String> Font::try_load_from_offset(ReadonlyBytes buf
         }
     }
 
-    return adopt_ref(*new Font(move(buffer), move(head), move(name), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf)));
+    return adopt_ref(*new Font(move(buffer), move(head), move(name), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf), move(os2)));
 }
 
 ScaledFontMetrics Font::metrics(float x_scale, float y_scale) const
@@ -549,6 +557,21 @@ int ScaledFont::glyph_or_emoji_width(u32 code_point) const
 u8 ScaledFont::glyph_fixed_width() const
 {
     return glyph_metrics(glyph_id_for_code_point(' ')).advance_width;
+}
+
+i16 OS2::typographic_ascender() const
+{
+    return be_i16(m_slice.offset_pointer((u32)Offsets::TypographicAscender));
+}
+
+i16 OS2::typographic_descender() const
+{
+    return be_i16(m_slice.offset_pointer((u32)Offsets::TypographicDescender));
+}
+
+i16 OS2::typographic_line_gap() const
+{
+    return be_i16(m_slice.offset_pointer((u32)Offsets::TypographicLineGap));
 }
 
 }
