@@ -232,3 +232,13 @@ test("override exec with non-function", () => {
     re.exec = 3;
     expect("test".replace(re, "x")).toBe("x");
 });
+
+test("UTF-16", () => {
+    expect("😀".replace("😀", "")).toBe("");
+    expect("😀".replace("\ud83d", "")).toBe("\ude00");
+    expect("😀".replace("\ude00", "")).toBe("\ud83d");
+
+    // FIXME: RegExp.prototype [ @@replace ] also needs to support UTF-16.
+    // expect("😀".replace(/\ud83d/, "")).toBe("\ude00");
+    // expect("😀".replace(/\ude00/, "")).toBe("\ud83d");
+});
