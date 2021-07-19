@@ -52,6 +52,7 @@ int main(int argc, char** argv)
     window->set_title("Pong");
     window->set_double_buffering_enabled(false);
     window->set_main_widget<Pong::Game>();
+    window->set_resizable(false);
     window->show();
 
     auto menubar = GUI::Menubar::construct();
