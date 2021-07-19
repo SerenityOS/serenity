@@ -89,7 +89,7 @@ String read_next_piece()
 
 void handle_command(StringView command)
 {
-    if (command == ".exit")
+    if (command == ".exit" || command == ".quit")
         s_keep_running = false;
     else
         outln("\033[33;1mUnrecognized command:\033[0m {}", command);
@@ -174,12 +174,15 @@ int main()
     };
 
     sql_client->on_connected = [&](int connection_id) {
+        outln("** Connected to {} **", getlogin());
         the_connection_id = connection_id;
         read_sql();
     };
 
     sql_client->on_execution_success = [&](int, bool has_results, int updated, int created, int deleted) {
-        outln("{} row(s) updated, {} created, {} deleted", updated, created, deleted);
+        if (updated != 0 || created != 0 || deleted != 0) {
+            outln("{} row(s) updated, {} created, {} deleted", updated, created, deleted);
+        }
         if (!has_results) {
             read_sql();
         }
