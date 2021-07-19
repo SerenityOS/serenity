@@ -12,7 +12,7 @@
 
 extern "C" PhysicalAddress start_of_prekernel_image;
 extern "C" PhysicalAddress end_of_prekernel_image;
-extern "C" __attribute__((section(".boot_bss"))) FlatPtr kernel_base;
+extern "C" FlatPtr kernel_base;
 #if ARCH(X86_64)
 extern "C" u32 gdt64ptr;
 extern "C" u16 code64_sel;
