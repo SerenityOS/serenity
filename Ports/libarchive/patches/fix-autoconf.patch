@@ -1,19 +1,13 @@
---- libarchive-3.4.0/build/autoconf/config.sub.orig	2019-10-03 23:14:02.281000072 +0100
-+++ libarchive-3.4.0/build/autoconf/config.sub	2019-10-03 23:14:36.896816822 +0100
-@@ -2,7 +2,7 @@
- # Configuration validation subroutine script.
- #   Copyright 1992-2019 Free Software Foundation, Inc.
- 
--timestamp='2019-05-23'
-+timestamp='2019-10-12'
- 
- # This file is free software; you can redistribute it and/or modify it
- # under the terms of the GNU General Public License as published by
-@@ -1342,6 +1342,7 @@
- 	# Each alternative MUST end in a * to match a version number.
- 	# sysv* is not here because it comes later, after sysvr4.
- 	gnu* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
-+	     | serenity* \
- 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]*\
- 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* 
- 	     | sym* | kopensolaris* | plan9* \
+diff --git a/build/autoconf/config.sub.orig b/build/autoconf/config.sub
+index 1d8e98bce..e1d397a3c 100755
+--- a/build/autoconf/config.sub.orig
++++ b/build/autoconf/config.sub
+@@ -1390,7 +1390,7 @@ case $os in
+	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* \
+	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox* | -bme* \
+-	      | -midnightbsd*)
++	      | -midnightbsd* | -serenity*)
+	# Remember, each alternative MUST END IN *, to match a version number.
+		;;
+	-qnx*)
