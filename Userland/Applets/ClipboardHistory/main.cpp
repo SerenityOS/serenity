@@ -75,6 +75,7 @@ int main(int argc, char* argv[])
     applet_window->set_window_type(GUI::WindowType::Applet);
     applet_window->set_has_alpha_channel(true);
     auto& icon = applet_window->set_main_widget<GUI::ImageWidget>();
+    icon.set_tooltip("Clipboard History");
     icon.load_from_file("/res/icons/16x16/edit-copy.png");
     icon.on_click = [&main_window = *main_window] {
         main_window.show();
