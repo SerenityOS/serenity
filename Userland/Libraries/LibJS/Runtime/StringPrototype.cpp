@@ -997,33 +997,40 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
         return {};
 
     if (!replace_value.is_function()) {
-        auto replace_string = replace_value.to_string(global_object);
+        auto replace_string = replace_value.to_utf16_string(global_object);
         if (vm.exception())
             return {};
-
-        replace_value = js_string(vm, move(replace_string));
+        replace_value = js_string(vm, Utf16View { replace_string });
         if (vm.exception())
             return {};
     }
 
+    auto utf16_string = AK::utf8_to_utf16(string);
+    Utf16View utf16_string_view { utf16_string };
+    auto string_length = utf16_string_view.length_in_code_units();
+
+    auto utf16_search_string = AK::utf8_to_utf16(search_string);
+    Utf16View utf16_search_view { utf16_search_string };
+    auto search_length = utf16_search_view.length_in_code_units();
+
     Vector<size_t> match_positions;
-    size_t advance_by = max(1u, search_string.length());
-    auto position = string.find(search_string);
+    size_t advance_by = max(1u, search_length);
+    auto position = string_index_of(utf16_string_view, utf16_search_view, 0);
 
     while (position.has_value()) {
         match_positions.append(*position);
-        position = string.find(search_string, *position + advance_by);
+        position = string_index_of(utf16_string_view, utf16_search_view, *position + advance_by);
     }
 
     size_t end_of_last_match = 0;
     StringBuilder result;
 
     for (auto position : match_positions) {
-        auto preserved = string.substring_view(end_of_last_match, position - end_of_last_match);
+        auto preserved = utf16_string_view.substring_view(end_of_last_match, position - end_of_last_match);
         String replacement;
 
         if (replace_value.is_function()) {
-            auto result = vm.call(replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position), js_string(vm, string));
+            auto result = vm.call(replace_value.as_function(), js_undefined(), js_string(vm, utf16_search_view), Value(position), js_string(vm, utf16_string_view));
             if (vm.exception())
                 return {};
 
@@ -1036,14 +1043,16 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
                 return {};
         }
 
-        result.append(preserved);
+        result.append(preserved.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
         result.append(replacement);
 
-        end_of_last_match = position + search_string.length();
+        end_of_last_match = position + search_length;
     }
 
-    if (end_of_last_match < string.length())
-        result.append(string.substring_view(end_of_last_match));
+    if (end_of_last_match < string_length) {
+        utf16_string_view = utf16_string_view.substring_view(end_of_last_match);
+        result.append(utf16_string_view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
+    }
 
     return js_string(vm, result.build());
 }
