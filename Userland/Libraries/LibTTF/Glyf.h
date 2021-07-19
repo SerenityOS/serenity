@@ -101,7 +101,7 @@ public:
             u32 m_offset { 0 };
         };
 
-        void rasterize_impl(Rasterizer& rasterizer, Gfx::AffineTransform& affine) const;
+        void rasterize_impl(Rasterizer&, Gfx::AffineTransform const&) const;
         RefPtr<Gfx::Bitmap> rasterize_simple(float x_scale, float y_scale) const;
         template<typename GlyphCb>
         RefPtr<Gfx::Bitmap> rasterize_composite(float x_scale, float y_scale, GlyphCb glyph_callback) const
