@@ -174,7 +174,7 @@ Optional<Glyf::Glyph::ComponentIterator::Item> Glyf::Glyph::ComponentIterator::n
         TODO();
     }
     if (flags & (u16)CompositeGlyfFlags::UseMyMetrics) {
-        TODO();
+        // FIXME: Implement this. There's no TODO() here since many fonts work just fine without this.
     }
     if (flags & (u16)CompositeGlyfFlags::ScaledComponentOffset) {
         TODO();
