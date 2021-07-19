@@ -17,7 +17,7 @@ enum class IndexToLocFormat {
 
 class Head {
 public:
-    static Optional<Head> from_slice(const ReadonlyBytes&);
+    static Optional<Head> from_slice(ReadonlyBytes const&);
     u16 units_per_em() const;
     i16 xmin() const;
     i16 ymin() const;
@@ -40,7 +40,7 @@ private:
         Table = 54,
     };
 
-    Head(const ReadonlyBytes& slice)
+    Head(ReadonlyBytes const& slice)
         : m_slice(slice)
     {
     }
@@ -50,7 +50,7 @@ private:
 
 class Hhea {
 public:
-    static Optional<Hhea> from_slice(const ReadonlyBytes&);
+    static Optional<Hhea> from_slice(ReadonlyBytes const&);
     i16 ascender() const;
     i16 descender() const;
     i16 line_gap() const;
@@ -69,7 +69,7 @@ private:
         Table = 36,
     };
 
-    Hhea(const ReadonlyBytes& slice)
+    Hhea(ReadonlyBytes const& slice)
         : m_slice(slice)
     {
     }
@@ -79,7 +79,7 @@ private:
 
 class Maxp {
 public:
-    static Optional<Maxp> from_slice(const ReadonlyBytes&);
+    static Optional<Maxp> from_slice(ReadonlyBytes const&);
     u16 num_glyphs() const;
 
 private:
@@ -90,7 +90,7 @@ private:
         TableV0p5 = 6,
     };
 
-    Maxp(const ReadonlyBytes& slice)
+    Maxp(ReadonlyBytes const& slice)
         : m_slice(slice)
     {
     }
@@ -105,7 +105,7 @@ struct GlyphHorizontalMetrics {
 
 class Hmtx {
 public:
-    static Optional<Hmtx> from_slice(const ReadonlyBytes&, u32 num_glyphs, u32 number_of_h_metrics);
+    static Optional<Hmtx> from_slice(ReadonlyBytes const&, u32 num_glyphs, u32 number_of_h_metrics);
     GlyphHorizontalMetrics get_glyph_horizontal_metrics(u32 glyph_id) const;
 
 private:
@@ -114,7 +114,7 @@ private:
         LeftSideBearing = 2
     };
 
-    Hmtx(const ReadonlyBytes& slice, u32 num_glyphs, u32 number_of_h_metrics)
+    Hmtx(ReadonlyBytes const& slice, u32 num_glyphs, u32 number_of_h_metrics)
         : m_slice(slice)
         , m_num_glyphs(num_glyphs)
         , m_number_of_h_metrics(number_of_h_metrics)
@@ -139,7 +139,7 @@ public:
     enum class WindowsLanguage {
         EnglishUnitedStates = 0x0409,
     };
-    static Optional<Name> from_slice(const ReadonlyBytes&);
+    static Optional<Name> from_slice(ReadonlyBytes const&);
 
     String family_name() const { return string_for_id(NameId::FamilyName); }
     String subfamily_name() const { return string_for_id(NameId::SubfamilyName); }
@@ -163,7 +163,7 @@ private:
         TypographicSubfamilyName = 17,
     };
 
-    Name(const ReadonlyBytes& slice)
+    Name(ReadonlyBytes const& slice)
         : m_slice(slice)
     {
     }

@@ -9,9 +9,9 @@
 
 namespace TTF {
 
-extern u16 be_u16(const u8* ptr);
-extern u32 be_u32(const u8* ptr);
-extern i16 be_i16(const u8* ptr);
+extern u16 be_u16(u8 const*);
+extern u32 be_u32(u8 const*);
+extern i16 be_i16(u8 const*);
 
 Cmap::Subtable::Platform Cmap::Subtable::platform_id() const
 {
@@ -143,7 +143,7 @@ u32 Cmap::glyph_id_for_code_point(u32 code_point) const
     return subtable.glyph_id_for_code_point(code_point);
 }
 
-Optional<Cmap> Cmap::from_slice(const ReadonlyBytes& slice)
+Optional<Cmap> Cmap::from_slice(ReadonlyBytes const& slice)
 {
     if (slice.size() < (size_t)Sizes::TableHeader) {
         return {};

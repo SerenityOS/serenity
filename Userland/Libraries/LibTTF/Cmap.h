@@ -37,7 +37,7 @@ public:
             UnicodeFullRepertoire = 10,
         };
 
-        Subtable(const ReadonlyBytes& slice, u16 platform_id, u16 encoding_id)
+        Subtable(ReadonlyBytes const& slice, u16 platform_id, u16 encoding_id)
             : m_slice(slice)
             , m_raw_platform_id(platform_id)
             , m_encoding_id(encoding_id)
@@ -81,7 +81,7 @@ public:
         u16 m_encoding_id { 0 };
     };
 
-    static Optional<Cmap> from_slice(const ReadonlyBytes&);
+    static Optional<Cmap> from_slice(ReadonlyBytes const&);
     u32 num_subtables() const;
     Optional<Subtable> subtable(u32 index) const;
     void set_active_index(u32 index) { m_active_index = index; }
@@ -99,7 +99,7 @@ private:
         EncodingRecord = 8,
     };
 
-    Cmap(const ReadonlyBytes& slice)
+    Cmap(ReadonlyBytes const& slice)
         : m_slice(slice)
     {
     }

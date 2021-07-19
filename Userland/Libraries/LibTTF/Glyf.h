@@ -30,11 +30,11 @@ private:
 
 class Loca {
 public:
-    static Optional<Loca> from_slice(const ReadonlyBytes&, u32 num_glyphs, IndexToLocFormat);
+    static Optional<Loca> from_slice(ReadonlyBytes const&, u32 num_glyphs, IndexToLocFormat);
     u32 get_glyph_offset(u32 glyph_id) const;
 
 private:
-    Loca(const ReadonlyBytes& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
+    Loca(ReadonlyBytes const& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
         : m_slice(slice)
         , m_num_glyphs(num_glyphs)
         , m_index_to_loc_format(index_to_loc_format)
@@ -50,7 +50,7 @@ class Glyf {
 public:
     class Glyph {
     public:
-        Glyph(const ReadonlyBytes& slice, i16 xmin, i16 ymin, i16 xmax, i16 ymax, i16 num_contours = -1)
+        Glyph(ReadonlyBytes const& slice, i16 xmin, i16 ymin, i16 xmax, i16 ymax, i16 num_contours = -1)
             : m_xmin(xmin)
             , m_ymin(ymin)
             , m_xmax(xmax)
@@ -89,7 +89,7 @@ public:
                 Gfx::AffineTransform affine;
             };
 
-            ComponentIterator(const ReadonlyBytes& slice)
+            ComponentIterator(ReadonlyBytes const& slice)
                 : m_slice(slice)
             {
             }
@@ -133,7 +133,7 @@ public:
         ReadonlyBytes m_slice;
     };
 
-    Glyf(const ReadonlyBytes& slice)
+    Glyf(ReadonlyBytes const& slice)
         : m_slice(slice)
     {
     }

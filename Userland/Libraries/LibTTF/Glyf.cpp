@@ -10,10 +10,10 @@
 
 namespace TTF {
 
-extern u16 be_u16(const u8* ptr);
-extern u32 be_u32(const u8* ptr);
-extern i16 be_i16(const u8* ptr);
-extern float be_fword(const u8* ptr);
+extern u16 be_u16(u8 const* ptr);
+extern u32 be_u32(u8 const* ptr);
+extern i16 be_i16(u8 const* ptr);
+extern float be_fword(u8 const* ptr);
 
 enum class SimpleGlyfFlags {
     // From spec.
@@ -56,7 +56,7 @@ public:
         Gfx::FloatPoint point;
     };
 
-    PointIterator(const ReadonlyBytes& slice, u16 num_points, u32 flags_offset, u32 x_offset, u32 y_offset, Gfx::AffineTransform affine)
+    PointIterator(ReadonlyBytes const& slice, u16 num_points, u32 flags_offset, u32 x_offset, u32 y_offset, Gfx::AffineTransform affine)
         : m_slice(slice)
         , m_points_remaining(num_points)
         , m_flags_offset(flags_offset)
@@ -319,7 +319,7 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
     }
 }
 
-Optional<Loca> Loca::from_slice(const ReadonlyBytes& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
+Optional<Loca> Loca::from_slice(ReadonlyBytes const& slice, u32 num_glyphs, IndexToLocFormat index_to_loc_format)
 {
     switch (index_to_loc_format) {
     case IndexToLocFormat::Offset16:
@@ -349,7 +349,7 @@ u32 Loca::get_glyph_offset(u32 glyph_id) const
     }
 }
 
-static void get_ttglyph_offsets(const ReadonlyBytes& slice, u32 num_points, u32 flags_offset, u32* x_offset, u32* y_offset)
+static void get_ttglyph_offsets(ReadonlyBytes const& slice, u32 num_points, u32 flags_offset, u32* x_offset, u32* y_offset)
 {
     u32 flags_size = 0;
     u32 x_size = 0;
