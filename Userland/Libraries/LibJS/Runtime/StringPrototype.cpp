@@ -610,46 +610,40 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
 // 22.1.3.20 String.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 {
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
-        return {};
-
-    if (vm.argument_count() == 0)
-        return js_string(vm, *string);
-
-    // FIXME: index_start and index_end should index a UTF-16 code_point view of the string.
-    auto string_length = static_cast<i32>(string->length());
-    auto index_start = vm.argument(0).to_i32(global_object);
+    auto string = utf16_string_from(vm, global_object);
     if (vm.exception())
         return {};
-    auto index_end = string_length;
 
-    auto negative_min_index = -(string_length - 1);
-    if (index_start < negative_min_index)
-        index_start = 0;
-    else if (index_start < 0)
-        index_start = string_length + index_start;
+    Utf16View utf16_string_view { string };
+    auto string_length = static_cast<double>(utf16_string_view.length_in_code_units());
 
-    if (vm.argument_count() >= 2) {
-        index_end = vm.argument(1).to_i32(global_object);
+    auto int_start = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+    if (Value(int_start).is_negative_infinity())
+        int_start = 0;
+    else if (int_start < 0)
+        int_start = max(string_length + int_start, 0);
+    else
+        int_start = min(int_start, string_length);
+
+    auto int_end = string_length;
+    if (!vm.argument(1).is_undefined()) {
+        int_end = vm.argument(1).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
-
-        if (index_end < negative_min_index)
-            return js_string(vm, String::empty());
-
-        if (index_end > string_length)
-            index_end = string_length;
-        else if (index_end < 0)
-            index_end = string_length + index_end;
+        if (Value(int_end).is_negative_infinity())
+            int_end = 0;
+        else if (int_end < 0)
+            int_end = max(string_length + int_end, 0);
+        else
+            int_end = min(int_end, string_length);
     }
 
-    if (index_start >= index_end)
+    if (int_start >= int_end)
         return js_string(vm, String::empty());
 
-    auto part_length = index_end - index_start;
-    auto string_part = string->substring(index_start, part_length);
-    return js_string(vm, string_part);
+    return js_string(vm, utf16_string_view.substring_view(int_start, int_end - int_start));
 }
 
 // 22.1.3.21 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split

@@ -15,3 +15,13 @@ test("basic functionality", () => {
     expect("hello friends".slice(1000)).toBe("");
     expect("hello friends".slice(-1000)).toBe("hello friends");
 });
+
+test("UTF-16", () => {
+    var s = "😀";
+    expect(s).toHaveLength(2);
+    expect(s.slice()).toBe("😀");
+    expect(s.slice(0)).toBe("😀");
+    expect(s.slice(1)).toBe("\ude00");
+    expect(s.slice(0, 1)).toBe("\ud83d");
+    expect(s.slice(0, 2)).toBe("😀");
+});
