@@ -327,6 +327,9 @@ Scrollbar::Component Scrollbar::component_at_position(const Gfx::IntPoint& posit
 
 void Scrollbar::mousemove_event(MouseEvent& event)
 {
+    if (!is_scrollable())
+        return;
+
     m_last_mouse_position = event.position();
 
     auto old_hovered_component = m_hovered_component;
