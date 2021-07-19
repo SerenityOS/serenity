@@ -9,14 +9,11 @@
 #include <AK/Platform.h>
 #ifdef __cplusplus
 #    include <AK/Types.h>
+#    include <Kernel/BootInfo.h>
 #endif
 
 #define READONLY_AFTER_INIT __attribute__((section(".ro_after_init")))
 #define UNMAP_AFTER_INIT NEVER_INLINE __attribute__((section(".unmap_after_init")))
-
-#ifdef __cplusplus
-extern "C" FlatPtr kernel_base;
-#endif
 
 #define KERNEL_PD_END (kernel_base + 0x31000000)
 #define KERNEL_PT1024_BASE (kernel_base + 0x3FE00000)
