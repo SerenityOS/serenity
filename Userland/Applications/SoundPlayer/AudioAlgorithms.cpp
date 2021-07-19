@@ -38,7 +38,7 @@ void fft(Vector<Complex<double>>& sample_data, bool invert)
     }
 
     for (int len = 2; len <= n; len <<= 1) {
-        double ang = 2 * AK::Pi<double> / len * (invert ? -1 : 1);
+        double ang = 2 * M_PI / len * (invert ? -1 : 1);
         Complex<double> wlen(AK::cos(ang), AK::sin(ang));
         for (int i = 0; i < n; i += len) {
             Complex<double> w = { 1., 0. };

@@ -9,15 +9,9 @@
 #include <AK/Concepts.h>
 #include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
+#include <math_defines.h>
 
 namespace AK {
-
-template<FloatingPoint T>
-constexpr T NaN = __builtin_nan("");
-template<FloatingPoint T>
-constexpr T Pi = 3.141592653589793238462643383279502884L;
-template<FloatingPoint T>
-constexpr T E = 2.718281828459045235360287471352662498L;
 
 namespace Details {
 template<size_t>
@@ -220,7 +214,7 @@ constexpr T asin(T x)
 {
     CONSTEXPR_STATE(asin, x);
     if (x > 1 || x < -1)
-        return NaN<T>;
+        return NAN;
     if (x > (T)0.5 || x < (T)-0.5)
         return 2 * atan<T>(x / (1 + sqrt<T>(1 - x * x)));
     T squared = x * x;
@@ -250,7 +244,7 @@ constexpr T acos(T value)
     CONSTEXPR_STATE(acos, value);
 
     // FIXME: I am naive
-    return Pi<T> + asin(value);
+    return (T)M_PIl + asin(value);
 }
 
 template<FloatingPoint T>

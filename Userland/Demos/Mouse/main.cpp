@@ -99,17 +99,17 @@ public:
             Gfx::IntPoint p3;
             Gfx::IntPoint p4;
 
-            p1.set_x(radius * AK::cos(AK::Pi<double> * m_wheel_delta_acc / 18.) + off_x);
-            p1.set_y(radius * AK::sin(AK::Pi<double> * m_wheel_delta_acc / 18.) + off_y);
+            p1.set_x(radius * AK::cos(M_PI * m_wheel_delta_acc / 18.) + off_x);
+            p1.set_y(radius * AK::sin(M_PI * m_wheel_delta_acc / 18.) + off_y);
 
-            p2.set_x(radius * AK::cos(AK::Pi<double> * (m_wheel_delta_acc + 18) / 18.) + off_x);
-            p2.set_y(radius * AK::sin(AK::Pi<double> * (m_wheel_delta_acc + 18) / 18.) + off_y);
+            p2.set_x(radius * AK::cos(M_PI * (m_wheel_delta_acc + 18) / 18.) + off_x);
+            p2.set_y(radius * AK::sin(M_PI * (m_wheel_delta_acc + 18) / 18.) + off_y);
 
-            p3.set_x(radius * AK::cos(AK::Pi<double> * (m_wheel_delta_acc + 9) / 18.) + off_x);
-            p3.set_y(radius * AK::sin(AK::Pi<double> * (m_wheel_delta_acc + 9) / 18.) + off_y);
+            p3.set_x(radius * AK::cos(M_PI * (m_wheel_delta_acc + 9) / 18.) + off_x);
+            p3.set_y(radius * AK::sin(M_PI * (m_wheel_delta_acc + 9) / 18.) + off_y);
 
-            p4.set_x(radius * AK::cos(AK::Pi<double> * (m_wheel_delta_acc + 27) / 18.) + off_x);
-            p4.set_y(radius * AK::sin(AK::Pi<double> * (m_wheel_delta_acc + 27) / 18.) + off_y);
+            p4.set_x(radius * AK::cos(M_PI * (m_wheel_delta_acc + 27) / 18.) + off_x);
+            p4.set_y(radius * AK::sin(M_PI * (m_wheel_delta_acc + 27) / 18.) + off_y);
 
             painter.draw_line(p1, p2, Color::Red, 2);
             painter.draw_line(p3, p4, Color::Red, 2);
