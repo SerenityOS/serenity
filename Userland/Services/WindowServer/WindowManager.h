@@ -186,8 +186,6 @@ public:
     void tell_wms_super_space_key_pressed();
     void tell_wms_current_window_stack_changed();
 
-    bool is_active_window_or_accessory(Window&) const;
-
     void check_hide_geometry_overlay(Window&);
 
     void start_window_resize(Window&, Gfx::IntPoint const&, MouseButton);
@@ -330,7 +328,7 @@ private:
     void tell_wm_about_current_window_stack(WMClientConnection&);
     bool pick_new_active_window(Window*);
 
-    void do_move_to_front(Window&, bool, bool);
+    void do_move_to_front(Window&, Window* make_active, Window* make_input);
 
     [[nodiscard]] static WindowStack& get_rendering_window_stacks(WindowStack*&);
 

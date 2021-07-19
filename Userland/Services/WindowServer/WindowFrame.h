@@ -74,6 +74,7 @@ public:
     void invalidate(Gfx::IntRect relative_rect);
     void invalidate();
 
+    bool has_titlebar() const;
     Gfx::IntRect titlebar_rect() const;
     Gfx::IntRect titlebar_icon_rect() const;
     Gfx::IntRect titlebar_text_rect() const;

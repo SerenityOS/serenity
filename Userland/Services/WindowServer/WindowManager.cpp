@@ -341,16 +341,10 @@ void WindowManager::add_window(Window& window)
 
 void WindowManager::move_to_front_and_make_active(Window& window)
 {
-    auto move_window_to_front = [&](Window& wnd, bool make_active, bool make_input) {
+    auto move_window_to_front = [&](Window& wnd, Window* make_active, Window* make_input) {
         if (wnd.is_accessory()) {
             auto* parent = wnd.parent_window();
-            do_move_to_front(*parent, true, false);
-            make_active = false;
-
-            for (auto& accessory_window : parent->accessory_windows()) {
-                if (accessory_window && accessory_window.ptr() != &wnd)
-                    do_move_to_front(*accessory_window, false, false);
-            }
+            do_move_to_front(*parent, parent, nullptr);
         }
 
         do_move_to_front(wnd, make_active, make_input);
@@ -362,18 +356,18 @@ void WindowManager::move_to_front_and_make_active(Window& window)
     // active input window to that same window (which would pull
     // active input from any accessory window)
     for_each_window_in_modal_stack(window, [&](auto& w, bool is_stack_top) {
-        move_window_to_front(w, is_stack_top, is_stack_top);
+        move_window_to_front(w, is_stack_top ? &w : nullptr, is_stack_top ? &w : nullptr);
         return IterationDecision::Continue;
     });
 
     Compositor::the().invalidate_occlusions();
 }
 
-void WindowManager::do_move_to_front(Window& window, bool make_active, bool make_input)
+void WindowManager::do_move_to_front(Window& window, Window* make_active, Window* make_input)
 {
     window.window_stack().move_to_front(window);
 
-    if (make_active)
+    if (make_active == &window)
         set_active_window(&window, make_input);
 
     if (m_switcher.is_visible()) {
@@ -387,6 +381,10 @@ void WindowManager::do_move_to_front(Window& window, bool make_active, bool make
     for (auto& child_window : window.child_windows()) {
         if (child_window)
             do_move_to_front(*child_window, make_active, make_input);
+    }
+    for (auto& accessory_window : window.accessory_windows()) {
+        if (accessory_window)
+            do_move_to_front(*accessory_window, make_active, make_input);
     }
 }
 
@@ -1670,14 +1668,6 @@ void WindowManager::set_highlight_window(Window* new_highlight_window)
     Compositor::the().invalidate_occlusions();
 }
 
-bool WindowManager::is_active_window_or_accessory(Window& window) const
-{
-    if (window.is_accessory())
-        return window.parent_window()->is_active();
-
-    return window.is_active();
-}
-
 static bool window_type_can_become_active(WindowType type)
 {
     return type == WindowType::Normal || type == WindowType::Desktop;
@@ -1741,9 +1731,9 @@ void WindowManager::set_active_window(Window* new_active_window, bool make_input
     }
 
     auto* new_active_input_window = new_active_window;
-    if (new_active_window && new_active_window->is_accessory()) {
-        // The parent of an accessory window is always the active
-        // window, but input is routed to the accessory window
+    if (new_active_window && new_active_window->is_accessory() && !new_active_window->frame().has_titlebar()) {
+        // The parent of an accessory window that doesn't have a title bar
+        // is always the active window, but input is routed to the accessory window
         new_active_window = new_active_window->parent_window();
     }
 

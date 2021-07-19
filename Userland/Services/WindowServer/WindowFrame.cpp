@@ -182,6 +182,17 @@ Gfx::IntRect WindowFrame::menubar_rect() const
     return Gfx::WindowTheme::current().menubar_rect(theme_window_type(), m_window.rect(), WindowManager::the().palette(), menu_row_count());
 }
 
+bool WindowFrame::has_titlebar() const
+{
+    switch (m_window.style()) {
+    case WindowStyle::Normal:
+    case WindowStyle::ToolWindow:
+        return true;
+    default:
+        return false;
+    }
+}
+
 Gfx::IntRect WindowFrame::titlebar_rect() const
 {
     return Gfx::WindowTheme::current().titlebar_rect(theme_window_type(), m_window.rect(), WindowManager::the().palette());
@@ -208,8 +219,9 @@ Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
         return Gfx::WindowTheme::WindowState::Highlighted;
     if (&m_window == wm.m_move_window)
         return Gfx::WindowTheme::WindowState::Moving;
-    if (wm.is_active_window_or_accessory(m_window))
+    if (m_window.is_active()) {
         return Gfx::WindowTheme::WindowState::Active;
+    }
     return Gfx::WindowTheme::WindowState::Inactive;
 }
 
