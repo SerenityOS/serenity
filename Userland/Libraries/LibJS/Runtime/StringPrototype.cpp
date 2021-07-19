@@ -723,34 +723,45 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 // 22.1.3.9 String.prototype.lastIndexOf ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.lastindexof
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
 {
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
-        return {};
-    auto search_string = vm.argument(0).to_string(global_object);
+    auto string = utf16_string_from(vm, global_object);
     if (vm.exception())
         return {};
+
+    auto search_string = vm.argument(0).to_utf16_string(global_object);
+    if (vm.exception())
+        return {};
+
+    Utf16View utf16_string_view { string };
+    auto string_length = utf16_string_view.length_in_code_units();
+
+    Utf16View utf16_search_view { search_string };
+    auto search_length = utf16_search_view.length_in_code_units();
+
     auto position = vm.argument(1).to_number(global_object);
     if (vm.exception())
         return {};
-    if (search_string.length() > string->length())
-        return Value(-1);
-    auto max_index = string->length() - search_string.length();
-    auto from_index = max_index;
-    if (!position.is_nan()) {
-        // FIXME: from_index should index a UTF-16 code_point view of the string.
-        auto p = position.to_integer_or_infinity(global_object);
-        if (vm.exception())
-            return {};
-        from_index = clamp(p, static_cast<double>(0), static_cast<double>(max_index));
+    double pos = position.is_nan() ? static_cast<double>(INFINITY) : position.to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    size_t start = clamp(pos, static_cast<double>(0), static_cast<double>(string_length));
+    Optional<size_t> last_index;
+
+    for (size_t k = 0; (k <= start) && (k + search_length <= string_length); ++k) {
+        bool is_match = true;
+
+        for (size_t j = 0; j < search_length; ++j) {
+            if (utf16_string_view.code_unit_at(k + j) != utf16_search_view.code_unit_at(j)) {
+                is_match = false;
+                break;
+            }
+        }
+
+        if (is_match)
+            last_index = k;
     }
 
-    for (i32 i = from_index; i >= 0; --i) {
-        auto part_view = string->substring_view(i, search_string.length());
-        if (part_view == search_string)
-            return Value(i);
-    }
-
-    return Value(-1);
+    return last_index.has_value() ? Value(*last_index) : Value(-1);
 }
 
 // 3.1 String.prototype.at ( index ), https://tc39.es/proposal-relative-indexing-method/#sec-string.prototype.at

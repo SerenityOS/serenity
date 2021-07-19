@@ -20,3 +20,11 @@ test("basic functionality", () => {
     expect("hello friends serenity".lastIndexOf("s", 13)).toBe(12);
     expect("hello".lastIndexOf("serenity")).toBe(-1);
 });
+
+test("UTF-16", () => {
+    var s = "😀";
+    expect(s.lastIndexOf("😀")).toBe(0);
+    expect(s.lastIndexOf("\ud83d")).toBe(0);
+    expect(s.lastIndexOf("\ude00")).toBe(1);
+    expect(s.lastIndexOf("a")).toBe(-1);
+});
