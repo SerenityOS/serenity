@@ -74,6 +74,27 @@ CodePoint code_point_at(Utf16View const& string, size_t position)
     return { code_point, 2, false };
 }
 
+// 6.1.4.1 StringIndexOf ( string, searchValue, fromIndex )
+static Optional<size_t> string_index_of(Utf16View const& string, Utf16View const& search_value, size_t from_index)
+{
+    size_t string_length = string.length_in_code_units();
+    size_t search_length = search_value.length_in_code_units();
+
+    if ((search_length == 0) && (from_index <= string_length))
+        return from_index;
+
+    if (search_length > string_length)
+        return {};
+
+    for (size_t i = from_index; i <= string_length - search_length; ++i) {
+        auto candidate = string.substring_view(i, search_length);
+        if (candidate == search_value)
+            return i;
+    }
+
+    return {};
+}
+
 StringPrototype::StringPrototype(GlobalObject& global_object)
     : StringObject(*js_string(global_object.heap(), String::empty()), *global_object.object_prototype())
 {
@@ -546,26 +567,37 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
 // 22.1.3.7 String.prototype.includes ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.includes
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
 {
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
-        return {};
-    auto search_string = vm.argument(0).to_string(global_object);
+    auto string = utf16_string_from(vm, global_object);
     if (vm.exception())
         return {};
-    auto string_length = string->length();
-    // FIXME: start should index a UTF-16 code_point view of the string.
+
+    auto search_string_value = vm.argument(0);
+
+    bool search_is_regexp = search_string_value.is_regexp(global_object);
+    if (vm.exception())
+        return {};
+    if (search_is_regexp) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::IsNotA, "searchString", "string, but a regular expression");
+        return {};
+    }
+
+    auto search_string = search_string_value.to_utf16_string(global_object);
+    if (vm.exception())
+        return {};
+
+    Utf16View utf16_string_view { string };
+    Utf16View utf16_search_view { search_string };
+
     size_t start = 0;
     if (!vm.argument(1).is_undefined()) {
         auto position = vm.argument(1).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
-        start = clamp(position, static_cast<double>(0), static_cast<double>(string_length));
+        start = clamp(position, static_cast<double>(0), static_cast<double>(utf16_string_view.length_in_code_units()));
     }
-    if (start == 0)
-        return Value(string->contains(search_string));
-    auto substring_length = string_length - start;
-    auto substring_search = string->substring(start, substring_length);
-    return Value(substring_search.contains(search_string));
+
+    auto index = string_index_of(utf16_string_view, utf16_search_view, start);
+    return Value(index.has_value());
 }
 
 // 22.1.3.20 String.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.slice
