@@ -48,20 +48,20 @@ NonnullOwnPtr<Vector<M3UEntry>> M3UParser::parse(bool include_extended_info)
 {
     auto vec = make<Vector<M3UEntry>>();
 
-    bool has_exteded_info_tag = false;
+    bool has_extended_info_tag = false;
     if (!m_use_utf8) {
         auto lines = m_m3u_raw_data.split_view('\n');
 
         if (include_extended_info) {
             if (lines[0] == "#EXTM3U")
-                has_exteded_info_tag = true;
+                has_extended_info_tag = true;
         }
 
         M3UExtendedInfo metadata_for_next_file {};
         for (auto& line : lines) {
             line = line.trim_whitespace();
             M3UEntry entry {};
-            if (line.starts_with('#') && has_exteded_info_tag) {
+            if (line.starts_with('#') && has_extended_info_tag) {
                 if (line.starts_with("#EXTINF:")) {
                     auto data = line.substring_view(8);
                     auto separator = data.find(',');
