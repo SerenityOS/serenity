@@ -20,38 +20,38 @@
 
 namespace TTF {
 
-u16 be_u16(const u8* ptr);
-u32 be_u32(const u8* ptr);
-i16 be_i16(const u8* ptr);
-float be_fword(const u8* ptr);
-u32 tag_from_str(const char* str);
+u16 be_u16(u8 const*);
+u32 be_u32(u8 const*);
+i16 be_i16(u8 const*);
+float be_fword(u8 const*);
+u32 tag_from_str(char const*);
 
-u16 be_u16(const u8* ptr)
+u16 be_u16(u8 const* ptr)
 {
     return (((u16)ptr[0]) << 8) | ((u16)ptr[1]);
 }
 
-u32 be_u32(const u8* ptr)
+u32 be_u32(u8 const* ptr)
 {
     return (((u32)ptr[0]) << 24) | (((u32)ptr[1]) << 16) | (((u32)ptr[2]) << 8) | ((u32)ptr[3]);
 }
 
-i16 be_i16(const u8* ptr)
+i16 be_i16(u8 const* ptr)
 {
     return (((i16)ptr[0]) << 8) | ((i16)ptr[1]);
 }
 
-float be_fword(const u8* ptr)
+float be_fword(u8 const* ptr)
 {
     return (float)be_i16(ptr) / (float)(1 << 14);
 }
 
-u32 tag_from_str(const char* str)
+u32 tag_from_str(char const* str)
 {
-    return be_u32((const u8*)str);
+    return be_u32((u8 const*)str);
 }
 
-Optional<Head> Head::from_slice(const ReadonlyBytes& slice)
+Optional<Head> Head::from_slice(ReadonlyBytes const& slice)
 {
     if (slice.size() < (size_t)Sizes::Table) {
         return {};
@@ -102,7 +102,7 @@ IndexToLocFormat Head::index_to_loc_format() const
     }
 }
 
-Optional<Hhea> Hhea::from_slice(const ReadonlyBytes& slice)
+Optional<Hhea> Hhea::from_slice(ReadonlyBytes const& slice)
 {
     if (slice.size() < (size_t)Sizes::Table) {
         return {};
@@ -135,7 +135,7 @@ u16 Hhea::number_of_h_metrics() const
     return be_u16(m_slice.offset_pointer((u32)Offsets::NumberOfHMetrics));
 }
 
-Optional<Maxp> Maxp::from_slice(const ReadonlyBytes& slice)
+Optional<Maxp> Maxp::from_slice(ReadonlyBytes const& slice)
 {
     if (slice.size() < (size_t)Sizes::TableV0p5) {
         return {};
@@ -148,7 +148,7 @@ u16 Maxp::num_glyphs() const
     return be_u16(m_slice.offset_pointer((u32)Offsets::NumGlyphs));
 }
 
-Optional<Hmtx> Hmtx::from_slice(const ReadonlyBytes& slice, u32 num_glyphs, u32 number_of_h_metrics)
+Optional<Hmtx> Hmtx::from_slice(ReadonlyBytes const& slice, u32 num_glyphs, u32 number_of_h_metrics)
 {
     if (slice.size() < number_of_h_metrics * (u32)Sizes::LongHorMetric + (num_glyphs - number_of_h_metrics) * (u32)Sizes::LeftSideBearing) {
         return {};
@@ -156,7 +156,7 @@ Optional<Hmtx> Hmtx::from_slice(const ReadonlyBytes& slice, u32 num_glyphs, u32 
     return Hmtx(slice, num_glyphs, number_of_h_metrics);
 }
 
-Optional<Name> Name::from_slice(const ReadonlyBytes& slice)
+Optional<Name> Name::from_slice(ReadonlyBytes const& slice)
 {
     return Name(slice);
 }
@@ -192,10 +192,10 @@ String Name::string_for_id(NameId id) const
 
     if (platform == (u16)Platform::Windows) {
         static auto& decoder = *TextCodec::decoder_for("utf-16be");
-        return decoder.to_utf8(StringView { (const char*)m_slice.offset_pointer(string_offset + offset), length });
+        return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(string_offset + offset), length });
     }
 
-    return String((const char*)m_slice.offset_pointer(string_offset + offset), length);
+    return String((char const*)m_slice.offset_pointer(string_offset + offset), length);
 }
 
 GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const

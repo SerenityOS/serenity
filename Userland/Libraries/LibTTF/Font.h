@@ -132,9 +132,9 @@ public:
     virtual u8 glyph_fixed_width() const override;
     virtual u8 baseline() const override { return m_point_height; }  // FIXME: Read from font
     virtual u8 mean_line() const override { return m_point_height; } // FIXME: Read from font
-    virtual int width(const StringView&) const override;
-    virtual int width(const Utf8View&) const override;
-    virtual int width(const Utf32View&) const override;
+    virtual int width(StringView const&) const override;
+    virtual int width(Utf8View const&) const override;
+    virtual int width(Utf32View const&) const override;
     virtual String name() const override { return String::formatted("{} {}", family(), variant()); }
     virtual bool is_fixed_width() const override { return m_font->is_fixed_width(); }
     virtual u8 glyph_spacing() const override { return m_x_scale; } // FIXME: Read from font
