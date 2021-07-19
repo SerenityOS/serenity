@@ -2,3 +2,6 @@
 Name=PDF Viewer
 Executable=/bin/PDFViewer
 Category=Graphics
+
+[Launcher]
+FileTypes=pdf

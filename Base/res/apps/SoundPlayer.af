@@ -4,4 +4,4 @@ Executable=/bin/SoundPlayer
 Category=Sound
 
 [Launcher]
-FileTypes=wav
+FileTypes=flac,m3u,m3u8,wav
