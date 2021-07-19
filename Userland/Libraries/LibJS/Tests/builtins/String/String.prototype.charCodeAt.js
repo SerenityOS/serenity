@@ -19,3 +19,11 @@ test("basic functionality", () => {
     expect(s.charCodeAt("foo")).toBe(70);
     expect(s.charCodeAt(undefined)).toBe(70);
 });
+
+test("UTF-16", () => {
+    var s = "😀";
+    expect(s).toHaveLength(2);
+    expect(s.charCodeAt(0)).toBe(0xd83d);
+    expect(s.charCodeAt(1)).toBe(0xde00);
+    expect(s.charCodeAt(2)).toBe(NaN);
+});
