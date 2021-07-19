@@ -7,10 +7,16 @@ version="${PYTHON_VERSION}"
 workdir="Python-${version}"
 useconfigure="true"
 files="${PYTHON_ARCHIVE_URL} ${PYTHON_ARCHIVE}
-https://www.python.org/ftp/python/${version}/Python-${version}.tar.xz.asc Python-${version}.tar.xz.asc"
+https://www.python.org/ftp/python/${version}/Python-${version}.tar.xz.asc Python-${version}.tar.xz.asc
+https://raw.githubusercontent.com/python/cpython/942dd9f3f77eef08fabddbd9fb883a866ad6d4cb/PC/pycon.ico launcher.ico"
 auth_type="sig"
 auth_import_key="E3FF2839C048B25C084DEBE9B26995E310250568"
 auth_opts="Python-${version}.tar.xz.asc Python-${version}.tar.xz"
+launcher_name="Python"
+launcher_category="Development"
+launcher_command="/usr/local/bin/python3"
+launcher_run_in_terminal="true"
+icon_file="../launcher.ico" # This is an older icon that's downloaded separately, so we need to go outside of $workdir
 
 # We could also add `openssl` here, but the _ssl modules doesn't build at the moment 
 depends="bzip2 libffi ncurses readline sqlite termcap zlib"
