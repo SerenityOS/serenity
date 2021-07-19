@@ -903,24 +903,29 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
         return {};
 
     if (!replace_value.is_function()) {
-        auto replace_string = replace_value.to_string(global_object);
+        auto replace_string = replace_value.to_utf16_string(global_object);
         if (vm.exception())
             return {};
-
-        replace_value = js_string(vm, move(replace_string));
+        replace_value = js_string(vm, Utf16View { replace_string });
         if (vm.exception())
             return {};
     }
 
-    Optional<size_t> position = string.find(search_string);
-    if (!position.has_value())
-        return js_string(vm, string);
+    auto utf16_string = AK::utf8_to_utf16(string);
+    Utf16View utf16_string_view { utf16_string };
 
-    auto preserved = string.substring(0, position.value());
+    auto utf16_search_string = AK::utf8_to_utf16(search_string);
+    Utf16View utf16_search_view { utf16_search_string };
+
+    Optional<size_t> position = string_index_of(utf16_string_view, utf16_search_view, 0);
+    if (!position.has_value())
+        return js_string(vm, utf16_string_view);
+
+    auto preserved = utf16_string_view.substring_view(0, position.value());
     String replacement;
 
     if (replace_value.is_function()) {
-        auto result = vm.call(replace_value.as_function(), js_undefined(), js_string(vm, search_string), Value(position.value()), js_string(vm, string));
+        auto result = vm.call(replace_value.as_function(), js_undefined(), js_string(vm, utf16_search_view), Value(position.value()), js_string(vm, utf16_string_view));
         if (vm.exception())
             return {};
 
@@ -933,10 +938,12 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
             return {};
     }
 
+    utf16_string_view = utf16_string_view.substring_view(*position + utf16_search_view.length_in_code_units());
+
     StringBuilder builder;
-    builder.append(preserved);
+    builder.append(preserved.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
     builder.append(replacement);
-    builder.append(string.substring(position.value() + search_string.length()));
+    builder.append(utf16_string_view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
 
     return js_string(vm, builder.build());
 }

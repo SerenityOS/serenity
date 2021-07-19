@@ -10,6 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/Result.h>
 #include <AK/TemporaryChange.h>
+#include <AK/Utf16View.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -583,36 +584,51 @@ String get_substitution(GlobalObject& global_object, String const& matched, Stri
     if (vm.exception())
         return {};
 
+    // FIXME: Once RegExp.prototype supports UTF-16, this AO can take UTF-16 strings as parameters instead of having to transcode here.
+    auto utf16_matched = AK::utf8_to_utf16(matched);
+    auto match_length = utf16_matched.size();
+
+    auto utf16_string = AK::utf8_to_utf16(str);
+    Utf16View utf16_string_view { utf16_string };
+    auto string_length = utf16_string_view.length_in_code_units();
+
+    auto utf16_replace = AK::utf8_to_utf16(replace_string);
+    Utf16View utf16_replace_view { utf16_replace };
+    auto replace_length = utf16_replace_view.length_in_code_units();
+
     StringBuilder result;
 
-    for (size_t i = 0; i < replace_string.length(); ++i) {
-        char curr = replace_string[i];
+    for (size_t i = 0; i < replace_length; ++i) {
+        u16 curr = utf16_replace_view.code_unit_at(i);
 
-        if ((curr != '$') || (i + 1 >= replace_string.length())) {
+        if ((curr != '$') || (i + 1 >= replace_length)) {
             result.append(curr);
             continue;
         }
 
-        char next = replace_string[i + 1];
+        u16 next = utf16_replace_view.code_unit_at(i + 1);
 
         if (next == '$') {
-            result.append(next);
+            result.append('$');
             ++i;
         } else if (next == '&') {
             result.append(matched);
             ++i;
         } else if (next == '`') {
-            result.append(str.substring_view(0, position));
+            auto substring = utf16_string_view.substring_view(0, position);
+            result.append(substring.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
             ++i;
         } else if (next == '\'') {
-            auto tail_pos = position + matched.length();
-            if (tail_pos < str.length())
-                result.append(str.substring_view(tail_pos));
+            auto tail_pos = position + match_length;
+            if (tail_pos < string_length) {
+                auto substring = utf16_string_view.substring_view(tail_pos);
+                result.append(substring.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
+            }
             ++i;
         } else if (is_ascii_digit(next)) {
-            bool is_two_digits = (i + 2 < replace_string.length()) && is_ascii_digit(replace_string[i + 2]);
+            bool is_two_digits = (i + 2 < replace_length) && is_ascii_digit(utf16_replace_view.code_unit_at(i + 2));
 
-            auto capture_postition_string = replace_string.substring_view(i + 1, is_two_digits ? 2 : 1);
+            auto capture_postition_string = utf16_replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8();
             auto capture_position = capture_postition_string.to_uint();
 
             if (capture_position.has_value() && (*capture_position > 0) && (*capture_position <= captures.size())) {
@@ -632,12 +648,20 @@ String get_substitution(GlobalObject& global_object, String const& matched, Stri
             }
         } else if (next == '<') {
             auto start_position = i + 2;
-            auto end_position = replace_string.find('>', start_position);
+            Optional<size_t> end_position;
+
+            for (size_t j = start_position; j < replace_length; ++j) {
+                if (utf16_replace_view.code_unit_at(j) == '>') {
+                    end_position = j;
+                    break;
+                }
+            }
 
             if (named_captures.is_undefined() || !end_position.has_value()) {
                 result.append(curr);
             } else {
-                auto group_name = replace_string.substring(start_position, *end_position - start_position);
+                auto group_name_view = utf16_replace_view.substring_view(start_position, *end_position - start_position);
+                auto group_name = group_name_view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes);
 
                 auto capture = named_captures.as_object().get(group_name);
                 if (vm.exception())
