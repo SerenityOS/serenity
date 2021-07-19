@@ -69,6 +69,7 @@ shift
 : "${launcher_name:=}"
 : "${launcher_category:=}"
 : "${launcher_command:=}"
+: "${launcher_run_in_terminal:=false}"
 : "${icon_file:=}"
 
 run_nocd() {
@@ -167,6 +168,7 @@ SCRIPT
 Name=$launcher_name
 Executable=$launcher_executable
 Category=$launcher_category
+RunInTerminal=$launcher_run_in_terminal
 CONFIG
     unset launcher_filename
 }
