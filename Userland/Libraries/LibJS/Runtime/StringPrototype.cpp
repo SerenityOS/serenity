@@ -527,14 +527,12 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 // B.2.3.1 String.prototype.substr ( start, length ), https://tc39.es/ecma262/#sec-string.prototype.substr
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
 {
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
+    auto string = utf16_string_from(vm, global_object);
+    if (vm.exception())
         return {};
-    if (vm.argument_count() == 0)
-        return js_string(vm, *string);
 
-    // FIXME: this should index a UTF-16 code_point view of the string.
-    auto size = (i32)string->length();
+    Utf16View utf16_string_view { string };
+    auto size = utf16_string_view.length_in_code_units();
 
     auto int_start = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
@@ -551,15 +549,14 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
         return {};
 
     if (Value(int_start).is_positive_infinity() || (int_length <= 0) || Value(int_length).is_positive_infinity())
-        return js_string(vm, String(""));
+        return js_string(vm, String::empty());
 
     auto int_end = min((i32)(int_start + int_length), size);
 
     if (int_start >= int_end)
-        return js_string(vm, String(""));
+        return js_string(vm, String::empty());
 
-    auto string_part = string->substring(int_start, int_end - int_start);
-    return js_string(vm, string_part);
+    return js_string(vm, utf16_string_view.substring_view(int_start, int_end - int_start));
 }
 
 // 22.1.3.7 String.prototype.includes ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.includes
