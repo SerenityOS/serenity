@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libarchive
-version=3.4.0
+version=3.5.1
 useconfigure=true
 configopts="--without-xml2"
 files="https://libarchive.org/downloads/libarchive-${version}.tar.gz libarchive-${version}.tar.gz
