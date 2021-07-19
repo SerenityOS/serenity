@@ -497,40 +497,31 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
 // 22.1.3.23 String.prototype.substring ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.substring
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 {
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
+    auto string = utf16_string_from(vm, global_object);
+    if (vm.exception())
         return {};
-    if (vm.argument_count() == 0)
-        return js_string(vm, *string);
 
-    // FIXME: index_start and index_end should index a UTF-16 code_point view of the string.
-    auto string_length = string->length();
+    Utf16View utf16_string_view { string };
+    auto string_length = static_cast<double>(utf16_string_view.length_in_code_units());
+
     auto start = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};
-    auto end = (double)string_length;
+
+    auto end = string_length;
     if (!vm.argument(1).is_undefined()) {
         end = vm.argument(1).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
     }
-    size_t index_start = clamp(start, static_cast<double>(0), static_cast<double>(string_length));
-    size_t index_end = clamp(end, static_cast<double>(0), static_cast<double>(string_length));
 
-    if (index_start == index_end)
-        return js_string(vm, String(""));
+    size_t final_start = clamp(start, static_cast<double>(0), string_length);
+    size_t final_end = clamp(end, static_cast<double>(0), string_length);
 
-    if (index_start > index_end) {
-        if (vm.argument_count() == 1)
-            return js_string(vm, String(""));
-        auto temp_index_start = index_start;
-        index_start = index_end;
-        index_end = temp_index_start;
-    }
+    size_t from = min(final_start, final_end);
+    size_t to = max(final_start, final_end);
 
-    auto part_length = index_end - index_start;
-    auto string_part = string->substring(index_start, part_length);
-    return js_string(vm, string_part);
+    return js_string(vm, utf16_string_view.substring_view(from, to - from));
 }
 
 // B.2.3.1 String.prototype.substr ( start, length ), https://tc39.es/ecma262/#sec-string.prototype.substr
