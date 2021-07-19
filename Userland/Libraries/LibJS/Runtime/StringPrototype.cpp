@@ -40,14 +40,17 @@ static Vector<u16> utf16_string_from(VM& vm, GlobalObject& global_object)
     return this_value.to_utf16_string(global_object);
 }
 
-static Optional<size_t> split_match(const String& haystack, size_t start, const String& needle)
+// 22.1.3.21.1 SplitMatch ( S, q, R ), https://tc39.es/ecma262/#sec-splitmatch
+static Optional<size_t> split_match(Utf16View const& haystack, size_t start, Utf16View const& needle)
 {
-    auto r = needle.length();
-    auto s = haystack.length();
+    auto r = needle.length_in_code_units();
+    auto s = haystack.length_in_code_units();
     if (start + r > s)
         return {};
-    if (!haystack.substring_view(start).starts_with(needle))
-        return {};
+    for (size_t i = 0; i < r; ++i) {
+        if (haystack.code_unit_at(start + i) != needle.code_unit_at(i))
+            return {};
+    }
     return start + r;
 }
 
@@ -676,7 +679,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
             return vm.call(*splitter, separator_argument, object, limit_argument);
     }
 
-    auto string = object.to_string(global_object);
+    auto string = object.to_utf16_string(global_object);
     if (vm.exception())
         return {};
 
@@ -690,34 +693,40 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
             return {};
     }
 
-    auto separator = separator_argument.to_string(global_object);
+    auto separator = separator_argument.to_utf16_string(global_object);
     if (vm.exception())
         return {};
 
     if (limit == 0)
         return array;
 
+    Utf16View utf16_string_view { string };
+    auto string_length = utf16_string_view.length_in_code_units();
+
+    Utf16View utf16_separator_view { separator };
+    auto separator_length = utf16_separator_view.length_in_code_units();
+
     if (separator_argument.is_undefined()) {
-        array->create_data_property_or_throw(0, js_string(vm, string));
+        array->create_data_property_or_throw(0, js_string(vm, utf16_string_view));
         return array;
     }
 
-    if (string.length() == 0) {
-        if (!separator.is_empty())
-            array->create_data_property_or_throw(0, js_string(vm, string));
+    if (string_length == 0) {
+        if (separator_length > 0)
+            array->create_data_property_or_throw(0, js_string(vm, utf16_string_view));
         return array;
     }
 
-    size_t start = 0;
-    auto position = start;
-    while (position != string.length()) {
-        auto match = split_match(string, position, separator);
+    size_t start = 0;      // 'p' in the spec.
+    auto position = start; // 'q' in the spec.
+    while (position != string_length) {
+        auto match = split_match(utf16_string_view, position, utf16_separator_view); // 'e' in the spec.
         if (!match.has_value() || match.value() == start) {
             ++position;
             continue;
         }
 
-        auto segment = string.substring_view(start, position - start);
+        auto segment = utf16_string_view.substring_view(start, position - start);
         array->create_data_property_or_throw(array_length, js_string(vm, segment));
         ++array_length;
         if (array_length == limit)
@@ -726,7 +735,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
         position = start;
     }
 
-    auto rest = string.substring(start);
+    auto rest = utf16_string_view.substring_view(start);
     array->create_data_property_or_throw(array_length, js_string(vm, rest));
 
     return array;

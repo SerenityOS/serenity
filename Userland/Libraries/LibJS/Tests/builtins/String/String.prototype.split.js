@@ -65,3 +65,15 @@ test("regex split", () => {
         "",
     ]);
 });
+
+test("UTF-16", () => {
+    var s = "😀";
+    expect(s.split()).toEqual(["😀"]);
+    expect(s.split("😀")).toEqual(["", ""]);
+    expect(s.split("\ud83d")).toEqual(["", "\ude00"]);
+    expect(s.split("\ude00")).toEqual(["\ud83d", ""]);
+
+    // FIXME: RegExp.prototype [ @@split ] also needs to support UTF-16.
+    // expect(s.split(/\ud83d/)).toEqual(["", "\ude00"]);
+    // expect(s.split(/\ude00/)).toEqual(["\ud83d", ""]);
+});
