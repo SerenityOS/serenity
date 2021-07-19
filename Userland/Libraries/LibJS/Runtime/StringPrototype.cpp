@@ -399,14 +399,19 @@ enum class PadPlacement {
 };
 
 // 22.1.3.15.1 StringPad ( O, maxLength, fillString, placement ), https://tc39.es/ecma262/#sec-stringpad
-static Value pad_string(GlobalObject& global_object, const String& string, PadPlacement placement)
+static Value pad_string(GlobalObject& global_object, String const& string, PadPlacement placement)
 {
     auto& vm = global_object.vm();
+
+    auto utf16_string = AK::utf8_to_utf16(string);
+    Utf16View utf16_string_view { utf16_string };
+    auto string_length = utf16_string_view.length_in_code_units();
+
     auto max_length = vm.argument(0).to_length(global_object);
     if (vm.exception())
         return {};
-    if (max_length <= string.length())
-        return js_string(vm, string);
+    if (max_length <= string_length)
+        return js_string(vm, utf16_string_view);
 
     String fill_string = " ";
     if (!vm.argument(1).is_undefined()) {
@@ -414,15 +419,22 @@ static Value pad_string(GlobalObject& global_object, const String& string, PadPl
         if (vm.exception())
             return {};
         if (fill_string.is_empty())
-            return js_string(vm, string);
+            return js_string(vm, utf16_string_view);
     }
 
-    auto fill_length = max_length - string.length();
+    auto utf16_fill_string = AK::utf8_to_utf16(fill_string);
+    Utf16View utf16_fill_view { utf16_fill_string };
+    auto fill_code_units = utf16_fill_view.length_in_code_units();
+    auto fill_length = max_length - string_length;
 
     StringBuilder filler_builder;
-    while (filler_builder.length() < fill_length)
+    for (size_t i = 0; i < fill_length / fill_code_units; ++i)
         filler_builder.append(fill_string);
-    auto filler = filler_builder.build().substring(0, fill_length);
+
+    utf16_fill_view = utf16_fill_view.substring_view(0, fill_length % fill_code_units);
+    filler_builder.append(utf16_fill_view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
+
+    auto filler = filler_builder.build();
 
     auto formatted = placement == PadPlacement::Start
         ? String::formatted("{}{}", filler, string)
