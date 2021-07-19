@@ -10,6 +10,7 @@
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Arch/x86/Processor.h>
+#include <Kernel/BootInfo.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Bus/USB/UHCIController.h>
@@ -39,7 +40,7 @@
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Panic.h>
-#include <Kernel/Prekernel/BootInfo.h>
+#include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessExposed.h>
 #include <Kernel/RTC.h>
@@ -110,8 +111,6 @@ u8 const* start_of_prekernel_image;
 u8 const* end_of_prekernel_image;
 __attribute__((section(".boot_bss"))) FlatPtr kernel_base;
 #if ARCH(X86_64)
-extern "C" u32 gdt64ptr;
-extern "C" u16 code64_sel;
 FlatPtr boot_pml4t;
 #endif
 FlatPtr boot_pdpt;

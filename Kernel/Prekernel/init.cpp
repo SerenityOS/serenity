@@ -8,7 +8,6 @@
 
 #include <AK/Types.h>
 #include <Kernel/Multiboot.h>
-#include <Kernel/Prekernel/BootInfo.h>
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibC/elf.h>

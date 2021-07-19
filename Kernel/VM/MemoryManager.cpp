@@ -7,6 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
+#include <Kernel/BootInfo.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Heap/kmalloc.h>
@@ -22,8 +23,6 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
-extern u8* start_of_prekernel_image;
-extern u8* end_of_prekernel_image;
 extern u8* start_of_kernel_image;
 extern u8* end_of_kernel_image;
 extern FlatPtr start_of_kernel_text;
@@ -35,9 +34,6 @@ extern FlatPtr start_of_unmap_after_init;
 extern FlatPtr end_of_unmap_after_init;
 extern FlatPtr start_of_kernel_ksyms;
 extern FlatPtr end_of_kernel_ksyms;
-
-extern "C" void* boot_pd_kernel;
-extern "C" void* boot_pd_kernel_pt1023;
 
 extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 extern size_t multiboot_copy_boot_modules_count;

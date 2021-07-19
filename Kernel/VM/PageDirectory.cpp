@@ -31,14 +31,6 @@ RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
     return cr3_map().get(cr3).value_or({});
 }
 
-extern "C" FlatPtr kernel_base;
-#if ARCH(X86_64)
-extern "C" void* boot_pml4t;
-#endif
-extern "C" void* boot_pdpt;
-extern "C" void* boot_pd0;
-extern "C" void* boot_pd_kernel;
-
 UNMAP_AFTER_INIT PageDirectory::PageDirectory()
 {
     // make sure this starts in a new page directory to make MemoryManager::initialize_physical_pages() happy
