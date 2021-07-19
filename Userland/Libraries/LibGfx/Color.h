@@ -80,6 +80,60 @@ public:
         return Color(r, g, b);
     }
 
+    static constexpr Color from_hsl(double h_degrees, double s, double l) { return from_hsla(h_degrees, s, l, 1.0); }
+    static constexpr Color from_hsla(double h_degrees, double s, double l, double a)
+    {
+        // Algorithm from https://www.w3.org/TR/css-color-3/#hsl-color
+        double h = clamp(h_degrees / 360.0, 0.0, 1.0);
+        s = clamp(s, 0.0, 1.0);
+        l = clamp(l, 0.0, 1.0);
+        a = clamp(a, 0.0, 1.0);
+
+        // HOW TO RETURN hue.to.rgb(m1, m2, h):
+        auto hue_to_rgb = [](double m1, double m2, double h) -> double {
+            // IF h<0: PUT h+1 IN h
+            if (h < 0.0)
+                h = h + 1.0;
+            // IF h>1: PUT h-1 IN h
+            if (h > 1.0)
+                h = h - 1.0;
+            // IF h*6<1: RETURN m1+(m2-m1)*h*6
+            if (h * 6.0 < 1.0)
+                return m1 + (m2 - m1) * h * 6.0;
+            // IF h*2<1: RETURN m2
+            if (h * 2.0 < 1.0)
+                return m2;
+            // IF h*3<2: RETURN m1+(m2-m1)*(2/3-h)*6
+            if (h * 3.0 < 2.0)
+                return m1 + (m2 - m1) * (2.0 / 3.0 - h) * 6.0;
+            // RETURN m1
+            return m1;
+        };
+
+        // SELECT:
+        // l<=0.5: PUT l*(s+1) IN m2
+        double m2;
+        if (l <= 0.5)
+            m2 = l * (s + 1.0);
+        // ELSE: PUT l+s-l*s IN m2
+        else
+            m2 = l + s - l * s;
+        // PUT l*2-m2 IN m1
+        double m1 = l * 2.0 - m2;
+        // PUT hue.to.rgb(m1, m2, h+1/3) IN r
+        double r = hue_to_rgb(m1, m2, h + 1.0 / 3.0);
+        // PUT hue.to.rgb(m1, m2, h    ) IN g
+        double g = hue_to_rgb(m1, m2, h);
+        // PUT hue.to.rgb(m1, m2, h-1/3) IN b
+        double b = hue_to_rgb(m1, m2, h - 1.0 / 3.0);
+        // RETURN (r, g, b)
+        u8 r_u8 = clamp(lroundf(r * 255.0), 0, 255);
+        u8 g_u8 = clamp(lroundf(g * 255.0), 0, 255);
+        u8 b_u8 = clamp(lroundf(b * 255.0), 0, 255);
+        u8 a_u8 = clamp(lroundf(a * 255.0), 0, 255);
+        return Color(r_u8, g_u8, b_u8, a_u8);
+    }
+
     constexpr u8 red() const { return (m_value >> 16) & 0xff; }
     constexpr u8 green() const { return (m_value >> 8) & 0xff; }
     constexpr u8 blue() const { return m_value & 0xff; }
