@@ -16,5 +16,5 @@ export CPPFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2"
 
 pre_configure() {
     run ./autogen.sh
-    run sed -i 's@irix\* \\@irix* | serenity* \\@' config.sub
+    run sed -i 's@irix\* \\@irix* | *serenity* \\@' config.sub
 }
