@@ -127,6 +127,9 @@ public:
 
     FileBlockCondition& block_condition();
 
+    KResult apply_flock(Process const&, Userspace<flock const*>);
+    KResult get_flock(Userspace<flock*>) const;
+
 private:
     friend class VirtualFileSystem;
     explicit FileDescription(File&);

@@ -97,6 +97,11 @@ public:
 
     NonnullRefPtr<FIFO> fifo();
 
+    KResult can_apply_flock(FileDescription const&, flock const&) const;
+    KResult apply_flock(Process const&, FileDescription const&, Userspace<flock const*>);
+    KResult get_flock(FileDescription const&, Userspace<flock*>) const;
+    void remove_flocks_for_description(FileDescription const&);
+
 protected:
     Inode(FileSystem&, InodeIndex);
     void set_metadata_dirty(bool);
@@ -118,6 +123,16 @@ private:
     bool m_metadata_dirty { false };
     RefPtr<FIFO> m_fifo;
     IntrusiveListNode<Inode> m_inode_list_node;
+
+    struct Flock {
+        short type;
+        off_t start;
+        off_t len;
+        FileDescription const* owner;
+        pid_t pid;
+    };
+
+    Vector<Flock> m_flocks;
 
 public:
     using List = IntrusiveList<Inode, RawPtr<Inode>, &Inode::m_inode_list_node>;

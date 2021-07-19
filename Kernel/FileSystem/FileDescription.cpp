@@ -74,6 +74,9 @@ FileDescription::~FileDescription()
     (void)m_file->close();
     if (m_inode)
         m_inode->detach(*this);
+
+    if (m_inode)
+        m_inode->remove_flocks_for_description(*this);
 }
 
 KResult FileDescription::attach()
@@ -446,4 +449,19 @@ FileBlockCondition& FileDescription::block_condition()
     return m_file->block_condition();
 }
 
+KResult FileDescription::apply_flock(Process const& process, Userspace<flock const*> lock)
+{
+    if (!m_inode)
+        return EBADF;
+
+    return m_inode->apply_flock(process, *this, lock);
+}
+
+KResult FileDescription::get_flock(Userspace<flock*> lock) const
+{
+    if (!m_inode)
+        return EBADF;
+
+    return m_inode->get_flock(*this, lock);
+}
 }

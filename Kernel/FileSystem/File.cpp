@@ -7,6 +7,7 @@
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Process.h>
 
 namespace Kernel {
 
@@ -53,5 +54,4 @@ void File::detach(FileDescription&)
 {
     m_attach_count--;
 }
-
 }
