@@ -51,6 +51,29 @@ static Optional<size_t> split_match(const String& haystack, size_t start, const 
     return start + r;
 }
 
+// 11.1.4 CodePointAt ( string, position ), https://tc39.es/ecma262/#sec-codepointat
+CodePoint code_point_at(Utf16View const& string, size_t position)
+{
+    VERIFY(position < string.length_in_code_units());
+
+    auto first = string.code_unit_at(position);
+    auto code_point = static_cast<u32>(first);
+
+    if (!Utf16View::is_high_surrogate(first) && !Utf16View::is_low_surrogate(first))
+        return { code_point, 1, false };
+
+    if (Utf16View::is_low_surrogate(first) || (position + 1 == string.length_in_code_units()))
+        return { code_point, 1, true };
+
+    auto second = string.code_unit_at(position + 1);
+
+    if (!Utf16View::is_low_surrogate(second))
+        return { code_point, 1, true };
+
+    code_point = Utf16View::decode_surrogate_pair(first, second);
+    return { code_point, 2, false };
+}
+
 StringPrototype::StringPrototype(GlobalObject& global_object)
     : StringObject(*js_string(global_object.heap(), String::empty()), *global_object.object_prototype())
 {
@@ -162,19 +185,19 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_code_at)
 // 22.1.3.3 String.prototype.codePointAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.codepointat
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::code_point_at)
 {
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
+    auto string = utf16_string_from(vm, global_object);
+    if (vm.exception())
         return {};
     auto position = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};
-    auto view = Utf8View(*string);
-    if (position < 0 || position >= view.length())
+
+    Utf16View utf16_string_view { string };
+    if (position < 0 || position >= utf16_string_view.length_in_code_units())
         return js_undefined();
-    auto it = view.begin();
-    for (auto i = 0; i < position; ++i)
-        ++it;
-    return Value(*it);
+
+    auto code_point = JS::code_point_at(utf16_string_view, position);
+    return Value(code_point.code_point);
 }
 
 // 22.1.3.16 String.prototype.repeat ( count ), https://tc39.es/ecma262/#sec-string.prototype.repeat
