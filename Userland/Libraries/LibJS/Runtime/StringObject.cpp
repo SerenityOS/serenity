@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Utf8View.h>
+#include <AK/Utf16View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
@@ -34,7 +34,7 @@ void StringObject::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     Object::initialize(global_object);
-    define_direct_property(vm.names.length, Value(Utf8View(m_string.string()).length()), 0);
+    define_direct_property(vm.names.length, Value(m_string.utf16_string_view().length_in_code_units()), 0);
 }
 
 void StringObject::visit_edges(Cell::Visitor& visitor)
@@ -70,17 +70,17 @@ static Optional<PropertyDescriptor> string_get_own_property(GlobalObject& global
 
     // 8. Let str be S.[[StringData]].
     // 9. Assert: Type(str) is String.
-    auto& str = string.primitive_string().string();
+    auto str = string.primitive_string().utf16_string_view();
 
     // 10. Let len be the length of str.
-    auto length = str.length();
+    auto length = str.length_in_code_units();
 
     // 11. If ℝ(index) < 0 or len ≤ ℝ(index), return undefined.
     if (index.as_double() < 0 || length <= index.as_double())
         return {};
 
     // 12. Let resultStr be the String value of length 1, containing one code unit from str, specifically the code unit at index ℝ(index).
-    auto result_str = js_string(string.vm(), str.substring(index.as_double(), 1));
+    auto result_str = js_string(string.vm(), str.substring_view(index.as_double(), 1));
 
     // 13. Return the PropertyDescriptor { [[Value]]: resultStr, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }.
     return PropertyDescriptor {
@@ -138,12 +138,12 @@ MarkedValueList StringObject::internal_own_property_keys() const
     auto keys = MarkedValueList { heap() };
 
     // 2. Let str be O.[[StringData]].
-    auto& str = m_string.string();
+    auto str = m_string.utf16_string_view();
 
     // 3. Assert: Type(str) is String.
 
     // 4. Let len be the length of str.
-    auto length = str.length();
+    auto length = str.length_in_code_units();
 
     // 5. For each integer i starting with 0 such that i < len, in ascending order, do
     for (size_t i = 0; i < length; ++i) {
