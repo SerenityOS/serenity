@@ -673,7 +673,7 @@ JS::Value Document::run_javascript(const StringView& source, const StringView& f
     auto parser = JS::Parser(JS::Lexer(source, filename));
     auto program = parser.parse_program();
     if (parser.has_errors()) {
-        parser.print_errors();
+        parser.print_errors(false);
         return JS::js_undefined();
     }
     auto& interpreter = document().interpreter();
