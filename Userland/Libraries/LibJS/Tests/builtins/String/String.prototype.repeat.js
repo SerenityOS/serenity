@@ -23,3 +23,9 @@ test("throws correct range errors", () => {
         "foo".repeat(Infinity);
     }).toThrowWithMessage(RangeError, "repeat count must be a finite number");
 });
+
+test("UTF-16", () => {
+    expect("😀".repeat(0)).toBe("");
+    expect("😀".repeat(1)).toBe("😀");
+    expect("😀".repeat(10)).toBe("😀😀😀😀😀😀😀😀😀😀");
+});

@@ -298,6 +298,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 // 22.1.3.26 String.prototype.toLowerCase ( ), https://tc39.es/ecma262/#sec-string.prototype.tolowercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 {
+    // FIXME: Implement Unicode case folding: https://www.unicode.org/Public/13.0.0/ucd/CaseFolding.txt
     auto string = ak_string_from(vm, global_object);
     if (!string.has_value())
         return {};
@@ -307,6 +308,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 // 22.1.3.28 String.prototype.toUpperCase ( ), https://tc39.es/ecma262/#sec-string.prototype.touppercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 {
+    // FIXME: Implement Unicode case folding: https://www.unicode.org/Public/13.0.0/ucd/CaseFolding.txt
     auto string = ak_string_from(vm, global_object);
     if (!string.has_value())
         return {};
