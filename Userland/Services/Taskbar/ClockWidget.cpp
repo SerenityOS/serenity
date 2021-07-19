@@ -37,7 +37,7 @@ ClockWidget::ClockWidget()
 
     m_calendar_window = add<GUI::Window>(window());
     m_calendar_window->resize(152, 186);
-    m_calendar_window->set_frameless(true);
+    m_calendar_window->set_style(GUI::WindowStyle::Frameless);
     m_calendar_window->set_resizable(false);
     m_calendar_window->set_minimizable(false);
     m_calendar_window->on_active_input_change = [this](bool is_active_input) {

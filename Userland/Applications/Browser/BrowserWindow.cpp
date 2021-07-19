@@ -147,7 +147,7 @@ void BrowserWindow::build_menus()
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action(
         [this](auto&) {
             auto& tab = active_tab();
-            set_fullscreen(!is_fullscreen());
+            set_style(is_fullscreen() ? GUI::WindowStyle::Normal : GUI::WindowStyle::Fullscreen);
 
             auto is_fullscreen = this->is_fullscreen();
             tab_widget().set_bar_visible(!is_fullscreen && tab_widget().children().size() > 1);

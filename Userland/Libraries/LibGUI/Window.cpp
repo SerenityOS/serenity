@@ -84,7 +84,10 @@ Window::Window(Core::Object* parent)
 
     REGISTER_BOOL_PROPERTY("minimizable", is_minimizable, set_minimizable);
     REGISTER_BOOL_PROPERTY("resizable", is_resizable, set_resizable);
-    REGISTER_BOOL_PROPERTY("fullscreen", is_fullscreen, set_fullscreen);
+    REGISTER_ENUM_PROPERTY("style", style, set_style, WindowStyle,
+        { WindowStyle::Normal, "Normal" },
+        { WindowStyle::ToolWindow, "ToolWindow" },
+        { WindowStyle::Fullscreen, "Fullscreen" });
     REGISTER_RECT_PROPERTY("rect", rect, set_rect);
     REGISTER_SIZE_PROPERTY("base_size", base_size, set_base_size);
     REGISTER_SIZE_PROPERTY("size_increment", size_increment, set_size_increment);
@@ -144,8 +147,7 @@ void Window::show()
         m_modal,
         m_minimizable,
         m_resizable,
-        m_fullscreen,
-        m_frameless,
+        (u8)m_style,
         m_forced_shadow,
         m_accessory,
         m_opacity_when_windowless,
@@ -307,7 +309,7 @@ void Window::set_window_type(WindowType window_type)
 
     if (!m_minimum_size_modified) {
         // Apply minimum size defaults.
-        if (m_window_type == WindowType::Normal || m_window_type == WindowType::ToolWindow)
+        if (m_window_type == WindowType::Normal)
             m_minimum_size_when_windowless = { 50, 50 };
         else
             m_minimum_size_when_windowless = { 1, 1 };
@@ -923,26 +925,16 @@ Vector<Widget&> Window::focusable_widgets(FocusSource source) const
     return collected_widgets;
 }
 
-void Window::set_fullscreen(bool fullscreen)
+void Window::set_style(WindowStyle style)
 {
-    if (m_fullscreen == fullscreen)
+    VERIFY(style < WindowStyle::_Count);
+    if (m_style == style)
         return;
-    m_fullscreen = fullscreen;
+    m_style = style;
     if (!is_visible())
         return;
-    WindowServerConnection::the().async_set_fullscreen(m_window_id, fullscreen);
-}
-
-void Window::set_frameless(bool frameless)
-{
-    if (m_frameless == frameless)
-        return;
-    m_frameless = frameless;
-    if (!is_visible())
-        return;
-    WindowServerConnection::the().async_set_frameless(m_window_id, frameless);
-
-    if (!frameless)
+    WindowServerConnection::the().async_set_style(m_window_id, (u8)style);
+    if (style != WindowStyle::Frameless)
         apply_icon();
 }
 

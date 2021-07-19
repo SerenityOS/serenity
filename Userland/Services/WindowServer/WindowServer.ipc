@@ -36,8 +36,7 @@ endpoint WindowServer
         bool modal,
         bool minimizable,
         bool resizable,
-        bool fullscreen,
-        bool frameless,
+        u8 style,
         bool forced_shadow,
         bool accessory,
         float opacity,
@@ -88,8 +87,7 @@ endpoint WindowServer
 
     set_window_has_alpha_channel(i32 window_id, bool has_alpha_channel) =|
     move_window_to_front(i32 window_id) =|
-    set_fullscreen(i32 window_id, bool fullscreen) =|
-    set_frameless(i32 window_id, bool frameless) =|
+    set_style(i32 window_id, u8 style) =|
     set_forced_shadow(i32 window_id, bool shadow) =|
     popup_menu(i32 menu_id, Gfx::IntPoint screen_position) =|
     dismiss_menu(i32 menu_id) =|

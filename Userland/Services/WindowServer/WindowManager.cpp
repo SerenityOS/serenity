@@ -447,7 +447,7 @@ void WindowManager::tell_wm_about_window(WMClientConnection& conn, Window& windo
         return;
     auto* parent = window.parent_window();
     auto& window_stack = is_stationary_window_type(window.type()) ? current_window_stack() : window.window_stack();
-    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window_stack.row(), window_stack.column(), window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
+    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window_stack.row(), window_stack.column(), window.is_active(), window.is_minimized(), window.is_accessory(), window.is_modal_dont_unparent(), (u8)window.style(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
 }
 
 void WindowManager::tell_wm_about_window_rect(WMClientConnection& conn, Window& window)
@@ -554,11 +554,6 @@ void WindowManager::tell_wms_current_window_stack_changed()
     });
 }
 
-static bool window_type_has_title(WindowType type)
-{
-    return type == WindowType::Normal || type == WindowType::ToolWindow;
-}
-
 void WindowManager::notify_modified_changed(Window& window)
 {
     if (m_switcher.is_visible())
@@ -569,7 +564,7 @@ void WindowManager::notify_modified_changed(Window& window)
 
 void WindowManager::notify_title_changed(Window& window)
 {
-    if (!window_type_has_title(window.type()))
+    if (window.type() != WindowType::Normal)
         return;
 
     dbgln_if(WINDOWMANAGER_DEBUG, "[WM] Window({}) title set to '{}'", &window, window.title());
@@ -641,7 +636,7 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
     Window* first_candidate = nullptr;
 
     for_each_visible_window_from_front_to_back([&](Window& candidate) {
-        if (candidate.type() != WindowType::Normal && candidate.type() != WindowType::ToolWindow)
+        if (candidate.type() != WindowType::Normal)
             return IterationDecision::Continue;
         if (candidate.is_destroyed())
             return IterationDecision::Continue;
@@ -1190,7 +1185,7 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
     }
 
     if (event.type() == Event::MouseDown) {
-        if (window.type() == WindowType::Normal || window.type() == WindowType::ToolWindow)
+        if (window.type() == WindowType::Normal)
             move_to_front_and_make_active(window);
         else if (window.type() == WindowType::Desktop)
             set_active_window(&window);
@@ -1351,7 +1346,6 @@ Gfx::IntRect WindowManager::arena_rect_for_type(Screen& screen, WindowType type)
     case WindowType::Desktop:
         return Screen::bounding_rect();
     case WindowType::Normal:
-    case WindowType::ToolWindow:
         return desktop_rect(screen);
     case WindowType::Menu:
     case WindowType::WindowSwitcher:
@@ -1686,7 +1680,7 @@ bool WindowManager::is_active_window_or_accessory(Window& window) const
 
 static bool window_type_can_become_active(WindowType type)
 {
-    return type == WindowType::Normal || type == WindowType::ToolWindow || type == WindowType::Desktop;
+    return type == WindowType::Normal || type == WindowType::Desktop;
 }
 
 void WindowManager::restore_active_input_window(Window* window)

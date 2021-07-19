@@ -116,7 +116,7 @@ int main(int argc, char** argv)
         }
     };
     widget.on_doubleclick = [&] {
-        window->set_fullscreen(!window->is_fullscreen());
+        window->set_style(window->is_fullscreen() ? GUI::WindowStyle::Normal : GUI::WindowStyle::Fullscreen);
         toolbar_container.set_visible(!window->is_fullscreen());
     };
 

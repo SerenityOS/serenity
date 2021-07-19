@@ -46,7 +46,7 @@ public:
         m_volume_level_bitmaps.append({ 0, Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-muted.png") });
 
         m_slider_window = add<GUI::Window>(window());
-        m_slider_window->set_frameless(true);
+        m_slider_window->set_style(GUI::WindowStyle::Frameless);
         m_slider_window->set_resizable(false);
         m_slider_window->set_minimizable(false);
         m_slider_window->on_active_input_change = [this](bool is_active_input) {

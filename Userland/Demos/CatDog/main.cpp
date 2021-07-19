@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title("CatDog Demo");
     window->resize(32, 32);
-    window->set_frameless(true);
+    window->set_style(GUI::WindowStyle::Frameless);
     window->set_resizable(false);
     window->set_has_alpha_channel(true);
     window->set_alpha_hit_threshold(1.0f);
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     auto advice_window = GUI::Window::construct();
     advice_window->set_title("CatDog Advice");
     advice_window->resize(225, 50);
-    advice_window->set_frameless(true);
+    advice_window->set_style(GUI::WindowStyle::Frameless);
     advice_window->set_resizable(false);
     advice_window->set_has_alpha_channel(true);
     advice_window->set_alpha_hit_threshold(1.0f);

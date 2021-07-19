@@ -231,7 +231,7 @@ int main(int argc, char** argv)
 
     auto& view_menu = menubar->add_menu("&View");
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
-        window->set_fullscreen(!window->is_fullscreen());
+        window->set_style(window->is_fullscreen() ? GUI::WindowStyle::Normal : GUI::WindowStyle::Fullscreen);
     }));
 
     auto& rotation_axis_menu = view_menu.add_submenu("Rotation &Axis");

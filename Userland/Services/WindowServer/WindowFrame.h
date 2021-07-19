@@ -137,6 +137,8 @@ private:
 
     Gfx::IntRect constrained_render_rect_to_screen(const Gfx::IntRect&) const;
 
+    Gfx::WindowTheme::WindowType theme_window_type() const;
+
     Window& m_window;
     NonnullOwnPtrVector<Button> m_buttons;
     Button* m_close_button { nullptr };

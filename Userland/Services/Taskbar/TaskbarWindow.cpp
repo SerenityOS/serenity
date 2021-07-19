@@ -332,17 +332,13 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
                 changed_event.is_active(),
                 changed_event.is_minimized());
         }
-        if (changed_event.window_type() != GUI::WindowType::Normal || changed_event.is_frameless()) {
+        if (changed_event.window_type() != GUI::WindowType::Normal || changed_event.is_accessory()) {
             if (auto* window = WindowList::the().window(identifier))
                 remove_window_button(*window, false);
             break;
         }
         auto& window = WindowList::the().ensure_window(identifier);
         window.set_parent_identifier({ changed_event.parent_client_id(), changed_event.parent_window_id() });
-        if (!window.is_modal())
-            add_window_button(window, identifier);
-        else
-            remove_window_button(window, false);
         window.set_title(changed_event.title());
         window.set_rect(changed_event.rect());
         window.set_modal(changed_event.is_modal());
@@ -350,6 +346,15 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         window.set_minimized(changed_event.is_minimized());
         window.set_progress(changed_event.progress());
         window.set_virtual_desktop(changed_event.virtual_desktop_row(), changed_event.virtual_desktop_column());
+
+        bool should_show_button = true;
+        if (window.is_modal() && window.parent_identifier().is_valid())
+            should_show_button = false;
+
+        if (should_show_button)
+            add_window_button(window, identifier);
+        else
+            remove_window_button(window, true);
 
         auto* window_owner = find_window_owner(window);
         if (window_owner == &window) {

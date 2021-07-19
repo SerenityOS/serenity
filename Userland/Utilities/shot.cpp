@@ -114,7 +114,7 @@ int main(int argc, char** argv)
 
         window->set_title("shot");
         window->set_has_alpha_channel(true);
-        window->set_fullscreen(true);
+        window->set_style(GUI::WindowStyle::Fullscreen);
         window->show();
         app->exec();
 

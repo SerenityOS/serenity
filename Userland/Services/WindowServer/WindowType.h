@@ -18,8 +18,16 @@ enum class WindowType {
     Applet,
     Notification,
     Desktop,
-    ToolWindow,
     AppletArea,
+    _Count
+};
+
+enum class WindowStyle : u8 {
+    Invalid = 0,
+    Normal,
+    ToolWindow,
+    Fullscreen,
+    Frameless,
     _Count
 };
 

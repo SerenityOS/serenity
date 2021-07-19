@@ -98,7 +98,7 @@ public:
     bool is_minimizable() const { return m_type == WindowType::Normal && m_minimizable; }
     void set_minimizable(bool);
 
-    bool is_resizable() const { return m_resizable && !m_fullscreen; }
+    bool is_resizable() const { return m_resizable && m_style != WindowStyle::Fullscreen; }
     void set_resizable(bool);
 
     bool is_maximized() const { return m_maximized; }
@@ -109,8 +109,10 @@ public:
 
     void set_vertically_maximized();
 
-    bool is_fullscreen() const { return m_fullscreen; }
-    void set_fullscreen(bool);
+    bool is_fullscreen() const { return m_style == WindowStyle::Fullscreen; }
+
+    WindowStyle style() const { return m_style; }
+    void set_style(WindowStyle);
 
     WindowTileType tiled() const { return m_tiled; }
     void set_tiled(Screen*, WindowTileType);
@@ -126,7 +128,7 @@ public:
 
     bool is_movable() const
     {
-        return m_type == WindowType::Normal || m_type == WindowType::ToolWindow;
+        return m_type == WindowType::Normal;
     }
 
     WindowFrame& frame() { return m_frame; }
@@ -307,8 +309,7 @@ public:
     bool is_accessory() const;
     bool is_accessory_of(Window&) const;
 
-    void set_frameless(bool);
-    bool is_frameless() const { return m_frameless; }
+    bool is_frameless() const { return m_style == WindowStyle::Frameless; }
 
     bool should_show_menubar() const { return m_should_show_menubar; }
 
@@ -377,7 +378,7 @@ public:
     bool is_stealable_by_client(i32 client_id) const { return m_stealable_by_client_ids.contains_slow(client_id); }
 
 private:
-    Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
+    Window(ClientConnection&, WindowType, int window_id, String const& title, bool modal, bool minimizable, bool resizable, WindowStyle style, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
 
     virtual void event(Core::Event&) override;
@@ -414,13 +415,12 @@ private:
     bool m_has_alpha_channel { false };
     bool m_modal { false };
     bool m_minimizable { false };
-    bool m_frameless { false };
     bool m_forced_shadow { false };
     bool m_resizable { false };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
     WindowMinimizedState m_minimized_state { WindowMinimizedState::None };
     bool m_maximized { false };
-    bool m_fullscreen { false };
+    WindowStyle m_style { WindowStyle::Normal };
     bool m_accessory { false };
     bool m_destroyed { false };
     bool m_default_positioned { false };

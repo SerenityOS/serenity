@@ -194,7 +194,7 @@ void Cube::set_show_window_frame(bool show)
     m_show_window_frame = show;
     m_stats->set_visible(m_show_window_frame);
     auto& w = *window();
-    w.set_frameless(!m_show_window_frame);
+    w.set_style(m_show_window_frame ? GUI::WindowStyle::Normal : GUI::WindowStyle::Frameless);
     w.set_has_alpha_channel(!m_show_window_frame);
     w.set_alpha_hit_threshold(m_show_window_frame ? 0 : 1);
 }

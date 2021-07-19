@@ -109,7 +109,7 @@ static void run_command(String command, bool keep_open)
 static RefPtr<GUI::Window> create_settings_window(VT::TerminalWidget& terminal)
 {
     auto window = GUI::Window::construct();
-    window->set_window_type(GUI::WindowType::ToolWindow);
+    window->set_style(GUI::WindowStyle::ToolWindow);
     window->set_title("Terminal settings");
     window->set_resizable(false);
     window->resize(200, 240);
@@ -182,7 +182,7 @@ static RefPtr<GUI::Window> create_settings_window(VT::TerminalWidget& terminal)
 static RefPtr<GUI::Window> create_find_window(VT::TerminalWidget& terminal)
 {
     auto window = GUI::Window::construct();
-    window->set_window_type(GUI::WindowType::ToolWindow);
+    window->set_style(GUI::WindowStyle::ToolWindow);
     window->set_title("Find in Terminal");
     window->set_resizable(false);
     window->resize(300, 90);
@@ -412,7 +412,7 @@ int main(int argc, char** argv)
 
     auto& view_menu = menubar->add_menu("&View");
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
-        window->set_fullscreen(!window->is_fullscreen());
+        window->set_style(window->is_fullscreen() ? GUI::WindowStyle::Normal : GUI::WindowStyle::Fullscreen);
     }));
     view_menu.add_action(terminal.clear_including_history_action());
     view_menu.add_separator();

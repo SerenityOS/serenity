@@ -100,7 +100,7 @@ private:
     virtual void add_menu_separator(i32) override;
     virtual void update_menu_item(i32, i32, i32, String const&, bool, bool, bool, bool, String const&) override;
     virtual void create_window(i32, Gfx::IntRect const&, bool, bool, bool, bool,
-        bool, bool, bool, bool, bool, float, float, Gfx::IntSize const&, Gfx::IntSize const&, Gfx::IntSize const&,
+        bool, u8, bool, bool, float, float, Gfx::IntSize const&, Gfx::IntSize const&, Gfx::IntSize const&,
         Optional<Gfx::IntSize> const&, i32, String const&, i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::DestroyWindowResponse destroy_window(i32) override;
     virtual void set_window_title(i32, String const&) override;
@@ -121,8 +121,7 @@ private:
     virtual void set_window_has_alpha_channel(i32, bool) override;
     virtual void set_window_alpha_hit_threshold(i32, float) override;
     virtual void move_window_to_front(i32) override;
-    virtual void set_fullscreen(i32, bool) override;
-    virtual void set_frameless(i32, bool) override;
+    virtual void set_style(i32, u8) override;
     virtual void set_forced_shadow(i32, bool) override;
     virtual void set_wallpaper(String const&) override;
     virtual void set_background_color(String const&) override;

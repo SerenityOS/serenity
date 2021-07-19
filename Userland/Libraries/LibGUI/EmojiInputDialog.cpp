@@ -38,7 +38,7 @@ static Vector<u32> supported_emoji_code_points()
 EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     : Dialog(parent_window)
 {
-    set_frameless(true);
+    set_style(GUI::WindowStyle::Frameless);
 
     auto& main_widget = set_main_widget<Frame>();
     main_widget.set_frame_shape(Gfx::FrameShape::Container);

@@ -11,5 +11,6 @@
 namespace GUI {
 
 using WindowType = WindowServer::WindowType;
+using WindowStyle = WindowServer::WindowStyle;
 
 }

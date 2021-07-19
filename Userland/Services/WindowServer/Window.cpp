@@ -87,15 +87,15 @@ Window::Window(Core::Object& parent, WindowType type)
     WindowManager::the().add_window(*this);
 }
 
-Window::Window(ClientConnection& client, WindowType window_type, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window)
+Window::Window(ClientConnection& client, WindowType window_type, int window_id, String const& title, bool modal, bool minimizable, bool resizable, WindowStyle style, bool accessory, Window* parent_window)
     : Core::Object(&client)
     , m_client(&client)
+    , m_title(title)
     , m_type(window_type)
     , m_modal(modal)
     , m_minimizable(minimizable)
-    , m_frameless(frameless)
     , m_resizable(resizable)
-    , m_fullscreen(fullscreen)
+    , m_style(style)
     , m_accessory(accessory)
     , m_window_id(window_id)
     , m_client_id(client.client_id())
@@ -282,7 +282,7 @@ void Window::update_window_menu_items()
     m_window_menu_maximize_item->set_text(m_maximized ? "&Restore" : "Ma&ximize");
     m_window_menu_maximize_item->set_enabled(m_resizable);
 
-    m_window_menu_move_item->set_enabled(m_minimized_state == WindowMinimizedState::None && !m_maximized && !m_fullscreen);
+    m_window_menu_move_item->set_enabled(m_minimized_state == WindowMinimizedState::None && !m_maximized && m_style != WindowStyle::Fullscreen);
 
     if (m_window_menu_pin_item)
         m_window_menu_pin_item->set_text(m_pinned ? "Un-&Pin Window" : "&Pin Window");
@@ -619,18 +619,6 @@ void Window::set_visible(bool b)
     }
 }
 
-void Window::set_frameless(bool frameless)
-{
-    if (m_frameless == frameless)
-        return;
-    m_frameless = frameless;
-    if (m_visible) {
-        Compositor::the().invalidate_occlusions();
-        invalidate(true, true);
-        invalidate_last_rendered_screen_rects();
-    }
-}
-
 void Window::invalidate(bool invalidate_frame, bool re_render_frame)
 {
     m_invalidated = true;
@@ -894,22 +882,33 @@ void Window::request_close()
     event(close_request);
 }
 
-void Window::set_fullscreen(bool fullscreen)
+void Window::set_style(WindowStyle style)
 {
-    if (m_fullscreen == fullscreen)
+    if (m_style == style)
         return;
-    m_fullscreen = fullscreen;
+    bool frameless_change = style == WindowStyle::Frameless || m_style == WindowStyle::Frameless;
+    bool fullscreen_change = style == WindowStyle::Fullscreen || m_style == WindowStyle::Fullscreen;
+    m_style = style;
     Gfx::IntRect new_window_rect = m_rect;
-    if (m_fullscreen) {
+    if (m_style == WindowStyle::Fullscreen) {
         m_saved_nonfullscreen_rect = m_rect;
         new_window_rect = Screen::closest_to_rect(m_rect).rect();
     } else if (!m_saved_nonfullscreen_rect.is_empty()) {
         new_window_rect = m_saved_nonfullscreen_rect;
     }
-    window_stack().window_fullscreen_state_changed(*this);
+
+    if (fullscreen_change)
+        window_stack().window_fullscreen_state_changed(*this);
 
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(new_window_rect));
     set_rect(new_window_rect);
+
+    if (m_visible && frameless_change) {
+        // TODO: do we really need to do this?
+        Compositor::the().invalidate_occlusions();
+        invalidate(true, true);
+        invalidate_last_rendered_screen_rects();
+    }
 }
 
 Gfx::IntRect Window::tiled_rect(Screen* target_screen, WindowTileType tiled) const

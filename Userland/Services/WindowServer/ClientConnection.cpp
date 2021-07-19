@@ -253,25 +253,18 @@ void ClientConnection::move_window_to_front(i32 window_id)
     WindowManager::the().move_to_front_and_make_active(*(*it).value);
 }
 
-void ClientConnection::set_fullscreen(i32 window_id, bool fullscreen)
+void ClientConnection::set_style(i32 window_id, u8 style)
 {
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
-        did_misbehave("SetFullscreen: Bad window ID");
+        did_misbehave("SetStyle: Bad window ID");
         return;
     }
-    it->value->set_fullscreen(fullscreen);
-}
-
-void ClientConnection::set_frameless(i32 window_id, bool frameless)
-{
-    auto it = m_windows.find(window_id);
-    if (it == m_windows.end()) {
-        did_misbehave("SetFrameless: Bad window ID");
+    if (style >= (u8)WindowStyle::_Count) {
+        did_misbehave("SetStyle: Bad style");
         return;
     }
-    it->value->set_frameless(frameless);
-    WindowManager::the().tell_wms_window_state_changed(*it->value);
+    it->value->set_style((WindowStyle)style);
 }
 
 void ClientConnection::set_forced_shadow(i32 window_id, bool shadow)
@@ -522,7 +515,7 @@ Window* ClientConnection::window_from_id(i32 window_id)
 
 void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
     bool auto_position, bool has_alpha_channel, bool modal, bool minimizable, bool resizable,
-    bool fullscreen, bool frameless, bool forced_shadow, bool accessory, float opacity,
+    u8 style, bool forced_shadow, bool accessory, float opacity,
     float alpha_hit_threshold, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment,
     Gfx::IntSize const& minimum_size, Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type,
     String const& title, i32 parent_window_id, Gfx::IntRect const& launch_origin_rect)
@@ -540,13 +533,18 @@ void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
         did_misbehave("CreateWindow with a bad type");
         return;
     }
+    if (style >= (u8)WindowStyle::_Count) {
+        did_misbehave("CreateWindow with a bad style");
+        return;
+    }
 
     if (m_windows.contains(window_id)) {
         did_misbehave("CreateWindow with already-used window ID");
         return;
     }
 
-    auto window = Window::construct(*this, (WindowType)type, window_id, modal, minimizable, frameless, resizable, fullscreen, accessory, parent_window);
+    auto window_style = (WindowStyle)style;
+    auto window = Window::construct(*this, (WindowType)type, window_id, title, modal, minimizable, resizable, window_style, accessory, parent_window);
 
     window->set_forced_shadow(forced_shadow);
 
@@ -554,8 +552,7 @@ void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
         window->start_launch_animation(launch_origin_rect);
 
     window->set_has_alpha_channel(has_alpha_channel);
-    window->set_title(title);
-    if (!fullscreen) {
+    if (window_style != WindowStyle::Fullscreen) {
         Gfx::IntRect new_rect = rect;
         if (auto_position && window->is_movable()) {
             new_rect = { WindowManager::the().get_recommended_window_position({ 100, 100 }), rect.size() };

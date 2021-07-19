@@ -162,8 +162,7 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(true);
     window->set_title("Starfield");
     window->set_resizable(false);
-    window->set_frameless(true);
-    window->set_fullscreen(true);
+    window->set_style(GUI::WindowStyle::Fullscreen);
     window->set_minimizable(false);
     window->set_icon(app_icon.bitmap_for_size(16));
 
