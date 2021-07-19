@@ -197,7 +197,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     // Register used memory regions that we know of.
     m_used_memory_ranges.ensure_capacity(4);
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
-    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Prekernel, PhysicalAddress(virtual_to_low_physical(FlatPtr(start_of_prekernel_image))), PhysicalAddress(page_round_up(virtual_to_low_physical(FlatPtr(end_of_prekernel_image)))) });
+    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Prekernel, start_of_prekernel_image, end_of_prekernel_image });
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical(FlatPtr(&start_of_kernel_image))), PhysicalAddress(page_round_up(virtual_to_low_physical(FlatPtr(&end_of_kernel_image)))) });
 
     if (multiboot_info_ptr->flags & 0x4) {
@@ -439,10 +439,8 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         unquickmap_page();
 
         // Hook the page table into the kernel page directory
-        PhysicalAddress boot_pd_kernel_paddr(virtual_to_low_physical((FlatPtr)boot_pd_kernel));
-
         u32 page_directory_index = (virtual_page_base_for_this_pt >> 21) & 0x1ff;
-        auto* pd = reinterpret_cast<PageDirectoryEntry*>(quickmap_page(boot_pd_kernel_paddr));
+        auto* pd = reinterpret_cast<PageDirectoryEntry*>(quickmap_page(boot_pd_kernel));
         PageDirectoryEntry& pde = pd[page_directory_index];
 
         VERIFY(!pde.is_present()); // Nothing should be using this PD yet
@@ -991,7 +989,7 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
 {
     VERIFY(s_mm_lock.own_lock());
     auto& mm_data = get_data();
-    auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[(KERNEL_QUICKMAP_PD - KERNEL_PT1024_BASE) / PAGE_SIZE];
+    auto& pte = boot_pd_kernel_pt1023[(KERNEL_QUICKMAP_PD - KERNEL_PT1024_BASE) / PAGE_SIZE];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
     if (pte.physical_page_base() != pd_paddr.get()) {
         pte.set_physical_page_base(pd_paddr.get());

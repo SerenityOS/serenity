@@ -8,6 +8,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Multiboot.h>
+#include <Kernel/PhysicalAddress.h>
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/VirtualAddress.h>
 #include <LibC/elf.h>
@@ -138,20 +139,20 @@ extern "C" [[noreturn]] void init()
     };
 
     BootInfo info;
-    info.start_of_prekernel_image = adjust_by_load_base(start_of_prekernel_image);
-    info.end_of_prekernel_image = adjust_by_load_base(end_of_prekernel_image);
+    info.start_of_prekernel_image = (PhysicalPtr)start_of_prekernel_image;
+    info.end_of_prekernel_image = (PhysicalPtr)end_of_prekernel_image;
     info.kernel_base = kernel_load_base;
-    info.multiboot_info_ptr = adjust_by_load_base(multiboot_info_ptr);
+    info.multiboot_info_ptr = (FlatPtr)adjust_by_load_base(multiboot_info_ptr);
 #if ARCH(X86_64)
-    info.gdt64ptr = (FlatPtr)gdt64ptr;
+    info.gdt64ptr = (PhysicalPtr)gdt64ptr;
     info.code64_sel = code64_sel;
-    info.boot_pml4t = (FlatPtr)adjust_by_load_base(boot_pml4t);
+    info.boot_pml4t = (PhysicalPtr)boot_pml4t;
 #endif
-    info.boot_pdpt = (FlatPtr)adjust_by_load_base(boot_pdpt);
-    info.boot_pd0 = (FlatPtr)adjust_by_load_base(boot_pd0);
-    info.boot_pd_kernel = (FlatPtr)adjust_by_load_base(boot_pd_kernel);
+    info.boot_pdpt = (PhysicalPtr)boot_pdpt;
+    info.boot_pd0 = (PhysicalPtr)boot_pd0;
+    info.boot_pd_kernel = (PhysicalPtr)boot_pd_kernel;
     info.boot_pd_kernel_pt1023 = (FlatPtr)adjust_by_load_base(boot_pd_kernel_pt1023);
-    info.kernel_cmdline = adjust_by_load_base(kernel_cmdline);
+    info.kernel_cmdline = (FlatPtr)adjust_by_load_base(kernel_cmdline);
 
     asm(
 #if ARCH(I386)
