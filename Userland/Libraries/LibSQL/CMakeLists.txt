@@ -1,8 +1,11 @@
 set(SOURCES
     AST/CreateSchema.cpp
     AST/CreateTable.cpp
+    AST/Expression.cpp
+    AST/Insert.cpp
     AST/Lexer.cpp
     AST/Parser.cpp
+    AST/Select.cpp
     AST/SyntaxHighlighter.cpp
     AST/Token.cpp
     BTree.cpp

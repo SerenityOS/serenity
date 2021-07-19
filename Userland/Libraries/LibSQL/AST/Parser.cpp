@@ -205,10 +205,16 @@ NonnullRefPtr<Insert> Parser::parse_insert_statement(RefPtr<CommonTableExpressio
 
     if (consume_if(TokenType::Values)) {
         parse_comma_separated_list(false, [&]() {
-            if (auto chained_expression = parse_chained_expression(); chained_expression.has_value())
-                chained_expressions.append(move(chained_expression.value()));
-            else
+            if (auto chained_expression = parse_chained_expression(); chained_expression.has_value()) {
+                auto chained_expr = dynamic_cast<ChainedExpression*>(chained_expression->ptr());
+                if ((column_names.size() > 0) && (chained_expr->expressions().size() != column_names.size())) {
+                    syntax_error("Number of expressions does not match number of columns");
+                } else {
+                    chained_expressions.append(move(chained_expression.value()));
+                }
+            } else {
                 expected("Chained expression");
+            }
         });
     } else if (match(TokenType::Select)) {
         select_statement = parse_select_statement({});
