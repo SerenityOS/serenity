@@ -219,6 +219,7 @@ private:
     Gfx::DisjointRectSet m_overlay_rects;
     Gfx::DisjointRectSet m_dirty_screen_rects;
     Gfx::DisjointRectSet m_opaque_wallpaper_rects;
+    Gfx::DisjointRectSet m_transparent_wallpaper_rects;
 
     String m_wallpaper_path { "" };
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
