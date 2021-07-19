@@ -209,7 +209,7 @@ void TerminalProvider::query(String const& query, Function<void(NonnullRefPtrVec
     if (!query.starts_with('$'))
         return;
 
-    auto command = query.substring(1);
+    auto command = query.substring(1).trim_whitespace();
 
     NonnullRefPtrVector<Result> results;
     results.append(adopt_ref(*new TerminalResult(move(command))));
