@@ -15,3 +15,10 @@ test("basic functionality", () => {
     expect("".concat(1, {})).toBe("1[object Object]");
     expect("".concat(1, {}, false)).toBe("1[object Object]false");
 });
+
+test("UTF-16", () => {
+    expect("😀".concat()).toBe("😀");
+    expect("😀".concat("a")).toBe("😀a");
+    expect("😀".concat("a", 4)).toBe("😀a4");
+    expect("😀".concat("a", "😀")).toBe("😀a😀");
+});
