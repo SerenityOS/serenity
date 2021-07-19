@@ -10,6 +10,14 @@
 
 namespace JS {
 
+struct CodePoint {
+    u32 code_point { 0 };
+    size_t code_unit_count { 0 };
+    bool is_unpaired_surrogate { false };
+};
+
+CodePoint code_point_at(Utf16View const& string, size_t position);
+
 class StringPrototype final : public StringObject {
     JS_OBJECT(StringPrototype, StringObject);
 
