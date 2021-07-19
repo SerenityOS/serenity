@@ -40,3 +40,11 @@ test("basic functionality", () => {
     );
     expect(s.endsWith("bar", undefined)).toBeTrue();
 });
+
+test("UTF-16", () => {
+    var s = "😀";
+    expect(s.endsWith("😀")).toBeTrue();
+    expect(s.endsWith("\ud83d")).toBeFalse();
+    expect(s.endsWith("\ude00")).toBeTrue();
+    expect(s.endsWith("a")).toBeFalse();
+});
