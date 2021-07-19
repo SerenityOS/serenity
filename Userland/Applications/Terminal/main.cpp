@@ -106,10 +106,12 @@ static void run_command(String command, bool keep_open)
     VERIFY_NOT_REACHED();
 }
 
-static RefPtr<GUI::Window> create_settings_window(VT::TerminalWidget& terminal)
+static RefPtr<GUI::Window> create_settings_window(GUI::Window& parent, VT::TerminalWidget& terminal)
 {
-    auto window = GUI::Window::construct();
+    auto window = GUI::Window::construct(&parent);
     window->set_style(GUI::WindowStyle::ToolWindow);
+    window->set_accessory(true);
+    window->set_minimizable(false);
     window->set_title("Terminal settings");
     window->set_resizable(false);
     window->resize(200, 240);
@@ -355,7 +357,7 @@ int main(int argc, char** argv)
     auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"),
         [&](const GUI::Action&) {
             if (!settings_window)
-                settings_window = create_settings_window(terminal);
+                settings_window = create_settings_window(window, terminal);
             settings_window->show();
             settings_window->move_to_front();
         });
