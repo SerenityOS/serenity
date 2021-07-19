@@ -21,4 +21,10 @@ int iswctype(wint_t, wctype_t)
     dbgln("FIXME: Implement iswctype()");
     TODO();
 }
+
+int iswprint(wint_t)
+{
+    dbgln("FIXME: Implement iswprint()");
+    TODO();
+}
 }
