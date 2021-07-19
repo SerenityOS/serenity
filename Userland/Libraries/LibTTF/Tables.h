@@ -126,6 +126,27 @@ private:
     u32 m_number_of_h_metrics { 0 };
 };
 
+class OS2 {
+public:
+    enum class Offsets {
+        TypographicAscender = 68,
+        TypographicDescender = 70,
+        TypographicLineGap = 72,
+    };
+
+    i16 typographic_ascender() const;
+    i16 typographic_descender() const;
+    i16 typographic_line_gap() const;
+
+    explicit OS2(ReadonlyBytes const& slice)
+        : m_slice(slice)
+    {
+    }
+
+private:
+    ReadonlyBytes m_slice;
+};
+
 class Name {
 public:
     enum class Platform {
