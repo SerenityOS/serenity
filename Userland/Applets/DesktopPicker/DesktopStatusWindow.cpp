@@ -67,6 +67,25 @@ public:
             GUI::WindowManagerServerConnection::the().async_set_virtual_desktop(row, col);
     }
 
+    virtual void mousewheel_event(GUI::MouseEvent& event) override
+    {
+        auto& desktop = GUI::Desktop::the();
+
+        auto col = current_col();
+        auto row = current_row();
+
+        auto vcols = desktop.virtual_desktop_columns();
+        auto vrows = desktop.virtual_desktop_rows();
+        auto direction = event.wheel_delta() < 0 ? 1 : -1;
+
+        if (event.modifiers() & Mod_Shift)
+            col = abs((int)col + direction) % vcols;
+        else
+            row = abs((int)row + direction) % vrows;
+
+        GUI::WindowManagerServerConnection::the().async_set_virtual_desktop(row, col);
+    }
+
     unsigned current_row() const { return m_current_row; }
     void set_current_row(unsigned row) { m_current_row = row; }
     unsigned current_col() const { return m_current_col; }
