@@ -143,3 +143,15 @@ test("search value is coerced to a string", () => {
     expect(newString).toBe("abc");
     expect(coerced).toBe("x");
 });
+
+test("UTF-16", () => {
+    expect("😀".replaceAll("😀", "")).toBe("");
+    expect("😀".replaceAll("\ud83d", "")).toBe("\ude00");
+    expect("😀".replaceAll("\ude00", "")).toBe("\ud83d");
+    expect("😀😀😀".replaceAll("\ud83d", "")).toBe("\ude00\ude00\ude00");
+    expect("😀😀😀".replaceAll("\ude00", "")).toBe("\ud83d\ud83d\ud83d");
+
+    // FIXME: RegExp.prototype [ @@replace ] also needs to support UTF-16.
+    // expect("😀".replaceAll(/\ud83d/g, "")).toBe("\ude00");
+    // expect("😀".replaceAll(/\ude00/g, "")).toBe("\ud83d");
+});
