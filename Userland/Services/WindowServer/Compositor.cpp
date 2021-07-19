@@ -1092,6 +1092,7 @@ void Compositor::recompute_occlusions()
             auto& visible_opaque = w.opaque_rects();
             auto& transparency_rects = w.transparency_rects();
             auto& transparency_wallpaper_rects = w.transparency_wallpaper_rects();
+            w.affected_transparency_rects().clear();
             w.screens().clear_with_capacity();
             if (&w == fullscreen_window) {
                 w.screens().append(&main_screen);
