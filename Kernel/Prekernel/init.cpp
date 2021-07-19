@@ -72,7 +72,7 @@ extern "C" [[noreturn]] void init()
     ElfW(Phdr)* kernel_program_headers = (ElfW(Phdr*))((char*)kernel_elf_header + kernel_elf_header->e_phoff);
 
     FlatPtr kernel_load_base = kernel_program_headers[0].p_vaddr;
-    FlatPtr kernel_load_end = kernel_program_headers[kernel_elf_header->e_phnum - 1].p_vaddr;
+    FlatPtr kernel_load_end = kernel_program_headers[kernel_elf_header->e_phnum - 1].p_vaddr + kernel_program_headers[kernel_elf_header->e_phnum - 1].p_memsz;
 
     // align to 1GB
     kernel_load_base &= ~(FlatPtr)0x3fffffff;
