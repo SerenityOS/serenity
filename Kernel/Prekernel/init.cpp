@@ -68,11 +68,15 @@ extern "C" [[noreturn]] void init()
     multiboot_module_entry_t* kernel_module = (multiboot_module_entry_t*)(FlatPtr)multiboot_info_ptr->mods_addr;
 
     u8* kernel_image = (u8*)(FlatPtr)kernel_module->start;
-    ElfW(Ehdr)* kernel_elf_header = (ElfW(Ehdr)*)kernel_image;
-    ElfW(Phdr)* kernel_program_headers = (ElfW(Phdr*))((char*)kernel_elf_header + kernel_elf_header->e_phoff);
+    // copy the ELF header and program headers because we might end up overwriting them
+    ElfW(Ehdr) kernel_elf_header = *(ElfW(Ehdr)*)kernel_image;
+    ElfW(Phdr) kernel_program_headers[16];
+    if (kernel_elf_header.e_phnum > array_size(kernel_program_headers))
+        halt();
+    __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(ElfW(Phdr)) * kernel_elf_header.e_phnum);
 
     FlatPtr kernel_load_base = kernel_program_headers[0].p_vaddr;
-    FlatPtr kernel_load_end = kernel_program_headers[kernel_elf_header->e_phnum - 1].p_vaddr + kernel_program_headers[kernel_elf_header->e_phnum - 1].p_memsz;
+    FlatPtr kernel_load_end = kernel_program_headers[kernel_elf_header.e_phnum - 1].p_vaddr + kernel_program_headers[kernel_elf_header.e_phnum - 1].p_memsz;
 
     // align to 1GB
     kernel_load_base &= ~(FlatPtr)0x3fffffff;
@@ -99,7 +103,7 @@ extern "C" [[noreturn]] void init()
     for (size_t i = 0; i < (FlatPtr)end_of_prekernel_image / PAGE_SIZE; i++)
         boot_pd_kernel_pts[i] = i * PAGE_SIZE | 0x3;
 
-    for (size_t i = 0; i < kernel_elf_header->e_phnum; i++) {
+    for (size_t i = 0; i < kernel_elf_header.e_phnum; i++) {
         auto& kernel_program_header = kernel_program_headers[i];
         if (kernel_program_header.p_type != PT_LOAD)
             continue;
@@ -113,14 +117,14 @@ extern "C" [[noreturn]] void init()
 
     reload_cr3();
 
-    for (ssize_t i = kernel_elf_header->e_phnum - 1; i >= 0; i--) {
+    for (ssize_t i = kernel_elf_header.e_phnum - 1; i >= 0; i--) {
         auto& kernel_program_header = kernel_program_headers[i];
         if (kernel_program_header.p_type != PT_LOAD)
             continue;
         __builtin_memmove((u8*)kernel_program_header.p_vaddr, kernel_image + kernel_program_header.p_offset, kernel_program_header.p_filesz);
     }
 
-    for (ssize_t i = kernel_elf_header->e_phnum - 1; i >= 0; i--) {
+    for (ssize_t i = kernel_elf_header.e_phnum - 1; i >= 0; i--) {
         auto& kernel_program_header = kernel_program_headers[i];
         if (kernel_program_header.p_type != PT_LOAD)
             continue;
@@ -166,7 +170,7 @@ extern "C" [[noreturn]] void init()
     for (FlatPtr vaddr = (FlatPtr)end_of_prekernel_image; vaddr < MAX_KERNEL_SIZE; vaddr += PAGE_SIZE)
         boot_pd0_pts[vaddr >> 12 & 0x1ff] = 0;
 
-    void (*entry)(BootInfo const&) = (void (*)(BootInfo const&))kernel_elf_header->e_entry;
+    void (*entry)(BootInfo const&) = (void (*)(BootInfo const&))kernel_elf_header.e_entry;
     entry(*adjust_by_load_base(&info));
 
     __builtin_unreachable();
