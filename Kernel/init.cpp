@@ -109,7 +109,7 @@ static Processor s_bsp_processor; // global but let's keep it "private"
 extern "C" {
 PhysicalAddress start_of_prekernel_image;
 PhysicalAddress end_of_prekernel_image;
-__attribute__((section(".boot_bss"))) FlatPtr kernel_base;
+FlatPtr kernel_base;
 #if ARCH(X86_64)
 PhysicalAddress boot_pml4t;
 #endif
