@@ -382,7 +382,7 @@ static void get_ttglyph_offsets(ReadonlyBytes const& slice, u32 num_points, u32 
     *y_offset = *x_offset + x_size;
 }
 
-void Glyf::Glyph::rasterize_impl(Rasterizer& rasterizer, Gfx::AffineTransform& affine) const
+void Glyf::Glyph::rasterize_impl(Rasterizer& rasterizer, Gfx::AffineTransform const& transform) const
 {
     // Get offset for flags, x, and y.
     u16 num_points = be_u16(m_slice.offset_pointer((m_num_contours - 1) * 2)) + 1;
@@ -394,7 +394,7 @@ void Glyf::Glyph::rasterize_impl(Rasterizer& rasterizer, Gfx::AffineTransform& a
 
     // Prepare to render glyph.
     Gfx::Path path;
-    PointIterator point_iterator(m_slice, num_points, flags_offset, x_offset, y_offset, affine);
+    PointIterator point_iterator(m_slice, num_points, flags_offset, x_offset, y_offset, transform);
 
     int last_contour_end = -1;
     i32 contour_index = 0;
