@@ -94,6 +94,12 @@ elif "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spicevmc; then
     SERENITY_SPICE_SERVER_CHARDEV="-chardev spicevmc,id=vdagent,name=vdagent"
 fi
 
+if [ "$(uname)" = "Darwin" ]; then
+    SERENITY_AUDIO_BACKEND="-audiodev coreaudio,id=snd0"
+else
+    SERENITY_AUDIO_BACKEND="-audiodev sdl,id=snd0"
+fi
+
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
 if  [ "$SERENITY_SPICE" ]; then
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-spice-app}"
@@ -146,8 +152,9 @@ $SERENITY_SPICE_SERVER_CHARDEV
 -device virtconsole,chardev=stdout
 -device isa-debugcon,chardev=stdout
 -device virtio-rng-pci
--soundhw pcspk
--device sb16
+$SERENITY_AUDIO_BACKEND
+-machine pcspk-audiodev=snd0
+-device sb16,audiodev=snd0
 -device pci-bridge,chassis_nr=1,id=bridge1 -device $SERENITY_ETHERNET_DEVICE_TYPE,bus=bridge1
 -device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
 -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
