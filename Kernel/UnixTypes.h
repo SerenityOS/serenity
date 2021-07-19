@@ -108,6 +108,9 @@ enum {
 #define F_GETFL 3
 #define F_SETFL 4
 #define F_ISTTY 5
+#define F_GETLK 6
+#define F_SETLK 7
+#define F_SETLKW 8
 
 #define FD_CLOEXEC 1
 
@@ -745,4 +748,16 @@ struct statvfs {
     unsigned long f_fsid;
     unsigned long f_flag;
     unsigned long f_namemax;
+};
+
+#define F_RDLCK ((short)0)
+#define F_WRLCK ((short)1)
+#define F_UNLCK ((short)2)
+
+struct flock {
+    short l_type;
+    short l_whence;
+    off_t l_start;
+    off_t l_len;
+    pid_t l_pid;
 };

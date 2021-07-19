@@ -18,6 +18,9 @@ __BEGIN_DECLS
 #define F_GETFL 3
 #define F_SETFL 4
 #define F_ISTTY 5
+#define F_GETLK 6
+#define F_SETLK 7
+#define F_SETLKW 8
 
 #define FD_CLOEXEC 1
 
@@ -48,12 +51,9 @@ int create_inode_watcher(unsigned flags);
 int inode_watcher_add_watch(int fd, const char* path, size_t path_length, unsigned event_mask);
 int inode_watcher_remove_watch(int fd, int wd);
 
-#define F_RDLCK 0
-#define F_WRLCK 1
-#define F_UNLCK 2
-#define F_GETLK 5
-#define F_SETLK 6
-#define F_SETLKW 7
+#define F_RDLCK ((short)0)
+#define F_WRLCK ((short)1)
+#define F_UNLCK ((short)2)
 
 struct flock {
     short l_type;

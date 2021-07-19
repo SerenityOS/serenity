@@ -42,6 +42,10 @@ KResultOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
         break;
     case F_ISTTY:
         return description->is_tty();
+    case F_GETLK:
+        return description->get_flock(Userspace<flock*>(arg));
+    case F_SETLK:
+        return description->apply_flock(*Process::current(), Userspace<const flock*>(arg));
     default:
         return EINVAL;
     }

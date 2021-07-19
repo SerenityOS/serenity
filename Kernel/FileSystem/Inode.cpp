@@ -11,11 +11,13 @@
 #include <AK/StringView.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Net/LocalSocket.h>
+#include <Kernel/Process.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
 namespace Kernel {
@@ -272,4 +274,126 @@ RefPtr<SharedInodeVMObject> Inode::shared_vmobject() const
     return m_shared_vmobject.strong_ref();
 }
 
+template<typename T>
+static inline bool range_overlap(T start1, T len1, T start2, T len2)
+{
+    return ((start1 < start2 + len2) || len2 == 0) && ((start2 < start1 + len1) || len1 == 0);
+}
+
+static inline KResult normalize_flock(FileDescription const& description, flock& lock)
+{
+    off_t start;
+    switch (lock.l_whence) {
+    case SEEK_SET:
+        start = lock.l_start;
+        break;
+    case SEEK_CUR:
+        start = description.offset() + lock.l_start;
+        break;
+    case SEEK_END:
+        // FIXME: Implement SEEK_END and negative lengths.
+        return ENOTSUP;
+    default:
+        return EINVAL;
+    }
+    lock = { lock.l_type, SEEK_SET, start, lock.l_len, 0 };
+    return KSuccess;
+}
+
+KResult Inode::can_apply_flock(FileDescription const& description, flock const& new_lock) const
+{
+    VERIFY(new_lock.l_whence == SEEK_SET);
+
+    MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
+
+    if (new_lock.l_type == F_UNLCK) {
+        for (auto& lock : m_flocks) {
+            if (&description == lock.owner && lock.start == new_lock.l_start && lock.len == new_lock.l_len)
+                return KSuccess;
+        }
+        return EINVAL;
+    }
+
+    for (auto& lock : m_flocks) {
+        if (!range_overlap(lock.start, lock.len, new_lock.l_start, new_lock.l_len))
+            continue;
+
+        if (new_lock.l_type == F_RDLCK && lock.type == F_WRLCK)
+            return EAGAIN;
+
+        if (new_lock.l_type == F_WRLCK)
+            return EAGAIN;
+    }
+    return KSuccess;
+}
+
+KResult Inode::apply_flock(Process const& process, FileDescription const& description, Userspace<flock const*> input_lock)
+{
+    flock new_lock;
+    if (!copy_from_user(&new_lock, input_lock))
+        return EFAULT;
+
+    auto rc = normalize_flock(description, new_lock);
+    if (rc.is_error())
+        return rc;
+
+    MutexLocker locker(m_inode_lock);
+
+    rc = can_apply_flock(description, new_lock);
+    if (rc.is_error())
+        return rc;
+
+    if (new_lock.l_type == F_UNLCK) {
+        for (size_t i = 0; i < m_flocks.size(); ++i) {
+            if (&description == m_flocks[i].owner && m_flocks[i].start == new_lock.l_start && m_flocks[i].len == new_lock.l_len) {
+                m_flocks.remove(i);
+                return KSuccess;
+            }
+        }
+        return EINVAL;
+    }
+
+    m_flocks.append(Flock { new_lock.l_type, new_lock.l_start, new_lock.l_len, &description, process.pid().value() });
+    return KSuccess;
+}
+
+KResult Inode::get_flock(FileDescription const& description, Userspace<flock*> reference_lock) const
+{
+    flock lookup;
+    if (!copy_from_user(&lookup, reference_lock))
+        return EFAULT;
+
+    auto rc = normalize_flock(description, lookup);
+    if (rc.is_error())
+        return rc;
+
+    MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
+
+    for (auto& lock : m_flocks) {
+        if (!range_overlap(lock.start, lock.len, lookup.l_start, lookup.l_len))
+            continue;
+
+        if ((lookup.l_type == F_RDLCK && lock.type == F_WRLCK) || lookup.l_type == F_WRLCK) {
+            lookup = { lock.type, SEEK_SET, lock.start, lock.len, lock.pid };
+            if (!copy_to_user(reference_lock, &lookup))
+                return EFAULT;
+            return KSuccess;
+        }
+    }
+
+    lookup.l_type = F_UNLCK;
+    if (!copy_to_user(reference_lock, &lookup))
+        return EFAULT;
+    return KSuccess;
+}
+
+void Inode::remove_flocks_for_description(FileDescription const& description)
+{
+    MutexLocker locker(m_inode_lock);
+
+    for (size_t i = 0; i < m_flocks.size(); ++i) {
+        if (&description == m_flocks[i].owner)
+            m_flocks.remove(i--);
+    }
+}
 }
