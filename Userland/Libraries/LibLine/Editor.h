@@ -383,7 +383,7 @@ private:
     }
 
     void recalculate_origin();
-    void reposition_cursor(bool to_end = false);
+    void reposition_cursor(OutputStream&, bool to_end = false);
 
     struct CodepointRange {
         size_t start { 0 };

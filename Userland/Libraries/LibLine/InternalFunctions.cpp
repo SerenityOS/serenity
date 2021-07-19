@@ -342,12 +342,13 @@ void Editor::enter_search()
         auto& search_string = search_string_result.value();
 
         // Manually cleanup the search line.
-        reposition_cursor();
+        OutputFileStream stderr_stream { stderr };
+        reposition_cursor(stderr_stream);
         auto search_metrics = actual_rendered_string_metrics(search_string);
         auto metrics = actual_rendered_string_metrics(search_prompt);
-        VT::clear_lines(0, metrics.lines_with_addition(search_metrics, m_num_columns) + search_end_row - m_origin_row - 1);
+        VT::clear_lines(0, metrics.lines_with_addition(search_metrics, m_num_columns) + search_end_row - m_origin_row - 1, stderr_stream);
 
-        reposition_cursor();
+        reposition_cursor(stderr_stream);
 
         m_refresh_needed = true;
         m_cached_prompt_valid = false;
@@ -432,8 +433,9 @@ void Editor::go_end()
 
 void Editor::clear_screen()
 {
-    fprintf(stderr, "\033[3J\033[H\033[2J"); // Clear screen.
-    VT::move_absolute(1, 1);
+    warn("\033[3J\033[H\033[2J");
+    OutputFileStream stream { stderr };
+    VT::move_absolute(1, 1, stream);
     set_origin(1, 1);
     m_refresh_needed = true;
     m_cached_prompt_valid = false;
