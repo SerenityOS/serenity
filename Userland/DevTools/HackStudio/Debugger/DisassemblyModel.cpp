@@ -30,7 +30,14 @@ DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, con
     OwnPtr<ELF::Image> kernel_elf;
     const ELF::Image* elf = nullptr;
 
-    if (containing_function.value().address_low >= 0xc0000000) {
+    // FIXME: Use /proc for this
+#if ARCH(I386)
+    FlatPtr kernel_base = 0xc0000000;
+#else
+    FlatPtr kernel_base = 0x2000000000;
+#endif
+
+    if (containing_function.value().address_low >= kernel_base) {
         auto file_or_error = MappedFile::map("/boot/Kernel.debug");
         if (file_or_error.is_error())
             return;

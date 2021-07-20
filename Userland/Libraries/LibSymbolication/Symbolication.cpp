@@ -82,7 +82,12 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
     Vector<RegionWithSymbols> regions;
 
     regions.append(RegionWithSymbols {
+    // FIXME: Use /proc for this
+#if ARCH(I386)
         .base = 0xc0000000,
+#else
+        .base = 0x2000000000,
+#endif
         .size = 0x3fffffff,
         .path = "/boot/Kernel.debug",
         .is_relative = false });

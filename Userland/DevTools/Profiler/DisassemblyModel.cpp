@@ -40,7 +40,13 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     OwnPtr<ELF::Image> kernel_elf;
     const ELF::Image* elf;
     FlatPtr base_address = 0;
-    if (m_node.address() >= 0xc0000000) {
+    // FIXME: Use /proc for this
+#if ARCH(I386)
+    FlatPtr kernel_base = 0xc0000000;
+#else
+    FlatPtr kernel_base = 0x2000000000;
+#endif
+    if (m_node.address() >= kernel_base) {
         if (!m_kernel_file) {
             auto file_or_error = MappedFile::map("/boot/Kernel.debug");
             if (file_or_error.is_error())

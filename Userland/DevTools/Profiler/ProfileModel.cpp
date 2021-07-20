@@ -105,7 +105,13 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             if (node->is_root()) {
                 return GUI::FileIconProvider::icon_for_executable(node->process().executable);
             }
-            if (node->address() >= 0xc0000000)
+            // FIXME: Use /proc for this
+#if ARCH(I386)
+            FlatPtr kernel_base = 0xc0000000;
+#else
+            FlatPtr kernel_base = 0x2000000000;
+#endif
+            if (node->address() >= kernel_base)
                 return m_kernel_frame_icon;
             return m_user_frame_icon;
         }
