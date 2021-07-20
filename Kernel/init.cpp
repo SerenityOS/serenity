@@ -124,7 +124,6 @@ const char* kernel_cmdline;
 extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 {
     g_in_early_boot = true;
-    setup_serial_debug();
 
     multiboot_info_ptr = boot_info.multiboot_info_ptr;
     start_of_prekernel_image = boot_info.start_of_prekernel_image;
@@ -140,6 +139,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     boot_pd_kernel = boot_info.boot_pd_kernel;
     boot_pd_kernel_pt1023 = boot_info.boot_pd_kernel_pt1023;
     kernel_cmdline = boot_info.kernel_cmdline;
+
+    setup_serial_debug();
 
     // We need to copy the command line before kmalloc is initialized,
     // as it may overwrite parts of multiboot!
