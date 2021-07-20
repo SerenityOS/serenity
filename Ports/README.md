@@ -261,6 +261,7 @@ build() {
 The following can be overridden, the names should be self-explanatory as they
 mostly match the [available options](#options):
 
+- `pre_fetch`
 - `post_fetch`
 - `pre_configure`
 - `configure`.
