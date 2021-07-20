@@ -1,5 +1,5 @@
 describe("correct behavior", () => {
-    test("length is 1", () => {
+    test("length is 2", () => {
         expect(Temporal.Instant.compare).toHaveLength(2);
     });
 
