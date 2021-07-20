@@ -17,7 +17,6 @@ public:
     using OutputType = KBuffer;
 
     explicit KBufferBuilder(bool can_expand = false);
-    explicit KBufferBuilder(RefPtr<KBufferImpl>&, bool can_expand = false);
     KBufferBuilder(KBufferBuilder&&) = default;
     ~KBufferBuilder() = default;
 

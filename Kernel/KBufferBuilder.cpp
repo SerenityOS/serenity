@@ -48,14 +48,6 @@ KBufferBuilder::KBufferBuilder(bool can_expand)
 {
 }
 
-KBufferBuilder::KBufferBuilder(RefPtr<KBufferImpl>& buffer, bool can_expand)
-    : m_buffer(buffer)
-    , m_can_expand(can_expand)
-{
-    if (!m_buffer)
-        m_buffer = buffer = KBufferImpl::try_create_with_size(4 * MiB, Region::Access::Read | Region::Access::Write);
-}
-
 void KBufferBuilder::append_bytes(ReadonlyBytes bytes)
 {
     if (!check_expand(bytes.size()))
