@@ -625,6 +625,8 @@ static void build_slash_reg(u8 op, u8 slash, const char* mnemonic, InstructionFo
     build(0xEE, "OUT", OP_DX_AL, &Interpreter::OUT_DX_AL);
     build(0xEF, "OUT", OP_DX_AX, &Interpreter::OUT_DX_AX, OP_DX_EAX, &Interpreter::OUT_DX_EAX);
 
+    build(0xF1, "INT1", OP, &Interpreter::INT1);
+
     build(0xF4, "HLT", OP, &Interpreter::HLT);
     build(0xF5, "CMC", OP, &Interpreter::CMC);
 

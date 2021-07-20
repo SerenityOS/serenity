@@ -729,6 +729,7 @@ private:
     virtual void INSB(const X86::Instruction&) override;
     virtual void INSD(const X86::Instruction&) override;
     virtual void INSW(const X86::Instruction&) override;
+    virtual void INT1(const X86::Instruction&) override;
     virtual void INT3(const X86::Instruction&) override;
     virtual void INTO(const X86::Instruction&) override;
     virtual void INT_imm8(const X86::Instruction&) override;
