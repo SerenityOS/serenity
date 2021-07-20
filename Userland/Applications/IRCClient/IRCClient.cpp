@@ -516,9 +516,9 @@ void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice typ
     // Otherwise, put them in the server window. This seems to match other clients.
     IRCQuery* query = nullptr;
     if (is_ctcp || type == PrivmsgOrNotice::Notice) {
-        query = query_with_name(sender_nick);
+        query = query_with_name(target);
     } else {
-        query = &ensure_query(sender_nick);
+        query = &ensure_query(target);
     }
     if (query) {
         if (insert_as_raw_message)
