@@ -177,7 +177,7 @@ extern "C" [[noreturn]] void init()
 
     // unmap the end_of_prekernel_image - MAX_KERNEL_SIZE region
     for (FlatPtr vaddr = (FlatPtr)end_of_prekernel_image; vaddr < MAX_KERNEL_SIZE; vaddr += PAGE_SIZE)
-        boot_pd0_pts[vaddr >> 12 & 0x1ff] = 0;
+        boot_pd0_pts[vaddr >> 12] = 0;
 
     void (*entry)(BootInfo const&) = (void (*)(BootInfo const&))kernel_elf_header.e_entry;
     entry(*adjust_by_load_base(&info));
