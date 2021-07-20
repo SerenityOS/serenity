@@ -2384,6 +2384,7 @@ void SoftCPU::INC_reg32(const X86::Instruction& insn)
 void SoftCPU::INSB(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::INSD(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::INSW(const X86::Instruction&) { TODO_INSN(); }
+void SoftCPU::INT1(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::INT3(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::INTO(const X86::Instruction&) { TODO_INSN(); }
 

@@ -276,6 +276,7 @@ public:
     virtual void INSB(const Instruction&) = 0;
     virtual void INSD(const Instruction&) = 0;
     virtual void INSW(const Instruction&) = 0;
+    virtual void INT1(const Instruction&) = 0;
     virtual void INT3(const Instruction&) = 0;
     virtual void INTO(const Instruction&) = 0;
     virtual void INT_imm8(const Instruction&) = 0;
