@@ -105,8 +105,6 @@ public:
 
     String qualified_name() const override;
 
-    Font const& bold_variant() const override;
-
     static size_t glyph_count_by_type(FontTypes type);
     static String type_name_by_type(FontTypes type);
 
@@ -143,8 +141,6 @@ private:
 
     bool m_fixed_width { false };
     bool m_owns_arrays { false };
-
-    mutable RefPtr<Gfx::Font> m_bold_variant;
 };
 
 }
