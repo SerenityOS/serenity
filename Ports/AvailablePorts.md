@@ -90,6 +90,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`mbedtls`](mbedtls/)                  | Mbed TLS                                                   | 2.16.2                   | https://tls.mbed.org/                                                          |
 | [`milkytracker`](milkytracker/)        | milkytracker                                               | 1.03.00                  | https://github.com/milkytracker/MilkyTracker                                   |
 | [`mrsh`](mrsh/)                        | mrsh                                                       | d9763a3                  | https://mrsh.sh/                                                               |
+| [`mysthous`](mysthous/)                | Hi-Res Adventure #1: Mystery House                         | 1.0                      | https://www.scummvm.org/games/#games-hires1                                    |
 | [`nano`](nano/)                        | GNU nano                                                   | 5.8                      | https://www.nano-editor.org/                                                   |
 | [`nasm`](nasm/)                        | Netwide Assembler (NASM)                                   | 2.15.05                  | https://www.nasm.us/                                                           |
 | [`ncurses`](ncurses/)                  | ncurses                                                    | 6.2                      | https://invisible-island.net/ncurses/announce.html                             |
