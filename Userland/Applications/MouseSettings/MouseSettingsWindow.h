@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "DoubleClickArrowWidget.h"
 #include <LibGUI/Button.h>
 #include <LibGUI/Slider.h>
 #include <LibGUI/SpinBox.h>
@@ -29,6 +30,8 @@ private:
     RefPtr<GUI::HorizontalSlider> m_double_click_speed_slider;
     RefPtr<GUI::Label> m_double_click_speed_label;
     RefPtr<GUI::Button> m_ok_button;
+    RefPtr<GUI::Button> m_cancel_button;
     RefPtr<GUI::Button> m_apply_button;
     RefPtr<GUI::Button> m_reset_button;
+    RefPtr<MouseSettings::DoubleClickArrowWidget> m_double_click_arrow_widget;
 };
