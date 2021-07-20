@@ -62,6 +62,8 @@ fi
 [ -z "$SERENITY_DISK_IMAGE" ] && {
     if [ "$SERENITY_RUN" = qgrub ]; then
         SERENITY_DISK_IMAGE="grub_disk_image"
+    elif [ "$SERENITY_RUN" = qextlinux ]; then
+        SERENITY_DISK_IMAGE="extlinux_disk_image"
     else
         SERENITY_DISK_IMAGE="_disk_image"
     fi
@@ -221,8 +223,8 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
         -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
     sudo ip tuntap del dev tap0 mode tap
-elif [ "$SERENITY_RUN" = "qgrub" ]; then
-    # Meta/run.sh qgrub: qemu with grub
+elif [ "$SERENITY_RUN" = "qgrub" ] || [ "$SERENITY_RUN" = "qextlinux" ]; then
+    # Meta/run.sh qgrub: qemu with grub/extlinux
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
