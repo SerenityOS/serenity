@@ -69,7 +69,7 @@ ProcFSExposedLink::ProcFSExposedLink(StringView name, InodeIndex preallocated_in
 }
 
 struct ProcFSInodeData : public FileDescriptionData {
-    RefPtr<KBufferImpl> buffer;
+    OwnPtr<KBuffer> buffer;
 };
 
 KResultOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
@@ -81,13 +81,16 @@ KResultOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count
 
     if (!description)
         return KResult(EIO);
+
+    MutexLocker locker(m_refresh_lock);
+
     if (!description->data()) {
         dbgln("ProcFSGlobalInformation: Do not have cached data!");
         return KResult(EIO);
     }
 
-    // Be sure to keep a reference to data_buffer while we use it!
-    RefPtr<KBufferImpl> data_buffer = static_cast<ProcFSInodeData&>(*description->data()).buffer;
+    auto& typed_cached_data = static_cast<ProcFSInodeData&>(*description->data());
+    auto& data_buffer = typed_cached_data.buffer;
 
     if (!data_buffer || (size_t)offset >= data_buffer->size())
         return 0;
@@ -101,26 +104,19 @@ KResultOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count
 
 KResult ProcFSGlobalInformation::refresh_data(FileDescription& description) const
 {
-    ScopedSpinLock lock(m_refresh_lock);
+    MutexLocker lock(m_refresh_lock);
     auto& cached_data = description.data();
-    if (!cached_data)
+    if (!cached_data) {
         cached_data = adopt_own_if_nonnull(new (nothrow) ProcFSInodeData);
-    VERIFY(description.data());
-    auto& buffer = static_cast<ProcFSInodeData&>(*cached_data).buffer;
-    if (buffer) {
-        // If we're reusing the buffer, reset the size to 0 first. This
-        // ensures we don't accidentally leak previously written data.
-        buffer->set_size(0);
+        if (!cached_data)
+            return ENOMEM;
     }
-    KBufferBuilder builder(buffer, true);
+    KBufferBuilder builder;
     if (!const_cast<ProcFSGlobalInformation&>(*this).output(builder))
         return ENOENT;
-    // We don't use builder.build() here, which would steal our buffer
-    // and turn it into an OwnPtr. Instead, just flush to the buffer so
-    // that we can read all the data that was written.
-    if (!builder.flush())
-        return ENOMEM;
-    if (!buffer)
+    auto& typed_cached_data = static_cast<ProcFSInodeData&>(*cached_data);
+    typed_cached_data.buffer = builder.build();
+    if (!typed_cached_data.buffer)
         return ENOMEM;
     return KSuccess;
 }
@@ -139,8 +135,10 @@ KResultOr<size_t> ProcFSProcessInformation::read_bytes(off_t offset, size_t coun
         return KResult(EIO);
     }
 
-    // Be sure to keep a reference to data_buffer while we use it!
-    RefPtr<KBufferImpl> data_buffer = static_cast<ProcFSInodeData&>(*description->data()).buffer;
+    MutexLocker locker(m_refresh_lock);
+
+    auto& typed_cached_data = static_cast<ProcFSInodeData&>(*description->data());
+    auto& data_buffer = typed_cached_data.buffer;
 
     if (!data_buffer || (size_t)offset >= data_buffer->size())
         return 0;
@@ -171,26 +169,19 @@ KResult ProcFSProcessInformation::refresh_data(FileDescription& description) con
     ScopeGuard guard = [&] {
         process->ptrace_lock().unlock();
     };
-    ScopedSpinLock lock(m_refresh_lock);
+    MutexLocker locker(m_refresh_lock);
     auto& cached_data = description.data();
-    if (!cached_data)
+    if (!cached_data) {
         cached_data = adopt_own_if_nonnull(new (nothrow) ProcFSInodeData);
-    VERIFY(description.data());
-    auto& buffer = static_cast<ProcFSInodeData&>(*cached_data).buffer;
-    if (buffer) {
-        // If we're reusing the buffer, reset the size to 0 first. This
-        // ensures we don't accidentally leak previously written data.
-        buffer->set_size(0);
+        if (!cached_data)
+            return ENOMEM;
     }
-    KBufferBuilder builder(buffer, true);
+    KBufferBuilder builder;
     if (!const_cast<ProcFSProcessInformation&>(*this).output(builder))
         return ENOENT;
-    // We don't use builder.build() here, which would steal our buffer
-    // and turn it into an OwnPtr. Instead, just flush to the buffer so
-    // that we can read all the data that was written.
-    if (!builder.flush())
-        return ENOMEM;
-    if (!buffer)
+    auto& typed_cached_data = static_cast<ProcFSInodeData&>(*cached_data);
+    typed_cached_data.buffer = builder.build();
+    if (!typed_cached_data.buffer)
         return ENOMEM;
     return KSuccess;
 }
