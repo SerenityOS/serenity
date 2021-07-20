@@ -1621,7 +1621,6 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
 RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, PropertyID property_id, StyleComponentValueRule const& component_value)
 {
     dbgln_if(CSS_PARSER_TRACE, "Parser::parse_css_value '{}'", component_value.to_debug_string());
-
     // FIXME: Figure out if we still need takes_integer_value, and if so, move this information
     // into Properties.json.
     auto takes_integer_value = [](PropertyID property_id) -> bool {
