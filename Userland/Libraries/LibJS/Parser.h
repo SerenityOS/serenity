@@ -107,26 +107,15 @@ public:
         {
             if (!position.has_value())
                 return {};
-
-            StringBuilder builder;
+            // We need to modify the source to match what the lexer considers one line - normalizing
+            // line terminators to \n is easier than splitting using all different LT characters.
             String source_string { source };
-            GenericLexer lexer(source_string);
-            // Skip to the line we want
-            size_t current_line = 0;
-            while (current_line < position.value().line - 1) {
-                if (lexer.consume_specific("\n") || lexer.consume_specific("\r\n") || lexer.consume_specific(LINE_SEPARATOR) || lexer.consume_specific(PARAGRAPH_SEPARATOR))
-                    current_line++;
-                else
-                    lexer.ignore();
-                VERIFY(!lexer.is_eof());
-            }
-            // We are at the line, now add the chars to the string
-            while (!lexer.is_eof()) {
-                if (lexer.consume_specific("\n") || lexer.consume_specific("\r\n") || lexer.consume_specific(LINE_SEPARATOR) || lexer.consume_specific(PARAGRAPH_SEPARATOR))
-                    break;
-                else
-                    builder.append(lexer.consume());
-            }
+            source_string.replace("\r\n", "\n");
+            source_string.replace("\r", "\n");
+            source_string.replace(LINE_SEPARATOR, "\n");
+            source_string.replace(PARAGRAPH_SEPARATOR, "\n");
+            StringBuilder builder;
+            builder.append(source_string.split_view('\n', true)[position.value().line - 1]);
             builder.append('\n');
             for (size_t i = 0; i < position.value().column - 1; ++i)
                 builder.append(spacer);
