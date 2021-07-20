@@ -66,7 +66,7 @@ KResult Process::do_killall(int signal)
 
     // Send the signal to all processes we have access to for.
     ScopedSpinLock lock(g_processes_lock);
-    for (auto& process : *g_processes) {
+    for (auto& process : processes()) {
         KResult res = KSuccess;
         if (process.pid() == pid())
             res = do_killself(signal);

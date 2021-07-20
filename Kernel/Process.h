@@ -780,7 +780,7 @@ public:
     using List = IntrusiveList<Process, RawPtr<Process>, &Process::m_list_node>;
 };
 
-extern Process::List* g_processes;
+Process::List& processes();
 extern RecursiveSpinLock g_processes_lock;
 
 template<IteratorFunction<Process&> Callback>
@@ -788,7 +788,7 @@ inline void Process::for_each(Callback callback)
 {
     VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(g_processes_lock);
-    for (auto it = g_processes->begin(); it != g_processes->end();) {
+    for (auto it = processes().begin(); it != processes().end();) {
         auto& process = *it;
         ++it;
         if (callback(process) == IterationDecision::Break)
@@ -802,7 +802,7 @@ inline void Process::for_each_child(Callback callback)
     VERIFY_INTERRUPTS_DISABLED();
     ProcessID my_pid = pid();
     ScopedSpinLock lock(g_processes_lock);
-    for (auto it = g_processes->begin(); it != g_processes->end();) {
+    for (auto it = processes().begin(); it != processes().end();) {
         auto& process = *it;
         ++it;
         if (process.ppid() == my_pid || process.has_tracee_thread(pid())) {
@@ -841,7 +841,7 @@ inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
 {
     VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(g_processes_lock);
-    for (auto it = g_processes->begin(); it != g_processes->end();) {
+    for (auto it = processes().begin(); it != processes().end();) {
         auto& process = *it;
         ++it;
         if (!process.is_dead() && process.pgid() == pgid) {

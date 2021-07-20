@@ -45,7 +45,7 @@ static void create_signal_trampoline();
 
 RecursiveSpinLock g_processes_lock;
 static Atomic<pid_t> next_pid;
-READONLY_AFTER_INIT Process::List* g_processes;
+static AK::Singleton<Process::List> s_processes;
 READONLY_AFTER_INIT HashMap<String, OwnPtr<Module>>* g_modules;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
@@ -54,6 +54,11 @@ static AK::Singleton<ProtectedValue<String>> s_hostname;
 ProtectedValue<String>& hostname()
 {
     return *s_hostname;
+}
+
+Process::List& processes()
+{
+    return *s_processes;
 }
 
 ProcessID Process::allocate_pid()
@@ -71,7 +76,6 @@ UNMAP_AFTER_INIT void Process::initialize()
     g_modules = new HashMap<String, OwnPtr<Module>>;
 
     next_pid.store(0, AK::MemoryOrder::memory_order_release);
-    g_processes = new Process::List();
     g_process_groups = new ProcessGroup::List();
 
     hostname().with_exclusive([&](auto& name) {
@@ -85,20 +89,20 @@ Vector<ProcessID> Process::all_pids()
 {
     Vector<ProcessID> pids;
     ScopedSpinLock lock(g_processes_lock);
-    pids.ensure_capacity(g_processes->size_slow());
-    for (auto& process : *g_processes)
+    pids.ensure_capacity(processes().size_slow());
+    for (auto& process : processes())
         pids.append(process.pid());
     return pids;
 }
 
 NonnullRefPtrVector<Process> Process::all_processes()
 {
-    NonnullRefPtrVector<Process> processes;
+    NonnullRefPtrVector<Process> output;
     ScopedSpinLock lock(g_processes_lock);
-    processes.ensure_capacity(g_processes->size_slow());
-    for (auto& process : *g_processes)
-        processes.append(NonnullRefPtr<Process>(process));
-    return processes;
+    output.ensure_capacity(processes().size_slow());
+    for (auto& process : processes())
+        output.append(NonnullRefPtr<Process>(process));
+    return output;
 }
 
 bool Process::in_group(gid_t gid) const
@@ -147,7 +151,7 @@ void Process::register_new(Process& process)
     RefPtr<Process> new_process = process;
     {
         ScopedSpinLock lock(g_processes_lock);
-        g_processes->prepend(process);
+        processes().prepend(process);
     }
     ProcFSComponentRegistry::the().register_new_process(process);
 }
@@ -307,7 +311,7 @@ Process::~Process()
     {
         ScopedSpinLock processes_lock(g_processes_lock);
         if (m_list_node.is_in_list())
-            g_processes->remove(*this);
+            processes().remove(*this);
     }
 }
 
@@ -414,7 +418,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
 RefPtr<Process> Process::from_pid(ProcessID pid)
 {
     ScopedSpinLock lock(g_processes_lock);
-    for (auto& process : *g_processes) {
+    for (auto& process : processes()) {
         process.pid();
         if (process.pid() == pid)
             return &process;
@@ -690,7 +694,7 @@ void Process::die()
 
     {
         ScopedSpinLock lock(g_processes_lock);
-        for (auto it = g_processes->begin(); it != g_processes->end();) {
+        for (auto it = processes().begin(); it != processes().end();) {
             auto& process = *it;
             ++it;
             if (process.has_tracee_thread(pid())) {
