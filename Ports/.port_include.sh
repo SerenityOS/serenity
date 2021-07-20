@@ -177,10 +177,15 @@ func_defined() {
     PATH= command -V "$1"  > /dev/null 2>&1
 }
 
+func_defined pre_fetch || pre_fetch() {
+    :
+}
 func_defined post_fetch || post_fetch() {
     :
 }
 fetch() {
+    pre_fetch
+
     if [ "$auth_type" = "sig" ] && [ ! -z "${auth_import_key}" ]; then
         # import gpg key if not existing locally
         # The default keyserver keys.openpgp.org prints "new key but contains no user ID - skipped"
