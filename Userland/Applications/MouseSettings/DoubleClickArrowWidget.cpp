@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Mathias Jakobsen <mathias@jbcoding.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -54,10 +55,22 @@ void DoubleClickArrowWidget::paint_event(GUI::PaintEvent& event)
     text_rect.set_height(font().glyph_height());
 }
 
-void DoubleClickArrowWidget::doubleclick_event(GUI::MouseEvent&)
+void DoubleClickArrowWidget::mousedown_event(GUI::MouseEvent&)
 {
-    m_inverted = !m_inverted;
-    update();
+    if (!m_double_click_timer.is_valid()) {
+        m_double_click_timer.start();
+        return;
+    }
+
+    auto elapsed_time = m_double_click_timer.elapsed();
+    if (elapsed_time <= m_double_click_speed) {
+        dbgln("Double-click in {}ms", elapsed_time);
+        m_inverted = !m_inverted;
+        update();
+    }
+
+    // Reset the timer after each click
+    m_double_click_timer.start();
 }
 
 }
