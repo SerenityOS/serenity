@@ -335,6 +335,56 @@ static inline bool is_line_width(StyleValue const& value)
     }
 }
 
+static inline bool is_list_style_image(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+    if (value.is_image())
+        return true;
+    if (value.is_identifier() && value.to_identifier() == ValueID::None)
+        return true;
+
+    return false;
+}
+
+static inline bool is_list_style_position(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+
+    switch (value.to_identifier()) {
+    case ValueID::Inside:
+    case ValueID::Outside:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static inline bool is_list_style_type(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+    // FIXME: Handle strings and symbols("...") syntax
+    switch (value.to_identifier()) {
+    case CSS::ValueID::None:
+    case CSS::ValueID::Disc:
+    case CSS::ValueID::Circle:
+    case CSS::ValueID::Square:
+    case CSS::ValueID::Decimal:
+    case CSS::ValueID::DecimalLeadingZero:
+    case CSS::ValueID::LowerAlpha:
+    case CSS::ValueID::LowerLatin:
+    case CSS::ValueID::UpperAlpha:
+    case CSS::ValueID::UpperLatin:
+    case CSS::ValueID::UpperRoman:
+    case CSS::ValueID::LowerRoman:
+        return true;
+    default:
+        return true;
+    }
+}
+
 static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document, bool is_internally_generated_pseudo_property = false)
 {
     CSS::DeprecatedParsingContext deprecated_context(document);
@@ -1202,16 +1252,58 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        // FIXME: Handle all three parts of ListStyle. (list-style-positon, list-style-image, list-style-type)
         if (value.is_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
-            if (!parts.is_empty()) {
-                auto list_style = Parser::parse_css_value(context, property_id, parts[0]);
-                if (list_style)
-                    style.set_property(CSS::PropertyID::ListStyleType, *list_style);
+
+            if (!parts.is_empty() && parts.size() <= 3) {
+                RefPtr<StyleValue> position_value;
+                RefPtr<StyleValue> image_value;
+                RefPtr<StyleValue> type_value;
+
+                // FIXME: `none` is ambiguous as it is a valid value for ListStyleImage and ListStyleType,
+                // so requires special handling. https://www.w3.org/TR/css-lists-3/#propdef-list-style
+
+                for (auto& part : parts) {
+                    auto value = Parser::parse_css_value(context, property_id, part);
+                    if (!value)
+                        return;
+
+                    if (is_list_style_position(*value)) {
+                        if (position_value)
+                            return;
+                        position_value = move(value);
+                        continue;
+                    }
+                    if (is_list_style_image(*value)) {
+                        if (image_value)
+                            return;
+                        image_value = move(value);
+                        continue;
+                    }
+                    if (is_list_style_type(*value)) {
+                        if (type_value)
+                            return;
+                        type_value = move(value);
+                        continue;
+                    }
+                }
+
+                if (position_value)
+                    style.set_property(CSS::PropertyID::ListStylePosition, *position_value);
+                if (image_value)
+                    style.set_property(CSS::PropertyID::ListStyleImage, *image_value);
+                if (type_value)
+                    style.set_property(CSS::PropertyID::ListStyleType, *type_value);
             }
             return;
         }
+
+        if (is_list_style_position(value))
+            style.set_property(CSS::PropertyID::ListStylePosition, value);
+        else if (is_list_style_image(value))
+            style.set_property(CSS::PropertyID::ListStyleImage, value);
+        else if (is_list_style_type(value))
+            style.set_property(CSS::PropertyID::ListStyleType, value);
 
         return;
     }
