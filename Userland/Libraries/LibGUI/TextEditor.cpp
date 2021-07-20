@@ -331,7 +331,7 @@ int TextEditor::ruler_width() const
 {
     if (!m_ruler_visible)
         return 0;
-    int line_count_digits = static_cast<int>(log10(line_count())) + 1;
+    int line_count_digits = static_cast<int>(AK::log10((double)line_count())) + 1;
     constexpr size_t padding = 5;
     return line_count() < 10 ? (line_count_digits + 1) * font().glyph_width('x') + padding : line_count_digits * font().glyph_width('x') + padding;
 }

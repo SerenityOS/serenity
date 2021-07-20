@@ -144,7 +144,7 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
 
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
-            fragment.set_offset({ roundf(x_offset + fragment.offset().x()), content_height + (max_height - fragment.height()) });
+            fragment.set_offset({ AK::round(x_offset + fragment.offset().x()), content_height + (max_height - fragment.height()) });
 
             if (text_align == CSS::TextAlign::Justify
                 && fragment.is_justifiable_whitespace()

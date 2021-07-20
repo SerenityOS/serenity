@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Math.h>
 #include <LibSQL/Serializer.h>
 #include <LibSQL/Value.h>
-#include <math.h>
 #include <string.h>
 
 namespace SQL {
@@ -543,7 +543,7 @@ void IntegerImpl::assign_int(int int_value)
 
 void IntegerImpl::assign_double(double double_value)
 {
-    m_value = static_cast<int>(round(double_value));
+    m_value = AK::round_to_int<>(double_value);
 }
 
 void IntegerImpl::assign_bool(bool bool_value)
@@ -577,7 +577,7 @@ String FloatImpl::to_string() const
 
 Optional<int> FloatImpl::to_int() const
 {
-    return static_cast<int>(round(value()));
+    return AK::round_to_int(value());
 }
 
 Optional<double> FloatImpl::to_double() const

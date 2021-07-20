@@ -141,7 +141,7 @@ void StyleProperties::load_font(Layout::Node const& node) const
             break;
         }
     } else if (font_weight->is_numeric()) {
-        int font_weight_integer = roundf(static_cast<NumericStyleValue const&>(*font_weight).value());
+        int font_weight_integer = AK::round_to_int<>(static_cast<NumericStyleValue const&>(*font_weight).value());
         if (font_weight_integer <= Gfx::FontWeight::Regular)
             weight = Gfx::FontWeight::Regular;
         else if (font_weight_integer <= Gfx::FontWeight::Bold)
@@ -174,10 +174,10 @@ void StyleProperties::load_font(Layout::Node const& node) const
             size = 12;
             break;
         case CSS::ValueID::Smaller:
-            size = roundf(parent_font_size / font_size_ratio);
+            size = AK::round_to_int<>(parent_font_size / font_size_ratio);
             break;
         case CSS::ValueID::Larger:
-            size = roundf(parent_font_size * font_size_ratio);
+            size = AK::round_to_int<>(parent_font_size * font_size_ratio);
             break;
 
         default:

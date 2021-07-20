@@ -718,7 +718,7 @@ Value Parser::parse_number()
     if (is_float)
         return Value(f);
 
-    VERIFY(floorf(f) == f);
+    VERIFY(AK::floor(f) == f);
     return Value(static_cast<int>(f));
 }
 

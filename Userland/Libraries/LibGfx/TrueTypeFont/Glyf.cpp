@@ -233,16 +233,16 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
 {
     // FIXME: Shift x and y according to dy/dx
     if (p0.x() < 0.0f) {
-        p0.set_x(roundf(p0.x()));
+        p0.set_x(AK::round(p0.x()));
     }
     if (p0.y() < 0.0f) {
-        p0.set_y(roundf(p0.y()));
+        p0.set_y(AK::round(p0.y()));
     }
     if (p1.x() < 0.0f) {
-        p1.set_x(roundf(p1.x()));
+        p1.set_x(AK::round(p1.x()));
     }
     if (p1.y() < 0.0f) {
-        p1.set_y(roundf(p1.y()));
+        p1.set_y(AK::round(p1.y()));
     }
 
     if (!(p0.x() >= 0.0f && p0.y() >= 0.0f && p0.x() <= m_size.width() && p0.y() <= m_size.height())) {
@@ -272,8 +272,8 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
     }
 
     float dxdy = (p1.x() - p0.x()) / (p1.y() - p0.y());
-    u32 y0 = floorf(p0.y());
-    u32 y1 = ceilf(p1.y());
+    u32 y0 = (u32)AK::floor(p0.y());
+    u32 y1 = (u32)AK::ceil(p1.y());
     float x_cur = p0.x();
 
     for (u32 y = y0; y < y1; y++) {
@@ -291,8 +291,8 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
             x1 = x_cur;
             x0 = x_next;
         }
-        float x0_floor = floorf(x0);
-        float x1_ceil = ceilf(x1);
+        float x0_floor = AK::floor(x0);
+        float x1_ceil = AK::ceil(x1);
         u32 x0i = x0_floor;
 
         if (x1_ceil <= x0_floor + 1.0f) {
@@ -306,7 +306,7 @@ void Rasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
                 dydx = -dydx;
 
             float x0_right = 1.0f - (x0 - x0_floor);
-            u32 x1_floor_i = floorf(x1);
+            u32 x1_floor_i = (u32)AK::floor(x1);
             float area_upto_here = 0.5f * x0_right * x0_right * dydx;
             m_data[line_offset + x0i] += direction * area_upto_here;
             for (u32 x = x0i + 1; x < x1_floor_i; x++) {
@@ -480,8 +480,8 @@ void Glyf::Glyph::rasterize_impl(Rasterizer& rasterizer, Gfx::AffineTransform co
 
 RefPtr<Gfx::Bitmap> Glyf::Glyph::rasterize_simple(i16 font_ascender, i16 font_descender, float x_scale, float y_scale) const
 {
-    u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 2;
-    u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 2;
+    u32 width = (u32)(AK::ceil((m_xmax - m_xmin) * x_scale)) + 2;
+    u32 height = (u32)(AK::ceil((font_ascender - font_descender) * y_scale)) + 2;
     Rasterizer rasterizer(Gfx::IntSize(width, height));
     auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -font_ascender);
     rasterize_impl(rasterizer, affine);

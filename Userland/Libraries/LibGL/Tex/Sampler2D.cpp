@@ -7,20 +7,19 @@
 #include "Sampler2D.h"
 
 #include <LibGL/Tex/Texture2D.h>
-#include <math.h>
 
 namespace GL {
 
 static constexpr float wrap_repeat(float value)
 {
-    return value - floorf(value);
+    return value - AK::floor(value);
 }
 
 static constexpr float wrap_mirrored_repeat(float value)
 {
-    float integer = floorf(value);
+    int integer = AK::floor_to_int<>(value);
     float frac = value - integer;
-    bool iseven = fmodf(integer, 2.0f) == 0.0f;
+    bool iseven = integer % 2 == 0;
     return iseven ? frac : 1 - frac;
 }
 
@@ -86,8 +85,8 @@ FloatVector4 Sampler2D::sample(FloatVector2 const& uv) const
         auto t2 = mip.texel(i0, j1);
         auto t3 = mip.texel(i1, j1);
 
-        float frac_x = x - floorf(x);
-        float frac_y = y - floorf(y);
+        float frac_x = x - AK::floor(x);
+        float frac_y = y - AK::floor(y);
         float one_minus_frac_x = 1 - frac_x;
 
         auto h1 = t0 * one_minus_frac_x + t1 * frac_x;

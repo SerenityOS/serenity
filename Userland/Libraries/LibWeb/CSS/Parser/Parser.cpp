@@ -9,6 +9,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <AK/Math.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
@@ -1627,9 +1628,9 @@ Optional<Color> Parser::parse_color(ParsingContext const&, StyleComponentValueRu
                 auto maybe_g = try_parse_float(g_val.m_value.string_view());
                 auto maybe_b = try_parse_float(b_val.m_value.string_view());
                 if (maybe_r.has_value() && maybe_g.has_value() && maybe_b.has_value()) {
-                    u8 r = clamp(lroundf(maybe_r.value() * 2.55f), 0, 255);
-                    u8 g = clamp(lroundf(maybe_g.value() * 2.55f), 0, 255);
-                    u8 b = clamp(lroundf(maybe_b.value() * 2.55f), 0, 255);
+                    u8 r = (u8)clamp(AK::round_to_int<i16>(maybe_r.value() * 2.55f), 0, 255);
+                    u8 g = (u8)clamp(AK::round_to_int<i16>(maybe_g.value() * 2.55f), 0, 255);
+                    u8 b = (u8)clamp(AK::round_to_int<i16>(maybe_b.value() * 2.55f), 0, 255);
                     return Color(r, g, b);
                 }
             }
@@ -1652,7 +1653,7 @@ Optional<Color> Parser::parse_color(ParsingContext const&, StyleComponentValueRu
                 auto maybe_b = b_val.m_value.string_view().to_uint<u8>();
                 auto maybe_a = try_parse_float(a_val.m_value.string_view());
                 if (maybe_r.has_value() && maybe_g.has_value() && maybe_b.has_value() && maybe_a.has_value()) {
-                    u8 a = clamp(lroundf(maybe_a.value() * 255.0f), 0, 255);
+                    u8 a = (u8)clamp(AK::round_to_int<i16>(maybe_a.value() * 255.0f), 0, 255);
                     return Color(maybe_r.value(), maybe_g.value(), maybe_b.value(), a);
                 }
 
@@ -1666,10 +1667,10 @@ Optional<Color> Parser::parse_color(ParsingContext const&, StyleComponentValueRu
                 auto maybe_b = try_parse_float(b_val.m_value.string_view());
                 auto maybe_a = try_parse_float(a_val.m_value.string_view());
                 if (maybe_r.has_value() && maybe_g.has_value() && maybe_b.has_value() && maybe_a.has_value()) {
-                    u8 r = clamp(lroundf(maybe_r.value() * 2.55f), 0, 255);
-                    u8 g = clamp(lroundf(maybe_g.value() * 2.55f), 0, 255);
-                    u8 b = clamp(lroundf(maybe_b.value() * 2.55f), 0, 255);
-                    u8 a = clamp(lroundf(maybe_a.value() * 255.0f), 0, 255);
+                    u8 r = (u8)clamp(AK::round_to_int<i16>(maybe_r.value() * 2.55f), 0, 255);
+                    u8 g = (u8)clamp(AK::round_to_int<i16>(maybe_g.value() * 2.55f), 0, 255);
+                    u8 b = (u8)clamp(AK::round_to_int<i16>(maybe_b.value() * 2.55f), 0, 255);
+                    u8 a = (u8)clamp(AK::round_to_int<i16>(maybe_a.value() * 255.0f), 0, 255);
                     return Color(r, g, b, a);
                 }
             }

@@ -205,31 +205,31 @@ DOM::ExceptionOr<void> CanvasRenderingContext2D::ellipse(float x, float y, float
         start_angle = 0;
         end_angle = tau;
     } else {
-        start_angle = fmodf(start_angle, tau);
-        end_angle = fmodf(end_angle, tau);
+        start_angle = AK::fmod(start_angle, tau);
+        end_angle = AK::fmod(end_angle, tau);
     }
 
     // Then, figure out where the ends of the arc are.
     // To do so, we can pretend that the center of this ellipse is at (0, 0),
     // and the whole coordinate system is rotated `rotation` radians around the x axis, centered on `center`.
     // The sign of the resulting relative positions is just whether our angle is on one of the left quadrants.
-    auto sin_rotation = sinf(rotation);
-    auto cos_rotation = cosf(rotation);
+    auto sin_rotation = AK::sin(rotation);
+    auto cos_rotation = AK::cos(rotation);
 
     auto resolve_point_with_angle = [&](float angle) {
-        auto tan_relative = tanf(angle);
+        auto tan_relative = AK::tan(angle);
         auto tan2 = tan_relative * tan_relative;
 
         auto ab = radius_x * radius_y;
         auto a2 = radius_x * radius_x;
         auto b2 = radius_y * radius_y;
-        auto sqrt = sqrtf(b2 + a2 * tan2);
+        auto sqrt = AK::sqrt(b2 + a2 * tan2);
 
         auto relative_x_position = ab / sqrt;
         auto relative_y_position = ab * tan_relative / sqrt;
 
         // Make sure to set the correct sign
-        float sn = sinf(angle) >= 0 ? 1 : -1;
+        float sn = AK::sin(angle) >= 0 ? 1 : -1;
         relative_x_position *= sn;
         relative_y_position *= sn;
 

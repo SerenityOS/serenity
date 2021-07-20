@@ -7,6 +7,7 @@
 
 #include <AK/Checked.h>
 #include <AK/MappedFile.h>
+#include <AK/Math.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/File.h>
@@ -15,7 +16,6 @@
 #include <LibGfx/TrueTypeFont/Glyf.h>
 #include <LibGfx/TrueTypeFont/Tables.h>
 #include <LibTextCodec/Decoder.h>
-#include <math.h>
 #include <sys/mman.h>
 
 namespace TTF {
@@ -391,10 +391,10 @@ ScaledFontMetrics Font::metrics(float x_scale, float y_scale) const
     auto line_gap = m_hhea.line_gap() * y_scale;
     auto advance_width_max = m_hhea.advance_width_max() * x_scale;
     return ScaledFontMetrics {
-        .ascender = (int)roundf(ascender),
-        .descender = (int)roundf(descender),
-        .line_gap = (int)roundf(line_gap),
-        .advance_width_max = (int)roundf(advance_width_max),
+        .ascender = AK::round_to_int<>(ascender),
+        .descender = AK::round_to_int<>(descender),
+        .line_gap = AK::round_to_int<>(line_gap),
+        .advance_width_max = AK::round_to_int<>(advance_width_max),
     };
 }
 
@@ -410,10 +410,10 @@ ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y_scal
     int ascender = glyph.ascender();
     int descender = glyph.descender();
     return ScaledGlyphMetrics {
-        .ascender = (int)roundf(ascender * y_scale),
-        .descender = (int)roundf(descender * y_scale),
-        .advance_width = (int)roundf(horizontal_metrics.advance_width * x_scale),
-        .left_side_bearing = (int)roundf(horizontal_metrics.left_side_bearing * x_scale),
+        .ascender = AK::round_to_int<>(ascender * y_scale),
+        .descender = AK::round_to_int<>(descender * y_scale),
+        .advance_width = AK::round_to_int<>(horizontal_metrics.advance_width * x_scale),
+        .left_side_bearing = AK::round_to_int<>(horizontal_metrics.left_side_bearing * x_scale),
     };
 }
 

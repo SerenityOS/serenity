@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include <AK/Math.h>
 #include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/TrueTypeFont/Tables.h>
-#include <math.h>
 
 namespace TTF {
 
@@ -106,8 +106,8 @@ public:
         template<typename GlyphCb>
         RefPtr<Gfx::Bitmap> rasterize_composite(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, GlyphCb glyph_callback) const
         {
-            u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 1;
-            u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 1;
+            u32 width = (u32)(AK::ceil((m_xmax - m_xmin) * x_scale)) + 1;
+            u32 height = (u32)(AK::ceil((font_ascender - font_descender) * y_scale)) + 1;
             Rasterizer rasterizer(Gfx::IntSize(width, height));
             auto affine = Gfx::AffineTransform().scale(x_scale, -y_scale).translate(-m_xmin, -font_ascender);
             ComponentIterator component_iterator(m_slice);

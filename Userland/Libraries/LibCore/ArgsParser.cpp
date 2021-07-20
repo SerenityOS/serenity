@@ -10,7 +10,6 @@
 #include <LibCore/ConfigFile.h>
 #include <getopt.h>
 #include <limits.h>
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
 

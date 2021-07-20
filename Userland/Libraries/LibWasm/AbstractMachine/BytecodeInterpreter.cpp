@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Math.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/AbstractMachine/Configuration.h>
@@ -311,11 +312,7 @@ MakeSigned<T> BytecodeInterpreter::checked_signed_truncate(V value)
         return 0;
     }
 
-    double truncated;
-    if constexpr (IsSame<float, V>)
-        truncated = truncf(value);
-    else
-        truncated = trunc(value);
+    double truncated = AK::trunc(value);
 
     using SignedT = MakeSigned<T>;
     if (NumericLimits<SignedT>::min() <= truncated && static_cast<double>(NumericLimits<SignedT>::max()) >= truncated)
@@ -333,11 +330,7 @@ MakeUnsigned<T> BytecodeInterpreter::checked_unsigned_truncate(V value)
         m_trap = Trap { "Unsigned truncation undefined behaviour" };
         return 0;
     }
-    double truncated;
-    if constexpr (IsSame<float, V>)
-        truncated = truncf(value);
-    else
-        truncated = trunc(value);
+    double truncated = AK::trunc(value);
 
     using UnsignedT = MakeUnsigned<T>;
     if (NumericLimits<UnsignedT>::min() <= truncated && static_cast<double>(NumericLimits<UnsignedT>::max()) >= truncated)

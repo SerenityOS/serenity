@@ -11,7 +11,6 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <limits.h>
-#include <math.h>
 
 namespace Operators {
 
@@ -150,12 +149,7 @@ struct CopySign {
     template<typename Lhs, typename Rhs>
     auto operator()(Lhs lhs, Rhs rhs) const
     {
-        if constexpr (IsSame<Lhs, float>)
-            return copysignf(lhs, rhs);
-        else if constexpr (IsSame<Lhs, double>)
-            return copysign(lhs, rhs);
-        else
-            static_assert(DependentFalse<Lhs, Rhs>, "Invalid types to CopySign");
+        return AK::copysign(lhs, rhs);
     }
 
     static StringView name() { return "copysign"; }
@@ -173,15 +167,7 @@ struct CountLeadingZeros {
     template<typename Lhs>
     i32 operator()(Lhs lhs) const
     {
-        if (lhs == 0)
-            return sizeof(Lhs) * CHAR_BIT;
-
-        if constexpr (sizeof(Lhs) == 4)
-            return __builtin_clz(lhs);
-        else if constexpr (sizeof(Lhs) == 8)
-            return __builtin_clzll(lhs);
-        else
-            VERIFY_NOT_REACHED();
+        return AK::clz(lhs);
     }
 
     static StringView name() { return "clz"; }
@@ -190,15 +176,7 @@ struct CountTrailingZeros {
     template<typename Lhs>
     i32 operator()(Lhs lhs) const
     {
-        if (lhs == 0)
-            return sizeof(Lhs) * CHAR_BIT;
-
-        if constexpr (sizeof(Lhs) == 4)
-            return __builtin_ctz(lhs);
-        else if constexpr (sizeof(Lhs) == 8)
-            return __builtin_ctzll(lhs);
-        else
-            VERIFY_NOT_REACHED();
+        return AK::ctz(lhs);
     }
 
     static StringView name() { return "ctz"; }
@@ -207,12 +185,7 @@ struct PopCount {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
     {
-        if constexpr (sizeof(Lhs) == 4)
-            return __builtin_popcount(lhs);
-        else if constexpr (sizeof(Lhs) == 8)
-            return __builtin_popcountll(lhs);
-        else
-            VERIFY_NOT_REACHED();
+        return AK::popcnt(lhs);
     }
 
     static StringView name() { return "popcnt"; }
@@ -233,12 +206,7 @@ struct Ceil {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
     {
-        if constexpr (IsSame<Lhs, float>)
-            return ceilf(lhs);
-        else if constexpr (IsSame<Lhs, double>)
-            return ceil(lhs);
-        else
-            VERIFY_NOT_REACHED();
+        return AK::ceil(lhs);
     }
 
     static StringView name() { return "ceil"; }
@@ -247,12 +215,7 @@ struct Floor {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
     {
-        if constexpr (IsSame<Lhs, float>)
-            return floorf(lhs);
-        else if constexpr (IsSame<Lhs, double>)
-            return floor(lhs);
-        else
-            VERIFY_NOT_REACHED();
+        return AK::floor(lhs);
     }
 
     static StringView name() { return "floor"; }
@@ -261,12 +224,7 @@ struct Truncate {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
     {
-        if constexpr (IsSame<Lhs, float>)
-            return truncf(lhs);
-        else if constexpr (IsSame<Lhs, double>)
-            return trunc(lhs);
-        else
-            VERIFY_NOT_REACHED();
+        return AK::trunc(lhs);
     }
 
     static StringView name() { return "truncate"; }
@@ -275,12 +233,7 @@ struct Round {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
     {
-        if constexpr (IsSame<Lhs, float>)
-            return roundf(lhs);
-        else if constexpr (IsSame<Lhs, double>)
-            return round(lhs);
-        else
-            VERIFY_NOT_REACHED();
+        return AK::round(lhs);
     }
 
     static StringView name() { return "round"; }
@@ -289,12 +242,7 @@ struct SquareRoot {
     template<typename Lhs>
     auto operator()(Lhs lhs) const
     {
-        if constexpr (IsSame<Lhs, float>)
-            return sqrtf(lhs);
-        else if constexpr (IsSame<Lhs, double>)
-            return sqrt(lhs);
-        else
-            VERIFY_NOT_REACHED();
+        return AK::sqrt(lhs);
     }
 
     static StringView name() { return "sqrt"; }
@@ -319,13 +267,7 @@ struct CheckedTruncate {
         if (isnan(lhs) || isinf(lhs)) // "undefined", let's just trap.
             return "Truncation undefined behaviour"sv;
 
-        Lhs truncated;
-        if constexpr (IsSame<float, Lhs>)
-            truncated = truncf(lhs);
-        else if constexpr (IsSame<double, Lhs>)
-            truncated = trunc(lhs);
-        else
-            VERIFY_NOT_REACHED();
+        Lhs truncated = AK::trunc(lhs);
 
         if (NumericLimits<ResultT>::min() <= truncated && static_cast<double>(NumericLimits<ResultT>::max()) >= static_cast<double>(truncated))
             return static_cast<ResultT>(truncated);
@@ -374,7 +316,7 @@ struct Promote {
     double operator()(float lhs) const
     {
         if (isnan(lhs))
-            return nan(""); // FIXME: Ensure canonical NaN remains canonical
+            return NAN; // FIXME: Ensure canonical NaN remains canonical
         return static_cast<double>(lhs);
     }
 
@@ -385,10 +327,10 @@ struct Demote {
     float operator()(double lhs) const
     {
         if (isnan(lhs))
-            return nanf(""); // FIXME: Ensure canonical NaN remains canonical
+            return NAN; // FIXME: Ensure canonical NaN remains canonical
 
         if (isinf(lhs))
-            return __builtin_huge_valf();
+            return INFINITY;
 
         return static_cast<float>(lhs);
     }
@@ -432,10 +374,7 @@ struct SaturatingTruncate {
             return static_cast<ResultT>(truncated_value);
         };
 
-        if constexpr (IsSame<Lhs, float>)
-            return convert(truncf(lhs));
-        else
-            return convert(trunc(lhs));
+        return convert(AK::trunc(lhs));
     }
 
     static StringView name() { return "truncate.saturating"; }

@@ -506,10 +506,10 @@ void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Array
                 factor = (m_options.fog_end - z) / (m_options.fog_end - m_options.fog_start);
                 break;
             case GL_EXP:
-                factor = exp(-((m_options.fog_density * z)));
+                factor = AK::exp(-((m_options.fog_density * z)));
                 break;
             case GL_EXP2:
-                factor = exp(-((m_options.fog_density * z) * (m_options.fog_density * z)));
+                factor = AK::exp(-((m_options.fog_density * z) * (m_options.fog_density * z)));
                 break;
             default:
                 break;
