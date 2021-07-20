@@ -187,7 +187,7 @@ protected:
     virtual KResult refresh_data(FileDescription&) const override;
     virtual bool output(KBufferBuilder& builder) = 0;
 
-    mutable SpinLock<u8> m_refresh_lock;
+    mutable Mutex m_refresh_lock;
 };
 
 class ProcFSSystemBoolean : public ProcFSGlobalInformation {
@@ -245,7 +245,7 @@ protected:
     virtual bool output(KBufferBuilder& builder) = 0;
 
     WeakPtr<ProcFSProcessDirectory> m_parent_directory;
-    mutable SpinLock<u8> m_refresh_lock;
+    mutable Mutex m_refresh_lock;
 };
 
 }
