@@ -6,6 +6,7 @@
  */
 
 #include <AK/AllOf.h>
+#include <AK/Math.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
@@ -30,7 +31,6 @@
 #include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
-#include <math.h>
 
 namespace JS {
 
@@ -79,7 +79,7 @@ static String double_to_string(double d)
         builder.append(double_to_string(-d));
         return builder.to_string();
     }
-    if (d == static_cast<double>(INFINITY))
+    if (isinf(d))
         return "Infinity";
 
     StringBuilder number_string_builder;
@@ -91,11 +91,11 @@ static String double_to_string(double d)
     // generate integer part (reversed)
     double int_part;
     double frac_part;
-    frac_part = modf(d, &int_part);
+    frac_part = AK::modf(d, int_part);
     while (int_part > 0) {
-        number_string_builder.append('0' + (int)fmod(int_part, 10));
+        number_string_builder.append('0' + (int)AK::fmod(int_part, 10.));
         end_index++;
-        int_part = floor(int_part / 10);
+        int_part = AK::floor(int_part / 10);
     }
 
     auto reversed_integer_part = number_string_builder.to_string().reverse();
@@ -110,7 +110,7 @@ static String double_to_string(double d)
     while (frac_part > 0) {
         double old_frac_part = frac_part;
         frac_part *= 10;
-        frac_part = modf(frac_part, &int_part);
+        frac_part = AK::modf(frac_part, int_part);
         if (old_frac_part == frac_part)
             break;
         number_string_builder.append('0' + (int)int_part);
@@ -622,11 +622,11 @@ i32 Value::to_i32_slow_case(GlobalObject& global_object) const
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
-    auto abs = fabs(value);
-    auto int_val = floor(abs);
+    auto abs = AK::fabs(value);
+    auto int_val = AK::floor(abs);
     if (signbit(value))
         int_val = -int_val;
-    auto remainder = fmod(int_val, 4294967296.0);
+    auto remainder = AK::fmod(int_val, 4294967296.0);
     auto int32bit = remainder >= 0.0 ? remainder : remainder + 4294967296.0; // The notation “x modulo y” computes a value k of the same sign as y
     if (int32bit >= 2147483648.0)
         int32bit -= 4294967296.0;
@@ -642,10 +642,10 @@ u32 Value::to_u32(GlobalObject& global_object) const
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
-    auto int_val = floor(fabs(value));
+    auto int_val = AK::floor(AK::fabs(value));
     if (signbit(value))
         int_val = -int_val;
-    auto int32bit = fmod(int_val, NumericLimits<u32>::max() + 1.0);
+    auto int32bit = AK::fmod(int_val, NumericLimits<u32>::max() + 1.0);
     // Cast to i64 here to ensure that the double --> u32 cast doesn't invoke undefined behavior
     // Otherwise, negative numbers cause a UBSAN warning.
     return static_cast<u32>(static_cast<i64>(int32bit));
@@ -660,11 +660,11 @@ i16 Value::to_i16(GlobalObject& global_object) const
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
-    auto abs = fabs(value);
-    auto int_val = floor(abs);
+    auto abs = AK::fabs(value);
+    auto int_val = AK::floor(abs);
     if (signbit(value))
         int_val = -int_val;
-    auto remainder = fmod(int_val, 65536.0);
+    auto remainder = AK::fmod(int_val, 65536.0);
     auto int16bit = remainder >= 0.0 ? remainder : remainder + 65536.0; // The notation “x modulo y” computes a value k of the same sign as y
     if (int16bit >= 32768.0)
         int16bit -= 65536.0;
@@ -680,10 +680,10 @@ u16 Value::to_u16(GlobalObject& global_object) const
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
-    auto int_val = floor(fabs(value));
+    auto int_val = AK::floor(AK::fabs(value));
     if (signbit(value))
         int_val = -int_val;
-    auto int16bit = fmod(int_val, NumericLimits<u16>::max() + 1.0);
+    auto int16bit = AK::fmod(int_val, NumericLimits<u16>::max() + 1.0);
     if (int16bit < 0)
         int16bit += NumericLimits<u16>::max() + 1.0;
     return static_cast<u16>(int16bit);
@@ -698,11 +698,11 @@ i8 Value::to_i8(GlobalObject& global_object) const
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
-    auto abs = fabs(value);
-    auto int_val = floor(abs);
+    auto abs = AK::fabs(value);
+    auto int_val = AK::floor(abs);
     if (signbit(value))
         int_val = -int_val;
-    auto remainder = fmod(int_val, 256.0);
+    auto remainder = AK::fmod(int_val, 256.0);
     auto int8bit = remainder >= 0.0 ? remainder : remainder + 256.0; // The notation “x modulo y” computes a value k of the same sign as y
     if (int8bit >= 128.0)
         int8bit -= 256.0;
@@ -718,10 +718,10 @@ u8 Value::to_u8(GlobalObject& global_object) const
     double value = number.as_double();
     if (!isfinite(value) || value == 0)
         return 0;
-    auto int_val = floor(fabs(value));
+    auto int_val = AK::floor(AK::fabs(value));
     if (signbit(value))
         int_val = -int_val;
-    auto int8bit = fmod(int_val, NumericLimits<u8>::max() + 1.0);
+    auto int8bit = AK::fmod(int_val, NumericLimits<u8>::max() + 1.0);
     if (int8bit < 0)
         int8bit += NumericLimits<u8>::max() + 1.0;
     return static_cast<u8>(int8bit);
@@ -740,12 +740,12 @@ u8 Value::to_u8_clamp(GlobalObject& global_object) const
         return 0;
     if (value >= 255.0)
         return 255;
-    auto int_val = floor(value);
+    auto int_val = AK::floor(value);
     if (int_val + 0.5 < value)
         return static_cast<u8>(int_val + 1.0);
     if (value < int_val + 0.5)
         return static_cast<u8>(int_val);
-    if (fmod(int_val, 2.0) == 1.0)
+    if (AK::fmod(int_val, 2.0) == 1.0)
         return static_cast<u8>(int_val + 1.0);
     return static_cast<u8>(int_val);
 }
@@ -800,7 +800,7 @@ double Value::to_integer_or_infinity(GlobalObject& global_object) const
         return 0;
     if (number.is_infinity())
         return number.as_double();
-    auto integer = floor(fabs(number.as_double()));
+    auto integer = AK::floor(AK::fabs(number.as_double()));
     if (number.as_double() < 0)
         integer = -integer;
     return integer;
@@ -1241,7 +1241,7 @@ Value exp(GlobalObject& global_object, Value lhs, Value rhs)
     if (vm.exception())
         return {};
     if (both_number(lhs_numeric, rhs_numeric))
-        return Value(pow(lhs_numeric.as_double(), rhs_numeric.as_double()));
+        return Value(AK::pow(lhs_numeric.as_double(), rhs_numeric.as_double()));
     if (both_bigint(lhs_numeric, rhs_numeric)) {
         if (rhs_numeric.as_bigint().big_integer().is_negative()) {
             vm.throw_exception<RangeError>(global_object, ErrorType::NegativeExponent);

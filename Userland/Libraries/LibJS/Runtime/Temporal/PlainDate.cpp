@@ -166,7 +166,7 @@ Optional<ISODate> regulate_iso_date(GlobalObject& global_object, double year, do
 {
     auto& vm = global_object.vm();
     // 1. Assert: year, month, and day are integers.
-    VERIFY(year == trunc(year) && month == trunc(month) && day == trunc(day));
+    VERIFY(year == AK::fast_round_to_int<>(year) && month == AK::fast_round_to_int<>(month) && day == AK::fast_round_to_int<>(day));
     // 2. Assert: overflow is either "constrain" or "reject".
     // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
 

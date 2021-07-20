@@ -209,7 +209,7 @@ Value DateConstructor::construct(FunctionObject& new_target)
         if (value_as_double > Date::time_clip)
             return create_invalid_date();
         auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
-        auto milliseconds = static_cast<i16>(fmod(value_as_double, 1000));
+        auto milliseconds = static_cast<i16>(AK::fmod(value_as_double, 1000.));
         return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false);
     }
 
@@ -296,7 +296,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
 {
     struct timeval tv;
     gettimeofday(&tv, nullptr);
-    return Value(floor(tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0));
+    return Value(AK::floor(tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0));
 }
 
 // 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse

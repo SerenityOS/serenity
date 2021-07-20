@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Math.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -166,7 +167,7 @@ BigInt* add_instant(GlobalObject& global_object, BigInt const& epoch_nanoseconds
     auto& vm = global_object.vm();
 
     // 1. Assert: hours, minutes, seconds, milliseconds, microseconds, and nanoseconds are integer Number values.
-    VERIFY(hours == trunc(hours) && minutes == trunc(minutes) && seconds == trunc(seconds) && milliseconds == trunc(milliseconds) && microseconds == trunc(microseconds) && nanoseconds == trunc(nanoseconds));
+    VERIFY(hours == AK::trunc_to_int<>(hours) && minutes == AK::trunc_to_int<>(minutes) && seconds == AK::trunc_to_int<>(seconds) && milliseconds == AK::trunc_to_int<>(milliseconds) && microseconds == AK::trunc_to_int<>(microseconds) && nanoseconds == AK::trunc_to_int<>(nanoseconds));
 
     // 2. Let result be epochNanoseconds + ℤ(nanoseconds) + ℤ(microseconds) × 1000ℤ + ℤ(milliseconds) × 10^6ℤ + ℤ(seconds) × 10^9ℤ + ℤ(minutes) × 60ℤ × 10^9ℤ + ℤ(hours) × 3600ℤ × 10^9ℤ.
     // FIXME: Pretty sure i64's are not sufficient for the extreme cases.

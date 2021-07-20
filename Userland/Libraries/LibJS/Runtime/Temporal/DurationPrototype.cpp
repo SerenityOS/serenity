@@ -8,7 +8,6 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/DurationPrototype.h>
-#include <math.h>
 
 namespace JS::Temporal {
 
@@ -324,7 +323,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::abs)
         return {};
 
     // 3. Return ! CreateTemporalDuration(abs(duration.[[Years]]), abs(duration.[[Months]]), abs(duration.[[Weeks]]), abs(duration.[[Days]]), abs(duration.[[Hours]]), abs(duration.[[Minutes]]), abs(duration.[[Seconds]]), abs(duration.[[Milliseconds]]), abs(duration.[[Microseconds]]), abs(duration.[[Nanoseconds]])).
-    return create_temporal_duration(global_object, fabs(duration->years()), fabs(duration->months()), fabs(duration->weeks()), fabs(duration->days()), fabs(duration->hours()), fabs(duration->minutes()), fabs(duration->seconds()), fabs(duration->milliseconds()), fabs(duration->microseconds()), fabs(duration->nanoseconds()));
+    return create_temporal_duration(global_object, AK::fabs(duration->years()), AK::fabs(duration->months()), AK::fabs(duration->weeks()), AK::fabs(duration->days()), AK::fabs(duration->hours()), AK::fabs(duration->minutes()), AK::fabs(duration->seconds()), AK::fabs(duration->milliseconds()), AK::fabs(duration->microseconds()), AK::fabs(duration->nanoseconds()));
 }
 
 // 7.3.25 Temporal.Duration.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.valueof

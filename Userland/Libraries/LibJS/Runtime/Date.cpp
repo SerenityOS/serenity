@@ -198,7 +198,7 @@ u16 days_in_year(i32 y)
 double day_from_year(i32 y)
 {
     // 𝔽(365 × (ℝ(y) - 1970) + floor((ℝ(y) - 1969) / 4) - floor((ℝ(y) - 1901) / 100) + floor((ℝ(y) - 1601) / 400))
-    return 365 * (y - 1970) + floor((y - 1969) / 4.0) - floor((y - 1901) / 100.0) + floor((y - 1601) / 400.0);
+    return 365 * (y - 1970) + AK::floor((y - 1969) / 4.0) - AK::floor((y - 1901) / 100.0) + AK::floor((y - 1601) / 400.0);
 }
 
 // YearFromTime(t), https://tc39.es/ecma262/#eqn-YearFromTime
@@ -265,28 +265,28 @@ u8 month_from_time(double t)
 u8 hour_from_time(double t)
 {
     // 𝔽(floor(ℝ(t / msPerHour)) modulo HoursPerDay)
-    return static_cast<u8>(fmod(floor(t / MS_PER_HOUR), HOURS_PER_DAY));
+    return static_cast<u8>(AK::fmod(AK::floor(t / MS_PER_HOUR), HOURS_PER_DAY));
 }
 
 // MinFromTime(t), https://tc39.es/ecma262/#eqn-MinFromTime
 u8 min_from_time(double t)
 {
     // 𝔽(floor(ℝ(t / msPerMinute)) modulo MinutesPerHour)
-    return static_cast<u8>(fmod(floor(t / MS_PER_MINUTE), MINUTES_PER_HOUR));
+    return static_cast<u8>(AK::fmod(AK::floor(t / MS_PER_MINUTE), MINUTES_PER_HOUR));
 }
 
 // SecFromTime(t), https://tc39.es/ecma262/#eqn-SecFromTime
 u8 sec_from_time(double t)
 {
     // 𝔽(floor(ℝ(t / msPerSecond)) modulo SecondsPerMinute)
-    return static_cast<u8>(fmod(t / MS_PER_SECOND, SECONDS_PER_MINUTE));
+    return static_cast<u8>(AK::fmod(t / MS_PER_SECOND, SECONDS_PER_MINUTE));
 }
 
 // msFromTime(t), https://tc39.es/ecma262/#eqn-msFromTime
 u16 ms_from_time(double t)
 {
     // 𝔽(ℝ(t) modulo msPerSecond)
-    return static_cast<u16>(fmod(t, MS_PER_SECOND));
+    return static_cast<u16>(AK::fmod(t, MS_PER_SECOND));
 }
 
 // 21.4.1.11 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
@@ -314,7 +314,7 @@ Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, V
 // Day(t), https://tc39.es/ecma262/#eqn-Day
 double day(double time_value)
 {
-    return floor(time_value / MS_PER_DAY);
+    return AK::floor(time_value / MS_PER_DAY);
 }
 
 // 21.4.1.12 MakeDay ( year, month, date ), https://tc39.es/ecma262/#sec-makeday
@@ -331,7 +331,7 @@ Value make_day(GlobalObject& global_object, Value year, Value month, Value date)
     // 4. Let dt be 𝔽(! ToIntegerOrInfinity(date)).
     auto dt = date.to_integer_or_infinity(global_object);
     // 5. Let ym be y + 𝔽(floor(ℝ(m) / 12)).
-    auto ym = Value(y + floor(m / 12));
+    auto ym = Value(y + AK::floor(m / 12.));
     // 6. If ym is not finite, return NaN.
     if (!ym.is_finite_number())
         return js_nan();

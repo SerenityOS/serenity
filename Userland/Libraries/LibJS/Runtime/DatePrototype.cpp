@@ -594,7 +594,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
 
     auto new_date_time = Core::DateTime::from_timestamp(static_cast<time_t>(new_time / 1000));
     this_object->datetime().set_time(new_date_time.year(), new_date_time.month(), new_date_time.day(), new_date_time.hour(), new_date_time.minute(), new_date_time.second());
-    this_object->set_milliseconds(static_cast<i16>(fmod(new_time, 1000)));
+    this_object->set_milliseconds(static_cast<i16>(AK::fmod(new_time, 1000.)));
 
     this_object->set_is_invalid(false);
     return Value(this_object->time());

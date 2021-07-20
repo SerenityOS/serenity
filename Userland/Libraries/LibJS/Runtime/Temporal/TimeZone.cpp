@@ -406,7 +406,7 @@ double get_offset_nanoseconds_for(GlobalObject& global_object, Value time_zone, 
     auto offset_nanoseconds = offset_nanoseconds_value.as_double();
 
     // 7. If abs(offsetNanoseconds) > 86400 × 10^9, throw a RangeError exception.
-    if (fabs(offset_nanoseconds) > 86400000000000.0) {
+    if (AK::fabs(offset_nanoseconds) > 86400000000000.0) {
         vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidOffsetNanosecondsValue);
         return {};
     }

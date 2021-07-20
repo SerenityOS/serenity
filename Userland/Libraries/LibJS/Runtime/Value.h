@@ -12,6 +12,7 @@
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Function.h>
+#include <AK/Math.h>
 #include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/Types.h>
@@ -19,7 +20,6 @@
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Utf16String.h>
-#include <math.h>
 
 // 2 ** 53 - 1
 static constexpr double MAX_ARRAY_LIKE_INDEX = 9007199254740991.0;
@@ -73,7 +73,7 @@ public:
     bool is_negative_infinity() const { return is_number() && __builtin_isinf_sign(as_double()) < 0; }
     bool is_positive_zero() const { return is_number() && bit_cast<u64>(as_double()) == 0; }
     bool is_negative_zero() const { return is_number() && bit_cast<u64>(as_double()) == NEGATIVE_ZERO_BITS; }
-    bool is_integral_number() const { return is_finite_number() && trunc(as_double()) == as_double(); }
+    bool is_integral_number() const { return is_finite_number() && AK::trunc(as_double()) == as_double(); }
     bool is_finite_number() const
     {
         if (!is_number())
@@ -96,7 +96,7 @@ public:
     explicit Value(double value)
     {
         bool is_negative_zero = bit_cast<u64>(value) == NEGATIVE_ZERO_BITS;
-        if (value >= NumericLimits<i32>::min() && value <= NumericLimits<i32>::max() && trunc(value) == value && !is_negative_zero) {
+        if (value >= NumericLimits<i32>::min() && value <= NumericLimits<i32>::max() && AK::trunc(value) == value && !is_negative_zero) {
             m_type = Type::Int32;
             m_value.as_i32 = static_cast<i32>(value);
         } else {

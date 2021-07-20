@@ -116,7 +116,7 @@ TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object
             return {};
 
         // e. If floor(val) ≠ val, then
-        if (floor(value.as_double()) != value.as_double()) {
+        if (AK::floor(value.as_double()) != value.as_double()) {
             // i. Throw a RangeError exception.
             vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
             return {};

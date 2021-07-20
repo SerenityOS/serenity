@@ -81,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
         return js_string(vm, number_value.to_string(global_object));
 
     auto number = number_value.as_double();
-    if (fabs(number) >= 1e+21)
+    if (AK::fabs(number) >= 1e+21)
         return js_string(vm, number_value.to_string(global_object));
 
     return js_string(vm, String::formatted("{:0.{1}}", number, static_cast<size_t>(fraction_digits)));
@@ -122,7 +122,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     if (negative)
         number *= -1;
 
-    u64 int_part = floor(number);
+    u64 int_part = (u64)AK::floor(number);
     double decimal_part = number - int_part;
 
     Vector<char> backwards_characters;
@@ -153,7 +153,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 
         for (u8 i = 0; i < precision; ++i) {
             decimal_part *= radix;
-            u64 integral = floor(decimal_part);
+            u64 integral = (u64)AK::floor(decimal_part);
             characters.append(digits[integral]);
             decimal_part -= integral;
         }

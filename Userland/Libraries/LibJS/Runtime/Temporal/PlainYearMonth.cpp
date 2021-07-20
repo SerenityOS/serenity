@@ -36,7 +36,7 @@ Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject& global_object, doub
     auto& vm = global_object.vm();
 
     // 1. Assert: year and month are integers.
-    VERIFY(year == trunc(year) && month == trunc(month));
+    VERIFY(year == AK::fast_round(year) && month == AK::fast_round(month));
 
     // 2. Assert: overflow is either "constrain" or "reject".
     // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
@@ -124,13 +124,13 @@ bool iso_year_month_within_limits(i32 year, u8 month)
 ISOYearMonth balance_iso_year_month(double year, double month)
 {
     // 1. Assert: year and month are integers.
-    VERIFY(year == trunc(year) && month == trunc(month));
+    VERIFY(year == AK::fast_round(year) && month == AK::fast_round(month));
 
     // 2. Set year to year + floor((month - 1) / 12).
-    year += floor((month - 1) / 12);
+    year += AK::floor((month - 1) / 12);
 
     // 3. Set month to (month − 1) modulo 12 + 1.
-    month = fmod(month - 1, 12) + 1;
+    month = AK::fmod(month - 1, 12.) + 1;
 
     // 4. Return the Record { [[Year]]: year, [[Month]]: month }.
     return ISOYearMonth { .year = static_cast<i32>(year), .month = static_cast<u8>(month), .reference_iso_day = 0 };
@@ -140,7 +140,7 @@ ISOYearMonth balance_iso_year_month(double year, double month)
 ISOYearMonth constrain_iso_year_month(double year, double month)
 {
     // 1. Assert: year and month are integers.
-    VERIFY(year == trunc(year) && month == trunc(month));
+    VERIFY(year == AK::fast_round(year) && month == AK::fast_round(month));
 
     // 2. Set month to ! ConstrainToRange(month, 1, 12).
     month = constrain_to_range(month, 1, 12);
