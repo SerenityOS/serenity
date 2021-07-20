@@ -142,6 +142,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`sed`](sed/)                          | GNU sed                                                    | 4.2.1                    | https://www.gnu.org/software/sed/                                              |
 | [`sfinx`](sfinx/)                      | Sfinx                                                      | 1.1                      | https://www.scummvm.org/games/#games-sfinx                                     |
 | [`sl`](sl/)                            | Steam Locomotive (SL)                                      |                          | https://github.com/mtoyoda/sl                                                  |
+| [`soltys`](soltys/)                    | Soltys                                                     | 1.0                      | https://www.scummvm.org/games/#games-soltys                                    |
 | [`sqlite`](sqlite/)                    | SQLite                                                     | 3350500                  | https://www.sqlite.org/                                                        |
 | [`stpuzzles`](stpuzzles/)              | Simon Tatham's Portable Puzzle Collection                  |                          | https://www.chiark.greenend.org.uk/~sgtatham/puzzles/                          |
 | [`stress-ng`](stress-ng/)              | stress-ng                                                  | 0.11.23                  | https://github.com/ColinIanKing/stress-ng                                      |
