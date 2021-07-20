@@ -114,13 +114,13 @@ public:
             return;
 
         size_t no_of_passes = 3;
-        double wIdeal = sqrt((12 * radius * radius / (double)no_of_passes) + 1);
-        int wl = floor(wIdeal);
+        double wIdeal = AK::sqrt((12 * radius * radius / (double)no_of_passes) + 1);
+        int wl = AK::floor_to_int<>(wIdeal);
         if (wl % 2 == 0)
             wl--;
         int wu = wl - 2;
         double mIdeal = (12 * radius * radius - no_of_passes * wl * wl - 4 * no_of_passes * wl - 3 * no_of_passes) / (double)(-4 * wl - 4);
-        int m = round(mIdeal);
+        int m = AK::round_to_int<>(mIdeal);
 
         for (size_t i = 0; i < no_of_passes; i++) {
             int weighted_radius = (int)i < m ? wl : wu;

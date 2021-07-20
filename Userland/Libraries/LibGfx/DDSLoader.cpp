@@ -8,12 +8,12 @@
 #include <AK/Endian.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
+#include <AK/Math.h>
 #include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibGfx/DDSLoader.h>
 #include <fcntl.h>
-#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -508,7 +508,7 @@ static void decode_dx5_alpha_block(InputMemoryStream& stream, DDSLoadingContext&
     for (size_t y = 0; y < 4; y++) {
         for (size_t x = 0; x < 4; x++) {
             u8 index = 3 * (4 * y + x);
-            u8 bit_location = floor(index / 8.0);
+            u8 bit_location = index / 8;
             u8 adjusted_index = index - (bit_location * 8);
 
             u8 code = (codes[bit_location] >> adjusted_index) & 7;

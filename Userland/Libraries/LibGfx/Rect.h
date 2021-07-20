@@ -7,12 +7,12 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/Math.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
-#include <math.h>
 
 namespace Gfx {
 
@@ -578,7 +578,7 @@ public:
                 if (rect.intersects(other_rect))
                     center_sum += rect_center - other_rect.center();
             }
-            double m = sqrt((double)center_sum.x() * (double)center_sum.x() + (double)center_sum.y() * (double)center_sum.y());
+            double m = AK::hypot((double)center_sum.x(), (double)center_sum.y());
             if (m != 0.0)
                 return { (double)center_sum.x() / m + 0.5, (double)center_sum.y() / m + 0.5 };
             return {};
@@ -669,10 +669,10 @@ using FloatRect = Rect<float>;
 
 [[nodiscard]] ALWAYS_INLINE IntRect enclosing_int_rect(FloatRect const& float_rect)
 {
-    int x1 = floorf(float_rect.x());
-    int y1 = floorf(float_rect.y());
-    int x2 = ceilf(float_rect.x() + float_rect.width());
-    int y2 = ceilf(float_rect.y() + float_rect.height());
+    int x1 = AK::floor_to_int<>(float_rect.x());
+    int y1 = AK::floor_to_int<>(float_rect.y());
+    int x2 = AK::ceil_to_int<>(float_rect.x() + float_rect.width());
+    int y2 = AK::ceil_to_int<>(float_rect.y() + float_rect.height());
     return Gfx::IntRect::from_two_points({ x1, y1 }, { x2, y2 });
 }
 

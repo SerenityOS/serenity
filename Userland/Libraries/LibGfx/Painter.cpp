@@ -476,7 +476,7 @@ void Painter::fill_ellipse(const IntRect& a_rect, Color color)
 
     for (int i = 1; i < a_rect.height(); i++) {
         double y = a_rect.height() * 0.5 - i;
-        double x = a_rect.width() * sqrt(0.25 - y * y / a_rect.height() / a_rect.height());
+        double x = a_rect.width() * AK::sqrt(0.25 - y * y / a_rect.height() / a_rect.height());
         draw_line({ a_rect.x() + a_rect.width() / 2 - (int)x, a_rect.y() + i }, { a_rect.x() + a_rect.width() / 2 + (int)x - 1, a_rect.y() + i }, color);
     }
 }
@@ -1837,7 +1837,7 @@ void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, cons
     if (theta_delta < 0) {
         swap(start, end);
         theta_1 = theta_1 + theta_delta;
-        theta_delta = fabsf(theta_delta);
+        theta_delta = AK::fabs(theta_delta);
     }
 
     auto relative_start = start - center;
@@ -1847,7 +1847,7 @@ void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, cons
 
     // The segments are at most 1 long
     auto largest_radius = max(a, b);
-    double theta_step = atan(1 / (double)largest_radius);
+    double theta_step = AK::atan2(1., (double)largest_radius);
 
     FloatPoint current_point = relative_start;
     FloatPoint next_point = { 0, 0 };

@@ -9,10 +9,10 @@
 #include <AK/Assertions.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
+#include <AK/Math.h>
 #include <AK/SIMD.h>
 #include <AK/StdLibExtras.h>
 #include <LibIPC/Forward.h>
-#include <math.h>
 
 namespace Gfx {
 
@@ -127,10 +127,10 @@ public:
         // PUT hue.to.rgb(m1, m2, h-1/3) IN b
         double b = hue_to_rgb(m1, m2, h - 1.0 / 3.0);
         // RETURN (r, g, b)
-        u8 r_u8 = clamp(lroundf(r * 255.0), 0, 255);
-        u8 g_u8 = clamp(lroundf(g * 255.0), 0, 255);
-        u8 b_u8 = clamp(lroundf(b * 255.0), 0, 255);
-        u8 a_u8 = clamp(lroundf(a * 255.0), 0, 255);
+        u8 r_u8 = clamp(AK::round_to_int<i16>(r * 255.0), 0, 255);
+        u8 g_u8 = clamp(AK::round_to_int<i16>(g * 255.0), 0, 255);
+        u8 b_u8 = clamp(AK::round_to_int<i16>(b * 255.0), 0, 255);
+        u8 a_u8 = clamp(AK::round_to_int<i16>(a * 255.0), 0, 255);
         return Color(r_u8, g_u8, b_u8, a_u8);
     }
 
@@ -205,10 +205,10 @@ public:
 
     Color interpolate(const Color& other, float weight) const noexcept
     {
-        u8 r = red() + roundf(static_cast<float>(other.red() - red()) * weight);
-        u8 g = green() + roundf(static_cast<float>(other.green() - green()) * weight);
-        u8 b = blue() + roundf(static_cast<float>(other.blue() - blue()) * weight);
-        u8 a = alpha() + roundf(static_cast<float>(other.alpha() - alpha()) * weight);
+        u8 r = red() + (AK::round_to_int<i16>(static_cast<float>(other.red() - red()) * weight) & 0xff);
+        u8 g = green() + (AK::round_to_int<i16>(static_cast<float>(other.green() - green()) * weight) & 0xff);
+        u8 b = blue() + (AK::round_to_int<i16>(static_cast<float>(other.blue() - blue()) * weight) & 0xff);
+        u8 a = alpha() + (AK::round_to_int<i16>(static_cast<float>(other.alpha() - alpha()) * weight) & 0xff);
         return Color(r, g, b, a);
     }
 

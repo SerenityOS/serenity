@@ -18,7 +18,7 @@ bool AffineTransform::is_identity() const
 static float hypotenuse(float x, float y)
 {
     // FIXME: This won't handle overflow :(
-    return sqrtf(x * x + y * y);
+    return AK::hypot(x, y);
 }
 
 float AffineTransform::x_scale() const
@@ -118,8 +118,8 @@ AffineTransform& AffineTransform::multiply(const AffineTransform& other)
 
 AffineTransform& AffineTransform::rotate_radians(float radians)
 {
-    float sin_angle = sinf(radians);
-    float cos_angle = cosf(radians);
+    float sin_angle = AK::sin(radians);
+    float cos_angle = AK::cos(radians);
     AffineTransform rotation(cos_angle, sin_angle, -sin_angle, cos_angle, 0, 0);
     multiply(rotation);
     return *this;
@@ -137,7 +137,7 @@ IntPoint AffineTransform::map(const IntPoint& point) const
     float mapped_x;
     float mapped_y;
     map(static_cast<float>(point.x()), static_cast<float>(point.y()), mapped_x, mapped_y);
-    return { roundf(mapped_x), roundf(mapped_y) };
+    return { AK::round_to_int<>(mapped_x), AK::round_to_int<>(mapped_y) };
 }
 
 template<>
@@ -153,8 +153,8 @@ template<>
 IntSize AffineTransform::map(const IntSize& size) const
 {
     return {
-        roundf(static_cast<float>(size.width()) * x_scale()),
-        roundf(static_cast<float>(size.height()) * y_scale()),
+        AK::round_to_int<>(static_cast<float>(size.width()) * x_scale()),
+        AK::round_to_int<>(static_cast<float>(size.height()) * y_scale()),
     };
 }
 

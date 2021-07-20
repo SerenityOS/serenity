@@ -380,11 +380,11 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(int sx, int sy) const
 RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
 {
     VERIFY(sx >= 0.0f && sy >= 0.0f);
-    if (floorf(sx) == sx && floorf(sy) == sy)
+    if (AK::floor(sx) == sx && AK::floor(sy) == sy)
         return scaled(static_cast<int>(sx), static_cast<int>(sy));
 
-    int scaled_width = (int)ceilf(sx * (float)width());
-    int scaled_height = (int)ceilf(sy * (float)height());
+    int scaled_width = AK::ceil_to_int<>(sx * (float)width());
+    int scaled_height = AK::ceil_to_int<>(sy * (float)height());
 
     auto new_bitmap = Gfx::Bitmap::try_create(format(), { scaled_width, scaled_height }, scale());
     if (!new_bitmap)
@@ -404,8 +404,8 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
             auto p = static_cast<float>(x) * static_cast<float>(old_width - 1) / static_cast<float>(new_width - 1);
             auto q = static_cast<float>(y) * static_cast<float>(old_height - 1) / static_cast<float>(new_height - 1);
 
-            int i = floorf(p);
-            int j = floorf(q);
+            int i = AK::floor_to_int<>(p);
+            int j = AK::floor_to_int<>(q);
             float u = p - static_cast<float>(i);
             float v = q - static_cast<float>(j);
 
@@ -427,7 +427,7 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
     for (int x = 0; x < new_width - 1; x++) {
         auto p = static_cast<float>(x) * static_cast<float>(old_width - 1) / static_cast<float>(new_width - 1);
 
-        int i = floorf(p);
+        int i = AK::floor_to_int<>(p);
         float u = p - static_cast<float>(i);
 
         auto a = get_pixel(i, old_bottom_y);
@@ -442,7 +442,7 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
     for (int y = 0; y < new_height - 1; y++) {
         auto q = static_cast<float>(y) * static_cast<float>(old_height - 1) / static_cast<float>(new_height - 1);
 
-        int j = floorf(q);
+        int j = AK::floor_to_int<>(q);
         float v = q - static_cast<float>(j);
 
         auto c = get_pixel(old_right_x, j);

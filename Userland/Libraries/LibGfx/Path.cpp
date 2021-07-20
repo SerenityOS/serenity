@@ -99,9 +99,9 @@ void Path::elliptical_arc_to(const FloatPoint& point, const FloatPoint& radii, d
     auto theta_delta = theta_2 - theta_1;
 
     if (!sweep && theta_delta > 0.0) {
-        theta_delta -= 2 * M_PI;
+        theta_delta -= 2. * M_PI;
     } else if (sweep && theta_delta < 0) {
-        theta_delta += 2 * M_PI;
+        theta_delta += 2. * M_PI;
     }
 
     elliptical_arc_to(
