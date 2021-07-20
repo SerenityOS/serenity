@@ -246,6 +246,7 @@ public:
     u64 encoded() const { return m_value.encoded; }
 
     String to_string(GlobalObject&, bool legacy_null_to_empty_string = false) const;
+    Vector<u16> to_utf16_string(GlobalObject&) const;
     PrimitiveString* to_primitive_string(GlobalObject&);
     Value to_primitive(GlobalObject&, PreferredType preferred_type = PreferredType::Default) const;
     Object* to_object(GlobalObject&) const;
