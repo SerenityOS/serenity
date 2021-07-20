@@ -155,13 +155,6 @@ int main(int argc, char** argv)
     bottom_widget.layout()->add_spacer();
     bottom_widget.set_fixed_height(22);
 
-    auto& apply_button = bottom_widget.add<GUI::Button>();
-    apply_button.set_text("Apply");
-    apply_button.set_fixed_width(60);
-    apply_button.on_click = [&](auto) {
-        apply_settings(false);
-    };
-
     auto& ok_button = bottom_widget.add<GUI::Button>();
     ok_button.set_text("OK");
     ok_button.set_fixed_width(60);
@@ -174,6 +167,13 @@ int main(int argc, char** argv)
     cancel_button.set_fixed_width(60);
     cancel_button.on_click = [&](auto) {
         app->quit();
+    };
+
+    auto& apply_button = bottom_widget.add<GUI::Button>();
+    apply_button.set_text("Apply");
+    apply_button.set_fixed_width(60);
+    apply_button.on_click = [&](auto) {
+        apply_settings(false);
     };
 
     auto quit_action = GUI::CommonActions::make_quit_action(
