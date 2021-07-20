@@ -13,7 +13,7 @@ else
     : "${SUDO_UID:=0}" "${SUDO_GID:=0}"
 fi
 
-for dir in "/usr/lib/syslinux" "/usr/share/syslinux"; do
+for dir in "/usr/lib/syslinux/bios" "/usr/lib/syslinux" "/usr/share/syslinux"; do
     if [ -d $dir ]; then
         syslinux_dir=$dir
         break
