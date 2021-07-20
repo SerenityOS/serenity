@@ -75,7 +75,8 @@ extern "C" [[noreturn]] void init()
         halt();
     __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(ElfW(Phdr)) * kernel_elf_header.e_phnum);
 
-    FlatPtr kernel_load_base, kernel_load_end;
+    FlatPtr kernel_load_base = 0;
+    FlatPtr kernel_load_end = 0;
     for (size_t i = 0; i < kernel_elf_header.e_phnum; i++) {
         auto& kernel_program_header = kernel_program_headers[i];
         if (kernel_program_header.p_type != PT_LOAD)
