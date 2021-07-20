@@ -31,8 +31,7 @@ public:
     template<typename... Parameters>
     void appendff(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
     {
-        // FIXME: This is really not the way to go about it, but vformat expects a
-        //        StringBuilder. Why does this class exist anyways?
+        // FIXME: This really not ideal, but vformat expects StringBuilder.
         StringBuilder builder;
         vformat(builder, fmtstr.view(), AK::VariadicFormatParams { parameters... });
         append_bytes(builder.string_view().bytes());
