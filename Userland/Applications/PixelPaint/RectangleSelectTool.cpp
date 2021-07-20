@@ -156,7 +156,7 @@ GUI::Widget* RectangleSelectTool::get_properties_widget()
     const int feather_slider_max = 100;
     auto& feather_slider = feather_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
     feather_slider.set_range(0, feather_slider_max);
-    feather_slider.set_value((int)floorf(m_edge_feathering * (float)feather_slider_max));
+    feather_slider.set_value(AK::floor_to_int<>(m_edge_feathering * (float)feather_slider_max));
 
     feather_slider.on_change = [&](int value) {
         m_edge_feathering = (float)value / (float)feather_slider_max;

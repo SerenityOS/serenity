@@ -93,7 +93,7 @@ public:
 
         m_slider = m_root_container->add<GUI::VerticalSlider>();
         m_slider->set_max(20);
-        int non_log_volume = sqrt(100 * m_audio_volume);
+        int non_log_volume = (int)AK::sqrt(100.f * m_audio_volume);
         m_slider->set_value(-(non_log_volume / 5.0f) + 20);
         m_slider->set_knob_size_mode(GUI::Slider::KnobSizeMode::Proportional);
         m_slider->on_change = [&](int value) {

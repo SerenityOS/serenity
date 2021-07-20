@@ -699,7 +699,7 @@ NonnullRefPtr<GUI::Widget> build_performance_tab()
             sum_cpu += cpus[i].total_cpu_percent;
         }
         float cpu_usage = sum_cpu / (float)cpus.size();
-        statusbar->set_text(2, String::formatted("CPU usage: {}%", (int)roundf(cpu_usage)));
+        statusbar->set_text(2, String::formatted("CPU usage: {}%", AK::round_to_int<>(cpu_usage)));
     };
 
     auto& memory_graph_group_box = graphs_container->add<GUI::GroupBox>("Memory usage");

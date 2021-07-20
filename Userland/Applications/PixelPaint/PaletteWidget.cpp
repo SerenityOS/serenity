@@ -166,7 +166,7 @@ void PaletteWidget::display_color_list(Vector<Color> const& colors)
         color_widget.set_palette(pal);
     };
 
-    int colors_per_row = ceil(colors_to_add / 2);
+    int colors_per_row = (colors_to_add >> 1) + (colors_to_add & 1);
     int number_of_added_colors = 0;
     for (auto& color : colors) {
         if (number_of_added_colors < colors_per_row)

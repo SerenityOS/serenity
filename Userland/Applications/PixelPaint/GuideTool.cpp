@@ -119,7 +119,7 @@ void GuideTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& image_ev
 
     if (image_event.shift() && m_snap_size > 0) {
         float snap_size_half = m_snap_size / 2.0;
-        new_offset -= fmodf(new_offset + snap_size_half, m_snap_size) - snap_size_half;
+        new_offset -= AK::fmod(new_offset + snap_size_half, (float)m_snap_size) - snap_size_half;
     }
 
     m_selected_guide->set_offset(new_offset);

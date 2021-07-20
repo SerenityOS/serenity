@@ -50,7 +50,7 @@ void SprayTool::paint_it()
     const double base_radius = minimal_radius * m_thickness;
     for (int i = 0; i < M_PI * base_radius * base_radius * (m_density / 100.0); i++) {
         double radius = base_radius * nrand();
-        double angle = 2 * M_PI * nrand();
+        double angle = 2. * M_PI * nrand();
         const int xpos = m_last_pos.x() + radius * AK::cos(angle);
         const int ypos = m_last_pos.y() - radius * AK::sin(angle);
         if (xpos < 0 || xpos >= bitmap.width())

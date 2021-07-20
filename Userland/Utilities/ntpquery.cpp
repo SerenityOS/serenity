@@ -8,11 +8,11 @@
 #define _DEFAULT_SOURCE
 #include <AK/Assertions.h>
 #include <AK/Endian.h>
+#include <AK/Math.h>
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <arpa/inet.h>
 #include <inttypes.h>
-#include <math.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -309,7 +309,7 @@ int main(int argc, char** argv)
     outln("Offset: {}", offset_s);
 
     if (adjust_time) {
-        long delta_us = static_cast<long>(round(offset_s * 1'000'000));
+        long delta_us = AK::round_to_int<long>(offset_s * 1'000'000);
         timeval delta_timeval;
         delta_timeval.tv_sec = delta_us / 1'000'000;
         delta_timeval.tv_usec = delta_us % 1'000'000;

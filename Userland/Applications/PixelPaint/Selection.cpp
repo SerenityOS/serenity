@@ -51,7 +51,7 @@ void Selection::draw_marching_ants(Gfx::Painter& painter, Gfx::IntRect const& re
 void Selection::draw_marching_ants(Gfx::Painter& painter, Mask const& mask) const
 {
     // If the zoom is < 100%, we can skip pixels to save a lot of time drawing the ants
-    int step = max(1, (int)floorf(1.0f / m_editor.scale()));
+    int step = max(1, AK::floor_to_int<>(1.0f / m_editor.scale()));
 
     // Only check the visible selection area when drawing for performance
     auto rect = m_editor.rect();

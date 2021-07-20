@@ -19,7 +19,7 @@ namespace PixelPaint {
 
 static Gfx::IntPoint constrain_line_angle(Gfx::IntPoint const& start_pos, Gfx::IntPoint const& end_pos, float angle_increment)
 {
-    float current_angle = AK::atan2<float>(end_pos.y() - start_pos.y(), end_pos.x() - start_pos.x()) + float { M_PI * 2 };
+    float current_angle = AK::atan2<float>(end_pos.y() - start_pos.y(), end_pos.x() - start_pos.x()) + 2.f * (float)M_PI;
 
     float constrained_angle = ((int)((current_angle + angle_increment / 2) / angle_increment)) * angle_increment;
 
@@ -71,7 +71,7 @@ void LineTool::on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEven
         return;
 
     if (layer_event.shift()) {
-        constexpr auto ANGLE_STEP = M_PI / 8;
+        constexpr auto ANGLE_STEP = M_PI / 8.;
         m_line_end_position = constrain_line_angle(m_line_start_position, layer_event.position(), ANGLE_STEP);
     } else {
         m_line_end_position = layer_event.position();

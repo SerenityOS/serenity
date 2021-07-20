@@ -107,8 +107,8 @@ struct FilterParameters<Gfx::SpatialGaussianBlurFilter<N>> {
 
         for (auto x = -offset; x <= offset; x++) {
             for (auto y = -offset; y <= offset; y++) {
-                auto r = sqrtf(x * x + y * y);
-                kernel.elements()[x + offset][y + offset] = (expf(-(r * r) / s)) / (float { M_PI } * s);
+                auto r = AK::hypot((float)x, (float)y);
+                kernel.elements()[x + offset][y + offset] = (AK::exp(-(r * r) / s)) / ((float)M_PI * s);
             }
         }
 

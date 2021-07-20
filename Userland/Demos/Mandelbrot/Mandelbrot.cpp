@@ -102,8 +102,8 @@ public:
         if (iteration == max_iterations)
             return iteration;
 
-        auto lz = sqrt(x * x + y * y) / 2;
-        return 1 + iteration + log(lz / log(2)) / log(2);
+        auto lz = AK::hypot(x, y) / 2;
+        return 1 + iteration + (AK::log(lz) - AK::log(2.)) / AK::log(2.);
     }
 
     static double linear_interpolate(double v0, double v1, double t)
@@ -114,8 +114,8 @@ public:
     void calculate_pixel(int px, int py, int max_iterations)
     {
         auto iterations = mandelbrot(px, py, max_iterations);
-        auto whole_iterations = floor(iterations);
-        auto partial_iterations = fmod(iterations, 1);
+        auto whole_iterations = AK::floor(iterations);
+        auto partial_iterations = AK::fmod(iterations, 1.);
         double hue1 = whole_iterations * 360.0 / max_iterations;
         if (hue1 >= 360.0)
             hue1 = 0.0;

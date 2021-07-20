@@ -96,12 +96,12 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
     auto draw_arrow = [&painter](Gfx::FloatPoint A, Gfx::FloatPoint B, float w1, float w2, float h, Gfx::Color color) {
         float dx = B.x() - A.x();
         float dy = A.y() - B.y();
-        float phi = atan2f(dy, dx);
-        float hdx = h * cosf(phi);
-        float hdy = h * sinf(phi);
+        float phi = AK::atan2(dy, dx);
+        float hdx = h * AK::cos(phi);
+        float hdy = h * AK::sin(phi);
 
-        const auto cos_pi_2_phi = cosf(float { M_PI_2 } - phi);
-        const auto sin_pi_2_phi = sinf(float { M_PI_2 } - phi);
+        const auto cos_pi_2_phi = AK::cos((float)M_PI_2 - phi);
+        const auto sin_pi_2_phi = AK::sin((float)M_PI_2 - phi);
 
         Gfx::FloatPoint A1(A.x() - (w1 / 2) * cos_pi_2_phi, A.y() - (w1 / 2) * sin_pi_2_phi);
         Gfx::FloatPoint B3(A.x() + (w1 / 2) * cos_pi_2_phi, A.y() + (w1 / 2) * sin_pi_2_phi);

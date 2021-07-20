@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Math.h>
 #include <LibCore/ArgsParser.h>
-#include <math.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -19,11 +19,11 @@ int main(int argc, char** argv)
 #endif
 
     Core::ArgsParser args_parser;
-    double delta = __builtin_nan("");
+    double delta = NAN;
     args_parser.add_option(delta, "Adjust system time by this many seconds", "set", 's', "delta_seconds");
     args_parser.parse(argc, argv);
 
-    if (__builtin_isnan(delta)) {
+    if (isnan(delta)) {
 #ifdef __serenity__
         if (pledge("stdio", nullptr) < 0) {
             perror("pledge");
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
         }
 #endif
     } else {
-        long delta_us = static_cast<long>(round(delta * 1'000'000));
+        long delta_us = AK::round_to_int<long>(delta * 1'000'000);
         timeval delta_timeval;
         delta_timeval.tv_sec = delta_us / 1'000'000;
         delta_timeval.tv_usec = delta_us % 1'000'000;

@@ -119,7 +119,7 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
 {
     m_progressbar->set_min(0);
     if (total_size.has_value()) {
-        int percent = roundf(((float)downloaded_size / (float)total_size.value()) * 100.0f);
+        int percent = AK::round_to_int<>(((float)downloaded_size / (float)total_size.value()) * 100.0f);
         window()->set_progress(percent);
         m_progressbar->set_max(total_size.value());
     } else {
@@ -138,7 +138,7 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
     {
         StringBuilder builder;
         if (total_size.has_value()) {
-            int percent = roundf(((float)downloaded_size / (float)total_size.value()) * 100);
+            int percent = AK::round_to_int<>(((float)downloaded_size / (float)total_size.value()) * 100);
             builder.appendff("{}%", percent);
         } else {
             builder.append(human_readable_size(downloaded_size));

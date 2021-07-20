@@ -142,7 +142,7 @@ double MCTSTree::uct(Chess::Color color) const
 
     // Fun fact: Szepesvári was my data structures professor.
     double expected = expected_value() * ((color == Chess::Color::White) ? 1 : -1);
-    return expected + s_exploration_parameter * sqrt(log(m_parent->m_simulations) / m_simulations);
+    return expected + s_exploration_parameter * AK::sqrt(AK::log((double)m_parent->m_simulations) / m_simulations);
 }
 
 bool MCTSTree::expanded() const

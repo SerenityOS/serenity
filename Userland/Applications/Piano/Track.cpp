@@ -10,7 +10,6 @@
 #include <AK/Math.h>
 #include <AK/NumericLimits.h>
 #include <LibAudio/Loader.h>
-#include <math.h>
 
 Track::Track(const u32& time)
     : m_time(time)
@@ -135,8 +134,8 @@ String Track::set_recorded_sample(const StringView& path)
 
     double peak = 0;
     for (int i = 0; i < buffer->sample_count(); ++i) {
-        double left_abs = fabs(buffer->samples()[i].left);
-        double right_abs = fabs(buffer->samples()[i].right);
+        double left_abs = AK::fabs(buffer->samples()[i].left);
+        double right_abs = AK::fabs(buffer->samples()[i].right);
         if (left_abs > peak)
             peak = left_abs;
         if (right_abs > peak)
@@ -158,8 +157,8 @@ String Track::set_recorded_sample(const StringView& path)
 Audio::Frame Track::sine(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
-    double sin_step = pos * 2 * M_PI;
-    double w = sin(m_pos[note]);
+    double sin_step = pos * 2. * M_PI;
+    double w = AK::sin(m_pos[note]);
     m_pos[note] += sin_step;
     return w;
 }
@@ -168,7 +167,7 @@ Audio::Frame Track::saw(size_t note)
 {
     double saw_step = note_frequencies[note] / sample_rate;
     double t = m_pos[note];
-    double w = (0.5 - (t - floor(t))) * 2;
+    double w = (0.5 - (t - AK::floor(t))) * 2;
     m_pos[note] += saw_step;
     return w;
 }
@@ -176,7 +175,7 @@ Audio::Frame Track::saw(size_t note)
 Audio::Frame Track::square(size_t note)
 {
     double pos = note_frequencies[note] / sample_rate;
-    double square_step = pos * 2 * M_PI;
+    double square_step = pos * 2. * M_PI;
     double w = AK::sin(m_pos[note]) >= 0 ? 1 : -1;
     m_pos[note] += square_step;
     return w;

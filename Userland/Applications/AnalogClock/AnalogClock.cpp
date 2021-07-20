@@ -43,11 +43,11 @@ void AnalogClock::draw_mirrored_graduations(GUI::Painter& painter, Gfx::IntRect&
 void AnalogClock::draw_face(GUI::Painter& painter)
 {
     int x, y;
-    double angle = 2 * M_PI / 60;
+    double angle = 2. * M_PI / 60.;
 
     for (int i = 0; i <= 7; ++i) {
-        x = sin(angle * static_cast<double>(i)) * m_clock_face_radius;
-        y = cos(angle * static_cast<double>(i)) * m_clock_face_radius;
+        x = AK::sin(angle * static_cast<double>(i)) * m_clock_face_radius;
+        y = AK::cos(angle * static_cast<double>(i)) * m_clock_face_radius;
 
         draw_mirrored_graduations(painter, m_small_graduation_square, x, y, 1);
 
@@ -58,11 +58,11 @@ void AnalogClock::draw_face(GUI::Painter& painter)
 
 void AnalogClock::draw_hand(GUI::Painter& painter, double angle, double length, Gfx::Color hand_color)
 {
-    if (angle >= 2 * M_PI)
-        angle -= 2 * M_PI;
+    if (angle >= 2. * M_PI)
+        angle -= 2. * M_PI;
 
-    double cosine = cos(angle);
-    double sine = sin(angle);
+    double cosine = AK::cos(angle);
+    double sine = AK::sin(angle);
 
     double hand_x = (rect().center().x() + (cosine * length));
     double hand_y = (rect().center().y() + (sine * length));
@@ -100,8 +100,8 @@ void AnalogClock::draw_hand(GUI::Painter& painter, double angle, double length, 
 
 void AnalogClock::draw_seconds_hand(GUI::Painter& painter, double angle)
 {
-    double hand_x = (rect().center().x() + (cos(angle)) * (m_clock_face_radius - 10));
-    double hand_y = (rect().center().y() + (sin(angle)) * (m_clock_face_radius - 10));
+    double hand_x = (rect().center().x() + (AK::cos(angle)) * (m_clock_face_radius - 10));
+    double hand_y = (rect().center().y() + (AK::sin(angle)) * (m_clock_face_radius - 10));
 
     Gfx::IntPoint indicator_point(hand_x, hand_y);
     painter.draw_line(rect().center(), indicator_point, palette().base_text());
@@ -115,9 +115,9 @@ void AnalogClock::paint_event(GUI::PaintEvent& event)
     draw_face(painter);
 
     auto time = Core::DateTime::now();
-    auto minute = time.minute() * (2 * M_PI) / 60;
-    auto hour = (minute + (2 * M_PI) * time.hour()) / 12;
-    auto seconds = time.second() * (2 * M_PI) / 60;
+    auto minute = time.minute() * 2. * M_PI / 60;
+    auto hour = (minute + 2. * M_PI * time.hour()) / 12;
+    auto seconds = time.second() * 2. * M_PI / 60;
     auto angle_offset = M_PI_2;
 
     draw_hand(painter, minute - angle_offset, m_minute_hand_length, palette().active_window_border2());
