@@ -1199,11 +1199,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     paste_action->set_enabled(GUI::Clipboard::the().mime_type() == "text/uri-list" && access(initial_location.characters(), W_OK) == 0);
 
-    window->show();
-
     window->set_rect({ left, top, width, height });
     if (was_maximized)
         window->set_maximized(true);
+
+    window->show();
 
     // Read directory read mode from config.
     auto dir_view_mode = config->read_entry("DirectoryView", "ViewMode", "Icon");
