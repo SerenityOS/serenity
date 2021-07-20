@@ -37,8 +37,9 @@ int main(int argc, char** argv)
         FileArgument parsed_argument(file_to_edit);
 
         file_to_edit_full_path = Core::File::real_path_for(parsed_argument.filename());
+        VERIFY(!file_to_edit_full_path.is_empty());
         dbgln("unveil for: {}", file_to_edit_full_path);
-        if (unveil(file_to_edit_full_path.characters(), "rwc") < 0) {
+        if (unveil(file_to_edit_full_path.characters(), "r") < 0) {
             perror("unveil");
             return 1;
         }
