@@ -28,7 +28,7 @@ namespace Profiler {
 
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
-    static NonnullRefPtr<ProfileNode> create(Process const& process, FlyString object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t pid)
+    static NonnullRefPtr<ProfileNode> create(Process const& process, FlyString object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     {
         return adopt_ref(*new ProfileNode(process, move(object_name), move(symbol), address, offset, timestamp, pid));
     }
@@ -49,7 +49,7 @@ public:
 
     const FlyString& object_name() const { return m_object_name; }
     const String& symbol() const { return m_symbol; }
-    u32 address() const { return m_address; }
+    FlatPtr address() const { return m_address; }
     u32 offset() const { return m_offset; }
     u64 timestamp() const { return m_timestamp; }
 
@@ -68,7 +68,7 @@ public:
         m_children.append(child);
     }
 
-    ProfileNode& find_or_create_child(FlyString object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t pid)
+    ProfileNode& find_or_create_child(FlyString object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     {
         for (size_t i = 0; i < m_children.size(); ++i) {
             auto& child = m_children[i];
@@ -106,7 +106,7 @@ public:
 
 private:
     explicit ProfileNode(Process const&);
-    explicit ProfileNode(Process const&, const String& object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t);
+    explicit ProfileNode(Process const&, const String& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t);
 
     bool m_root { false };
     Process const& m_process;
@@ -114,7 +114,7 @@ private:
     FlyString m_object_name;
     String m_symbol;
     pid_t m_pid { 0 };
-    u32 m_address { 0 };
+    FlatPtr m_address { 0 };
     u32 m_offset { 0 };
     u32 m_event_count { 0 };
     u32 m_self_count { 0 };
@@ -158,7 +158,7 @@ public:
     struct Frame {
         FlyString object_name;
         String symbol;
-        u32 address { 0 };
+        FlatPtr address { 0 };
         u32 offset { 0 };
     };
 

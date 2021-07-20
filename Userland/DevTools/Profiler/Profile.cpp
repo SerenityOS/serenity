@@ -313,7 +313,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         auto& stack_array = stack->as_array();
         for (ssize_t i = stack_array.values().size() - 1; i >= 0; --i) {
             auto& frame = stack_array.at(i);
-            auto ptr = frame.to_number<u32>();
+            auto ptr = frame.to_number<u64>();
             u32 offset = 0;
             FlyString object_name;
             String symbol;
@@ -338,7 +338,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
                 }
             }
 
-            event.frames.append({ object_name, symbol, ptr, offset });
+            event.frames.append({ object_name, symbol, (FlatPtr)ptr, offset });
         }
 
         if (event.frames.size() < 2)
@@ -491,7 +491,7 @@ ProfileNode::ProfileNode(Process const& process)
 {
 }
 
-ProfileNode::ProfileNode(Process const& process, const String& object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t pid)
+ProfileNode::ProfileNode(Process const& process, const String& object_name, String symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     : m_process(process)
     , m_symbol(move(symbol))
     , m_pid(pid)
