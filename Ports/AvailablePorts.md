@@ -140,6 +140,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`SDL2_net`](SDL2_net/)                | SDL2\_net (network add-on for SDL2)                        | 2.0.1                    | https://www.libsdl.org/projects/SDL_net/                                       |
 | [`SDL2_ttf`](SDL2_ttf/)                | SDL2\_ttf (TrueType Font add-on for SDL2)                  | 2.0.15                   | https://www.libsdl.org/projects/SDL_ttf/                                       |
 | [`sed`](sed/)                          | GNU sed                                                    | 4.2.1                    | https://www.gnu.org/software/sed/                                              |
+| [`sfinx`](sfinx/)                      | Sfinx                                                      | 1.1                      | https://www.scummvm.org/games/#games-sfinx                                     |
 | [`sl`](sl/)                            | Steam Locomotive (SL)                                      |                          | https://github.com/mtoyoda/sl                                                  |
 | [`sqlite`](sqlite/)                    | SQLite                                                     | 3350500                  | https://www.sqlite.org/                                                        |
 | [`stpuzzles`](stpuzzles/)              | Simon Tatham's Portable Puzzle Collection                  |                          | https://www.chiark.greenend.org.uk/~sgtatham/puzzles/                          |
