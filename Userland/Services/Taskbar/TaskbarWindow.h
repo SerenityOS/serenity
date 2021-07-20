@@ -40,6 +40,8 @@ private:
     bool is_window_on_current_virtual_desktop(::Window&) const;
     void virtual_desktop_change_event(unsigned, unsigned);
 
+    void set_start_button_font(Gfx::Font const&);
+
     NonnullRefPtr<GUI::Menu> m_start_menu;
     RefPtr<GUI::Widget> m_task_button_container;
     RefPtr<Gfx::Bitmap> m_default_icon;

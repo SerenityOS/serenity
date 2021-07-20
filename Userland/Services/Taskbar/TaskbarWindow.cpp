@@ -65,9 +65,8 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     main_widget.layout()->set_margins({ 3, 3, 1, 1 });
 
     m_start_button = GUI::Button::construct("Serenity");
-    m_start_button->set_font(Gfx::FontDatabase::default_font().bold_variant());
+    set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());
     m_start_button->set_icon_spacing(0);
-    m_start_button->set_fixed_size(80, 21);
     auto app_icon = GUI::Icon::default_icon("ladyball");
     m_start_button->set_icon(app_icon.bitmap_for_size(16));
     m_start_button->set_menu(m_start_menu);
@@ -270,7 +269,7 @@ void TaskbarWindow::event(Core::Event& event)
         break;
     }
     case GUI::Event::FontsChange:
-        m_start_button->set_font(Gfx::FontDatabase::default_font().bold_variant());
+        set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());
         break;
     }
     Window::event(event);
@@ -412,4 +411,10 @@ void TaskbarWindow::virtual_desktop_change_event(unsigned current_row, unsigned 
         if (auto* button = window.button())
             button->set_visible(is_window_on_current_virtual_desktop(window));
     });
+}
+
+void TaskbarWindow::set_start_button_font(Gfx::Font const& font)
+{
+    m_start_button->set_font(font);
+    m_start_button->set_fixed_size(font.width(m_start_button->text()) + 30, 21);
 }
