@@ -144,7 +144,6 @@ public:
     virtual String family() const override { return m_font->family(); }
     virtual String variant() const override { return m_font->variant(); }
     virtual String qualified_name() const override { return String::formatted("{} {} {}", family(), presentation_size(), weight()); }
-    virtual const Font& bold_variant() const override { return *this; } // FIXME: Perhaps remove this from the Gfx::Font interface
 
 private:
     NonnullRefPtr<TTF::Font> m_font;

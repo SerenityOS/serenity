@@ -121,7 +121,10 @@ public:
 
     virtual String qualified_name() const = 0;
 
-    virtual const Font& bold_variant() const = 0;
+    Font const& bold_variant() const;
+
+private:
+    mutable RefPtr<Gfx::Font> m_bold_variant;
 };
 
 }

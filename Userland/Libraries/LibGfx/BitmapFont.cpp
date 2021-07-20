@@ -317,11 +317,11 @@ String BitmapFont::qualified_name() const
     return String::formatted("{} {} {}", family(), presentation_size(), weight());
 }
 
-const Font& BitmapFont::bold_variant() const
+Font const& Font::bold_variant() const
 {
     if (m_bold_variant)
         return *m_bold_variant;
-    m_bold_variant = Gfx::FontDatabase::the().get(m_family, m_presentation_size, 700);
+    m_bold_variant = Gfx::FontDatabase::the().get(family(), presentation_size(), 700);
     if (!m_bold_variant)
         m_bold_variant = this;
     return *m_bold_variant;
