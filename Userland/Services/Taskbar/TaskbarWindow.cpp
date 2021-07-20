@@ -233,18 +233,20 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
 
 ::Window* TaskbarWindow::find_window_owner(::Window& window) const
 {
-    if (!window.is_modal())
-        return &window;
-
-    ::Window* parent = nullptr;
-    auto* current_window = &window;
-    while (current_window) {
-        parent = WindowList::the().find_parent(*current_window);
-        if (!parent || !parent->is_modal())
-            break;
-        current_window = parent;
+    if (window.is_modal()) {
+        ::Window* parent = nullptr;
+        auto* current_window = &window;
+        while (current_window) {
+            parent = WindowList::the().find_parent(*current_window);
+            if (!parent || !parent->is_modal())
+                break;
+            current_window = parent;
+        }
+        return parent;
+    } else if (window.is_accessory()) {
+        return WindowList::the().find_parent(window);
     }
-    return parent;
+    return &window;
 }
 
 void TaskbarWindow::event(Core::Event& event)
@@ -332,7 +334,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
                 changed_event.is_active(),
                 changed_event.is_minimized());
         }
-        if (changed_event.window_type() != GUI::WindowType::Normal || changed_event.is_accessory()) {
+        if (changed_event.window_type() != GUI::WindowType::Normal) {
             if (auto* window = WindowList::the().window(identifier))
                 remove_window_button(*window, false);
             break;
@@ -342,13 +344,25 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         window.set_title(changed_event.title());
         window.set_rect(changed_event.rect());
         window.set_modal(changed_event.is_modal());
+        window.set_accessory(changed_event.is_accessory());
         window.set_active(changed_event.is_active());
         window.set_minimized(changed_event.is_minimized());
         window.set_progress(changed_event.progress());
         window.set_virtual_desktop(changed_event.virtual_desktop_row(), changed_event.virtual_desktop_column());
 
+        bool has_titlebar = false;
+        switch (changed_event.style()) {
+        case GUI::WindowStyle::Normal:
+        case GUI::WindowStyle::ToolWindow:
+            has_titlebar = true;
+            break;
+        default:
+            break;
+        }
         bool should_show_button = true;
         if (window.is_modal() && window.parent_identifier().is_valid())
+            should_show_button = false;
+        else if (!has_titlebar || changed_event.is_accessory())
             should_show_button = false;
 
         if (should_show_button)
@@ -362,7 +376,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         } else if (window_owner) {
             // check the window owner's button if the modal's window button
             // would have been checked
-            VERIFY(window.is_modal());
+            VERIFY(window.is_modal() || window.is_accessory());
             update_window_button(*window_owner, window.is_active());
         }
         break;

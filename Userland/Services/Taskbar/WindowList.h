@@ -48,6 +48,9 @@ public:
     void set_modal(bool modal) { m_modal = modal; }
     bool is_modal() const { return m_modal; }
 
+    void set_accessory(bool accessory) { m_accessory = accessory; }
+    bool is_accessory() const { return m_accessory; }
+
     void set_virtual_desktop(unsigned row, unsigned column)
     {
         m_virtual_desktop_row = row;
@@ -81,6 +84,7 @@ private:
     bool m_active { false };
     bool m_minimized { false };
     bool m_modal { false };
+    bool m_accessory { false };
     Optional<int> m_progress;
 };
 
