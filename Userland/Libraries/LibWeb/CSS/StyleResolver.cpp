@@ -240,6 +240,62 @@ static inline bool is_color(StyleValue const& value)
     return false;
 }
 
+static inline bool is_flex_direction(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+
+    switch (value.to_identifier()) {
+    case ValueID::Row:
+    case ValueID::RowReverse:
+    case ValueID::Column:
+    case ValueID::ColumnReverse:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static inline bool is_flex_wrap(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+
+    switch (value.to_identifier()) {
+    case ValueID::Wrap:
+    case ValueID::Nowrap:
+    case ValueID::WrapReverse:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static inline bool is_flex_grow_or_shrink(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+
+    if (value.is_numeric())
+        return true;
+
+    return false;
+}
+
+static inline bool is_flex_basis(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+
+    if (value.is_length())
+        return true;
+
+    if (value.is_identifier() && value.to_identifier() == ValueID::Content)
+        return true;
+
+    return false;
+}
+
 static inline bool is_line_style(StyleValue const& value)
 {
     if (value.is_builtin_or_dynamic())
@@ -411,54 +467,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             dbgln("Unsure what to do with CSS border-radius value '{}'", value.to_string());
             return;
         }
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::Flex) {
-        if (value.is_length() || (value.is_identifier() && value.to_identifier() == CSS::ValueID::Content)) {
-            style.set_property(CSS::PropertyID::FlexBasis, value);
-            return;
-        }
-
-        // FIXME: Remove string parsing once DeprecatedCSSParser is gone.
-        if (value.is_string()) {
-            auto parts = split_on_whitespace(value.to_string());
-            if (parts.size() == 1) {
-                auto flex_grow = parse_css_value(deprecated_context, parts[0]);
-                style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
-                return;
-            }
-
-            if (parts.size() == 2) {
-                auto flex_grow = parse_css_value(deprecated_context, parts[0]);
-                style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
-
-                auto second_value = parse_css_value(deprecated_context, parts[1]);
-                if (second_value->is_length() || (second_value->is_identifier() && second_value->to_identifier() == CSS::ValueID::Content)) {
-                    style.set_property(CSS::PropertyID::FlexBasis, *second_value);
-                } else {
-                    auto flex_shrink = parse_css_value(deprecated_context, parts[1]);
-                    style.set_property(CSS::PropertyID::FlexShrink, *flex_shrink);
-                }
-                return;
-            }
-
-            if (parts.size() == 3) {
-                auto flex_grow = parse_css_value(deprecated_context, parts[0]);
-                style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
-                auto flex_shrink = parse_css_value(deprecated_context, parts[1]);
-                style.set_property(CSS::PropertyID::FlexShrink, *flex_shrink);
-
-                auto third_value = parse_css_value(deprecated_context, parts[2]);
-                if (third_value->is_length() || (third_value->is_identifier() && third_value->to_identifier() == CSS::ValueID::Content))
-                    style.set_property(CSS::PropertyID::FlexBasis, *third_value);
-                return;
-            }
-        }
-
-        // FIXME: Implement List parsing.
-
-        dbgln("Unsure what to do with CSS flex value '{}'", value.to_string());
         return;
     }
 
@@ -1239,6 +1247,103 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::Flex) {
+        if (value.is_length() || (value.is_identifier() && value.to_identifier() == CSS::ValueID::Content)) {
+            style.set_property(CSS::PropertyID::FlexBasis, value);
+            return;
+        }
+
+        // FIXME: Remove string parsing once DeprecatedCSSParser is gone.
+        if (value.is_string()) {
+            auto parts = split_on_whitespace(value.to_string());
+            if (parts.size() == 1) {
+                auto flex_grow = parse_css_value(deprecated_context, parts[0]);
+                style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
+                return;
+            }
+
+            if (parts.size() == 2) {
+                auto flex_grow = parse_css_value(deprecated_context, parts[0]);
+                style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
+
+                auto second_value = parse_css_value(deprecated_context, parts[1]);
+                if (second_value->is_length() || (second_value->is_identifier() && second_value->to_identifier() == CSS::ValueID::Content)) {
+                    style.set_property(CSS::PropertyID::FlexBasis, *second_value);
+                } else {
+                    auto flex_shrink = parse_css_value(deprecated_context, parts[1]);
+                    style.set_property(CSS::PropertyID::FlexShrink, *flex_shrink);
+                }
+                return;
+            }
+
+            if (parts.size() == 3) {
+                auto flex_grow = parse_css_value(deprecated_context, parts[0]);
+                style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
+                auto flex_shrink = parse_css_value(deprecated_context, parts[1]);
+                style.set_property(CSS::PropertyID::FlexShrink, *flex_shrink);
+
+                auto third_value = parse_css_value(deprecated_context, parts[2]);
+                if (third_value->is_length() || (third_value->is_identifier() && third_value->to_identifier() == CSS::ValueID::Content))
+                    style.set_property(CSS::PropertyID::FlexBasis, *third_value);
+                return;
+            }
+
+            return;
+        }
+
+        if (value.is_value_list()) {
+            auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
+            if (parts.size() == 1) {
+                auto value = Parser::parse_css_value(context, property_id, parts[0]);
+                if (!value)
+                    return;
+                if (is_flex_basis(*value)) {
+                    style.set_property(CSS::PropertyID::FlexBasis, *value);
+                } else if (is_flex_grow_or_shrink(*value)) {
+                    style.set_property(CSS::PropertyID::FlexGrow, *value);
+                }
+                return;
+            }
+
+            if (parts.size() == 2) {
+                auto flex_grow = Parser::parse_css_value(context, property_id, parts[0]);
+                auto second_value = Parser::parse_css_value(context, property_id, parts[1]);
+                if (!flex_grow || !second_value)
+                    return;
+
+                style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
+
+                if (is_flex_basis(*second_value)) {
+                    style.set_property(CSS::PropertyID::FlexBasis, *second_value);
+                } else if (is_flex_grow_or_shrink(*second_value)) {
+                    style.set_property(CSS::PropertyID::FlexShrink, *second_value);
+                }
+                return;
+            }
+
+            if (parts.size() == 3) {
+                auto flex_grow = Parser::parse_css_value(context, property_id, parts[0]);
+                auto flex_shrink = Parser::parse_css_value(context, property_id, parts[1]);
+                auto flex_basis = Parser::parse_css_value(context, property_id, parts[2]);
+                if (!flex_grow || !flex_shrink || !flex_basis)
+                    return;
+
+                style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
+                style.set_property(CSS::PropertyID::FlexShrink, *flex_shrink);
+
+                if (is_flex_basis(*flex_basis))
+                    style.set_property(CSS::PropertyID::FlexBasis, *flex_basis);
+
+                return;
+            }
+
+            return;
+        }
+
+        dbgln("Unsure what to do with CSS flex value '{}'", value.to_string());
+        return;
+    }
+
     if (property_id == CSS::PropertyID::FlexFlow) {
         // FIXME: Remove string parsing once DeprecatedCSSParser is gone.
         if (value.is_string()) {
@@ -1256,7 +1361,39 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        // FIXME: Handle this as a ValueListStyleValue.
+        if (value.is_value_list()) {
+            auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
+            if (parts.is_empty() || parts.size() > 2)
+                return;
+
+            RefPtr<StyleValue> flex_direction_value;
+            RefPtr<StyleValue> flex_wrap_value;
+
+            for (auto& part : parts) {
+                auto value = Parser::parse_css_value(context, property_id, part);
+                if (!value)
+                    return;
+                if (is_flex_direction(*value)) {
+                    if (flex_direction_value)
+                        return;
+                    flex_direction_value = move(value);
+                    continue;
+                }
+                if (is_flex_wrap(*value)) {
+                    if (flex_wrap_value)
+                        return;
+                    flex_wrap_value = move(value);
+                    continue;
+                }
+            }
+
+            if (flex_direction_value)
+                style.set_property(CSS::PropertyID::FlexDirection, *flex_direction_value);
+            if (flex_wrap_value)
+                style.set_property(CSS::PropertyID::FlexWrap, *flex_wrap_value);
+
+            return;
+        }
 
         return;
     }
