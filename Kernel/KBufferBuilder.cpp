@@ -15,8 +15,6 @@ inline bool KBufferBuilder::check_expand(size_t size)
         return false;
     if ((m_size + size) < m_buffer->capacity())
         return true;
-    if (!m_can_expand)
-        return false;
     if (Checked<size_t>::addition_would_overflow(m_size, size))
         return false;
     size_t new_buffer_size = m_size + size;
@@ -42,9 +40,8 @@ OwnPtr<KBuffer> KBufferBuilder::build()
     return try_make<KBuffer>(move(m_buffer));
 }
 
-KBufferBuilder::KBufferBuilder(bool can_expand)
+KBufferBuilder::KBufferBuilder()
     : m_buffer(KBufferImpl::try_create_with_size(4 * MiB, Region::Access::Read | Region::Access::Write))
-    , m_can_expand(can_expand)
 {
 }
 

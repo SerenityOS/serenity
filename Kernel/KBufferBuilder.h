@@ -16,7 +16,7 @@ class KBufferBuilder {
 public:
     using OutputType = KBuffer;
 
-    explicit KBufferBuilder(bool can_expand = false);
+    KBufferBuilder();
     KBufferBuilder(KBufferBuilder&&) = default;
     ~KBufferBuilder() = default;
 
@@ -50,7 +50,6 @@ private:
 
     RefPtr<KBufferImpl> m_buffer;
     size_t m_size { 0 };
-    bool m_can_expand { false };
 };
 
 }
