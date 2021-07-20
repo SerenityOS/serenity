@@ -1,5 +1,6 @@
 @GUI::Frame {
     fill_with_background_color: true
+
     layout: @GUI::VerticalBoxLayout {
         margins: [10, 10, 10, 10]
         spacing: 5
@@ -11,11 +12,11 @@
 
         layout: @GUI::VerticalBoxLayout {
             margins: [8, 16, 8, 8]
+            spacing: 2
         }
 
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
-                margins: [8, 8, 8, 8]
                 spacing: 16
             }
 
@@ -33,6 +34,11 @@
 
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
+                spacing: 16
+            }
+
+            @GUI::Widget {
+                fixed_width: 32
             }
 
             @GUI::HorizontalSlider {
@@ -55,11 +61,11 @@
 
         layout: @GUI::VerticalBoxLayout {
             margins: [8, 16, 8, 8]
+            spacing: 2
         }
 
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
-                margins: [8, 8, 8, 8]
                 spacing: 16
             }
 
@@ -77,10 +83,12 @@
 
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
+                margins: [8, 8, 8, 8]
                 spacing: 8
             }
 
             @GUI::Widget {
+                fixed_width: 32
             }
 
             @GUI::Label {
@@ -107,11 +115,11 @@
 
         layout: @GUI::VerticalBoxLayout {
             margins: [8, 16, 8, 8]
+            spacing: 2
         }
 
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
-                margins: [8, 8, 8, 8]
                 spacing: 16
             }
 
@@ -129,6 +137,12 @@
 
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {
+                margins: [8, 8, 8, 8]
+                spacing: 8
+            }
+
+            @GUI::Widget {
+                fixed_width: 32
             }
 
             @GUI::HorizontalSlider {
