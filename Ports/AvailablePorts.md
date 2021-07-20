@@ -85,6 +85,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`links`](links/)                      | Links web browser                                          | 2.22                     | http://links.twibright.com/                                                    |
 | [`llvm`](llvm/)                        | LLVM                                                       | 12.0.0                   | http://llvm.org/                                                               |
 | [`lua`](lua/)                          | Lua                                                        | 5.3.5                    | https://www.lua.org/                                                           |
+| [`lure`](lure/)                        | Lure of the Temptress                                      | 1.1                      | https://www.scummvm.org/games/#games-lure                                      |
 | [`m4`](m4/)                            | GNU M4                                                     | 1.4.9                    | https://www.gnu.org/software/m4/                                               |
 | [`make`](make/)                        | GNU make                                                   | 4.3                      | https://www.gnu.org/software/make/                                             |
 | [`mandoc`](mandoc/)                    | mandoc                                                     | 1.14.5                   | https://mandoc.bsd.lv/                                                         |
