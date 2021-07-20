@@ -1,6 +1,14 @@
+#include <AK/Platform.h>
+
 ENTRY(init)
 
-KERNEL_VIRTUAL_BASE = 0xc0000000;
+#if ARCH(I386)
+#    define KERNEL_BASE 0xc0000000
+#else
+#    define KERNEL_BASE 0x2000000000
+#endif
+
+KERNEL_VIRTUAL_BASE = KERNEL_BASE;
 
 PHDRS
 {
