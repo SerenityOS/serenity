@@ -356,11 +356,9 @@ endif()
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -fno-pic -mno-red-zone")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new=8")
-    set(KERNEL_LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_amd64.ld)
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fPIE")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new=4")
-    set(KERNEL_LINKER_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/linker_i386.ld)
 endif()
 
 # Kernel Undefined Behavior Sanitizer (KUBSAN)
@@ -396,8 +394,18 @@ endif()
 add_executable(Kernel ${SOURCES})
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
 
-target_link_options(Kernel PRIVATE LINKER:-T ${KERNEL_LINKER_SCRIPT} -nostdlib)
-set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${KERNEL_LINKER_SCRIPT})
+add_custom_command(
+    OUTPUT linker.ld
+    COMMAND "${CMAKE_CXX_COMPILER}" -E -P -x c -I${CMAKE_CURRENT_SOURCE_DIR}/.. "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld" -o "${CMAKE_CURRENT_BINARY_DIR}/linker.ld"
+    MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld"
+    COMMENT "Preprocessing linker.ld"
+    VERBATIM
+)
+
+add_custom_target(generate_kernel_linker_script DEPENDS linker.ld)
+
+target_link_options(Kernel PRIVATE LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib)
+set_target_properties(Kernel PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/linker.ld")
 
 if (ENABLE_KERNEL_LTO)
     include(CheckIPOSupported)
