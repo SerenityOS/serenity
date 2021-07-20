@@ -8,15 +8,19 @@ ENTRY(init)
 #    define KERNEL_BASE 0x2000000000
 #endif
 
+#define PF_X 0x1
+#define PF_W 0x2
+#define PF_R 0x4
+
 KERNEL_VIRTUAL_BASE = KERNEL_BASE;
 
 PHDRS
 {
-  super_pages PT_LOAD ;
-  text PT_LOAD ;
-  data PT_LOAD ;
-  bss PT_LOAD ;
-  ksyms PT_LOAD ;
+  super_pages PT_LOAD FLAGS(PF_R | PF_W) ;
+  text PT_LOAD FLAGS(PF_R | PF_X) ;
+  data PT_LOAD FLAGS(PF_R | PF_W) ;
+  bss PT_LOAD FLAGS(PF_R | PF_W) ;
+  ksyms PT_LOAD FLAGS(PF_R) ;
 }
 
 SECTIONS
