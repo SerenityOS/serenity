@@ -301,6 +301,13 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             continue;
         }
 
+        // FIXME: Use /proc for this
+#if ARCH(I386)
+        FlatPtr kernel_base = 0xc0000000;
+#else
+        FlatPtr kernel_base = 0x2000000000;
+#endif
+
         auto* stack = perf_event.get_ptr("stack");
         VERIFY(stack);
         auto& stack_array = stack->as_array();
@@ -311,7 +318,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             FlyString object_name;
             String symbol;
 
-            if (ptr >= 0xc0000000) {
+            if (ptr >= kernel_base) {
                 if (kernel_elf) {
                     symbol = kernel_elf->symbolicate(ptr, &offset);
                 } else {
@@ -338,7 +345,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             continue;
 
         FlatPtr innermost_frame_address = event.frames.at(1).address;
-        event.in_kernel = innermost_frame_address >= 0xc0000000;
+        event.in_kernel = innermost_frame_address >= kernel_base;
 
         events.append(move(event));
     }

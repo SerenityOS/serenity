@@ -44,7 +44,13 @@ int main(int argc, char** argv)
         auto frame_number = symbols.size() - 1;
         for (auto& symbol : symbols) {
             // Make kernel stack frames stand out.
-            int color = symbol.address < 0xc0000000 ? 35 : 31;
+            // FIXME: Use /proc for this
+#if ARCH(I386)
+            FlatPtr kernel_base = 0xc0000000;
+#else
+            FlatPtr kernel_base = 0x2000000000;
+#endif
+            int color = symbol.address < kernel_base ? 35 : 31;
             out("{:3}: \033[{};1m{:p}\033[0m | ", frame_number, color, symbol.address);
             if (!symbol.name.is_empty())
                 out("{} ", symbol.name);
