@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Debug.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StringBuilder.h>
@@ -107,15 +108,31 @@ public:
         {
             if (!position.has_value())
                 return {};
-            // We need to modify the source to match what the lexer considers one line - normalizing
-            // line terminators to \n is easier than splitting using all different LT characters.
-            String source_string { source };
-            source_string.replace("\r\n", "\n");
-            source_string.replace("\r", "\n");
-            source_string.replace(LINE_SEPARATOR, "\n");
-            source_string.replace(PARAGRAPH_SEPARATOR, "\n");
             StringBuilder builder;
-            builder.append(source_string.split_view('\n', true)[position.value().line - 1]);
+            GenericLexer lexer(source);
+            // Skip to the line we want
+            size_t current_line = 0;
+            dbgln_if(LEXER_DEBUG, "Generating source location hint for line: {}", position.value().line);
+            while (current_line < position.value().line - 1) {
+                if (lexer.consume_specific("\n") || lexer.consume_specific("\r\n") || lexer.consume_specific(LINE_SEPARATOR) || lexer.consume_specific(PARAGRAPH_SEPARATOR))
+                    current_line++;
+                else
+                    lexer.ignore();
+                if (lexer.is_eof()) {
+                    // Check if we are at the last line
+                    if (current_line == (position.value().line - 1))
+                        break;
+                    dbgln("Reached EOF during source hint generation; invalid input line: {}, only got to line {}", position.value().line, current_line);
+                    return {};
+                }
+            }
+            // We are at the line, now add the chars to the string
+            while (!lexer.is_eof()) {
+                if (lexer.consume_specific("\n") || lexer.consume_specific("\r\n") || lexer.consume_specific(LINE_SEPARATOR) || lexer.consume_specific(PARAGRAPH_SEPARATOR))
+                    break;
+                else
+                    builder.append(lexer.consume());
+            }
             builder.append('\n');
             for (size_t i = 0; i < position.value().column - 1; ++i)
                 builder.append(spacer);
