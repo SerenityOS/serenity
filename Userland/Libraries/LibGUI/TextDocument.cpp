@@ -350,6 +350,8 @@ String TextDocument::text_in_range(const TextRange& a_range) const
         auto& line = this->line(i);
         size_t selection_start_column_on_line = range.start().line() == i ? range.start().column() : 0;
         size_t selection_end_column_on_line = range.end().line() == i ? range.end().column() : line.length();
+        if (selection_end_column_on_line > line.length())
+            selection_end_column_on_line = line.length();
         builder.append(Utf32View(line.code_points() + selection_start_column_on_line, selection_end_column_on_line - selection_start_column_on_line));
         if (i != range.end().line())
             builder.append('\n');
