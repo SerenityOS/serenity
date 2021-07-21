@@ -50,8 +50,8 @@ struct [[gnu::packed]] ThreadInfo {
 
 struct [[gnu::packed]] MemoryRegionInfo {
     NotesEntryHeader header;
-    uint32_t region_start;
-    uint32_t region_end;
+    uint64_t region_start;
+    uint64_t region_end;
     uint16_t program_header_index;
     char region_name[]; // Null terminated
 

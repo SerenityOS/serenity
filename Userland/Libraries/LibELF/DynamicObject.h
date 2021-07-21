@@ -60,8 +60,8 @@ public:
         StringView name() const { return m_dynamic.symbol_string_table_string(m_sym.st_name); }
         const char* raw_name() const { return m_dynamic.raw_symbol_string_table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
-        unsigned value() const { return m_sym.st_value; }
-        unsigned size() const { return m_sym.st_size; }
+        FlatPtr value() const { return m_sym.st_value; }
+        size_t size() const { return m_sym.st_size; }
         unsigned index() const { return m_index; }
 #if ARCH(I386)
         unsigned type() const
