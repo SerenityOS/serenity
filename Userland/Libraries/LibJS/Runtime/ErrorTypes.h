@@ -172,9 +172,12 @@
     M(TemporalInvalidDurationPropertyValue, "Invalid value for duration property '{}': must be an integer, got {}")                     \
     M(TemporalInvalidEpochNanoseconds, "Invalid epoch nanoseconds value, must be in range -86400 * 10^17 to 86400 * 10^17")             \
     M(TemporalInvalidISODate, "Invalid ISO date")                                                                                       \
+    M(TemporalInvalidMonthCode, "Invalid month code")                                                                                   \
     M(TemporalInvalidPlainDate, "Invalid plain date")                                                                                   \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
+    M(TemporalMissingRequiredProperty, "Required property {} is missing or undefined")                                                  \
+    M(TemporalPropertyMustBePositiveInteger, "Property must be a positive integer")                                                     \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
     M(ThisIsAlreadyInitialized, "|this| is already initialized")                                                                        \
     M(ToObjectNullOrUndefined, "ToObject on null or undefined")                                                                         \

@@ -116,6 +116,20 @@ Value get_option(GlobalObject& global_object, Object& options, String const& pro
     return value;
 }
 
+// 13.6 ToTemporalOverflow ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
+Optional<String> to_temporal_overflow(GlobalObject& global_object, Object& normalized_options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Return ? GetOption(normalizedOptions, "overflow", « String », « "constrain", "reject" », "constrain").
+    auto option = get_option(global_object, normalized_options, "overflow", { OptionType::String }, { "constrain"sv, "reject"sv }, js_string(vm, "constrain"));
+    if (vm.exception())
+        return {};
+
+    VERIFY(option.is_string());
+    return option.as_string().string();
+}
+
 // 13.8 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
 Optional<String> to_temporal_rounding_mode(GlobalObject& global_object, Object& normalized_options, String const& fallback)
 {
@@ -230,6 +244,12 @@ Optional<String> to_smallest_temporal_unit(GlobalObject& global_object, Object& 
 
     // 5. Return smallestUnit.
     return smallest_unit;
+}
+
+// 13.29 ConstrainToRange ( x, minimum, maximum ), https://tc39.es/proposal-temporal/#sec-temporal-constraintorange
+double constrain_to_range(double x, double minimum, double maximum)
+{
+    return min(max(x, minimum), maximum);
 }
 
 // 13.32 RoundNumberToIncrement ( x, increment, roundingMode )
@@ -543,6 +563,95 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_
 
     // 8. Return the new Record: { [[Z]]: undefined, [[OffsetString]]: offsetString, [[Name]]: name }.
     return TemporalTimeZone { .z = false, .offset = offset, .name = name };
+}
+
+// 13.45 ToPositiveIntegerOrInfinity ( argument ), https://tc39.es/proposal-temporal/#sec-temporal-topositiveintegerorinfinity
+double to_positive_integer_or_infinity(GlobalObject& global_object, Value argument)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let integer be ? ToIntegerOrInfinity(argument).
+    auto integer = argument.to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    // 2. If integer is -∞𝔽, then
+    if (Value(integer).is_negative_infinity()) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalPropertyMustBePositiveInteger);
+        return {};
+    }
+
+    // 3. If integer ≤ 0, then
+    if (integer <= 0) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalPropertyMustBePositiveInteger);
+        return {};
+    }
+
+    // 4. Return integer.
+    return integer;
+}
+
+// 13.46 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
+Object* prepare_temporal_fields(GlobalObject& global_object, Object& fields, Vector<String> field_names, Vector<StringView> required_fields)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(fields) is Object.
+
+    // 2. Let result be ! OrdinaryObjectCreate(%Object.prototype%).
+    auto* result = Object::create(global_object, global_object.object_prototype());
+    VERIFY(result);
+
+    // 3. For each value property of fieldNames, do
+    for (auto& property : field_names) {
+        // a. Let value be ? Get(fields, property).
+        auto value = fields.get(property);
+        if (vm.exception())
+            return {};
+
+        // b. If value is undefined, then
+        if (value.is_undefined()) {
+            // i. If requiredFields contains property, then
+            if (required_fields.contains_slow(property)) {
+                // 1. Throw a TypeError exception.
+                vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, property);
+                return {};
+            }
+            // ii. If property is in the Property column of Table 13, then
+            // NOTE: The other properties in the table are automatically handled as their default value is undefined
+            if (property.is_one_of("hour", "minute", "second", "millisecond", "microsecond", "nanosecond")) {
+                // 1. Set value to the corresponding Default value of the same row.
+                value = Value(0);
+            }
+        }
+        // c. Else,
+        else {
+            // i. If property is in the Property column of Table 13 and there is a Conversion value in the same row, then
+            // 1. Let Conversion represent the abstract operation named by the Conversion value of the same row.
+            // 2. Set value to ? Conversion(value).
+            if (property.is_one_of("year", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", "eraYear")) {
+                value = Value(value.to_integer_or_infinity(global_object));
+                if (vm.exception())
+                    return {};
+            } else if (property.is_one_of("month", "day")) {
+                value = Value(to_positive_integer_or_infinity(global_object, value));
+                if (vm.exception())
+                    return {};
+            } else if (property.is_one_of("monthCode", "offset", "era")) {
+                value = value.to_primitive_string(global_object);
+                if (vm.exception())
+                    return {};
+            }
+        }
+
+        // d. Perform ! CreateDataPropertyOrThrow(result, property, value).
+        result->create_data_property_or_throw(property, value);
+    }
+
+    // 4. Return result.
+    return result;
 }
 
 }

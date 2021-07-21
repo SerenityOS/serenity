@@ -8,6 +8,7 @@
 #pragma once
 
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Temporal {
@@ -36,5 +37,8 @@ Object* to_temporal_calendar(GlobalObject&, Value);
 Object* to_temporal_calendar_with_iso_default(GlobalObject&, Value);
 bool is_iso_leap_year(i32 year);
 i32 iso_days_in_month(i32 year, i32 month);
+String build_iso_month_code(i32 month);
+double resolve_iso_month(GlobalObject&, Object& fields);
+Optional<TemporalDate> iso_date_from_fields(GlobalObject&, Object& fields, Object& options);
 
 }
