@@ -1,5 +1,6 @@
 {
     "name": "serenity-dsl-syntaxhighlight",
+    "publisher": "kleinesfilmroellchen",
     "displayName": "SerenityOS DSL Syntax Highlight",
     "description": "Syntax Highlighting for the DSLs in SerenityOS",
     "version": "0.0.1",
