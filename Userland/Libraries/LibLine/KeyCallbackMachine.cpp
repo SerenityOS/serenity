@@ -36,10 +36,10 @@ void KeyCallbackMachine::key_pressed(Editor& editor, Key key)
     }
 
     ++m_sequence_length;
-    Vector<Vector<Key>> old_macthing_keys;
-    swap(m_current_matching_keys, old_macthing_keys);
+    Vector<Vector<Key>> old_matching_keys;
+    swap(m_current_matching_keys, old_matching_keys);
 
-    for (auto& okey : old_macthing_keys) {
+    for (auto& okey : old_matching_keys) {
         if (okey.size() < m_sequence_length)
             continue;
 
@@ -49,8 +49,8 @@ void KeyCallbackMachine::key_pressed(Editor& editor, Key key)
 
     if (m_current_matching_keys.is_empty()) {
         // Insert any keys that were captured
-        if (!old_macthing_keys.is_empty()) {
-            auto& keys = old_macthing_keys.first();
+        if (!old_matching_keys.is_empty()) {
+            auto& keys = old_matching_keys.first();
             for (size_t i = 0; i < m_sequence_length - 1; ++i)
                 editor.insert(keys[i].key);
         }
