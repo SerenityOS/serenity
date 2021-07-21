@@ -1,6 +1,10 @@
 {
     "name": "serenity-dsl-syntaxhighlight",
     "publisher": "kleinesfilmroellchen",
+    "repository": {
+        "url": "https://github.com/kleinesfilmroellchen/serenity-dsl-syntaxhighlight",
+        "type": "git"
+    },
     "displayName": "SerenityOS DSL Syntax Highlight",
     "description": "Syntax Highlighting for the DSLs in SerenityOS",
     "version": "0.0.1",
@@ -26,7 +30,9 @@
                     "Graphics Markup Language (SerenityOS)",
                     "serenity-gml"
                 ],
-                "extensions": [".gml"],
+                "extensions": [
+                    ".gml"
+                ],
                 "configuration": "./language-config-gml.json"
             },
             {
@@ -35,7 +41,9 @@
                     "Inter Process Communication Endpoint (SerenityOS)",
                     "serenity-ipc"
                 ],
-                "extensions": [".ipc"],
+                "extensions": [
+                    ".ipc"
+                ],
                 "configuration": "./language-config-ipc.json"
             }
         ],
