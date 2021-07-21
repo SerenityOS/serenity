@@ -84,6 +84,10 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
     output.operations = 0;
     size_t lines_to_skip = 0;
 
+    bool unicode = input.regex_options.has_flag_set(AllFlags::Unicode);
+    for (auto& view : views)
+        const_cast<RegexStringView&>(view).set_unicode(unicode);
+
     if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
         if (views.size() > 1 && input.start_offset > views.first().length()) {
             dbgln_if(REGEX_DEBUG, "Started with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
