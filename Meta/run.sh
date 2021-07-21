@@ -136,6 +136,13 @@ if [ -z "$SERENITY_ETHERNET_DEVICE_TYPE" ]; then
   SERENITY_ETHERNET_DEVICE_TYPE="e1000"
 fi
 
+if "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spice; then
+    SERENITY_SPICE_ARGS="$SERENITY_COMMON_QEMU_ARGS
+    -spice port=5930,agent-mouse=off,disable-ticketing=on
+    -device virtserialport,chardev=vdagent,nr=1
+    "
+fi
+
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
 -m $SERENITY_RAM_SIZE
@@ -146,8 +153,9 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device $SERENITY_QEMU_DISPLAY_DEVICE
 -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
 -usb
-$SERENITY_SPICE_SERVER_CHARDEV
 -device virtio-serial,max_ports=2
+$SERENITY_SPICE_SERVER_CHARDEV
+$SERENITY_SPICE_ARGS
 -chardev stdio,id=stdout,mux=on
 -device virtconsole,chardev=stdout
 -device isa-debugcon,chardev=stdout
@@ -160,13 +168,6 @@ $SERENITY_AUDIO_BACKEND
 -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
 -device ich9-ahci,bus=bridge3
 "
-
-if "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spice; then
-    SERENITY_COMMON_QEMU_ARGS="$SERENITY_COMMON_QEMU_ARGS
-    -spice port=5930,agent-mouse=off,disable-ticketing=on
-    -device virtserialport,chardev=vdagent,nr=1
-    "
-fi
 
 [ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
@@ -183,20 +184,21 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device pcie-root-port,port=0x15,chassis=6,id=pcie.6,bus=pcie.0,addr=0x2.0x5
 -display $SERENITY_QEMU_DISPLAY_BACKEND
 -device $SERENITY_QEMU_DISPLAY_DEVICE
--device secondary-vga
--device bochs-display,bus=pcie.6,addr=0x10.0x0
 -device piix3-ide
--drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
+-drive file=${SERENITY_DISK_IMAGE},id=disk,if=none,format=raw
 -device ahci,id=ahci
 -device ide-hd,bus=ahci.0,drive=disk,unit=0
 -usb
--device virtio-serial
+-device virtio-serial,max_ports=2
+$SERENITY_SPICE_SERVER_CHARDEV
+$SERENITY_SPICE_ARGS
 -chardev stdio,id=stdout,mux=on
 -device virtconsole,chardev=stdout
 -device isa-debugcon,chardev=stdout
 -device virtio-rng-pci
--soundhw pcspk
--device sb16
+$SERENITY_AUDIO_BACKEND
+-machine pcspk-audiodev=snd0
+-device sb16,audiodev=snd0
 "
 
 export SDL_VIDEO_X11_DGAMOUSE=0
