@@ -179,7 +179,7 @@
 					"begin": "(::)|(\\p{L}[\\p{L}0-9_$]*)",
 					"beginCaptures": {
 						"1": {
-							"name": "punctuation.namespace.serenity-ipc"
+							"name": "keyword.operator.namespace.serenity-ipc"
 						},
 						"2": {
 							"name": "entity.name.type.class.serenity-ipc"
@@ -224,7 +224,7 @@
 					"match": "(\\p{L}[\\p{L}0-9_$]*)"
 				},
 				{
-					"name": "punctuation.namespace.serenity-ipc",
+					"name": "keyword.operator.namespace.serenity-ipc",
 					"match": "::"
 				}
 			]
