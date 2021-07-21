@@ -45,10 +45,8 @@ NonnullRefPtr<BitmapFont> BitmapFont::create(u8 glyph_height, u8 glyph_width, bo
 {
     size_t bytes_per_glyph = sizeof(u32) * glyph_height;
     size_t count = glyph_count_by_type(type);
-    auto* new_rows = static_cast<unsigned*>(malloc(bytes_per_glyph * count));
-    memset(new_rows, 0, bytes_per_glyph * count);
-    auto* new_widths = static_cast<u8*>(malloc(count));
-    memset(new_widths, 0, count);
+    auto* new_rows = static_cast<unsigned*>(calloc(count, bytes_per_glyph));
+    auto* new_widths = static_cast<u8*>(calloc(count, 1));
     return adopt_ref(*new BitmapFont("Untitled", "Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1, type, 0, 0, 0, 400, true));
 }
 
@@ -295,12 +293,10 @@ void BitmapFont::set_type(FontTypes type)
 
     size_t bytes_per_glyph = sizeof(u32) * glyph_height();
 
-    auto* new_rows = static_cast<unsigned*>(kmalloc(bytes_per_glyph * new_glyph_count));
-    memset(new_rows, (unsigned)0, bytes_per_glyph * new_glyph_count);
+    auto* new_rows = static_cast<unsigned*>(calloc(new_glyph_count, bytes_per_glyph));
     memcpy(new_rows, m_rows, bytes_per_glyph * item_count_to_copy);
 
-    auto* new_widths = static_cast<u8*>(kmalloc(new_glyph_count));
-    memset(new_widths, (u8)0, new_glyph_count);
+    auto* new_widths = static_cast<u8*>(calloc(new_glyph_count, 1));
     memcpy(new_widths, m_glyph_widths, item_count_to_copy);
 
     kfree(m_rows);
