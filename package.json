@@ -1,0 +1,54 @@
+{
+    "name": "serenity-dsl-syntaxhighlight",
+    "displayName": "SerenityOS DSL Syntax Highlight",
+    "description": "Syntax Highlighting for the DSLs in SerenityOS",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.58.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "keywords": [
+        "Serenity",
+        "SerenityOS",
+        "Inter Process Communication",
+        "IPC",
+        "Graphics Markup Language",
+        "GML"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "serenity-gml",
+                "aliases": [
+                    "Graphics Markup Language (SerenityOS)",
+                    "serenity-gml"
+                ],
+                "extensions": [".gml"],
+                "configuration": "./language-config-gml.json"
+            },
+            {
+                "id": "serenity-ipc",
+                "aliases": [
+                    "Inter Process Communication Endpoint (SerenityOS)",
+                    "serenity-ipc"
+                ],
+                "extensions": [".ipc"],
+                "configuration": "./language-config-ipc.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "serenity-gml",
+                "scopeName": "source.serenity-gml",
+                "path": "./syntaxes/serenity-gml.tmLanguage.json"
+            },
+            {
+                "language": "serenity-ipc",
+                "scopeName": "source.serenity-ipc",
+                "path": "./syntaxes/serenity-ipc.tmLanguage.json"
+            }
+        ]
+    }
+}
