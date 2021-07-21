@@ -104,6 +104,8 @@ public:
         return validate(valid_code_units);
     }
 
+    bool equals_ignoring_case(Utf16View const&) const;
+
 private:
     u16 const* begin_ptr() const { return m_code_units.data(); }
     u16 const* end_ptr() const { return begin_ptr() + m_code_units.size(); }

@@ -335,6 +335,11 @@ public:
                     [&](StringView other_view) { return view.equals_ignoring_case(other_view); },
                     [](auto&) -> bool { TODO(); });
             },
+            [&](Utf16View view) {
+                return other.m_view.visit(
+                    [&](Utf16View other_view) { return view.equals_ignoring_case(other_view); },
+                    [](auto&) -> bool { TODO(); });
+            },
             [](auto&) -> bool { TODO(); });
     }
 
