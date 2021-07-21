@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
+#include <AK/Utf16View.h>
 
 namespace regex {
 
@@ -1440,13 +1441,31 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
 
     if (try_skip("u")) {
         if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4); code_point.has_value()) {
-            // FIXME: The minimum length depends on the mode - should be utf8-length in u8 mode.
+            // In Unicode mode, we need to combine surrogate pairs into a single code point. But we also need to be
+            // rather forgiving if the surrogate pairs are invalid. So if a second code unit follows this code unit,
+            // but doesn't form a valid surrogate pair, insert bytecode for both code units individually.
+            Optional<u32> low_surrogate;
+            if (unicode && Utf16View::is_high_surrogate(*code_point) && try_skip("\\u")) {
+                low_surrogate = read_digits(ReadDigitsInitialZeroState::Allow, true, 4);
+                if (!low_surrogate.has_value()) {
+                    set_error(Error::InvalidPattern);
+                    return false;
+                }
+
+                if (Utf16View::is_low_surrogate(*low_surrogate)) {
+                    *code_point = Utf16View::decode_surrogate_pair(*code_point, *low_surrogate);
+                    low_surrogate.clear();
+                }
+            }
+
             match_length_minimum += 1;
-            StringBuilder builder;
-            builder.append_code_point(code_point.value());
-            // FIXME: This isn't actually correct for ECMAScript.
-            auto u8_encoded = builder.string_view();
-            stack.insert_bytecode_compare_string(u8_encoded);
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)code_point.value() } });
+
+            if (low_surrogate.has_value()) {
+                match_length_minimum += 1;
+                stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)low_surrogate.value() } });
+            }
+
             return true;
         } else if (!unicode) {
             // '\u' is allowed in non-unicode mode, just matches 'u'.
