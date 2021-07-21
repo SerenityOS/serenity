@@ -465,12 +465,13 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             Optional<String> str;
+            Vector<u16> utf16;
             Vector<u32> data;
             data.ensure_capacity(length);
             for (size_t i = offset; i < offset + length; ++i)
                 data.unchecked_append(m_bytecode->at(i));
 
-            auto view = input.view.construct_as_same(data, str);
+            auto view = input.view.construct_as_same(data, str, utf16);
             offset += length;
             if (!compare_string(input, state, view, had_zero_length_match))
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
@@ -553,7 +554,8 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(MatchInput const& input, MatchSt
 
     auto input_view = input.view.substring_view(state.string_position, 1);
     Optional<String> str;
-    auto compare_view = input_view.construct_as_same({ &ch1, 1 }, str);
+    Vector<u16> utf16;
+    auto compare_view = input_view.construct_as_same({ &ch1, 1 }, str, utf16);
     bool equal;
     if (input.regex_options & AllFlags::Insensitive)
         equal = input_view.equals_ignoring_case(compare_view);

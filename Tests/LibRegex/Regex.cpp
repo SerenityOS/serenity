@@ -506,10 +506,14 @@ TEST_CASE(ECMA262_parse)
         { ",(?", regex::Error::InvalidCaptureGroup }, // #4583
         { "{1}", regex::Error::InvalidPattern },
         { "{1,2}", regex::Error::InvalidPattern },
+        { "\\uxxxx", regex::Error::NoError },
+        { "\\uxxxx", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\ud83d", regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "\\ud83d\\uxxxx", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
-        Regex<ECMA262> re(test.pattern);
+        Regex<ECMA262> re(test.pattern, test.flags);
         EXPECT_EQ(re.parser_result.error, test.expected_error);
         if constexpr (REGEX_DEBUG) {
             dbgln("\n");
@@ -583,6 +587,45 @@ TEST_CASE(ECMA262_match)
         }
         EXPECT_EQ(re.parser_result.error, Error::NoError);
         EXPECT_EQ(re.match(test.subject).success, test.matches);
+    }
+}
+
+TEST_CASE(ECMA262_unicode_match)
+{
+    struct _test {
+        char const* pattern;
+        char const* subject;
+        bool matches { true };
+        ECMAScriptFlags options {};
+    };
+    _test tests[] {
+        { "\\ud83d", "😀", true },
+        { "\\ud83d", "😀", false, ECMAScriptFlags::Unicode },
+        { "\\ude00", "😀", true },
+        { "\\ude00", "😀", false, ECMAScriptFlags::Unicode },
+        { "\\ud83d\\ude00", "😀", true },
+        { "\\ud83d\\ude00", "😀", true, ECMAScriptFlags::Unicode },
+        { "\\ud83d\\ud83d", "\xed\xa0\xbd\xed\xa0\xbd", true },
+        { "\\ud83d\\ud83d", "\xed\xa0\xbd\xed\xa0\xbd", true, ECMAScriptFlags::Unicode },
+    };
+
+    for (auto& test : tests) {
+        Regex<ECMA262> re(test.pattern, (ECMAScriptFlags)regex::AllFlags::Global | test.options);
+
+        auto subject = AK::utf8_to_utf16(test.subject);
+        Utf16View view { subject };
+
+        if constexpr (REGEX_DEBUG) {
+            dbgln("\n");
+            RegexDebug regex_dbg(stderr);
+            regex_dbg.print_raw_bytecode(re);
+            regex_dbg.print_header();
+            regex_dbg.print_bytecode(re);
+            dbgln("\n");
+        }
+
+        EXPECT_EQ(re.parser_result.error, Error::NoError);
+        EXPECT_EQ(re.match(view).success, test.matches);
     }
 }
 
