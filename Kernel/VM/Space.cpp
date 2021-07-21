@@ -316,13 +316,13 @@ KResultOr<Vector<Region*, 2>> Space::try_split_region_around_range(const Region&
 void Space::dump_regions()
 {
     dbgln("Process regions:");
-    dbgln("BEGIN       END         SIZE        ACCESS  NAME");
+    dbgln("BEGIN         END        SIZE       ACCESS NAME");
 
     ScopedSpinLock lock(m_lock);
 
     for (auto& sorted_region : m_regions) {
         auto& region = *sorted_region;
-        dbgln("{:08x} -- {:08x} {:08x} {:c}{:c}{:c}{:c}{:c}{:c} {}", region.vaddr().get(), region.vaddr().offset(region.size() - 1).get(), region.size(),
+        dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}", region.vaddr().get(), region.vaddr().offset(region.size() - 1).get(), region.size(),
             region.is_readable() ? 'R' : ' ',
             region.is_writable() ? 'W' : ' ',
             region.is_executable() ? 'X' : ' ',

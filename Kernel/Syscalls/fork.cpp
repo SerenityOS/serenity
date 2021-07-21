@@ -64,7 +64,7 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_regs.gs = regs.gs;
     child_regs.ss = regs.userspace_ss;
 
-    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:04x}:{:08x} with stack {:04x}:{:08x}, kstack {:04x}:{:08x}",
+    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:#04x}:{:p} with stack {:#04x}:{:p}, kstack {:#04x}:{:p}",
         child_regs.cs, child_regs.eip, child_regs.ss, child_regs.esp, child_regs.ss0, child_regs.esp0);
 #else
     auto& child_regs = child_first_thread->m_regs;
@@ -88,7 +88,7 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_regs.rip = regs.rip;
     child_regs.cs = regs.cs;
 
-    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:04x}:{:16x} with stack {:08x}, kstack {:08x}",
+    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:#04x}:{:p} with stack {:p}, kstack {:p}",
         child_regs.cs, child_regs.rip, child_regs.rsp, child_regs.rsp0);
 #endif
 

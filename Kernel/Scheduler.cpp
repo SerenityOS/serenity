@@ -295,12 +295,7 @@ bool Scheduler::context_switch(Thread* thread)
             from_thread->set_state(Thread::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-        const auto msg =
-#    if ARCH(I386)
-            "Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:08x}";
-#    else
-            "Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:16x}";
-#    endif
+        const auto msg = "Scheduler[{}]: {} -> {} [prio={}] {:#04x}:{:p}";
 
         dbgln(msg,
             Processor::id(), from_thread->tid().value(),

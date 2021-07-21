@@ -1121,10 +1121,10 @@ void MemoryManager::unregister_region(Region& region)
 void MemoryManager::dump_kernel_regions()
 {
     dbgln("Kernel regions:");
-    dbgln("BEGIN       END         SIZE        ACCESS  NAME");
+    dbgln("BEGIN         END        SIZE       ACCESS NAME");
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_kernel_regions) {
-        dbgln("{:08x} -- {:08x} {:08x} {:c}{:c}{:c}{:c}{:c}{:c} {}",
+        dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}",
             region.vaddr().get(),
             region.vaddr().offset(region.size() - 1).get(),
             region.size(),

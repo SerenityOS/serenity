@@ -65,7 +65,7 @@ KResultOr<size_t> Pipe::control_transfer(u8 request_type, u8 request, u16 value,
 
     transfer->set_setup_packet(usb_request);
 
-    dbgln_if(USB_DEBUG, "Pipe: Transfer allocated @ {:08x}", transfer->buffer_physical());
+    dbgln_if(USB_DEBUG, "Pipe: Transfer allocated @ {}", transfer->buffer_physical());
     auto transfer_len_or_error = UHCIController::the().submit_control_transfer(*transfer);
 
     if (transfer_len_or_error.is_error())

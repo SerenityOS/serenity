@@ -530,14 +530,14 @@ int main(int argc, char** argv)
             outln("There are no sections in this file.");
         } else {
             outln("Section Headers:");
-            outln("  Name                Type            Address  Offset   Size     Flags");
+            outln("  Name                Type            Address    Offset     Size       Flags");
 
             elf_image.for_each_section([](const ELF::Image::Section& section) {
                 out("  {:19} ", section.name());
                 out("{:15} ", object_section_header_type_to_string(section.type()));
-                out("{:08x} ", section.address());
-                out("{:08x} ", section.offset());
-                out("{:08x} ", section.size());
+                out("{:p} ", section.address());
+                out("{:p} ", section.offset());
+                out("{:p} ", section.size());
                 out("{}", section.flags());
                 outln();
             });
@@ -714,11 +714,11 @@ int main(int argc, char** argv)
 
             if (object->symbol_count()) {
                 // FIXME: Add support for init/fini/start/main sections
-                outln("   Num: Value    Size     Type     Bind     Name");
+                outln("   Num: Value      Size       Type     Bind     Name");
                 object->for_each_symbol([](const ELF::DynamicObject::Symbol& sym) {
                     out("  {:>4}: ", sym.index());
-                    out("{:08x} ", sym.value());
-                    out("{:08x} ", sym.size());
+                    out("{:p} ", sym.value());
+                    out("{:p} ", sym.size());
                     out("{:8} ", object_symbol_type_to_string(sym.type()));
                     out("{:8} ", object_symbol_binding_to_string(sym.bind()));
                     out("{}", sym.name());
@@ -736,12 +736,12 @@ int main(int argc, char** argv)
     if (display_symbol_table) {
         if (elf_image.symbol_count()) {
             outln("Symbol table '{}' contains {} entries:", ELF_SYMTAB, elf_image.symbol_count());
-            outln("   Num: Value    Size     Type     Bind     Name");
+            outln("   Num: Value      Size       Type     Bind     Name");
 
             elf_image.for_each_symbol([](const ELF::Image::Symbol& sym) {
                 out("  {:>4}: ", sym.index());
-                out("{:08x} ", sym.value());
-                out("{:08x} ", sym.size());
+                out("{:p} ", sym.value());
+                out("{:p} ", sym.size());
                 out("{:8} ", object_symbol_type_to_string(sym.type()));
                 out("{:8} ", object_symbol_binding_to_string(sym.bind()));
                 out("{}", sym.name());

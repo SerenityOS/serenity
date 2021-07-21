@@ -44,9 +44,9 @@ int main(int argc, char** argv)
     outln("{}:", pid);
 
     if (extended) {
-        outln("Address         Size   Resident      Dirty Access  VMObject Type  Purgeable   CoW Pages Name");
+        outln("Address           Size   Resident      Dirty Access  VMObject Type  Purgeable   CoW Pages Name");
     } else {
-        outln("Address         Size Access  Name");
+        outln("Address           Size Access  Name");
     }
 
     auto file_contents = file->read_all();
@@ -74,11 +74,7 @@ int main(int argc, char** argv)
             (map.get("shared").to_bool() ? "s" : "-"),
             (map.get("syscall").to_bool() ? "c" : "-"));
 
-#if ARCH(I386)
-        out("{:08x}  ", address);
-#else
-        out("{:16x}  ", address);
-#endif
+        out("{:p}  ", address);
         out("{:>10} ", size);
         if (extended) {
             auto resident = map.get("amount_resident").to_string();
