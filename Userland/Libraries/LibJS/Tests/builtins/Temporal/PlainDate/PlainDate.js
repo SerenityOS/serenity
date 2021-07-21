@@ -40,8 +40,8 @@ describe("errors", () => {
 });
 
 describe("normal behavior", () => {
-    test("length is 0", () => {
-        expect(Temporal.PlainDate).toHaveLength(0);
+    test("length is 3", () => {
+        expect(Temporal.PlainDate).toHaveLength(3);
     });
 
     test("basic functionality", () => {

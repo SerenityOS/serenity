@@ -27,7 +27,7 @@ void PlainDateConstructor::initialize(GlobalObject& global_object)
     // 3.2.1 Temporal.PlainDate.prototype, https://tc39.es/proposal-temporal/#sec-temporal-plaindate-prototype
     define_direct_property(vm.names.prototype, global_object.temporal_plain_date_prototype(), 0);
 
-    define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
+    define_direct_property(vm.names.length, Value(3), Attribute::Configurable);
 }
 
 // 3.1.1 Temporal.PlainDate ( isoYear, isoMonth, isoDay [ , calendarLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate
