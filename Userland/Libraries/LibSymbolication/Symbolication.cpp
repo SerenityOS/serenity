@@ -108,7 +108,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
 
         stack.ensure_capacity(json.value().as_array().size());
         for (auto& value : json.value().as_array().values()) {
-            stack.append(value.to_u32());
+            stack.append(value.to_addr());
         }
     }
 
@@ -129,8 +129,8 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
         for (auto& region_value : json.value().as_array().values()) {
             auto& region = region_value.as_object();
             auto name = region.get("name").to_string();
-            auto address = region.get("address").to_u32();
-            auto size = region.get("size").to_u32();
+            auto address = region.get("address").to_addr();
+            auto size = region.get("size").to_addr();
 
             String path;
             if (name == "/usr/lib/Loader.so") {
