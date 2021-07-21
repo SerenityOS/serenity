@@ -520,6 +520,12 @@ int main(int argc, char** argv)
         outln();
     }
 
+#if ARCH(I386)
+    auto addr_padding = "";
+#else
+    auto addr_padding = "        ";
+#endif
+
     if (display_section_headers) {
         if (!display_all) {
             outln("There are {} section headers, starting at offset {:#x}:", header.e_shnum, header.e_shoff);
@@ -530,7 +536,7 @@ int main(int argc, char** argv)
             outln("There are no sections in this file.");
         } else {
             outln("Section Headers:");
-            outln("  Name                Type            Address    Offset     Size       Flags");
+            outln("  Name                Type            Address{}    Offset{}     Size{}       Flags", addr_padding, addr_padding, addr_padding);
 
             elf_image.for_each_section([](const ELF::Image::Section& section) {
                 out("  {:19} ", section.name());
@@ -557,7 +563,7 @@ int main(int argc, char** argv)
             outln("There are no program headers in this file.");
         } else {
             outln("Program Headers:");
-            outln("  Type           Offset     VirtAddr   PhysAddr   FileSiz    MemSiz     Flg  Align");
+            outln("  Type           Offset     VirtAddr{}   PhysAddr{}   FileSiz    MemSiz     Flg  Align", addr_padding, addr_padding);
 
             elf_image.for_each_program_header([](const ELF::Image::ProgramHeader& program_header) {
                 out("  ");
@@ -714,7 +720,7 @@ int main(int argc, char** argv)
 
             if (object->symbol_count()) {
                 // FIXME: Add support for init/fini/start/main sections
-                outln("   Num: Value      Size       Type     Bind     Name");
+                outln("   Num: Value{}      Size{}       Type     Bind     Name", addr_padding, addr_padding);
                 object->for_each_symbol([](const ELF::DynamicObject::Symbol& sym) {
                     out("  {:>4}: ", sym.index());
                     out("{:p} ", sym.value());
@@ -736,7 +742,7 @@ int main(int argc, char** argv)
     if (display_symbol_table) {
         if (elf_image.symbol_count()) {
             outln("Symbol table '{}' contains {} entries:", ELF_SYMTAB, elf_image.symbol_count());
-            outln("   Num: Value      Size       Type     Bind     Name");
+            outln("   Num: Value{}      Size{}       Type     Bind     Name", addr_padding, addr_padding);
 
             elf_image.for_each_symbol([](const ELF::Image::Symbol& sym) {
                 out("  {:>4}: ", sym.index());
