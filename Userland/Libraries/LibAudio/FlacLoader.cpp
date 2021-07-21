@@ -802,7 +802,7 @@ u64 read_utf8_char(InputStream& input)
     u8 bits_from_start_byte = 8 - (length + 1);
     u8 start_byte_bitmask = AK::exp2(bits_from_start_byte) - 1;
     character = start_byte_bitmask & start_byte;
-    for (u8 i = length; i > 0; --i) {
+    for (u8 i = length - 1; i > 0; --i) {
         input.read(single_byte_buffer);
         u8 current_byte = single_byte_buffer[0];
         character = (character << 6) | (current_byte & 0b00111111);
