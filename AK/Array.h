@@ -13,50 +13,50 @@ namespace AK {
 
 template<typename T, size_t Size>
 struct Array {
-    constexpr T const* data() const { return __data; }
-    constexpr T* data() { return __data; }
+    [[nodiscard]] constexpr T const* data() const { return __data; }
+    [[nodiscard]] constexpr T* data() { return __data; }
 
-    constexpr size_t size() const { return Size; }
+    [[nodiscard]] constexpr size_t size() const { return Size; }
 
-    constexpr Span<T const> span() const { return { __data, Size }; }
-    constexpr Span<T> span() { return { __data, Size }; }
+    [[nodiscard]] constexpr Span<T const> span() const { return { __data, Size }; }
+    [[nodiscard]] constexpr Span<T> span() { return { __data, Size }; }
 
-    constexpr T const& at(size_t index) const
+    [[nodiscard]] constexpr T const& at(size_t index) const
     {
         VERIFY(index < size());
         return __data[index];
     }
-    constexpr T& at(size_t index)
+    [[nodiscard]] constexpr T& at(size_t index)
     {
         VERIFY(index < size());
         return __data[index];
     }
 
-    constexpr T const& front() const { return at(0); }
-    constexpr T& front() { return at(0); }
+    [[nodiscard]] constexpr T const& front() const { return at(0); }
+    [[nodiscard]] constexpr T& front() { return at(0); }
 
-    constexpr T const& back() const { return at(max(1, size()) - 1); }
-    constexpr T& back() { return at(max(1, size()) - 1); }
+    [[nodiscard]] constexpr T const& back() const { return at(max(1, size()) - 1); }
+    [[nodiscard]] constexpr T& back() { return at(max(1, size()) - 1); }
 
-    constexpr bool is_empty() const { return size() == 0; }
+    [[nodiscard]] constexpr bool is_empty() const { return size() == 0; }
 
-    constexpr T const& operator[](size_t index) const { return at(index); }
-    constexpr T& operator[](size_t index) { return at(index); }
+    [[nodiscard]] constexpr T const& operator[](size_t index) const { return at(index); }
+    [[nodiscard]] constexpr T& operator[](size_t index) { return at(index); }
 
     template<typename T2, size_t Size2>
-    constexpr bool operator==(Array<T2, Size2> const& other) const { return span() == other.span(); }
+    [[nodiscard]] constexpr bool operator==(Array<T2, Size2> const& other) const { return span() == other.span(); }
 
     using ConstIterator = SimpleIterator<Array const, T const>;
     using Iterator = SimpleIterator<Array, T>;
 
-    constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
-    constexpr Iterator begin() { return Iterator::begin(*this); }
+    [[nodiscard]] constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
+    [[nodiscard]] constexpr Iterator begin() { return Iterator::begin(*this); }
 
-    constexpr ConstIterator end() const { return ConstIterator::end(*this); }
-    constexpr Iterator end() { return Iterator::end(*this); }
+    [[nodiscard]] constexpr ConstIterator end() const { return ConstIterator::end(*this); }
+    [[nodiscard]] constexpr Iterator end() { return Iterator::end(*this); }
 
-    constexpr operator Span<T const>() const { return span(); }
-    constexpr operator Span<T>() { return span(); }
+    [[nodiscard]] constexpr operator Span<T const>() const { return span(); }
+    [[nodiscard]] constexpr operator Span<T>() { return span(); }
 
     constexpr size_t fill(T const& value)
     {
@@ -66,7 +66,7 @@ struct Array {
         return Size;
     }
 
-    constexpr T max() requires(requires(T x, T y) { x < y; })
+    [[nodiscard]] constexpr T max() requires(requires(T x, T y) { x < y; })
     {
         static_assert(Size > 0, "No values to max() over");
 
@@ -76,7 +76,7 @@ struct Array {
         return value;
     }
 
-    constexpr T min() requires(requires(T x, T y) { x > y; })
+    [[nodiscard]] constexpr T min() requires(requires(T x, T y) { x > y; })
     {
         static_assert(Size > 0, "No values to min() over");
 
