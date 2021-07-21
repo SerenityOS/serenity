@@ -19,7 +19,7 @@ extern bool __stdio_is_initialized;
 #ifndef NDEBUG
 void __assertion_failed(const char* msg)
 {
-    dbgln("USERSPACE({}) ASSERTION FAILED: {}", getpid(), msg);
+    dbgln("ASSERTION FAILED: {}", msg);
     if (__stdio_is_initialized)
         warnln("ASSERTION FAILED: {}", msg);
 
