@@ -123,7 +123,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     toolbar.add_separator();
 
     auto mkdir_action = Action::create(
-        "New directory...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
+        "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"), [this](const Action&) {
             String value;
             if (InputBox::show(this, value, "Enter name:", "New directory") == InputBox::ExecOK && !value.is_empty()) {
                 auto new_dir_path = LexicalPath::canonicalized_path(String::formatted("{}/{}", m_model->root_path(), value));
@@ -171,10 +171,12 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     };
 
     m_context_menu = GUI::Menu::construct();
-    m_context_menu->add_action(GUI::Action::create_checkable("Show dotfiles", [&](auto& action) {
-        m_model->set_should_show_dotfiles(action.is_checked());
-        m_model->update();
-    }));
+    m_context_menu->add_action(GUI::Action::create_checkable(
+        "Show dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
+            m_model->set_should_show_dotfiles(action.is_checked());
+            m_model->update();
+        },
+        this));
 
     m_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (!index.is_valid()) {
