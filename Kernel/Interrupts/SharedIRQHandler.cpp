@@ -24,13 +24,13 @@ UNMAP_AFTER_INIT void SharedIRQHandler::initialize(u8 interrupt_number)
 void SharedIRQHandler::register_handler(GenericInterruptHandler& handler)
 {
     dbgln_if(INTERRUPT_DEBUG, "Interrupt Handler registered @ Shared Interrupt Handler {}", interrupt_number());
-    m_handlers.set(&handler);
+    m_handlers.append(handler);
     enable_interrupt_vector();
 }
 void SharedIRQHandler::unregister_handler(GenericInterruptHandler& handler)
 {
     dbgln_if(INTERRUPT_DEBUG, "Interrupt Handler unregistered @ Shared Interrupt Handler {}", interrupt_number());
-    m_handlers.remove(&handler);
+    m_handlers.remove(handler);
     if (m_handlers.is_empty())
         disable_interrupt_vector();
 }
@@ -44,9 +44,8 @@ bool SharedIRQHandler::eoi()
 
 void SharedIRQHandler::enumerate_handlers(Function<void(GenericInterruptHandler&)>& callback)
 {
-    for (auto* handler : m_handlers) {
-        VERIFY(handler);
-        callback(*handler);
+    for (auto& handler : m_handlers) {
+        callback(handler);
     }
 }
 
@@ -69,15 +68,14 @@ bool SharedIRQHandler::handle_interrupt(const RegisterState& regs)
 
     if constexpr (INTERRUPT_DEBUG) {
         dbgln("Interrupt @ {}", interrupt_number());
-        dbgln("Interrupt Handlers registered - {}", m_handlers.size());
+        dbgln("Interrupt Handlers registered - {}", m_handlers.size_slow());
     }
     int i = 0;
     bool was_handled = false;
-    for (auto* handler : m_handlers) {
+    for (auto& handler : m_handlers) {
         dbgln_if(INTERRUPT_DEBUG, "Going for Interrupt Handling @ {}, Shared Interrupt {}", i, interrupt_number());
-        VERIFY(handler != nullptr);
-        if (handler->handle_interrupt(regs)) {
-            handler->increment_invoking_counter();
+        if (handler.handle_interrupt(regs)) {
+            handler.increment_invoking_counter();
             was_handled = true;
         }
         dbgln_if(INTERRUPT_DEBUG, "Going for Interrupt Handling @ {}, Shared Interrupt {} - End", i, interrupt_number());

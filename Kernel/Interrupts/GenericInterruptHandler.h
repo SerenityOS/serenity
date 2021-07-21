@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
-#include <AK/String.h>
+#include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/RegisterState.h>
 
@@ -65,5 +64,10 @@ private:
     u8 m_interrupt_number { 0 };
     bool m_disable_remap { false };
     bool m_registered { false };
+
+    IntrusiveListNode<GenericInterruptHandler> m_list_node;
+
+public:
+    using List = IntrusiveList<GenericInterruptHandler, RawPtr<GenericInterruptHandler>, &GenericInterruptHandler::m_list_node>;
 };
 }
