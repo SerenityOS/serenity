@@ -80,6 +80,11 @@ private:
     // watch description, so they will overlap.
     HashMap<int, NonnullOwnPtr<WatchDescription>> m_wd_to_watches;
     HashMap<InodeIdentifier, WatchDescription*> m_inode_to_watches;
+
+    IntrusiveListNode<InodeWatcher> m_list_node;
+
+public:
+    using List = IntrusiveList<InodeWatcher, RawPtr<InodeWatcher>, &InodeWatcher::m_list_node>;
 };
 
 }
