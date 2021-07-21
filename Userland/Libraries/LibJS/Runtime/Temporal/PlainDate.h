@@ -35,6 +35,7 @@ private:
 };
 
 PlainDate* create_temporal_date(GlobalObject&, i32 iso_year, i32 iso_month, i32 iso_day, Object& calendar, FunctionObject* new_target = nullptr);
+PlainDate* to_temporal_date(GlobalObject&, Value item, Object* options = nullptr);
 Optional<TemporalDate> regulate_iso_date(GlobalObject&, double year, double month, double day, String const& overflow);
 bool is_valid_iso_date(i32 year, i32 month, i32 day);
 

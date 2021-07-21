@@ -136,6 +136,7 @@ namespace JS {
     P(exec)                                  \
     P(exp)                                   \
     P(expm1)                                 \
+    P(fields)                                \
     P(fill)                                  \
     P(filter)                                \
     P(finally)                               \

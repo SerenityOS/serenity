@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -82,6 +83,41 @@ Calendar* get_iso8601_calendar(GlobalObject& global_object)
     return get_builtin_calendar(global_object, "iso8601");
 }
 
+// 12.1.5 CalendarFields ( calendar, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-calendarfields
+Vector<String> calendar_fields(GlobalObject& global_object, Object& calendar, Vector<StringView> const& field_names)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let fields be ? GetMethod(calendar, "fields").
+    auto fields = Value(&calendar).get_method(global_object, vm.names.fields);
+    if (vm.exception())
+        return {};
+
+    // 2. Let fieldsArray be ! CreateArrayFromList(fieldNames).
+    Vector<Value> field_names_values;
+    for (auto& field_name : field_names)
+        field_names_values.append(js_string(vm, field_name));
+    Value fields_array = Array::create_from(global_object, field_names_values);
+
+    // 3. If fields is not undefined, then
+    if (fields) {
+        // a. Set fieldsArray to ? Call(fields, calendar, « fieldsArray »).
+        fields_array = vm.call(*fields, &calendar, fields_array);
+        if (vm.exception())
+            return {};
+    }
+
+    // 4. Return ? IterableToListOfType(fieldsArray, « String »).
+    auto list = iterable_to_list_of_type(global_object, fields_array, { OptionType::String });
+    if (vm.exception())
+        return {};
+
+    Vector<String> result;
+    for (auto& value : list)
+        result.append(value.as_string().string());
+    return result;
+}
+
 // 12.1.21 ToTemporalCalendar ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendar
 Object* to_temporal_calendar(GlobalObject& global_object, Value temporal_calendar_like)
 {
@@ -146,6 +182,53 @@ Object* to_temporal_calendar_with_iso_default(GlobalObject& global_object, Value
     }
     // 2. Return ? ToTemporalCalendar(temporalCalendarLike).
     return to_temporal_calendar(global_object, temporal_calendar_like);
+}
+
+// 12.1.23 GetTemporalCalendarWithISODefault ( item ), https://tc39.es/proposal-temporal/#sec-temporal-gettemporalcalendarwithisodefault
+Object* get_temporal_calendar_with_iso_default(GlobalObject& global_object, Object& item)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If item has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
+    // TODO: The rest of the Temporal built-ins
+    if (is<PlainDate>(item)) {
+        // a. Return item.[[Calendar]].
+        return &static_cast<PlainDate&>(item).calendar();
+    }
+
+    // 2. Let calendar be ? Get(item, "calendar").
+    auto calendar = item.get(vm.names.calendar);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? ToTemporalCalendarWithISODefault(calendar).
+    return to_temporal_calendar_with_iso_default(global_object, calendar);
+}
+
+// 12.1.24 DateFromFields ( calendar, fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-datefromfields
+PlainDate* date_from_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object& options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(calendar) is Object.
+    // 2. Assert: Type(fields) is Object.
+
+    // 3. Let date be ? Invoke(calendar, "dateFromFields", « fields, options »).
+    auto date = calendar.invoke(vm.names.dateFromFields, &fields, &options);
+    if (vm.exception())
+        return {};
+
+    // 4. Perform ? RequireInternalSlot(date, [[InitializedTemporalDate]]).
+    auto* date_object = date.to_object(global_object);
+    if (!date_object)
+        return {};
+    if (!is<PlainDate>(date_object)) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.PlainDate");
+        return {};
+    }
+
+    // 5. Return date.
+    return static_cast<PlainDate*>(date_object);
 }
 
 // 12.1.30 IsISOLeapYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isisoleapyear
