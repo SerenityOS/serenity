@@ -19,6 +19,7 @@
 #include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/WeakContainer.h>
 
 namespace JS {
 
@@ -111,7 +112,7 @@ private:
 
     MarkedValueList::List m_marked_value_lists;
 
-    HashTable<WeakContainer*> m_weak_containers;
+    WeakContainer::List m_weak_containers;
 
     BlockAllocator m_block_allocator;
 
