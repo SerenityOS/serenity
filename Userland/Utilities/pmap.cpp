@@ -43,10 +43,16 @@ int main(int argc, char** argv)
 
     outln("{}:", pid);
 
+#if ARCH(I386)
+    auto padding = "";
+#else
+    auto padding = "        ";
+#endif
+
     if (extended) {
-        outln("Address           Size   Resident      Dirty Access  VMObject Type  Purgeable   CoW Pages Name");
+        outln("Address{}           Size   Resident      Dirty Access  VMObject Type  Purgeable   CoW Pages Name", padding);
     } else {
-        outln("Address           Size Access  Name");
+        outln("Address{}           Size Access  Name", padding);
     }
 
     auto file_contents = file->read_all();
