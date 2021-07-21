@@ -104,3 +104,5 @@ dist
 .tern-port
 
 .vscode/
+
+.env
