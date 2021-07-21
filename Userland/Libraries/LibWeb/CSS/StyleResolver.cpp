@@ -296,6 +296,98 @@ static inline bool is_flex_basis(StyleValue const& value)
     return false;
 }
 
+static inline bool is_font_family(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+    if (value.is_string())
+        return true;
+    switch (value.to_identifier()) {
+    case ValueID::Cursive:
+    case ValueID::Fantasy:
+    case ValueID::Monospace:
+    case ValueID::Serif:
+    case ValueID::SansSerif:
+    case ValueID::UiMonospace:
+    case ValueID::UiRounded:
+    case ValueID::UiSerif:
+    case ValueID::UiSansSerif:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static inline bool is_font_size(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+    if (value.is_length())
+        return true;
+    switch (value.to_identifier()) {
+    case ValueID::XxSmall:
+    case ValueID::XSmall:
+    case ValueID::Small:
+    case ValueID::Medium:
+    case ValueID::Large:
+    case ValueID::XLarge:
+    case ValueID::XxLarge:
+    case ValueID::XxxLarge:
+    case ValueID::Smaller:
+    case ValueID::Larger:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static inline bool is_font_style(StyleValue const& value)
+{
+    // FIXME: Handle angle parameter to `oblique`: https://www.w3.org/TR/css-fonts-4/#font-style-prop
+    if (value.is_builtin_or_dynamic())
+        return true;
+    switch (value.to_identifier()) {
+    case ValueID::Normal:
+    case ValueID::Italic:
+    case ValueID::Oblique:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static inline bool is_font_weight(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+    if (value.is_numeric()) {
+        auto weight = static_cast<NumericStyleValue const&>(value).value();
+        return (weight >= 1 && weight <= 1000);
+    }
+    switch (value.to_identifier()) {
+    case ValueID::Normal:
+    case ValueID::Bold:
+    case ValueID::Bolder:
+    case ValueID::Lighter:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static inline bool is_line_height(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+    if (value.is_numeric())
+        return true;
+    if (value.is_length())
+        return true;
+    if (value.to_identifier() == ValueID::Normal)
+        return true;
+    return false;
+}
+
 static inline bool is_line_style(StyleValue const& value)
 {
     if (value.is_builtin_or_dynamic())
@@ -1308,7 +1400,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
-    // FIXME: parse other values as well
     if (property_id == CSS::PropertyID::Font) {
         // FIXME: Remove string parsing once DeprecatedCSSParser is gone.
         if (value.is_string()) {
@@ -1334,7 +1425,125 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        // FIXME: Handle this as a ValueListStyleValue.
+        if (value.is_value_list()) {
+            auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
+
+            RefPtr<StyleValue> font_style_value;
+            RefPtr<StyleValue> font_weight_value;
+            RefPtr<StyleValue> font_size_value;
+            RefPtr<StyleValue> line_height_value;
+            RefPtr<StyleValue> font_family_value;
+            // FIXME: Implement font-stretch and font-variant.
+
+            for (size_t i = 0; i < parts.size(); ++i) {
+                auto value = Parser::parse_css_value(context, property_id, parts[i]);
+                if (!value)
+                    return;
+
+                if (is_font_style(*value)) {
+                    if (font_style_value)
+                        return;
+                    font_style_value = move(value);
+                    continue;
+                }
+                if (is_font_weight(*value)) {
+                    if (font_weight_value)
+                        return;
+                    font_weight_value = move(value);
+                    continue;
+                }
+                if (is_font_size(*value)) {
+                    if (font_size_value)
+                        return;
+                    font_size_value = move(value);
+
+                    // Consume `/ line-height` if present
+                    if (i + 2 < parts.size()) {
+                        auto solidus_part = parts[i + 1];
+                        if (!(solidus_part.is(Token::Type::Delim) && solidus_part.token().delim() == "/"sv))
+                            break;
+                        auto line_height = Parser::parse_css_value(context, property_id, parts[i + 2]);
+                        if (!(line_height && is_line_height(*line_height)))
+                            return;
+                        line_height_value = move(line_height);
+                        i += 2;
+                    }
+
+                    // Consume font-family
+                    // FIXME: Handle multiple font-families separated by commas, for fallback purposes.
+                    if (i + 1 < parts.size()) {
+                        auto& font_family_part = parts[i + 1];
+                        auto font_family = Parser::parse_css_value(context, property_id, font_family_part);
+                        if (!font_family) {
+                            // Single-word font-families may not be quoted. We convert it to a String for convenience.
+                            if (font_family_part.is(Token::Type::Ident))
+                                font_family = StringStyleValue::create(font_family_part.token().ident());
+                            else
+                                return;
+                        } else if (!is_font_family(*font_family)) {
+                            dbgln("*** Unable to parse '{}' as a font-family.", font_family_part.to_debug_string());
+                            return;
+                        }
+
+                        font_family_value = move(font_family);
+                    }
+                    break;
+                }
+
+                return;
+            }
+
+            if (!font_size_value || !font_family_value)
+                return;
+
+            style.set_property(CSS::PropertyID::FontSize, *font_size_value);
+            style.set_property(CSS::PropertyID::FontFamily, *font_family_value);
+
+            if (font_style_value)
+                style.set_property(CSS::PropertyID::FontStyle, *font_style_value);
+            if (font_weight_value)
+                style.set_property(CSS::PropertyID::FontWeight, *font_weight_value);
+            if (line_height_value)
+                style.set_property(CSS::PropertyID::LineHeight, *line_height_value);
+
+            return;
+        }
+
+        if (value.is_inherit()) {
+            style.set_property(CSS::PropertyID::FontSize, value);
+            style.set_property(CSS::PropertyID::FontFamily, value);
+            style.set_property(CSS::PropertyID::FontStyle, value);
+            style.set_property(CSS::PropertyID::FontVariant, value);
+            style.set_property(CSS::PropertyID::FontWeight, value);
+            style.set_property(CSS::PropertyID::LineHeight, value);
+            // FIXME: Implement font-stretch
+            return;
+        }
+
+        // FIXME: Handle system fonts. (caption, icon, menu, message-box, small-caption, status-bar)
+
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::FontFamily) {
+        if (value.is_value_list()) {
+            auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
+            // FIXME: Handle multiple font-families separated by commas, for fallback purposes.
+            for (auto& part : parts) {
+                auto value = Parser::parse_css_value(context, property_id, part);
+                if (!value)
+                    return;
+                if (is_font_family(*value))
+                    style.set_property(CSS::PropertyID::FontFamily, *value);
+                break;
+            }
+            return;
+        }
+
+        if (is_font_family(value)) {
+            style.set_property(CSS::PropertyID::FontFamily, value);
+            return;
+        }
 
         return;
     }
