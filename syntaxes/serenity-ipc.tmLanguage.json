@@ -49,7 +49,7 @@
 		},
 		"endpoint": {
 			"name": "meta.name.class.endpoint.serenity-ipc",
-			"begin": "(endpoint)\\s+(\\p{L}[\\p{L}0-9_$]*)\\s*(\\{)?\\s*$",
+			"begin": "(endpoint)\\s+(\\p{L}[\\p{L}0-9_$]*)\\s*((\\[)(\\p{L}[\\p{L}0-9_$]*)(=)(.*?)(\\]))?(\\{)?\\s*$",
 			"beginCaptures": {
 				"1": {
 					"name": "storage.type.class.endpoint.serenity-ipc"
@@ -58,6 +58,24 @@
 					"name": "entity.name.class.endpoint.serenity-ipc"
 				},
 				"3": {
+					"name": "meta.attribute.serenity-ipc"
+				},
+				"4": {
+					"name": "punctuation.bracket.begin.serenity-ipc"
+				},
+				"5": {
+					"name": "entity.other.attribute-name.serenity-ipc entity.name.attribute.serenity-ipc"
+				},
+				"6": {
+					"name": "punctuation.equals.serenity-ipc"
+				},
+				"7": {
+					"name": "constant.other.attribute.serenity-ipc"
+				},
+				"8": {
+					"name": "punctuation.bracket.end.serenity-ipc"
+				},
+				"9": {
 					"name": "punctuation.definition.brace.start.serenity-ipc"
 				}
 			},
