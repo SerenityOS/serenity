@@ -26,22 +26,22 @@
 							"name": "keyword.control.import.serenity-ipc"
 						},
 						"3": {
-							"name": "punctuation.definition.string.begin.serenity-ipc"
+							"name": "punctuation.string.begin.serenity-ipc"
 						},
 						"4": {
 							"name": "string.quoted.other.lt-gt.include.serenity-ipc"
 						},
 						"5": {
-							"name": "punctuation.definition.string.end.serenity-ipc"
+							"name": "punctuation.string.end.serenity-ipc"
 						},
 						"6": {
-							"name": "punctuation.definition.string.begin.serenity-ipc"
+							"name": "punctuation.string.begin.serenity-ipc"
 						},
 						"7": {
 							"name": "string.quoted.double.include.serenity-ipc"
 						},
 						"8": {
-							"name": "punctuation.definition.string.end.serenity-ipc"
+							"name": "punctuation.string.end.serenity-ipc"
 						}
 					}
 				}
