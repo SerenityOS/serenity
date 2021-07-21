@@ -1,0 +1,173 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"scopeName": "source.serenity-gml",
+	"name": "Graphics Markup Language (SerenityOS)",
+	"patterns": [
+		{
+			"include": "#objects"
+		},
+		{
+			"include": "#comments"
+		}
+	],
+	"repository": {
+		"objects": {
+			"patterns": [
+				{
+					"name": "meta.type.object.serenity-gml",
+					"begin": "(@)(\\p{L}[\\p{L}0-9_$]*)(?:(::)(\\p{L}[\\p{L}0-9_$]*))?\\s*(\\{)",
+					"end": "(\\})",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.at-sign.serenity-gml"
+						},
+						"2": {
+							"name": "entity.name.type.serenity-gml"
+						},
+						"3": {
+							"name": "keyword.operator.namespace.serenity-gml"
+						},
+						"4": {
+							"name": "entity.name.type.serenity-gml"
+						},
+						"5": {
+							"name": "punctuation.braces.begin.serenity-gml"
+						}
+					},
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.braces.end.serenity-gml"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#attributes"
+						},
+						{
+							"include": "#objects"
+						},
+						{
+							"include": "#comments"
+						}
+					]
+				},
+				{
+					"name": "meta.type.object.serenity-gml",
+					"match": "(@)(\\p{L}[\\p{L}0-9_$]*)(?:(::)(\\p{L}[\\p{L}0-9_$]*))?",
+					"captures": {
+						"1": {
+							"name": "punctuation.at-sign.serenity-gml"
+						},
+						"2": {
+							"name": "entity.name.type.serenity-gml"
+						},
+						"3": {
+							"name": "keyword.operator.namespace.serenity-gml"
+						},
+						"4": {
+							"name": "entity.name.type.serenity-gml"
+						}
+					}
+				}
+			]
+		},
+		"attributes": {
+			"name": "meta.attribute.serenity-gml",
+			"begin": "(?!<@)(\\p{L}[\\p{L}0-9_$]*)\\s*(:)",
+			"end": "$",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.attribute.serenity-gml"
+				},
+				"2": {
+					"name": "punctuation.attribute.serenity-gml"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#values"
+				}
+			]
+		},
+		"values": {
+			"patterns": [
+				{
+					"include": "#strings"
+				},
+				{
+					"include": "#numbers"
+				},
+				{
+					"include": "#number-arrays"
+				},
+				{
+					"include": "#booleans"
+				},
+				{
+					"include": "#objects"
+				}
+			]
+		},
+		"numbers": {
+			"name": "constant.numeric.decimal.serenity-gml",
+			"match": "[0-9]+(\\.[0-9]+([eE][+-]?[0-9]+)?)?"
+		},
+		"number-arrays": {
+			"begin": "(\\[)",
+			"end": "(\\])",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.list.begin.serenity-gml"
+				}
+			},
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.list.end.serenity-gml"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#numbers"
+				},
+				{
+					"match": ",",
+					"name": "punctuation.comma.serenity-gml"
+				}
+			]
+		},
+		"booleans": {
+			"name": "constant.boolean.serenity-gml",
+			"match": "\\b(true|false)\\b"
+		},
+		"strings": {
+			"name": "string.quoted.double.serenity-gml",
+			"begin": "(\")",
+			"end": "(\")",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.string.begin.serenity-gml"
+				}
+			},
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.string.end.serenity-gml"
+				}
+			},
+			"patterns": [
+				{
+					"name": "constant.character.escape.serenity-gml",
+					"match": "\\\\."
+				}
+			]
+		},
+		"comments": {
+			"name": "comment.line.double-slash.serenity-gml",
+			"match": "(//).*",
+			"captures": {
+				"1": {
+					"name": "punctuation.comment.begin.serenity-gml"
+				}
+			}
+		}
+	}
+}
