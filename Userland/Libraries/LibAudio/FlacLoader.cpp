@@ -512,7 +512,10 @@ FlacSubframeHeader FlacLoaderPlugin::next_subframe_header(InputBitStream& bit_st
     }
 
     // zero-bit padding
-    bit_stream.read_bit_big_endian();
+    if (bit_stream.read_bit_big_endian() != 0) {
+        m_error_string = "Zero bit padding";
+        return {};
+    };
 
     // subframe type (encoding)
     u8 subframe_code = bit_stream.read_bits_big_endian(6);
