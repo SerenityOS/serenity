@@ -643,10 +643,10 @@ int main(int argc, char** argv)
                 outln("Relocation section '{}' at offset {:#08x} contains zero entries:", object->relocation_section().name(), object->relocation_section().offset());
             } else {
                 outln("Relocation section '{}' at offset {:#08x} contains {} entries:", object->relocation_section().name(), object->relocation_section().offset(), object->relocation_section().entry_count());
-                outln("  Offset{}      Type               Sym Value{}   Sym Name", addr_padding, addr_padding);
+                outln("  Offset{}      Type                Sym Value{}   Sym Name", addr_padding, addr_padding);
                 object->relocation_section().for_each_relocation([](const ELF::DynamicObject::Relocation& reloc) {
                     out("  {:p} ", reloc.offset());
-                    out(" {:17} ", object_relocation_type_to_string(reloc.type()));
+                    out(" {:18} ", object_relocation_type_to_string(reloc.type()));
                     out(" {:p} ", reloc.symbol().value());
                     out(" {}", reloc.symbol().name());
                     outln();
@@ -658,10 +658,10 @@ int main(int argc, char** argv)
                 outln("Relocation section '{}' at offset {:#08x} contains zero entries:", object->plt_relocation_section().name(), object->plt_relocation_section().offset());
             } else {
                 outln("Relocation section '{}' at offset {:#08x} contains {} entries:", object->plt_relocation_section().name(), object->plt_relocation_section().offset(), object->plt_relocation_section().entry_count());
-                outln("  Offset{}      Type               Sym Value{}   Sym Name", addr_padding, addr_padding);
+                outln("  Offset{}      Type                Sym Value{}   Sym Name", addr_padding, addr_padding);
                 object->plt_relocation_section().for_each_relocation([](const ELF::DynamicObject::Relocation& reloc) {
                     out("  {:p} ", reloc.offset());
-                    out(" {:17} ", object_relocation_type_to_string(reloc.type()));
+                    out(" {:18} ", object_relocation_type_to_string(reloc.type()));
                     out(" {:p} ", reloc.symbol().value());
                     out(" {}", reloc.symbol().name());
                     outln();
