@@ -54,7 +54,7 @@ TimeZone* system_time_zone(GlobalObject& global_object)
     return create_temporal_time_zone(global_object, identifier);
 }
 
-// 2.2.2 SystemUTCEpochNanoseconds ( )
+// 2.2.2 SystemUTCEpochNanoseconds ( ), https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochnanoseconds
 BigInt* system_utc_epoch_nanoseconds(GlobalObject& global_object)
 {
     // 1. Let ns be the approximate current UTC date and time, in nanoseconds since the epoch.
@@ -77,7 +77,7 @@ BigInt* system_utc_epoch_nanoseconds(GlobalObject& global_object)
     return js_bigint(global_object.heap(), move(ns));
 }
 
-// 2.2.3 SystemInstant ( )
+// 2.2.3 SystemInstant ( ), https://tc39.es/proposal-temporal/#sec-temporal-systeminstant
 Instant* system_instant(GlobalObject& global_object)
 {
     // 1. Let ns be ! SystemUTCEpochNanoseconds().
