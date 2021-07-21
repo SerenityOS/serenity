@@ -23,6 +23,8 @@ concept TimeSpecType = requires(T t)
     t.tv_nsec;
 };
 
+// FIXME: remove once Clang formats these properly.
+// clang-format off
 namespace AK {
 
 // Month and day start at 1. Month must be >= 1 and <= 12.
@@ -287,6 +289,7 @@ inline bool operator!=(const T& a, const T& b)
 }
 
 }
+// clang-format on
 
 using AK::day_of_week;
 using AK::day_of_year;
