@@ -1,4 +1,9 @@
-set(SOURCES Objects.cpp Client.cpp  Parser.cpp)
+set(SOURCES
+    Client.cpp
+    Objects.cpp
+    Parser.cpp
+    QuotedPrintable.cpp
+)
 
 set(GENERATED_SOURCES)
 
