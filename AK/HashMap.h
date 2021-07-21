@@ -71,26 +71,26 @@ public:
     using IteratorType = typename HashTableType::Iterator;
     using ConstIteratorType = typename HashTableType::ConstIterator;
 
-    IteratorType begin() { return m_table.begin(); }
-    IteratorType end() { return m_table.end(); }
-    IteratorType find(const K& key)
+    [[nodiscard]] IteratorType begin() { return m_table.begin(); }
+    [[nodiscard]] IteratorType end() { return m_table.end(); }
+    [[nodiscard]] IteratorType find(const K& key)
     {
         return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); });
     }
     template<typename TUnaryPredicate>
-    IteratorType find(unsigned hash, TUnaryPredicate predicate)
+    [[nodiscard]] IteratorType find(unsigned hash, TUnaryPredicate predicate)
     {
         return m_table.find(hash, predicate);
     }
 
-    ConstIteratorType begin() const { return m_table.begin(); }
-    ConstIteratorType end() const { return m_table.end(); }
-    ConstIteratorType find(const K& key) const
+    [[nodiscard]] ConstIteratorType begin() const { return m_table.begin(); }
+    [[nodiscard]] ConstIteratorType end() const { return m_table.end(); }
+    [[nodiscard]] ConstIteratorType find(const K& key) const
     {
         return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); });
     }
     template<typename TUnaryPredicate>
-    ConstIteratorType find(unsigned hash, TUnaryPredicate predicate) const
+    [[nodiscard]] ConstIteratorType find(unsigned hash, TUnaryPredicate predicate) const
     {
         return m_table.find(hash, predicate);
     }
@@ -121,7 +121,7 @@ public:
         return (*it).value;
     }
 
-    bool contains(const K& key) const
+    [[nodiscard]] bool contains(const K& key) const
     {
         return find(key) != end();
     }
@@ -139,7 +139,7 @@ public:
         return find(key)->value;
     }
 
-    Vector<K> keys() const
+    [[nodiscard]] Vector<K> keys() const
     {
         Vector<K> list;
         list.ensure_capacity(size());

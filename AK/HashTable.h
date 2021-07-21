@@ -197,7 +197,7 @@ public:
         rehash(capacity * 2);
     }
 
-    bool contains(const T& value) const
+    [[nodiscard]] bool contains(T const& value) const
     {
         return find(value) != end();
     }
@@ -206,7 +206,7 @@ public:
         OrderedHashTableIterator<HashTable, T, BucketType>,
         HashTableIterator<HashTable, T, BucketType>>;
 
-    Iterator begin()
+    [[nodiscard]] Iterator begin()
     {
         if constexpr (IsOrdered)
             return Iterator(m_collection_data.head);
@@ -218,7 +218,7 @@ public:
         return end();
     }
 
-    Iterator end()
+    [[nodiscard]] Iterator end()
     {
         return Iterator(nullptr);
     }
@@ -227,7 +227,7 @@ public:
         OrderedHashTableIterator<const HashTable, const T, const BucketType>,
         HashTableIterator<const HashTable, const T, const BucketType>>;
 
-    ConstIterator begin() const
+    [[nodiscard]] ConstIterator begin() const
     {
         if constexpr (IsOrdered)
             return ConstIterator(m_collection_data.head);
@@ -239,7 +239,7 @@ public:
         return end();
     }
 
-    ConstIterator end() const
+    [[nodiscard]] ConstIterator end() const
     {
         return ConstIterator(nullptr);
     }
@@ -282,23 +282,23 @@ public:
     }
 
     template<typename TUnaryPredicate>
-    Iterator find(unsigned hash, TUnaryPredicate predicate)
+    [[nodiscard]] Iterator find(unsigned hash, TUnaryPredicate predicate)
     {
         return Iterator(lookup_with_hash(hash, move(predicate)));
     }
 
-    Iterator find(const T& value)
+    [[nodiscard]] Iterator find(T const& value)
     {
         return find(TraitsForT::hash(value), [&](auto& other) { return TraitsForT::equals(value, other); });
     }
 
     template<typename TUnaryPredicate>
-    ConstIterator find(unsigned hash, TUnaryPredicate predicate) const
+    [[nodiscard]] ConstIterator find(unsigned hash, TUnaryPredicate predicate) const
     {
         return ConstIterator(lookup_with_hash(hash, move(predicate)));
     }
 
-    ConstIterator find(const T& value) const
+    [[nodiscard]] ConstIterator find(T const& value) const
     {
         return find(TraitsForT::hash(value), [&](auto& other) { return TraitsForT::equals(value, other); });
     }
@@ -360,7 +360,7 @@ private:
         }
     }
 
-    static size_t size_in_bytes(size_t capacity)
+    [[nodiscard]] static size_t size_in_bytes(size_t capacity)
     {
         if constexpr (IsOrdered) {
             return sizeof(BucketType) * capacity;
@@ -406,7 +406,7 @@ private:
     }
 
     template<typename TUnaryPredicate>
-    BucketType* lookup_with_hash(unsigned hash, TUnaryPredicate predicate) const
+    [[nodiscard]] BucketType* lookup_with_hash(unsigned hash, TUnaryPredicate predicate) const
     {
         if (is_empty())
             return nullptr;
@@ -424,12 +424,12 @@ private:
         }
     }
 
-    const BucketType* lookup_for_reading(const T& value) const
+    [[nodiscard]] BucketType const* lookup_for_reading(T const& value) const
     {
         return lookup_with_hash(TraitsForT::hash(value), [&value](auto& entry) { return TraitsForT::equals(entry, value); });
     }
 
-    BucketType& lookup_for_writing(const T& value)
+    [[nodiscard]] BucketType& lookup_for_writing(T const& value)
     {
         if (should_grow())
             rehash(capacity() * 2);
