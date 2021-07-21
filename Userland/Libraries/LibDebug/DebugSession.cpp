@@ -451,7 +451,7 @@ void DebugSession::update_loaded_libs()
         if (file_or_error.is_error())
             return IterationDecision::Continue;
 
-        FlatPtr base_address = entry.as_object().get("address").as_u32();
+        FlatPtr base_address = entry.as_object().get("address").to_addr();
         auto debug_info = make<DebugInfo>(make<ELF::Image>(file_or_error.value()->bytes()), m_source_root, base_address);
         auto lib = make<LoadedLibrary>(lib_name, file_or_error.release_value(), move(debug_info), base_address);
         m_loaded_libraries.set(lib_name, move(lib));
