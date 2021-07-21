@@ -193,4 +193,119 @@ i32 iso_days_in_month(i32 year, i32 month)
     return 28;
 }
 
+// 12.1.36 BuildISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-buildisomonthcode
+String build_iso_month_code(i32 month)
+{
+    return String::formatted("M{:02}", month);
+}
+
+// 12.1.37 ResolveISOMonth ( fields ), https://tc39.es/proposal-temporal/#sec-temporal-resolveisomonth
+double resolve_iso_month(GlobalObject& global_object, Object& fields)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let month be ? Get(fields, "month").
+    auto month = fields.get(vm.names.month);
+    if (vm.exception())
+        return {};
+
+    // 2. Let monthCode be ? Get(fields, "monthCode").
+    auto month_code = fields.get(vm.names.monthCode);
+    if (vm.exception())
+        return {};
+
+    // 3. If monthCode is undefined, then
+    if (month_code.is_undefined()) {
+        // a. If month is undefined, throw a TypeError exception.
+        if (month.is_undefined()) {
+            vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.month.as_string());
+            return {};
+        }
+        // b. Return month.
+        return month.as_double();
+    }
+
+    // 4. Assert: Type(monthCode) is String.
+    VERIFY(month_code.is_string());
+    auto& month_code_string = month_code.as_string().string();
+    // 5. Let monthLength be the length of monthCode.
+    auto month_length = month_code_string.length();
+    // 6. If monthLength is not 3, throw a RangeError exception.
+    if (month_length != 3) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
+        return {};
+    }
+    // 7. Let numberPart be the substring of monthCode from 1.
+    auto number_part = month_code_string.substring(1);
+    // 8. Set numberPart to ! ToIntegerOrInfinity(numberPart).
+    auto number_part_integer = Value(js_string(vm, move(number_part))).to_integer_or_infinity(global_object);
+    // 9. If numberPart < 1 or numberPart > 12, throw a RangeError exception.
+    if (number_part_integer < 1 || number_part_integer > 12) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
+        return {};
+    }
+    // 10. If month is not undefined, and month ≠ numberPart, then
+    if (!month.is_undefined() && month.as_double() != number_part_integer) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
+        return {};
+    }
+    // 11. If ! SameValueNonNumeric(monthCode, ! BuildISOMonthCode(numberPart)) is false, then
+    if (month_code_string != build_iso_month_code(number_part_integer)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidMonthCode);
+        return {};
+    }
+    // 12. Return numberPart.
+    return number_part_integer;
+}
+
+// 12.1.38 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
+Optional<TemporalDate> iso_date_from_fields(GlobalObject& global_object, Object& fields, Object& options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(fields) is Object.
+
+    // 2. Let overflow be ? ToTemporalOverflow(options).
+    auto overflow = to_temporal_overflow(global_object, options);
+    if (vm.exception())
+        return {};
+
+    // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
+    auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "day", "month", "monthCode", "year" }, {});
+    if (vm.exception())
+        return {};
+
+    // 4. Let year be ? Get(fields, "year").
+    auto year = prepared_fields->get(vm.names.year);
+    if (vm.exception())
+        return {};
+
+    // 5. If year is undefined, throw a TypeError exception.
+    if (year.is_undefined()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.year.as_string());
+        return {};
+    }
+
+    // 6. Let month be ? ResolveISOMonth(fields).
+    auto month = resolve_iso_month(global_object, *prepared_fields);
+    if (vm.exception())
+        return {};
+
+    // 7. Let day be ? Get(fields, "day").
+    auto day = prepared_fields->get(vm.names.day);
+    if (vm.exception())
+        return {};
+
+    // 8. If day is undefined, throw a TypeError exception.
+    if (day.is_undefined()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.day.as_string());
+        return {};
+    }
+
+    // 9. Return ? RegulateISODate(year, month, day, overflow).
+    return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), *overflow);
+}
+
 }

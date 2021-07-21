@@ -104,6 +104,8 @@ namespace JS {
     P(count)                                 \
     P(countReset)                            \
     P(create)                                \
+    P(dateFromFields)                        \
+    P(day)                                   \
     P(days)                                  \
     P(debug)                                 \
     P(decodeURI)                             \
@@ -244,6 +246,8 @@ namespace JS {
     P(milliseconds)                          \
     P(min)                                   \
     P(minutes)                               \
+    P(month)                                 \
+    P(monthCode)                             \
     P(months)                                \
     P(multiline)                             \
     P(name)                                  \
@@ -367,6 +371,7 @@ namespace JS {
     P(weeks)                                 \
     P(with)                                  \
     P(writable)                              \
+    P(year)                                  \
     P(years)
 
 struct CommonPropertyNames {
