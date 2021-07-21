@@ -15,7 +15,7 @@ class Duration final : public Object {
     JS_OBJECT(Duration, Object);
 
 public:
-    explicit Duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object& prototype);
+    Duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object& prototype);
     virtual ~Duration() override = default;
 
     double years() const { return m_years; }

@@ -17,7 +17,7 @@ class Instant final : public Object {
     JS_OBJECT(Instant, Object);
 
 public:
-    explicit Instant(BigInt& nanoseconds, Object& prototype);
+    Instant(BigInt& nanoseconds, Object& prototype);
     virtual ~Instant() override = default;
 
     BigInt const& nanoseconds() const { return m_nanoseconds; }
