@@ -66,9 +66,7 @@ int main(int argc, char** argv)
 
     s_window->set_title(String::formatted("{} - Hack Studio", s_hack_studio_widget->project().name()));
 
-    auto menubar = GUI::Menubar::construct();
-    s_hack_studio_widget->initialize_menubar(menubar);
-    s_window->set_menubar(menubar);
+    s_hack_studio_widget->initialize_menubar(*s_window);
 
     s_window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         s_hack_studio_widget->locator().close();

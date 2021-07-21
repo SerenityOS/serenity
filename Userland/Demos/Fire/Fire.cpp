@@ -221,10 +221,8 @@ int main(int argc, char** argv)
     window->set_resizable(false);
     window->resize(FIRE_WIDTH * 2 + 4, FIRE_HEIGHT * 2 + 4);
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
-    window->set_menubar(move(menubar));
 
     auto& fire = window->set_main_widget<Fire>();
 

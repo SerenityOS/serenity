@@ -1130,6 +1130,13 @@ Gfx::Bitmap* Window::back_bitmap()
     return m_back_store ? &m_back_store->bitmap() : nullptr;
 }
 
+Menu& Window::add_menu(String name)
+{
+    if (!m_menubar)
+        set_menubar(GUI::Menubar::construct());
+    return m_menubar->add_menu(move(name));
+}
+
 void Window::set_menubar(RefPtr<Menubar> menubar)
 {
     if (m_menubar == menubar)

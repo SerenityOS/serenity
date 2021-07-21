@@ -377,9 +377,7 @@ int main(int argc, char** argv)
     terminal.context_menu().add_separator();
     terminal.context_menu().add_action(open_settings_action);
 
-    auto menubar = GUI::Menubar::construct();
-
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
         pid_t child;
         const char* argv[] = { "Terminal", nullptr };
@@ -398,7 +396,7 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = menubar->add_menu("&Edit");
+    auto& edit_menu = window->add_menu("&Edit");
     edit_menu.add_action(terminal.copy_action());
     edit_menu.add_action(terminal.paste_action());
     edit_menu.add_separator();
@@ -410,7 +408,7 @@ int main(int argc, char** argv)
             find_window->move_to_front();
         }));
 
-    auto& view_menu = menubar->add_menu("&View");
+    auto& view_menu = window->add_menu("&View");
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
         window->set_fullscreen(!window->is_fullscreen());
     }));
@@ -418,13 +416,11 @@ int main(int argc, char** argv)
     view_menu.add_separator();
     view_menu.add_action(pick_font_action);
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Terminal.md"), "/bin/Help");
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Terminal", app_icon, window));
-
-    window->set_menubar(menubar);
 
     window->on_close = [&]() {
         if (find_window)

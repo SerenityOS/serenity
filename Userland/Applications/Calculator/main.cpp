@@ -49,14 +49,12 @@ int main(int argc, char** argv)
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto menubar = GUI::Menubar::construct();
-
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = menubar->add_menu("&Edit");
+    auto& edit_menu = window->add_menu("&Edit");
     edit_menu.add_action(GUI::CommonActions::make_copy_action([&](auto&) {
         GUI::Clipboard::the().set_plain_text(widget.get_entry());
     }));
@@ -70,8 +68,7 @@ int main(int argc, char** argv)
         }
     }));
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
-    window->set_menubar(move(menubar));
     return app->exec();
 }

@@ -141,8 +141,7 @@ int main(int argc, char** argv)
         editor->image().set_path(save_path.value());
     });
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
 
     file_menu.add_action(new_image_action);
     file_menu.add_action(open_image_action);
@@ -182,7 +181,7 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = menubar->add_menu("&Edit");
+    auto& edit_menu = window->add_menu("&Edit");
 
     auto copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
         auto* editor = current_image_editor();
@@ -294,7 +293,7 @@ int main(int argc, char** argv)
         },
         window));
 
-    auto& view_menu = menubar->add_menu("&View");
+    auto& view_menu = window->add_menu("&View");
 
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action(
         [&](auto&) {
@@ -321,14 +320,14 @@ int main(int argc, char** argv)
     view_menu.add_action(zoom_out_action);
     view_menu.add_action(reset_zoom_action);
 
-    auto& tool_menu = menubar->add_menu("&Tool");
+    auto& tool_menu = window->add_menu("&Tool");
     toolbox.for_each_tool([&](auto& tool) {
         if (tool.action())
             tool_menu.add_action(*tool.action());
         return IterationDecision::Continue;
     });
 
-    auto& layer_menu = menubar->add_menu("&Layer");
+    auto& layer_menu = window->add_menu("&Layer");
     layer_menu.add_action(GUI::Action::create(
         "New &Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, [&](auto&) {
             auto* editor = current_image_editor();
@@ -438,7 +437,7 @@ int main(int argc, char** argv)
         },
         window));
 
-    auto& filter_menu = menubar->add_menu("&Filter");
+    auto& filter_menu = window->add_menu("&Filter");
     auto& spatial_filters_menu = filter_menu.add_submenu("&Spatial");
 
     auto& edge_detect_submenu = spatial_filters_menu.add_submenu("&Edge Detect");
@@ -542,10 +541,8 @@ int main(int argc, char** argv)
         }
     }));
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Pixel Paint", app_icon, window));
-
-    window->set_menubar(move(menubar));
 
     auto& toolbar = *main_widget.find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     toolbar.add_action(new_image_action);

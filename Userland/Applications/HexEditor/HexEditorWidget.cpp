@@ -209,9 +209,9 @@ HexEditorWidget::~HexEditorWidget()
 {
 }
 
-void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
+void HexEditorWidget::initialize_menubar(GUI::Window& window)
 {
-    auto& file_menu = menubar.add_menu("&File");
+    auto& file_menu = window.add_menu("&File");
     file_menu.add_action(*m_new_action);
     file_menu.add_action(*m_open_action);
     file_menu.add_action(*m_save_action);
@@ -223,14 +223,14 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = menubar.add_menu("&Edit");
+    auto& edit_menu = window.add_menu("&Edit");
     edit_menu.add_action(GUI::CommonActions::make_select_all_action([this](auto&) {
         m_editor->select_all();
         m_editor->update();
     }));
     edit_menu.add_action(GUI::Action::create("Fill &Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(window(), value, "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(&window, value, "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto fill_byte = strtol(value.characters(), nullptr, 16);
             m_editor->fill_selection(fill_byte);
         }
@@ -249,13 +249,13 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     edit_menu.add_action(*m_find_action);
     edit_menu.add_action(GUI::Action::create("Find &Next", { Mod_None, Key_F3 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png"), [&](const GUI::Action&) {
         if (m_search_text.is_empty() || m_search_buffer.is_empty()) {
-            GUI::MessageBox::show(window(), "Nothing to search for", "Not found", GUI::MessageBox::Type::Warning);
+            GUI::MessageBox::show(&window, "Nothing to search for", "Not found", GUI::MessageBox::Type::Warning);
             return;
         }
 
         auto result = m_editor->find_and_highlight(m_search_buffer, last_found_index());
         if (!result) {
-            GUI::MessageBox::show(window(), String::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
+            GUI::MessageBox::show(&window, String::formatted("No more matches for \"{}\" found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
             return;
         }
         m_editor->update();
@@ -269,7 +269,7 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         m_search_results->update();
 
         if (matches.is_empty()) {
-            GUI::MessageBox::show(window(), "No strings found in this file", "Not found", GUI::MessageBox::Type::Warning);
+            GUI::MessageBox::show(&window, "No strings found in this file", "Not found", GUI::MessageBox::Type::Warning);
             return;
         }
 
@@ -279,7 +279,7 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     edit_menu.add_separator();
     edit_menu.add_action(*m_goto_offset_action);
 
-    auto& view_menu = menubar.add_menu("&View");
+    auto& view_menu = window.add_menu("&View");
 
     auto show_toolbar = m_config->read_bool_entry("Layout", "ShowToolbar", true);
     m_layout_toolbar_action->set_checked(show_toolbar);
@@ -307,8 +307,8 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
             action->set_checked(true);
     }
 
-    auto& help_menu = menubar.add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("app-hex-editor"), window()));
+    auto& help_menu = window.add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("app-hex-editor"), &window));
 }
 
 void HexEditorWidget::set_path(StringView const& path)

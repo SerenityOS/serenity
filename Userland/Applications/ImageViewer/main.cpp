@@ -264,15 +264,13 @@ int main(int argc, char** argv)
     main_toolbar.add_action(reset_zoom_action);
     main_toolbar.add_action(zoom_out_action);
 
-    auto menubar = GUI::Menubar::construct();
-
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(open_action);
     file_menu.add_action(delete_action);
     file_menu.add_separator();
     file_menu.add_action(quit_action);
 
-    auto& image_menu = menubar->add_menu("&Image");
+    auto& image_menu = window->add_menu("&Image");
     image_menu.add_action(rotate_left_action);
     image_menu.add_action(rotate_right_action);
     image_menu.add_action(vertical_flip_action);
@@ -280,13 +278,13 @@ int main(int argc, char** argv)
     image_menu.add_separator();
     image_menu.add_action(desktop_wallpaper_action);
 
-    auto& navigate_menu = menubar->add_menu("&Navigate");
+    auto& navigate_menu = window->add_menu("&Navigate");
     navigate_menu.add_action(go_first_action);
     navigate_menu.add_action(go_back_action);
     navigate_menu.add_action(go_forward_action);
     navigate_menu.add_action(go_last_action);
 
-    auto& view_menu = menubar->add_menu("&View");
+    auto& view_menu = window->add_menu("&View");
     view_menu.add_action(full_screen_action);
     view_menu.add_separator();
     view_menu.add_action(zoom_in_action);
@@ -295,13 +293,11 @@ int main(int argc, char** argv)
     view_menu.add_separator();
     view_menu.add_action(hide_show_toolbar_action);
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/ImageViewer.md"), "/bin/Help");
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Image Viewer", app_icon, window));
-
-    window->set_menubar(move(menubar));
 
     if (path != nullptr) {
         widget.load_from_file(path);

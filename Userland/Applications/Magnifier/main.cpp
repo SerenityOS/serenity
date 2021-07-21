@@ -48,8 +48,7 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
     auto& magnifier = window->set_main_widget<MagnifierWidget>();
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     }));
@@ -70,15 +69,14 @@ int main(int argc, char** argv)
     size_action_group->add_action(four_x_action);
     size_action_group->set_exclusive(true);
 
-    auto& view_menu = menubar->add_menu("&View");
+    auto& view_menu = window->add_menu("&View");
     view_menu.add_action(two_x_action);
     view_menu.add_action(four_x_action);
     two_x_action->set_checked(true);
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Magnifier", app_icon, window));
 
-    window->set_menubar(move(menubar));
     window->show();
 
     magnifier.track_cursor_globally();

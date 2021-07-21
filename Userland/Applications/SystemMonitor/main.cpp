@@ -309,8 +309,7 @@ int main(int argc, char** argv)
         },
         &process_table_view);
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
@@ -328,7 +327,7 @@ int main(int argc, char** argv)
             process_context_menu->popup(event.screen_position(), process_properties_action);
     };
 
-    auto& frequency_menu = menubar->add_menu("F&requency");
+    auto& frequency_menu = window->add_menu("F&requency");
     GUI::ActionGroup frequency_action_group;
     frequency_action_group.set_exclusive(true);
 
@@ -346,10 +345,8 @@ int main(int argc, char** argv)
     make_frequency_action(3, true);
     make_frequency_action(5);
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("System Monitor", app_icon, window));
-
-    window->set_menubar(move(menubar));
 
     process_table_view.on_activation = [&](auto&) {
         if (process_properties_action->is_enabled())

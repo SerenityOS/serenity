@@ -85,8 +85,7 @@ int main(int argc, char* argv[])
     if (filename)
         spreadsheet_widget.load(filename);
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
 
     file_menu.add_action(GUI::Action::create("Add New Sheet", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png"), [&](auto&) {
         spreadsheet_widget.add_sheet();
@@ -138,7 +137,7 @@ int main(int argc, char* argv[])
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
-    auto& edit_menu = menubar->add_menu("&Edit");
+    auto& edit_menu = window->add_menu("&Edit");
 
     auto clipboard_action = [&](bool is_cut) {
         /// text/x-spreadsheet-data:
@@ -228,7 +227,7 @@ int main(int argc, char* argv[])
     },
         window));
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
 
     help_menu.add_action(GUI::Action::create(
         "&Functions Help", [&](auto&) {
@@ -244,8 +243,6 @@ int main(int argc, char* argv[])
         window));
 
     help_menu.add_action(GUI::CommonActions::make_about_action("Spreadsheet", app_icon, window));
-
-    window->set_menubar(move(menubar));
 
     window->show();
 

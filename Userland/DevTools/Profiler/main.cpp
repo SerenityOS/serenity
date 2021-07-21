@@ -191,11 +191,10 @@ int main(int argc, char** argv)
         statusbar.set_text(builder.to_string());
     };
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
-    auto& view_menu = menubar->add_menu("&View");
+    auto& view_menu = window->add_menu("&View");
 
     auto invert_action = GUI::Action::create_checkable("&Invert Tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
         profile->set_inverted(action.is_checked());
@@ -219,13 +218,12 @@ int main(int argc, char** argv)
 
     view_menu.add_action(disassembly_action);
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Profiler.md"), "/bin/Help");
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Profiler", app_icon, window));
 
-    window->set_menubar(move(menubar));
     window->show();
     return app->exec();
 }

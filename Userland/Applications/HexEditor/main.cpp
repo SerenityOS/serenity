@@ -39,9 +39,7 @@ int main(int argc, char** argv)
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
-    auto menubar = GUI::Menubar::construct();
-    hex_editor_widget.initialize_menubar(menubar);
-    window->set_menubar(menubar);
+    hex_editor_widget.initialize_menubar(*window);
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
 

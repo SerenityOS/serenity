@@ -39,7 +39,7 @@ public:
     void set_auto_detect_preview_mode(bool value) { m_auto_detect_preview_mode = value; }
 
     void update_title();
-    void initialize_menubar(GUI::Menubar&);
+    void initialize_menubar(GUI::Window&);
 
 private:
     MainWidget();

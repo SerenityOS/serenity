@@ -237,13 +237,12 @@ void IRCAppWindow::setup_actions()
 
 void IRCAppWindow::setup_menus()
 {
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
-    auto& server_menu = menubar->add_menu("&Server");
+    auto& server_menu = add_menu("&Server");
     server_menu.add_action(*m_change_nick_action);
     server_menu.add_separator();
     server_menu.add_action(*m_join_action);
@@ -253,7 +252,7 @@ void IRCAppWindow::setup_menus()
     server_menu.add_action(*m_open_query_action);
     server_menu.add_action(*m_close_query_action);
 
-    auto& channel_menu = menubar->add_menu("&Channel");
+    auto& channel_menu = add_menu("&Channel");
     channel_menu.add_action(*m_change_topic_action);
     channel_menu.add_action(*m_invite_user_action);
     channel_menu.add_action(*m_banlist_action);
@@ -272,10 +271,8 @@ void IRCAppWindow::setup_menus()
     channel_menu.add_action(*m_cycle_channel_action);
     channel_menu.add_action(*m_part_action);
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("IRC Client", GUI::Icon::default_icon("app-irc-client"), this));
-
-    set_menubar(move(menubar));
 }
 
 void IRCAppWindow::setup_widgets()

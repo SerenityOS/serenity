@@ -369,9 +369,9 @@ Web::OutOfProcessWebView& MainWidget::ensure_web_view()
     return *m_page_view;
 }
 
-void MainWidget::initialize_menubar(GUI::Menubar& menubar)
+void MainWidget::initialize_menubar(GUI::Window& window)
 {
-    auto& file_menu = menubar.add_menu("&File");
+    auto& file_menu = window.add_menu("&File");
     file_menu.add_action(*m_new_action);
     file_menu.add_action(*m_open_action);
     file_menu.add_action(*m_save_action);
@@ -383,7 +383,7 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = menubar.add_menu("&Edit");
+    auto& edit_menu = window.add_menu("&Edit");
     edit_menu.add_action(m_editor->undo_action());
     edit_menu.add_action(m_editor->redo_action());
     edit_menu.add_separator();
@@ -449,7 +449,7 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
     m_layout_ruler_action->set_checked(show_ruler);
     m_editor->set_ruler_visible(show_ruler);
 
-    auto& view_menu = menubar.add_menu("&View");
+    auto& view_menu = window.add_menu("&View");
     auto& layout_menu = view_menu.add_submenu("&Layout");
     layout_menu.add_action(*m_layout_toolbar_action);
     layout_menu.add_action(*m_layout_statusbar_action);
@@ -459,7 +459,7 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
 
     view_menu.add_action(GUI::Action::create("Editor &Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png"),
         [&](auto&) {
-            auto picker = GUI::FontPicker::construct(window(), &m_editor->font(), false);
+            auto picker = GUI::FontPicker::construct(&window, &m_editor->font(), false);
             if (picker->exec() == GUI::Dialog::ExecOK) {
                 dbgln("setting font {}", picker->font()->qualified_name());
                 m_editor->set_font(picker->font());
@@ -605,11 +605,11 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
     syntax_actions.add_action(*m_sql_highlight);
     syntax_menu.add_action(*m_sql_highlight);
 
-    auto& help_menu = menubar.add_menu("&Help");
+    auto& help_menu = window.add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/TextEditor.md"), "/bin/Help");
     }));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"), window()));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"), &window));
 }
 
 void MainWidget::set_path(StringView const& path)

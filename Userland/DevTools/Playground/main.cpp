@@ -156,8 +156,7 @@ int main(int argc, char** argv)
         update_title();
     };
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         Optional<String> new_save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "gml");
@@ -223,7 +222,7 @@ int main(int argc, char** argv)
         app->quit();
     }));
 
-    auto& edit_menu = menubar->add_menu("&Edit");
+    auto& edit_menu = window->add_menu("&Edit");
     edit_menu.add_action(GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, [&](auto&) {
         auto source = editor.text();
         GUI::GMLLexer lexer(source);
@@ -252,13 +251,12 @@ int main(int argc, char** argv)
         }
     }));
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Playground.md"), "/bin/Help");
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("GML Playground", app_icon, window));
 
-    window->set_menubar(move(menubar));
     window->on_close_request = [&] {
         if (!window->is_modified())
             return GUI::Window::CloseRequestDecision::Close;

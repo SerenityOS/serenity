@@ -262,8 +262,7 @@ int main(int argc, char** argv)
     window->resize(window->minimum_size() * 2);
     auto& mandelbrot = window->set_main_widget<Mandelbrot>();
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::Action::create("&Export...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"),
         [&](GUI::Action&) {
             Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
@@ -273,7 +272,6 @@ int main(int argc, char** argv)
         }));
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
-    window->set_menubar(move(menubar));
     window->show();
 
     auto app_icon = GUI::Icon::default_icon("app-mandelbrot");

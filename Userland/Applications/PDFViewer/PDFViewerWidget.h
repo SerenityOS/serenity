@@ -21,7 +21,7 @@ class PDFViewerWidget final : public GUI::Widget {
 public:
     ~PDFViewerWidget() override = default;
 
-    void initialize_menubar(GUI::Menubar&);
+    void initialize_menubar(GUI::Window&);
     void create_toolbar();
     void open_file(const String& path);
 

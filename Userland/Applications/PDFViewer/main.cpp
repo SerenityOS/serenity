@@ -21,9 +21,8 @@ int main(int argc, char** argv)
 
     auto& pdf_viewer_widget = window->set_main_widget<PDFViewerWidget>();
 
-    auto menubar = GUI::Menubar::construct();
-    pdf_viewer_widget.initialize_menubar(menubar);
-    window->set_menubar(menubar);
+    pdf_viewer_widget.initialize_menubar(*window);
+
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
 
