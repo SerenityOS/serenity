@@ -109,7 +109,7 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
     current_thread->did_syscall();
 
     if (function >= Function::__Count) {
-        dbgln("Unknown syscall {} requested ({:08x}, {:08x}, {:08x})", function, arg1, arg2, arg3);
+        dbgln("Unknown syscall {} requested ({:p}, {:p}, {:p})", function, arg1, arg2, arg3);
         return ENOSYS;
     }
 

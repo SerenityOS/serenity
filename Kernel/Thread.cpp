@@ -1030,11 +1030,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     auto signal_trampoline_addr = process.signal_trampoline().get();
     regs.set_ip_reg(signal_trampoline_addr);
 
-#if ARCH(I386)
-    dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_regs.cs, m_regs.ip(), signal);
-#else
-    dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:04x}:{:16x} to deliver {}", state_string(), m_regs.cs, m_regs.ip(), signal);
-#endif
+    dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:#04x}:{:p} to deliver {}", state_string(), m_regs.cs, m_regs.ip(), signal);
 
     return DispatchSignalResult::Continue;
 }
