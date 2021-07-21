@@ -693,6 +693,13 @@ bool MainWidget::read_file_and_close(int fd, String const& path)
     return true;
 }
 
+void MainWidget::open_nonexistent_file(String const& path)
+{
+    m_editor->set_text({});
+    set_path(path);
+    m_editor->set_focus(true);
+}
+
 bool MainWidget::request_close()
 {
     if (!editor().document().is_modified())
