@@ -92,7 +92,7 @@ AHCI::HBADefinedCapabilities AHCIController::capabilities() const
     u32 capabilities = hba().control_regs.cap;
     u32 extended_capabilities = hba().control_regs.cap2;
 
-    dbgln_if(AHCI_DEBUG, "{}: AHCI Controller Capabilities = 0x{:08x}, Extended Capabilities = 0x{:08x}", pci_address(), capabilities, extended_capabilities);
+    dbgln_if(AHCI_DEBUG, "{}: AHCI Controller Capabilities = {:#08x}, Extended Capabilities = {:#08x}", pci_address(), capabilities, extended_capabilities);
 
     return (AHCI::HBADefinedCapabilities) {
         (capabilities & 0b11111) + 1,
@@ -144,7 +144,7 @@ void AHCIController::initialize()
     dbgln("{}: AHCI command list entries count - {}", pci_address(), hba_capabilities().max_command_list_entries_count);
 
     u32 version = hba().control_regs.version;
-    dbgln_if(AHCI_DEBUG, "{}: AHCI Controller Version = 0x{:08x}", pci_address(), version);
+    dbgln_if(AHCI_DEBUG, "{}: AHCI Controller Version = {:#08x}", pci_address(), version);
 
     hba().control_regs.ghc = 0x80000000; // Ensure that HBA knows we are AHCI aware.
     PCI::enable_interrupt_line(pci_address());

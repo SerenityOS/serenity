@@ -158,7 +158,7 @@ ParseResult<FunctionType> FunctionType::parse(InputStream& stream)
         return with_eof_check(stream, ParseError::ExpectedKindTag);
 
     if (tag != Constants::function_signature_tag) {
-        dbgln("Expected 0x60, but found 0x{:x}", tag);
+        dbgln("Expected 0x60, but found {:#x}", tag);
         return with_eof_check(stream, ParseError::InvalidTag);
     }
 

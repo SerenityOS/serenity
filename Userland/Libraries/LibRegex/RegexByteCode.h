@@ -510,7 +510,7 @@ public:
 
     const String to_string() const
     {
-        return String::formatted("[0x{:02X}] {}", (int)opcode_id(), name(opcode_id()));
+        return String::formatted("[{:#02X}] {}", (int)opcode_id(), name(opcode_id()));
     }
 
     virtual const String arguments_string() const = 0;
