@@ -72,7 +72,7 @@ public:
     bool is_negative_infinity() const { return is_number() && __builtin_isinf_sign(as_double()) < 0; }
     bool is_positive_zero() const { return is_number() && bit_cast<u64>(as_double()) == 0; }
     bool is_negative_zero() const { return is_number() && bit_cast<u64>(as_double()) == NEGATIVE_ZERO_BITS; }
-    bool is_integral_number() const { return is_finite_number() && static_cast<i64>(as_double()) == as_double(); }
+    bool is_integral_number() const { return is_finite_number() && trunc(as_double()) == as_double(); }
     bool is_finite_number() const
     {
         if (!is_number())
