@@ -86,21 +86,15 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
     StringBuilder builder;
 
 #if ARCH(I386)
-    builder.appendff("eax={:08x} ebx={:08x} ecx={:08x} edx={:08x}", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    builder.append('\n');
-    builder.appendff("ebp={:08x} esp={:08x} esi={:08x} edi={:08x}", regs.ebp, regs.esp, regs.esi, regs.edi);
-    builder.append('\n');
-    builder.appendff("eip={:08x} eflags={:08x}", regs.eip, regs.eflags);
+    builder.appendff("eax={:p} ebx={:p} ecx={:p} edx={:p}\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    builder.appendff("ebp={:p} esp={:p} esi={:p} edi={:p}\n", regs.ebp, regs.esp, regs.esi, regs.edi);
+    builder.appendff("eip={:p} eflags={:p}", regs.eip, regs.eflags);
 #else
-    builder.appendff("rax={:16x} rbx={:16x} rcx={:16x} rdx={:16x}", regs.rax, regs.rbx, regs.rcx, regs.rdx);
-    builder.append('\n');
-    builder.appendff("rbp={:16x} rsp={:16x} rsi={:16x} rdi={:16x}", regs.rbp, regs.rsp, regs.rsi, regs.rdi);
-    builder.append('\n');
-    builder.appendff(" r8={:16x}  r9={:16x} r10={:16x} r11={:16x}", regs.r8, regs.r9, regs.r10, regs.r11);
-    builder.append('\n');
-    builder.appendff("r12={:16x} r13={:16x} r14={:16x} r15={:16x}", regs.r12, regs.r13, regs.r14, regs.r15);
-    builder.append('\n');
-    builder.appendff("rip={:16x} rflags={:16x}", regs.rip, regs.rflags);
+    builder.appendff("rax={:p} rbx={:p} rcx={:p} rdx={:p}\n", regs.rax, regs.rbx, regs.rcx, regs.rdx);
+    builder.appendff("rbp={:p} rsp={:p} rsi={:p} rdi={:p}\n", regs.rbp, regs.rsp, regs.rsi, regs.rdi);
+    builder.appendff(" r8={:p}  r9={:p} r10={:p} r11={:p}\n", regs.r8, regs.r9, regs.r10, regs.r11);
+    builder.appendff("r12={:p} r13={:p} r14={:p} r15={:p}\n", regs.r12, regs.r13, regs.r14, regs.r15);
+    builder.appendff("rip={:p} rflags={:p}", regs.rip, regs.rflags);
 #endif
 
     return {
