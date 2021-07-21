@@ -332,7 +332,7 @@ Image::SortedSymbol* Image::find_sorted_symbol(FlatPtr address) const
     return &m_sorted_symbols[index];
 }
 
-Optional<Image::Symbol> Image::find_symbol(u32 address, u32* out_offset) const
+Optional<Image::Symbol> Image::find_symbol(FlatPtr address, u32* out_offset) const
 {
     auto symbol_count = this->symbol_count();
     if (!symbol_count)
@@ -358,7 +358,7 @@ NEVER_INLINE void Image::sort_symbols() const
 }
 
 #ifndef KERNEL
-String Image::symbolicate(u32 address, u32* out_offset) const
+String Image::symbolicate(FlatPtr address, u32* out_offset) const
 {
     auto symbol_count = this->symbol_count();
     if (!symbol_count) {

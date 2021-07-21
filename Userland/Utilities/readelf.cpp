@@ -563,18 +563,19 @@ int main(int argc, char** argv)
             outln("There are no program headers in this file.");
         } else {
             outln("Program Headers:");
-            outln("  Type           Offset     VirtAddr{}   PhysAddr{}   FileSiz    MemSiz     Flg  Align", addr_padding, addr_padding);
+            outln("  Type           Offset{}     VirtAddr{}   PhysAddr{}   FileSiz{}    MemSiz{}     Flg  Align",
+                addr_padding, addr_padding, addr_padding, addr_padding, addr_padding);
 
             elf_image.for_each_program_header([](const ELF::Image::ProgramHeader& program_header) {
                 out("  ");
                 out("{:14} ", object_program_header_type_to_string(program_header.type()));
-                out("{:#08x} ", program_header.offset());
+                out("{:p} ", program_header.offset());
                 out("{:p} ", program_header.vaddr().as_ptr());
                 out("{:p} ", program_header.vaddr().as_ptr()); // FIXME: assumes PhysAddr = VirtAddr
-                out("{:#08x} ", program_header.size_in_image());
-                out("{:#08x} ", program_header.size_in_memory());
+                out("{:p} ", program_header.size_in_image());
+                out("{:p} ", program_header.size_in_memory());
                 out("{:04x} ", program_header.flags());
-                out("{:#08x}", program_header.alignment());
+                out("{:p}", program_header.alignment());
                 outln();
 
                 if (program_header.type() == PT_INTERP)
@@ -642,11 +643,11 @@ int main(int argc, char** argv)
                 outln("Relocation section '{}' at offset {:#08x} contains zero entries:", object->relocation_section().name(), object->relocation_section().offset());
             } else {
                 outln("Relocation section '{}' at offset {:#08x} contains {} entries:", object->relocation_section().name(), object->relocation_section().offset(), object->relocation_section().entry_count());
-                outln("  Offset      Type               Sym Value   Sym Name");
+                outln("  Offset{}      Type               Sym Value{}   Sym Name", addr_padding, addr_padding);
                 object->relocation_section().for_each_relocation([](const ELF::DynamicObject::Relocation& reloc) {
-                    out("  {:#08x} ", reloc.offset());
+                    out("  {:p} ", reloc.offset());
                     out(" {:17} ", object_relocation_type_to_string(reloc.type()));
-                    out(" {:#08x} ", reloc.symbol().value());
+                    out(" {:p} ", reloc.symbol().value());
                     out(" {}", reloc.symbol().name());
                     outln();
                 });
@@ -657,11 +658,11 @@ int main(int argc, char** argv)
                 outln("Relocation section '{}' at offset {:#08x} contains zero entries:", object->plt_relocation_section().name(), object->plt_relocation_section().offset());
             } else {
                 outln("Relocation section '{}' at offset {:#08x} contains {} entries:", object->plt_relocation_section().name(), object->plt_relocation_section().offset(), object->plt_relocation_section().entry_count());
-                outln("  Offset      Type               Sym Value   Sym Name");
+                outln("  Offset{}      Type               Sym Value{}   Sym Name", addr_padding, addr_padding);
                 object->plt_relocation_section().for_each_relocation([](const ELF::DynamicObject::Relocation& reloc) {
-                    out("  {:#08x} ", reloc.offset());
+                    out("  {:p} ", reloc.offset());
                     out(" {:17} ", object_relocation_type_to_string(reloc.type()));
-                    out(" {:#08x} ", reloc.symbol().value());
+                    out(" {:p} ", reloc.symbol().value());
                     out(" {}", reloc.symbol().name());
                     outln();
                 });
