@@ -1121,7 +1121,13 @@ void MemoryManager::unregister_region(Region& region)
 void MemoryManager::dump_kernel_regions()
 {
     dbgln("Kernel regions:");
-    dbgln("BEGIN         END        SIZE       ACCESS NAME");
+#if ARCH(I386)
+    auto addr_padding = "";
+#else
+    auto addr_padding = "        ";
+#endif
+    dbgln("BEGIN{}         END{}        SIZE{}       ACCESS NAME",
+        addr_padding, addr_padding, addr_padding);
     ScopedSpinLock lock(s_mm_lock);
     for (auto& region : m_kernel_regions) {
         dbgln("{:p} -- {:p} {:p} {:c}{:c}{:c}{:c}{:c}{:c} {}",
