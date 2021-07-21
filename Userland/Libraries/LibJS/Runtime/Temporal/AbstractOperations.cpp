@@ -7,6 +7,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/DateTimeLexer.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
@@ -14,6 +15,64 @@
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 
 namespace JS::Temporal {
+
+static Optional<OptionType> to_option_type(Value value)
+{
+    if (value.is_boolean())
+        return OptionType::Boolean;
+    if (value.is_string())
+        return OptionType::String;
+    if (value.is_number())
+        return OptionType::Number;
+    return {};
+}
+
+// 13.1 IterableToListOfType ( items, elementTypes ), https://tc39.es/proposal-temporal/#sec-iterabletolistoftype
+MarkedValueList iterable_to_list_of_type(GlobalObject& global_object, Value items, Vector<OptionType> const& element_types)
+{
+    auto& vm = global_object.vm();
+    auto& heap = global_object.heap();
+
+    // 1. Let iteratorRecord be ? GetIterator(items, sync).
+    auto iterator_record = get_iterator(global_object, items, IteratorHint::Sync);
+    if (vm.exception())
+        return MarkedValueList { heap };
+
+    // 2. Let values be a new empty List.
+    MarkedValueList values(heap);
+
+    // 3. Let next be true.
+    auto next = true;
+    // 4. Repeat, while next is not false,
+    while (next) {
+        // a. Set next to ? IteratorStep(iteratorRecord).
+        auto* iterator_result = iterator_step(global_object, *iterator_record);
+        if (vm.exception())
+            return MarkedValueList { heap };
+        next = iterator_result;
+
+        // b. If next is not false, then
+        if (next) {
+            // i. Let nextValue be ? IteratorValue(next).
+            auto next_value = iterator_value(global_object, *iterator_result);
+            if (vm.exception())
+                return MarkedValueList { heap };
+            // ii. If Type(nextValue) is not an element of elementTypes, then
+            if (auto type = to_option_type(next_value); !type.has_value() || !element_types.contains_slow(*type)) {
+                // 1. Let completion be ThrowCompletion(a newly created TypeError object).
+                vm.throw_exception<TypeError>(global_object, ErrorType::FixmeAddAnErrorString);
+                // 2. Return ? IteratorClose(iteratorRecord, completion).
+                iterator_close(*iterator_record);
+                return MarkedValueList { heap };
+            }
+            // iii. Append nextValue to the end of the List values.
+            values.append(next_value);
+        }
+    }
+
+    // 5. Return values.
+    return values;
+}
 
 // 13.2 GetOptionsObject ( options ), https://tc39.es/proposal-temporal/#sec-getoptionsobject
 Object* get_options_object(GlobalObject& global_object, Value options)
@@ -34,17 +93,6 @@ Object* get_options_object(GlobalObject& global_object, Value options)
 
     // 3. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, "Options");
-    return {};
-}
-
-static Optional<OptionType> to_option_type(Value value)
-{
-    if (value.is_boolean())
-        return OptionType::Boolean;
-    if (value.is_string())
-        return OptionType::String;
-    if (value.is_number())
-        return OptionType::Number;
     return {};
 }
 
@@ -462,6 +510,26 @@ Optional<String> parse_temporal_calendar_string([[maybe_unused]] GlobalObject& g
 
     // 5. Return id.
     return id_part.value();
+}
+
+// 13.38 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
+Optional<TemporalDate> parse_temporal_date_string(GlobalObject& global_object, String const& iso_string)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(isoString) is String.
+
+    // 2. If isoString does not satisfy the syntax of a TemporalDateString (see 13.33), then
+    // a. Throw a RangeError exception.
+    // TODO
+
+    // 3. Let result be ? ParseISODateTime(isoString).
+    auto result = parse_iso_date_time(global_object, iso_string);
+    if (vm.exception())
+        return {};
+
+    // 4. Return the new Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[Calendar]]: result.[[Calendar]] }.
+    return TemporalDate { .year = result->year, .month = result->month, .day = result->day, .calendar = move(result->calendar) };
 }
 
 // 13.40 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring

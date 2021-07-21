@@ -59,6 +59,7 @@ struct TemporalTimeZone {
     Optional<String> name;
 };
 
+MarkedValueList iterable_to_list_of_type(GlobalObject&, Value items, Vector<OptionType> const& element_types);
 Object* get_options_object(GlobalObject&, Value options);
 Value get_option(GlobalObject&, Object& options, String const& property, Vector<OptionType> const& types, Vector<StringView> const& values, Value fallback);
 Optional<String> to_temporal_overflow(GlobalObject&, Object& normalized_options);
@@ -70,6 +71,7 @@ BigInt* round_number_to_increment(GlobalObject&, BigInt const&, u64 increment, S
 Optional<ISODateTime> parse_iso_date_time(GlobalObject&, String const& iso_string);
 Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject&, String const& iso_string);
 Optional<String> parse_temporal_calendar_string(GlobalObject&, String const& iso_string);
+Optional<TemporalDate> parse_temporal_date_string(GlobalObject&, String const& iso_string);
 Optional<TemporalDuration> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
 Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject&, String const& iso_string);
 double to_positive_integer_or_infinity(GlobalObject&, Value argument);

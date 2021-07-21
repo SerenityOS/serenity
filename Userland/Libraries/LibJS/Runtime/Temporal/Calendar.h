@@ -33,8 +33,11 @@ Calendar* create_temporal_calendar(GlobalObject&, String const& identifier, Func
 bool is_builtin_calendar(String const& identifier);
 Calendar* get_builtin_calendar(GlobalObject&, String const& identifier);
 Calendar* get_iso8601_calendar(GlobalObject&);
+Vector<String> calendar_fields(GlobalObject&, Object& calendar, Vector<StringView> const& field_names);
 Object* to_temporal_calendar(GlobalObject&, Value);
 Object* to_temporal_calendar_with_iso_default(GlobalObject&, Value);
+Object* get_temporal_calendar_with_iso_default(GlobalObject&, Object&);
+PlainDate* date_from_fields(GlobalObject&, Object& calendar, Object& fields, Object& options);
 bool is_iso_leap_year(i32 year);
 i32 iso_days_in_month(i32 year, i32 month);
 String build_iso_month_code(i32 month);

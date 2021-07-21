@@ -66,6 +66,82 @@ PlainDate* create_temporal_date(GlobalObject& global_object, i32 iso_year, i32 i
     return object;
 }
 
+// 3.5.2 ToTemporalDate ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldate
+PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If options is not present, set options to ! OrdinaryObjectCreate(null).
+    if (!options)
+        options = Object::create(global_object, nullptr);
+
+    // 2. Assert: Type(options) is Object.
+
+    // 3. If Type(item) is Object, then
+    if (item.is_object()) {
+        auto& item_object = item.as_object();
+        // a. If item has an [[InitializedTemporalDate]] internal slot, then
+        if (is<PlainDate>(item_object)) {
+            // i. Return item.
+            return static_cast<PlainDate*>(&item_object);
+        }
+
+        // b. If item has an [[InitializedTemporalZonedDateTime]] internal slot, then
+        // i. Let instant be ! CreateTemporalInstant(item.[[Nanoseconds]]).
+        // ii. Let plainDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
+        // iii. Return ! CreateTemporalDate(plainDateTime.[[ISOYear]], plainDateTime.[[ISOMonth]], plainDateTime.[[ISODay]], plainDateTime.[[Calendar]]).
+        // TODO
+
+        // c. If item has an [[InitializedTemporalDateTime]] internal slot, then
+        // i. Return ! CreateTemporalDate(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], item.[[Calendar]]).
+        // TODO
+
+        // d. Let calendar be ? GetTemporalCalendarWithISODefault(item).
+        auto* calendar = get_temporal_calendar_with_iso_default(global_object, item_object);
+        if (vm.exception())
+            return {};
+
+        // e. Let fieldNames be ? CalendarFields(calendar, « "day", "month", "monthCode", "year" »).
+        auto field_names = calendar_fields(global_object, *calendar, { "day"sv, "month"sv, "monthCode"sv, "year"sv });
+        if (vm.exception())
+            return {};
+
+        // f. Let fields be ? PrepareTemporalFields(item, fieldNames, «»).
+        auto* fields = prepare_temporal_fields(global_object, item_object, field_names, {});
+        if (vm.exception())
+            return {};
+
+        // g. Return ? DateFromFields(calendar, fields, options).
+        return date_from_fields(global_object, *calendar, *fields, *options);
+    }
+
+    // 4. Perform ? ToTemporalOverflow(options).
+    (void)to_temporal_overflow(global_object, *options);
+    if (vm.exception())
+        return {};
+
+    // 5. Let string be ? ToString(item).
+    auto string = item.to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    // 6. Let result be ? ParseTemporalDateString(string).
+    auto result = parse_temporal_date_string(global_object, string);
+    if (vm.exception())
+        return {};
+
+    // 7. Assert: ! IsValidISODate(result.[[Year]], result.[[Month]], result.[[Day]]) is true.
+    VERIFY(is_valid_iso_date(result->year, result->month, result->day));
+
+    // 8. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
+    auto calendar = to_temporal_calendar_with_iso_default(global_object, result->calendar.has_value() ? js_string(vm, *result->calendar) : js_undefined());
+    if (vm.exception())
+        return {};
+
+    // 9. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
+    return create_temporal_date(global_object, result->year, result->month, result->day, *calendar);
+}
+
 // 3.5.4 RegulateISODate ( year, month, day, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisodate
 Optional<TemporalDate> regulate_iso_date(GlobalObject& global_object, double year, double month, double day, String const& overflow)
 {
