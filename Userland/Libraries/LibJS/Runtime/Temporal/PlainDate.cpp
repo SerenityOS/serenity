@@ -66,6 +66,57 @@ PlainDate* create_temporal_date(GlobalObject& global_object, i32 iso_year, i32 i
     return object;
 }
 
+// 3.5.4 RegulateISODate ( year, month, day, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisodate
+Optional<TemporalDate> regulate_iso_date(GlobalObject& global_object, double year, double month, double day, String const& overflow)
+{
+    auto& vm = global_object.vm();
+    // 1. Assert: year, month, and day are integers.
+    VERIFY(year == trunc(year) && month == trunc(month) && day == trunc(day));
+    // 2. Assert: overflow is either "constrain" or "reject".
+    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
+
+    // 3. If overflow is "reject", then
+    if (overflow == "reject"sv) {
+        // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
+        // This does not change the exposed behaviour as the call to IsValidISODate will immediately check that these values are valid ISO
+        // values (for years: -273975 - 273975, for months: 1 - 12, for days: 1 - 31) all of which are subsets of this check.
+        if (!AK::is_within_range<i32>(year) || !AK::is_within_range<i32>(month) || !AK::is_within_range<i32>(day)) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
+            return {};
+        }
+        auto y = static_cast<i32>(year);
+        auto m = static_cast<i32>(month);
+        auto d = static_cast<i32>(day);
+        // a. If ! IsValidISODate(year, month, day) is false, throw a RangeError exception.
+        if (is_valid_iso_date(y, m, d)) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
+            return {};
+        }
+        // b. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
+        return TemporalDate { .year = y, .month = m, .day = d, .calendar = {} };
+    }
+    // 4. If overflow is "constrain", then
+    else if (overflow == "constrain"sv) {
+        // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat this double as normal integer from this point onwards. This
+        // does not change the exposed behaviour as the parent's call to CreateTemporalDate will immediately check that this value is a valid
+        // ISO value for years: -273975 - 273975, which is a subset of this check.
+        if (!AK::is_within_range<i32>(year)) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
+            return {};
+        }
+        auto y = static_cast<i32>(year);
+
+        // a. Set month to ! ConstrainToRange(month, 1, 12).
+        month = constrain_to_range(month, 1, 12);
+        // b. Set day to ! ConstrainToRange(day, 1, ! ISODaysInMonth(year, month)).
+        day = constrain_to_range(day, 1, iso_days_in_month(y, month));
+
+        // c. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
+        return TemporalDate { .year = y, .month = static_cast<i32>(month), .day = static_cast<i32>(day), .calendar = {} };
+    }
+    VERIFY_NOT_REACHED();
+}
+
 // 3.5.5 IsValidISODate ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidisodate
 bool is_valid_iso_date(i32 year, i32 month, i32 day)
 {

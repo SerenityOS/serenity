@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Temporal {
@@ -33,7 +34,8 @@ private:
     Object& m_calendar;    // [[Calendar]]
 };
 
-PlainDate* create_temporal_date(GlobalObject&, i32 iso_year, i32 iso_month, i32 iso_day, Object& calendar, FunctionObject* new_target);
+PlainDate* create_temporal_date(GlobalObject&, i32 iso_year, i32 iso_month, i32 iso_day, Object& calendar, FunctionObject* new_target = nullptr);
+Optional<TemporalDate> regulate_iso_date(GlobalObject&, double year, double month, double day, String const& overflow);
 bool is_valid_iso_date(i32 year, i32 month, i32 day);
 
 }
