@@ -15,7 +15,7 @@ class PlainDate final : public Object {
     JS_OBJECT(PlainDate, Object);
 
 public:
-    explicit PlainDate(i32 iso_year, i32 iso_month, i32 iso_day, Object& calendar, Object& prototype);
+    PlainDate(i32 iso_year, i32 iso_month, i32 iso_day, Object& calendar, Object& prototype);
     virtual ~PlainDate() override = default;
 
     [[nodiscard]] i32 iso_year() const { return m_iso_year; }
