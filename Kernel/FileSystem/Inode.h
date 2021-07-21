@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
@@ -16,7 +17,6 @@
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
-#include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Mutex.h>
@@ -118,7 +118,7 @@ private:
     InodeIndex m_index { 0 };
     WeakPtr<SharedInodeVMObject> m_shared_vmobject;
     RefPtr<LocalSocket> m_socket;
-    InodeWatcher::List m_watchers;
+    HashTable<InodeWatcher*> m_watchers;
     bool m_metadata_dirty { false };
     RefPtr<FIFO> m_fifo;
     IntrusiveListNode<Inode> m_inode_list_node;
