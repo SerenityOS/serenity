@@ -23,8 +23,7 @@
 
 namespace Kernel {
 
-class Inode : public RefCounted<Inode>
-    , public Weakable<Inode> {
+class Inode : public RefCounted<Inode> {
     friend class VirtualFileSystem;
     friend class FileSystem;
 
