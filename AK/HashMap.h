@@ -66,7 +66,6 @@ public:
         }
         return false;
     }
-    void remove_one_randomly() { m_table.remove(m_table.begin()); }
 
     using HashTableType = HashTable<Entry, EntryTraits, IsOrdered>;
     using IteratorType = typename HashTableType::Iterator;
