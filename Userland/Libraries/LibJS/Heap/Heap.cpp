@@ -226,8 +226,8 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
         allocator_for_size(block->cell_size()).block_did_become_usable({}, *block);
     }
 
-    for (auto* weak_container : m_weak_containers)
-        weak_container->remove_swept_cells({}, swept_cells);
+    for (auto& weak_container : m_weak_containers)
+        weak_container.remove_swept_cells({}, swept_cells);
 
     if constexpr (HEAP_DEBUG) {
         for_each_block([&](auto& block) {
@@ -282,14 +282,14 @@ void Heap::did_destroy_marked_value_list(Badge<MarkedValueList>, MarkedValueList
 
 void Heap::did_create_weak_container(Badge<WeakContainer>, WeakContainer& set)
 {
-    VERIFY(!m_weak_containers.contains(&set));
-    m_weak_containers.set(&set);
+    VERIFY(!m_weak_containers.contains(set));
+    m_weak_containers.append(set);
 }
 
 void Heap::did_destroy_weak_container(Badge<WeakContainer>, WeakContainer& set)
 {
-    VERIFY(m_weak_containers.contains(&set));
-    m_weak_containers.remove(&set);
+    VERIFY(m_weak_containers.contains(set));
+    m_weak_containers.remove(set);
 }
 
 void Heap::defer_gc(Badge<DeferGC>)

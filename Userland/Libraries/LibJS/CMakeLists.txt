@@ -148,6 +148,7 @@ set(SOURCES
     Runtime/TypedArrayPrototype.cpp
     Runtime/Value.cpp
     Runtime/VM.cpp
+    Runtime/WeakContainer.cpp
     Runtime/WeakMap.cpp
     Runtime/WeakMapConstructor.cpp
     Runtime/WeakMapPrototype.cpp
