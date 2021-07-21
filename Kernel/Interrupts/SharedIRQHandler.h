@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/HashTable.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
@@ -28,7 +27,7 @@ public:
 
     void enumerate_handlers(Function<void(GenericInterruptHandler&)>&);
 
-    virtual size_t sharing_devices_count() const override { return m_handlers.size(); }
+    virtual size_t sharing_devices_count() const override { return m_handlers.size_slow(); }
     virtual bool is_shared_handler() const override { return true; }
     virtual bool is_sharing_with_others() const override { return false; }
 
@@ -41,7 +40,7 @@ private:
     void disable_interrupt_vector();
     explicit SharedIRQHandler(u8 interrupt_number);
     bool m_enabled { true };
-    HashTable<GenericInterruptHandler*> m_handlers;
+    GenericInterruptHandler::List m_handlers;
     RefPtr<IRQController> m_responsible_irq_controller;
 };
 }
