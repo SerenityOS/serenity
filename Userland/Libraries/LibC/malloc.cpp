@@ -411,6 +411,10 @@ static void free_impl(void* ptr)
 
 void* calloc(size_t count, size_t size)
 {
+    if (Checked<size_t>::multiplication_would_overflow(count, size)) {
+        errno = ENOMEM;
+        return nullptr;
+    }
     size_t new_size = count * size;
     auto* ptr = malloc_impl(new_size, CallerWillInitializeMemory::Yes);
     if (ptr)
