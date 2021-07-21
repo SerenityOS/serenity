@@ -69,7 +69,7 @@ bool GPU::handle_device_config_change()
         clear_pending_events(VIRTIO_GPU_EVENT_DISPLAY);
     }
     if (events & ~VIRTIO_GPU_EVENT_DISPLAY) {
-        dbgln("GPU: Got unknown device config change event: 0x{:x}", events);
+        dbgln("GPU: Got unknown device config change event: {:#x}", events);
         return false;
     }
     return true;

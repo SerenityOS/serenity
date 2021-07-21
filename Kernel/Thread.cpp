@@ -1160,9 +1160,9 @@ static bool symbolicate(RecognizedSymbol const& symbol, Process& process, String
             if (auto* region = process.space().find_region_containing({ VirtualAddress(symbol.address), sizeof(FlatPtr) })) {
                 size_t offset = symbol.address - region->vaddr().get();
                 if (auto region_name = region->name(); !region_name.is_null() && !region_name.is_empty())
-                    builder.appendff("{:p}  {} + 0x{:x}\n", (void*)symbol.address, region_name, offset);
+                    builder.appendff("{:p}  {} + {:#x}\n", (void*)symbol.address, region_name, offset);
                 else
-                    builder.appendff("{:p}  {:p} + 0x{:x}\n", (void*)symbol.address, region->vaddr().as_ptr(), offset);
+                    builder.appendff("{:p}  {:p} + {:#x}\n", (void*)symbol.address, region->vaddr().as_ptr(), offset);
             } else {
                 builder.appendff("{:p}\n", symbol.address);
             }
@@ -1173,7 +1173,7 @@ static bool symbolicate(RecognizedSymbol const& symbol, Process& process, String
     if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096) {
         builder.appendff("{:p}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address));
     } else {
-        builder.appendff("{:p}  {} + 0x{:x}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address), symbol.symbol->name, offset);
+        builder.appendff("{:p}  {} + {:#x}\n", (void*)(mask_kernel_addresses ? 0xdeadc0de : symbol.address), symbol.symbol->name, offset);
     }
     return true;
 }

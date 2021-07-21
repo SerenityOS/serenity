@@ -408,7 +408,7 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
         if (identify_block.commands_and_feature_sets_supported[1] & (1 << 10))
             max_addressable_block = identify_block.user_addressable_logical_sectors_count;
 
-        dbgln("IDEChannel: {} {} {} device found: Name={}, Capacity={}, Capabilities=0x{:04x}", channel_type_string(), channel_string(i), interface_type == PATADiskDevice::InterfaceType::ATA ? "ATA" : "ATAPI", ((char*)bbuf.data() + 54), max_addressable_block * 512, capabilities);
+        dbgln("IDEChannel: {} {} {} device found: Name={}, Capacity={}, Capabilities={:#04x}", channel_type_string(), channel_string(i), interface_type == PATADiskDevice::InterfaceType::ATA ? "ATA" : "ATAPI", ((char*)bbuf.data() + 54), max_addressable_block * 512, capabilities);
         if (i == 0) {
             m_master = PATADiskDevice::create(m_parent_controller, *this, PATADiskDevice::DriveType::Master, interface_type, capabilities, max_addressable_block);
         } else {

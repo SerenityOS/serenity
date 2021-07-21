@@ -196,7 +196,7 @@ void AHCIPort::eject()
 
     while (1) {
         if (m_port_registers.serr != 0) {
-            dbgln_if(AHCI_DEBUG, "AHCI Port {}: Eject Drive failed, SError 0x{:08x}", representative_port_index(), (u32)m_port_registers.serr);
+            dbgln_if(AHCI_DEBUG, "AHCI Port {}: Eject Drive failed, SError {:#08x}", representative_port_index(), (u32)m_port_registers.serr);
             try_disambiguate_sata_error();
             VERIFY_NOT_REACHED();
         }
@@ -241,7 +241,7 @@ bool AHCIPort::initialize_without_reset()
 bool AHCIPort::initialize(ScopedSpinLock<SpinLock<u8>>& main_lock)
 {
     VERIFY(m_lock.is_locked());
-    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Initialization. Signature = 0x{:08x}", representative_port_index(), static_cast<u32>(m_port_registers.sig));
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Initialization. Signature = {:#08x}", representative_port_index(), static_cast<u32>(m_port_registers.sig));
     if (!is_phy_enabled()) {
         // Note: If PHY is not enabled, just clear the interrupt status and enable interrupts, in case
         // we are going to hotplug a device later.
@@ -524,7 +524,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     // handshake error bit in PxSERR register if CFL is incorrect.
     command_list_entries[unused_command_header.value()].attributes = (size_t)FIS::DwordCount::RegisterHostToDevice | AHCI::CommandHeaderAttributes::P | (is_atapi_attached() ? AHCI::CommandHeaderAttributes::A : 0) | (direction == AsyncBlockDeviceRequest::RequestType::Write ? AHCI::CommandHeaderAttributes::W : 0);
 
-    dbgln_if(AHCI_DEBUG, "AHCI Port {}: CLE: ctba=0x{:08x}, ctbau=0x{:08x}, prdbc=0x{:08x}, prdtl=0x{:04x}, attributes=0x{:04x}", representative_port_index(), (u32)command_list_entries[unused_command_header.value()].ctba, (u32)command_list_entries[unused_command_header.value()].ctbau, (u32)command_list_entries[unused_command_header.value()].prdbc, (u16)command_list_entries[unused_command_header.value()].prdtl, (u16)command_list_entries[unused_command_header.value()].attributes);
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: CLE: ctba={:#08x}, ctbau={:#08x}, prdbc={:#08x}, prdtl={:#04x}, attributes={:#04x}", representative_port_index(), (u32)command_list_entries[unused_command_header.value()].ctba, (u32)command_list_entries[unused_command_header.value()].ctbau, (u32)command_list_entries[unused_command_header.value()].prdbc, (u16)command_list_entries[unused_command_header.value()].prdtl, (u16)command_list_entries[unused_command_header.value()].attributes);
 
     auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Region::Access::Read | Region::Access::Write, Region::Cacheable::No);
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();
@@ -638,7 +638,7 @@ bool AHCIPort::identify_device(ScopedSpinLock<SpinLock<u8>>& main_lock)
 
         while (1) {
             if (m_port_registers.serr != 0) {
-                dbgln("AHCI Port {}: Identify failed, SError 0x{:08x}", representative_port_index(), (u32)m_port_registers.serr);
+                dbgln("AHCI Port {}: Identify failed, SError {:#08x}", representative_port_index(), (u32)m_port_registers.serr);
                 try_disambiguate_sata_error();
                 return false;
             }

@@ -325,16 +325,16 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     m_system_memory_info.user_physical_pages_uncommitted = m_system_memory_info.user_physical_pages;
 
     for (auto& used_range : m_used_memory_ranges) {
-        dmesgln("MM: {} range @ {} - {} (size 0x{:x})", UserMemoryRangeTypeNames[to_underlying(used_range.type)], used_range.start, used_range.end.offset(-1), used_range.end.as_ptr() - used_range.start.as_ptr());
+        dmesgln("MM: {} range @ {} - {} (size {:#x})", UserMemoryRangeTypeNames[to_underlying(used_range.type)], used_range.start, used_range.end.offset(-1), used_range.end.as_ptr() - used_range.start.as_ptr());
     }
 
     for (auto& region : m_super_physical_regions) {
-        dmesgln("MM: Super physical region: {} - {} (size 0x{:x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
+        dmesgln("MM: Super physical region: {} - {} (size {:#x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
         region.initialize_zones();
     }
 
     for (auto& region : m_user_physical_regions) {
-        dmesgln("MM: User physical region: {} - {} (size 0x{:x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
+        dmesgln("MM: User physical region: {} - {} (size {:#x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
         region.initialize_zones();
     }
 }

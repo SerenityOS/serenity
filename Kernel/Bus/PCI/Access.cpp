@@ -442,13 +442,13 @@ OwnPtr<KBuffer> PCIDeviceAttributeSysFSComponent::try_to_generate_buffer() const
     String value;
     switch (m_field_bytes_width) {
     case 1:
-        value = String::formatted("0x{:x}", PCI::read8(m_device->address(), m_offset));
+        value = String::formatted("{:#x}", PCI::read8(m_device->address(), m_offset));
         break;
     case 2:
-        value = String::formatted("0x{:x}", PCI::read16(m_device->address(), m_offset));
+        value = String::formatted("{:#x}", PCI::read16(m_device->address(), m_offset));
         break;
     case 4:
-        value = String::formatted("0x{:x}", PCI::read32(m_device->address(), m_offset));
+        value = String::formatted("{:#x}", PCI::read32(m_device->address(), m_offset));
         break;
     default:
         VERIFY_NOT_REACHED();
