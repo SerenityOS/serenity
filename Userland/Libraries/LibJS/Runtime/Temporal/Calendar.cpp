@@ -231,6 +231,31 @@ PlainDate* date_from_fields(GlobalObject& global_object, Object& calendar, Objec
     return static_cast<PlainDate*>(date_object);
 }
 
+// 12.1.28 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals
+bool calendar_equals(GlobalObject& global_object, Object& one, Object& two)
+{
+    auto& vm = global_object.vm();
+
+    // 1. If one and two are the same Object value, return true.
+    if (&one == &two)
+        return true;
+
+    // 2. Let calendarOne be ? ToString(one).
+    auto calendar_one = Value(&one).to_string(global_object);
+    if (vm.exception())
+        return {};
+    // 3. Let calendarTwo be ? ToString(two).
+    auto calendar_two = Value(&two).to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    // 4. If calendarOne is calendarTwo, return true.
+    if (calendar_one == calendar_two)
+        return true;
+    // 5. Return false.
+    return false;
+}
+
 // 12.1.30 IsISOLeapYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isisoleapyear
 bool is_iso_leap_year(i32 year)
 {
