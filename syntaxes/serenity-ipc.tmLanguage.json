@@ -17,30 +17,33 @@
 		"includes": {
 			"patterns": [
 				{
-					"match": "\\s*(#)\\s*(include)\\s+(?:(\\<)(.*?)(\\>)|(\")(.*?)(\"))\\s*",
+					"match": "\\s*((#)\\s*include)\\s+((\\<)(.*?)(\\>)|(\")(.*?)(\"))\\s*",
 					"captures": {
 						"1": {
-							"name": "punctuation.include.hash.serenity-ipc"
-						},
-						"2": {
 							"name": "keyword.control.import.serenity-ipc"
 						},
+						"2": {
+							"name": "punctuation.include.hash.serenity-ipc"
+						},
 						"3": {
-							"name": "punctuation.string.begin.serenity-ipc"
+							"name": "string.quoted.include.serenity-ipc"
 						},
 						"4": {
-							"name": "string.quoted.other.lt-gt.include.serenity-ipc"
-						},
-						"5": {
-							"name": "punctuation.string.end.serenity-ipc"
-						},
-						"6": {
 							"name": "punctuation.string.begin.serenity-ipc"
 						},
+						"5": {
+							"name": "string.quoted.other.lt-gt.include.serenity-ipc"
+						},
+						"6": {
+							"name": "punctuation.string.end.serenity-ipc"
+						},
 						"7": {
-							"name": "string.quoted.double.include.serenity-ipc"
+							"name": "punctuation.string.begin.serenity-ipc"
 						},
 						"8": {
+							"name": "string.quoted.double.include.serenity-ipc"
+						},
+						"9": {
 							"name": "punctuation.string.end.serenity-ipc"
 						}
 					}
@@ -102,6 +105,9 @@
 				{
 					"name": "punctuation.definition.brace.start.serenity-ipc",
 					"match": "\\{"
+				},
+				{
+					"include": "#comments"
 				}
 			]
 		},
@@ -246,6 +252,15 @@
 					"match": "::"
 				}
 			]
+		},
+		"comments": {
+			"name": "comment.line.double-slash.serenity-ipc",
+			"match": "(//).*",
+			"captures": {
+				"1": {
+					"name": "punctuation.comment.begin.serenity-ipc"
+				}
+			}
 		}
 	}
 }
