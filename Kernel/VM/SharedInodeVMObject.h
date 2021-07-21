@@ -23,11 +23,11 @@ private:
     virtual bool is_shared_inode() const override { return true; }
 
     explicit SharedInodeVMObject(Inode&, size_t);
-    explicit SharedInodeVMObject(const SharedInodeVMObject&);
+    explicit SharedInodeVMObject(SharedInodeVMObject const&);
 
     virtual StringView class_name() const override { return "SharedInodeVMObject"sv; }
 
-    SharedInodeVMObject& operator=(const SharedInodeVMObject&) = delete;
+    SharedInodeVMObject& operator=(SharedInodeVMObject const&) = delete;
 };
 
 }

@@ -25,11 +25,11 @@ private:
     virtual bool is_private_inode() const override { return true; }
 
     explicit PrivateInodeVMObject(Inode&, size_t);
-    explicit PrivateInodeVMObject(const PrivateInodeVMObject&);
+    explicit PrivateInodeVMObject(PrivateInodeVMObject const&);
 
     virtual StringView class_name() const override { return "PrivateInodeVMObject"sv; }
 
-    PrivateInodeVMObject& operator=(const PrivateInodeVMObject&) = delete;
+    PrivateInodeVMObject& operator=(PrivateInodeVMObject const&) = delete;
 };
 
 }

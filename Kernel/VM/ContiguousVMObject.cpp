@@ -27,7 +27,7 @@ ContiguousVMObject::ContiguousVMObject(size_t size, NonnullRefPtrVector<Physical
     }
 }
 
-ContiguousVMObject::ContiguousVMObject(const ContiguousVMObject& other)
+ContiguousVMObject::ContiguousVMObject(ContiguousVMObject const& other)
     : VMObject(other)
 {
 }

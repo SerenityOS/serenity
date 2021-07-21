@@ -17,7 +17,7 @@ InodeVMObject::InodeVMObject(Inode& inode, size_t size)
 {
 }
 
-InodeVMObject::InodeVMObject(const InodeVMObject& other)
+InodeVMObject::InodeVMObject(InodeVMObject const& other)
     : VMObject(other)
     , m_inode(other.m_inode)
     , m_dirty_pages(page_count(), false)

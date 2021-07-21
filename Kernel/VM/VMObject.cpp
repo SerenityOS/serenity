@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-VMObject::VMObject(const VMObject& other)
+VMObject::VMObject(VMObject const& other)
     : m_physical_pages(other.m_physical_pages)
 {
     MM.register_vmobject(*this);

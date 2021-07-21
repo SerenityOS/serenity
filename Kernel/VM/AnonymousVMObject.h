@@ -41,7 +41,7 @@ public:
 
     bool is_any_volatile() const;
 
-    template<IteratorFunction<const VolatilePageRange&> F>
+    template<IteratorFunction<VolatilePageRange const&> F>
     IterationDecision for_each_volatile_range(F f) const
     {
         VERIFY(m_lock.is_locked());
@@ -61,7 +61,7 @@ public:
                         // immediately bail
                         return IterationDecision::Continue;
                     }
-                    for (const auto& r2 : purgeable_range2->volatile_ranges().ranges()) {
+                    for (auto const& r2 : purgeable_range2->volatile_ranges().ranges()) {
                         range = range.intersected(r2);
                         if (range.is_empty())
                             break;
@@ -79,11 +79,11 @@ public:
         return IterationDecision::Continue;
     }
 
-    template<IteratorFunction<const VolatilePageRange&> F>
+    template<IteratorFunction<VolatilePageRange const&> F>
     IterationDecision for_each_nonvolatile_range(F f) const
     {
         size_t base = 0;
-        for_each_volatile_range([&](const VolatilePageRange& volatile_range) {
+        for_each_volatile_range([&](VolatilePageRange const& volatile_range) {
             if (volatile_range.base == base)
                 return IterationDecision::Continue;
             IterationDecision decision = f(VolatilePageRange { base, volatile_range.base - base });
@@ -97,7 +97,7 @@ public:
         return IterationDecision::Continue;
     }
 
-    template<VoidFunction<const VolatilePageRange&> F>
+    template<VoidFunction<VolatilePageRange const&> F>
     IterationDecision for_each_volatile_range(F f) const
     {
         return for_each_volatile_range([&](auto& range) {
@@ -106,7 +106,7 @@ public:
         });
     }
 
-    template<VoidFunction<const VolatilePageRange&> F>
+    template<VoidFunction<VolatilePageRange const&> F>
     IterationDecision for_each_nonvolatile_range(F f) const
     {
         return for_each_nonvolatile_range([&](auto range) {
@@ -120,21 +120,21 @@ private:
     explicit AnonymousVMObject(PhysicalAddress, size_t);
     explicit AnonymousVMObject(PhysicalPage&);
     explicit AnonymousVMObject(NonnullRefPtrVector<PhysicalPage>);
-    explicit AnonymousVMObject(const AnonymousVMObject&);
+    explicit AnonymousVMObject(AnonymousVMObject const&);
 
     virtual StringView class_name() const override { return "AnonymousVMObject"sv; }
 
     int purge_impl();
     void update_volatile_cache();
-    void set_was_purged(const VolatilePageRange&);
-    size_t remove_lazy_commit_pages(const VolatilePageRange&);
-    void range_made_volatile(const VolatilePageRange&);
-    void range_made_nonvolatile(const VolatilePageRange&);
-    size_t count_needed_commit_pages_for_nonvolatile_range(const VolatilePageRange&);
-    size_t mark_committed_pages_for_nonvolatile_range(const VolatilePageRange&, size_t);
+    void set_was_purged(VolatilePageRange const&);
+    size_t remove_lazy_commit_pages(VolatilePageRange const&);
+    void range_made_volatile(VolatilePageRange const&);
+    void range_made_nonvolatile(VolatilePageRange const&);
+    size_t count_needed_commit_pages_for_nonvolatile_range(VolatilePageRange const&);
+    size_t mark_committed_pages_for_nonvolatile_range(VolatilePageRange const&, size_t);
     bool is_nonvolatile(size_t page_index);
 
-    AnonymousVMObject& operator=(const AnonymousVMObject&) = delete;
+    AnonymousVMObject& operator=(AnonymousVMObject const&) = delete;
     AnonymousVMObject& operator=(AnonymousVMObject&&) = delete;
     AnonymousVMObject(AnonymousVMObject&&) = delete;
 
