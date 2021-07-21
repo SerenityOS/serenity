@@ -17,7 +17,7 @@ public:
     virtual ~InodeVMObject() override;
 
     Inode& inode() { return *m_inode; }
-    const Inode& inode() const { return *m_inode; }
+    Inode const& inode() const { return *m_inode; }
 
     size_t amount_dirty() const;
     size_t amount_clean() const;
@@ -29,9 +29,9 @@ public:
 
 protected:
     explicit InodeVMObject(Inode&, size_t);
-    explicit InodeVMObject(const InodeVMObject&);
+    explicit InodeVMObject(InodeVMObject const&);
 
-    InodeVMObject& operator=(const InodeVMObject&) = delete;
+    InodeVMObject& operator=(InodeVMObject const&) = delete;
     InodeVMObject& operator=(InodeVMObject&&) = delete;
     InodeVMObject(InodeVMObject&&) = delete;
 

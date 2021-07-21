@@ -63,7 +63,7 @@ public:
 
 protected:
     explicit VMObject(size_t);
-    explicit VMObject(const VMObject&);
+    explicit VMObject(VMObject const&);
 
     template<typename Callback>
     void for_each_region(Callback);
@@ -75,7 +75,7 @@ protected:
     mutable SpinLock<u8> m_lock;
 
 private:
-    VMObject& operator=(const VMObject&) = delete;
+    VMObject& operator=(VMObject const&) = delete;
     VMObject& operator=(VMObject&&) = delete;
     VMObject(VMObject&&) = delete;
 

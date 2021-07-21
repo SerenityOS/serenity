@@ -24,7 +24,7 @@ PrivateInodeVMObject::PrivateInodeVMObject(Inode& inode, size_t size)
 {
 }
 
-PrivateInodeVMObject::PrivateInodeVMObject(const PrivateInodeVMObject& other)
+PrivateInodeVMObject::PrivateInodeVMObject(PrivateInodeVMObject const& other)
     : InodeVMObject(other)
 {
 }

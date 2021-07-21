@@ -19,12 +19,12 @@ public:
 
 private:
     explicit ContiguousVMObject(size_t, NonnullRefPtrVector<PhysicalPage>&);
-    explicit ContiguousVMObject(const ContiguousVMObject&);
+    explicit ContiguousVMObject(ContiguousVMObject const&);
 
     virtual StringView class_name() const override { return "ContiguousVMObject"sv; }
     virtual RefPtr<VMObject> try_clone() override;
 
-    ContiguousVMObject& operator=(const ContiguousVMObject&) = delete;
+    ContiguousVMObject& operator=(ContiguousVMObject const&) = delete;
     ContiguousVMObject& operator=(ContiguousVMObject&&) = delete;
     ContiguousVMObject(ContiguousVMObject&&) = delete;
 

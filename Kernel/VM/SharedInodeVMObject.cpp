@@ -31,7 +31,7 @@ SharedInodeVMObject::SharedInodeVMObject(Inode& inode, size_t size)
 {
 }
 
-SharedInodeVMObject::SharedInodeVMObject(const SharedInodeVMObject& other)
+SharedInodeVMObject::SharedInodeVMObject(SharedInodeVMObject const& other)
     : InodeVMObject(other)
 {
 }

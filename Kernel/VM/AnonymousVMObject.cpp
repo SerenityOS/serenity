@@ -25,7 +25,7 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
     size_t need_cow_pages = 0;
 
     // We definitely need to commit non-volatile areas
-    for_each_nonvolatile_range([&](const VolatilePageRange& nonvolatile_range) {
+    for_each_nonvolatile_range([&](VolatilePageRange const& nonvolatile_range) {
         need_cow_pages += nonvolatile_range.count;
     });
 
@@ -125,7 +125,7 @@ AnonymousVMObject::AnonymousVMObject(NonnullRefPtrVector<PhysicalPage> physical_
     }
 }
 
-AnonymousVMObject::AnonymousVMObject(const AnonymousVMObject& other)
+AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other)
     : VMObject(other)
     , m_volatile_ranges_cache({ 0, page_count() }) // do *not* clone this
     , m_volatile_ranges_cache_dirty(true)          // do *not* clone this
@@ -178,7 +178,7 @@ int AnonymousVMObject::purge_with_interrupts_disabled(Badge<MemoryManager>)
     return purge_impl();
 }
 
-void AnonymousVMObject::set_was_purged(const VolatilePageRange& range)
+void AnonymousVMObject::set_was_purged(VolatilePageRange const& range)
 {
     VERIFY(m_lock.is_locked());
     for (auto* purgeable_ranges : m_purgeable_ranges)
@@ -189,7 +189,7 @@ int AnonymousVMObject::purge_impl()
 {
     int purged_page_count = 0;
     ScopedSpinLock lock(m_lock);
-    for_each_volatile_range([&](const auto& range) {
+    for_each_volatile_range([&](auto const& range) {
         int purged_in_range = 0;
         auto range_end = range.base + range.count;
         for (size_t i = range.base; i < range_end; i++) {
@@ -261,7 +261,7 @@ bool AnonymousVMObject::is_any_volatile() const
     return false;
 }
 
-size_t AnonymousVMObject::remove_lazy_commit_pages(const VolatilePageRange& range)
+size_t AnonymousVMObject::remove_lazy_commit_pages(VolatilePageRange const& range)
 {
     VERIFY(m_lock.is_locked());
 
@@ -286,14 +286,14 @@ void AnonymousVMObject::update_volatile_cache()
     VERIFY(m_volatile_ranges_cache_dirty);
 
     m_volatile_ranges_cache.clear();
-    for_each_nonvolatile_range([&](const VolatilePageRange& range) {
+    for_each_nonvolatile_range([&](VolatilePageRange const& range) {
         m_volatile_ranges_cache.add_unchecked(range);
     });
 
     m_volatile_ranges_cache_dirty = false;
 }
 
-void AnonymousVMObject::range_made_volatile(const VolatilePageRange& range)
+void AnonymousVMObject::range_made_volatile(VolatilePageRange const& range)
 {
     VERIFY(m_lock.is_locked());
 
@@ -305,7 +305,7 @@ void AnonymousVMObject::range_made_volatile(const VolatilePageRange& range)
     // and also adjust the m_unused_committed_pages for each such page.
     // Take into account all the other views as well.
     size_t uncommit_page_count = 0;
-    for_each_volatile_range([&](const auto& r) {
+    for_each_volatile_range([&](auto const& r) {
         auto intersected = range.intersected(r);
         if (!intersected.is_empty()) {
             uncommit_page_count += remove_lazy_commit_pages(intersected);
@@ -324,13 +324,13 @@ void AnonymousVMObject::range_made_volatile(const VolatilePageRange& range)
     m_volatile_ranges_cache_dirty = true;
 }
 
-void AnonymousVMObject::range_made_nonvolatile(const VolatilePageRange&)
+void AnonymousVMObject::range_made_nonvolatile(VolatilePageRange const&)
 {
     VERIFY(m_lock.is_locked());
     m_volatile_ranges_cache_dirty = true;
 }
 
-size_t AnonymousVMObject::count_needed_commit_pages_for_nonvolatile_range(const VolatilePageRange& range)
+size_t AnonymousVMObject::count_needed_commit_pages_for_nonvolatile_range(VolatilePageRange const& range)
 {
     VERIFY(m_lock.is_locked());
     VERIFY(!range.is_empty());
@@ -348,7 +348,7 @@ size_t AnonymousVMObject::count_needed_commit_pages_for_nonvolatile_range(const 
     return need_commit_pages;
 }
 
-size_t AnonymousVMObject::mark_committed_pages_for_nonvolatile_range(const VolatilePageRange& range, size_t mark_total)
+size_t AnonymousVMObject::mark_committed_pages_for_nonvolatile_range(VolatilePageRange const& range, size_t mark_total)
 {
     VERIFY(m_lock.is_locked());
     VERIFY(!range.is_empty());
