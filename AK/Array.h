@@ -13,15 +13,15 @@ namespace AK {
 
 template<typename T, size_t Size>
 struct Array {
-    constexpr const T* data() const { return __data; }
+    constexpr T const* data() const { return __data; }
     constexpr T* data() { return __data; }
 
     constexpr size_t size() const { return Size; }
 
-    constexpr Span<const T> span() const { return { __data, Size }; }
+    constexpr Span<T const> span() const { return { __data, Size }; }
     constexpr Span<T> span() { return { __data, Size }; }
 
-    constexpr const T& at(size_t index) const
+    constexpr T const& at(size_t index) const
     {
         VERIFY(index < size());
         return __data[index];
@@ -32,21 +32,21 @@ struct Array {
         return __data[index];
     }
 
-    constexpr const T& front() const { return at(0); }
+    constexpr T const& front() const { return at(0); }
     constexpr T& front() { return at(0); }
 
-    constexpr const T& back() const { return at(max(1, size()) - 1); }
+    constexpr T const& back() const { return at(max(1, size()) - 1); }
     constexpr T& back() { return at(max(1, size()) - 1); }
 
     constexpr bool is_empty() const { return size() == 0; }
 
-    constexpr const T& operator[](size_t index) const { return at(index); }
+    constexpr T const& operator[](size_t index) const { return at(index); }
     constexpr T& operator[](size_t index) { return at(index); }
 
     template<typename T2, size_t Size2>
-    constexpr bool operator==(const Array<T2, Size2>& other) const { return span() == other.span(); }
+    constexpr bool operator==(Array<T2, Size2> const& other) const { return span() == other.span(); }
 
-    using ConstIterator = SimpleIterator<const Array, const T>;
+    using ConstIterator = SimpleIterator<Array const, T const>;
     using Iterator = SimpleIterator<Array, T>;
 
     constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
@@ -55,10 +55,10 @@ struct Array {
     constexpr ConstIterator end() const { return ConstIterator::end(*this); }
     constexpr Iterator end() { return Iterator::end(*this); }
 
-    constexpr operator Span<const T>() const { return span(); }
+    constexpr operator Span<T const>() const { return span(); }
     constexpr operator Span<T>() { return span(); }
 
-    constexpr size_t fill(const T& value)
+    constexpr size_t fill(T const& value)
     {
         for (size_t idx = 0; idx < Size; ++idx)
             __data[idx] = value;
@@ -94,14 +94,14 @@ Array(T, Types...) -> Array<T, sizeof...(Types) + 1>;
 
 namespace Detail {
 template<typename T, size_t... Is>
-constexpr auto integer_sequence_generate_array([[maybe_unused]] const T offset, IntegerSequence<T, Is...>) -> Array<T, sizeof...(Is)>
+constexpr auto integer_sequence_generate_array([[maybe_unused]] T const offset, IntegerSequence<T, Is...>) -> Array<T, sizeof...(Is)>
 {
     return { { (offset + Is)... } };
 }
 }
 
 template<typename T, T N>
-constexpr static auto iota_array(const T offset = {})
+constexpr static auto iota_array(T const offset = {})
 {
     static_assert(N >= T {}, "Negative sizes not allowed in iota_array()");
     return Detail::integer_sequence_generate_array<T>(offset, MakeIntegerSequence<T, N>());
