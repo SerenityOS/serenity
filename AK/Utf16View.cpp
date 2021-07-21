@@ -7,6 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Utf16View.h>
+#include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 
 namespace AK {
@@ -18,16 +19,12 @@ static constexpr u16 low_surrogate_max = 0xdfff;
 static constexpr u32 replacement_code_point = 0xfffd;
 static constexpr u32 first_supplementary_plane_code_point = 0x10000;
 
-Vector<u16> utf8_to_utf16(StringView const& utf8_view)
-{
-    return utf8_to_utf16(Utf8View { utf8_view });
-}
-
-Vector<u16> utf8_to_utf16(Utf8View const& utf8_view)
+template<typename UtfViewType>
+static Vector<u16> to_utf16_impl(UtfViewType const& view) requires(IsSame<UtfViewType, Utf8View> || IsSame<UtfViewType, Utf32View>)
 {
     Vector<u16> utf16_data;
 
-    for (auto code_point : utf8_view) {
+    for (auto code_point : view) {
         if (code_point < first_supplementary_plane_code_point) {
             utf16_data.append(static_cast<u16>(code_point));
         } else {
@@ -38,6 +35,21 @@ Vector<u16> utf8_to_utf16(Utf8View const& utf8_view)
     }
 
     return utf16_data;
+}
+
+Vector<u16> utf8_to_utf16(StringView const& utf8_view)
+{
+    return to_utf16_impl(Utf8View { utf8_view });
+}
+
+Vector<u16> utf8_to_utf16(Utf8View const& utf8_view)
+{
+    return to_utf16_impl(utf8_view);
+}
+
+Vector<u16> utf32_to_utf16(Utf32View const& utf32_view)
+{
+    return to_utf16_impl(utf32_view);
 }
 
 bool Utf16View::is_high_surrogate(u16 code_unit)
@@ -98,12 +110,66 @@ u16 Utf16View::code_unit_at(size_t index) const
     return m_code_units[index];
 }
 
+size_t Utf16View::code_point_offset_of(size_t code_unit_offset) const
+{
+    size_t code_point_offset = 0;
+
+    for (auto it = begin(); it != end(); ++it) {
+        if (code_unit_offset == 0)
+            return code_point_offset;
+
+        code_unit_offset -= it.length_in_code_units();
+        ++code_point_offset;
+    }
+
+    return code_point_offset;
+}
+
+size_t Utf16View::code_unit_offset_of(size_t code_point_offset) const
+{
+    size_t code_unit_offset = 0;
+
+    for (auto it = begin(); it != end(); ++it) {
+        if (code_point_offset == 0)
+            return code_unit_offset;
+
+        code_unit_offset += it.length_in_code_units();
+        --code_point_offset;
+    }
+
+    return code_unit_offset;
+}
+
 Utf16View Utf16View::substring_view(size_t code_unit_offset, size_t code_unit_length) const
 {
     VERIFY(!Checked<size_t>::addition_would_overflow(code_unit_offset, code_unit_length));
     VERIFY(code_unit_offset + code_unit_length <= length_in_code_units());
 
     return Utf16View { m_code_units.slice(code_unit_offset, code_unit_length) };
+}
+
+Utf16View Utf16View::unicode_substring_view(size_t code_point_offset, size_t code_point_length) const
+{
+    if (code_point_length == 0)
+        return {};
+
+    auto code_unit_offset_of = [&](Utf16CodePointIterator const& it) { return it.m_ptr - begin_ptr(); };
+    size_t code_point_index = 0;
+    size_t code_unit_offset = 0;
+
+    for (auto it = begin(); it != end(); ++it) {
+        if (code_point_index == code_point_offset)
+            code_unit_offset = code_unit_offset_of(it);
+
+        if (code_point_index == (code_point_offset + code_point_length - 1)) {
+            size_t code_unit_length = code_unit_offset_of(++it) - code_unit_offset;
+            return substring_view(code_unit_offset, code_unit_length);
+        }
+
+        ++code_point_index;
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 bool Utf16View::validate(size_t& valid_code_units) const

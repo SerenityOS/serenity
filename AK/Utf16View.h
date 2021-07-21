@@ -17,6 +17,7 @@ namespace AK {
 
 Vector<u16> utf8_to_utf16(StringView const&);
 Vector<u16> utf8_to_utf16(Utf8View const&);
+Vector<u16> utf32_to_utf16(Utf32View const&);
 
 class Utf16View;
 
@@ -67,8 +68,6 @@ public:
     {
     }
 
-    Utf16View& operator=(Utf16View const&) = default;
-    Utf16View& operator=(Utf16View&&) = default;
     bool operator==(Utf16View const& other) const;
 
     enum class AllowInvalidCodeUnits {
@@ -78,6 +77,7 @@ public:
 
     String to_utf8(AllowInvalidCodeUnits = AllowInvalidCodeUnits::No) const;
 
+    bool is_null() const { return m_code_units.is_null(); }
     bool is_empty() const { return m_code_units.is_empty(); }
     size_t length_in_code_units() const { return m_code_units.size(); }
     size_t length_in_code_points() const;
@@ -88,8 +88,14 @@ public:
     u16 const* data() const { return m_code_units.data(); }
     u16 code_unit_at(size_t index) const;
 
+    size_t code_point_offset_of(size_t code_unit_offset) const;
+    size_t code_unit_offset_of(size_t code_point_offset) const;
+
     Utf16View substring_view(size_t code_unit_offset, size_t code_unit_length) const;
     Utf16View substring_view(size_t code_unit_offset) const { return substring_view(code_unit_offset, length_in_code_units() - code_unit_offset); }
+
+    Utf16View unicode_substring_view(size_t code_point_offset, size_t code_point_length) const;
+    Utf16View unicode_substring_view(size_t code_point_offset) const { return unicode_substring_view(code_point_offset, length_in_code_points() - code_point_offset); }
 
     bool validate(size_t& valid_code_units) const;
     bool validate() const
