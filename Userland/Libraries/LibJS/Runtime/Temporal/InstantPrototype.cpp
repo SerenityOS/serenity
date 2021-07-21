@@ -196,7 +196,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
         return {};
 
     // 14. Let roundedNs be ? RoundTemporalInstant(instant.[[Nanoseconds]], roundingIncrement, smallestUnit, roundingMode).
-    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), rounding_increment, smallest_unit, rounding_mode);
+    auto* rounded_ns = round_temporal_instant(global_object, instant->nanoseconds(), rounding_increment, smallest_unit, *rounding_mode);
     if (vm.exception())
         return {};
 

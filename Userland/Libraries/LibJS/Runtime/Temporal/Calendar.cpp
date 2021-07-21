@@ -126,9 +126,10 @@ Object* to_temporal_calendar(GlobalObject& global_object, Value temporal_calenda
     // 3. If ! IsBuiltinCalendar(identifier) is false, then
     if (!is_builtin_calendar(identifier)) {
         // a. Let identifier be ? ParseTemporalCalendarString(identifier).
-        identifier = parse_temporal_calendar_string(global_object, identifier);
+        auto parsed_identifier = parse_temporal_calendar_string(global_object, identifier);
         if (vm.exception())
             return {};
+        identifier = move(*parsed_identifier);
     }
 
     // 4. Return ? CreateTemporalCalendar(identifier).

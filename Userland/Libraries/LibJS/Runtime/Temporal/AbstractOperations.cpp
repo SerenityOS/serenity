@@ -117,7 +117,7 @@ Value get_option(GlobalObject& global_object, Object& options, String const& pro
 }
 
 // 13.8 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
-String to_temporal_rounding_mode(GlobalObject& global_object, Object& normalized_options, String const& fallback)
+Optional<String> to_temporal_rounding_mode(GlobalObject& global_object, Object& normalized_options, String const& fallback)
 {
     auto& vm = global_object.vm();
 
@@ -424,7 +424,7 @@ Optional<TemporalInstant> parse_temporal_instant_string(GlobalObject& global_obj
 }
 
 // 13.37 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
-String parse_temporal_calendar_string([[maybe_unused]] GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
+Optional<String> parse_temporal_calendar_string([[maybe_unused]] GlobalObject& global_object, [[maybe_unused]] String const& iso_string)
 {
     // 1. Assert: Type(isoString) is String.
 
