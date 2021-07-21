@@ -331,7 +331,7 @@ NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action()
 {
-    return GUI::Action::create("New &File...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
+    return GUI::Action::create("New &File...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         String filename;
         if (GUI::InputBox::show(window(), filename, "Enter name of new file:", "Add new file to project") != GUI::InputBox::ExecOK)
             return;
@@ -368,7 +368,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_directory_action()
 {
-    return GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const GUI::Action&) {
+    return GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"), [this](const GUI::Action&) {
         String directory_name;
         if (GUI::InputBox::show(window(), directory_name, "Enter name of new directory:", "Add new folder to project") != GUI::InputBox::ExecOK)
             return;
@@ -478,7 +478,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_project_action()
 {
-    return GUI::Action::create("&New Project...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/hackstudio-project.png"), [this](const GUI::Action&) {
+    return GUI::Action::create("&New Project...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hackstudio-project.png"), [this](const GUI::Action&) {
         auto dialog = NewProjectDialog::construct(window());
         dialog->set_icon(window()->icon());
         auto result = dialog->exec();
@@ -560,7 +560,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_editor_action
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_action()
 {
-    return GUI::Action::create("&Open Project...", { Mod_Ctrl | Mod_Shift, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"), [this](auto&) {
+    return GUI::Action::create("&Open Project...", { Mod_Ctrl | Mod_Shift, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"), [this](auto&) {
         auto open_path = GUI::FilePicker::get_open_filepath(window(), "Open project", Core::StandardPaths::home_directory(), true);
         if (!open_path.has_value())
             return;
@@ -601,7 +601,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_terminal_acti
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_editor_action()
 {
     return GUI::Action::create("Add New &Editor", { Mod_Ctrl | Mod_Alt, Key_E },
-        Gfx::Bitmap::load_from_file("/res/icons/16x16/app-text-editor.png"),
+        Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-text-editor.png"),
         [this](auto&) {
             add_new_editor(*m_editors_splitter);
             update_actions();
@@ -611,7 +611,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_editor_action()
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_terminal_action()
 {
     return GUI::Action::create("Add New &Terminal", { Mod_Ctrl | Mod_Alt, Key_T },
-        Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"),
+        Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"),
         [this](auto&) {
             auto& terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Terminal");
             reveal_action_tab(terminal_wrapper);
@@ -629,7 +629,7 @@ void HackStudioWidget::reveal_action_tab(GUI::Widget& widget)
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
 {
-    return GUI::Action::create("&Debug", Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-run.png"), [this](auto&) {
+    return GUI::Action::create("&Debug", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/debug-run.png"), [this](auto&) {
         if (!Core::File::exists(get_project_executable_path())) {
             GUI::MessageBox::show(window(), String::formatted("Could not find file: {}. (did you build the project?)", get_project_executable_path()), "Error", GUI::MessageBox::Type::Error);
             return;
@@ -850,7 +850,7 @@ void HackStudioWidget::create_toolbar(GUI::Widget& parent)
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_build_action()
 {
-    return GUI::Action::create("&Build", { Mod_Ctrl, Key_B }, Gfx::Bitmap::load_from_file("/res/icons/16x16/build.png"), [this](auto&) {
+    return GUI::Action::create("&Build", { Mod_Ctrl, Key_B }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/build.png"), [this](auto&) {
         if (warn_unsaved_changes("There are unsaved changes, do you want to save before building?") == ContinueDecision::No)
             return;
 
@@ -862,7 +862,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_build_action()
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_run_action()
 {
-    return GUI::Action::create("&Run", { Mod_Ctrl, Key_R }, Gfx::Bitmap::load_from_file("/res/icons/16x16/program-run.png"), [this](auto&) {
+    return GUI::Action::create("&Run", { Mod_Ctrl, Key_R }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/program-run.png"), [this](auto&) {
         reveal_action_tab(*m_terminal_wrapper);
         run(*m_terminal_wrapper);
         m_stop_action->set_enabled(true);
@@ -944,7 +944,7 @@ void HackStudioWidget::create_project_menubar(GUI::Menubar& menubar)
 void HackStudioWidget::create_edit_menubar(GUI::Menubar& menubar)
 {
     auto& edit_menu = menubar.add_menu("&Edit");
-    edit_menu.add_action(GUI::Action::create("&Find in Files...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [this](auto&) {
+    edit_menu.add_action(GUI::Action::create("&Find in Files...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"), [this](auto&) {
         reveal_action_tab(*m_find_in_files_widget);
         m_find_in_files_widget->focus_textbox_and_select_all();
     }));
@@ -1026,7 +1026,7 @@ void HackStudioWidget::create_help_menubar(GUI::Menubar& menubar)
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_stop_action()
 {
-    auto action = GUI::Action::create("&Stop", Gfx::Bitmap::load_from_file("/res/icons/16x16/program-stop.png"), [this](auto&) {
+    auto action = GUI::Action::create("&Stop", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/program-stop.png"), [this](auto&) {
         if (!Debugger::the().session()) {
             m_terminal_wrapper->kill_running_command();
             return;

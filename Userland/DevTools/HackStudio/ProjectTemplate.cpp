@@ -50,7 +50,7 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(const String& manife
     auto bitmap_path_32 = String::formatted("/res/icons/hackstudio/templates-32x32/{}.png", config->read_entry("HackStudioTemplate", "IconName32x"));
 
     if (Core::File::exists(bitmap_path_32)) {
-        auto bitmap32 = Gfx::Bitmap::load_from_file(bitmap_path_32);
+        auto bitmap32 = Gfx::Bitmap::try_load_from_file(bitmap_path_32);
         icon = GUI::Icon(move(bitmap32));
     }
 

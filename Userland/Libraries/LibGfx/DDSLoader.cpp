@@ -792,7 +792,7 @@ static bool decode_dds(DDSLoadingContext& context)
         dbgln_if(DDS_DEBUG, "There are {} bytes remaining, we need {} for mipmap level {} of the image", stream.remaining(), needed_bytes, mipmap_level);
         VERIFY(stream.remaining() >= needed_bytes);
 
-        context.bitmap = Bitmap::create_purgeable(BitmapFormat::BGRA8888, { width, height });
+        context.bitmap = Bitmap::try_create_purgeable(BitmapFormat::BGRA8888, { width, height });
 
         decode_bitmap(stream, context, format, width, height);
 

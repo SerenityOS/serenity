@@ -246,7 +246,7 @@ static bool load_ico_bmp(ICOLoadingContext& context, ICOImageDescriptor& desc)
         return false;
     }
 
-    desc.bitmap = Bitmap::create_purgeable(BitmapFormat::BGRA8888, { desc.width, desc.height });
+    desc.bitmap = Bitmap::try_create_purgeable(BitmapFormat::BGRA8888, { desc.width, desc.height });
     if (!desc.bitmap)
         return false;
     Bitmap& bitmap = *desc.bitmap;

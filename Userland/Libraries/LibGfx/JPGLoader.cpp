@@ -1064,7 +1064,7 @@ static void ycbcr_to_rgb(const JPGLoadingContext& context, Vector<Macroblock>& m
 
 static bool compose_bitmap(JPGLoadingContext& context, const Vector<Macroblock>& macroblocks)
 {
-    context.bitmap = Bitmap::create_purgeable(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height });
+    context.bitmap = Bitmap::try_create_purgeable(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height });
     if (!context.bitmap)
         return false;
 

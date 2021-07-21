@@ -76,7 +76,7 @@ bool decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
     auto buffer = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), Gfx::Bitmap::size_in_bytes(Gfx::Bitmap::minimum_pitch(size.width(), bitmap_format), size.height()));
     if (!buffer.is_valid())
         return false;
-    auto bitmap = Gfx::Bitmap::create_with_anonymous_buffer(bitmap_format, buffer, size, scale, palette);
+    auto bitmap = Gfx::Bitmap::try_create_with_anonymous_buffer(bitmap_format, buffer, size, scale, palette);
     if (!bitmap)
         return false;
     shareable_bitmap = Gfx::ShareableBitmap { bitmap.release_nonnull(), Gfx::ShareableBitmap::ConstructWithKnownGoodBitmap };

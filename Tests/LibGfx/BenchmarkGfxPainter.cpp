@@ -25,7 +25,7 @@ BENCHMARK_CASE(diagonal_lines)
     const int run_count = 50;
     const int bitmap_size = 2000;
 
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size });
+    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size });
     Gfx::Painter painter(*bitmap);
 
     for (int run = 0; run < run_count; run++) {
@@ -41,7 +41,7 @@ BENCHMARK_CASE(fill)
     const int run_count = 1000;
     const int bitmap_size = 2000;
 
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size });
+    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size });
     Gfx::Painter painter(*bitmap);
 
     for (int run = 0; run < run_count; run++) {
@@ -54,7 +54,7 @@ BENCHMARK_CASE(fill_with_gradient)
     const int run_count = 50;
     const int bitmap_size = 2000;
 
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size });
+    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { bitmap_size, bitmap_size });
     Gfx::Painter painter(*bitmap);
 
     for (int run = 0; run < run_count; run++) {

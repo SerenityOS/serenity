@@ -19,7 +19,7 @@ const Bitmap* Emoji::emoji_for_code_point(u32 code_point)
     if (it != s_emojis.end())
         return (*it).value.ptr();
 
-    auto bitmap = Bitmap::load_from_file(String::formatted("/res/emoji/U+{:X}.png", code_point));
+    auto bitmap = Bitmap::try_load_from_file(String::formatted("/res/emoji/U+{:X}.png", code_point));
     if (!bitmap) {
         s_emojis.set(code_point, nullptr);
         return nullptr;

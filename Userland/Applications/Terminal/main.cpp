@@ -208,10 +208,10 @@ static RefPtr<GUI::Window> create_find_window(VT::TerminalWidget& terminal)
     }
     auto& find_backwards = find.add<GUI::Button>();
     find_backwards.set_fixed_width(25);
-    find_backwards.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png"));
+    find_backwards.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png"));
     auto& find_forwards = find.add<GUI::Button>();
     find_forwards.set_fixed_width(25);
-    find_forwards.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png"));
+    find_forwards.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png"));
 
     find_textbox.on_return_pressed = [&]() {
         find_backwards.click();
@@ -352,7 +352,7 @@ int main(int argc, char** argv)
     auto new_scrollback_size = config->read_num_entry("Terminal", "MaxHistorySize", terminal.max_history_size());
     terminal.set_max_history_size(new_scrollback_size);
 
-    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"),
+    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"),
         [&](const GUI::Action&) {
             if (!settings_window)
                 settings_window = create_settings_window(terminal);
@@ -361,7 +361,7 @@ int main(int argc, char** argv)
         });
 
     terminal.context_menu().add_separator();
-    auto pick_font_action = GUI::Action::create("&Terminal Font...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"),
+    auto pick_font_action = GUI::Action::create("&Terminal Font...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png"),
         [&](auto&) {
             auto picker = GUI::FontPicker::construct(window, &terminal.font(), true);
             if (picker->exec() == GUI::Dialog::ExecOK) {
@@ -380,7 +380,7 @@ int main(int argc, char** argv)
     auto menubar = GUI::Menubar::construct();
 
     auto& file_menu = menubar->add_menu("&File");
-    file_menu.add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+    file_menu.add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
         pid_t child;
         const char* argv[] = { "Terminal", nullptr };
         if ((errno = posix_spawn(&child, "/bin/Terminal", nullptr, nullptr, const_cast<char**>(argv), environ))) {
@@ -402,7 +402,7 @@ int main(int argc, char** argv)
     edit_menu.add_action(terminal.copy_action());
     edit_menu.add_action(terminal.paste_action());
     edit_menu.add_separator();
-    edit_menu.add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"),
+    edit_menu.add_action(GUI::Action::create("&Find...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"),
         [&](auto&) {
             if (!find_window)
                 find_window = create_find_window(terminal);

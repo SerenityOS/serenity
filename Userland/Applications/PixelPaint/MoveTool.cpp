@@ -103,7 +103,7 @@ void MoveTool::on_context_menu(Layer& layer, GUI::ContextMenuEvent& event)
             m_editor));
         m_context_menu->add_separator();
         m_context_menu->add_action(GUI::Action::create(
-            "&Delete Layer", Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"), [this](auto&) {
+            "&Delete Layer", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"), [this](auto&) {
                 m_editor->image().remove_layer(*m_context_menu_layer);
                 // FIXME: This should not be done imperatively here. Perhaps a Image::Client interface that ImageEditor can implement?
                 if (m_editor->active_layer() == m_context_menu_layer)

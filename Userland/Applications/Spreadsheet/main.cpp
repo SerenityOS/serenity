@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
     auto menubar = GUI::Menubar::construct();
     auto& file_menu = menubar->add_menu("&File");
 
-    file_menu.add_action(GUI::Action::create("Add New Sheet", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"), [&](auto&) {
+    file_menu.add_action(GUI::Action::create("Add New Sheet", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png"), [&](auto&) {
         spreadsheet_widget.add_sheet();
     }));
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {

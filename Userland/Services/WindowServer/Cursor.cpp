@@ -132,7 +132,7 @@ bool Cursor::load(const StringView& filename, const StringView& default_filename
     bool did_load_any = false;
 
     auto load_bitmap = [&](const StringView& path, int scale_factor) {
-        auto bitmap = Gfx::Bitmap::load_from_file(path, scale_factor);
+        auto bitmap = Gfx::Bitmap::try_load_from_file(path, scale_factor);
         if (bitmap) {
             did_load_any = true;
             m_bitmaps.set(scale_factor, bitmap.release_nonnull());

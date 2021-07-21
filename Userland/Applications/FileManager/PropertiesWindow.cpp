@@ -39,7 +39,7 @@ PropertiesWindow::PropertiesWindow(const String& path, bool disable_rename, Wind
     set_rect({ 0, 0, 360, 420 });
     set_resizable(false);
 
-    set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"));
+    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/properties.png"));
 
     auto& tab_widget = main_widget.add<GUI::TabWidget>();
 

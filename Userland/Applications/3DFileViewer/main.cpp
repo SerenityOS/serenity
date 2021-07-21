@@ -42,7 +42,7 @@ private:
     GLContextWidget()
         : m_mesh_loader(adopt_own(*new WavefrontOBJLoader()))
     {
-        m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { RENDER_WIDTH, RENDER_HEIGHT });
+        m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { RENDER_WIDTH, RENDER_HEIGHT });
         m_context = GL::create_context(*m_bitmap);
 
         start_timer(20);
@@ -169,7 +169,7 @@ bool GLContextWidget::load(const String& filename)
     builder.append(".bmp");
 
     // Attempt to open the texture file from disk
-    auto texture_image = Gfx::Bitmap::load_from_file(builder.string_view());
+    auto texture_image = Gfx::Bitmap::try_load_from_file(builder.string_view());
 
     GLuint tex;
     glGenTextures(1, &tex);

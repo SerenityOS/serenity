@@ -45,13 +45,13 @@ RefPtr<Gfx::Bitmap> MessageBox::icon() const
 {
     switch (m_type) {
     case Type::Information:
-        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-information.png");
+        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-information.png");
     case Type::Warning:
-        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-warning.png");
+        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-warning.png");
     case Type::Error:
-        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-error.png");
+        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-error.png");
     case Type::Question:
-        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-question.png");
+        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-question.png");
     default:
         return nullptr;
     }

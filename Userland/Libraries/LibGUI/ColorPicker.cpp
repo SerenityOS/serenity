@@ -129,7 +129,7 @@ ColorPicker::ColorPicker(Color color, Window* parent_window, String title)
     : Dialog(parent_window)
     , m_color(color)
 {
-    set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"));
+    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"));
     set_title(title);
     set_resizable(false);
     resize(458, 326);
@@ -459,7 +459,7 @@ ColorField::ColorField(Color color)
 
 void ColorField::create_color_bitmap()
 {
-    m_color_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { 256, 256 });
+    m_color_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { 256, 256 });
     auto painter = Gfx::Painter(*m_color_bitmap);
 
     Gfx::HSV hsv;
@@ -585,7 +585,7 @@ void ColorField::resize_event(ResizeEvent&)
 ColorSlider::ColorSlider(double value)
     : m_value(value)
 {
-    m_color_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { 32, 360 });
+    m_color_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { 32, 360 });
     auto painter = Gfx::Painter(*m_color_bitmap);
 
     for (int h = 0; h < 360; h++) {

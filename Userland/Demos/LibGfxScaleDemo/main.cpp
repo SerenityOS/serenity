@@ -41,15 +41,15 @@ private:
 
 Canvas::Canvas()
 {
-    m_bitmap_1x = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }, 1);
-    m_bitmap_2x = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }, 2);
+    m_bitmap_1x = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }, 1);
+    m_bitmap_2x = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }, 2);
 
     // m_bitmap_1x and m_bitmap_2x have the same logical size, so LibGfx will try to draw them at the same physical size:
     // When drawing on a 2x backing store it'd scale m_bitmap_1x up 2x and paint m_bitmap_2x at its physical size.
     // When drawing on a 1x backing store it'd draw m_bitmap_1x at its physical size, and it would have to scale down m_bitmap_2x to 0.5x its size.
     // But the system can't current scale down, and we want to draw the 2x bitmap at twice the size of the 1x bitmap in this particular application,
     // so make a 1x alias of the 2x bitmap to make LibGfx paint it without any scaling at paint time, mapping once pixel to one pixel.
-    m_bitmap_2x_as_1x = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, m_bitmap_2x->physical_size(), 1, m_bitmap_2x->pitch(), m_bitmap_2x->scanline(0));
+    m_bitmap_2x_as_1x = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::BGRx8888, m_bitmap_2x->physical_size(), 1, m_bitmap_2x->pitch(), m_bitmap_2x->scanline(0));
 
     Gfx::Painter painter_1x(*m_bitmap_1x);
     draw(painter_1x);
@@ -75,14 +75,14 @@ void Canvas::paint_event(GUI::PaintEvent& event)
 
 void Canvas::draw(Gfx::Painter& painter)
 {
-    auto active_window_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png");
+    auto active_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png");
     Gfx::WindowTheme::current().paint_normal_frame(painter, Gfx::WindowTheme::WindowState::Active, { 4, 18, WIDTH - 8, HEIGHT - 29 }, "Well hello friends 🐞", *active_window_icon, palette(), { WIDTH - 20, 6, 16, 16 }, 0, false);
 
     painter.draw_rect({ 20, 34, WIDTH - 40, HEIGHT - 45 }, palette().color(Gfx::ColorRole::Selection), true);
     painter.draw_rect({ 24, 38, WIDTH - 48, HEIGHT - 53 }, palette().color(Gfx::ColorRole::Selection));
 
     // buggie.png has an alpha channel.
-    auto buggie = Gfx::Bitmap::load_from_file("/res/graphics/buggie.png");
+    auto buggie = Gfx::Bitmap::try_load_from_file("/res/graphics/buggie.png");
     painter.blit({ 25, 39 }, *buggie, { 2, 30, 62, 20 });
     painter.draw_scaled_bitmap({ 88, 39, 62 * 2, 20 * 2 }, *buggie, Gfx::IntRect { 2, 30, 62, 20 });
     painter.draw_scaled_bitmap({ 202, 39, 80, 40 }, *buggie, Gfx::IntRect { 2, 30, 62, 20 });
@@ -92,7 +92,7 @@ void Canvas::draw(Gfx::Painter& painter)
     painter.blit({ 25, 101 }, *buggie, { 2, 30, 3 * buggie->width(), 20 });
 
     // grid does not have an alpha channel.
-    auto grid = Gfx::Bitmap::load_from_file("/res/wallpapers/grid.png");
+    auto grid = Gfx::Bitmap::try_load_from_file("/res/wallpapers/grid.png");
     VERIFY(!grid->has_alpha_channel());
     painter.fill_rect({ 25, 122, 62, 20 }, Color::Green);
     painter.blit({ 25, 122 }, *grid, { (grid->width() - 62) / 2, (grid->height() - 20) / 2 + 40, 62, 20 }, 0.9);

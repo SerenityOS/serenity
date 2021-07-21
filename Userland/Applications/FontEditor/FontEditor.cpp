@@ -90,7 +90,7 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     };
 
     auto& reload_button = textbox_button_container.add<GUI::Button>();
-    reload_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"));
+    reload_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"));
     reload_button.set_fixed_width(22);
     reload_button.on_click = [&](auto) {
         static int i = 1;
@@ -155,7 +155,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
             m_font_preview_window->update();
     };
 
-    m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-font.png"), [&](auto&) {
+    m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-font.png"), [&](auto&) {
         if (m_font_modified) {
             auto result = GUI::MessageBox::show(window(), "Save changes to the current font?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (result == GUI::Dialog::ExecResult::ExecYes) {
@@ -271,7 +271,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
         redo();
     });
     m_redo_action->set_enabled(false);
-    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
+    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"), [&](auto&) {
         if (!m_font_preview_window)
             m_font_preview_window = create_font_preview_window(*this);
         m_font_preview_window->show();
@@ -333,7 +333,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
             m_glyph_editor_widget->set_mode(GlyphEditorWidget::Paint);
     };
     move_glyph_button.set_checkable(true);
-    move_glyph_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/selection-move.png"));
+    move_glyph_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png"));
 
     GUI::Clipboard::the().on_change = [&](const String& data_type) {
         m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");

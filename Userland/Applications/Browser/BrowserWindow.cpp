@@ -129,7 +129,7 @@ void BrowserWindow::build_menus()
     file_menu.add_action(WindowActions::the().create_new_tab_action());
 
     auto close_tab_action = GUI::Action::create(
-        "&Close Tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
+        "&Close Tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
             active_tab().on_tab_close_request(active_tab());
         },
         this);
@@ -221,7 +221,7 @@ void BrowserWindow::build_menus()
                     tab.m_dom_inspector_window = GUI::Window::construct(this);
                     tab.m_dom_inspector_window->resize(300, 500);
                     tab.m_dom_inspector_window->set_title("DOM inspector");
-                    tab.m_dom_inspector_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
+                    tab.m_dom_inspector_window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
                     tab.m_dom_inspector_window->set_main_widget<InspectorWidget>();
                 }
                 auto* inspector_widget = static_cast<InspectorWidget*>(tab.m_dom_inspector_window->main_widget());
@@ -247,7 +247,7 @@ void BrowserWindow::build_menus()
                     tab.m_console_window = GUI::Window::construct(this);
                     tab.m_console_window->resize(500, 300);
                     tab.m_console_window->set_title("JS Console");
-                    tab.m_console_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-javascript.png"));
+                    tab.m_console_window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-javascript.png"));
                     tab.m_console_window->set_main_widget<ConsoleWidget>();
                 }
                 auto* console_widget = static_cast<ConsoleWidget*>(tab.m_console_window->main_widget());
@@ -259,7 +259,7 @@ void BrowserWindow::build_menus()
                     tab.m_console_window = GUI::Window::construct(this);
                     tab.m_console_window->resize(500, 300);
                     tab.m_console_window->set_title("JS Console");
-                    tab.m_console_window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-javascript.png"));
+                    tab.m_console_window->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-javascript.png"));
                     tab.m_console_window->set_main_widget<ConsoleWidget>();
                 }
                 auto* console_widget = static_cast<ConsoleWidget*>(tab.m_console_window->main_widget());
@@ -520,7 +520,7 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
 
     m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
 
-    auto default_favicon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png");
+    auto default_favicon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png");
     VERIFY(default_favicon);
     m_tab_widget->set_tab_icon(new_tab, default_favicon);
 

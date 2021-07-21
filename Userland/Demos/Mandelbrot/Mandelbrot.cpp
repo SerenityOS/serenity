@@ -35,7 +35,7 @@ public:
 
     void resize(Gfx::IntSize const& size)
     {
-        m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size);
+        m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size);
         correct_aspect();
         calculate();
     }
@@ -264,7 +264,7 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::Menubar::construct();
     auto& file_menu = menubar->add_menu("&File");
-    file_menu.add_action(GUI::Action::create("&Export...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"),
+    file_menu.add_action(GUI::Action::create("&Export...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"),
         [&](GUI::Action&) {
             Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
             if (!export_path.has_value())

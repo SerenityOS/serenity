@@ -104,17 +104,17 @@ void MultiView::set_column_visible(int column_index, bool visible)
 void MultiView::build_actions()
 {
     m_view_as_table_action = Action::create_checkable(
-        "Table view", Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [this](auto&) {
+        "Table view", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/table-view.png"), [this](auto&) {
             set_view_mode(ViewMode::Table);
         });
 
     m_view_as_icons_action = Action::create_checkable(
-        "Icon view", Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"), [this](auto&) {
+        "Icon view", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/icon-view.png"), [this](auto&) {
             set_view_mode(ViewMode::Icon);
         });
 
     m_view_as_columns_action = Action::create_checkable(
-        "Columns view", Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"), [this](auto&) {
+        "Columns view", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/columns-view.png"), [this](auto&) {
             set_view_mode(ViewMode::Columns);
         });
 

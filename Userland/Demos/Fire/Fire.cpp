@@ -81,7 +81,7 @@ private:
 
 Fire::Fire()
 {
-    bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::Indexed8, { FIRE_WIDTH, FIRE_HEIGHT });
+    bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::Indexed8, { FIRE_WIDTH, FIRE_HEIGHT });
 
     /* Initialize fire palette */
     for (int i = 0; i < 30; i++)
