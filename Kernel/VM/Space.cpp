@@ -316,7 +316,13 @@ KResultOr<Vector<Region*, 2>> Space::try_split_region_around_range(const Region&
 void Space::dump_regions()
 {
     dbgln("Process regions:");
-    dbgln("BEGIN         END        SIZE       ACCESS NAME");
+#if ARCH(I386)
+    auto addr_padding = "";
+#else
+    auto addr_padding = "        ";
+#endif
+    dbgln("BEGIN{}         END{}        SIZE{}       ACCESS NAME",
+        addr_padding, addr_padding, addr_padding);
 
     ScopedSpinLock lock(m_lock);
 
