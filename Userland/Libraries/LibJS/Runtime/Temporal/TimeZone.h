@@ -18,7 +18,7 @@ public:
     // Needs to store values in the range -8.64 * 10^13 to 8.64 * 10^13
     using OffsetType = double;
 
-    explicit TimeZone(String identifier, Object& prototype);
+    TimeZone(String identifier, Object& prototype);
     virtual ~TimeZone() override = default;
 
     String const& identifier() const { return m_identifier; }

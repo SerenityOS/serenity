@@ -17,7 +17,7 @@ class Calendar final : public Object {
     JS_OBJECT(Calendar, Object);
 
 public:
-    explicit Calendar(String identifier, Object& prototype);
+    Calendar(String identifier, Object& prototype);
     virtual ~Calendar() override = default;
 
     String const& identifier() const { return m_identifier; }
