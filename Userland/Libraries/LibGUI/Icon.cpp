@@ -74,8 +74,8 @@ void IconImpl::set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap>&& bitmap)
 
 Icon Icon::default_icon(const StringView& name)
 {
-    auto bitmap16 = Gfx::Bitmap::load_from_file(String::formatted("/res/icons/16x16/{}.png", name));
-    auto bitmap32 = Gfx::Bitmap::load_from_file(String::formatted("/res/icons/32x32/{}.png", name));
+    auto bitmap16 = Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/16x16/{}.png", name));
+    auto bitmap32 = Gfx::Bitmap::try_load_from_file(String::formatted("/res/icons/32x32/{}.png", name));
     return Icon(move(bitmap16), move(bitmap32));
 }
 

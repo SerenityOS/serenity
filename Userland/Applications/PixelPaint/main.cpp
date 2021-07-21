@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     };
 
     auto new_image_action = GUI::Action::create(
-        "&New Image...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](auto&) {
+        "&New Image...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"), [&](auto&) {
             auto dialog = PixelPaint::CreateNewImageDialog::construct(window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
                 auto image = PixelPaint::Image::try_create_with_size(dialog->image_size());

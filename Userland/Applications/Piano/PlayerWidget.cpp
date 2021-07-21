@@ -19,10 +19,10 @@ PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
     set_layout<GUI::HorizontalBoxLayout>();
     set_fill_with_background_color(true);
 
-    m_play_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png");
-    m_pause_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png");
-    m_back_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png");    // Go back a note
-    m_next_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"); // Advance a note
+    m_play_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png");
+    m_pause_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/pause.png");
+    m_back_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png");    // Go back a note
+    m_next_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"); // Advance a note
 
     m_play_button = add<GUI::Button>();
     m_play_button->set_icon(*m_pause_icon);

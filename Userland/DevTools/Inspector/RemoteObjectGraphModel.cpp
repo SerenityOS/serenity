@@ -17,10 +17,10 @@ namespace Inspector {
 RemoteObjectGraphModel::RemoteObjectGraphModel(RemoteProcess& process)
     : m_process(process)
 {
-    m_object_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
-    m_window_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"));
-    m_layout_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/layout.png"));
-    m_timer_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/timer.png"));
+    m_object_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
+    m_window_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png"));
+    m_layout_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/layout.png"));
+    m_timer_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/timer.png"));
 }
 
 RemoteObjectGraphModel::~RemoteObjectGraphModel()

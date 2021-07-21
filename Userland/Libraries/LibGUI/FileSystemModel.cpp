@@ -550,13 +550,13 @@ static HashMap<String, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;
 
 static RefPtr<Gfx::Bitmap> render_thumbnail(const StringView& path)
 {
-    auto png_bitmap = Gfx::Bitmap::load_from_file(path);
+    auto png_bitmap = Gfx::Bitmap::try_load_from_file(path);
     if (!png_bitmap)
         return nullptr;
 
     double scale = min(32 / (double)png_bitmap->width(), 32 / (double)png_bitmap->height());
 
-    auto thumbnail = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 32, 32 });
+    auto thumbnail = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { 32, 32 });
     Gfx::IntRect destination = Gfx::IntRect(0, 0, (int)(png_bitmap->width() * scale), (int)(png_bitmap->height() * scale));
     destination.center_within(thumbnail->rect());
 

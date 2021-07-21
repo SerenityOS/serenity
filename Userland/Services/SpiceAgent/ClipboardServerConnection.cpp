@@ -39,8 +39,8 @@ RefPtr<Gfx::Bitmap> ClipboardServerConnection::get_bitmap()
         return nullptr;
 
     auto data = ByteBuffer::copy(clipping.data().data<void>(), clipping.data().size());
-    auto clipping_bitmap = Gfx::Bitmap::create_wrapper((Gfx::BitmapFormat)format.value(), { (int)width.value(), (int)height.value() }, scale.value(), pitch.value(), data.data());
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { (int)width.value(), (int)height.value() }, scale.value());
+    auto clipping_bitmap = Gfx::Bitmap::try_create_wrapper((Gfx::BitmapFormat)format.value(), { (int)width.value(), (int)height.value() }, scale.value(), pitch.value(), data.data());
+    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { (int)width.value(), (int)height.value() }, scale.value());
 
     for (int y = 0; y < clipping_bitmap->physical_height(); ++y) {
         for (int x = 0; x < clipping_bitmap->physical_width(); ++x) {

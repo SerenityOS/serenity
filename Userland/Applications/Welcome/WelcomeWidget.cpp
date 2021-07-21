@@ -28,14 +28,14 @@ WelcomeWidget::WelcomeWidget()
     tip_frame.set_fill_with_background_color(true);
 
     auto& light_bulb_label = *find_descendant_of_type_named<GUI::Label>("light_bulb_label");
-    light_bulb_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/32x32/app-welcome.png"));
+    light_bulb_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-welcome.png"));
 
     m_web_view = *find_descendant_of_type_named<Web::OutOfProcessWebView>("web_view");
 
     m_tip_label = *find_descendant_of_type_named<GUI::Label>("tip_label");
 
     m_next_button = *find_descendant_of_type_named<GUI::Button>("next_button");
-    m_next_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"));
+    m_next_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"));
     m_next_button->on_click = [&](auto) {
         if (!tip_frame.is_visible()) {
             m_web_view->set_visible(false);
@@ -50,7 +50,7 @@ WelcomeWidget::WelcomeWidget()
     };
 
     m_help_button = *find_descendant_of_type_named<GUI::Button>("help_button");
-    m_help_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/book-open.png"));
+    m_help_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png"));
     m_help_button->on_click = [](auto) {
         pid_t pid;
         const char* argv[] = { "Help", nullptr };

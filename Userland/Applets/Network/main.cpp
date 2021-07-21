@@ -143,8 +143,8 @@ private:
     String m_adapter_info;
     bool m_connected = false;
     bool m_notifications = true;
-    RefPtr<Gfx::Bitmap> m_connected_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/network.png");
-    RefPtr<Gfx::Bitmap> m_disconnected_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/network-disconnected.png");
+    RefPtr<Gfx::Bitmap> m_connected_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network.png");
+    RefPtr<Gfx::Bitmap> m_disconnected_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png");
 };
 
 int main(int argc, char* argv[])

@@ -31,7 +31,7 @@ static Gfx::Bitmap& default_window_icon()
 {
     static Gfx::Bitmap* s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file(default_window_icon_path()).leak_ref();
+        s_icon = Gfx::Bitmap::try_load_from_file(default_window_icon_path()).leak_ref();
     return *s_icon;
 }
 
@@ -39,7 +39,7 @@ static Gfx::Bitmap& minimize_icon()
 {
     static Gfx::Bitmap* s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png").leak_ref();
+        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png").leak_ref();
     return *s_icon;
 }
 
@@ -47,7 +47,7 @@ static Gfx::Bitmap& maximize_icon()
 {
     static Gfx::Bitmap* s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png").leak_ref();
+        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png").leak_ref();
     return *s_icon;
 }
 
@@ -55,7 +55,7 @@ static Gfx::Bitmap& restore_icon()
 {
     static Gfx::Bitmap* s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-restore.png").leak_ref();
+        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-restore.png").leak_ref();
     return *s_icon;
 }
 
@@ -63,7 +63,7 @@ static Gfx::Bitmap& close_icon()
 {
     static Gfx::Bitmap* s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png").leak_ref();
+        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-close.png").leak_ref();
     return *s_icon;
 }
 
@@ -71,7 +71,7 @@ static Gfx::Bitmap& pin_icon()
 {
     static Gfx::Bitmap* s_icon;
     if (!s_icon)
-        s_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-pin.png").leak_ref();
+        s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-pin.png").leak_ref();
     return *s_icon;
 }
 Window::Window(Core::Object& parent, WindowType type)
@@ -144,7 +144,7 @@ void Window::set_rect(const Gfx::IntRect& rect)
     if (rect.is_empty()) {
         m_backing_store = nullptr;
     } else if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
-        m_backing_store = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, m_rect.size());
+        m_backing_store = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, m_rect.size());
     }
 
     invalidate(true, old_rect.size() != rect.size());

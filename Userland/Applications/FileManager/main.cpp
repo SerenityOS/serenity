@@ -353,11 +353,11 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
 
     auto desktop_view_context_menu = GUI::Menu::construct("Directory View");
 
-    auto file_manager_action = GUI::Action::create("Show in File &Manager", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"), [&](const GUI::Action&) {
+    auto file_manager_action = GUI::Action::create("Show in File &Manager", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"), [&](const GUI::Action&) {
         Desktop::Launcher::open(URL::create_with_file_protocol(directory_view.path()));
     });
 
-    auto display_properties_action = GUI::Action::create("&Display Settings", {}, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-display-settings.png"), [&](const GUI::Action&) {
+    auto display_properties_action = GUI::Action::create("&Display Settings", {}, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-display-settings.png"), [&](const GUI::Action&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/bin/DisplaySettings"));
     });
 
@@ -527,7 +527,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto tree_view_directory_context_menu = GUI::Menu::construct("Tree View Directory");
     auto tree_view_context_menu = GUI::Menu::construct("Tree View");
 
-    auto open_parent_directory_action = GUI::Action::create("Open &Parent Directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GUI::Action&) {
+    auto open_parent_directory_action = GUI::Action::create("Open &Parent Directory", { Mod_Alt, Key_Up }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GUI::Action&) {
         directory_view.open_parent_directory();
     });
 
@@ -608,7 +608,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     RefPtr<GUI::Action> view_as_columns_action;
 
     view_as_icons_action = GUI::Action::create_checkable(
-        "View as &Icons", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
+        "View as &Icons", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/icon-view.png"), [&](const GUI::Action&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Icon);
             config->write_entry("DirectoryView", "ViewMode", "Icon");
             config->sync();
@@ -616,7 +616,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         window);
 
     view_as_table_action = GUI::Action::create_checkable(
-        "View as &Table", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
+        "View as &Table", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/table-view.png"), [&](const GUI::Action&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Table);
             config->write_entry("DirectoryView", "ViewMode", "Table");
             config->sync();
@@ -624,7 +624,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         window);
 
     view_as_columns_action = GUI::Action::create_checkable(
-        "View as &Columns", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GUI::Action&) {
+        "View as &Columns", { Mod_Ctrl, KeyCode::Key_3 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/columns-view.png"), [&](const GUI::Action&) {
             directory_view.set_view_mode(DirectoryView::ViewMode::Columns);
             config->write_entry("DirectoryView", "ViewMode", "Columns");
             config->sync();
@@ -686,7 +686,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         = GUI::Action::create(
             "Open in New &Window",
             {},
-            Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"),
+            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"),
             [&](GUI::Action const& action) {
                 Vector<String> paths;
                 if (action.activator() == tree_view_directory_context_menu)
@@ -705,7 +705,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         = GUI::Action::create(
             "Open in &Terminal",
             {},
-            Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"),
+            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"),
             [&](GUI::Action const& action) {
                 Vector<String> paths;
                 if (action.activator() == tree_view_directory_context_menu)
@@ -725,7 +725,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         = GUI::Action::create(
             "Create Desktop &Shortcut",
             {},
-            Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-symlink.png"),
+            Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-symlink.png"),
             [&](const GUI::Action&) {
                 auto paths = directory_view.selected_file_paths();
                 if (paths.is_empty()) {
@@ -832,12 +832,12 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     });
     focus_dependent_delete_action->set_enabled(false);
 
-    auto mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
+    auto mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"), [&](const GUI::Action&) {
         directory_view.mkdir_action().activate();
         refresh_tree_view();
     });
 
-    auto touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
+    auto touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"), [&](const GUI::Action&) {
         directory_view.touch_action().activate();
         refresh_tree_view();
     });

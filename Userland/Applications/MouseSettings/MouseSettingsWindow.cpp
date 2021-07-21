@@ -63,10 +63,10 @@ MouseSettingsWindow::MouseSettingsWindow()
     m_speed_slider->set_value(slider_value);
 
     auto& cursor_speed_image_label = *main_widget.find_descendant_of_type_named<GUI::Label>("cursor_speed_image_label");
-    cursor_speed_image_label.set_icon(Gfx::Bitmap::load_from_file("/res/graphics/mouse-cursor-speed.png"));
+    cursor_speed_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/graphics/mouse-cursor-speed.png"));
 
     auto& scroll_step_size_image_label = *main_widget.find_descendant_of_type_named<GUI::Label>("scroll_step_size_image_label");
-    scroll_step_size_image_label.set_icon(Gfx::Bitmap::load_from_file("/res/graphics/scroll-wheel-step-size.png"));
+    scroll_step_size_image_label.set_icon(Gfx::Bitmap::try_load_from_file("/res/graphics/scroll-wheel-step-size.png"));
 
     m_scroll_length_spinbox = *main_widget.find_descendant_of_type_named<GUI::SpinBox>("scroll_length_spinbox");
     m_scroll_length_spinbox->set_min(WindowServer::scroll_step_size_min);

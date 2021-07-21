@@ -90,13 +90,14 @@ enum RotationDirection {
 
 class Bitmap : public RefCounted<Bitmap> {
 public:
-    static RefPtr<Bitmap> create(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
-    static RefPtr<Bitmap> create_shareable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
-    static RefPtr<Bitmap> create_purgeable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
-    static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, int intrinsic_scale, size_t pitch, void*);
-    static RefPtr<Bitmap> load_from_file(String const& path, int scale_factor = 1);
-    static RefPtr<Bitmap> create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, const IntSize&, int intrinsic_scale, const Vector<RGBA32>& palette);
-    static RefPtr<Bitmap> create_from_serialized_byte_buffer(ByteBuffer&& buffer);
+    [[nodiscard]] static RefPtr<Bitmap> try_create(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
+    [[nodiscard]] static RefPtr<Bitmap> try_create_shareable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
+    [[nodiscard]] static RefPtr<Bitmap> try_create_purgeable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
+    [[nodiscard]] static RefPtr<Bitmap> try_create_wrapper(BitmapFormat, const IntSize&, int intrinsic_scale, size_t pitch, void*);
+    [[nodiscard]] static RefPtr<Bitmap> try_load_from_file(String const& path, int scale_factor = 1);
+    [[nodiscard]] static RefPtr<Bitmap> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, const IntSize&, int intrinsic_scale, const Vector<RGBA32>& palette);
+    [[nodiscard]] static RefPtr<Bitmap> try_create_from_serialized_byte_buffer(ByteBuffer&& buffer);
+
     static bool is_path_a_supported_image_format(const StringView& path)
     {
 #define __ENUMERATE_IMAGE_FORMAT(Name, Ext)                    \

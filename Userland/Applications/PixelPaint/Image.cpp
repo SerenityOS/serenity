@@ -194,7 +194,7 @@ Result<void, String> Image::write_to_file(const String& file_path) const
 
 RefPtr<Gfx::Bitmap> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
 {
-    auto bitmap = Gfx::Bitmap::create(format, m_size);
+    auto bitmap = Gfx::Bitmap::try_create(format, m_size);
     if (!bitmap)
         return nullptr;
     GUI::Painter painter(*bitmap);

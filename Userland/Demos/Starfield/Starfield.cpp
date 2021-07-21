@@ -59,7 +59,7 @@ Starfield::Starfield(int interval)
 
 void Starfield::create_stars(int width, int height, int stars)
 {
-    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height });
+    m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { width, height });
 
     m_stars.grow_capacity(stars);
     for (int i = 0; i < stars; i++) {

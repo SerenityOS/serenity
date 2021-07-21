@@ -429,13 +429,13 @@ void Editor::clear_execution_position()
 
 const Gfx::Bitmap& Editor::breakpoint_icon_bitmap()
 {
-    static auto bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/breakpoint.png");
+    static auto bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/breakpoint.png");
     return *bitmap;
 }
 
 const Gfx::Bitmap& Editor::current_position_icon_bitmap()
 {
-    static auto bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png");
+    static auto bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png");
     return *bitmap;
 }
 

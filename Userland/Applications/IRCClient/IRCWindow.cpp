@@ -55,14 +55,14 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
 
             m_context_menu = GUI::Menu::construct();
 
-            m_context_menu->add_action(GUI::Action::create("Open &Query", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](const GUI::Action&) {
+            m_context_menu->add_action(GUI::Action::create("Open &Query", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/irc-open-query.png"), [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
                 m_client->handle_open_query_action(m_client->nick_without_prefix(nick.characters()));
             }));
 
-            m_context_menu->add_action(GUI::Action::create("Whois", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](const GUI::Action&) {
+            m_context_menu->add_action(GUI::Action::create("Whois", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/irc-whois.png"), [&](const GUI::Action&) {
                 auto nick = channel().member_model()->nick_at(member_view.selection().first());
                 if (nick.is_empty())
                     return;
@@ -227,7 +227,7 @@ void IRCWindow::post_notification_if_needed(const String& name, const String& me
         notification->set_title(name);
     }
 
-    notification->set_icon(Gfx::Bitmap::load_from_file("/res/icons/32x32/app-irc-client.png"));
+    notification->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/app-irc-client.png"));
     notification->set_text(message);
     notification->show();
 }

@@ -16,8 +16,8 @@ namespace Profiler {
 ProfileModel::ProfileModel(Profile& profile)
     : m_profile(profile)
 {
-    m_user_frame_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
-    m_kernel_frame_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object-red.png"));
+    m_user_frame_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"));
+    m_kernel_frame_icon.set_bitmap_for_size(16, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object-red.png"));
 }
 
 ProfileModel::~ProfileModel()
