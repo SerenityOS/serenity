@@ -102,9 +102,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto menubar = GUI::Menubar::construct();
-    text_widget.initialize_menubar(menubar);
-    window->set_menubar(menubar);
+    text_widget.initialize_menubar(*window);
 
     if (file_to_edit) {
         // A file name was passed, parse any possible line and column numbers included.
@@ -125,8 +123,6 @@ int main(int argc, char** argv)
 
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
-
-    window->set_menubar(menubar);
 
     return app->exec();
 }

@@ -78,9 +78,7 @@ int main(int argc, char** argv)
     auto& font_editor = window->set_main_widget<FontEditorWidget>(path, move(edited_font));
     font_editor.update_title();
 
-    auto menubar = GUI::Menubar::construct();
-    font_editor.initialize_menubar(menubar);
-    window->set_menubar(move(menubar));
+    font_editor.initialize_menubar(*window);
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (font_editor.request_close())

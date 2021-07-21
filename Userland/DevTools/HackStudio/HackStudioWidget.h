@@ -42,7 +42,7 @@ public:
     void set_current_editor_wrapper(RefPtr<EditorWrapper>);
 
     const String& active_file() const { return m_current_editor_wrapper->filename(); }
-    void initialize_menubar(GUI::Menubar&);
+    void initialize_menubar(GUI::Window&);
 
     Locator& locator()
     {
@@ -104,12 +104,12 @@ private:
     void create_open_files_view(GUI::Widget& parent);
     void create_toolbar(GUI::Widget& parent);
     void create_action_tab(GUI::Widget& parent);
-    void create_file_menubar(GUI::Menubar&);
-    void create_project_menubar(GUI::Menubar&);
-    void create_edit_menubar(GUI::Menubar&);
-    void create_build_menubar(GUI::Menubar&);
-    void create_view_menubar(GUI::Menubar&);
-    void create_help_menubar(GUI::Menubar&);
+    void create_file_menu(GUI::Window&);
+    void create_project_menu(GUI::Window&);
+    void create_edit_menu(GUI::Window&);
+    void create_build_menu(GUI::Window&);
+    void create_view_menu(GUI::Window&);
+    void create_help_menu(GUI::Window&);
     void create_project_tab(GUI::Widget& parent);
     void configure_project_tree_view();
 

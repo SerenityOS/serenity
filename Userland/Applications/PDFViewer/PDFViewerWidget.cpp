@@ -35,11 +35,11 @@ PDFViewerWidget::PDFViewerWidget()
     };
 }
 
-void PDFViewerWidget::initialize_menubar(GUI::Menubar& menubar)
+void PDFViewerWidget::initialize_menubar(GUI::Window& window)
 {
-    auto& file_menu = menubar.add_menu("&File");
+    auto& file_menu = window.add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window());
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(&window);
         if (open_path.has_value())
             open_file(open_path.value());
     }));
@@ -48,8 +48,8 @@ void PDFViewerWidget::initialize_menubar(GUI::Menubar& menubar)
         GUI::Application::the()->quit();
     }));
 
-    auto& help_menu = menubar.add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"), window()));
+    auto& help_menu = window.add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"), &window));
 }
 
 void PDFViewerWidget::create_toolbar()

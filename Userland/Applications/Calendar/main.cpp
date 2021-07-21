@@ -126,8 +126,7 @@ int main(int argc, char** argv)
         view_month_action->set_checked(true);
     };
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::Action::create("&Add Event", { Mod_Ctrl | Mod_Shift, Key_E }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/add-event.png"),
         [&](const GUI::Action&) {
             AddEventDialog::show(calendar->selected_date(), window);
@@ -139,14 +138,13 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     }));
 
-    auto& view_menu = menubar->add_menu("&View");
+    auto& view_menu = window->add_menu("&View");
     view_menu.add_action(*view_month_action);
     view_menu.add_action(*view_year_action);
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Calendar", app_icon, window));
 
-    window->set_menubar(move(menubar));
     window->show();
     app->exec();
 }

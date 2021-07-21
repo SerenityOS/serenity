@@ -76,8 +76,7 @@ int main(int argc, char** argv)
     widget.set_coordinates(config->read_bool_entry("Style", "Coordinates", true));
     widget.set_show_available_moves(config->read_bool_entry("Style", "ShowAvailableMoves", true));
 
-    auto menubar = GUI::Menubar::construct();
-    auto& game_menu = menubar->add_menu("&Game");
+    auto& game_menu = window->add_menu("&Game");
 
     game_menu.add_action(GUI::Action::create("&Resign", { Mod_None, Key_F3 }, [&](auto&) {
         widget.resign();
@@ -131,7 +130,7 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     }));
 
-    auto& style_menu = menubar->add_menu("&Style");
+    auto& style_menu = window->add_menu("&Style");
     GUI::ActionGroup piece_set_action_group;
     piece_set_action_group.set_exclusive(true);
     auto& piece_set_menu = style_menu.add_submenu("&Piece Set");
@@ -189,7 +188,7 @@ int main(int argc, char** argv)
     show_available_moves_action->set_checked(widget.show_available_moves());
     style_menu.add_action(show_available_moves_action);
 
-    auto& engine_menu = menubar->add_menu("&Engine");
+    auto& engine_menu = window->add_menu("&Engine");
 
     GUI::ActionGroup engines_action_group;
     engines_action_group.set_exclusive(true);
@@ -210,10 +209,8 @@ int main(int argc, char** argv)
         engine_submenu.add_action(*action);
     }
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Chess", app_icon, window));
-
-    window->set_menubar(move(menubar));
 
     window->show();
     widget.reset();

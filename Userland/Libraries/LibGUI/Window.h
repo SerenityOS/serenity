@@ -200,6 +200,7 @@ public:
 
     void did_disable_focused_widget(Badge<Widget>);
 
+    Menu& add_menu(String name);
     void set_menubar(RefPtr<Menubar>);
 
 protected:

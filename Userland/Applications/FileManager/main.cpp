@@ -842,9 +842,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         refresh_tree_view();
     });
 
-    auto menubar = GUI::Menubar::construct();
-
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(mkdir_action);
     file_menu.add_action(touch_action);
     file_menu.add_action(focus_dependent_delete_action);
@@ -856,7 +854,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = menubar->add_menu("&Edit");
+    auto& edit_menu = window->add_menu("&Edit");
     edit_menu.add_action(cut_action);
     edit_menu.add_action(copy_action);
     edit_menu.add_action(paste_action);
@@ -874,7 +872,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_view.set_should_show_dotfiles(show_dotfiles);
     action_show_dotfiles->set_checked(show_dotfiles);
 
-    auto& view_menu = menubar->add_menu("&View");
+    auto& view_menu = window->add_menu("&View");
     auto& layout_menu = view_menu.add_submenu("&Layout");
     layout_menu.add_action(*layout_toolbar_action);
     layout_menu.add_action(*layout_location_action);
@@ -897,7 +895,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         location_textbox.set_focus(true);
     });
 
-    auto& go_menu = menubar->add_menu("&Go");
+    auto& go_menu = window->add_menu("&Go");
     go_menu.add_action(go_back_action);
     go_menu.add_action(go_forward_action);
     go_menu.add_action(open_parent_directory_action);
@@ -906,10 +904,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     go_menu.add_separator();
     go_menu.add_action(directory_view.open_terminal_action());
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("File Manager", GUI::Icon::default_icon("app-file-manager"), window));
-
-    window->set_menubar(menubar);
 
     main_toolbar.add_action(go_back_action);
     main_toolbar.add_action(go_forward_action);

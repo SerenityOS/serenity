@@ -533,9 +533,9 @@ void FontEditorWidget::initialize(const String& path, RefPtr<Gfx::BitmapFont>&& 
         on_initialize();
 }
 
-void FontEditorWidget::initialize_menubar(GUI::Menubar& menubar)
+void FontEditorWidget::initialize_menubar(GUI::Window& window)
 {
-    auto& file_menu = menubar.add_menu("&File");
+    auto& file_menu = window.add_menu("&File");
     file_menu.add_action(*m_new_action);
     file_menu.add_action(*m_open_action);
     file_menu.add_action(*m_save_action);
@@ -547,7 +547,7 @@ void FontEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = menubar.add_menu("&Edit");
+    auto& edit_menu = window.add_menu("&Edit");
     edit_menu.add_action(*m_undo_action);
     edit_menu.add_action(*m_redo_action);
     edit_menu.add_separator();
@@ -556,7 +556,7 @@ void FontEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     edit_menu.add_action(*m_paste_action);
     edit_menu.add_action(*m_delete_action);
 
-    auto& view_menu = menubar.add_menu("&View");
+    auto& view_menu = window.add_menu("&View");
     view_menu.add_action(*m_open_preview_action);
     view_menu.add_separator();
     view_menu.add_action(*m_show_metadata_action);
@@ -566,11 +566,11 @@ void FontEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     scale_menu.add_action(*m_scale_ten_action);
     scale_menu.add_action(*m_scale_fifteen_action);
 
-    auto& help_menu = menubar.add_menu("&Help");
+    auto& help_menu = window.add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/FontEditor.md"), "/bin/Help");
     }));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Font Editor", GUI::Icon::default_icon("app-font-editor"), window()));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Font Editor", GUI::Icon::default_icon("app-font-editor"), &window));
 }
 
 bool FontEditorWidget::save_as(const String& path)

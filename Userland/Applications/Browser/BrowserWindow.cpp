@@ -123,9 +123,7 @@ BrowserWindow::~BrowserWindow()
 
 void BrowserWindow::build_menus()
 {
-    auto menubar = GUI::Menubar::construct();
-
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = add_menu("&File");
     file_menu.add_action(WindowActions::the().create_new_tab_action());
 
     auto close_tab_action = GUI::Action::create(
@@ -141,7 +139,7 @@ void BrowserWindow::build_menus()
         GUI::Application::the()->quit();
     }));
 
-    auto& view_menu = menubar->add_menu("&View");
+    auto& view_menu = add_menu("&View");
     view_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
     view_menu.add_separator();
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action(
@@ -169,7 +167,7 @@ void BrowserWindow::build_menus()
     m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) { active_tab().reload(); }, this);
     m_reload_action->set_status_tip("Reload current page");
 
-    auto& go_menu = menubar->add_menu("&Go");
+    auto& go_menu = add_menu("&Go");
     go_menu.add_action(*m_go_back_action);
     go_menu.add_action(*m_go_forward_action);
     go_menu.add_action(*m_go_home_action);
@@ -235,7 +233,7 @@ void BrowserWindow::build_menus()
         this);
     m_inspect_dom_tree_action->set_status_tip("Open DOM inspector window for this page");
 
-    auto& inspect_menu = menubar->add_menu("&Inspect");
+    auto& inspect_menu = add_menu("&Inspect");
     inspect_menu.add_action(*m_view_source_action);
     inspect_menu.add_action(*m_inspect_dom_tree_action);
 
@@ -276,7 +274,7 @@ void BrowserWindow::build_menus()
     js_console_action->set_status_tip("Open JavaScript console for this page");
     inspect_menu.add_action(js_console_action);
 
-    auto& settings_menu = menubar->add_menu("&Settings");
+    auto& settings_menu = add_menu("&Settings");
 
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL", [this](auto&) {
@@ -362,7 +360,7 @@ void BrowserWindow::build_menus()
         custom_search_engine_action->set_status_tip(g_search_engine);
     }
 
-    auto& debug_menu = menubar->add_menu("&Debug");
+    auto& debug_menu = add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
         "Dump &DOM Tree", [this](auto&) {
             auto& tab = active_tab();
@@ -490,10 +488,8 @@ void BrowserWindow::build_menus()
     spoof_user_agent_menu.add_action(custom_user_agent);
     m_user_agent_spoof_actions.add_action(custom_user_agent);
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = add_menu("&Help");
     help_menu.add_action(WindowActions::the().about_action());
-
-    set_menubar(move(menubar));
 }
 
 GUI::TabWidget& BrowserWindow::tab_widget()

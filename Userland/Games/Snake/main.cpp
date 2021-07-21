@@ -58,9 +58,7 @@ int main(int argc, char** argv)
 
     auto& game = window->set_main_widget<SnakeGame>();
 
-    auto menubar = GUI::Menubar::construct();
-
-    auto& game_menu = menubar->add_menu("&Game");
+    auto& game_menu = window->add_menu("&Game");
 
     game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
         game.reset();
@@ -70,10 +68,8 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     }));
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Snake", app_icon, window));
-
-    window->set_menubar(move(menubar));
 
     window->show();
 

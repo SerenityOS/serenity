@@ -110,8 +110,7 @@ int main(int argc, char** argv)
     });
     main_toolbar.add_action(rotate_pattern_action);
 
-    auto menubar = GUI::Menubar::construct();
-    auto& game_menu = menubar->add_menu("&Game");
+    auto& game_menu = window->add_menu("&Game");
 
     game_menu.add_action(clear_board_action);
     game_menu.add_action(randomize_cells_action);
@@ -123,10 +122,8 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     }));
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Game Of Life", app_icon, window));
-
-    window->set_menubar(move(menubar));
 
     board_widget.on_running_state_change = [&]() {
         if (board_widget.is_running()) {

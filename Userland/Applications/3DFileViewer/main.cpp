@@ -206,8 +206,7 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(true);
     auto& widget = window->set_main_widget<GLContextWidget>();
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
 
     auto load_model = [&](StringView const& filename) {
         if (widget.load(filename)) {
@@ -229,7 +228,7 @@ int main(int argc, char** argv)
         app->quit();
     }));
 
-    auto& view_menu = menubar->add_menu("&View");
+    auto& view_menu = window->add_menu("&View");
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
         window->set_fullscreen(!window->is_fullscreen());
     }));
@@ -281,10 +280,9 @@ int main(int argc, char** argv)
 
     normal_rotation_action->set_checked(true);
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("3D File Viewer", app_icon, window));
 
-    window->set_menubar(move(menubar));
     window->show();
 
     auto filename = argc > 1 ? argv[1] : "/home/anon/Documents/3D Models/teapot.obj";

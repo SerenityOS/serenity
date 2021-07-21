@@ -79,14 +79,12 @@ int main(int argc, char* argv[])
 
     auto& eyes = window->set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns);
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Eyes Demo", app_icon, window));
 
-    window->set_menubar(move(menubar));
     window->show();
     eyes.track_cursor_globally();
 

@@ -27,7 +27,7 @@ public:
     const String& path() { return m_path; }
     const Gfx::BitmapFont& edited_font() { return *m_edited_font; }
     void initialize(const String& path, RefPtr<Gfx::BitmapFont>&&);
-    void initialize_menubar(GUI::Menubar&);
+    void initialize_menubar(GUI::Window&);
 
     bool is_showing_font_metadata() { return m_font_metadata; }
     void set_show_font_metadata(bool b);

@@ -922,9 +922,9 @@ void HackStudioWidget::create_project_tab(GUI::Widget& parent)
     };
 }
 
-void HackStudioWidget::create_file_menubar(GUI::Menubar& menubar)
+void HackStudioWidget::create_file_menu(GUI::Window& window)
 {
-    auto& file_menu = menubar.add_menu("&File");
+    auto& file_menu = window.add_menu("&File");
     file_menu.add_action(*m_new_project_action);
     file_menu.add_action(*m_open_action);
     file_menu.add_action(*m_save_action);
@@ -934,16 +934,16 @@ void HackStudioWidget::create_file_menubar(GUI::Menubar& menubar)
     }));
 }
 
-void HackStudioWidget::create_project_menubar(GUI::Menubar& menubar)
+void HackStudioWidget::create_project_menu(GUI::Window& window)
 {
-    auto& project_menu = menubar.add_menu("&Project");
+    auto& project_menu = window.add_menu("&Project");
     project_menu.add_action(*m_new_file_action);
     project_menu.add_action(*m_new_directory_action);
 }
 
-void HackStudioWidget::create_edit_menubar(GUI::Menubar& menubar)
+void HackStudioWidget::create_edit_menu(GUI::Window& window)
 {
-    auto& edit_menu = menubar.add_menu("&Edit");
+    auto& edit_menu = window.add_menu("&Edit");
     edit_menu.add_action(GUI::Action::create("&Find in Files...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"), [this](auto&) {
         reveal_action_tab(*m_find_in_files_widget);
         m_find_in_files_widget->focus_textbox_and_select_all();
@@ -961,9 +961,9 @@ void HackStudioWidget::create_edit_menubar(GUI::Menubar& menubar)
     edit_menu.add_action(vim_emulation_setting_action);
 }
 
-void HackStudioWidget::create_build_menubar(GUI::Menubar& menubar)
+void HackStudioWidget::create_build_menu(GUI::Window& window)
 {
-    auto& build_menu = menubar.add_menu("&Build");
+    auto& build_menu = window.add_menu("&Build");
     build_menu.add_action(*m_build_action);
     build_menu.add_separator();
     build_menu.add_action(*m_run_action);
@@ -972,7 +972,7 @@ void HackStudioWidget::create_build_menubar(GUI::Menubar& menubar)
     build_menu.add_action(*m_debug_action);
 }
 
-void HackStudioWidget::create_view_menubar(GUI::Menubar& menubar)
+void HackStudioWidget::create_view_menu(GUI::Window& window)
 {
     auto hide_action_tabs_action = GUI::Action::create("&Hide Action Tabs", { Mod_Ctrl | Mod_Shift, Key_X }, [this](auto&) {
         hide_action_tabs();
@@ -981,7 +981,7 @@ void HackStudioWidget::create_view_menubar(GUI::Menubar& menubar)
         m_locator->open();
     });
 
-    auto& view_menu = menubar.add_menu("&View");
+    auto& view_menu = window.add_menu("&View");
     view_menu.add_action(hide_action_tabs_action);
     view_menu.add_action(open_locator_action);
     view_menu.add_separator();
@@ -1018,10 +1018,10 @@ void HackStudioWidget::create_view_menubar(GUI::Menubar& menubar)
     view_menu.add_action(*m_remove_current_terminal_action);
 }
 
-void HackStudioWidget::create_help_menubar(GUI::Menubar& menubar)
+void HackStudioWidget::create_help_menu(GUI::Window& window)
 {
-    auto& help_menu = menubar.add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Hack Studio", GUI::Icon::default_icon("app-hack-studio"), window()));
+    auto& help_menu = window.add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_about_action("Hack Studio", GUI::Icon::default_icon("app-hack-studio"), &window));
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_stop_action()
@@ -1039,14 +1039,14 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_stop_action()
     return action;
 }
 
-void HackStudioWidget::initialize_menubar(GUI::Menubar& menubar)
+void HackStudioWidget::initialize_menubar(GUI::Window& window)
 {
-    create_file_menubar(menubar);
-    create_project_menubar(menubar);
-    create_edit_menubar(menubar);
-    create_build_menubar(menubar);
-    create_view_menubar(menubar);
-    create_help_menubar(menubar);
+    create_file_menu(window);
+    create_project_menu(window);
+    create_edit_menu(window);
+    create_build_menu(window);
+    create_view_menu(window);
+    create_help_menu(window);
 }
 
 void HackStudioWidget::update_statusbar()

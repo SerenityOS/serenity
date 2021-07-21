@@ -76,12 +76,11 @@ int main(int argc, char** argv)
     Gfx::Palette preview_palette = app->palette();
 
     auto window = GUI::Window::construct();
-    auto menubar = GUI::Menubar::construct();
 
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Theme Editor", app_icon, window));
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
@@ -120,7 +119,6 @@ int main(int argc, char** argv)
 
     window->resize(480, 385);
     window->set_resizable(false);
-    window->set_menubar(menubar);
     window->show();
     window->set_title("Theme Editor");
     window->set_icon(app_icon.bitmap_for_size(16));
