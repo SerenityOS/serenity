@@ -424,11 +424,6 @@ private:
         }
     }
 
-    [[nodiscard]] BucketType const* lookup_for_reading(T const& value) const
-    {
-        return lookup_with_hash(TraitsForT::hash(value), [&value](auto& entry) { return TraitsForT::equals(entry, value); });
-    }
-
     [[nodiscard]] BucketType& lookup_for_writing(T const& value)
     {
         if (should_grow())
