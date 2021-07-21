@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
@@ -34,6 +35,11 @@ public:
 
 private:
     Heap& m_heap;
+
+    IntrusiveListNode<MarkedValueList> m_list_node;
+
+public:
+    using List = IntrusiveList<MarkedValueList, RawPtr<MarkedValueList>, &MarkedValueList::m_list_node>;
 };
 
 }

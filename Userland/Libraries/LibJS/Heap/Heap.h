@@ -109,7 +109,7 @@ private:
 
     HandleImpl::List m_handles;
 
-    HashTable<MarkedValueList*> m_marked_value_lists;
+    MarkedValueList::List m_marked_value_lists;
 
     HashTable<WeakContainer*> m_weak_containers;
 
