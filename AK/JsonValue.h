@@ -91,6 +91,15 @@ public:
     u32 to_u32(u32 default_value = 0) const { return to_number<u32>(default_value); }
     u64 to_u64(u64 default_value = 0) const { return to_number<u64>(default_value); }
 
+    FlatPtr to_addr(FlatPtr default_value = 0) const
+    {
+#ifdef __LP64__
+        return to_u64(default_value);
+#else
+        return to_u32(default_value);
+#endif
+    }
+
     bool to_bool(bool default_value = false) const
     {
         if (!is_bool())
