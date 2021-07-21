@@ -91,8 +91,8 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
     vm().gather_roots(roots);
     gather_conservative_roots(roots);
 
-    for (auto* handle : m_handles)
-        roots.set(handle->cell());
+    for (auto& handle : m_handles)
+        roots.set(handle.cell());
 
     for (auto* list : m_marked_value_lists) {
         for (auto& value : list->values()) {
@@ -258,14 +258,14 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
 
 void Heap::did_create_handle(Badge<HandleImpl>, HandleImpl& impl)
 {
-    VERIFY(!m_handles.contains(&impl));
-    m_handles.set(&impl);
+    VERIFY(!m_handles.contains(impl));
+    m_handles.append(impl);
 }
 
 void Heap::did_destroy_handle(Badge<HandleImpl>, HandleImpl& impl)
 {
-    VERIFY(m_handles.contains(&impl));
-    m_handles.remove(&impl);
+    VERIFY(m_handles.contains(impl));
+    m_handles.remove(impl);
 }
 
 void Heap::did_create_marked_value_list(Badge<MarkedValueList>, MarkedValueList& list)

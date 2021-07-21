@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/HashTable.h>
+#include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Types.h>
@@ -105,7 +106,8 @@ private:
     VM& m_vm;
 
     Vector<NonnullOwnPtr<CellAllocator>> m_allocators;
-    HashTable<HandleImpl*> m_handles;
+
+    HandleImpl::List m_handles;
 
     HashTable<MarkedValueList*> m_marked_value_lists;
 

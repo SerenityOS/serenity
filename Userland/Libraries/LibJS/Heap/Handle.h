@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
@@ -30,6 +31,11 @@ private:
 
     explicit HandleImpl(Cell*);
     Cell* m_cell { nullptr };
+
+    IntrusiveListNode<HandleImpl> m_list_node;
+
+public:
+    using List = IntrusiveList<HandleImpl, RawPtr<HandleImpl>, &HandleImpl::m_list_node>;
 };
 
 template<class T>
