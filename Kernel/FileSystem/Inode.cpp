@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -105,7 +105,7 @@ Inode::~Inode()
     all_with_lock().remove(*this);
 
     for (auto& watcher : m_watchers) {
-        watcher->unregister_by_inode({}, identifier());
+        watcher.unregister_by_inode({}, identifier());
     }
 }
 
@@ -168,15 +168,15 @@ bool Inode::unbind_socket()
 void Inode::register_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
 {
     MutexLocker locker(m_inode_lock);
-    VERIFY(!m_watchers.contains(&watcher));
-    m_watchers.set(&watcher);
+    VERIFY(!m_watchers.contains(watcher));
+    m_watchers.append(watcher);
 }
 
 void Inode::unregister_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
 {
     MutexLocker locker(m_inode_lock);
-    VERIFY(m_watchers.contains(&watcher));
-    m_watchers.remove(&watcher);
+    VERIFY(m_watchers.contains(watcher));
+    m_watchers.remove(watcher);
 }
 
 NonnullRefPtr<FIFO> Inode::fifo()
@@ -209,7 +209,7 @@ void Inode::set_metadata_dirty(bool metadata_dirty)
         // FIXME: Maybe we should hook into modification events somewhere else, I'm not sure where.
         //        We don't always end up on this particular code path, for instance when writing to an ext2fs file.
         for (auto& watcher : m_watchers) {
-            watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::MetadataModified);
+            watcher.notify_inode_event({}, identifier(), InodeWatcherEvent::Type::MetadataModified);
         }
     }
 }
@@ -219,7 +219,7 @@ void Inode::did_add_child(InodeIdentifier const&, String const& name)
     MutexLocker locker(m_inode_lock);
 
     for (auto& watcher : m_watchers) {
-        watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ChildCreated, name);
+        watcher.notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ChildCreated, name);
     }
 }
 
@@ -233,7 +233,7 @@ void Inode::did_remove_child(InodeIdentifier const&, String const& name)
     }
 
     for (auto& watcher : m_watchers) {
-        watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ChildDeleted, name);
+        watcher.notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ChildDeleted, name);
     }
 }
 
@@ -241,7 +241,7 @@ void Inode::did_modify_contents()
 {
     MutexLocker locker(m_inode_lock);
     for (auto& watcher : m_watchers) {
-        watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ContentModified);
+        watcher.notify_inode_event({}, identifier(), InodeWatcherEvent::Type::ContentModified);
     }
 }
 
@@ -249,7 +249,7 @@ void Inode::did_delete_self()
 {
     MutexLocker locker(m_inode_lock);
     for (auto& watcher : m_watchers) {
-        watcher->notify_inode_event({}, identifier(), InodeWatcherEvent::Type::Deleted);
+        watcher.notify_inode_event({}, identifier(), InodeWatcherEvent::Type::Deleted);
     }
 }
 
