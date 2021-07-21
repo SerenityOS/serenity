@@ -913,6 +913,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     main_toolbar.add_action(mkdir_action);
     main_toolbar.add_action(touch_action);
     main_toolbar.add_action(focus_dependent_delete_action);
+    main_toolbar.add_action(directory_view.rename_action());
 
     main_toolbar.add_separator();
     main_toolbar.add_action(cut_action);
