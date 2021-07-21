@@ -51,7 +51,7 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
     const char* begin_color = g_should_output_color ? "\033[34;1m" : "";
     const char* end_color = g_should_output_color ? "\033[0m" : "";
 #if ARCH(I386)
-    outln("=> {}SC_{}(0x{:x}, 0x{:x}, 0x{:x}){}",
+    outln("=> {}SC_{}({:#x}, {:#x}, {:#x}){}",
         begin_color,
         Syscall::to_string((Syscall::Function)regs.eax),
         regs.edx,
@@ -59,7 +59,7 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
         regs.ebx,
         end_color);
 #else
-    outln("=> {}SC_{}(0x{:x}, 0x{:x}, 0x{:x}){}",
+    outln("=> {}SC_{}({:#x}, {:#x}, {:#x}){}",
         begin_color,
         Syscall::to_string((Syscall::Function)regs.rax),
         regs.rdx,
