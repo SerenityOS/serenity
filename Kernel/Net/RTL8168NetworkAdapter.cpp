@@ -1572,7 +1572,7 @@ void RTL8168NetworkAdapter::identify_chip_version()
         }
         break;
     default:
-        dbgln_if(RTL8168_DEBUG, "Unable to determine device version: {#04x}", registers);
+        dbgln_if(RTL8168_DEBUG, "Unable to determine device version: {:#04x}", registers);
         m_version = ChipVersion::Unknown;
         m_version_uncertain = true;
         break;
