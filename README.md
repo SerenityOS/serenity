@@ -1,4 +1,4 @@
-# serenity-dsl-syntaxhighlight README
+# serenity-dsl-syntaxhighlight – Syntax highlighting for SerenityOS' DSLs
 
 Syntax highlighting for SerenityOS' Domain Specific Languages:
 
@@ -8,6 +8,11 @@ Syntax highlighting for SerenityOS' Domain Specific Languages:
 ## Features
 
 Provides TextMate Grammar-based syntax highlighting for the IPC and GML languages. Syntax highlighting is mostly compliant with SerenityOS' own syntax highlighters (in the case of GML) and code generators (in the case of IPC).
+
+### GML syntax highlighting
+![](./img/gml-highlight.png)
+### IPC syntax highlighting
+![](./img/ipc-highlight.png)
 
 ## Known Issues
 
