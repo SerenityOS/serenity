@@ -149,9 +149,6 @@ void Lexer::consume()
     if (m_position > m_source.length())
         return;
 
-    if (did_reach_eof())
-        return;
-
     if (is_line_terminator()) {
         if constexpr (LEXER_DEBUG) {
             String type;
@@ -189,6 +186,9 @@ void Lexer::consume()
     } else {
         m_line_column++;
     }
+
+    if (did_reach_eof())
+        return;
 
     m_current_char = m_source[m_position++];
 }
@@ -399,12 +399,11 @@ Token Lexer::next()
                 do {
                     consume();
                 } while (!is_eof() && !is_block_comment_end());
-                if (is_eof())
+                if (!is_eof()) {
+                    consume();
+                    consume();
+                } else
                     unterminated_comment = true;
-                consume(); // consume *
-                if (is_eof())
-                    unterminated_comment = true;
-                consume(); // consume /
             } else {
                 break;
             }
