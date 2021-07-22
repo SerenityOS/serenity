@@ -488,6 +488,40 @@ static inline bool is_list_style_type(StyleValue const& value)
     }
 }
 
+static inline bool is_text_decoration_line(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+
+    switch (value.to_identifier()) {
+    case ValueID::None:
+    case ValueID::Underline:
+    case ValueID::Overline:
+    case ValueID::LineThrough:
+    case ValueID::Blink:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static inline bool is_text_decoration_style(StyleValue const& value)
+{
+    if (value.is_builtin_or_dynamic())
+        return true;
+
+    switch (value.to_identifier()) {
+    case ValueID::Solid:
+    case ValueID::Double:
+    case ValueID::Dotted:
+    case ValueID::Dashed:
+    case ValueID::Wavy:
+        return true;
+    default:
+        return false;
+    }
+}
+
 static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document, bool is_internally_generated_pseudo_property = false)
 {
     CSS::DeprecatedParsingContext deprecated_context(document);
@@ -499,17 +533,63 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::TextDecoration) {
-        switch (value.to_identifier()) {
-        case CSS::ValueID::None:
-        case CSS::ValueID::Underline:
-        case CSS::ValueID::Overline:
-        case CSS::ValueID::LineThrough:
-        case CSS::ValueID::Blink:
-            set_property_expanding_shorthands(style, CSS::PropertyID::TextDecorationLine, value, document);
-            break;
-        default:
-            break;
+        if (value.is_color()) {
+            style.set_property(CSS::PropertyID::TextDecorationColor, value);
+            return;
         }
+        if (is_text_decoration_line(value)) {
+            style.set_property(CSS::PropertyID::TextDecorationLine, value);
+            return;
+        }
+        if (is_text_decoration_style(value)) {
+            style.set_property(CSS::PropertyID::TextDecorationStyle, value);
+            return;
+        }
+
+        if (value.is_value_list()) {
+            auto& parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
+            if (!parts.is_empty() && parts.size() <= 3) {
+                RefPtr<StyleValue> color_value;
+                RefPtr<StyleValue> line_value;
+                RefPtr<StyleValue> style_value;
+
+                for (auto& part : parts) {
+                    auto value = Parser::parse_css_value(context, property_id, part);
+                    if (!value)
+                        return;
+
+                    if (value->is_color()) {
+                        if (color_value)
+                            return;
+                        color_value = move(value);
+                        continue;
+                    }
+                    if (is_text_decoration_line(*value)) {
+                        if (line_value)
+                            return;
+                        line_value = move(value);
+                        continue;
+                    }
+                    if (is_text_decoration_style(*value)) {
+                        if (style_value)
+                            return;
+                        style_value = move(value);
+                        continue;
+                    }
+
+                    return;
+                }
+
+                if (color_value)
+                    style.set_property(CSS::PropertyID::TextDecorationColor, *color_value);
+                if (line_value)
+                    style.set_property(CSS::PropertyID::TextDecorationLine, *line_value);
+                if (style_value)
+                    style.set_property(CSS::PropertyID::TextDecorationStyle, *style_value);
+            }
+            return;
+        }
+
         return;
     }
 
