@@ -15,6 +15,7 @@ set(SOURCES
     IODevice.cpp
     LocalServer.cpp
     LocalSocket.cpp
+    LockFile.cpp
     MimeData.cpp
     NetworkJob.cpp
     NetworkResponse.cpp
