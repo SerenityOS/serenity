@@ -1085,13 +1085,16 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
         if (vm.exception())
             return {};
     }
-    auto s = this_object.to_string(global_object);
+
+    auto string = this_object.to_utf16_string(global_object);
     if (vm.exception())
         return {};
+    Utf16View utf16_string_view { string };
+
     auto rx = regexp_create(global_object, regexp, js_undefined());
     if (!rx)
         return {};
-    return rx->invoke(*vm.well_known_symbol_search(), js_string(vm, s));
+    return rx->invoke(*vm.well_known_symbol_search(), js_string(vm, utf16_string_view));
 }
 
 // B.2.3.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml
