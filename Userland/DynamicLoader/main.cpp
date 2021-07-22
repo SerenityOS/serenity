@@ -37,7 +37,7 @@ static void perform_self_relocations(auxv_t* auxvp)
     VERIFY(found_base_address);
     ElfW(Ehdr)* header = (ElfW(Ehdr)*)(base_address);
     ElfW(Phdr)* pheader = (ElfW(Phdr)*)(base_address + header->e_phoff);
-    u32 dynamic_section_addr = 0;
+    FlatPtr dynamic_section_addr = 0;
     for (size_t i = 0; i < (size_t)header->e_phnum; ++i, ++pheader) {
         if (pheader->p_type != PT_DYNAMIC)
             continue;
