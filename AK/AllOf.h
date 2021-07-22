@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Iterator.h>
 
 namespace AK {
@@ -20,6 +21,16 @@ constexpr bool all_of(
         if (!predicate(*iter)) {
             return false;
         }
+    }
+    return true;
+}
+
+template<IterableContainer Container>
+constexpr bool all_of(Container&& container, auto const& predicate)
+{
+    for (auto&& entry : container) {
+        if (!predicate(entry))
+            return false;
     }
     return true;
 }
