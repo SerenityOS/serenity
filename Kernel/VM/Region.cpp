@@ -19,7 +19,7 @@
 
 namespace Kernel {
 
-Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+Region::Region(Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
     : PurgeablePageRanges(vmobject)
     , m_range(range)
     , m_offset_in_vmobject(offset_in_vmobject)
@@ -184,14 +184,14 @@ size_t Region::cow_pages() const
 {
     if (!vmobject().is_anonymous())
         return 0;
-    return static_cast<const AnonymousVMObject&>(vmobject()).cow_pages();
+    return static_cast<AnonymousVMObject const&>(vmobject()).cow_pages();
 }
 
 size_t Region::amount_dirty() const
 {
     if (!vmobject().is_inode())
         return amount_resident();
-    return static_cast<const InodeVMObject&>(vmobject()).amount_dirty();
+    return static_cast<InodeVMObject const&>(vmobject()).amount_dirty();
 }
 
 size_t Region::amount_resident() const
@@ -216,7 +216,7 @@ size_t Region::amount_shared() const
     return bytes;
 }
 
-OwnPtr<Region> Region::try_create_user_accessible(Process* owner, const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+OwnPtr<Region> Region::try_create_user_accessible(Process* owner, Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
 {
     auto region = adopt_own_if_nonnull(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
     if (!region)
@@ -226,7 +226,7 @@ OwnPtr<Region> Region::try_create_user_accessible(Process* owner, const Range& r
     return region;
 }
 
-OwnPtr<Region> Region::try_create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable)
+OwnPtr<Region> Region::try_create_kernel_only(Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable)
 {
     return adopt_own_if_nonnull(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, false));
 }
@@ -235,7 +235,7 @@ bool Region::should_cow(size_t page_index) const
 {
     if (!vmobject().is_anonymous())
         return false;
-    return static_cast<const AnonymousVMObject&>(vmobject()).should_cow(first_page_index() + page_index, m_shared);
+    return static_cast<AnonymousVMObject const&>(vmobject()).should_cow(first_page_index() + page_index, m_shared);
 }
 
 void Region::set_should_cow(size_t page_index, bool cow)
@@ -406,7 +406,7 @@ void Region::remap()
     map(*m_page_directory);
 }
 
-PageFaultResponse Region::handle_fault(const PageFault& fault, ScopedSpinLock<RecursiveSpinLock>& mm_lock)
+PageFaultResponse Region::handle_fault(PageFault const& fault, ScopedSpinLock<RecursiveSpinLock>& mm_lock)
 {
     auto page_index_in_region = page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
