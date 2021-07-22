@@ -45,6 +45,10 @@ int main()
     auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini"));
     auto keymap = mapper_config->read_entry("Mapping", "Keymap", "");
 
+    auto keymap_user_settings = keyboard_settings_config->read_entry("StartupEnable", "Keymap", "");
+    if (keymap_user_settings != keymap)
+        keymap = keymap_user_settings;
+
     pid_t child_pid;
     const char* argv[] = { "/bin/keymap", keymap.characters(), nullptr };
     if ((errno = posix_spawn(&child_pid, "/bin/keymap", nullptr, nullptr, const_cast<char**>(argv), environ))) {
