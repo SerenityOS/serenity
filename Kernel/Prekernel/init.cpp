@@ -150,6 +150,7 @@ extern "C" [[noreturn]] void init()
     BootInfo info;
     info.start_of_prekernel_image = (PhysicalPtr)start_of_prekernel_image;
     info.end_of_prekernel_image = (PhysicalPtr)end_of_prekernel_image;
+    info.physical_to_virtual_offset = kernel_load_base;
     info.kernel_base = kernel_load_base;
     info.multiboot_info_ptr = (FlatPtr)adjust_by_load_base(multiboot_info_ptr);
 #if ARCH(X86_64)
