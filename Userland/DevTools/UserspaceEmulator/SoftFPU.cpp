@@ -197,13 +197,12 @@ template<Arithmetic T>
 ALWAYS_INLINE T SoftFPU::fpu_round_checked(long double value)
 {
     T result = fpu_round<T>(value);
-    if (auto rnd = value - result) {
-        if (rnd > 0)
-            set_c1(1);
-        else
-            set_c1(0);
+    if (result != value)
         fpu_set_exception(FPU_Exception::Precision);
-    }
+    if (result > value)
+        set_c1(1);
+    else
+        set_c1(0);
     return result;
 }
 
@@ -791,13 +790,7 @@ void SoftFPU::FCHS(const X86::Instruction&)
 
 void SoftFPU::FRNDINT(const X86::Instruction&)
 {
-    auto res = fpu_round<long double>(fpu_get(0));
-    if (auto rnd = (res - fpu_get(0))) {
-        if (rnd > 0)
-            set_c1(1);
-        else
-            set_c1(0);
-    }
+    auto res = fpu_round_checked<long double>(fpu_get(0));
     fpu_set(0, res);
 }
 
