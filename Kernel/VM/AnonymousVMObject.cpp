@@ -65,14 +65,9 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_with_size(size_t size, A
     return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, commit));
 }
 
-RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_with_physical_pages(NonnullRefPtrVector<PhysicalPage> physical_pages)
+RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>> physical_pages)
 {
     return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(physical_pages));
-}
-
-RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_with_physical_page(PhysicalPage& page)
-{
-    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(page));
 }
 
 RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_for_physical_range(PhysicalAddress paddr, size_t size)
@@ -109,14 +104,7 @@ AnonymousVMObject::AnonymousVMObject(PhysicalAddress paddr, size_t size)
         physical_pages()[i] = PhysicalPage::create(paddr.offset(i * PAGE_SIZE), MayReturnToFreeList::No);
 }
 
-AnonymousVMObject::AnonymousVMObject(PhysicalPage& page)
-    : VMObject(PAGE_SIZE)
-    , m_volatile_ranges_cache({ 0, page_count() })
-{
-    physical_pages()[0] = page;
-}
-
-AnonymousVMObject::AnonymousVMObject(NonnullRefPtrVector<PhysicalPage> physical_pages)
+AnonymousVMObject::AnonymousVMObject(Span<NonnullRefPtr<PhysicalPage>> physical_pages)
     : VMObject(physical_pages.size() * PAGE_SIZE)
     , m_volatile_ranges_cache({ 0, page_count() })
 {

@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-RefPtr<ScatterGatherList> ScatterGatherList::create(AsyncBlockDeviceRequest& request, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size)
+RefPtr<ScatterGatherList> ScatterGatherList::try_create(AsyncBlockDeviceRequest& request, Span<NonnullRefPtr<PhysicalPage>> allocated_pages, size_t device_block_size)
 {
     auto vm_object = AnonymousVMObject::try_create_with_physical_pages(allocated_pages);
     if (!vm_object)
