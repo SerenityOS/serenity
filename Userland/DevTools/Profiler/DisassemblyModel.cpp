@@ -9,6 +9,7 @@
 #include <AK/MappedFile.h>
 #include <LibELF/Image.h>
 #include <LibGUI/Painter.h>
+#include <LibSymbolication/Symbolication.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/ELFSymbolProvider.h>
 #include <ctype.h>
@@ -40,13 +41,8 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     OwnPtr<ELF::Image> kernel_elf;
     const ELF::Image* elf;
     FlatPtr base_address = 0;
-    // FIXME: Use /proc for this
-#if ARCH(I386)
-    FlatPtr kernel_base = 0xc0000000;
-#else
-    FlatPtr kernel_base = 0x2000000000;
-#endif
-    if (m_node.address() >= kernel_base) {
+    auto maybe_kernel_base = Symbolication::kernel_base();
+    if (maybe_kernel_base.has_value() && m_node.address() >= maybe_kernel_base.value()) {
         if (!m_kernel_file) {
             auto file_or_error = MappedFile::map("/boot/Kernel.debug");
             if (file_or_error.is_error())

@@ -9,6 +9,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
 #include <LibSymbolication/Symbolication.h>
 #include <unistd.h>
 
@@ -44,13 +45,8 @@ int main(int argc, char** argv)
         auto frame_number = symbols.size() - 1;
         for (auto& symbol : symbols) {
             // Make kernel stack frames stand out.
-            // FIXME: Use /proc for this
-#if ARCH(I386)
-            FlatPtr kernel_base = 0xc0000000;
-#else
-            FlatPtr kernel_base = 0x2000000000;
-#endif
-            int color = symbol.address < kernel_base ? 35 : 31;
+            auto maybe_kernel_base = Symbolication::kernel_base();
+            int color = maybe_kernel_base.has_value() && symbol.address < maybe_kernel_base.value() ? 35 : 31;
             out("{:3}: \033[{};1m{:p}\033[0m | ", frame_number, color, symbol.address);
             if (!symbol.name.is_empty())
                 out("{} ", symbol.name);

@@ -8,6 +8,7 @@
 #include "Profile.h"
 #include <AK/StringBuilder.h>
 #include <LibGUI/FileIconProvider.h>
+#include <LibSymbolication/Symbolication.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -105,13 +106,8 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             if (node->is_root()) {
                 return GUI::FileIconProvider::icon_for_executable(node->process().executable);
             }
-            // FIXME: Use /proc for this
-#if ARCH(I386)
-            FlatPtr kernel_base = 0xc0000000;
-#else
-            FlatPtr kernel_base = 0x2000000000;
-#endif
-            if (node->address() >= kernel_base)
+            auto maybe_kernel_base = Symbolication::kernel_base();
+            if (maybe_kernel_base.has_value() && node->address() >= maybe_kernel_base.value())
                 return m_kernel_frame_icon;
             return m_user_frame_icon;
         }

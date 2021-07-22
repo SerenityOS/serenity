@@ -21,6 +21,42 @@ struct CachedELF {
 
 static HashMap<String, OwnPtr<CachedELF>> s_cache;
 
+enum class KernelBaseState {
+    Uninitialized,
+    Valid,
+    Invalid,
+};
+
+static FlatPtr s_kernel_base;
+static KernelBaseState s_kernel_base_state = KernelBaseState::Uninitialized;
+
+Optional<FlatPtr> kernel_base()
+{
+    if (s_kernel_base_state == KernelBaseState::Uninitialized) {
+        auto file = Core::File::open("/proc/kernel_base", Core::OpenMode::ReadOnly);
+        if (file.is_error()) {
+            s_kernel_base_state = KernelBaseState::Invalid;
+            return {};
+        }
+        auto kernel_base_str = String { file.value()->read_all(), NoChomp };
+#if ARCH(I386)
+        using AddressType = u32;
+#else
+        using AddressType = u64;
+#endif
+        auto maybe_kernel_base = kernel_base_str.to_uint<AddressType>();
+        if (!maybe_kernel_base.has_value()) {
+            s_kernel_base_state = KernelBaseState::Invalid;
+            return {};
+        }
+        s_kernel_base = maybe_kernel_base.value();
+        s_kernel_base_state = KernelBaseState::Valid;
+    }
+    if (s_kernel_base_state == KernelBaseState::Invalid)
+        return {};
+    return s_kernel_base;
+}
+
 Optional<Symbol> symbolicate(String const& path, FlatPtr address)
 {
     if (!s_cache.contains(path)) {
@@ -81,16 +117,14 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
     Vector<FlatPtr> stack;
     Vector<RegionWithSymbols> regions;
 
-    regions.append(RegionWithSymbols {
-    // FIXME: Use /proc for this
-#if ARCH(I386)
-        .base = 0xc0000000,
-#else
-        .base = 0x2000000000,
-#endif
-        .size = 0x3fffffff,
-        .path = "/boot/Kernel.debug",
-        .is_relative = false });
+    if (auto maybe_kernel_base = kernel_base(); maybe_kernel_base.has_value()) {
+        regions.append(RegionWithSymbols {
+            .base = maybe_kernel_base.value(),
+            .size = 0x3fffffff,
+            .path = "/boot/Kernel.debug",
+            .is_relative = false,
+        });
+    }
 
     {
         auto stack_path = String::formatted("/proc/{}/stacks/{}", pid, tid);
