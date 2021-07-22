@@ -75,18 +75,7 @@ static void print_backtrace(const String& coredump_path)
             dbgln();
         dbgln("--- Backtrace for thread #{} (TID {}) ---", thread_index, thread_info.tid);
         for (auto& entry : backtrace.entries()) {
-#ifndef BACKTRACE_DEBUG
             dbgln("{}", entry.to_string(true));
-#else
-            auto region = coredump->region_containing(entry.eip);
-            String name;
-            u32 base_addr { 0 };
-            if (region) {
-                name = region->region_name;
-                base_addr = region->region_start;
-            }
-            dbgln("{} ({} base: {:p}, offset: {:p})", entry.to_string(true), name, base_addr, entry.eip - base_addr);
-#endif
         }
         ++thread_index;
         return IterationDecision::Continue;
