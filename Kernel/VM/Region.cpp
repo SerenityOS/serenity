@@ -431,17 +431,8 @@ PageFaultResponse Region::handle_fault(PageFault const& fault, ScopedSpinLock<Re
             remap_vmobject_page(page_index_in_vmobject);
             return PageFaultResponse::Continue;
         }
-#ifdef MAP_SHARED_ZERO_PAGE_LAZILY
-        if (fault.is_read()) {
-            page_slot = MM.shared_zero_page();
-            remap_vmobject_page(translate_to_vmobject_page(page_index_in_region));
-            return PageFaultResponse::Continue;
-        }
-        return handle_zero_fault(page_index_in_region, mm_lock);
-#else
         dbgln("BUG! Unexpected NP fault at {}", fault.vaddr());
         return PageFaultResponse::ShouldCrash;
-#endif
     }
     VERIFY(fault.type() == PageFault::Type::ProtectionViolation);
     if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
