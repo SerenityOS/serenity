@@ -186,7 +186,7 @@ ALWAYS_INLINE T SoftFPU::fpu_round(long double value) const
         return static_cast<T>(floorl(value));
     case RoundingMode::UP:
         return static_cast<T>(ceill(value));
-    case RoundingMode::TRUNK:
+    case RoundingMode::TRUNC:
         return static_cast<T>(truncl(value));
     default:
         VERIFY_NOT_REACHED();
