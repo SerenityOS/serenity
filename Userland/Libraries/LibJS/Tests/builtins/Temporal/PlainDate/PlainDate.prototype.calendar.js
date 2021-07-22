@@ -7,7 +7,7 @@ describe("correct behavior", () => {
 });
 
 test("errors", () => {
-    test("this value must be a Temporal.Duration object", () => {
+    test("this value must be a Temporal.PlainDate object", () => {
         expect(() => {
             Reflect.get(Temporal.PlainDate.prototype, "calendar", "foo");
         }).toThrowWithMessage(TypeError, "Not a Temporal.PlainDate");
