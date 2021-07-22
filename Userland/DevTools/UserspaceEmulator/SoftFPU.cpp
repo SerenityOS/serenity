@@ -93,11 +93,10 @@ ALWAYS_INLINE MMX SoftFPU::mmx_get(u8 index) const
 ALWAYS_INLINE void SoftFPU::mmx_set(u8 index, MMX value)
 {
     m_storage[index].mmx = value;
-    // The high bytes are set to 0b11... to make the floatingpoint value NaN.
+    // The high bytes are set to 0b11... to make the floating-point value NaN.
     // This way we are technically able to find out if we are reading the wrong
     // type, but this is still difficult, so we use our own lookup for that
-    // We set the alignment bytes to all 1's, too, just in case
-    m_storage[index].__high = ~(decltype(m_storage[index].__high))0u;
+    m_storage[index].__high = 0xFFFFU;
     m_reg_is_mmx[index] = true;
 }
 
