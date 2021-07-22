@@ -7,7 +7,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Function.h>
-#include <AK/Utf8View.h>
+#include <AK/Utf16View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
@@ -16,6 +16,7 @@
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/RegExpPrototype.h>
 #include <LibJS/Runtime/RegExpStringIterator.h>
+#include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Token.h>
 
 namespace JS {
@@ -90,30 +91,25 @@ static String escape_regexp_pattern(const RegExpObject& regexp_object)
 }
 
 // 22.2.5.2.3 AdvanceStringIndex ( S, index, unicode ), https://tc39.es/ecma262/#sec-advancestringindex
-size_t advance_string_index(String const& string, size_t index, bool unicode)
+size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
 {
     if (!unicode)
         return index + 1;
 
-    Utf8View view(string);
-
-    if (index + 1 >= view.length())
+    if (index + 1 >= string.length_in_code_units())
         return index + 1;
 
-    auto it = view.begin();
-    for (size_t i = 0; i < index; ++i)
-        ++it;
+    auto code_point = code_point_at(string, index);
+    return index + code_point.code_unit_count;
+}
 
-    // See https://tc39.es/ecma262/#sec-codepointat for details on [[CodeUnitCount]].
-    auto code_unit_count = 1;
-    if (is_unicode_surrogate(*it)) {
-        ++it;
+// 22.2.5.2.3 AdvanceStringIndex ( S, index, unicode ), https://tc39.es/ecma262/#sec-advancestringindex
+size_t advance_string_index(String const& string, size_t index, bool unicode)
+{
+    auto utf16_string = AK::utf8_to_utf16(string);
+    Utf16View utf16_string_view { utf16_string };
 
-        if ((it != view.end()) && is_unicode_surrogate(*it))
-            code_unit_count = 2;
-    }
-
-    return index + code_unit_count;
+    return advance_string_index(utf16_string_view, index, unicode);
 }
 
 static void increment_last_index(GlobalObject& global_object, Object& regexp_object, String const& string, bool unicode)
@@ -143,17 +139,17 @@ struct Match {
 };
 
 // 1.1.4.1.4 GetMatchIndicesArray ( S, match ), https://tc39.es/proposal-regexp-match-indices/#sec-getmatchindicesarray
-static Value get_match_indices_array(GlobalObject& global_object, String const& string, Match const& match)
+static Value get_match_indices_array(GlobalObject& global_object, Utf16View const& string, Match const& match)
 {
-    VERIFY(match.start_index <= string.length());
+    VERIFY(match.start_index <= string.length_in_code_units());
     VERIFY(match.end_index >= match.start_index);
-    VERIFY(match.end_index <= string.length());
+    VERIFY(match.end_index <= string.length_in_code_units());
 
     return Array::create_from(global_object, { Value(match.start_index), Value(match.end_index) });
 }
 
 // 1.1.4.1.5 MakeIndicesArray ( S , indices, groupNames, hasGroups ), https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray
-static Value make_indices_array(GlobalObject& global_object, String const& string, Vector<Optional<Match>> const& indices, HashMap<String, Match> const& group_names, bool has_groups)
+static Value make_indices_array(GlobalObject& global_object, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<String, Match> const& group_names, bool has_groups)
 {
     // Note: This implementation differs from the spec, but has the same behavior.
     //
@@ -205,7 +201,7 @@ static Value make_indices_array(GlobalObject& global_object, String const& strin
 }
 
 // 22.2.5.2.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
-static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, String const& string)
+static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, Utf16View const& string)
 {
     // FIXME: This should try using internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
     auto& vm = global_object.vm();
@@ -229,7 +225,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     RegexResult result;
 
     while (true) {
-        if (last_index > string.length()) {
+        if (last_index > string.length_in_code_units()) {
             if (global || sticky) {
                 regexp_object.set(vm.names.lastIndex, Value(0), Object::ShouldThrowExceptions::Yes);
                 if (vm.exception())
@@ -239,13 +235,8 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
             return js_null();
         }
 
-        regex.start_offset = last_index;
-        // FIXME: JavaScript strings are UTF-16, update this if the backing storage
-        //        encoding changes for spec compliance reasons.
-        if (unicode)
-            result = regex.match(Utf8View { string });
-        else
-            result = regex.match(string);
+        regex.start_offset = unicode ? string.code_point_offset_of(last_index) : last_index;
+        result = regex.match(string);
 
         if (result.success)
             break;
@@ -262,12 +253,16 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     }
 
     auto& match = result.matches[0];
+    auto match_index = match.global_offset;
 
     // https://tc39.es/ecma262/#sec-notation:
     // The endIndex is one plus the index of the last input character matched so far by the pattern.
-    auto end_index = match.global_offset + match.view.length();
+    auto end_index = match_index + match.view.length();
 
-    // FIXME: Do code point index correction if the Unicode flag is set.
+    if (unicode) {
+        match_index = string.code_unit_offset_of(match.global_offset);
+        end_index = string.code_unit_offset_of(end_index);
+    }
 
     if (global || sticky) {
         regexp_object.set(vm.names.lastIndex, Value(end_index), Object::ShouldThrowExceptions::Yes);
@@ -279,9 +274,9 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     if (vm.exception())
         return {};
 
-    array->create_data_property_or_throw(vm.names.index, Value(match.global_offset));
+    array->create_data_property_or_throw(vm.names.index, Value(match_index));
     array->create_data_property_or_throw(vm.names.input, js_string(vm, string));
-    array->create_data_property_or_throw(0, js_string(vm, match.view.to_string()));
+    array->create_data_property_or_throw(0, js_string(vm, match.view.u16_view()));
 
     Vector<Optional<Match>> indices { Match::create(match) };
     HashMap<String, Match> group_names;
@@ -292,7 +287,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
         if (capture.view.is_null()) {
             indices.append({});
         } else {
-            capture_value = js_string(vm, capture.view.to_string());
+            capture_value = js_string(vm, capture.view.u16_view());
             indices.append(Match::create(capture));
         }
         array->create_data_property_or_throw(i + 1, capture_value);
@@ -305,7 +300,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
         auto groups_object = Object::create(global_object, nullptr);
 
         for (auto& entry : result.named_capture_group_matches[0]) {
-            groups_object->create_data_property_or_throw(entry.key, js_string(vm, entry.value.view.to_string()));
+            groups_object->create_data_property_or_throw(entry.key, js_string(vm, entry.value.view.u16_view()));
             group_names.set(entry.key, Match::create(entry.value));
         }
 
@@ -325,7 +320,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
 }
 
 // 22.2.5.2.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
-Value regexp_exec(GlobalObject& global_object, Object& regexp_object, String const& string)
+Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16View const& string)
 {
     auto& vm = global_object.vm();
 
@@ -350,6 +345,15 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, String con
     }
 
     return regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), string);
+}
+
+// 22.2.5.2.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
+Value regexp_exec(GlobalObject& global_object, Object& regexp_object, String const& string)
+{
+    auto utf16_string = AK::utf8_to_utf16(string);
+    Utf16View utf16_string_view { utf16_string };
+
+    return regexp_exec(global_object, regexp_object, utf16_string_view);
 }
 
 // 1.1.4.3 get RegExp.prototype.hasIndices, https://tc39.es/proposal-regexp-match-indices/#sec-get-regexp.prototype.hasIndices
@@ -424,11 +428,12 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
     if (!regexp_object)
         return {};
 
-    auto string = vm.argument(0).to_string(global_object);
+    auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
+    Utf16View string_view { string };
 
-    return regexp_builtin_exec(global_object, *regexp_object, string);
+    return regexp_builtin_exec(global_object, *regexp_object, string_view);
 }
 
 // 22.2.5.15 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
@@ -438,11 +443,12 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
     if (!regexp_object)
         return {};
 
-    auto str = vm.argument(0).to_string(global_object);
+    auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
+    Utf16View string_view { string };
 
-    auto match = regexp_exec(global_object, *regexp_object, str);
+    auto match = regexp_exec(global_object, *regexp_object, string_view);
     if (vm.exception())
         return {};
 
