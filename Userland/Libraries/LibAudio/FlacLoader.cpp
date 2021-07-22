@@ -210,8 +210,13 @@ void FlacLoaderPlugin::seek(const int position)
 RefPtr<Buffer> FlacLoaderPlugin::get_more_samples([[maybe_unused]] size_t max_bytes_to_read_from_input)
 {
     Vector<Frame> samples;
-    size_t remaining_samples = max_bytes_to_read_from_input;
-    while (remaining_samples > 0) {
+    ssize_t remaining_samples = m_total_samples - m_loaded_samples;
+    if (remaining_samples <= 0) {
+        return nullptr;
+    }
+
+    size_t samples_to_read = min(max_bytes_to_read_from_input, remaining_samples);
+    while (samples_to_read > 0) {
         if (!m_current_frame.has_value()) {
             next_frame();
             if (!m_error_string.is_empty()) {
@@ -227,7 +232,7 @@ RefPtr<Buffer> FlacLoaderPlugin::get_more_samples([[maybe_unused]] size_t max_by
         if (m_current_frame_data.size() == 0) {
             m_current_frame.clear();
         }
-        --remaining_samples;
+        --samples_to_read;
     }
 
     return Buffer::create_with_samples(move(samples));
