@@ -131,7 +131,10 @@ private:
             if (ip_address != "null")
                 connected_adapters++;
 
-            adapter_info.appendff("{}: {}\n", ifname, ip_address);
+            if (!adapter_info.is_empty())
+                adapter_info.append('\n');
+
+            adapter_info.appendff("{}: {}", ifname, ip_address);
         });
 
         // show connected icon so long as at least one adapter is connected
