@@ -4,13 +4,36 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
+#include <LibJS/Runtime/Temporal/PlainDateTimeConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 
 namespace JS::Temporal {
+
+// 5 Temporal.PlainDateTime Objects, https://tc39.es/proposal-temporal/#sec-temporal-plaindatetime-objects
+PlainDateTime::PlainDateTime(i32 iso_year, u8 iso_month, u8 iso_day, u8 iso_hour, u8 iso_minute, u8 iso_second, u8 iso_millisecond, u8 iso_microsecond, u8 iso_nanosecond, Object& calendar, Object& prototype)
+    : Object(prototype)
+    , m_iso_year(iso_year)
+    , m_iso_month(iso_month)
+    , m_iso_day(iso_day)
+    , m_iso_hour(iso_hour)
+    , m_iso_minute(iso_minute)
+    , m_iso_second(iso_second)
+    , m_iso_millisecond(iso_millisecond)
+    , m_iso_microsecond(iso_microsecond)
+    , m_iso_nanosecond(iso_nanosecond)
+    , m_calendar(calendar)
+{
+}
+
+void PlainDateTime::visit_edges(Visitor& visitor)
+{
+    visitor.visit(&m_calendar);
+}
 
 // 5.5.1 GetEpochFromISOParts ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-getepochfromisoparts
 BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, i32 month, i32 day, i32 hour, i32 minute, i32 second, i32 millisecond, i32 microsecond, i32 nanosecond)
@@ -67,6 +90,56 @@ bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, i32 mont
     }
     // 5. Return true.
     return true;
+}
+
+// 5.5.6 CreateTemporalDateTime ( isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldatetime
+PlainDateTime* create_temporal_date_time(GlobalObject& global_object, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, FunctionObject* new_target)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
+    // 2. Assert: Type(calendar) is Object.
+
+    // 3. If ! IsValidISODate(isoYear, isoMonth, isoDay) is false, throw a RangeError exception.
+    if (!is_valid_iso_date(iso_year, iso_month, iso_day)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
+        return {};
+    }
+
+    // 4. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
+    if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
+        return {};
+    }
+
+    // 5. If ! ISODateTimeWithinLimits(isoYear, isoMonth, isoDay, hour, minute, second, millisecond, microsecond, nanosecond) is false, then
+    if (!iso_date_time_within_limits(global_object, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond)) {
+        // a. Throw a RangeError exception.
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDateTime);
+        return {};
+    }
+
+    // 6. If newTarget is not present, set it to %Temporal.PlainDateTime%.
+    if (!new_target)
+        new_target = global_object.temporal_plain_date_time_constructor();
+
+    // 7. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.PlainDateTime.prototype%", « [[InitializedTemporalDateTime]], [[ISOYear]], [[ISOMonth]], [[ISODay]], [[ISOHour]], [[ISOMinute]], [[ISOSecond]], [[ISOMillisecond]], [[ISOMicrosecond]], [[ISONanosecond]], [[Calendar]] »).
+    // 8. Set object.[[ISOYear]] to isoYear.
+    // 9. Set object.[[ISOMonth]] to isoMonth.
+    // 10. Set object.[[ISODay]] to isoDay.
+    // 11. Set object.[[ISOHour]] to hour.
+    // 12. Set object.[[ISOMinute]] to minute.
+    // 13. Set object.[[ISOSecond]] to second.
+    // 14. Set object.[[ISOMillisecond]] to millisecond.
+    // 15. Set object.[[ISOMicrosecond]] to microsecond.
+    // 16. Set object.[[ISONanosecond]] to nanosecond.
+    // 17. Set object.[[Calendar]] to calendar.
+    auto* object = ordinary_create_from_constructor<PlainDateTime>(global_object, *new_target, &GlobalObject::temporal_plain_date_prototype, iso_year, iso_month, iso_day, hour, minute, second, millisecond, microsecond, nanosecond, calendar);
+    if (vm.exception())
+        return {};
+
+    // 18. Return object.
+    return object;
 }
 
 }
