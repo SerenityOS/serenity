@@ -223,10 +223,12 @@ void Game::setup(String player_name, int hand_number)
             player.hand.append(card);
         }
         player.sort_hand();
+        Gfx::IntRect update_rect;
         reposition_hand(player);
+        for (auto& card : player.hand)
+            update_rect = update_rect.united(card->rect());
+        update(update_rect);
     }
-
-    update();
 
     continue_game_after_delay();
 }
@@ -263,23 +265,25 @@ void Game::stop_animation()
 
 void Game::timer_event(Core::TimerEvent&)
 {
-    if (m_animation_playing) {
-        for (auto& animation : m_animation_cards) {
-            animation.card->set_position(animation.start + (m_animation_end - animation.start) * m_animation_current_step / m_animation_steps);
-        }
-        if (m_animation_current_step >= m_animation_steps) {
-            stop_timer();
-            m_animation_playing = false;
-            if (m_animation_did_finish) {
-                // The did_finish handler might end up destroying/replacing the handler
-                // so we have to save it first.
-                OwnPtr<Function<void()>> animation_did_finish = move(m_animation_did_finish);
-                (*animation_did_finish)();
-            }
-        }
-        m_animation_current_step++;
+    if (!m_animation_playing)
+        return;
+    for (auto& animation : m_animation_cards) {
+        Gfx::IntRect update_rect = animation.card->rect();
+        animation.card->set_position(animation.start + (m_animation_end - animation.start) * m_animation_current_step / m_animation_steps);
+        update_rect = update_rect.united(animation.card->rect());
+        update(update_rect);
     }
-    update();
+    if (m_animation_current_step >= m_animation_steps) {
+        stop_timer();
+        m_animation_playing = false;
+        if (m_animation_did_finish) {
+            // The did_finish handler might end up destroying/replacing the handler
+            // so we have to save it first.
+            OwnPtr<Function<void()>> animation_did_finish = move(m_animation_did_finish);
+            (*animation_did_finish)();
+        }
+    }
+    m_animation_current_step++;
 }
 
 bool Game::other_player_has_lower_value_card(Player& player, Card& card)
@@ -424,8 +428,8 @@ void Game::let_player_play_card()
             auto card_index = pick_card(player);
             auto& card = player.hand[card_index];
             card->set_inverted(true);
+            update(card->rect());
         }
-        update();
         return;
     }
 
@@ -458,6 +462,7 @@ void Game::advance_game()
 
     if (m_inverted_card) {
         m_inverted_card->set_inverted(false);
+        update(m_inverted_card->rect());
         m_inverted_card.clear();
     }
 
@@ -565,7 +570,6 @@ void Game::advance_game()
 
             m_trick.clear_with_capacity();
             m_leading_player = &taking_player;
-            update();
             dbgln_if(HEARTS_DEBUG, "-----");
             advance_game();
         },
@@ -703,14 +707,13 @@ void Game::card_clicked_during_play(size_t card_index, Card& card)
         if (m_inverted_card)
             m_inverted_card->set_inverted(false);
         card.set_inverted(true);
+        update(card.rect());
         m_inverted_card = card;
-        update();
         on_status_change(String::formatted("You can't play this card: {}", explanation));
         continue_game_after_delay();
         return;
     }
     play_card(m_players[0], card_index);
-    update();
 }
 
 void Game::card_clicked(size_t card_index, Card& card)
@@ -781,16 +784,20 @@ void Game::highlight_card(Card& card)
 {
     VERIFY(!m_cards_highlighted.contains(card));
     m_cards_highlighted.set(card);
+    Gfx::IntRect update_rect = card.rect();
     card.set_position(card.position().translated(0, card_highlight_offset));
-    update();
+    update_rect = update_rect.united(card.rect());
+    update(update_rect);
 }
 
 void Game::unhighlight_card(Card& card)
 {
     VERIFY(m_cards_highlighted.contains(card));
     m_cards_highlighted.remove(card);
+    Gfx::IntRect update_rect = card.rect();
     card.set_position(card.position().translated(0, -card_highlight_offset));
-    update();
+    update_rect = update_rect.united(card.rect());
+    update(update_rect);
 }
 
 void Game::clear_highlighted_cards()
@@ -865,12 +872,15 @@ void Game::pass_cards()
         VERIFY(player.hand.size() == 13);
         player.sort_hand();
         reposition_hand(player);
+        Gfx::IntRect update_rect;
+        for (auto& card : player.hand)
+            update_rect = update_rect.united(card->rect());
+        update(update_rect);
     }
 
     m_state = State::PassingAccept;
     m_passing_button->set_text("OK");
     m_passing_button->set_enabled(true);
-    update();
 }
 
 PassingDirection Game::passing_direction() const
