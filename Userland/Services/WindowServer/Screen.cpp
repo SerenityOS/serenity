@@ -475,12 +475,12 @@ void Screen::constrain_pending_flush_rects()
             rects.add(intersected_rect);
     }
     fb_data.pending_flush_rects.clear_with_capacity();
-    for (auto& rect : rects.rects()) {
+    for (auto const& rect : rects.rects()) {
         fb_data.pending_flush_rects.append({
-            x : (unsigned)rect.x(),
-            y : (unsigned)rect.y(),
-            width : (unsigned)rect.width(),
-            height : (unsigned)rect.height()
+            .x = (unsigned)rect.x(),
+            .y = (unsigned)rect.y(),
+            .width = (unsigned)rect.width(),
+            .height = (unsigned)rect.height(),
         });
     }
 }
