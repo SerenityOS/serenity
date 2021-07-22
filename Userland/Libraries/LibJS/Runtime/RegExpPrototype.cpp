@@ -787,14 +787,14 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 // 22.2.5.11 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
 JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 {
-    auto string_value = vm.argument(0);
-
     auto* regexp_object = this_object_from(vm, global_object);
     if (!regexp_object)
         return {};
-    auto string = string_value.to_string(global_object);
+
+    auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
+    Utf16View string_view { string };
 
     auto previous_last_index = regexp_object->get(vm.names.lastIndex);
     if (vm.exception())
@@ -805,7 +805,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
             return {};
     }
 
-    auto result = regexp_exec(global_object, *regexp_object, string);
+    auto result = regexp_exec(global_object, *regexp_object, string_view);
     if (vm.exception())
         return {};
 
