@@ -32,15 +32,15 @@ enum class PropertyID;
 class ParsingContext {
 public:
     ParsingContext();
-    explicit ParsingContext(DOM::Document const&);
-    explicit ParsingContext(DOM::ParentNode const&);
+    explicit ParsingContext(DOM::Document&);
+    explicit ParsingContext(DOM::ParentNode&);
 
     bool in_quirks_mode() const;
-
+    DOM::Document* document() const { return m_document; }
     URL complete_url(String const&) const;
 
 private:
-    const DOM::Document* m_document { nullptr };
+    DOM::Document* m_document { nullptr };
 };
 
 template<typename T>
@@ -174,6 +174,7 @@ private:
     static RefPtr<StyleValue> parse_identifier_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_color_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_string_value(ParsingContext const&, StyleComponentValueRule const&);
+    static RefPtr<StyleValue> parse_image_value(ParsingContext const&, StyleComponentValueRule const&);
 
     ParsingContext m_context;
 

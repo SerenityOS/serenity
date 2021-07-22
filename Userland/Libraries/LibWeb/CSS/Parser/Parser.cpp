@@ -34,12 +34,12 @@ ParsingContext::ParsingContext()
 {
 }
 
-ParsingContext::ParsingContext(DOM::Document const& document)
+ParsingContext::ParsingContext(DOM::Document& document)
     : m_document(&document)
 {
 }
 
-ParsingContext::ParsingContext(DOM::ParentNode const& parent_node)
+ParsingContext::ParsingContext(DOM::ParentNode& parent_node)
     : m_document(&parent_node.document())
 {
 }
@@ -1589,6 +1589,26 @@ RefPtr<StyleValue> Parser::parse_string_value(ParsingContext const&, StyleCompon
     return {};
 }
 
+RefPtr<StyleValue> Parser::parse_image_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
+{
+    if (component_value.is(Token::Type::Url))
+        return ImageStyleValue::create(context.complete_url(component_value.token().url()), *context.document());
+    if (component_value.is_function() && component_value.function().name().equals_ignoring_case("url")) {
+        auto& function_values = component_value.function().values();
+        // FIXME: Handle url-modifiers. https://www.w3.org/TR/css-values-4/#url-modifiers
+        for (size_t i = 0; i < function_values.size(); ++i) {
+            auto& value = function_values[i];
+            if (value.is(Token::Type::Whitespace))
+                continue;
+            if (value.is(Token::Type::String))
+                return ImageStyleValue::create(context.complete_url(value.token().string()), *context.document());
+        }
+    }
+    // FIXME: Handle gradients.
+
+    return {};
+}
+
 RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
 {
     dbgln_if(CSS_PARSER_TRACE, "Parser::parse_css_value");
@@ -1652,6 +1672,9 @@ RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, Proper
 
     if (auto string = parse_string_value(context, component_value))
         return string;
+
+    if (auto image = parse_image_value(context, component_value))
+        return image;
 
     return {};
 }
