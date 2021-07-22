@@ -846,7 +846,7 @@ Token Tokenizer::consume_a_token()
         if (would_start_an_identifier()) {
             auto name = consume_a_name();
 
-            return create_value_token(Token::Type::AtKeyword, input);
+            return create_value_token(Token::Type::AtKeyword, name);
         }
 
         return create_value_token(Token::Type::Delim, input);

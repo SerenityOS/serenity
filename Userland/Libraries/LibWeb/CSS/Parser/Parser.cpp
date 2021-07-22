@@ -131,8 +131,13 @@ template<typename T>
 void TokenStream<T>::dump_all_tokens()
 {
     dbgln("Dumping all tokens:");
-    for (auto& token : m_tokens)
-        dbgln("{}", token.to_debug_string());
+    for (size_t i = 0; i < m_tokens.size(); ++i) {
+        auto& token = m_tokens[i];
+        if ((i - 1) == (size_t)m_iterator_offset)
+            dbgln("-> {}", token.to_debug_string());
+        else
+            dbgln("   {}", token.to_debug_string());
+    }
 }
 
 Parser::Parser(ParsingContext const& context, StringView const& input, String const& encoding)
@@ -623,10 +628,10 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
     dbgln_if(CSS_PARSER_TRACE, "Parser::consume_an_at_rule");
 
     auto name_ident = tokens.next_token();
-    VERIFY(name_ident.is(Token::Type::Ident));
+    VERIFY(name_ident.is(Token::Type::AtKeyword));
 
     NonnullRefPtr<StyleRule> rule = create<StyleRule>(StyleRule::Type::At);
-    rule->m_name = ((Token)name_ident).ident();
+    rule->m_name = ((Token)name_ident).at_keyword();
 
     for (;;) {
         auto token = tokens.next_token();
@@ -1112,6 +1117,31 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of
     return lists;
 }
 
+Optional<URL> Parser::parse_url_function(ParsingContext const& context, StyleComponentValueRule const& component_value)
+{
+    // FIXME: Handle list of media queries. https://www.w3.org/TR/css-cascade-3/#conditional-import
+
+    if (component_value.is(Token::Type::Url))
+        return context.complete_url(component_value.token().url());
+    if (component_value.is_function() && component_value.function().name().equals_ignoring_case("url")) {
+        auto& function_values = component_value.function().values();
+        // FIXME: Handle url-modifiers. https://www.w3.org/TR/css-values-4/#url-modifiers
+        for (size_t i = 0; i < function_values.size(); ++i) {
+            auto& value = function_values[i];
+            if (value.is(Token::Type::Whitespace))
+                continue;
+            if (value.is(Token::Type::String)) {
+                // FIXME: RFC2397
+                if (value.token().string().starts_with("data:"))
+                    break;
+                return context.complete_url(value.token().string());
+            }
+        }
+    }
+
+    return {};
+}
+
 RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 {
     dbgln_if(CSS_PARSER_TRACE, "Parser::convert_to_rule");
@@ -1119,25 +1149,26 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
     if (rule->m_type == StyleRule::Type::At) {
         if (rule->m_name.equals_ignoring_case("import"sv) && !rule->prelude().is_empty()) {
 
-            Optional<String> url;
-            auto url_token = rule->prelude().first();
-            if (url_token.is_function()) {
-                auto& function = url_token.function();
-                if (function.name().equals_ignoring_case("url"sv) && !function.values().is_empty()) {
-                    auto& argument_token = url_token.function().values().first();
-                    if (argument_token.is(Token::Type::String))
-                        url = argument_token.token().string();
-                    else
-                        dbgln("First argument to url() was not a string: '{}'", argument_token.to_debug_string());
+            Optional<URL> url;
+            for (auto& token : rule->prelude()) {
+                if (token.is(Token::Type::Whitespace))
+                    continue;
+
+                if (token.is(Token::Type::String)) {
+                    url = m_context.complete_url(token.token().string());
+                } else {
+                    url = parse_url_function(m_context, token);
                 }
+
+                // FIXME: Handle list of media queries. https://www.w3.org/TR/css-cascade-3/#conditional-import
+                if (url.has_value())
+                    break;
             }
 
-            if (url_token.is(Token::Type::String))
-                url = url_token.token().string();
-
-            // FIXME: Handle list of media queries. https://www.w3.org/TR/css-cascade-3/#conditional-import
             if (url.has_value())
-                return CSSImportRule::create(m_context.complete_url(url.value()));
+                return CSSImportRule::create(url.value());
+            else
+                dbgln("Unable to parse url from @import rule");
         } else {
             dbgln("Unrecognized CSS at-rule: {}", rule->m_name);
         }
@@ -1591,24 +1622,9 @@ RefPtr<StyleValue> Parser::parse_string_value(ParsingContext const&, StyleCompon
 
 RefPtr<StyleValue> Parser::parse_image_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
 {
-    if (component_value.is(Token::Type::Url))
-        return ImageStyleValue::create(context.complete_url(component_value.token().url()), *context.document());
-    if (component_value.is_function() && component_value.function().name().equals_ignoring_case("url")) {
-        auto& function_values = component_value.function().values();
-        // FIXME: Handle url-modifiers. https://www.w3.org/TR/css-values-4/#url-modifiers
-        for (size_t i = 0; i < function_values.size(); ++i) {
-            auto& value = function_values[i];
-            if (value.is(Token::Type::Whitespace))
-                continue;
-            if (value.is(Token::Type::String)) {
-                // FIXME: RFC2397
-                if (value.token().string().starts_with("data:"))
-                    continue;
-
-                return ImageStyleValue::create(context.complete_url(value.token().string()), *context.document());
-            }
-        }
-    }
+    auto url = parse_url_function(context, component_value);
+    if (url.has_value())
+        return ImageStyleValue::create(url.value(), *context.document());
     // FIXME: Handle gradients.
 
     return {};
