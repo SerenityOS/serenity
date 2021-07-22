@@ -18,6 +18,7 @@ struct Symbol {
     Vector<Debug::DebugInfo::SourcePosition> source_positions;
 };
 
+Optional<FlatPtr> kernel_base();
 Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid);
 Optional<Symbol> symbolicate(String const& path, FlatPtr address);
 

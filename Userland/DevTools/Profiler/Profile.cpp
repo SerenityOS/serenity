@@ -16,6 +16,7 @@
 #include <AK/RefPtr.h>
 #include <LibCore/File.h>
 #include <LibELF/Image.h>
+#include <LibSymbolication/Symbolication.h>
 #include <sys/stat.h>
 
 namespace Profiler {
@@ -301,12 +302,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             continue;
         }
 
-        // FIXME: Use /proc for this
-#if ARCH(I386)
-        FlatPtr kernel_base = 0xc0000000;
-#else
-        FlatPtr kernel_base = 0x2000000000;
-#endif
+        auto maybe_kernel_base = Symbolication::kernel_base();
 
         auto* stack = perf_event.get_ptr("stack");
         VERIFY(stack);
@@ -318,7 +314,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             FlyString object_name;
             String symbol;
 
-            if (ptr >= kernel_base) {
+            if (maybe_kernel_base.has_value() && ptr >= maybe_kernel_base.value()) {
                 if (kernel_elf) {
                     symbol = kernel_elf->symbolicate(ptr, &offset);
                 } else {
@@ -345,7 +341,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             continue;
 
         FlatPtr innermost_frame_address = event.frames.at(1).address;
-        event.in_kernel = innermost_frame_address >= kernel_base;
+        event.in_kernel = maybe_kernel_base.has_value() && innermost_frame_address >= maybe_kernel_base.value();
 
         events.append(move(event));
     }

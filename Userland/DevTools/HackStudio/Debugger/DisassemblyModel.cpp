@@ -9,6 +9,7 @@
 #include <AK/StringBuilder.h>
 #include <LibDebug/DebugSession.h>
 #include <LibELF/Image.h>
+#include <LibSymbolication/Symbolication.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/ELFSymbolProvider.h>
 #include <ctype.h>
@@ -30,14 +31,9 @@ DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, con
     OwnPtr<ELF::Image> kernel_elf;
     const ELF::Image* elf = nullptr;
 
-    // FIXME: Use /proc for this
-#if ARCH(I386)
-    FlatPtr kernel_base = 0xc0000000;
-#else
-    FlatPtr kernel_base = 0x2000000000;
-#endif
+    auto maybe_kernel_base = Symbolication::kernel_base();
 
-    if (containing_function.value().address_low >= kernel_base) {
+    if (maybe_kernel_base.has_value() && containing_function.value().address_low >= maybe_kernel_base.value()) {
         auto file_or_error = MappedFile::map("/boot/Kernel.debug");
         if (file_or_error.is_error())
             return;
