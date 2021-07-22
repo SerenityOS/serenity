@@ -73,7 +73,10 @@ test("UTF-16", () => {
     expect(s.split("\ud83d")).toEqual(["", "\ude00"]);
     expect(s.split("\ude00")).toEqual(["\ud83d", ""]);
 
-    // FIXME: RegExp.prototype [ @@split ] also needs to support UTF-16.
-    // expect(s.split(/\ud83d/)).toEqual(["", "\ude00"]);
-    // expect(s.split(/\ude00/)).toEqual(["\ud83d", ""]);
+    expect(s.split(/\ud83d/)).toEqual(["", "\ude00"]);
+    expect(s.split(/\ude00/)).toEqual(["\ud83d", ""]);
+
+    s = "😀😀😀";
+    expect(s.split(/\ud83d/)).toEqual(["", "\ude00", "\ude00", "\ude00"]);
+    expect(s.split(/\ude00/)).toEqual(["\ud83d", "\ud83d", "\ud83d", ""]);
 });

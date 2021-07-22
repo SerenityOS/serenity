@@ -838,9 +838,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto* regexp_object = this_object_from(vm, global_object);
     if (!regexp_object)
         return {};
-    auto string = vm.argument(0).to_string(global_object);
+
+    auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
+    Utf16View string_view { string };
 
     auto* constructor = species_constructor(global_object, *regexp_object, *global_object.regexp_constructor());
     if (vm.exception())
@@ -879,28 +881,28 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     if (limit == 0)
         return array;
 
-    if (string.is_empty()) {
-        auto result = regexp_exec(global_object, *splitter, string);
+    if (string_view.is_empty()) {
+        auto result = regexp_exec(global_object, *splitter, string_view);
         if (!result.is_null())
             return array;
 
-        array->create_data_property_or_throw(0, js_string(vm, string));
+        array->create_data_property_or_throw(0, js_string(vm, string_view));
         return array;
     }
 
     size_t last_match_end = 0;   // 'p' in the spec.
     size_t next_search_from = 0; // 'q' in the spec.
 
-    while (next_search_from < string.length()) {
+    while (next_search_from < string_view.length_in_code_units()) {
         splitter->set(vm.names.lastIndex, Value(next_search_from), Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
             return {};
 
-        auto result = regexp_exec(global_object, *splitter, string);
+        auto result = regexp_exec(global_object, *splitter, string_view);
         if (vm.exception())
             return {};
         if (result.is_null()) {
-            next_search_from = advance_string_index(string, next_search_from, unicode);
+            next_search_from = advance_string_index(string_view, next_search_from, unicode);
             continue;
         }
 
@@ -910,14 +912,14 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         auto last_index = last_index_value.to_length(global_object); // 'e' in the spec.
         if (vm.exception())
             return {};
-        last_index = min(last_index, string.length());
+        last_index = min(last_index, string_view.length_in_code_units());
 
         if (last_index == last_match_end) {
-            next_search_from = advance_string_index(string, next_search_from, unicode);
+            next_search_from = advance_string_index(string_view, next_search_from, unicode);
             continue;
         }
 
-        auto substring = string.substring(last_match_end, next_search_from - last_match_end);
+        auto substring = string_view.substring_view(last_match_end, next_search_from - last_match_end);
         array->create_data_property_or_throw(array_length, js_string(vm, move(substring)));
 
         if (++array_length == limit)
@@ -946,7 +948,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         next_search_from = last_index;
     }
 
-    auto substring = string.substring(last_match_end);
+    auto substring = string_view.substring_view(last_match_end);
     array->create_data_property_or_throw(array_length, js_string(vm, move(substring)));
 
     return array;
