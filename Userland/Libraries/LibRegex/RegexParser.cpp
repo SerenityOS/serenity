@@ -7,6 +7,7 @@
 
 #include "RegexParser.h"
 #include "RegexDebug.h"
+#include <AK/CharacterTypes.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
@@ -1440,6 +1441,26 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     if (try_skip("u")) {
+        if (match(TokenType::LeftCurly)) {
+            consume();
+
+            if (!unicode) {
+                // FIXME: In non-Unicode mode, this should be parsed as a repetition symbol (repeating the 'u').
+                TODO();
+            }
+
+            auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 6);
+            if (code_point.has_value() && is_unicode(*code_point) && match(TokenType::RightCurly)) {
+                consume();
+                match_length_minimum += 1;
+                stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)code_point.value() } });
+                return true;
+            }
+
+            set_error(Error::InvalidPattern);
+            return false;
+        }
+
         if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4); code_point.has_value()) {
             // In Unicode mode, we need to combine surrogate pairs into a single code point. But we also need to be
             // rather forgiving if the surrogate pairs are invalid. So if a second code unit follows this code unit,
