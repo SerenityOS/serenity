@@ -46,10 +46,15 @@ test("override exec with non-function", () => {
     expect("test".search(re)).toBe(0);
 });
 
-// FIXME: RegExp.prototype [ @@search ] needs to support UTF-16.
-// test("UTF-16", () => {
-//     var s = "😀";
-//     expect(s.search("😀")).toBe(0);
-//     expect(s.search("\ud83d")).toBe(0);
-//     expect(s.search("\ude00")).toBe(1);
-// });
+test("UTF-16", () => {
+    var s = "😀";
+    expect(s.search("😀")).toBe(0);
+    expect(s.search("\ud83d")).toBe(0);
+    expect(s.search("\ude00")).toBe(1);
+    expect(s.search("foo")).toBe(-1);
+
+    s = "\u{80}\u{160}";
+    expect(s.search("\u{80}")).toBe(0);
+    expect(s.search("\u{160}")).toBe(1);
+    expect(s.search("foo")).toBe(-1);
+});
