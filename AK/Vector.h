@@ -782,6 +782,9 @@ private:
     StorageType* m_outline_buffer { nullptr };
 };
 
+template<class... Args>
+Vector(Args... args) -> Vector<CommonType<Args...>>;
+
 }
 
 using AK::Vector;
