@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -101,15 +102,6 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
 
     auto code_point = code_point_at(string, index);
     return index + code_point.code_unit_count;
-}
-
-// 22.2.5.2.3 AdvanceStringIndex ( S, index, unicode ), https://tc39.es/ecma262/#sec-advancestringindex
-size_t advance_string_index(String const& string, size_t index, bool unicode)
-{
-    auto utf16_string = AK::utf8_to_utf16(string);
-    Utf16View utf16_string_view { utf16_string };
-
-    return advance_string_index(utf16_string_view, index, unicode);
 }
 
 static void increment_last_index(GlobalObject& global_object, Object& regexp_object, Utf16View const& string, bool unicode)
@@ -345,15 +337,6 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16View 
     }
 
     return regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), string);
-}
-
-// 22.2.5.2.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
-Value regexp_exec(GlobalObject& global_object, Object& regexp_object, String const& string)
-{
-    auto utf16_string = AK::utf8_to_utf16(string);
-    Utf16View utf16_string_view { utf16_string };
-
-    return regexp_exec(global_object, regexp_object, utf16_string_view);
 }
 
 // 1.1.4.3 get RegExp.prototype.hasIndices, https://tc39.es/proposal-regexp-match-indices/#sec-get-regexp.prototype.hasIndices

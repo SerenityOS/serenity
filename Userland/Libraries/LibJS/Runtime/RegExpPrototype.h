@@ -10,9 +10,7 @@
 
 namespace JS {
 
-Value regexp_exec(GlobalObject& global_object, Object& regexp_object, String const& string);
 Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16View const& string);
-size_t advance_string_index(String const& string, size_t index, bool unicode);
 size_t advance_string_index(Utf16View const& string, size_t index, bool unicode);
 
 class RegExpPrototype final : public Object {
