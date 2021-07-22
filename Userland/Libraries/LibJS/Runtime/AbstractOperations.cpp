@@ -576,59 +576,48 @@ Value canonical_numeric_index_string(GlobalObject& global_object, PropertyName c
 }
 
 // 22.1.3.17.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacement ), https://tc39.es/ecma262/#sec-getsubstitution
-String get_substitution(GlobalObject& global_object, String const& matched, String const& str, size_t position, Vector<Value> const& captures, Value named_captures, Value replacement)
+String get_substitution(GlobalObject& global_object, Utf16View const& matched, Utf16View const& str, size_t position, Vector<Value> const& captures, Value named_captures, Value replacement)
 {
     auto& vm = global_object.vm();
 
-    auto replace_string = replacement.to_string(global_object);
+    auto replace_string = replacement.to_utf16_string(global_object);
     if (vm.exception())
         return {};
-
-    // FIXME: Once RegExp.prototype supports UTF-16, this AO can take UTF-16 strings as parameters instead of having to transcode here.
-    auto utf16_matched = AK::utf8_to_utf16(matched);
-    auto match_length = utf16_matched.size();
-
-    auto utf16_string = AK::utf8_to_utf16(str);
-    Utf16View utf16_string_view { utf16_string };
-    auto string_length = utf16_string_view.length_in_code_units();
-
-    auto utf16_replace = AK::utf8_to_utf16(replace_string);
-    Utf16View utf16_replace_view { utf16_replace };
-    auto replace_length = utf16_replace_view.length_in_code_units();
+    Utf16View replace_view { replace_string };
 
     StringBuilder result;
 
-    for (size_t i = 0; i < replace_length; ++i) {
-        u16 curr = utf16_replace_view.code_unit_at(i);
+    for (size_t i = 0; i < replace_view.length_in_code_units(); ++i) {
+        u16 curr = replace_view.code_unit_at(i);
 
-        if ((curr != '$') || (i + 1 >= replace_length)) {
+        if ((curr != '$') || (i + 1 >= replace_view.length_in_code_units())) {
             result.append(curr);
             continue;
         }
 
-        u16 next = utf16_replace_view.code_unit_at(i + 1);
+        u16 next = replace_view.code_unit_at(i + 1);
 
         if (next == '$') {
             result.append('$');
             ++i;
         } else if (next == '&') {
-            result.append(matched);
+            result.append(matched.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
             ++i;
         } else if (next == '`') {
-            auto substring = utf16_string_view.substring_view(0, position);
+            auto substring = str.substring_view(0, position);
             result.append(substring.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
             ++i;
         } else if (next == '\'') {
-            auto tail_pos = position + match_length;
-            if (tail_pos < string_length) {
-                auto substring = utf16_string_view.substring_view(tail_pos);
+            auto tail_pos = position + matched.length_in_code_units();
+            if (tail_pos < str.length_in_code_units()) {
+                auto substring = str.substring_view(tail_pos);
                 result.append(substring.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
             }
             ++i;
         } else if (is_ascii_digit(next)) {
-            bool is_two_digits = (i + 2 < replace_length) && is_ascii_digit(utf16_replace_view.code_unit_at(i + 2));
+            bool is_two_digits = (i + 2 < replace_view.length_in_code_units()) && is_ascii_digit(replace_view.code_unit_at(i + 2));
 
-            auto capture_postition_string = utf16_replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8();
+            auto capture_postition_string = replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8();
             auto capture_position = capture_postition_string.to_uint();
 
             if (capture_position.has_value() && (*capture_position > 0) && (*capture_position <= captures.size())) {
@@ -650,8 +639,8 @@ String get_substitution(GlobalObject& global_object, String const& matched, Stri
             auto start_position = i + 2;
             Optional<size_t> end_position;
 
-            for (size_t j = start_position; j < replace_length; ++j) {
-                if (utf16_replace_view.code_unit_at(j) == '>') {
+            for (size_t j = start_position; j < replace_view.length_in_code_units(); ++j) {
+                if (replace_view.code_unit_at(j) == '>') {
                     end_position = j;
                     break;
                 }
@@ -660,7 +649,7 @@ String get_substitution(GlobalObject& global_object, String const& matched, Stri
             if (named_captures.is_undefined() || !end_position.has_value()) {
                 result.append(curr);
             } else {
-                auto group_name_view = utf16_replace_view.substring_view(start_position, *end_position - start_position);
+                auto group_name_view = replace_view.substring_view(start_position, *end_position - start_position);
                 auto group_name = group_name_view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes);
 
                 auto capture = named_captures.as_object().get(group_name);
