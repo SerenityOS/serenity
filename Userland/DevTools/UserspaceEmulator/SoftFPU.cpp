@@ -797,7 +797,7 @@ void SoftFPU::FRNDINT(const X86::Instruction&)
 void SoftFPU::FSCALE(const X86::Instruction&)
 {
     // FIXME: set C1 upon stack overflow or if result was rounded
-    fpu_set(0, fpu_get(0) * powl(2, floorl(fpu_get(1))));
+    fpu_set(0, fpu_get(0) * powl(2, truncl(fpu_get(1))));
 }
 
 void SoftFPU::FSQRT(const X86::Instruction&)
