@@ -50,7 +50,7 @@ static PlainDate* typed_this(GlobalObject& global_object)
 JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::calendar_getter)
 {
     // 1. Let temporalDate be the this value.
-    // Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
+    // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
     auto* temporal_date = typed_this(global_object);
     if (vm.exception())
         return {};
