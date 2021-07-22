@@ -90,7 +90,7 @@ private:
 
     void fpu_dump_env()
     {
-        reportln("Exceptions: #I:{} #D:{} #O:{} #D:{} #U:{} #P:{} #SF:{} Summary:{}",
+        reportln("Exceptions: #I:{} #D:{} #Z:{} #O:{} #U:{} #P:{} #SF:{} Summary:{}",
             m_fpu_error_invalid,
             m_fpu_error_denorm,
             m_fpu_error_zero_div,
@@ -99,7 +99,7 @@ private:
             m_fpu_error_precision,
             m_fpu_error_stackfault,
             m_fpu_error_summary);
-        reportln("Masks: #I:{} #D:{} #O:{} #D:{} #U:{} #P:{}",
+        reportln("Masks: #I:{} #D:{} #Z:{} #O:{} #U:{} #P:{}",
             m_fpu_mask_invalid,
             m_fpu_mask_denorm,
             m_fpu_mask_zero_div,
