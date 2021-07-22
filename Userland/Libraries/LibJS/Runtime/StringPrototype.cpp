@@ -839,13 +839,16 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
         if (vm.exception())
             return {};
     }
-    auto s = this_object.to_string(global_object);
+
+    auto string = this_object.to_utf16_string(global_object);
     if (vm.exception())
         return {};
+    Utf16View utf16_string_view { string };
+
     auto rx = regexp_create(global_object, regexp, js_undefined());
     if (!rx)
         return {};
-    return rx->invoke(*vm.well_known_symbol_match(), js_string(vm, s));
+    return rx->invoke(*vm.well_known_symbol_match(), js_string(vm, utf16_string_view));
 }
 
 // 22.1.3.12 String.prototype.matchAll ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.matchall
@@ -879,13 +882,16 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
         if (vm.exception())
             return {};
     }
-    auto s = this_object.to_string(global_object);
+
+    auto string = this_object.to_utf16_string(global_object);
     if (vm.exception())
         return {};
+    Utf16View utf16_string_view { string };
+
     auto rx = regexp_create(global_object, regexp, js_string(vm, "g"));
     if (!rx)
         return {};
-    return rx->invoke(*vm.well_known_symbol_match_all(), js_string(vm, s));
+    return rx->invoke(*vm.well_known_symbol_match_all(), js_string(vm, utf16_string_view));
 }
 
 // 22.1.3.17 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace
