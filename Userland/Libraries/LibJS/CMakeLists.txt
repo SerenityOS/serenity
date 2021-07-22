@@ -138,6 +138,8 @@ set(SOURCES
     Runtime/Temporal/PlainDateConstructor.cpp
     Runtime/Temporal/PlainDatePrototype.cpp
     Runtime/Temporal/PlainDateTime.cpp
+    Runtime/Temporal/PlainDateTimeConstructor.cpp
+    Runtime/Temporal/PlainDateTimePrototype.cpp
     Runtime/Temporal/PlainTime.cpp
     Runtime/Temporal/Temporal.cpp
     Runtime/Temporal/TimeZone.cpp
