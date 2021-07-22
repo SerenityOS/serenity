@@ -437,19 +437,20 @@ void SoftFPU::FCMOVB(const X86::Instruction& insn)
 }
 void SoftFPU::FCMOVNB(const X86::Instruction& insn)
 {
-    VERIFY(!insn.modrm().is_register());
-    auto m32int = (i32)insn.modrm().read32(m_cpu, insn).value();
-    // FIXME: Respect shadow values
-    fpu_push((long double)m32int);
+    VERIFY(insn.modrm().is_register());
+    if (!m_cpu.cf())
+        fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 void SoftFPU::FCMOVBE(const X86::Instruction& insn)
 {
-    if (m_cpu.cf() | m_cpu.zf())
+    VERIFY(insn.modrm().is_register());
+    if (m_cpu.cf() || m_cpu.zf())
         fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 void SoftFPU::FCMOVNBE(const X86::Instruction& insn)
 {
-    if (!(m_cpu.cf() | m_cpu.zf()))
+    VERIFY(insn.modrm().is_register());
+    if (!(m_cpu.cf() || m_cpu.zf()))
         fpu_set(0, fpu_get(insn.modrm().rm()));
 }
 
@@ -462,7 +463,7 @@ void SoftFPU::FCMOVU(const X86::Instruction& insn)
 void SoftFPU::FCMOVNU(const X86::Instruction& insn)
 {
     VERIFY(insn.modrm().is_register());
-    if (m_cpu.pf())
+    if (!m_cpu.pf())
         fpu_set(0, fpu_get((insn.modrm().reg_fpu())));
 }
 
