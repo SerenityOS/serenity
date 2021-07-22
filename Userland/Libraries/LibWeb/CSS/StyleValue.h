@@ -8,12 +8,16 @@
 
 #pragma once
 
+#include <AK/NonnullOwnPtr.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/URL.h>
+#include <AK/Variant.h>
+#include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
@@ -223,6 +227,7 @@ public:
         CustomProperty,
         Numeric,
         ValueList,
+        Calculated,
     };
 
     Type type() const { return m_type; }
@@ -237,11 +242,19 @@ public:
     bool is_position() const { return type() == Type::Position; }
     bool is_custom_property() const { return type() == Type::CustomProperty; }
     bool is_numeric() const { return type() == Type::Numeric; }
-    bool is_value_list() const { return type() == Type::ValueList; }
+    bool is_value_list() const
+    {
+        return type() == Type::ValueList;
+    }
 
     bool is_builtin_or_dynamic() const
     {
         return is_inherit() || is_initial() || is_custom_property();
+    }
+
+    bool is_calculated() const
+    {
+        return type() == Type::Calculated;
     }
 
     virtual String to_string() const = 0;
@@ -359,6 +372,113 @@ private:
     }
 
     Length m_length;
+};
+
+class CalculatedStyleValue : public StyleValue {
+public:
+    struct CalcSum;
+    struct CalcSumPartWithOperator;
+    struct CalcProduct;
+    struct CalcProductPartWithOperator;
+    struct CalcNumberSum;
+    struct CalcNumberSumPartWithOperator;
+    struct CalcNumberProduct;
+    struct CalcNumberProductPartWithOperator;
+
+    using CalcNumberValue = Variant<float, NonnullOwnPtr<CalcNumberSum>>;
+    using CalcValue = Variant<float, CSS::Length, NonnullOwnPtr<CalcSum>>;
+
+    // This represents that: https://drafts.csswg.org/css-values-3/#calc-syntax
+    struct CalcSum {
+        CalcSum(NonnullOwnPtr<CalcProduct> first_calc_product, NonnullOwnPtrVector<CalcSumPartWithOperator> additional)
+            : first_calc_product(move(first_calc_product))
+            , zero_or_more_additional_calc_products(move(additional)) {};
+
+        NonnullOwnPtr<CalcProduct> first_calc_product;
+        NonnullOwnPtrVector<CalcSumPartWithOperator> zero_or_more_additional_calc_products;
+    };
+
+    struct CalcNumberSum {
+        CalcNumberSum(NonnullOwnPtr<CalcNumberProduct> first_calc_number_product, NonnullOwnPtrVector<CalcNumberSumPartWithOperator> additional)
+            : first_calc_number_product(move(first_calc_number_product))
+            , zero_or_more_additional_calc_number_products(move(additional)) {};
+
+        NonnullOwnPtr<CalcNumberProduct> first_calc_number_product;
+        NonnullOwnPtrVector<CalcNumberSumPartWithOperator> zero_or_more_additional_calc_number_products;
+    };
+
+    struct CalcProduct {
+        CalcValue first_calc_value;
+        NonnullOwnPtrVector<CalcProductPartWithOperator> zero_or_more_additional_calc_values;
+    };
+
+    struct CalcSumPartWithOperator {
+        enum Operation {
+            Add,
+            Subtract,
+        };
+
+        CalcSumPartWithOperator(Operation op, NonnullOwnPtr<CalcProduct> calc_product)
+            : op(op)
+            , calc_product(move(calc_product)) {};
+
+        Operation op;
+        NonnullOwnPtr<CalcProduct> calc_product;
+    };
+
+    struct CalcProductPartWithOperator {
+        enum {
+            Multiply,
+            Divide,
+        } op;
+        Variant<CalcValue, CalcNumberValue> value;
+    };
+
+    struct CalcNumberProduct {
+        CalcNumberValue first_calc_number_value;
+        NonnullOwnPtrVector<CalcNumberProductPartWithOperator> zero_or_more_additional_calc_number_values;
+    };
+
+    struct CalcNumberProductPartWithOperator {
+        enum {
+            Multiply,
+            Divide,
+        } op;
+        CalcNumberValue value;
+    };
+
+    struct CalcNumberSumPartWithOperator {
+        enum Operation {
+            Add,
+            Subtract,
+        };
+
+        CalcNumberSumPartWithOperator(Operation op, NonnullOwnPtr<CalcNumberProduct> calc_number_product)
+            : op(op)
+            , calc_number_product(move(calc_number_product)) {};
+
+        Operation op;
+        NonnullOwnPtr<CalcNumberProduct> calc_number_product;
+    };
+
+    static NonnullRefPtr<CalculatedStyleValue> create(String const& expression_string, NonnullOwnPtr<CalcSum> calc_sum)
+    {
+        return adopt_ref(*new CalculatedStyleValue(expression_string, move(calc_sum)));
+    }
+
+    String to_string() const override { return m_expression_string; }
+    NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
+
+private:
+    explicit CalculatedStyleValue(String const& expression_string, NonnullOwnPtr<CalcSum> calc_sum)
+        : StyleValue(Type::Calculated)
+        , m_expression_string(expression_string)
+        , m_expression(move(calc_sum))
+    {
+    }
+
+    String m_expression_string;
+    NonnullOwnPtr<CalcSum> m_expression;
 };
 
 class InitialStyleValue final : public StyleValue {
@@ -491,5 +611,4 @@ inline CSS::ValueID StyleValue::to_identifier() const
         return static_cast<const IdentifierStyleValue&>(*this).id();
     return CSS::ValueID::Invalid;
 }
-
 }
