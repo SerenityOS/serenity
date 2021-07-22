@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainDateTimePrototype.h>
 
@@ -29,6 +30,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.toPlainDate, to_plain_date, 0, attr);
 }
 
 static PlainDateTime* typed_this(GlobalObject& global_object)
@@ -63,6 +65,19 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::value_of)
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainDateTime", "a primitive value");
     return {};
+}
+
+// 5.3.37 Temporal.PlainDateTime.prototype.toPlainDate ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaindate
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_date)
+{
+    // 1. Let dateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
+    auto* date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
+    return create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar());
 }
 
 }
