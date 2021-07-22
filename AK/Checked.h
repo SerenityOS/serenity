@@ -58,7 +58,7 @@ template<typename Destination, typename Source>
 struct TypeBoundsChecker<Destination, Source, false, false, true> {
     static constexpr bool is_within_range(Source value)
     {
-        return static_cast<MakeUnsigned<Source>>(value) <= NumericLimits<Destination>::max();
+        return value >= 0 && value <= NumericLimits<Destination>::max();
     }
 };
 
