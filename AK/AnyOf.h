@@ -12,10 +12,10 @@
 
 namespace AK {
 
-template<typename Container, typename ValueType>
+template<typename TEndIterator, IteratorPairWith<TEndIterator> TIterator>
 constexpr bool any_of(
-    SimpleIterator<Container, ValueType> const& begin,
-    SimpleIterator<Container, ValueType> const& end,
+    TIterator const& begin,
+    TEndIterator const& end,
     auto const& predicate)
 {
     return find_if(begin, end, predicate) != end;

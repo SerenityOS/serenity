@@ -11,10 +11,10 @@
 
 namespace AK {
 
-template<typename Container, typename ValueType>
+template<typename TEndIterator, IteratorPairWith<TEndIterator> TIterator>
 constexpr bool all_of(
-    SimpleIterator<Container, ValueType> const& begin,
-    SimpleIterator<Container, ValueType> const& end,
+    TIterator const& begin,
+    TEndIterator const& end,
     auto const& predicate)
 {
     for (auto iter = begin; iter != end; ++iter) {
