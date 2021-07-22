@@ -51,6 +51,21 @@ concept IteratorFunction = requires(Func func, Args... args)
     }
     -> SameAs<IterationDecision>;
 };
+
+template<typename T, typename EndT>
+concept IteratorPairWith = requires(T it, EndT end)
+{
+    *it;
+    { it != end } -> SameAs<bool>;
+    ++it;
+};
+
+template<typename T>
+concept IterableContainer = requires
+{
+    { declval<T>().begin() } -> IteratorPairWith<decltype(declval<T>().end())>;
+};
+
 // clang-format on
 }
 
@@ -58,7 +73,9 @@ using AK::Concepts::Arithmetic;
 using AK::Concepts::Enum;
 using AK::Concepts::FloatingPoint;
 using AK::Concepts::Integral;
+using AK::Concepts::IterableContainer;
 using AK::Concepts::IteratorFunction;
+using AK::Concepts::IteratorPairWith;
 using AK::Concepts::Signed;
 using AK::Concepts::Unsigned;
 using AK::Concepts::VoidFunction;
