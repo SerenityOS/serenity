@@ -296,17 +296,17 @@ void FlacLoaderPlugin::next_frame()
 
     // Conditional header variables
     if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_8) {
-        sample_count = bit_stream.read_bits(8) + 1;
+        sample_count = bit_stream.read_bits_big_endian(8) + 1;
     } else if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_16) {
-        sample_count = bit_stream.read_bits(16) + 1;
+        sample_count = bit_stream.read_bits_big_endian(16) + 1;
     }
 
     if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_8) {
-        frame_sample_rate = bit_stream.read_bits(8) * 1000;
+        frame_sample_rate = bit_stream.read_bits_big_endian(8) * 1000;
     } else if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_16) {
-        frame_sample_rate = bit_stream.read_bits(16);
+        frame_sample_rate = bit_stream.read_bits_big_endian(16);
     } else if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_16X10) {
-        frame_sample_rate = bit_stream.read_bits(16) * 10;
+        frame_sample_rate = bit_stream.read_bits_big_endian(16) * 10;
     }
 
     // TODO: check header checksum, see above
