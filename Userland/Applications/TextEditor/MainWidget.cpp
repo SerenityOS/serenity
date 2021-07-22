@@ -664,6 +664,14 @@ void MainWidget::update_title()
     window()->set_title(builder.to_string());
 }
 
+bool MainWidget::open_new_file(String const& path)
+{
+    VERIFY(path.starts_with("/"sv));
+    set_path(path);
+    m_editor->set_focus(true);
+    return true;
+}
+
 bool MainWidget::read_file_and_close(int fd, String const& path)
 {
     VERIFY(path.starts_with("/"sv));
