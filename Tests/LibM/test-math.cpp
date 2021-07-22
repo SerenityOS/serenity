@@ -4,7 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#pragma GCC optimize("O0")
+#ifdef __clang__
+#    pragma clang optimize off
+#else
+#    pragma GCC optimize("O0")
+#endif
+
 #include <LibTest/TestCase.h>
 
 #include <float.h>
