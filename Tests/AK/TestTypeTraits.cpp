@@ -246,3 +246,23 @@ TEST_CASE(IsDestructible)
     EXPECT_TRAIT_FALSE(IsDestructible, C);
     EXPECT_TRAIT_FALSE(IsTriviallyDestructible, C);
 }
+
+TEST_CASE(CommonType)
+{
+    using TCommon0 = CommonType<int, float, char>;
+    EXPECT_VARIADIC_TRAIT_TRUE(IsSame, TCommon0, float);
+
+    using TCommon1 = CommonType<int, int, int, char>;
+    EXPECT_VARIADIC_TRAIT_TRUE(IsSame, TCommon1, int);
+
+    struct Foo {
+    };
+    using TCommon2 = CommonType<Foo, Foo, Foo>;
+    EXPECT_VARIADIC_TRAIT_TRUE(IsSame, TCommon2, Foo);
+
+    struct Bar {
+        operator Foo();
+    };
+    using TCommon3 = CommonType<Bar, Foo, Bar>;
+    EXPECT_VARIADIC_TRAIT_TRUE(IsSame, TCommon3, Foo);
+}
