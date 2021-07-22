@@ -348,12 +348,12 @@ JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
     case Wasm::ValueType::I32:
         return JS::Value(wasm_value.to<i32>().value());
     case Wasm::ValueType::F64:
-        return JS::Value(static_cast<double>(wasm_value.to<float>().value()));
-    case Wasm::ValueType::F32:
         return JS::Value(wasm_value.to<double>().value());
+    case Wasm::ValueType::F32:
+        return JS::Value(static_cast<double>(wasm_value.to<float>().value()));
     case Wasm::ValueType::FunctionReference:
         // FIXME: What's the name of a function reference that isn't exported?
-        return create_native_function(wasm_value.to<Wasm::FunctionAddress>().value(), "FIXME_IHaveNoIdeaWhatThisShouldBeCalled", global_object);
+        return create_native_function(wasm_value.to<Wasm::Reference::Func>().value().address, "FIXME_IHaveNoIdeaWhatThisShouldBeCalled", global_object);
     case Wasm::ValueType::NullFunctionReference:
         return JS::js_null();
     case Wasm::ValueType::ExternReference:
