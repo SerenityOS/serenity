@@ -23,17 +23,17 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 
-extern u8* start_of_kernel_image;
-extern u8* end_of_kernel_image;
-extern FlatPtr start_of_kernel_text;
-extern FlatPtr start_of_kernel_data;
-extern FlatPtr end_of_kernel_bss;
-extern FlatPtr start_of_ro_after_init;
-extern FlatPtr end_of_ro_after_init;
-extern FlatPtr start_of_unmap_after_init;
-extern FlatPtr end_of_unmap_after_init;
-extern FlatPtr start_of_kernel_ksyms;
-extern FlatPtr end_of_kernel_ksyms;
+extern u8 start_of_kernel_image[];
+extern u8 end_of_kernel_image[];
+extern u8 start_of_kernel_text[];
+extern u8 start_of_kernel_data[];
+extern u8 end_of_kernel_bss[];
+extern u8 start_of_ro_after_init[];
+extern u8 end_of_ro_after_init[];
+extern u8 start_of_unmap_after_init[];
+extern u8 end_of_unmap_after_init[];
+extern u8 start_of_kernel_ksyms[];
+extern u8 end_of_kernel_ksyms[];
 
 extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 extern size_t multiboot_copy_boot_modules_count;
@@ -92,13 +92,13 @@ UNMAP_AFTER_INIT void MemoryManager::protect_kernel_image()
 {
     ScopedSpinLock page_lock(kernel_page_directory().get_lock());
     // Disable writing to the kernel text and rodata segments.
-    for (auto i = (FlatPtr)&start_of_kernel_text; i < (FlatPtr)&start_of_kernel_data; i += PAGE_SIZE) {
+    for (auto i = start_of_kernel_text; i < start_of_kernel_data; i += PAGE_SIZE) {
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
     if (Processor::current().has_feature(CPUFeature::NX)) {
         // Disable execution of the kernel data, bss and heap segments.
-        for (auto i = (FlatPtr)&start_of_kernel_data; i < (FlatPtr)&end_of_kernel_image; i += PAGE_SIZE) {
+        for (auto i = start_of_kernel_data; i < end_of_kernel_image; i += PAGE_SIZE) {
             auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
@@ -140,8 +140,8 @@ void MemoryManager::unmap_ksyms_after_init()
     ScopedSpinLock mm_lock(s_mm_lock);
     ScopedSpinLock page_lock(kernel_page_directory().get_lock());
 
-    auto start = page_round_down((FlatPtr)&start_of_kernel_ksyms);
-    auto end = page_round_up((FlatPtr)&end_of_kernel_ksyms);
+    auto start = page_round_down((FlatPtr)start_of_kernel_ksyms);
+    auto end = page_round_up((FlatPtr)end_of_kernel_ksyms);
 
     // Unmap the entire .ksyms section
     for (auto i = start; i < end; i += PAGE_SIZE) {
@@ -198,7 +198,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     m_used_memory_ranges.ensure_capacity(4);
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Prekernel, start_of_prekernel_image, end_of_prekernel_image });
-    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical(FlatPtr(&start_of_kernel_image))), PhysicalAddress(page_round_up(virtual_to_low_physical(FlatPtr(&end_of_kernel_image)))) });
+    m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image))) });
 
     if (multiboot_info_ptr->flags & 0x4) {
         auto* bootmods_start = multiboot_copy_boot_modules_array;

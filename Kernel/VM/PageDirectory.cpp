@@ -13,7 +13,7 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 
-extern u8* end_of_kernel_image;
+extern u8 end_of_kernel_image[];
 
 namespace Kernel {
 
@@ -34,7 +34,7 @@ RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
 UNMAP_AFTER_INIT PageDirectory::PageDirectory()
 {
     // make sure this starts in a new page directory to make MemoryManager::initialize_physical_pages() happy
-    FlatPtr start_of_range = ((FlatPtr)&end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000;
+    FlatPtr start_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000;
     m_range_allocator.initialize_with_range(VirtualAddress(start_of_range), KERNEL_PD_END - start_of_range);
     m_identity_range_allocator.initialize_with_range(VirtualAddress(FlatPtr(0x00000000)), 0x00200000);
 }
