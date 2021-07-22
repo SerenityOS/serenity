@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <Applications/FileManager/PropertiesWindowHashesTab.h>
 #include <LibCore/File.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Dialog.h>
@@ -57,6 +58,11 @@ private:
         return "Unknown";
     }
 
+    static bool is_hashable(mode_t mode)
+    {
+        return S_ISREG(mode) || S_ISBLK(mode);
+    }
+
     GUI::Button& make_button(String, GUI::Widget& parent);
     void setup_permission_checkboxes(GUI::CheckBox& box_read, GUI::CheckBox& box_write, GUI::CheckBox& box_execute, PermissionMasks masks, mode_t mode);
     void permission_changed(mode_t mask, bool set);
@@ -67,6 +73,7 @@ private:
     RefPtr<GUI::Button> m_apply_button;
     RefPtr<GUI::TextBox> m_name_box;
     RefPtr<GUI::ImageWidget> m_icon;
+
     String m_name;
     String m_parent_path;
     String m_path;

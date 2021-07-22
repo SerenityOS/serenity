@@ -159,6 +159,8 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
     m_apply_button->on_click = [this](auto) { apply_changes(); };
     m_apply_button->set_enabled(false);
 
+    if (is_hashable(m_mode))
+        tab_widget.add_tab<HashTab>("Hashes", path, ((u64)st.st_size) < 2 * MiB);
     update();
 }
 
