@@ -374,10 +374,11 @@ Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueTyp
         if (vm.exception())
             return {};
         auto value = bigint->big_integer().divided_by(two_64).remainder;
-        VERIFY(value.trimmed_length() <= 2);
-        BigEndian<i64> integer { 0 };
-        value.export_data({ &integer, 2 });
-        return Wasm::Value { static_cast<i64>(integer) };
+        VERIFY(value.unsigned_value().trimmed_length() <= 2);
+        i64 integer = static_cast<i64>(value.unsigned_value().to_u64());
+        if (value.is_negative())
+            integer = -integer;
+        return Wasm::Value { integer };
     }
     case Wasm::ValueType::I32: {
         auto _i32 = value.to_i32(global_object);
