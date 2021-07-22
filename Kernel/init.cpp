@@ -189,8 +189,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     Memory::MemoryManager::initialize(0);
 
     // Ensure that the safemem sections are not empty. This could happen if the linker accidentally discards the sections.
-    VERIFY(start_of_safemem_text != end_of_safemem_text);
-    VERIFY(start_of_safemem_atomic_text != end_of_safemem_atomic_text);
+    VERIFY(+start_of_safemem_text != +end_of_safemem_text);
+    VERIFY(+start_of_safemem_atomic_text != +end_of_safemem_atomic_text);
 
     // Invoke all static global constructors in the kernel.
     // Note that we want to do this as early as possible.
