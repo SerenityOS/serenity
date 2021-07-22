@@ -497,7 +497,7 @@ RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_r
 
         tokens.skip_whitespace();
 
-        auto current_value = tokens.peek_token();
+        auto& current_value = tokens.peek_token();
         if (current_value.is(Token::Type::Delim)) {
             auto delim = ((Token)current_value).delim();
             if (delim == ">") {
@@ -512,7 +512,7 @@ RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_r
             } else if (delim == "|") {
                 tokens.next_token();
 
-                auto next = tokens.peek_token();
+                auto& next = tokens.peek_token();
                 if (next.is(Token::Type::EndOfFile))
                     return {};
 
@@ -528,7 +528,7 @@ RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_r
         Vector<Selector::SimpleSelector> simple_selectors;
 
         for (;;) {
-            auto current_value = tokens.peek_token();
+            auto& current_value = tokens.peek_token();
             if (current_value.is(Token::Type::EndOfFile) || current_value.is(Token::Type::Whitespace))
                 break;
 
@@ -546,7 +546,7 @@ RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_r
     };
 
     for (;;) {
-        auto current_value = tokens.peek_token();
+        auto& current_value = tokens.peek_token();
         if (current_value.is(Token::Type::EndOfFile))
             break;
 
@@ -577,7 +577,7 @@ NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& t
     NonnullRefPtrVector<StyleRule> rules;
 
     for (;;) {
-        auto token = tokens.next_token();
+        auto& token = tokens.next_token();
 
         if (token.is(Token::Type::Whitespace)) {
             continue;
@@ -627,14 +627,14 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_TRACE, "Parser::consume_an_at_rule");
 
-    auto name_ident = tokens.next_token();
+    auto& name_ident = tokens.next_token();
     VERIFY(name_ident.is(Token::Type::AtKeyword));
 
     NonnullRefPtr<StyleRule> rule = create<StyleRule>(StyleRule::Type::At);
     rule->m_name = ((Token)name_ident).at_keyword();
 
     for (;;) {
-        auto token = tokens.next_token();
+        auto& token = tokens.next_token();
         if (token.is(Token::Type::Semicolon)) {
             return rule;
         }
@@ -670,7 +670,7 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
     NonnullRefPtr<StyleRule> rule = create<StyleRule>(StyleRule::Type::Qualified);
 
     for (;;) {
-        auto token = tokens.next_token();
+        auto& token = tokens.next_token();
 
         if (token.is(Token::Type::EndOfFile)) {
             log_parse_error();
@@ -705,7 +705,7 @@ StyleComponentValueRule Parser::consume_a_component_value(TokenStream<T>& tokens
 {
     dbgln_if(CSS_PARSER_TRACE, "Parser::consume_a_component_value");
 
-    auto token = tokens.next_token();
+    auto& token = tokens.next_token();
 
     if (token.is(Token::Type::OpenCurly) || token.is(Token::Type::OpenSquare) || token.is(Token::Type::OpenParen))
         return StyleComponentValueRule(consume_a_simple_block(tokens));
@@ -737,7 +737,7 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tok
     block->m_token = tokens.current_token();
 
     for (;;) {
-        auto token = tokens.next_token();
+        auto& token = tokens.next_token();
 
         if (token.is(ending_token)) {
             return block;
@@ -769,7 +769,7 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& toke
     NonnullRefPtr<StyleFunctionRule> function = create<StyleFunctionRule>(((Token)name_ident).m_value.to_string());
 
     for (;;) {
-        auto token = tokens.next_token();
+        auto& token = tokens.next_token();
         if (token.is(Token::Type::CloseParen)) {
             return function;
         }
@@ -797,7 +797,7 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
 {
     dbgln_if(CSS_PARSER_TRACE, "Parser::consume_a_declaration");
 
-    auto token = tokens.next_token();
+    auto& token = tokens.next_token();
 
     StyleDeclarationRule declaration;
     VERIFY(token.is(Token::Type::Ident));
@@ -805,8 +805,8 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tok
 
     tokens.skip_whitespace();
 
-    auto colon = tokens.next_token();
-    if (!colon.is(Token::Type::Colon)) {
+    auto& maybe_colon = tokens.next_token();
+    if (!maybe_colon.is(Token::Type::Colon)) {
         log_parse_error();
         return {};
     }
@@ -862,7 +862,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
     Vector<DeclarationOrAtRule> list;
 
     for (;;) {
-        auto token = tokens.next_token();
+        auto& token = tokens.next_token();
         if (token.is(Token::Type::Whitespace) || token.is(Token::Type::Semicolon)) {
             continue;
         }
@@ -882,7 +882,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
             temp.append(token);
 
             for (;;) {
-                auto peek = tokens.peek_token();
+                auto& peek = tokens.peek_token();
                 if (peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile)) {
                     break;
                 }
@@ -899,11 +899,13 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
 
         log_parse_error();
         tokens.reconsume_current_input_token();
-        auto peek = tokens.peek_token();
-        while (!(peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))) {
+
+        for (;;) {
+            auto& peek = tokens.peek_token();
+            if (peek.is(Token::Type::Semicolon) || peek.is(Token::Type::EndOfFile))
+                break;
             dbgln("Discarding token: '{}'", peek.to_debug_string());
             (void)consume_a_component_value(tokens);
-            peek = tokens.peek_token();
         }
     }
 
@@ -924,7 +926,7 @@ RefPtr<CSSRule> Parser::parse_as_rule(TokenStream<T>& tokens)
 
     tokens.skip_whitespace();
 
-    auto token = tokens.peek_token();
+    auto& token = tokens.peek_token();
 
     if (token.is(Token::Type::EndOfFile)) {
         return {};
@@ -941,7 +943,7 @@ RefPtr<CSSRule> Parser::parse_as_rule(TokenStream<T>& tokens)
 
     tokens.skip_whitespace();
 
-    auto maybe_eof = tokens.peek_token();
+    auto& maybe_eof = tokens.peek_token();
     if (maybe_eof.is(Token::Type::EndOfFile)) {
         return rule;
     }
@@ -983,7 +985,7 @@ Optional<StyleProperty> Parser::parse_as_declaration(TokenStream<T>& tokens)
 
     tokens.skip_whitespace();
 
-    auto token = tokens.peek_token();
+    auto& token = tokens.peek_token();
 
     if (!token.is(Token::Type::Ident)) {
         return {};
@@ -1045,7 +1047,7 @@ Optional<StyleComponentValueRule> Parser::parse_as_component_value(TokenStream<T
 
     tokens.skip_whitespace();
 
-    auto token = tokens.peek_token();
+    auto& token = tokens.peek_token();
 
     if (token.is(Token::Type::EndOfFile)) {
         return {};
@@ -1055,7 +1057,7 @@ Optional<StyleComponentValueRule> Parser::parse_as_component_value(TokenStream<T
 
     tokens.skip_whitespace();
 
-    auto maybe_eof = tokens.peek_token();
+    auto& maybe_eof = tokens.peek_token();
     if (maybe_eof.is(Token::Type::EndOfFile)) {
         return value;
     }
@@ -1100,7 +1102,7 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of
     lists.append({});
 
     for (;;) {
-        auto next = tokens.next_token();
+        auto& next = tokens.next_token();
 
         if (next.is(Token::Type::Comma)) {
             lists.append({});
