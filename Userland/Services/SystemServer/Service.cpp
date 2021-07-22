@@ -13,6 +13,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/Socket.h>
+#include <LibCore/Timer.h>
 #include <fcntl.h>
 #include <sched.h>
 #include <stdio.h>
@@ -119,14 +120,34 @@ void Service::handle_socket_connection()
     }
 }
 
-void Service::activate()
+bool Service::activate()
 {
     VERIFY(m_pid < 0);
+
+    if (!m_manager.can_activate(*this)) {
+        dbgln_if(SERVICE_DEBUG, "Cannot activate {}, dependencies not met", name());
+        return false;
+    }
 
     if (m_lazy)
         setup_notifier();
     else
         spawn();
+    return true;
+}
+
+void Service::delayed_activate(int seconds)
+{
+    if (m_delayed_activate_timer)
+        m_delayed_activate_timer->stop();
+    dbgln_if(SERVICE_DEBUG, "Starting {} with {} seconds delay", name(), seconds);
+    m_delayed_activate_timer = Core::Timer::create_single_shot(
+        min(seconds, 1) * 1000,
+        [&] {
+            dbgln_if(SERVICE_DEBUG, "Activating {} now, was delayed by {} seconds", name(), seconds);
+            activate();
+        },
+        this);
 }
 
 void Service::spawn(int socket_fd)
@@ -243,6 +264,8 @@ void Service::spawn(int socket_fd)
         // We are the parent.
         m_pid = pid;
         s_service_map.set(pid, this);
+
+        m_manager.did_spawn_service(*this);
     }
 }
 
@@ -280,14 +303,17 @@ void Service::did_exit(int exit_code)
     activate();
 }
 
-Service::Service(const Core::ConfigFile& config, StringView name)
+Service::Service(ServiceManager& manager, const Core::ConfigFile& config, StringView name)
     : Core::Object(nullptr)
+    , m_manager(manager)
 {
     VERIFY(config.has_group(name));
 
     set_name(name);
     m_executable_path = config.read_entry(name, "Executable", String::formatted("/bin/{}", this->name()));
     m_extra_arguments = config.read_entry(name, "Arguments", "").split(' ');
+    m_after_services = config.read_entry(name, "After", "").split(' ');
+    m_after_delay = config.read_num_entry(name, "AfterDelay", 0);
     m_stdio_file_path = config.read_entry(name, "StdIO");
 
     String prio = config.read_entry(name, "Priority");

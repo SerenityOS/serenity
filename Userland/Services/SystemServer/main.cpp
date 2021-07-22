@@ -457,6 +457,82 @@ static void create_tmp_coredump_directory()
     umask(old_umask);
 }
 
+class SystemServer : public ServiceManager {
+public:
+    SystemServer(bool);
+
+    void activate_services();
+
+    bool is_running(StringView const&) override;
+    bool can_activate(Service&) override;
+    void did_spawn_service(Service&) override;
+
+private:
+    NonnullRefPtrVector<Service> m_services;
+};
+
+SystemServer::SystemServer(bool user)
+{
+    // Read our config and instantiate services.
+    // This takes care of setting up sockets.
+    NonnullRefPtrVector<Service> services;
+    auto config = (user)
+        ? Core::ConfigFile::open_for_app("SystemServer")
+        : Core::ConfigFile::open_for_system("SystemServer");
+    for (auto name : config->groups()) {
+        auto service = Service::construct(*this, *config, name);
+        if (service->is_enabled())
+            m_services.append(service);
+    }
+}
+
+void SystemServer::activate_services()
+{
+    dbgln("Activating {} services...", m_services.size());
+    for (auto& service : m_services)
+        service.activate();
+}
+
+bool SystemServer::is_running(StringView const& service_name)
+{
+    for (auto& service : m_services) {
+        if (service.name() == service_name)
+            return service.is_running();
+    }
+    return false;
+}
+
+bool SystemServer::can_activate(Service& service)
+{
+    // Check if all its dependencies are running
+    for (auto& after_service_name : service.after_services()) {
+        if (!is_running(after_service_name))
+            return false;
+        dbgln("Service {} depends on {}: running", service.name(), after_service_name);
+    }
+    return true;
+}
+
+void SystemServer::did_spawn_service(Service& spawned_service)
+{
+    // Check if any service is listing this service in After
+    for (auto& service : m_services) {
+        if (!service.is_enabled())
+            continue;
+        if (service.is_running())
+            continue;
+
+        if (service.after_services().contains_slow(spawned_service.name())) {
+            if (service.after_delay() == 0) {
+                // Try activating it. If it still has unmet dependencies it will fail
+                service.activate();
+            } else {
+                service.delayed_activate(service.after_delay());
+            }
+        }
+    }
+}
+
 int main(int argc, char** argv)
 {
     bool user = false;
@@ -483,22 +559,10 @@ int main(int argc, char** argv)
 
     event_loop.register_signal(SIGCHLD, sigchld_handler);
 
-    // Read our config and instantiate services.
-    // This takes care of setting up sockets.
-    NonnullRefPtrVector<Service> services;
-    auto config = (user)
-        ? Core::ConfigFile::open_for_app("SystemServer")
-        : Core::ConfigFile::open_for_system("SystemServer");
-    for (auto name : config->groups()) {
-        auto service = Service::construct(*config, name);
-        if (service->is_enabled())
-            services.append(service);
-    }
+    SystemServer system_server(user);
 
     // After we've set them all up, activate them!
-    dbgln("Activating {} services...", services.size());
-    for (auto& service : services)
-        service.activate();
+    system_server.activate_services();
 
     return event_loop.exec();
 }

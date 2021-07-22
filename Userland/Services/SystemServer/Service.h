@@ -13,12 +13,25 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 
+class Service;
+
+class ServiceManager {
+public:
+    virtual ~ServiceManager() = default;
+
+    virtual bool is_running(StringView const&) = 0;
+    virtual bool can_activate(Service&) = 0;
+    virtual void did_spawn_service(Service&) = 0;
+};
+
 class Service final : public Core::Object {
     C_OBJECT(Service)
 
 public:
     bool is_enabled() const;
-    void activate();
+    bool is_running() const { return m_pid >= 0; }
+    bool activate();
+    void delayed_activate(int);
     void did_exit(int exit_code);
 
     static Service* find_by_pid(pid_t);
@@ -26,8 +39,11 @@ public:
     // FIXME: Port to Core::Property
     void save_to(JsonObject&);
 
+    int after_delay() const { return m_after_delay; }
+    auto const& after_services() const { return m_after_services; }
+
 private:
-    Service(const Core::ConfigFile&, StringView name);
+    Service(ServiceManager&, const Core::ConfigFile&, StringView name);
 
     void spawn(int socket_fd = -1);
 
@@ -42,10 +58,15 @@ private:
         mode_t permissions;
     };
 
+    ServiceManager& m_manager;
+
     // Path to the executable. By default this is /bin/{m_name}.
     String m_executable_path;
     // Extra arguments, starting from argv[1], to pass when exec'ing.
     Vector<String> m_extra_arguments;
+    // Other services that need to be running before this service can be activated
+    Vector<String> m_after_services;
+    int m_after_delay { 0 };
     // File path to open as stdio fds.
     String m_stdio_file_path;
     int m_priority { 1 };
@@ -76,6 +97,8 @@ private:
     // For single-instance services, PID of the running instance of this service.
     pid_t m_pid { -1 };
     RefPtr<Core::Notifier> m_socket_notifier;
+
+    RefPtr<Core::Timer> m_delayed_activate_timer;
 
     // Timer since we last spawned the service.
     Core::ElapsedTimer m_run_timer;
