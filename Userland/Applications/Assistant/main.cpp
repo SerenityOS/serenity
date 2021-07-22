@@ -7,6 +7,7 @@
 #include "Providers.h"
 #include <AK/QuickSort.h>
 #include <AK/String.h>
+#include <LibCore/LockFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Event.h>
@@ -17,6 +18,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Palette.h>
 #include <LibThreading/Mutex.h>
+#include <string.h>
 #include <unistd.h>
 
 namespace Assistant {
@@ -191,9 +193,21 @@ static constexpr size_t MAX_SEARCH_RESULTS = 6;
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd rpath unix proc exec thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath cpath unix proc exec thread", nullptr) < 0) {
         perror("pledge");
         return 1;
+    }
+
+    Core::LockFile lockfile("/tmp/lock/assistant.lock");
+
+    if (!lockfile.is_held()) {
+        if (lockfile.error_code()) {
+            warnln("Core::LockFile: {}", strerror(lockfile.error_code()));
+            return 1;
+        }
+
+        // Another assistant is open, so exit silently.
+        return 0;
     }
 
     auto app = GUI::Application::construct(argc, argv);
