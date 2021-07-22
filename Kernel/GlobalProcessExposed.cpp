@@ -707,6 +707,24 @@ private:
     }
 };
 
+class ProcFSKernelBase final : public ProcFSGlobalInformation {
+public:
+    static NonnullRefPtr<ProcFSKernelBase> must_create();
+
+private:
+    ProcFSKernelBase();
+
+    virtual mode_t required_mode() const override { return 0400; }
+
+    virtual bool output(KBufferBuilder& builder) override
+    {
+        if (!Process::current()->is_superuser())
+            return false;
+        builder.append(String::number(kernel_base));
+        return true;
+    }
+};
+
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSelfProcessDirectory> ProcFSSelfProcessDirectory::must_create()
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSSelfProcessDirectory()).release_nonnull();
@@ -762,6 +780,11 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSModules> ProcFSModules::must_create()
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSProfile> ProcFSProfile::must_create()
 {
     return adopt_ref_if_nonnull(new (nothrow) ProcFSProfile).release_nonnull();
+}
+
+UNMAP_AFTER_INIT NonnullRefPtr<ProcFSKernelBase> ProcFSKernelBase::must_create()
+{
+    return adopt_ref_if_nonnull(new (nothrow) ProcFSKernelBase).release_nonnull();
 }
 
 UNMAP_AFTER_INIT ProcFSSelfProcessDirectory::ProcFSSelfProcessDirectory()
@@ -821,6 +844,11 @@ UNMAP_AFTER_INIT ProcFSProfile::ProcFSProfile()
 {
 }
 
+UNMAP_AFTER_INIT ProcFSKernelBase::ProcFSKernelBase()
+    : ProcFSGlobalInformation("kernel_base"sv)
+{
+}
+
 UNMAP_AFTER_INIT NonnullRefPtr<ProcFSSystemDirectory> ProcFSSystemDirectory::must_create(const ProcFSRootDirectory& parent_directory)
 {
     auto directory = adopt_ref(*new (nothrow) ProcFSSystemDirectory(parent_directory));
@@ -852,6 +880,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<ProcFSRootDirectory> ProcFSRootDirectory::must_cr
     directory->m_components.append(ProcFSCommandLine::must_create());
     directory->m_components.append(ProcFSModules::must_create());
     directory->m_components.append(ProcFSProfile::must_create());
+    directory->m_components.append(ProcFSKernelBase::must_create());
 
     directory->m_components.append(ProcFSNetworkDirectory::must_create(*directory));
     directory->m_components.append(ProcFSSystemDirectory::must_create(*directory));
