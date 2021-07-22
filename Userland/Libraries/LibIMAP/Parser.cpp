@@ -719,9 +719,9 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
             data_item.section->parts = Vector<unsigned>();
 
             while (!try_consume("]")) {
-                auto num = parse_number();
-                if (num != (unsigned)-1) {
-                    data_item.section->parts->append(num);
+                auto num = try_parse_number();
+                if (num.has_value()) {
+                    data_item.section->parts->append(num.value());
                     continue;
                 }
                 auto atom = parse_atom();
