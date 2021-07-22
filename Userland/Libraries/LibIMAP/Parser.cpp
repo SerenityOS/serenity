@@ -716,12 +716,12 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
             consume("]");
         } else if (is_ascii_digit(section_type[0])) {
             data_item.section->type = FetchCommand::DataItem::SectionType::Parts;
-            data_item.section->parts = Vector<int>();
+            data_item.section->parts = Vector<unsigned>();
 
             while (!try_consume("]")) {
                 auto num = parse_number();
                 if (num != (unsigned)-1) {
-                    data_item.section->parts->append((int)num);
+                    data_item.section->parts->append(num);
                     continue;
                 }
                 auto atom = parse_atom();

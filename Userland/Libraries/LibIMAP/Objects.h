@@ -275,7 +275,7 @@ struct FetchCommand {
         struct Section {
             SectionType type;
 
-            Optional<Vector<int>> parts {};
+            Optional<Vector<unsigned>> parts {};
             bool ends_with_mime {};
 
             Optional<Vector<String>> headers {};
