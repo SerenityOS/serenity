@@ -14,9 +14,9 @@ namespace AK {
 
 template<typename Container, typename ValueType>
 constexpr bool any_of(
-    const SimpleIterator<Container, ValueType>& begin,
-    const SimpleIterator<Container, ValueType>& end,
-    const auto& predicate)
+    SimpleIterator<Container, ValueType> const& begin,
+    SimpleIterator<Container, ValueType> const& end,
+    auto const& predicate)
 {
     return find_if(begin, end, predicate) != end;
 }
