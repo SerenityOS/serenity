@@ -146,7 +146,6 @@ int main(int argc, char** argv)
         }
 
         config->write_bool_entry("StartupEnable", "NumLock", num_lock_checkbox.is_checked());
-        config->write_entry("StartupEnable", "Keymap", character_map_file_combo.text());
         config->sync();
 
         if (quit)

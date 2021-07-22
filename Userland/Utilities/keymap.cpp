@@ -23,11 +23,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/etc/Keyboard.ini", "rwc") < 0) {
-        perror("unveil /etc/Keyboard.ini");
-        return 1;
-    }
-
     const char* path = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "The mapping file to be used", "file", Core::ArgsParser::Required::No);
@@ -38,6 +33,12 @@ int main(int argc, char** argv)
             perror("unveil path");
             return 1;
         }
+    }
+
+    auto mapper_config = Core::ConfigFile::get_for_app("Keyboard");
+    if (unveil(mapper_config->filename().characters(), "rwc") < 0) {
+        perror("unveil");
+        return 1;
     }
 
     if (unveil(nullptr, nullptr) < 0) {
@@ -69,7 +70,6 @@ int main(int argc, char** argv)
         return rc;
     }
 
-    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini"));
     mapper_config->write_entry("Mapping", "Keymap", path);
     mapper_config->sync();
 

@@ -22,13 +22,20 @@ int main()
 
     auto keyboard_settings_config = Core::ConfigFile::get_for_app("KeyboardSettings");
 
-    if (unveil("/bin/keymap", "x") < 0) {
-        perror("unveil /bin/keymap");
+    if (unveil(keyboard_settings_config->filename().characters(), "r") < 0) {
+        perror("unveil user keyboard settings");
         return 1;
     }
 
-    if (unveil("/etc/Keyboard.ini", "r") < 0) {
-        perror("unveil /etc/Keyboard.ini");
+    auto mapping_config = Core::ConfigFile::get_for_app("Keyboard");
+
+    if (unveil(mapping_config->filename().characters(), "r") < 0) {
+        perror("unveil user keyboard settings");
+        return 1;
+    }
+
+    if (unveil("/bin/keymap", "x") < 0) {
+        perror("unveil /bin/keymap");
         return 1;
     }
 
@@ -42,12 +49,7 @@ int main()
         return 1;
     }
 
-    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini"));
-    auto keymap = mapper_config->read_entry("Mapping", "Keymap", "");
-
-    auto keymap_user_settings = keyboard_settings_config->read_entry("StartupEnable", "Keymap", "");
-    if (keymap_user_settings != keymap)
-        keymap = keymap_user_settings;
+    auto keymap = mapping_config->read_entry("Mapping", "Keymap", "");
 
     pid_t child_pid;
     const char* argv[] = { "/bin/keymap", keymap.characters(), nullptr };
