@@ -132,10 +132,12 @@ if [ "$SERENITY_ARCH" != "aarch64" ]; then
         SERENITY_QEMU_CPU="$SERENITY_QEMU_CPU,-x2apic"
     fi
 
-    if [ -z "$SERENITY_SPICE" ] && "${SERENITY_QEMU_BIN}" -chardev help | grep -iq qemu-vdagent; then
-        SERENITY_SPICE_SERVER_CHARDEV="-chardev qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent"
-    elif "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spicevmc; then
-        SERENITY_SPICE_SERVER_CHARDEV="-chardev spicevmc,id=vdagent,name=vdagent"
+    if [ "$SERENITY_SPICE" != "no" ]; then
+        if [ -z "$SERENITY_SPICE" ] && "${SERENITY_QEMU_BIN}" -chardev help | grep -iq qemu-vdagent; then
+            SERENITY_SPICE_SERVER_CHARDEV="-chardev qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent"
+        elif "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spicevmc; then
+            SERENITY_SPICE_SERVER_CHARDEV="-chardev spicevmc,id=vdagent,name=vdagent"
+        fi
     fi
 fi
 
@@ -156,7 +158,7 @@ else
 fi
 
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
-if [ "$SERENITY_SPICE" ]; then
+if [ "$SERENITY_SPICE" ] && [ "$SERENITY_SPICE" != "no" ]; then
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-spice-app}"
 elif [ "$NATIVE_WINDOWS_QEMU" -eq "1" ]; then
     # QEMU for windows does not like gl=on, so detect if we are building in wsl, and if so, disable it
@@ -228,7 +230,7 @@ $SERENITY_MACHINE
 $SERENITY_SPICE_SERVER_CHARDEV
 "
 
-if [ "$SERENITY_ARCH" != "aarch64" ]; then
+if [ "$SERENITY_ARCH" != "aarch64" ] && [ "$SERENITY_SPICE" != "no" ]; then
     if "${SERENITY_QEMU_BIN}" -chardev help | grep -iq spice; then
         SERENITY_COMMON_QEMU_ARGS="$SERENITY_COMMON_QEMU_ARGS
         -spice port=5930,agent-mouse=off,disable-ticketing=on
