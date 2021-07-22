@@ -85,7 +85,7 @@ private:
         NEAREST = 0b00,
         DOWN = 0b01,
         UP = 0b10,
-        TRUNK = 0b11
+        TRUNC = 0b11
     };
 
     void fpu_dump_env()
@@ -122,7 +122,7 @@ private:
         case FPU_Exception::InvalidOperation:
             return "Invalid Operation";
         case FPU_Exception::DenormalizedOperand:
-            return "Denormalized Operant";
+            return "Denormalized Operand";
         case FPU_Exception::ZeroDivide:
             return "Divide by Zero";
         case FPU_Exception::Overflow:
