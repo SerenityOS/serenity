@@ -67,8 +67,7 @@ public:
     virtual void reset() override;
     virtual void seek(const int position) override;
 
-    // FIXME
-    virtual int loaded_samples() override { return 0; }
+    virtual int loaded_samples() override { return m_loaded_samples; }
     virtual int total_samples() override { return m_total_samples; }
     virtual u32 sample_rate() override { return m_sample_rate; }
     virtual u16 num_channels() override { return m_num_channels; }
@@ -119,6 +118,7 @@ private:
     u32 m_max_frame_size { 0 }; // 24 bit
     u64 m_total_samples { 0 };  // 36 bit
     u8 m_md5_checksum[128 / 8]; // 128 bit (!)
+    size_t m_loaded_samples { 0 };
 
     // keep track of the start of the data in the FLAC stream to seek back more easily
     u64 m_data_start_location { 0 };

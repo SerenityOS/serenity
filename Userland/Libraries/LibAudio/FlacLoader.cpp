@@ -235,6 +235,7 @@ RefPtr<Buffer> FlacLoaderPlugin::get_more_samples([[maybe_unused]] size_t max_by
         --samples_to_read;
     }
 
+    m_loaded_samples += samples.size();
     return Buffer::create_with_samples(move(samples));
 }
 
