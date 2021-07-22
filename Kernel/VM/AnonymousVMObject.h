@@ -23,8 +23,7 @@ public:
 
     static RefPtr<AnonymousVMObject> try_create_with_size(size_t, AllocationStrategy);
     static RefPtr<AnonymousVMObject> try_create_for_physical_range(PhysicalAddress paddr, size_t size);
-    static RefPtr<AnonymousVMObject> try_create_with_physical_page(PhysicalPage& page);
-    static RefPtr<AnonymousVMObject> try_create_with_physical_pages(NonnullRefPtrVector<PhysicalPage>);
+    static RefPtr<AnonymousVMObject> try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>>);
     virtual RefPtr<VMObject> try_clone() override;
 
     RefPtr<PhysicalPage> allocate_committed_page(size_t);
@@ -118,8 +117,7 @@ public:
 private:
     explicit AnonymousVMObject(size_t, AllocationStrategy);
     explicit AnonymousVMObject(PhysicalAddress, size_t);
-    explicit AnonymousVMObject(PhysicalPage&);
-    explicit AnonymousVMObject(NonnullRefPtrVector<PhysicalPage>);
+    explicit AnonymousVMObject(Span<NonnullRefPtr<PhysicalPage>>);
     explicit AnonymousVMObject(AnonymousVMObject const&);
 
     virtual StringView class_name() const override { return "AnonymousVMObject"sv; }

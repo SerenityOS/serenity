@@ -40,7 +40,7 @@ void FrameBufferDevice::create_framebuffer()
     for (auto i = 0u; i < num_needed_pages; ++i) {
         pages.append(write_sink_page);
     }
-    m_framebuffer_sink_vmobject = AnonymousVMObject::try_create_with_physical_pages(move(pages));
+    m_framebuffer_sink_vmobject = AnonymousVMObject::try_create_with_physical_pages(pages.span());
 
     MutexLocker locker(m_gpu.operation_lock());
     m_current_buffer = &buffer_from_index(m_last_set_buffer_index.load());
