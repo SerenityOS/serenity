@@ -112,7 +112,7 @@ size_t advance_string_index(String const& string, size_t index, bool unicode)
     return advance_string_index(utf16_string_view, index, unicode);
 }
 
-static void increment_last_index(GlobalObject& global_object, Object& regexp_object, String const& string, bool unicode)
+static void increment_last_index(GlobalObject& global_object, Object& regexp_object, Utf16View const& string, bool unicode)
 {
     auto& vm = global_object.vm();
 
@@ -125,6 +125,14 @@ static void increment_last_index(GlobalObject& global_object, Object& regexp_obj
 
     last_index = advance_string_index(string, last_index, unicode);
     regexp_object.set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes);
+}
+
+static void increment_last_index(GlobalObject& global_object, Object& regexp_object, String const& string, bool unicode)
+{
+    auto utf16_string = AK::utf8_to_utf16(string);
+    Utf16View utf16_string_view { utf16_string };
+
+    return increment_last_index(global_object, regexp_object, utf16_string_view, unicode);
 }
 
 // 1.1.2.1 Match Records, https://tc39.es/proposal-regexp-match-indices/#sec-match-records
@@ -485,9 +493,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     auto* regexp_object = this_object_from(vm, global_object);
     if (!regexp_object)
         return {};
-    auto s = vm.argument(0).to_string(global_object);
+
+    auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
+    Utf16View string_view { string };
 
     auto global_value = regexp_object->get(vm.names.global);
     if (vm.exception())
@@ -495,7 +505,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     bool global = global_value.to_boolean();
 
     if (!global) {
-        auto result = regexp_exec(global_object, *regexp_object, s);
+        auto result = regexp_exec(global_object, *regexp_object, string_view);
         if (vm.exception())
             return {};
         return result;
@@ -517,7 +527,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     size_t n = 0;
 
     while (true) {
-        auto result = regexp_exec(global_object, *regexp_object, s);
+        auto result = regexp_exec(global_object, *regexp_object, string_view);
         if (vm.exception())
             return {};
 
@@ -542,7 +552,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
             return {};
 
         if (match_str.is_empty()) {
-            increment_last_index(global_object, *regexp_object, s, unicode);
+            increment_last_index(global_object, *regexp_object, string_view, unicode);
             if (vm.exception())
                 return {};
         }
@@ -558,7 +568,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     if (!regexp_object)
         return {};
 
-    auto string = vm.argument(0).to_string(global_object);
+    auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
 
