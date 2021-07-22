@@ -25,8 +25,8 @@ union MMX {
     c8x8 v8;
     i16x4 v16;
     i32x2 v32;
-    i16x4 v16u;
-    i32x2 v32u;
+    u16x4 v16u;
+    u32x2 v32u;
 };
 static_assert(AssertSize<MMX, sizeof(u64)>());
 
