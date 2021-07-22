@@ -1,8 +1,8 @@
 describe("correct behavior", () => {
     test("basic functionality", () => {
         const calendar = { hello: "friends" };
-        const plain_date = new Temporal.PlainDate(1, 1, 1, calendar);
-        expect(plain_date.calendar).toBe(calendar);
+        const plainDate = new Temporal.PlainDate(1, 1, 1, calendar);
+        expect(plainDate.calendar).toBe(calendar);
     });
 });
 

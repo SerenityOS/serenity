@@ -5,9 +5,9 @@ describe("correct behavior", () => {
 
     test("basic functionality", () => {
         const calendar = { hello: "friends" };
-        const first_plain_date = new Temporal.PlainDate(1, 1, 1, calendar);
-        const second_plain_date = new Temporal.PlainDate(0, 1, 1, calendar);
-        expect(first_plain_date.equals(first_plain_date));
-        expect(!first_plain_date.equals(second_plain_date));
+        const firstPlainDate = new Temporal.PlainDate(1, 1, 1, calendar);
+        const secondPlainDate = new Temporal.PlainDate(0, 1, 1, calendar);
+        expect(firstPlainDate.equals(firstPlainDate));
+        expect(!firstPlainDate.equals(secondPlainDate));
     });
 });
