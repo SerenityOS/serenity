@@ -37,7 +37,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
         }
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        dbgln("Received connection");
         IPC::new_client_connection<LaunchServer::ClientConnection>(client_socket.release_nonnull(), client_id);
     };
 
