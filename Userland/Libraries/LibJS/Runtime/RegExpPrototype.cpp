@@ -127,14 +127,6 @@ static void increment_last_index(GlobalObject& global_object, Object& regexp_obj
     regexp_object.set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes);
 }
 
-static void increment_last_index(GlobalObject& global_object, Object& regexp_object, String const& string, bool unicode)
-{
-    auto utf16_string = AK::utf8_to_utf16(string);
-    Utf16View utf16_string_view { utf16_string };
-
-    return increment_last_index(global_object, regexp_object, utf16_string_view, unicode);
-}
-
 // 1.1.2.1 Match Records, https://tc39.es/proposal-regexp-match-indices/#sec-match-records
 struct Match {
     static Match create(regex::Match const& match)
@@ -619,9 +611,10 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     auto* regexp_object = this_object_from(vm, global_object);
     if (!regexp_object)
         return {};
-    auto string = string_value.to_string(global_object);
+    auto string = string_value.to_utf16_string(global_object);
     if (vm.exception())
         return {};
+    Utf16View string_view { string };
 
     if (!replace_value.is_function()) {
         auto replace_string = replace_value.to_string(global_object);
@@ -654,7 +647,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     MarkedValueList results(vm.heap());
 
     while (true) {
-        auto result = regexp_exec(global_object, *regexp_object, string);
+        auto result = regexp_exec(global_object, *regexp_object, string_view);
         if (vm.exception())
             return {};
         if (result.is_null())
@@ -676,7 +669,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             return {};
 
         if (match_str.is_empty()) {
-            increment_last_index(global_object, *regexp_object, string, unicode);
+            increment_last_index(global_object, *regexp_object, string_view, unicode);
             if (vm.exception())
                 return {};
         }
@@ -693,10 +686,10 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         auto matched_value = result.get(0);
         if (vm.exception())
             return {};
-
-        auto matched = matched_value.to_string(global_object);
+        auto matched = matched_value.to_utf16_string(global_object);
         if (vm.exception())
             return {};
+        Utf16View matched_view { matched };
 
         auto position_value = result.get(vm.names.index);
         if (vm.exception())
@@ -706,7 +699,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         if (vm.exception())
             return {};
 
-        position = clamp(position, static_cast<double>(0), static_cast<double>(string.length()));
+        position = clamp(position, static_cast<double>(0), static_cast<double>(string_view.length_in_code_units()));
 
         MarkedValueList captures(vm.heap());
         for (size_t n = 1; n <= n_captures; ++n) {
@@ -735,10 +728,10 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
         if (replace_value.is_function()) {
             MarkedValueList replacer_args(vm.heap());
-            replacer_args.append(js_string(vm, matched));
+            replacer_args.append(js_string(vm, matched_view));
             replacer_args.extend(move(captures));
             replacer_args.append(Value(position));
-            replacer_args.append(js_string(vm, string));
+            replacer_args.append(js_string(vm, string_view));
             if (!named_captures.is_undefined()) {
                 replacer_args.append(move(named_captures));
             }
@@ -758,28 +751,32 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
                     return {};
             }
 
-            replacement = get_substitution(global_object, matched, string, position, captures, named_captures_object, replace_value);
+            replacement = get_substitution(global_object, matched_view, string_view, position, captures, named_captures_object, replace_value);
             if (vm.exception())
                 return {};
         }
 
         if (position >= next_source_position) {
+            auto substring = string_view.substring_view(next_source_position, position - next_source_position);
+
             StringBuilder builder;
             builder.append(accumulated_result);
-            builder.append(string.substring(next_source_position, position - next_source_position));
+            builder.append(substring.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
             builder.append(replacement);
 
             accumulated_result = builder.build();
-            next_source_position = position + matched.length();
+            next_source_position = position + matched_view.length_in_code_units();
         }
     }
 
-    if (next_source_position >= string.length())
+    if (next_source_position >= string_view.length_in_code_units())
         return js_string(vm, accumulated_result);
+
+    auto substring = string_view.substring_view(next_source_position);
 
     StringBuilder builder;
     builder.append(accumulated_result);
-    builder.append(string.substring(next_source_position));
+    builder.append(substring.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
 
     return js_string(vm, builder.build());
 }

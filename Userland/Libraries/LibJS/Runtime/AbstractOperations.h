@@ -30,7 +30,7 @@ Object* get_prototype_from_constructor(GlobalObject&, FunctionObject const& cons
 Object* create_unmapped_arguments_object(GlobalObject&, Vector<Value> const& arguments);
 Object* create_mapped_arguments_object(GlobalObject&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Vector<Value> const& arguments, Environment&);
 Value canonical_numeric_index_string(GlobalObject&, PropertyName const&);
-String get_substitution(GlobalObject&, String const& matched, String const& str, size_t position, Vector<Value> const& captures, Value named_captures, Value replacement);
+String get_substitution(GlobalObject&, Utf16View const& matched, Utf16View const& str, size_t position, Vector<Value> const& captures, Value named_captures, Value replacement);
 
 enum class CallerMode {
     Strict,
