@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Tobias Christiansen <tobi@tobyase.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
 #include <AK/SourceLocation.h>
 #include <LibWeb/CSS/CSSImportRule.h>
@@ -229,6 +231,104 @@ static StringView parse_custom_property_name(const StringView& value)
     return value.substring_view(4, substring_length);
 }
 
+static StringView isolate_calc_expression(const StringView& value)
+{
+    if (!value.starts_with("calc(") || !value.ends_with(")"))
+        return {};
+    auto substring_length = value.length() - 5 - 1;
+    return value.substring_view(5, substring_length);
+}
+
+static Optional<NonnullOwnPtr<CSS::CalculatedStyleValue::CalcSum>> parse_calc_expression(const StringView& expression_string)
+{
+    // First, tokenize
+
+    struct CalcToken {
+        enum class Type {
+            Undefined,
+            Number,
+            Unit,
+            Whitespace,
+            Plus,
+            Minus,
+            Asterisk,
+            Slash,
+            OpenBracket,
+            CloseBracket,
+        } type { Type::Undefined };
+        String value {};
+    };
+
+    Vector<CalcToken> tokens;
+
+    GenericLexer lexer(expression_string);
+    while (!lexer.is_eof()) {
+        // Number
+        if (((lexer.next_is('+') || lexer.next_is('-')) && !isspace(lexer.peek(1)))
+            || lexer.next_is('.')
+            || lexer.next_is(isdigit)) {
+
+            auto number = lexer.consume_while(is_any_of("+-.0123456789"));
+            tokens.append(CalcToken { CalcToken::Type ::Number, number.to_string() });
+            continue;
+        }
+
+        auto ch = lexer.consume();
+
+        if (isspace(ch)) {
+            tokens.append(CalcToken { CalcToken::Type::Whitespace });
+            continue;
+        }
+
+        if (ch == '%') {
+            tokens.append(CalcToken { CalcToken::Type::Unit, "%" });
+            continue;
+        }
+
+        if (ch == '+') {
+            tokens.append(CalcToken { CalcToken::Type::Plus });
+            continue;
+        }
+
+        if (ch == '-') {
+            tokens.append(CalcToken { CalcToken::Type::Minus });
+            continue;
+        }
+
+        if (ch == '*') {
+            tokens.append(CalcToken { CalcToken::Type::Asterisk });
+            continue;
+        }
+
+        if (ch == '/') {
+            tokens.append(CalcToken { CalcToken::Type::Slash });
+            continue;
+        }
+
+        if (ch == '(') {
+            tokens.append(CalcToken { CalcToken::Type::OpenBracket });
+            continue;
+        }
+
+        if (ch == ')') {
+            tokens.append(CalcToken { CalcToken::Type::CloseBracket });
+            continue;
+        }
+
+        // Unit
+        if (isalpha(ch)) {
+            lexer.retreat();
+            auto unit = lexer.consume_while(isalpha);
+            tokens.append(CalcToken { CalcToken::Type::Unit, unit.to_string() });
+            continue;
+        }
+
+        VERIFY_NOT_REACHED();
+    }
+
+    return {};
+}
+
 RefPtr<CSS::StyleValue> parse_css_value(const CSS::DeprecatedParsingContext& context, const StringView& string, CSS::PropertyID property_id)
 {
     bool is_bad_length = false;
@@ -257,6 +357,12 @@ RefPtr<CSS::StyleValue> parse_css_value(const CSS::DeprecatedParsingContext& con
         return CSS::LengthStyleValue::create(CSS::Length::make_auto());
     if (string.starts_with("var("))
         return CSS::CustomStyleValue::create(parse_custom_property_name(string));
+    if (string.starts_with("calc(")) {
+        auto calc_expression_string = isolate_calc_expression(string);
+        auto calc_expression = parse_calc_expression(calc_expression_string);
+        if (calc_expression.has_value())
+            return CSS::CalculatedStyleValue::create(calc_expression_string, calc_expression.release_value());
+    }
 
     auto value_id = CSS::value_id_from_string(string);
     if (value_id != CSS::ValueID::Invalid)
