@@ -510,6 +510,11 @@ TEST_CASE(ECMA262_parse)
         { "\\uxxxx", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
         { "\\ud83d", regex::Error::NoError, ECMAScriptFlags::Unicode },
         { "\\ud83d\\uxxxx", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\u{0}", regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "\\u{10ffff}", regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "\\u{10ffff", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\u{10ffffx", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\u{110000}", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
@@ -605,6 +610,7 @@ TEST_CASE(ECMA262_unicode_match)
         { "\\ude00", "😀", false, ECMAScriptFlags::Unicode },
         { "\\ud83d\\ude00", "😀", true },
         { "\\ud83d\\ude00", "😀", true, ECMAScriptFlags::Unicode },
+        { "\\u{1f600}", "😀", true, ECMAScriptFlags::Unicode },
         { "\\ud83d\\ud83d", "\xed\xa0\xbd\xed\xa0\xbd", true },
         { "\\ud83d\\ud83d", "\xed\xa0\xbd\xed\xa0\xbd", true, ECMAScriptFlags::Unicode },
     };
