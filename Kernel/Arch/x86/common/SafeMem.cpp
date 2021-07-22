@@ -9,33 +9,33 @@
 
 #define CODE_SECTION(section_name) __attribute__((section(section_name)))
 
-extern "C" u8* start_of_safemem_text;
-extern "C" u8* end_of_safemem_text;
+extern "C" u8 start_of_safemem_text[];
+extern "C" u8 end_of_safemem_text[];
 
-extern "C" u8* safe_memcpy_ins_1;
-extern "C" u8* safe_memcpy_1_faulted;
-extern "C" u8* safe_memcpy_ins_2;
-extern "C" u8* safe_memcpy_2_faulted;
-extern "C" u8* safe_strnlen_ins;
-extern "C" u8* safe_strnlen_faulted;
-extern "C" u8* safe_memset_ins_1;
-extern "C" u8* safe_memset_1_faulted;
-extern "C" u8* safe_memset_ins_2;
-extern "C" u8* safe_memset_2_faulted;
+extern "C" u8 safe_memcpy_ins_1[];
+extern "C" u8 safe_memcpy_1_faulted[];
+extern "C" u8 safe_memcpy_ins_2[];
+extern "C" u8 safe_memcpy_2_faulted[];
+extern "C" u8 safe_strnlen_ins[];
+extern "C" u8 safe_strnlen_faulted[];
+extern "C" u8 safe_memset_ins_1[];
+extern "C" u8 safe_memset_1_faulted[];
+extern "C" u8 safe_memset_ins_2[];
+extern "C" u8 safe_memset_2_faulted[];
 
-extern "C" u8* start_of_safemem_atomic_text;
-extern "C" u8* end_of_safemem_atomic_text;
+extern "C" u8 start_of_safemem_atomic_text[];
+extern "C" u8 end_of_safemem_atomic_text[];
 
-extern "C" u8* safe_atomic_fetch_add_relaxed_ins;
-extern "C" u8* safe_atomic_fetch_add_relaxed_faulted;
-extern "C" u8* safe_atomic_exchange_relaxed_ins;
-extern "C" u8* safe_atomic_exchange_relaxed_faulted;
-extern "C" u8* safe_atomic_load_relaxed_ins;
-extern "C" u8* safe_atomic_load_relaxed_faulted;
-extern "C" u8* safe_atomic_store_relaxed_ins;
-extern "C" u8* safe_atomic_store_relaxed_faulted;
-extern "C" u8* safe_atomic_compare_exchange_relaxed_ins;
-extern "C" u8* safe_atomic_compare_exchange_relaxed_faulted;
+extern "C" u8 safe_atomic_fetch_add_relaxed_ins[];
+extern "C" u8 safe_atomic_fetch_add_relaxed_faulted[];
+extern "C" u8 safe_atomic_exchange_relaxed_ins[];
+extern "C" u8 safe_atomic_exchange_relaxed_faulted[];
+extern "C" u8 safe_atomic_load_relaxed_ins[];
+extern "C" u8 safe_atomic_load_relaxed_faulted[];
+extern "C" u8 safe_atomic_store_relaxed_ins[];
+extern "C" u8 safe_atomic_store_relaxed_faulted[];
+extern "C" u8 safe_atomic_compare_exchange_relaxed_ins[];
+extern "C" u8 safe_atomic_compare_exchange_relaxed_faulted[];
 
 namespace Kernel {
 
@@ -266,16 +266,16 @@ bool handle_safe_access_fault(RegisterState& regs, FlatPtr fault_address)
     if (ip >= (FlatPtr)&start_of_safemem_text && ip < (FlatPtr)&end_of_safemem_text) {
         // If we detect that the fault happened in safe_memcpy() safe_strnlen(),
         // or safe_memset() then resume at the appropriate _faulted label
-        if (ip == (FlatPtr)&safe_memcpy_ins_1)
-            ip = (FlatPtr)&safe_memcpy_1_faulted;
-        else if (ip == (FlatPtr)&safe_memcpy_ins_2)
-            ip = (FlatPtr)&safe_memcpy_2_faulted;
-        else if (ip == (FlatPtr)&safe_strnlen_ins)
-            ip = (FlatPtr)&safe_strnlen_faulted;
-        else if (ip == (FlatPtr)&safe_memset_ins_1)
-            ip = (FlatPtr)&safe_memset_1_faulted;
-        else if (ip == (FlatPtr)&safe_memset_ins_2)
-            ip = (FlatPtr)&safe_memset_2_faulted;
+        if (ip == (FlatPtr)safe_memcpy_ins_1)
+            ip = (FlatPtr)safe_memcpy_1_faulted;
+        else if (ip == (FlatPtr)safe_memcpy_ins_2)
+            ip = (FlatPtr)safe_memcpy_2_faulted;
+        else if (ip == (FlatPtr)safe_strnlen_ins)
+            ip = (FlatPtr)safe_strnlen_faulted;
+        else if (ip == (FlatPtr)safe_memset_ins_1)
+            ip = (FlatPtr)safe_memset_1_faulted;
+        else if (ip == (FlatPtr)safe_memset_ins_2)
+            ip = (FlatPtr)safe_memset_2_faulted;
         else
             return false;
 
@@ -292,16 +292,16 @@ bool handle_safe_access_fault(RegisterState& regs, FlatPtr fault_address)
         // If we detect that a fault happened in one of the atomic safe_
         // functions, resume at the appropriate _faulted label and set
         // the edx/rdx register to 1 to indicate an error
-        if (ip == (FlatPtr)&safe_atomic_fetch_add_relaxed_ins)
-            ip = (FlatPtr)&safe_atomic_fetch_add_relaxed_faulted;
-        else if (ip == (FlatPtr)&safe_atomic_exchange_relaxed_ins)
-            ip = (FlatPtr)&safe_atomic_exchange_relaxed_faulted;
-        else if (ip == (FlatPtr)&safe_atomic_load_relaxed_ins)
-            ip = (FlatPtr)&safe_atomic_load_relaxed_faulted;
-        else if (ip == (FlatPtr)&safe_atomic_store_relaxed_ins)
-            ip = (FlatPtr)&safe_atomic_store_relaxed_faulted;
-        else if (ip == (FlatPtr)&safe_atomic_compare_exchange_relaxed_ins)
-            ip = (FlatPtr)&safe_atomic_compare_exchange_relaxed_faulted;
+        if (ip == (FlatPtr)safe_atomic_fetch_add_relaxed_ins)
+            ip = (FlatPtr)safe_atomic_fetch_add_relaxed_faulted;
+        else if (ip == (FlatPtr)safe_atomic_exchange_relaxed_ins)
+            ip = (FlatPtr)safe_atomic_exchange_relaxed_faulted;
+        else if (ip == (FlatPtr)safe_atomic_load_relaxed_ins)
+            ip = (FlatPtr)safe_atomic_load_relaxed_faulted;
+        else if (ip == (FlatPtr)safe_atomic_store_relaxed_ins)
+            ip = (FlatPtr)safe_atomic_store_relaxed_faulted;
+        else if (ip == (FlatPtr)safe_atomic_compare_exchange_relaxed_ins)
+            ip = (FlatPtr)safe_atomic_compare_exchange_relaxed_faulted;
         else
             return false;
 
