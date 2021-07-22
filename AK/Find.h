@@ -6,13 +6,14 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
 
 namespace AK {
 
-template<typename TIterator, typename TUnaryPredicate>
-constexpr TIterator find_if(TIterator first, TIterator last, TUnaryPredicate&& pred)
+template<typename TEndIterator, IteratorPairWith<TEndIterator> TIterator, typename TUnaryPredicate>
+constexpr TIterator find_if(TIterator first, TEndIterator last, TUnaryPredicate&& pred)
 {
     for (; first != last; ++first) {
         if (pred(*first)) {
@@ -22,16 +23,16 @@ constexpr TIterator find_if(TIterator first, TIterator last, TUnaryPredicate&& p
     return last;
 }
 
-template<typename TIterator, typename T>
-constexpr TIterator find(TIterator first, TIterator last, const T& value)
+template<typename TEndIterator, IteratorPairWith<TEndIterator> TIterator, typename T>
+constexpr TIterator find(TIterator first, TEndIterator last, T const& value)
 {
-    return find_if(first, last, [&](const auto& v) { return Traits<T>::equals(value, v); });
+    return find_if(first, last, [&](auto const& v) { return Traits<T>::equals(value, v); });
 }
 
-template<typename TIterator, typename T>
-constexpr size_t find_index(TIterator first, TIterator last, const T& value)
+template<typename TEndIterator, IteratorPairWith<TEndIterator> TIterator, typename T>
+constexpr size_t find_index(TIterator first, TEndIterator last, T const& value) requires(requires(TIterator it) { it.index(); })
 {
-    return find_if(first, last, [&](const auto& v) { return Traits<T>::equals(value, v); }).index();
+    return find_if(first, last, [&](auto const& v) { return Traits<T>::equals(value, v); }).index();
 }
 
 }
