@@ -362,7 +362,7 @@ size_t AnonymousVMObject::mark_committed_pages_for_nonvolatile_range(VolatilePag
     return pages_updated;
 }
 
-RefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(size_t page_index)
+NonnullRefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(Badge<Region>, size_t page_index)
 {
     {
         ScopedSpinLock lock(m_lock);

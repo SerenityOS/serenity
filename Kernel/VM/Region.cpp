@@ -426,7 +426,8 @@ PageFaultResponse Region::handle_fault(const PageFault& fault, ScopedSpinLock<Re
         auto& page_slot = physical_page_slot(page_index_in_region);
         if (page_slot->is_lazy_committed_page()) {
             auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
-            page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_vmobject);
+            VERIFY(m_vmobject->is_anonymous());
+            page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({}, page_index_in_vmobject);
             remap_vmobject_page(page_index_in_vmobject);
             return PageFaultResponse::Continue;
         }
@@ -495,7 +496,8 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, ScopedS
         current_thread->did_zero_fault();
 
     if (page_slot->is_lazy_committed_page()) {
-        page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page(page_index_in_vmobject);
+        VERIFY(m_vmobject->is_anonymous());
+        page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({}, page_index_in_vmobject);
         dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED COMMITTED {}", page_slot->paddr());
     } else {
         page_slot = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);

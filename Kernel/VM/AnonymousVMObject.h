@@ -26,7 +26,7 @@ public:
     static RefPtr<AnonymousVMObject> try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>>);
     virtual RefPtr<VMObject> try_clone() override;
 
-    RefPtr<PhysicalPage> allocate_committed_page(size_t);
+    [[nodiscard]] NonnullRefPtr<PhysicalPage> allocate_committed_page(Badge<Region>, size_t);
     PageFaultResponse handle_cow_fault(size_t, VirtualAddress);
     size_t cow_pages() const;
     bool should_cow(size_t page_index, bool) const;
