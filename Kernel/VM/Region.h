@@ -49,12 +49,12 @@ public:
         Yes,
     };
 
-    static OwnPtr<Region> try_create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
-    static OwnPtr<Region> try_create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
+    static OwnPtr<Region> try_create_user_accessible(Process*, Range const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
+    static OwnPtr<Region> try_create_kernel_only(Range const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
 
     ~Region();
 
-    const Range& range() const { return m_range; }
+    Range const& range() const { return m_range; }
     VirtualAddress vaddr() const { return m_range.base(); }
     size_t size() const { return m_range.size(); }
     bool is_readable() const { return m_access & Access::Read; }
@@ -72,7 +72,7 @@ public:
 
     void set_name(OwnPtr<KString> name) { m_name = move(name); }
 
-    const VMObject& vmobject() const { return *m_vmobject; }
+    VMObject const& vmobject() const { return *m_vmobject; }
     VMObject& vmobject() { return *m_vmobject; }
     void set_vmobject(NonnullRefPtr<VMObject>&&);
 
@@ -88,7 +88,7 @@ public:
     bool is_user() const { return !is_kernel(); }
     bool is_kernel() const { return vaddr().get() < 0x00800000 || vaddr().get() >= kernel_base; }
 
-    PageFaultResponse handle_fault(const PageFault&, ScopedSpinLock<RecursiveSpinLock>&);
+    PageFaultResponse handle_fault(PageFault const&, ScopedSpinLock<RecursiveSpinLock>&);
 
     OwnPtr<Region> clone(Process&);
 
@@ -97,7 +97,7 @@ public:
         return m_range.contains(vaddr);
     }
 
-    bool contains(const Range& range) const
+    bool contains(Range const& range) const
     {
         return m_range.contains(range);
     }
@@ -165,7 +165,7 @@ public:
         return size() / PAGE_SIZE;
     }
 
-    const PhysicalPage* physical_page(size_t index) const
+    PhysicalPage const* physical_page(size_t index) const
     {
         VERIFY(index < page_count());
         return vmobject().physical_pages()[first_page_index() + index];
@@ -226,7 +226,7 @@ public:
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
 private:
-    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
+    Region(Range const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
 
     bool do_remap_vmobject_page_range(size_t page_index, size_t page_count);
 
