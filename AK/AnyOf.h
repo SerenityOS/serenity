@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Find.h>
 #include <AK/Iterator.h>
 
@@ -18,6 +19,16 @@ constexpr bool any_of(
     const auto& predicate)
 {
     return find_if(begin, end, predicate) != end;
+}
+
+template<IterableContainer Container>
+constexpr bool any_of(Container&& container, auto const& predicate)
+{
+    for (auto&& entry : container) {
+        if (predicate(entry))
+            return true;
+    }
+    return false;
 }
 
 }
