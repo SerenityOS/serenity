@@ -111,6 +111,7 @@ extern "C" {
 READONLY_AFTER_INIT PhysicalAddress start_of_prekernel_image;
 READONLY_AFTER_INIT PhysicalAddress end_of_prekernel_image;
 READONLY_AFTER_INIT FlatPtr kernel_base;
+READONLY_AFTER_INIT size_t physical_to_virtual_offset;
 #if ARCH(X86_64)
 READONLY_AFTER_INIT PhysicalAddress boot_pml4t;
 #endif
@@ -128,6 +129,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     multiboot_info_ptr = (multiboot_info_t*)boot_info.multiboot_info_ptr;
     start_of_prekernel_image = PhysicalAddress { boot_info.start_of_prekernel_image };
     end_of_prekernel_image = PhysicalAddress { boot_info.end_of_prekernel_image };
+    physical_to_virtual_offset = boot_info.physical_to_virtual_offset;
     kernel_base = boot_info.kernel_base;
 #if ARCH(X86_64)
     gdt64ptr = boot_info.gdt64ptr;

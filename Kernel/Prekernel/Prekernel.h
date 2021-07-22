@@ -20,6 +20,7 @@ namespace Kernel {
 struct [[gnu::packed]] BootInfo {
     u32 start_of_prekernel_image;
     u32 end_of_prekernel_image;
+    u64 physical_to_virtual_offset;
     u64 kernel_base;
     u64 multiboot_info_ptr;
 #    if ARCH(X86_64)
