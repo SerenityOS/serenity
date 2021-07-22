@@ -289,12 +289,7 @@ private:
         long double fp;
         struct {
             MMX mmx;
-            Conditional<sizeof(long double) == 16,
-                u64,
-                Conditional<sizeof(long double) == 12,
-                    u32,
-                    u16>>
-                __high;
+            u16 __high;
         };
     } m_storage[8];
 
