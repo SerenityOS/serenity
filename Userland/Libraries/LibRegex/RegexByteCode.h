@@ -39,6 +39,8 @@ using ByteCodeValueType = u64;
     __ENUMERATE_OPCODE(Save)                       \
     __ENUMERATE_OPCODE(Restore)                    \
     __ENUMERATE_OPCODE(GoBack)                     \
+    __ENUMERATE_OPCODE(ClearCaptureGroup)          \
+    __ENUMERATE_OPCODE(ClearNamedCaptureGroup)     \
     __ENUMERATE_OPCODE(Exit)
 
 // clang-format off
@@ -172,6 +174,19 @@ public:
         bytecode.empend((ByteCodeValueType)type);
 
         extend(move(bytecode));
+    }
+
+    void insert_bytecode_clear_capture_group(size_t index)
+    {
+        empend(static_cast<ByteCodeValueType>(OpCodeId::ClearCaptureGroup));
+        empend(index);
+    }
+
+    void insert_bytecode_clear_named_capture_group(StringView name)
+    {
+        empend(static_cast<ByteCodeValueType>(OpCodeId::ClearNamedCaptureGroup));
+        empend(reinterpret_cast<ByteCodeValueType>(name.characters_without_null_termination()));
+        empend(name.length());
     }
 
     void insert_bytecode_compare_string(StringView view)
@@ -624,6 +639,28 @@ public:
     ALWAYS_INLINE size_t arguments_count() const { return 1; }
     ALWAYS_INLINE BoundaryCheckType type() const { return static_cast<BoundaryCheckType>(argument(0)); }
     const String arguments_string() const override { return String::formatted("kind={} ({})", (long unsigned int)argument(0), boundary_check_type_name(type())); }
+};
+
+class OpCode_ClearCaptureGroup final : public OpCode {
+public:
+    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ClearCaptureGroup; }
+    ALWAYS_INLINE size_t size() const override { return 2; }
+    ALWAYS_INLINE size_t id() const { return argument(0); }
+    const String arguments_string() const override { return String::formatted("id={}", id()); }
+};
+
+class OpCode_ClearNamedCaptureGroup final : public OpCode {
+public:
+    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ClearNamedCaptureGroup; }
+    ALWAYS_INLINE size_t size() const override { return 3; }
+    ALWAYS_INLINE StringView name() const { return { reinterpret_cast<char*>(argument(0)), length() }; }
+    ALWAYS_INLINE size_t length() const { return argument(1); }
+    const String arguments_string() const override
+    {
+        return String::formatted("name={}, length={}", name(), length());
+    }
 };
 
 class OpCode_SaveLeftCaptureGroup final : public OpCode {

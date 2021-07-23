@@ -132,6 +132,12 @@ void ByteCode::ensure_opcodes_initialized()
         case OpCodeId::CheckBegin:
             s_opcodes[i] = make<OpCode_CheckBegin>();
             break;
+        case OpCodeId::ClearCaptureGroup:
+            s_opcodes[i] = make<OpCode_ClearCaptureGroup>();
+            break;
+        case OpCodeId::ClearNamedCaptureGroup:
+            s_opcodes[i] = make<OpCode_ClearNamedCaptureGroup>();
+            break;
         case OpCodeId::SaveLeftCaptureGroup:
             s_opcodes[i] = make<OpCode_SaveLeftCaptureGroup>();
             break;
@@ -288,6 +294,16 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckEnd::execute(const MatchInput& input, 
     return ExecutionResult::Failed_ExecuteLowPrioForks;
 }
 
+ALWAYS_INLINE ExecutionResult OpCode_ClearCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
+{
+    if (input.match_index < state.capture_group_matches.size()) {
+        auto& group = state.capture_group_matches[input.match_index];
+        if (id() < group.size())
+            group[id()] = {};
+    }
+    return ExecutionResult::Continue;
+}
+
 ALWAYS_INLINE ExecutionResult OpCode_SaveLeftCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
 {
     if (input.match_index >= state.capture_group_matches.size()) {
@@ -330,6 +346,15 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightCaptureGroup::execute(const MatchI
         match = { view, input.line, start_position, input.global_offset + start_position }; // take view to original string
     }
 
+    return ExecutionResult::Continue;
+}
+
+ALWAYS_INLINE ExecutionResult OpCode_ClearNamedCaptureGroup::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
+{
+    if (input.match_index < state.capture_group_matches.size()) {
+        auto& group = state.named_capture_group_matches[input.match_index];
+        group.remove(name());
+    }
     return ExecutionResult::Continue;
 }
 
