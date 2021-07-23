@@ -23,6 +23,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(date_from_fields);
     JS_DECLARE_NATIVE_FUNCTION(year);
     JS_DECLARE_NATIVE_FUNCTION(month);
+    JS_DECLARE_NATIVE_FUNCTION(month_code);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(to_json);
 };
