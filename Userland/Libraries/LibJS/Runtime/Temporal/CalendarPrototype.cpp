@@ -36,6 +36,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.monthCode, month_code, 1, attr);
     define_native_function(vm.names.day, day, 1, attr);
     define_native_function(vm.names.dayOfWeek, day_of_week, 1, attr);
+    define_native_function(vm.names.dayOfYear, day_of_year, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 }
@@ -229,6 +230,28 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_week)
 
     // 5. Return 𝔽(! ToISODayOfWeek(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).
     return Value(to_iso_day_of_week(temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day()));
+}
+
+// 12.4.14 Temporal.Calendar.prototype.dayOfYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dayofyear
+// NOTE: This is the minimum dayOfYear implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_year)
+{
+    // 1. Let calendar be the this value.
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Assert: calendar.[[Identifier]] is "iso8601".
+    VERIFY(calendar->identifier() == "iso8601"sv);
+
+    // 4. Let temporalDate be ? ToTemporalDate(temporalDateLike).
+    auto* temporal_date = to_temporal_date(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 5. Return 𝔽(! ToISODayOfYear(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]])).
+    return Value(to_iso_day_of_year(temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day()));
 }
 
 // 12.4.23 Temporal.Calendar.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tostring

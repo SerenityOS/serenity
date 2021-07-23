@@ -416,6 +416,21 @@ u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
     return result;
 }
 
+// 12.1.34 ToISODayOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofyear
+u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
+{
+    // 1. Assert: year is an integer.
+    // 2. Assert: month is an integer.
+    // 3. Assert: day is an integer.
+
+    // 4. Let date be the date given by year, month, and day.
+    // 5. Return date's ordinal date in the year according to ISO-8601.
+    u16 days = day;
+    for (u8 i = month - 1; i > 0; --i)
+        days += iso_days_in_month(year, i);
+    return days;
+}
+
 // 12.1.36 BuildISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-buildisomonthcode
 String build_iso_month_code(i32 month)
 {
