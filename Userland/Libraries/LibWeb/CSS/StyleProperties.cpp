@@ -229,6 +229,18 @@ Optional<int> StyleProperties::z_index() const
     return static_cast<int>(value.value()->to_length().raw_value());
 }
 
+Optional<float> StyleProperties::opacity() const
+{
+    auto value = property(CSS::PropertyID::Opacity);
+    if (!value.has_value())
+        return {};
+
+    if (auto length = value.value()->to_length(); length.is_percentage())
+        return clamp(static_cast<float>(length.raw_value() / 100), 0.0f, 1.0f);
+    else
+        return clamp(static_cast<float>(length.raw_value()), 0.0f, 1.0f);
+}
+
 Optional<CSS::FlexDirection> StyleProperties::flex_direction() const
 {
     auto value = property(CSS::PropertyID::FlexDirection);
