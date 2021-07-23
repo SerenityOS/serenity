@@ -173,6 +173,7 @@ namespace JS {
     P(getInt8)                               \
     P(getInt16)                              \
     P(getInt32)                              \
+    P(getISOFields)                          \
     P(getMilliseconds)                       \
     P(getMinutes)                            \
     P(getMonth)                              \
@@ -227,6 +228,15 @@ namespace JS {
     P(isSafeInteger)                         \
     P(isSealed)                              \
     P(isView)                                \
+    P(isoDay)                                \
+    P(isoHour)                               \
+    P(isoMicrosecond)                        \
+    P(isoMillisecond)                        \
+    P(isoMinute)                             \
+    P(isoMonth)                              \
+    P(isoNanosecond)                         \
+    P(isoSecond)                             \
+    P(isoYear)                               \
     P(italics)                               \
     P(join)                                  \
     P(keyFor)                                \
