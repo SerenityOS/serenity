@@ -45,6 +45,7 @@ Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap) __attribute__((used));
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
 extern "C" FlatPtr do_init_context(Thread* thread, u32 flags) __attribute__((used));
+extern "C" void syscall_entry();
 
 bool Processor::is_smp_enabled()
 {
@@ -220,6 +221,28 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
             write_xcr0(read_xcr0() | 0x7);
         }
     }
+
+#if ARCH(X86_64)
+    // x86_64 processors must have the syscall feature.
+    VERIFY(has_feature(CPUFeature::SYSCALL));
+    MSR efer_msr(MSR_EFER);
+    efer_msr.set(efer_msr.get() | 1u);
+
+    // Write code and stack selectors to the STAR MSR. The first value stored in bits 63:48 controls the sysret CS (value + 0x10) and SS (value + 0x8),
+    // and the value stored in bits 47:32 controls the syscall CS (value) and SS (value + 0x8).
+    u64 star = 0;
+    star |= 0x13ul << 48u;
+    star |= 0x08ul << 32u;
+    MSR star_msr(MSR_STAR);
+    star_msr.set(star);
+
+    // Write the syscall entry point to the LSTAR MSR, and write the SFMASK MSR to clear rflags upon entry.
+    // The userspace rflags will be preserved in r11.
+    MSR lstar_msr(MSR_LSTAR);
+    MSR sfmask_msr(MSR_SFMASK);
+    lstar_msr.set(reinterpret_cast<u64>(&syscall_entry));
+    sfmask_msr.set(~0x2);
+#endif
 }
 
 String Processor::features_string() const
