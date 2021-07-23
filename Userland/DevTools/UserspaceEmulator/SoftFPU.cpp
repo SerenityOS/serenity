@@ -38,15 +38,6 @@ ALWAYS_INLINE void warn_if_uninitialized(T value_with_shadow, const char* messag
 
 namespace UserspaceEmulator {
 
-ALWAYS_INLINE void SoftFPU::warn_if_fpu_not_set_absolute(u8 index) const
-{
-    if (!fpu_is_set(index)) [[unlikely]] {
-        // FIXME: Are we supposed to set a flag here?
-        //        We might need to raise a stack underflow here
-        reportln("\033[31;1mWarning! Read of uninitialized value on the FPU Stack ({} abs)\033[0m\n", index);
-        m_emulator.dump_backtrace();
-    }
-}
 ALWAYS_INLINE void SoftFPU::warn_if_mmx_absolute(u8 index) const
 {
     if (m_reg_is_mmx[index]) [[unlikely]] {
@@ -62,10 +53,11 @@ ALWAYS_INLINE void SoftFPU::warn_if_fpu_absolute(u8 index) const
     }
 }
 
-ALWAYS_INLINE long double SoftFPU::fpu_get(u8 index) const
+ALWAYS_INLINE long double SoftFPU::fpu_get(u8 index)
 {
     VERIFY(index < 8);
-    warn_if_fpu_not_set_absolute(index);
+    if (!fpu_is_set(index))
+        fpu_set_stack_underflow();
     warn_if_mmx_absolute(index);
 
     u8 effective_index = (m_fpu_stack_top + index) % 8;
