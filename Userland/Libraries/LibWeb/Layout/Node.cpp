@@ -350,6 +350,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     computed_values.set_margin(specified_style.length_box(CSS::PropertyID::MarginLeft, CSS::PropertyID::MarginTop, CSS::PropertyID::MarginRight, CSS::PropertyID::MarginBottom, CSS::Length::make_px(0)));
     computed_values.set_padding(specified_style.length_box(CSS::PropertyID::PaddingLeft, CSS::PropertyID::PaddingTop, CSS::PropertyID::PaddingRight, CSS::PropertyID::PaddingBottom, CSS::Length::make_px(0)));
 
+    computed_values.set_box_shadow(specified_style.box_shadow());
+
     auto do_border_style = [&](CSS::BorderData& border, CSS::PropertyID width_property, CSS::PropertyID color_property, CSS::PropertyID style_property) {
         border.color = specified_style.color_or_fallback(color_property, document(), Color::Transparent);
         border.line_style = specified_style.line_style(style_property).value_or(CSS::LineStyle::None);
