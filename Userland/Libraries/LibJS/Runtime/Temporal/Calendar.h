@@ -34,6 +34,7 @@ bool is_builtin_calendar(String const& identifier);
 Calendar* get_builtin_calendar(GlobalObject&, String const& identifier);
 Calendar* get_iso8601_calendar(GlobalObject&);
 Vector<String> calendar_fields(GlobalObject&, Object& calendar, Vector<StringView> const& field_names);
+double calendar_year(GlobalObject&, Object& calendar, Object& date_like);
 Object* to_temporal_calendar(GlobalObject&, Value);
 Object* to_temporal_calendar_with_iso_default(GlobalObject&, Value);
 Object* get_temporal_calendar_with_iso_default(GlobalObject&, Object&);
