@@ -12,7 +12,7 @@
 
 namespace regex {
 
-const char* Token::name(const TokenType type)
+char const* Token::name(TokenType const type)
 {
     switch (type) {
 #define __ENUMERATE_REGEX_TOKEN(x) \
@@ -26,12 +26,12 @@ const char* Token::name(const TokenType type)
     }
 }
 
-const char* Token::name() const
+char const* Token::name() const
 {
     return name(m_type);
 }
 
-Lexer::Lexer(const StringView source)
+Lexer::Lexer(StringView const source)
     : m_source(source)
 {
 }

@@ -43,7 +43,7 @@ enum class TokenType {
 class Token {
 public:
     Token() = default;
-    Token(const TokenType type, const size_t start_position, const StringView value)
+    Token(TokenType const type, size_t const start_position, StringView const value)
         : m_type(type)
         , m_position(start_position)
         , m_value(value)
@@ -51,11 +51,11 @@ public:
     }
 
     TokenType type() const { return m_type; }
-    const StringView& value() const { return m_value; }
+    StringView const& value() const { return m_value; }
     size_t position() const { return m_position; }
 
-    const char* name() const;
-    static const char* name(const TokenType);
+    char const* name() const;
+    static char const* name(TokenType const);
 
 private:
     TokenType m_type { TokenType::Eof };
@@ -66,14 +66,14 @@ private:
 class Lexer {
 public:
     Lexer() = default;
-    explicit Lexer(const StringView source);
+    explicit Lexer(StringView const source);
     Token next();
     void reset();
     void back(size_t offset);
-    void set_source(const StringView source) { m_source = source; }
+    void set_source(StringView const source) { m_source = source; }
     bool try_skip(char);
     char skip();
-    const auto& source() const { return m_source; }
+    auto const& source() const { return m_source; }
 
 private:
     ALWAYS_INLINE int peek(size_t offset = 0) const;

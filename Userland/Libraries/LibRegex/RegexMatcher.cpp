@@ -54,7 +54,7 @@ String Regex<Parser>::error_string(Optional<String> message) const
 }
 
 template<typename Parser>
-RegexResult Matcher<Parser>::match(const RegexStringView& view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
+RegexResult Matcher<Parser>::match(RegexStringView const& view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
 {
     AllOptions options = m_regex_options | regex_options.value_or({}).value();
 
@@ -67,7 +67,7 @@ RegexResult Matcher<Parser>::match(const RegexStringView& view, Optional<typenam
 }
 
 template<typename Parser>
-RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
+RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
 {
     // If the pattern *itself* isn't stateful, reset any changes to start_offset.
     if (!((AllFlags)m_regex_options.value() & AllFlags::Internal_Stateful))
@@ -288,7 +288,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 }
 
 template<class Parser>
-Optional<bool> Matcher<Parser>::execute(const MatchInput& input, MatchState& state, MatchOutput& output, size_t recursion_level) const
+Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& state, MatchOutput& output, size_t recursion_level) const
 {
     if (recursion_level > c_max_recursion)
         return false;
@@ -358,7 +358,7 @@ Optional<bool> Matcher<Parser>::execute(const MatchInput& input, MatchState& sta
 }
 
 template<class Parser>
-ALWAYS_INLINE Optional<bool> Matcher<Parser>::execute_low_prio_forks(const MatchInput& input, MatchState& original_state, MatchOutput& output, Vector<MatchState> states, size_t recursion_level) const
+ALWAYS_INLINE Optional<bool> Matcher<Parser>::execute_low_prio_forks(MatchInput const& input, MatchState& original_state, MatchOutput& output, Vector<MatchState> states, size_t recursion_level) const
 {
     for (auto& state : states) {
 
