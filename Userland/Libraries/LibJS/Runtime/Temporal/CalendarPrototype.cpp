@@ -34,6 +34,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.year, year, 1, attr);
     define_native_function(vm.names.month, month, 1, attr);
     define_native_function(vm.names.monthCode, month_code, 1, attr);
+    define_native_function(vm.names.day, day, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 }
@@ -178,6 +179,33 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_code)
 
     // 5. Return ! ISOMonthCode(temporalDateLike).
     return js_string(vm, iso_month_code(temporal_date_like.as_object()));
+}
+
+// 12.4.12 Temporal.Calendar.prototype.day ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.day
+// NOTE: This is the minimum day implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day)
+{
+    // 1. Let calendar be the this value.
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Assert: calendar.[[Identifier]] is "iso8601".
+    VERIFY(calendar->identifier() == "iso8601"sv);
+
+    auto temporal_date_like = vm.argument(0);
+    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]] or [[InitializedTemporalMonthDay]] internal slot, then
+    // TODO PlainMonthDay objects
+    if (!temporal_date_like.is_object() || !is<PlainDate>(temporal_date_like.as_object())) {
+        // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
+        temporal_date_like = to_temporal_date(global_object, temporal_date_like);
+        if (vm.exception())
+            return {};
+    }
+
+    // 5. Return ! ISODay(temporalDateLike).
+    return Value(iso_day(temporal_date_like.as_object()));
 }
 
 // 12.4.23 Temporal.Calendar.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tostring
