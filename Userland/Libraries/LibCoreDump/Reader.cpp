@@ -265,7 +265,7 @@ const Reader::LibraryData* Reader::library_containing(FlatPtr address) const
         if (file_or_error.is_error())
             return {};
         auto image = ELF::Image(file_or_error.value()->bytes());
-        cached_libs.set(path, make<LibraryData>(name, region->region_start, file_or_error.release_value(), move(image)));
+        cached_libs.set(path, make<LibraryData>(name, (FlatPtr)region->region_start, file_or_error.release_value(), move(image)));
     }
 
     auto lib_data = cached_libs.get(path).value();
