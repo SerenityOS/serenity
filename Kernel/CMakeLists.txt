@@ -357,12 +357,13 @@ if (NOT ${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -fno-pic -mno-red-zone")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -mno-red-zone")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new=8")
 else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fPIE")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new=4")
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -Wl,--no-dynamic-linker")
 
 # Kernel Undefined Behavior Sanitizer (KUBSAN)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
