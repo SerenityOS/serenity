@@ -267,27 +267,27 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
 {
     builder.append("  CSS::Selector:\n");
 
-    for (auto& complex_selector : selector.complex_selectors()) {
+    for (auto& relative_selector : selector.compound_selectors()) {
         builder.append("    ");
 
         char const* relation_description = "";
-        switch (complex_selector.relation) {
-        case CSS::Selector::ComplexSelector::Relation::None:
+        switch (relative_selector.combinator) {
+        case CSS::Selector::Combinator::None:
             relation_description = "None";
             break;
-        case CSS::Selector::ComplexSelector::Relation::ImmediateChild:
+        case CSS::Selector::Combinator::ImmediateChild:
             relation_description = "ImmediateChild";
             break;
-        case CSS::Selector::ComplexSelector::Relation::Descendant:
+        case CSS::Selector::Combinator::Descendant:
             relation_description = "Descendant";
             break;
-        case CSS::Selector::ComplexSelector::Relation::AdjacentSibling:
+        case CSS::Selector::Combinator::NextSibling:
             relation_description = "AdjacentSibling";
             break;
-        case CSS::Selector::ComplexSelector::Relation::GeneralSibling:
+        case CSS::Selector::Combinator::SubsequentSibling:
             relation_description = "GeneralSibling";
             break;
-        case CSS::Selector::ComplexSelector::Relation::Column:
+        case CSS::Selector::Combinator::Column:
             relation_description = "Column";
             break;
         }
@@ -295,8 +295,8 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
         if (*relation_description)
             builder.appendff("{{{}}} ", relation_description);
 
-        for (size_t i = 0; i < complex_selector.compound_selector.size(); ++i) {
-            auto& simple_selector = complex_selector.compound_selector[i];
+        for (size_t i = 0; i < relative_selector.simple_selectors.size(); ++i) {
+            auto& simple_selector = relative_selector.simple_selectors[i];
             char const* type_description = "Unknown";
             switch (simple_selector.type) {
             case CSS::Selector::SimpleSelector::Type::Invalid:
@@ -459,7 +459,7 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 builder.appendff(" [{}, name='{}', value='{}']", attribute_match_type_description, simple_selector.attribute.name, simple_selector.attribute.value);
             }
 
-            if (i != complex_selector.compound_selector.size() - 1)
+            if (i != relative_selector.simple_selectors.size() - 1)
                 builder.append(", ");
         }
         builder.append("\n");

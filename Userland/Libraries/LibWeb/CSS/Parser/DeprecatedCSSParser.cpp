@@ -1081,9 +1081,9 @@ public:
         return simple_selector;
     }
 
-    Optional<CSS::Selector::ComplexSelector> parse_complex_selector()
+    Optional<CSS::Selector::CompoundSelector> parse_complex_selector()
     {
-        auto relation = CSS::Selector::ComplexSelector::Relation::Descendant;
+        auto relation = CSS::Selector::Combinator::Descendant;
 
         if (peek() == '{' || peek() == ',')
             return {};
@@ -1091,13 +1091,13 @@ public:
         if (is_combinator(peek())) {
             switch (peek()) {
             case '>':
-                relation = CSS::Selector::ComplexSelector::Relation::ImmediateChild;
+                relation = CSS::Selector::Combinator::ImmediateChild;
                 break;
             case '+':
-                relation = CSS::Selector::ComplexSelector::Relation::AdjacentSibling;
+                relation = CSS::Selector::Combinator::NextSibling;
                 break;
             case '~':
-                relation = CSS::Selector::ComplexSelector::Relation::GeneralSibling;
+                relation = CSS::Selector::Combinator::SubsequentSibling;
                 break;
             }
             consume_one();
@@ -1119,12 +1119,12 @@ public:
         if (simple_selectors.is_empty())
             return {};
 
-        return CSS::Selector::ComplexSelector { relation, move(simple_selectors) };
+        return CSS::Selector::CompoundSelector { relation, move(simple_selectors) };
     }
 
     void parse_selector()
     {
-        Vector<CSS::Selector::ComplexSelector> complex_selectors;
+        Vector<CSS::Selector::CompoundSelector> complex_selectors;
 
         for (;;) {
             auto index_before = index;
@@ -1141,7 +1141,7 @@ public:
 
         if (complex_selectors.is_empty())
             return;
-        complex_selectors.first().relation = CSS::Selector::ComplexSelector::Relation::None;
+        complex_selectors.first().combinator = CSS::Selector::Combinator::None;
 
         current_rule.selectors.append(CSS::Selector::create(move(complex_selectors)));
     }
