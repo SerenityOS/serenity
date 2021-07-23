@@ -273,6 +273,16 @@ Value calendar_months_in_year(GlobalObject& global_object, Object& calendar, Obj
     return calendar.invoke(vm.names.monthsInYear, &date_like);
 }
 
+// 12.1.20 CalendarInLeapYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarinleapyear
+Value calendar_in_leap_year(GlobalObject& global_object, Object& calendar, Object& date_like)
+{
+    auto& vm = global_object.vm();
+    // 1. Assert: Type(calendar) is Object.
+
+    // 2. Return ? Invoke(calendar, "inLeapYear", « dateLike »).
+    return calendar.invoke(vm.names.inLeapYear, &date_like);
+}
+
 // 12.1.21 ToTemporalCalendar ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendar
 Object* to_temporal_calendar(GlobalObject& global_object, Value temporal_calendar_like)
 {
