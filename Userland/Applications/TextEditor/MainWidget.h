@@ -8,6 +8,7 @@
 
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
+#include <LibCore/ConfigFile.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -41,6 +42,8 @@ public:
 
     void update_title();
     void initialize_menubar(GUI::Window&);
+
+    static RefPtr<Core::ConfigFile> open_config_file();
 
 private:
     MainWidget();

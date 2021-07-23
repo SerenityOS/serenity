@@ -9,7 +9,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/TextEditor/TextEditorWindowGML.h>
-#include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibDesktop/Launcher.h>
@@ -47,7 +46,7 @@ MainWidget::MainWidget()
 {
     load_from_gml(text_editor_window_gml);
 
-    m_config = Core::ConfigFile::open_for_app("TextEditor", Core::ConfigFile::AllowWriting::Yes);
+    m_config = open_config_file();
 
     m_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
@@ -343,6 +342,15 @@ MainWidget::MainWidget()
 
 MainWidget::~MainWidget()
 {
+}
+
+static RefPtr<Core::ConfigFile> s_config;
+
+RefPtr<Core::ConfigFile> MainWidget::open_config_file()
+{
+    if (!s_config)
+        s_config = Core::ConfigFile::open_for_app("TextEditor", Core::ConfigFile::AllowWriting::Yes);
+    return s_config;
 }
 
 Web::OutOfProcessWebView& MainWidget::ensure_web_view()
