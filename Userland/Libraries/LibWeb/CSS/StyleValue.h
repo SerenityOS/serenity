@@ -228,6 +228,7 @@ public:
         Numeric,
         ValueList,
         Calculated,
+        BoxShadow,
     };
 
     Type type() const { return m_type; }
@@ -251,6 +252,7 @@ public:
     {
         return is_inherit() || is_initial() || is_custom_property();
     }
+    bool is_box_shadow() const { return type() == Type::BoxShadow; }
 
     bool is_calculated() const
     {
@@ -340,6 +342,38 @@ private:
     }
 
     String m_string;
+};
+
+class BoxShadowStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<BoxShadowStyleValue> create(Length const& offset_x, Length const& offset_y, Length const& blur_radius, Color const& color)
+    {
+        return adopt_ref(*new BoxShadowStyleValue(offset_x, offset_y, blur_radius, color));
+    }
+    virtual ~BoxShadowStyleValue() override { }
+
+    Length const& offset_x() const { return m_offset_x; }
+    Length const& offset_y() const { return m_offset_y; }
+    Length const& blur_radius() const { return m_blur_radius; }
+    Color const& color() const { return m_color; }
+
+    String to_string() const override { return String::formatted("BoxShadow offset_x: {}, offset_y: {}, blur_radius: {}, color: {}",
+        m_offset_x.to_string(), m_offset_y.to_string(), m_blur_radius.to_string(), m_color.to_string()); }
+
+private:
+    explicit BoxShadowStyleValue(Length const& offset_x, Length const& offset_y, Length const& blur_radius, Color const& color)
+        : StyleValue(Type::BoxShadow)
+        , m_offset_x(offset_x)
+        , m_offset_y(offset_y)
+        , m_blur_radius(blur_radius)
+        , m_color(color)
+    {
+    }
+
+    Length m_offset_x;
+    Length m_offset_y;
+    Length m_blur_radius;
+    Color m_color;
 };
 
 class LengthStyleValue : public StyleValue {
