@@ -33,7 +33,7 @@ public:
     }
 
     template<typename T>
-    void print_bytecode(const Regex<T>& regex) const
+    void print_bytecode(Regex<T> const& regex) const
     {
         MatchState state;
         auto& bytecode = regex.parser_result.bytecode;
@@ -52,7 +52,7 @@ public:
         fflush(m_file);
     }
 
-    void print_opcode(const String& system, OpCode& opcode, MatchState& state, size_t recursion = 0, bool newline = true) const
+    void print_opcode(String const& system, OpCode& opcode, MatchState& state, size_t recursion = 0, bool newline = true) const
     {
         out(m_file, "{:15} | {:5} | {:9} | {:35} | {:30} | {:20}",
             system.characters(),
@@ -69,7 +69,7 @@ public:
         }
     }
 
-    void print_result(const OpCode& opcode, const ByteCode& bytecode, const MatchInput& input, MatchState& state, ExecutionResult result) const
+    void print_result(OpCode const& opcode, ByteCode const& bytecode, MatchInput const& input, MatchState& state, ExecutionResult result) const
     {
         StringBuilder builder;
         builder.append(execution_result_name(result));

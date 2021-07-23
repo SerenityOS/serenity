@@ -78,7 +78,7 @@ protected:
     ALWAYS_INLINE bool match_ordinary_characters();
     ALWAYS_INLINE Token consume();
     ALWAYS_INLINE Token consume(TokenType type, Error error);
-    ALWAYS_INLINE bool consume(const String&);
+    ALWAYS_INLINE bool consume(String const&);
     ALWAYS_INLINE bool try_skip(StringView);
     ALWAYS_INLINE bool lookahead_any(StringView);
     ALWAYS_INLINE char skip();
