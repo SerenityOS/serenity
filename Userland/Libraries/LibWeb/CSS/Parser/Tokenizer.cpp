@@ -5,12 +5,11 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/Debug.h>
 #include <AK/SourceLocation.h>
 #include <AK/Vector.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
-
-#define CSS_TOKENIZER_TRACE 0
 
 //U+FFFD REPLACEMENT CHARACTER (�)
 #define REPLACEMENT_CHARACTER 0xFFFD
@@ -18,7 +17,7 @@ static const u32 TOKENIZER_EOF = 0xFFFFFFFF;
 
 static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
 {
-    dbgln_if(CSS_TOKENIZER_TRACE, "Parse error (css tokenization) {} ", location);
+    dbgln_if(CSS_TOKENIZER_DEBUG, "Parse error (css tokenization) {} ", location);
 }
 
 static inline bool is_eof(u32 code_point)
@@ -219,7 +218,7 @@ u32 Tokenizer::next_code_point()
         return TOKENIZER_EOF;
     m_prev_utf8_iterator = m_utf8_iterator;
     ++m_utf8_iterator;
-    dbgln_if(CSS_TOKENIZER_TRACE, "(Tokenizer) Next code_point: {:c}", (char)*m_prev_utf8_iterator);
+    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Next code_point: {:c}", (char)*m_prev_utf8_iterator);
     return *m_prev_utf8_iterator;
 }
 
@@ -716,7 +715,7 @@ Token Tokenizer::consume_a_token()
     }
 
     if (is_whitespace(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is whitespace");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is whitespace");
 
         auto next = peek_code_point();
         while (is_whitespace(next)) {
@@ -728,12 +727,12 @@ Token Tokenizer::consume_a_token()
     }
 
     if (is_quotation_mark(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is quotation mark");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is quotation mark");
         return consume_string_token(input);
     }
 
     if (is_number_sign(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is number sign");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is number sign");
 
         auto next_input = peek_code_point();
         auto maybe_escape = peek_twin();
@@ -754,22 +753,22 @@ Token Tokenizer::consume_a_token()
     }
 
     if (is_apostrophe(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is apostrophe");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is apostrophe");
         return consume_string_token(input);
     }
 
     if (is_left_paren(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is left paren");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is left paren");
         return create_new_token(Token::Type::OpenParen);
     }
 
     if (is_right_paren(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is right paren");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is right paren");
         return create_new_token(Token::Type::CloseParen);
     }
 
     if (is_plus_sign(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is plus sign");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is plus sign");
         if (starts_with_a_number()) {
             reconsume_current_input_code_point();
             return consume_a_numeric_token();
@@ -779,12 +778,12 @@ Token Tokenizer::consume_a_token()
     }
 
     if (is_comma(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is comma");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is comma");
         return create_new_token(Token::Type::Comma);
     }
 
     if (is_hyphen_minus(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is hyphen minus");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is hyphen minus");
         if (starts_with_a_number()) {
             reconsume_current_input_code_point();
             return consume_a_numeric_token();
@@ -807,7 +806,7 @@ Token Tokenizer::consume_a_token()
     }
 
     if (is_full_stop(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is full stop");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is full stop");
         if (starts_with_a_number()) {
             reconsume_current_input_code_point();
             return consume_a_numeric_token();
@@ -817,17 +816,17 @@ Token Tokenizer::consume_a_token()
     }
 
     if (is_colon(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is colon");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is colon");
         return create_new_token(Token::Type::Colon);
     }
 
     if (is_semicolon(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is semicolon");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is semicolon");
         return create_new_token(Token::Type::Semicolon);
     }
 
     if (is_less_than_sign(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is less than");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is less than");
         auto maybe_cdo = peek_triplet();
 
         if (is_exclamation_mark(maybe_cdo.first) && is_hyphen_minus(maybe_cdo.second) && is_hyphen_minus(maybe_cdo.third)) {
@@ -842,7 +841,7 @@ Token Tokenizer::consume_a_token()
     }
 
     if (is_at(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is at");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is at");
         if (would_start_an_identifier()) {
             auto name = consume_a_name();
 
@@ -853,12 +852,12 @@ Token Tokenizer::consume_a_token()
     }
 
     if (is_open_square_bracket(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is open square");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is open square");
         return create_new_token(Token::Type::OpenSquare);
     }
 
     if (is_reverse_solidus(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is reverse solidus");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is reverse solidus");
         if (is_valid_escape_sequence({ input, peek_code_point() })) {
             reconsume_current_input_code_point();
             return consume_an_ident_like_token();
@@ -869,33 +868,33 @@ Token Tokenizer::consume_a_token()
     }
 
     if (is_closed_square_bracket(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is closed square");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is closed square");
         return create_new_token(Token::Type::CloseSquare);
     }
 
     if (is_open_curly_bracket(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is open curly");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is open curly");
         return create_new_token(Token::Type::OpenCurly);
     }
 
     if (is_closed_curly_bracket(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is closed curly");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is closed curly");
         return create_new_token(Token::Type::CloseCurly);
     }
 
     if (is_ascii_digit(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is digit");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is digit");
         reconsume_current_input_code_point();
         return consume_a_numeric_token();
     }
 
     if (is_name_start_code_point(input)) {
-        dbgln_if(CSS_TOKENIZER_TRACE, "is name start");
+        dbgln_if(CSS_TOKENIZER_DEBUG, "is name start");
         reconsume_current_input_code_point();
         return consume_an_ident_like_token();
     }
 
-    dbgln_if(CSS_TOKENIZER_TRACE, "is delimiter");
+    dbgln_if(CSS_TOKENIZER_DEBUG, "is delimiter");
     return create_value_token(Token::Type::Delim, input);
 }
 
