@@ -27,9 +27,11 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     // 12.4.2 Temporal.Calendar.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.Calendar"), Attribute::Configurable);
 
-    u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_accessor(vm.names.id, id_getter, {}, Attribute::Configurable);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.dateFromFields, date_from_fields, 2, attr);
+    define_native_function(vm.names.year, year, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 }
@@ -89,6 +91,33 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
 
     // 7. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
     return create_temporal_date(global_object, result->year, result->month, result->day, *calendar);
+}
+
+// 12.4.9 Temporal.Calendar.prototype.year ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.year
+// NOTE: This is the minimum year implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year)
+{
+    // 1. Let calendar be the this value.
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Assert: calendar.[[Identifier]] is "iso8601".
+    VERIFY(calendar->identifier() == "iso8601"sv);
+
+    auto temporal_date_like = vm.argument(0);
+    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]] or [[InitializedTemporalYearMonth]] internal slot, then
+    // TODO PlainYearMonth objects
+    if (!temporal_date_like.is_object() || !is<PlainDate>(temporal_date_like.as_object())) {
+        // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
+        temporal_date_like = to_temporal_date(global_object, temporal_date_like);
+        if (vm.exception())
+            return {};
+    }
+
+    // 5. Return ! ISOYear(temporalDateLike).
+    return Value(iso_year(temporal_date_like.as_object()));
 }
 
 // 12.4.23 Temporal.Calendar.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tostring
