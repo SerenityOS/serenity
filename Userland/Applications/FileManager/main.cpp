@@ -1108,21 +1108,20 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     };
 
     tree_view.on_selection_change = [&] {
-        auto const& index = tree_view.selection().first();
-        if (directories_model->m_previously_selected_index.is_valid())
-            directories_model->update_node_on_selection(directories_model->m_previously_selected_index, false);
-
-        directories_model->update_node_on_selection(index, true);
-        directories_model->m_previously_selected_index = index;
-    };
-
-    tree_view.on_selection_change = [&] {
         focus_dependent_delete_action->set_enabled((!tree_view.selection().is_empty() && tree_view.is_focused())
             || !directory_view.current_view().selection().is_empty());
 
         if (tree_view.selection().is_empty())
             return;
-        auto path = directories_model->full_path(tree_view.selection().first());
+
+        if (directories_model->m_previously_selected_index.is_valid())
+            directories_model->update_node_on_selection(directories_model->m_previously_selected_index, false);
+
+        auto const& index = tree_view.selection().first();
+        directories_model->update_node_on_selection(index, true);
+        directories_model->m_previously_selected_index = index;
+
+        auto path = directories_model->full_path(index);
         if (directory_view.path() == path)
             return;
         TemporaryChange change(is_reacting_to_tree_view_selection_change, true);
