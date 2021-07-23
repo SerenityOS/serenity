@@ -32,6 +32,7 @@ int main(int argc, char** argv)
     parser.parse(argc, argv);
 
     String file_to_edit_full_path;
+    auto config_filename = MainWidget::open_config_file()->filename();
 
     if (file_to_edit) {
         FileArgument parsed_argument(file_to_edit);
@@ -47,7 +48,7 @@ int main(int argc, char** argv)
         }
     }
 
-    if (unveil(Core::StandardPaths::config_directory().characters(), "rw") < 0) {
+    if (unveil(config_filename.characters(), "rwc") < 0) {
         perror("unveil");
         return 1;
     }
