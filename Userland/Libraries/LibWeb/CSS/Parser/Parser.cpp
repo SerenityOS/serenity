@@ -1600,8 +1600,13 @@ RefPtr<StyleValue> Parser::parse_image_value(ParsingContext const& context, Styl
             auto& value = function_values[i];
             if (value.is(Token::Type::Whitespace))
                 continue;
-            if (value.is(Token::Type::String))
+            if (value.is(Token::Type::String)) {
+                // FIXME: RFC2397
+                if (value.token().string().starts_with("data:"))
+                    continue;
+
                 return ImageStyleValue::create(context.complete_url(value.token().string()), *context.document());
+            }
         }
     }
     // FIXME: Handle gradients.
