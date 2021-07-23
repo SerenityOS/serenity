@@ -13,6 +13,7 @@ else()
 endif()
 
 add_executable(${PREKERNEL_TARGET} ${SOURCES})
+target_compile_options(${PREKERNEL_TARGET} PRIVATE -no-pie -fno-pic)
 
 target_link_options(${PREKERNEL_TARGET} PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib)
 set_target_properties(${PREKERNEL_TARGET} PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld)
