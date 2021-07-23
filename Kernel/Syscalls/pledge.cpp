@@ -39,7 +39,7 @@ KResultOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params
         auto parts = pledge_spec.split_view(' ');
         for (auto& part : parts) {
 #define __ENUMERATE_PLEDGE_PROMISE(x)   \
-    if (part == #x) {                   \
+    if (part == StringView { #x }) {    \
         mask |= (1u << (u32)Pledge::x); \
         continue;                       \
     }
