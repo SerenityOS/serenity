@@ -19,21 +19,23 @@ KResultOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params
     if (params.promises.length > 1024 || params.execpromises.length > 1024)
         return E2BIG;
 
-    String promises;
+    OwnPtr<KString> promises;
     if (params.promises.characters) {
-        promises = copy_string_from_user(params.promises);
-        if (promises.is_null())
-            return EFAULT;
+        auto promises_or_error = try_copy_kstring_from_user(params.promises);
+        if (promises_or_error.is_error())
+            return promises_or_error.error();
+        promises = promises_or_error.release_value();
     }
 
-    String execpromises;
+    OwnPtr<KString> execpromises;
     if (params.execpromises.characters) {
-        execpromises = copy_string_from_user(params.execpromises);
-        if (execpromises.is_null())
-            return EFAULT;
+        auto execpromises_or_error = try_copy_kstring_from_user(params.execpromises);
+        if (execpromises_or_error.is_error())
+            return execpromises_or_error.error();
+        execpromises = execpromises_or_error.release_value();
     }
 
-    auto parse_pledge = [&](auto& pledge_spec, u32& mask) {
+    auto parse_pledge = [&](auto pledge_spec, u32& mask) {
         auto parts = pledge_spec.split_view(' ');
         for (auto& part : parts) {
 #define __ENUMERATE_PLEDGE_PROMISE(x)   \
@@ -50,20 +52,19 @@ KResultOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params
 
     ProtectedDataMutationScope scope { *this };
 
-    if (!promises.is_null()) {
+    if (promises) {
         u32 new_promises = 0;
-        if (!parse_pledge(promises, new_promises))
+        if (!parse_pledge(promises->view(), new_promises))
             return EINVAL;
         if (m_has_promises && (new_promises & ~m_promises))
             return EPERM;
-
         m_has_promises = true;
         m_promises = new_promises;
     }
 
-    if (!execpromises.is_null()) {
+    if (execpromises) {
         u32 new_execpromises = 0;
-        if (!parse_pledge(execpromises, new_execpromises))
+        if (!parse_pledge(execpromises->view(), new_execpromises))
             return EINVAL;
         if (m_has_execpromises && (new_execpromises & ~m_execpromises))
             return EPERM;
