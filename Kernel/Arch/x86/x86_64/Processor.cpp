@@ -47,7 +47,7 @@ NAKED void do_assume_context(Thread*, u32)
         "    movq %r12, %rsi \n"                          // from_thread
         "    pushq %r12 \n"                               // to_thread (for thread_context_first_enter)
         "    pushq %r12 \n"                               // from_thread (for thread_context_first_enter)
-        "    movabs $thread_context_first_enter, %r12 \n" // should be same as regs.rip
+        "    leaq thread_context_first_enter(%rip), %r12 \n" // should be same as regs.rip
         "    pushq %r12 \n"
         "    jmp enter_thread_context \n");
     // clang-format on
@@ -191,7 +191,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
         "pushq %%r14 \n"
         "pushq %%r15 \n"
         "movq %%rsp, %[from_rsp] \n"
-        "movabs $1f, %%rbx \n"
+        "leaq 1f(%%rip), %%rbx \n"
         "movq %%rbx, %[from_rip] \n"
         "movq %[to_rsp0], %%rbx \n"
         "movl %%ebx, %[tss_rsp0l] \n"

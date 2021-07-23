@@ -141,7 +141,7 @@ apic_ap_start64:
 
     /* push the Processor pointer this CPU is going to use */
     movq (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %rax
-    movabsq $(kernel_base), %r8
+    leaq kernel_base(%rip), %r8
     movq (%r8), %r8
     addq %r8, %rax
     movq 0(%rax, %rsi, 4), %rax
@@ -157,9 +157,9 @@ apic_ap_start64:
     /* We are in identity mapped P0x8000 and the BSP will unload this code
        once all APs are initialized, so call init_ap but return to our
        infinite loop */
-    movabs $loop, %rax
+    leaq loop(%rip), %rax
     pushq %rax
-    movabs $init_ap, %rax
+    leaq init_ap(%rip), %rax
     jmp *(%rax)
 
 loop:
