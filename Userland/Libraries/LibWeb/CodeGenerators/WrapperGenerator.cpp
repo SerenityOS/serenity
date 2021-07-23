@@ -1437,6 +1437,9 @@ static @fully_qualified_name@* impl_from(JS::VM& vm, JS::GlobalObject& global_ob
 )~~~");
         } else if (return_type.name == "EventHandler") {
             scoped_generator.append(R"~~~(
+    if (retval.callback.is_null())
+        return JS::js_null();
+
     return retval.callback.cell();
 )~~~");
         } else {
