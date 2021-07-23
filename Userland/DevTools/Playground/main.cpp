@@ -19,8 +19,10 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TextEditor.h>
+#include <LibGUI/VimEditingEngine.h>
 #include <LibGUI/Window.h>
 #include <string.h>
 #include <unistd.h>
@@ -250,6 +252,15 @@ int main(int argc, char** argv)
                 GUI::MessageBox::Type::Error);
         }
     }));
+
+    auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
+        if (action.is_checked())
+            editor.set_editing_engine(make<GUI::VimEditingEngine>());
+        else
+            editor.set_editing_engine(make<GUI::RegularEditingEngine>());
+    });
+    vim_emulation_setting_action->set_checked(false);
+    edit_menu.add_action(vim_emulation_setting_action);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
