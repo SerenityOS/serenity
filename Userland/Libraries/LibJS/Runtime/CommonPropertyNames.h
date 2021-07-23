@@ -107,6 +107,7 @@ namespace JS {
     P(dateFromFields)                        \
     P(day)                                   \
     P(dayOfWeek)                             \
+    P(dayOfYear)                             \
     P(days)                                  \
     P(debug)                                 \
     P(decodeURI)                             \
