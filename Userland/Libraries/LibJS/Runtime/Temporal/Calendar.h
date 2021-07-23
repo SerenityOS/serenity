@@ -44,5 +44,6 @@ i32 iso_days_in_month(i32 year, i32 month);
 String build_iso_month_code(i32 month);
 double resolve_iso_month(GlobalObject&, Object& fields);
 Optional<TemporalDate> iso_date_from_fields(GlobalObject&, Object& fields, Object& options);
+i32 iso_year(Object& temporal_object);
 
 }

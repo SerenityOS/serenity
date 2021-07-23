@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/CalendarConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
+#include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Temporal {
@@ -414,6 +415,21 @@ Optional<TemporalDate> iso_date_from_fields(GlobalObject& global_object, Object&
 
     // 9. Return ? RegulateISODate(year, month, day, overflow).
     return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), *overflow);
+}
+
+// 12.1.41 ISOYear ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isoyear
+i32 iso_year(Object& temporal_object)
+{
+    // 1. Assert: temporalObject has an [[ISOYear]] internal slot.
+    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
+
+    // 2. Return 𝔽(temporalObject.[[ISOYear]]).
+    // TODO: add the rest of the builtins with a [[ISOYear]] slot (PlainYearMonth, PlainMonthDay)
+    if (is<PlainDate>(temporal_object))
+        return static_cast<PlainDate&>(temporal_object).iso_year();
+    if (is<PlainDateTime>(temporal_object))
+        return static_cast<PlainDateTime&>(temporal_object).iso_year();
+    VERIFY_NOT_REACHED();
 }
 
 }
