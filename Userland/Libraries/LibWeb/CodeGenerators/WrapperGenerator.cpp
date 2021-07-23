@@ -17,7 +17,7 @@
 #include <LibCore/File.h>
 #include <ctype.h>
 
-static String make_input_acceptable_cpp(const String& input)
+static String make_input_acceptable_cpp(String const& input)
 {
     if (input.is_one_of("class", "template", "for", "default", "char", "namespace")) {
         StringBuilder builder;
@@ -147,7 +147,7 @@ struct Interface {
     String prototype_base_class;
 };
 
-static OwnPtr<Interface> parse_interface(StringView filename, const StringView& input)
+static OwnPtr<Interface> parse_interface(StringView filename, StringView const& input)
 {
     auto interface = make<Interface>();
 
@@ -170,7 +170,7 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         }
     };
 
-    auto assert_string = [&](const StringView& expected) {
+    auto assert_string = [&](StringView const& expected) {
         if (!lexer.consume_specific(expected))
             report_parsing_error(String::formatted("expected '{}'", expected), filename, input, lexer.tell());
     };
@@ -369,17 +369,17 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
 
 }
 
-static void generate_constructor_header(const IDL::Interface&);
-static void generate_constructor_implementation(const IDL::Interface&);
-static void generate_prototype_header(const IDL::Interface&);
-static void generate_prototype_implementation(const IDL::Interface&);
-static void generate_header(const IDL::Interface&);
-static void generate_implementation(const IDL::Interface&);
+static void generate_constructor_header(IDL::Interface const&);
+static void generate_constructor_implementation(IDL::Interface const&);
+static void generate_prototype_header(IDL::Interface const&);
+static void generate_prototype_implementation(IDL::Interface const&);
+static void generate_header(IDL::Interface const&);
+static void generate_implementation(IDL::Interface const&);
 
 int main(int argc, char** argv)
 {
     Core::ArgsParser args_parser;
-    const char* path = nullptr;
+    char const* path = nullptr;
     bool header_mode = false;
     bool implementation_mode = false;
     bool constructor_header_mode = false;
@@ -468,7 +468,7 @@ int main(int argc, char** argv)
     return 0;
 }
 
-static bool should_emit_wrapper_factory(const IDL::Interface& interface)
+static bool should_emit_wrapper_factory(IDL::Interface const& interface)
 {
     // FIXME: This is very hackish.
     if (interface.name == "Event")
@@ -488,7 +488,7 @@ static bool should_emit_wrapper_factory(const IDL::Interface& interface)
     return true;
 }
 
-static bool is_wrappable_type(const IDL::Type& type)
+static bool is_wrappable_type(IDL::Type const& type)
 {
     if (type.name == "Node")
         return true;
@@ -508,7 +508,7 @@ static bool is_wrappable_type(const IDL::Type& type)
 }
 
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, const String& js_name, const String& js_suffix, const String& cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {})
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, String const& js_name, String const& js_suffix, String const& cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {})
 {
     auto scoped_generator = generator.fork();
     scoped_generator.set("cpp_name", make_input_acceptable_cpp(cpp_name));
@@ -726,7 +726,7 @@ static void generate_argument_count_check(SourceGenerator& generator, FunctionTy
 )~~~");
 }
 
-static void generate_arguments(SourceGenerator& generator, const Vector<IDL::Parameter>& parameters, StringBuilder& arguments_builder, bool return_void = false)
+static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter> const& parameters, StringBuilder& arguments_builder, bool return_void = false)
 {
     auto arguments_generator = generator.fork();
 
@@ -747,7 +747,7 @@ static void generate_arguments(SourceGenerator& generator, const Vector<IDL::Par
     arguments_builder.join(", ", parameter_names);
 }
 
-static void generate_header(const IDL::Interface& interface)
+static void generate_header(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -809,19 +809,19 @@ public:
     }
     if (interface.extended_attributes.contains("CustomSet")) {
         generator.append(R"~~~(
-    virtual bool internal_set(const JS::PropertyName&, JS::Value, JS::Value receiver) override;
+    virtual bool internal_set(JS::PropertyName const&, JS::Value, JS::Value receiver) override;
 )~~~");
     }
 
     if (interface.wrapper_base_class == "Wrapper") {
         generator.append(R"~~~(
     @fully_qualified_name@& impl() { return *m_impl; }
-    const @fully_qualified_name@& impl() const { return *m_impl; }
+    @fully_qualified_name@ const& impl() const { return *m_impl; }
 )~~~");
     } else {
         generator.append(R"~~~(
     @fully_qualified_name@& impl() { return static_cast<@fully_qualified_name@&>(@wrapper_base_class@::impl()); }
-    const @fully_qualified_name@& impl() const { return static_cast<const @fully_qualified_name@&>(@wrapper_base_class@::impl()); }
+    @fully_qualified_name@ const& impl() const { return static_cast<@fully_qualified_name@ const&>(@wrapper_base_class@::impl()); }
 )~~~");
     }
 
@@ -852,7 +852,7 @@ private:
     outln("{}", generator.as_string_view());
 }
 
-void generate_implementation(const IDL::Interface& interface)
+void generate_implementation(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -957,7 +957,7 @@ void @wrapper_class@::initialize(JS::GlobalObject& global_object)
     outln("{}", generator.as_string_view());
 }
 
-static void generate_constructor_header(const IDL::Interface& interface)
+static void generate_constructor_header(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -994,7 +994,7 @@ private:
     outln("{}", generator.as_string_view());
 }
 
-void generate_constructor_implementation(const IDL::Interface& interface)
+void generate_constructor_implementation(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -1137,7 +1137,7 @@ define_direct_property("@constant.name@", JS::Value((i32)@constant.value@), JS::
     outln("{}", generator.as_string_view());
 }
 
-static void generate_prototype_header(const IDL::Interface& interface)
+static void generate_prototype_header(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -1194,7 +1194,7 @@ private:
     outln("{}", generator.as_string_view());
 }
 
-void generate_prototype_implementation(const IDL::Interface& interface)
+void generate_prototype_implementation(IDL::Interface const& interface)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
