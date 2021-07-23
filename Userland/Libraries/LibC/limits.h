@@ -80,6 +80,8 @@
 
 #define SSIZE_MAX 2147483647
 
+#define LINK_MAX 4096
+
 #ifdef __USE_POSIX
 #    include <bits/posix1_lim.h>
 #endif
