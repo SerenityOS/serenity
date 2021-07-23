@@ -764,4 +764,18 @@ Optional<CSS::Repeat> StyleProperties::background_repeat_y() const
         return {};
     }
 }
+
+Optional<CSS::BoxShadowData> StyleProperties::box_shadow() const
+{
+    auto value_or_error = property(CSS::PropertyID::BoxShadow);
+    if (!value_or_error.has_value())
+        return {};
+
+    auto value = value_or_error.value();
+    if (!value->is_box_shadow())
+        return {};
+
+    auto box = verify_cast<CSS::BoxShadowStyleValue>(value.ptr());
+    return { { box->offset_x(), box->offset_y(), box->blur_radius(), box->color() } };
+}
 }
