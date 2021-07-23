@@ -40,6 +40,7 @@ String calendar_month_code(GlobalObject&, Object& calendar, Object& date_like);
 double calendar_day(GlobalObject&, Object& calendar, Object& date_like);
 Value calendar_day_of_week(GlobalObject&, Object& calendar, Object& date_like);
 Value calendar_day_of_year(GlobalObject&, Object& calendar, Object& date_like);
+Value calendar_week_of_year(GlobalObject&, Object& calendar, Object& date_like);
 Object* to_temporal_calendar(GlobalObject&, Value);
 Object* to_temporal_calendar_with_iso_default(GlobalObject&, Value);
 Object* get_temporal_calendar_with_iso_default(GlobalObject&, Object&);
