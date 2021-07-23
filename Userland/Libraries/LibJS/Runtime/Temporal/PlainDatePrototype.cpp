@@ -31,6 +31,7 @@ void PlainDatePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.month, month_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.day, day_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.dayOfWeek, day_of_week_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
@@ -126,6 +127,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::day_getter)
 
     // 4. Return ? CalendarDay(calendar, temporalDate).
     return Value(calendar_day(global_object, calendar, *temporal_date));
+}
+
+// 3.3.8 get Temporal.PlainDate.prototype.dayOfWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.dayofweek
+JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::day_of_week_getter)
+{
+    // 1. Let temporalDate be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
+    auto* temporal_date = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be temporalDate.[[Calendar]].
+    auto& calendar = temporal_date->calendar();
+
+    // Return ? CalendarDayOfWeek(calendar, temporalDate).
+    return Value(calendar_day_of_week(global_object, calendar, *temporal_date));
 }
 
 // 3.3.22 Temporal.PlainDate.prototype.withCalendar ( calendar ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar
