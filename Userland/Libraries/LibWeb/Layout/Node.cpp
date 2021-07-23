@@ -77,6 +77,9 @@ bool Node::establishes_stacking_context() const
     auto position = computed_values().position();
     if (position == CSS::Position::Absolute || position == CSS::Position::Relative || position == CSS::Position::Fixed || position == CSS::Position::Sticky)
         return true;
+    auto opacity = computed_values().opacity();
+    if (opacity.has_value() && opacity.value() != 1.0f)
+        return true;
     return false;
 }
 
