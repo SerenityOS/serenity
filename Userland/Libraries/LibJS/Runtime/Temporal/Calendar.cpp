@@ -161,6 +161,27 @@ double calendar_month(GlobalObject& global_object, Object& calendar, Object& dat
     return to_positive_integer_or_infinity(global_object, result);
 }
 
+// 12.1.11 CalendarMonthCode ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthcode
+String calendar_month_code(GlobalObject& global_object, Object& calendar, Object& date_like)
+{
+    auto& vm = global_object.vm();
+    // 1. Assert: Type(calendar) is Object.
+
+    // 2. Let result be ? Invoke(calendar, "monthCode", « dateLike »).
+    auto result = calendar.invoke(vm.names.monthCode, &date_like);
+    if (vm.exception())
+        return {};
+
+    // 3. If result is undefined, throw a RangeError exception.
+    if (result.is_undefined()) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.monthCode.as_string());
+        return {};
+    }
+
+    // 4. Return ? ToString(result).
+    return result.to_string(global_object);
+}
+
 // 12.1.21 ToTemporalCalendar ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendar
 Object* to_temporal_calendar(GlobalObject& global_object, Value temporal_calendar_like)
 {
