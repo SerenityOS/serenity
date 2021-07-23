@@ -1411,9 +1411,7 @@ RefPtr<StyleValue> Parser::parse_numeric_value(ParsingContext const&, StyleCompo
     if (component_value.is(Token::Type::Number)) {
         auto number = component_value.token();
         if (number.m_number_type == Token::NumberType::Integer) {
-            // FIXME: This seems wrong, but it's how the old parser did things, as well as it
-            // whitelisting ZIndex, FontWeight and Custom PropertyIDs to allow this.
-            return LengthStyleValue::create(Length::make_px(number.integer()));
+            return NumericStyleValue::create(number.integer());
         } else {
             auto float_value = try_parse_float(number.m_value.string_view());
             if (float_value.has_value())
