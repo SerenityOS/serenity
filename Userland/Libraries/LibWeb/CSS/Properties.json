@@ -175,6 +175,10 @@
     "inherited": false,
     "initial": "auto"
   },
+  "box-shadow":{
+    "inherited": false,
+    "initial": "none"
+  },
   "caption-side": {
     "inherited": true,
     "initial": "top"
