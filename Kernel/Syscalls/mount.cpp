@@ -67,7 +67,7 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
 
     RefPtr<FileSystem> fs;
 
-    if (fs_type == "ext2" || fs_type == "Ext2FS") {
+    if (fs_type == "ext2"sv || fs_type == "Ext2FS"sv) {
         if (description.is_null())
             return EBADF;
         if (!description->file().is_block_device())
@@ -80,20 +80,20 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
         dbgln("mount: attempting to mount {} on {}", description->absolute_path(), target);
 
         fs = Ext2FS::create(*description);
-    } else if (fs_type == "9p" || fs_type == "Plan9FS") {
+    } else if (fs_type == "9p"sv || fs_type == "Plan9FS"sv) {
         if (description.is_null())
             return EBADF;
 
         fs = Plan9FS::create(*description);
-    } else if (fs_type == "proc" || fs_type == "ProcFS") {
+    } else if (fs_type == "proc"sv || fs_type == "ProcFS"sv) {
         fs = ProcFS::create();
-    } else if (fs_type == "devpts" || fs_type == "DevPtsFS") {
+    } else if (fs_type == "devpts"sv || fs_type == "DevPtsFS"sv) {
         fs = DevPtsFS::create();
-    } else if (fs_type == "dev" || fs_type == "DevFS") {
+    } else if (fs_type == "dev"sv || fs_type == "DevFS"sv) {
         fs = DevFS::create();
-    } else if (fs_type == "sys" || fs_type == "SysFS") {
+    } else if (fs_type == "sys"sv || fs_type == "SysFS"sv) {
         fs = SysFS::create();
-    } else if (fs_type == "tmp" || fs_type == "TmpFS") {
+    } else if (fs_type == "tmp"sv || fs_type == "TmpFS"sv) {
         fs = TmpFS::create();
     } else {
         return ENODEV;
