@@ -34,8 +34,8 @@ public:
         Type type { Type::Invalid };
 
         struct NthChildPattern {
-            int step_size = 0;
-            int offset = 0;
+            int step_size { 0 };
+            int offset = { 0 };
 
             static NthChildPattern parse(StringView const& args);
         };
@@ -70,7 +70,7 @@ public:
 
             SelectorList not_selector {};
         };
-        PseudoClass pseudo_class;
+        PseudoClass pseudo_class {};
 
         enum class PseudoElement {
             None,
@@ -81,7 +81,7 @@ public:
         };
         PseudoElement pseudo_element { PseudoElement::None };
 
-        FlyString value;
+        FlyString value {};
 
         struct Attribute {
             enum class MatchType {
@@ -95,10 +95,10 @@ public:
                 EndsWithString,    // [att$=val]
             };
             MatchType match_type { MatchType::None };
-            FlyString name;
-            String value;
+            FlyString name {};
+            String value {};
         };
-        Attribute attribute;
+        Attribute attribute {};
     };
 
     enum class Combinator {
