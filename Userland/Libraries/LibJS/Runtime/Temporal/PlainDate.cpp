@@ -93,8 +93,11 @@ PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* opt
         // TODO
 
         // c. If item has an [[InitializedTemporalDateTime]] internal slot, then
-        // i. Return ! CreateTemporalDate(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], item.[[Calendar]]).
-        // TODO
+        if (is<PlainDateTime>(item_object)) {
+            auto& date_time_item = static_cast<PlainDateTime&>(item_object);
+            // i. Return ! CreateTemporalDate(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], item.[[Calendar]]).
+            return create_temporal_date(global_object, date_time_item.iso_year(), date_time_item.iso_month(), date_time_item.iso_day(), date_time_item.calendar());
+        }
 
         // d. Let calendar be ? GetTemporalCalendarWithISODefault(item).
         auto* calendar = get_temporal_calendar_with_iso_default(global_object, item_object);
