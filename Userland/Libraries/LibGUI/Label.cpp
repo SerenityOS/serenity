@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Vinicius Sugimoto <vtmsugimoto@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,6 +29,10 @@ Label::Label(String text)
     REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_BOOL_PROPERTY("autosize", is_autosize, set_autosize);
     REGISTER_BOOL_PROPERTY("word_wrap", is_word_wrap, set_word_wrap);
+    REGISTER_ENUM_PROPERTY(
+        "word_wrap_mode", word_wrap_mode, set_word_wrap_mode, GUI::WordWrapMode,
+        { GUI::WordWrapMode::Word, "Word" },
+        { GUI::WordWrapMode::Anywhere, "Anywhere" });
 }
 
 Label::~Label()
@@ -109,7 +114,7 @@ void Label::paint_event(PaintEvent& event)
             auto& line = m_lines[i];
             auto text_rect = this->text_rect(i);
             if (is_enabled()) {
-                painter.draw_text(text_rect, line, m_text_alignment, palette().color(foreground_role()), Gfx::TextElision::None);
+                painter.draw_text(text_rect, line, m_text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right);
             } else {
                 painter.draw_text(text_rect.translated(1, 1), line, font(), text_alignment(), Color::White, Gfx::TextElision::Right);
                 painter.draw_text(text_rect, line, font(), text_alignment(), Color::from_rgb(0x808080), Gfx::TextElision::Right);
@@ -135,18 +140,34 @@ void Label::wrap_text()
 {
     Vector<String> words;
     Optional<size_t> start;
+    bool word_is_space = false;
+    auto include_word = [this, &start, &words](size_t i) {
+        if (start.has_value())
+            words.append(m_text.substring(start.value(), i - start.value()));
+        start.clear();
+    };
     for (size_t i = 0; i < m_text.length(); i++) {
         switch (m_text[i]) {
         case '\n':
-        case '\r':
-        case '\t':
-        case ' ': {
-            if (start.has_value())
-                words.append(m_text.substring(start.value(), i - start.value()));
-            start.clear();
+        case '\r': {
+            include_word(i);
+            words.append("\n");
             continue;
         }
+        case '\t':
+        case ' ': {
+            if (m_word_wrap_mode != GUI::WordWrapMode::Anywhere) {
+                word_is_space = true;
+                include_word(i);
+                start = i;
+                continue;
+            }
+            [[fallthrough]];
+        }
         default: {
+            if (word_is_space)
+                include_word(i);
+            word_is_space = false;
             if (!start.has_value())
                 start = i;
         }
@@ -161,28 +182,83 @@ void Label::wrap_text()
         rect.set_width(rect.width() - font().glyph_width('x'));
 
     Vector<String> lines;
+    String line;
     StringBuilder builder;
-    int line_width = 0;
     for (auto& word : words) {
-        int word_width = font().width(word);
-        if (line_width > 0)
-            word_width += font().glyph_width('x');
-        if (line_width + word_width > rect.width()) {
-            lines.append(builder.to_string());
-            builder.clear();
-            line_width = 0;
+        switch (m_word_wrap_mode) {
+        case GUI::WordWrapMode::Word:
+            line = builder.to_string();
+            builder.append(word);
+            if (font().width(builder.to_string()) > rect.width() && !line.is_empty()) {
+                lines.append(line);
+                line = String::empty();
+                builder.clear();
+                builder.append(word);
+            }
+            if (word == "\n") {
+                if (!line.is_empty())
+                    lines.append(line);
+                builder.clear();
+                lines.append(word);
+            }
+            continue;
+        case GUI::WordWrapMode::Anywhere:
+            size_t current_position = 0;
+            while (current_position != word.length()) {
+                size_t size = next_substring_size(&word, current_position);
+                lines.append(word.substring(current_position, size));
+                current_position += size;
+            }
+            continue;
         }
-        if (line_width > 0)
-            builder.append(' ');
-        builder.append(word);
-        line_width += word_width;
     }
 
-    auto last_line = builder.to_string();
-    if (!last_line.is_empty())
-        lines.append(last_line);
+    if (!builder.is_empty())
+        lines.append(builder.to_string());
 
     m_lines = lines;
+}
+
+size_t Label::next_substring_size(String* word, size_t start)
+{
+    String sub_word = word->substring(start);
+    size_t lower_index = 0, upper_index = sub_word.length();
+    size_t index = (upper_index - lower_index) / 2;
+
+    if (index == 0)
+        return upper_index;
+
+    double sub_word_width = font().width(sub_word.substring(0, index));
+
+    auto rect = frame_inner_rect();
+    if (frame_thickness() > 0)
+        rect.set_width(rect.width() - font().glyph_width('x'));
+
+    if (rect.width() == 0)
+        return upper_index;
+
+    while (upper_index != lower_index) {
+        if (sub_word_width > rect.width()) {
+            if (upper_index == index) {
+                index--;
+                continue;
+            }
+            upper_index = index;
+            index -= (upper_index - lower_index) / 2;
+        } else if (sub_word_width < rect.width()) {
+            if (lower_index == index)
+                index++;
+            lower_index = index;
+            index += (upper_index - lower_index) / 2;
+        } else
+            break;
+
+        sub_word_width = font().width(sub_word.substring(0, index));
+    }
+    if (sub_word_width > rect.width())
+        index--;
+
+    return index;
 }
 
 }

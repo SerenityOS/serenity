@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGUI/Frame.h>
+#include <LibGUI/WordWrapMode.h>
 #include <LibGfx/TextAlignment.h>
 
 namespace GUI {
@@ -36,6 +37,9 @@ public:
     bool is_word_wrap() const { return m_word_wrap; }
     void set_word_wrap(bool);
 
+    GUI::WordWrapMode word_wrap_mode() const { return m_word_wrap_mode; }
+    void set_word_wrap_mode(GUI::WordWrapMode mode) { m_word_wrap_mode = mode; }
+
     Gfx::IntRect text_rect(size_t line = 0) const;
 
 protected:
@@ -47,6 +51,7 @@ protected:
 private:
     void size_to_fit();
     void wrap_text();
+    size_t next_substring_size(String*, size_t);
 
     String m_text;
     RefPtr<Gfx::Bitmap> m_icon;
@@ -54,6 +59,7 @@ private:
     bool m_should_stretch_icon { false };
     bool m_autosize { false };
     bool m_word_wrap { false };
+    GUI::WordWrapMode m_word_wrap_mode { GUI::WordWrapMode::Word };
     Vector<String> m_lines;
 };
 
