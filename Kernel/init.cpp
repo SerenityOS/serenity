@@ -107,9 +107,9 @@ static Processor s_bsp_processor; // global but let's keep it "private"
 // init_stage2() function. Initialization continues there.
 
 extern "C" {
-PhysicalAddress start_of_prekernel_image;
-PhysicalAddress end_of_prekernel_image;
-FlatPtr kernel_base;
+READONLY_AFTER_INIT PhysicalAddress start_of_prekernel_image;
+READONLY_AFTER_INIT PhysicalAddress end_of_prekernel_image;
+READONLY_AFTER_INIT FlatPtr kernel_base;
 #if ARCH(X86_64)
 PhysicalAddress boot_pml4t;
 #endif
