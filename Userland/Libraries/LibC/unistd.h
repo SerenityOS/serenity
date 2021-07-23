@@ -126,7 +126,8 @@ enum {
     _PC_NAME_MAX,
     _PC_PATH_MAX,
     _PC_PIPE_BUF,
-    _PC_VDISABLE
+    _PC_VDISABLE,
+    _PC_LINK_MAX
 };
 
 #define R_OK 4

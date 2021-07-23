@@ -618,7 +618,7 @@ int mknod(const char* pathname, mode_t mode, dev_t dev)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-long fpathconf([[maybe_unused]] int fd, [[maybe_unused]] int name)
+long fpathconf([[maybe_unused]] int fd, int name)
 {
     switch (name) {
     case _PC_NAME_MAX:
@@ -627,6 +627,8 @@ long fpathconf([[maybe_unused]] int fd, [[maybe_unused]] int name)
         return PATH_MAX;
     case _PC_VDISABLE:
         return _POSIX_VDISABLE;
+    case _PC_LINK_MAX:
+        return LINK_MAX;
     }
 
     VERIFY_NOT_REACHED();
@@ -641,6 +643,8 @@ long pathconf([[maybe_unused]] const char* path, int name)
         return PATH_MAX;
     case _PC_PIPE_BUF:
         return PIPE_BUF;
+    case _PC_LINK_MAX:
+        return LINK_MAX;
     }
 
     VERIFY_NOT_REACHED();
