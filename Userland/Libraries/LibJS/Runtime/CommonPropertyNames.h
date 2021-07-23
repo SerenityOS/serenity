@@ -111,6 +111,7 @@ namespace JS {
     P(days)                                  \
     P(daysInMonth)                           \
     P(daysInWeek)                            \
+    P(daysInYear)                            \
     P(debug)                                 \
     P(decodeURI)                             \
     P(decodeURIComponent)                    \
