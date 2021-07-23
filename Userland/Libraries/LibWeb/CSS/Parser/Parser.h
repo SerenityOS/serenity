@@ -10,6 +10,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
+#include <AK/Result.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/StyleBlockRule.h>
@@ -111,20 +112,17 @@ public:
     template<typename T>
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values(TokenStream<T>&);
 
-    template<typename T>
-    RefPtr<Selector> parse_single_selector(TokenStream<T>&, bool is_relative = false);
-
     Optional<Selector::SimpleSelector::NthChildPattern> parse_nth_child_pattern(TokenStream<StyleComponentValueRule>&);
 
     // FIXME: https://www.w3.org/TR/selectors-4/
     // Contrary to the name, these parse a comma-separated list of selectors, according to the spec.
-    NonnullRefPtrVector<Selector> parse_a_selector();
+    Optional<SelectorList> parse_a_selector();
     template<typename T>
-    NonnullRefPtrVector<Selector> parse_a_selector(TokenStream<T>&);
+    Optional<SelectorList> parse_a_selector(TokenStream<T>&);
 
-    NonnullRefPtrVector<Selector> parse_a_relative_selector();
+    Optional<SelectorList> parse_a_relative_selector();
     template<typename T>
-    NonnullRefPtrVector<Selector> parse_a_relative_selector(TokenStream<T>&);
+    Optional<SelectorList> parse_a_relative_selector(TokenStream<T>&);
 
     RefPtr<StyleValue> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
     static RefPtr<StyleValue> parse_css_value(ParsingContext const&, PropertyID, StyleComponentValueRule const&);
@@ -176,6 +174,21 @@ private:
     static RefPtr<StyleValue> parse_color_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_string_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_image_value(ParsingContext const&, StyleComponentValueRule const&);
+
+    template<typename T>
+    Optional<SelectorList> parse_a_selector_list(TokenStream<T>&);
+    template<typename T>
+    Optional<SelectorList> parse_a_relative_selector_list(TokenStream<T>&);
+
+    enum class SelectorParsingResult {
+        Done,
+        SyntaxError,
+    };
+
+    RefPtr<Selector> parse_complex_selector(TokenStream<StyleComponentValueRule>&, bool allow_starting_combinator);
+    Result<Selector::CompoundSelector, SelectorParsingResult> parse_compound_selector(TokenStream<StyleComponentValueRule>&);
+    Optional<Selector::Combinator> parse_selector_combinator(TokenStream<StyleComponentValueRule>&);
+    Result<Selector::SimpleSelector, SelectorParsingResult> parse_simple_selector(TokenStream<StyleComponentValueRule>&);
 
     ParsingContext m_context;
 

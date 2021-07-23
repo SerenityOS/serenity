@@ -88,6 +88,17 @@ public:
         return m_value.string_view();
     }
 
+    HashType hash_type() const
+    {
+        VERIFY(m_type == Type::Hash);
+        return m_hash_type;
+    }
+    StringView hash_value() const
+    {
+        VERIFY(m_type == Type::Hash);
+        return m_value.string_view();
+    }
+
     bool is(NumberType number_type) const { return is(Token::Type::Number) && m_number_type == number_type; }
 
     int integer() const
