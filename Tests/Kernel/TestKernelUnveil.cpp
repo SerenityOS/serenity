@@ -5,7 +5,35 @@
  */
 
 #include <LibTest/TestCase.h>
+#include <errno.h>
 #include <unistd.h>
+
+TEST_CASE(test_argument_validation)
+{
+    auto res = unveil("/etc", "aaaaaaaaaaaa");
+    EXPECT_EQ(res, -1);
+    EXPECT_EQ(errno, EINVAL);
+
+    res = unveil(nullptr, "r");
+    EXPECT_EQ(res, -1);
+    EXPECT_EQ(errno, EINVAL);
+
+    res = unveil("/etc", nullptr);
+    EXPECT_EQ(res, -1);
+    EXPECT_EQ(errno, EINVAL);
+
+    res = unveil("", "r");
+    EXPECT_EQ(res, -1);
+    EXPECT_EQ(errno, EINVAL);
+
+    res = unveil("test", "r");
+    EXPECT_EQ(res, -1);
+    EXPECT_EQ(errno, EINVAL);
+
+    res = unveil("/etc", "f");
+    EXPECT_EQ(res, -1);
+    EXPECT_EQ(errno, EINVAL);
+}
 
 TEST_CASE(test_failures)
 {
