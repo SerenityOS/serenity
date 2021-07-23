@@ -35,6 +35,8 @@ private:
     Box& m_box;
     StackingContext* const m_parent { nullptr };
     Vector<StackingContext*> m_children;
+
+    void paint_internal(PaintContext&);
 };
 
 }
