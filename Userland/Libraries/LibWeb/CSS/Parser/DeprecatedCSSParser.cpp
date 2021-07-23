@@ -631,9 +631,57 @@ static OwnPtr<CSS::CalculatedStyleValue::CalcSum> parse_calc_sum(Vector<CalcToke
     return make<CSS::CalculatedStyleValue::CalcSum>(parsed_calc_product.release_nonnull(), move(additional));
 }
 
+static RefPtr<CSS::BoxShadowStyleValue> parse_box_shadow(CSS::DeprecatedParsingContext const& context, StringView const& string)
+{
+    // FIXME: Also support inset, spread-radius and multiple comma-seperated box-shadows
+    CSS::Length offset_x {};
+    CSS::Length offset_y {};
+    CSS::Length blur_radius {};
+    Color color {};
+
+    auto parts = string.split_view(' ');
+
+    if (parts.size() < 3 || parts.size() > 4)
+        return nullptr;
+
+    bool bad_length = false;
+    offset_x = parse_length(context, parts[0], bad_length);
+    if (bad_length)
+        return nullptr;
+
+    bad_length = false;
+    offset_y = parse_length(context, parts[1], bad_length);
+    if (bad_length)
+        return nullptr;
+
+    if (parts.size() == 3) {
+        auto parsed_color = parse_color(context, parts[2]);
+        if (!parsed_color)
+            return nullptr;
+        color = parsed_color->color();
+    } else if (parts.size() == 4) {
+        bad_length = false;
+        blur_radius = parse_length(context, parts[2], bad_length);
+        if (bad_length)
+            return nullptr;
+
+        auto parsed_color = parse_color(context, parts[3]);
+        if (!parsed_color)
+            return nullptr;
+        color = parsed_color->color();
+    }
+    return CSS::BoxShadowStyleValue::create(offset_x, offset_y, blur_radius, color);
+}
+
 RefPtr<CSS::StyleValue> parse_css_value(const CSS::DeprecatedParsingContext& context, const StringView& string, CSS::PropertyID property_id)
 {
     bool is_bad_length = false;
+
+    if (property_id == CSS::PropertyID::BoxShadow) {
+        auto parsed_box_shadow = parse_box_shadow(context, string);
+        if (parsed_box_shadow)
+            return parsed_box_shadow;
+    }
 
     if (takes_integer_value(property_id)) {
         auto integer = string.to_int();
