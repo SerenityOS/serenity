@@ -24,9 +24,9 @@ public:
     [[nodiscard]] u8 iso_hour() const { return m_iso_hour; }
     [[nodiscard]] u8 iso_minute() const { return m_iso_minute; }
     [[nodiscard]] u8 iso_second() const { return m_iso_second; }
-    [[nodiscard]] u8 iso_millisecond() const { return m_iso_millisecond; }
-    [[nodiscard]] u8 iso_microsecond() const { return m_iso_microsecond; }
-    [[nodiscard]] u8 iso_nanosecond() const { return m_iso_nanosecond; }
+    [[nodiscard]] u16 iso_millisecond() const { return m_iso_millisecond; }
+    [[nodiscard]] u16 iso_microsecond() const { return m_iso_microsecond; }
+    [[nodiscard]] u16 iso_nanosecond() const { return m_iso_nanosecond; }
     [[nodiscard]] Object const& calendar() const { return m_calendar; }
     [[nodiscard]] Object& calendar() { return m_calendar; }
 
