@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
@@ -27,8 +28,8 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     auto padded_rect = this->padded_rect();
 
     if (phase == PaintPhase::Background) {
-
         paint_background(context);
+        paint_box_shadow(context);
     }
 
     if (phase == PaintPhase::Border) {
@@ -253,6 +254,33 @@ void Box::paint_background_image(
     context.painter().blit_tiled(background_rect, background_image, background_image.rect());
 }
 
+void Box::paint_box_shadow(PaintContext& context)
+{
+    // FIXME: Implement support for blurring the shadow.
+    auto box_shadow_data = computed_values().box_shadow();
+    if (!box_shadow_data.has_value())
+        return;
+
+    auto offset_x_px = box_shadow_data->offset_x.resolved_or_zero(*this, width()).to_px(*this);
+    auto offset_y_px = box_shadow_data->offset_y.resolved_or_zero(*this, width()).to_px(*this);
+
+    Gfx::IntRect shifted_box_rect = {
+        bordered_rect().x() + offset_x_px,
+        bordered_rect().y() + offset_y_px,
+        bordered_rect().width(),
+        bordered_rect().height()
+    };
+
+    Gfx::DisjointRectSet rect_set;
+    rect_set.add(shifted_box_rect);
+    auto shattered = rect_set.shatter(enclosing_int_rect(bordered_rect()));
+
+    for (auto& rect : shattered.rects()) {
+        context.painter().fill_rect(rect, box_shadow_data->color);
+        (void)rect;
+    }
+}
+
 Box::BorderRadiusData Box::normalized_border_radius_data()
 {
     // FIXME: some values should be relative to the height() if specified, but which? For now, all relative values are relative to the width.
@@ -376,4 +404,5 @@ float Box::width_of_logical_containing_block() const
     VERIFY(containing_block);
     return containing_block->width();
 }
+
 }
