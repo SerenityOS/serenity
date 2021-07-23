@@ -888,15 +888,17 @@ void SoftFPU::FCOMI(const X86::Instruction& insn)
         m_cpu.set_zf(1);
         m_cpu.set_pf(1);
         m_cpu.set_cf(1);
+    } else {
+        m_cpu.set_zf(fpu_get(0) == fpu_get(i));
+        m_cpu.set_pf(false);
+        m_cpu.set_cf(fpu_get(0) < fpu_get(i));
     }
     if (!fpu_is_set(1))
         fpu_set_exception(FPU_Exception::Underflow);
 
-    m_cpu.set_zf(fpu_get(0) == fpu_get(i));
-    m_cpu.set_pf(false);
-    m_cpu.set_cf(fpu_get(0) < fpu_get(i));
-    // FIXME: is this supposed to be here?
-    // m_cpu.set_of(false);
+    m_cpu.set_of(false);
+    m_cpu.set_af(false);
+    m_cpu.set_sf(false);
 
     // FIXME: Taint should be based on ST(0) and ST(i)
     m_cpu.m_flags_tainted = false;
@@ -921,8 +923,10 @@ void SoftFPU::FUCOMI(const X86::Instruction& insn)
         m_cpu.set_zf(fpu_get(0) == fpu_get(i));
         m_cpu.set_pf(false);
         m_cpu.set_cf(fpu_get(0) < fpu_get(i));
-        m_cpu.set_of(false);
     }
+    m_cpu.set_of(false);
+    m_cpu.set_af(false);
+    m_cpu.set_sf(false);
 
     // FIXME: Taint should be based on ST(0) and ST(i)
     m_cpu.m_flags_tainted = false;
