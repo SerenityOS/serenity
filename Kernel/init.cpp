@@ -111,13 +111,13 @@ READONLY_AFTER_INIT PhysicalAddress start_of_prekernel_image;
 READONLY_AFTER_INIT PhysicalAddress end_of_prekernel_image;
 READONLY_AFTER_INIT FlatPtr kernel_base;
 #if ARCH(X86_64)
-PhysicalAddress boot_pml4t;
+READONLY_AFTER_INIT PhysicalAddress boot_pml4t;
 #endif
-PhysicalAddress boot_pdpt;
-PhysicalAddress boot_pd0;
-PhysicalAddress boot_pd_kernel;
-PageTableEntry* boot_pd_kernel_pt1023;
-const char* kernel_cmdline;
+READONLY_AFTER_INIT PhysicalAddress boot_pdpt;
+READONLY_AFTER_INIT PhysicalAddress boot_pd0;
+READONLY_AFTER_INIT PhysicalAddress boot_pd_kernel;
+READONLY_AFTER_INIT PageTableEntry* boot_pd_kernel_pt1023;
+READONLY_AFTER_INIT const char* kernel_cmdline;
 }
 
 extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
