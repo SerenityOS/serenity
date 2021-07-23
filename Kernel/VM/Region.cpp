@@ -562,18 +562,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     }
 
     u8* dest_ptr = MM.quickmap_page(*vmobject_physical_page_entry);
-    {
-        void* fault_at;
-        if (!safe_memcpy(dest_ptr, page_buffer, PAGE_SIZE, fault_at)) {
-            if ((u8*)fault_at >= dest_ptr && (u8*)fault_at <= dest_ptr + PAGE_SIZE)
-                dbgln("      >> inode fault: error copying data to {}/{}, failed at {}",
-                    vmobject_physical_page_entry->paddr(),
-                    VirtualAddress(dest_ptr),
-                    VirtualAddress(fault_at));
-            else
-                VERIFY_NOT_REACHED();
-        }
-    }
+    memcpy(dest_ptr, page_buffer, PAGE_SIZE);
     MM.unquickmap_page();
 
     remap_vmobject_page(page_index_in_vmobject);
