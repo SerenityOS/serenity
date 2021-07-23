@@ -229,7 +229,7 @@ RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_r
 
     // FIXME: Bring this all in line with the spec. https://www.w3.org/TR/selectors-4/
 
-    Vector<Selector::ComplexSelector> selectors;
+    Vector<Selector::CompoundSelector> selectors;
 
     auto check_for_eof_or_whitespace = [&](T& current_value) -> bool {
         if (current_value.is(Token::Type::EndOfFile))
@@ -491,8 +491,8 @@ RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_r
         return simple_selector;
     };
 
-    auto parse_complex_selector = [&]() -> Optional<Selector::ComplexSelector> {
-        auto relation = Selector::ComplexSelector::Relation::Descendant;
+    auto parse_complex_selector = [&]() -> Optional<Selector::CompoundSelector> {
+        auto combinator = Selector::Combinator::Descendant;
 
         tokens.skip_whitespace();
 
@@ -500,13 +500,13 @@ RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_r
         if (current_value.is(Token::Type::Delim)) {
             auto delim = ((Token)current_value).delim();
             if (delim == ">") {
-                relation = Selector::ComplexSelector::Relation::ImmediateChild;
+                combinator = Selector::Combinator::ImmediateChild;
                 tokens.next_token();
             } else if (delim == "+") {
-                relation = Selector::ComplexSelector::Relation::AdjacentSibling;
+                combinator = Selector::Combinator::NextSibling;
                 tokens.next_token();
             } else if (delim == "~") {
-                relation = Selector::ComplexSelector::Relation::GeneralSibling;
+                combinator = Selector::Combinator::SubsequentSibling;
                 tokens.next_token();
             } else if (delim == "|") {
                 tokens.next_token();
@@ -516,7 +516,7 @@ RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_r
                     return {};
 
                 if (next.is(Token::Type::Delim) && next.token().delim() == "|") {
-                    relation = Selector::ComplexSelector::Relation::Column;
+                    combinator = Selector::Combinator::Column;
                     tokens.next_token();
                 }
             }
@@ -541,7 +541,7 @@ RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_r
         if (simple_selectors.is_empty())
             return {};
 
-        return Selector::ComplexSelector { relation, move(simple_selectors) };
+        return Selector::CompoundSelector { combinator, move(simple_selectors) };
     };
 
     for (;;) {
@@ -558,7 +558,7 @@ RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_r
         return {};
 
     if (!is_relative)
-        selectors.first().relation = Selector::ComplexSelector::Relation::None;
+        selectors.first().combinator = Selector::Combinator::None;
 
     return Selector::create(move(selectors));
 }

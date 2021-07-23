@@ -11,8 +11,8 @@
 
 namespace Web::CSS {
 
-Selector::Selector(Vector<ComplexSelector>&& component_lists)
-    : m_complex_selectors(move(component_lists))
+Selector::Selector(Vector<CompoundSelector>&& compound_selectors)
+    : m_compound_selectors(move(compound_selectors))
 {
 }
 
@@ -26,8 +26,8 @@ u32 Selector::specificity() const
     unsigned tag_names = 0;
     unsigned classes = 0;
 
-    for (auto& list : m_complex_selectors) {
-        for (auto& simple_selector : list.compound_selector) {
+    for (auto& list : m_compound_selectors) {
+        for (auto& simple_selector : list.simple_selectors) {
             switch (simple_selector.type) {
             case SimpleSelector::Type::Id:
                 ++ids;
