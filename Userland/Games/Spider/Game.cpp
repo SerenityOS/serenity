@@ -5,6 +5,7 @@
  */
 
 #include "Game.h"
+#include <AK/Random.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 
@@ -72,7 +73,7 @@ void Game::setup(Mode mode)
     m_new_deck.clear_with_capacity();
     m_new_deck.ensure_capacity(deck.size());
     while (!deck.is_empty())
-        m_new_deck.append(deck.take(rand() % deck.size()));
+        m_new_deck.append(deck.take(get_random_uniform(deck.size())));
 
     m_new_game_animation = true;
     start_timer(s_timer_interval_ms);
