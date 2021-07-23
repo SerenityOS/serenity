@@ -28,6 +28,7 @@ void PlainDatePrototype::initialize(GlobalObject& global_object)
 
     define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.year, year_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.month, month_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
@@ -75,6 +76,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::year_getter)
 
     // 4. Return ? CalendarYear(calendar, temporalDate).
     return Value(calendar_year(global_object, calendar, *temporal_date));
+}
+
+// 3.3.5 get Temporal.PlainDate.prototype.month, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindate.prototype.month
+JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::month_getter)
+{
+    // 1. Let temporalDate be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
+    auto* temporal_date = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be temporalDate.[[Calendar]].
+    auto& calendar = temporal_date->calendar();
+
+    // 4. Return ? CalendarMonth(calendar, temporalDate).
+    return Value(calendar_month(global_object, calendar, *temporal_date));
 }
 
 // 3.3.22 Temporal.PlainDate.prototype.withCalendar ( calendar ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar
