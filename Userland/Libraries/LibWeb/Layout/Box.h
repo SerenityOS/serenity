@@ -111,6 +111,7 @@ public:
 
     virtual void paint(PaintContext&, PaintPhase) override;
     virtual void paint_border(PaintContext& context);
+    virtual void paint_box_shadow(PaintContext& context);
     virtual void paint_background(PaintContext& context);
 
     Vector<LineBox>& line_boxes() { return m_line_boxes; }
