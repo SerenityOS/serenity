@@ -308,6 +308,7 @@ void signal_trampoline_dummy()
     // necessary to preserve it here.
     asm(
         ".intel_syntax noprefix\n"
+        ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
         "push ebp\n"
         "mov ebp, esp\n"
@@ -319,6 +320,7 @@ void signal_trampoline_dummy()
         "add esp, 8\n"
         "mov eax, %P0\n"
         "int 0x82\n" // sigreturn syscall
+        ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
         ".att_syntax" ::"i"(Syscall::SC_sigreturn));
 #elif ARCH(X86_64)
@@ -329,6 +331,7 @@ void signal_trampoline_dummy()
     // necessary to preserve it here.
     asm(
         ".intel_syntax noprefix\n"
+        ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
         "push rbp\n"
         "mov rbp, rsp\n"
@@ -339,6 +342,7 @@ void signal_trampoline_dummy()
         "add rsp, 8\n"
         "mov rax, %P0\n"
         "int 0x82\n" // sigreturn syscall
+        ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
         ".att_syntax" ::"i"(Syscall::SC_sigreturn));
 #endif
