@@ -23,17 +23,17 @@ namespace regex {
 
 class RegexStringView {
 public:
-    RegexStringView(const char* chars)
+    RegexStringView(char const* chars)
         : m_view(StringView { chars })
     {
     }
 
-    RegexStringView(const String& string)
+    RegexStringView(String const& string)
         : m_view(string.view())
     {
     }
 
-    RegexStringView(const StringView view)
+    RegexStringView(StringView const view)
         : m_view(view)
     {
     }
@@ -48,17 +48,17 @@ public:
     {
     }
 
-    const StringView& string_view() const
+    StringView const& string_view() const
     {
         return m_view.get<StringView>();
     }
 
-    const Utf32View& u32_view() const
+    Utf32View const& u32_view() const
     {
         return m_view.get<Utf32View>();
     }
 
-    const Utf8View& u8_view() const
+    Utf8View const& u8_view() const
     {
         return m_view.get<Utf8View>();
     }
@@ -184,7 +184,7 @@ public:
             });
     }
 
-    bool operator==(const char* cstring) const
+    bool operator==(char const* cstring) const
     {
         return m_view.visit(
             [&](Utf32View) { return to_string() == cstring; },
@@ -192,12 +192,12 @@ public:
             [&](StringView view) { return view == cstring; });
     }
 
-    bool operator!=(const char* cstring) const
+    bool operator!=(char const* cstring) const
     {
         return !(*this == cstring);
     }
 
-    bool operator==(const String& string) const
+    bool operator==(String const& string) const
     {
         return m_view.visit(
             [&](Utf32View) { return to_string() == string; },
@@ -205,7 +205,7 @@ public:
             [&](StringView view) { return view == string; });
     }
 
-    bool operator==(const StringView& string) const
+    bool operator==(StringView const& string) const
     {
         return m_view.visit(
             [&](Utf32View) { return to_string() == string; },
@@ -213,12 +213,12 @@ public:
             [&](StringView view) { return view == string; });
     }
 
-    bool operator!=(const StringView& other) const
+    bool operator!=(StringView const& other) const
     {
         return !(*this == other);
     }
 
-    bool operator==(const Utf32View& other) const
+    bool operator==(Utf32View const& other) const
     {
         return m_view.visit(
             [&](Utf32View view) {
@@ -228,12 +228,12 @@ public:
             [&](StringView view) { return view == RegexStringView { other }.to_string(); });
     }
 
-    bool operator!=(const Utf32View& other) const
+    bool operator!=(Utf32View const& other) const
     {
         return !(*this == other);
     }
 
-    bool operator==(const Utf8View& other) const
+    bool operator==(Utf8View const& other) const
     {
         return m_view.visit(
             [&](Utf32View) {
@@ -243,17 +243,17 @@ public:
             [&](StringView view) { return other.as_string() == view; });
     }
 
-    bool operator!=(const Utf8View& other) const
+    bool operator!=(Utf8View const& other) const
     {
         return !(*this == other);
     }
 
-    bool equals(const RegexStringView& other) const
+    bool equals(RegexStringView const& other) const
     {
         return other.m_view.visit([&](auto const& view) { return operator==(view); });
     }
 
-    bool equals_ignoring_case(const RegexStringView& other) const
+    bool equals_ignoring_case(RegexStringView const& other) const
     {
         // FIXME: Implement equals_ignoring_case() for unicode.
         return m_view.visit(
@@ -265,7 +265,7 @@ public:
             [](auto&) -> bool { TODO(); });
     }
 
-    bool starts_with(const StringView& str) const
+    bool starts_with(StringView const& str) const
     {
         return m_view.visit(
             [&](Utf32View) -> bool {
@@ -275,7 +275,7 @@ public:
             [&](StringView view) { return view.starts_with(str); });
     }
 
-    bool starts_with(const Utf32View& str) const
+    bool starts_with(Utf32View const& str) const
     {
         return m_view.visit(
             [&](Utf32View view) -> bool {
@@ -315,7 +315,7 @@ public:
     Match() = default;
     ~Match() = default;
 
-    Match(const RegexStringView view_, const size_t line_, const size_t column_, const size_t global_offset_)
+    Match(RegexStringView const view_, size_t const line_, size_t const column_, size_t const global_offset_)
         : view(view_)
         , line(line_)
         , column(column_)
@@ -324,7 +324,7 @@ public:
     {
     }
 
-    Match(const String string_, const size_t line_, const size_t column_, const size_t global_offset_)
+    Match(String const string_, size_t const line_, size_t const column_, size_t const global_offset_)
         : string(string_)
         , view(string.value().view())
         , line(line_)
@@ -382,7 +382,7 @@ using regex::RegexStringView;
 
 template<>
 struct AK::Formatter<regex::RegexStringView> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const regex::RegexStringView& value)
+    void format(FormatBuilder& builder, regex::RegexStringView const& value)
     {
         auto string = value.to_string();
         return Formatter<StringView>::format(builder, string);

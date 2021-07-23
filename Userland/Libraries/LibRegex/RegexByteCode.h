@@ -105,8 +105,8 @@ enum class BoundaryCheckType : ByteCodeValueType {
 };
 
 struct CharRange {
-    const u32 from;
-    const u32 to;
+    u32 const from;
+    u32 const to;
 
     CharRange(u64 value)
         : from(value >> 32)
@@ -137,7 +137,7 @@ public:
         ensure_opcodes_initialized();
     }
 
-    ByteCode(const ByteCode&) = default;
+    ByteCode(ByteCode const&) = default;
     virtual ~ByteCode() = default;
 
     ByteCode& operator=(ByteCode&&) = default;
@@ -232,7 +232,7 @@ public:
         empend(capture_groups_count);
     }
 
-    void insert_bytecode_group_capture_left(const StringView& name)
+    void insert_bytecode_group_capture_left(StringView const& name)
     {
         empend(static_cast<ByteCodeValueType>(OpCodeId::SaveLeftNamedCaptureGroup));
         empend(reinterpret_cast<ByteCodeValueType>(name.characters_without_null_termination()));
@@ -245,7 +245,7 @@ public:
         empend(capture_groups_count);
     }
 
-    void insert_bytecode_group_capture_right(const StringView& name)
+    void insert_bytecode_group_capture_right(StringView const& name)
     {
         empend(static_cast<ByteCodeValueType>(OpCodeId::SaveRightNamedCaptureGroup));
         empend(reinterpret_cast<ByteCodeValueType>(name.characters_without_null_termination()));
@@ -462,7 +462,7 @@ public:
     OpCode& get_opcode(MatchState& state) const;
 
 private:
-    void insert_string(const StringView& view)
+    void insert_string(StringView const& view)
     {
         empend((ByteCodeValueType)view.length());
         for (size_t i = 0; i < view.length(); ++i)
@@ -489,11 +489,11 @@ enum class ExecutionResult : u8 {
 #undef __ENUMERATE_EXECUTION_RESULT
 };
 
-const char* execution_result_name(ExecutionResult result);
-const char* opcode_id_name(OpCodeId opcode_id);
-const char* boundary_check_type_name(BoundaryCheckType);
-const char* character_compare_type_name(CharacterCompareType result);
-const char* execution_result_name(ExecutionResult result);
+char const* execution_result_name(ExecutionResult result);
+char const* opcode_id_name(OpCodeId opcode_id);
+char const* boundary_check_type_name(BoundaryCheckType);
+char const* character_compare_type_name(CharacterCompareType result);
+char const* execution_result_name(ExecutionResult result);
 
 class OpCode {
 public:
@@ -502,7 +502,7 @@ public:
 
     virtual OpCodeId opcode_id() const = 0;
     virtual size_t size() const = 0;
-    virtual ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const = 0;
+    virtual ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const = 0;
 
     ALWAYS_INLINE ByteCodeValueType argument(size_t offset) const
     {
@@ -510,27 +510,27 @@ public:
         return m_bytecode->at(state().instruction_position + 1 + offset);
     }
 
-    ALWAYS_INLINE const char* name() const;
-    static const char* name(const OpCodeId);
+    ALWAYS_INLINE char const* name() const;
+    static char const* name(OpCodeId const);
 
     ALWAYS_INLINE void set_state(MatchState& state) { m_state = &state; }
 
     ALWAYS_INLINE void set_bytecode(ByteCode& bytecode) { m_bytecode = &bytecode; }
 
-    ALWAYS_INLINE const MatchState& state() const
+    ALWAYS_INLINE MatchState const& state() const
     {
         VERIFY(m_state);
         return *m_state;
     }
 
-    const String to_string() const
+    String const to_string() const
     {
         return String::formatted("[{:#02X}] {}", (int)opcode_id(), name(opcode_id()));
     }
 
-    virtual const String arguments_string() const = 0;
+    virtual String const arguments_string() const = 0;
 
-    ALWAYS_INLINE const ByteCode& bytecode() const { return *m_bytecode; }
+    ALWAYS_INLINE ByteCode const& bytecode() const { return *m_bytecode; }
 
 protected:
     ByteCode* m_bytecode { nullptr };
@@ -539,53 +539,53 @@ protected:
 
 class OpCode_Exit final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Exit; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    const String arguments_string() const override { return ""; }
+    String const arguments_string() const override { return ""; }
 };
 
 class OpCode_FailForks final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::FailForks; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t count() const { return argument(0); }
-    const String arguments_string() const override { return String::formatted("count={}", count()); }
+    String const arguments_string() const override { return String::formatted("count={}", count()); }
 };
 
 class OpCode_Save final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Save; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    const String arguments_string() const override { return ""; }
+    String const arguments_string() const override { return ""; }
 };
 
 class OpCode_Restore final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Restore; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    const String arguments_string() const override { return ""; }
+    String const arguments_string() const override { return ""; }
 };
 
 class OpCode_GoBack final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::GoBack; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t count() const { return argument(0); }
-    const String arguments_string() const override { return String::formatted("count={}", count()); }
+    String const arguments_string() const override { return String::formatted("count={}", count()); }
 };
 
 class OpCode_Jump final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Jump; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
-    const String arguments_string() const override
+    String const arguments_string() const override
     {
         return String::formatted("offset={} [&{}]", offset(), state().instruction_position + size() + offset());
     }
@@ -593,11 +593,11 @@ public:
 
 class OpCode_ForkJump final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkJump; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
-    const String arguments_string() const override
+    String const arguments_string() const override
     {
         return String::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
     }
@@ -605,11 +605,11 @@ public:
 
 class OpCode_ForkStay final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkStay; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
-    const String arguments_string() const override
+    String const arguments_string() const override
     {
         return String::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
     }
@@ -617,47 +617,47 @@ public:
 
 class OpCode_CheckBegin final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckBegin; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    const String arguments_string() const override { return ""; }
+    String const arguments_string() const override { return ""; }
 };
 
 class OpCode_CheckEnd final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckEnd; }
     ALWAYS_INLINE size_t size() const override { return 1; }
-    const String arguments_string() const override { return ""; }
+    String const arguments_string() const override { return ""; }
 };
 
 class OpCode_CheckBoundary final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckBoundary; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t arguments_count() const { return 1; }
     ALWAYS_INLINE BoundaryCheckType type() const { return static_cast<BoundaryCheckType>(argument(0)); }
-    const String arguments_string() const override { return String::formatted("kind={} ({})", (long unsigned int)argument(0), boundary_check_type_name(type())); }
+    String const arguments_string() const override { return String::formatted("kind={} ({})", (long unsigned int)argument(0), boundary_check_type_name(type())); }
 };
 
 class OpCode_ClearCaptureGroup final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ClearCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    const String arguments_string() const override { return String::formatted("id={}", id()); }
+    String const arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
 class OpCode_ClearNamedCaptureGroup final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ClearNamedCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 3; }
     ALWAYS_INLINE StringView name() const { return { reinterpret_cast<char*>(argument(0)), length() }; }
     ALWAYS_INLINE size_t length() const { return argument(1); }
-    const String arguments_string() const override
+    String const arguments_string() const override
     {
         return String::formatted("name={}, length={}", name(), length());
     }
@@ -665,30 +665,30 @@ public:
 
 class OpCode_SaveLeftCaptureGroup final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveLeftCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    const String arguments_string() const override { return String::formatted("id={}", id()); }
+    String const arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
 class OpCode_SaveRightCaptureGroup final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveRightCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    const String arguments_string() const override { return String::formatted("id={}", id()); }
+    String const arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
 class OpCode_SaveLeftNamedCaptureGroup final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveLeftNamedCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 3; }
     ALWAYS_INLINE StringView name() const { return { reinterpret_cast<char*>(argument(0)), length() }; }
     ALWAYS_INLINE size_t length() const { return argument(1); }
-    const String arguments_string() const override
+    String const arguments_string() const override
     {
         return String::formatted("name={}, length={}", name(), length());
     }
@@ -696,12 +696,12 @@ public:
 
 class OpCode_SaveRightNamedCaptureGroup final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveRightNamedCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 3; }
     ALWAYS_INLINE StringView name() const { return { reinterpret_cast<char*>(argument(0)), length() }; }
     ALWAYS_INLINE size_t length() const { return argument(1); }
-    const String arguments_string() const override
+    String const arguments_string() const override
     {
         return String::formatted("name={}, length={}", name(), length());
     }
@@ -709,50 +709,50 @@ public:
 
 class OpCode_Compare final : public OpCode {
 public:
-    ExecutionResult execute(const MatchInput& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Compare; }
     ALWAYS_INLINE size_t size() const override { return arguments_size() + 3; }
     ALWAYS_INLINE size_t arguments_count() const { return argument(0); }
     ALWAYS_INLINE size_t arguments_size() const { return argument(1); }
-    const String arguments_string() const override;
-    const Vector<String> variable_arguments_to_string(Optional<MatchInput> input = {}) const;
+    String const arguments_string() const override;
+    Vector<String> const variable_arguments_to_string(Optional<MatchInput> input = {}) const;
 
 private:
-    ALWAYS_INLINE static void compare_char(const MatchInput& input, MatchState& state, u32 ch1, bool inverse, bool& inverse_matched);
-    ALWAYS_INLINE static bool compare_string(const MatchInput& input, MatchState& state, RegexStringView const& str, bool& had_zero_length_match);
-    ALWAYS_INLINE static void compare_character_class(const MatchInput& input, MatchState& state, CharClass character_class, u32 ch, bool inverse, bool& inverse_matched);
-    ALWAYS_INLINE static void compare_character_range(const MatchInput& input, MatchState& state, u32 from, u32 to, u32 ch, bool inverse, bool& inverse_matched);
+    ALWAYS_INLINE static void compare_char(MatchInput const& input, MatchState& state, u32 ch1, bool inverse, bool& inverse_matched);
+    ALWAYS_INLINE static bool compare_string(MatchInput const& input, MatchState& state, RegexStringView const& str, bool& had_zero_length_match);
+    ALWAYS_INLINE static void compare_character_class(MatchInput const& input, MatchState& state, CharClass character_class, u32 ch, bool inverse, bool& inverse_matched);
+    ALWAYS_INLINE static void compare_character_range(MatchInput const& input, MatchState& state, u32 from, u32 to, u32 ch, bool inverse, bool& inverse_matched);
 };
 
 template<typename T>
-bool is(const OpCode&);
+bool is(OpCode const&);
 
 template<typename T>
-ALWAYS_INLINE bool is(const OpCode&)
+ALWAYS_INLINE bool is(OpCode const&)
 {
     return false;
 }
 
 template<typename T>
-ALWAYS_INLINE bool is(const OpCode* opcode)
+ALWAYS_INLINE bool is(OpCode const* opcode)
 {
     return is<T>(*opcode);
 }
 
 template<>
-ALWAYS_INLINE bool is<OpCode_ForkStay>(const OpCode& opcode)
+ALWAYS_INLINE bool is<OpCode_ForkStay>(OpCode const& opcode)
 {
     return opcode.opcode_id() == OpCodeId::ForkStay;
 }
 
 template<>
-ALWAYS_INLINE bool is<OpCode_Exit>(const OpCode& opcode)
+ALWAYS_INLINE bool is<OpCode_Exit>(OpCode const& opcode)
 {
     return opcode.opcode_id() == OpCodeId::Exit;
 }
 
 template<>
-ALWAYS_INLINE bool is<OpCode_Compare>(const OpCode& opcode)
+ALWAYS_INLINE bool is<OpCode_Compare>(OpCode const& opcode)
 {
     return opcode.opcode_id() == OpCodeId::Compare;
 }

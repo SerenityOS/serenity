@@ -55,7 +55,7 @@ ALWAYS_INLINE Token Parser::consume(TokenType type, Error error)
     return consume();
 }
 
-ALWAYS_INLINE bool Parser::consume(const String& str)
+ALWAYS_INLINE bool Parser::consume(String const& str)
 {
     size_t potentially_go_back { 1 };
     for (auto ch : str) {
