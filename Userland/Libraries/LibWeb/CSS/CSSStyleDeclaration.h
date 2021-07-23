@@ -44,6 +44,7 @@ protected:
     explicit CSSStyleDeclaration(Vector<StyleProperty>&&, HashMap<String, StyleProperty>&&);
 
 private:
+    friend class ElementInlineCSSStyleDeclaration;
     friend class Bindings::CSSStyleDeclarationWrapper;
 
     Vector<StyleProperty> m_properties;
@@ -53,6 +54,7 @@ private:
 class ElementInlineCSSStyleDeclaration final : public CSSStyleDeclaration {
 public:
     static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create(DOM::Element& element) { return adopt_ref(*new ElementInlineCSSStyleDeclaration(element)); }
+    static NonnullRefPtr<ElementInlineCSSStyleDeclaration> create_and_take_properties_from(DOM::Element& element, CSSStyleDeclaration& declaration) { return adopt_ref(*new ElementInlineCSSStyleDeclaration(element, declaration)); }
     virtual ~ElementInlineCSSStyleDeclaration() override;
 
     DOM::Element* element() { return m_element.ptr(); }
@@ -60,6 +62,7 @@ public:
 
 private:
     explicit ElementInlineCSSStyleDeclaration(DOM::Element&);
+    explicit ElementInlineCSSStyleDeclaration(DOM::Element&, CSSStyleDeclaration&);
 
     WeakPtr<DOM::Element> m_element;
 };
