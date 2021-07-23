@@ -7,9 +7,9 @@
 
 #include "Game.h"
 #include <AK/Debug.h>
+#include <AK/Random.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
-#include <time.h>
 
 REGISTER_WIDGET(Solitaire, Game);
 
@@ -20,8 +20,6 @@ static constexpr int s_timer_interval_ms = 1000 / 60;
 
 Game::Game()
 {
-    srand(time(nullptr));
-
     m_stacks.append(adopt_ref(*new CardStack({ 10, 10 }, CardStack::Type::Stock)));
     m_stacks.append(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste)));
     m_stacks.append(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Play, m_stacks.ptr_at(Waste))));
@@ -44,7 +42,7 @@ Game::~Game()
 
 static float rand_float()
 {
-    return rand() / static_cast<float>(RAND_MAX);
+    return get_random_uniform(RAND_MAX) / static_cast<float>(RAND_MAX);
 }
 
 void Game::timer_event(Core::TimerEvent&)
@@ -95,11 +93,11 @@ void Game::timer_event(Core::TimerEvent&)
 
 void Game::create_new_animation_card()
 {
-    auto card = Card::construct(static_cast<Card::Type>(rand() % Card::Type::__Count), rand() % Card::card_count);
-    card->set_position({ rand() % (Game::width - Card::width), rand() % (Game::height / 8) });
+    auto card = Card::construct(static_cast<Card::Type>(get_random_uniform(Card::Type::__Count)), get_random_uniform(Card::card_count));
+    card->set_position({ get_random_uniform(Game::width - Card::width), get_random_uniform(Game::height / 8) });
 
     int x_sgn = card->position().x() > (Game::width / 2) ? -1 : 1;
-    m_animation = Animation(card, rand_float() + .4f, x_sgn * ((rand() % 3) + 2), .6f + rand_float() * .4f);
+    m_animation = Animation(card, rand_float() + .4f, x_sgn * (get_random_uniform(3) + 2), .6f + rand_float() * .4f);
 }
 
 void Game::set_background_fill_enabled(bool enabled)
@@ -175,7 +173,7 @@ void Game::setup(Mode mode)
     }
 
     for (uint8_t i = 0; i < 200; ++i)
-        m_new_deck.append(m_new_deck.take(rand() % m_new_deck.size()));
+        m_new_deck.append(m_new_deck.take(get_random_uniform(m_new_deck.size())));
 
     m_new_game_animation = true;
     start_timer(s_timer_interval_ms);
