@@ -71,6 +71,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * Higher-level threading (LibThreading)
 * Transport Layer Security (LibTLS)
 * HTTP and HTTPS (LibHTTP)
+* IMAP (LibIMAP)
 
 ## Userland features
 
@@ -81,6 +82,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * C++ IDE (HackStudio)
 * IRC client
 * Desktop synthesizer (Piano)
+* E-mail client (Mail)
 * Various desktop apps & games
 * Color themes
 
