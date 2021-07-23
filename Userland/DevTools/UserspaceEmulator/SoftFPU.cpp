@@ -638,14 +638,14 @@ void SoftFPU::FIMUL_RM32(const X86::Instruction& insn)
     VERIFY(!insn.modrm().is_register());
     auto m32int = (i32)insn.modrm().read32(m_cpu, insn).value();
     // FIXME: Respect shadow values
-    fpu_set(0, fpu_get(0) * (long double)m32int);
+    fpu_set(0, fpu_get(0) * m32int);
 }
 void SoftFPU::FIMUL_RM16(const X86::Instruction& insn)
 {
     VERIFY(!insn.modrm().is_register());
     auto m16int = (i16)insn.modrm().read16(m_cpu, insn).value();
     // FIXME: Respect shadow values
-    fpu_set(0, fpu_get(0) * (long double)m16int);
+    fpu_set(0, fpu_get(0) * m16int);
 }
 
 void SoftFPU::FDIV_RM32(const X86::Instruction& insn)
@@ -720,7 +720,7 @@ void SoftFPU::FIDIV_RM16(const X86::Instruction& insn)
     auto m16int = (i16)insn.modrm().read16(m_cpu, insn).value();
     // FIXME: Respect shadow values
     // FIXME: Raise IA on 0 / _=0, raise Z on finite / +-0
-    fpu_set(0, fpu_get(0) / (long double)m16int);
+    fpu_set(0, fpu_get(0) / m16int);
 }
 void SoftFPU::FIDIV_RM32(const X86::Instruction& insn)
 {
@@ -728,7 +728,7 @@ void SoftFPU::FIDIV_RM32(const X86::Instruction& insn)
     auto m32int = (i32)insn.modrm().read32(m_cpu, insn).value();
     // FIXME: Respect shadow values
     // FIXME: Raise IA on 0 / _=0, raise Z on finite / +-0
-    fpu_set(0, fpu_get(0) / (long double)m32int);
+    fpu_set(0, fpu_get(0) / m32int);
 }
 
 void SoftFPU::FIDIVR_RM16(const X86::Instruction& insn)
@@ -737,7 +737,7 @@ void SoftFPU::FIDIVR_RM16(const X86::Instruction& insn)
     auto m16int = (i16)insn.modrm().read16(m_cpu, insn).value();
     // FIXME: Respect shadow values
     // FIXME: Raise IA on 0 / _=0, raise Z on finite / +-0
-    fpu_set(0, (long double)m16int / fpu_get(0));
+    fpu_set(0, m16int / fpu_get(0));
 }
 void SoftFPU::FIDIVR_RM32(const X86::Instruction& insn)
 {
@@ -745,7 +745,7 @@ void SoftFPU::FIDIVR_RM32(const X86::Instruction& insn)
     auto m32int = (i32)insn.modrm().read32(m_cpu, insn).value();
     // FIXME: Respect shadow values
     // FIXME: Raise IA on 0 / _=0, raise Z on finite / +-0
-    fpu_set(0, (long double)m32int / fpu_get(0));
+    fpu_set(0, m32int / fpu_get(0));
 }
 
 void SoftFPU::FPREM(const X86::Instruction&)
