@@ -46,5 +46,6 @@ String build_iso_month_code(i32 month);
 double resolve_iso_month(GlobalObject&, Object& fields);
 Optional<TemporalDate> iso_date_from_fields(GlobalObject&, Object& fields, Object& options);
 i32 iso_year(Object& temporal_object);
+u8 iso_month(Object& temporal_object);
 
 }
