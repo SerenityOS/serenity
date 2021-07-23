@@ -351,10 +351,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 # Zero any registers used within a function on return (to reduce data lifetime and ROP gadgets).
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fzero-call-used-regs=used-gpr")
-
-if (NOT ${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -nostdinc -nostdinc++")
-endif()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -nostdinc -nostdinc++")
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -mno-red-zone")
