@@ -525,4 +525,19 @@ String iso_month_code(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
+// 12.1.44 ISODay ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
+u8 iso_day(Object& temporal_object)
+{
+    // 1. Assert: temporalObject has an [[ISODay]] internal slot.
+    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
+
+    // 2. Return 𝔽(temporalObject.[[ISODay]]).
+    // TODO: add the rest of the builtins with a [[ISODay]] slot (PlainYearMonth, PlainMonthDay)
+    if (is<PlainDate>(temporal_object))
+        return static_cast<PlainDate&>(temporal_object).iso_day();
+    if (is<PlainDateTime>(temporal_object))
+        return static_cast<PlainDateTime&>(temporal_object).iso_day();
+    VERIFY_NOT_REACHED();
+}
+
 }
