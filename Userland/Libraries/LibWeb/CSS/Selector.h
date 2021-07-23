@@ -15,6 +15,9 @@
 
 namespace Web::CSS {
 
+using SelectorList = NonnullRefPtrVector<class Selector>;
+
+// This is a <complex-selector> in the spec. https://www.w3.org/TR/selectors-4/#complex
 class Selector : public RefCounted<Selector> {
 public:
     struct SimpleSelector {
@@ -65,7 +68,7 @@ public:
             // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
             NthChildPattern nth_child_pattern;
 
-            NonnullRefPtrVector<Selector> not_selector {};
+            SelectorList not_selector {};
         };
         PseudoClass pseudo_class;
 
@@ -98,36 +101,37 @@ public:
         Attribute attribute;
     };
 
-    struct ComplexSelector {
-        enum class Relation {
-            None,
-            ImmediateChild,
-            Descendant,
-            AdjacentSibling,
-            GeneralSibling,
-            Column,
-        };
-        Relation relation { Relation::None };
-
-        using CompoundSelector = Vector<SimpleSelector>;
-        CompoundSelector compound_selector;
+    enum class Combinator {
+        None,
+        ImmediateChild,    // >
+        Descendant,        // <whitespace>
+        NextSibling,       // +
+        SubsequentSibling, // ~
+        Column,            // ||
     };
 
-    static NonnullRefPtr<Selector> create(Vector<ComplexSelector>&& complex_selectors)
+    struct CompoundSelector {
+        // Spec-wise, the <combinator> is not part of a <compound-selector>,
+        // but it is more understandable to put them together.
+        Combinator combinator { Combinator::None };
+        Vector<SimpleSelector> simple_selectors;
+    };
+
+    static NonnullRefPtr<Selector> create(Vector<CompoundSelector>&& compound_selectors)
     {
-        return adopt_ref(*new Selector(move(complex_selectors)));
+        return adopt_ref(*new Selector(move(compound_selectors)));
     }
 
     ~Selector();
 
-    Vector<ComplexSelector> const& complex_selectors() const { return m_complex_selectors; }
+    Vector<CompoundSelector> const& compound_selectors() const { return m_compound_selectors; }
 
     u32 specificity() const;
 
 private:
-    explicit Selector(Vector<ComplexSelector>&&);
+    explicit Selector(Vector<CompoundSelector>&&);
 
-    Vector<ComplexSelector> m_complex_selectors;
+    Vector<CompoundSelector> m_compound_selectors;
 };
 
 }

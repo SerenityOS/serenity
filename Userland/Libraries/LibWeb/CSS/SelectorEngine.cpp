@@ -195,15 +195,15 @@ static bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element
 
 static bool matches(CSS::Selector const& selector, int component_list_index, DOM::Element const& element)
 {
-    auto& component_list = selector.complex_selectors()[component_list_index];
-    for (auto& component : component_list.compound_selector) {
-        if (!matches(component, element))
+    auto& relative_selector = selector.compound_selectors()[component_list_index];
+    for (auto& simple_selector : relative_selector.simple_selectors) {
+        if (!matches(simple_selector, element))
             return false;
     }
-    switch (component_list.relation) {
-    case CSS::Selector::ComplexSelector::Relation::None:
+    switch (relative_selector.combinator) {
+    case CSS::Selector::Combinator::None:
         return true;
-    case CSS::Selector::ComplexSelector::Relation::Descendant:
+    case CSS::Selector::Combinator::Descendant:
         VERIFY(component_list_index != 0);
         for (auto* ancestor = element.parent(); ancestor; ancestor = ancestor->parent()) {
             if (!is<DOM::Element>(*ancestor))
@@ -212,24 +212,24 @@ static bool matches(CSS::Selector const& selector, int component_list_index, DOM
                 return true;
         }
         return false;
-    case CSS::Selector::ComplexSelector::Relation::ImmediateChild:
+    case CSS::Selector::Combinator::ImmediateChild:
         VERIFY(component_list_index != 0);
         if (!element.parent() || !is<DOM::Element>(*element.parent()))
             return false;
         return matches(selector, component_list_index - 1, verify_cast<DOM::Element>(*element.parent()));
-    case CSS::Selector::ComplexSelector::Relation::AdjacentSibling:
+    case CSS::Selector::Combinator::NextSibling:
         VERIFY(component_list_index != 0);
         if (auto* sibling = element.previous_element_sibling())
             return matches(selector, component_list_index - 1, *sibling);
         return false;
-    case CSS::Selector::ComplexSelector::Relation::GeneralSibling:
+    case CSS::Selector::Combinator::SubsequentSibling:
         VERIFY(component_list_index != 0);
         for (auto* sibling = element.previous_element_sibling(); sibling; sibling = sibling->previous_element_sibling()) {
             if (matches(selector, component_list_index - 1, *sibling))
                 return true;
         }
         return false;
-    case CSS::Selector::ComplexSelector::Relation::Column:
+    case CSS::Selector::Combinator::Column:
         TODO();
     }
     VERIFY_NOT_REACHED();
@@ -237,8 +237,8 @@ static bool matches(CSS::Selector const& selector, int component_list_index, DOM
 
 bool matches(CSS::Selector const& selector, DOM::Element const& element)
 {
-    VERIFY(!selector.complex_selectors().is_empty());
-    return matches(selector, selector.complex_selectors().size() - 1, element);
+    VERIFY(!selector.compound_selectors().is_empty());
+    return matches(selector, selector.compound_selectors().size() - 1, element);
 }
 
 }
