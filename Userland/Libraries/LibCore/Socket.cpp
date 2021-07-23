@@ -63,15 +63,17 @@ bool Socket::connect(const String& hostname, int port)
     return connect(host_address, port);
 }
 
-void Socket::set_blocking(bool blocking)
+bool Socket::set_blocking(bool blocking)
 {
     int flags = fcntl(fd(), F_GETFL, 0);
     VERIFY(flags >= 0);
+    int result;
     if (blocking)
-        flags = fcntl(fd(), F_SETFL, flags & ~O_NONBLOCK);
+        result = fcntl(fd(), F_SETFL, flags & ~O_NONBLOCK);
     else
-        flags = fcntl(fd(), F_SETFL, flags | O_NONBLOCK);
-    VERIFY(flags == 0);
+        result = fcntl(fd(), F_SETFL, flags | O_NONBLOCK);
+    VERIFY(result == 0);
+    return !(flags & O_NONBLOCK);
 }
 
 bool Socket::connect(const SocketAddress& address, int port)

@@ -484,13 +484,13 @@ private:
         )~~~");
 
         endpoint_generator.append(R"~~~(
-template<typename LocalEndpoint, typename PeerEndpoint>
+template<typename LocalEndpoint, typename PeerEndpoint, typename ConnectionType = IPC::Connection<LocalEndpoint, PeerEndpoint>>
 class @endpoint.name@Proxy {
 public:
     // Used to disambiguate the constructor call.
     struct Tag { };
 
-    @endpoint.name@Proxy(IPC::Connection<LocalEndpoint, PeerEndpoint>& connection, Tag)
+    @endpoint.name@Proxy(ConnectionType& connection, Tag)
         : m_connection(connection)
     { }
 )~~~");
@@ -615,12 +615,12 @@ public:
 
         endpoint_generator.append(R"~~~(
 private:
-    IPC::Connection<LocalEndpoint, PeerEndpoint>& m_connection;
+    ConnectionType& m_connection;
 };
 )~~~");
 
         endpoint_generator.append(R"~~~(
-template<typename LocalEndpoint, typename PeerEndpoint>
+template<typename LocalEndpoint, typename PeerEndpoint, typename ConnectionType>
 class @endpoint.name@Proxy;
 class @endpoint.name@Stub;
 

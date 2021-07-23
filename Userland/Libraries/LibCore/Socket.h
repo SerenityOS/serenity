@@ -34,7 +34,7 @@ public:
     bool send(ReadonlyBytes);
 
     bool is_connected() const { return m_connected; }
-    void set_blocking(bool blocking);
+    bool set_blocking(bool blocking);
 
     SocketAddress source_address() const { return m_source_address; }
     int source_port() const { return m_source_port; }

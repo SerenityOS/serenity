@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/System.h>
 #include <LibIPC/Connection.h>
 #include <LibIPC/Stub.h>
 #include <sys/select.h>
 
 namespace IPC {
 
-ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullRefPtr<Core::LocalSocket> socket, u32 local_endpoint_magic)
+template<typename SocketType>
+ConnectionBase<SocketType>::ConnectionBase(IPC::Stub& local_stub, NonnullRefPtr<SocketType> socket, u32 local_endpoint_magic)
     : m_local_stub(local_stub)
     , m_socket(move(socket))
     , m_notifier(Core::Notifier::construct(m_socket->fd(), Core::Notifier::Read, this))
@@ -20,16 +20,19 @@ ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullRefPtr<Core::LocalS
     m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
 }
 
-ConnectionBase::~ConnectionBase()
+template<typename SocketType>
+ConnectionBase<SocketType>::~ConnectionBase()
 {
 }
 
-ErrorOr<void> ConnectionBase::post_message(Message const& message)
+template<typename SocketType>
+ErrorOr<void> ConnectionBase<SocketType>::post_message(Message const& message)
 {
     return post_message(message.encode());
 }
 
-ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
+template<typename SocketType>
+ErrorOr<void> ConnectionBase<SocketType>::post_message(MessageBuffer buffer)
 {
     // NOTE: If this connection is being shut down, but has not yet been destroyed,
     //       the socket will be closed. Don't try to send more messages.
@@ -40,21 +43,40 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
     uint32_t message_size = buffer.data.size();
     TRY(buffer.data.try_prepend(reinterpret_cast<const u8*>(&message_size), sizeof(message_size)));
 
-#ifdef __serenity__
     for (auto& fd : buffer.fds) {
-        if (auto result = Core::System::sendfd(m_socket->fd(), fd.value()); result.is_error()) {
-            dbgln("{}", result.error());
+        if (auto result = SocketConnectionSendFd<SocketType>::send_fd(m_socket->fd(), fd.value()); result.is_error()) {
             shutdown();
             return result;
         }
     }
-#else
-    if (!buffer.fds.is_empty())
-        warnln("fd passing is not supported on this platform, sorry :(");
-#endif
 
     size_t total_nwritten = 0;
     while (total_nwritten < buffer.data.size()) {
+        if (m_buffer_outgoing) {
+            auto available = m_send_buffer.capacity() - m_send_buffer.size();
+            if (available == 0) {
+                if (auto result = flush_send_buffer(); result.is_error())
+                    return result;
+                continue;
+            }
+            auto need = buffer.data.size() - total_nwritten;
+            auto write_bytes = min(need, available);
+            m_send_buffer.append(buffer.data.data() + total_nwritten, write_bytes);
+            total_nwritten += write_bytes;
+            if (need >= available) {
+                if (auto result = flush_send_buffer(); result.is_error())
+                    return result;
+                continue;
+            } else if (!buffer.fds.is_empty()) {
+                if (auto result = flush_send_buffer(); result.is_error())
+                    return result;
+            }
+            break;
+        } else if (!m_send_buffer.is_empty()) {
+            if (auto result = flush_send_buffer(); result.is_error())
+                return result;
+        }
+
         auto nwritten = write(m_socket->fd(), buffer.data.data() + total_nwritten, buffer.data.size() - total_nwritten);
         if (nwritten < 0) {
             switch (errno) {
@@ -69,6 +91,7 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
                 return Error::from_syscall("IPC::Connection::post_message write"sv, -errno);
             }
         }
+        m_bytes_sent += (size_t)nwritten;
         total_nwritten += nwritten;
     }
 
@@ -76,14 +99,18 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
     return {};
 }
 
-void ConnectionBase::shutdown()
+template<typename SocketType>
+void ConnectionBase<SocketType>::shutdown()
 {
     m_notifier->close();
     m_socket->close();
+    if (on_disconnect)
+        on_disconnect();
     die();
 }
 
-void ConnectionBase::handle_messages()
+template<typename SocketType>
+void ConnectionBase<SocketType>::handle_messages()
 {
     auto messages = move(m_unprocessed_messages);
     for (auto& message : messages) {
@@ -95,14 +122,21 @@ void ConnectionBase::handle_messages()
             }
         }
     }
+    notify_if_idle();
 }
 
-void ConnectionBase::wait_for_socket_to_become_readable()
+template<typename SocketType>
+void ConnectionBase<SocketType>::wait_for_socket_to_become_readable()
 {
     fd_set read_fds;
     FD_ZERO(&read_fds);
     FD_SET(m_socket->fd(), &read_fds);
     for (;;) {
+        if (!m_send_buffer.is_empty()) {
+            if (auto result = flush_send_buffer(); result.is_error())
+                break;
+        }
+
         if (auto rc = select(m_socket->fd() + 1, &read_fds, nullptr, nullptr, nullptr); rc < 0) {
             if (errno == EINTR)
                 continue;
@@ -116,15 +150,9 @@ void ConnectionBase::wait_for_socket_to_become_readable()
     }
 }
 
-ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without_blocking()
+template<typename SocketType>
+ErrorOr<void> ConnectionBase<SocketType>::drain_messages_from_peer()
 {
-    Vector<u8> bytes;
-
-    if (!m_unprocessed_bytes.is_empty()) {
-        bytes.append(m_unprocessed_bytes.data(), m_unprocessed_bytes.size());
-        m_unprocessed_bytes.clear();
-    }
-
     while (m_socket->is_open()) {
         u8 buffer[4096];
         ssize_t nread = recv(m_socket->fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
@@ -135,53 +163,27 @@ ErrorOr<Vector<u8>> ConnectionBase::read_as_much_as_possible_from_socket_without
             exit(1);
         }
         if (nread == 0) {
-            if (bytes.is_empty()) {
+            if (!has_partial_pending_message()) {
                 deferred_invoke([this] { shutdown(); });
                 return Error::from_string_literal("IPC connection EOF"sv);
             }
             break;
         }
-        bytes.append(buffer, nread);
+        m_bytes_received += (size_t)nread;
+        try_parse_messages(ReadonlyBytes { buffer, (size_t)nread });
     }
 
-    if (!bytes.is_empty()) {
+    if (has_partial_pending_message()) {
         m_responsiveness_timer->stop();
         did_become_responsive();
-    }
-
-    return bytes;
-}
-
-ErrorOr<void> ConnectionBase::drain_messages_from_peer()
-{
-    auto bytes = TRY(read_as_much_as_possible_from_socket_without_blocking());
-
-    size_t index = 0;
-    try_parse_messages(bytes, index);
-
-    if (index < bytes.size()) {
-        // Sometimes we might receive a partial message. That's okay, just stash away
-        // the unprocessed bytes and we'll prepend them to the next incoming message
-        // in the next run of this function.
-        auto maybe_remaining_bytes = ByteBuffer::copy(bytes.span().slice(index));
-        if (!maybe_remaining_bytes.has_value())
-            return Error::from_string_literal("drain_messages_from_peer: Failed to allocate buffer"sv);
-        if (!m_unprocessed_bytes.is_empty()) {
-            shutdown();
-            return Error::from_string_literal("drain_messages_from_peer: Already have unprocessed bytes"sv);
-        }
-        m_unprocessed_bytes = maybe_remaining_bytes.release_value();
-    }
-
-    if (!m_unprocessed_messages.is_empty()) {
-        deferred_invoke([this] {
-            handle_messages();
-        });
+    } else {
+        notify_if_idle();
     }
     return {};
 }
 
-OwnPtr<IPC::Message> ConnectionBase::wait_for_specific_endpoint_message_impl(u32 endpoint_magic, int message_id)
+template<typename SocketType>
+OwnPtr<IPC::Message> ConnectionBase<SocketType>::wait_for_specific_endpoint_message_impl(u32 endpoint_magic, int message_id)
 {
     for (;;) {
         // Double check we don't already have the event waiting for us.
@@ -203,5 +205,86 @@ OwnPtr<IPC::Message> ConnectionBase::wait_for_specific_endpoint_message_impl(u32
     }
     return {};
 }
+
+template<typename SocketType>
+void ConnectionBase<SocketType>::handle_raw_message(NonnullOwnPtr<IPC::Message>&& message, ReadonlyBytes const& bytes, bool is_peer)
+{
+    if (on_handle_raw_message && !on_handle_raw_message(is_peer, bytes))
+        return;
+    bool was_empty = m_unprocessed_messages.is_empty();
+    m_unprocessed_messages.append(move(message));
+    if (was_empty) {
+        deferred_invoke([this]() {
+            handle_messages();
+        });
+    }
+}
+
+template<typename SocketType>
+void ConnectionBase<SocketType>::notify_if_idle()
+{
+    if (!m_unprocessed_messages.is_empty() || !m_unprocessed_bytes.is_empty())
+        return;
+    if (on_idle)
+        on_idle();
+}
+
+template<typename SocketType>
+ErrorOr<void> ConnectionBase<SocketType>::flush_send_buffer()
+{
+    if (m_send_buffer.is_empty())
+        return {};
+
+    bool was_blocking = socket().set_blocking(true);
+    size_t total_nwritten = 0;
+    while (total_nwritten < m_send_buffer.size()) {
+        auto nwritten = write(m_socket->fd(), m_send_buffer.data() + total_nwritten, m_send_buffer.size() - total_nwritten);
+        if (nwritten < 0) {
+            switch (errno) {
+            case EPIPE:
+                dbgln("Connection {:p} flush_send_buffer: Disconnected from peer", this);
+                shutdown();
+                return Error::from_string_literal("Disconnected from peer"sv);
+            case EAGAIN:
+                dbgln("Connection {:p} flush_send_buffer: Peer buffer overflowed", this);
+                shutdown();
+                return Error::from_string_literal("Peer buffer overflowed"sv);
+            default:
+                perror("Connection::flush_send_buffer write");
+                shutdown();
+                return Error::from_string_literal("Write failed"sv);
+            }
+        }
+        m_bytes_sent += (size_t)nwritten;
+        total_nwritten += (size_t)nwritten;
+    }
+    if (!was_blocking)
+        socket().set_blocking(false);
+
+    if (m_buffer_outgoing)
+        m_send_buffer.clear_with_capacity();
+    else
+        m_send_buffer.clear();
+    return {};
+}
+
+template<typename SocketType>
+void ConnectionBase<SocketType>::enable_send_buffer(size_t size)
+{
+    VERIFY(size > 0);
+    m_buffer_outgoing = true;
+    m_send_buffer.ensure_capacity(size);
+}
+
+template<typename SocketType>
+void ConnectionBase<SocketType>::disable_send_buffer()
+{
+    m_buffer_outgoing = false;
+    if (auto result = flush_send_buffer(); result.is_error())
+        dbgln("Disabling send buffer failed: {}", result.error());
+}
+
+template class ConnectionBase<Core::LocalSocket>;
+template class ConnectionBase<Core::TCPSocket>;
 
 }
