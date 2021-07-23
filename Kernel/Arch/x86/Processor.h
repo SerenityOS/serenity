@@ -30,6 +30,10 @@ struct ProcessorMessage;
 struct ProcessorMessageEntry;
 
 #if ARCH(X86_64)
+#    define MSR_EFER 0xc0000080
+#    define MSR_STAR 0xc0000081
+#    define MSR_LSTAR 0xc0000082
+#    define MSR_SFMASK 0xc0000084
 #    define MSR_FS_BASE 0xc0000100
 #    define MSR_GS_BASE 0xc0000101
 #endif
@@ -57,6 +61,11 @@ class Processor {
     AK_MAKE_NONMOVABLE(Processor);
 
     Processor* m_self;
+
+#if ARCH(X86_64)
+    // Saved user stack for the syscall instruction.
+    void* m_user_stack;
+#endif
 
     DescriptorTablePointer m_gdtr;
     Descriptor m_gdt[256];
@@ -204,6 +213,17 @@ public:
     u64 time_spent_idle() const;
 
     static bool is_smp_enabled();
+
+#if ARCH(X86_64)
+    static constexpr u64 user_stack_offset()
+    {
+        return __builtin_offsetof(Processor, m_user_stack);
+    }
+    static constexpr u64 kernel_stack_offset()
+    {
+        return __builtin_offsetof(Processor, m_tss) + __builtin_offsetof(TSS, rsp0l);
+    }
+#endif
 
     ALWAYS_INLINE static Processor& current()
     {
