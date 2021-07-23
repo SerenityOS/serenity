@@ -45,6 +45,13 @@ struct FlexBasisData {
     CSS::Length length {};
 };
 
+struct BoxShadowData {
+    CSS::Length offset_x {};
+    CSS::Length offset_y {};
+    CSS::Length blur_radius {};
+    Color color {};
+};
+
 class ComputedValues {
 public:
     CSS::Float float_() const { return m_noninherited.float_; }
@@ -64,6 +71,7 @@ public:
     Optional<float> flex_shrink_factor() const { return m_noninherited.flex_shrink_factor; }
     Optional<float> opacity() const { return m_noninherited.opacity; }
     CSS::JustifyContent justify_content() const { return m_noninherited.justify_content; }
+    Optional<BoxShadowData> box_shadow() const { return m_noninherited.box_shadow; }
     const CSS::Length& width() const { return m_noninherited.width; }
     const CSS::Length& min_width() const { return m_noninherited.min_width; }
     const CSS::Length& max_width() const { return m_noninherited.max_width; }
@@ -148,6 +156,7 @@ protected:
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
         Optional<float> opacity;
+        Optional<BoxShadowData> box_shadow {};
     } m_noninherited;
 };
 
@@ -197,6 +206,7 @@ public:
     void set_flex_shrink_factor(Optional<float> value) { m_noninherited.flex_shrink_factor = value; }
     void set_opacity(Optional<float> value) { m_noninherited.opacity = value; }
     void set_justify_content(CSS::JustifyContent value) { m_noninherited.justify_content = value; }
+    void set_box_shadow(Optional<BoxShadowData> value) { m_noninherited.box_shadow = move(value); }
 };
 
 }
