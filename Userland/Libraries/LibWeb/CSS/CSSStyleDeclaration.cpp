@@ -32,6 +32,12 @@ ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element&
 {
 }
 
+ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element& element, CSSStyleDeclaration& declaration)
+    : CSSStyleDeclaration(move(declaration.m_properties), move(declaration.m_custom_properties))
+    , m_element(element.make_weak_ptr<DOM::Element>())
+{
+}
+
 ElementInlineCSSStyleDeclaration::~ElementInlineCSSStyleDeclaration()
 {
 }
