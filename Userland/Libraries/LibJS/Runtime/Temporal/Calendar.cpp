@@ -453,4 +453,19 @@ i32 iso_year(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
+// 12.1.42 ISOMonth ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isomonth
+u8 iso_month(Object& temporal_object)
+{
+    // 1. Assert: temporalObject has an [[ISOMonth]] internal slot.
+    // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
+
+    // 2. Return 𝔽(temporalObject.[[ISOMonth]]).
+    // TODO: add the rest of the builtins with a [[ISOMonth]] slot (PlainYearMonth, PlainMonthDay)
+    if (is<PlainDate>(temporal_object))
+        return static_cast<PlainDate&>(temporal_object).iso_month();
+    if (is<PlainDateTime>(temporal_object))
+        return static_cast<PlainDateTime&>(temporal_object).iso_month();
+    VERIFY_NOT_REACHED();
+}
+
 }
