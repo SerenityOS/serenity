@@ -42,23 +42,25 @@ void Game::setup(Mode mode)
     for (auto& stack : m_stacks)
         stack.clear();
 
-    m_new_deck.clear();
     m_new_game_animation_pile = 0;
 
     m_score = 500;
     update_score(0);
 
+    NonnullRefPtrVector<Card> deck;
+    deck.ensure_capacity(Card::card_count * 2);
+
     for (int i = 0; i < Card::card_count; ++i) {
         switch (m_mode) {
         case Mode::SingleSuit:
             for (int j = 0; j < 8; j++) {
-                m_new_deck.append(Card::construct(Card::Type::Spades, i));
+                deck.append(Card::construct(Card::Type::Spades, i));
             }
             break;
         case Mode::TwoSuit:
             for (int j = 0; j < 4; j++) {
-                m_new_deck.append(Card::construct(Card::Type::Spades, i));
-                m_new_deck.append(Card::construct(Card::Type::Hearts, i));
+                deck.append(Card::construct(Card::Type::Spades, i));
+                deck.append(Card::construct(Card::Type::Hearts, i));
             }
             break;
         default:
@@ -67,9 +69,10 @@ void Game::setup(Mode mode)
         }
     }
 
-    for (int x = 0; x < 3; x++)
-        for (uint8_t i = 0; i < Card::card_count * 8; ++i)
-            m_new_deck.append(m_new_deck.take(rand() % m_new_deck.size()));
+    m_new_deck.clear_with_capacity();
+    m_new_deck.ensure_capacity(deck.size());
+    while (!deck.is_empty())
+        m_new_deck.append(deck.take(rand() % deck.size()));
 
     m_new_game_animation = true;
     start_timer(s_timer_interval_ms);
