@@ -10,13 +10,13 @@
 #include "ScoreCard.h"
 #include <AK/Debug.h>
 #include <AK/QuickSort.h>
+#include <AK/Random.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
-#include <time.h>
 
 REGISTER_WIDGET(Hearts, Game);
 
@@ -24,8 +24,6 @@ namespace Hearts {
 
 Game::Game()
 {
-    srand(time(nullptr));
-
     m_delay_timer = Core::Timer::create_single_shot(0, [this] {
         dbgln_if(HEARTS_DEBUG, "Continuing game after delay...");
         advance_game();
@@ -215,7 +213,7 @@ void Game::setup(String player_name, int hand_number)
 
     for (auto& player : m_players) {
         for (uint8_t i = 0; i < Card::card_count; ++i) {
-            auto card = deck.take(rand() % deck.size());
+            auto card = deck.take(get_random_uniform(deck.size()));
             if constexpr (!HEARTS_DEBUG) {
                 if (&player != &m_players[0])
                     card->set_upside_down(true);
