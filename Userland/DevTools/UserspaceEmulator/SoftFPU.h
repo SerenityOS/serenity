@@ -48,7 +48,7 @@ public:
     ALWAYS_INLINE void set_c2(bool val) { m_fpu_c2 = val; }
     ALWAYS_INLINE void set_c3(bool val) { m_fpu_c3 = val; }
 
-    long double fpu_get(u8 index) const;
+    long double fpu_get(u8 index);
 
     void fpu_push(long double value);
     long double fpu_pop();
@@ -246,7 +246,7 @@ private:
         set_tag_from_value_absolute((m_fpu_stack_top + index) % 8, val);
     }
 
-    ALWAYS_INLINE bool fpu_isnan(u8 index) const
+    ALWAYS_INLINE bool fpu_isnan(u8 index)
     {
         return isnan(fpu_get(index));
     }
@@ -279,7 +279,6 @@ private:
     }
     void warn_if_mmx_absolute(u8 index) const;
     void warn_if_fpu_absolute(u8 index) const;
-    void warn_if_fpu_not_set_absolute(u8 index) const;
 
     void mmx_common() { m_fpu_tw = 0; }
 

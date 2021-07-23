@@ -267,7 +267,7 @@ public:
     ValueWithShadow<u8> dl() const { return const_gpr8(X86::RegisterDL); }
     ValueWithShadow<u8> dh() const { return const_gpr8(X86::RegisterDH); }
 
-    long double fpu_get(u8 index) const { return m_fpu.fpu_get(index); }
+    long double fpu_get(u8 index) { return m_fpu.fpu_get(index); }
     long double fpu_pop() { return m_fpu.fpu_pop(); }
     MMX mmx_get(u8 index) const { return m_fpu.mmx_get(index); };
 
