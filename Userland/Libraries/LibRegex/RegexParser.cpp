@@ -1877,6 +1877,28 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
 {
     consume(TokenType::LeftParen, Error::InvalidPattern);
 
+    auto enter_capture_group_scope = [&] {
+        m_capture_groups_in_scope.empend();
+    };
+    auto exit_capture_group_scope = [&] {
+        auto last = m_capture_groups_in_scope.take_last();
+        m_capture_groups_in_scope.last().extend(move(last));
+    };
+    auto register_capture_group_in_current_scope = [&](auto identifier) {
+        m_capture_groups_in_scope.last().empend(identifier);
+    };
+    auto clear_all_capture_groups_in_scope = [&] {
+        for (auto& entry : m_capture_groups_in_scope.last()) {
+            entry.visit(
+                [&](size_t index) {
+                    stack.insert_bytecode_clear_capture_group(index);
+                },
+                [&](String const& name) {
+                    stack.insert_bytecode_clear_named_capture_group(name);
+                });
+        }
+    };
+
     if (match(TokenType::Questionmark)) {
         // Non-capturing group or group with specifier.
         consume();
@@ -1885,8 +1907,12 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
             consume();
             ByteCode noncapture_group_bytecode;
             size_t length = 0;
+
+            enter_capture_group_scope();
             if (!parse_disjunction(noncapture_group_bytecode, length, unicode, named))
                 return set_error(Error::InvalidPattern);
+            clear_all_capture_groups_in_scope();
+            exit_capture_group_scope();
 
             consume(TokenType::RightParen, Error::MismatchingParen);
 
@@ -1907,8 +1933,14 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
 
             ByteCode capture_group_bytecode;
             size_t length = 0;
+            enter_capture_group_scope();
             if (!parse_disjunction(capture_group_bytecode, length, unicode, named))
                 return set_error(Error::InvalidPattern);
+            clear_all_capture_groups_in_scope();
+            exit_capture_group_scope();
+
+            register_capture_group_in_current_scope(name);
+            register_capture_group_in_current_scope(group_index);
 
             consume(TokenType::RightParen, Error::MismatchingParen);
 
@@ -1930,7 +1962,7 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
     }
 
     auto group_index = ++m_parser_state.capture_groups_count;
-    stack.insert_bytecode_group_capture_left(group_index);
+    enter_capture_group_scope();
 
     ByteCode capture_group_bytecode;
     size_t length = 0;
@@ -1938,6 +1970,12 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
     if (!parse_disjunction(capture_group_bytecode, length, unicode, named))
         return set_error(Error::InvalidPattern);
 
+    clear_all_capture_groups_in_scope();
+    exit_capture_group_scope();
+
+    register_capture_group_in_current_scope(group_index);
+
+    stack.insert_bytecode_group_capture_left(group_index);
     stack.extend(move(capture_group_bytecode));
 
     m_parser_state.capture_group_minimum_lengths.set(group_index, length);
