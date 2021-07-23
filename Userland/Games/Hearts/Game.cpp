@@ -203,6 +203,7 @@ void Game::setup(String player_name, int hand_number)
     }
 
     NonnullRefPtrVector<Card> deck;
+    deck.ensure_capacity(Card::card_count * 4);
 
     for (int i = 0; i < Card::card_count; ++i) {
         deck.append(Card::construct(Card::Type::Clubs, i));
@@ -212,6 +213,7 @@ void Game::setup(String player_name, int hand_number)
     }
 
     for (auto& player : m_players) {
+        player.hand.ensure_capacity(Card::card_count);
         for (uint8_t i = 0; i < Card::card_count; ++i) {
             auto card = deck.take(get_random_uniform(deck.size()));
             if constexpr (!HEARTS_DEBUG) {
