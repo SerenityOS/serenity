@@ -27,6 +27,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(day);
     JS_DECLARE_NATIVE_FUNCTION(day_of_week);
     JS_DECLARE_NATIVE_FUNCTION(day_of_year);
+    JS_DECLARE_NATIVE_FUNCTION(week_of_year);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
     JS_DECLARE_NATIVE_FUNCTION(to_json);
 };
