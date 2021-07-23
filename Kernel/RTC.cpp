@@ -7,6 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/Time.h>
 #include <Kernel/CMOS.h>
+#include <Kernel/IO.h>
 #include <Kernel/RTC.h>
 
 namespace RTC {
@@ -35,8 +36,27 @@ static u8 bcd_to_binary(u8 bcd)
 
 void read_registers(unsigned& year, unsigned& month, unsigned& day, unsigned& hour, unsigned& minute, unsigned& second)
 {
-    while (update_in_progress())
-        ;
+    // Note: Let's wait 0.01 seconds until we stop trying to query the RTC CMOS
+    size_t time_passed_in_milliseconds = 0;
+    bool update_in_progress_ended_successfully = false;
+    while (time_passed_in_milliseconds < 100) {
+        if (!update_in_progress()) {
+            update_in_progress_ended_successfully = true;
+            break;
+        }
+        IO::delay(1000);
+        time_passed_in_milliseconds++;
+    }
+
+    if (!update_in_progress_ended_successfully) {
+        year = 1970;
+        month = 1;
+        day = 1;
+        hour = 0;
+        minute = 0;
+        second = 0;
+        return;
+    }
 
     u8 status_b = CMOS::read(0x0b);
 
