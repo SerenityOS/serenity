@@ -78,9 +78,9 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_add
     if (id.vendor_id == 0x80ee && id.device_id == 0xbeef)
         m_io_required = true;
 
-    // FIXME: Although this helps with setting the screen to work on some cases,
-    // we need to check we actually can access the VGA MMIO remapped ioports before
-    // doing the unblanking.
+    // Note: According to Gerd Hoffmann - "The linux driver simply does
+    // the unblank unconditionally. With bochs-display this is not needed but
+    // it also has no bad side effect".
     unblank();
     set_safe_resolution();
 }
