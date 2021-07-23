@@ -33,14 +33,14 @@ Region::Region(Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offs
     VERIFY(m_range.size());
     VERIFY((m_range.size() % PAGE_SIZE) == 0);
 
-    m_vmobject->ref_region();
+    m_vmobject->add_region(*this);
     register_purgeable_page_ranges();
     MM.register_region(*this);
 }
 
 Region::~Region()
 {
-    m_vmobject->unref_region();
+    m_vmobject->remove_region(*this);
     unregister_purgeable_page_ranges();
 
     // Make sure we disable interrupts so we don't get interrupted between unmapping and unregistering.
@@ -130,9 +130,9 @@ void Region::set_vmobject(NonnullRefPtr<VMObject>&& obj)
     if (m_vmobject.ptr() == obj.ptr())
         return;
     unregister_purgeable_page_ranges();
-    m_vmobject->unref_region();
+    m_vmobject->remove_region(*this);
     m_vmobject = move(obj);
-    m_vmobject->ref_region();
+    m_vmobject->add_region(*this);
     register_purgeable_page_ranges();
 }
 
@@ -255,6 +255,9 @@ bool Region::map_individual_page_impl(size_t page_index)
         PANIC("About to map mmap'ed page at a kernel address");
     }
 
+    // NOTE: We have to take the MM lock for PTE's to stay valid while we use them.
+    ScopedSpinLock mm_locker(s_mm_lock);
+
     auto* pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     if (!pte)
         return false;
@@ -279,7 +282,6 @@ bool Region::map_individual_page_impl(size_t page_index)
 bool Region::do_remap_vmobject_page_range(size_t page_index, size_t page_count)
 {
     bool success = true;
-    VERIFY(s_mm_lock.own_lock());
     if (!m_page_directory)
         return success; // not an error, region may have not yet mapped it
     if (!translate_vmobject_page_range(page_index, page_count))
@@ -301,7 +303,6 @@ bool Region::do_remap_vmobject_page_range(size_t page_index, size_t page_count)
 bool Region::remap_vmobject_page_range(size_t page_index, size_t page_count)
 {
     bool success = true;
-    ScopedSpinLock lock(s_mm_lock);
     auto& vmobject = this->vmobject();
     if (vmobject.is_shared_by_multiple_regions()) {
         vmobject.for_each_region([&](auto& region) {
@@ -317,7 +318,7 @@ bool Region::remap_vmobject_page_range(size_t page_index, size_t page_count)
 
 bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
 {
-    ScopedSpinLock lock(s_mm_lock);
+    ScopedSpinLock lock(vmobject().m_lock);
     if (!m_page_directory)
         return true; // not an error, region may have not yet mapped it
     if (!translate_vmobject_page(page_index))
@@ -333,8 +334,8 @@ bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
 bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
 {
     bool success = true;
-    ScopedSpinLock lock(s_mm_lock);
     auto& vmobject = this->vmobject();
+    ScopedSpinLock lock(vmobject.m_lock);
     if (vmobject.is_shared_by_multiple_regions()) {
         vmobject.for_each_region([&](auto& region) {
             if (!region.do_remap_vmobject_page(page_index, with_flush))
@@ -406,7 +407,7 @@ void Region::remap()
     map(*m_page_directory);
 }
 
-PageFaultResponse Region::handle_fault(PageFault const& fault, ScopedSpinLock<RecursiveSpinLock>& mm_lock)
+PageFaultResponse Region::handle_fault(PageFault const& fault)
 {
     auto page_index_in_region = page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
@@ -420,7 +421,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault, ScopedSpinLock<Re
         }
         if (vmobject().is_inode()) {
             dbgln_if(PAGE_FAULT_DEBUG, "NP(inode) fault in Region({})[{}]", this, page_index_in_region);
-            return handle_inode_fault(page_index_in_region, mm_lock);
+            return handle_inode_fault(page_index_in_region);
         }
 
         auto& page_slot = physical_page_slot(page_index_in_region);
@@ -440,7 +441,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault, ScopedSpinLock<Re
         auto* phys_page = physical_page(page_index_in_region);
         if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
             dbgln_if(PAGE_FAULT_DEBUG, "NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-            return handle_zero_fault(page_index_in_region, mm_lock);
+            return handle_zero_fault(page_index_in_region);
         }
         return handle_cow_fault(page_index_in_region);
     }
@@ -448,32 +449,15 @@ PageFaultResponse Region::handle_fault(PageFault const& fault, ScopedSpinLock<Re
     return PageFaultResponse::ShouldCrash;
 }
 
-PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, ScopedSpinLock<RecursiveSpinLock>& mm_lock)
+PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(vmobject().is_anonymous());
 
-    bool can_lock = Thread::current() && !g_scheduler_lock.own_lock();
-    if (can_lock) {
-        // TODO: This seems rather weird. If we don't have a current thread
-        // then we're in the Kernel in early initialization still. So we
-        // can't actually wait on the paging lock. And if we currently
-        // own the scheduler lock and we trigger zero faults, we also
-        // can't really wait. But do we actually need to wait here?
-        mm_lock.unlock();
-        VERIFY(!s_mm_lock.own_lock());
-
-        vmobject().m_paging_lock.lock();
-
-        mm_lock.lock();
-    }
-    ScopeGuard guard([&]() {
-        if (can_lock)
-            vmobject().m_paging_lock.unlock();
-    });
-
     auto& page_slot = physical_page_slot(page_index_in_region);
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
+
+    ScopedSpinLock locker(vmobject().m_lock);
 
     if (!page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page()) {
         dbgln_if(PAGE_FAULT_DEBUG, "MM: zero_page() but page already present. Fine with me!");
@@ -523,32 +507,20 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
     return response;
 }
 
-PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, ScopedSpinLock<RecursiveSpinLock>& mm_lock)
+PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(vmobject().is_inode());
-
-    mm_lock.unlock();
     VERIFY(!s_mm_lock.own_lock());
     VERIFY(!g_scheduler_lock.own_lock());
 
-    MutexLocker locker(vmobject().m_paging_lock);
-
-    mm_lock.lock();
-
-    VERIFY_INTERRUPTS_DISABLED();
     auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
+
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
     auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[page_index_in_vmobject];
+    VERIFY(vmobject_physical_page_entry.is_null());
 
     dbgln_if(PAGE_FAULT_DEBUG, "Inode fault in {} page index: {}", name(), page_index_in_region);
-
-    if (!vmobject_physical_page_entry.is_null()) {
-        dbgln_if(PAGE_FAULT_DEBUG, "MM: page_in_from_inode() but page already present. Fine with me!");
-        if (!remap_vmobject_page(page_index_in_vmobject))
-            return PageFaultResponse::OutOfMemory;
-        return PageFaultResponse::Continue;
-    }
 
     auto current_thread = Thread::current();
     if (current_thread)
@@ -557,29 +529,33 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, Scoped
     u8 page_buffer[PAGE_SIZE];
     auto& inode = inode_vmobject.inode();
 
-    // Reading the page may block, so release the MM lock temporarily
-    mm_lock.unlock();
-
-    KResultOr<size_t> result(KSuccess);
-    {
-        ScopedLockRelease release_paging_lock(vmobject().m_paging_lock);
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer);
-        result = inode.read_bytes(page_index_in_vmobject * PAGE_SIZE, PAGE_SIZE, buffer, nullptr);
-    }
-
-    mm_lock.lock();
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer);
+    auto result = inode.read_bytes(page_index_in_vmobject * PAGE_SIZE, PAGE_SIZE, buffer, nullptr);
 
     if (result.is_error()) {
-        dmesgln("MM: handle_inode_fault had error ({}) while reading!", result.error());
+        dmesgln("handle_inode_fault: Error ({}) while reading from inode", result.error());
         return PageFaultResponse::ShouldCrash;
     }
+
     auto nread = result.value();
     if (nread < PAGE_SIZE) {
         // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
         memset(page_buffer + nread, 0, PAGE_SIZE - nread);
     }
 
+    ScopedSpinLock locker(inode_vmobject.m_lock);
+
+    if (!vmobject_physical_page_entry.is_null()) {
+        // Someone else faulted in this page while we were reading from the inode.
+        // No harm done (other than some duplicate work), remap the page here and return.
+        dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else, remapping.");
+        if (!remap_vmobject_page(page_index_in_vmobject))
+            return PageFaultResponse::OutOfMemory;
+        return PageFaultResponse::Continue;
+    }
+
     vmobject_physical_page_entry = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
+
     if (vmobject_physical_page_entry.is_null()) {
         dmesgln("MM: handle_inode_fault was unable to allocate a physical page");
         return PageFaultResponse::OutOfMemory;

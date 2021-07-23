@@ -684,7 +684,6 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
 PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    ScopedSpinLock lock(s_mm_lock);
     if (Processor::current().in_irq()) {
         dbgln("CPU[{}] BUG! Page fault while handling IRQ! code={}, vaddr={}, irq level: {}",
             Processor::id(), fault.code(), fault.vaddr(), Processor::current().in_irq());
@@ -696,8 +695,7 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
     if (!region) {
         return PageFaultResponse::ShouldCrash;
     }
-
-    return region->handle_fault(fault, lock);
+    return region->handle_fault(fault);
 }
 
 OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
@@ -878,7 +876,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
         for_each_vmobject([&](auto& vmobject) {
             if (!vmobject.is_anonymous())
                 return IterationDecision::Continue;
-            int purged_page_count = static_cast<AnonymousVMObject&>(vmobject).purge_with_interrupts_disabled({});
+            int purged_page_count = static_cast<AnonymousVMObject&>(vmobject).purge();
             if (purged_page_count) {
                 dbgln("MM: Purge saved the day! Purged {} pages from AnonymousVMObject", purged_page_count);
                 page = find_free_user_physical_page(false);

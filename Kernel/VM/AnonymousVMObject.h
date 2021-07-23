@@ -36,7 +36,6 @@ public:
     void unregister_purgeable_page_ranges(PurgeablePageRanges&);
 
     int purge();
-    int purge_with_interrupts_disabled(Badge<MemoryManager>);
 
     bool is_any_volatile() const;
 
@@ -122,7 +121,6 @@ private:
 
     virtual StringView class_name() const override { return "AnonymousVMObject"sv; }
 
-    int purge_impl();
     void update_volatile_cache();
     void set_was_purged(VolatilePageRange const&);
     size_t remove_lazy_commit_pages(VolatilePageRange const&);

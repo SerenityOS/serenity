@@ -15,10 +15,10 @@
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/KString.h>
 #include <Kernel/Sections.h>
+#include <Kernel/UnixTypes.h>
 #include <Kernel/VM/PageFaultResponse.h>
 #include <Kernel/VM/PurgeablePageRanges.h>
 #include <Kernel/VM/RangeAllocator.h>
-#include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
 
@@ -88,7 +88,7 @@ public:
     bool is_user() const { return !is_kernel(); }
     bool is_kernel() const { return vaddr().get() < 0x00800000 || vaddr().get() >= kernel_base; }
 
-    PageFaultResponse handle_fault(PageFault const&, ScopedSpinLock<RecursiveSpinLock>&);
+    PageFaultResponse handle_fault(PageFault const&);
 
     OwnPtr<Region> clone(Process&);
 
@@ -165,17 +165,8 @@ public:
         return size() / PAGE_SIZE;
     }
 
-    PhysicalPage const* physical_page(size_t index) const
-    {
-        VERIFY(index < page_count());
-        return vmobject().physical_pages()[first_page_index() + index];
-    }
-
-    RefPtr<PhysicalPage>& physical_page_slot(size_t index)
-    {
-        VERIFY(index < page_count());
-        return vmobject().physical_pages()[first_page_index() + index];
-    }
+    PhysicalPage const* physical_page(size_t index) const;
+    RefPtr<PhysicalPage>& physical_page_slot(size_t index);
 
     size_t offset_in_vmobject() const
     {
@@ -242,8 +233,8 @@ private:
     bool remap_vmobject_page(size_t index, bool with_flush = true);
 
     PageFaultResponse handle_cow_fault(size_t page_index);
-    PageFaultResponse handle_inode_fault(size_t page_index, ScopedSpinLock<RecursiveSpinLock>&);
-    PageFaultResponse handle_zero_fault(size_t page_index, ScopedSpinLock<RecursiveSpinLock>&);
+    PageFaultResponse handle_inode_fault(size_t page_index);
+    PageFaultResponse handle_zero_fault(size_t page_index);
 
     bool map_individual_page_impl(size_t page_index);
 
@@ -262,10 +253,12 @@ private:
     bool m_mmap : 1 { false };
     bool m_syscall_region : 1 { false };
     WeakPtr<Process> m_owner;
-    IntrusiveListNode<Region> m_list_node;
+    IntrusiveListNode<Region> m_memory_manager_list_node;
+    IntrusiveListNode<Region> m_vmobject_list_node;
 
 public:
-    using List = IntrusiveList<Region, RawPtr<Region>, &Region::m_list_node>;
+    using ListInMemoryManager = IntrusiveList<Region, RawPtr<Region>, &Region::m_memory_manager_list_node>;
+    using ListInVMObject = IntrusiveList<Region, RawPtr<Region>, &Region::m_vmobject_list_node>;
 };
 
 AK_ENUM_BITWISE_OPERATORS(Region::Access)

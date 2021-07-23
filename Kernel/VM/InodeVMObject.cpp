@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/VM/InodeVMObject.h>
 
@@ -53,23 +52,20 @@ size_t InodeVMObject::amount_dirty() const
 
 int InodeVMObject::release_all_clean_pages()
 {
-    MutexLocker locker(m_paging_lock);
-    return release_all_clean_pages_impl();
-}
+    ScopedSpinLock locker(m_lock);
 
-int InodeVMObject::release_all_clean_pages_impl()
-{
     int count = 0;
-    InterruptDisabler disabler;
     for (size_t i = 0; i < page_count(); ++i) {
         if (!m_dirty_pages.get(i) && m_physical_pages[i]) {
             m_physical_pages[i] = nullptr;
             ++count;
         }
     }
-    for_each_region([](auto& region) {
-        region.remap();
-    });
+    if (count) {
+        for_each_region([](auto& region) {
+            region.remap();
+        });
+    }
     return count;
 }
 

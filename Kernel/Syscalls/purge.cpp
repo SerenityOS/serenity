@@ -24,7 +24,6 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
         NonnullRefPtrVector<AnonymousVMObject> vmobjects;
         {
             KResult result(KSuccess);
-            InterruptDisabler disabler;
             MM.for_each_vmobject([&](auto& vmobject) {
                 if (vmobject.is_anonymous()) {
                     // In the event that the append fails, only attempt to continue
@@ -48,7 +47,6 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
         NonnullRefPtrVector<InodeVMObject> vmobjects;
         {
             KResult result(KSuccess);
-            InterruptDisabler disabler;
             MM.for_each_vmobject([&](auto& vmobject) {
                 if (vmobject.is_inode()) {
                     // In the event that the append fails, only attempt to continue
