@@ -62,6 +62,14 @@
 #cmakedefine01 CSS_LOADER_DEBUG
 #endif
 
+#ifndef CSS_PARSER_DEBUG
+#cmakedefine01 CSS_PARSER_DEBUG
+#endif
+
+#ifndef CSS_TOKENIZER_DEBUG
+#cmakedefine01 CSS_TOKENIZER_DEBUG
+#endif
+
 #ifndef CURSOR_TOOL_DEBUG
 #cmakedefine01 CURSOR_TOOL_DEBUG
 #endif
