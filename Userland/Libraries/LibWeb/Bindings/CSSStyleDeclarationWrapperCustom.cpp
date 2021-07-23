@@ -11,6 +11,13 @@
 
 namespace Web::Bindings {
 
+bool CSSStyleDeclarationWrapper::internal_has_property(JS::PropertyName const& name) const
+{
+    // FIXME: These should actually use camelCase versions of the property names!
+    auto property_id = CSS::property_id_from_string(name.to_string());
+    return property_id != CSS::PropertyID::Invalid;
+}
+
 JS::Value CSSStyleDeclarationWrapper::internal_get(const JS::PropertyName& name, JS::Value receiver) const
 {
     // FIXME: These should actually use camelCase versions of the property names!

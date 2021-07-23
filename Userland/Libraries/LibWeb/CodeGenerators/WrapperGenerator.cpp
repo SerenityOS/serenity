@@ -813,6 +813,12 @@ public:
 )~~~");
     }
 
+    if (interface.extended_attributes.contains("CustomHasProperty")) {
+        generator.append(R"~~~(
+    virtual bool internal_has_property(JS::PropertyName const&) const override;
+)~~~");
+    }
+
     if (interface.wrapper_base_class == "Wrapper") {
         generator.append(R"~~~(
     @fully_qualified_name@& impl() { return *m_impl; }

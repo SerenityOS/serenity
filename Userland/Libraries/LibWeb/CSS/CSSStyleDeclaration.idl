@@ -1,4 +1,4 @@
-[CustomGet,CustomSet]
+[CustomGet,CustomSet,CustomHasProperty]
 interface CSSStyleDeclaration {
 
     readonly attribute unsigned long length;
