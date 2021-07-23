@@ -223,6 +223,16 @@ Value calendar_day_of_year(GlobalObject& global_object, Object& calendar, Object
     return calendar.invoke(vm.names.dayOfYear, &date_like);
 }
 
+// 12.1.15 CalendarWeekOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarweekofyear
+Value calendar_week_of_year(GlobalObject& global_object, Object& calendar, Object& date_like)
+{
+    auto& vm = global_object.vm();
+    // 1. Assert: Type(calendar) is Object.
+
+    // 2. Return ? Invoke(calendar, "weekOfYear", « dateLike »).
+    return calendar.invoke(vm.names.weekOfYear, &date_like);
+}
+
 // 12.1.21 ToTemporalCalendar ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendar
 Object* to_temporal_calendar(GlobalObject& global_object, Value temporal_calendar_like)
 {
