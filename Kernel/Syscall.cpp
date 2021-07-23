@@ -196,13 +196,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 
     static constexpr FlatPtr iopl_mask = 3u << 12;
 
-    FlatPtr flags;
-#if ARCH(I386)
-    flags = regs.eflags;
-#else
-    flags = regs.rflags;
-#endif
-
+    FlatPtr flags = regs.flags();
     if ((flags & (iopl_mask)) != 0) {
         PANIC("Syscall from process with IOPL != 0");
     }
