@@ -25,6 +25,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(month_code_getter);
     JS_DECLARE_NATIVE_FUNCTION(day_getter);
     JS_DECLARE_NATIVE_FUNCTION(day_of_week_getter);
+    JS_DECLARE_NATIVE_FUNCTION(day_of_year_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(with_calendar);
     JS_DECLARE_NATIVE_FUNCTION(equals);
