@@ -32,6 +32,8 @@ StackingContext::StackingContext(Box& box, StackingContext* parent)
 void StackingContext::paint_descendants(PaintContext& context, Node& box, StackingContextPaintPhase phase)
 {
     box.for_each_child([&](auto& child) {
+        if (child.establishes_stacking_context())
+            return;
         switch (phase) {
         case StackingContextPaintPhase::BackgroundAndBorders:
             if (!child.is_floating() && !child.is_positioned()) {
