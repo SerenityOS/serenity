@@ -265,6 +265,7 @@ namespace JS {
     P(month)                                 \
     P(monthCode)                             \
     P(months)                                \
+    P(monthsInYear)                          \
     P(multiline)                             \
     P(name)                                  \
     P(nanoseconds)                           \
