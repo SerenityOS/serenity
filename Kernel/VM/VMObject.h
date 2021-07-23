@@ -15,6 +15,7 @@
 #include <AK/Weakable.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Mutex.h>
+#include <Kernel/VM/Region.h>
 
 namespace Kernel {
 
@@ -48,8 +49,20 @@ public:
 
     virtual StringView class_name() const = 0;
 
-    ALWAYS_INLINE void ref_region() { m_regions_count++; }
-    ALWAYS_INLINE void unref_region() { m_regions_count--; }
+    ALWAYS_INLINE void add_region(Region& region)
+    {
+        ScopedSpinLock locker(m_lock);
+        m_regions_count++;
+        m_regions.append(region);
+    }
+
+    ALWAYS_INLINE void remove_region(Region& region)
+    {
+        ScopedSpinLock locker(m_lock);
+        m_regions_count--;
+        m_regions.remove(region);
+    }
+
     ALWAYS_INLINE bool is_shared_by_multiple_regions() const { return m_regions_count > 1; }
 
     void register_on_deleted_handler(VMObjectDeletedHandler& handler)
@@ -70,9 +83,8 @@ protected:
 
     IntrusiveListNode<VMObject> m_list_node;
     FixedArray<RefPtr<PhysicalPage>> m_physical_pages;
-    Mutex m_paging_lock { "VMObject" };
 
-    mutable SpinLock<u8> m_lock;
+    mutable RecursiveSpinLock m_lock;
 
 private:
     VMObject& operator=(VMObject const&) = delete;
@@ -83,8 +95,31 @@ private:
     HashTable<VMObjectDeletedHandler*> m_on_deleted;
     SpinLock<u8> m_on_deleted_lock;
 
+    Region::ListInVMObject m_regions;
+
 public:
     using List = IntrusiveList<VMObject, RawPtr<VMObject>, &VMObject::m_list_node>;
 };
+
+template<typename Callback>
+inline void VMObject::for_each_region(Callback callback)
+{
+    ScopedSpinLock lock(m_lock);
+    for (auto& region : m_regions) {
+        callback(region);
+    }
+}
+
+inline PhysicalPage const* Region::physical_page(size_t index) const
+{
+    VERIFY(index < page_count());
+    return vmobject().physical_pages()[first_page_index() + index];
+}
+
+inline RefPtr<PhysicalPage>& Region::physical_page_slot(size_t index)
+{
+    VERIFY(index < page_count());
+    return vmobject().physical_pages()[first_page_index() + index];
+}
 
 }

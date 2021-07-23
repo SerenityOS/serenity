@@ -175,6 +175,7 @@ public:
     template<IteratorFunction<VMObject&> Callback>
     static void for_each_vmobject(Callback callback)
     {
+        ScopedSpinLock locker(s_mm_lock);
         for (auto& vmobject : MM.m_vmobjects) {
             if (callback(vmobject) == IterationDecision::Break)
                 break;
@@ -255,30 +256,14 @@ private:
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };
 
-    Region::List m_user_regions;
-    Region::List m_kernel_regions;
+    Region::ListInMemoryManager m_user_regions;
+    Region::ListInMemoryManager m_kernel_regions;
     Vector<UsedMemoryRange> m_used_memory_ranges;
     Vector<PhysicalMemoryRange> m_physical_memory_ranges;
     Vector<ContiguousReservedMemoryRange> m_reserved_memory_ranges;
 
     VMObject::List m_vmobjects;
 };
-
-template<typename Callback>
-void VMObject::for_each_region(Callback callback)
-{
-    ScopedSpinLock lock(s_mm_lock);
-    // FIXME: Figure out a better data structure so we don't have to walk every single region every time an inode changes.
-    //        Perhaps VMObject could have a Vector<Region*> with all of his mappers?
-    for (auto& region : MM.m_user_regions) {
-        if (&region.vmobject() == this)
-            callback(region);
-    }
-    for (auto& region : MM.m_kernel_regions) {
-        if (&region.vmobject() == this)
-            callback(region);
-    }
-}
 
 inline bool is_user_address(VirtualAddress vaddr)
 {

@@ -154,27 +154,6 @@ AnonymousVMObject::~AnonymousVMObject()
 
 int AnonymousVMObject::purge()
 {
-    MutexLocker locker(m_paging_lock);
-    return purge_impl();
-}
-
-int AnonymousVMObject::purge_with_interrupts_disabled(Badge<MemoryManager>)
-{
-    VERIFY_INTERRUPTS_DISABLED();
-    if (m_paging_lock.is_locked())
-        return 0;
-    return purge_impl();
-}
-
-void AnonymousVMObject::set_was_purged(VolatilePageRange const& range)
-{
-    VERIFY(m_lock.is_locked());
-    for (auto* purgeable_ranges : m_purgeable_ranges)
-        purgeable_ranges->set_was_purged(range);
-}
-
-int AnonymousVMObject::purge_impl()
-{
     int purged_page_count = 0;
     ScopedSpinLock lock(m_lock);
     for_each_volatile_range([&](auto const& range) {
@@ -193,28 +172,33 @@ int AnonymousVMObject::purge_impl()
             purged_page_count += purged_in_range;
             set_was_purged(range);
             for_each_region([&](auto& region) {
-                if (&region.vmobject() == this) {
-                    if (auto owner = region.get_owner()) {
-                        // we need to hold a reference the process here (if there is one) as we may not own this region
-                        dmesgln("Purged {} pages from region {} owned by {} at {} - {}",
-                            purged_in_range,
-                            region.name(),
-                            *owner,
-                            region.vaddr_from_page_index(range.base),
-                            region.vaddr_from_page_index(range.base + range.count));
-                    } else {
-                        dmesgln("Purged {} pages from region {} (no ownership) at {} - {}",
-                            purged_in_range,
-                            region.name(),
-                            region.vaddr_from_page_index(range.base),
-                            region.vaddr_from_page_index(range.base + range.count));
-                    }
-                    region.remap_vmobject_page_range(range.base, range.count);
+                if (auto owner = region.get_owner()) {
+                    // we need to hold a reference the process here (if there is one) as we may not own this region
+                    dmesgln("Purged {} pages from region {} owned by {} at {} - {}",
+                        purged_in_range,
+                        region.name(),
+                        *owner,
+                        region.vaddr_from_page_index(range.base),
+                        region.vaddr_from_page_index(range.base + range.count));
+                } else {
+                    dmesgln("Purged {} pages from region {} (no ownership) at {} - {}",
+                        purged_in_range,
+                        region.name(),
+                        region.vaddr_from_page_index(range.base),
+                        region.vaddr_from_page_index(range.base + range.count));
                 }
+                region.remap_vmobject_page_range(range.base, range.count);
             });
         }
     });
     return purged_page_count;
+}
+
+void AnonymousVMObject::set_was_purged(VolatilePageRange const& range)
+{
+    VERIFY(m_lock.is_locked());
+    for (auto* purgeable_ranges : m_purgeable_ranges)
+        purgeable_ranges->set_was_purged(range);
 }
 
 void AnonymousVMObject::register_purgeable_page_ranges(PurgeablePageRanges& purgeable_page_ranges)

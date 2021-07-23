@@ -37,8 +37,6 @@ protected:
 
     virtual bool is_inode() const final { return true; }
 
-    int release_all_clean_pages_impl();
-
     NonnullRefPtr<Inode> m_inode;
     Bitmap m_dirty_pages;
 };
