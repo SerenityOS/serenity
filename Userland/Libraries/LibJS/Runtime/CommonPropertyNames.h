@@ -382,6 +382,7 @@ namespace JS {
     P(valueOf)                               \
     P(values)                                \
     P(warn)                                  \
+    P(weekOfYear)                            \
     P(weeks)                                 \
     P(with)                                  \
     P(withCalendar)                          \

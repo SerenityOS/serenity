@@ -382,6 +382,21 @@ bool is_iso_leap_year(i32 year)
     return true;
 }
 
+// 12.1.31 ISODaysInYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinyear
+u16 iso_days_in_year(i32 year)
+{
+    // 1. Assert: year is an integer.
+
+    // 2. If ! IsISOLeapYear(year) is true, then
+    if (is_iso_leap_year(year)) {
+        // a. Return 366.
+        return 366;
+    }
+
+    // 3. Return 365.
+    return 365;
+}
+
 // 12.1.32 ISODaysInMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth
 i32 iso_days_in_month(i32 year, i32 month)
 {
@@ -439,6 +454,34 @@ u16 to_iso_day_of_year(i32 year, u8 month, u8 day)
     for (u8 i = month - 1; i > 0; --i)
         days += iso_days_in_month(year, i);
     return days;
+}
+
+// 12.1.35 ToISOWeekOfYear ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisoweekofyear
+u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
+{
+    // 1. Assert: year is an integer.
+    // 2. Assert: month is an integer.
+    // 3. Assert: day is an integer.
+
+    // 4. Let date be the date given by year, month, and day.
+    // 5. Return date's week number according to ISO-8601.
+    auto day_of_year = to_iso_day_of_year(year, month, day);
+    auto day_of_week = to_iso_day_of_week(year, month, day);
+    auto week = (day_of_year - day_of_week + 10) / 7;
+
+    if (week < 1) {
+        auto day_of_jump = to_iso_day_of_week(year, 1, 1);
+        if (day_of_jump == 5 || (is_iso_leap_year(year) && day_of_jump == 6))
+            return 53;
+        else
+            return 52;
+    } else if (week == 53) {
+        auto days_in_year = iso_days_in_year(year);
+        if (days_in_year - day_of_year < 4 - day_of_week)
+            return 1;
+    }
+
+    return week;
 }
 
 // 12.1.36 BuildISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-buildisomonthcode
