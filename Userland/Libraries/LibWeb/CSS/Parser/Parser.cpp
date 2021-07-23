@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
@@ -21,11 +22,9 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 
-#define CSS_PARSER_TRACE 1
-
 static void log_parse_error(const SourceLocation& location = SourceLocation::current())
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parse error (CSS) {}", location);
+    dbgln_if(CSS_PARSER_DEBUG, "Parse error (CSS) {}", location);
 }
 
 namespace Web::CSS {
@@ -160,7 +159,7 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet()
 template<typename T>
 NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_as_stylesheet");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_stylesheet");
 
     auto parser_rules = consume_a_list_of_rules(tokens, true);
     NonnullRefPtrVector<CSSRule> rules;
@@ -184,7 +183,7 @@ NonnullRefPtrVector<Selector> Parser::parse_a_selector()
 template<typename T>
 NonnullRefPtrVector<Selector> Parser::parse_a_selector(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_a_selector");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_a_selector");
 
     auto comma_separated_lists = parse_as_comma_separated_list_of_component_values(tokens);
     NonnullRefPtrVector<Selector> selectors;
@@ -207,7 +206,7 @@ NonnullRefPtrVector<Selector> Parser::parse_a_relative_selector()
 template<typename T>
 NonnullRefPtrVector<Selector> Parser::parse_a_relative_selector(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_a_relative_selector");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_a_relative_selector");
 
     auto comma_separated_lists = parse_as_comma_separated_list_of_component_values(tokens);
 
@@ -226,7 +225,7 @@ NonnullRefPtrVector<Selector> Parser::parse_a_relative_selector(TokenStream<T>& 
 template<typename T>
 RefPtr<Selector> Parser::parse_single_selector(TokenStream<T>& tokens, bool is_relative)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_single_selector");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_single_selector");
 
     // FIXME: Bring this all in line with the spec. https://www.w3.org/TR/selectors-4/
 
@@ -572,7 +571,7 @@ NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(bool top_level)
 template<typename T>
 NonnullRefPtrVector<StyleRule> Parser::consume_a_list_of_rules(TokenStream<T>& tokens, bool top_level)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::consume_a_list_of_rules");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::consume_a_list_of_rules");
 
     NonnullRefPtrVector<StyleRule> rules;
 
@@ -625,7 +624,7 @@ NonnullRefPtr<StyleRule> Parser::consume_an_at_rule()
 template<typename T>
 NonnullRefPtr<StyleRule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::consume_an_at_rule");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::consume_an_at_rule");
 
     auto& name_ident = tokens.next_token();
     VERIFY(name_ident.is(Token::Type::AtKeyword));
@@ -665,7 +664,7 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule()
 template<typename T>
 RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::consume_a_qualified_rule");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::consume_a_qualified_rule");
 
     NonnullRefPtr<StyleRule> rule = create<StyleRule>(StyleRule::Type::Qualified);
 
@@ -695,7 +694,7 @@ RefPtr<StyleRule> Parser::consume_a_qualified_rule(TokenStream<T>& tokens)
 template<>
 StyleComponentValueRule Parser::consume_a_component_value(TokenStream<StyleComponentValueRule>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::consume_a_component_value - shortcut: '{}'", tokens.peek_token().to_debug_string());
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::consume_a_component_value - shortcut: '{}'", tokens.peek_token().to_debug_string());
 
     return tokens.next_token();
 }
@@ -703,7 +702,7 @@ StyleComponentValueRule Parser::consume_a_component_value(TokenStream<StyleCompo
 template<typename T>
 StyleComponentValueRule Parser::consume_a_component_value(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::consume_a_component_value");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::consume_a_component_value");
 
     auto& token = tokens.next_token();
 
@@ -729,7 +728,7 @@ NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block()
 template<typename T>
 NonnullRefPtr<StyleBlockRule> Parser::consume_a_simple_block(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::consume_a_simple_block");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::consume_a_simple_block");
 
     auto ending_token = ((Token)tokens.current_token()).mirror_variant();
 
@@ -762,7 +761,7 @@ NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function()
 template<typename T>
 NonnullRefPtr<StyleFunctionRule> Parser::consume_a_function(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::consume_a_function");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::consume_a_function");
 
     auto name_ident = tokens.current_token();
     VERIFY(name_ident.is(Token::Type::Function));
@@ -795,7 +794,7 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration()
 template<typename T>
 Optional<StyleDeclarationRule> Parser::consume_a_declaration(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::consume_a_declaration");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::consume_a_declaration");
 
     auto& token = tokens.next_token();
 
@@ -857,7 +856,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations()
 template<typename T>
 Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::consume_a_list_of_declarations");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::consume_a_list_of_declarations");
 
     Vector<DeclarationOrAtRule> list;
 
@@ -920,7 +919,7 @@ RefPtr<CSSRule> Parser::parse_as_rule()
 template<typename T>
 RefPtr<CSSRule> Parser::parse_as_rule(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_as_rule");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_rule");
 
     RefPtr<CSSRule> rule;
 
@@ -959,7 +958,7 @@ NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules()
 template<typename T>
 NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_as_list_of_rules");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_list_of_rules");
 
     auto parsed_rules = consume_a_list_of_rules(tokens, false);
     NonnullRefPtrVector<CSSRule> rules;
@@ -981,7 +980,7 @@ Optional<StyleProperty> Parser::parse_as_declaration()
 template<typename T>
 Optional<StyleProperty> Parser::parse_as_declaration(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_as_declaration");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_declaration");
 
     tokens.skip_whitespace();
 
@@ -1006,7 +1005,7 @@ RefPtr<CSSStyleDeclaration> Parser::parse_as_list_of_declarations()
 template<typename T>
 RefPtr<CSSStyleDeclaration> Parser::parse_as_list_of_declarations(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_as_list_of_declarations");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_list_of_declarations");
 
     auto declarations_and_at_rules = consume_a_list_of_declarations(tokens);
 
@@ -1043,7 +1042,7 @@ Optional<StyleComponentValueRule> Parser::parse_as_component_value()
 template<typename T>
 Optional<StyleComponentValueRule> Parser::parse_as_component_value(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_as_component_value");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_component_value");
 
     tokens.skip_whitespace();
 
@@ -1073,7 +1072,7 @@ Vector<StyleComponentValueRule> Parser::parse_as_list_of_component_values()
 template<typename T>
 Vector<StyleComponentValueRule> Parser::parse_as_list_of_component_values(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_as_list_of_component_values");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_list_of_component_values");
 
     Vector<StyleComponentValueRule> rules;
 
@@ -1096,7 +1095,7 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of
 template<typename T>
 Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of_component_values(TokenStream<T>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_as_comma_separated_list_of_component_values");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_comma_separated_list_of_component_values");
 
     Vector<Vector<StyleComponentValueRule>> lists;
     lists.append({});
@@ -1146,7 +1145,7 @@ Optional<URL> Parser::parse_url_function(ParsingContext const& context, StyleCom
 
 RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::convert_to_rule");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::convert_to_rule");
 
     if (rule->m_type == StyleRule::Type::At) {
         if (rule->m_name.equals_ignoring_case("import"sv) && !rule->prelude().is_empty()) {
@@ -1192,7 +1191,7 @@ RefPtr<CSSRule> Parser::convert_to_rule(NonnullRefPtr<StyleRule> rule)
 
 RefPtr<CSSStyleDeclaration> Parser::convert_to_declaration(NonnullRefPtr<StyleBlockRule> block)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::convert_to_declaration");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::convert_to_declaration");
 
     if (!block->is_curly())
         return {};
@@ -1203,7 +1202,7 @@ RefPtr<CSSStyleDeclaration> Parser::convert_to_declaration(NonnullRefPtr<StyleBl
 
 Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule& declaration)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::convert_to_style_property");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::convert_to_style_property");
 
     auto& property_name = declaration.m_name;
     auto property_id = property_id_from_string(property_name);
@@ -1634,7 +1633,7 @@ RefPtr<StyleValue> Parser::parse_image_value(ParsingContext const& context, Styl
 
 RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_css_value");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_css_value");
 
     Vector<StyleComponentValueRule> component_values;
 
@@ -1663,7 +1662,7 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
 
 RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, PropertyID property_id, StyleComponentValueRule const& component_value)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_css_value '{}'", component_value.to_debug_string());
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_css_value '{}'", component_value.to_debug_string());
     // FIXME: Figure out if we still need takes_integer_value, and if so, move this information
     // into Properties.json.
     auto takes_integer_value = [](PropertyID property_id) -> bool {
@@ -1704,7 +1703,7 @@ RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, Proper
 
 Optional<Selector::SimpleSelector::NthChildPattern> Parser::parse_nth_child_pattern(TokenStream<StyleComponentValueRule>& values)
 {
-    dbgln_if(CSS_PARSER_TRACE, "Parser::parse_nth_child_pattern");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_nth_child_pattern");
 
     Selector::SimpleSelector::NthChildPattern pattern;
 
