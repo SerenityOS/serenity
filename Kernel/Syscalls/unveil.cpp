@@ -53,13 +53,17 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
     if (path.is_empty() || !path.view().starts_with('/'))
         return EINVAL;
 
-    auto permissions = copy_string_from_user(params.permissions);
-    if (permissions.is_null())
-        return EFAULT;
+    OwnPtr<KString> permissions;
+    {
+        auto permissions_or_error = try_copy_kstring_from_user(params.permissions);
+        if (permissions_or_error.is_error())
+            return permissions_or_error.error();
+        permissions = permissions_or_error.release_value();
+    }
 
     // Let's work out permissions first...
     unsigned new_permissions = 0;
-    for (const char permission : permissions) {
+    for (const char permission : permissions->view()) {
         switch (permission) {
         case 'r':
             new_permissions |= UnveilAccess::Read;
