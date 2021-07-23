@@ -190,12 +190,14 @@ public:
     explicit ECMA262Parser(Lexer& lexer)
         : Parser(lexer)
     {
+        m_capture_groups_in_scope.empend();
     }
 
     ECMA262Parser(Lexer& lexer, Optional<typename ParserTraits<ECMA262Parser>::OptionsType> regex_options)
         : Parser(lexer, regex_options.value_or({}))
     {
         m_should_use_browser_extended_grammar = regex_options.has_value() && regex_options->has_flag_set(ECMAScriptFlags::BrowserExtended);
+        m_capture_groups_in_scope.empend();
     }
 
     ~ECMA262Parser() = default;
@@ -242,6 +244,12 @@ private:
 
     // Keep the Annex B. behaviour behind a flag, the users can enable it by passing the `ECMAScriptFlags::BrowserExtended` flag.
     bool m_should_use_browser_extended_grammar { false };
+
+    // ECMA-262 basically requires that we clear the inner captures of a capture group before trying to match it,
+    // by requiring that (...)+ only contain the matches for the last iteration.
+    // To do that, we have to keep track of which capture groups are "in scope", so we can clear them as needed.
+    using CaptureGroup = Variant<size_t, String>;
+    Vector<Vector<CaptureGroup>> m_capture_groups_in_scope;
 };
 
 using PosixExtended = PosixExtendedParser;
