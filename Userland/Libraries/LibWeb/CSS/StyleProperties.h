@@ -62,6 +62,7 @@ public:
     Optional<CSS::Overflow> overflow_y() const;
     Optional<CSS::Repeat> background_repeat_x() const;
     Optional<CSS::Repeat> background_repeat_y() const;
+    Optional<CSS::BoxShadowData> box_shadow() const;
 
     const Gfx::Font& font() const
     {
