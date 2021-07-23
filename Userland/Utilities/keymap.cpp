@@ -18,6 +18,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto mapper_config = Core::ConfigFile::get_for_app("Keyboard");
+
     if (unveil("/res/keymaps", "r") < 0) {
         perror("unveil");
         return 1;
@@ -35,7 +37,6 @@ int main(int argc, char** argv)
         }
     }
 
-    auto mapper_config = Core::ConfigFile::get_for_app("Keyboard");
     if (unveil(mapper_config->filename().characters(), "rwc") < 0) {
         perror("unveil");
         return 1;

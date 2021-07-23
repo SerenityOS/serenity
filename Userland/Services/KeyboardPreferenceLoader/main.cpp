@@ -21,16 +21,15 @@ int main()
     }
 
     auto keyboard_settings_config = Core::ConfigFile::get_for_app("KeyboardSettings");
+    auto mapping_config = Core::ConfigFile::get_for_app("Keyboard");
 
     if (unveil(keyboard_settings_config->filename().characters(), "r") < 0) {
         perror("unveil user keyboard settings");
         return 1;
     }
 
-    auto mapping_config = Core::ConfigFile::get_for_app("Keyboard");
-
     if (unveil(mapping_config->filename().characters(), "r") < 0) {
-        perror("unveil user keyboard settings");
+        perror("unveil user keyboard mapping settings");
         return 1;
     }
 
