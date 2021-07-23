@@ -42,6 +42,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.daysInMonth, days_in_month, 1, attr);
     define_native_function(vm.names.daysInYear, days_in_year, 1, attr);
     define_native_function(vm.names.monthsInYear, months_in_year, 1, attr);
+    define_native_function(vm.names.inLeapYear, in_leap_year, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 }
@@ -383,6 +384,33 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
 
     // 5. Return 12𝔽.
     return Value(12);
+}
+
+// 12.4.20 Temporal.Calendar.prototype.inLeapYear ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.inleapyear
+// NOTE: This is the minimum inLeapYear implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
+{
+    // 1. Let calendar be the this value.
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Assert: calendar.[[Identifier]] is "iso8601".
+    VERIFY(calendar->identifier() == "iso8601"sv);
+
+    auto temporal_date_like = vm.argument(0);
+    // 4. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]] or [[InitializedTemporalYearMonth]] internal slot, then
+    // TODO PlainYearMonth objects
+    if (!temporal_date_like.is_object() || !is<PlainDate>(temporal_date_like.as_object())) {
+        // a. Set temporalDateLike to ? ToTemporalDate(temporalDateLike).
+        temporal_date_like = to_temporal_date(global_object, temporal_date_like);
+        if (vm.exception())
+            return {};
+    }
+
+    // 5. Return ! IsISOLeapYear(temporalDateLike.[[ISOYear]]).
+    return Value(is_iso_leap_year(iso_year(temporal_date_like.as_object())));
 }
 
 // 12.4.23 Temporal.Calendar.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tostring

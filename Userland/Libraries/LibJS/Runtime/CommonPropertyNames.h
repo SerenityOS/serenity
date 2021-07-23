@@ -219,6 +219,7 @@ namespace JS {
     P(indexOf)                               \
     P(indices)                               \
     P(info)                                  \
+    P(inLeapYear)                            \
     P(input)                                 \
     P(instant)                               \
     P(is)                                    \
