@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/Types.h>
 
 #define ENUMERATE_KEY_CODES                          \
@@ -127,6 +128,10 @@ enum KeyCode : u8 {
 };
 const int key_code_count = Key_Super;
 
+#define __ENUMERATE_KEY_CODE(name, ui_name) ui_name,
+static const char* str_key_codes[] = { ENUMERATE_KEY_CODES };
+#undef __ENUMERATE_KEY_CODE
+
 enum KeyModifier {
     Mod_None = 0x00,
     Mod_Alt = 0x01,
@@ -166,4 +171,14 @@ inline const char* key_code_to_string(KeyCode key)
     default:
         return nullptr;
     }
+}
+
+inline KeyCode string_to_key_code(const String& str)
+{
+    int n = sizeof(str_key_codes) / sizeof(str_key_codes[0]);
+    for (int i = 0; i < n; i++) {
+        if (String(str_key_codes[i]) == String(str.characters()))
+            return (KeyCode)i;
+    }
+    return KeyCode::Key_Invalid;
 }

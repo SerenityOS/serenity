@@ -6,12 +6,27 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/Optional.h>
 #include <LibCore/Object.h>
 #include <LibGUI/EditingEngine.h>
 #include <LibGUI/TextRange.h>
 
 namespace GUI {
+
+class VimEditingEngine;
+
+enum VimMode {
+    Normal,
+    Insert,
+    Visual
+};
+
+enum class VimMatchType {
+    None,
+    Partial,
+    Complete
+};
 
 // Wrapper over TextPosition that makes it easier to move it around as a cursor,
 // and to get the current line or character.
@@ -141,24 +156,97 @@ private:
     size_t m_end_column { 0 };
 };
 
-class VimEditingEngine final : public EditingEngine {
-
+class VimKey {
 public:
+    VimKey(KeyCode key_code, const String& str, bool shift)
+        : m_key_code(key_code)
+        , m_string(str)
+        , m_shift(shift)
+        , m_ctrl(false)
+    {
+    }
+    VimKey(KeyCode key_code, const String& str, bool shift, bool ctrl)
+        : m_key_code(key_code)
+        , m_string(str)
+        , m_shift(shift)
+        , m_ctrl(ctrl)
+    {
+    }
+
+    bool operator==(const VimKey& key)
+    {
+        return m_key_code == key.m_key_code && m_shift == key.m_shift && m_ctrl == key.m_ctrl;
+    }
+
+    String to_string() const;
+
+private:
+    const KeyCode m_key_code;
+    const String m_string;
+    const bool m_shift;
+    const bool m_ctrl;
+};
+
+class VimCommand {
+public:
+    template<typename Callable>
+    VimCommand(const String& keys, const String& vim_modes, Callable callable)
+        : m_keys(parse_keys(keys))
+        , m_vim_modes(vim_modes)
+        , m_execute_command(move(callable))
+    {
+    }
+
+    static Vector<VimKey> parse_keys(const String& keys);
+
+    void execute() const;
+    VimMatchType check_match(Vector<VimKey> keys, VimMode vim_mode) const;
+    String to_string() const;
+
+private:
+    static VimKey parse_modified_key(GenericLexer&);
+
+    const Vector<VimKey> m_keys {};
+    // A string representing the modes in which this command is allowed.
+    // For example, if this string is "NV" (Normal, Visual) and the mode is insert,
+    // Even if the keys match, the command cannot be executed.
+    const String m_vim_modes;
+    Function<void()> m_execute_command;
+};
+
+class VimEditingEngine final : public EditingEngine {
+public:
+    VimEditingEngine()
+    {
+        initialize_commands();
+    }
+
+    static bool key_requires_shift(u32 code_point, KeyCode key);
+    static bool special_character_requires_shift(KeyCode key);
+
     virtual CursorWidth cursor_width() const override;
 
     virtual bool on_key(const KeyEvent& event) override;
 
 private:
-    enum VimMode {
-        Normal,
-        Insert,
-        Visual
-    };
-
     enum YankType {
         Line,
         Selection
     };
+
+    // A list of keys entered by the user as they build up to the command
+    // they are trying to execute.
+    Vector<VimKey> m_keys {};
+    // A list of all commands that this engine supports.
+    Vector<VimCommand> m_commands {};
+    // Called in the constructor of the VimEditingEngine to populate the m_commands list
+    // with its supported commands and their actions.
+    void initialize_commands();
+    // Would replace the virtual override on_key which handles the user's keypress.
+    // If not in insert mode (with some exceptions) would convert the KeyEvent to a VimKey
+    // and add it to m_keys, then check if the new m_keys matches any commands in m_commands,
+    // if a complete match is found, execute the matching command.
+    void add_key(const KeyEvent&);
 
     VimMode m_vim_mode { VimMode::Normal };
     VimMotion m_motion;
@@ -187,6 +275,26 @@ private:
     bool on_key_in_insert_mode(const KeyEvent& event);
     bool on_key_in_normal_mode(const KeyEvent& event);
     bool on_key_in_visual_mode(const KeyEvent& event);
+};
+
+}
+
+namespace AK {
+
+template<>
+struct Formatter<GUI::VimKey> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const GUI::VimKey& value)
+    {
+        Formatter<StringView>::format(builder, value.to_string());
+    }
+};
+
+template<>
+struct Formatter<GUI::VimCommand> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const GUI::VimCommand& value)
+    {
+        Formatter<StringView>::format(builder, value.to_string());
+    }
 };
 
 }

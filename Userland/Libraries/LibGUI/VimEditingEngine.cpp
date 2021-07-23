@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/CharacterTypes.h>
 #include <AK/String.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/TextEditor.h>
@@ -1402,5 +1403,189 @@ void VimEditingEngine::move_to_next_empty_lines_block()
 
     m_editor->set_cursor(new_cursor);
 };
+
+void VimEditingEngine::initialize_commands()
+{
+    if (!m_commands.is_empty())
+        return;
+
+    m_commands.append(VimCommand("v", "N",
+        [&] {
+            switch_to_visual_mode();
+        }));
+    m_commands.append(VimCommand("<Escape>", "IV",
+        [&] {
+            switch_to_normal_mode();
+        }));
+    m_commands.append(VimCommand("i", "N",
+        [&] {
+            switch_to_insert_mode();
+        }));
+    m_commands.append(VimCommand("dd", "NV",
+        [&] {
+            if (m_motion.amount()) {
+                auto range = m_motion.get_repeat_range(*this, VimMotion::Unit::Line);
+                VERIFY(range.has_value());
+                yank(*range, Line);
+                m_editor->delete_text_range(*range);
+            } else {
+                yank(Line);
+                delete_line();
+            }
+            m_motion.reset();
+            m_previous_key = {};
+        }));
+}
+
+void VimEditingEngine::add_key(const KeyEvent& event)
+{
+    m_keys.append(VimKey(event.key(), event.text(), event.shift(), event.ctrl()));
+
+    VimMatchType match_type = VimMatchType::None;
+    for (const auto& command : m_commands) {
+        VimMatchType current_match = command.check_match(m_keys, m_vim_mode);
+        if (current_match == VimMatchType::Complete) {
+            match_type = VimMatchType::Complete;
+            command.execute();
+        } else if (current_match == VimMatchType::Partial) {
+            match_type = VimMatchType::Partial;
+        }
+    }
+    if (match_type == VimMatchType::None || match_type == VimMatchType::Complete) {
+        m_keys.clear();
+    }
+}
+
+bool VimEditingEngine::key_requires_shift(u32 code_point, KeyCode key)
+{
+    bool is_alphanumeric = is_ascii_alphanumeric(code_point);
+    bool is_alpha = is_ascii_alpha(code_point);
+
+    // Is a number
+    if (is_alphanumeric && !is_alpha)
+        return false;
+
+    if (is_alpha)
+        return is_ascii_upper_alpha(code_point);
+
+    return special_character_requires_shift(key);
+}
+
+bool VimEditingEngine::special_character_requires_shift(KeyCode key)
+{
+    static Vector<KeyCode> shift_required_keys = {
+        KeyCode::Key_ExclamationPoint,
+        KeyCode::Key_AtSign,
+        KeyCode::Key_Hashtag,
+        KeyCode::Key_Dollar,
+        KeyCode::Key_Percent,
+        KeyCode::Key_Circumflex,
+        KeyCode::Key_Ampersand,
+        KeyCode::Key_Asterisk,
+        KeyCode::Key_LeftParen,
+        KeyCode::Key_RightParen,
+        KeyCode::Key_Underscore,
+        KeyCode::Key_Plus,
+        KeyCode::Key_Pipe,
+        KeyCode::Key_Tilde,
+        KeyCode::Key_LeftBrace,
+        KeyCode::Key_RightBrace,
+        KeyCode::Key_Colon,
+        KeyCode::Key_DoubleQuote,
+        KeyCode::Key_LessThan,
+        KeyCode::Key_GreaterThan,
+        KeyCode::Key_QuestionMark
+    };
+    return shift_required_keys.contains_slow(key);
+}
+
+String VimKey::to_string() const
+{
+    return String::formatted("key_code: {} string:{} shift:{} ctrl:{}", (int)m_key_code, m_string, m_shift, m_ctrl);
+}
+
+Vector<VimKey> VimCommand::parse_keys(const String& keys)
+{
+    Vector<VimKey> vim_keys {};
+    GenericLexer lexer = GenericLexer(keys);
+    while (!lexer.is_eof()) {
+        char peek = lexer.peek();
+        if (peek == '<') {
+            vim_keys.append(parse_modified_key(lexer));
+        } else {
+            char consumed_char = lexer.consume();
+            StringView key_str = StringView(&consumed_char, 1);
+            KeyCode key_code = string_to_key_code(key_str.to_uppercase_string());
+            bool shift = VimEditingEngine::key_requires_shift(consumed_char, key_code);
+            vim_keys.append(VimKey(key_code, key_str, shift));
+        }
+    }
+    return vim_keys;
+}
+
+VimKey VimCommand::parse_modified_key(GenericLexer& lexer)
+{
+    VERIFY(lexer.consume_specific('<'));
+    bool has_modifier = lexer.peek(1) == '-';
+    char possible_modifier = lexer.peek();
+    if (has_modifier) {
+        VERIFY(possible_modifier == 'S' || possible_modifier == 'C');
+        lexer.consume_specific('-');
+    }
+    StringView key = lexer.consume_until('>');
+    KeyCode key_code = string_to_key_code(key.length() == 1 ? (String)key.to_uppercase_string() : (String)key);
+    bool shift = VimEditingEngine::special_character_requires_shift(key_code);
+    return VimKey(key_code, key, shift || possible_modifier == 'S', possible_modifier == 'C');
+}
+
+void VimCommand::execute() const
+{
+    m_execute_command();
+}
+
+VimMatchType VimCommand::check_match(Vector<VimKey> keys, VimMode vim_mode) const
+{
+    StringView current_vim_mode_char;
+    switch (vim_mode) {
+    case Normal:
+        current_vim_mode_char = "N";
+        break;
+    case Insert:
+        current_vim_mode_char = "I";
+        break;
+    case Visual:
+        current_vim_mode_char = "V";
+        break;
+    }
+
+    if (!m_vim_modes.contains(current_vim_mode_char))
+        return VimMatchType::None;
+
+    if (keys.size() > m_keys.size()) {
+        return VimMatchType::None;
+    }
+
+    for (size_t i = 0; i < keys.size(); i++) {
+        if (m_keys[i] != keys[i]) {
+            return VimMatchType::None;
+        }
+    }
+
+    if (keys.size() < m_keys.size()) {
+        return VimMatchType::Partial;
+    }
+    return VimMatchType::Complete;
+}
+
+String VimCommand::to_string() const
+{
+    StringBuilder sb = StringBuilder();
+    for (const auto& item : m_keys) {
+        sb.append(item.to_string());
+        sb.append(", ");
+    }
+    sb.trim(2);
+    return String::formatted("keys:[{}]", sb.to_string());
+}
 
 }
