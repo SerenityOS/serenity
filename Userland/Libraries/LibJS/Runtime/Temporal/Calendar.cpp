@@ -386,6 +386,26 @@ i32 iso_days_in_month(i32 year, i32 month)
     return 28;
 }
 
+// 12.1.33 ToISODayOfWeek ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-toisodayofweek
+u8 to_iso_day_of_week(i32 year, u8 month, u8 day)
+{
+    // 1. Assert: year is an integer.
+    // 2. Assert: month is an integer.
+    // 3. Assert: day is an integer.
+
+    // 4. Let date be the date given by year, month, and day.
+    // 5. Return date's day of the week according to ISO-8601.
+    // NOTE: Implemented based on https://cs.uwaterloo.ca/~alopez-o/math-faq/node73.html
+    auto normalized_month = month + (month < 3 ? 10 : -2);
+    auto normalized_year = year - (month < 3 ? 1 : 0);
+    auto century = normalized_year / 100;
+    auto truncated_year = normalized_year - (century * 100);
+    auto result = (day + static_cast<u8>((2.6 * normalized_month) - 0.2) - (2 * century) + truncated_year + (truncated_year / 4) + (century / 4)) % 7;
+    if (result <= 0) // Mathematical modulo
+        result += 7;
+    return result;
+}
+
 // 12.1.36 BuildISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-buildisomonthcode
 String build_iso_month_code(i32 month)
 {
