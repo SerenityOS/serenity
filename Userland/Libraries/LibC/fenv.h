@@ -55,9 +55,9 @@ int fetestexcept(int exceptions);
 int feraiseexcept(int exceptions);
 
 #define FE_TONEAREST 0
-#define FE_DOWNWARD 1
-#define FE_UPWARD 2
-#define FE_TOWARDZERO 3
+#define FE_DOWNWARD 0x400
+#define FE_UPWARD 0x800
+#define FE_TOWARDZERO 0xc00
 
 int fesetround(int round);
 int fegetround(void);

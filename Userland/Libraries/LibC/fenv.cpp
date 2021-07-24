@@ -132,7 +132,7 @@ int fesetexceptflag(const fexcept_t* except, int exceptions)
 int fegetround()
 {
     // There's no way to signal whether the SSE rounding mode and x87 ones are different, so we assume they're the same
-    return (read_status_register() >> 10) & 3;
+    return (read_status_register()) & (3 << 10);
 }
 
 int fesetround(int rounding_mode)
@@ -143,14 +143,16 @@ int fesetround(int rounding_mode)
     auto control_word = read_control_word();
 
     control_word &= ~(3 << 10);
-    control_word |= rounding_mode << 10;
+    control_word |= rounding_mode;
 
     set_control_word(control_word);
 
     auto mxcsr = read_mxcsr();
 
+    // the rounding mode is already shifted in the correct amount for x87
+    // so we have to compensate for that in the shift amount
     mxcsr &= ~(3 << 13);
-    mxcsr |= rounding_mode << 13;
+    mxcsr |= rounding_mode << 3;
 
     set_mxcsr(mxcsr);
 
