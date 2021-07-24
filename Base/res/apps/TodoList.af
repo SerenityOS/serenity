@@ -1,0 +1,4 @@
+[App]
+Name=Todo List
+Executable=/bin/TodoList
+Category=Utilities
