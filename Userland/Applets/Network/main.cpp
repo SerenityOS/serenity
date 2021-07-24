@@ -124,17 +124,20 @@ private:
             auto& if_object = value.as_object();
             auto ip_address = if_object.get("ipv4_address").to_string();
             auto ifname = if_object.get("name").to_string();
+            auto link_up = if_object.get("link_up").as_bool();
 
             if (!include_loopback)
                 if (ifname == "loop")
                     return;
             if (ip_address != "null")
                 connected_adapters++;
+            else
+                ip_address = "-"; // friendly representation of 'no ip configured'
 
             if (!adapter_info.is_empty())
                 adapter_info.append('\n');
 
-            adapter_info.appendff("{}: {}", ifname, ip_address);
+            adapter_info.appendff("{}: {} ({})", ifname, ip_address, (link_up ? "up" : "down"));
         });
 
         // show connected icon so long as at least one adapter is connected
