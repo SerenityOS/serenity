@@ -299,7 +299,7 @@ ALWAYS_INLINE ExecutionResult OpCode_ClearCaptureGroup::execute(MatchInput const
     if (input.match_index < state.capture_group_matches.size()) {
         auto& group = state.capture_group_matches[input.match_index];
         if (id() < group.size())
-            group[id()] = {};
+            group[id()].reset();
     }
     return ExecutionResult::Continue;
 }
@@ -353,7 +353,8 @@ ALWAYS_INLINE ExecutionResult OpCode_ClearNamedCaptureGroup::execute(MatchInput 
 {
     if (input.match_index < state.capture_group_matches.size()) {
         auto& group = state.named_capture_group_matches[input.match_index];
-        group.remove(name());
+        if (auto it = group.find(name()); it != group.end())
+            it->value.reset();
     }
     return ExecutionResult::Continue;
 }

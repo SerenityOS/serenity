@@ -101,6 +101,16 @@ public:
             [](auto const& view) { return view.length(); });
     }
 
+    RegexStringView typed_null_view()
+    {
+        auto view = m_view.visit(
+            [&]<typename T>(T const&) {
+                return RegexStringView { T {} };
+            });
+        view.set_unicode(unicode());
+        return view;
+    }
+
     RegexStringView construct_as_same(Span<u32> data, Optional<String>& optional_string_storage, Vector<u16>& optional_utf16_storage) const
     {
         auto view = m_view.visit(
@@ -415,6 +425,15 @@ public:
         , global_offset(global_offset_)
         , left_column(column_)
     {
+    }
+
+    void reset()
+    {
+        view = view.typed_null_view();
+        line = 0;
+        column = 0;
+        global_offset = 0;
+        left_column = 0;
     }
 
     RegexStringView view { nullptr };
