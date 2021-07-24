@@ -151,7 +151,7 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
         // Someone has this IPv4 address. I guess we can try to remember that.
         // FIXME: Protect against ARP spamming.
         // FIXME: Support static ARP table entries.
-        update_arp_table(packet.sender_protocol_address(), packet.sender_hardware_address());
+        update_arp_table(packet.sender_protocol_address(), packet.sender_hardware_address(), UpdateArp::Set);
     }
 
     if (packet.operation() == ARPOperation::Request) {
@@ -199,7 +199,7 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const Time& 
             auto my_net = adapter.ipv4_address().to_u32() & adapter.ipv4_netmask().to_u32();
             auto their_net = packet.source().to_u32() & adapter.ipv4_netmask().to_u32();
             if (my_net == their_net)
-                update_arp_table(packet.source(), eth.source());
+                update_arp_table(packet.source(), eth.source(), UpdateArp::Set);
         }
     });
 

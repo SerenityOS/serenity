@@ -18,7 +18,12 @@ struct RoutingDecision {
     bool is_zero() const;
 };
 
-void update_arp_table(const IPv4Address&, const MACAddress&);
+enum class UpdateArp {
+    Set,
+    Delete,
+};
+
+void update_arp_table(const IPv4Address&, const MACAddress&, UpdateArp update);
 RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, const RefPtr<NetworkAdapter> through = nullptr);
 
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table();
