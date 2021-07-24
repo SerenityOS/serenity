@@ -104,10 +104,13 @@ Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
     return *s_arp_table;
 }
 
-void update_arp_table(const IPv4Address& ip_addr, const MACAddress& addr)
+void update_arp_table(const IPv4Address& ip_addr, const MACAddress& addr, UpdateArp update)
 {
     MutexLocker locker(arp_table().lock());
-    arp_table().resource().set(ip_addr, addr);
+    if (update == UpdateArp::Set)
+        arp_table().resource().set(ip_addr, addr);
+    if (update == UpdateArp::Delete)
+        arp_table().resource().remove(ip_addr);
     s_arp_table_block_condition->unblock(ip_addr, addr);
 
     if constexpr (ROUTING_DEBUG) {
