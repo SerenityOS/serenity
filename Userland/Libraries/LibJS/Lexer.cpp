@@ -549,6 +549,9 @@ Token Lexer::next()
         while (m_current_char != stop_char && m_current_char != '\r' && m_current_char != '\n' && !is_eof()) {
             if (m_current_char == '\\') {
                 consume();
+                if (m_current_char == '\r' && m_position < m_source.length() && m_source[m_position] == '\n') {
+                    consume();
+                }
             }
             consume();
         }
