@@ -26,12 +26,12 @@ public:
     void set_view_diff_callback(ViewDiffCallback callback);
     void on_repository_update(Function<void()> callback);
     bool initialized() const { return !m_git_repo.is_null(); };
+    bool initialize_if_needed(bool quiet);
 
 private:
     explicit GitWidget(const LexicalPath& repo_root);
 
-    bool initialize();
-    bool initialize_if_needed();
+    bool initialize(bool quiet);
     void stage_file(const LexicalPath&);
     void unstage_file(const LexicalPath&);
     void show_diff(const LexicalPath&);

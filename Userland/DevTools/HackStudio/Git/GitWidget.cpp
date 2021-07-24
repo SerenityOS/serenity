@@ -71,7 +71,7 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
         Gfx::Bitmap::try_load_from_file("/res/icons/16x16/minus.png").release_nonnull());
 }
 
-bool GitWidget::initialize()
+bool GitWidget::initialize(bool quiet)
 {
     auto result = GitRepo::try_to_create(m_repo_root);
     switch (result.type) {
@@ -79,31 +79,36 @@ bool GitWidget::initialize()
         m_git_repo = result.repo;
         return true;
     case GitRepo::CreateResult::Type::GitProgramNotFound:
-        GUI::MessageBox::show(window(), "Please install the Git port", "Error", GUI::MessageBox::Type::Error);
+        if (!quiet)
+            GUI::MessageBox::show(window(), "Please install the Git port", "Error", GUI::MessageBox::Type::Error);
         return false;
     case GitRepo::CreateResult::Type::NoGitRepo: {
-        auto decision = GUI::MessageBox::show(window(), "Create git repository?", "Git", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-        if (decision != GUI::Dialog::ExecResult::ExecYes)
-            return false;
-        m_git_repo = GitRepo::initialize_repository(m_repo_root);
-        return true;
+        if (!quiet) {
+            auto decision = GUI::MessageBox::show(window(), "Create git repository?", "Git", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+            if (decision != GUI::Dialog::ExecResult::ExecYes)
+                return false;
+            m_git_repo = GitRepo::initialize_repository(m_repo_root);
+            return true;
+        }
+
+        return false;
     }
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-bool GitWidget::initialize_if_needed()
+bool GitWidget::initialize_if_needed(bool quiet)
 {
     if (initialized())
         return true;
 
-    return initialize();
+    return initialize(quiet);
 }
 
 void GitWidget::refresh()
 {
-    if (!initialize_if_needed()) {
+    if (!initialize_if_needed(false)) {
         dbgln("GitWidget initialization failed");
         return;
     }
