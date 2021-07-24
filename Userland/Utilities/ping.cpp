@@ -22,10 +22,31 @@
 
 static int total_pings;
 static int successful_pings;
+static int count;
 static uint32_t total_ms;
 static int min_ms;
 static int max_ms;
 static const char* host;
+
+static void closing_statistics()
+{
+    int packet_loss = 100;
+
+    outln();
+    outln("--- {} ping statistics ---", host);
+
+    if (total_pings)
+        packet_loss -= 100.0f * successful_pings / total_pings;
+    outln("{} packets transmitted, {} received, {}% packet loss",
+        total_pings, successful_pings, packet_loss);
+
+    int average_ms = 0;
+    if (successful_pings)
+        average_ms = total_ms / successful_pings;
+    outln("rtt min/avg/max = {}/{}/{} ms", min_ms, average_ms, max_ms);
+
+    exit(0);
+};
 
 int main(int argc, char** argv)
 {
@@ -36,6 +57,7 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(host, "Host to ping", "host");
+    args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets.", "count", 'c', "count");
     args_parser.parse(argc, argv);
 
     int fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
@@ -99,22 +121,7 @@ int main(int argc, char** argv)
     uint16_t seq = 1;
 
     sighandler_t ret = signal(SIGINT, [](int) {
-        int packet_loss = 100;
-
-        outln();
-        outln("--- {} ping statistics ---", host);
-
-        if (total_pings)
-            packet_loss -= 100.0f * successful_pings / total_pings;
-        outln("{} packets transmitted, {} received, {}% packet loss",
-            total_pings, successful_pings, packet_loss);
-
-        int average_ms = 0;
-        if (successful_pings)
-            average_ms = total_ms / successful_pings;
-        outln("rtt min/avg/max = {}/{}/{} ms", min_ms, average_ms, max_ms);
-
-        exit(0);
+        closing_statistics();
     });
 
     if (ret == SIG_ERR) {
@@ -146,7 +153,10 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        total_pings++;
+        if (count && total_pings == count)
+            closing_statistics();
+        else
+            total_pings++;
 
         for (;;) {
             PongPacket pong_packet;
