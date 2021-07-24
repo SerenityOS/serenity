@@ -132,6 +132,7 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     m_stop_action = create_stop_action();
     m_debug_action = create_debug_action();
     m_git_commit_action = create_git_commit_action();
+    m_git_commit_action->set_enabled(m_git_widget->initialize_if_needed(true));
 
     initialize_debugger();
 
