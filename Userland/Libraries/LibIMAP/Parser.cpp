@@ -131,16 +131,16 @@ void Parser::parse_untagged()
     if (number.has_value()) {
         consume(" ");
         auto data_type = parse_atom().to_string();
-        if (data_type.matches("EXISTS")) {
+        if (data_type == "EXISTS"sv) {
             m_response.data().set_exists(number.value());
             consume("\r\n");
-        } else if (data_type.matches("RECENT")) {
+        } else if (data_type == "RECENT"sv) {
             m_response.data().set_recent(number.value());
             consume("\r\n");
-        } else if (data_type.matches("FETCH")) {
+        } else if (data_type == "FETCH"sv) {
             auto fetch_response = parse_fetch_response();
             m_response.data().add_fetch_response(number.value(), move(fetch_response));
-        } else if (data_type.matches("EXPUNGE")) {
+        } else if (data_type == "EXPUNGE"sv) {
             m_response.data().add_expunged(number.value());
             consume("\r\n");
         }
@@ -165,16 +165,16 @@ void Parser::parse_untagged()
         if (try_consume("[")) {
             auto actual_type = parse_atom();
             consume(" ");
-            if (actual_type.matches("UIDNEXT")) {
+            if (actual_type == "UIDNEXT"sv) {
                 auto n = parse_number();
                 m_response.data().set_uid_next(n);
-            } else if (actual_type.matches("UIDVALIDITY")) {
+            } else if (actual_type == "UIDVALIDITY"sv) {
                 auto n = parse_number();
                 m_response.data().set_uid_validity(n);
-            } else if (actual_type.matches("UNSEEN")) {
+            } else if (actual_type == "UNSEEN"sv) {
                 auto n = parse_number();
                 m_response.data().set_unseen(n);
-            } else if (actual_type.matches("PERMANENTFLAGS")) {
+            } else if (actual_type == "PERMANENTFLAGS"sv) {
                 auto flags = parse_list(+[](StringView x) { return String(x); });
                 m_response.data().set_permanent_flags(move(flags));
             } else {
@@ -209,15 +209,15 @@ void Parser::parse_untagged()
             auto value = parse_number();
 
             auto type = StatusItemType::Recent;
-            if (status_att.matches("MESSAGES")) {
+            if (status_att == "MESSAGES"sv) {
                 type = StatusItemType::Messages;
-            } else if (status_att.matches("UNSEEN")) {
+            } else if (status_att == "UNSEEN"sv) {
                 type = StatusItemType::Unseen;
-            } else if (status_att.matches("UIDNEXT")) {
+            } else if (status_att == "UIDNEXT"sv) {
                 type = StatusItemType::UIDNext;
-            } else if (status_att.matches("UIDVALIDITY")) {
+            } else if (status_att == "UIDVALIDITY"sv) {
                 type = StatusItemType::UIDValidity;
-            } else if (status_att.matches("RECENT")) {
+            } else if (status_att == "RECENT"sv) {
                 type = StatusItemType::Recent;
             } else {
                 dbgln("Unmatched status attribute: {}", status_att);
@@ -610,11 +610,11 @@ ResponseStatus Parser::parse_status()
 {
     auto atom = parse_atom();
 
-    if (atom.matches("OK")) {
+    if (atom == "OK"sv) {
         return ResponseStatus::OK;
-    } else if (atom.matches("BAD")) {
+    } else if (atom == "BAD"sv) {
         return ResponseStatus::Bad;
-    } else if (atom.matches("NO")) {
+    } else if (atom == "NO"sv) {
         return ResponseStatus::No;
     }
 
@@ -643,31 +643,31 @@ Vector<T> Parser::parse_list(T converter(StringView))
 
 MailboxFlag Parser::parse_mailbox_flag(StringView s)
 {
-    if (s.matches("\\All"))
+    if (s == "\\All"sv)
         return MailboxFlag::All;
-    if (s.matches("\\Drafts"))
+    if (s == "\\Drafts"sv)
         return MailboxFlag::Drafts;
-    if (s.matches("\\Flagged"))
+    if (s == "\\Flagged"sv)
         return MailboxFlag::Flagged;
-    if (s.matches("\\HasChildren"))
+    if (s == "\\HasChildren"sv)
         return MailboxFlag::HasChildren;
-    if (s.matches("\\HasNoChildren"))
+    if (s == "\\HasNoChildren"sv)
         return MailboxFlag::HasNoChildren;
-    if (s.matches("\\Important"))
+    if (s == "\\Important"sv)
         return MailboxFlag::Important;
-    if (s.matches("\\Junk"))
+    if (s == "\\Junk"sv)
         return MailboxFlag::Junk;
-    if (s.matches("\\Marked"))
+    if (s == "\\Marked"sv)
         return MailboxFlag::Marked;
-    if (s.matches("\\Noinferiors"))
+    if (s == "\\Noinferiors"sv)
         return MailboxFlag::NoInferiors;
-    if (s.matches("\\Noselect"))
+    if (s == "\\Noselect"sv)
         return MailboxFlag::NoSelect;
-    if (s.matches("\\Sent"))
+    if (s == "\\Sent"sv)
         return MailboxFlag::Sent;
-    if (s.matches("\\Trash"))
+    if (s == "\\Trash"sv)
         return MailboxFlag::Trash;
-    if (s.matches("\\Unmarked"))
+    if (s == "\\Unmarked"sv)
         return MailboxFlag::Unmarked;
 
     dbgln("Unrecognized mailbox flag {}", s);
