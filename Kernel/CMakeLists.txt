@@ -264,7 +264,6 @@ set(KERNEL_SOURCES
     VM/PhysicalZone.cpp
     VM/PrivateInodeVMObject.cpp
     VM/ProcessPagingScope.cpp
-    VM/PurgeablePageRanges.cpp
     VM/Range.cpp
     VM/RangeAllocator.cpp
     VM/Region.cpp

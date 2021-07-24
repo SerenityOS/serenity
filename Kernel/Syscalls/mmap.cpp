@@ -12,6 +12,7 @@
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PrivateInodeVMObject.h>
@@ -217,7 +218,14 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
-        auto region_or_error = space().allocate_region(range.value(), {}, prot, strategy);
+        RefPtr<AnonymousVMObject> vmobject;
+        if (flags & MAP_PURGEABLE)
+            vmobject = AnonymousVMObject::try_create_purgeable_with_size(page_round_up(size), strategy);
+        else
+            vmobject = AnonymousVMObject::try_create_with_size(page_round_up(size), strategy);
+        if (!vmobject)
+            return ENOMEM;
+        auto region_or_error = space().allocate_region_with_vmobject(range.value(), vmobject.release_nonnull(), 0, {}, prot, map_shared);
         if (region_or_error.is_error())
             return region_or_error.error().error();
         region = region_or_error.value();
@@ -465,23 +473,17 @@ KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, i
     if (set_volatile || set_nonvolatile) {
         if (!region->vmobject().is_anonymous())
             return EPERM;
+        auto& vmobject = static_cast<AnonymousVMObject&>(region->vmobject());
         bool was_purged = false;
-        switch (region->set_volatile(VirtualAddress(address), size, set_volatile, was_purged)) {
-        case Region::SetVolatileError::Success:
-            break;
-        case Region::SetVolatileError::NotPurgeable:
-            return EPERM;
-        case Region::SetVolatileError::OutOfMemory:
-            return ENOMEM;
-        }
-        if (set_nonvolatile)
-            return was_purged ? 1 : 0;
-        return 0;
+        auto result = vmobject.set_volatile(set_volatile, was_purged);
+        if (result.is_error())
+            return result.error();
+        return was_purged ? 1 : 0;
     }
     if (advice & MADV_GET_VOLATILE) {
         if (!region->vmobject().is_anonymous())
             return EPERM;
-        return region->is_volatile(VirtualAddress(address), size) ? 0 : 1;
+        return static_cast<AnonymousVMObject&>(region->vmobject()).is_volatile() ? 0 : 1;
     }
     return EINVAL;
 }
@@ -668,5 +670,4 @@ KResultOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
     region->set_syscall_region(true);
     return 0;
 }
-
 }

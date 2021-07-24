@@ -22,16 +22,17 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
     // commit the number of pages that we need to potentially allocate
     // so that the parent is still guaranteed to be able to have all
     // non-volatile memory available.
-    size_t need_cow_pages = 0;
+    size_t new_cow_pages_needed = 0;
 
-    // We definitely need to commit non-volatile areas
-    for_each_nonvolatile_range([&](VolatilePageRange const& nonvolatile_range) {
-        need_cow_pages += nonvolatile_range.count;
-    });
+    if (is_volatile()) {
+        // NOTE: If this object is currently volatile, we don't own any committed pages.
+    } else {
+        new_cow_pages_needed = page_count();
+    }
 
-    dbgln_if(COMMIT_DEBUG, "Cloning {:p}, need {} committed cow pages", this, need_cow_pages);
+    dbgln_if(COMMIT_DEBUG, "Cloning {:p}, need {} committed cow pages", this, new_cow_pages_needed);
 
-    if (!MM.commit_user_physical_pages(need_cow_pages))
+    if (!MM.commit_user_physical_pages(new_cow_pages_needed))
         return {};
 
     // Create or replace the committed cow pages. When cloning a previously
@@ -40,10 +41,10 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
     // one would keep the one it still has. This ensures that the original
     // one and this one, as well as the clone have sufficient resources
     // to cow all pages as needed
-    m_shared_committed_cow_pages = try_create<CommittedCowPages>(need_cow_pages);
+    m_shared_committed_cow_pages = try_create<CommittedCowPages>(new_cow_pages_needed);
 
     if (!m_shared_committed_cow_pages) {
-        MM.uncommit_user_physical_pages(need_cow_pages);
+        MM.uncommit_user_physical_pages(new_cow_pages_needed);
         return {};
     }
 
@@ -65,6 +66,20 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_with_size(size_t size, A
     return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, commit));
 }
 
+RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_purgeable_with_size(size_t size, AllocationStrategy commit)
+{
+    if (commit == AllocationStrategy::Reserve || commit == AllocationStrategy::AllocateNow) {
+        // We need to attempt to commit before actually creating the object
+        if (!MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))))
+            return {};
+    }
+    auto vmobject = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, commit));
+    if (!vmobject)
+        return {};
+    vmobject->m_purgeable = true;
+    return vmobject;
+}
+
 RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>> physical_pages)
 {
     return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(physical_pages));
@@ -81,7 +96,6 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_for_physical_range(Physi
 
 AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy)
     : VMObject(size)
-    , m_volatile_ranges_cache({ 0, page_count() })
     , m_unused_committed_pages(strategy == AllocationStrategy::Reserve ? page_count() : 0)
 {
     if (strategy == AllocationStrategy::AllocateNow) {
@@ -97,7 +111,6 @@ AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy)
 
 AnonymousVMObject::AnonymousVMObject(PhysicalAddress paddr, size_t size)
     : VMObject(size)
-    , m_volatile_ranges_cache({ 0, page_count() })
 {
     VERIFY(paddr.page_base() == paddr);
     for (size_t i = 0; i < page_count(); ++i)
@@ -106,7 +119,6 @@ AnonymousVMObject::AnonymousVMObject(PhysicalAddress paddr, size_t size)
 
 AnonymousVMObject::AnonymousVMObject(Span<NonnullRefPtr<PhysicalPage>> physical_pages)
     : VMObject(physical_pages.size() * PAGE_SIZE)
-    , m_volatile_ranges_cache({ 0, page_count() })
 {
     for (size_t i = 0; i < physical_pages.size(); ++i) {
         m_physical_pages[i] = physical_pages[i];
@@ -115,9 +127,6 @@ AnonymousVMObject::AnonymousVMObject(Span<NonnullRefPtr<PhysicalPage>> physical_
 
 AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other)
     : VMObject(other)
-    , m_volatile_ranges_cache({ 0, page_count() }) // do *not* clone this
-    , m_volatile_ranges_cache_dirty(true)          // do *not* clone this
-    , m_purgeable_ranges()                         // do *not* clone this
     , m_unused_committed_pages(other.m_unused_committed_pages)
     , m_cow_map()                                                      // do *not* clone this
     , m_shared_committed_cow_pages(other.m_shared_committed_cow_pages) // share the pool
@@ -152,217 +161,94 @@ AnonymousVMObject::~AnonymousVMObject()
         MM.uncommit_user_physical_pages(m_unused_committed_pages);
 }
 
-int AnonymousVMObject::purge()
-{
-    int purged_page_count = 0;
-    ScopedSpinLock lock(m_lock);
-    for_each_volatile_range([&](auto const& range) {
-        int purged_in_range = 0;
-        auto range_end = range.base + range.count;
-        for (size_t i = range.base; i < range_end; i++) {
-            auto& phys_page = m_physical_pages[i];
-            if (phys_page && !phys_page->is_shared_zero_page()) {
-                VERIFY(!phys_page->is_lazy_committed_page());
-                ++purged_in_range;
-            }
-            phys_page = MM.shared_zero_page();
-        }
-
-        if (purged_in_range > 0) {
-            purged_page_count += purged_in_range;
-            set_was_purged(range);
-            for_each_region([&](auto& region) {
-                if (auto owner = region.get_owner()) {
-                    // we need to hold a reference the process here (if there is one) as we may not own this region
-                    dmesgln("Purged {} pages from region {} owned by {} at {} - {}",
-                        purged_in_range,
-                        region.name(),
-                        *owner,
-                        region.vaddr_from_page_index(range.base),
-                        region.vaddr_from_page_index(range.base + range.count));
-                } else {
-                    dmesgln("Purged {} pages from region {} (no ownership) at {} - {}",
-                        purged_in_range,
-                        region.name(),
-                        region.vaddr_from_page_index(range.base),
-                        region.vaddr_from_page_index(range.base + range.count));
-                }
-                region.remap_vmobject_page_range(range.base, range.count);
-            });
-        }
-    });
-    return purged_page_count;
-}
-
-void AnonymousVMObject::set_was_purged(VolatilePageRange const& range)
-{
-    VERIFY(m_lock.is_locked());
-    for (auto* purgeable_ranges : m_purgeable_ranges)
-        purgeable_ranges->set_was_purged(range);
-}
-
-void AnonymousVMObject::register_purgeable_page_ranges(PurgeablePageRanges& purgeable_page_ranges)
+size_t AnonymousVMObject::purge()
 {
     ScopedSpinLock lock(m_lock);
-    purgeable_page_ranges.set_vmobject(this);
-    VERIFY(!m_purgeable_ranges.contains_slow(&purgeable_page_ranges));
-    m_purgeable_ranges.append(&purgeable_page_ranges);
-}
 
-void AnonymousVMObject::unregister_purgeable_page_ranges(PurgeablePageRanges& purgeable_page_ranges)
-{
-    ScopedSpinLock lock(m_lock);
-    for (size_t i = 0; i < m_purgeable_ranges.size(); i++) {
-        if (m_purgeable_ranges[i] != &purgeable_page_ranges)
+    if (!is_purgeable() || !is_volatile())
+        return 0;
+
+    size_t total_pages_purged = 0;
+
+    for (auto& page : m_physical_pages) {
+        VERIFY(page);
+        if (page->is_shared_zero_page())
             continue;
-        purgeable_page_ranges.set_vmobject(nullptr);
-        m_purgeable_ranges.remove(i);
-        return;
+        page = MM.shared_zero_page();
+        ++total_pages_purged;
     }
-    VERIFY_NOT_REACHED();
-}
 
-bool AnonymousVMObject::is_any_volatile() const
-{
-    ScopedSpinLock lock(m_lock);
-    for (auto& volatile_ranges : m_purgeable_ranges) {
-        ScopedSpinLock lock(volatile_ranges->m_volatile_ranges_lock);
-        if (!volatile_ranges->is_empty())
-            return true;
-    }
-    return false;
-}
+    m_was_purged = true;
 
-size_t AnonymousVMObject::remove_lazy_commit_pages(VolatilePageRange const& range)
-{
-    VERIFY(m_lock.is_locked());
-
-    size_t removed_count = 0;
-    auto range_end = range.base + range.count;
-    for (size_t i = range.base; i < range_end; i++) {
-        auto& phys_page = m_physical_pages[i];
-        if (phys_page && phys_page->is_lazy_committed_page()) {
-            phys_page = MM.shared_zero_page();
-            removed_count++;
-            VERIFY(m_unused_committed_pages > 0);
-            if (--m_unused_committed_pages == 0)
-                break;
-        }
-    }
-    return removed_count;
-}
-
-void AnonymousVMObject::update_volatile_cache()
-{
-    VERIFY(m_lock.is_locked());
-    VERIFY(m_volatile_ranges_cache_dirty);
-
-    m_volatile_ranges_cache.clear();
-    for_each_nonvolatile_range([&](VolatilePageRange const& range) {
-        m_volatile_ranges_cache.add_unchecked(range);
+    for_each_region([](Region& region) {
+        region.remap();
     });
 
-    m_volatile_ranges_cache_dirty = false;
+    return total_pages_purged;
 }
 
-void AnonymousVMObject::range_made_volatile(VolatilePageRange const& range)
+KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
 {
-    VERIFY(m_lock.is_locked());
+    VERIFY(is_purgeable());
 
-    if (m_unused_committed_pages == 0)
-        return;
+    ScopedSpinLock locker(m_lock);
 
-    // We need to check this range for any pages that are marked for
-    // lazy committed allocation and turn them into shared zero pages
-    // and also adjust the m_unused_committed_pages for each such page.
-    // Take into account all the other views as well.
-    size_t uncommit_page_count = 0;
-    for_each_volatile_range([&](auto const& r) {
-        auto intersected = range.intersected(r);
-        if (!intersected.is_empty()) {
-            uncommit_page_count += remove_lazy_commit_pages(intersected);
-            if (m_unused_committed_pages == 0)
-                return IterationDecision::Break;
+    was_purged = m_was_purged;
+    if (m_volatile == is_volatile)
+        return KSuccess;
+
+    if (is_volatile) {
+        // When a VMObject is made volatile, it gives up all of its committed memory.
+        // Any physical pages already allocated remain in the VMObject for now, but the kernel is free to take them at any moment.
+        for (auto& page : m_physical_pages) {
+            if (page && page->is_lazy_committed_page())
+                page = MM.shared_zero_page();
         }
-        return IterationDecision::Continue;
-    });
 
-    // Return those committed pages back to the system
-    if (uncommit_page_count > 0) {
-        dbgln_if(COMMIT_DEBUG, "Uncommit {} lazy-commit pages from {:p}", uncommit_page_count, this);
-        MM.uncommit_user_physical_pages(uncommit_page_count);
-    }
-
-    m_volatile_ranges_cache_dirty = true;
-}
-
-void AnonymousVMObject::range_made_nonvolatile(VolatilePageRange const&)
-{
-    VERIFY(m_lock.is_locked());
-    m_volatile_ranges_cache_dirty = true;
-}
-
-size_t AnonymousVMObject::count_needed_commit_pages_for_nonvolatile_range(VolatilePageRange const& range)
-{
-    VERIFY(m_lock.is_locked());
-    VERIFY(!range.is_empty());
-
-    size_t need_commit_pages = 0;
-    auto range_end = range.base + range.count;
-    for (size_t page_index = range.base; page_index < range_end; page_index++) {
-        // COW pages are accounted for in m_shared_committed_cow_pages
-        if (!m_cow_map.is_null() && m_cow_map.get(page_index))
-            continue;
-        auto& phys_page = m_physical_pages[page_index];
-        if (phys_page && phys_page->is_shared_zero_page())
-            need_commit_pages++;
-    }
-    return need_commit_pages;
-}
-
-size_t AnonymousVMObject::mark_committed_pages_for_nonvolatile_range(VolatilePageRange const& range, size_t mark_total)
-{
-    VERIFY(m_lock.is_locked());
-    VERIFY(!range.is_empty());
-    VERIFY(mark_total > 0);
-
-    size_t pages_updated = 0;
-    auto range_end = range.base + range.count;
-    for (size_t page_index = range.base; page_index < range_end; page_index++) {
-        // COW pages are accounted for in m_shared_committed_cow_pages
-        if (!m_cow_map.is_null() && m_cow_map.get(page_index))
-            continue;
-        auto& phys_page = m_physical_pages[page_index];
-        if (phys_page && phys_page->is_shared_zero_page()) {
-            phys_page = MM.lazy_committed_page();
-            if (++pages_updated == mark_total)
-                break;
+        if (m_unused_committed_pages) {
+            MM.uncommit_user_physical_pages(m_unused_committed_pages);
+            m_unused_committed_pages = 0;
         }
+
+        m_volatile = true;
+        m_was_purged = false;
+        return KSuccess;
+    }
+    // When a VMObject is made non-volatile, we try to commit however many pages are not currently available.
+    // If that fails, we return false to indicate that memory allocation failed.
+    size_t committed_pages_needed = 0;
+    for (auto& page : m_physical_pages) {
+        VERIFY(page);
+        if (page->is_shared_zero_page())
+            ++committed_pages_needed;
     }
 
-    dbgln_if(COMMIT_DEBUG, "Added {} lazy-commit pages to {:p}", pages_updated, this);
+    if (!committed_pages_needed) {
+        m_volatile = false;
+        return KSuccess;
+    }
 
-    m_unused_committed_pages += pages_updated;
-    return pages_updated;
+    if (!MM.commit_user_physical_pages(committed_pages_needed))
+        return ENOMEM;
+
+    m_unused_committed_pages = committed_pages_needed;
+
+    for (auto& page : m_physical_pages) {
+        if (page->is_shared_zero_page())
+            page = MM.lazy_committed_page();
+    }
+
+    m_volatile = false;
+    m_was_purged = false;
+    return KSuccess;
 }
 
-NonnullRefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(Badge<Region>, size_t page_index)
+NonnullRefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(Badge<Region>)
 {
     {
         ScopedSpinLock lock(m_lock);
-
         VERIFY(m_unused_committed_pages > 0);
-
-        // We shouldn't have any committed page tags in volatile regions
-        VERIFY([&]() {
-            for (auto* purgeable_ranges : m_purgeable_ranges) {
-                if (purgeable_ranges->is_volatile(page_index))
-                    return false;
-            }
-            return true;
-        }());
-
-        m_unused_committed_pages--;
+        --m_unused_committed_pages;
     }
     return MM.allocate_committed_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
 }
@@ -404,19 +290,20 @@ size_t AnonymousVMObject::cow_pages() const
     return m_cow_map.count_slow(true);
 }
 
-bool AnonymousVMObject::is_nonvolatile(size_t page_index)
-{
-    if (m_volatile_ranges_cache_dirty)
-        update_volatile_cache();
-    return !m_volatile_ranges_cache.contains(page_index);
-}
-
 PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, VirtualAddress vaddr)
 {
     VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(m_lock);
+
+    if (is_volatile()) {
+        // A COW fault in a volatile region? Userspace is writing to volatile memory, this is a bug. Crash.
+        dbgln("COW fault in volatile region, will crash.");
+        return PageFaultResponse::ShouldCrash;
+    }
+
     auto& page_slot = physical_pages()[page_index];
-    bool have_committed = m_shared_committed_cow_pages && is_nonvolatile(page_index);
+    bool have_committed = m_shared_committed_cow_pages;
+
     if (page_slot->ref_count() == 1) {
         dbgln_if(PAGE_FAULT_DEBUG, "    >> It's a COW page but nobody is sharing it anymore. Remap r/w");
         set_should_cow(page_index, false);
@@ -460,6 +347,35 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
     MM.unquickmap_page();
     set_should_cow(page_index, false);
     return PageFaultResponse::Continue;
+}
+
+CommittedCowPages::CommittedCowPages(size_t committed_pages)
+    : m_committed_pages(committed_pages)
+{
+}
+
+CommittedCowPages::~CommittedCowPages()
+{
+    // Return unused committed pages
+    if (m_committed_pages > 0)
+        MM.uncommit_user_physical_pages(m_committed_pages);
+}
+
+NonnullRefPtr<PhysicalPage> CommittedCowPages::allocate_one()
+{
+    VERIFY(m_committed_pages > 0);
+    m_committed_pages--;
+
+    return MM.allocate_committed_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+}
+
+bool CommittedCowPages::return_one()
+{
+    VERIFY(m_committed_pages > 0);
+    m_committed_pages--;
+
+    MM.uncommit_user_physical_pages(1);
+    return m_committed_pages == 0;
 }
 
 }

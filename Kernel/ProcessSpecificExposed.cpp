@@ -456,7 +456,7 @@ private:
                 region_object.add("syscall", region->is_syscall_region());
                 region_object.add("purgeable", region->vmobject().is_anonymous());
                 if (region->vmobject().is_anonymous()) {
-                    region_object.add("volatile", static_cast<const AnonymousVMObject&>(region->vmobject()).is_any_volatile());
+                    region_object.add("volatile", static_cast<AnonymousVMObject const&>(region->vmobject()).is_volatile());
                 }
                 region_object.add("cacheable", region->is_cacheable());
                 region_object.add("address", region->vaddr().get());
