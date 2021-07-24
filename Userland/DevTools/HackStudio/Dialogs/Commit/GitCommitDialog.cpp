@@ -22,19 +22,17 @@ GitCommitDialog::GitCommitDialog(GUI::Window* parent)
     auto& widget = set_main_widget<GUI::Widget>();
     widget.load_from_gml(git_commit_dialog_gml);
 
-    m_message_editor = *widget.find_descendant_of_type_named<GUI::TextEditor>("message_editor");
-    m_cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
-    m_commit_button = *widget.find_descendant_of_type_named<GUI::Button>("commit_button");
-    m_commit_button->set_enabled(!m_message_editor->text().is_empty());
+    m_message_editor = widget.find_descendant_of_type_named<GUI::TextEditor>("message_editor");
+    m_cancel_button = widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+    m_commit_button = widget.find_descendant_of_type_named<GUI::Button>("commit_button");
+    m_commit_button->set_enabled(!m_message_editor->text().is_empty() && on_commit);
 
     m_message_editor->on_change = [this]() {
-        m_commit_button->set_enabled(!m_message_editor->text().is_empty());
+        m_commit_button->set_enabled(!m_message_editor->text().is_empty() && on_commit);
     };
 
     m_commit_button->on_click = [this](auto) {
-        if (on_commit)
-            on_commit(m_message_editor->text());
-
+        on_commit(m_message_editor->text());
         done(ExecResult::ExecOK);
     };
 

@@ -24,7 +24,7 @@
         layout: @GUI::HorizontalBoxLayout
         shrink_to_fit: true
 
-        @GUI::Widget {}
+        @GUI::Widget
 
         @GUI::Button {
             name: "commit_button"

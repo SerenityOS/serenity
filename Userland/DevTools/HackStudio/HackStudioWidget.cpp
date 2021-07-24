@@ -132,7 +132,7 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     m_stop_action = create_stop_action();
     m_debug_action = create_debug_action();
     m_git_commit_action = create_git_commit_action();
-    m_git_commit_action->set_enabled(m_git_widget->initialize_if_needed(true));
+    m_git_commit_action->set_enabled(m_git_widget->initialize_if_needed(true) && m_git_widget->has_staged_files());
 
     initialize_debugger();
 
@@ -657,7 +657,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_git_commit_action()
 {
     return GUI::Action::create("&Commit", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/commit.png"), [this](auto&) {
         if (m_git_widget->initialized())
-            this->m_git_widget->commit();
+            m_git_widget->commit();
     });
 }
 
@@ -906,8 +906,8 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
     });
-    m_git_widget->on_repository_update([this]() {
-        m_git_commit_action->set_enabled(m_git_widget->initialized());
+    m_git_widget->set_repository_update_callback([this]() {
+        m_git_commit_action->set_enabled(m_git_widget->initialize_if_needed(true) && m_git_widget->has_staged_files());
     });
 
     ToDoEntries::the().on_update = [this]() {

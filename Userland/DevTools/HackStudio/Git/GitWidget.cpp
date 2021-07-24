@@ -5,8 +5,8 @@
  */
 
 #include "GitWidget.h"
+#include "../Dialogs/Commit/GitCommitDialog.h"
 #include "GitFilesModel.h"
-#include <DevTools/HackStudio/Dialogs/Commit/GitCommitDialog.h>
 #include <LibCore/File.h>
 #include <LibDiff/Format.h>
 #include <LibGUI/Application.h>
@@ -15,7 +15,6 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
@@ -140,13 +139,17 @@ void GitWidget::unstage_file(const LexicalPath& file)
 
 void GitWidget::commit()
 {
-    auto dialog = GitCommitDialog::construct(window());
+    if (m_git_repo) {
+        auto dialog = GitCommitDialog::construct(window());
 
-    dialog->on_commit = [this](auto& message) {
-        m_git_repo->commit(message);
-        refresh();
-    };
-    dialog->exec();
+        dialog->on_commit = [this](auto& message) {
+            m_git_repo->commit(message);
+            refresh();
+        };
+        dialog->exec();
+    } else {
+        GUI::MessageBox::show(window(), "There is no git repository to commit to!", "Error");
+    }
 }
 
 void GitWidget::set_view_diff_callback(ViewDiffCallback callback)
@@ -154,7 +157,7 @@ void GitWidget::set_view_diff_callback(ViewDiffCallback callback)
     m_view_diff_callback = move(callback);
 }
 
-void GitWidget::on_repository_update(Function<void()> callback)
+void GitWidget::set_repository_update_callback(Function<void()> callback)
 {
     m_repository_update_callback = move(callback);
 }
@@ -177,5 +180,10 @@ void GitWidget::show_diff(const LexicalPath& file_path)
     const auto& diff = m_git_repo->unstaged_diff(file_path);
     VERIFY(original_content.has_value() && diff.has_value());
     m_view_diff_callback(original_content.value(), diff.value());
+}
+
+bool GitWidget::has_staged_files()
+{
+    return !m_git_repo->staged_files().is_empty();
 }
 }

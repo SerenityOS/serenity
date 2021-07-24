@@ -24,9 +24,10 @@ public:
     void commit();
     void refresh();
     void set_view_diff_callback(ViewDiffCallback callback);
-    void on_repository_update(Function<void()> callback);
+    void set_repository_update_callback(Function<void()> callback);
     bool initialized() const { return !m_git_repo.is_null(); };
     bool initialize_if_needed(bool quiet);
+    bool has_staged_files();
 
 private:
     explicit GitWidget(const LexicalPath& repo_root);
