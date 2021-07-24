@@ -1153,7 +1153,10 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         auto low_bound = low_bound_string.to_uint();
 
         if (!low_bound.has_value()) {
-            back(chars_consumed + 1);
+            if (!m_should_use_browser_extended_grammar && done())
+                return set_error(Error::MismatchingBrace);
+
+            back(chars_consumed + !done());
             return true;
         }
 
@@ -1173,7 +1176,10 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         }
 
         if (!match(TokenType::RightCurly)) {
-            back(chars_consumed + 1);
+            if (!m_should_use_browser_extended_grammar && done())
+                return set_error(Error::MismatchingBrace);
+
+            back(chars_consumed + !done());
             return true;
         }
 
@@ -1297,7 +1303,7 @@ bool ECMA262Parser::parse_invalid_braced_quantifier()
     StringView high_bound;
 
     if (low_bound.is_empty()) {
-        back(chars_consumed + 1);
+        back(chars_consumed + !done());
         return false;
     }
     chars_consumed += low_bound.length();
@@ -1310,7 +1316,7 @@ bool ECMA262Parser::parse_invalid_braced_quantifier()
     }
 
     if (!match(TokenType::RightCurly)) {
-        back(chars_consumed + 1);
+        back(chars_consumed + !done());
         return false;
     }
 
