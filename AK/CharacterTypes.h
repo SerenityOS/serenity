@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/Types.h>
+#include <AK/UnicodeData.h>
 
 // NOTE: For a quick reference for most of this, see https://www.cplusplus.com/reference/cctype/ and https://infra.spec.whatwg.org/#code-points.
 // NOTE: To avoid ambiguity when including this header, all methods contains names should contain "ascii" or "unicode".
@@ -109,6 +110,22 @@ constexpr bool is_unicode_noncharacter(u32 code_point)
     return is_unicode(code_point) && ((code_point >= 0xFDD0 && code_point <= 0xFDEF) || ((code_point & 0xFFFE) == 0xFFFE) || ((code_point & 0xFFFF) == 0xFFFF));
 }
 
+inline u32 to_unicode_lowercase(u32 code_point)
+{
+    auto unicode_data = unicode_data_for_code_point(code_point);
+    if (unicode_data.has_value())
+        return unicode_data->simple_lowercase_mapping;
+    return code_point;
+}
+
+inline u32 to_unicode_uppercase(u32 code_point)
+{
+    auto unicode_data = unicode_data_for_code_point(code_point);
+    if (unicode_data.has_value())
+        return unicode_data->simple_uppercase_mapping;
+    return code_point;
+}
+
 constexpr u32 to_ascii_lowercase(u32 code_point)
 {
     if (is_ascii_upper_alpha(code_point))
@@ -186,3 +203,5 @@ using AK::parse_ascii_hex_digit;
 using AK::to_ascii_base36_digit;
 using AK::to_ascii_lowercase;
 using AK::to_ascii_uppercase;
+using AK::to_unicode_lowercase;
+using AK::to_unicode_uppercase;

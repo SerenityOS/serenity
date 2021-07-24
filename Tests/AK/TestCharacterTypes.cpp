@@ -106,6 +106,34 @@ TEST_CASE(to_ascii_uppercase)
     compare_value_output_over(ASCII, toupper, to_ascii_uppercase);
 }
 
+TEST_CASE(to_unicode_lowercase)
+{
+    compare_value_output_over(ASCII, tolower, to_unicode_lowercase);
+
+    EXPECT_EQ(to_unicode_lowercase(0x03c9u), 0x03c9u); // "ω" to "ω"
+    EXPECT_EQ(to_unicode_lowercase(0x03a9u), 0x03c9u); // "Ω" to "ω"
+
+    // Code points encoded by ranges in UnicodeData.txt
+    EXPECT_EQ(to_unicode_lowercase(0x3400u), 0x3400u);
+    EXPECT_EQ(to_unicode_lowercase(0x3401u), 0x3401u);
+    EXPECT_EQ(to_unicode_lowercase(0x3402u), 0x3402u);
+    EXPECT_EQ(to_unicode_lowercase(0x4dbfu), 0x4dbfu);
+}
+
+TEST_CASE(to_unicode_uppercase)
+{
+    compare_value_output_over(ASCII, toupper, to_unicode_uppercase);
+
+    EXPECT_EQ(to_unicode_uppercase(0x03c9u), 0x03a9u); // "ω" to "Ω"
+    EXPECT_EQ(to_unicode_uppercase(0x03a9u), 0x03a9u); // "Ω" to "Ω"
+
+    // Code points encoded by ranges in UnicodeData.txt
+    EXPECT_EQ(to_unicode_uppercase(0x3400u), 0x3400u);
+    EXPECT_EQ(to_unicode_uppercase(0x3401u), 0x3401u);
+    EXPECT_EQ(to_unicode_uppercase(0x3402u), 0x3402u);
+    EXPECT_EQ(to_unicode_uppercase(0x4dbfu), 0x4dbfu);
+}
+
 TEST_CASE(parse_ascii_digit)
 {
     EXPECT_EQ(parse_ascii_digit('0'), 0u);
