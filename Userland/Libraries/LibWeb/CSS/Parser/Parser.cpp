@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
@@ -603,7 +604,6 @@ Result<Selector::SimpleSelector, Parser::SelectorParsingResult> Parser::parse_si
                     simple_selector.pseudo_class.nth_child_pattern = nth_child_pattern.value();
                 } else {
                     dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid nth-child format");
-                    function_values.dump_all_tokens();
                     return SelectorParsingResult::SyntaxError;
                 }
             } else if (pseudo_function.name().equals_ignoring_case("nth-last-child")) {
@@ -611,11 +611,9 @@ Result<Selector::SimpleSelector, Parser::SelectorParsingResult> Parser::parse_si
                 auto function_values = TokenStream<StyleComponentValueRule>(pseudo_function.values());
                 auto nth_child_pattern = parse_a_n_plus_b_pattern(function_values);
                 if (nth_child_pattern.has_value()) {
-                    dbgln("+++ Got An+B pattern: '{}'", nth_child_pattern.value().to_string());
                     simple_selector.pseudo_class.nth_child_pattern = nth_child_pattern.value();
                 } else {
                     dbgln_if(CSS_PARSER_DEBUG, "!!! Invalid nth-child format");
-                    function_values.dump_all_tokens();
                     return SelectorParsingResult::SyntaxError;
                 }
             } else {
@@ -1491,7 +1489,7 @@ RefPtr<StyleValue> Parser::parse_numeric_value(ParsingContext const&, StyleCompo
     if (component_value.is(Token::Type::Number)) {
         auto number = component_value.token();
         if (number.m_number_type == Token::NumberType::Integer) {
-            return NumericStyleValue::create(number.integer());
+            return NumericStyleValue::create(number.to_integer());
         } else {
             auto float_value = try_parse_float(number.m_value.string_view());
             if (float_value.has_value())
@@ -1748,7 +1746,7 @@ RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, Proper
     if (takes_integer_value(property_id) && component_value.is(Token::Type::Number)) {
         auto number = component_value.token();
         if (number.m_number_type == Token::NumberType::Integer) {
-            return LengthStyleValue::create(Length::make_px(number.integer()));
+            return LengthStyleValue::create(Length::make_px(number.to_integer()));
         }
     }
 
@@ -1776,90 +1774,306 @@ RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, Proper
     return {};
 }
 
-Optional<Selector::SimpleSelector::NthChildPattern> Parser::parse_nth_child_pattern(TokenStream<StyleComponentValueRule>& values)
+Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>& values)
 {
-    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_nth_child_pattern");
+    dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_a_n_plus_b_pattern");
 
-    Selector::SimpleSelector::NthChildPattern pattern;
+    int a = 0;
+    int b = 0;
 
-    auto current_value = values.next_token();
-    if (current_value.is(Token::Type::Ident)) {
-        auto ident = current_value.token().ident();
-        if (ident.equals_ignoring_case("odd")) {
-            pattern.step_size = 2;
-            pattern.offset = 1;
-            return pattern;
-
-        } else if (ident.equals_ignoring_case("even")) {
-            pattern.step_size = 2;
-            return pattern;
+    auto syntax_error = [&]() -> Optional<Selector::SimpleSelector::ANPlusBPattern> {
+        if constexpr (CSS_PARSER_DEBUG) {
+            dbgln("Invalid An+B value:");
+            values.dump_all_tokens();
         }
-    }
-
-    // Try to match any of following patterns:
-    // 1. An+B
-    // 2. An
-    // 3. B
-    // ...where "A" is "step_size", "B" is "offset" and rest are literals.
-    // "A" can be omitted, in that case "A" = 1.
-    // "A" may have "+" or "-" sign, "B" always must be predated by sign for pattern (1).
-
-    auto is_n = [](StyleComponentValueRule value) -> bool {
-        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("n");
+        return {};
     };
 
-    auto is_delim = [](StyleComponentValueRule value, StringView delim) -> bool {
+    auto make_return_value = [&]() -> Optional<Selector::SimpleSelector::ANPlusBPattern> {
+        // When we think we are done, but there are more non-whitespace tokens, then it's a parse error.
+        values.skip_whitespace();
+        if (values.has_next_token()) {
+            if constexpr (CSS_PARSER_DEBUG) {
+                dbgln("Extra tokens at end of An+B value:");
+                values.dump_all_tokens();
+            }
+            return syntax_error();
+        } else {
+            return Selector::SimpleSelector::ANPlusBPattern { a, b };
+        }
+    };
+
+    auto is_n = [](StyleComponentValueRule const& value) -> bool {
+        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("n"sv);
+    };
+    auto is_ndash = [](StyleComponentValueRule const& value) -> bool {
+        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("n-"sv);
+    };
+    auto is_dashn = [](StyleComponentValueRule const& value) -> bool {
+        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("-n"sv);
+    };
+    auto is_dashndash = [](StyleComponentValueRule const& value) -> bool {
+        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("-n-"sv);
+    };
+    auto is_delim = [](StyleComponentValueRule const& value, StringView const& delim) -> bool {
         return value.is(Token::Type::Delim) && value.token().delim().equals_ignoring_case(delim);
     };
-
-    int step_size_or_offset = 0;
-
-    // "When a=1, or a=-1, the 1 may be omitted from the rule."
-    if (is_n(current_value)) {
-        step_size_or_offset = +1;
-    } else if (is_delim(current_value, "+"sv) && is_n(values.peek_token())) {
-        step_size_or_offset = +1;
-        values.next_token();
-    } else if (is_delim(current_value, "-"sv) && is_n(values.peek_token())) {
-        step_size_or_offset = -1;
-        values.next_token();
-    } else if (current_value.is(Token::Type::Number)) {
-        step_size_or_offset = current_value.token().integer();
-    } else {
-        values.reconsume_current_input_token();
-    }
-
-    current_value = values.next_token();
-
-    if (is_n(current_value)) {
-        values.skip_whitespace();
-
-        auto next_value = values.peek_token();
-        if (is_delim(next_value, "+") || is_delim(next_value, "-")) {
-            const auto sign = is_delim(next_value, "+") ? 1 : -1;
-            values.next_token();
-
-            values.skip_whitespace();
-
-            // "An+B" pattern
-            auto number = values.next_token();
-            if (!number.is(Token::Type::Number))
-                return {};
-
-            pattern.step_size = step_size_or_offset;
-            pattern.offset = sign * number.token().integer();
-        } else {
-            // "An" pattern
-            pattern.step_size = step_size_or_offset;
+    auto is_n_dimension = [](StyleComponentValueRule const& value) -> bool {
+        if (!value.is(Token::Type::Dimension))
+            return false;
+        if (value.token().number_type() != Token::NumberType::Integer)
+            return false;
+        if (!value.token().dimension_unit().equals_ignoring_case("n"sv))
+            return false;
+        return true;
+    };
+    auto is_ndash_dimension = [](StyleComponentValueRule const& value) -> bool {
+        if (!value.is(Token::Type::Dimension))
+            return false;
+        if (value.token().number_type() != Token::NumberType::Integer)
+            return false;
+        if (!value.token().dimension_unit().equals_ignoring_case("n-"sv))
+            return false;
+        return true;
+    };
+    auto is_ndashdigit_dimension = [](StyleComponentValueRule const& value) -> bool {
+        if (!value.is(Token::Type::Dimension))
+            return false;
+        if (value.token().number_type() != Token::NumberType::Integer)
+            return false;
+        auto dimension_unit = value.token().dimension_unit();
+        if (!dimension_unit.starts_with("n-"sv, CaseSensitivity::CaseInsensitive))
+            return false;
+        for (size_t i = 2; i < dimension_unit.length(); ++i) {
+            if (!is_ascii_digit(dimension_unit[i]))
+                return false;
         }
-    } else {
-        // "B" pattern
-        pattern.offset = step_size_or_offset;
+        return true;
+    };
+    auto is_ndashdigit_ident = [](StyleComponentValueRule const& value) -> bool {
+        if (!value.is(Token::Type::Ident))
+            return false;
+        auto ident = value.token().ident();
+        if (!ident.starts_with("n-"sv, CaseSensitivity::CaseInsensitive))
+            return false;
+        for (size_t i = 2; i < ident.length(); ++i) {
+            if (!is_ascii_digit(ident[i]))
+                return false;
+        }
+        return true;
+    };
+    auto is_dashndashdigit_ident = [](StyleComponentValueRule const& value) -> bool {
+        if (!value.is(Token::Type::Ident))
+            return false;
+        auto ident = value.token().ident();
+        if (!ident.starts_with("-n-"sv, CaseSensitivity::CaseInsensitive))
+            return false;
+        for (size_t i = 3; i < ident.length(); ++i) {
+            if (!is_ascii_digit(ident[i]))
+                return false;
+        }
+        return true;
+    };
+    auto is_integer = [](StyleComponentValueRule const& value) -> bool {
+        return value.is(Token::Type::Number) && value.token().is(Token::NumberType::Integer);
+    };
+    auto is_signed_integer = [is_integer](StyleComponentValueRule const& value) -> bool {
+        return is_integer(value) && value.token().is_integer_value_signed();
+    };
+    auto is_signless_integer = [is_integer](StyleComponentValueRule const& value) -> bool {
+        return is_integer(value) && !value.token().is_integer_value_signed();
+    };
+
+    // https://www.w3.org/TR/css-syntax-3/#the-anb-type
+    // Unfortunately these can't be in the same order as in the spec.
+
+    values.skip_whitespace();
+    auto& first_value = values.next_token();
+
+    // odd | even
+    if (first_value.is(Token::Type::Ident)) {
+        auto ident = first_value.token().ident();
+        if (ident.equals_ignoring_case("odd")) {
+            a = 2;
+            b = 1;
+            return make_return_value();
+        } else if (ident.equals_ignoring_case("even")) {
+            a = 2;
+            return make_return_value();
+        }
+    }
+    // <integer>
+    if (is_integer(first_value)) {
+        b = first_value.token().to_integer();
+        return make_return_value();
+    }
+    // <n-dimension>
+    // <n-dimension> <signed-integer>
+    // <n-dimension> ['+' | '-'] <signless-integer>
+    if (is_n_dimension(first_value)) {
+        a = first_value.token().dimension_value_int();
+
+        values.skip_whitespace();
+        auto& second_value = values.next_token();
+        if (second_value.is(Token::Type::EndOfFile)) {
+            // <n-dimension>
+            return make_return_value();
+        } else if (is_signed_integer(second_value)) {
+            // <n-dimension> <signed-integer>
+            b = second_value.token().to_integer();
+            return make_return_value();
+        }
+
+        values.skip_whitespace();
+        auto& third_value = values.next_token();
+        if ((is_delim(second_value, "+"sv) || is_delim(second_value, "-"sv)) && is_signless_integer(third_value)) {
+            // <n-dimension> ['+' | '-'] <signless-integer>
+            b = third_value.token().to_integer() * (is_delim(second_value, "+"sv) ? 1 : -1);
+            return make_return_value();
+        }
+
+        return syntax_error();
+    }
+    // <ndash-dimension> <signless-integer>
+    if (is_ndash_dimension(first_value)) {
+        values.skip_whitespace();
+        auto& second_value = values.next_token();
+        if (is_signless_integer(second_value)) {
+            a = first_value.token().dimension_value_int();
+            b = -second_value.token().to_integer();
+            return make_return_value();
+        }
+
+        return syntax_error();
+    }
+    // <ndashdigit-dimension>
+    if (is_ndashdigit_dimension(first_value)) {
+        auto& dimension = first_value.token();
+        a = dimension.dimension_value_int();
+        auto maybe_b = dimension.dimension_unit().substring_view(1).to_int();
+        if (maybe_b.has_value()) {
+            b = maybe_b.value();
+            return make_return_value();
+        }
+
+        return syntax_error();
+    }
+    // <dashndashdigit-ident>
+    if (is_dashndashdigit_ident(first_value)) {
+        a = -1;
+        auto maybe_b = first_value.token().ident().substring_view(2).to_int();
+        if (maybe_b.has_value()) {
+            b = maybe_b.value();
+            return make_return_value();
+        }
+
+        return syntax_error();
+    }
+    // -n
+    // -n <signed-integer>
+    // -n ['+' | '-'] <signless-integer>
+    if (is_dashn(first_value)) {
+        a = -1;
+        values.skip_whitespace();
+        auto& second_value = values.next_token();
+        if (second_value.is(Token::Type::EndOfFile)) {
+            // -n
+            return make_return_value();
+        } else if (is_signed_integer(second_value)) {
+            // -n <signed-integer>
+            b = second_value.token().to_integer();
+            return make_return_value();
+        }
+
+        values.skip_whitespace();
+        auto& third_value = values.next_token();
+        if ((is_delim(second_value, "+"sv) || is_delim(second_value, "-"sv)) && is_signless_integer(third_value)) {
+            // -n ['+' | '-'] <signless-integer>
+            b = third_value.token().to_integer() * (is_delim(second_value, "+"sv) ? 1 : -1);
+            return make_return_value();
+        }
+
+        return syntax_error();
+    }
+    // -n- <signless-integer>
+    if (is_dashndash(first_value)) {
+        values.skip_whitespace();
+        auto& second_value = values.next_token();
+        if (is_signless_integer(second_value)) {
+            a = -1;
+            b = -second_value.token().to_integer();
+            return make_return_value();
+        }
+
+        return syntax_error();
     }
 
-    if (values.has_next_token())
-        return {};
+    // All that's left now are these:
+    // '+'?† n
+    // '+'?† n <signed-integer>
+    // '+'?† n ['+' | '-'] <signless-integer>
+    // '+'?† n- <signless-integer>
+    // '+'?† <ndashdigit-ident>
+    // In all of these cases, the + is optional, and has no effect.
+    // So, we just skip the +, and carry on.
+    if (!is_delim(first_value, "+"sv)) {
+        values.reconsume_current_input_token();
+        // We do *not* skip whitespace here.
+    }
 
-    return pattern;
+    auto& first_after_plus = values.next_token();
+    // '+'?† n
+    // '+'?† n <signed-integer>
+    // '+'?† n ['+' | '-'] <signless-integer>
+    if (is_n(first_after_plus)) {
+        a = 1;
+        values.skip_whitespace();
+        auto& second_value = values.next_token();
+        if (second_value.is(Token::Type::EndOfFile)) {
+            // '+'?† n
+            return make_return_value();
+        } else if (is_signed_integer(second_value)) {
+            // '+'?† n <signed-integer>
+            b = second_value.token().to_integer();
+            return make_return_value();
+        }
+
+        values.skip_whitespace();
+        auto& third_value = values.next_token();
+        if ((is_delim(second_value, "+"sv) || is_delim(second_value, "-"sv)) && is_signless_integer(third_value)) {
+            // '+'?† n ['+' | '-'] <signless-integer>
+            b = third_value.token().to_integer() * (is_delim(second_value, "+"sv) ? 1 : -1);
+            return make_return_value();
+        }
+
+        return syntax_error();
+    }
+
+    // '+'?† n- <signless-integer>
+    if (is_ndash(first_after_plus)) {
+        values.skip_whitespace();
+        auto& second_value = values.next_token();
+        if (is_signless_integer(second_value)) {
+            a = 1;
+            b = -second_value.token().to_integer();
+            return make_return_value();
+        }
+
+        return syntax_error();
+    }
+
+    // '+'?† <ndashdigit-ident>
+    if (is_ndashdigit_ident(first_after_plus)) {
+        a = 1;
+        auto maybe_b = first_after_plus.token().ident().substring_view(1).to_int();
+        if (maybe_b.has_value()) {
+            b = maybe_b.value();
+            return make_return_value();
+        }
+
+        return syntax_error();
+    }
+
+    return syntax_error();
 }
 }

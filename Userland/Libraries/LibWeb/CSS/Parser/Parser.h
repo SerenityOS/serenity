@@ -112,7 +112,7 @@ public:
     template<typename T>
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values(TokenStream<T>&);
 
-    Optional<Selector::SimpleSelector::NthChildPattern> parse_nth_child_pattern(TokenStream<StyleComponentValueRule>&);
+    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&);
 
     // FIXME: https://www.w3.org/TR/selectors-4/
     // Contrary to the name, these parse a comma-separated list of selectors, according to the spec.
