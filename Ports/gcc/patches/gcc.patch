@@ -6331,3 +6331,15 @@ diff -Naur gcc-11.1.0/gcc/config/host-darwin.c gcc-11.1.0.serenity/gcc/config/ho
  
  /* Yes, this is really supposed to work.  */
  /* This allows for a pagesize of 16384, which we have on Darwin20, but should
+diff -Naur gcc-11.1.0/gcc/common.opt gcc-11.1.0.serenity/gcc/common.opt
+--- gcc-11.1.0/gcc/common.opt	2021-07-24 02:52:10.000000000 +0200
++++ gcc-11.1.0.serenity/gcc/common.opt	2021-04-27 12:00:13.000000000 +0200
+@@ -3490,4 +3490,8 @@
+ Common Var(flag_ipa_ra) Optimization
+ Use caller save register across calls if possible.
+ 
++arch
++Driver Ignore Separate
++-arch <name>	Generate output for architecture <name>.
++
+ ; This comment is to ensure we retain the blank line above.
