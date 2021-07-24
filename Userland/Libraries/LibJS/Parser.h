@@ -50,7 +50,13 @@ public:
     };
 
     NonnullRefPtr<Declaration> parse_declaration();
-    NonnullRefPtr<Statement> parse_statement();
+
+    enum class AllowLabelledFunction {
+        No,
+        Yes
+    };
+
+    NonnullRefPtr<Statement> parse_statement(AllowLabelledFunction allow_labelled_function = AllowLabelledFunction::No);
     NonnullRefPtr<BlockStatement> parse_block_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement(bool& is_strict, bool error_on_binding = false);
     NonnullRefPtr<ReturnStatement> parse_return_statement();
@@ -91,7 +97,7 @@ public:
     NonnullRefPtr<ExportStatement> parse_export_statement(Program& program);
 
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
-    RefPtr<Statement> try_parse_labelled_statement();
+    RefPtr<Statement> try_parse_labelled_statement(AllowLabelledFunction allow_function);
     RefPtr<MetaProperty> try_parse_new_target_expression();
 
     struct Error {
