@@ -116,7 +116,7 @@ static constexpr int NE2K_RAM_END = 32768;
 static constexpr int NE2K_RAM_SIZE = NE2K_RAM_END - NE2K_RAM_BEGIN;
 
 static constexpr int NE2K_RAM_SEND_BEGIN = 16384;
-static constexpr int NE2K_RAM_SEND_END = 16384 + 6 * 256;
+static constexpr int NE2K_RAM_SEND_END = 16384 + 6 * NE2K_PAGE_SIZE;
 static constexpr int NE2K_RAM_SEND_SIZE = NE2K_RAM_SEND_END - NE2K_RAM_SEND_BEGIN;
 
 static constexpr int NE2K_RAM_RECV_BEGIN = NE2K_RAM_SEND_END;
@@ -426,7 +426,7 @@ void NE2000NetworkAdapter::receive()
             did_receive(packet.span().slice(sizeof(received_packet_header)));
         }
 
-        if (header.next_packet_page == NE2K_RAM_RECV_BEGIN)
+        if (header.next_packet_page == (NE2K_RAM_RECV_BEGIN >> 8))
             out8(REG_RW_BOUNDARY, (NE2K_RAM_RECV_END >> 8) - 1);
         else
             out8(REG_RW_BOUNDARY, header.next_packet_page - 1);
