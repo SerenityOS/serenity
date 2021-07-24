@@ -43,9 +43,9 @@ namespace Kernel {
 
 static void create_signal_trampoline();
 
-RecursiveSpinLock g_processes_lock;
+RecursiveSpinLock g_profiling_lock;
 static Atomic<pid_t> next_pid;
-static AK::Singleton<Process::List> s_processes;
+static AK::Singleton<ProtectedValue<Process::List>> s_processes;
 READONLY_AFTER_INIT HashMap<String, OwnPtr<Module>>* g_modules;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
@@ -56,7 +56,7 @@ ProtectedValue<String>& hostname()
     return *s_hostname;
 }
 
-Process::List& processes()
+ProtectedValue<Process::List>& processes()
 {
     return *s_processes;
 }
@@ -88,20 +88,22 @@ UNMAP_AFTER_INIT void Process::initialize()
 Vector<ProcessID> Process::all_pids()
 {
     Vector<ProcessID> pids;
-    ScopedSpinLock lock(g_processes_lock);
-    pids.ensure_capacity(processes().size_slow());
-    for (auto& process : processes())
-        pids.append(process.pid());
+    processes().with_shared([&](const auto& list) {
+        pids.ensure_capacity(list.size_slow());
+        for (const auto& process : list)
+            pids.append(process.pid());
+    });
     return pids;
 }
 
 NonnullRefPtrVector<Process> Process::all_processes()
 {
     NonnullRefPtrVector<Process> output;
-    ScopedSpinLock lock(g_processes_lock);
-    output.ensure_capacity(processes().size_slow());
-    for (auto& process : processes())
-        output.append(NonnullRefPtr<Process>(process));
+    processes().with_shared([&](const auto& list) {
+        output.ensure_capacity(list.size_slow());
+        for (const auto& process : list)
+            output.append(NonnullRefPtr<Process>(process));
+    });
     return output;
 }
 
@@ -149,10 +151,9 @@ void Process::register_new(Process& process)
 {
     // Note: this is essentially the same like process->ref()
     RefPtr<Process> new_process = process;
-    {
-        ScopedSpinLock lock(g_processes_lock);
-        processes().prepend(process);
-    }
+    processes().with_exclusive([&](auto& list) {
+        list.prepend(process);
+    });
     ProcFSComponentRegistry::the().register_new_process(process);
 }
 
@@ -162,14 +163,10 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     if (arguments.is_empty()) {
         arguments.append(parts.last());
     }
-    RefPtr<Custody> cwd;
-    {
-        ScopedSpinLock lock(g_processes_lock);
-        if (auto parent = Process::from_pid(parent_pid)) {
-            cwd = parent->m_cwd;
-        }
-    }
 
+    RefPtr<Custody> cwd;
+    if (auto parent = Process::from_pid(parent_pid))
+        cwd = parent->m_cwd;
     if (!cwd)
         cwd = VirtualFileSystem::the().root_custody();
 
@@ -308,11 +305,10 @@ Process::~Process()
 
     PerformanceManager::add_process_exit_event(*this);
 
-    {
-        ScopedSpinLock processes_lock(g_processes_lock);
-        if (m_list_node.is_in_list())
-            processes().remove(*this);
-    }
+    if (m_list_node.is_in_list())
+        processes().with_exclusive([&](auto& list) {
+            list.remove(*this);
+        });
 }
 
 // Make sure the compiler doesn't "optimize away" this function:
@@ -417,13 +413,13 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
 
 RefPtr<Process> Process::from_pid(ProcessID pid)
 {
-    ScopedSpinLock lock(g_processes_lock);
-    for (auto& process : processes()) {
-        process.pid();
-        if (process.pid() == pid)
-            return &process;
-    }
-    return {};
+    return processes().with_shared([&](const auto& list) -> RefPtr<Process> {
+        for (auto& process : list) {
+            if (process.pid() == pid)
+                return &process;
+        }
+        return {};
+    });
 }
 
 const Process::FileDescriptionAndFlags& Process::FileDescriptions::at(size_t i) const
@@ -637,13 +633,10 @@ void Process::finalize()
         }
     }
 
-    {
-        ScopedSpinLock processses_lock(g_processes_lock);
-        if (!!ppid()) {
-            if (auto parent = Process::from_pid(ppid())) {
-                parent->m_ticks_in_user_for_dead_children += m_ticks_in_user + m_ticks_in_user_for_dead_children;
-                parent->m_ticks_in_kernel_for_dead_children += m_ticks_in_kernel + m_ticks_in_kernel_for_dead_children;
-            }
+    if (!!ppid()) {
+        if (auto parent = Process::from_pid(ppid())) {
+            parent->m_ticks_in_user_for_dead_children += m_ticks_in_user + m_ticks_in_user_for_dead_children;
+            parent->m_ticks_in_kernel_for_dead_children += m_ticks_in_kernel + m_ticks_in_kernel_for_dead_children;
         }
     }
 
@@ -692,9 +685,8 @@ void Process::die()
         m_threads_for_coredump.append(thread);
     });
 
-    {
-        ScopedSpinLock lock(g_processes_lock);
-        for (auto it = processes().begin(); it != processes().end();) {
+    processes().with_shared([&](const auto& list) {
+        for (auto it = list.begin(); it != list.end();) {
             auto& process = *it;
             ++it;
             if (process.has_tracee_thread(pid())) {
@@ -705,7 +697,7 @@ void Process::die()
                     dbgln("Failed to send the SIGSTOP signal to {} ({})", process.name(), process.pid());
             }
         }
-    }
+    });
 
     kill_all_threads();
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION

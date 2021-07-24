@@ -65,8 +65,7 @@ KResult Process::do_killall(int signal)
     KResult error = KSuccess;
 
     // Send the signal to all processes we have access to for.
-    ScopedSpinLock lock(g_processes_lock);
-    for (auto& process : processes()) {
+    processes().for_each_shared([&](auto& process) {
         KResult res = KSuccess;
         if (process.pid() == pid())
             res = do_killself(signal);
@@ -77,7 +76,7 @@ KResult Process::do_killall(int signal)
             any_succeeded = true;
         else
             error = res;
-    }
+    });
 
     if (any_succeeded)
         return KSuccess;
@@ -117,7 +116,6 @@ KResultOr<FlatPtr> Process::sys$kill(pid_t pid_or_pgid, int signal)
         return do_killself(signal);
     }
     VERIFY(pid_or_pgid >= 0);
-    ScopedSpinLock lock(g_processes_lock);
     auto peer = Process::from_pid(pid_or_pgid);
     if (!peer)
         return ESRCH;
