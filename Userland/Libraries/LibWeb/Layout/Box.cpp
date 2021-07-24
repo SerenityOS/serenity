@@ -5,6 +5,8 @@
  */
 
 #include <LibGfx/DisjointRectSet.h>
+#include <LibGfx/Filters/FastBoxBlurFilter.h>
+#include <LibGfx/Filters/SpatialGaussianBlurFilter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
@@ -256,29 +258,41 @@ void Box::paint_background_image(
 
 void Box::paint_box_shadow(PaintContext& context)
 {
-    // FIXME: Implement support for blurring the shadow.
     auto box_shadow_data = computed_values().box_shadow();
     if (!box_shadow_data.has_value())
         return;
 
-    auto offset_x_px = box_shadow_data->offset_x.resolved_or_zero(*this, width()).to_px(*this);
-    auto offset_y_px = box_shadow_data->offset_y.resolved_or_zero(*this, width()).to_px(*this);
+    auto enclosed_int_rect = enclosing_int_rect(bordered_rect());
 
-    Gfx::IntRect shifted_box_rect = {
-        bordered_rect().x() + offset_x_px,
-        bordered_rect().y() + offset_y_px,
-        bordered_rect().width(),
-        bordered_rect().height()
+    auto offset_x_px = (int)box_shadow_data->offset_x.resolved_or_zero(*this, width()).to_px(*this);
+    auto offset_y_px = (int)box_shadow_data->offset_y.resolved_or_zero(*this, width()).to_px(*this);
+    auto blur_radius = (int)box_shadow_data->blur_radius.resolved_or_zero(*this, width()).to_px(*this);
+
+    Gfx::IntRect bitmap_rect = {
+        0,
+        0,
+        enclosed_int_rect.width() + 4 * blur_radius,
+        enclosed_int_rect.height() + 4 * blur_radius
     };
 
-    Gfx::DisjointRectSet rect_set;
-    rect_set.add(shifted_box_rect);
-    auto shattered = rect_set.shatter(enclosing_int_rect(bordered_rect()));
+    Gfx::IntPoint blur_rect_position = {
+        enclosed_int_rect.x() - 2 * blur_radius + offset_x_px,
+        enclosed_int_rect.y() - 2 * blur_radius + offset_y_px
+    };
 
-    for (auto& rect : shattered.rects()) {
-        context.painter().fill_rect(rect, box_shadow_data->color);
-        (void)rect;
-    }
+    auto new_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, bitmap_rect.size());
+    Gfx::Painter painter(*new_bitmap);
+    painter.fill_rect({ { 2 * blur_radius, 2 * blur_radius }, enclosed_int_rect.size() }, box_shadow_data->color);
+
+    Gfx::FastBoxBlurFilter filter(*new_bitmap);
+    filter.apply_three_passes(blur_radius);
+
+    Gfx::DisjointRectSet rect_set;
+    rect_set.add(bitmap_rect);
+    auto shattered = rect_set.shatter({ enclosed_int_rect.location() - blur_rect_position, enclosed_int_rect.size() });
+
+    for (auto& rect : shattered.rects())
+        context.painter().blit(rect.location() + blur_rect_position, *new_bitmap, rect);
 }
 
 Box::BorderRadiusData Box::normalized_border_radius_data()
