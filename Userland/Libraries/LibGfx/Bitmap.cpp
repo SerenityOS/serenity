@@ -22,7 +22,7 @@
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PPMLoader.h>
 #include <LibGfx/ShareableBitmap.h>
-#include <fcntl.h>
+#include <errno.h>
 #include <stdio.h>
 #include <sys/mman.h>
 
@@ -533,21 +533,27 @@ void Bitmap::set_volatile()
     m_volatile = true;
 }
 
-[[nodiscard]] bool Bitmap::set_nonvolatile()
+[[nodiscard]] bool Bitmap::set_nonvolatile(bool& was_purged)
 {
-    if (!m_volatile)
+    if (!m_volatile) {
+        was_purged = false;
         return true;
+    }
+
 #ifdef __serenity__
     int rc = madvise(m_data, size_in_bytes(), MADV_SET_NONVOLATILE);
     if (rc < 0) {
+        if (errno == ENOMEM) {
+            was_purged = was_purged_int;
+            return false;
+        }
+
         perror("madvise(MADV_SET_NONVOLATILE)");
-        VERIFY_NOT_REACHED();
     }
-#else
-    int rc = 0;
+    was_purged = rc != 0;
 #endif
     m_volatile = false;
-    return rc == 0;
+    return true;
 }
 
 ShareableBitmap Bitmap::to_shareable_bitmap() const
@@ -600,5 +606,4 @@ Vector<RGBA32> Bitmap::palette_to_vector() const
         vector.unchecked_append(palette_color(i).value());
     return vector;
 }
-
 }

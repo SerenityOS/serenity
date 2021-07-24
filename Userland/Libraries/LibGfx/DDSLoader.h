@@ -245,7 +245,7 @@ public:
     virtual IntSize size() override;
     virtual RefPtr<Gfx::Bitmap> bitmap() override;
     virtual void set_volatile() override;
-    [[nodiscard]] virtual bool set_nonvolatile() override;
+    [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
     virtual bool sniff() override;
     virtual bool is_animated() override;
     virtual size_t loop_count() override;

@@ -655,12 +655,11 @@ void GIFImageDecoderPlugin::set_volatile()
     }
 }
 
-bool GIFImageDecoderPlugin::set_nonvolatile()
+bool GIFImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 {
-    if (!m_context->frame_buffer) {
-        return true;
-    }
-    return m_context->frame_buffer->set_nonvolatile();
+    if (!m_context->frame_buffer)
+        return false;
+    return m_context->frame_buffer->set_nonvolatile(was_purged);
 }
 
 bool GIFImageDecoderPlugin::sniff()

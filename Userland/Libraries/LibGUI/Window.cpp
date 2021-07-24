@@ -410,8 +410,9 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         m_back_store = create_backing_store(event.window_size());
         VERIFY(m_back_store);
     } else if (m_double_buffering_enabled) {
-        bool still_has_pixels = m_back_store->bitmap().set_nonvolatile();
-        if (!still_has_pixels) {
+        bool was_purged = false;
+        bool bitmap_has_memory = m_back_store->bitmap().set_nonvolatile(was_purged);
+        if (!bitmap_has_memory || was_purged) {
             m_back_store = create_backing_store(event.window_size());
             VERIFY(m_back_store);
             created_new_backing_store = true;
@@ -1015,7 +1016,9 @@ void Window::notify_state_changed(Badge<WindowServerConnection>, bool minimized,
     if (minimized || occluded) {
         store->bitmap().set_volatile();
     } else {
-        if (!store->bitmap().set_nonvolatile()) {
+        bool was_purged = false;
+        bool bitmap_has_memory = store->bitmap().set_nonvolatile(was_purged);
+        if (!bitmap_has_memory || was_purged) {
             store = nullptr;
             update();
         }

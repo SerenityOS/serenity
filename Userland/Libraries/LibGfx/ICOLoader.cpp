@@ -352,11 +352,11 @@ void ICOImageDecoderPlugin::set_volatile()
         m_context->images[0].bitmap->set_volatile();
 }
 
-bool ICOImageDecoderPlugin::set_nonvolatile()
+bool ICOImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 {
     if (!m_context->images[0].bitmap)
         return false;
-    return m_context->images[0].bitmap->set_nonvolatile();
+    return m_context->images[0].bitmap->set_nonvolatile(was_purged);
 }
 
 bool ICOImageDecoderPlugin::sniff()
