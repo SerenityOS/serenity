@@ -1179,9 +1179,8 @@ _StartOfFunction:
                 }
                 ON('&')
                 {
-                    m_current_token.last_attribute().value = consume_current_builder();
                     m_return_state = State::AttributeValueDoubleQuoted;
-                    SWITCH_TO(CharacterReference);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CharacterReference);
                 }
                 ON(0)
                 {
@@ -1211,9 +1210,8 @@ _StartOfFunction:
                 }
                 ON('&')
                 {
-                    m_current_token.last_attribute().value = consume_current_builder();
                     m_return_state = State::AttributeValueSingleQuoted;
-                    SWITCH_TO(CharacterReference);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CharacterReference);
                 }
                 ON(0)
                 {
@@ -1244,9 +1242,8 @@ _StartOfFunction:
                 }
                 ON('&')
                 {
-                    m_current_token.last_attribute().value = consume_current_builder();
                     m_return_state = State::AttributeValueUnquoted;
-                    SWITCH_TO(CharacterReference);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CharacterReference);
                 }
                 ON('>')
                 {
