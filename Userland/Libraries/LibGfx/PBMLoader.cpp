@@ -156,12 +156,12 @@ void PBMImageDecoderPlugin::set_volatile()
         m_context->bitmap->set_volatile();
 }
 
-bool PBMImageDecoderPlugin::set_nonvolatile()
+bool PBMImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 {
     if (!m_context->bitmap)
         return false;
 
-    return m_context->bitmap->set_nonvolatile();
+    return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
 bool PBMImageDecoderPlugin::sniff()

@@ -33,7 +33,7 @@ public:
     virtual RefPtr<Gfx::Bitmap> bitmap() = 0;
 
     virtual void set_volatile() = 0;
-    [[nodiscard]] virtual bool set_nonvolatile() = 0;
+    [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) = 0;
 
     virtual bool sniff() = 0;
 
@@ -63,7 +63,7 @@ public:
         if (m_plugin)
             m_plugin->set_volatile();
     }
-    [[nodiscard]] bool set_nonvolatile() { return m_plugin ? m_plugin->set_nonvolatile() : false; }
+    [[nodiscard]] bool set_nonvolatile(bool& was_purged) { return m_plugin ? m_plugin->set_nonvolatile(was_purged) : false; }
     bool sniff() const { return m_plugin ? m_plugin->sniff() : false; }
     bool is_animated() const { return m_plugin ? m_plugin->is_animated() : false; }
     size_t loop_count() const { return m_plugin ? m_plugin->loop_count() : 0; }

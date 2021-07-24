@@ -1367,11 +1367,11 @@ void BMPImageDecoderPlugin::set_volatile()
         m_context->bitmap->set_volatile();
 }
 
-bool BMPImageDecoderPlugin::set_nonvolatile()
+bool BMPImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 {
     if (!m_context->bitmap)
         return false;
-    return m_context->bitmap->set_nonvolatile();
+    return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
 bool BMPImageDecoderPlugin::sniff()

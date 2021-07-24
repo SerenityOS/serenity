@@ -1295,11 +1295,11 @@ void JPGImageDecoderPlugin::set_volatile()
         m_context->bitmap->set_volatile();
 }
 
-bool JPGImageDecoderPlugin::set_nonvolatile()
+bool JPGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 {
     if (!m_context->bitmap)
         return false;
-    return m_context->bitmap->set_nonvolatile();
+    return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
 bool JPGImageDecoderPlugin::sniff()

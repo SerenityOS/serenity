@@ -227,7 +227,10 @@ public:
 
     [[nodiscard]] bool is_volatile() const { return m_volatile; }
     void set_volatile();
-    [[nodiscard]] bool set_nonvolatile();
+
+    // Returns true if making the bitmap non-volatile succeeded. `was_purged` indicates status of contents.
+    // Returns false if there was not enough memory.
+    [[nodiscard]] bool set_nonvolatile(bool& was_purged);
 
     [[nodiscard]] Core::AnonymousBuffer& anonymous_buffer() { return m_buffer; }
     [[nodiscard]] Core::AnonymousBuffer const& anonymous_buffer() const { return m_buffer; }
