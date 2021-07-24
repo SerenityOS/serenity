@@ -9,6 +9,7 @@
 #include <AK/Concepts.h>
 #include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
+#include <AK/IntrusiveListRelaxedConst.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
 #include <AK/Userspace.h>
@@ -580,7 +581,7 @@ private:
             return nullptr;
     }
 
-    IntrusiveListNode<Process> m_list_node;
+    mutable IntrusiveListNode<Process> m_list_node;
 
     String m_name;
 
@@ -777,39 +778,41 @@ private:
     NonnullRefPtrVector<Thread> m_threads_for_coredump;
 
 public:
-    using List = IntrusiveList<Process, RawPtr<Process>, &Process::m_list_node>;
+    using List = IntrusiveListRelaxedConst<Process, RawPtr<Process>, &Process::m_list_node>;
 };
 
-Process::List& processes();
-extern RecursiveSpinLock g_processes_lock;
+extern RecursiveSpinLock g_profiling_lock;
+
+ProtectedValue<Process::List>& processes();
 
 template<IteratorFunction<Process&> Callback>
 inline void Process::for_each(Callback callback)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    ScopedSpinLock lock(g_processes_lock);
-    for (auto it = processes().begin(); it != processes().end();) {
-        auto& process = *it;
-        ++it;
-        if (callback(process) == IterationDecision::Break)
-            break;
-    }
+    processes().with_shared([&](const auto& list) {
+        for (auto it = list.begin(); it != list.end();) {
+            auto& process = *it;
+            ++it;
+            if (callback(process) == IterationDecision::Break)
+                break;
+        }
+    });
 }
 
 template<IteratorFunction<Process&> Callback>
 inline void Process::for_each_child(Callback callback)
 {
-    VERIFY_INTERRUPTS_DISABLED();
     ProcessID my_pid = pid();
-    ScopedSpinLock lock(g_processes_lock);
-    for (auto it = processes().begin(); it != processes().end();) {
-        auto& process = *it;
-        ++it;
-        if (process.ppid() == my_pid || process.has_tracee_thread(pid())) {
-            if (callback(process) == IterationDecision::Break)
-                break;
+    processes().with_shared([&](const auto& list) {
+        for (auto it = list.begin(); it != list.end();) {
+            auto& process = *it;
+            ++it;
+            if (process.ppid() == my_pid || process.has_tracee_thread(pid())) {
+                if (callback(process) == IterationDecision::Break)
+                    break;
+            }
         }
-    }
+    });
 }
 
 template<IteratorFunction<Thread&> Callback>
@@ -839,16 +842,16 @@ inline IterationDecision Process::for_each_thread(Callback callback)
 template<IteratorFunction<Process&> Callback>
 inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
 {
-    VERIFY_INTERRUPTS_DISABLED();
-    ScopedSpinLock lock(g_processes_lock);
-    for (auto it = processes().begin(); it != processes().end();) {
-        auto& process = *it;
-        ++it;
-        if (!process.is_dead() && process.pgid() == pgid) {
-            if (callback(process) == IterationDecision::Break)
-                break;
+    processes().with_shared([&](const auto& list) {
+        for (auto it = list.begin(); it != list.end();) {
+            auto& process = *it;
+            ++it;
+            if (!process.is_dead() && process.pgid() == pgid) {
+                if (callback(process) == IterationDecision::Break)
+                    break;
+            }
         }
-    }
+    });
 }
 
 template<VoidFunction<Process&> Callback>
