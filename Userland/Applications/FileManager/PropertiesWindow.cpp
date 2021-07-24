@@ -19,6 +19,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/TabWidget.h>
+#include <LibGfx/ImageDecoder.h>
 #include <grp.h>
 #include <limits.h>
 #include <pwd.h>
@@ -36,7 +37,7 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
     main_widget.layout()->set_margins({ 4, 4, 4, 4 });
     main_widget.set_fill_with_background_color(true);
 
-    set_rect({ 0, 0, 360, 420 });
+    set_rect({ 0, 0, 360, 440 });
     set_resizable(false);
 
     set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/properties.png"));
@@ -108,6 +109,15 @@ PropertiesWindow::PropertiesWindow(String const& path, bool disable_rename, Wind
     } else {
         auto link_location_widget = general_tab.find_descendant_of_type_named<GUI::Widget>("link_location_widget");
         general_tab.remove_child(*link_location_widget);
+    }
+
+    auto bitmap_size = get_bitmap_size(path);
+    if (bitmap_size.has_value()) {
+        auto dimensions = general_tab.find_descendant_of_type_named<GUI::Label>("dimensions");
+        dimensions->set_text(String::formatted("{}x{}", bitmap_size->width(), bitmap_size->height()));
+    } else {
+        auto dimensions_widget = general_tab.find_descendant_of_type_named<GUI::Widget>("dimensions_widget");
+        general_tab.remove_child(*dimensions_widget);
     }
 
     auto size = general_tab.find_descendant_of_type_named<GUI::Label>("size");
@@ -187,6 +197,18 @@ void PropertiesWindow::permission_changed(mode_t mask, bool set)
 String PropertiesWindow::make_full_path(String const& name)
 {
     return String::formatted("{}/{}", m_parent_path, name);
+}
+
+Optional<Gfx::IntSize> PropertiesWindow::get_bitmap_size(String const& path)
+{
+    auto file_or_error = MappedFile::map(path);
+    if (file_or_error.is_error())
+        return {};
+    auto& mapped_file = *file_or_error.value();
+    auto image_decoder = Gfx::ImageDecoder::create((const u8*)mapped_file.data(), mapped_file.size());
+    if (!image_decoder->is_valid())
+        return {};
+    return image_decoder->size();
 }
 
 bool PropertiesWindow::apply_changes()

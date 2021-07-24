@@ -63,6 +63,7 @@ private:
     bool apply_changes();
     void update();
     String make_full_path(String const& name);
+    Optional<Gfx::IntSize> get_bitmap_size(String const& path);
 
     RefPtr<GUI::Button> m_apply_button;
     RefPtr<GUI::TextBox> m_name_box;

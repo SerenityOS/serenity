@@ -88,6 +88,27 @@
     }
 
     @GUI::Widget {
+        name: "dimensions_widget"
+        fixed_height: 14
+
+        layout: @GUI::HorizontalBoxLayout {
+            spacing: 12
+        }
+
+        @GUI::Label {
+            text: "Dimensions:"
+            text_alignment: "CenterLeft"
+            fixed_width: 80
+        }
+
+        @GUI::Label {
+            name: "dimensions"
+            text: "16x16"
+            text_alignment: "CenterLeft"
+        }
+    }
+
+    @GUI::Widget {
         fixed_height: 14
 
         layout: @GUI::HorizontalBoxLayout {
