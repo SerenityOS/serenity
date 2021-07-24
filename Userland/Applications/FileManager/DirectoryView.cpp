@@ -54,26 +54,8 @@ NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(L
 
 RefPtr<LauncherHandler> DirectoryView::get_default_launch_handler(NonnullRefPtrVector<LauncherHandler> const& handlers)
 {
-    // If this is an application, pick it first
-    for (size_t i = 0; i < handlers.size(); i++) {
-        if (handlers[i].details().launcher_type == Desktop::Launcher::LauncherType::Application)
-            return handlers[i];
-    }
-    // If there's a handler preferred by the user, pick this first
-    for (size_t i = 0; i < handlers.size(); i++) {
-        if (handlers[i].details().launcher_type == Desktop::Launcher::LauncherType::UserPreferred)
-            return handlers[i];
-    }
-    // Otherwise, use the user's default, if available
-    for (size_t i = 0; i < handlers.size(); i++) {
-        if (handlers[i].details().launcher_type == Desktop::Launcher::LauncherType::UserDefault)
-            return handlers[i];
-    }
-    // If still no match, use the first one we find
-    if (!handlers.is_empty()) {
-        return handlers[0];
-    }
-
+    if (!handlers.is_empty())
+        return handlers.first();
     return {};
 }
 
@@ -448,17 +430,31 @@ void DirectoryView::set_should_show_dotfiles(bool show_dotfiles)
 void DirectoryView::launch(URL const&, LauncherHandler const& launcher_handler) const
 {
     pid_t child;
-    if (launcher_handler.details().launcher_type == Desktop::Launcher::LauncherType::Application) {
-        char const* argv[] = { launcher_handler.details().name.characters(), nullptr };
-        posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
+    auto const& handler_detail = launcher_handler.details();
+    constexpr char const* TERMINAL = "/bin/Terminal";
+    Vector<char const*> args { handler_detail.run_in_terminal ? TERMINAL : handler_detail.executable.characters() };
+    if (handler_detail.launcher_type == Desktop::Launcher::LauncherType::Application) {
+        auto const& terminal_execute_arg = String::formatted("'{}'", handler_detail.executable);
+        if (handler_detail.run_in_terminal)
+            args.extend({ "-k", "-e", terminal_execute_arg.characters() });
+        args.append(nullptr);
+        if ((errno = posix_spawn(&child, args.first(), nullptr, nullptr, const_cast<char**>(args.data()), environ)))
+            perror("posix_spawn");
         if (disown(child) < 0)
             perror("disown");
     } else {
         for (auto& path : selected_file_paths()) {
-            char const* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
-            posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
+            auto const& terminal_execute_arg = String::formatted("'{}' '{}'", handler_detail.executable, path);
+            if (handler_detail.run_in_terminal)
+                args.extend({ "-k", "-e", terminal_execute_arg.characters() });
+            else
+                args.append(path.characters());
+            args.append(nullptr);
+            if ((errno = posix_spawn(&child, args.first(), nullptr, nullptr, const_cast<char**>(args.data()), environ)))
+                perror("posix_spawn");
             if (disown(child) < 0)
                 perror("disown");
+            args.resize_and_keep_capacity(1);
         }
     }
 }
