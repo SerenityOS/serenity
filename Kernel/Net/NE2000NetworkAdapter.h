@@ -23,7 +23,12 @@ public:
     virtual ~NE2000NetworkAdapter() override;
 
     virtual void send_raw(ReadonlyBytes) override;
-    virtual bool link_up() override { return m_link_up; }
+    virtual bool link_up() override
+    {
+        // Pure NE2000 doesn't seem to have a link status indicator, so
+        // just assume that it's up.
+        return true;
+    }
 
     virtual StringView purpose() const override { return class_name(); }
 
@@ -48,7 +53,6 @@ private:
     IOAddress m_io_base;
     int m_ring_read_ptr;
     u8 m_interrupt_line { 0 };
-    bool m_link_up { false };
 
     MACAddress m_mac_address;
     EntropySource m_entropy_source;
