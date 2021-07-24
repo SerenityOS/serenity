@@ -54,7 +54,7 @@ String Token::to_debug_string() const
     case Type::Number:
         builder.append("Number: ");
         builder.append(m_value.to_string());
-        builder.append(m_unit.to_string());
+        builder.append(m_number_type == NumberType::Integer ? " (int)" : " (float)");
         return builder.to_string();
     case Type::Percentage:
         builder.append("Percentage: ");

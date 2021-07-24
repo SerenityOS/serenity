@@ -33,11 +33,15 @@ public:
         };
         Type type { Type::Invalid };
 
-        struct NthChildPattern {
-            int step_size { 0 };
-            int offset = { 0 };
+        struct ANPlusBPattern {
+            int step_size { 0 }; // "A"
+            int offset = { 0 };  // "B"
 
-            static NthChildPattern parse(StringView const& args);
+            static ANPlusBPattern parse(StringView const& args);
+            String to_string() const
+            {
+                return String::formatted("{}n{:+}", step_size, offset);
+            }
         };
 
         struct PseudoClass {
@@ -66,7 +70,7 @@ public:
 
             // FIXME: We don't need this field on every single SimpleSelector, but it's also annoying to malloc it somewhere.
             // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
-            NthChildPattern nth_child_pattern;
+            ANPlusBPattern nth_child_pattern;
 
             SelectorList not_selector {};
         };

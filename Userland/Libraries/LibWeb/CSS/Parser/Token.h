@@ -100,11 +100,34 @@ public:
     }
 
     bool is(NumberType number_type) const { return is(Token::Type::Number) && m_number_type == number_type; }
-
-    int integer() const
+    StringView number_string_value() const
+    {
+        VERIFY(m_type == Type::Number);
+        return m_value.string_view();
+    }
+    int to_integer() const
     {
         VERIFY(m_type == Type::Number && m_number_type == NumberType::Integer);
-        return m_value.string_view().to_int().value();
+        return number_string_value().to_int().value();
+    }
+    bool is_integer_value_signed() const { return number_string_value().starts_with('-') || number_string_value().starts_with('+'); }
+
+    StringView dimension_unit() const
+    {
+        VERIFY(m_type == Type::Dimension);
+        return m_unit.string_view();
+    }
+    StringView dimension_value() const
+    {
+        VERIFY(m_type == Type::Dimension);
+        return m_value.string_view();
+    }
+    int dimension_value_int() const { return dimension_value().to_int().value(); }
+
+    NumberType number_type() const
+    {
+        VERIFY((m_type == Type::Number) || (m_type == Type::Dimension));
+        return m_number_type;
     }
 
     Type mirror_variant() const;
