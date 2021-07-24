@@ -1046,10 +1046,10 @@ public:
                 pseudo_class.type = CSS::Selector::SimpleSelector::PseudoClass::Type::LastOfType;
             } else if (pseudo_name.starts_with("nth-child", CaseSensitivity::CaseInsensitive)) {
                 pseudo_class.type = CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild;
-                pseudo_class.nth_child_pattern = CSS::Selector::SimpleSelector::NthChildPattern::parse(capture_selector_args(pseudo_name));
+                pseudo_class.nth_child_pattern = CSS::Selector::SimpleSelector::ANPlusBPattern::parse(capture_selector_args(pseudo_name));
             } else if (pseudo_name.starts_with("nth-last-child", CaseSensitivity::CaseInsensitive)) {
                 pseudo_class.type = CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild;
-                pseudo_class.nth_child_pattern = CSS::Selector::SimpleSelector::NthChildPattern::parse(capture_selector_args(pseudo_name));
+                pseudo_class.nth_child_pattern = CSS::Selector::SimpleSelector::ANPlusBPattern::parse(capture_selector_args(pseudo_name));
             } else if (pseudo_name.equals_ignoring_case("before")) {
                 simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::Before;
             } else if (pseudo_name.equals_ignoring_case("after")) {

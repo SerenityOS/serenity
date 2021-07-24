@@ -47,11 +47,11 @@ u32 Selector::specificity() const
     return ids * 0x10000 + classes * 0x100 + tag_names;
 }
 
-Selector::SimpleSelector::NthChildPattern Selector::SimpleSelector::NthChildPattern::parse(StringView const& args)
+Selector::SimpleSelector::ANPlusBPattern Selector::SimpleSelector::ANPlusBPattern::parse(StringView const& args)
 {
     // FIXME: Remove this when the DeprecatedCSSParser is gone.
     // The new Parser::parse_nth_child_pattern() does the same as this, using Tokens.
-    CSS::Selector::SimpleSelector::NthChildPattern pattern;
+    CSS::Selector::SimpleSelector::ANPlusBPattern pattern;
     if (args.equals_ignoring_case("odd")) {
         pattern.step_size = 2;
         pattern.offset = 1;
