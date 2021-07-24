@@ -421,6 +421,27 @@ bool Board::is_legal_no_check(const Move& move, Color color) const
         // attempted move outside of board
         return false;
 
+    // Check castling first to allow dragging king onto the rook.
+    if (piece.type == Type::King) {
+        if (color == Color::White) {
+            if ((move.to == Square("a1") || move.to == Square("c1")) && m_white_can_castle_queenside && get_piece(Square("b1")).type == Type::None && get_piece(Square("c1")).type == Type::None && get_piece(Square("d1")).type == Type::None) {
+                return true;
+            } else if ((move.to == Square("h1") || move.to == Square("g1")) && m_white_can_castle_kingside && get_piece(Square("f1")).type == Type::None && get_piece(Square("g1")).type == Type::None) {
+                return true;
+            }
+        } else {
+            if ((move.to == Square("a8") || move.to == Square("c8")) && m_black_can_castle_queenside && get_piece(Square("b8")).type == Type::None && get_piece(Square("c8")).type == Type::None && get_piece(Square("d8")).type == Type::None) {
+                return true;
+            } else if ((move.to == Square("h8") || move.to == Square("g8")) && m_black_can_castle_kingside && get_piece(Square("f8")).type == Type::None && get_piece(Square("g8")).type == Type::None) {
+                return true;
+            }
+        }
+    }
+
+    if (piece.color == get_piece(move.to).color)
+        // Attempted move to a square occupied by a piece of the same color.
+        return false;
+
     if (piece.type == Type::Pawn) {
         int dir = (color == Color::White) ? +1 : -1;
         int start_rank = (color == Color::White) ? 1 : 6;
@@ -459,7 +480,7 @@ bool Board::is_legal_no_check(const Move& move, Color color) const
     } else if (piece.type == Type::Knight) {
         int rank_delta = abs(move.to.rank - move.from.rank);
         int file_delta = abs(move.to.file - move.from.file);
-        if (get_piece(move.to).color != color && max(rank_delta, file_delta) == 2 && min(rank_delta, file_delta) == 1) {
+        if (max(rank_delta, file_delta) == 2 && min(rank_delta, file_delta) == 1) {
             return true;
         }
     } else if (piece.type == Type::Bishop) {
@@ -473,10 +494,7 @@ bool Board::is_legal_no_check(const Move& move, Color color) const
                     return false;
                 }
             }
-
-            if (get_piece(move.to).color != color) {
-                return true;
-            }
+            return true;
         }
     } else if (piece.type == Type::Rook) {
         int rank_delta = move.to.rank - move.from.rank;
@@ -489,10 +507,7 @@ bool Board::is_legal_no_check(const Move& move, Color color) const
                     return false;
                 }
             }
-
-            if (get_piece(move.to).color != color) {
-                return true;
-            }
+            return true;
         }
     } else if (piece.type == Type::Queen) {
         int rank_delta = move.to.rank - move.from.rank;
@@ -505,36 +520,13 @@ bool Board::is_legal_no_check(const Move& move, Color color) const
                     return false;
                 }
             }
-
-            if (get_piece(move.to).color != color) {
-                return true;
-            }
+            return true;
         }
     } else if (piece.type == Type::King) {
         int rank_delta = move.to.rank - move.from.rank;
         int file_delta = move.to.file - move.from.file;
         if (abs(rank_delta) <= 1 && abs(file_delta) <= 1) {
-            if (get_piece(move.to).color != color) {
-                return true;
-            }
-        }
-
-        if (color == Color::White) {
-            if ((move.to == Square("a1") || move.to == Square("c1")) && m_white_can_castle_queenside && get_piece(Square("b1")).type == Type::None && get_piece(Square("c1")).type == Type::None && get_piece(Square("d1")).type == Type::None) {
-
-                return true;
-            } else if ((move.to == Square("h1") || move.to == Square("g1")) && m_white_can_castle_kingside && get_piece(Square("f1")).type == Type::None && get_piece(Square("g1")).type == Type::None) {
-
-                return true;
-            }
-        } else {
-            if ((move.to == Square("a8") || move.to == Square("c8")) && m_black_can_castle_queenside && get_piece(Square("b8")).type == Type::None && get_piece(Square("c8")).type == Type::None && get_piece(Square("d8")).type == Type::None) {
-
-                return true;
-            } else if ((move.to == Square("h8") || move.to == Square("g8")) && m_black_can_castle_kingside && get_piece(Square("f8")).type == Type::None && get_piece(Square("g8")).type == Type::None) {
-
-                return true;
-            }
+            return true;
         }
     }
 
