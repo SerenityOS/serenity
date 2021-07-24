@@ -27,6 +27,7 @@ public:
         String name;
         String executable;
         LauncherType launcher_type { LauncherType::Default };
+        bool run_in_terminal { false };
 
         static NonnullRefPtr<Details> from_details_str(const String&);
     };

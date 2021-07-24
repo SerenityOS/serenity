@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Nicholas Hollett <niax@niax.co.uk>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,6 +31,11 @@ void ClientConnection::die()
 
 Messages::LaunchServer::OpenUrlResponse ClientConnection::open_url(URL const& url, String const& handler_name)
 {
+    if (!url.is_valid()) {
+        did_misbehave("Got request to open invalid URL");
+        return nullptr;
+    }
+
     if (!m_allowlist.is_empty()) {
         bool allowed = false;
         auto request_url_without_fragment = url;
@@ -53,11 +59,21 @@ Messages::LaunchServer::OpenUrlResponse ClientConnection::open_url(URL const& ur
 
 Messages::LaunchServer::GetHandlersForUrlResponse ClientConnection::get_handlers_for_url(URL const& url)
 {
+    if (!url.is_valid()) {
+        did_misbehave("Got request to get handlers for invalid URL");
+        return nullptr;
+    }
+
     return Launcher::the().handlers_for_url(url);
 }
 
 Messages::LaunchServer::GetHandlersWithDetailsForUrlResponse ClientConnection::get_handlers_with_details_for_url(URL const& url)
 {
+    if (!url.is_valid()) {
+        did_misbehave("Got request to get handlers with details for invalid URL");
+        return nullptr;
+    }
+
     return Launcher::the().handlers_with_details_for_url(url);
 }
 

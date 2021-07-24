@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,14 +23,19 @@ auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRe
     auto obj = json.value().as_object();
     details->executable = obj.get("executable").to_string();
     details->name = obj.get("name").to_string();
+    details->run_in_terminal = obj.get("run_in_terminal").to_bool();
     if (auto type_value = obj.get_ptr("type")) {
         auto type_str = type_value->to_string();
-        if (type_str == "app")
+        if (type_str == "default")
+            details->launcher_type = LauncherType::Default;
+        else if (type_str == "application")
             details->launcher_type = LauncherType::Application;
         else if (type_str == "userpreferred")
             details->launcher_type = LauncherType::UserPreferred;
         else if (type_str == "userdefault")
             details->launcher_type = LauncherType::UserDefault;
+        else
+            VERIFY_NOT_REACHED();
     }
     return details;
 }

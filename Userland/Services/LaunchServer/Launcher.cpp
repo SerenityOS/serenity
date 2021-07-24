@@ -1,186 +1,32 @@
 /*
- * Copyright (c) 2020, Nicholas Hollett <niax@niax.co.uk>, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Nicholas Hollett <niax@niax.co.uk>
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Launcher.h"
-#include <AK/Function.h>
-#include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
-#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibDesktop/AppFile.h>
+#include <LibCore/File.h>
+#include <LibCore/StandardPaths.h>
 #include <errno.h>
 #include <serenity.h>
 #include <spawn.h>
-#include <stdio.h>
 #include <sys/stat.h>
 
 namespace LaunchServer {
 
 static Launcher* s_the;
-static bool spawn(String executable, const Vector<String>& arguments);
 
-String Handler::name_from_executable(const StringView& executable)
+static ALWAYS_INLINE bool is_executable(mode_t mode)
 {
-    auto separator = executable.find_last('/');
-    if (separator.has_value()) {
-        auto start = separator.value() + 1;
-        return executable.substring_view(start, executable.length() - start);
-    }
-    return executable;
+    return (mode & (S_IXUSR | S_IXGRP | S_IXOTH));
 }
 
-void Handler::from_executable(Type handler_type, const String& executable)
-{
-    this->handler_type = handler_type;
-    this->name = name_from_executable(executable);
-    this->executable = executable;
-}
-
-String Handler::to_details_str() const
-{
-    StringBuilder builder;
-    JsonObjectSerializer obj { builder };
-    obj.add("executable", executable);
-    obj.add("name", name);
-    switch (handler_type) {
-    case Type::Application:
-        obj.add("type", "app");
-        break;
-    case Type::UserDefault:
-        obj.add("type", "userdefault");
-        break;
-    case Type::UserPreferred:
-        obj.add("type", "userpreferred");
-        break;
-    default:
-        break;
-    }
-    obj.finish();
-    return builder.build();
-}
-
-Launcher::Launcher()
-{
-    VERIFY(s_the == nullptr);
-    s_the = this;
-}
-
-Launcher& Launcher::the()
-{
-    VERIFY(s_the);
-    return *s_the;
-}
-
-void Launcher::load_handlers(const String& af_dir)
-{
-    Desktop::AppFile::for_each([&](auto af) {
-        auto app_name = af->name();
-        auto app_executable = af->executable();
-        HashTable<String> file_types;
-        for (auto& file_type : af->launcher_file_types())
-            file_types.set(file_type);
-        HashTable<String> protocols;
-        for (auto& protocol : af->launcher_protocols())
-            protocols.set(protocol);
-        if (access(app_executable.characters(), X_OK) == 0)
-            m_handlers.set(app_executable, { Handler::Type::Default, app_name, app_executable, file_types, protocols });
-    },
-        af_dir);
-}
-
-void Launcher::load_config(const Core::ConfigFile& cfg)
-{
-    for (auto key : cfg.keys("FileType")) {
-        auto handler = cfg.read_entry("FileType", key).trim_whitespace();
-        if (handler.is_empty())
-            continue;
-        if (access(handler.characters(), X_OK) != 0)
-            continue;
-        m_file_handlers.set(key.to_lowercase(), handler);
-    }
-
-    for (auto key : cfg.keys("Protocol")) {
-        auto handler = cfg.read_entry("Protocol", key).trim_whitespace();
-        if (handler.is_empty())
-            continue;
-        if (access(handler.characters(), X_OK) != 0)
-            continue;
-        m_protocol_handlers.set(key.to_lowercase(), handler);
-    }
-}
-
-Vector<String> Launcher::handlers_for_url(const URL& url)
-{
-    Vector<String> handlers;
-    if (url.protocol() == "file") {
-        for_each_handler_for_path(url.path(), [&](auto& handler) -> bool {
-            handlers.append(handler.executable);
-            return true;
-        });
-    } else {
-        for_each_handler(url.protocol(), m_protocol_handlers, [&](const auto& handler) -> bool {
-            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.protocol())) {
-                handlers.append(handler.executable);
-                return true;
-            }
-            return false;
-        });
-    }
-    return handlers;
-}
-
-Vector<String> Launcher::handlers_with_details_for_url(const URL& url)
-{
-    Vector<String> handlers;
-    if (url.protocol() == "file") {
-        for_each_handler_for_path(url.path(), [&](auto& handler) -> bool {
-            handlers.append(handler.to_details_str());
-            return true;
-        });
-    } else {
-        for_each_handler(url.protocol(), m_protocol_handlers, [&](const auto& handler) -> bool {
-            if (handler.handler_type != Handler::Type::Default || handler.protocols.contains(url.protocol())) {
-                handlers.append(handler.to_details_str());
-                return true;
-            }
-            return false;
-        });
-    }
-    return handlers;
-}
-
-bool Launcher::open_url(const URL& url, const String& handler_name)
-{
-    if (!handler_name.is_null())
-        return open_with_handler_name(url, handler_name);
-
-    if (url.protocol() == "file")
-        return open_file_url(url);
-
-    return open_with_user_preferences(m_protocol_handlers, url.protocol(), { url.to_string() });
-}
-
-bool Launcher::open_with_handler_name(const URL& url, const String& handler_name)
-{
-    auto handler_optional = m_handlers.get(handler_name);
-    if (!handler_optional.has_value())
-        return false;
-
-    auto& handler = handler_optional.value();
-    String argument;
-    if (url.protocol() == "file")
-        argument = url.path();
-    else
-        argument = url.to_string();
-    return spawn(handler.executable, { argument });
-}
-
-bool spawn(String executable, const Vector<String>& arguments)
+static bool spawn(const String& executable, const Vector<String>& arguments)
 {
     Vector<const char*> argv { executable.characters() };
     for (auto& arg : arguments)
@@ -191,149 +37,273 @@ bool spawn(String executable, const Vector<String>& arguments)
     if ((errno = posix_spawn(&child_pid, executable.characters(), nullptr, nullptr, const_cast<char**>(argv.data()), environ))) {
         perror("posix_spawn");
         return false;
-    } else {
-        if (disown(child_pid) < 0)
-            perror("disown");
     }
+    if (disown(child_pid) < 0) {
+        perror("disown");
+        return false;
+    }
+
     return true;
 }
 
-Handler Launcher::get_handler_for_executable(Handler::Type handler_type, const String& executable) const
+static constexpr const char* TEXT_EDITOR_NAME = "Text Editor";
+static constexpr const char* TEXT_EDITOR_EXECUTABLE = "/bin/TextEditor";
+static constexpr const char* FILE_MANAGER_NAME = "File Manager";
+static constexpr const char* FILE_MANAGER_EXECUTABLE = "/bin/FileManager";
+static constexpr const char* TERMINAL_NAME = "Terminal";
+static constexpr const char* TERMINAL_EXECUTABLE = "/bin/Terminal";
+
+String Handler::to_details_str() const
 {
-    Handler handler;
-    auto existing_handler = m_handlers.get(executable);
-    if (existing_handler.has_value()) {
-        handler = existing_handler.value();
-        handler.handler_type = handler_type;
-    } else {
-        handler.from_executable(handler_type, executable);
+    return to_details_str(handler_type, name, executable, run_in_terminal);
+}
+
+String Handler::to_details_str(Type handler_type, const String& name, const String& executable, bool run_in_terminal)
+{
+    StringBuilder builder;
+    JsonObjectSerializer obj { builder };
+    switch (handler_type) {
+    case Type::Default:
+        obj.add("type", "default");
+        break;
+    case Type::Application:
+        obj.add("type", "application");
+        break;
+    case Type::UserDefault:
+        obj.add("type", "userdefault");
+        break;
+    case Type::UserPreferred:
+        obj.add("type", "userpreferred");
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
-    return handler;
+    obj.add("name", name);
+    obj.add("executable", executable);
+    obj.add("run_in_terminal", run_in_terminal);
+    obj.finish();
+    return builder.build();
 }
 
-bool Launcher::open_with_user_preferences(const HashMap<String, String>& user_preferences, const String& key, const Vector<String>& arguments, const String& default_program)
+Launcher::Launcher(const String& app_file_dir)
+    : m_app_file_dir { app_file_dir }
 {
-    auto program_path = user_preferences.get(key);
-    if (program_path.has_value())
-        return spawn(program_path.value(), arguments);
+    VERIFY(s_the == nullptr);
+    s_the = this;
 
-    // There wasn't a handler for this, so try the fallback instead
-    program_path = user_preferences.get("*");
-    if (program_path.has_value())
-        return spawn(program_path.value(), arguments);
+    load_default_handlers();
+    load_config();
 
-    // Absolute worst case, try the provided default program, if any
-    if (!default_program.is_empty())
-        return spawn(default_program, arguments);
-
-    return false;
-}
-
-void Launcher::for_each_handler(const String& key, HashMap<String, String>& user_preference, Function<bool(const Handler&)> f)
-{
-    auto user_preferred = user_preference.get(key);
-    if (user_preferred.has_value())
-        f(get_handler_for_executable(Handler::Type::UserPreferred, user_preferred.value()));
-
-    size_t counted = 0;
-    for (auto& handler : m_handlers) {
-        // Skip over the existing item in the list
-        if (user_preferred.has_value() && user_preferred.value() == handler.value.executable)
-            continue;
-        if (f(handler.value))
-            counted++;
-    }
-
-    auto user_default = user_preference.get("*");
-    if (counted == 0 && user_default.has_value())
-        f(get_handler_for_executable(Handler::Type::UserDefault, user_default.value()));
-}
-
-void Launcher::for_each_handler_for_path(const String& path, Function<bool(const Handler&)> f)
-{
-    struct stat st;
-    if (stat(path.characters(), &st) < 0) {
-        perror("stat");
+    bool failed { false };
+    auto watcher_or_error = Core::FileWatcher::create();
+    if (watcher_or_error.is_error()) {
+        dbgln("Core::FileWatcher::create(): {}", watcher_or_error.error());
+        failed = true;
         return;
     }
+    m_config_file_watcher = watcher_or_error.release_value();
+    m_config_file_watcher->on_change = [this](auto&) {
+        dbgln("Reloading config file");
+        m_file_handlers.clear();
+        m_protocol_handlers.clear();
+        load_config();
+    };
+    auto add_watch_result = m_config_file_watcher->add_watch(LexicalPath::join(Core::StandardPaths::config_directory(), "LaunchServer.ini").string(), Core::FileWatcherEvent::Type::ContentModified | Core::FileWatcherEvent::Type::Deleted);
+    if (add_watch_result.is_error()) {
+        dbgln("Core::FileWatcher::add_watch(): {}", add_watch_result.error());
+        failed = true;
+    } else if (!add_watch_result.value()) {
+        dbgln("Core::FileWatcher::add_watch(): false");
+        failed = true;
+    }
+    if (failed)
+        dbgln("Could not create a file watcher. Changes to config file will not be notified");
+}
 
-    if (S_ISDIR(st.st_mode)) {
-        auto handler_optional = m_file_handlers.get("directory");
-        if (!handler_optional.has_value())
+Launcher& Launcher::the()
+{
+    VERIFY(s_the);
+    return *s_the;
+}
+
+void Launcher::load_default_handlers()
+{
+    Desktop::AppFile::for_each([this](auto app_file) {
+        auto name = app_file->name();
+        auto executable = app_file->executable();
+        struct stat st;
+        if (stat(executable.characters(), &st) < 0 || !is_executable(st.st_mode))
             return;
-        auto& handler = handler_optional.value();
-        f(get_handler_for_executable(Handler::Type::Default, handler));
-        return;
-    }
+        auto default_handler = create<Handler>(Handler::Type::Default, name, executable, app_file->run_in_terminal());
+        for (const auto& file_type : app_file->launcher_file_types())
+            m_default_file_handlers.set(file_type.to_lowercase(), default_handler);
+        for (const auto& protocol : app_file->launcher_protocols())
+            m_default_protocol_handlers.set(protocol.to_lowercase(), default_handler);
+    },
+        m_app_file_dir);
+}
 
-    if ((st.st_mode & S_IFMT) == S_IFREG && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
-        f(get_handler_for_executable(Handler::Type::Application, path));
+void Launcher::load_config()
+{
+    auto config_file = Core::ConfigFile::get_for_app("LaunchServer");
+    auto set_handlers = [this, &config_file](String entry, auto& handlers) {
+        for (const auto& key : config_file->keys(entry)) {
+            auto executable = config_file->read_entry(entry, key).trim_whitespace();
+            if (executable.is_empty())
+                continue;
+            struct stat st;
+            if (stat(executable.characters(), &st) < 0 || !is_executable(st.st_mode))
+                continue;
+            auto handler = create<Handler>(key == "*" ? Handler::Type::UserDefault : Handler::Type::UserPreferred, get_name_for_executable(executable), executable, run_in_terminal(executable));
+            handlers.set(key.to_lowercase(), handler);
+        }
+    };
 
-    auto extension = LexicalPath::extension(path).to_lowercase();
+    set_handlers("FileType", m_file_handlers);
+    set_handlers("Protocol", m_protocol_handlers);
+}
 
-    for_each_handler(extension, m_file_handlers, [&](const auto& handler) -> bool {
-        if (handler.handler_type != Handler::Type::Default || handler.file_types.contains(extension))
-            return f(handler);
+bool Launcher::open_url(const URL& url, const String& handler_name)
+{
+    if (!handler_name.is_null())
+        return open_with_handler_name(url, handler_name);
+    if (url.protocol() == "file")
+        return open_file_url(url);
+    auto handlers = get_handlers(url);
+    if (handlers.is_empty())
         return false;
-    });
+    return spawn(handlers.first(), { url.to_string() });
+}
+
+Vector<String> Launcher::handlers_for_url(const URL& url)
+{
+    return get_handlers(url);
+}
+
+Vector<String> Launcher::handlers_with_details_for_url(const URL& url)
+{
+    return get_handlers(url, true);
 }
 
 bool Launcher::open_file_url(const URL& url)
 {
+    auto path = url.path();
+
     struct stat st;
-    if (stat(url.path().characters(), &st) < 0) {
+    if (stat(path.characters(), &st) < 0) {
         perror("stat");
         return false;
     }
 
     if (S_ISDIR(st.st_mode)) {
-        Vector<String> fm_arguments;
+        Vector<String> file_manager_arguments;
         if (url.fragment().is_empty()) {
-            fm_arguments.append(url.path());
+            file_manager_arguments.append(path);
         } else {
-            fm_arguments.append("-s");
-            fm_arguments.append("-r");
-            fm_arguments.append(String::formatted("{}/{}", url.path(), url.fragment()));
+            file_manager_arguments.append("-s");
+            file_manager_arguments.append("-r");
+            file_manager_arguments.append(LexicalPath::join(path, url.fragment()).string());
         }
-
-        auto handler_optional = m_file_handlers.get("directory");
-        if (!handler_optional.has_value())
-            return false;
-        auto& handler = handler_optional.value();
-
-        return spawn(handler, fm_arguments);
+        return spawn(FILE_MANAGER_EXECUTABLE, file_manager_arguments);
     }
 
-    if ((st.st_mode & S_IFMT) == S_IFREG && st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
-        return spawn(url.path(), {});
+    const auto& handler = get_handlers(url).take_first();
 
-    auto extension_parts = url.path().to_lowercase().split('.');
-    String extension = {};
-    if (extension_parts.size() > 1)
-        extension = extension_parts.last();
-
-    auto handler_optional = m_file_handlers.get("txt");
-    if (!handler_optional.has_value())
-        return false;
-    auto& default_handler = handler_optional.value();
+    if (is_executable(st.st_mode)) {
+        if (run_in_terminal(handler))
+            return spawn(TERMINAL_EXECUTABLE, { "-k", "-e", String::formatted("'{}'", path) });
+        return spawn(path, {});
+    }
 
     // Additional parameters parsing, specific for the file protocol and txt file handlers
-    Vector<String> additional_parameters;
-    String filepath = url.path();
-
-    auto parameters = url.query().split('&');
-    for (auto const& parameter : parameters) {
+    for (const auto& parameter : url.query().split('&')) {
         auto pair = parameter.split('=');
         if (pair.size() == 2 && pair[0] == "line_number") {
-            auto line = pair[1].to_int();
-            if (line.has_value())
-                // TextEditor uses file:line:col to open a file at a specific line number
-                filepath = String::formatted("{}:{}", filepath, line.value());
+            auto line_number = pair[1].to_uint();
+            if (line_number.has_value()) { // TextEditor uses file:line:col to open a file at a specific line number
+                path = String::formatted("{}:{}", path, line_number.value());
+                break;
+            }
         }
     }
 
-    additional_parameters.append(filepath);
-
-    return open_with_user_preferences(m_file_handlers, extension, additional_parameters, default_handler);
+    if (run_in_terminal(handler))
+        return spawn(TERMINAL_EXECUTABLE, { "-k", "-e", String::formatted("'{}' '{}'", handler, path) });
+    return spawn(handler, { path });
 }
+
+bool Launcher::open_with_handler_name(const URL& url, const String& executable)
+{
+    struct stat st;
+    if (stat(executable.characters(), &st) < 0 || !is_executable(st.st_mode))
+        return false;
+    String argument;
+    if (url.protocol() == "file")
+        argument = url.path();
+    else
+        argument = url.to_string();
+    return spawn(executable, { argument });
+}
+
+Vector<String> Launcher::get_handlers(const URL& url, bool with_details) const
+{
+    bool is_file_url = (url.protocol() == "file");
+    const auto& key = is_file_url ? LexicalPath::extension(Core::File::real_path_for(url.path())) : url.protocol();
+    const auto& all_handlers = is_file_url ? m_file_handlers : m_protocol_handlers;
+    const auto& all_default_handlers = is_file_url ? m_default_file_handlers : m_default_protocol_handlers;
+    Vector<String> handlers;
+    Vector<String> existing_handlers;
+    handlers.ensure_capacity(4);
+    existing_handlers.ensure_capacity(3);
+
+    auto append_handler = [&handlers, &existing_handlers, with_details](const auto& handler_optional) {
+        if (!handler_optional.has_value())
+            return;
+        auto handler = handler_optional.value();
+        if (!existing_handlers.contains_slow(handler->executable))
+            handlers.append(with_details ? handler->to_details_str() : handler->executable);
+        existing_handlers.append(handler->executable);
+    };
+
+    if (is_file_url) {
+        const auto& file_path = url.path();
+        struct stat st;
+        if (stat(file_path.characters(), &st) < 0) {
+            perror("stat");
+            return {};
+        }
+        if (S_ISDIR(st.st_mode)) {
+            handlers.append(with_details ? Handler::to_details_str(Handler::Type::Default, FILE_MANAGER_NAME, FILE_MANAGER_EXECUTABLE) : FILE_MANAGER_EXECUTABLE);
+            return handlers;
+        }
+        if (is_executable(st.st_mode)) {
+            handlers.append(with_details ? Handler::to_details_str(Handler::Type::Application, get_name_for_executable(file_path), file_path, run_in_terminal(file_path)) : file_path);
+        }
+    }
+
+    if (!key.is_empty())
+        append_handler(all_handlers.get(key));
+    append_handler(all_handlers.get("*"));
+    if (!key.is_empty())
+        append_handler(all_default_handlers.get(key));
+    if (is_file_url && handlers.is_empty())
+        handlers.append(with_details ? Handler::to_details_str(Handler::Type::Default, TEXT_EDITOR_NAME, TEXT_EDITOR_EXECUTABLE) : TEXT_EDITOR_EXECUTABLE);
+    return handlers;
+}
+
+bool Launcher::run_in_terminal(const String& path) const
+{
+    auto basename = LexicalPath::basename(Core::File::real_path_for(path));
+    return !(Core::File::exists(String::formatted("{}/{}.af", m_app_file_dir, basename)) && !Desktop::AppFile::get_for_app(basename)->run_in_terminal());
+}
+
+String Launcher::get_name_for_executable(const String& executable) const
+{
+    auto executable_basename = LexicalPath::basename(Core::File::real_path_for(executable));
+    auto app_file = Desktop::AppFile::get_for_app(executable_basename);
+    if (!Core::File::exists(String::formatted("{}/{}.af", m_app_file_dir, executable_basename)) || !app_file->is_valid())
+        return executable_basename;
+    return app_file->name();
+}
+
 }

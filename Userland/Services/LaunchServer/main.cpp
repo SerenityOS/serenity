@@ -17,10 +17,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     Core::EventLoop event_loop;
     auto server = Core::LocalServer::construct();
 
-    auto launcher = LaunchServer::Launcher();
-
-    launcher.load_handlers();
-    launcher.load_config(Core::ConfigFile::get_for_app("LaunchServer"));
+    LaunchServer::Launcher launcher;
 
     if (pledge("stdio accept rpath proc exec", nullptr) < 0) {
         perror("pledge");
