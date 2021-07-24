@@ -182,6 +182,10 @@ void Parser::parse_untagged()
                 consume(" ");
                 auto flags = parse_list(+[](StringView x) { return String(x); });
                 m_response.data().set_permanent_flags(move(flags));
+            } else if (actual_type == "HIGHESTMODSEQ"sv) {
+                consume(" ");
+                parse_number();
+                // No-op for now.
             } else {
                 dbgln("Unknown: {}", actual_type);
                 consume_while([](u8 x) { return x != ']'; });
