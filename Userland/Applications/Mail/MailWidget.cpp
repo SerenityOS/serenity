@@ -298,7 +298,10 @@ void MailWidget::selected_mailbox()
                 return false;
             if (!data_item.section->headers.has_value())
                 return false;
-            return data_item.section->headers->contains_slow(search_header);
+            auto header_iterator = data_item.section->headers->find_if([&search_header](auto& header) {
+                return header.equals_ignoring_case(search_header);
+            });
+            return header_iterator != data_item.section->headers->end();
         };
 
         auto subject_iterator = body_data.find_if([&data_item_has_header](Tuple<IMAP::FetchCommand::DataItem, Optional<String>>& data) {
