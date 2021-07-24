@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1050,7 +1051,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         m_context_menu_href = m_hovered_href;
 
         // Ask LaunchServer for a list of programs that can handle the right-clicked URL.
-        auto handlers = Desktop::Launcher::get_handlers_for_url(m_hovered_href);
+        const auto& handlers = Desktop::Launcher::get_handlers_with_details_for_url(m_hovered_href);
         if (handlers.is_empty()) {
             m_context_menu->popup(event.screen_position());
             return;
@@ -1061,19 +1062,36 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
         // Go through the list of handlers and see if we can find a nice display name + icon for them.
         // Then add them to the context menu.
-        // FIXME: Adapt this code when we actually support calling LaunchServer with a specific handler in mind.
-        for (auto& handler : handlers) {
-            auto af = Desktop::AppFile::get_for_app(LexicalPath::basename(handler));
-            if (!af->is_valid())
-                continue;
-            auto action = GUI::Action::create(String::formatted("&Open in {}", af->name()), af->icon().bitmap_for_size(16), [this, handler](auto&) {
-                Desktop::Launcher::open(m_context_menu_href, handler);
-            });
-
-            if (context_menu_default_action.is_null()) {
-                context_menu_default_action = action;
+        for (const auto& handler : handlers) {
+            auto bitmap = GUI::FileIconProvider::icon_for_executable(handler.executable).bitmap_for_size(16);
+            Function<void(GUI::Action&)> callback;
+            String message;
+            if (handler.run_in_terminal) {
+                if (handler.launcher_type == Desktop::Launcher::LauncherType::Application)
+                    callback = [this, handler_executable = handler.executable](auto&) {
+                        scroll_to_bottom();
+                        send_non_user_input(String::formatted("'{}'", handler_executable).bytes());
+                        m_terminal.handle_key_press(Key_Return, 10, 0); // FIXME: Is this the proper way of sending return key?
+                    };
+                else
+                    callback = [this, handler_executable = handler.executable](auto&) {
+                        scroll_to_bottom();
+                        send_non_user_input(String::formatted("'{}' '{}'", handler_executable, URL { m_context_menu_href }.path()).bytes());
+                        m_terminal.handle_key_press(Key_Return, 10, 0);
+                    };
+                message = String::formatted("&Run {} in Terminal", handler.name);
+            } else {
+                if (handler.launcher_type == Desktop::Launcher::LauncherType::Application)
+                    message = String::formatted("&Run {}", handler.name);
+                else
+                    message = String::formatted("&Open in {}", handler.name);
+                callback = [this, handler_executable = handler.executable](auto&) {
+                    Desktop::Launcher::open(m_context_menu_href, handler_executable);
+                };
             }
-
+            auto action = GUI::Action::create(message, bitmap, move(callback));
+            if (context_menu_default_action.is_null())
+                context_menu_default_action = action;
             m_context_menu_for_hyperlink->add_action(action);
         }
         m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy &URL", [this](auto&) {
