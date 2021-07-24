@@ -103,15 +103,15 @@ void MultiView::set_column_visible(int column_index, bool visible)
 
 void MultiView::build_actions()
 {
-    m_view_as_table_action = Action::create_checkable(
-        "Table view", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/table-view.png"), [this](auto&) {
-            set_view_mode(ViewMode::Table);
-        },
-        this);
-
     m_view_as_icons_action = Action::create_checkable(
         "Icon view", { Mod_Ctrl, KeyCode::Key_1 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/icon-view.png"), [this](auto&) {
             set_view_mode(ViewMode::Icon);
+        },
+        this);
+
+    m_view_as_table_action = Action::create_checkable(
+        "Table view", { Mod_Ctrl, KeyCode::Key_2 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/table-view.png"), [this](auto&) {
+            set_view_mode(ViewMode::Table);
         },
         this);
 
@@ -123,8 +123,8 @@ void MultiView::build_actions()
 
     m_view_type_action_group = make<ActionGroup>();
     m_view_type_action_group->set_exclusive(true);
-    m_view_type_action_group->add_action(*m_view_as_table_action);
     m_view_type_action_group->add_action(*m_view_as_icons_action);
+    m_view_type_action_group->add_action(*m_view_as_table_action);
     m_view_type_action_group->add_action(*m_view_as_columns_action);
 }
 
