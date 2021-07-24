@@ -15,6 +15,37 @@
 #include <float.h>
 #include <math.h>
 
+TEST_CASE(rounding)
+{
+    EXPECT_EQ(round(1.5), 2.);
+    EXPECT_EQ(round(1.4), 1.);
+    EXPECT_EQ(round(1.6), 2.);
+    EXPECT_EQ(round(-1.5), -2.);
+    EXPECT_EQ(round(-1.4), -1.);
+    EXPECT_EQ(round(-1.6), -2.);
+
+    EXPECT_EQ(ceil(1.5), 2.);
+    EXPECT_EQ(ceil(1.4), 2.);
+    EXPECT_EQ(ceil(1.6), 2.);
+    EXPECT_EQ(ceil(-1.5), -1.);
+    EXPECT_EQ(ceil(-1.4), -1.);
+    EXPECT_EQ(ceil(-1.6), -1.);
+
+    EXPECT_EQ(floor(1.5), 1.);
+    EXPECT_EQ(floor(1.4), 1.);
+    EXPECT_EQ(floor(1.6), 1.);
+    EXPECT_EQ(floor(-1.5), -2.);
+    EXPECT_EQ(floor(-1.4), -2.);
+    EXPECT_EQ(floor(-1.6), -2.);
+
+    EXPECT_EQ(trunc(1.5), 1.);
+    EXPECT_EQ(trunc(1.4), 1.);
+    EXPECT_EQ(trunc(1.6), 1.);
+    EXPECT_EQ(trunc(-1.5), -1.);
+    EXPECT_EQ(trunc(-1.4), -1.);
+    EXPECT_EQ(trunc(-1.6), -1.);
+}
+
 TEST_CASE(atan2)
 {
     EXPECT_APPROXIMATE(atan2(-1, -0.0e0), -M_PI_2);
