@@ -5,5 +5,9 @@ test("basic functionality", () => {
     expect("Foo".toUpperCase()).toBe("FOO");
     expect("FOO".toUpperCase()).toBe("FOO");
 
+    expect("ω".toUpperCase()).toBe("Ω");
+    expect("Ω".toUpperCase()).toBe("Ω");
+    expect("😀".toUpperCase()).toBe("😀");
+
     expect(("b" + "a" + +"n" + "a").toUpperCase()).toBe("BANANA");
 });
