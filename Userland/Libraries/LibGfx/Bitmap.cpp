@@ -67,7 +67,7 @@ static bool size_would_overflow(BitmapFormat format, const IntSize& size, int sc
 
 RefPtr<Bitmap> Bitmap::try_create(BitmapFormat format, const IntSize& size, int scale_factor)
 {
-    auto backing_store = Bitmap::allocate_backing_store(format, size, scale_factor, Purgeable::No);
+    auto backing_store = Bitmap::try_allocate_backing_store(format, size, scale_factor, Purgeable::No);
     if (!backing_store.has_value())
         return nullptr;
     return adopt_ref(*new Bitmap(format, size, scale_factor, Purgeable::No, backing_store.value()));
@@ -75,7 +75,7 @@ RefPtr<Bitmap> Bitmap::try_create(BitmapFormat format, const IntSize& size, int 
 
 RefPtr<Bitmap> Bitmap::try_create_purgeable(BitmapFormat format, const IntSize& size, int scale_factor)
 {
-    auto backing_store = Bitmap::allocate_backing_store(format, size, scale_factor, Purgeable::Yes);
+    auto backing_store = Bitmap::try_allocate_backing_store(format, size, scale_factor, Purgeable::Yes);
     if (!backing_store.has_value())
         return nullptr;
     return adopt_ref(*new Bitmap(format, size, scale_factor, Purgeable::Yes, backing_store.value()));
@@ -576,7 +576,7 @@ ShareableBitmap Bitmap::to_shareable_bitmap() const
     return ShareableBitmap(*bitmap);
 }
 
-Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const IntSize& size, int scale_factor, [[maybe_unused]] Purgeable purgeable)
+Optional<BackingStore> Bitmap::try_allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor, [[maybe_unused]] Purgeable purgeable)
 {
     if (size_would_overflow(format, size, scale_factor))
         return {};
