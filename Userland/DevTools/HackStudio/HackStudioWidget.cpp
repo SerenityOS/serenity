@@ -131,6 +131,7 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     m_run_action = create_run_action();
     m_stop_action = create_stop_action();
     m_debug_action = create_debug_action();
+    m_git_commit_action = create_git_commit_action();
 
     initialize_debugger();
 
@@ -651,6 +652,13 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
     });
 }
 
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_git_commit_action()
+{
+    return GUI::Action::create("&Commit", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/commit.png"), [this](auto&) {
+        this->m_git_widget->commit();
+    });
+}
+
 void HackStudioWidget::initialize_debugger()
 {
     Debugger::initialize(
@@ -846,6 +854,9 @@ void HackStudioWidget::create_toolbar(GUI::Widget& parent)
     toolbar.add_separator();
 
     toolbar.add_action(*m_debug_action);
+    toolbar.add_separator();
+
+    toolbar.add_action(*m_git_commit_action);
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_build_action()

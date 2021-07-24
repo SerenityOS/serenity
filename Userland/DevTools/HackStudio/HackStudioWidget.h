@@ -89,6 +89,7 @@ private:
     NonnullRefPtr<GUI::Action> create_build_action();
     NonnullRefPtr<GUI::Action> create_run_action();
     NonnullRefPtr<GUI::Action> create_stop_action();
+    NonnullRefPtr<GUI::Action> create_git_commit_action();
 
     void add_new_editor(GUI::Widget& parent);
     RefPtr<EditorWrapper> get_editor_of_file(const String& filename);
@@ -167,6 +168,7 @@ private:
     RefPtr<GUI::Action> m_debug_action;
     RefPtr<GUI::Action> m_build_action;
     RefPtr<GUI::Action> m_run_action;
+    RefPtr<GUI::Action> m_git_commit_action;
 
     GUI::ActionGroup m_wrapping_mode_actions;
     RefPtr<GUI::Action> m_no_wrapping_action;

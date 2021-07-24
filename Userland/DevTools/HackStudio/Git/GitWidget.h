@@ -21,6 +21,7 @@ class GitWidget final : public GUI::Widget {
 public:
     virtual ~GitWidget() override { }
 
+    void commit();
     void refresh();
     void set_view_diff_callback(ViewDiffCallback callback);
     bool initialized() const { return !m_git_repo.is_null(); };
@@ -32,7 +33,6 @@ private:
     bool initialize_if_needed();
     void stage_file(const LexicalPath&);
     void unstage_file(const LexicalPath&);
-    void commit();
     void show_diff(const LexicalPath&);
 
     LexicalPath m_repo_root;
