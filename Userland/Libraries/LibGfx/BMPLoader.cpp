@@ -1185,7 +1185,7 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
 
     const u32 width = abs(context.dib.core.width);
     const u32 height = abs(context.dib.core.height);
-    context.bitmap = Bitmap::try_create_purgeable(format, { static_cast<int>(width), static_cast<int>(height) });
+    context.bitmap = Bitmap::try_create(format, { static_cast<int>(width), static_cast<int>(height) });
     if (!context.bitmap) {
         dbgln("BMP appears to have overly large dimensions");
         return false;
