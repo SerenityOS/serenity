@@ -92,6 +92,7 @@ enum {
 #define MAP_STACK 0x40
 #define MAP_NORESERVE 0x80
 #define MAP_RANDOMIZED 0x100
+#define MAP_PURGEABLE 0x200
 
 #define PROT_READ 0x1
 #define PROT_WRITE 0x2

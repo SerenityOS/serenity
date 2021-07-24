@@ -17,7 +17,6 @@
 #include <Kernel/Sections.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/PageFaultResponse.h>
-#include <Kernel/VM/PurgeablePageRanges.h>
 #include <Kernel/VM/RangeAllocator.h>
 
 namespace Kernel {
@@ -28,8 +27,7 @@ enum class ShouldFlushTLB {
 };
 
 class Region final
-    : public Weakable<Region>
-    , public PurgeablePageRanges {
+    : public Weakable<Region> {
     friend class MemoryManager;
 
     MAKE_SLAB_ALLOCATED(Region)
@@ -201,15 +199,11 @@ public:
 
     void remap();
 
-    bool remap_vmobject_page_range(size_t page_index, size_t page_count);
-
-    bool is_volatile(VirtualAddress vaddr, size_t size) const;
     enum class SetVolatileError {
         Success = 0,
         NotPurgeable,
         OutOfMemory
     };
-    SetVolatileError set_volatile(VirtualAddress vaddr, size_t size, bool is_volatile, bool& was_purged);
 
     RefPtr<Process> get_owner();
 
@@ -219,7 +213,8 @@ public:
 private:
     Region(Range const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
 
-    bool do_remap_vmobject_page_range(size_t page_index, size_t page_count);
+    bool remap_vmobject_page(size_t page_index, bool with_flush = true);
+    bool do_remap_vmobject_page(size_t page_index, bool with_flush = true);
 
     void set_access_bit(Access access, bool b)
     {
@@ -229,17 +224,11 @@ private:
             m_access &= ~access;
     }
 
-    bool do_remap_vmobject_page(size_t index, bool with_flush = true);
-    bool remap_vmobject_page(size_t index, bool with_flush = true);
-
     PageFaultResponse handle_cow_fault(size_t page_index);
     PageFaultResponse handle_inode_fault(size_t page_index);
     PageFaultResponse handle_zero_fault(size_t page_index);
 
     bool map_individual_page_impl(size_t page_index);
-
-    void register_purgeable_page_ranges();
-    void unregister_purgeable_page_ranges();
 
     RefPtr<PageDirectory> m_page_directory;
     Range m_range;

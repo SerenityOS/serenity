@@ -19,7 +19,7 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
     REQUIRE_NO_PROMISES;
     if (!is_superuser())
         return EPERM;
-    int purged_page_count = 0;
+    size_t purged_page_count = 0;
     if (mode & PURGE_ALL_VOLATILE) {
         NonnullRefPtrVector<AnonymousVMObject> vmobjects;
         {

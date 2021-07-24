@@ -544,11 +544,11 @@ void Bitmap::set_volatile()
     int rc = madvise(m_data, size_in_bytes(), MADV_SET_NONVOLATILE);
     if (rc < 0) {
         if (errno == ENOMEM) {
-            was_purged = was_purged_int;
+            was_purged = true;
             return false;
         }
-
         perror("madvise(MADV_SET_NONVOLATILE)");
+        VERIFY_NOT_REACHED();
     }
     was_purged = rc != 0;
 #endif
@@ -574,6 +574,7 @@ Optional<BackingStore> Bitmap::try_allocate_backing_store(BitmapFormat format, I
 
     int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
 #ifdef __serenity__
+    map_flags |= MAP_PURGEABLE;
     void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, String::formatted("GraphicsBitmap [{}]", size).characters());
 #else
     void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0);

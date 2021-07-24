@@ -414,7 +414,10 @@ size_t Space::amount_purgeable_volatile() const
     ScopedSpinLock lock(m_lock);
     size_t amount = 0;
     for (auto& region : m_regions) {
-        if (region->vmobject().is_anonymous() && static_cast<const AnonymousVMObject&>(region->vmobject()).is_any_volatile())
+        if (!region->vmobject().is_anonymous())
+            continue;
+        auto const& vmobject = static_cast<AnonymousVMObject const&>(region->vmobject());
+        if (vmobject.is_purgeable() && vmobject.is_volatile())
             amount += region->amount_resident();
     }
     return amount;
@@ -425,7 +428,10 @@ size_t Space::amount_purgeable_nonvolatile() const
     ScopedSpinLock lock(m_lock);
     size_t amount = 0;
     for (auto& region : m_regions) {
-        if (region->vmobject().is_anonymous() && !static_cast<const AnonymousVMObject&>(region->vmobject()).is_any_volatile())
+        if (!region->vmobject().is_anonymous())
+            continue;
+        auto const& vmobject = static_cast<AnonymousVMObject const&>(region->vmobject());
+        if (vmobject.is_purgeable() && !vmobject.is_volatile())
             amount += region->amount_resident();
     }
     return amount;

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 
 namespace Kernel {
 
