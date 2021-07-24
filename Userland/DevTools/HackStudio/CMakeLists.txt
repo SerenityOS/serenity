@@ -9,6 +9,7 @@ add_subdirectory(LanguageServers)
 add_subdirectory(LanguageClients)
 
 compile_gml(Dialogs/NewProjectDialog.gml Dialogs/NewProjectDialogGML.h new_project_dialog_gml)
+compile_gml(Dialogs/Commit/GitCommitDialog.gml Dialogs/Commit/GitCommitDialogGML.h git_commit_dialog_gml)
 
 set(SOURCES
     CodeDocument.cpp
@@ -25,6 +26,8 @@ set(SOURCES
     Debugger/VariablesModel.cpp
     Dialogs/NewProjectDialog.cpp
     Dialogs/NewProjectDialogGML.h
+    Dialogs/Commit/GitCommitDialog.cpp
+    Dialogs/Commit/GitCommitDialogGML.h
     Dialogs/ProjectTemplatesModel.cpp
     Editor.cpp
     EditorWrapper.cpp
