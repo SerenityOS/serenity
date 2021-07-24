@@ -126,6 +126,10 @@ if [ -z "$SERENITY_DISABLE_GDB_SOCKET" ]; then
   SERENITY_EXTRA_QEMU_ARGS="$SERENITY_EXTRA_QEMU_ARGS -s"
 fi
 
+if [ -z "$SERENITY_ETHERNET_DEVICE_TYPE" ]; then
+  SERENITY_ETHERNET_DEVICE_TYPE="e1000"
+fi
+
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
 -m $SERENITY_RAM_SIZE
@@ -144,7 +148,7 @@ $SERENITY_SPICE_SERVER_CHARDEV
 -device virtio-rng-pci
 -soundhw pcspk
 -device sb16
--device pci-bridge,chassis_nr=1,id=bridge1 -device e1000,bus=bridge1
+-device pci-bridge,chassis_nr=1,id=bridge1 -device $SERENITY_ETHERNET_DEVICE_TYPE,bus=bridge1
 -device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
 -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
 -device ich9-ahci,bus=bridge3
@@ -205,7 +209,7 @@ elif [ "$SERENITY_RUN" = "qn" ]; then
     # Meta/run.sh qn: qemu without network
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
-        -device e1000 \
+        -device $SERENITY_ETHERNET_DEVICE_TYPE \
         -kernel Kernel/Prekernel/Prekernel \
         -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
@@ -218,7 +222,7 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev tap,ifname=tap0,id=br0 \
-        -device e1000,netdev=br0 \
+        -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=br0 \
         -kernel Kernel/Prekernel/Prekernel \
         -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
@@ -230,7 +234,7 @@ elif [ "$SERENITY_RUN" = "qgrub" ] || [ "$SERENITY_RUN" = "qextlinux" ]; then
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
-        -device e1000,netdev=breh
+        -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh
 elif [ "$SERENITY_RUN" = "q35" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
     echo "Starting SerenityOS with QEMU Q35 machine, Commandline: ${SERENITY_KERNEL_CMDLINE}"
@@ -238,7 +242,7 @@ elif [ "$SERENITY_RUN" = "q35" ]; then
         $SERENITY_COMMON_QEMU_Q35_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
-        -device e1000,netdev=breh \
+        -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh \
         -kernel Kernel/Prekernel/Prekernel \
         -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
@@ -267,7 +271,7 @@ else
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23,hostfwd=tcp:127.0.0.1:8000-10.0.2.15:8000,hostfwd=tcp:127.0.0.1:2222-10.0.2.15:22 \
-        -device e1000,netdev=breh \
+        -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh \
         -kernel Kernel/Prekernel/Prekernel \
         -initrd Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
