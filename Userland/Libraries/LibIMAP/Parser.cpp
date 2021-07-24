@@ -164,17 +164,22 @@ void Parser::parse_untagged()
         consume(" ");
         if (try_consume("[")) {
             auto actual_type = parse_atom();
-            consume(" ");
-            if (actual_type == "UIDNEXT"sv) {
+            if (actual_type == "CLOSED"sv) {
+                // No-op.
+            } else if (actual_type == "UIDNEXT"sv) {
+                consume(" ");
                 auto n = parse_number();
                 m_response.data().set_uid_next(n);
             } else if (actual_type == "UIDVALIDITY"sv) {
+                consume(" ");
                 auto n = parse_number();
                 m_response.data().set_uid_validity(n);
             } else if (actual_type == "UNSEEN"sv) {
+                consume(" ");
                 auto n = parse_number();
                 m_response.data().set_unseen(n);
             } else if (actual_type == "PERMANENTFLAGS"sv) {
+                consume(" ");
                 auto flags = parse_list(+[](StringView x) { return String(x); });
                 m_response.data().set_permanent_flags(move(flags));
             } else {
