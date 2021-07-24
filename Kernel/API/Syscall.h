@@ -531,6 +531,17 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
                  : "memory");
     return result;
 }
+
+template<typename T1, typename T2, typename T3, typename T4>
+inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+{
+    uintptr_t result;
+    asm volatile("int $0x82"
+                 : "=a"(result)
+                 : "a"(function), "d"((uintptr_t)arg1), "c"((uintptr_t)arg2), "b"((uintptr_t)arg3), "S"((uintptr_t)arg4)
+                 : "memory");
+    return result;
+}
 #endif
 
 }
