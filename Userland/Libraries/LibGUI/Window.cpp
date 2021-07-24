@@ -412,9 +412,19 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     } else if (m_double_buffering_enabled) {
         bool was_purged = false;
         bool bitmap_has_memory = m_back_store->bitmap().set_nonvolatile(was_purged);
-        if (!bitmap_has_memory || was_purged) {
-            m_back_store = create_backing_store(event.window_size());
-            VERIFY(m_back_store);
+        if (!bitmap_has_memory) {
+            // We didn't have enough memory to make the bitmap non-volatile!
+            // Fall back to single-buffered mode for this window.
+            // FIXME: Once we have a way to listen for system memory pressure notifications,
+            //        it would be cool to transition back into double-buffered mode once
+            //        the coast is clear.
+            dbgln("Not enough memory to make backing store non-volatile. Falling back to single-buffered mode.");
+            m_double_buffering_enabled = false;
+            m_back_store = move(m_front_store);
+            created_new_backing_store = true;
+        } else if (was_purged) {
+            // The backing store bitmap was cleared, but it does have memory.
+            // Act as if it's a new backing store so the entire window gets repainted.
             created_new_backing_store = true;
         }
     }
@@ -1018,8 +1028,14 @@ void Window::notify_state_changed(Badge<WindowServerConnection>, bool minimized,
     } else {
         bool was_purged = false;
         bool bitmap_has_memory = store->bitmap().set_nonvolatile(was_purged);
-        if (!bitmap_has_memory || was_purged) {
+        if (!bitmap_has_memory) {
+            // Not enough memory to make the bitmap non-volatile. Lose the bitmap and schedule an update.
+            // Let the paint system figure out what to do.
             store = nullptr;
+            update();
+        } else if (was_purged) {
+            // The bitmap memory was purged by the kernel, but we have all-new zero-filled pages.
+            // Schedule an update to regenerate the bitmap.
             update();
         }
     }
