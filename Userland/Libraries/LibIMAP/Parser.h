@@ -36,6 +36,7 @@ private:
     void parse_response_done();
 
     void consume(StringView x);
+    StringView consume_while(Function<bool(u8)> should_consume);
 
     unsigned parse_number();
     Optional<unsigned> try_parse_number();
@@ -54,7 +55,6 @@ private:
 
     static MailboxFlag parse_mailbox_flag(StringView s);
 
-    StringView parse_while(Function<bool(u8)> should_consume);
 
     void parse_capability_response();
 
