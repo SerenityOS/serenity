@@ -207,7 +207,7 @@ RefPtr<Promise<Optional<T>>> cast_promise(RefPtr<Promise<Optional<Response>>> pr
 
 RefPtr<Promise<Optional<SolidResponse>>> Client::login(StringView username, StringView password)
 {
-    auto command = Command { CommandType::Login, m_current_command, { username, password } };
+    auto command = Command { CommandType::Login, m_current_command, { serialize_astring(username), serialize_astring(password) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
@@ -241,7 +241,7 @@ RefPtr<Promise<Optional<Response>>> Client::send_simple_command(CommandType type
 
 RefPtr<Promise<Optional<SolidResponse>>> Client::select(StringView string)
 {
-    auto command = Command { CommandType::Select, m_current_command, { string } };
+    auto command = Command { CommandType::Select, m_current_command, { serialize_astring(string) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
@@ -293,19 +293,19 @@ void Client::send_next_command()
 
 RefPtr<Promise<Optional<SolidResponse>>> Client::examine(StringView string)
 {
-    auto command = Command { CommandType::Examine, m_current_command, { string } };
+    auto command = Command { CommandType::Examine, m_current_command, { serialize_astring(string) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
 RefPtr<Promise<Optional<SolidResponse>>> Client::create_mailbox(StringView name)
 {
-    auto command = Command { CommandType::Create, m_current_command, { name } };
+    auto command = Command { CommandType::Create, m_current_command, { serialize_astring(name) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
 RefPtr<Promise<Optional<SolidResponse>>> Client::delete_mailbox(StringView name)
 {
-    auto command = Command { CommandType::Delete, m_current_command, { name } };
+    auto command = Command { CommandType::Delete, m_current_command, { serialize_astring(name) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
@@ -426,12 +426,12 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Mess
 }
 RefPtr<Promise<Optional<SolidResponse>>> Client::subscribe(StringView mailbox)
 {
-    auto command = Command { CommandType::Subscribe, m_current_command, { mailbox } };
+    auto command = Command { CommandType::Subscribe, m_current_command, { serialize_astring(mailbox) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 RefPtr<Promise<Optional<SolidResponse>>> Client::unsubscribe(StringView mailbox)
 {
-    auto command = Command { CommandType::Unsubscribe, m_current_command, { mailbox } };
+    auto command = Command { CommandType::Unsubscribe, m_current_command, { serialize_astring(mailbox) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 RefPtr<Promise<Optional<Response>>> Client::authenticate(StringView method)
@@ -441,13 +441,13 @@ RefPtr<Promise<Optional<Response>>> Client::authenticate(StringView method)
 }
 RefPtr<Promise<Optional<SolidResponse>>> Client::rename(StringView from, StringView to)
 {
-    auto command = Command { CommandType::Rename, m_current_command, { from, to } };
+    auto command = Command { CommandType::Rename, m_current_command, { serialize_astring(from), serialize_astring(to) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 RefPtr<Promise<Optional<SolidResponse>>> Client::copy(Sequence sequence_set, StringView name, bool uid)
 {
     auto command = Command {
-        uid ? CommandType::UIDCopy : CommandType::Copy, m_current_command, { sequence_set.serialize(), name }
+        uid ? CommandType::UIDCopy : CommandType::Copy, m_current_command, { sequence_set.serialize(), serialize_astring(name) }
     };
 
     return cast_promise<SolidResponse>(send_command(move(command)));
