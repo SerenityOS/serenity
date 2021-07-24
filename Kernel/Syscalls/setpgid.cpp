@@ -16,7 +16,6 @@ KResultOr<FlatPtr> Process::sys$getsid(pid_t pid)
     REQUIRE_PROMISE(proc);
     if (pid == 0)
         return sid().value();
-    ScopedSpinLock lock(g_processes_lock);
     auto process = Process::from_pid(pid);
     if (!process)
         return ESRCH;
@@ -51,7 +50,6 @@ KResultOr<FlatPtr> Process::sys$getpgid(pid_t pid)
     REQUIRE_PROMISE(proc);
     if (pid == 0)
         return pgid().value();
-    ScopedSpinLock lock(g_processes_lock); // FIXME: Use a ProcessHandle
     auto process = Process::from_pid(pid);
     if (!process)
         return ESRCH;
@@ -68,7 +66,6 @@ KResultOr<FlatPtr> Process::sys$getpgrp()
 SessionID Process::get_sid_from_pgid(ProcessGroupID pgid)
 {
     // FIXME: This xor sys$setsid() uses the wrong locking mechanism.
-    ScopedSpinLock lock(g_processes_lock);
 
     SessionID sid { -1 };
     Process::for_each_in_pgrp(pgid, [&](auto& process) {
@@ -83,7 +80,7 @@ KResultOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgi
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
-    ScopedSpinLock lock(g_processes_lock); // FIXME: Use a ProcessHandle
+    // FIXME: Use a ProcessHandle
     ProcessID pid = specified_pid ? ProcessID(specified_pid) : this->pid();
     if (specified_pgid < 0) {
         // The value of the pgid argument is less than 0, or is not a value supported by the implementation.
