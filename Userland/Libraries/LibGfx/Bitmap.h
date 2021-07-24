@@ -92,7 +92,6 @@ class Bitmap : public RefCounted<Bitmap> {
 public:
     [[nodiscard]] static RefPtr<Bitmap> try_create(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     [[nodiscard]] static RefPtr<Bitmap> try_create_shareable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
-    [[nodiscard]] static RefPtr<Bitmap> try_create_purgeable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     [[nodiscard]] static RefPtr<Bitmap> try_create_wrapper(BitmapFormat, const IntSize&, int intrinsic_scale, size_t pitch, void*);
     [[nodiscard]] static RefPtr<Bitmap> try_load_from_file(String const& path, int scale_factor = 1);
     [[nodiscard]] static RefPtr<Bitmap> try_create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, const IntSize&, int intrinsic_scale, const Vector<RGBA32>& palette);
@@ -226,7 +225,6 @@ public:
         set_pixel(physical_position.x(), physical_position.y(), color);
     }
 
-    [[nodiscard]] bool is_purgeable() const { return m_purgeable; }
     [[nodiscard]] bool is_volatile() const { return m_volatile; }
     void set_volatile();
     [[nodiscard]] bool set_nonvolatile();
@@ -235,15 +233,11 @@ public:
     [[nodiscard]] Core::AnonymousBuffer const& anonymous_buffer() const { return m_buffer; }
 
 private:
-    enum class Purgeable {
-        No,
-        Yes
-    };
-    Bitmap(BitmapFormat, const IntSize&, int, Purgeable, const BackingStore&);
+    Bitmap(BitmapFormat, IntSize const&, int, BackingStore const&);
     Bitmap(BitmapFormat, const IntSize&, int, size_t pitch, void*);
     Bitmap(BitmapFormat, Core::AnonymousBuffer, const IntSize&, int, const Vector<RGBA32>& palette);
 
-    static Optional<BackingStore> try_allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor, Purgeable);
+    static Optional<BackingStore> try_allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor);
 
     void allocate_palette_from_format(BitmapFormat, const Vector<RGBA32>& source_palette);
 
@@ -254,7 +248,6 @@ private:
     size_t m_pitch { 0 };
     BitmapFormat m_format { BitmapFormat::Invalid };
     bool m_needs_munmap { false };
-    bool m_purgeable { false };
     bool m_volatile { false };
     Core::AnonymousBuffer m_buffer;
 };
