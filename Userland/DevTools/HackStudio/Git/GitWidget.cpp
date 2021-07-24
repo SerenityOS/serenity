@@ -110,6 +110,8 @@ void GitWidget::refresh()
 
     VERIFY(!m_git_repo.is_null());
 
+    if (m_repository_update_callback)
+        m_repository_update_callback();
     m_unstaged_files->set_model(GitFilesModel::create(m_git_repo->unstaged_files()));
     m_staged_files->set_model(GitFilesModel::create(m_git_repo->staged_files()));
 }
@@ -144,6 +146,11 @@ void GitWidget::commit()
 void GitWidget::set_view_diff_callback(ViewDiffCallback callback)
 {
     m_view_diff_callback = move(callback);
+}
+
+void GitWidget::on_repository_update(Function<void()> callback)
+{
+    m_repository_update_callback = move(callback);
 }
 
 void GitWidget::show_diff(const LexicalPath& file_path)

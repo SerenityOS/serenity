@@ -24,6 +24,7 @@ public:
     void commit();
     void refresh();
     void set_view_diff_callback(ViewDiffCallback callback);
+    void on_repository_update(Function<void()> callback);
     bool initialized() const { return !m_git_repo.is_null(); };
 
 private:
@@ -40,6 +41,7 @@ private:
     RefPtr<GitFilesView> m_staged_files;
     RefPtr<GitRepo> m_git_repo;
     ViewDiffCallback m_view_diff_callback;
+    Function<void()> m_repository_update_callback;
 };
 
 }

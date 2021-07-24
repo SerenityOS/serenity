@@ -655,7 +655,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_git_commit_action()
 {
     return GUI::Action::create("&Commit", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/commit.png"), [this](auto&) {
-        this->m_git_widget->commit();
+        if (m_git_widget->initialized())
+            this->m_git_widget->commit();
     });
 }
 
@@ -903,6 +904,9 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
     m_git_widget->set_view_diff_callback([this](const auto& original_content, const auto& diff) {
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
+    });
+    m_git_widget->on_repository_update([this]() {
+        m_git_commit_action->set_enabled(m_git_widget->initialized());
     });
 
     ToDoEntries::the().on_update = [this]() {
