@@ -104,18 +104,20 @@ struct [[gnu::packed]] RegisterState {
 #endif
     }
 
-    void capture_syscall_params(FlatPtr& function, FlatPtr& arg1, FlatPtr& arg2, FlatPtr& arg3) const
+    void capture_syscall_params(FlatPtr& function, FlatPtr& arg1, FlatPtr& arg2, FlatPtr& arg3, FlatPtr& arg4) const
     {
 #if ARCH(I386)
         function = eax;
         arg1 = edx;
         arg2 = ecx;
         arg3 = ebx;
+        arg4 = esi;
 #else
         function = rax;
         arg1 = rdx;
         arg2 = rcx;
         arg3 = rbx;
+        arg4 = rsi;
 #endif
     }
 

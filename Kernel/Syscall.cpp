@@ -80,7 +80,7 @@ NEVER_INLINE NAKED void syscall_asm_entry()
 
 namespace Syscall {
 
-static KResultOr<FlatPtr> handle(RegisterState&, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3);
+static KResultOr<FlatPtr> handle(RegisterState&, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3, FlatPtr arg4);
 
 UNMAP_AFTER_INIT void initialize()
 {
@@ -88,7 +88,7 @@ UNMAP_AFTER_INIT void initialize()
 }
 
 #pragma GCC diagnostic ignored "-Wcast-function-type"
-typedef KResultOr<FlatPtr> (Process::*Handler)(FlatPtr, FlatPtr, FlatPtr);
+typedef KResultOr<FlatPtr> (Process::*Handler)(FlatPtr, FlatPtr, FlatPtr, FlatPtr);
 typedef KResultOr<FlatPtr> (Process::*HandlerWithRegisterState)(RegisterState&);
 struct HandlerMetadata {
     Handler handler;
@@ -101,7 +101,7 @@ static const HandlerMetadata s_syscall_table[] = {
 };
 #undef __ENUMERATE_SYSCALL
 
-KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
+KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3, FlatPtr arg4)
 {
     VERIFY_INTERRUPTS_ENABLED();
     auto current_thread = Thread::current();
@@ -109,7 +109,7 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
     current_thread->did_syscall();
 
     if (function >= Function::__Count) {
-        dbgln("Unknown syscall {} requested ({:p}, {:p}, {:p})", function, arg1, arg2, arg3);
+        dbgln("Unknown syscall {} requested ({:p}, {:p}, {:p}, {:p})", function, arg1, arg2, arg3, arg4);
         return ENOSYS;
     }
 
@@ -153,7 +153,7 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
         auto handler = (HandlerWithRegisterState)syscall_metadata.handler;
         result = (process.*(handler))(regs);
     } else {
-        result = (process.*(syscall_metadata.handler))(arg1, arg2, arg3);
+        result = (process.*(syscall_metadata.handler))(arg1, arg2, arg3, arg4);
     }
 
     return result;
@@ -207,9 +207,10 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     FlatPtr arg1;
     FlatPtr arg2;
     FlatPtr arg3;
-    regs.capture_syscall_params(function, arg1, arg2, arg3);
+    FlatPtr arg4;
+    regs.capture_syscall_params(function, arg1, arg2, arg3, arg4);
 
-    auto result = Syscall::handle(regs, function, arg1, arg2, arg3);
+    auto result = Syscall::handle(regs, function, arg1, arg2, arg3, arg4);
 
     if (result.is_error()) {
         regs.set_return_reg(result.error());

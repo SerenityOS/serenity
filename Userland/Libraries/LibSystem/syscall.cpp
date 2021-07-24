@@ -28,4 +28,9 @@ uintptr_t syscall3(uintptr_t function, uintptr_t arg0, uintptr_t arg1, uintptr_t
 {
     return Syscall::invoke((Syscall::Function)function, arg0, arg1, arg2);
 }
+
+uintptr_t syscall4(uintptr_t function, uintptr_t arg0, uintptr_t arg1, uintptr_t arg2, uintptr_t arg3)
+{
+    return Syscall::invoke((Syscall::Function)function, arg0, arg1, arg2, arg3);
+}
 }
