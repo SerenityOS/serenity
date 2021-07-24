@@ -16,6 +16,8 @@ fi
 if [ "$(uname -s)" = "Darwin" ]; then
     export PATH="/usr/local/opt/e2fsprogs/bin:$PATH"
     export PATH="/usr/local/opt/e2fsprogs/sbin:$PATH"
+    export PATH="/opt/homebrew/opt/e2fsprogs/bin:$PATH"
+    export PATH="/opt/homebrew/opt/e2fsprogs/sbin:$PATH"
 fi
 
 SCRIPT_DIR="$(dirname "${0}")"
