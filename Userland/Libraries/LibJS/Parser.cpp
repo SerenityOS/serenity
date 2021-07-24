@@ -298,7 +298,7 @@ NonnullRefPtr<Program> Parser::parse_program(bool starts_in_strict_mode)
             program->append(parse_declaration());
             parsing_directives = false;
         } else if (match_statement()) {
-            auto statement = parse_statement();
+            auto statement = parse_statement(AllowLabelledFunction::Yes);
             program->append(statement);
             if (statement_is_use_strict_directive(statement)) {
                 if (parsing_directives) {
@@ -363,7 +363,7 @@ NonnullRefPtr<Declaration> Parser::parse_declaration()
     }
 }
 
-NonnullRefPtr<Statement> Parser::parse_statement()
+NonnullRefPtr<Statement> Parser::parse_statement(AllowLabelledFunction allow_labelled_function)
 {
     auto rule_start = push_start();
     switch (m_state.current_token.type()) {
@@ -401,8 +401,8 @@ NonnullRefPtr<Statement> Parser::parse_statement()
         consume();
         return create_ast_node<EmptyStatement>({ m_state.current_token.filename(), rule_start.position(), position() });
     default:
-        if (match(TokenType::Identifier)) {
-            auto result = try_parse_labelled_statement();
+        if (match_identifier_name()) {
+            auto result = try_parse_labelled_statement(allow_labelled_function);
             if (!result.is_null())
                 return result.release_nonnull();
         }
@@ -534,13 +534,18 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         move(parameters), function_length, FunctionKind::Regular, is_strict, true);
 }
 
-RefPtr<Statement> Parser::try_parse_labelled_statement()
+RefPtr<Statement> Parser::try_parse_labelled_statement(AllowLabelledFunction allow_function)
 {
     save_state();
     auto rule_start = push_start();
     ArmedScopeGuard state_rollback_guard = [&] {
         load_state();
     };
+
+    if (match(TokenType::Yield) && (m_state.strict_mode || m_state.in_generator_function_context)) {
+        syntax_error("'yield' label not allowed in this context");
+        return {};
+    }
 
     auto identifier = consume_identifier_reference().value();
     if (!match(TokenType::Colon))
@@ -549,14 +554,37 @@ RefPtr<Statement> Parser::try_parse_labelled_statement()
 
     if (!match_statement())
         return {};
+
+    if (match(TokenType::Function) && (allow_function == AllowLabelledFunction::No || m_state.strict_mode)) {
+        syntax_error("Not allowed to declare a function here");
+        return {};
+    }
+
+    if (m_state.labels_in_scope.contains(identifier))
+        syntax_error(String::formatted("Label '{}' has already been declared", identifier));
     m_state.labels_in_scope.set(identifier);
-    auto statement = parse_statement();
+
+    RefPtr<Statement> labelled_statement;
+
+    if (match(TokenType::Function)) {
+        auto function_declaration = parse_function_node<FunctionDeclaration>();
+        m_state.current_scope->function_declarations.append(function_declaration);
+        auto hoisting_target = m_state.current_scope->get_current_function_scope();
+        hoisting_target->hoisted_function_declarations.append({ function_declaration, *m_state.current_scope });
+        if (function_declaration->kind() == FunctionKind::Generator)
+            syntax_error("Generator functions cannot be defined in labelled statements");
+
+        labelled_statement = move(function_declaration);
+    } else {
+        labelled_statement = parse_statement();
+    }
+
     m_state.labels_in_scope.remove(identifier);
 
-    statement->set_label(identifier);
+    labelled_statement->set_label(identifier);
     state_rollback_guard.disarm();
     discard_saved_state();
-    return statement;
+    return labelled_statement.release_nonnull();
 }
 
 RefPtr<MetaProperty> Parser::try_parse_new_target_expression()
@@ -1632,7 +1660,7 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(bool& is_strict, boo
             block->append(parse_declaration());
             parsing_directives = false;
         } else if (match_statement()) {
-            auto statement = parse_statement();
+            auto statement = parse_statement(AllowLabelledFunction::Yes);
             block->append(statement);
             if (statement_is_use_strict_directive(statement)) {
                 if (parsing_directives) {
