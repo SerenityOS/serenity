@@ -188,6 +188,9 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::~NE2000NetworkAdapter()
 bool NE2000NetworkAdapter::handle_irq(const RegisterState&)
 {
     u8 status = in8(REG_RW_INTERRUPTSTATUS);
+
+    m_entropy_source.add_random_event(status);
+
     dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Got interrupt, status={:#02x}", status);
     if (status == 0) {
         return false;
