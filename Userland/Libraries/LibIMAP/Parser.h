@@ -28,6 +28,7 @@ private:
     void consume(StringView);
     bool try_consume(StringView);
     StringView consume_while(Function<bool(u8)> should_consume);
+    StringView consume_until_end_of_line();
 
     bool at_end() { return position >= m_buffer.size(); };
 

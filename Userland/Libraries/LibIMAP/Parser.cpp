@@ -22,7 +22,7 @@ ParseStatus Parser::parse(ByteBuffer&& buffer, bool expecting_tag)
 
     if (try_consume("+")) {
         consume(" ");
-        auto data = consume_while([](u8 x) { return x != '\r'; });
+        auto data = consume_until_end_of_line();
         consume("\r\n");
         return { true, { ContinueRequest { data } } };
     }
@@ -182,12 +182,9 @@ void Parser::parse_untagged()
                 consume_while([](u8 x) { return x != ']'; });
             }
             consume("]");
-            consume_while([](u8 x) { return x != '\r'; });
-            consume("\r\n");
-        } else {
-            consume_while([](u8 x) { return x != '\r'; });
-            consume("\r\n");
         }
+        consume_until_end_of_line();
+        consume("\r\n");
     } else if (try_consume("SEARCH")) {
         Vector<unsigned> ids;
         while (!try_consume("\r\n")) {
@@ -197,7 +194,7 @@ void Parser::parse_untagged()
         }
         m_response.data().set_search_results(move(ids));
     } else if (try_consume("BYE")) {
-        auto message = consume_while([](u8 x) { return x != '\r'; });
+        auto message = consume_until_end_of_line();
         consume("\r\n");
         m_response.data().set_bye(message.is_empty() ? Optional<String>() : Optional<String>(message));
     } else if (try_consume("STATUS")) {
@@ -236,7 +233,7 @@ void Parser::parse_untagged()
         try_consume(" "); // Not in the spec but the Outlook server sends a space for some reason.
         consume("\r\n");
     } else {
-        auto x = consume_while([](u8 x) { return x != '\r'; });
+        auto x = consume_until_end_of_line();
         consume("\r\n");
         dbgln("ignored {}", x);
     }
@@ -685,6 +682,11 @@ StringView Parser::consume_while(Function<bool(u8)> should_consume)
         chars++;
     }
     return StringView(m_buffer.data() + position - chars, chars);
+}
+
+StringView Parser::consume_until_end_of_line()
+{
+    return consume_while([](u8 x) { return x != '\r'; });
 }
 
 FetchCommand::DataItem Parser::parse_fetch_data_item()
