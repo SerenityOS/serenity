@@ -37,11 +37,11 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         m_adapter_model = GUI::JsonArrayModel::create("/proc/net/adapters", move(net_adapters_fields));
         m_adapter_table_view->set_model(GUI::SortingProxyModel::create(*m_adapter_model));
 
-        auto& sockets_group_box = add<GUI::GroupBox>("Sockets");
-        sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
-        sockets_group_box.layout()->set_margins({ 6, 16, 6, 6 });
+        auto& tcp_sockets_group_box = add<GUI::GroupBox>("TCP Sockets");
+        tcp_sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
+        tcp_sockets_group_box.layout()->set_margins({ 6, 16, 6, 6 });
 
-        m_tcp_socket_table_view = sockets_group_box.add<GUI::TableView>();
+        m_tcp_socket_table_view = tcp_sockets_group_box.add<GUI::TableView>();
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_tcp_fields;
         net_tcp_fields.empend("peer_address", "Peer", Gfx::TextAlignment::CenterLeft);
@@ -58,7 +58,11 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         m_tcp_socket_model = GUI::JsonArrayModel::create("/proc/net/tcp", move(net_tcp_fields));
         m_tcp_socket_table_view->set_model(GUI::SortingProxyModel::create(*m_tcp_socket_model));
 
-        m_udp_socket_table_view = sockets_group_box.add<GUI::TableView>();
+        auto& udp_sockets_group_box = add<GUI::GroupBox>("UDP Sockets");
+        udp_sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
+        udp_sockets_group_box.layout()->set_margins({ 6, 16, 6, 6 });
+
+        m_udp_socket_table_view = udp_sockets_group_box.add<GUI::TableView>();
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_udp_fields;
         net_udp_fields.empend("peer_address", "Peer", Gfx::TextAlignment::CenterLeft);
