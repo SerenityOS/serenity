@@ -393,10 +393,10 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
 
                 builder.appendff(" pseudo_class={}", pseudo_class_description);
                 if (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::Not) {
-                    builder.append("(");
+                    builder.append("([");
                     for (auto& selector : pseudo_class.not_selector)
                         dump_selector(builder, selector);
-                    builder.append(")");
+                    builder.append("])");
                 } else if ((pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild)
                     || (pseudo_class.type == CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild)) {
                     builder.appendff("(step={}, offset={})", pseudo_class.nth_child_pattern.step_size, pseudo_class.nth_child_pattern.offset);
@@ -407,7 +407,7 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 char const* pseudo_element_description = "";
                 switch (simple_selector.pseudo_element) {
                 case CSS::Selector::SimpleSelector::PseudoElement::None:
-                    pseudo_element_description = "None";
+                    pseudo_element_description = "NONE";
                     break;
                 case CSS::Selector::SimpleSelector::PseudoElement::Before:
                     pseudo_element_description = "before";
@@ -431,30 +431,30 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
 
                 switch (simple_selector.attribute.match_type) {
                 case CSS::Selector::SimpleSelector::Attribute::MatchType::None:
+                    attribute_match_type_description = "NONE";
                     break;
                 case CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute:
-                    type_description = "HasAttribute";
+                    attribute_match_type_description = "HasAttribute";
                     break;
                 case CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
-                    type_description = "ExactValueMatch";
+                    attribute_match_type_description = "ExactValueMatch";
                     break;
                 case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord:
-                    type_description = "ContainsWord";
+                    attribute_match_type_description = "ContainsWord";
                     break;
                 case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
-                    type_description = "ContainsString";
+                    attribute_match_type_description = "ContainsString";
                     break;
                 case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment:
-                    type_description = "StartsWithSegment";
+                    attribute_match_type_description = "StartsWithSegment";
                     break;
                 case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
-                    type_description = "StartsWithString";
+                    attribute_match_type_description = "StartsWithString";
                     break;
                 case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
-                    type_description = "EndsWithString";
+                    attribute_match_type_description = "EndsWithString";
                     break;
                 }
-                break;
 
                 builder.appendff(" [{}, name='{}', value='{}']", attribute_match_type_description, simple_selector.attribute.name, simple_selector.attribute.value);
             }
