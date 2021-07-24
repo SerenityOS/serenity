@@ -95,6 +95,12 @@ add_custom_target(configure-components
     USES_TERMINAL
 )
 
+add_custom_target(generate-unicode-data
+    COMMAND GenerateUnicodeData
+    DEPENDS GenerateUnicodeData
+    USES_TERMINAL
+)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -138,6 +144,7 @@ add_subdirectory(Userland/DevTools/IPCCompiler)
 add_subdirectory(Userland/DevTools/StateMachineGenerator)
 add_subdirectory(Userland/Libraries/LibWeb/CodeGenerators)
 add_subdirectory(Meta/CMake/ConfigureComponents)
+add_subdirectory(Meta/Unicode)
 
 set(write_if_different ${CMAKE_SOURCE_DIR}/Meta/write-only-on-difference.sh)
 
