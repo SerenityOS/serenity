@@ -98,6 +98,9 @@ void TextEditor::create_actions()
             this);
     }
     m_select_all_action = CommonActions::make_select_all_action([this](auto&) { select_all(); }, this);
+    Clipboard::the().on_change = [this](auto const& mime_type) {
+        m_paste_action->set_enabled(is_editable() && mime_type.starts_with("text/") && !Clipboard::the().data().is_empty());
+    };
 }
 
 void TextEditor::set_text(StringView const& text)
@@ -1395,6 +1398,9 @@ void TextEditor::copy()
 void TextEditor::paste()
 {
     if (!is_editable())
+        return;
+
+    if (!Clipboard::the().mime_type().starts_with("text/"))
         return;
 
     auto paste_text = Clipboard::the().data();

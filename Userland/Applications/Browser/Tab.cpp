@@ -151,7 +151,12 @@ Tab::Tab(BrowserWindow& window, Type type)
     };
 
     m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste && Go", [this](auto&) {
-        m_location_box->set_text(GUI::Clipboard::the().data());
+        if (!GUI::Clipboard::the().mime_type().starts_with("text/"))
+            return;
+        auto const& paste_text = GUI::Clipboard::the().data();
+        if (paste_text.is_empty())
+            return;
+        m_location_box->set_text(paste_text);
         m_location_box->on_return_pressed();
     }));
 
