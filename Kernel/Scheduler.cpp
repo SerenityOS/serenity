@@ -77,7 +77,7 @@ static inline u32 thread_priority_to_priority_index(u32 thread_priority)
 
 Thread& Scheduler::pull_next_runnable_thread()
 {
-    auto affinity_mask = 1u << Processor::current().id();
+    auto affinity_mask = 1u << Processor::id();
 
     ScopedSpinLock lock(g_ready_queues_lock);
     auto priority_mask = g_ready_queues_mask;
@@ -115,7 +115,7 @@ Thread& Scheduler::pull_next_runnable_thread()
 
 Thread* Scheduler::peek_next_runnable_thread()
 {
-    auto affinity_mask = 1u << Processor::current().id();
+    auto affinity_mask = 1u << Processor::id();
 
     ScopedSpinLock lock(g_ready_queues_lock);
     auto priority_mask = g_ready_queues_mask;
@@ -151,7 +151,7 @@ bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
         return false;
     }
 
-    if (check_affinity && !(thread.affinity() & (1 << Processor::current().id())))
+    if (check_affinity && !(thread.affinity() & (1 << Processor::id())))
         return false;
 
     VERIFY(g_ready_queues_mask & (1u << priority));
@@ -439,7 +439,7 @@ UNMAP_AFTER_INIT void Scheduler::set_idle_thread(Thread* idle_thread)
 {
     idle_thread->set_idle_thread();
     Processor::current().set_idle_thread(*idle_thread);
-    Processor::current().set_current_thread(*idle_thread);
+    Processor::set_current_thread(*idle_thread);
 }
 
 UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
@@ -562,7 +562,7 @@ void Scheduler::idle_loop(void*)
 #if SCHEDULE_ON_ALL_PROCESSORS
         yield();
 #else
-        if (Processor::current().id() == 0)
+        if (Processor::id() == 0)
             yield();
 #endif
     }
