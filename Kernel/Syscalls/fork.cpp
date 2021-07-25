@@ -96,7 +96,7 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         ScopedSpinLock lock(space().get_lock());
         for (auto& region : space().regions()) {
             dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", region, region->name(), region->vaddr());
-            auto region_clone = region->clone(*child);
+            auto region_clone = region->clone();
             if (!region_clone) {
                 dbgln("fork: Cannot clone region, insufficient memory");
                 // TODO: tear down new process?

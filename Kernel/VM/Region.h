@@ -8,7 +8,6 @@
 
 #include <AK/EnumBits.h>
 #include <AK/IntrusiveList.h>
-#include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Forward.h>
@@ -47,7 +46,7 @@ public:
         Yes,
     };
 
-    static OwnPtr<Region> try_create_user_accessible(Process*, Range const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
+    static OwnPtr<Region> try_create_user_accessible(Range const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
     static OwnPtr<Region> try_create_kernel_only(Range const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
 
     ~Region();
@@ -88,7 +87,7 @@ public:
 
     PageFaultResponse handle_fault(PageFault const&);
 
-    OwnPtr<Region> clone(Process&);
+    OwnPtr<Region> clone();
 
     bool contains(VirtualAddress vaddr) const
     {
@@ -205,8 +204,6 @@ public:
         OutOfMemory
     };
 
-    RefPtr<Process> get_owner();
-
     bool is_syscall_region() const { return m_syscall_region; }
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
@@ -241,7 +238,6 @@ private:
     bool m_stack : 1 { false };
     bool m_mmap : 1 { false };
     bool m_syscall_region : 1 { false };
-    WeakPtr<Process> m_owner;
     IntrusiveListNode<Region> m_memory_manager_list_node;
     IntrusiveListNode<Region> m_vmobject_list_node;
 
