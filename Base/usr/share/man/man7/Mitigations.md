@@ -237,6 +237,40 @@ Date:   Fri Jan 1 15:27:42 2021 -0800
 
 Build + LibC: Enable -fstack-protector-strong in user space
 ```
+### Protected Kernel Process Data
+
+The kernel applies a exploit mitigation technique where vulnerable data
+related to the state of a process is separated out into it's own region
+in memory which is always remmaped as read-only after it's initialized
+or updated. This means that an attacker needs more than an arbitrary
+kernel write primitive to be able to elevate a process to root for example.
+
+It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/cbcf891040e9921ff628fdda668c9738f358a178):
+```
+commit cbcf891040e9921ff628fdda668c9738f358a178
+Author: Andreas Kling <kling@serenityos.org>
+Date:   Wed Mar 10 19:59:46 2021 +0100
+
+Kernel: Move select Process members into protected memory
+```
+
+### -fzero-call-used-regs
+
+GCC-11 added a new option `-fzero-call-used-regs` which causes the
+compiler to zero function arguments before return of a function. The
+goal being to reduce the possible attack surface by disarming ROP
+gadgets that might be potentially useful to attackers, and reducing
+the risk of information leaks via stale register data.
+
+It was first enabled when compiling the Kernel in the following [commit](https://github.com/SerenityOS/serenity/commit/204d5ff8f86547a8b100cf26a958aaabf49211f2):
+
+```
+commit 204d5ff8f86547a8b100cf26a958aaabf49211f2
+Author: Brian Gianforcaro <bgianf@serenityos.org>
+Date:   Fri Jul 23 00:42:54 2021 -0700
+
+Kernel: Reduce useful ROP gadgets by zeroing used function registers
+```
 
 ## See also
 
