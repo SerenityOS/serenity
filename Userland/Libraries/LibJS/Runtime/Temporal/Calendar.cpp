@@ -356,11 +356,12 @@ Object* get_temporal_calendar_with_iso_default(GlobalObject& global_object, Obje
     auto& vm = global_object.vm();
 
     // 1. If item has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
-    // TODO: The rest of the Temporal built-ins
-    if (is<PlainDate>(item)) {
-        // a. Return item.[[Calendar]].
+    // a. Return item.[[Calendar]].
+    if (is<PlainDate>(item))
         return &static_cast<PlainDate&>(item).calendar();
-    }
+    if (is<PlainDateTime>(item))
+        return &static_cast<PlainDateTime&>(item).calendar();
+    // TODO: The rest of the Temporal built-ins (PlainMonthDay, PlainTime, PlainYearMonth, ZonedDateTime)
 
     // 2. Let calendar be ? Get(item, "calendar").
     auto calendar = item.get(vm.names.calendar);
