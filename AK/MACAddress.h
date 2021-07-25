@@ -57,6 +57,28 @@ public:
         return String::formatted("{:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
     }
 
+    static Optional<MACAddress> from_string(const StringView& string)
+    {
+        if (string.is_null())
+            return {};
+
+        const auto parts = string.split_view(":");
+        if (parts.size() != 6)
+            return {};
+
+        auto a = AK::StringUtils::convert_to_uint_from_hex(parts[0]).value_or(256);
+        auto b = AK::StringUtils::convert_to_uint_from_hex(parts[1]).value_or(256);
+        auto c = AK::StringUtils::convert_to_uint_from_hex(parts[2]).value_or(256);
+        auto d = AK::StringUtils::convert_to_uint_from_hex(parts[3]).value_or(256);
+        auto e = AK::StringUtils::convert_to_uint_from_hex(parts[4]).value_or(256);
+        auto f = AK::StringUtils::convert_to_uint_from_hex(parts[5]).value_or(256);
+
+        if (a > 255 || b > 255 || c > 255 || d > 255 || e > 255 || f > 255)
+            return {};
+
+        return MACAddress(a, b, c, d, e, f);
+    }
+
     constexpr bool is_zero() const
     {
         return all_of(m_data.begin(), m_data.end(), [](const auto octet) { return octet == 0; });
