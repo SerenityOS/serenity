@@ -158,12 +158,17 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         app_category_menus.set(category, category_menu);
     };
 
-    for (const auto& category : sorted_app_categories)
-        create_category_menu(category);
+    for (const auto& category : sorted_app_categories) {
+        if (category != "Settings"sv)
+            create_category_menu(category);
+    }
 
     // Then we create and insert all the app menu items into the right place.
     int app_identifier = 0;
     for (const auto& app : g_apps) {
+        if (app.category == "Settings"sv)
+            continue;
+
         auto icon = GUI::FileIconProvider::icon_for_executable(app.executable).bitmap_for_size(16);
 
         if constexpr (SYSTEM_MENU_DEBUG) {
@@ -230,6 +235,17 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             ++theme_identifier;
         }
     }
+
+    system_menu->add_action(GUI::Action::create("Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-settings.png"), [](auto&) {
+        pid_t child_pid;
+        const char* argv[] = { "/bin/Settings", nullptr };
+        if ((errno = posix_spawn(&child_pid, "/bin/Settings", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+            perror("posix_spawn");
+        } else {
+            if (disown(child_pid) < 0)
+                perror("disown");
+        }
+    }));
 
     system_menu->add_separator();
     system_menu->add_action(GUI::Action::create("Help", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png"), [](auto&) {
