@@ -31,7 +31,7 @@ VMObject::~VMObject()
     }
 
     MM.unregister_vmobject(*this);
-    VERIFY(m_regions_count.load(AK::MemoryOrder::memory_order_relaxed) == 0);
+    VERIFY(m_regions.is_empty());
 }
 
 }

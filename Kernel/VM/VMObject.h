@@ -52,18 +52,14 @@ public:
     ALWAYS_INLINE void add_region(Region& region)
     {
         ScopedSpinLock locker(m_lock);
-        m_regions_count++;
         m_regions.append(region);
     }
 
     ALWAYS_INLINE void remove_region(Region& region)
     {
         ScopedSpinLock locker(m_lock);
-        m_regions_count--;
         m_regions.remove(region);
     }
-
-    ALWAYS_INLINE bool is_shared_by_multiple_regions() const { return m_regions_count > 1; }
 
     void register_on_deleted_handler(VMObjectDeletedHandler& handler)
     {
@@ -93,7 +89,6 @@ private:
     VMObject& operator=(VMObject&&) = delete;
     VMObject(VMObject&&) = delete;
 
-    Atomic<u32, AK::MemoryOrder::memory_order_relaxed> m_regions_count { 0 };
     HashTable<VMObjectDeletedHandler*> m_on_deleted;
     SpinLock<u8> m_on_deleted_lock;
 

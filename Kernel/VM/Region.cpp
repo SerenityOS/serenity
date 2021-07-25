@@ -225,18 +225,12 @@ bool Region::do_remap_vmobject_page(size_t page_index, bool with_flush)
 
 bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
 {
-    bool success = true;
     auto& vmobject = this->vmobject();
-    ScopedSpinLock lock(vmobject.m_lock);
-    if (vmobject.is_shared_by_multiple_regions()) {
-        vmobject.for_each_region([&](auto& region) {
-            if (!region.do_remap_vmobject_page(page_index, with_flush))
-                success = false;
-        });
-    } else {
-        if (!do_remap_vmobject_page(page_index, with_flush))
+    bool success = true;
+    vmobject.for_each_region([&](auto& region) {
+        if (!region.do_remap_vmobject_page(page_index, with_flush))
             success = false;
-    }
+    });
     return success;
 }
 
