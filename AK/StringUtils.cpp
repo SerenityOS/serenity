@@ -284,7 +284,7 @@ bool contains(const StringView& str, const StringView& needle, CaseSensitivity c
 
 bool is_whitespace(const StringView& str)
 {
-    return all_of(str.begin(), str.end(), is_ascii_space);
+    return all_of(str, is_ascii_space);
 }
 
 StringView trim(const StringView& str, const StringView& characters, TrimMode mode)

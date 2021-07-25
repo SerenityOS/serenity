@@ -53,7 +53,7 @@ static bool is_valid_bigint_value(StringView string)
     string = string.trim_whitespace();
     if (string.length() > 1 && (string[0] == '-' || string[0] == '+'))
         string = string.substring_view(1, string.length() - 1);
-    return all_of(string.begin(), string.end(), [](auto ch) { return isdigit(ch); });
+    return all_of(string, [](auto ch) { return isdigit(ch); });
 }
 
 ALWAYS_INLINE bool both_number(const Value& lhs, const Value& rhs)

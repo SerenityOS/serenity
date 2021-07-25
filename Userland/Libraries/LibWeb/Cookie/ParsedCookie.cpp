@@ -231,7 +231,7 @@ Optional<Core::DateTime> parse_date_time(StringView date_string)
     unsigned year = 0;
 
     auto to_uint = [](StringView token, unsigned& result) {
-        if (!all_of(token.begin(), token.end(), isdigit))
+        if (!all_of(token, isdigit))
             return false;
 
         if (auto converted = token.to_uint(); converted.has_value()) {

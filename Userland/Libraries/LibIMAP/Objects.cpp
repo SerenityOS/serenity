@@ -120,7 +120,7 @@ String serialize_astring(StringView string)
         auto non_atom_chars = { '(', ')', '{', ' ', '%', '*', '"', '\\', ']' };
         return AK::find(non_atom_chars.begin(), non_atom_chars.end(), x) != non_atom_chars.end();
     };
-    auto is_atom = all_of(string.begin(), string.end(), [&](auto ch) { return is_ascii_control(ch) && !is_non_atom_char(ch); });
+    auto is_atom = all_of(string, [&](auto ch) { return is_ascii_control(ch) && !is_non_atom_char(ch); });
     if (is_atom) {
         return string;
     }
