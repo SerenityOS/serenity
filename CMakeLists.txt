@@ -134,6 +134,8 @@ include_directories(Userland/Libraries)
 include_directories(.)
 include_directories(${CMAKE_BINARY_DIR})
 
+set(write_if_different ${CMAKE_SOURCE_DIR}/Meta/write-only-on-difference.sh)
+
 add_subdirectory(Meta/Lagom)
 
 if (ENABLE_UNDEFINED_SANITIZER)
@@ -145,8 +147,6 @@ add_subdirectory(Userland/DevTools/StateMachineGenerator)
 add_subdirectory(Userland/Libraries/LibUnicode/CodeGenerators)
 add_subdirectory(Userland/Libraries/LibWeb/CodeGenerators)
 add_subdirectory(Meta/CMake/ConfigureComponents)
-
-set(write_if_different ${CMAKE_SOURCE_DIR}/Meta/write-only-on-difference.sh)
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
