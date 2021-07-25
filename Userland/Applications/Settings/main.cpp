@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Settings");
-    window->resize(400, 300);
+    window->resize(360, 240);
 
     auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
