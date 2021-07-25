@@ -721,7 +721,23 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
                 //   It is a Syntax Error if PropName of MethodDefinition is "prototype".
                 if (is_static && name == "prototype"sv)
                     syntax_error("Classes may not have a static property named 'prototype'");
-
+            } else if (match(TokenType::ParenOpen) && (is_static || method_kind != ClassMethod::Kind::Method)) {
+                switch (method_kind) {
+                case ClassMethod::Kind::Method:
+                    VERIFY(is_static);
+                    name = "static";
+                    is_static = false;
+                    break;
+                case ClassMethod::Kind::Getter:
+                    name = "get";
+                    method_kind = ClassMethod::Kind::Method;
+                    break;
+                case ClassMethod::Kind::Setter:
+                    name = "set";
+                    method_kind = ClassMethod::Kind::Method;
+                    break;
+                }
+                property_key = create_ast_node<StringLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, name);
             } else {
                 expected("property key");
             }
@@ -741,7 +757,7 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
 
         if (match(TokenType::ParenOpen)) {
             u8 parse_options = FunctionNodeParseOptions::AllowSuperPropertyLookup;
-            if (!super_class.is_null())
+            if (!super_class.is_null() && !is_static && is_constructor)
                 parse_options |= FunctionNodeParseOptions::AllowSuperConstructorCall;
             if (method_kind == ClassMethod::Kind::Getter)
                 parse_options |= FunctionNodeParseOptions::IsGetterFunction;
