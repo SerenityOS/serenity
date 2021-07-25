@@ -255,7 +255,6 @@ set(KERNEL_SOURCES
     VirtIO/VirtIOQueue.cpp
     VirtIO/VirtIORNG.cpp
     VM/AnonymousVMObject.cpp
-    VM/ContiguousVMObject.cpp
     VM/InodeVMObject.cpp
     VM/MemoryManager.cpp
     VM/PageDirectory.cpp

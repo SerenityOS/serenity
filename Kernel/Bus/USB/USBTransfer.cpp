@@ -11,14 +11,14 @@ namespace Kernel::USB {
 
 RefPtr<Transfer> Transfer::try_create(Pipe& pipe, u16 len)
 {
-    auto vmobject = ContiguousVMObject::try_create_with_size(PAGE_SIZE);
+    auto vmobject = AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE);
     if (!vmobject)
         return nullptr;
 
     return AK::try_create<Transfer>(pipe, len, *vmobject);
 }
 
-Transfer::Transfer(Pipe& pipe, u16 len, ContiguousVMObject& vmobject)
+Transfer::Transfer(Pipe& pipe, u16 len, AnonymousVMObject& vmobject)
     : m_pipe(pipe)
     , m_transfer_data_size(len)
 {

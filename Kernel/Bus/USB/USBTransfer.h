@@ -10,7 +10,7 @@
 #include <AK/RefPtr.h>
 #include <Kernel/Bus/USB/PacketTypes.h>
 #include <Kernel/Bus/USB/USBPipe.h>
-#include <Kernel/VM/ContiguousVMObject.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>
 
@@ -23,7 +23,7 @@ public:
 
 public:
     Transfer() = delete;
-    Transfer(Pipe& pipe, u16 len, ContiguousVMObject&);
+    Transfer(Pipe& pipe, u16 len, AnonymousVMObject&);
     ~Transfer();
 
     void set_setup_packet(const USBRequestData& request);

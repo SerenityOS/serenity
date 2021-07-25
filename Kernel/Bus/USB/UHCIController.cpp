@@ -289,7 +289,7 @@ void UHCIController::reset()
     }
 
     // Let's allocate the physical page for the Frame List (which is 4KiB aligned)
-    auto framelist_vmobj = ContiguousVMObject::try_create_with_size(PAGE_SIZE);
+    auto framelist_vmobj = AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE);
     m_framelist = MemoryManager::the().allocate_kernel_region_with_vmobject(*framelist_vmobj, PAGE_SIZE, "UHCI Framelist", Region::Access::Write);
     dbgln("UHCI: Allocated framelist at physical address {}", m_framelist->physical_page(0)->paddr());
     dbgln("UHCI: Framelist is at virtual address {}", m_framelist->vaddr());
@@ -311,7 +311,7 @@ UNMAP_AFTER_INIT void UHCIController::create_structures()
 {
     // Let's allocate memory for both the QH and TD pools
     // First the QH pool and all of the Interrupt QH's
-    auto qh_pool_vmobject = ContiguousVMObject::try_create_with_size(2 * PAGE_SIZE);
+    auto qh_pool_vmobject = AnonymousVMObject::try_create_physically_contiguous_with_size(2 * PAGE_SIZE);
     m_qh_pool = MemoryManager::the().allocate_kernel_region_with_vmobject(*qh_pool_vmobject, 2 * PAGE_SIZE, "UHCI Queue Head Pool", Region::Access::Write);
     memset(m_qh_pool->vaddr().as_ptr(), 0, 2 * PAGE_SIZE); // Zero out both pages
 
@@ -331,7 +331,7 @@ UNMAP_AFTER_INIT void UHCIController::create_structures()
     m_dummy_qh = allocate_queue_head();
 
     // Now the Transfer Descriptor pool
-    auto td_pool_vmobject = ContiguousVMObject::try_create_with_size(2 * PAGE_SIZE);
+    auto td_pool_vmobject = AnonymousVMObject::try_create_physically_contiguous_with_size(2 * PAGE_SIZE);
     m_td_pool = MemoryManager::the().allocate_kernel_region_with_vmobject(*td_pool_vmobject, 2 * PAGE_SIZE, "UHCI Transfer Descriptor Pool", Region::Access::Write);
     memset(m_td_pool->vaddr().as_ptr(), 0, 2 * PAGE_SIZE);
 
