@@ -224,6 +224,9 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
 
         m_shared_committed_cow_pages = nullptr;
 
+        if (!m_cow_map.is_null())
+            m_cow_map = {};
+
         m_volatile = true;
         m_was_purged = false;
         return KSuccess;
