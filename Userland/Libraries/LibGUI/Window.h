@@ -208,6 +208,9 @@ protected:
     virtual void wm_event(WMEvent&);
     virtual void screen_rects_change_event(ScreenRectsChangeEvent&);
 
+    virtual void enter_event(Core::Event&);
+    virtual void leave_event(Core::Event&);
+
 private:
     void update_cursor();
     void focus_a_widget_if_possible(FocusSource);
@@ -224,7 +227,8 @@ private:
     void handle_fonts_change_event(FontsChangeEvent&);
     void handle_screen_rects_change_event(ScreenRectsChangeEvent&);
     void handle_drag_move_event(DragEvent&);
-    void handle_left_event();
+    void handle_entered_event(Core::Event&);
+    void handle_left_event(Core::Event&);
 
     void server_did_destroy();
 
