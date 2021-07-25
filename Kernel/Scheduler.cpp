@@ -231,17 +231,10 @@ bool Scheduler::pick_next()
 
     auto& thread_to_schedule = pull_next_runnable_thread();
     if constexpr (SCHEDULER_DEBUG) {
-#if ARCH(I386)
-        dbgln("Scheduler[{}]: Switch to {} @ {:04x}:{:08x}",
+        dbgln("Scheduler[{}]: Switch to {} @ {:#04x}:{:p}",
             Processor::id(),
             thread_to_schedule,
             thread_to_schedule.regs().cs, thread_to_schedule.regs().ip());
-#else
-        dbgln("Scheduler[{}]: Switch to {} @ {:04x}:{:016x}",
-            Processor::id(),
-            thread_to_schedule,
-            thread_to_schedule.regs().cs, thread_to_schedule.regs().rip);
-#endif
     }
 
     // We need to leave our first critical section before switching context,
