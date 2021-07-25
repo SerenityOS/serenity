@@ -13,6 +13,16 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     set(UNICODE_DATA_HEADER UnicodeData.h)
     set(UNICODE_DATA_IMPLEMENTATION UnicodeData.cpp)
 
+    if (CMAKE_SOURCE_DIR MATCHES ".*/Lagom") # Lagom-only build.
+        set(UNICODE_GENERATOR LibUnicode/CodeGenerators/GenerateUnicodeData)
+        set(UNICODE_DATA_HEADER LibUnicode/UnicodeData.h)
+        set(UNICODE_DATA_IMPLEMENTATION LibUnicode/UnicodeData.cpp)
+    elseif (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/Lagom") # Lagom build within the main SerenityOS build.
+        set(UNICODE_GENERATOR ../../Userland/Libraries/LibUnicode/CodeGenerators/GenerateUnicodeData)
+        set(UNICODE_DATA_HEADER LibUnicode/UnicodeData.h)
+        set(UNICODE_DATA_IMPLEMENTATION LibUnicode/UnicodeData.cpp)
+    endif()
+
     add_custom_command(
         OUTPUT ${UNICODE_DATA_HEADER}
         COMMAND ${write_if_different} ${UNICODE_DATA_HEADER} ${UNICODE_GENERATOR} -h -u ${UNICODE_DATA_PATH}

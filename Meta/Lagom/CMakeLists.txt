@@ -1,6 +1,11 @@
 cmake_minimum_required (VERSION 3.0)
 project (Lagom)
 
+# This is required for CMake (when invoked for a Lagom-only build) to
+# ignore any files downloading during the build, e.g. UnicodeData.txt.
+# https://cmake.org/cmake/help/latest/policy/CMP0058.html
+cmake_policy(SET CMP0058 NEW)
+
 include(../CMake/wasm_spec_tests.cmake)
 
 if (NOT ENABLE_OSS_FUZZ)
@@ -45,6 +50,21 @@ set(ORIGINAL_CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
+
+include_directories(../../)
+include_directories(../../Userland/)
+include_directories(../../Userland/Libraries/)
+include_directories(${CMAKE_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+if (BUILD_LAGOM AND NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
+    if (CMAKE_SOURCE_DIR MATCHES ".*/Lagom")
+        set(write_if_different ${CMAKE_SOURCE_DIR}/../write-only-on-difference.sh)
+        add_subdirectory(../../Userland/Libraries/LibUnicode/CodeGenerators ${CMAKE_CURRENT_BINARY_DIR}/LibUnicode/CodeGenerators)
+    endif()
+
+    include(../../Userland/Libraries/LibUnicode/unicode_data.cmake)
+endif()
 
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
 file(GLOB AK_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/AK/*.cpp")
@@ -92,10 +112,13 @@ list(FILTER LIBTEST_SOURCES EXCLUDE REGEX ".*Main.cpp$")
 file(GLOB LIBTEST_MAIN CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/TestMain.cpp")
 file(GLOB LIBCRYPTO_TESTS CONFIGURE_DEPENDS "../../Tests/LibCrypto/*.cpp")
 file(GLOB LIBTLS_TESTS CONFIGURE_DEPENDS "../../Tests/LibTLS/*.cpp")
+file(GLOB LIBUNICODE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibUnicode/*.cpp")
+set(LIBUNICODE_SOURCES ${LIBUNICODE_SOURCES} ${UNICODE_DATA_SOURCES})
+file(GLOB LIBUNICODE_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibUnicode/*.cpp")
 
 set(LAGOM_REGEX_SOURCES ${LIBREGEX_LIBC_SOURCES} ${LIBREGEX_SOURCES})
 set(LAGOM_CORE_SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES})
-set(LAGOM_MORE_SOURCES ${LIBARCHIVE_SOURCES} ${LIBAUDIO_SOURCES} ${LIBELF_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBJS_SUBSUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCOMPRESS_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBCRYPTO_SUBSUBDIR_SOURCES} ${LIBTLS_SOURCES} ${LIBTTF_SOURCES} ${LIBTEXTCODEC_SOURCES} ${LIBMARKDOWN_SOURCES} ${LIBGEMINI_SOURCES} ${LIBGFX_SOURCES} ${LIBGUI_GML_SOURCES} ${LIBHTTP_SOURCES} ${LAGOM_REGEX_SOURCES} ${SHELL_SOURCES} ${LIBSQL_SOURCES} ${LIBWASM_SOURCES} ${LIBIMAP_SOURCES})
+set(LAGOM_MORE_SOURCES ${LIBARCHIVE_SOURCES} ${LIBAUDIO_SOURCES} ${LIBELF_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBJS_SUBSUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCOMPRESS_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBCRYPTO_SUBSUBDIR_SOURCES} ${LIBTLS_SOURCES} ${LIBTTF_SOURCES} ${LIBTEXTCODEC_SOURCES} ${LIBMARKDOWN_SOURCES} ${LIBGEMINI_SOURCES} ${LIBGFX_SOURCES} ${LIBGUI_GML_SOURCES} ${LIBHTTP_SOURCES} ${LAGOM_REGEX_SOURCES} ${SHELL_SOURCES} ${LIBSQL_SOURCES} ${LIBWASM_SOURCES} ${LIBIMAP_SOURCES} ${LIBUNICODE_SOURCES})
 set(LAGOM_TEST_SOURCES ${LIBTEST_SOURCES})
 
 # FIXME: This is a hack, because the lagom stuff can be build individually or
@@ -104,10 +127,6 @@ set(LAGOM_TEST_SOURCES ${LIBTEST_SOURCES})
 configure_file(../../AK/Debug.h.in AK/Debug.h @ONLY)
 configure_file(../../Kernel/Debug.h.in Kernel/Debug.h @ONLY)
 
-include_directories(../../)
-include_directories(../../Userland/)
-include_directories(../../Userland/Libraries/)
-include_directories(${CMAKE_BINARY_DIR})
 add_library(LagomCore ${LAGOM_CORE_SOURCES})
 find_package(Threads REQUIRED)
 target_link_libraries(LagomCore Threads::Threads)
@@ -286,6 +305,17 @@ if (BUILD_LAGOM)
         foreach(source ${LIBSQL_TEST_SOURCES})
             get_filename_component(name ${source} NAME_WE)
             add_executable(${name}_lagom ${source} ${LIBSQL_SOURCES} ${LIBTEST_MAIN})
+            target_link_libraries(${name}_lagom LagomTest)
+            add_test(
+                NAME ${name}_lagom
+                COMMAND ${name}_lagom
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+        endforeach()
+
+        foreach(source ${LIBUNICODE_TEST_SOURCES})
+            get_filename_component(name ${source} NAME_WE)
+            add_executable(${name}_lagom ${source} ${LIBUNICODE_SOURCES} ${LIBTEST_MAIN})
             target_link_libraries(${name}_lagom LagomTest)
             add_test(
                 NAME ${name}_lagom
