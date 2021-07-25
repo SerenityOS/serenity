@@ -20,6 +20,7 @@
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibUnicode/CharacterTypes.h>
 #include <string.h>
 
 namespace JS {
@@ -379,21 +380,33 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 // 22.1.3.26 String.prototype.toLowerCase ( ), https://tc39.es/ecma262/#sec-string.prototype.tolowercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 {
-    // FIXME: Implement Unicode case folding: https://www.unicode.org/Public/13.0.0/ucd/CaseFolding.txt
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
+    auto string = utf16_string_from(vm, global_object);
+    if (vm.exception())
         return {};
-    return js_string(vm, string->to_lowercase());
+
+    Utf16View utf16_string_view { string };
+    StringBuilder builder;
+
+    for (auto code_point : utf16_string_view)
+        builder.append_code_point(Unicode::to_unicode_lowercase(code_point));
+
+    return js_string(vm, builder.to_string());
 }
 
 // 22.1.3.28 String.prototype.toUpperCase ( ), https://tc39.es/ecma262/#sec-string.prototype.touppercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 {
-    // FIXME: Implement Unicode case folding: https://www.unicode.org/Public/13.0.0/ucd/CaseFolding.txt
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
+    auto string = utf16_string_from(vm, global_object);
+    if (vm.exception())
         return {};
-    return js_string(vm, string->to_uppercase());
+
+    Utf16View utf16_string_view { string };
+    StringBuilder builder;
+
+    for (auto code_point : utf16_string_view)
+        builder.append_code_point(Unicode::to_unicode_uppercase(code_point));
+
+    return js_string(vm, builder.to_string());
 }
 
 // 22.1.3.27 String.prototype.toString ( ), https://tc39.es/ecma262/#sec-string.prototype.tostring
