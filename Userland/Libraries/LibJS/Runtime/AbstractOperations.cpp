@@ -435,10 +435,7 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Vector<Val
     }
 
     // 7. Perform ! DefinePropertyOrThrow(obj, @@iterator, PropertyDescriptor { [[Value]]: %Array.prototype.values%, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
-    // FIXME: This is not guaranteed to be %Array.prototype.values%!
-    auto array_prototype_values = global_object.array_prototype()->get(vm.names.values);
-    if (vm.exception())
-        return {};
+    auto* array_prototype_values = global_object.array_prototype_values_function();
     object->define_property_or_throw(*vm.well_known_symbol_iterator(), { .value = array_prototype_values, .writable = true, .enumerable = false, .configurable = true });
     VERIFY(!vm.exception());
 
@@ -530,10 +527,7 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
     }
 
     // 20. Perform ! DefinePropertyOrThrow(obj, @@iterator, PropertyDescriptor { [[Value]]: %Array.prototype.values%, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
-    // FIXME: This is not guaranteed to be %Array.prototype.values%!
-    auto array_prototype_values = global_object.array_prototype()->get(vm.names.values);
-    if (vm.exception())
-        return {};
+    auto* array_prototype_values = global_object.array_prototype_values_function();
     object->define_property_or_throw(*vm.well_known_symbol_iterator(), { .value = array_prototype_values, .writable = true, .enumerable = false, .configurable = true });
     VERIFY(!vm.exception());
 
