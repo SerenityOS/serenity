@@ -466,4 +466,29 @@ void E1000NetworkAdapter::receive()
     }
 }
 
+i32 E1000NetworkAdapter::link_speed()
+{
+    if (!link_up())
+        return NetworkAdapter::LINKSPEED_INVALID;
+
+    u32 speed = in32(REG_STATUS) & STATUS_SPEED;
+    switch (speed) {
+    case STATUS_SPEED_10MB:
+        return 10;
+    case STATUS_SPEED_100MB:
+        return 100;
+    case STATUS_SPEED_1000MB1:
+    case STATUS_SPEED_1000MB2:
+        return 1000;
+    default:
+        return NetworkAdapter::LINKSPEED_INVALID;
+    }
+}
+
+bool E1000NetworkAdapter::link_full_duplex()
+{
+    u32 status = in32(REG_STATUS);
+    return !!(status & STATUS_FD);
+}
+
 }
