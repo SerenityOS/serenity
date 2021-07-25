@@ -8,6 +8,7 @@
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 
 void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func)
@@ -27,10 +28,7 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
     if (process)
         MM.enter_process_paging_scope(*process);
 
-    Kernel::dump_backtrace();
-    Processor::halt();
-
-    abort();
+    PANIC("Aborted");
 }
 
 [[noreturn]] void _abort()
