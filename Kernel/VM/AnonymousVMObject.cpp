@@ -209,7 +209,6 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
                 page = MM.shared_zero_page();
         }
 
-
         if (m_unused_committed_pages) {
             MM.uncommit_user_physical_pages(m_unused_committed_pages);
             m_unused_committed_pages = 0;
