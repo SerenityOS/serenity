@@ -572,10 +572,24 @@ void Window::handle_drag_move_event(DragEvent& event)
     }
 }
 
-void Window::handle_left_event()
+void Window::enter_event(Core::Event&)
+{
+}
+
+void Window::leave_event(Core::Event&)
+{
+}
+
+void Window::handle_entered_event(Core::Event& event)
+{
+    enter_event(event);
+}
+
+void Window::handle_left_event(Core::Event& event)
 {
     set_hovered_widget(nullptr);
     Application::the()->set_drag_hovered_widget({}, nullptr);
+    leave_event(event);
 }
 
 void Window::event(Core::Event& event)
@@ -605,8 +619,11 @@ void Window::event(Core::Event& event)
     if (event.type() == Event::WindowCloseRequest)
         return handle_close_request();
 
+    if (event.type() == Event::WindowEntered)
+        return handle_entered_event(event);
+
     if (event.type() == Event::WindowLeft)
-        return handle_left_event();
+        return handle_left_event(event);
 
     if (event.type() == Event::Resize)
         return handle_resize_event(static_cast<ResizeEvent&>(event));
