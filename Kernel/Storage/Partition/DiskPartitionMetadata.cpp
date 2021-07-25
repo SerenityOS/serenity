@@ -34,7 +34,7 @@ bool DiskPartitionMetadata::PartitionType::is_uuid() const
 }
 bool DiskPartitionMetadata::PartitionType::is_valid() const
 {
-    return !all_of(m_partition_type.begin(), m_partition_type.end(), [](const auto octet) { return octet == 0; });
+    return !all_of(m_partition_type, [](const auto octet) { return octet == 0; });
 }
 
 DiskPartitionMetadata::DiskPartitionMetadata(u64 start_block, u64 end_block, u8 partition_type)
