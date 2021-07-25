@@ -280,6 +280,8 @@ public:
 
     bool has_pending_drop() const;
 
+    bool is_parent_of(Widget const*) const;
+
 protected:
     Widget();
 
