@@ -253,6 +253,7 @@ namespace JS {
     P(length)                                \
     P(link)                                  \
     P(load)                                  \
+    P(localeCompare)                         \
     P(log)                                   \
     P(log1p)                                 \
     P(log2)                                  \
