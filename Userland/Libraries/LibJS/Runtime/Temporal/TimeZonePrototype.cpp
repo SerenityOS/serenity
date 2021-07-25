@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Temporal/TimeZonePrototype.h>
 
@@ -24,6 +25,7 @@ void TimeZonePrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_accessor(vm.names.id, id_getter, {}, Attribute::Configurable);
+    define_native_function(vm.names.getOffsetNanosecondsFor, get_offset_nanoseconds_for, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 
@@ -52,6 +54,28 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::id_getter)
 
     // 2. Return ? ToString(timeZone).
     return js_string(vm, time_zone.to_string(global_object));
+}
+
+// 11.4.4 Temporal.TimeZone.prototype.getOffsetNanosecondsFor ( instant ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getoffsetnanosecondsfor
+JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
+{
+    // 1. Let timeZone be the this value.
+    // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
+    auto* time_zone = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set instant to ? ToTemporalInstant(instant).
+    auto* instant = to_temporal_instant(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. If timeZone.[[OffsetNanoseconds]] is not undefined, return timeZone.[[OffsetNanoseconds]].
+    if (time_zone->offset_nanoseconds().has_value())
+        return Value(*time_zone->offset_nanoseconds());
+
+    // 5. Return ! GetIANATimeZoneOffsetNanoseconds(instant.[[Nanoseconds]], timeZone.[[Identifier]]).
+    return Value((double)get_iana_time_zone_offset_nanoseconds(instant->nanoseconds(), time_zone->identifier()));
 }
 
 // 11.4.11 Temporal.TimeZone.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.tostring

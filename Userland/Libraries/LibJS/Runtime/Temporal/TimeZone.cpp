@@ -92,6 +92,15 @@ TimeZone* create_temporal_time_zone(GlobalObject& global_object, String const& i
     return object;
 }
 
+// 11.6.5 GetIANATimeZoneOffsetNanoseconds ( epochNanoseconds, timeZoneIdentifier ), https://tc39.es/proposal-temporal/#sec-temporal-getianatimezoneoffsetnanoseconds
+i64 get_iana_time_zone_offset_nanoseconds([[maybe_unused]] BigInt const& epoch_nanoseconds, [[maybe_unused]] String const& time_zone_identifier)
+{
+    // The abstract operation GetIANATimeZoneOffsetNanoseconds is an implementation-defined algorithm that returns an integer representing the offset of the IANA time zone identified by timeZoneIdentifier from UTC, at the instant corresponding to epochNanoseconds.
+    // Given the same values of epochNanoseconds and timeZoneIdentifier, the result must be the same for the lifetime of the surrounding agent.
+    // TODO: Implement this
+    return 0;
+}
+
 // https://tc39.es/proposal-temporal/#prod-TimeZoneNumericUTCOffset
 static bool parse_time_zone_numeric_utc_offset_syntax(String const& offset_string, StringView& sign, StringView& hours, Optional<StringView>& minutes, Optional<StringView>& seconds, Optional<StringView>& fraction)
 {
