@@ -69,6 +69,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(strike);
     JS_DECLARE_NATIVE_FUNCTION(sub);
     JS_DECLARE_NATIVE_FUNCTION(sup);
+    JS_DECLARE_NATIVE_FUNCTION(locale_compare);
 
     JS_DECLARE_NATIVE_FUNCTION(symbol_iterator);
 };

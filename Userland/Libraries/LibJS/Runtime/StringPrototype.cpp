@@ -153,6 +153,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.strike, strike, 0, attr);
     define_native_function(vm.names.sub, sub, 0, attr);
     define_native_function(vm.names.sup, sup, 0, attr);
+    define_native_function(vm.names.localeCompare, locale_compare, 1, attr);
     define_native_function(*vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
 
@@ -1200,6 +1201,27 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sub)
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sup)
 {
     return create_html(global_object, vm.this_value(global_object), "sup", String::empty(), Value());
+}
+
+// 22.1.3.10 String.prototype.localeCompare ( that [ , reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.localecompare
+// NOTE: This is the minimum localeCompare implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::locale_compare)
+{
+    auto string = ak_string_from(vm, global_object);
+    if (!string.has_value())
+        return {};
+
+    auto that_string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    // FIXME: Actually compare the string not just according to their bits.
+    if (string == that_string)
+        return Value(0);
+    if (string.value() < that_string)
+        return Value(-1);
+
+    return Value(1);
 }
 
 }
