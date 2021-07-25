@@ -786,6 +786,10 @@ void InsertTextCommand::perform_formatting(const TextDocument::Client& client)
 
     for (auto input_char : m_text) {
         if (input_char == '\n') {
+            size_t spaces_at_end = 0;
+            if (column < line_indentation)
+                spaces_at_end = line_indentation - column;
+            line_indentation -= spaces_at_end;
             builder.append('\n');
             column = 0;
             if (should_auto_indent) {
