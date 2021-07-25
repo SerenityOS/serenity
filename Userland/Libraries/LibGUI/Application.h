@@ -10,6 +10,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
+#include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Shortcut.h>
@@ -79,7 +80,7 @@ public:
     Function<void(Action&)> on_action_leave;
 
 private:
-    Application(int argc, char** argv);
+    Application(int argc, char** argv, Core::EventLoop::MakeInspectable = Core::EventLoop::MakeInspectable::No);
 
     virtual void event(Core::Event&) override;
 
