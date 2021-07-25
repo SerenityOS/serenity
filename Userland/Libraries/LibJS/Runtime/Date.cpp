@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,7 +9,6 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <sys/time.h>
 #include <time.h>
 
 namespace JS {
@@ -111,6 +110,12 @@ String Date::iso_date_string() const
     return builder.build();
 }
 
+// https://tc39.es/ecma262/#eqn-HoursPerDay
+static constexpr double HOURS_PER_DAY = 24;
+// https://tc39.es/ecma262/#eqn-MinutesPerHour
+static constexpr double MINUTES_PER_HOUR = 60;
+// https://tc39.es/ecma262/#eqn-SecondsPerMinute
+static constexpr double SECONDS_PER_MINUTE = 60;
 // https://tc39.es/ecma262/#eqn-msPerSecond
 static constexpr double MS_PER_SECOND = 1000;
 // https://tc39.es/ecma262/#eqn-msPerMinute
@@ -119,6 +124,171 @@ static constexpr double MS_PER_MINUTE = 60000;
 static constexpr double MS_PER_HOUR = 3600000;
 // https://tc39.es/ecma262/#eqn-msPerDay
 static constexpr double MS_PER_DAY = 86400000;
+
+// DayWithinYear(t), https://tc39.es/ecma262/#eqn-DayWithinYear
+u16 day_within_year(double t)
+{
+    // Day(t) - DayFromYear(YearFromTime(t))
+    return static_cast<u16>(day(t) - day_from_year(year_from_time(t)));
+}
+
+// DateFromTime(t), https://tc39.es/ecma262/#sec-date-number
+u8 date_from_time(double t)
+{
+    switch (month_from_time(t)) {
+    // DayWithinYear(t) + 1𝔽 if MonthFromTime(t) = +0𝔽
+    case 0:
+        return day_within_year(t) + 1;
+    // DayWithinYear(t) - 30𝔽 if MonthFromTime(t) = 1𝔽
+    case 1:
+        return day_within_year(t) - 30;
+    // DayWithinYear(t) - 58𝔽 - InLeapYear(t) if MonthFromTime(t) = 2𝔽
+    case 2:
+        return day_within_year(t) - 58 - in_leap_year(t);
+    // DayWithinYear(t) - 89𝔽 - InLeapYear(t) if MonthFromTime(t) = 3𝔽
+    case 3:
+        return day_within_year(t) - 89 - in_leap_year(t);
+    // DayWithinYear(t) - 119𝔽 - InLeapYear(t) if MonthFromTime(t) = 4𝔽
+    case 4:
+        return day_within_year(t) - 119 - in_leap_year(t);
+    // DayWithinYear(t) - 150𝔽 - InLeapYear(t) if MonthFromTime(t) = 5𝔽
+    case 5:
+        return day_within_year(t) - 150 - in_leap_year(t);
+    // DayWithinYear(t) - 180𝔽 - InLeapYear(t) if MonthFromTime(t) = 6𝔽
+    case 6:
+        return day_within_year(t) - 180 - in_leap_year(t);
+    // DayWithinYear(t) - 211𝔽 - InLeapYear(t) if MonthFromTime(t) = 7𝔽
+    case 7:
+        return day_within_year(t) - 211 - in_leap_year(t);
+    // DayWithinYear(t) - 242𝔽 - InLeapYear(t) if MonthFromTime(t) = 8𝔽
+    case 8:
+        return day_within_year(t) - 242 - in_leap_year(t);
+    // DayWithinYear(t) - 272𝔽 - InLeapYear(t) if MonthFromTime(t) = 9𝔽
+    case 9:
+        return day_within_year(t) - 272 - in_leap_year(t);
+    // DayWithinYear(t) - 303𝔽 - InLeapYear(t) if MonthFromTime(t) = 10𝔽
+    case 10:
+        return day_within_year(t) - 303 - in_leap_year(t);
+    // DayWithinYear(t) - 333𝔽 - InLeapYear(t) if MonthFromTime(t) = 11𝔽
+    case 11:
+        return day_within_year(t) - 333 - in_leap_year(t);
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+// DaysInYear(y), https://tc39.es/ecma262/#eqn-DaysInYear
+u16 days_in_year(i32 y)
+{
+    // 365𝔽 if (ℝ(y) modulo 4) ≠ 0
+    if (y % 4 != 0)
+        return 365;
+    // 366𝔽 if (ℝ(y) modulo 4) = 0 and (ℝ(y) modulo 100) ≠ 0
+    if (y % 4 == 0 && y % 100 != 0)
+        return 366;
+    // 365𝔽 if (ℝ(y) modulo 100) = 0 and (ℝ(y) modulo 400) ≠ 0
+    if (y % 100 == 0 && y % 400 != 0)
+        return 365;
+    // 366𝔽 if (ℝ(y) modulo 400) = 0
+    if (y % 400 == 0)
+        return 366;
+    VERIFY_NOT_REACHED();
+}
+
+// DayFromYear(y), https://tc39.es/ecma262/#eqn-DaysFromYear
+double day_from_year(i32 y)
+{
+    // 𝔽(365 × (ℝ(y) - 1970) + floor((ℝ(y) - 1969) / 4) - floor((ℝ(y) - 1901) / 100) + floor((ℝ(y) - 1601) / 400))
+    return 365 * (y - 1970) + floor((y - 1969) / 4.0) - floor((y - 1901) / 100.0) + floor((y - 1601) / 400.0);
+}
+
+// YearFromTime(t), https://tc39.es/ecma262/#eqn-YearFromTime
+i32 year_from_time(double t)
+{
+    // the largest integral Number y (closest to +∞) such that TimeFromYear(y) ≤ t
+    return static_cast<i32>(t / (365.0 * MS_PER_DAY) + 1970);
+}
+
+// InLeapYear(t), https://tc39.es/ecma262/#eqn-InLeapYear
+bool in_leap_year(double t)
+{
+    // +0𝔽 if DaysInYear(YearFromTime(t)) = 365𝔽
+    // 1𝔽 if DaysInYear(YearFromTime(t)) = 366𝔽
+    return days_in_year(year_from_time(t)) == 366;
+}
+
+// MonthFromTime(t), https://tc39.es/ecma262/#eqn-MonthFromTime
+u8 month_from_time(double t)
+{
+    auto in_leap_year = JS::in_leap_year(t);
+    auto day_within_year = JS::day_within_year(t);
+
+    // +0𝔽 if +0𝔽 ≤ DayWithinYear(t) < 31𝔽
+    if (day_within_year < 31)
+        return 0;
+    // 1𝔽 if 31𝔽 ≤ DayWithinYear(t) < 59𝔽 + InLeapYear(t)
+    if (31 <= day_within_year && day_within_year < 59 + in_leap_year)
+        return 1;
+    // 2𝔽 if 59𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 90𝔽 + InLeapYear(t)
+    if (59 + in_leap_year <= day_within_year && day_within_year < 90 + in_leap_year)
+        return 2;
+    // 3𝔽 if 90𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 120𝔽 + InLeapYear(t)
+    if (90 + in_leap_year <= day_within_year && day_within_year < 120 + in_leap_year)
+        return 3;
+    // 4𝔽 if 120𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 151𝔽 + InLeapYear(t)
+    if (120 + in_leap_year <= day_within_year && day_within_year < 151 + in_leap_year)
+        return 4;
+    // 5𝔽 if 151𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 181𝔽 + InLeapYear(t)
+    if (151 + in_leap_year <= day_within_year && day_within_year < 181 + in_leap_year)
+        return 5;
+    // 6𝔽 if 181𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 212𝔽 + InLeapYear(t)
+    if (181 + in_leap_year <= day_within_year && day_within_year < 212 + in_leap_year)
+        return 6;
+    // 7𝔽 if 212𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 243𝔽 + InLeapYear(t)
+    if (212 + in_leap_year <= day_within_year && day_within_year < 243 + in_leap_year)
+        return 7;
+    // 8𝔽 if 243𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 273𝔽 + InLeapYear(t)
+    if (243 + in_leap_year <= day_within_year && day_within_year < 273 + in_leap_year)
+        return 8;
+    // 9𝔽 if 273𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 304𝔽 + InLeapYear(t)
+    if (273 + in_leap_year <= day_within_year && day_within_year < 304 + in_leap_year)
+        return 9;
+    // 10𝔽 if 304𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 334𝔽 + InLeapYear(t)
+    if (304 + in_leap_year <= day_within_year && day_within_year < 334 + in_leap_year)
+        return 10;
+    // 11𝔽 if 334𝔽 + InLeapYear(t) ≤ DayWithinYear(t) < 365𝔽 + InLeapYear(t)
+    if (334 + in_leap_year <= day_within_year && day_within_year < 365 + in_leap_year)
+        return 11;
+    VERIFY_NOT_REACHED();
+}
+
+// HourFromTime(t), https://tc39.es/ecma262/#eqn-HourFromTime
+u8 hour_from_time(double t)
+{
+    // 𝔽(floor(ℝ(t / msPerHour)) modulo HoursPerDay)
+    return static_cast<u8>(fmod(floor(t / MS_PER_HOUR), HOURS_PER_DAY));
+}
+
+// MinFromTime(t), https://tc39.es/ecma262/#eqn-MinFromTime
+u8 min_from_time(double t)
+{
+    // 𝔽(floor(ℝ(t / msPerMinute)) modulo MinutesPerHour)
+    return static_cast<u8>(fmod(floor(t / MS_PER_MINUTE), MINUTES_PER_HOUR));
+}
+
+// SecFromTime(t), https://tc39.es/ecma262/#eqn-SecFromTime
+u8 sec_from_time(double t)
+{
+    // 𝔽(floor(ℝ(t / msPerSecond)) modulo SecondsPerMinute)
+    return static_cast<u8>(fmod(t / MS_PER_SECOND, SECONDS_PER_MINUTE));
+}
+
+// msFromTime(t), https://tc39.es/ecma262/#eqn-msFromTime
+u16 ms_from_time(double t)
+{
+    // 𝔽(ℝ(t) modulo msPerSecond)
+    return static_cast<u16>(fmod(t, MS_PER_SECOND));
+}
 
 // 21.4.1.11 MakeTime ( hour, min, sec, ms ), https://tc39.es/ecma262/#sec-maketime
 Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, Value ms)
@@ -142,8 +312,8 @@ Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, V
     return Value(t);
 }
 
-// https://tc39.es/ecma262/#eqn-Day
-static inline double day(double time_value)
+// Day(t), https://tc39.es/ecma262/#eqn-Day
+double day(double time_value)
 {
     return floor(time_value / MS_PER_DAY);
 }
