@@ -11,6 +11,7 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
@@ -118,9 +119,9 @@ bool MailWidget::connect_and_login()
     }
 
     auto password = config->read_entry("User", "Password", {});
-    if (password.is_empty()) {
-        GUI::MessageBox::show_error(window(), "Mail has no password configured. Refer to the Mail(1) man page for more information.");
-        return false;
+    while (password.is_empty()) {
+        if (GUI::InputBox::show(window(), password, String::formatted("Enter password for {}:", username), "Login", {}, GUI::InputType::Password) != GUI::InputBox::ExecOK)
+            return false;
     }
 
     m_imap_client = make<IMAP::Client>(server, port, tls);
