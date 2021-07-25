@@ -70,6 +70,14 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_with_size(size_t size, A
     return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, commit));
 }
 
+RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)
+{
+    auto contiguous_physical_pages = MM.allocate_contiguous_supervisor_physical_pages(size);
+    if (contiguous_physical_pages.is_empty())
+        return {};
+    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(contiguous_physical_pages.span()));
+}
+
 RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_purgeable_with_size(size_t size, AllocationStrategy commit)
 {
     if (commit == AllocationStrategy::Reserve || commit == AllocationStrategy::AllocateNow) {

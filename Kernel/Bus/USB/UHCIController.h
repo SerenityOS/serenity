@@ -17,7 +17,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/Process.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <Kernel/VM/ContiguousVMObject.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 
 namespace Kernel::USB {
 

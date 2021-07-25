@@ -17,7 +17,6 @@
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/AnonymousVMObject.h>
-#include <Kernel/VM/ContiguousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/PhysicalRegion.h>
@@ -705,7 +704,7 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, Str
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
         return {};
-    auto vmobject = ContiguousVMObject::try_create_with_size(size);
+    auto vmobject = AnonymousVMObject::try_create_physically_contiguous_with_size(size);
     if (!vmobject) {
         kernel_page_directory().range_allocator().deallocate(range.value());
         return {};
