@@ -24,11 +24,7 @@ constexpr bool any_of(
 template<IterableContainer Container>
 constexpr bool any_of(Container&& container, auto const& predicate)
 {
-    for (auto&& entry : container) {
-        if (predicate(entry))
-            return true;
-    }
-    return false;
+    return any_of(container.begin(), container.end(), predicate);
 }
 
 }
