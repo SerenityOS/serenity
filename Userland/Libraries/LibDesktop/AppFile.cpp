@@ -77,6 +77,11 @@ String AppFile::executable() const
     return executable;
 }
 
+String AppFile::description() const
+{
+    return m_config->read_entry("App", "Description").trim_whitespace();
+}
+
 String AppFile::category() const
 {
     return m_config->read_entry("App", "Category").trim_whitespace();
