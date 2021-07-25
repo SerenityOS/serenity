@@ -1,21 +1,25 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Mixer.h"
 #include <AK/Array.h>
 #include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AudioServer/ClientConnection.h>
 #include <AudioServer/Mixer.h>
+#include <LibCore/ConfigFile.h>
+#include <LibCore/Timer.h>
 #include <pthread.h>
 
 namespace AudioServer {
 
 u8 Mixer::m_zero_filled_buffer[4096];
 
-Mixer::Mixer()
+Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config)
     : m_device(Core::File::construct("/dev/audio", this))
     , m_sound_thread(Threading::Thread::construct(
           [this] {
@@ -23,6 +27,7 @@ Mixer::Mixer()
               return 0;
           },
           "AudioServer[mixer]"))
+    , m_config(move(config))
 {
     if (!m_device->open(Core::OpenMode::WriteOnly)) {
         dbgln("Can't open audio device: {}", m_device->error_string());
@@ -31,6 +36,9 @@ Mixer::Mixer()
 
     pthread_mutex_init(&m_pending_mutex, nullptr);
     pthread_cond_init(&m_pending_cond, nullptr);
+
+    m_muted = m_config->read_bool_entry("Master", "Mute", false);
+    m_main_volume = m_config->read_num_entry("Master", "Volume", 100);
 
     m_sound_thread->start();
 }
@@ -119,6 +127,10 @@ void Mixer::set_main_volume(int volume)
         m_main_volume = 200;
     else
         m_main_volume = volume;
+
+    m_config->write_num_entry("Master", "Volume", volume);
+    request_setting_sync();
+
     ClientConnection::for_each([&](ClientConnection& client) {
         client.did_change_main_mix_volume({}, m_main_volume);
     });
@@ -129,9 +141,26 @@ void Mixer::set_muted(bool muted)
     if (m_muted == muted)
         return;
     m_muted = muted;
+
+    m_config->write_bool_entry("Master", "Mute", m_muted);
+    request_setting_sync();
+
     ClientConnection::for_each([muted](ClientConnection& client) {
         client.did_change_muted_state({}, muted);
     });
+}
+
+void Mixer::request_setting_sync()
+{
+    if (m_config_write_timer.is_null() || !m_config_write_timer->is_active()) {
+        m_config_write_timer = Core::Timer::create_single_shot(
+            AUDIO_CONFIG_WRITE_INTERVAL,
+            [this] {
+                m_config->sync();
+            },
+            this);
+        m_config_write_timer->start();
+    }
 }
 
 BufferQueue::BufferQueue(ClientConnection& client)
