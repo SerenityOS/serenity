@@ -33,10 +33,9 @@ public:
     bool is_autosize() const { return m_autosize; }
     void set_autosize(bool);
 
-    bool is_word_wrap() const { return m_word_wrap; }
-    void set_word_wrap(bool);
+    int preferred_height() const;
 
-    Gfx::IntRect text_rect(size_t line = 0) const;
+    Gfx::IntRect text_rect() const;
 
 protected:
     explicit Label(String text = {});
@@ -46,15 +45,12 @@ protected:
 
 private:
     void size_to_fit();
-    void wrap_text();
 
     String m_text;
     RefPtr<Gfx::Bitmap> m_icon;
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
     bool m_should_stretch_icon { false };
     bool m_autosize { false };
-    bool m_word_wrap { false };
-    Vector<String> m_lines;
 };
 
 }
