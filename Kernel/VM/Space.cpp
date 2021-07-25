@@ -149,7 +149,7 @@ Optional<Range> Space::allocate_range(VirtualAddress vaddr, size_t size, size_t 
 KResultOr<Region*> Space::try_allocate_split_region(Region const& source_region, Range const& range, size_t offset_in_vmobject)
 {
     auto new_region = Region::try_create_user_accessible(
-        m_process, range, source_region.vmobject(), offset_in_vmobject, KString::try_create(source_region.name()), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared());
+        range, source_region.vmobject(), offset_in_vmobject, KString::try_create(source_region.name()), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared());
     if (!new_region)
         return ENOMEM;
     auto* region = add_region(new_region.release_nonnull());
@@ -172,7 +172,7 @@ KResultOr<Region*> Space::allocate_region(Range const& range, StringView name, i
     auto vmobject = AnonymousVMObject::try_create_with_size(range.size(), strategy);
     if (!vmobject)
         return ENOMEM;
-    auto region = Region::try_create_user_accessible(m_process, range, vmobject.release_nonnull(), 0, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false);
+    auto region = Region::try_create_user_accessible(range, vmobject.release_nonnull(), 0, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false);
     if (!region)
         return ENOMEM;
     if (!region->map(page_directory()))
@@ -200,7 +200,7 @@ KResultOr<Region*> Space::allocate_region_with_vmobject(Range const& range, Nonn
         return EINVAL;
     }
     offset_in_vmobject &= PAGE_MASK;
-    auto region = Region::try_create_user_accessible(m_process, range, move(vmobject), offset_in_vmobject, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared);
+    auto region = Region::try_create_user_accessible(range, move(vmobject), offset_in_vmobject, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared);
     if (!region) {
         dbgln("allocate_region_with_vmobject: Unable to allocate Region");
         return ENOMEM;

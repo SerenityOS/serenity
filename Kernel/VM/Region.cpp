@@ -52,7 +52,7 @@ Region::~Region()
     MM.unregister_region(*this);
 }
 
-OwnPtr<Region> Region::clone(Process& new_owner)
+OwnPtr<Region> Region::clone()
 {
     VERIFY(Process::current());
 
@@ -65,7 +65,7 @@ OwnPtr<Region> Region::clone(Process& new_owner)
 
         // Create a new region backed by the same VMObject.
         auto region = Region::try_create_user_accessible(
-            &new_owner, m_range, m_vmobject, m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
+            m_range, m_vmobject, m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
         if (!region) {
             dbgln("Region::clone: Unable to allocate new Region");
             return nullptr;
@@ -86,7 +86,7 @@ OwnPtr<Region> Region::clone(Process& new_owner)
     // Set up a COW region. The parent (this) region becomes COW as well!
     remap();
     auto clone_region = Region::try_create_user_accessible(
-        &new_owner, m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
+        m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
     if (!clone_region) {
         dbgln("Region::clone: Unable to allocate new Region for COW");
         return nullptr;
@@ -147,13 +147,11 @@ size_t Region::amount_shared() const
     return bytes;
 }
 
-OwnPtr<Region> Region::try_create_user_accessible(Process* owner, Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+OwnPtr<Region> Region::try_create_user_accessible(Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
 {
     auto region = adopt_own_if_nonnull(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
     if (!region)
         return nullptr;
-    if (owner)
-        region->m_owner = owner->make_weak_ptr();
     return region;
 }
 
@@ -461,11 +459,6 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 
     remap_vmobject_page(page_index_in_vmobject);
     return PageFaultResponse::Continue;
-}
-
-RefPtr<Process> Region::get_owner()
-{
-    return m_owner.strong_ref();
 }
 
 }
