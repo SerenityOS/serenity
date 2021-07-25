@@ -150,7 +150,6 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
     if (!packet.sender_hardware_address().is_zero() && !packet.sender_protocol_address().is_zero()) {
         // Someone has this IPv4 address. I guess we can try to remember that.
         // FIXME: Protect against ARP spamming.
-        // FIXME: Support static ARP table entries.
         update_arp_table(packet.sender_protocol_address(), packet.sender_hardware_address(), UpdateArp::Set);
     }
 
