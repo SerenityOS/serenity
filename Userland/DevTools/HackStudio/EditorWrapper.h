@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Debugger/BreakpointCallback.h"
-#include "Git/GitRepo.h"
 #include "LanguageClient.h"
 #include <AK/Function.h>
 #include <AK/RefPtr.h>
@@ -47,8 +46,6 @@ public:
     Optional<LexicalPath> const& project_root() const { return m_project_root; }
     void set_project_root(LexicalPath const& project_root);
 
-    GitRepo const* git_repo() const { return m_git_repo; }
-
     void update_diff();
     Vector<Diff::Hunk> const& hunks() const { return m_hunks; }
 
@@ -63,7 +60,6 @@ private:
     bool m_document_dirty { false };
 
     Optional<LexicalPath> m_project_root;
-    RefPtr<GitRepo> m_git_repo;
     Vector<Diff::Hunk> m_hunks;
 };
 

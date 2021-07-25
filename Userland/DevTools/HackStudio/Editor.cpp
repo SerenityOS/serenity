@@ -9,6 +9,7 @@
 #include "Debugger/Debugger.h"
 #include "Debugger/EvaluateExpressionDialog.h"
 #include "EditorWrapper.h"
+#include "Git/GitRepo.h"
 #include "HackStudio.h"
 #include "Language.h"
 #include <AK/ByteBuffer.h>
@@ -28,7 +29,6 @@
 #include <LibGUI/Window.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
-#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/OutOfProcessWebView.h>
@@ -145,7 +145,7 @@ void Editor::paint_event(GUI::PaintEvent& event)
             painter.blit(gutter_icon_rect(execution_position().value()).top_left(), icon, icon.rect());
         }
 
-        if (wrapper().git_repo()) {
+        if (GitRepo::the().repo_exists(true)) {
             for (auto& hunk : wrapper().hunks()) {
                 auto start_line = hunk.target_start_line;
                 auto finish_line = start_line + hunk.added_lines.size();

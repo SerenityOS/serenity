@@ -1,61 +1,49 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2021, Conor Byrne <cbyrneee@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#pragma once
-
 #include <AK/LexicalPath.h>
-#include <AK/Optional.h>
-#include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
+
+#pragma once
 
 namespace HackStudio {
 
-class GitRepo final : public RefCounted<GitRepo> {
+class GitRepo {
 public:
-    struct CreateResult {
-        enum class Type {
-            Success,
-            NoGitRepo,
-            GitProgramNotFound,
-        };
-        Type type;
-        RefPtr<GitRepo> repo;
-    };
+    static GitRepo& the();
+    static void initialize(LexicalPath root);
 
-    static CreateResult try_to_create(const LexicalPath& repository_root);
-    static RefPtr<GitRepo> initialize_repository(const LexicalPath& repository_root);
+    bool repo_exists(bool cached);
+    bool is_git_installed();
+    bool initialize_repository();
 
-    Vector<LexicalPath> unstaged_files() const;
-    Vector<LexicalPath> staged_files() const;
     bool stage(const LexicalPath& file);
     bool unstage(const LexicalPath& file);
     bool commit(const String& message);
-    Optional<String> original_file_content(const LexicalPath& file) const;
-    Optional<String> unstaged_diff(const LexicalPath& file) const;
-    bool is_tracked(const LexicalPath& file) const;
+    bool is_tracked(const LexicalPath& file);
+
+    Optional<String> original_file_content(const LexicalPath& file);
+    Optional<String> unstaged_diff(const LexicalPath& file);
+
+    Vector<LexicalPath> staged_files();
+    Vector<LexicalPath> modified_files();
+    Vector<LexicalPath> untracked_files();
+    Vector<LexicalPath> unstaged_files();
 
 private:
-    static String command_wrapper(const Vector<String>& command_parts, const LexicalPath& chdir);
-    static bool git_is_installed();
-    static bool git_repo_exists(const LexicalPath& repo_root);
-    static Vector<LexicalPath> parse_files_list(const String&);
-
-    explicit GitRepo(const LexicalPath& repository_root)
-        : m_repository_root(repository_root)
+    explicit GitRepo(LexicalPath& root)
+        : m_root(root)
     {
     }
 
-    Vector<LexicalPath> modified_files() const;
-    Vector<LexicalPath> untracked_files() const;
+    Vector<LexicalPath> parse_files_list(const String& raw_result);
+    String execute_git_command(const Vector<String>& command_parts, const LexicalPath& chdir);
 
-    String command(const Vector<String>& command_parts) const;
-
-    LexicalPath m_repository_root;
+    LexicalPath m_root;
+    bool m_repo_exists;
 };
 
 }

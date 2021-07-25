@@ -6,6 +6,7 @@
 
 #include "GitWidget.h"
 #include "GitFilesModel.h"
+#include "GitRepo.h"
 #include <LibCore/File.h>
 #include <LibDiff/Format.h>
 #include <LibGUI/Application.h>
@@ -21,9 +22,7 @@
 
 namespace HackStudio {
 
-GitWidget::GitWidget(const LexicalPath& repo_root)
-    : m_repo_root(repo_root)
-{
+GitWidget::GitWidget() {
     set_layout<GUI::HorizontalBoxLayout>();
 
     auto& unstaged = add<GUI::Widget>();
@@ -73,29 +72,31 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
 
 bool GitWidget::initialize()
 {
-    auto result = GitRepo::try_to_create(m_repo_root);
-    switch (result.type) {
-    case GitRepo::CreateResult::Type::Success:
-        m_git_repo = result.repo;
-        return true;
-    case GitRepo::CreateResult::Type::GitProgramNotFound:
+    if (!GitRepo::the().is_git_installed()) {
         GUI::MessageBox::show(window(), "Please install the Git port", "Error", GUI::MessageBox::Type::Error);
         return false;
-    case GitRepo::CreateResult::Type::NoGitRepo: {
+    }
+
+    if (!GitRepo::the().repo_exists(false)) {
         auto decision = GUI::MessageBox::show(window(), "Create git repository?", "Git", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
         if (decision != GUI::Dialog::ExecResult::ExecYes)
             return false;
-        m_git_repo = GitRepo::initialize_repository(m_repo_root);
+
+        auto result = GitRepo::the().initialize_repository();
+        if (!result) {
+            GUI::MessageBox::show(window(), "Failed to create the git repository", "Error", GUI::MessageBox::Type::Error);
+            return false;
+        }
+
         return true;
     }
-    default:
-        VERIFY_NOT_REACHED();
-    }
+
+    return true;
 }
 
 bool GitWidget::initialize_if_needed()
 {
-    if (initialized())
+    if (GitRepo::the().repo_exists(false))
         return true;
 
     return initialize();
@@ -108,16 +109,16 @@ void GitWidget::refresh()
         return;
     }
 
-    VERIFY(!m_git_repo.is_null());
+    VERIFY(GitRepo::the().repo_exists(false));
 
-    m_unstaged_files->set_model(GitFilesModel::create(m_git_repo->unstaged_files()));
-    m_staged_files->set_model(GitFilesModel::create(m_git_repo->staged_files()));
+    m_unstaged_files->set_model(GitFilesModel::create(GitRepo::the().unstaged_files()));
+    m_staged_files->set_model(GitFilesModel::create(GitRepo::the().staged_files()));
 }
 
 void GitWidget::stage_file(const LexicalPath& file)
 {
     dbgln("staging: {}", file);
-    bool rc = m_git_repo->stage(file);
+    bool rc = GitRepo::the().stage(file);
     VERIFY(rc);
     refresh();
 }
@@ -125,7 +126,7 @@ void GitWidget::stage_file(const LexicalPath& file)
 void GitWidget::unstage_file(const LexicalPath& file)
 {
     dbgln("unstaging: {}", file);
-    bool rc = m_git_repo->unstage(file);
+    bool rc = GitRepo::the().unstage(file);
     VERIFY(rc);
     refresh();
 }
@@ -137,7 +138,7 @@ void GitWidget::commit()
     if (res != GUI::InputBox::ExecOK || message.is_empty())
         return;
     dbgln("commit message: {}", message);
-    m_git_repo->commit(message);
+    GitRepo::the().commit(message);
     refresh();
 }
 
@@ -148,7 +149,7 @@ void GitWidget::set_view_diff_callback(ViewDiffCallback callback)
 
 void GitWidget::show_diff(const LexicalPath& file_path)
 {
-    if (!m_git_repo->is_tracked(file_path)) {
+    if (!GitRepo::the().is_tracked(file_path)) {
         auto file = Core::File::construct(file_path.string());
         if (!file->open(Core::OpenMode::ReadOnly)) {
             perror("open");
@@ -160,8 +161,8 @@ void GitWidget::show_diff(const LexicalPath& file_path)
         m_view_diff_callback("", Diff::generate_only_additions(content_string));
         return;
     }
-    const auto& original_content = m_git_repo->original_file_content(file_path);
-    const auto& diff = m_git_repo->unstaged_diff(file_path);
+    const auto& original_content = GitRepo::the().original_file_content(file_path);
+    const auto& diff = GitRepo::the().unstaged_diff(file_path);
     VERIFY(original_content.has_value() && diff.has_value());
     m_view_diff_callback(original_content.value(), diff.value());
 }

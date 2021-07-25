@@ -15,6 +15,7 @@
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
 #include "Git/DiffViewer.h"
+#include "Git/GitRepo.h"
 #include "Git/GitWidget.h"
 #include "HackStudio.h"
 #include "HackStudioWidget.h"
@@ -200,6 +201,9 @@ void HackStudioWidget::open_project(const String& root_path)
         debugger.reset_breakpoints();
         debugger.set_source_root(m_project->root_path());
     }
+
+    GitRepo::initialize(LexicalPath(m_project->root_path()));
+
     for (auto& editor_wrapper : m_all_editor_wrappers)
         editor_wrapper.set_project_root(LexicalPath(m_project->root_path()));
 }
@@ -577,7 +581,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_action()
 
         current_editor_wrapper().save();
 
-        if (m_git_widget->initialized())
+        if (GitRepo::the().repo_exists(false))
             m_git_widget->refresh();
     });
 }
@@ -888,7 +892,7 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
     m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Build", false);
     m_debug_info_widget = m_action_tab_widget->add_tab<DebugInfoWidget>("Debug");
     m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
-    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git", LexicalPath(m_project->root_path()));
+    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git");
     m_git_widget->set_view_diff_callback([this](const auto& original_content, const auto& diff) {
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
