@@ -1307,6 +1307,8 @@ namespace Web::Bindings {
 )~~~");
     }
 
+    // FIXME: Currently almost everything gets default_attributes but it should be configurable per attribute.
+    //        See the spec links for details
     generator.append(R"~~~(
 }
 
@@ -1317,10 +1319,11 @@ namespace Web::Bindings {
 void @prototype_class@::initialize(JS::GlobalObject& global_object)
 {
     [[maybe_unused]] auto& vm = this->vm();
-    [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable | JS::Attribute::Configurable;
+    [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable | JS::Attribute::Configurable | JS::Attribute::Writable;
 
 )~~~");
 
+    // https://heycam.github.io/webidl/#es-attributes
     for (auto& attribute : interface.attributes) {
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.name", attribute.name);
@@ -1336,6 +1339,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 )~~~");
     }
 
+    // https://heycam.github.io/webidl/#es-constants
     for (auto& constant : interface.constants) {
         auto constant_generator = generator.fork();
         constant_generator.set("constant.name", constant.name);
@@ -1346,6 +1350,7 @@ void @prototype_class@::initialize(JS::GlobalObject& global_object)
 )~~~");
     }
 
+    // https://heycam.github.io/webidl/#es-operations
     for (auto& function : interface.functions) {
         auto function_generator = generator.fork();
         function_generator.set("function.name", function.name);
