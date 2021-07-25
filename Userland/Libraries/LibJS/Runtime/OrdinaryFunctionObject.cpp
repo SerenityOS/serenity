@@ -59,7 +59,7 @@ OrdinaryFunctionObject::OrdinaryFunctionObject(GlobalObject& global_object, cons
         set_this_mode(ThisMode::Global);
 
     // 15.1.3 Static Semantics: IsSimpleParameterList, https://tc39.es/ecma262/#sec-static-semantics-issimpleparameterlist
-    set_has_simple_parameter_list(all_of(m_parameters.begin(), m_parameters.end(), [&](auto& parameter) {
+    set_has_simple_parameter_list(all_of(m_parameters, [&](auto& parameter) {
         if (parameter.is_rest)
             return false;
         if (parameter.default_value)

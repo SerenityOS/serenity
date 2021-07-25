@@ -70,7 +70,7 @@ bool UUID::operator==(const UUID& other) const
 
 bool UUID::is_zero() const
 {
-    return all_of(m_uuid_buffer.begin(), m_uuid_buffer.end(), [](const auto octet) { return octet == 0; });
+    return all_of(m_uuid_buffer, [](const auto octet) { return octet == 0; });
 }
 
 }

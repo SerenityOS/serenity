@@ -81,7 +81,7 @@ public:
 
     constexpr bool is_zero() const
     {
-        return all_of(m_data.begin(), m_data.end(), [](const auto octet) { return octet == 0; });
+        return all_of(m_data, [](const auto octet) { return octet == 0; });
     }
 
 private:

@@ -199,8 +199,7 @@ private:
                 return false;
             };
             auto references_all_arguments = AK::all_of(
-                all_parameters.begin(),
-                all_parameters.end(),
+                all_parameters,
                 [&](auto& entry) {
                     return contains(
                         check.used_arguments.begin(),

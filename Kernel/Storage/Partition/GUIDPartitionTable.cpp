@@ -118,7 +118,7 @@ bool GUIDPartitionTable::initialize()
 
 bool GUIDPartitionTable::is_unused_entry(Array<u8, 16> partition_type) const
 {
-    return all_of(partition_type.begin(), partition_type.end(), [](const auto octet) { return octet == 0; });
+    return all_of(partition_type, [](const auto octet) { return octet == 0; });
 }
 
 }
