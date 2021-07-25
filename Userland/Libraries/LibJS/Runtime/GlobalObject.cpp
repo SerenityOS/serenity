@@ -166,7 +166,6 @@ void GlobalObject::initialize_global_object()
     define_native_function(vm.names.parseFloat, parse_float, 1, attr);
     define_native_function(vm.names.parseInt, parse_int, 2, attr);
     define_native_function(vm.names.eval, eval, 1, attr);
-    m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
 
     // 10.2.4.1 %ThrowTypeError% ( ), https://tc39.es/ecma262/#sec-%throwtypeerror%
     m_throw_type_error_function = NativeFunction::create(global_object(), {}, [](VM& vm, GlobalObject& global_object) {
@@ -178,8 +177,8 @@ void GlobalObject::initialize_global_object()
     m_throw_type_error_function->internal_prevent_extensions();
 
     // 10.2.4 AddRestrictedFunctionProperties ( F, realm ), https://tc39.es/ecma262/#sec-addrestrictedfunctionproperties
-    m_function_prototype->define_direct_accessor(vm.names.caller, throw_type_error_function(), throw_type_error_function(), Attribute::Configurable);
-    m_function_prototype->define_direct_accessor(vm.names.arguments, throw_type_error_function(), throw_type_error_function(), Attribute::Configurable);
+    m_function_prototype->define_direct_accessor(vm.names.caller, m_throw_type_error_function, m_throw_type_error_function, Attribute::Configurable);
+    m_function_prototype->define_direct_accessor(vm.names.arguments, m_throw_type_error_function, m_throw_type_error_function, Attribute::Configurable);
 
     define_native_function(vm.names.encodeURI, encode_uri, 1, attr);
     define_native_function(vm.names.decodeURI, decode_uri, 1, attr);
@@ -238,6 +237,9 @@ void GlobalObject::initialize_global_object()
     m_generator_function_constructor = heap().allocate<GeneratorFunctionConstructor>(*this, *this);
     // 27.3.3.1 GeneratorFunction.prototype.constructor, https://tc39.es/ecma262/#sec-generatorfunction.prototype.constructor
     m_generator_function_prototype->define_direct_property(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
+
+    m_array_prototype_values_function = &m_array_prototype->get_without_side_effects(vm.names.values).as_function();
+    m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
 }
 
 GlobalObject::~GlobalObject()
@@ -254,6 +256,9 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_proxy_constructor);
     visitor.visit(m_generator_object_prototype);
     visitor.visit(m_environment);
+    visitor.visit(m_array_prototype_values_function);
+    visitor.visit(m_eval_function);
+    visitor.visit(m_throw_type_error_function);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     visitor.visit(m_##snake_name##_constructor);                                         \
@@ -271,9 +276,6 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_##snake_name##_prototype);
     JS_ENUMERATE_ITERATOR_PROTOTYPES
 #undef __JS_ENUMERATE
-
-    visitor.visit(m_eval_function);
-    visitor.visit(m_throw_type_error_function);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
