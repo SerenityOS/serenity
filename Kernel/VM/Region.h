@@ -198,12 +198,6 @@ public:
 
     void remap();
 
-    enum class SetVolatileError {
-        Success = 0,
-        NotPurgeable,
-        OutOfMemory
-    };
-
     bool is_syscall_region() const { return m_syscall_region; }
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
