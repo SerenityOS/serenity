@@ -876,8 +876,10 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
         for_each_vmobject([&](auto& vmobject) {
             if (!vmobject.is_anonymous())
                 return IterationDecision::Continue;
-            int purged_page_count = static_cast<AnonymousVMObject&>(vmobject).purge();
-            if (purged_page_count) {
+            auto& anonymous_vmobject = static_cast<AnonymousVMObject&>(vmobject);
+            if (!anonymous_vmobject.is_purgeable() || !anonymous_vmobject.is_volatile())
+                return IterationDecision::Continue;
+            if (auto purged_page_count = anonymous_vmobject.purge()) {
                 dbgln("MM: Purge saved the day! Purged {} pages from AnonymousVMObject", purged_page_count);
                 page = find_free_user_physical_page(false);
                 purged_pages = true;
