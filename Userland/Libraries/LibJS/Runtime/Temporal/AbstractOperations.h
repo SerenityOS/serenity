@@ -22,17 +22,18 @@ enum class OptionType {
 
 struct ISODateTime {
     i32 year;
-    i32 month;
-    i32 day;
-    i32 hour;
-    i32 minute;
-    i32 second;
-    i32 millisecond;
-    i32 microsecond;
-    i32 nanosecond;
-    Optional<String> calendar;
+    u8 month;
+    u8 day;
+    u8 hour;
+    u8 minute;
+    u8 second;
+    u16 millisecond;
+    u16 microsecond;
+    u16 nanosecond;
+    Optional<String> calendar = {};
 };
 
+// FIXME: Use more narrow types for most of these (u8/u16)
 struct TemporalInstant {
     i32 year;
     i32 month;
@@ -46,6 +47,7 @@ struct TemporalInstant {
     Optional<String> time_zone_offset;
 };
 
+// FIXME: Use more narrow type for month/day (u8)
 struct TemporalDate {
     i32 year;
     i32 month;

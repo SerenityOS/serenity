@@ -383,7 +383,7 @@ Optional<ISODateTime> parse_iso_date_time(GlobalObject& global_object, [[maybe_u
     // 5. Set year to ! ToIntegerOrInfinity(year).
     i32 year = Value(js_string(vm, normalized_year)).to_integer_or_infinity(global_object);
 
-    i32 month;
+    u8 month;
     // 6. If month is undefined, then
     if (!month_part.has_value()) {
         // a. Set month to 1.
@@ -392,10 +392,10 @@ Optional<ISODateTime> parse_iso_date_time(GlobalObject& global_object, [[maybe_u
     // 7. Else,
     else {
         // a. Set month to ! ToIntegerOrInfinity(month).
-        month = Value(js_string(vm, *month_part)).to_integer_or_infinity(global_object);
+        month = *month_part->to_uint<u8>();
     }
 
-    i32 day;
+    u8 day;
     // 8. If day is undefined, then
     if (!day_part.has_value()) {
         // a. Set day to 1.
@@ -404,17 +404,17 @@ Optional<ISODateTime> parse_iso_date_time(GlobalObject& global_object, [[maybe_u
     // 9. Else,
     else {
         // a. Set day to ! ToIntegerOrInfinity(day).
-        day = Value(js_string(vm, *day_part)).to_integer_or_infinity(global_object);
+        day = *day_part->to_uint<u8>();
     }
 
     // 10. Set hour to ! ToIntegerOrInfinity(hour).
-    i32 hour = Value(js_string(vm, hour_part.value_or(""sv))).to_integer_or_infinity(global_object);
+    u8 hour = hour_part->to_uint<u8>().value_or(0);
 
     // 11. Set minute to ! ToIntegerOrInfinity(minute).
-    i32 minute = Value(js_string(vm, minute_part.value_or(""sv))).to_integer_or_infinity(global_object);
+    u8 minute = minute_part->to_uint<u8>().value_or(0);
 
     // 12. Set second to ! ToIntegerOrInfinity(second).
-    i32 second = Value(js_string(vm, second_part.value_or(""sv))).to_integer_or_infinity(global_object);
+    u8 second = second_part->to_uint<u8>().value_or(0);
 
     // 13. If second is 60, then
     if (second == 60) {
@@ -422,22 +422,22 @@ Optional<ISODateTime> parse_iso_date_time(GlobalObject& global_object, [[maybe_u
         second = 59;
     }
 
-    i32 millisecond;
-    i32 microsecond;
-    i32 nanosecond;
+    u16 millisecond;
+    u16 microsecond;
+    u16 nanosecond;
     // 14. If fraction is not undefined, then
     if (fraction_part.has_value()) {
         // a. Set fraction to the string-concatenation of the previous value of fraction and the string "000000000".
         auto fraction = String::formatted("{}000000000", *fraction_part);
         // b. Let millisecond be the String value equal to the substring of fraction from 0 to 3.
         // c. Set millisecond to ! ToIntegerOrInfinity(millisecond).
-        millisecond = Value(js_string(vm, fraction.substring(0, 3))).to_integer_or_infinity(global_object);
+        millisecond = *fraction.substring(0, 3).to_uint<u16>();
         // d. Let microsecond be the String value equal to the substring of fraction from 3 to 6.
         // e. Set microsecond to ! ToIntegerOrInfinity(microsecond).
-        microsecond = Value(js_string(vm, fraction.substring(3, 3))).to_integer_or_infinity(global_object);
+        microsecond = *fraction.substring(3, 3).to_uint<u16>();
         // f. Let nanosecond be the String value equal to the substring of fraction from 6 to 9.
         // g. Set nanosecond to ! ToIntegerOrInfinity(nanosecond).
-        nanosecond = Value(js_string(vm, fraction.substring(6, 3))).to_integer_or_infinity(global_object);
+        nanosecond = *fraction.substring(6, 3).to_uint<u16>();
     }
     // 15. Else,
     else {
