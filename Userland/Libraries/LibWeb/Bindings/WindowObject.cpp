@@ -102,11 +102,20 @@ Origin WindowObject::origin() const
 
 static DOM::Window* impl_from(JS::VM& vm, JS::GlobalObject& global_object)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object) {
-        VERIFY_NOT_REACHED();
-        return nullptr;
+    // Since this is a non built-in function we must treat it as non-strict mode
+    // this means that a nullish this_value should be converted to the
+    // global_object. Generally this does not matter as we try to convert the
+    // this_value to a specific object type in the bindings. But since window is
+    // the global object we make an exception here.
+    // This allows calls like `setTimeout(f, 10)` to work.
+    auto this_value = vm.this_value(global_object);
+    if (this_value.is_nullish()) {
+        this_value = global_object.value_of();
     }
+
+    auto* this_object = this_value.to_object(global_object);
+    VERIFY(this_object);
+
     if (StringView("WindowObject") != this_object->class_name()) {
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WindowObject");
         return nullptr;
