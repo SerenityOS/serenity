@@ -319,20 +319,21 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
     }
 
     auto& page_slot = physical_pages()[page_index];
-    bool have_committed = m_shared_committed_cow_pages;
 
     if (page_slot->ref_count() == 1) {
         dbgln_if(PAGE_FAULT_DEBUG, "    >> It's a COW page but nobody is sharing it anymore. Remap r/w");
         set_should_cow(page_index, false);
-        if (have_committed) {
-            if (m_shared_committed_cow_pages->return_one())
-                m_shared_committed_cow_pages = nullptr;
-        }
+
+        // If we were sharing committed COW pages with another process, and the other process
+        // has exhausted the supply, we can stop counting the shared pages.
+        if (m_shared_committed_cow_pages && m_shared_committed_cow_pages->is_empty())
+            m_shared_committed_cow_pages = nullptr;
+
         return PageFaultResponse::Continue;
     }
 
     RefPtr<PhysicalPage> page;
-    if (have_committed) {
+    if (m_shared_committed_cow_pages) {
         dbgln_if(PAGE_FAULT_DEBUG, "    >> It's a committed COW page and it's time to COW!");
         page = m_shared_committed_cow_pages->allocate_one();
     } else {
@@ -384,15 +385,6 @@ NonnullRefPtr<PhysicalPage> CommittedCowPages::allocate_one()
     m_committed_pages--;
 
     return MM.allocate_committed_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
-}
-
-bool CommittedCowPages::return_one()
-{
-    VERIFY(m_committed_pages > 0);
-    m_committed_pages--;
-
-    MM.uncommit_user_physical_pages(1);
-    return m_committed_pages == 0;
 }
 
 }
