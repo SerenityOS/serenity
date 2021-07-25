@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGUI/Widget.h>
+#include <LibGfx/TextWrapping.h>
 
 namespace GUI {
 
@@ -51,7 +52,7 @@ protected:
     virtual void leave_event(Core::Event&) override;
     virtual void change_event(Event&) override;
 
-    void paint_text(Painter&, const Gfx::IntRect&, const Gfx::Font&, Gfx::TextAlignment);
+    void paint_text(Painter&, const Gfx::IntRect&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextWrapping);
 
 private:
     String m_text;

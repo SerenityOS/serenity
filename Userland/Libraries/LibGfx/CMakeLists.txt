@@ -31,6 +31,7 @@ set(SOURCES
     StylePainter.cpp
     SystemTheme.cpp
     TextDirection.cpp
+    TextLayout.cpp
     Triangle.cpp
     Typeface.cpp
     WindowTheme.cpp
