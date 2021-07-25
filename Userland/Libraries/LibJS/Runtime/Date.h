@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -86,6 +86,18 @@ private:
     bool m_is_invalid { false };
 };
 
+u16 day_within_year(double);
+u8 date_from_time(double);
+u16 days_in_year(i32);
+double day_from_year(i32);
+i32 year_from_time(double);
+bool in_leap_year(double);
+u8 month_from_time(double);
+u8 hour_from_time(double);
+u8 min_from_time(double);
+u8 sec_from_time(double);
+u16 ms_from_time(double);
+double day(double);
 Value make_time(GlobalObject& global_object, Value hour, Value min, Value sec, Value ms);
 Value make_day(GlobalObject& global_object, Value year, Value month, Value date);
 Value make_date(Value day, Value time);
