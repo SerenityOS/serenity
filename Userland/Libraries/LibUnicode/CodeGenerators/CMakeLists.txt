@@ -1,0 +1,2 @@
+add_executable(GenerateUnicodeData GenerateUnicodeData.cpp)
+target_link_libraries(GenerateUnicodeData LagomCore)
