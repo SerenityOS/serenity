@@ -409,7 +409,7 @@ static constexpr AK::Array<StringView, 9> strict_reserved_words = { "implements"
 
 static bool is_strict_reserved_word(StringView str)
 {
-    return any_of(strict_reserved_words.begin(), strict_reserved_words.end(), [&str](StringView const& word) {
+    return any_of(strict_reserved_words, [&str](StringView const& word) {
         return word == str;
     });
 }
@@ -472,7 +472,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         if (match(TokenType::CurlyOpen)) {
             // Parse a function body with statements
             ScopePusher scope(*this, ScopePusher::Var, Scope::Function);
-            bool has_binding = any_of(parameters.begin(), parameters.end(), [&](FunctionNode::Parameter const& parameter) {
+            bool has_binding = any_of(parameters, [](FunctionNode::Parameter const& parameter) {
                 return parameter.binding.has<NonnullRefPtr<BindingPattern>>();
             });
 
@@ -1695,7 +1695,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
     m_state.function_parameters.append(parameters);
 
-    bool has_binding = any_of(parameters.begin(), parameters.end(), [&](FunctionNode::Parameter const& parameter) {
+    bool has_binding = any_of(parameters, [](FunctionNode::Parameter const& parameter) {
         return parameter.binding.has<NonnullRefPtr<BindingPattern>>();
     });
 
@@ -2784,7 +2784,7 @@ void Parser::discard_saved_state()
 void Parser::check_identifier_name_for_assignment_validity(StringView name, bool force_strict)
 {
     // FIXME: this is now called from multiple places maybe the error message should be dynamic?
-    if (any_of(s_reserved_words.begin(), s_reserved_words.end(), [&](auto& value) { return name == value; })) {
+    if (any_of(s_reserved_words, [&](auto& value) { return name == value; })) {
         syntax_error("Binding pattern target may not be a reserved word");
     } else if (m_state.strict_mode || force_strict) {
         if (name.is_one_of("arguments"sv, "eval"sv))

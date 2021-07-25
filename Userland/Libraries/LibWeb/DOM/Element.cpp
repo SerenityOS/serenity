@@ -92,7 +92,7 @@ void Element::remove_attribute(const FlyString& name)
 
 bool Element::has_class(const FlyString& class_name, CaseSensitivity case_sensitivity) const
 {
-    return any_of(m_classes.begin(), m_classes.end(), [&](auto& it) {
+    return any_of(m_classes, [&](auto& it) {
         return case_sensitivity == CaseSensitivity::CaseSensitive
             ? it == class_name
             : it.to_lowercase() == class_name.to_lowercase();
