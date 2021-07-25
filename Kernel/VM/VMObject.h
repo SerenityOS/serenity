@@ -67,10 +67,12 @@ public:
 
     void register_on_deleted_handler(VMObjectDeletedHandler& handler)
     {
+        ScopedSpinLock locker(m_on_deleted_lock);
         m_on_deleted.set(&handler);
     }
     void unregister_on_deleted_handler(VMObjectDeletedHandler& handler)
     {
+        ScopedSpinLock locker(m_on_deleted_lock);
         m_on_deleted.remove(&handler);
     }
 
