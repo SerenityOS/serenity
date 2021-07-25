@@ -43,7 +43,6 @@ void MenuManager::refresh()
 {
     ClientConnection::for_each_client([&](ClientConnection& client) {
         client.for_each_menu([&](Menu& menu) {
-            dbgln("MenuManager::refresh {}", &menu);
             menu.redraw();
             return IterationDecision::Continue;
         });
