@@ -26,6 +26,7 @@ public:
     String name() const;
     String executable() const;
     String category() const;
+    String description() const;
     bool run_in_terminal() const;
     Vector<String> launcher_file_types() const;
     Vector<String> launcher_protocols() const;
