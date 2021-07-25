@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,6 +17,7 @@
 #include <AK/WeakPtr.h>
 #include <LibAudio/Buffer.h>
 #include <LibCore/File.h>
+#include <LibCore/Timer.h>
 #include <LibThreading/Mutex.h>
 #include <LibThreading/Thread.h>
 
@@ -93,7 +95,7 @@ private:
 class Mixer : public Core::Object {
     C_OBJECT(Mixer)
 public:
-    Mixer();
+    Mixer(NonnullRefPtr<Core::ConfigFile> config);
     virtual ~Mixer() override;
 
     NonnullRefPtr<BufferQueue> create_queue(ClientConnection&);
@@ -105,6 +107,8 @@ public:
     void set_muted(bool);
 
 private:
+    void request_setting_sync();
+
     Vector<NonnullRefPtr<BufferQueue>> m_pending_mixing;
     Atomic<bool> m_added_queue { false };
     pthread_mutex_t m_pending_mutex;
@@ -117,8 +121,15 @@ private:
     bool m_muted { false };
     int m_main_volume { 100 };
 
+    NonnullRefPtr<Core::ConfigFile> m_config;
+    RefPtr<Core::Timer> m_config_write_timer;
+
     static u8 m_zero_filled_buffer[4096];
 
     void mix();
 };
+
+// Interval in ms when the server tries to save its configuration to disk.
+constexpr unsigned AUDIO_CONFIG_WRITE_INTERVAL = 2000;
+
 }
