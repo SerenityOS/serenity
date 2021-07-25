@@ -11,19 +11,24 @@
 
 namespace GUI {
 
+enum class InputType {
+    Text,
+    Password
+};
+
 class InputBox : public Dialog {
     C_OBJECT(InputBox)
 public:
     virtual ~InputBox() override;
 
-    static int show(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder = {});
+    static int show(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder = {}, InputType input_type = InputType::Text);
 
 private:
-    explicit InputBox(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder);
+    explicit InputBox(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder, InputType input_type);
 
     String text_value() const { return m_text_value; }
 
-    void build();
+    void build(InputType input_type);
     String m_text_value;
     String m_prompt;
     String m_placeholder;

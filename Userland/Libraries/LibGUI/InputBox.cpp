@@ -15,23 +15,23 @@
 
 namespace GUI {
 
-InputBox::InputBox(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder)
+InputBox::InputBox(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder, InputType input_type)
     : Dialog(parent_window)
     , m_text_value(text_value)
     , m_prompt(prompt)
     , m_placeholder(placeholder)
 {
     set_title(title);
-    build();
+    build(input_type);
 }
 
 InputBox::~InputBox()
 {
 }
 
-int InputBox::show(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder)
+int InputBox::show(Window* parent_window, String& text_value, StringView const& prompt, StringView const& title, StringView const& placeholder, InputType input_type)
 {
-    auto box = InputBox::construct(parent_window, text_value, prompt, title, placeholder);
+    auto box = InputBox::construct(parent_window, text_value, prompt, title, placeholder, input_type);
     box->set_resizable(false);
     if (parent_window)
         box->set_icon(parent_window->icon());
@@ -40,7 +40,7 @@ int InputBox::show(Window* parent_window, String& text_value, StringView const& 
     return result;
 }
 
-void InputBox::build()
+void InputBox::build(InputType input_type)
 {
     auto& widget = set_main_widget<Widget>();
 
@@ -62,7 +62,15 @@ void InputBox::build()
     auto& label = label_editor_container.add<Label>(m_prompt);
     label.set_fixed_size(text_width, 16);
 
-    m_text_editor = label_editor_container.add<TextBox>();
+    switch (input_type) {
+    case InputType::Text:
+        m_text_editor = label_editor_container.add<TextBox>();
+        break;
+    case InputType::Password:
+        m_text_editor = label_editor_container.add<PasswordBox>();
+        break;
+    }
+
     m_text_editor->set_fixed_height(19);
     m_text_editor->set_text(m_text_value);
 
