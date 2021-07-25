@@ -20,14 +20,14 @@ class CommittedCowPages : public RefCounted<CommittedCowPages> {
 public:
     CommittedCowPages() = delete;
 
-    CommittedCowPages(size_t);
+    explicit CommittedCowPages(size_t);
     ~CommittedCowPages();
 
-    NonnullRefPtr<PhysicalPage> allocate_one();
-    bool return_one();
+    [[nodiscard]] NonnullRefPtr<PhysicalPage> allocate_one();
+    [[nodiscard]] size_t is_empty() const { return m_committed_pages == 0; }
 
-private:
-    size_t m_committed_pages;
+public:
+    size_t m_committed_pages { 0 };
 };
 
 class AnonymousVMObject final : public VMObject {
