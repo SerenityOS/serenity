@@ -46,7 +46,7 @@ public:
 
     bool is_empty() const
     {
-        return !any_of(m_cells.begin(), m_cells.end(), [](auto& cell) { return cell != Cell(); });
+        return !any_of(m_cells, [](auto& cell) { return cell != Cell(); });
     }
 
     size_t length() const
