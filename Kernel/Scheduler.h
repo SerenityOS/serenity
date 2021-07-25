@@ -38,7 +38,6 @@ public:
     [[noreturn]] static void start();
     static bool pick_next();
     static bool yield();
-    static void yield_from_critical();
     static bool context_switch(Thread*);
     static void enter_current(Thread& prev_thread, bool is_first);
     static void leave_on_first_switch(u32 flags);
