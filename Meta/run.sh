@@ -255,6 +255,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
         -m $SERENITY_RAM_SIZE \
         -cpu $SERENITY_QEMU_CPU \
         -d guest_errors \
+        -no-reboot \
         -smp 2 \
         -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk \
         -device ich9-ahci \
