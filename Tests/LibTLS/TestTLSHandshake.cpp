@@ -14,10 +14,6 @@
 static const char* ca_certs_file = "./ca_certs.ini";
 static int port = 443;
 
-constexpr const char* DEFAULT_DIGEST_SUITE { "HMAC-SHA256" };
-constexpr const char* DEFAULT_CHECKSUM_SUITE { "CRC32" };
-constexpr const char* DEFAULT_HASH_SUITE { "SHA256" };
-constexpr const char* DEFAULT_CIPHER_SUITE { "AES_CBC" };
 constexpr const char* DEFAULT_SERVER { "www.google.com" };
 
 static ByteBuffer operator""_b(const char* string, size_t length)
