@@ -604,6 +604,32 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return -EINVAL;
     };
 
+    auto ioctl_arp = [request, arg]() {
+        arpreq arp_req;
+        if (!copy_from_user(&arp_req, (arpreq*)arg))
+            return -EFAULT;
+
+        switch (request) {
+        case SIOCSARP:
+            if (!Process::current()->is_superuser())
+                return -EPERM;
+            if (arp_req.arp_pa.sa_family != AF_INET)
+                return -EAFNOSUPPORT;
+            update_arp_table(IPv4Address(((sockaddr_in&)arp_req.arp_pa).sin_addr.s_addr), *(MACAddress*)&arp_req.arp_ha.sa_data[0], UpdateArp::Set);
+            return 0;
+
+        case SIOCDARP:
+            if (!Process::current()->is_superuser())
+                return -EPERM;
+            if (arp_req.arp_pa.sa_family != AF_INET)
+                return -EAFNOSUPPORT;
+            update_arp_table(IPv4Address(((sockaddr_in&)arp_req.arp_pa).sin_addr.s_addr), *(MACAddress*)&arp_req.arp_ha.sa_data[0], UpdateArp::Delete);
+            return 0;
+        }
+
+        return -EINVAL;
+    };
+
     auto ioctl_interface = [request, arg]() {
         ifreq* user_ifr = (ifreq*)arg;
         ifreq ifr;
@@ -730,6 +756,10 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     case SIOCADDRT:
     case SIOCDELRT:
         return ioctl_route();
+
+    case SIOCSARP:
+    case SIOCDARP:
+        return ioctl_arp();
     }
 
     return -EINVAL;
