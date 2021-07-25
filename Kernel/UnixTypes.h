@@ -691,6 +691,14 @@ struct rtentry {
 #define AT_FDCWD -100
 #define AT_SYMLINK_NOFOLLOW 0x100
 
+struct arpreq {
+    struct sockaddr arp_pa;      /* protocol address */
+    struct sockaddr arp_ha;      /* hardware address */
+    struct sockaddr arp_netmask; /* netmask of protocol address */
+    int arp_flags;               /* flags */
+    char arp_dev[16];
+};
+
 #define PURGE_ALL_VOLATILE 0x1
 #define PURGE_ALL_CLEAN_INODE 0x2
 

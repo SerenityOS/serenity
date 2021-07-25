@@ -18,3 +18,11 @@ struct rtentry {
 
 #define RTF_UP 0x1      /* do not delete the route */
 #define RTF_GATEWAY 0x2 /* the route is a gateway and not an end host */
+
+struct arpreq {
+    struct sockaddr arp_pa;      /* protocol address */
+    struct sockaddr arp_ha;      /* hardware address */
+    struct sockaddr arp_netmask; /* netmask of protocol address */
+    int arp_flags;               /* flags */
+    char arp_dev[16];
+};
