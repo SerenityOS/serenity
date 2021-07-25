@@ -18,17 +18,21 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
     // We need to acquire our lock so we copy a sane state
     ScopedSpinLock lock(m_lock);
 
+    if (is_purgeable() && is_volatile()) {
+        // If this object is purgeable+volatile, create a new zero-filled purgeable+volatile
+        // object, effectively "pre-purging" it in the child process.
+        auto clone = try_create_purgeable_with_size(size(), AllocationStrategy::None);
+        if (!clone)
+            return {};
+        clone->m_volatile = true;
+        return clone;
+    }
+
     // We're the parent. Since we're about to become COW we need to
     // commit the number of pages that we need to potentially allocate
     // so that the parent is still guaranteed to be able to have all
     // non-volatile memory available.
-    size_t new_cow_pages_needed = 0;
-
-    if (is_volatile()) {
-        // NOTE: If this object is currently volatile, we don't own any committed pages.
-    } else {
-        new_cow_pages_needed = page_count();
-    }
+    size_t new_cow_pages_needed = page_count();
 
     dbgln_if(COMMIT_DEBUG, "Cloning {:p}, need {} committed cow pages", this, new_cow_pages_needed);
 
@@ -205,10 +209,13 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
                 page = MM.shared_zero_page();
         }
 
+
         if (m_unused_committed_pages) {
             MM.uncommit_user_physical_pages(m_unused_committed_pages);
             m_unused_committed_pages = 0;
         }
+
+        m_shared_committed_cow_pages = nullptr;
 
         m_volatile = true;
         m_was_purged = false;
