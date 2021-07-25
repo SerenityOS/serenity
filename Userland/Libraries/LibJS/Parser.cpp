@@ -1721,6 +1721,8 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
     TemporaryChange super_property_access_rollback(m_state.allow_super_property_lookup, !!(parse_options & FunctionNodeParseOptions::AllowSuperPropertyLookup));
     TemporaryChange super_constructor_call_rollback(m_state.allow_super_constructor_call, !!(parse_options & FunctionNodeParseOptions::AllowSuperConstructorCall));
+    TemporaryChange break_context_rollback(m_state.in_break_context, false);
+    TemporaryChange continue_context_rollback(m_state.in_continue_context, false);
 
     ScopePusher scope(*this, ScopePusher::Var, Parser::Scope::Function);
 
