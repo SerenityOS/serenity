@@ -50,7 +50,7 @@ void RadioButton::paint_event(PaintEvent& event)
 
     Gfx::IntRect text_rect { circle_rect.right() + 7, 0, font().width(text()), font().glyph_height() };
     text_rect.center_vertically_within(rect());
-    paint_text(painter, text_rect, font(), Gfx::TextAlignment::TopLeft);
+    paint_text(painter, text_rect, font(), Gfx::TextAlignment::TopLeft, Gfx::TextWrapping::DontWrap);
 
     if (is_focused())
         painter.draw_focus_rect(text_rect.inflated(6, 6), palette().focus_outline());

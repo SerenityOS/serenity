@@ -15,7 +15,9 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
+#include <LibGfx/TextDirection.h>
 #include <LibGfx/TextElision.h>
+#include <LibGfx/TextWrapping.h>
 
 namespace Gfx {
 
@@ -60,13 +62,13 @@ public:
     void blit_offset(const IntPoint&, const Gfx::Bitmap&, const IntRect& src_rect, const IntPoint&);
     void blit_disabled(const IntPoint&, const Gfx::Bitmap&, const IntRect&, const Palette&);
     void blit_tiled(const IntRect&, const Gfx::Bitmap&, const IntRect& src_rect);
-    void draw_text(const IntRect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_text(const IntRect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_text(const IntRect&, const Utf32View&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_text(const IntRect&, const Utf32View&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None);
-    void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const Utf8View&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None);
-    void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const Utf32View&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None);
+    void draw_text(const IntRect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::Wrap);
+    void draw_text(const IntRect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::Wrap);
+    void draw_text(const IntRect&, const Utf32View&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::Wrap);
+    void draw_text(const IntRect&, const Utf32View&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None, TextWrapping = TextWrapping::Wrap);
+    void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::Wrap);
+    void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const Utf8View&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::Wrap);
+    void draw_text(Function<void(const IntRect&, u32)>, const IntRect&, const Utf32View&, const Font&, TextAlignment = TextAlignment::TopLeft, TextElision = TextElision::None, TextWrapping = TextWrapping::Wrap);
     void draw_ui_text(const Gfx::IntRect&, const StringView&, const Gfx::Font&, TextAlignment, Gfx::Color);
     void draw_glyph(const IntPoint&, u32, Color);
     void draw_glyph(const IntPoint&, u32, const Font&, Color);
@@ -151,6 +153,12 @@ protected:
     IntRect m_clip_origin;
     NonnullRefPtr<Gfx::Bitmap> m_target;
     Vector<State, 4> m_state_stack;
+
+private:
+    Vector<DirectionalRun> split_text_into_directional_runs(Utf8View const&, TextDirection initial_direction);
+    bool text_contains_bidirectional_text(Utf8View const&, TextDirection);
+    template<typename DrawGlyphFunction>
+    void do_draw_text(IntRect const&, Utf8View const& text, Font const&, TextAlignment, TextElision, TextWrapping, DrawGlyphFunction);
 };
 
 class PainterStateSaver {
