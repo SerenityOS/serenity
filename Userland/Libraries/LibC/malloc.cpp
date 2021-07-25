@@ -158,7 +158,11 @@ extern "C" {
 
 static void* os_alloc(size_t size, const char* name)
 {
-    auto* ptr = serenity_mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_PURGEABLE, 0, 0, ChunkedBlock::block_size, name);
+    int flags = MAP_ANONYMOUS | MAP_PRIVATE | MAP_PURGEABLE;
+#if ARCH(X86_64)
+    flags |= MAP_RANDOMIZED;
+#endif
+    auto* ptr = serenity_mmap(nullptr, size, PROT_READ | PROT_WRITE, flags, 0, 0, ChunkedBlock::block_size, name);
     VERIFY(ptr != MAP_FAILED);
     return ptr;
 }
