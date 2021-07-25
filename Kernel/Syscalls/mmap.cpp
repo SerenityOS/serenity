@@ -480,11 +480,6 @@ KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, i
             return result.error();
         return was_purged ? 1 : 0;
     }
-    if (advice & MADV_GET_VOLATILE) {
-        if (!region->vmobject().is_anonymous())
-            return EPERM;
-        return static_cast<AnonymousVMObject&>(region->vmobject()).is_volatile() ? 0 : 1;
-    }
     return EINVAL;
 }
 
