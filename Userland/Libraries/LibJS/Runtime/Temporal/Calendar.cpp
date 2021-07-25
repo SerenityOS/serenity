@@ -292,11 +292,12 @@ Object* to_temporal_calendar(GlobalObject& global_object, Value temporal_calenda
     if (temporal_calendar_like.is_object()) {
         auto& temporal_calendar_like_object = temporal_calendar_like.as_object();
         // a. If temporalCalendarLike has an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], [[InitializedTemporalMonthDay]], [[InitializedTemporalTime]], [[InitializedTemporalYearMonth]], or [[InitializedTemporalZonedDateTime]] internal slot, then
-        // TODO: The rest of the Temporal built-ins
-        if (is<PlainDate>(temporal_calendar_like_object)) {
-            // i. Return temporalCalendarLike.[[Calendar]].
+        // i. Return temporalCalendarLike.[[Calendar]].
+        if (is<PlainDate>(temporal_calendar_like_object))
             return &static_cast<PlainDate&>(temporal_calendar_like_object).calendar();
-        }
+        if (is<PlainDateTime>(temporal_calendar_like_object))
+            return &static_cast<PlainDateTime&>(temporal_calendar_like_object).calendar();
+        // TODO: The rest of the Temporal built-ins (PlainMonthDay, PlainTime, PlainYearMonth, ZonedDateTime)
 
         // b. If ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
         auto has_property = temporal_calendar_like_object.has_property(vm.names.calendar);
