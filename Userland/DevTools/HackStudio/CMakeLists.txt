@@ -8,6 +8,7 @@ serenity_component(
 add_subdirectory(LanguageServers)
 add_subdirectory(LanguageClients)
 
+compile_gml(Dialogs/Commit/GitCommitDialog.gml Dialogs/Commit/GitCommitDialogGML.h git_commit_dialog_gml)
 compile_gml(Dialogs/NewProjectDialog.gml Dialogs/NewProjectDialogGML.h new_project_dialog_gml)
 
 set(SOURCES
@@ -26,6 +27,8 @@ set(SOURCES
     Dialogs/NewProjectDialog.cpp
     Dialogs/NewProjectDialogGML.h
     Dialogs/ProjectTemplatesModel.cpp
+    Dialogs/Commit/GitCommitDialog.cpp
+    Dialogs/Commit/GitCommitDialogGML.h
     Editor.cpp
     EditorWrapper.cpp
     FindInFilesWidget.cpp

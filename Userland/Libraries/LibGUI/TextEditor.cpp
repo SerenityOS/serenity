@@ -814,6 +814,12 @@ void TextEditor::keydown_event(KeyEvent& event)
         }
     }
 
+    if (is_multi_line() && event.modifiers() == KeyModifier::Mod_Ctrl && event.key() == KeyCode::Key_Return) {
+        if (on_ctrl_return_pressed)
+            on_ctrl_return_pressed();
+        return;
+    }
+
     if (m_editing_engine->on_key(event))
         return;
 
