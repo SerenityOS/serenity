@@ -523,8 +523,9 @@ void Widget::focusout_event(FocusEvent&)
 {
 }
 
-void Widget::enter_event(Core::Event&)
+void Widget::enter_event(Core::Event& event)
 {
+    event.ignore();
 }
 
 void Widget::leave_event(Core::Event&)
