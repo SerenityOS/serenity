@@ -29,6 +29,7 @@ namespace Kernel {
 #define REG_CONFIG1 0x52
 #define REG_MSR 0x58
 #define REG_BMCR 0x62
+#define REG_ANLPAR 0x68
 
 #define TX_STATUS_OWN 0x2000
 #define TX_STATUS_THRESHOLD_MAX 0x3F0000
@@ -84,11 +85,15 @@ namespace Kernel {
 #define RXCFG_FTH_NONE 0xE000
 
 #define MSR_LINKB 0x02
+#define MSR_SPEED_10 0x08
 #define MSR_RX_FLOW_CONTROL_ENABLE 0x40
 
 #define BMCR_SPEED 0x2000
 #define BMCR_AUTO_NEGOTIATE 0x1000
 #define BMCR_DUPLEX 0x0100
+
+#define ANLPAR_10FD 0x0040
+#define ANLPAR_TXFD 0x0100
 
 #define RX_MULTICAST 0x8000
 #define RX_PHYSICAL_MATCH 0x4000
@@ -364,6 +369,24 @@ u16 RTL8139NetworkAdapter::in16(u16 address)
 u32 RTL8139NetworkAdapter::in32(u16 address)
 {
     return m_io_base.offset(address).in<u32>();
+}
+
+bool RTL8139NetworkAdapter::link_full_duplex()
+{
+    // Note: this code assumes auto-negotiation is enabled (which is now always the case) and
+    // bases the duplex state on the link partner advertisement.
+    // If non-auto-negotiation is ever implemented this should be changed.
+    u16 anlpar = in16(REG_ANLPAR);
+    return !!(anlpar & (ANLPAR_TXFD | ANLPAR_10FD));
+}
+
+i32 RTL8139NetworkAdapter::link_speed()
+{
+    if (!link_up())
+        return NetworkAdapter::LINKSPEED_INVALID;
+
+    u16 msr = in16(REG_MSR);
+    return msr & MSR_SPEED_10 ? 10 : 100;
 }
 
 }

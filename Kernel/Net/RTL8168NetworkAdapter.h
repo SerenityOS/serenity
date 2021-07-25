@@ -26,6 +26,8 @@ public:
 
     virtual void send_raw(ReadonlyBytes) override;
     virtual bool link_up() override { return m_link_up; }
+    virtual bool link_full_duplex() override;
+    virtual i32 link_speed() override;
 
     virtual StringView purpose() const override { return class_name(); }
 

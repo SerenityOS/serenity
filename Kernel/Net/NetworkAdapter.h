@@ -42,6 +42,8 @@ struct PacketWithTimestamp : public RefCounted<PacketWithTimestamp> {
 class NetworkAdapter : public RefCounted<NetworkAdapter>
     , public Weakable<NetworkAdapter> {
 public:
+    static constexpr i32 LINKSPEED_INVALID = -1;
+
     virtual ~NetworkAdapter();
 
     virtual StringView class_name() const = 0;
@@ -53,6 +55,12 @@ public:
     IPv4Address ipv4_broadcast() const { return IPv4Address { (m_ipv4_address.to_u32() & m_ipv4_netmask.to_u32()) | ~m_ipv4_netmask.to_u32() }; }
     IPv4Address ipv4_gateway() const { return m_ipv4_gateway; }
     virtual bool link_up() { return false; }
+    virtual i32 link_speed()
+    {
+        // In Mbit/sec.
+        return LINKSPEED_INVALID;
+    }
+    virtual bool link_full_duplex() { return false; }
 
     void set_ipv4_address(const IPv4Address&);
     void set_ipv4_netmask(const IPv4Address&);

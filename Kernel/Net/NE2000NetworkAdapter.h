@@ -29,6 +29,12 @@ public:
         // just assume that it's up.
         return true;
     }
+    virtual i32 link_speed()
+    {
+        // Can only do 10mbit..
+        return 10;
+    }
+    virtual bool link_full_duplex() { return true; }
 
     virtual StringView purpose() const override { return class_name(); }
 
