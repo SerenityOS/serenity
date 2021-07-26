@@ -720,7 +720,7 @@ private:
     {
         if (!Process::current()->is_superuser())
             return false;
-        builder.append(String::number(kernel_base));
+        builder.append(String::number(kernel_load_base));
         return true;
     }
 };

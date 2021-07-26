@@ -12,7 +12,7 @@
 #    include <Kernel/VirtualAddress.h>
 #endif
 
-#define MAX_KERNEL_SIZE 0x3000000
+#define MAX_KERNEL_SIZE 0x4000000
 
 #ifdef __cplusplus
 namespace Kernel {
@@ -21,7 +21,8 @@ struct [[gnu::packed]] BootInfo {
     u32 start_of_prekernel_image;
     u32 end_of_prekernel_image;
     u64 physical_to_virtual_offset;
-    u64 kernel_base;
+    u64 kernel_mapping_base;
+    u64 kernel_load_base;
 #    if ARCH(X86_64)
     u32 gdt64ptr;
     u16 code64_sel;

@@ -316,7 +316,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
 
             if (maybe_kernel_base.has_value() && ptr >= maybe_kernel_base.value()) {
                 if (kernel_elf) {
-                    symbol = kernel_elf->symbolicate(ptr, &offset);
+                    symbol = kernel_elf->symbolicate(ptr - maybe_kernel_base.value(), &offset);
                 } else {
                     symbol = String::formatted("?? <{:p}>", ptr);
                 }

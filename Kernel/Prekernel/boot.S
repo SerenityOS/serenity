@@ -31,8 +31,11 @@ boot_pd0_pts:
 .global boot_pd_kernel
 boot_pd_kernel:
 .skip 4096
-.global boot_pd_kernel_pts
-boot_pd_kernel_pts:
+.global boot_pd_kernel_pt0
+boot_pd_kernel_pt0:
+.skip 4096
+.global boot_pd_kernel_image_pts
+boot_pd_kernel_image_pts:
 .skip 4096 * (MAX_KERNEL_SIZE >> 21)
 .global boot_pd_kernel_pt1023
 boot_pd_kernel_pt1023:

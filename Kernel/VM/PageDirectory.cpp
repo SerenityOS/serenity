@@ -51,7 +51,7 @@ UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
     dmesgln("MM: boot_pd_kernel @ {}", boot_pd_kernel);
     m_directory_table = PhysicalPage::create(boot_pdpt, MayReturnToFreeList::No);
     m_directory_pages[0] = PhysicalPage::create(boot_pd0, MayReturnToFreeList::No);
-    m_directory_pages[(kernel_base >> 30) & 0x1ff] = PhysicalPage::create(boot_pd_kernel, MayReturnToFreeList::No);
+    m_directory_pages[(kernel_mapping_base >> 30) & 0x1ff] = PhysicalPage::create(boot_pd_kernel, MayReturnToFreeList::No);
 }
 
 PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
@@ -77,13 +77,13 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
     m_directory_table = MM.allocate_user_physical_page();
     if (!m_directory_table)
         return;
-    auto kernel_pd_index = (kernel_base >> 30) & 0x1ffu;
+    auto kernel_pd_index = (kernel_mapping_base >> 30) & 0x1ffu;
     for (size_t i = 0; i < kernel_pd_index; i++) {
         m_directory_pages[i] = MM.allocate_user_physical_page();
         if (!m_directory_pages[i])
             return;
     }
-    // Share the top 1 GiB of kernel-only mappings (>=kernel_base)
+    // Share the top 1 GiB of kernel-only mappings (>=kernel_mapping_base)
     m_directory_pages[kernel_pd_index] = MM.kernel_page_directory().m_directory_pages[kernel_pd_index];
 
 #if ARCH(X86_64)

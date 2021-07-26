@@ -110,8 +110,9 @@ static Processor s_bsp_processor; // global but let's keep it "private"
 extern "C" {
 READONLY_AFTER_INIT PhysicalAddress start_of_prekernel_image;
 READONLY_AFTER_INIT PhysicalAddress end_of_prekernel_image;
-READONLY_AFTER_INIT FlatPtr kernel_base;
 READONLY_AFTER_INIT size_t physical_to_virtual_offset;
+READONLY_AFTER_INIT FlatPtr kernel_mapping_base;
+READONLY_AFTER_INIT FlatPtr kernel_load_base;
 #if ARCH(X86_64)
 READONLY_AFTER_INIT PhysicalAddress boot_pml4t;
 #endif
@@ -140,7 +141,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     start_of_prekernel_image = PhysicalAddress { boot_info.start_of_prekernel_image };
     end_of_prekernel_image = PhysicalAddress { boot_info.end_of_prekernel_image };
     physical_to_virtual_offset = boot_info.physical_to_virtual_offset;
-    kernel_base = boot_info.kernel_base;
+    kernel_mapping_base = boot_info.kernel_mapping_base;
+    kernel_load_base = boot_info.kernel_load_base;
 #if ARCH(X86_64)
     gdt64ptr = boot_info.gdt64ptr;
     code64_sel = boot_info.code64_sel;
