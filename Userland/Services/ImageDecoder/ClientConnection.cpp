@@ -37,7 +37,12 @@ Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::decode_image
         return nullptr;
     }
 
-    auto decoder = Gfx::ImageDecoder::create(encoded_buffer.data<u8>(), encoded_buffer.size());
+    auto decoder = Gfx::ImageDecoder::try_create(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() });
+
+    if (!decoder) {
+        dbgln_if(IMAGE_DECODER_DEBUG, "Could not find suitable image decoder plugin for data");
+        return { false, 0, Vector<Gfx::ShareableBitmap> {}, Vector<u32> {} };
+    }
 
     if (!decoder->frame_count()) {
         dbgln_if(IMAGE_DECODER_DEBUG, "Could not decode image from encoded data");

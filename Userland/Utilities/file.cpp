@@ -28,9 +28,8 @@ static Optional<String> image_details(const String& description, const String& p
         return {};
 
     auto& mapped_file = *file_or_error.value();
-    auto image_decoder = Gfx::ImageDecoder::create((const u8*)mapped_file.data(), mapped_file.size());
-
-    if (!image_decoder->is_valid())
+    auto image_decoder = Gfx::ImageDecoder::try_create(mapped_file.bytes());
+    if (!image_decoder)
         return {};
 
     return String::formatted("{}, {} x {}", description, image_decoder->width(), image_decoder->height());

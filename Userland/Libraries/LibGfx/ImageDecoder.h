@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -48,32 +48,25 @@ protected:
 
 class ImageDecoder : public RefCounted<ImageDecoder> {
 public:
-    static NonnullRefPtr<ImageDecoder> create(const u8* data, size_t size) { return adopt_ref(*new ImageDecoder(data, size)); }
-    static NonnullRefPtr<ImageDecoder> create(const ByteBuffer& data) { return adopt_ref(*new ImageDecoder(data.data(), data.size())); }
+    static RefPtr<ImageDecoder> try_create(ReadonlyBytes);
     ~ImageDecoder();
 
-    bool is_valid() const { return m_plugin; }
-
-    IntSize size() const { return m_plugin ? m_plugin->size() : IntSize(); }
+    IntSize size() const { return m_plugin->size(); }
     int width() const { return size().width(); }
     int height() const { return size().height(); }
     RefPtr<Gfx::Bitmap> bitmap() const;
-    void set_volatile()
-    {
-        if (m_plugin)
-            m_plugin->set_volatile();
-    }
-    [[nodiscard]] bool set_nonvolatile(bool& was_purged) { return m_plugin ? m_plugin->set_nonvolatile(was_purged) : false; }
-    bool sniff() const { return m_plugin ? m_plugin->sniff() : false; }
-    bool is_animated() const { return m_plugin ? m_plugin->is_animated() : false; }
-    size_t loop_count() const { return m_plugin ? m_plugin->loop_count() : 0; }
-    size_t frame_count() const { return m_plugin ? m_plugin->frame_count() : 0; }
-    ImageFrameDescriptor frame(size_t i) const { return m_plugin ? m_plugin->frame(i) : ImageFrameDescriptor(); }
+    void set_volatile() { m_plugin->set_volatile(); }
+    [[nodiscard]] bool set_nonvolatile(bool& was_purged) { return m_plugin->set_nonvolatile(was_purged); }
+    bool sniff() const { return m_plugin->sniff(); }
+    bool is_animated() const { return m_plugin->is_animated(); }
+    size_t loop_count() const { return m_plugin->loop_count(); }
+    size_t frame_count() const { return m_plugin->frame_count(); }
+    ImageFrameDescriptor frame(size_t i) const { return m_plugin->frame(i); }
 
 private:
-    ImageDecoder(const u8*, size_t);
+    explicit ImageDecoder(NonnullOwnPtr<ImageDecoderPlugin>);
 
-    mutable OwnPtr<ImageDecoderPlugin> m_plugin;
+    NonnullOwnPtr<ImageDecoderPlugin> mutable m_plugin;
 };
 
 }
