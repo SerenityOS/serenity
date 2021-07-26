@@ -33,6 +33,7 @@
 #pragma once
 
 #ifndef KERNEL
+#    include <stdint.h>
 #    include <sys/types.h>
 #else
 #    include <AK/Types.h>
