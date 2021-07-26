@@ -568,13 +568,14 @@ KResult IPv4Socket::getsockopt(FileDescription& description, int level, int opti
     }
 }
 
-int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
+int IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(inet);
 
     auto ioctl_route = [request, arg]() {
+        auto user_route = static_ptr_cast<rtentry*>(arg);
         rtentry route;
-        if (!copy_from_user(&route, (rtentry*)arg))
+        if (!copy_from_user(&route, user_route))
             return -EFAULT;
 
         auto copied_ifname = copy_string_from_user(route.rt_dev, IFNAMSIZ);
@@ -605,8 +606,9 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     };
 
     auto ioctl_arp = [request, arg]() {
+        auto user_req = static_ptr_cast<arpreq*>(arg);
         arpreq arp_req;
-        if (!copy_from_user(&arp_req, (arpreq*)arg))
+        if (!copy_from_user(&arp_req, user_req))
             return -EFAULT;
 
         switch (request) {
@@ -631,7 +633,7 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     };
 
     auto ioctl_interface = [request, arg]() {
-        ifreq* user_ifr = (ifreq*)arg;
+        auto user_ifr = static_ptr_cast<ifreq*>(arg);
         ifreq ifr;
         if (!copy_from_user(&ifr, user_ifr))
             return -EFAULT;
@@ -662,72 +664,65 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
             return 0;
 
         case SIOCGIFADDR: {
-            u16 sa_family = AF_INET;
-            if (!copy_to_user(&user_ifr->ifr_addr.sa_family, &sa_family))
-                return -EFAULT;
             auto ip4_addr = adapter->ipv4_address().to_u32();
-            if (!copy_to_user(&((sockaddr_in&)user_ifr->ifr_addr).sin_addr.s_addr, &ip4_addr, sizeof(ip4_addr)))
+            auto& socket_address_in = reinterpret_cast<sockaddr_in&>(ifr.ifr_addr);
+            socket_address_in.sin_family = AF_INET;
+            socket_address_in.sin_addr.s_addr = ip4_addr;
+            if (!copy_to_user(user_ifr, &ifr))
                 return -EFAULT;
             return 0;
         }
 
         case SIOCGIFNETMASK: {
-            u16 sa_family = AF_INET;
-            if (!copy_to_user(&user_ifr->ifr_addr.sa_family, &sa_family))
-                return -EFAULT;
             auto ip4_netmask = adapter->ipv4_netmask().to_u32();
+            auto& socket_address_in = reinterpret_cast<sockaddr_in&>(ifr.ifr_addr);
+            socket_address_in.sin_family = AF_INET;
             // NOTE: NOT ifr_netmask.
-            if (!copy_to_user(&((sockaddr_in&)user_ifr->ifr_addr).sin_addr.s_addr, &ip4_netmask, sizeof(ip4_netmask)))
+            socket_address_in.sin_addr.s_addr = ip4_netmask;
+
+            if (!copy_to_user(user_ifr, &ifr))
                 return -EFAULT;
             return 0;
         }
 
         case SIOCGIFHWADDR: {
-            u16 sa_family = AF_INET;
-            if (!copy_to_user(&user_ifr->ifr_hwaddr.sa_family, &sa_family))
-                return -EFAULT;
             auto mac_address = adapter->mac_address();
-            if (!copy_to_user(ifr.ifr_hwaddr.sa_data, &mac_address, sizeof(MACAddress)))
+            ifr.ifr_hwaddr.sa_family = AF_INET;
+            mac_address.copy_to(Bytes { ifr.ifr_hwaddr.sa_data, sizeof(ifr.ifr_hwaddr.sa_data) });
+            if (!copy_to_user(user_ifr, &ifr))
                 return -EFAULT;
             return 0;
         }
 
         case SIOCGIFBRDADDR: {
-            u16 sa_family = AF_INET;
-            if (!copy_to_user(&user_ifr->ifr_addr.sa_family, &sa_family))
-                return -EFAULT;
-
             // Broadcast address is basically the reverse of the netmask, i.e.
             // instead of zeroing out the end, you OR with 1 instead.
             auto ip4_netmask = adapter->ipv4_netmask().to_u32();
             auto broadcast_addr = adapter->ipv4_address().to_u32() | ~ip4_netmask;
-
-            if (!copy_to_user(&((sockaddr_in&)user_ifr->ifr_addr).sin_addr.s_addr, &broadcast_addr, sizeof(broadcast_addr)))
+            auto& socket_address_in = reinterpret_cast<sockaddr_in&>(ifr.ifr_addr);
+            socket_address_in.sin_family = AF_INET;
+            socket_address_in.sin_addr.s_addr = broadcast_addr;
+            if (!copy_to_user(user_ifr, &ifr))
                 return -EFAULT;
             return 0;
         }
 
         case SIOCGIFMTU: {
-            u16 sa_family = AF_INET;
-            if (!copy_to_user(&user_ifr->ifr_addr.sa_family, &sa_family))
-                return -EFAULT;
-
             auto ip4_metric = adapter->mtu();
 
-            if (!copy_to_user(&user_ifr->ifr_metric, &ip4_metric, sizeof(ip4_metric)))
+            ifr.ifr_addr.sa_family = AF_INET;
+            ifr.ifr_metric = ip4_metric;
+            if (!copy_to_user(user_ifr, &ifr))
                 return -EFAULT;
             return 0;
         }
 
         case SIOCGIFFLAGS: {
-            u16 sa_family = AF_INET;
-            if (!copy_to_user(&user_ifr->ifr_addr.sa_family, &sa_family))
-                return -EFAULT;
-
             // FIXME: stub!
-            short flags = 1;
-
-            if (!copy_to_user(&user_ifr->ifr_flags, &flags, sizeof(flags)))
+            constexpr short flags = 1;
+            ifr.ifr_addr.sa_family = AF_INET;
+            ifr.ifr_flags = flags;
+            if (!copy_to_user(user_ifr, &ifr))
                 return -EFAULT;
             return 0;
         }

@@ -40,7 +40,7 @@ private:
     virtual bool can_write(const FileDescription&, size_t) const override;
     virtual KResult close() override;
     virtual bool is_master_pty() const override { return true; }
-    virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
+    virtual int ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual StringView class_name() const override { return "MasterPTY"; }
 
     RefPtr<SlavePTY> m_slave;

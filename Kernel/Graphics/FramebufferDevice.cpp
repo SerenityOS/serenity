@@ -143,37 +143,38 @@ size_t FramebufferDevice::framebuffer_size_in_bytes() const
     return m_framebuffer_pitch * m_framebuffer_height;
 }
 
-int FramebufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
+int FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
-        auto* out = (size_t*)arg;
+        auto user_size = static_ptr_cast<size_t*>(arg);
         size_t value = framebuffer_size_in_bytes();
-        if (!copy_to_user(out, &value))
+        if (!copy_to_user(user_size, &value))
             return -EFAULT;
         return 0;
     }
     case FB_IOCTL_GET_BUFFER: {
-        auto* index = (int*)arg;
+        auto user_index = static_ptr_cast<int*>(arg);
         int value = m_y_offset == 0 ? 0 : 1;
-        if (!copy_to_user(index, &value))
+        if (!copy_to_user(user_index, &value))
             return -EFAULT;
         if (!m_graphics_adapter->double_framebuffering_capable())
             return -ENOTIMPL;
         return 0;
     }
     case FB_IOCTL_SET_BUFFER: {
-        if (arg != 0 && arg != 1)
+        auto buffer = static_cast<int>(arg.ptr());
+        if (buffer != 0 && buffer != 1)
             return -EINVAL;
         if (!m_graphics_adapter->double_framebuffering_capable())
             return -ENOTIMPL;
-        m_graphics_adapter->set_y_offset(m_output_port_index, arg == 0 ? 0 : m_framebuffer_height);
+        m_graphics_adapter->set_y_offset(m_output_port_index, buffer == 0 ? 0 : m_framebuffer_height);
         return 0;
     }
     case FB_IOCTL_GET_RESOLUTION: {
-        auto* user_resolution = (FBResolution*)arg;
-        FBResolution resolution;
+        auto user_resolution = static_ptr_cast<FBResolution*>(arg);
+        FBResolution resolution {};
         resolution.pitch = m_framebuffer_pitch;
         resolution.width = m_framebuffer_width;
         resolution.height = m_framebuffer_height;
@@ -182,7 +183,7 @@ int FramebufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case FB_IOCTL_SET_RESOLUTION: {
-        auto* user_resolution = (FBResolution*)arg;
+        auto user_resolution = static_ptr_cast<FBResolution*>(arg);
         FBResolution resolution;
         if (!copy_from_user(&resolution, user_resolution))
             return -EFAULT;
@@ -225,13 +226,14 @@ int FramebufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case FB_IOCTL_GET_BUFFER_OFFSET: {
+        auto user_buffer_offset = static_ptr_cast<FBBufferOffset*>(arg);
         FBBufferOffset buffer_offset;
-        if (!copy_from_user(&buffer_offset, (FBBufferOffset*)arg))
+        if (!copy_from_user(&buffer_offset, user_buffer_offset))
             return -EFAULT;
         if (buffer_offset.buffer_index != 0 && buffer_offset.buffer_index != 1)
             return -EINVAL;
         buffer_offset.offset = (size_t)buffer_offset.buffer_index * m_framebuffer_pitch * m_framebuffer_height;
-        if (!copy_to_user((FBBufferOffset*)arg, &buffer_offset))
+        if (!copy_to_user(user_buffer_offset, &buffer_offset))
             return -EFAULT;
         return 0;
     }

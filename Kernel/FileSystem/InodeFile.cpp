@@ -62,7 +62,7 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, u64 offset, con
     return nwritten;
 }
 
-int InodeFile::ioctl(FileDescription& description, unsigned request, FlatPtr arg)
+int InodeFile::ioctl(FileDescription& description, unsigned request, Userspace<void*> arg)
 {
     (void)description;
 
@@ -71,8 +71,9 @@ int InodeFile::ioctl(FileDescription& description, unsigned request, FlatPtr arg
         if (!Process::current()->is_superuser())
             return -EPERM;
 
+        auto user_block_number = static_ptr_cast<int*>(arg);
         int block_number = 0;
-        if (!copy_from_user(&block_number, (int*)arg))
+        if (!copy_from_user(&block_number, user_block_number))
             return -EFAULT;
 
         if (block_number < 0)
@@ -82,7 +83,7 @@ int InodeFile::ioctl(FileDescription& description, unsigned request, FlatPtr arg
         if (block_address.is_error())
             return block_address.error();
 
-        if (!copy_to_user((int*)arg, &block_address.value()))
+        if (!copy_to_user(user_block_number, &block_address.value()))
             return -EFAULT;
 
         return 0;
