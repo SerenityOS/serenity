@@ -46,8 +46,8 @@ private:
     Object& m_calendar;          // [[Calendar]]
 };
 
-BigInt* get_epoch_from_iso_parts(GlobalObject&, i32 year, i32 month, i32 day, i32 hour, i32 minute, i32 second, i32 millisecond, i32 microsecond, i32 nanosecond);
-bool iso_date_time_within_limits(GlobalObject&, i32 year, i32 month, i32 day, i32 hour, i32 minute, i32 second, i32 millisecond, i32 microsecond, i32 nanosecond);
+BigInt* get_epoch_from_iso_parts(GlobalObject&, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
+bool iso_date_time_within_limits(GlobalObject&, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
 PlainDateTime* create_temporal_date_time(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Object& calendar, FunctionObject* new_target = nullptr);
 
 }

@@ -36,7 +36,7 @@ void PlainDateTime::visit_edges(Visitor& visitor)
 }
 
 // 5.5.1 GetEpochFromISOParts ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-getepochfromisoparts
-BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, i32 month, i32 day, i32 hour, i32 minute, i32 second, i32 millisecond, i32 microsecond, i32 nanosecond)
+BigInt* get_epoch_from_iso_parts(GlobalObject& global_object, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
     auto& vm = global_object.vm();
 
@@ -70,7 +70,7 @@ const auto DATETIME_NANOSECONDS_MIN = "-8640086400000000000000"_sbigint;
 const auto DATETIME_NANOSECONDS_MAX = "8640086400000000000000"_sbigint;
 
 // 5.5.2 ISODateTimeWithinLimits ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isodatetimewithinlimits
-bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, i32 month, i32 day, i32 hour, i32 minute, i32 second, i32 millisecond, i32 microsecond, i32 nanosecond)
+bool iso_date_time_within_limits(GlobalObject& global_object, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
     // 1. Assert: year, month, day, hour, minute, second, millisecond, microsecond, and nanosecond are integers.
 

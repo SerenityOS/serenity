@@ -10,42 +10,42 @@
 namespace JS::Temporal {
 
 // 4.5.5 IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidtime
-bool is_valid_time(i32 hour, i32 minute, i32 second, i32 millisecond, i32 microsecond, i32 nanosecond)
+bool is_valid_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond, and nanosecond are integers.
 
     // 2. If hour < 0 or hour > 23, then
-    if (hour < 0 || hour > 23) {
+    if (hour > 23) {
         // a. Return false.
         return false;
     }
 
     // 3. If minute < 0 or minute > 59, then
-    if (minute < 0 || minute > 59) {
+    if (minute > 59) {
         // a. Return false.
         return false;
     }
 
     // 4. If second < 0 or second > 59, then
-    if (second < 0 || second > 59) {
+    if (second > 59) {
         // a. Return false.
         return false;
     }
 
     // 5. If millisecond < 0 or millisecond > 999, then
-    if (millisecond < 0 || millisecond > 999) {
+    if (millisecond > 999) {
         // a. Return false.
         return false;
     }
 
     // 6. If microsecond < 0 or microsecond > 999, then
-    if (microsecond < 0 || microsecond > 999) {
+    if (microsecond > 999) {
         // a. Return false.
         return false;
     }
 
     // 7. If nanosecond < 0 or nanosecond > 999, then
-    if (nanosecond < 0 || nanosecond > 999) {
+    if (nanosecond > 999) {
         // a. Return false.
         return false;
     }

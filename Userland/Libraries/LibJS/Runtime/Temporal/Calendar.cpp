@@ -460,7 +460,7 @@ u16 iso_days_in_year(i32 year)
 }
 
 // 12.1.32 ISODaysInMonth ( year, month ), https://tc39.es/proposal-temporal/#sec-temporal-isodaysinmonth
-i32 iso_days_in_month(i32 year, i32 month)
+u8 iso_days_in_month(i32 year, u8 month)
 {
     // 1. Assert: year is an integer.
 
@@ -547,7 +547,7 @@ u8 to_iso_week_of_year(i32 year, u8 month, u8 day)
 }
 
 // 12.1.36 BuildISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-buildisomonthcode
-String build_iso_month_code(i32 month)
+String build_iso_month_code(u8 month)
 {
     return String::formatted("M{:02}", month);
 }

@@ -10,6 +10,6 @@
 
 namespace JS::Temporal {
 
-bool is_valid_time(i32 hour, i32 minute, i32 second, i32 millisecond, i32 microsecond, i32 nanosecond);
+bool is_valid_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond);
 
 }

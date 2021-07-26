@@ -14,7 +14,7 @@
 namespace JS::Temporal {
 
 // 3 Temporal.PlainDate Objects, https://tc39.es/proposal-temporal/#sec-temporal-plaindate-objects
-PlainDate::PlainDate(i32 year, i32 month, i32 day, Object& calendar, Object& prototype)
+PlainDate::PlainDate(i32 year, u8 month, u8 day, Object& calendar, Object& prototype)
     : Object(prototype)
     , m_iso_year(year)
     , m_iso_month(month)
@@ -29,7 +29,7 @@ void PlainDate::visit_edges(Visitor& visitor)
 }
 
 // 3.5.1 CreateTemporalDate ( isoYear, isoMonth, isoDay, calendar [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaldate
-PlainDate* create_temporal_date(GlobalObject& global_object, i32 iso_year, i32 iso_month, i32 iso_day, Object& calendar, FunctionObject* new_target)
+PlainDate* create_temporal_date(GlobalObject& global_object, i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, FunctionObject* new_target)
 {
     auto& vm = global_object.vm();
 
@@ -159,13 +159,13 @@ Optional<TemporalDate> regulate_iso_date(GlobalObject& global_object, double yea
         // IMPLEMENTATION DEFINED: This is an optimization that allows us to treat these doubles as normal integers from this point onwards.
         // This does not change the exposed behaviour as the call to IsValidISODate will immediately check that these values are valid ISO
         // values (for years: -273975 - 273975, for months: 1 - 12, for days: 1 - 31) all of which are subsets of this check.
-        if (!AK::is_within_range<i32>(year) || !AK::is_within_range<i32>(month) || !AK::is_within_range<i32>(day)) {
+        if (!AK::is_within_range<i32>(year) || !AK::is_within_range<u8>(month) || !AK::is_within_range<u8>(day)) {
             vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
             return {};
         }
         auto y = static_cast<i32>(year);
-        auto m = static_cast<i32>(month);
-        auto d = static_cast<i32>(day);
+        auto m = static_cast<u8>(month);
+        auto d = static_cast<u8>(day);
         // a. If ! IsValidISODate(year, month, day) is false, throw a RangeError exception.
         if (is_valid_iso_date(y, m, d)) {
             vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainDate);
@@ -191,13 +191,13 @@ Optional<TemporalDate> regulate_iso_date(GlobalObject& global_object, double yea
         day = constrain_to_range(day, 1, iso_days_in_month(y, month));
 
         // c. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
-        return TemporalDate { .year = y, .month = static_cast<i32>(month), .day = static_cast<i32>(day), .calendar = {} };
+        return TemporalDate { .year = y, .month = static_cast<u8>(month), .day = static_cast<u8>(day), .calendar = {} };
     }
     VERIFY_NOT_REACHED();
 }
 
 // 3.5.5 IsValidISODate ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidisodate
-bool is_valid_iso_date(i32 year, i32 month, i32 day)
+bool is_valid_iso_date(i32 year, u8 month, u8 day)
 {
     // 1. Assert: year, month, and day are integers.
 
