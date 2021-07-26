@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibTTF/Font.h>
+#include <LibGfx/TrueTypeFont/Font.h>
 #include <stddef.h>
 #include <stdint.h>
 

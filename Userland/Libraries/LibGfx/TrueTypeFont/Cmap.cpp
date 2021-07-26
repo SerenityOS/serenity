@@ -5,7 +5,7 @@
  */
 
 #include <AK/Optional.h>
-#include <LibTTF/Cmap.h>
+#include <LibGfx/TrueTypeFont/Cmap.h>
 
 namespace TTF {
 

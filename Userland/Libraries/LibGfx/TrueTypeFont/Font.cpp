@@ -11,10 +11,10 @@
 #include <AK/Utf8View.h>
 #include <LibCore/File.h>
 #include <LibGfx/FontDatabase.h>
-#include <LibTTF/Cmap.h>
-#include <LibTTF/Font.h>
-#include <LibTTF/Glyf.h>
-#include <LibTTF/Tables.h>
+#include <LibGfx/TrueTypeFont/Cmap.h>
+#include <LibGfx/TrueTypeFont/Font.h>
+#include <LibGfx/TrueTypeFont/Glyf.h>
+#include <LibGfx/TrueTypeFont/Tables.h>
 #include <LibTextCodec/Decoder.h>
 #include <math.h>
 #include <sys/mman.h>

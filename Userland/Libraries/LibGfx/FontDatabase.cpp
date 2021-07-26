@@ -9,8 +9,8 @@
 #include <LibCore/DirIterator.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
+#include <LibGfx/TrueTypeFont/Font.h>
 #include <LibGfx/Typeface.h>
-#include <LibTTF/Font.h>
 #include <stdlib.h>
 
 namespace Gfx {

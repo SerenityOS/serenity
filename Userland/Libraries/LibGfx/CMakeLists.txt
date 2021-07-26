@@ -33,9 +33,12 @@ set(SOURCES
     TextDirection.cpp
     TextLayout.cpp
     Triangle.cpp
+    TrueTypeFont/Font.cpp
+    TrueTypeFont/Glyf.cpp
+    TrueTypeFont/Cmap.cpp
     Typeface.cpp
     WindowTheme.cpp
 )
 
 serenity_lib(LibGfx gfx)
-target_link_libraries(LibGfx LibM LibCompress LibCore LibTTF)
+target_link_libraries(LibGfx LibM LibCompress LibCore LibTextCodec)

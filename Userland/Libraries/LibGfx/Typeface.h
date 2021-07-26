@@ -12,7 +12,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Font.h>
-#include <LibTTF/Font.h>
+#include <LibGfx/TrueTypeFont/Font.h>
 
 namespace Gfx {
 
