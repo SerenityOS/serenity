@@ -117,8 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::get_iso_fields)
     // 11. Perform ! CreateDataPropertyOrThrow(fields, "isoNanosecond", 𝔽(dateTime.[[ISONanosecond]])).
     fields->create_data_property_or_throw(vm.names.isoNanosecond, Value(date_time->iso_nanosecond()));
 
-    // TODO: Typo in the spec? ([[Second]] -> [[ISOSecond]])
-    // 12. Perform ! CreateDataPropertyOrThrow(fields, "isoSecond", 𝔽(dateTime.[[Second]])).
+    // 12. Perform ! CreateDataPropertyOrThrow(fields, "isoSecond", 𝔽(dateTime.[[ISOSecond]])).
     fields->create_data_property_or_throw(vm.names.isoSecond, Value(date_time->iso_second()));
 
     // 13. Perform ! CreateDataPropertyOrThrow(fields, "isoYear", 𝔽(dateTime.[[ISOYear]])).
