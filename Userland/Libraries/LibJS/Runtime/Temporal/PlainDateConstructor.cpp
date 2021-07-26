@@ -28,6 +28,7 @@ void PlainDateConstructor::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.prototype, global_object.temporal_plain_date_prototype(), 0);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.from, from, 1, attr);
     define_native_function(vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(3), Attribute::Configurable);
@@ -94,6 +95,30 @@ Value PlainDateConstructor::construct(FunctionObject& new_target)
 
     // 9. Return ? CreateTemporalDate(y, m, d, calendar, NewTarget).
     return create_temporal_date(global_object, y, m, d, *calendar, &new_target);
+}
+
+// 3.2.2 Temporal.PlainDate.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.from
+JS_DEFINE_NATIVE_FUNCTION(PlainDateConstructor::from)
+{
+    // 1. Set options to ? GetOptionsObject(options).
+    auto* options = get_options_object(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+
+    auto item = vm.argument(0);
+    // 2. If Type(item) is Object and item has an [[InitializedTemporalDate]] internal slot, then
+    if (item.is_object() && is<PlainDate>(item.as_object())) {
+        auto& plain_date_item = static_cast<PlainDate&>(item.as_object());
+        // a. Perform ? ToTemporalOverflow(options).
+        (void)to_temporal_overflow(global_object, *options);
+        if (vm.exception())
+            return {};
+        // b. Return ? CreateTemporalDate(item.[[ISOYear]], item.[[ISOMonth]], item.[[ISODay]], item.[[Calendar]]).
+        return create_temporal_date(global_object, plain_date_item.iso_year(), plain_date_item.iso_month(), plain_date_item.iso_day(), plain_date_item.calendar());
+    }
+
+    // 3. Return ? ToTemporalDate(item, options).
+    return to_temporal_date(global_object, item, options);
 }
 
 // 3.2.3 Temporal.PlainDate.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-plaindate-constructor
