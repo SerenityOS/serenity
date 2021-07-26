@@ -10,6 +10,7 @@
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
+#include <LibGfx/Painter.h>
 
 NetworkStatisticsWidget::NetworkStatisticsWidget()
 {
@@ -17,6 +18,17 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         set_layout<GUI::VerticalBoxLayout>();
         layout()->set_margins({ 4, 4, 4, 4 });
         set_fill_with_background_color(true);
+
+        m_network_connected_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-connected.png");
+        m_network_disconnected_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png");
+
+        m_network_link_down_bitmap = Gfx::Bitmap::try_create(m_network_connected_bitmap->format(), m_network_connected_bitmap->size());
+        {
+            Gfx::Painter painter(*m_network_link_down_bitmap);
+            painter.blit_filtered({}, *m_network_connected_bitmap, m_network_connected_bitmap->rect(), [](Color color) {
+                return color.to_grayscale();
+            });
+        }
 
         auto& adapters_group_box = add<GUI::GroupBox>("Adapters");
         adapters_group_box.set_layout<GUI::VerticalBoxLayout>();
@@ -26,6 +38,13 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         m_adapter_table_view = adapters_group_box.add<GUI::TableView>();
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_adapters_fields;
+        net_adapters_fields.empend("", Gfx::TextAlignment::CenterLeft,
+            [this](JsonObject const& object) -> GUI::Variant {
+                if (!object.get("link_up").as_bool())
+                    return *m_network_link_down_bitmap;
+                else
+                    return object.get("ipv4_address").as_string_or("").is_empty() ? *m_network_disconnected_bitmap : *m_network_connected_bitmap;
+            });
         net_adapters_fields.empend("name", "Name", Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("mac_address", "MAC", Gfx::TextAlignment::CenterLeft);
