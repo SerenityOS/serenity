@@ -360,9 +360,9 @@ void TTY::flush_input()
     evaluate_block_conditions();
 }
 
-int TTY::set_termios(const termios& t)
+KResult TTY::set_termios(const termios& t)
 {
-    int rc = 0;
+    KResult rc = KSuccess;
     m_termios = t;
 
     dbgln_if(TTY_DEBUG, "{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}, OPOST={}, ONLCR={}",
@@ -402,7 +402,7 @@ int TTY::set_termios(const termios& t)
     for (auto flag : unimplemented_iflags) {
         if (m_termios.c_iflag & flag.value) {
             dbgln("FIXME: iflag {} unimplemented", flag.name);
-            rc = -ENOTIMPL;
+            rc = ENOTIMPL;
         }
     }
 
@@ -416,7 +416,7 @@ int TTY::set_termios(const termios& t)
     for (auto flag : unimplemented_oflags) {
         if (m_termios.c_oflag & flag.value) {
             dbgln("FIXME: oflag {} unimplemented", flag.name);
-            rc = -ENOTIMPL;
+            rc = ENOTIMPL;
         }
     }
 
@@ -436,7 +436,7 @@ int TTY::set_termios(const termios& t)
     for (auto flag : unimplemented_cflags) {
         if (m_termios.c_cflag & flag.value) {
             dbgln("FIXME: cflag {} unimplemented", flag.name);
-            rc = -ENOTIMPL;
+            rc = ENOTIMPL;
         }
     }
 
@@ -447,14 +447,14 @@ int TTY::set_termios(const termios& t)
     for (auto flag : unimplemented_lflags) {
         if (m_termios.c_lflag & flag.value) {
             dbgln("FIXME: lflag {} unimplemented", flag.name);
-            rc = -ENOTIMPL;
+            rc = ENOTIMPL;
         }
     }
 
     return rc;
 }
 
-int TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
+KResult TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(tty);
     auto& current_process = *Process::current();
@@ -473,42 +473,42 @@ int TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
         auto user_pgid = static_ptr_cast<pid_t*>(arg);
         auto pgid = this->pgid().value();
         if (!copy_to_user(user_pgid, &pgid))
-            return -EFAULT;
-        return 0;
+            return EFAULT;
+        return KSuccess;
     }
     case TIOCSPGRP: {
         ProcessGroupID pgid = static_cast<pid_t>(arg.ptr());
         if (pgid <= 0)
-            return -EINVAL;
+            return EINVAL;
         InterruptDisabler disabler;
         auto process_group = ProcessGroup::from_pgid(pgid);
         // Disallow setting a nonexistent PGID.
         if (!process_group)
-            return -EINVAL;
+            return EINVAL;
 
         auto process = Process::from_pid(ProcessID(pgid.value()));
         SessionID new_sid = process ? process->sid() : Process::get_sid_from_pgid(pgid);
         if (!new_sid || new_sid != current_process.sid())
-            return -EPERM;
+            return EPERM;
         if (process && pgid != process->pgid())
-            return -EPERM;
+            return EPERM;
         m_pg = process_group;
 
         if (process) {
             if (auto parent = Process::from_pid(process->ppid())) {
                 m_original_process_parent = *parent;
-                return 0;
+                return KSuccess;
             }
         }
 
         m_original_process_parent = nullptr;
-        return 0;
+        return KSuccess;
     }
     case TCGETS: {
         user_termios = static_ptr_cast<termios*>(arg);
         if (!copy_to_user(user_termios, &m_termios))
-            return -EFAULT;
-        return 0;
+            return EFAULT;
+        return KSuccess;
     }
     case TCSETS:
     case TCSETSF:
@@ -516,8 +516,8 @@ int TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
         user_termios = static_ptr_cast<termios*>(arg);
         termios termios;
         if (!copy_from_user(&termios, user_termios))
-            return -EFAULT;
-        int rc = set_termios(termios);
+            return EFAULT;
+        auto rc = set_termios(termios);
         if (request == TCSETSF)
             flush_input();
         return rc;
@@ -528,9 +528,9 @@ int TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
         if (operation == TCIFLUSH || operation == TCIOFLUSH) {
             flush_input();
         } else if (operation != TCOFLUSH) {
-            return -EINVAL;
+            return EINVAL;
         }
-        return 0;
+        return KSuccess;
     }
     case TIOCGWINSZ:
         user_winsize = static_ptr_cast<winsize*>(arg);
@@ -540,30 +540,30 @@ int TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
         ws.ws_xpixel = 0;
         ws.ws_ypixel = 0;
         if (!copy_to_user(user_winsize, &ws))
-            return -EFAULT;
-        return 0;
+            return EFAULT;
+        return KSuccess;
     case TIOCSWINSZ: {
         user_winsize = static_ptr_cast<winsize*>(arg);
         winsize ws;
         if (!copy_from_user(&ws, user_winsize))
-            return -EFAULT;
+            return EFAULT;
         if (ws.ws_col == m_columns && ws.ws_row == m_rows)
-            return 0;
+            return KSuccess;
         m_rows = ws.ws_row;
         m_columns = ws.ws_col;
         generate_signal(SIGWINCH);
-        return 0;
+        return KSuccess;
     }
     case TIOCSCTTY:
         current_process.set_tty(this);
-        return 0;
+        return KSuccess;
     case TIOCSTI:
-        return -EIO;
+        return EIO;
     case TIOCNOTTY:
         current_process.set_tty(nullptr);
-        return 0;
+        return KSuccess;
     }
-    return -EINVAL;
+    return EINVAL;
 }
 
 void TTY::set_size(unsigned short columns, unsigned short rows)

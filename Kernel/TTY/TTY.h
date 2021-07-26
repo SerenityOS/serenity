@@ -25,7 +25,7 @@ public:
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual bool can_write(const FileDescription&, size_t) const override;
-    virtual int ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override final;
+    virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override final;
     virtual String absolute_path(const FileDescription&) const override { return tty_name(); }
 
     virtual String const& tty_name() const = 0;
@@ -40,7 +40,7 @@ public:
         return 0;
     }
 
-    int set_termios(const termios&);
+    KResult set_termios(const termios&);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
     bool should_flush_on_signal() const { return !(m_termios.c_lflag & NOFLSH); }
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
