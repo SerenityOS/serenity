@@ -577,9 +577,9 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_
         VERIFY(sign_part.has_value());
 
         // b. Set hours to ! ToIntegerOrInfinity(hours).
-        i32 hours = Value(js_string(vm, *hours_part)).to_integer_or_infinity(global_object);
+        u8 hours = Value(js_string(vm, *hours_part)).to_integer_or_infinity(global_object);
 
-        i32 sign;
+        u8 sign;
         // c. If sign is the code unit 0x002D (HYPHEN-MINUS) or the code unit 0x2212 (MINUS SIGN), then
         if (sign_part->is_one_of("-", "\u2212")) {
             // i. Set sign to −1.
@@ -592,10 +592,10 @@ Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject& global_
         }
 
         // e. Set minutes to ! ToIntegerOrInfinity(minutes).
-        i32 minutes = Value(js_string(vm, minutes_part.value_or(""sv))).to_integer_or_infinity(global_object);
+        u8 minutes = Value(js_string(vm, minutes_part.value_or(""sv))).to_integer_or_infinity(global_object);
 
         // f. Set seconds to ! ToIntegerOrInfinity(seconds).
-        i32 seconds = Value(js_string(vm, seconds_part.value_or(""sv))).to_integer_or_infinity(global_object);
+        u8 seconds = Value(js_string(vm, seconds_part.value_or(""sv))).to_integer_or_infinity(global_object);
 
         i32 nanoseconds;
         // g. If fraction is not undefined, then
