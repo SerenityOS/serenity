@@ -10,12 +10,19 @@
 #
 if [ "$SERENITY_ARCH" = "x86_64" ]; then
     gdb_arch=i386:x86-64
+    prekernel_image=Prekernel64
+    kernel_base=0x2000200000
 else
     gdb_arch=i386:intel
+    prekernel_image=Prekernel
+    kernel_base=0xc0200000
 fi
 
 exec $SERENITY_KERNEL_DEBUGGER \
-    -ex "file $(dirname "$0")/../Build/${SERENITY_ARCH:-i686}/Kernel/Kernel" \
+    -ex "file $(dirname "$0")/../Build/${SERENITY_ARCH:-i686}/Kernel/Prekernel/$prekernel_image" \
+    -ex "set confirm off" \
+    -ex "add-symbol-file $(dirname "$0")/../Build/${SERENITY_ARCH:-i686}/Kernel/Kernel -o $kernel_base" \
+    -ex "set confirm on" \
     -ex "set arch $gdb_arch" \
     -ex 'target remote localhost:1234' \
     -ex "source $(dirname "$0")/serenity_gdb.py" \

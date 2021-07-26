@@ -112,7 +112,6 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
         FlatPtr base { 0 };
         size_t size { 0 };
         String path;
-        bool is_relative { true };
     };
 
     Vector<FlatPtr> stack;
@@ -123,7 +122,6 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
             .base = maybe_kernel_base.value(),
             .size = 0x3fffffff,
             .path = "/boot/Kernel.debug",
-            .is_relative = false,
         });
     }
 
@@ -209,11 +207,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
             continue;
         }
 
-        FlatPtr adjusted_address;
-        if (found_region->is_relative)
-            adjusted_address = address - found_region->base;
-        else
-            adjusted_address = address;
+        FlatPtr adjusted_address = address - found_region->base;
 
         // We're subtracting 1 from the address because this is the return address,
         // i.e. it is one instruction past the call instruction.
