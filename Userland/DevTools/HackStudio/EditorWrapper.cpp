@@ -6,8 +6,8 @@
 
 #include "EditorWrapper.h"
 #include "Editor.h"
-#include "HackStudio.h"
 #include "Git/GitRepo.h"
+#include "HackStudio.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>

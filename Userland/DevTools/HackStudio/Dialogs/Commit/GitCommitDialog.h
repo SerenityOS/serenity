@@ -8,9 +8,9 @@
 
 #include <LibGUI/Button.h>
 #include <LibGUI/Dialog.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
-#include <LibGUI/Label.h>
 
 namespace HackStudio {
 

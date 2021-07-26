@@ -20,13 +20,16 @@ public:
     bool is_git_installed();
     bool initialize_repository();
 
-    bool stage(const LexicalPath& file);
-    bool unstage(const LexicalPath& file);
-    bool commit(const String& message);
-    bool is_tracked(const LexicalPath& file);
+    bool stage(LexicalPath const& file);
+    bool stage_files(Vector<LexicalPath> const& files);
+    bool unstage(LexicalPath const& file);
+    bool unstage_files(Vector<LexicalPath> const& file);
 
-    Optional<String> original_file_content(const LexicalPath& file);
-    Optional<String> unstaged_diff(const LexicalPath& file);
+    bool commit(String const& message);
+    bool is_tracked(LexicalPath const& file);
+
+    Optional<String> original_file_content(LexicalPath const& file);
+    Optional<String> unstaged_diff(LexicalPath const& file);
 
     Vector<LexicalPath> staged_files();
     Vector<LexicalPath> modified_files();

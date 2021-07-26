@@ -30,7 +30,8 @@ GitCommitDialog::GitCommitDialog(GUI::Window* parent)
         m_commit_button->set_enabled(!m_message_editor->text().is_empty() && on_commit);
     };
     m_message_editor->on_ctrl_return_pressed = [this]() {
-        if (m_commit_button->is_enabled()) commit();
+        if (m_commit_button->is_enabled())
+            commit();
     };
 
     m_message_editor->on_cursor_change = [this]() {

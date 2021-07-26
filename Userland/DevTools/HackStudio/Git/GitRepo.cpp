@@ -41,22 +41,22 @@ bool GitRepo::initialize_repository()
     return !execute_git_command({ "init" }, m_root).is_null();
 }
 
-bool GitRepo::stage(const LexicalPath& file)
+bool GitRepo::stage(LexicalPath const& file)
 {
     return !execute_git_command({ "add", file.string() }, m_root).is_null();
 }
 
-bool GitRepo::unstage(const LexicalPath& file)
+bool GitRepo::unstage(LexicalPath const& file)
 {
     return !execute_git_command({ "reset", "HEAD", "--", file.string() }, m_root).is_null();
 }
 
-bool GitRepo::commit(const String& message)
+bool GitRepo::commit(String const& message)
 {
     return !execute_git_command({ "commit", "-m", message }, m_root).is_null();
 }
 
-bool GitRepo::is_tracked(const LexicalPath& file)
+bool GitRepo::is_tracked(LexicalPath const& file)
 {
     auto res = execute_git_command({ "ls-files", file.string() }, m_root);
     if (res.is_null())
@@ -100,24 +100,24 @@ Vector<LexicalPath> GitRepo::untracked_files()
     return parse_files_list(raw_result);
 }
 
-Vector<LexicalPath> GitRepo::parse_files_list(const String& raw_result)
+Vector<LexicalPath> GitRepo::parse_files_list(String const& raw_result)
 {
     auto lines = raw_result.split('\n');
 
     Vector<LexicalPath> files;
-    for (const auto& line : lines) {
+    for (auto const& line : lines) {
         files.empend(line);
     }
 
     return files;
 }
 
-Optional<String> GitRepo::original_file_content(const LexicalPath& file)
+Optional<String> GitRepo::original_file_content(LexicalPath const& file)
 {
     return execute_git_command({ "show", String::formatted("HEAD:{}", file) }, m_root);
 }
 
-Optional<String> GitRepo::unstaged_diff(const LexicalPath& file)
+Optional<String> GitRepo::unstaged_diff(LexicalPath const& file)
 {
     return execute_git_command({ "diff", file.string().characters() }, m_root);
 }
@@ -125,6 +125,28 @@ Optional<String> GitRepo::unstaged_diff(const LexicalPath& file)
 String GitRepo::execute_git_command(Vector<String> const& command_parts, LexicalPath const& chdir)
 {
     return Core::command("git", command_parts, chdir);
+}
+
+bool GitRepo::stage_files(Vector<LexicalPath> const& files)
+{
+    Vector<String> arguments = { String("add") };
+
+    for (auto& file : files) {
+        arguments.append(file.string());
+    }
+
+    return !execute_git_command(arguments, m_root).is_null();
+}
+
+bool GitRepo::unstage_files(Vector<LexicalPath> const& files)
+{
+    Vector<String> arguments = { String("reset"), String("HEAD"), String("--") };
+
+    for (auto& file : files) {
+        arguments.append(file.string());
+    }
+
+    return !execute_git_command(arguments, m_root).is_null();
 }
 
 }

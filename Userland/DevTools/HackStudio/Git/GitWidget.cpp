@@ -5,9 +5,9 @@
  */
 
 #include "GitWidget.h"
+#include "../Dialogs/Commit/GitCommitDialog.h"
 #include "GitFilesModel.h"
 #include "GitRepo.h"
-#include "../Dialogs/Commit/GitCommitDialog.h"
 #include <LibCore/File.h>
 #include <LibDiff/Format.h>
 #include <LibGUI/Application.h>
@@ -23,7 +23,8 @@
 
 namespace HackStudio {
 
-GitWidget::GitWidget() {
+GitWidget::GitWidget()
+{
     set_layout<GUI::HorizontalBoxLayout>();
 
     auto& unstaged = add<GUI::Widget>();
@@ -31,11 +32,15 @@ GitWidget::GitWidget() {
     auto& unstaged_header = unstaged.add<GUI::Widget>();
     unstaged_header.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto& refresh_button = unstaged_header.add<GUI::Button>();
-    refresh_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"));
-    refresh_button.set_fixed_size(16, 16);
-    refresh_button.set_tooltip("refresh");
-    refresh_button.on_click = [this](int) { refresh(); };
+    m_stage_all_button = unstaged_header.add<GUI::Button>();
+    m_stage_all_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/plus.png"));
+    m_stage_all_button->set_fixed_size(16, 16);
+    m_stage_all_button->set_tooltip("Stage All");
+    m_stage_all_button->set_enabled(!GitRepo::the().unstaged_files().is_empty());
+    m_stage_all_button->on_click = [this](int) {
+        GitRepo::the().stage_files(GitRepo::the().unstaged_files());
+        refresh();
+    };
 
     auto& unstaged_label = unstaged_header.add<GUI::Label>();
     unstaged_label.set_text("Unstaged");
@@ -46,11 +51,18 @@ GitWidget::GitWidget() {
         Gfx::Bitmap::try_load_from_file("/res/icons/16x16/plus.png").release_nonnull());
     m_unstaged_files->on_selection_change = [this] {
         const auto& index = m_unstaged_files->selection().first();
-        if (!index.is_valid()) return;
+        if (!index.is_valid())
+            return;
 
         const auto& selected = index.data().as_string();
         show_diff(LexicalPath(selected));
     };
+
+    auto& refresh_button = unstaged_header.add<GUI::Button>();
+    refresh_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"));
+    refresh_button.set_fixed_size(16, 16);
+    refresh_button.set_tooltip("refresh");
+    refresh_button.on_click = [this](int) { refresh(); };
 
     auto& staged = add<GUI::Widget>();
     staged.set_layout<GUI::VerticalBoxLayout>();
@@ -67,6 +79,16 @@ GitWidget::GitWidget() {
 
     auto& staged_label = staged_header.add<GUI::Label>();
     staged_label.set_text("Staged");
+
+    m_unstage_all_button = staged_header.add<GUI::Button>();
+    m_unstage_all_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/minus.png"));
+    m_unstage_all_button->set_fixed_size(16, 16);
+    m_unstage_all_button->set_tooltip("Unstage All");
+    m_unstage_all_button->set_enabled(!GitRepo::the().staged_files().is_empty());
+    m_unstage_all_button->on_click = [this](int) {
+        GitRepo::the().unstage_files(GitRepo::the().staged_files());
+        refresh();
+    };
 
     staged_header.set_fixed_height(20);
     m_staged_files = staged.add<GitFilesView>(
@@ -113,13 +135,21 @@ void GitWidget::refresh()
         return;
     }
 
-    VERIFY(GitRepo::the().repo_exists(false));
+    auto repo_exists = GitRepo::the().repo_exists(false);
+    VERIFY(repo_exists);
 
-    if (on_refresh) on_refresh();
+    if (on_refresh)
+        on_refresh();
 
-    m_commit_button->set_enabled(GitRepo::the().repo_exists(true) && !GitRepo::the().staged_files().is_empty());
-    m_unstaged_files->set_model(GitFilesModel::create(GitRepo::the().unstaged_files()));
-    m_staged_files->set_model(GitFilesModel::create(GitRepo::the().staged_files()));
+    auto staged_files = GitRepo::the().staged_files();
+    auto unstaged_files = GitRepo::the().unstaged_files();
+
+    m_commit_button->set_enabled(repo_exists && !staged_files.is_empty());
+    m_unstage_all_button->set_enabled(!staged_files.is_empty());
+    m_stage_all_button->set_enabled(!unstaged_files.is_empty());
+
+    m_unstaged_files->set_model(GitFilesModel::create(move(unstaged_files)));
+    m_staged_files->set_model(GitFilesModel::create(move(staged_files)));
 }
 
 void GitWidget::stage_file(const LexicalPath& file)
@@ -147,7 +177,7 @@ void GitWidget::commit()
             GitRepo::the().commit(message);
             refresh();
         };
-        
+
         dialog->exec();
     } else {
         GUI::MessageBox::show(window(), "There is no repository to commit to!", "Error", GUI::MessageBox::Type::Error);

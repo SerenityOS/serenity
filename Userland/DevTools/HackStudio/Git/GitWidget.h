@@ -27,6 +27,7 @@ public:
     void commit();
 
     Function<void()> on_refresh;
+
 private:
     explicit GitWidget();
 
@@ -39,6 +40,8 @@ private:
     RefPtr<GitFilesView> m_unstaged_files;
     RefPtr<GitFilesView> m_staged_files;
     RefPtr<GUI::Button> m_commit_button;
+    RefPtr<GUI::Button> m_stage_all_button;
+    RefPtr<GUI::Button> m_unstage_all_button;
 
     ViewDiffCallback m_view_diff_callback;
 };
