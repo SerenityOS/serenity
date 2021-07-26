@@ -40,11 +40,14 @@ void DiffViewer::paint_event(GUI::PaintEvent& event)
     size_t y_offset = 10;
     size_t current_original_line_index = 0;
     for (const auto& hunk : m_hunks) {
-        for (size_t i = current_original_line_index; i < hunk.original_start_line; ++i) {
-            draw_line(painter, m_original_lines[i], y_offset, LinePosition::Both, LineType::Normal);
-            y_offset += line_height();
+        // Note: -1 (int32_t) = 0xFFFFFFFF (uint32_t). -1 indicates that there were no original lines :^)
+        if (hunk.original_start_line != 0xFFFFFFFF) {
+            for (size_t i = current_original_line_index; i < hunk.original_start_line; ++i) {
+                draw_line(painter, m_original_lines[i], y_offset, LinePosition::Both, LineType::Normal);
+                y_offset += line_height();
+            }
+            current_original_line_index = hunk.original_start_line + hunk.removed_lines.size();
         }
-        current_original_line_index = hunk.original_start_line + hunk.removed_lines.size();
 
         size_t left_y_offset = y_offset;
         for (const auto& removed_line : hunk.removed_lines) {
