@@ -52,14 +52,7 @@ Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::decode_image
     Vector<Gfx::ShareableBitmap> bitmaps;
     Vector<u32> durations;
     for (size_t i = 0; i < decoder->frame_count(); ++i) {
-        // FIXME: All image decoder plugins should be rewritten to return frame() instead of bitmap().
-        //        Non-animated images can simply return 1 frame.
-        Gfx::ImageFrameDescriptor frame;
-        if (decoder->is_animated()) {
-            frame = decoder->frame(i);
-        } else {
-            frame.image = decoder->bitmap();
-        }
+        auto frame = decoder->frame(i);
         if (frame.image)
             bitmaps.append(frame.image->to_shareable_bitmap());
         else

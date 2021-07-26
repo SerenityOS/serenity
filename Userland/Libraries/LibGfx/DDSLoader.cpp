@@ -1046,9 +1046,11 @@ size_t DDSImageDecoderPlugin::frame_count()
     return 1;
 }
 
-ImageFrameDescriptor DDSImageDecoderPlugin::frame([[maybe_unused]] size_t i)
+ImageFrameDescriptor DDSImageDecoderPlugin::frame(size_t i)
 {
-    // We have "frames", but they are all the same image, so lets just use the largest version.
+    if (i > 0)
+        return {};
     return { bitmap(), 0 };
 }
+
 }

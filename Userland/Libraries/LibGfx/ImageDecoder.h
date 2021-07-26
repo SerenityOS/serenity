@@ -30,7 +30,6 @@ public:
     virtual ~ImageDecoderPlugin() { }
 
     virtual IntSize size() = 0;
-    virtual RefPtr<Gfx::Bitmap> bitmap() = 0;
 
     virtual void set_volatile() = 0;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) = 0;
@@ -43,6 +42,8 @@ public:
     virtual ImageFrameDescriptor frame(size_t i) = 0;
 
 protected:
+    virtual RefPtr<Gfx::Bitmap> bitmap() = 0;
+
     ImageDecoderPlugin() { }
 };
 
@@ -54,7 +55,6 @@ public:
     IntSize size() const { return m_plugin->size(); }
     int width() const { return size().width(); }
     int height() const { return size().height(); }
-    RefPtr<Gfx::Bitmap> bitmap() const;
     void set_volatile() { m_plugin->set_volatile(); }
     [[nodiscard]] bool set_nonvolatile(bool& was_purged) { return m_plugin->set_nonvolatile(was_purged); }
     bool sniff() const { return m_plugin->sniff(); }

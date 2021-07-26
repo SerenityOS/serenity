@@ -200,11 +200,9 @@ size_t PPMImageDecoderPlugin::frame_count()
 
 ImageFrameDescriptor PPMImageDecoderPlugin::frame(size_t i)
 {
-    if (i > 0) {
-        return { bitmap(), 0 };
-    }
-
-    return {};
+    if (i > 0)
+        return {};
+    return { bitmap(), 0 };
 }
 
 }

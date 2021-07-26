@@ -195,11 +195,9 @@ size_t PBMImageDecoderPlugin::frame_count()
 
 ImageFrameDescriptor PBMImageDecoderPlugin::frame(size_t i)
 {
-    if (i > 0) {
-        return { bitmap(), 0 };
-    }
-
-    return {};
+    if (i > 0)
+        return {};
+    return { bitmap(), 0 };
 }
 
 }

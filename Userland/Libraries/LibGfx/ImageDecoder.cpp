@@ -78,9 +78,4 @@ ImageDecoder::~ImageDecoder()
 {
 }
 
-RefPtr<Gfx::Bitmap> ImageDecoder::bitmap() const
-{
-    return m_plugin->bitmap();
-}
-
 }
