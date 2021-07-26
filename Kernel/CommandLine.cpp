@@ -191,7 +191,7 @@ UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const
     PANIC("Unknown AHCIResetMode: {}", ahci_reset_mode);
 }
 
-UNMAP_AFTER_INIT BootMode CommandLine::boot_mode() const
+BootMode CommandLine::boot_mode() const
 {
     const auto boot_mode = lookup("boot_mode"sv).value_or("graphical"sv);
     if (boot_mode == "no-fbdev"sv) {
