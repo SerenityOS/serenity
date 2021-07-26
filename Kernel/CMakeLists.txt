@@ -16,8 +16,6 @@ set(KERNEL_HEAP_SOURCES
     Heap/kmalloc.cpp
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_STATIC}")
-
 set(KERNEL_SOURCES
     ACPI/DynamicParser.cpp
     ACPI/Initialize.cpp
@@ -350,7 +348,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-80387 -mno-mmx -mno-sse -mno-sse2")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-asynchronous-unwind-tables")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nostdlib -nostdinc -nostdinc++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nodefaultlibs -nostdlib -nostdinc -nostdinc++")
 
 # Apply any flags that are only available on >= GCC 11.1
 if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 11.1)
@@ -365,7 +363,7 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -faligned-new=4")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -Wl,--no-dynamic-linker")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-pie")
 
 # Kernel Coverage (KCOV) is an API to collect and expose program counters of
 # kernel code that has been run to user space. It's rather slow and likely not

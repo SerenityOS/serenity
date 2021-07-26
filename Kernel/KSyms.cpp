@@ -83,7 +83,7 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(ReadonlyBytes const& 
             }
         }
         auto& ksym = s_symbols[current_symbol_index];
-        ksym.address = address;
+        ksym.address = kernel_load_base + address;
         char* name = static_cast<char*>(kmalloc_eternal((bufptr - start_of_name) + 1));
         memcpy(name, start_of_name, bufptr - start_of_name);
         name[bufptr - start_of_name] = '\0';
@@ -118,7 +118,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
     if (use_ksyms) {
         FlatPtr copied_stack_ptr[2];
         for (FlatPtr* stack_ptr = (FlatPtr*)base_pointer; stack_ptr && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (FlatPtr*)copied_stack_ptr[0]) {
-            if ((FlatPtr)stack_ptr < kernel_base)
+            if ((FlatPtr)stack_ptr < kernel_load_base)
                 break;
 
             void* fault_at;

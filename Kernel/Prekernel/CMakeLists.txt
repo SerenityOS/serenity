@@ -4,6 +4,7 @@ set(SOURCES
     init.cpp
     UBSanitizer.cpp
     ../MiniStdLib.cpp
+    ../../Userland/Libraries/LibELF/Relocation.cpp
 )
 
 if ("${SERENITY_ARCH}" STREQUAL "i686")
@@ -11,6 +12,8 @@ if ("${SERENITY_ARCH}" STREQUAL "i686")
 else()
     set(PREKERNEL_TARGET Prekernel64)
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 
 add_executable(${PREKERNEL_TARGET} ${SOURCES})
 target_compile_options(${PREKERNEL_TARGET} PRIVATE -no-pie -fno-pic)
