@@ -469,8 +469,13 @@ int TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
     }
 #endif
     switch (request) {
-    case TIOCGPGRP:
-        return this->pgid().value();
+    case TIOCGPGRP: {
+        auto user_pgid = static_ptr_cast<pid_t*>(arg);
+        auto pgid = this->pgid().value();
+        if (!copy_to_user(user_pgid, &pgid))
+            return -EFAULT;
+        return 0;
+    }
     case TIOCSPGRP: {
         ProcessGroupID pgid = static_cast<pid_t>(arg.ptr());
         if (pgid <= 0)
