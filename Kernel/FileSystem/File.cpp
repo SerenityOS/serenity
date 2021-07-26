@@ -35,9 +35,9 @@ KResult File::close()
     return KSuccess;
 }
 
-int File::ioctl(FileDescription&, unsigned, Userspace<void*>)
+KResult File::ioctl(FileDescription&, unsigned, Userspace<void*>)
 {
-    return -ENOTTY;
+    return ENOTTY;
 }
 
 KResultOr<Region*> File::mmap(Process&, FileDescription&, const Range&, u64, int, bool)

@@ -87,7 +87,7 @@ public:
     virtual void did_seek(FileDescription&, off_t) { }
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) = 0;
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) = 0;
-    virtual int ioctl(FileDescription&, unsigned request, Userspace<void*> arg);
+    virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg);
     virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, u64 offset, int prot, bool shared);
     virtual KResult stat(::stat&) const { return EBADF; }
 

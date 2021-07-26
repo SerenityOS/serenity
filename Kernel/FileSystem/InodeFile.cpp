@@ -62,34 +62,34 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, u64 offset, con
     return nwritten;
 }
 
-int InodeFile::ioctl(FileDescription& description, unsigned request, Userspace<void*> arg)
+KResult InodeFile::ioctl(FileDescription& description, unsigned request, Userspace<void*> arg)
 {
     (void)description;
 
     switch (request) {
     case FIBMAP: {
         if (!Process::current()->is_superuser())
-            return -EPERM;
+            return EPERM;
 
         auto user_block_number = static_ptr_cast<int*>(arg);
         int block_number = 0;
         if (!copy_from_user(&block_number, user_block_number))
-            return -EFAULT;
+            return EFAULT;
 
         if (block_number < 0)
-            return -EINVAL;
+            return EINVAL;
 
         auto block_address = inode().get_block_address(block_number);
         if (block_address.is_error())
             return block_address.error();
 
         if (!copy_to_user(user_block_number, &block_address.value()))
-            return -EFAULT;
+            return EFAULT;
 
-        return 0;
+        return KSuccess;
     }
     default:
-        return -EINVAL;
+        return EINVAL;
     }
 }
 

@@ -568,75 +568,75 @@ KResult IPv4Socket::getsockopt(FileDescription& description, int level, int opti
     }
 }
 
-int IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
+KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(inet);
 
-    auto ioctl_route = [request, arg]() {
+    auto ioctl_route = [request, arg]() -> KResult {
         auto user_route = static_ptr_cast<rtentry*>(arg);
         rtentry route;
         if (!copy_from_user(&route, user_route))
-            return -EFAULT;
+            return EFAULT;
 
         auto copied_ifname = copy_string_from_user(route.rt_dev, IFNAMSIZ);
         if (copied_ifname.is_null())
-            return -EFAULT;
+            return EFAULT;
 
         auto adapter = NetworkingManagement::the().lookup_by_name(copied_ifname);
         if (!adapter)
-            return -ENODEV;
+            return ENODEV;
 
         switch (request) {
         case SIOCADDRT:
             if (!Process::current()->is_superuser())
-                return -EPERM;
+                return EPERM;
             if (route.rt_gateway.sa_family != AF_INET)
-                return -EAFNOSUPPORT;
+                return EAFNOSUPPORT;
             if ((route.rt_flags & (RTF_UP | RTF_GATEWAY)) != (RTF_UP | RTF_GATEWAY))
-                return -EINVAL; // FIXME: Find the correct value to return
+                return EINVAL; // FIXME: Find the correct value to return
             adapter->set_ipv4_gateway(IPv4Address(((sockaddr_in&)route.rt_gateway).sin_addr.s_addr));
-            return 0;
+            return KSuccess;
 
         case SIOCDELRT:
             // FIXME: Support gateway deletion
-            return 0;
+            return KSuccess;
         }
 
-        return -EINVAL;
+        return EINVAL;
     };
 
-    auto ioctl_arp = [request, arg]() {
+    auto ioctl_arp = [request, arg]() -> KResult {
         auto user_req = static_ptr_cast<arpreq*>(arg);
         arpreq arp_req;
         if (!copy_from_user(&arp_req, user_req))
-            return -EFAULT;
+            return EFAULT;
 
         switch (request) {
         case SIOCSARP:
             if (!Process::current()->is_superuser())
-                return -EPERM;
+                return EPERM;
             if (arp_req.arp_pa.sa_family != AF_INET)
-                return -EAFNOSUPPORT;
+                return EAFNOSUPPORT;
             update_arp_table(IPv4Address(((sockaddr_in&)arp_req.arp_pa).sin_addr.s_addr), *(MACAddress*)&arp_req.arp_ha.sa_data[0], UpdateArp::Set);
-            return 0;
+            return KSuccess;
 
         case SIOCDARP:
             if (!Process::current()->is_superuser())
-                return -EPERM;
+                return EPERM;
             if (arp_req.arp_pa.sa_family != AF_INET)
-                return -EAFNOSUPPORT;
+                return EAFNOSUPPORT;
             update_arp_table(IPv4Address(((sockaddr_in&)arp_req.arp_pa).sin_addr.s_addr), *(MACAddress*)&arp_req.arp_ha.sa_data[0], UpdateArp::Delete);
-            return 0;
+            return KSuccess;
         }
 
-        return -EINVAL;
+        return EINVAL;
     };
 
-    auto ioctl_interface = [request, arg]() {
+    auto ioctl_interface = [request, arg]() -> KResult {
         auto user_ifr = static_ptr_cast<ifreq*>(arg);
         ifreq ifr;
         if (!copy_from_user(&ifr, user_ifr))
-            return -EFAULT;
+            return EFAULT;
 
         char namebuf[IFNAMSIZ + 1];
         memcpy(namebuf, ifr.ifr_name, IFNAMSIZ);
@@ -644,24 +644,24 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
 
         auto adapter = NetworkingManagement::the().lookup_by_name(namebuf);
         if (!adapter)
-            return -ENODEV;
+            return ENODEV;
 
         switch (request) {
         case SIOCSIFADDR:
             if (!Process::current()->is_superuser())
-                return -EPERM;
+                return EPERM;
             if (ifr.ifr_addr.sa_family != AF_INET)
-                return -EAFNOSUPPORT;
+                return EAFNOSUPPORT;
             adapter->set_ipv4_address(IPv4Address(((sockaddr_in&)ifr.ifr_addr).sin_addr.s_addr));
-            return 0;
+            return KSuccess;
 
         case SIOCSIFNETMASK:
             if (!Process::current()->is_superuser())
-                return -EPERM;
+                return EPERM;
             if (ifr.ifr_addr.sa_family != AF_INET)
-                return -EAFNOSUPPORT;
+                return EAFNOSUPPORT;
             adapter->set_ipv4_netmask(IPv4Address(((sockaddr_in&)ifr.ifr_netmask).sin_addr.s_addr));
-            return 0;
+            return KSuccess;
 
         case SIOCGIFADDR: {
             auto ip4_addr = adapter->ipv4_address().to_u32();
@@ -669,8 +669,8 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
             socket_address_in.sin_family = AF_INET;
             socket_address_in.sin_addr.s_addr = ip4_addr;
             if (!copy_to_user(user_ifr, &ifr))
-                return -EFAULT;
-            return 0;
+                return EFAULT;
+            return KSuccess;
         }
 
         case SIOCGIFNETMASK: {
@@ -681,8 +681,8 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
             socket_address_in.sin_addr.s_addr = ip4_netmask;
 
             if (!copy_to_user(user_ifr, &ifr))
-                return -EFAULT;
-            return 0;
+                return EFAULT;
+            return KSuccess;
         }
 
         case SIOCGIFHWADDR: {
@@ -690,8 +690,8 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
             ifr.ifr_hwaddr.sa_family = AF_INET;
             mac_address.copy_to(Bytes { ifr.ifr_hwaddr.sa_data, sizeof(ifr.ifr_hwaddr.sa_data) });
             if (!copy_to_user(user_ifr, &ifr))
-                return -EFAULT;
-            return 0;
+                return EFAULT;
+            return KSuccess;
         }
 
         case SIOCGIFBRDADDR: {
@@ -703,8 +703,8 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
             socket_address_in.sin_family = AF_INET;
             socket_address_in.sin_addr.s_addr = broadcast_addr;
             if (!copy_to_user(user_ifr, &ifr))
-                return -EFAULT;
-            return 0;
+                return EFAULT;
+            return KSuccess;
         }
 
         case SIOCGIFMTU: {
@@ -713,8 +713,8 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
             ifr.ifr_addr.sa_family = AF_INET;
             ifr.ifr_metric = ip4_metric;
             if (!copy_to_user(user_ifr, &ifr))
-                return -EFAULT;
-            return 0;
+                return EFAULT;
+            return KSuccess;
         }
 
         case SIOCGIFFLAGS: {
@@ -723,17 +723,17 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
             ifr.ifr_addr.sa_family = AF_INET;
             ifr.ifr_flags = flags;
             if (!copy_to_user(user_ifr, &ifr))
-                return -EFAULT;
-            return 0;
+                return EFAULT;
+            return KSuccess;
         }
 
         case SIOCGIFCONF: {
             // FIXME: stub!
-            return -EINVAL;
+            return EINVAL;
         }
         }
 
-        return -EINVAL;
+        return EINVAL;
     };
 
     switch (request) {
@@ -757,7 +757,7 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
         return ioctl_arp();
     }
 
-    return -EINVAL;
+    return EINVAL;
 }
 
 KResult IPv4Socket::close()
