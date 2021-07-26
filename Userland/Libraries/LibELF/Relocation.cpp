@@ -53,10 +53,15 @@ bool perform_relative_relocations(FlatPtr base_address)
 #else
         VERIFY(ELF64_R_TYPE(relocation->r_info) == R_X86_64_RELATIVE);
 #endif
-        if (use_addend)
-            *(FlatPtr*)(base_address + relocation->r_offset) = base_address + relocation->r_addend;
-        else
-            *(FlatPtr*)(base_address + relocation->r_offset) += base_address;
+        auto* patch_address = (FlatPtr*)(base_address + relocation->r_offset);
+        FlatPtr relocated_address;
+        if (use_addend) {
+            relocated_address = base_address + relocation->r_addend;
+        } else {
+            __builtin_memcpy(&relocated_address, patch_address, sizeof(relocated_address));
+            relocated_address += base_address;
+        }
+        __builtin_memcpy(patch_address, &relocated_address, sizeof(relocated_address));
     }
 
     return true;
