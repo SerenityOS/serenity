@@ -1,10 +1,10 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Badge.h>
 #include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/ClipboardServerEndpoint.h>
 #include <LibGUI/Clipboard.h>
@@ -23,18 +23,14 @@ private:
         : IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, "/tmp/portal/clipboard")
     {
     }
-    virtual void clipboard_data_changed(String const& mime_type) override;
+
+    virtual void clipboard_data_changed(String const& mime_type) override
+    {
+        Clipboard::the().clipboard_data_changed({}, mime_type);
+    }
 };
 
-Clipboard& Clipboard::the()
-{
-    static Clipboard* s_the;
-    if (!s_the)
-        s_the = new Clipboard;
-    return *s_the;
-}
-
-ClipboardServerConnection* s_connection;
+static ClipboardServerConnection* s_connection;
 
 static ClipboardServerConnection& connection()
 {
@@ -46,8 +42,12 @@ void Clipboard::initialize(Badge<Application>)
     s_connection = &ClipboardServerConnection::construct().leak_ref();
 }
 
-Clipboard::Clipboard()
+Clipboard& Clipboard::the()
 {
+    static Clipboard* s_the;
+    if (!s_the)
+        s_the = new Clipboard;
+    return *s_the;
 }
 
 Clipboard::DataAndType Clipboard::data_and_type() const
@@ -59,31 +59,6 @@ Clipboard::DataAndType Clipboard::data_and_type() const
     auto type = response.mime_type();
     auto metadata = response.metadata().entries();
     return { data, type, metadata };
-}
-
-void Clipboard::set_data(ReadonlyBytes data, const String& type, const HashMap<String, String>& metadata)
-{
-    auto buffer = Core::AnonymousBuffer::create_with_size(data.size());
-    if (!buffer.is_valid()) {
-        dbgln("GUI::Clipboard::set_data() failed to create a buffer");
-        return;
-    }
-    if (!data.is_empty())
-        memcpy(buffer.data<void>(), data.data(), data.size());
-
-    connection().async_set_clipboard_data(move(buffer), type, metadata);
-}
-
-void Clipboard::clear()
-{
-    connection().async_set_clipboard_data({}, {}, {});
-}
-
-void ClipboardServerConnection::clipboard_data_changed(String const& mime_type)
-{
-    auto& clipboard = Clipboard::the();
-    if (clipboard.on_change)
-        clipboard.on_change(mime_type);
 }
 
 RefPtr<Gfx::Bitmap> Clipboard::bitmap() const
@@ -126,7 +101,20 @@ RefPtr<Gfx::Bitmap> Clipboard::bitmap() const
     return bitmap;
 }
 
-void Clipboard::set_bitmap(const Gfx::Bitmap& bitmap)
+void Clipboard::set_data(ReadonlyBytes const& data, String const& type, HashMap<String, String> const& metadata)
+{
+    auto buffer = Core::AnonymousBuffer::create_with_size(data.size());
+    if (!buffer.is_valid()) {
+        dbgln("GUI::Clipboard::set_data() failed to create a buffer");
+        return;
+    }
+    if (!data.is_empty())
+        memcpy(buffer.data<void>(), data.data(), data.size());
+
+    connection().async_set_clipboard_data(move(buffer), type, metadata);
+}
+
+void Clipboard::set_bitmap(Gfx::Bitmap const& bitmap)
 {
     HashMap<String, String> metadata;
     metadata.set("width", String::number(bitmap.width()));
@@ -135,6 +123,29 @@ void Clipboard::set_bitmap(const Gfx::Bitmap& bitmap)
     metadata.set("format", String::number((int)bitmap.format()));
     metadata.set("pitch", String::number(bitmap.pitch()));
     set_data({ bitmap.scanline(0), bitmap.size_in_bytes() }, "image/x-serenityos", metadata);
+}
+
+void Clipboard::clear()
+{
+    connection().async_set_clipboard_data({}, {}, {});
+}
+
+void Clipboard::clipboard_data_changed(Badge<ClipboardServerConnection>, String const& mime_type)
+{
+    if (on_change)
+        on_change(mime_type);
+    for (auto* client : m_clients)
+        client->clipboard_content_did_change(mime_type);
+}
+
+Clipboard::ClipboardClient::ClipboardClient()
+{
+    Clipboard::the().register_client({}, *this);
+}
+
+Clipboard::ClipboardClient::~ClipboardClient()
+{
+    Clipboard::the().unregister_client({}, *this);
 }
 
 }
