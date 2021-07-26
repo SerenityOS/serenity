@@ -116,23 +116,27 @@ jobs:
         # about 0.25 GB, so 1.5 GB (0.5GB after compression) should be plenty, all while comfortly fitting in the cache.
         ccache -M 1500M
         ccache -s
+    - name: Create build directory
+      run: |
+        mkdir -p ${{ github.workspace }}/Build
+        mkdir -p ${{ github.workspace }}/Build/UCD
+    - name: UnicodeData cache
+      # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+      uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+      with:
+        path: ${{ github.workspace }}/Build/UCD
+        key: UnicodeData-${{ hashFiles('Userland/Libraries/LibUnicode/unicode_data.cmake') }}
     - name: Create build environment with extra debug options
-      working-directory: ${{ github.workspace }}
+      working-directory: ${{ github.workspace }}/Build
       # Build the entire project with all available debug options turned on, to prevent code rot.
       # However, it is unweildy and slow to run tests with them enabled, so we will build twice.
-      run: |
-        mkdir -p Build
-        cd Build
-        cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DBUILD_LAGOM=ON -DENABLE_ALL_DEBUG_FACILITIES=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+      run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DBUILD_LAGOM=ON -DENABLE_ALL_DEBUG_FACILITIES=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
       if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
     - name: Create build environment
-      working-directory: ${{ github.workspace }}
+      working-directory: ${{ github.workspace }}/Build
       # Note that we do not set BUILD_LAGOM for the normal debug build
       # We build and run the Lagom tests in a separate job, and sanitizer builds take a good while longer than non-sanitized.
-      run: |
-        mkdir -p Build
-        cd Build
-        cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DENABLE_UNDEFINED_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+      run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DENABLE_UNDEFINED_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
       if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
 
     # === ACTUALLY BUILD ===
@@ -223,24 +227,31 @@ jobs:
 
     # === PREPARE FOR BUILDING ===
 
+    - name: Create build directory
+      run: |
+        mkdir -p ${{ github.workspace }}/Meta/Lagom/Build
+        mkdir -p ${{ github.workspace }}/Meta/Lagom/Build/UCD
+
+    - name: UnicodeData cache
+      # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+      uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+      with:
+        path: ${{ github.workspace }}/Meta/Lagom/Build/UCD/
+        key: UnicodeData-${{ hashFiles('Userland/Libraries/LibUnicode/unicode_data.cmake') }}
+      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
+
     # TODO: ccache
     # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
     # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
     # Ignore for now, since the other step dominates
     - name: Create build environment (fuzz)
-      working-directory: ${{ github.workspace }}/Meta/Lagom
-      run: |
-        mkdir -p Build
-        cd Build
-        cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
+      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
+      run: cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
       if: ${{ matrix.with-fuzzers == 'FUZZ' }}
 
     - name: Create build environment (no fuzz)
-      working-directory: ${{ github.workspace }}/Meta/Lagom
-      run: |
-        mkdir -p Build
-        cd Build
-        cmake -GNinja -DBUILD_LAGOM=ON -DINCLUDE_WASM_SPEC_TESTS=ON -DWASM_SPEC_TEST_SKIP_FORMATTING=ON -DENABLE_UNDEFINED_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 ..
+      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
+      run: cmake -GNinja -DBUILD_LAGOM=ON -DINCLUDE_WASM_SPEC_TESTS=ON -DWASM_SPEC_TEST_SKIP_FORMATTING=ON -DENABLE_UNDEFINED_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 ..
       if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
 
     # === ACTUALLY BUILD AND TEST ===
