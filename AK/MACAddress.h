@@ -84,6 +84,11 @@ public:
         return all_of(m_data.begin(), m_data.end(), [](const auto octet) { return octet == 0; });
     }
 
+    void copy_to(Bytes destination) const
+    {
+        m_data.span().copy_to(destination);
+    }
+
 private:
     Array<u8, s_mac_address_length> m_data {};
 };
