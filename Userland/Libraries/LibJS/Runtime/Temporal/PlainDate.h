@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,10 +35,17 @@ private:
     Object& m_calendar;   // [[Calendar]]
 };
 
+struct ISODate {
+    i32 year;
+    u8 month;
+    u8 day;
+};
+
 PlainDate* create_temporal_date(GlobalObject&, i32 iso_year, u8 iso_month, u8 iso_day, Object& calendar, FunctionObject* new_target = nullptr);
 PlainDate* to_temporal_date(GlobalObject&, Value item, Object* options = nullptr);
 Optional<TemporalDate> regulate_iso_date(GlobalObject&, double year, double month, double day, String const& overflow);
 bool is_valid_iso_date(i32 year, u8 month, u8 day);
+ISODate balance_iso_date(i32 year, i32 month, i32 day);
 i8 compare_iso_date(i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2);
 
 }
