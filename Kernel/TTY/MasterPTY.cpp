@@ -106,14 +106,14 @@ KResult MasterPTY::close()
     return KSuccess;
 }
 
-int MasterPTY::ioctl(FileDescription& description, unsigned request, Userspace<void*> arg)
+KResult MasterPTY::ioctl(FileDescription& description, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(tty);
     if (!m_slave)
-        return -EIO;
+        return EIO;
     if (request == TIOCSWINSZ || request == TIOCGPGRP)
         return m_slave->ioctl(description, request, arg);
-    return -EINVAL;
+    return EINVAL;
 }
 
 String MasterPTY::absolute_path(const FileDescription&) const

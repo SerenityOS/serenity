@@ -143,7 +143,7 @@ size_t FramebufferDevice::framebuffer_size_in_bytes() const
     return m_framebuffer_pitch * m_framebuffer_height;
 }
 
-int FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
+KResult FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {
@@ -151,26 +151,26 @@ int FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<void*
         auto user_size = static_ptr_cast<size_t*>(arg);
         size_t value = framebuffer_size_in_bytes();
         if (!copy_to_user(user_size, &value))
-            return -EFAULT;
-        return 0;
+            return EFAULT;
+        return KSuccess;
     }
     case FB_IOCTL_GET_BUFFER: {
         auto user_index = static_ptr_cast<int*>(arg);
         int value = m_y_offset == 0 ? 0 : 1;
         if (!copy_to_user(user_index, &value))
-            return -EFAULT;
+            return EFAULT;
         if (!m_graphics_adapter->double_framebuffering_capable())
-            return -ENOTIMPL;
-        return 0;
+            return ENOTIMPL;
+        return KSuccess;
     }
     case FB_IOCTL_SET_BUFFER: {
         auto buffer = static_cast<int>(arg.ptr());
         if (buffer != 0 && buffer != 1)
-            return -EINVAL;
+            return EINVAL;
         if (!m_graphics_adapter->double_framebuffering_capable())
-            return -ENOTIMPL;
+            return ENOTIMPL;
         m_graphics_adapter->set_y_offset(m_output_port_index, buffer == 0 ? 0 : m_framebuffer_height);
-        return 0;
+        return KSuccess;
     }
     case FB_IOCTL_GET_RESOLUTION: {
         auto user_resolution = static_ptr_cast<FBResolution*>(arg);
@@ -179,24 +179,24 @@ int FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<void*
         resolution.width = m_framebuffer_width;
         resolution.height = m_framebuffer_height;
         if (!copy_to_user(user_resolution, &resolution))
-            return -EFAULT;
-        return 0;
+            return EFAULT;
+        return KSuccess;
     }
     case FB_IOCTL_SET_RESOLUTION: {
         auto user_resolution = static_ptr_cast<FBResolution*>(arg);
         FBResolution resolution;
         if (!copy_from_user(&resolution, user_resolution))
-            return -EFAULT;
+            return EFAULT;
         if (resolution.width > MAX_RESOLUTION_WIDTH || resolution.height > MAX_RESOLUTION_HEIGHT)
-            return -EINVAL;
+            return EINVAL;
 
         if (!m_graphics_adapter->modesetting_capable()) {
             resolution.pitch = m_framebuffer_pitch;
             resolution.width = m_framebuffer_width;
             resolution.height = m_framebuffer_height;
             if (!copy_to_user(user_resolution, &resolution))
-                return -EFAULT;
-            return -ENOTIMPL;
+                return EFAULT;
+            return ENOTIMPL;
         }
 
         if (!m_graphics_adapter->try_to_set_resolution(m_output_port_index, resolution.width, resolution.height)) {
@@ -210,8 +210,8 @@ int FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<void*
             resolution.width = m_framebuffer_width;
             resolution.height = m_framebuffer_height;
             if (!copy_to_user(user_resolution, &resolution))
-                return -EFAULT;
-            return -EINVAL;
+                return EFAULT;
+            return EINVAL;
         }
         m_framebuffer_width = resolution.width;
         m_framebuffer_height = resolution.height;
@@ -222,25 +222,25 @@ int FramebufferDevice::ioctl(FileDescription&, unsigned request, Userspace<void*
         resolution.width = m_framebuffer_width;
         resolution.height = m_framebuffer_height;
         if (!copy_to_user(user_resolution, &resolution))
-            return -EFAULT;
-        return 0;
+            return EFAULT;
+        return KSuccess;
     }
     case FB_IOCTL_GET_BUFFER_OFFSET: {
         auto user_buffer_offset = static_ptr_cast<FBBufferOffset*>(arg);
         FBBufferOffset buffer_offset;
         if (!copy_from_user(&buffer_offset, user_buffer_offset))
-            return -EFAULT;
+            return EFAULT;
         if (buffer_offset.buffer_index != 0 && buffer_offset.buffer_index != 1)
-            return -EINVAL;
+            return EINVAL;
         buffer_offset.offset = (size_t)buffer_offset.buffer_index * m_framebuffer_pitch * m_framebuffer_height;
         if (!copy_to_user(user_buffer_offset, &buffer_offset))
-            return -EFAULT;
-        return 0;
+            return EFAULT;
+        return KSuccess;
     }
     case FB_IOCTL_FLUSH_BUFFERS:
-        return -ENOTSUP;
+        return ENOTSUP;
     default:
-        return -EINVAL;
+        return EINVAL;
     };
 }
 

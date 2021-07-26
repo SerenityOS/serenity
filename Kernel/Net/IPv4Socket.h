@@ -46,7 +46,7 @@ public:
     virtual KResult setsockopt(int level, int option, Userspace<const void*>, socklen_t) override;
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
 
-    virtual int ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
+    virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
 
     bool did_receive(const IPv4Address& peer_address, u16 peer_port, ReadonlyBytes, const Time&);
 
