@@ -15,7 +15,7 @@ KCOVInstance::KCOVInstance(ProcessID pid)
     state = UNUSED;
 }
 
-int KCOVInstance::buffer_allocate(size_t buffer_size_in_entries)
+KResult KCOVInstance::buffer_allocate(size_t buffer_size_in_entries)
 {
     // first entry contains index of last PC
     this->m_buffer_size_in_entries = buffer_size_in_entries - 1;
@@ -40,7 +40,7 @@ int KCOVInstance::buffer_allocate(size_t buffer_size_in_entries)
     if (!this->has_buffer())
         return ENOMEM;
 
-    return 0;
+    return KSuccess;
 }
 
 void KCOVInstance::buffer_add_pc(u64 pc)

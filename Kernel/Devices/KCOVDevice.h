@@ -37,7 +37,7 @@ protected:
     virtual void start_request(AsyncBlockDeviceRequest& request) override final { request.complete(AsyncDeviceRequest::Failure); }
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override { return -EINVAL; }
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return -EINVAL; }
-    virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
+    virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
 
 private:
     KCOVDevice();
