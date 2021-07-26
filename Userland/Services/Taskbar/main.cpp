@@ -166,8 +166,10 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     // Then we create and insert all the app menu items into the right place.
     int app_identifier = 0;
     for (const auto& app : g_apps) {
-        if (app.category == "Settings"sv)
+        if (app.category == "Settings"sv) {
+            ++app_identifier;
             continue;
+        }
 
         auto icon = GUI::FileIconProvider::icon_for_executable(app.executable).bitmap_for_size(16);
 
