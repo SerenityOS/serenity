@@ -41,11 +41,6 @@ constexpr FlatPtr page_round_down(FlatPtr x)
     return ((FlatPtr)(x)) & ~(PAGE_SIZE - 1);
 }
 
-inline FlatPtr low_physical_to_virtual(FlatPtr physical)
-{
-    return physical + physical_to_virtual_offset;
-}
-
 inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)
 {
     return virtual_ - physical_to_virtual_offset;
