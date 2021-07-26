@@ -1397,7 +1397,8 @@ size_t BMPImageDecoderPlugin::frame_count()
 ImageFrameDescriptor BMPImageDecoderPlugin::frame(size_t i)
 {
     if (i > 0)
-        return { bitmap(), 0 };
-    return {};
+        return {};
+    return { bitmap(), 0 };
 }
+
 }

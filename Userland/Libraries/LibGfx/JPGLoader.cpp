@@ -1327,9 +1327,9 @@ size_t JPGImageDecoderPlugin::frame_count()
 
 ImageFrameDescriptor JPGImageDecoderPlugin::frame(size_t i)
 {
-    if (i > 0) {
-        return { bitmap(), 0 };
-    }
-    return {};
+    if (i > 0)
+        return {};
+    return { bitmap(), 0 };
 }
+
 }

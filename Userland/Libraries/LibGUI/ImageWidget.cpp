@@ -81,7 +81,8 @@ void ImageWidget::load_from_file(const StringView& path)
     m_image_decoder = Gfx::ImageDecoder::try_create(mapped_file.bytes());
     VERIFY(m_image_decoder);
 
-    auto bitmap = m_image_decoder->bitmap();
+    auto frame = m_image_decoder->frame(0);
+    auto bitmap = frame.image;
     VERIFY(bitmap);
 
     set_bitmap(bitmap);

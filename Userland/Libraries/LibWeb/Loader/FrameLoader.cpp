@@ -71,7 +71,8 @@ static bool build_image_document(DOM::Document& document, const ByteBuffer& data
     auto image_decoder = Gfx::ImageDecoder::try_create(data.bytes());
     if (!image_decoder)
         return false;
-    auto bitmap = image_decoder->bitmap();
+    auto frame = image_decoder->frame(0);
+    auto bitmap = frame.image;
     if (!bitmap)
         return false;
 
@@ -171,7 +172,8 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
                     dbgln("No image decoder plugin for favicon {}", favicon_url);
                     return;
                 }
-                auto bitmap = decoder->bitmap();
+                auto frame = decoder->frame(0);
+                auto bitmap = frame.image;
                 if (!bitmap) {
                     dbgln("Could not decode favicon {}", favicon_url);
                     return;
