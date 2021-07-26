@@ -25,4 +25,7 @@ private:
     RefPtr<GUI::JsonArrayModel> m_tcp_socket_model;
     RefPtr<GUI::JsonArrayModel> m_udp_socket_model;
     RefPtr<Core::Timer> m_update_timer;
+    RefPtr<Gfx::Bitmap> m_network_connected_bitmap;
+    RefPtr<Gfx::Bitmap> m_network_disconnected_bitmap;
+    RefPtr<Gfx::Bitmap> m_network_link_down_bitmap;
 };
