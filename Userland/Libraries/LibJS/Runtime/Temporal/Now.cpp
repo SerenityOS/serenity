@@ -32,6 +32,7 @@ void Now::initialize(GlobalObject& global_object)
     define_native_function(vm.names.timeZone, time_zone, 0, attr);
     define_native_function(vm.names.instant, instant, 0, attr);
     define_native_function(vm.names.plainDateTime, plain_date_time, 1, attr);
+    define_native_function(vm.names.plainDateTimeISO, plain_date_time_iso, 0, attr);
     define_native_function(vm.names.plainDate, plain_date, 1, attr);
     define_native_function(vm.names.plainDateISO, plain_date_iso, 0, attr);
 }
@@ -57,6 +58,20 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time)
     auto temporal_time_zone_like = vm.argument(1);
 
     // 1. Return ? SystemDateTime(temporalTimeZoneLike, calendar).
+    return system_date_time(global_object, temporal_time_zone_like, calendar);
+}
+
+// 2.1.4 Temporal.Now.plainDateTimeISO ( [ temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetimeiso
+JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time_iso)
+{
+    auto temporal_time_zone_like = vm.argument(0);
+
+    // 1, Let calendar be ? GetISO8601Calendar().
+    auto* calendar = get_iso8601_calendar(global_object);
+    if (vm.exception())
+        return {};
+
+    // 2. Return ? SystemDateTime(temporalTimeZoneLike, calendar).
     return system_date_time(global_object, temporal_time_zone_like, calendar);
 }
 

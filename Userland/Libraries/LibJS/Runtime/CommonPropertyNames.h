@@ -285,6 +285,7 @@ namespace JS {
     P(plainDate)                             \
     P(plainDateISO)                          \
     P(plainDateTime)                         \
+    P(plainDateTimeISO)                      \
     P(pop)                                   \
     P(pow)                                   \
     P(preventExtensions)                     \
