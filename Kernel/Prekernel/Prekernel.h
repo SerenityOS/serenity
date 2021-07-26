@@ -22,7 +22,6 @@ struct [[gnu::packed]] BootInfo {
     u32 end_of_prekernel_image;
     u64 physical_to_virtual_offset;
     u64 kernel_base;
-    u64 multiboot_info_ptr;
 #    if ARCH(X86_64)
     u32 gdt64ptr;
     u16 code64_sel;
@@ -33,6 +32,17 @@ struct [[gnu::packed]] BootInfo {
     u32 boot_pd_kernel;
     u64 boot_pd_kernel_pt1023;
     u64 kernel_cmdline;
+    u32 multiboot_flags;
+    u64 multiboot_memory_map;
+    u32 multiboot_memory_map_count;
+    u64 multiboot_modules;
+    u32 multiboot_modules_count;
+    u64 multiboot_framebuffer_addr;
+    u32 multiboot_framebuffer_pitch;
+    u32 multiboot_framebuffer_width;
+    u32 multiboot_framebuffer_height;
+    u8 multiboot_framebuffer_bpp;
+    u8 multiboot_framebuffer_type;
 };
 }
 #endif
