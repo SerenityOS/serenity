@@ -68,7 +68,9 @@ static bool build_text_document(DOM::Document& document, const ByteBuffer& data)
 
 static bool build_image_document(DOM::Document& document, const ByteBuffer& data)
 {
-    auto image_decoder = Gfx::ImageDecoder::create(data.data(), data.size());
+    auto image_decoder = Gfx::ImageDecoder::try_create(data.bytes());
+    if (!image_decoder)
+        return false;
     auto bitmap = image_decoder->bitmap();
     if (!bitmap)
         return false;
@@ -164,7 +166,11 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
             favicon_url,
             [this, favicon_url](auto data, auto&, auto) {
                 dbgln("Favicon downloaded, {} bytes from {}", data.size(), favicon_url);
-                auto decoder = Gfx::ImageDecoder::create(data.data(), data.size());
+                auto decoder = Gfx::ImageDecoder::try_create(data);
+                if (!decoder) {
+                    dbgln("No image decoder plugin for favicon {}", favicon_url);
+                    return;
+                }
                 auto bitmap = decoder->bitmap();
                 if (!bitmap) {
                     dbgln("Could not decode favicon {}", favicon_url);
