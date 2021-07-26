@@ -282,6 +282,7 @@ namespace JS {
     P(parse)                                 \
     P(parseFloat)                            \
     P(parseInt)                              \
+    P(plainDate)                             \
     P(pop)                                   \
     P(pow)                                   \
     P(preventExtensions)                     \

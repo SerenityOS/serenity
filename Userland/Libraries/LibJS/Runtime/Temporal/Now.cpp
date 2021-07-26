@@ -6,8 +6,11 @@
 
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/Now.h>
+#include <LibJS/Runtime/Temporal/PlainDate.h>
+#include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <time.h>
 
@@ -31,6 +34,7 @@ void Now::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.timeZone, time_zone, 0, attr);
     define_native_function(vm.names.instant, instant, 0, attr);
+    define_native_function(vm.names.plainDate, plain_date, 1, attr);
 }
 
 // 2.1.1 Temporal.Now.timeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.timezone
@@ -45,6 +49,21 @@ JS_DEFINE_NATIVE_FUNCTION(Now::instant)
 {
     // 1. Return ! SystemInstant().
     return system_instant(global_object);
+}
+
+// 2.1.7 Temporal.Now.plainDate ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindate
+JS_DEFINE_NATIVE_FUNCTION(Now::plain_date)
+{
+    auto calendar = vm.argument(0);
+    auto temporal_time_zone_like = vm.argument(1);
+
+    // 1. Let dateTime be ? SystemDateTime(temporalTimeZoneLike, calendar).
+    auto* date_time = system_date_time(global_object, temporal_time_zone_like, calendar);
+    if (vm.exception())
+        return {};
+
+    // 2. Return ? CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
+    return create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar());
 }
 
 // 2.2.1 SystemTimeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal-systemtimezone
@@ -88,6 +107,35 @@ Instant* system_instant(GlobalObject& global_object)
 
     // 2. Return ! CreateTemporalInstant(ns).
     return create_temporal_instant(global_object, *ns);
+}
+
+// 2.2.4 SystemDateTime ( temporalTimeZoneLike, calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-systemdatetime
+PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time_zone_like, Value calendar_like)
+{
+    auto& vm = global_object.vm();
+    Object* time_zone;
+
+    // 1. If temporalTimeZoneLike is undefined, then
+    if (temporal_time_zone_like.is_undefined()) {
+        // a. Let timeZone be ! SystemTimeZone().
+        time_zone = system_time_zone(global_object);
+    } else {
+        // a. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).
+        time_zone = to_temporal_time_zone(global_object, temporal_time_zone_like);
+        if (vm.exception())
+            return {};
+    }
+
+    // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
+    auto* calendar = to_temporal_calendar(global_object, calendar_like);
+    if (vm.exception())
+        return {};
+
+    // 4. Let instant be ! SystemInstant().
+    auto* instant = system_instant(global_object);
+
+    // 5. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
+    return builtin_time_zone_get_plain_date_time_for(global_object, *time_zone, *instant, *calendar);
 }
 
 }

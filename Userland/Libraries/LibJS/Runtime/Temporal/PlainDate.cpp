@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +11,7 @@
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
+#include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 
 namespace JS::Temporal {
 
@@ -218,6 +220,102 @@ bool is_valid_iso_date(i32 year, u8 month, u8 day)
 
     // 5. Return true.
     return true;
+}
+
+// 3.5.6 BalanceISODate ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-balanceisodate
+ISODate balance_iso_date(i32 year, i32 month, i32 day)
+{
+    // 1. Assert: year, month, and day are integers.
+
+    // 2. Let balancedYearMonth be ! BalanceISOYearMonth(year, month).
+    auto balanced_year_month = balance_iso_year_month(year, month);
+
+    // 3. Set month to balancedYearMonth.[[Month]].
+    month = balanced_year_month.month;
+
+    // 4. Set year to balancedYearMonth.[[Year]].
+    year = balanced_year_month.year;
+
+    // 5. NOTE: To deal with negative numbers of days whose absolute value is greater than the number of days in a year, the following section subtracts years and adds days until the number of days is greater than −366 or −365.
+
+    i32 test_year;
+
+    // 6. If month > 2, then
+    if (month > 2) {
+        // a. Let testYear be year.
+        test_year = year;
+    }
+    // 7. Else,
+    else {
+        // a. Let testYear be year − 1.
+        test_year = year - 1;
+    }
+
+    // 8. Repeat, while day < −1 × ! ISODaysInYear(testYear),
+    while (day < -1 * iso_days_in_year(test_year)) {
+        // a.Set day to day + !ISODaysInYear(testYear).
+        day += iso_days_in_year(test_year);
+
+        // b.Set year to year − 1.
+        year--;
+
+        // c.Set testYear to testYear − 1.
+        test_year--;
+    }
+
+    // 9. NOTE: To deal with numbers of days greater than the number of days in a year, the following section adds years and subtracts days until the number of days is less than 366 or 365.
+
+    // 10. Let testYear be year + 1.
+    test_year = year + 1;
+
+    // 11. Repeat, while day > ! ISODaysInYear(testYear),
+    while (day > iso_days_in_year(test_year)) {
+        // a. Set day to day − ! ISODaysInYear(testYear).
+        day -= iso_days_in_year(test_year);
+
+        // b. Set year to year + 1.
+        year++;
+
+        // c. Set testYear to testYear + 1.
+        test_year++;
+    }
+
+    // 12. NOTE: To deal with negative numbers of days whose absolute value is greater than the number of days in the current month, the following section subtracts months and adds days until the number of days is greater than 0.
+
+    // 13. Repeat, while day < 1,
+    while (day < 1) {
+        // a. Set balancedYearMonth to ! BalanceISOYearMonth(year, month − 1).
+        balanced_year_month = balance_iso_year_month(year, month - 1);
+
+        // b. Set year to balancedYearMonth.[[Year]].
+        year = balanced_year_month.year;
+
+        // c. Set month to balancedYearMonth.[[Month]].
+        month = balanced_year_month.month;
+
+        // d. Set day to day + ! ISODaysInMonth(year, month).
+        day += iso_days_in_month(year, month);
+    }
+
+    // 14. NOTE: To deal with numbers of days greater than the number of days in the current month, the following section adds months and subtracts days until the number of days is less than the number of days in the month.
+
+    // 15. Repeat, while day > ! ISODaysInMonth(year, month),
+    while (day > iso_days_in_month(year, month)) {
+        // a. Set day to day − ! ISODaysInMonth(year, month).
+        day -= iso_days_in_month(year, month);
+
+        // b. Set balancedYearMonth to ! BalanceISOYearMonth(year, month + 1).
+        balanced_year_month = balance_iso_year_month(year, month + 1);
+
+        // c. Set year to balancedYearMonth.[[Year]].
+        year = balanced_year_month.year;
+
+        // d. Set month to balancedYearMonth.[[Month]].
+        month = balanced_year_month.month;
+    }
+
+    // 16. Return the new Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
+    return ISODate { .year = year, .month = static_cast<u8>(month), .day = static_cast<u8>(day) };
 }
 
 // 3.5.10 CompareISODate ( y1, m1, d1, y2, m2, d2 ), https://tc39.es/proposal-temporal/#sec-temporal-compareisodate
