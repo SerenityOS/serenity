@@ -325,7 +325,7 @@ void page_fault_handler(TrapFrame* trap)
     if (fault_address >= (FlatPtr)&start_of_unmap_after_init && fault_address < (FlatPtr)&end_of_unmap_after_init) {
         dump(regs);
         auto sym = symbolicate_kernel_address(fault_address);
-        PANIC("Attempt to access UNMAP_AFTER_INIT section ({:#p}: {})", fault_address, sym ? sym->name : "(Unknown)");
+        PANIC("Attempt to access UNMAP_AFTER_INIT section ({:p}: {})", fault_address, sym ? sym->name : "(Unknown)");
     }
 
     if (fault_address >= (FlatPtr)&start_of_kernel_ksyms && fault_address < (FlatPtr)&end_of_kernel_ksyms) {
