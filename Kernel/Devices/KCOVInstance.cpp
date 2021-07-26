@@ -17,6 +17,9 @@ KCOVInstance::KCOVInstance(ProcessID pid)
 
 int KCOVInstance::buffer_allocate(size_t buffer_size_in_entries)
 {
+    if (buffer_size_in_entries < 2 || buffer_size_in_entries > KCOV_MAX_ENTRIES)
+        return EINVAL;
+
     // first entry contains index of last PC
     this->m_buffer_size_in_entries = buffer_size_in_entries - 1;
     this->m_buffer_size_in_bytes = page_round_up(buffer_size_in_entries * KCOV_ENTRY_SIZE);
