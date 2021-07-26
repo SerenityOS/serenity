@@ -13,9 +13,9 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Size.h>
-#include <LibTTF/Cmap.h>
-#include <LibTTF/Glyf.h>
-#include <LibTTF/Tables.h>
+#include <LibGfx/TrueTypeFont/Cmap.h>
+#include <LibGfx/TrueTypeFont/Glyf.h>
+#include <LibGfx/TrueTypeFont/Tables.h>
 
 #define POINTS_PER_INCH 72.0f
 #define DEFAULT_DPI 96

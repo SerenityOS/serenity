@@ -6,7 +6,7 @@
 
 #include <LibGfx/Path.h>
 #include <LibGfx/Point.h>
-#include <LibTTF/Glyf.h>
+#include <LibGfx/TrueTypeFont/Glyf.h>
 
 namespace TTF {
 

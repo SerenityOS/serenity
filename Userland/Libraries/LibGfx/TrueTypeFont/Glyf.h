@@ -10,7 +10,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Bitmap.h>
-#include <LibTTF/Tables.h>
+#include <LibGfx/TrueTypeFont/Tables.h>
 #include <math.h>
 
 namespace TTF {
