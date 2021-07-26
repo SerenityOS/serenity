@@ -8,6 +8,7 @@
 
 #include <AK/Optional.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Temporal/AbstractOperations.h>
 
 namespace JS::Temporal {
 
@@ -38,10 +39,15 @@ private:
 bool is_valid_time_zone_name(String const& time_zone);
 String canonicalize_time_zone_name(String const& time_zone);
 String default_time_zone();
+String parse_temporal_time_zone(GlobalObject&, String const&);
 TimeZone* create_temporal_time_zone(GlobalObject&, String const& identifier, FunctionObject* new_target = nullptr);
+Optional<ISODateTime> get_iso_parts_from_epoch(BigInt const& epoch_nanoseconds);
 i64 get_iana_time_zone_offset_nanoseconds(BigInt const& epoch_nanoseconds, String const& time_zone_identifier);
 double parse_time_zone_offset_string(GlobalObject&, String const&);
 String format_time_zone_offset_string(double offset_nanoseconds);
+Object* to_temporal_time_zone(GlobalObject&, Value temporal_time_zone_like);
+double get_offset_nanoseconds_for(GlobalObject&, Object& time_zone, Instant&);
+PlainDateTime* builtin_time_zone_get_plain_date_time_for(GlobalObject&, Object& time_zone, Instant&, Object& calendar);
 
 bool is_valid_time_zone_numeric_utc_offset_syntax(String const&);
 

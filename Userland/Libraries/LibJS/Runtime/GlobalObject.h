@@ -38,6 +38,7 @@ public:
 
     FunctionObject* array_prototype_values_function() const { return m_array_prototype_values_function; }
     FunctionObject* eval_function() const { return m_eval_function; }
+    FunctionObject* temporal_time_zone_prototype_get_offset_nanoseconds_for_function() const { return m_temporal_time_zone_prototype_get_offset_nanoseconds_for_function; }
     FunctionObject* throw_type_error_function() const { return m_throw_type_error_function; }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
@@ -97,6 +98,7 @@ private:
 
     FunctionObject* m_array_prototype_values_function { nullptr };
     FunctionObject* m_eval_function { nullptr };
+    FunctionObject* m_temporal_time_zone_prototype_get_offset_nanoseconds_for_function { nullptr };
     FunctionObject* m_throw_type_error_function { nullptr };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
