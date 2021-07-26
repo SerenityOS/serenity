@@ -22,6 +22,7 @@ public:
 
     virtual void send_raw(ReadonlyBytes) override;
     virtual StringView class_name() const override { return "LoopbackAdapter"; }
+    virtual bool link_up() override { return true; }
 };
 
 }
