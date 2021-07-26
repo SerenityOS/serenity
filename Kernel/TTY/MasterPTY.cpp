@@ -106,7 +106,7 @@ KResult MasterPTY::close()
     return KSuccess;
 }
 
-int MasterPTY::ioctl(FileDescription& description, unsigned request, FlatPtr arg)
+int MasterPTY::ioctl(FileDescription& description, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(tty);
     if (!m_slave)

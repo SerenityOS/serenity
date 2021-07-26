@@ -311,31 +311,34 @@ KResultOr<size_t> KeyboardDevice::write(FileDescription&, u64, const UserOrKerne
     return 0;
 }
 
-int KeyboardDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
+int KeyboardDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
 {
     switch (request) {
     case KEYBOARD_IOCTL_GET_NUM_LOCK: {
-        auto* output = (bool*)arg;
+        auto output = static_ptr_cast<bool*>(arg);
         if (!copy_to_user(output, &m_num_lock_on))
             return -EFAULT;
         return 0;
     }
     case KEYBOARD_IOCTL_SET_NUM_LOCK: {
-        if (arg != 0 && arg != 1)
+        // In this case we expect the value to be a boolean and not a pointer.
+        auto num_lock_value = static_cast<u8>(arg.ptr());
+        if (num_lock_value != 0 && num_lock_value != 1)
             return -EINVAL;
-        m_num_lock_on = arg;
+        m_num_lock_on = !!num_lock_value;
         return 0;
     }
     case KEYBOARD_IOCTL_GET_CAPS_LOCK: {
-        auto* output = (bool*)arg;
+        auto output = static_ptr_cast<bool*>(arg);
         if (!copy_to_user(output, &m_caps_lock_on))
             return -EFAULT;
         return 0;
     }
     case KEYBOARD_IOCTL_SET_CAPS_LOCK: {
-        if (arg != 0 && arg != 1)
+        auto caps_lock_value = static_cast<u8>(arg.ptr());
+        if (caps_lock_value != 0 && caps_lock_value != 1)
             return -EINVAL;
-        m_caps_lock_on = arg;
+        m_caps_lock_on = !!caps_lock_value;
         return 0;
     }
     default:

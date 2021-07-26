@@ -140,19 +140,19 @@ void FrameBufferDevice::set_buffer(int buffer_index)
     buffer.dirty_rect = {};
 }
 
-int FrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
+int FrameBufferDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
-        auto* out = (size_t*)arg;
+        auto out = static_ptr_cast<size_t*>(arg);
         size_t value = m_buffer_size * 2;
         if (!copy_to_user(out, &value))
             return -EFAULT;
         return 0;
     }
     case FB_IOCTL_SET_RESOLUTION: {
-        auto* user_resolution = (FBResolution*)arg;
+        auto user_resolution = static_ptr_cast<FBResolution*>(arg);
         FBResolution resolution;
         if (!copy_from_user(&resolution, user_resolution))
             return -EFAULT;
@@ -164,8 +164,8 @@ int FrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case FB_IOCTL_GET_RESOLUTION: {
-        auto* user_resolution = (FBResolution*)arg;
-        FBResolution resolution;
+        auto user_resolution = static_ptr_cast<FBResolution*>(arg);
+        FBResolution resolution {};
         resolution.pitch = pitch();
         resolution.width = width();
         resolution.height = height();
@@ -174,7 +174,7 @@ int FrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case FB_IOCTL_SET_BUFFER: {
-        auto buffer_index = (int)arg;
+        auto buffer_index = static_cast<int>(arg.ptr());
         if (!is_valid_buffer_index(buffer_index))
             return -EINVAL;
         if (m_last_set_buffer_index.exchange(buffer_index) != buffer_index && m_are_writes_active)
@@ -182,19 +182,20 @@ int FrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case FB_IOCTL_FLUSH_BUFFERS: {
-        FBFlushRects user_flush_rects;
-        if (!copy_from_user(&user_flush_rects, (FBFlushRects*)arg))
+        auto user_flush_rects = static_ptr_cast<FBFlushRects*>(arg);
+        FBFlushRects flush_rects;
+        if (!copy_from_user(&flush_rects, user_flush_rects))
             return -EFAULT;
-        if (!is_valid_buffer_index(user_flush_rects.buffer_index))
+        if (!is_valid_buffer_index(flush_rects.buffer_index))
             return -EINVAL;
-        if (Checked<unsigned>::multiplication_would_overflow(user_flush_rects.count, sizeof(FBRect)))
+        if (Checked<unsigned>::multiplication_would_overflow(flush_rects.count, sizeof(FBRect)))
             return -EFAULT;
-        if (m_are_writes_active && user_flush_rects.count > 0) {
-            auto& buffer = buffer_from_index(user_flush_rects.buffer_index);
+        if (m_are_writes_active && flush_rects.count > 0) {
+            auto& buffer = buffer_from_index(flush_rects.buffer_index);
             MutexLocker locker(m_gpu.operation_lock());
-            for (unsigned i = 0; i < user_flush_rects.count; i++) {
+            for (unsigned i = 0; i < flush_rects.count; i++) {
                 FBRect user_dirty_rect;
-                if (!copy_from_user(&user_dirty_rect, &user_flush_rects.rects[i]))
+                if (!copy_from_user(&user_dirty_rect, &flush_rects.rects[i]))
                     return -EFAULT;
                 Protocol::Rect dirty_rect {
                     .x = user_dirty_rect.x,
@@ -224,13 +225,14 @@ int FrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case FB_IOCTL_GET_BUFFER_OFFSET: {
+        auto user_buffer_offset = static_ptr_cast<FBBufferOffset*>(arg);
         FBBufferOffset buffer_offset;
-        if (!copy_from_user(&buffer_offset, (FBBufferOffset*)arg))
+        if (!copy_from_user(&buffer_offset, user_buffer_offset))
             return -EFAULT;
         if (!is_valid_buffer_index(buffer_offset.buffer_index))
             return -EINVAL;
         buffer_offset.offset = (size_t)buffer_offset.buffer_index * m_buffer_size;
-        if (!copy_to_user((FBBufferOffset*)arg, &buffer_offset))
+        if (!copy_to_user(user_buffer_offset, &buffer_offset))
             return -EFAULT;
         return 0;
     }

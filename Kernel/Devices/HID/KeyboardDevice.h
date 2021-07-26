@@ -37,7 +37,7 @@ public:
     virtual mode_t required_mode() const override { return 0440; }
 
     // ^File
-    virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
+    virtual int ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
 
     virtual String device_name() const override { return String::formatted("keyboard{}", minor()); }
 

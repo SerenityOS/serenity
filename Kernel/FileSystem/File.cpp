@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringView.h>
+#include <AK/Userspace.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
@@ -34,7 +35,7 @@ KResult File::close()
     return KSuccess;
 }
 
-int File::ioctl(FileDescription&, unsigned, FlatPtr)
+int File::ioctl(FileDescription&, unsigned, Userspace<void*>)
 {
     return -ENOTTY;
 }

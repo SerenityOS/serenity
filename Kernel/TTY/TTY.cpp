@@ -454,12 +454,12 @@ int TTY::set_termios(const termios& t)
     return rc;
 }
 
-int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
+int TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
 {
     REQUIRE_PROMISE(tty);
     auto& current_process = *Process::current();
-    termios* user_termios;
-    winsize* user_winsize;
+    Userspace<termios*> user_termios;
+    Userspace<winsize*> user_winsize;
 
 #if 0
     // FIXME: When should we block things?
@@ -472,7 +472,7 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     case TIOCGPGRP:
         return this->pgid().value();
     case TIOCSPGRP: {
-        ProcessGroupID pgid = static_cast<pid_t>(arg);
+        ProcessGroupID pgid = static_cast<pid_t>(arg.ptr());
         if (pgid <= 0)
             return -EINVAL;
         InterruptDisabler disabler;
@@ -500,7 +500,7 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return 0;
     }
     case TCGETS: {
-        user_termios = reinterpret_cast<termios*>(arg);
+        user_termios = static_ptr_cast<termios*>(arg);
         if (!copy_to_user(user_termios, &m_termios))
             return -EFAULT;
         return 0;
@@ -508,7 +508,7 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     case TCSETS:
     case TCSETSF:
     case TCSETSW: {
-        user_termios = reinterpret_cast<termios*>(arg);
+        user_termios = static_ptr_cast<termios*>(arg);
         termios termios;
         if (!copy_from_user(&termios, user_termios))
             return -EFAULT;
@@ -517,16 +517,18 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
             flush_input();
         return rc;
     }
-    case TCFLSH:
+    case TCFLSH: {
         // Serenity's TTY implementation does not use an output buffer, so ignore TCOFLUSH.
-        if (arg == TCIFLUSH || arg == TCIOFLUSH) {
+        auto operation = static_cast<u8>(arg.ptr());
+        if (operation == TCIFLUSH || operation == TCIOFLUSH) {
             flush_input();
-        } else if (arg != TCOFLUSH) {
+        } else if (operation != TCOFLUSH) {
             return -EINVAL;
         }
         return 0;
+    }
     case TIOCGWINSZ:
-        user_winsize = reinterpret_cast<winsize*>(arg);
+        user_winsize = static_ptr_cast<winsize*>(arg);
         winsize ws;
         ws.ws_row = m_rows;
         ws.ws_col = m_columns;
@@ -536,7 +538,7 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
             return -EFAULT;
         return 0;
     case TIOCSWINSZ: {
-        user_winsize = reinterpret_cast<winsize*>(arg);
+        user_winsize = static_ptr_cast<winsize*>(arg);
         winsize ws;
         if (!copy_from_user(&ws, user_winsize))
             return -EFAULT;
