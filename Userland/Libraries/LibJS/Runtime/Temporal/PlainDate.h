@@ -38,5 +38,6 @@ PlainDate* create_temporal_date(GlobalObject&, i32 iso_year, u8 iso_month, u8 is
 PlainDate* to_temporal_date(GlobalObject&, Value item, Object* options = nullptr);
 Optional<TemporalDate> regulate_iso_date(GlobalObject&, double year, double month, double day, String const& overflow);
 bool is_valid_iso_date(i32 year, u8 month, u8 day);
+i8 compare_iso_date(i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2);
 
 }

@@ -220,4 +220,37 @@ bool is_valid_iso_date(i32 year, u8 month, u8 day)
     return true;
 }
 
+// 3.5.10 CompareISODate ( y1, m1, d1, y2, m2, d2 ), https://tc39.es/proposal-temporal/#sec-temporal-compareisodate
+i8 compare_iso_date(i32 year1, u8 month1, u8 day1, i32 year2, u8 month2, u8 day2)
+{
+    // 1. Assert: y1, m1, d1, y2, m2, and d2 are integers.
+
+    // 2. If y1 > y2, return 1.
+    if (year1 > year2)
+        return 1;
+
+    // 3. If y1 < y2, return -1.
+    if (year1 < year2)
+        return -1;
+
+    // 4. If m1 > m2, return 1.
+    if (month1 > month2)
+        return 1;
+
+    // 5. If m1 < m2, return -1.
+    if (month1 < month2)
+        return -1;
+
+    // 6. If d1 > d2, return 1.
+    if (day1 > day2)
+        return 1;
+
+    // 7. If d1 < d2, return -1.
+    if (day1 < day2)
+        return -1;
+
+    // 8. Return 0.
+    return 0;
+}
+
 }

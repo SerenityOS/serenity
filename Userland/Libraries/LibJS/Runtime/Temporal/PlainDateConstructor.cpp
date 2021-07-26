@@ -27,6 +27,9 @@ void PlainDateConstructor::initialize(GlobalObject& global_object)
     // 3.2.1 Temporal.PlainDate.prototype, https://tc39.es/proposal-temporal/#sec-temporal-plaindate-prototype
     define_direct_property(vm.names.prototype, global_object.temporal_plain_date_prototype(), 0);
 
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.compare, compare, 2, attr);
+
     define_direct_property(vm.names.length, Value(3), Attribute::Configurable);
 }
 
@@ -91,6 +94,21 @@ Value PlainDateConstructor::construct(FunctionObject& new_target)
 
     // 9. Return ? CreateTemporalDate(y, m, d, calendar, NewTarget).
     return create_temporal_date(global_object, y, m, d, *calendar, &new_target);
+}
+
+// 3.2.3 Temporal.PlainDate.compare ( one, two ), https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-plaindate-constructor
+JS_DEFINE_NATIVE_FUNCTION(PlainDateConstructor::compare)
+{
+    // 1. Set one to ? ToTemporalDate(one).
+    auto* one = to_temporal_date(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+    // 2. Set two to ? ToTemporalDate(two).
+    auto* two = to_temporal_date(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+    // 3. Return 𝔽(! CompareISODate(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]])).
+    return Value(compare_iso_date(one->iso_year(), one->iso_month(), one->iso_day(), two->iso_year(), two->iso_month(), two->iso_day()));
 }
 
 }
