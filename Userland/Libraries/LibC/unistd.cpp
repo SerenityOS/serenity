@@ -257,7 +257,11 @@ pid_t setsid()
 
 pid_t tcgetpgrp(int fd)
 {
-    return ioctl(fd, TIOCGPGRP);
+    pid_t pgrp;
+    int rc = ioctl(fd, TIOCGPGRP, &pgrp);
+    if (rc < 0)
+        return rc;
+    return pgrp;
 }
 
 int tcsetpgrp(int fd, pid_t pgid)
