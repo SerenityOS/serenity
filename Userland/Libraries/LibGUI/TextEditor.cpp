@@ -83,6 +83,7 @@ void TextEditor::create_actions()
     m_cut_action->set_enabled(false);
     m_copy_action->set_enabled(false);
     m_paste_action = CommonActions::make_paste_action([&](auto&) { paste(); }, this);
+    m_paste_action->set_enabled(is_editable() && Clipboard::the().mime_type().starts_with("text/") && !Clipboard::the().data().is_empty());
     m_delete_action = CommonActions::make_delete_action([&](auto&) { do_delete(); }, this);
     if (is_multi_line()) {
         m_go_to_line_action = Action::create(
@@ -98,9 +99,6 @@ void TextEditor::create_actions()
             this);
     }
     m_select_all_action = CommonActions::make_select_all_action([this](auto&) { select_all(); }, this);
-    Clipboard::the().on_change = [this](auto const& mime_type) {
-        m_paste_action->set_enabled(is_editable() && mime_type.starts_with("text/") && !Clipboard::the().data().is_empty());
-    };
 }
 
 void TextEditor::set_text(StringView const& text)
@@ -1799,6 +1797,11 @@ void TextEditor::document_did_set_text()
 void TextEditor::document_did_set_cursor(TextPosition const& position)
 {
     set_cursor(position);
+}
+
+void TextEditor::clipboard_content_did_change(String const& mime_type)
+{
+    m_paste_action->set_enabled(is_editable() && mime_type.starts_with("text/") && !Clipboard::the().data().is_empty());
 }
 
 void TextEditor::set_document(TextDocument& document)
