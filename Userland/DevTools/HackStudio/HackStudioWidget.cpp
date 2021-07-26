@@ -553,6 +553,18 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_editor_action
         auto wrapper = m_current_editor_wrapper;
         m_switch_to_next_editor->activate();
         m_editors_splitter->remove_child(*wrapper);
+
+        auto child_editors = m_editors_splitter->child_widgets();
+        bool has_child_to_fill_space = false;
+        for (auto& editor : child_editors) {
+            if (editor.max_height() == -1) {
+                has_child_to_fill_space = true;
+                break;
+            }
+        }
+        if (!has_child_to_fill_space)
+            child_editors.last().set_max_height(-1);
+
         m_all_editor_wrappers.remove_first_matching([&wrapper](auto& entry) { return entry == wrapper.ptr(); });
         update_actions();
     });
