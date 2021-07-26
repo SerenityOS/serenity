@@ -75,9 +75,9 @@ KResultOr<NonnullRefPtr<FileDescription>> KCOVDevice::open(int options)
     return File::open(options);
 }
 
-int KCOVDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
+KResult KCOVDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
 {
-    int error = 0;
+    KResult return_value = KSuccess;
     auto thread = Thread::current();
     auto tid = thread->tid();
     auto pid = thread->pid();
@@ -90,19 +90,19 @@ int KCOVDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     switch (request) {
     case KCOV_SETBUFSIZE: {
         if (kcov_instance->state >= KCOVInstance::TRACING) {
-            error = EBUSY;
+            return_value = EBUSY;
             break;
         }
-        error = kcov_instance->buffer_allocate(arg);
+        return_value = kcov_instance->buffer_allocate((FlatPtr)arg.unsafe_userspace_ptr());
         break;
     }
     case KCOV_ENABLE: {
         if (kcov_instance->state >= KCOVInstance::TRACING) {
-            error = EBUSY;
+            return_value = EBUSY;
             break;
         }
         if (!kcov_instance->has_buffer()) {
-            error = ENOBUFS;
+            return_value = ENOBUFS;
             break;
         }
         VERIFY(kcov_instance->state == KCOVInstance::OPENED);
@@ -113,7 +113,7 @@ int KCOVDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     case KCOV_DISABLE: {
         auto maybe_kcov_instance = thread_instance->get(tid);
         if (!maybe_kcov_instance.has_value()) {
-            error = ENOENT;
+            return_value = ENOENT;
             break;
         }
         VERIFY(kcov_instance->state == KCOVInstance::TRACING);
@@ -122,11 +122,11 @@ int KCOVDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         break;
     }
     default: {
-        error = EINVAL;
+        return_value = EINVAL;
     }
     };
 
-    return error;
+    return return_value;
 }
 
 KResultOr<Region*> KCOVDevice::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
