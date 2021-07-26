@@ -120,13 +120,23 @@ READONLY_AFTER_INIT PhysicalAddress boot_pd0;
 READONLY_AFTER_INIT PhysicalAddress boot_pd_kernel;
 READONLY_AFTER_INIT PageTableEntry* boot_pd_kernel_pt1023;
 READONLY_AFTER_INIT const char* kernel_cmdline;
+READONLY_AFTER_INIT u32 multiboot_flags;
+READONLY_AFTER_INIT multiboot_memory_map_t* multiboot_memory_map;
+READONLY_AFTER_INIT size_t multiboot_memory_map_count;
+READONLY_AFTER_INIT multiboot_module_entry_t* multiboot_modules;
+READONLY_AFTER_INIT size_t multiboot_modules_count;
+READONLY_AFTER_INIT PhysicalAddress multiboot_framebuffer_addr;
+READONLY_AFTER_INIT u32 multiboot_framebuffer_pitch;
+READONLY_AFTER_INIT u32 multiboot_framebuffer_width;
+READONLY_AFTER_INIT u32 multiboot_framebuffer_height;
+READONLY_AFTER_INIT u8 multiboot_framebuffer_bpp;
+READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
 }
 
 extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 {
     g_in_early_boot = true;
 
-    multiboot_info_ptr = (multiboot_info_t*)boot_info.multiboot_info_ptr;
     start_of_prekernel_image = PhysicalAddress { boot_info.start_of_prekernel_image };
     end_of_prekernel_image = PhysicalAddress { boot_info.end_of_prekernel_image };
     physical_to_virtual_offset = boot_info.physical_to_virtual_offset;
@@ -141,14 +151,25 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     boot_pd_kernel = PhysicalAddress { boot_info.boot_pd_kernel };
     boot_pd_kernel_pt1023 = (PageTableEntry*)boot_info.boot_pd_kernel_pt1023;
     kernel_cmdline = (char const*)boot_info.kernel_cmdline;
+    multiboot_flags = boot_info.multiboot_flags;
+    multiboot_memory_map = (multiboot_memory_map_t*)boot_info.multiboot_memory_map;
+    multiboot_memory_map_count = boot_info.multiboot_memory_map_count;
+    multiboot_modules = (multiboot_module_entry_t*)boot_info.multiboot_modules;
+    multiboot_modules_count = boot_info.multiboot_modules_count;
+    multiboot_framebuffer_addr = PhysicalAddress { boot_info.multiboot_framebuffer_addr };
+    multiboot_framebuffer_pitch = boot_info.multiboot_framebuffer_pitch;
+    multiboot_framebuffer_width = boot_info.multiboot_framebuffer_width;
+    multiboot_framebuffer_height = boot_info.multiboot_framebuffer_height;
+    multiboot_framebuffer_bpp = boot_info.multiboot_framebuffer_bpp;
+    multiboot_framebuffer_type = boot_info.multiboot_framebuffer_type;
 
     setup_serial_debug();
 
     // We need to copy the command line before kmalloc is initialized,
     // as it may overwrite parts of multiboot!
     CommandLine::early_initialize(kernel_cmdline);
-    memcpy(multiboot_copy_boot_modules_array, (u8*)low_physical_to_virtual(multiboot_info_ptr->mods_addr), multiboot_info_ptr->mods_count * sizeof(multiboot_module_entry_t));
-    multiboot_copy_boot_modules_count = multiboot_info_ptr->mods_count;
+    memcpy(multiboot_copy_boot_modules_array, multiboot_modules, multiboot_modules_count * sizeof(multiboot_module_entry_t));
+    multiboot_copy_boot_modules_count = multiboot_modules_count;
     s_bsp_processor.early_initialize(0);
 
     // Invoke the constructors needed for the kernel heap
@@ -350,10 +371,6 @@ UNMAP_AFTER_INIT void setup_serial_debug()
     if (StringView(kernel_cmdline).contains("serial_debug")) {
         set_serial_debug(true);
     }
-}
-
-extern "C" {
-multiboot_info_t* multiboot_info_ptr;
 }
 
 // Define some Itanium C++ ABI methods to stop the linker from complaining.

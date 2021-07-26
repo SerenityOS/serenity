@@ -109,13 +109,13 @@ UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_devi
         // support, so we want to utilize the provided framebuffer of these
         // devices, if possible.
         if (!m_vga_adapter && PCI::is_io_space_enabled(address)) {
-            if (multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+            if (multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
                 dmesgln("Graphics: Using a preset resolution from the bootloader");
                 adapter = VGACompatibleAdapter::initialize_with_preset_resolution(address,
-                    PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
-                    multiboot_info_ptr->framebuffer_width,
-                    multiboot_info_ptr->framebuffer_height,
-                    multiboot_info_ptr->framebuffer_pitch);
+                    multiboot_framebuffer_addr,
+                    multiboot_framebuffer_width,
+                    multiboot_framebuffer_height,
+                    multiboot_framebuffer_pitch);
             }
         } else {
             dmesgln("Graphics: Using a VGA compatible generic adapter");

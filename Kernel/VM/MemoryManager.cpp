@@ -199,7 +199,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Prekernel, start_of_prekernel_image, end_of_prekernel_image });
     m_used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image))) });
 
-    if (multiboot_info_ptr->flags & 0x4) {
+    if (multiboot_flags & 0x4) {
         auto* bootmods_start = multiboot_copy_boot_modules_array;
         auto* bootmods_end = bootmods_start + multiboot_copy_boot_modules_count;
 
@@ -208,8 +208,8 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         }
     }
 
-    auto* mmap_begin = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
-    auto* mmap_end = reinterpret_cast<multiboot_memory_map_t*>(low_physical_to_virtual(multiboot_info_ptr->mmap_addr) + multiboot_info_ptr->mmap_length);
+    auto* mmap_begin = multiboot_memory_map;
+    auto* mmap_end = multiboot_memory_map + multiboot_memory_map_count;
 
     struct ContiguousPhysicalRange {
         PhysicalAddress lower;

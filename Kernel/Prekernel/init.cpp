@@ -143,7 +143,7 @@ extern "C" [[noreturn]] void init()
     multiboot_info_ptr->mods_count--;
     multiboot_info_ptr->mods_addr += sizeof(multiboot_module_entry_t);
 
-    auto adjust_by_load_base = [kernel_load_base](auto* ptr) {
+    auto adjust_by_load_base = [kernel_load_base](auto ptr) {
         return (decltype(ptr))((FlatPtr)ptr + kernel_load_base);
     };
 
@@ -152,7 +152,6 @@ extern "C" [[noreturn]] void init()
     info.end_of_prekernel_image = (PhysicalPtr)end_of_prekernel_image;
     info.physical_to_virtual_offset = kernel_load_base;
     info.kernel_base = kernel_load_base;
-    info.multiboot_info_ptr = (FlatPtr)adjust_by_load_base(multiboot_info_ptr);
 #if ARCH(X86_64)
     info.gdt64ptr = (PhysicalPtr)gdt64ptr;
     info.code64_sel = code64_sel;
@@ -163,6 +162,17 @@ extern "C" [[noreturn]] void init()
     info.boot_pd_kernel = (PhysicalPtr)boot_pd_kernel;
     info.boot_pd_kernel_pt1023 = (FlatPtr)adjust_by_load_base(boot_pd_kernel_pt1023);
     info.kernel_cmdline = (FlatPtr)adjust_by_load_base(kernel_cmdline);
+    info.multiboot_flags = multiboot_info_ptr->flags;
+    info.multiboot_memory_map = adjust_by_load_base((FlatPtr)multiboot_info_ptr->mmap_addr);
+    info.multiboot_memory_map_count = multiboot_info_ptr->mmap_length / sizeof(multiboot_memory_map_t);
+    info.multiboot_modules = adjust_by_load_base((FlatPtr)multiboot_info_ptr->mods_addr);
+    info.multiboot_modules_count = multiboot_info_ptr->mods_count;
+    info.multiboot_framebuffer_addr = multiboot_info_ptr->framebuffer_addr;
+    info.multiboot_framebuffer_pitch = multiboot_info_ptr->framebuffer_pitch;
+    info.multiboot_framebuffer_width = multiboot_info_ptr->framebuffer_width;
+    info.multiboot_framebuffer_height = multiboot_info_ptr->framebuffer_height;
+    info.multiboot_framebuffer_bpp = multiboot_info_ptr->framebuffer_bpp;
+    info.multiboot_framebuffer_type = multiboot_info_ptr->framebuffer_type;
 
     asm(
 #if ARCH(I386)
