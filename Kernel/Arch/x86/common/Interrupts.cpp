@@ -24,6 +24,7 @@
 #include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
+#include <Kernel/KSyms.h>
 
 extern FlatPtr start_of_unmap_after_init;
 extern FlatPtr end_of_unmap_after_init;
@@ -323,7 +324,8 @@ void page_fault_handler(TrapFrame* trap)
 
     if (fault_address >= (FlatPtr)&start_of_unmap_after_init && fault_address < (FlatPtr)&end_of_unmap_after_init) {
         dump(regs);
-        PANIC("Attempt to access UNMAP_AFTER_INIT section");
+        auto sym = symbolicate_kernel_address(fault_address);
+        PANIC("Attempt to access UNMAP_AFTER_INIT section ({:#p}: {})", fault_address, sym ? sym->name : "(Unknown)");
     }
 
     if (fault_address >= (FlatPtr)&start_of_kernel_ksyms && fault_address < (FlatPtr)&end_of_kernel_ksyms) {
