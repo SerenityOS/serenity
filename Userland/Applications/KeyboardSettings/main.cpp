@@ -104,6 +104,7 @@ int main(int argc, char** argv)
     window->set_title("Keyboard Settings");
     window->resize(300, 70);
     window->set_resizable(false);
+    window->set_minimizable(false);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& root_widget = window->set_main_widget<GUI::Widget>();
