@@ -11,6 +11,7 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Timer.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
@@ -22,7 +23,8 @@ namespace VT {
 
 class TerminalWidget final
     : public GUI::Frame
-    , public VT::TerminalClient {
+    , public VT::TerminalClient
+    , public GUI::Clipboard::ClipboardClient {
     C_OBJECT(TerminalWidget);
 
 public:
@@ -122,6 +124,9 @@ private:
     virtual void terminal_history_changed(int delta) override;
     virtual void emit(const u8*, size_t) override;
     virtual void set_cursor_style(CursorStyle) override;
+
+    // ^GUI::Clipboard::ClipboardClient
+    virtual void clipboard_content_did_change(const String&) override { update_paste_action(); }
 
     void set_logical_focus(bool);
 

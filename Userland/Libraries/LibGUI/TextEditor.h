@@ -12,6 +12,8 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractScrollableWidget.h>
+#include <LibGUI/Action.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextRange.h>
@@ -24,7 +26,8 @@ namespace GUI {
 class TextEditor
     : public AbstractScrollableWidget
     , public TextDocument::Client
-    , public Syntax::HighlighterClient {
+    , public Syntax::HighlighterClient
+    , public Clipboard::ClipboardClient {
     C_OBJECT(TextEditor);
 
 public:
@@ -251,6 +254,9 @@ private:
     virtual String highlighter_did_request_text() const final { return text(); }
     virtual GUI::TextDocument& highlighter_did_request_document() final { return document(); }
     virtual GUI::TextPosition highlighter_did_request_cursor() const final { return m_cursor; }
+
+    // ^Clipboard::ClipboardClient
+    virtual void clipboard_content_did_change(String const& mime_type) override;
 
     void create_actions();
     void paint_ruler(Painter&);

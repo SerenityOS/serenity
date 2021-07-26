@@ -49,11 +49,6 @@ int main(int argc, char* argv[])
     auto model = ClipboardHistoryModel::create();
     table_view.set_model(model);
 
-    GUI::Clipboard::the().on_change = [&](const String&) {
-        auto item = GUI::Clipboard::the().data_and_type();
-        model->add_item(item);
-    };
-
     table_view.on_activation = [&](const GUI::ModelIndex& index) {
         auto& data_and_type = model->item_at(index.row());
         GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type, data_and_type.metadata);

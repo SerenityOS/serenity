@@ -143,10 +143,6 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     m_context_menu->add_separator();
     m_context_menu->add_action(clear_including_history_action());
 
-    GUI::Clipboard::the().on_change = [this](const String&) {
-        update_paste_action();
-    };
-
     update_copy_action();
     update_paste_action();
 
