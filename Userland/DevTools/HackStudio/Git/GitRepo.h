@@ -43,7 +43,7 @@ private:
     String execute_git_command(const Vector<String>& command_parts, const LexicalPath& chdir);
 
     LexicalPath m_root;
-    bool m_repo_exists;
+    bool m_repo_exists { false };
 };
 
 }

@@ -132,6 +132,8 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     m_run_action = create_run_action();
     m_stop_action = create_stop_action();
     m_debug_action = create_debug_action();
+    m_git_commit_action = create_git_commit_action();
+    m_git_commit_action->set_enabled(GitRepo::the().repo_exists(false) && !GitRepo::the().staged_files().is_empty());
 
     initialize_debugger();
 
@@ -581,7 +583,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_action()
 
         current_editor_wrapper().save();
 
-        if (GitRepo::the().repo_exists(false))
+        if (GitRepo::the().repo_exists(true))
             m_git_widget->refresh();
     });
 }
@@ -652,6 +654,13 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
         for (auto& editor_wrapper : m_all_editor_wrappers) {
             editor_wrapper.set_debug_mode(true);
         }
+    });
+}
+
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_git_commit_action()
+{
+    return GUI::Action::create("Commit", { Mod_Ctrl | Mod_Alt, Key_P }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/commit.png"), [this](auto&) {
+        m_git_widget->commit();
     });
 }
 
@@ -850,6 +859,9 @@ void HackStudioWidget::create_toolbar(GUI::Widget& parent)
     toolbar.add_separator();
 
     toolbar.add_action(*m_debug_action);
+    toolbar.add_separator();
+
+    toolbar.add_action(*m_git_commit_action);
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_build_action()
@@ -897,6 +909,9 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
     });
+    m_git_widget->on_refresh = [this]() {
+        m_git_commit_action->set_enabled(GitRepo::the().repo_exists(true) && !GitRepo::the().staged_files().is_empty());
+    };
 
     ToDoEntries::the().on_update = [this]() {
         m_todo_entries_widget->refresh();

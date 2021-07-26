@@ -24,7 +24,9 @@ public:
 
     void refresh();
     void set_view_diff_callback(ViewDiffCallback callback);
+    void commit();
 
+    Function<void()> on_refresh;
 private:
     explicit GitWidget();
 
@@ -32,7 +34,6 @@ private:
     bool initialize_if_needed();
     void stage_file(const LexicalPath&);
     void unstage_file(const LexicalPath&);
-    void commit();
     void show_diff(const LexicalPath&);
 
     RefPtr<GitFilesView> m_unstaged_files;

@@ -113,6 +113,8 @@ void GitWidget::refresh()
 
     VERIFY(GitRepo::the().repo_exists(false));
 
+    if (on_refresh) on_refresh();
+
     m_commit_button->set_enabled(GitRepo::the().repo_exists(true) && !GitRepo::the().staged_files().is_empty());
     m_unstaged_files->set_model(GitFilesModel::create(GitRepo::the().unstaged_files()));
     m_staged_files->set_model(GitFilesModel::create(GitRepo::the().staged_files()));
