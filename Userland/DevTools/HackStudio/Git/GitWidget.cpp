@@ -56,11 +56,12 @@ GitWidget::GitWidget() {
     auto& staged_header = staged.add<GUI::Widget>();
     staged_header.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto& commit_button = staged_header.add<GUI::Button>();
-    commit_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/commit.png"));
-    commit_button.set_fixed_size(16, 16);
-    commit_button.set_tooltip("commit");
-    commit_button.on_click = [this](int) { commit(); };
+    m_commit_button = staged_header.add<GUI::Button>();
+    m_commit_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/commit.png"));
+    m_commit_button->set_fixed_size(16, 16);
+    m_commit_button->set_tooltip("Commit");
+    m_commit_button->on_click = [this](int) { commit(); };
+    m_commit_button->set_enabled(GitRepo::the().repo_exists(true) && !GitRepo::the().staged_files().is_empty());
 
     auto& staged_label = staged_header.add<GUI::Label>();
     staged_label.set_text("Staged");
@@ -112,6 +113,7 @@ void GitWidget::refresh()
 
     VERIFY(GitRepo::the().repo_exists(false));
 
+    m_commit_button->set_enabled(GitRepo::the().repo_exists(true) && !GitRepo::the().staged_files().is_empty());
     m_unstaged_files->set_model(GitFilesModel::create(GitRepo::the().unstaged_files()));
     m_staged_files->set_model(GitFilesModel::create(GitRepo::the().staged_files()));
 }

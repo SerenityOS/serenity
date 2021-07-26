@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2021, Conor Byrne <cbyrneee@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,6 +37,8 @@ private:
 
     RefPtr<GitFilesView> m_unstaged_files;
     RefPtr<GitFilesView> m_staged_files;
+    RefPtr<GUI::Button> m_commit_button;
+
     ViewDiffCallback m_view_diff_callback;
 };
 
