@@ -181,6 +181,7 @@ private:
     size_t m_file_index { 0 };
     bool m_is_statement { false };
     bool m_basic_block { false };
+    bool m_prologue_end { false };
 
     Vector<LineInfo> m_lines;
 };
