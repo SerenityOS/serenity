@@ -42,6 +42,7 @@ int main(int argc, char** argv)
     window->set_title("Display Settings");
     window->resize(400, 480);
     window->set_resizable(false);
+    window->set_minimizable(false);
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
