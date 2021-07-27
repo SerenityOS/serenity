@@ -217,8 +217,6 @@ public:
     void flush_gdt();
     const DescriptorTablePointer& get_gdtr();
 
-    static Processor& by_id(u32 cpu);
-
     static size_t processor_count() { return processors().size(); }
 
     template<IteratorFunction<Processor&> Callback>
@@ -323,30 +321,6 @@ public:
         return Processor::id() == 0;
     }
 
-    ALWAYS_INLINE u32 raise_irq()
-    {
-        return m_in_irq++;
-    }
-
-    ALWAYS_INLINE void restore_irq(u32 prev_irq)
-    {
-        VERIFY(prev_irq <= m_in_irq);
-        if (!prev_irq) {
-            u32 prev_critical = 0;
-            if (m_in_critical.compare_exchange_strong(prev_critical, 1)) {
-                m_in_irq = prev_irq;
-                deferred_call_execute_pending();
-                auto prev_raised = m_in_critical.exchange(prev_critical);
-                VERIFY(prev_raised == prev_critical + 1);
-                check_invoke_scheduler();
-            } else if (prev_critical == 0) {
-                check_invoke_scheduler();
-            }
-        } else {
-            m_in_irq = prev_irq;
-        }
-    }
-
     ALWAYS_INLINE u32& in_irq()
     {
         return m_in_irq;
@@ -416,7 +390,6 @@ public:
     static void smp_enable();
     bool smp_process_pending_messages();
 
-    static void smp_broadcast(Function<void()>, bool async);
     static void smp_unicast(u32 cpu, Function<void()>, bool async);
     static void smp_broadcast_flush_tlb(const PageDirectory*, VirtualAddress, size_t);
     static u32 smp_wake_n_idle_processors(u32 wake_count);

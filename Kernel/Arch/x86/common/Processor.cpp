@@ -576,18 +576,6 @@ ProcessorContainer& Processor::processors()
     return s_processors;
 }
 
-Processor& Processor::by_id(u32 cpu)
-{
-    // s_processors does not need to be protected by a lock of any kind.
-    // It is populated early in the boot process, and the BSP is waiting
-    // for all APs to finish, after which this array never gets modified
-    // again, so it's safe to not protect access to it here
-    auto& procs = processors();
-    VERIFY(procs[cpu] != nullptr);
-    VERIFY(procs.size() > cpu);
-    return *procs[cpu];
-}
-
 void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
 {
     VERIFY_INTERRUPTS_DISABLED();
@@ -920,17 +908,6 @@ void Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
 
     smp_cleanup_message(msg);
     smp_return_to_pool(msg);
-}
-
-void Processor::smp_broadcast(Function<void()> callback, bool async)
-{
-    auto& msg = smp_get_from_pool();
-    msg.async = async;
-    msg.type = ProcessorMessage::Callback;
-    new (msg.callback_storage) ProcessorMessage::CallbackFunction(move(callback));
-    smp_broadcast_message(msg);
-    if (!async)
-        smp_broadcast_wait_sync(msg);
 }
 
 void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
