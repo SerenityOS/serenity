@@ -74,9 +74,11 @@ public:
         return m_bytes[m_offset];
     }
 
-    bool read_LEB128_unsigned(size_t& result) { return LEB128::read_unsigned(*this, result); }
+    template<typename ValueType>
+    bool read_LEB128_unsigned(ValueType& result) { return LEB128::read_unsigned(*this, result); }
 
-    bool read_LEB128_signed(ssize_t& result) { return LEB128::read_signed(*this, result); }
+    template<typename ValueType>
+    bool read_LEB128_signed(ValueType& result) { return LEB128::read_signed(*this, result); }
 
     ReadonlyBytes bytes() const { return m_bytes; }
     size_t offset() const { return m_offset; }
