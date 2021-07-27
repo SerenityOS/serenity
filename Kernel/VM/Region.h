@@ -125,28 +125,6 @@ public:
         return true;
     }
 
-    bool translate_vmobject_page_range(size_t& index, size_t& page_count) const
-    {
-        auto first_index = first_page_index();
-        if (index < first_index) {
-            auto delta = first_index - index;
-            index = first_index;
-            if (delta >= page_count) {
-                page_count = 0;
-                return false;
-            }
-            page_count -= delta;
-        }
-        index -= first_index;
-        auto total_page_count = this->page_count();
-        if (index + page_count > total_page_count) {
-            page_count = total_page_count - index;
-            if (page_count == 0)
-                return false;
-        }
-        return true;
-    }
-
     ALWAYS_INLINE size_t translate_to_vmobject_page(size_t page_index) const
     {
         return first_page_index() + page_index;
