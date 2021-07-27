@@ -539,7 +539,8 @@ void IconView::paint_event(PaintEvent& event)
                 } else if (m_hovered_index.is_valid() && m_hovered_index == item_data.index) {
                     painter.blit_brightened(destination.location(), *bitmap, bitmap->rect());
                 } else {
-                    painter.blit(destination.location(), *bitmap, bitmap->rect());
+                    auto opacity = item_data.index.data(ModelRole::IconOpacity).as_float_or(1.0f);
+                    painter.blit(destination.location(), *bitmap, bitmap->rect(), opacity);
                 }
             }
         }

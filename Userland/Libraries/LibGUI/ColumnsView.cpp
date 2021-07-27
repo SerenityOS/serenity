@@ -118,7 +118,8 @@ void ColumnsView::paint_event(PaintEvent& event)
                     } else if (m_hovered_index.is_valid() && m_hovered_index.parent() == index.parent() && m_hovered_index.row() == index.row()) {
                         painter.blit_brightened(icon_rect.location(), *bitmap, bitmap->rect());
                     } else {
-                        painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
+                        auto opacity = index.data(ModelRole::IconOpacity).as_float_or(1.0f);
+                        painter.blit(icon_rect.location(), *bitmap, bitmap->rect(), opacity);
                     }
                 }
             }

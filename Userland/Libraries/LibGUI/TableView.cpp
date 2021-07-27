@@ -121,7 +121,8 @@ void TableView::paint_event(PaintEvent& event)
                         } else if (m_hovered_index.is_valid() && cell_index.row() == m_hovered_index.row()) {
                             painter.blit_brightened(cell_rect.location(), *bitmap, bitmap->rect());
                         } else {
-                            painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
+                            auto opacity = cell_index.data(ModelRole::IconOpacity).as_float_or(1.0f);
+                            painter.blit(cell_rect.location(), *bitmap, bitmap->rect(), opacity);
                         }
                     }
                 } else {
