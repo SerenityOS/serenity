@@ -120,6 +120,7 @@ Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrap
     Vector<String> lines;
     StringBuilder builder;
     size_t line_width = 0;
+    size_t current_block = 0;
     bool did_not_finish = false;
     for (Block& block : blocks) {
         switch (block.type) {
@@ -133,11 +134,17 @@ Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrap
                 goto blocks_processed;
             }
 
+            current_block++;
             continue;
         }
         case BlockType::Whitespace:
         case BlockType::Word: {
             size_t block_width = font().width(block.characters);
+            // FIXME: This should look at the specific advance amount of the
+            //        last character, but we don't support that yet.
+            if (current_block != blocks.size() - 1) {
+                block_width += font().glyph_spacing();
+            }
 
             if (wrapping == TextWrapping::Wrap && line_width + block_width > static_cast<unsigned>(m_rect.width())) {
                 lines.append(builder.to_string());
@@ -152,6 +159,7 @@ Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrap
 
             builder.append(block.characters.as_string());
             line_width += block_width;
+            current_block++;
         }
         }
     }
