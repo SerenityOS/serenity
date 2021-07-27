@@ -20,6 +20,21 @@
 #include <stdio.h>
 #include <unistd.h>
 
+enum class StatisticDisplay : u8 {
+    HighScore,
+    BestTime,
+    __Count
+};
+
+static String format_seconds(uint64_t seconds_elapsed)
+{
+    uint64_t hours = seconds_elapsed / 3600;
+    uint64_t minutes = (seconds_elapsed / 60) % 60;
+    uint64_t seconds = seconds_elapsed % 60;
+
+    return String::formatted("{:02}:{:02}:{:02}", hours, minutes, seconds);
+}
+
 int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
@@ -69,6 +84,14 @@ int main(int argc, char** argv)
         }
     };
 
+    auto statistic_display = static_cast<StatisticDisplay>(config->read_num_entry("Settings", "StatisticDisplay", static_cast<int>(StatisticDisplay::HighScore)));
+    auto update_statistic_display = [&](StatisticDisplay new_statistic_display) {
+        statistic_display = new_statistic_display;
+        config->write_num_entry("Settings", "StatisticDisplay", static_cast<int>(statistic_display));
+        if (!config->sync())
+            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+    };
+
     auto high_score = [&]() {
         return static_cast<u32>(config->read_num_entry("HighScores", mode_id(), 0));
     };
@@ -114,6 +137,9 @@ int main(int argc, char** argv)
     if (mode >= Spider::Mode::__Count)
         update_mode(Spider::Mode::SingleSuit);
 
+    if (statistic_display >= StatisticDisplay::__Count)
+        update_statistic_display(StatisticDisplay::HighScore);
+
     auto& widget = window->set_main_widget<GUI::Widget>();
     widget.load_from_gml(spider_gml);
 
@@ -121,8 +147,21 @@ int main(int argc, char** argv)
     game.set_focus(true);
 
     auto& statusbar = *widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    auto reset_statistic_status = [&]() {
+        switch (statistic_display) {
+        case StatisticDisplay::HighScore:
+            statusbar.set_text(1, String::formatted("High Score: {}", high_score()));
+            break;
+        case StatisticDisplay::BestTime:
+            statusbar.set_text(1, String::formatted("Best Time: {}", format_seconds(best_time())));
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
     statusbar.set_text(0, "Score: 0");
-    statusbar.set_text(1, String::formatted("High Score: {}", high_score()));
+    reset_statistic_status();
     statusbar.set_text(2, "Time: 00:00:00");
 
     app->on_action_enter = [&](GUI::Action& action) {
@@ -145,11 +184,7 @@ int main(int argc, char** argv)
     auto timer = Core::Timer::create_repeating(1000, [&]() {
         ++seconds_elapsed;
 
-        uint64_t hours = seconds_elapsed / 3600;
-        uint64_t minutes = (seconds_elapsed / 60) % 60;
-        uint64_t seconds = seconds_elapsed % 60;
-
-        statusbar.set_text(2, String::formatted("Time: {:02}:{:02}:{:02}", hours, minutes, seconds));
+        statusbar.set_text(2, String::formatted("Time: {}", format_seconds(seconds_elapsed)));
     });
 
     game.on_game_start = [&]() {
@@ -171,13 +206,14 @@ int main(int argc, char** argv)
 
             if (score > high_score()) {
                 update_high_score(score);
-                statusbar.set_text(1, String::formatted("High Score: {}", score));
             }
 
             auto current_best_time = best_time();
             if (seconds_elapsed < current_best_time || current_best_time == 0) {
                 update_best_time(seconds_elapsed);
             }
+
+            reset_statistic_status();
         }
         statusbar.set_text(2, "Timer starts after your first move");
     };
@@ -208,7 +244,7 @@ int main(int argc, char** argv)
 
     auto single_suit_action = GUI::Action::create_checkable("&Single Suit", [&](auto&) {
         update_mode(Spider::Mode::SingleSuit);
-        statusbar.set_text(1, String::formatted("High Score: {}", high_score()));
+        reset_statistic_status();
         game.setup(mode);
     });
     single_suit_action->set_checked(mode == Spider::Mode::SingleSuit);
@@ -216,7 +252,7 @@ int main(int argc, char** argv)
 
     auto two_suit_action = GUI::Action::create_checkable("&Two Suit", [&](auto&) {
         update_mode(Spider::Mode::TwoSuit);
-        statusbar.set_text(1, String::formatted("High Score: {}", high_score()));
+        reset_statistic_status();
         game.setup(mode);
     });
     two_suit_action->set_checked(mode == Spider::Mode::TwoSuit);
@@ -231,6 +267,28 @@ int main(int argc, char** argv)
     game_menu.add_action(two_suit_action);
     game_menu.add_separator();
     game_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+
+    auto& view_menu = window->add_menu("&View");
+
+    GUI::ActionGroup statistic_display_actions;
+    statistic_display_actions.set_exclusive(true);
+
+    auto high_score_action = GUI::Action::create_checkable("&High Score", [&](auto&) {
+        update_statistic_display(StatisticDisplay::HighScore);
+        reset_statistic_status();
+    });
+    high_score_action->set_checked(statistic_display == StatisticDisplay::HighScore);
+    statistic_display_actions.add_action(high_score_action);
+
+    auto best_time_actions = GUI::Action::create_checkable("&Best Time", [&](auto&) {
+        update_statistic_display(StatisticDisplay::BestTime);
+        reset_statistic_status();
+    });
+    best_time_actions->set_checked(statistic_display == StatisticDisplay::BestTime);
+    statistic_display_actions.add_action(best_time_actions);
+
+    view_menu.add_action(high_score_action);
+    view_menu.add_action(best_time_actions);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Spider", app_icon, window));
