@@ -85,7 +85,7 @@ void Button::paint_event(PaintEvent& event)
     if (text_rect.width() > content_rect.width())
         text_rect.set_width(content_rect.width());
     text_rect.align_within(content_rect, text_alignment());
-    paint_text(painter, text_rect, font, text_alignment(), Gfx::TextWrapping::DontWrap);
+    paint_text(painter, text_rect, font, text_alignment());
 
     if (is_focused()) {
         Gfx::IntRect focus_rect;
