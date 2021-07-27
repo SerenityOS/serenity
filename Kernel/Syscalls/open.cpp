@@ -45,10 +45,11 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
         return path.error();
 
     dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path.value()->view(), options, mode);
-    int fd = m_fds.allocate();
-    if (fd < 0)
-        return fd;
 
+    auto fd_or_error = m_fds.allocate();
+    if (fd_or_error.is_error())
+        return fd_or_error.error();
+    auto fd = fd_or_error.value();
     RefPtr<Custody> base;
     if (dirfd == AT_FDCWD) {
         base = current_directory();

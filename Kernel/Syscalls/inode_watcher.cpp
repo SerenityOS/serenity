@@ -18,9 +18,10 @@ KResultOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(rpath);
 
-    int fd = m_fds.allocate();
-    if (fd < 0)
-        return fd;
+    auto fd_or_error = m_fds.allocate();
+    if (fd_or_error.is_error())
+        return fd_or_error.error();
+    auto fd = fd_or_error.value();
 
     auto watcher_or_error = InodeWatcher::create();
     if (watcher_or_error.is_error())

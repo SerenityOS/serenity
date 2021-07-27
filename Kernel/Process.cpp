@@ -465,14 +465,14 @@ size_t Process::FileDescriptions::open_count() const
     return count;
 }
 
-int Process::FileDescriptions::allocate(int first_candidate_fd)
+KResultOr<int> Process::FileDescriptions::allocate(int first_candidate_fd)
 {
     ScopedSpinLock lock(m_fds_lock);
     for (size_t i = first_candidate_fd; i < max_open(); ++i) {
         if (!m_fds_metadatas[i])
             return i;
     }
-    return -EMFILE;
+    return KResult(EMFILE);
 }
 
 Time kgettimeofday()
