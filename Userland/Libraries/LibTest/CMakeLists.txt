@@ -7,3 +7,6 @@ set(SOURCES
 
 serenity_lib(LibTest test)
 target_link_libraries(LibTest LibC)
+
+add_library(LibTestMain OBJECT TestMain.cpp)
+add_library(JavaScriptTestRunnerMain OBJECT JavaScriptTestRunnerMain.cpp)
