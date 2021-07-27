@@ -118,6 +118,10 @@ TEST_CASE(to_unicode_lowercase_special_casing_sigma)
     result = Unicode::to_unicode_lowercase_full("\u2160\u03A3"sv);
     EXPECT_EQ(result, "\u2170\u03C2");
 
+    // Sigma preceded by A and FULL STOP
+    result = Unicode::to_unicode_lowercase_full("A.\u03A3"sv);
+    EXPECT_EQ(result, "a.\u03C2");
+
     // Sigma preceded by A and MONGOLIAN VOWEL SEPARATOR
     result = Unicode::to_unicode_lowercase_full("A\u180E\u03A3"sv);
     EXPECT_EQ(result, "a\u180E\u03C2");

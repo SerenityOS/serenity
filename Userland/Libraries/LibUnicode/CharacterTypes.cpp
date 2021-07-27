@@ -63,9 +63,19 @@ static bool is_case_ignorable(UnicodeData const& unicode_data)
     case GeneralCategory::Sk:
         return true;
     default:
-        // FIXME: Handle word break properties (auxiliary/WordBreakProperty.txt).
-        return false;
+        break;
     }
+
+    switch (unicode_data.word_break_property) {
+    case WordBreakProperty::MidLetter:
+    case WordBreakProperty::MidNumLet:
+    case WordBreakProperty::SingleQuote:
+        return true;
+    default:
+        break;
+    }
+
+    return false;
 }
 
 static bool is_final_code_point(Utf8View const& string, size_t index, size_t byte_length)
