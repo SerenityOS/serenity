@@ -34,6 +34,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(starts_with);
     JS_DECLARE_NATIVE_FUNCTION(ends_with);
     JS_DECLARE_NATIVE_FUNCTION(index_of);
+    JS_DECLARE_NATIVE_FUNCTION(to_locale_lowercase);
+    JS_DECLARE_NATIVE_FUNCTION(to_locale_uppercase);
     JS_DECLARE_NATIVE_FUNCTION(to_lowercase);
     JS_DECLARE_NATIVE_FUNCTION(to_uppercase);
     JS_DECLARE_NATIVE_FUNCTION(to_string);

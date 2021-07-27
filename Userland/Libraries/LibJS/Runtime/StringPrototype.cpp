@@ -117,6 +117,8 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.startsWith, starts_with, 1, attr);
     define_native_function(vm.names.endsWith, ends_with, 1, attr);
     define_native_function(vm.names.indexOf, index_of, 1, attr);
+    define_native_function(vm.names.toLocaleLowerCase, to_locale_lowercase, 0, attr);
+    define_native_function(vm.names.toLocaleUpperCase, to_locale_uppercase, 0, attr);
     define_native_function(vm.names.toLowerCase, to_lowercase, 0, attr);
     define_native_function(vm.names.toUpperCase, to_uppercase, 0, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
@@ -376,6 +378,30 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 
     auto index = string_index_of(utf16_string_view, utf16_search_view, start);
     return index.has_value() ? Value(*index) : Value(-1);
+}
+
+// 22.1.3.24 String.prototype.toLocaleLowerCase ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase
+// NOTE: This is the minimum toLocaleLowerCase implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_lowercase)
+{
+    auto string = ak_string_from(vm, global_object);
+    if (!string.has_value())
+        return {};
+
+    auto lowercase = Unicode::to_unicode_lowercase_full(*string);
+    return js_string(vm, move(lowercase));
+}
+
+// 22.1.3.25 String.prototype.toLocaleUpperCase ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase
+// NOTE: This is the minimum toLocaleUpperCase implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_uppercase)
+{
+    auto string = ak_string_from(vm, global_object);
+    if (!string.has_value())
+        return {};
+
+    auto uppercase = Unicode::to_unicode_uppercase_full(*string);
+    return js_string(vm, move(uppercase));
 }
 
 // 22.1.3.26 String.prototype.toLowerCase ( ), https://tc39.es/ecma262/#sec-string.prototype.tolowercase
