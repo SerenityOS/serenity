@@ -193,7 +193,7 @@ void TabWidget::paint_event(PaintEvent& event)
         if (!icon)
             return;
         Gfx::IntRect icon_rect { button_rect.x(), button_rect.y(), 16, 16 };
-        icon_rect.translate_by(4, 3);
+        icon_rect.translate_by(5, 3);
         painter.draw_scaled_bitmap(icon_rect, *icon, icon->rect());
         text_rect.set_x(icon_rect.right() + 1 + 4);
         text_rect.intersect(button_rect);
@@ -205,15 +205,24 @@ void TabWidget::paint_event(PaintEvent& event)
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
-        auto tab_button_content_rect = button_rect.translated(4, m_tab_position == TabPosition::Top ? 1 : 0);
+
+        // NOTE: The inactive tab button is not pushed down, but just rendered a
+        // bit shrunken instead, which causes alignment issues with the icon
+        // (which is always drawn at a specific offset). Therefore, the content
+        // has to be translated down.
+        auto tab_button_content_rect = button_rect;
+        tab_button_content_rect.set_top(tab_button_content_rect.top() + (m_tab_position == TabPosition::Top ? 3 : 2));
+        tab_button_content_rect.intersect(button_rect);
 
         paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
         tab_button_content_rect.set_width(tab_button_content_rect.width() - (m_close_button_enabled ? 16 : 2));
 
         Gfx::IntRect text_rect { 0, 0, min(tab_button_content_rect.width(), font().width(m_tabs[i].title)), font().glyph_height() };
-        text_rect.inflate(6, 4);
         text_rect.align_within(tab_button_content_rect, m_text_alignment);
         text_rect.intersect(tab_button_content_rect);
+
+        if (bar_height() % 2 == 0)
+            text_rect.translate_by(0, 1);
 
         painter.draw_text(text_rect, m_tabs[i].title, Gfx::TextAlignment::CenterLeft, palette().button_text(), Gfx::TextElision::Right);
     }
@@ -231,6 +240,9 @@ void TabWidget::paint_event(PaintEvent& event)
         Gfx::IntRect text_rect { 0, 0, min(tab_button_content_rect.width(), font().width(m_tabs[i].title)), font().glyph_height() };
         text_rect.align_within(tab_button_content_rect, m_text_alignment);
         text_rect.intersect(tab_button_content_rect);
+
+        if (bar_height() % 2 == 0)
+            text_rect.translate_by(0, 1);
 
         painter.draw_text(text_rect, m_tabs[i].title, Gfx::TextAlignment::CenterLeft, palette().button_text(), Gfx::TextElision::Right);
 
@@ -316,9 +328,9 @@ Gfx::IntRect TabWidget::close_button_rect(int index) const
     Gfx::IntRect close_button_rect { 0, 0, 12, 12 };
 
     if (m_tabs[index].widget == m_active_widget)
-        close_button_rect.translate_by(rect.right() - 16, rect.top() + (m_tab_position == TabPosition::Top ? 5 : 4));
+        close_button_rect.translate_by(rect.right() - 16, rect.top() + (m_tab_position == TabPosition::Top ? 6 : 5));
     else
-        close_button_rect.translate_by(rect.right() - 15, rect.top() + (m_tab_position == TabPosition::Top ? 4 : 3));
+        close_button_rect.translate_by(rect.right() - 15, rect.top() + (m_tab_position == TabPosition::Top ? 5 : 4));
 
     return close_button_rect;
 }

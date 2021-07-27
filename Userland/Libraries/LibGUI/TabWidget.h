@@ -31,7 +31,7 @@ public:
     void set_active_widget(Widget*);
     void set_tab_index(int);
 
-    int bar_height() const { return m_bar_visible ? 21 : 0; }
+    int bar_height() const { return m_bar_visible ? 22 : 0; }
 
     GUI::Margins const& container_margins() const { return m_container_margins; }
     void set_container_margins(GUI::Margins const&);
