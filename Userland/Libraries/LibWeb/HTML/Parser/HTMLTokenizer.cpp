@@ -1554,7 +1554,7 @@ _StartOfFunction:
                 ON('#')
                 {
                     m_temporary_buffer.append(current_input_character.value());
-                    SWITCH_TO(NumericCharacterReference);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(NumericCharacterReference);
                 }
                 ANYTHING_ELSE
                 {
@@ -1630,12 +1630,12 @@ _StartOfFunction:
                 ON('X')
                 {
                     m_temporary_buffer.append(current_input_character.value());
-                    SWITCH_TO(HexadecimalCharacterReferenceStart);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(HexadecimalCharacterReferenceStart);
                 }
                 ON('x')
                 {
                     m_temporary_buffer.append(current_input_character.value());
-                    SWITCH_TO(HexadecimalCharacterReferenceStart);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(HexadecimalCharacterReferenceStart);
                 }
                 ANYTHING_ELSE
                 {
@@ -1696,7 +1696,7 @@ _StartOfFunction:
                 }
                 ON(';')
                 {
-                    SWITCH_TO(NumericCharacterReferenceEnd);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(NumericCharacterReferenceEnd);
                 }
                 ANYTHING_ELSE
                 {
@@ -1716,7 +1716,7 @@ _StartOfFunction:
                 }
                 ON(';')
                 {
-                    SWITCH_TO(NumericCharacterReferenceEnd);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(NumericCharacterReferenceEnd);
                 }
                 ANYTHING_ELSE
                 {
