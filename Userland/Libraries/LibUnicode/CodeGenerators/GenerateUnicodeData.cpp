@@ -7,6 +7,7 @@
 #include <AK/AllOf.h>
 #include <AK/Array.h>
 #include <AK/CharacterTypes.h>
+#include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
@@ -16,6 +17,16 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+
+// Some code points are excluded from UnicodeData.txt, and instead are part of a "range" of code
+// points, as indicated by the "name" field. For example:
+//     3400;<CJK Ideograph Extension A, First>;Lo;0;L;;;;;N;;;;;
+//     4DBF;<CJK Ideograph Extension A, Last>;Lo;0;L;;;;;N;;;;;
+struct CodePointRange {
+    u32 index;
+    u32 first;
+    u32 last;
+};
 
 // SpecialCasing source: https://www.unicode.org/Public/13.0.0/ucd/SpecialCasing.txt
 // Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#SpecialCasing.txt
@@ -28,6 +39,10 @@ struct SpecialCasing {
     String locale;
     String condition;
 };
+
+// PropList source: https://www.unicode.org/Public/13.0.0/ucd/PropList.txt
+// Property descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#PropList.txt
+using PropList = HashMap<String, Vector<CodePointRange>>;
 
 // UnicodeData source: https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
 // Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#UnicodeData.txt
@@ -49,16 +64,7 @@ struct CodePointData {
     Optional<u32> simple_lowercase_mapping;
     Optional<u32> simple_titlecase_mapping;
     Vector<u32> special_casing_indices;
-};
-
-// Some code points are excluded from UnicodeData.txt, and instead are part of a "range" of code
-// points, as indicated by the "name" field. For example:
-//     3400;<CJK Ideograph Extension A, First>;Lo;0;L;;;;;N;;;;;
-//     4DBF;<CJK Ideograph Extension A, Last>;Lo;0;L;;;;;N;;;;;
-struct CodePointRange {
-    u32 index;
-    u32 first;
-    u32 last;
+    Vector<StringView> prop_list;
 };
 
 struct UnicodeData {
@@ -72,6 +78,9 @@ struct UnicodeData {
     Vector<CodePointRange> code_point_ranges;
     Vector<String> general_categories;
     u32 last_contiguous_code_point { 0 };
+
+    PropList prop_list;
+    u32 largest_prop_list_size { 0 };
 };
 
 static constexpr auto s_desired_fields = Array {
@@ -143,6 +152,39 @@ static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
     quick_sort(unicode_data.conditions);
 }
 
+static void parse_prop_list(Core::File& file, UnicodeData& unicode_data)
+{
+    while (file.can_read_line()) {
+        auto line = file.read_line();
+        if (line.is_empty() || line.starts_with('#'))
+            continue;
+
+        if (auto index = line.find('#'); index.has_value())
+            line = line.substring(0, *index);
+
+        auto segments = line.split_view(';', true);
+        VERIFY(segments.size() == 2);
+
+        auto code_point_range = segments[0].trim_whitespace();
+        auto property = segments[1].trim_whitespace().to_string();
+        property.replace("_", "", true);
+
+        auto& code_points = unicode_data.prop_list.ensure(property);
+
+        if (code_point_range.contains(".."sv)) {
+            segments = code_point_range.split_view(".."sv);
+            VERIFY(segments.size() == 2);
+
+            auto begin = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
+            auto end = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[1]).value();
+            code_points.append({ 0, begin, end });
+        } else {
+            auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(code_point_range).value();
+            code_points.append({ 0, code_point, code_point });
+        }
+    }
+}
+
 static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
 {
     Optional<u32> code_point_range_start;
@@ -202,7 +244,17 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
                 data.special_casing_indices.append(casing.index);
         }
 
+        for (auto const& property : unicode_data.prop_list) {
+            for (auto const& range : property.value) {
+                if ((range.first <= data.code_point) && (data.code_point <= range.last)) {
+                    data.prop_list.append(property.key);
+                    break;
+                }
+            }
+        }
+
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
+        unicode_data.largest_prop_list_size = max(unicode_data.largest_prop_list_size, data.prop_list.size());
 
         if (!unicode_data.general_categories.contains_slow(data.general_category))
             unicode_data.general_categories.append(data.general_category);
@@ -221,6 +273,7 @@ static void generate_unicode_data_header(UnicodeData const& unicode_data)
     SourceGenerator generator { builder };
     generator.set("casing_transform_size", String::number(unicode_data.largest_casing_transform_size));
     generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
+    generator.set("prop_list_size", String::number(unicode_data.largest_prop_list_size));
 
     generator.append(R"~~~(
 #pragma once
@@ -261,6 +314,20 @@ enum class GeneralCategory {)~~~");
         generator.set("general_category", general_category);
         generator.append(R"~~~(
     @general_category@,)~~~");
+    }
+
+    generator.append(R"~~~(
+};
+
+enum class Property {)~~~");
+
+    auto properties = unicode_data.prop_list.keys();
+    quick_sort(properties);
+
+    for (auto const& property : properties) {
+        generator.set("property", property);
+        generator.append(R"~~~(
+    @property@,)~~~");
     }
 
     generator.append(R"~~~(
@@ -315,6 +382,9 @@ struct UnicodeData {
 
     SpecialCasing const* special_casing[@special_casing_size@] {};
     u32 special_casing_size { 0 };
+
+    Property prop_list[@prop_list_size@] {};
+    u32 prop_list_size { 0 };
 };
 
 Optional<UnicodeData> unicode_data_for_code_point(u32 code_point);
@@ -342,20 +412,20 @@ static void generate_unicode_data_implementation(UnicodeData unicode_data)
 namespace Unicode {
 )~~~");
 
-    auto append_numeric_list = [&](auto const& code_points, StringView format) {
-        if (code_points.is_empty()) {
+    auto append_list_and_size = [&](auto const& list, StringView format) {
+        if (list.is_empty()) {
             generator.append(", {}, 0");
             return;
         }
 
         bool first = true;
         generator.append(", {");
-        for (auto code_point : code_points) {
+        for (auto const& item : list) {
             generator.append(first ? " " : ", ");
-            generator.append(String::formatted(format, code_point));
+            generator.append(String::formatted(format, item));
             first = false;
         }
-        generator.append(String::formatted(" }}, {}", code_points.size()));
+        generator.append(String::formatted(" }}, {}", list.size()));
     };
 
     generator.append(R"~~~(
@@ -367,9 +437,9 @@ static constexpr Array<SpecialCasing, @special_casing_size@> s_special_casing { 
     { @code_point@)~~~");
 
         constexpr auto format = "0x{:x}"sv;
-        append_numeric_list(casing.lowercase_mapping, format);
-        append_numeric_list(casing.uppercase_mapping, format);
-        append_numeric_list(casing.titlecase_mapping, format);
+        append_list_and_size(casing.lowercase_mapping, format);
+        append_list_and_size(casing.uppercase_mapping, format);
+        append_list_and_size(casing.titlecase_mapping, format);
 
         generator.set("locale", casing.locale.is_empty() ? "None" : casing.locale);
         generator.append(", Locale::@locale@");
@@ -412,7 +482,8 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
         append_field("simple_uppercase_mapping", String::formatted("{:#x}", data.simple_uppercase_mapping.value_or(data.code_point)));
         append_field("simple_lowercase_mapping", String::formatted("{:#x}", data.simple_lowercase_mapping.value_or(data.code_point)));
         append_field("simple_titlecase_mapping", String::formatted("{:#x}", data.simple_titlecase_mapping.value_or(data.code_point)));
-        append_numeric_list(data.special_casing_indices, "&s_special_casing[{}]"sv);
+        append_list_and_size(data.special_casing_indices, "&s_special_casing[{}]"sv);
+        append_list_and_size(data.prop_list, "Property::{}"sv);
         generator.append(" },");
     }
 
@@ -468,12 +539,14 @@ int main(int argc, char** argv)
     bool generate_implementation = false;
     char const* unicode_data_path = nullptr;
     char const* special_casing_path = nullptr;
+    char const* prop_list_path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generate_header, "Generate the Unicode Data header file", "generate-header", 'h');
     args_parser.add_option(generate_implementation, "Generate the Unicode Data implementation file", "generate-implementation", 'c');
     args_parser.add_option(unicode_data_path, "Path to UnicodeData.txt file", "unicode-data-path", 'u', "unicode-data-path");
     args_parser.add_option(special_casing_path, "Path to SpecialCasing.txt file", "special-casing-path", 's', "special-casing-path");
+    args_parser.add_option(prop_list_path, "Path to PropList.txt file", "prop-list-path", 'p', "prop-list-path");
     args_parser.parse(argc, argv);
 
     if (!generate_header && !generate_implementation) {
@@ -491,6 +564,11 @@ int main(int argc, char** argv)
         args_parser.print_usage(stderr, argv[0]);
         return 1;
     }
+    if (!prop_list_path) {
+        warnln("-p/--prop-list-path is required");
+        args_parser.print_usage(stderr, argv[0]);
+        return 1;
+    }
 
     auto unicode_data_file_or_error = Core::File::open(unicode_data_path, Core::OpenMode::ReadOnly);
     if (unicode_data_file_or_error.is_error()) {
@@ -504,8 +582,15 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto prop_list_file_or_error = Core::File::open(prop_list_path, Core::OpenMode::ReadOnly);
+    if (prop_list_file_or_error.is_error()) {
+        warnln("Failed to open {}: {}", prop_list_path, prop_list_file_or_error.release_error());
+        return 1;
+    }
+
     UnicodeData unicode_data {};
     parse_special_casing(special_casing_file_or_error.value(), unicode_data);
+    parse_prop_list(prop_list_file_or_error.value(), unicode_data);
     parse_unicode_data(unicode_data_file_or_error.value(), unicode_data);
 
     if (generate_header)
