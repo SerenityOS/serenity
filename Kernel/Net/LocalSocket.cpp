@@ -16,6 +16,7 @@
 #include <Kernel/StdLib.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
+#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
@@ -429,6 +430,21 @@ KResult LocalSocket::getsockopt(FileDescription& description, int level, int opt
     default:
         return Socket::getsockopt(description, level, option, value, value_size);
     }
+}
+
+KResult LocalSocket::ioctl(FileDescription& description, unsigned request, Userspace<void*> arg)
+{
+    switch (request) {
+    case FIONREAD: {
+        int readable = receive_buffer_for(description)->immediately_readable();
+        if (!copy_to_user(Userspace<int*>(arg), &readable))
+            return EFAULT;
+
+        return KSuccess;
+    }
+    }
+
+    return ENOTTY;
 }
 
 KResult LocalSocket::chmod(FileDescription&, mode_t mode)
