@@ -33,7 +33,7 @@ RunWindow::RunWindow()
 
     set_title("Run");
     set_icon(app_icon.bitmap_for_size(16));
-    resize(345, 140);
+    resize(345, 100);
     set_resizable(false);
     set_minimizable(false);
 
