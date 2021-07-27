@@ -17,6 +17,7 @@
 #include <LibGUI/FilePickerDialogGML.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/InputBox.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/MultiView.h>
@@ -103,6 +104,9 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     m_view->set_column_visible(FileSystemModel::Column::SymlinkTarget, true);
 
     m_model->register_client(*this);
+
+    m_error_label = m_view->add<GUI::Label>();
+    m_error_label->set_font(m_error_label->font().bold_variant());
 
     m_location_textbox->on_return_pressed = [this] {
         set_path(m_location_textbox->text());
@@ -212,7 +216,12 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
 
     auto& common_locations_frame = *widget.find_descendant_of_type_named<Frame>("common_locations_frame");
     common_locations_frame.set_background_role(Gfx::ColorRole::Tray);
+    m_model->on_directory_change_error = [&](int, char const* error_string) {
+        m_error_label->set_text(String::formatted("Could not open {}:\n{}", m_model->root_path(), error_string));
+        m_view->set_active_widget(m_error_label);
+    };
     m_model->on_complete = [&] {
+        m_view->set_active_widget(&m_view->current_view());
         for (auto location_button : m_common_location_buttons)
             location_button.button.set_checked(m_model->root_path() == location_button.path);
     };
