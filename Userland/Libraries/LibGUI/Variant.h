@@ -175,6 +175,13 @@ public:
         return m_value.as_float;
     }
 
+    float as_float_or(float fallback) const
+    {
+        if (is_float())
+            return as_float();
+        return fallback;
+    }
+
     Gfx::IntPoint as_point() const
     {
         return { m_value.as_point.x, m_value.as_point.y };
