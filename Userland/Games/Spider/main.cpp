@@ -80,6 +80,17 @@ int main(int argc, char** argv)
             GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
     };
 
+    auto best_time = [&]() {
+        return static_cast<u32>(config->read_num_entry("BestTimes", mode_id(), 0));
+    };
+
+    auto update_best_time = [&](u32 new_best_time) {
+        config->write_num_entry("BestTimes", mode_id(), static_cast<int>(new_best_time));
+
+        if (!config->sync())
+            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+    };
+
     if (mode >= Spider::Mode::__Count)
         update_mode(Spider::Mode::SingleSuit);
 
@@ -134,6 +145,11 @@ int main(int argc, char** argv)
             if (score > high_score()) {
                 update_high_score(score);
                 statusbar.set_text(1, String::formatted("High Score: {}", score));
+            }
+
+            auto current_best_time = best_time();
+            if (seconds_elapsed < current_best_time || current_best_time == 0) {
+                update_best_time(seconds_elapsed);
             }
         }
         statusbar.set_text(2, "Timer starts after your first move");
