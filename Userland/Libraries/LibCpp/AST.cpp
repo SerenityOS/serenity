@@ -287,7 +287,9 @@ void EnumDeclaration::dump(FILE* output, size_t indent) const
     outln(output, "{}", m_name);
     for (auto& entry : m_entries) {
         print_indent(output, indent + 1);
-        outln(output, "{}", entry);
+        outln(output, "{}", entry.name);
+        if (entry.value)
+            entry.value->dump(output, indent + 2);
     }
 }
 
