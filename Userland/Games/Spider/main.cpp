@@ -155,6 +155,24 @@ int main(int argc, char** argv)
         statusbar.set_text(2, "Timer starts after your first move");
     };
 
+    window->on_close_request = [&]() {
+        auto game_in_progress = timer->is_active();
+        if (game_in_progress) {
+            auto result = GUI::MessageBox::show(window,
+                "A game is still in progress, are you sure you would like to quit?",
+                "Game in progress",
+                GUI::MessageBox::Type::Warning,
+                GUI::MessageBox::InputType::YesNoCancel);
+
+            if (result == GUI::MessageBox::ExecYes)
+                return GUI::Window::CloseRequestDecision::Close;
+            else
+                return GUI::Window::CloseRequestDecision::StayOpen;
+        }
+
+        return GUI::Window::CloseRequestDecision::Close;
+    };
+
     GUI::ActionGroup suit_actions;
     suit_actions.set_exclusive(true);
 
