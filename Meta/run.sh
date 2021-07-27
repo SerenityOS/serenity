@@ -96,6 +96,8 @@ fi
 
 if [ "$(uname)" = "Darwin" ]; then
     SERENITY_AUDIO_BACKEND="-audiodev coreaudio,id=snd0"
+elif (uname -a | grep -iq WSL) || (uname -a | grep -iq microsoft); then
+    SERENITY_AUDIO_BACKEND="-audiodev dsound,id=snd0"
 else
     SERENITY_AUDIO_BACKEND="-audiodev sdl,id=snd0"
 fi
