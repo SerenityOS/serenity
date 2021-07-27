@@ -11,6 +11,7 @@
 
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout
+        fixed_height: 22
 
         @GUI::Label {
             text: "Value to find"
@@ -20,7 +21,6 @@
 
         @GUI::TextBox {
             name: "text_editor"
-            fixed_height: 20
         }
     }
 
@@ -32,6 +32,7 @@
 
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout
+        fixed_height: 22
 
         @GUI::Button {
             name: "find_button"
