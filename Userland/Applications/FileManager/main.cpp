@@ -865,6 +865,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto action_show_dotfiles = GUI::Action::create_checkable("&Show Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
         directory_view.set_should_show_dotfiles(action.is_checked());
+        directories_model->set_should_show_dotfiles(action.is_checked());
         refresh_tree_view();
         config->write_bool_entry("DirectoryView", "ShowDotFiles", action.is_checked());
         config->sync();
