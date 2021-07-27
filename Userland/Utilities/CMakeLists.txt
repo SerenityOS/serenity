@@ -8,7 +8,7 @@ list(APPEND REQUIRED_TARGETS
 )
 list(APPEND RECOMMENDED_TARGETS
     adjtime aplay avol bt checksum chres cksum copy fortune gunzip gzip init keymap lsirq lsof lspci man mknod mktemp
-    modload modunload nc netstat notify ntpquery open pape passwd pls printf pro shot tar tt unzip zip
+    modload modunload nc netstat notify ntpquery open pape passwd pbcopy pbpaste pls printf pro shot tar tt unzip zip
 )
 
 # FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
@@ -80,6 +80,8 @@ target_link_libraries(open LibDesktop)
 target_link_libraries(pape LibGUI)
 target_link_libraries(passwd LibCrypt)
 target_link_libraries(paste LibGUI)
+target_link_libraries(pbcopy LibIPC)
+target_link_libraries(pbpaste LibIPC)
 target_link_libraries(pgrep LibRegex)
 target_link_libraries(pls LibCrypt)
 target_link_libraries(pro LibProtocol)
