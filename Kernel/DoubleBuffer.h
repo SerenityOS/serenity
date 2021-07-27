@@ -38,6 +38,10 @@ public:
     bool is_empty() const { return m_empty; }
 
     size_t space_for_writing() const { return m_space_for_writing; }
+    size_t immediately_readable() const
+    {
+        return (m_read_buffer->size - m_read_buffer_index) + m_write_buffer->size;
+    }
 
     void set_unblock_callback(Function<void()> callback)
     {

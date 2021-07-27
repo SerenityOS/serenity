@@ -64,8 +64,6 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, u64 offset, con
 
 KResult InodeFile::ioctl(FileDescription& description, unsigned request, Userspace<void*> arg)
 {
-    (void)description;
-
     switch (request) {
     case FIBMAP: {
         if (!Process::current().is_superuser())
@@ -84,6 +82,13 @@ KResult InodeFile::ioctl(FileDescription& description, unsigned request, Userspa
             return block_address.error();
 
         if (!copy_to_user(user_block_number, &block_address.value()))
+            return EFAULT;
+
+        return KSuccess;
+    }
+    case FIONREAD: {
+        int remaining_bytes = inode().size() - description.offset();
+        if (!copy_to_user(Userspace<int*>(arg), &remaining_bytes))
             return EFAULT;
 
         return KSuccess;
