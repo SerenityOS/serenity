@@ -219,11 +219,19 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     m_model->on_directory_change_error = [&](int, char const* error_string) {
         m_error_label->set_text(String::formatted("Could not open {}:\n{}", m_model->root_path(), error_string));
         m_view->set_active_widget(m_error_label);
+
+        m_view->view_as_icons_action().set_enabled(false);
+        m_view->view_as_table_action().set_enabled(false);
+        m_view->view_as_columns_action().set_enabled(false);
     };
     m_model->on_complete = [&] {
         m_view->set_active_widget(&m_view->current_view());
         for (auto location_button : m_common_location_buttons)
             location_button.button.set_checked(m_model->root_path() == location_button.path);
+
+        m_view->view_as_icons_action().set_enabled(true);
+        m_view->view_as_table_action().set_enabled(true);
+        m_view->view_as_columns_action().set_enabled(true);
     };
 
     for (auto& location : CommonLocationsProvider::common_locations()) {
