@@ -24,6 +24,7 @@ enum class Mode : u8 {
 enum class GameOverReason {
     Victory,
     NewGame,
+    Quit,
 };
 
 class Game final : public GUI::Frame {
