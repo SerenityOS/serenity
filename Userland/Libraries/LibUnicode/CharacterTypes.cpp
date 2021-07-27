@@ -23,18 +23,30 @@ namespace Unicode {
 
 #if ENABLE_UNICODE_DATA
 
+static bool has_property(UnicodeData const& unicode_data, Property property)
+{
+    for (u32 i = 0; i < unicode_data.prop_list_size; ++i) {
+        if (unicode_data.prop_list[i] == property)
+            return true;
+    }
+
+    return false;
+}
+
 static bool is_cased_letter(UnicodeData const& unicode_data)
 {
     // A character C is defined to be cased if and only if C has the Lowercase or Uppercase property
     // or has a General_Category value of Titlecase_Letter.
     switch (unicode_data.general_category) {
-    case GeneralCategory::Ll: // FIXME: Should be Ll + Other_Lowercase (PropList.txt).
-    case GeneralCategory::Lu: // FIXME: Should be Lu + Other_Uppercase (PropList.txt).
+    case GeneralCategory::Ll:
+    case GeneralCategory::Lu:
     case GeneralCategory::Lt:
         return true;
     default:
-        return false;
+        break;
     }
+
+    return has_property(unicode_data, Property::OtherLowercase) || has_property(unicode_data, Property::OtherUppercase);
 }
 
 static bool is_case_ignorable(UnicodeData const& unicode_data)
