@@ -71,8 +71,8 @@ static void paint_custom_progressbar(GUI::Painter& painter, const Gfx::IntRect& 
         painter.fill_rect_with_gradient(rect, start_color, end_color);
 
         if (!text.is_null()) {
-            painter.draw_text(text_rect.translated(1, 1), text, font, text_alignment, palette.base_text(), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap);
-            painter.draw_text(text_rect, text, font, text_alignment, palette.base_text().inverted(), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap);
+            painter.draw_text(text_rect.translated(1, 1), text, font, text_alignment, palette.base_text(), Gfx::TextElision::Right);
+            painter.draw_text(text_rect, text, font, text_alignment, palette.base_text().inverted(), Gfx::TextElision::Right);
         }
     }
 
@@ -82,7 +82,7 @@ static void paint_custom_progressbar(GUI::Painter& painter, const Gfx::IntRect& 
     Gfx::PainterStateSaver saver(painter);
     painter.add_clip_rect(hole_rect);
     if (!text.is_null())
-        painter.draw_text(text_rect, text, font, text_alignment, palette.base_text(), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap);
+        painter.draw_text(text_rect, text, font, text_alignment, palette.base_text(), Gfx::TextElision::Right);
 }
 
 void TaskbarButton::paint_event(GUI::PaintEvent& event)
@@ -138,5 +138,5 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
     }
 
     if (!window.progress().has_value())
-        paint_text(painter, text_rect, font, text_alignment(), Gfx::TextWrapping::DontWrap);
+        paint_text(painter, text_rect, font, text_alignment());
 }

@@ -176,8 +176,8 @@ void AbstractButton::paint_text(Painter& painter, const Gfx::IntRect& rect, cons
     auto clipped_rect = rect.intersected(this->rect());
 
     if (!is_enabled()) {
-        painter.draw_text(clipped_rect.translated(1, 1), text(), font, text_alignment, Color::White, Gfx::TextElision::Right);
-        painter.draw_text(clipped_rect, text(), font, text_alignment, Color::from_rgb(0x808080), Gfx::TextElision::Right);
+        painter.draw_text(clipped_rect.translated(1, 1), text(), font, text_alignment, Color::White, Gfx::TextElision::Right, text_wrapping);
+        painter.draw_text(clipped_rect, text(), font, text_alignment, Color::from_rgb(0x808080), Gfx::TextElision::Right, text_wrapping);
         return;
     }
 

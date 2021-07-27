@@ -52,7 +52,7 @@ protected:
     virtual void leave_event(Core::Event&) override;
     virtual void change_event(Event&) override;
 
-    void paint_text(Painter&, const Gfx::IntRect&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextWrapping);
+    void paint_text(Painter&, const Gfx::IntRect&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextWrapping = Gfx::TextWrapping::DontWrap);
 
 private:
     String m_text;

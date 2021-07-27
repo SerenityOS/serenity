@@ -11,6 +11,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/TextLayout.h>
+#include <LibGfx/TextWrapping.h>
 
 REGISTER_WIDGET(GUI, Label)
 
@@ -95,10 +96,10 @@ void Label::paint_event(PaintEvent& event)
 
     auto text_rect = this->text_rect();
     if (is_enabled()) {
-        painter.draw_text(text_rect, text(), m_text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right);
+        painter.draw_text(text_rect, text(), m_text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right, Gfx::TextWrapping::Wrap);
     } else {
-        painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), Color::White, Gfx::TextElision::Right);
-        painter.draw_text(text_rect, text(), font(), text_alignment(), Color::from_rgb(0x808080), Gfx::TextElision::Right);
+        painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), Color::White, Gfx::TextElision::Right, Gfx::TextWrapping::Wrap);
+        painter.draw_text(text_rect, text(), font(), text_alignment(), Color::from_rgb(0x808080), Gfx::TextElision::Right, Gfx::TextWrapping::Wrap);
     }
 }
 
@@ -113,5 +114,4 @@ int Label::preferred_height() const
     //        a constant instead.
     return Gfx::TextLayout(&font(), Utf8View { m_text }, text_rect()).bounding_rect(Gfx::TextWrapping::Wrap, 4).height();
 }
-
 }
