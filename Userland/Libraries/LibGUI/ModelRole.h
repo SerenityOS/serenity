@@ -14,6 +14,7 @@ enum class ModelRole {
     ForegroundColor,
     BackgroundColor,
     Icon,
+    IconOpacity,
     Font,
     MimeData,
     TextAlignment,

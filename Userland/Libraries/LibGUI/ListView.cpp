@@ -118,8 +118,10 @@ void ListView::paint_list_item(Painter& painter, int row_index, int painted_item
     if (data.is_bitmap()) {
         painter.blit(row_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
     } else if (data.is_icon()) {
-        if (auto bitmap = data.as_icon().bitmap_for_size(16))
-            painter.blit(row_rect.location(), *bitmap, bitmap->rect());
+        if (auto bitmap = data.as_icon().bitmap_for_size(16)) {
+            auto opacity = index.data(ModelRole::IconOpacity).as_float_or(1.0f);
+            painter.blit(row_rect.location(), *bitmap, bitmap->rect(), opacity);
+        }
     } else {
         Color text_color;
         if (is_selected_row)

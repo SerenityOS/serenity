@@ -298,8 +298,10 @@ void TreeView::paint_event(PaintEvent& event)
                     if (data.is_bitmap()) {
                         painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
                     } else if (data.is_icon()) {
-                        if (auto bitmap = data.as_icon().bitmap_for_size(16))
-                            painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
+                        if (auto bitmap = data.as_icon().bitmap_for_size(16)) {
+                            auto opacity = cell_index.data(ModelRole::IconOpacity).as_float_or(1.0f);
+                            painter.blit(cell_rect.location(), *bitmap, bitmap->rect(), opacity);
+                        }
                     } else {
                         auto text_alignment = cell_index.data(ModelRole::TextAlignment).to_text_alignment(Gfx::TextAlignment::CenterLeft);
                         draw_item_text(painter, cell_index, is_selected_row, cell_rect, data.to_string(), font_for_index(cell_index), text_alignment, Gfx::TextElision::Right);
@@ -318,10 +320,12 @@ void TreeView::paint_event(PaintEvent& event)
                 auto icon = index.data(ModelRole::Icon);
                 if (icon.is_icon()) {
                     if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size())) {
-                        if (m_hovered_index.is_valid() && m_hovered_index.parent() == index.parent() && m_hovered_index.row() == index.row())
+                        if (m_hovered_index.is_valid() && m_hovered_index.parent() == index.parent() && m_hovered_index.row() == index.row()) {
                             painter.blit_brightened(icon_rect.location(), *bitmap, bitmap->rect());
-                        else
-                            painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
+                        } else {
+                            auto opacity = index.data(ModelRole::IconOpacity).as_float_or(1.0f);
+                            painter.blit(icon_rect.location(), *bitmap, bitmap->rect(), opacity);
+                        }
                     }
                 }
                 draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::Center, Gfx::TextElision::None);
