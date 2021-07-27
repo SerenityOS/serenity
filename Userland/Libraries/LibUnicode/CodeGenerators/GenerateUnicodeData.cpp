@@ -4,8 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/AllOf.h>
 #include <AK/Array.h>
+#include <AK/CharacterTypes.h>
 #include <AK/Optional.h>
+#include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
 #include <AK/String.h>
 #include <AK/StringUtils.h>
@@ -13,6 +16,18 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+
+// SpecialCasing source: https://www.unicode.org/Public/13.0.0/ucd/SpecialCasing.txt
+// Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#SpecialCasing.txt
+struct SpecialCasing {
+    u32 index { 0 };
+    u32 code_point { 0 };
+    Vector<u32> lowercase_mapping;
+    Vector<u32> uppercase_mapping;
+    Vector<u32> titlecase_mapping;
+    String locale;
+    String condition;
+};
 
 // UnicodeData source: https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
 // Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#UnicodeData.txt
@@ -33,6 +48,7 @@ struct CodePointData {
     Optional<u32> simple_uppercase_mapping;
     Optional<u32> simple_lowercase_mapping;
     Optional<u32> simple_titlecase_mapping;
+    Vector<u32> special_casing_indices;
 };
 
 // Some code points are excluded from UnicodeData.txt, and instead are part of a "range" of code
@@ -46,6 +62,12 @@ struct CodePointRange {
 };
 
 struct UnicodeData {
+    Vector<SpecialCasing> special_casing;
+    u32 largest_casing_transform_size { 0 };
+    u32 largest_special_casing_size { 0 };
+    Vector<String> locales;
+    Vector<String> conditions;
+
     Vector<CodePointData> code_point_data;
     Vector<CodePointRange> code_point_ranges;
     u32 last_contiguous_code_point { 0 };
@@ -56,10 +78,71 @@ static constexpr auto s_desired_fields = Array {
     "simple_lowercase_mapping"sv,
 };
 
-static UnicodeData parse_unicode_data(Core::File& file)
+static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
 {
-    UnicodeData unicode_data;
+    auto parse_code_point_list = [&](auto const& line) {
+        Vector<u32> code_points;
 
+        auto segments = line.split(' ');
+        for (auto const& code_point : segments)
+            code_points.append(AK::StringUtils::convert_to_uint_from_hex<u32>(code_point).value());
+
+        return code_points;
+    };
+
+    while (file.can_read_line()) {
+        auto line = file.read_line();
+        if (line.is_empty() || line.starts_with('#'))
+            continue;
+
+        if (auto index = line.find('#'); index.has_value())
+            line = line.substring(0, *index);
+
+        auto segments = line.split(';', true);
+        VERIFY(segments.size() == 5 || segments.size() == 6);
+
+        SpecialCasing casing {};
+        casing.index = static_cast<u32>(unicode_data.special_casing.size());
+        casing.code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
+        casing.lowercase_mapping = parse_code_point_list(segments[1]);
+        casing.titlecase_mapping = parse_code_point_list(segments[2]);
+        casing.uppercase_mapping = parse_code_point_list(segments[3]);
+
+        if (auto condition = segments[4].trim_whitespace(); !condition.is_empty()) {
+            auto conditions = condition.split(' ', true);
+            VERIFY(conditions.size() == 1 || conditions.size() == 2);
+
+            if (conditions.size() == 2) {
+                casing.locale = move(conditions[0]);
+                casing.condition = move(conditions[1]);
+            } else if (all_of(conditions[0], is_ascii_lower_alpha)) {
+                casing.locale = move(conditions[0]);
+            } else {
+                casing.condition = move(conditions[0]);
+            }
+
+            casing.locale = casing.locale.to_uppercase();
+            casing.condition.replace("_", "", true);
+
+            if (!casing.locale.is_empty() && !unicode_data.locales.contains_slow(casing.locale))
+                unicode_data.locales.append(casing.locale);
+            if (!casing.condition.is_empty() && !unicode_data.conditions.contains_slow(casing.condition))
+                unicode_data.conditions.append(casing.condition);
+        }
+
+        unicode_data.largest_casing_transform_size = max(unicode_data.largest_casing_transform_size, casing.lowercase_mapping.size());
+        unicode_data.largest_casing_transform_size = max(unicode_data.largest_casing_transform_size, casing.titlecase_mapping.size());
+        unicode_data.largest_casing_transform_size = max(unicode_data.largest_casing_transform_size, casing.uppercase_mapping.size());
+
+        unicode_data.special_casing.append(move(casing));
+    }
+
+    quick_sort(unicode_data.locales);
+    quick_sort(unicode_data.conditions);
+}
+
+static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
+{
     Optional<u32> code_point_range_start;
     Optional<u32> code_point_range_index;
 
@@ -112,18 +195,26 @@ static UnicodeData parse_unicode_data(Core::File& file)
                 last_contiguous_code_point = previous_code_point;
         }
 
+        for (auto const& casing : unicode_data.special_casing) {
+            if (casing.code_point == data.code_point)
+                data.special_casing_indices.append(casing.index);
+        }
+
+        unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
+
         previous_code_point = data.code_point;
         unicode_data.code_point_data.append(move(data));
     }
 
     unicode_data.last_contiguous_code_point = *last_contiguous_code_point;
-    return unicode_data;
 }
 
-static void generate_unicode_data_header()
+static void generate_unicode_data_header(UnicodeData const& unicode_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
+    generator.set("casing_transform_size", String::number(unicode_data.largest_casing_transform_size));
+    generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
 
     generator.append(R"~~~(
 #pragma once
@@ -132,6 +223,46 @@ static void generate_unicode_data_header()
 #include <AK/Types.h>
 
 namespace Unicode {
+
+enum class Locale {
+    None,)~~~");
+
+    for (auto const& locale : unicode_data.locales) {
+        generator.set("locale", locale);
+        generator.append(R"~~~(
+    @locale@,)~~~");
+    }
+
+    generator.append(R"~~~(
+};
+
+enum class Condition {
+    None,)~~~");
+
+    for (auto const& condition : unicode_data.conditions) {
+        generator.set("condition", condition);
+        generator.append(R"~~~(
+    @condition@,)~~~");
+    }
+
+    generator.append(R"~~~(
+};
+
+struct SpecialCasing {
+    u32 code_point { 0 };
+
+    u32 lowercase_mapping[@casing_transform_size@];
+    u32 lowercase_mapping_size { 0 };
+
+    u32 uppercase_mapping[@casing_transform_size@];
+    u32 uppercase_mapping_size { 0 };
+
+    u32 titlecase_mapping[@casing_transform_size@];
+    u32 titlecase_mapping_size { 0 };
+
+    Locale locale { Locale::None };
+    Condition condition { Condition::None };
+};
 
 struct UnicodeData {
     u32 code_point;)~~~");
@@ -162,13 +293,15 @@ struct UnicodeData {
     append_field("u32"sv, "simple_lowercase_mapping"sv);
     append_field("u32"sv, "simple_titlecase_mapping"sv);
 
-    builder.append(R"~~~(
+    generator.append(R"~~~(
+
+    SpecialCasing const* special_casing[@special_casing_size@] {};
+    u32 special_casing_size { 0 };
 };
 
 Optional<UnicodeData> unicode_data_for_code_point(u32 code_point);
 
-}
-)~~~");
+})~~~");
 
     outln("{}", generator.as_string_view());
 }
@@ -178,7 +311,8 @@ static void generate_unicode_data_implementation(UnicodeData unicode_data)
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    generator.set("size", String::number(unicode_data.code_point_data.size()));
+    generator.set("special_casing_size", String::number(unicode_data.special_casing.size()));
+    generator.set("code_point_data_size", String::number(unicode_data.code_point_data.size()));
     generator.set("last_contiguous_code_point", String::formatted("0x{:x}", unicode_data.last_contiguous_code_point));
 
     generator.append(R"~~~(
@@ -188,8 +322,50 @@ static void generate_unicode_data_implementation(UnicodeData unicode_data)
 #include <LibUnicode/UnicodeData.h>
 
 namespace Unicode {
+)~~~");
 
-static constexpr Array<UnicodeData, @size@> s_unicode_data { {)~~~");
+    auto append_numeric_list = [&](auto const& code_points, StringView format) {
+        if (code_points.is_empty()) {
+            generator.append(", {}, 0");
+            return;
+        }
+
+        bool first = true;
+        generator.append(", {");
+        for (auto code_point : code_points) {
+            generator.append(first ? " " : ", ");
+            generator.append(String::formatted(format, code_point));
+            first = false;
+        }
+        generator.append(String::formatted(" }}, {}", code_points.size()));
+    };
+
+    generator.append(R"~~~(
+static constexpr Array<SpecialCasing, @special_casing_size@> s_special_casing { {)~~~");
+
+    for (auto const& casing : unicode_data.special_casing) {
+        generator.set("code_point", String::formatted("{:#x}", casing.code_point));
+        generator.append(R"~~~(
+    { @code_point@)~~~");
+
+        constexpr auto format = "0x{:x}"sv;
+        append_numeric_list(casing.lowercase_mapping, format);
+        append_numeric_list(casing.uppercase_mapping, format);
+        append_numeric_list(casing.titlecase_mapping, format);
+
+        generator.set("locale", casing.locale.is_empty() ? "None" : casing.locale);
+        generator.append(", Locale::@locale@");
+
+        generator.set("condition", casing.condition.is_empty() ? "None" : casing.condition);
+        generator.append(", Condition::@condition@");
+
+        generator.append(" },");
+    }
+
+    generator.append(R"~~~(
+} };
+
+static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~~~");
 
     auto append_field = [&](StringView name, String value) {
         if (!s_desired_fields.span().contains_slow(name))
@@ -218,7 +394,7 @@ static constexpr Array<UnicodeData, @size@> s_unicode_data { {)~~~");
         append_field("simple_uppercase_mapping", String::formatted("{:#x}", data.simple_uppercase_mapping.value_or(data.code_point)));
         append_field("simple_lowercase_mapping", String::formatted("{:#x}", data.simple_lowercase_mapping.value_or(data.code_point)));
         append_field("simple_titlecase_mapping", String::formatted("{:#x}", data.simple_titlecase_mapping.value_or(data.code_point)));
-
+        append_numeric_list(data.special_casing_indices, "&s_special_casing[{}]"sv);
         generator.append(" },");
     }
 
@@ -263,8 +439,7 @@ Optional<UnicodeData> unicode_data_for_code_point(u32 code_point)
     return {};
 }
 
-}
-)~~~");
+})~~~");
 
     outln("{}", generator.as_string_view());
 }
@@ -274,11 +449,13 @@ int main(int argc, char** argv)
     bool generate_header = false;
     bool generate_implementation = false;
     char const* unicode_data_path = nullptr;
+    char const* special_casing_path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generate_header, "Generate the Unicode Data header file", "generate-header", 'h');
     args_parser.add_option(generate_implementation, "Generate the Unicode Data implementation file", "generate-implementation", 'c');
     args_parser.add_option(unicode_data_path, "Path to UnicodeData.txt file", "unicode-data-path", 'u', "unicode-data-path");
+    args_parser.add_option(special_casing_path, "Path to SpecialCasing.txt file", "special-casing-path", 's', "special-casing-path");
     args_parser.parse(argc, argv);
 
     if (!generate_header && !generate_implementation) {
@@ -291,17 +468,30 @@ int main(int argc, char** argv)
         args_parser.print_usage(stderr, argv[0]);
         return 1;
     }
-
-    auto file_or_error = Core::File::open(unicode_data_path, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error()) {
-        warnln("Failed to open {}: {}", unicode_data_path, file_or_error.release_error());
+    if (!special_casing_path) {
+        warnln("-s/--special-casing-path is required");
+        args_parser.print_usage(stderr, argv[0]);
         return 1;
     }
 
-    auto unicode_data = parse_unicode_data(file_or_error.value());
+    auto unicode_data_file_or_error = Core::File::open(unicode_data_path, Core::OpenMode::ReadOnly);
+    if (unicode_data_file_or_error.is_error()) {
+        warnln("Failed to open {}: {}", unicode_data_path, unicode_data_file_or_error.release_error());
+        return 1;
+    }
+
+    auto special_casing_file_or_error = Core::File::open(special_casing_path, Core::OpenMode::ReadOnly);
+    if (special_casing_file_or_error.is_error()) {
+        warnln("Failed to open {}: {}", special_casing_path, special_casing_file_or_error.release_error());
+        return 1;
+    }
+
+    UnicodeData unicode_data {};
+    parse_special_casing(special_casing_file_or_error.value(), unicode_data);
+    parse_unicode_data(unicode_data_file_or_error.value(), unicode_data);
 
     if (generate_header)
-        generate_unicode_data_header();
+        generate_unicode_data_header(unicode_data);
     if (generate_implementation)
         generate_unicode_data_implementation(move(unicode_data));
 

@@ -3,10 +3,17 @@ option(ENABLE_UNICODE_DATABASE_DOWNLOAD "Enable download of Unicode UCD files at
 set(UNICODE_DATA_URL https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt)
 set(UNICODE_DATA_PATH ${CMAKE_BINARY_DIR}/UCD/UnicodeData.txt)
 
+set(SPECIAL_CASING_URL https://www.unicode.org/Public/13.0.0/ucd/SpecialCasing.txt)
+set(SPECIAL_CASING_PATH ${CMAKE_BINARY_DIR}/UCD/SpecialCasing.txt)
+
 if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     if (NOT EXISTS ${UNICODE_DATA_PATH})
         message(STATUS "Downloading UCD UnicodeData.txt from ${UNICODE_DATA_URL}...")
         file(DOWNLOAD ${UNICODE_DATA_URL} ${UNICODE_DATA_PATH} INACTIVITY_TIMEOUT 10)
+    endif()
+    if (NOT EXISTS ${SPECIAL_CASING_PATH})
+        message(STATUS "Downloading UCD SpecialCasing.txt from ${SPECIAL_CASING_URL}...")
+        file(DOWNLOAD ${SPECIAL_CASING_URL} ${SPECIAL_CASING_PATH} INACTIVITY_TIMEOUT 10)
     endif()
 
     set(UNICODE_GENERATOR CodeGenerators/GenerateUnicodeData)
@@ -25,18 +32,18 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
 
     add_custom_command(
         OUTPUT ${UNICODE_DATA_HEADER}
-        COMMAND ${write_if_different} ${UNICODE_DATA_HEADER} ${UNICODE_GENERATOR} -h -u ${UNICODE_DATA_PATH}
+        COMMAND ${write_if_different} ${UNICODE_DATA_HEADER} ${UNICODE_GENERATOR} -h -u ${UNICODE_DATA_PATH} -s ${SPECIAL_CASING_PATH}
         VERBATIM
         DEPENDS GenerateUnicodeData
-        MAIN_DEPENDENCY ${UNICODE_DATA_PATH}
+        MAIN_DEPENDENCY ${UNICODE_DATA_PATH} ${SPECIAL_CASING_PATH}
     )
 
     add_custom_command(
         OUTPUT ${UNICODE_DATA_IMPLEMENTATION}
-        COMMAND ${write_if_different} ${UNICODE_DATA_IMPLEMENTATION} ${UNICODE_GENERATOR} -c -u ${UNICODE_DATA_PATH}
+        COMMAND ${write_if_different} ${UNICODE_DATA_IMPLEMENTATION} ${UNICODE_GENERATOR} -c -u ${UNICODE_DATA_PATH} -s ${SPECIAL_CASING_PATH}
         VERBATIM
         DEPENDS GenerateUnicodeData
-        MAIN_DEPENDENCY ${UNICODE_DATA_PATH}
+        MAIN_DEPENDENCY ${UNICODE_DATA_PATH} ${SPECIAL_CASING_PATH}
     )
 
     set(UNICODE_DATA_SOURCES ${UNICODE_DATA_HEADER} ${UNICODE_DATA_IMPLEMENTATION})
