@@ -33,7 +33,7 @@ static u8 bcd_to_binary(u8 bcd)
     return (bcd & 0x0F) + ((bcd >> 4) * 10);
 }
 
-void read_registers(unsigned& year, unsigned& month, unsigned& day, unsigned& hour, unsigned& minute, unsigned& second)
+static bool try_to_read_registers(unsigned& year, unsigned& month, unsigned& day, unsigned& hour, unsigned& minute, unsigned& second)
 {
     // Note: Let's wait 0.01 seconds until we stop trying to query the RTC CMOS
     size_t time_passed_in_milliseconds = 0;
@@ -54,7 +54,7 @@ void read_registers(unsigned& year, unsigned& month, unsigned& day, unsigned& ho
         hour = 0;
         minute = 0;
         second = 0;
-        return;
+        return false;
     }
 
     u8 status_b = CMOS::read(0x0b);
@@ -85,20 +85,31 @@ void read_registers(unsigned& year, unsigned& month, unsigned& day, unsigned& ho
     }
 
     year += 2000;
+    return true;
 }
 
 time_t now()
 {
-    // FIXME: We should probably do something more robust here.
-    //        Perhaps read all the values twice and verify that they were identical.
-    //        We don't want to be caught in the middle of an RTC register update.
-    while (update_in_progress())
-        ;
+
+    auto check_registers_against_preloaded_values = [](unsigned year, unsigned month, unsigned day, unsigned hour, unsigned minute, unsigned second) {
+        unsigned checked_year, checked_month, checked_day, checked_hour, checked_minute, checked_second;
+        if (!try_to_read_registers(checked_year, checked_month, checked_day, checked_hour, checked_minute, checked_second))
+            return false;
+        return checked_year == year && checked_month == month && checked_day == day && checked_hour == hour && checked_minute == minute && checked_second == second;
+    };
 
     unsigned year, month, day, hour, minute, second;
-    read_registers(year, month, day, hour, minute, second);
+    bool did_read_rtc_sucessfully = false;
+    for (size_t attempt = 0; attempt < 5; attempt++) {
+        if (!try_to_read_registers(year, month, day, hour, minute, second))
+            break;
+        if (check_registers_against_preloaded_values(year, month, day, hour, minute, second)) {
+            did_read_rtc_sucessfully = true;
+            break;
+        }
+    }
 
-    dmesgln("RTC: Year: {}, month: {}, day: {}, hour: {}, minute: {}, second: {}", year, month, day, hour, minute, second);
+    dmesgln("RTC: {} Year: {}, month: {}, day: {}, hour: {}, minute: {}, second: {}", (did_read_rtc_sucessfully ? "" : "(failed to read)"), year, month, day, hour, minute, second);
 
     time_t days_since_epoch = years_to_days_since_epoch(year) + day_of_year(year, month, day);
     return ((days_since_epoch * 24 + hour) * 60 + minute) * 60 + second;
