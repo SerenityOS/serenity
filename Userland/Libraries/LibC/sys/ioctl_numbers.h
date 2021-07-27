@@ -83,6 +83,7 @@ enum IOCtlNumber {
     SIOCDARP,
     FIBMAP,
     FIONBIO,
+    FIONREAD,
     KCOV_SETBUFSIZE,
     KCOV_ENABLE,
     KCOV_DISABLE,
@@ -126,3 +127,4 @@ enum IOCtlNumber {
 #define SIOCDARP SIOCDARP
 #define FIBMAP FIBMAP
 #define FIONBIO FIONBIO
+#define FIONREAD FIONREAD
