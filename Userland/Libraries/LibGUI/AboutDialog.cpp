@@ -22,7 +22,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     , m_name(name)
     , m_icon(icon)
 {
-    resize(413, 205);
+    resize(413, 204);
     set_title(String::formatted("About {}", m_name));
     set_resizable(false);
 
@@ -56,12 +56,13 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
 
     auto& right_container = content_container.add<Widget>();
     right_container.set_layout<VerticalBoxLayout>();
-    right_container.layout()->set_margins({ 0, 12, 12, 8 });
+    right_container.layout()->set_margins({ 0, 12, 4, 4 });
 
     auto make_label = [&](const StringView& text, bool bold = false) {
         auto& label = right_container.add<Label>(text);
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         label.set_fixed_height(14);
+        label.set_content_margins({ 0, 0, 8, 0 });
         if (bold)
             label.set_font(Gfx::FontDatabase::default_font().bold_variant());
     };
@@ -75,11 +76,11 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
     right_container.layout()->add_spacer();
 
     auto& button_container = right_container.add<Widget>();
-    button_container.set_fixed_height(23);
+    button_container.set_fixed_height(22);
     button_container.set_layout<HorizontalBoxLayout>();
     button_container.layout()->add_spacer();
     auto& ok_button = button_container.add<Button>("OK");
-    ok_button.set_fixed_size(80, 23);
+    ok_button.set_fixed_width(80);
     ok_button.on_click = [this](auto) {
         done(Dialog::ExecOK);
     };
