@@ -151,6 +151,18 @@ public:
         fflush(m_tty);
     }
 
+    void top()
+    {
+        up_n(m_line);
+    }
+
+    void bottom()
+    {
+        while (read_line())
+            ;
+        down_n(m_lines.size() - m_line);
+    }
+
     void init()
     {
         while (m_lines.size() < m_height) {
@@ -369,6 +381,10 @@ int main(int argc, char** argv)
         } else if (sequence == "k" || sequence == "\e[A") {
             if (!emulate_more)
                 pager.up();
+        } else if (sequence == "g") {
+            pager.top();
+        } else if (sequence == "G") {
+            pager.bottom();
         } else if (sequence == " " || sequence == "\e[6~") {
             pager.down_page();
         } else if (sequence == "\e[5~") {
