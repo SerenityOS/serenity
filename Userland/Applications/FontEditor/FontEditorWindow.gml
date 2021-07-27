@@ -74,7 +74,7 @@
                 title: "Metadata"
                 fixed_height: 220
                 layout: @GUI::VerticalBoxLayout {
-                    margins: [8, 16, 8, 4]
+                    margins: [8, 16, 8, 8]
                 }
 
                 @GUI::Widget {
