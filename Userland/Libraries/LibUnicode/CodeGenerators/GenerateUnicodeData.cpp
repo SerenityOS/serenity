@@ -70,10 +70,12 @@ struct UnicodeData {
 
     Vector<CodePointData> code_point_data;
     Vector<CodePointRange> code_point_ranges;
+    Vector<String> general_categories;
     u32 last_contiguous_code_point { 0 };
 };
 
 static constexpr auto s_desired_fields = Array {
+    "general_category"sv,
     "simple_uppercase_mapping"sv,
     "simple_lowercase_mapping"sv,
 };
@@ -202,10 +204,14 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
 
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
 
+        if (!unicode_data.general_categories.contains_slow(data.general_category))
+            unicode_data.general_categories.append(data.general_category);
+
         previous_code_point = data.code_point;
         unicode_data.code_point_data.append(move(data));
     }
 
+    quick_sort(unicode_data.general_categories);
     unicode_data.last_contiguous_code_point = *last_contiguous_code_point;
 }
 
@@ -248,6 +254,18 @@ enum class Condition {
     generator.append(R"~~~(
 };
 
+// https://www.unicode.org/reports/tr44/#General_Category_Values
+enum class GeneralCategory {)~~~");
+
+    for (auto const& general_category : unicode_data.general_categories) {
+        generator.set("general_category", general_category);
+        generator.append(R"~~~(
+    @general_category@,)~~~");
+    }
+
+    generator.append(R"~~~(
+};
+
 struct SpecialCasing {
     u32 code_point { 0 };
 
@@ -279,7 +297,7 @@ struct UnicodeData {
 
     // Note: For compile-time performance, only primitive types are used.
     append_field("char const*"sv, "name"sv);
-    append_field("char const*"sv, "general_category"sv);
+    append_field("GeneralCategory"sv, "general_category"sv);
     append_field("u8"sv, "canonical_combining_class"sv);
     append_field("char const*"sv, "bidi_class"sv);
     append_field("char const*"sv, "decomposition_type"sv);
@@ -381,7 +399,7 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
     { @code_point@)~~~");
 
         append_field("name", String::formatted("\"{}\"", data.name));
-        append_field("general_category", String::formatted("\"{}\"", data.general_category));
+        append_field("general_category", String::formatted("GeneralCategory::{}", data.general_category));
         append_field("canonical_combining_class", String::number(data.canonical_combining_class));
         append_field("bidi_class", String::formatted("\"{}\"", data.bidi_class));
         append_field("decomposition_type", String::formatted("\"{}\"", data.decomposition_type));
