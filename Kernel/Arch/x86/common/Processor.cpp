@@ -304,8 +304,6 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
     m_message_queue = nullptr;
     m_idle_thread = nullptr;
     m_current_thread = nullptr;
-    m_scheduler_data = nullptr;
-    m_mm_data = nullptr;
     m_info = nullptr;
 
     m_halt_requested = false;

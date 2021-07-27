@@ -91,6 +91,8 @@ struct PhysicalMemoryRange {
 #define MM Kernel::MemoryManager::the()
 
 struct MemoryManagerData {
+    static ProcessorSpecificDataID processor_specific_data_id() { return ProcessorSpecificDataID::MemoryManager; }
+
     SpinLock<u8> m_quickmap_in_use;
     u32 m_quickmap_prev_flags;
 
@@ -115,7 +117,7 @@ public:
 
     static inline MemoryManagerData& get_data()
     {
-        return Processor::current().get_mm_data();
+        return ProcessorSpecific<MemoryManagerData>::get();
     }
 
     PageFaultResponse handle_page_fault(PageFault const&);

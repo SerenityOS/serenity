@@ -598,8 +598,7 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
 
 UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
 {
-    auto mm_data = new MemoryManagerData;
-    Processor::current().set_mm_data(*mm_data);
+    ProcessorSpecific<MemoryManagerData>::initialize();
 
     if (cpu == 0) {
         new MemoryManager;

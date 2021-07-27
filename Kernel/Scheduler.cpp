@@ -21,12 +21,14 @@
 
 namespace Kernel {
 
-class SchedulerPerProcessorData {
-    AK_MAKE_NONCOPYABLE(SchedulerPerProcessorData);
-    AK_MAKE_NONMOVABLE(SchedulerPerProcessorData);
+class SchedulerData {
+    AK_MAKE_NONCOPYABLE(SchedulerData);
+    AK_MAKE_NONMOVABLE(SchedulerData);
 
 public:
-    SchedulerPerProcessorData() = default;
+    static ProcessorSpecificDataID processor_specific_data_id() { return ProcessorSpecificDataID::Scheduler; }
+
+    SchedulerData() = default;
 
     bool m_in_scheduler { true };
 };
@@ -190,7 +192,7 @@ UNMAP_AFTER_INIT void Scheduler::start()
     g_scheduler_lock.lock();
 
     auto& processor = Processor::current();
-    processor.set_scheduler_data(*new SchedulerPerProcessorData());
+    ProcessorSpecific<SchedulerData>::initialize();
     VERIFY(processor.is_initialized());
     auto& idle_thread = *Processor::idle_thread();
     VERIFY(processor.current_thread() == &idle_thread);
@@ -212,13 +214,12 @@ bool Scheduler::pick_next()
     // prevents a recursive call into Scheduler::invoke_async upon
     // leaving the scheduler lock.
     ScopedCritical critical;
-    auto& scheduler_data = Processor::current().get_scheduler_data();
-    scheduler_data.m_in_scheduler = true;
+    ProcessorSpecific<SchedulerData>::get().m_in_scheduler = true;
     ScopeGuard guard(
         []() {
             // We may be on a different processor after we got switched
             // back to this thread!
-            auto& scheduler_data = Processor::current().get_scheduler_data();
+            auto& scheduler_data = ProcessorSpecific<SchedulerData>::get();
             VERIFY(scheduler_data.m_in_scheduler);
             scheduler_data.m_in_scheduler = false;
         });
@@ -358,7 +359,7 @@ void Scheduler::leave_on_first_switch(u32 flags)
     // Scheduler::context_switch is not in the call stack we need to
     // clean up and release locks manually here
     g_scheduler_lock.unlock(flags);
-    auto& scheduler_data = Processor::current().get_scheduler_data();
+    auto& scheduler_data = ProcessorSpecific<SchedulerData>::get();
     VERIFY(scheduler_data.m_in_scheduler);
     scheduler_data.m_in_scheduler = false;
 }
@@ -368,7 +369,7 @@ void Scheduler::prepare_after_exec()
     // This is called after exec() when doing a context "switch" into
     // the new process. This is called from Processor::assume_context
     VERIFY(g_scheduler_lock.own_lock());
-    auto& scheduler_data = Processor::current().get_scheduler_data();
+    auto& scheduler_data = ProcessorSpecific<SchedulerData>::get();
     VERIFY(!scheduler_data.m_in_scheduler);
     scheduler_data.m_in_scheduler = true;
 }
@@ -379,7 +380,7 @@ void Scheduler::prepare_for_idle_loop()
     // and is about to run it. We need to acquire he scheduler lock
     VERIFY(!g_scheduler_lock.own_lock());
     g_scheduler_lock.lock();
-    auto& scheduler_data = Processor::current().get_scheduler_data();
+    auto& scheduler_data = ProcessorSpecific<SchedulerData>::get();
     VERIFY(!scheduler_data.m_in_scheduler);
     scheduler_data.m_in_scheduler = true;
 }
@@ -509,13 +510,13 @@ void Scheduler::timer_tick(const RegisterState& regs)
 void Scheduler::invoke_async()
 {
     VERIFY_INTERRUPTS_DISABLED();
-    auto& proc = Processor::current();
-    VERIFY(!proc.in_irq());
+    auto& processor = Processor::current();
+    VERIFY(!processor.in_irq());
 
     // Since this function is called when leaving critical sections (such
     // as a SpinLock), we need to check if we're not already doing this
     // to prevent recursion
-    if (!proc.get_scheduler_data().m_in_scheduler)
+    if (!ProcessorSpecific<SchedulerData>::get().m_in_scheduler)
         pick_next();
 }
 
