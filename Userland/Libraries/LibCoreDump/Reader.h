@@ -32,6 +32,7 @@ public:
     const ELF::Image& image() const { return m_coredump_image; }
 
     Optional<FlatPtr> peek_memory(FlatPtr address) const;
+    ELF::Core::MemoryRegionInfo const* first_region_for_object(StringView object_name) const;
     const ELF::Core::MemoryRegionInfo* region_containing(FlatPtr address) const;
 
     struct LibraryData {
