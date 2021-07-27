@@ -362,6 +362,7 @@ void TabWidget::mouseup_event(MouseEvent& event)
         return;
 
     auto close_button_rect = this->close_button_rect(m_pressed_close_button_index);
+    m_pressed_close_button_index = -1;
 
     if (close_button_rect.contains(event.position())) {
         auto* widget = m_tabs[m_pressed_close_button_index].widget;
@@ -369,7 +370,6 @@ void TabWidget::mouseup_event(MouseEvent& event)
             if (on_tab_close_click && widget)
                 on_tab_close_click(*widget);
         });
-        m_pressed_close_button_index = -1;
         return;
     }
 }
