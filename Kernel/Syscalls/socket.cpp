@@ -153,9 +153,6 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
 KResultOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<const sockaddr*> user_address, socklen_t user_address_size)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    int fd = m_fds.allocate();
-    if (fd < 0)
-        return fd;
     auto description = fds().file_description(sockfd);
     if (!description)
         return EBADF;
