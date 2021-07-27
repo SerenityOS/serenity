@@ -301,10 +301,10 @@ bool Parser::match_variable_declaration()
     parse_type(get_dummy_node());
 
     // Identifier
-    if (!peek(Token::Type::Identifier).has_value()) {
+    if (!match_name())
         return false;
-    }
-    consume();
+
+    parse_name(get_dummy_node());
 
     if (match(Token::Type::Equals)) {
         consume(Token::Type::Equals);
