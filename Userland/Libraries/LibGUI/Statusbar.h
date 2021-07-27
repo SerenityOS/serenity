@@ -19,6 +19,11 @@ public:
     String text(size_t index) const;
     void set_text(String);
     void set_text(size_t index, String);
+    void set_icon(Gfx::Bitmap const*);
+    void set_icon(size_t index, Gfx::Bitmap const*);
+    void set_fixed_width(size_t index, int);
+    Gfx::Bitmap const* icon() const;
+    Gfx::Bitmap const* icon(size_t index) const;
     void set_override_text(String);
     void set_override_text(size_t index, String);
 
@@ -33,8 +38,10 @@ private:
     NonnullRefPtr<Label> create_label();
     struct Segment {
         NonnullRefPtr<GUI::Label> label;
+        RefPtr<Gfx::Bitmap> icon;
         String text;
         String override_text;
+        int fixed_width { -1 };
     };
     void update_label(size_t);
     Vector<Segment> m_segments;

@@ -52,14 +52,41 @@ void Statusbar::set_text(String text)
     set_text(0, move(text));
 }
 
+void Statusbar::set_icon(Gfx::Bitmap const* icon)
+{
+    set_icon(0, icon);
+}
+
 String Statusbar::text() const
 {
     return text(0);
 }
 
+Gfx::Bitmap const* Statusbar::icon() const
+{
+    return icon(0);
+}
+
+Gfx::Bitmap const* Statusbar::icon(size_t index) const
+{
+    return m_segments.at(index).icon;
+}
+
 void Statusbar::set_text(size_t index, String text)
 {
     m_segments.at(index).text = move(text);
+    update_label(index);
+}
+
+void Statusbar::set_icon(size_t index, Gfx::Bitmap const* icon)
+{
+    m_segments.at(index).icon = icon;
+    update_label(index);
+}
+
+void Statusbar::set_fixed_width(size_t index, int fixed_width)
+{
+    m_segments.at(index).fixed_width = fixed_width;
     update_label(index);
 }
 
@@ -71,6 +98,7 @@ void Statusbar::set_label_count(size_t label_count)
     for (auto i = m_segments.size(); i < label_count; i++) {
         m_segments.append(Segment {
             .label = create_label(),
+            .icon = {},
             .text = {},
             .override_text = {},
         });
@@ -85,11 +113,14 @@ void Statusbar::update_label(size_t index)
         segment.label->set_frame_shadow(Gfx::FrameShadow::Sunken);
         segment.label->set_frame_shape(Gfx::FrameShape::Panel);
         segment.label->set_text(segment.text);
+        segment.label->set_icon(segment.icon);
     } else {
         segment.label->set_frame_shadow(Gfx::FrameShadow::Plain);
         segment.label->set_frame_shape(Gfx::FrameShape::NoFrame);
         segment.label->set_text(segment.override_text);
+        segment.label->set_icon(nullptr);
     }
+    segment.label->set_fixed_width(segment.fixed_width);
 }
 
 String Statusbar::text(size_t index) const
