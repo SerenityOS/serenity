@@ -80,16 +80,19 @@ private:
             text = {};
         }
 
+        Gfx::IntRect hot_icon_rect() const { return icon_rect.inflated(10, 10); }
+        Gfx::IntRect hot_text_rect() const { return text_rect.inflated(2, 2); }
+
         bool is_intersecting(const Gfx::IntRect& rect) const
         {
             VERIFY(valid);
-            return icon_rect.intersects(rect) || text_rect.intersects(rect);
+            return hot_icon_rect().intersects(rect) || hot_text_rect().intersects(rect);
         }
 
         bool is_containing(const Gfx::IntPoint& point) const
         {
             VERIFY(valid);
-            return icon_rect.contains(point) || text_rect.contains(point);
+            return hot_icon_rect().contains(point) || hot_text_rect().contains(point);
         }
 
         Gfx::IntRect rect(bool wrapped = false) const
