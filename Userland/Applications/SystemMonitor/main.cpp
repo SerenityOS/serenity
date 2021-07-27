@@ -87,8 +87,8 @@ private:
 
 static bool can_access_pid(pid_t pid)
 {
-    auto path = String::formatted("/proc/{}", pid);
-    return access(path.characters(), X_OK) == 0;
+    int rc = kill(pid, 0);
+    return rc == 0;
 }
 
 int main(int argc, char** argv)
