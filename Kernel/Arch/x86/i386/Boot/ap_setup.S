@@ -109,7 +109,7 @@ apic_ap_start32_2:
 
     /* push the Processor pointer this CPU is going to use */
     movl (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %eax
-    addl kernel_load_base, %eax
+    addl kernel_mapping_base, %eax
     movl 0(%eax, %esi, 4), %eax
     push %eax
 
