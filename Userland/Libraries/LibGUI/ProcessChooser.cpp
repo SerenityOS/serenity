@@ -33,7 +33,6 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     auto& widget = set_main_widget<GUI::Widget>();
     widget.set_fill_with_background_color(true);
     widget.set_layout<GUI::VerticalBoxLayout>();
-    widget.layout()->set_margins({ 0, 0, 0, 2 });
 
     m_table_view = widget.add<GUI::TableView>();
     auto sorting_model = GUI::SortingProxyModel::create(RunningProcessesModel::create());
@@ -46,11 +45,12 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     auto& button_container = widget.add<GUI::Widget>();
     button_container.set_fixed_height(30);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
+    button_container.set_content_margins({ 0, 4, 0, 4 });
     button_container.layout()->set_margins({ 0, 0, 4, 0 });
     button_container.layout()->add_spacer();
 
     auto& select_button = button_container.add<GUI::Button>(m_button_label);
-    select_button.set_fixed_size(80, 24);
+    select_button.set_fixed_width(80);
     select_button.on_click = [this](auto) {
         if (m_table_view->selection().is_empty()) {
             GUI::MessageBox::show(this, "No process selected!", m_window_title, GUI::MessageBox::Type::Error);
@@ -60,7 +60,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
         set_pid_from_index_and_close(index);
     };
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
-    cancel_button.set_fixed_size(80, 24);
+    cancel_button.set_fixed_width(80);
     cancel_button.on_click = [this](auto) {
         done(ExecCancel);
     };
