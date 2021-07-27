@@ -95,7 +95,7 @@ static bool is_final_code_point(Utf8View const& string, size_t index, size_t byt
         if (!unicode_data.has_value())
             return false;
 
-        if (is_cased_letter(*unicode_data))
+        if (is_cased_letter(*unicode_data) && !is_case_ignorable(*unicode_data))
             ++cased_letter_count;
         else if (!is_case_ignorable(*unicode_data))
             cased_letter_count = 0;
