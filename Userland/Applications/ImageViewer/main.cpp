@@ -110,6 +110,7 @@ int main(int argc, char** argv)
     widget.on_doubleclick = [&] {
         window->set_fullscreen(!window->is_fullscreen());
         toolbar_container.set_visible(!window->is_fullscreen());
+        widget.set_frame_thickness(window->is_fullscreen() ? 0 : 2);
     };
 
     // Actions
