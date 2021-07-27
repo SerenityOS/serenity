@@ -1261,7 +1261,7 @@ Vector<StringView> Parser::parse_type_qualifiers()
         if (token.type() != Token::Type::Keyword)
             break;
         auto text = text_of_token(token);
-        if (text == "static" || text == "const") {
+        if (text == "static" || text == "const" || text == "extern") {
             qualifiers.append(text);
             consume();
         } else {
@@ -1280,7 +1280,7 @@ Vector<StringView> Parser::parse_function_qualifiers()
         if (token.type() != Token::Type::Keyword)
             break;
         auto text = text_of_token(token);
-        if (text == "static" || text == "inline") {
+        if (text == "static" || text == "inline" || text == "extern") {
             qualifiers.append(text);
             consume();
         } else {
