@@ -9,8 +9,16 @@
 
 namespace Gfx {
 
-// HACK: We need to point to some valid memory with Utf8Views.
-char const s_the_newline[] = "\n";
+enum class BlockType {
+    Newline,
+    Whitespace,
+    Word
+};
+
+struct Block {
+    BlockType type;
+    Utf8View characters;
+};
 
 IntRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing) const
 {
@@ -34,37 +42,69 @@ IntRect TextLayout::bounding_rect(TextWrapping wrapping, int line_spacing) const
 
 Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrapping, int line_spacing, FitWithinRect fit_within_rect) const
 {
-    Vector<Utf8View> words;
+    Vector<Block> blocks;
 
-    Optional<size_t> start_byte_offset;
-    size_t current_byte_offset = 0;
+    Optional<BlockType> current_block_type;
+    size_t block_start_offset;
+
+    size_t offset = 0;
     for (auto it = m_text.begin(); !it.done(); ++it) {
-        current_byte_offset = m_text.iterator_offset(it);
+        offset = m_text.iterator_offset(it);
 
         switch (*it) {
-        case '\n':
-        case '\r':
         case '\t':
         case ' ': {
-            if (start_byte_offset.has_value())
-                words.append(m_text.substring_view(start_byte_offset.value(), current_byte_offset - start_byte_offset.value()));
-            start_byte_offset.clear();
+            if (current_block_type.has_value() && current_block_type.value() != BlockType::Whitespace) {
+                blocks.append({
+                    current_block_type.value(),
+                    m_text.substring_view(block_start_offset, offset - block_start_offset),
+                });
+                current_block_type.clear();
+            }
 
-            if (*it == '\n') {
-                words.append(Utf8View { s_the_newline });
+            if (!current_block_type.has_value()) {
+                current_block_type = BlockType::Whitespace;
+                block_start_offset = offset;
             }
 
             continue;
         }
+        case '\n':
+        case '\r': {
+            if (current_block_type.has_value()) {
+                blocks.append({
+                    current_block_type.value(),
+                    m_text.substring_view(block_start_offset, offset - block_start_offset),
+                });
+                current_block_type.clear();
+            }
+
+            blocks.append({ BlockType::Newline, Utf8View {} });
+            continue;
+        }
         default: {
-            if (!start_byte_offset.has_value())
-                start_byte_offset = current_byte_offset;
+            if (current_block_type.has_value() && current_block_type.value() != BlockType::Word) {
+                blocks.append({
+                    current_block_type.value(),
+                    m_text.substring_view(block_start_offset, offset - block_start_offset),
+                });
+                current_block_type.clear();
+            }
+
+            if (!current_block_type.has_value()) {
+                current_block_type = BlockType::Word;
+                block_start_offset = offset;
+            }
         }
         }
     }
 
-    if (start_byte_offset.has_value())
-        words.append(m_text.substring_view(start_byte_offset.value(), m_text.byte_length() - start_byte_offset.value()));
+    if (current_block_type.has_value()) {
+        blocks.append({
+            current_block_type.value(),
+            m_text.substring_view(block_start_offset, m_text.byte_length() - block_start_offset),
+        });
+    }
 
     size_t max_lines_that_can_fit = 0;
     if (m_rect.height() >= m_font->glyph_height()) {
@@ -81,46 +121,51 @@ Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrap
     StringBuilder builder;
     size_t line_width = 0;
     bool did_not_finish = false;
-    for (auto& word : words) {
-
-        if (word.as_string() == s_the_newline) {
+    for (Block& block : blocks) {
+        switch (block.type) {
+        case BlockType::Newline: {
             lines.append(builder.to_string());
             builder.clear();
             line_width = 0;
 
             if (lines.size() == max_lines_that_can_fit && fit_within_rect == FitWithinRect::Yes) {
                 did_not_finish = true;
-                break;
+                goto blocks_processed;
             }
-        } else {
-            size_t word_width = font().width(word);
+
+            continue;
+        }
+        case BlockType::Whitespace:
+        case BlockType::Word: {
+            size_t block_width = font().width(block.characters);
 
             if (line_width > 0) {
-                word_width += font().glyph_width('x');
+                block_width += font().glyph_width('x');
 
-                if (wrapping == TextWrapping::Wrap && line_width + word_width > static_cast<unsigned>(m_rect.width())) {
+                if (wrapping == TextWrapping::Wrap && line_width + block_width > static_cast<unsigned>(m_rect.width())) {
                     lines.append(builder.to_string());
                     builder.clear();
                     line_width = 0;
 
                     if (lines.size() == max_lines_that_can_fit && fit_within_rect == FitWithinRect::Yes) {
                         did_not_finish = true;
-                        break;
+                        goto blocks_processed;
                     }
                 }
-
-                builder.append(' ');
             }
+
             if (lines.size() == max_lines_that_can_fit && fit_within_rect == FitWithinRect::Yes) {
                 did_not_finish = true;
                 break;
             }
 
-            builder.append(word.as_string());
-            line_width += word_width;
+            builder.append(block.characters.as_string());
+            line_width += block_width;
+        }
         }
     }
 
+blocks_processed:
     if (!did_not_finish) {
         auto last_line = builder.to_string();
         if (!last_line.is_empty())
