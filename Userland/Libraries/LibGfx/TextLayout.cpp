@@ -45,7 +45,7 @@ Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrap
     Vector<Block> blocks;
 
     Optional<BlockType> current_block_type;
-    size_t block_start_offset;
+    size_t block_start_offset = 0;
 
     size_t offset = 0;
     for (auto it = m_text.begin(); !it.done(); ++it) {
