@@ -67,12 +67,7 @@ void Label::set_text(String text)
 
 Gfx::IntRect Label::text_rect() const
 {
-    int indent = 0;
-    if (frame_thickness() > 0)
-        indent = font().glyph_width('x') / 2;
-    auto rect = frame_inner_rect();
-    rect.set_width(rect.width() - indent * 2);
-    return rect;
+    return frame_inner_rect().shrunken(frame_thickness() > 0 ? font().glyph_width('x') : 0, 0);
 }
 
 void Label::paint_event(PaintEvent& event)
