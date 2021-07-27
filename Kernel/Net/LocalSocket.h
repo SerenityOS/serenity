@@ -47,6 +47,7 @@ public:
     virtual KResultOr<size_t> sendto(FileDescription&, const UserOrKernelBuffer&, size_t, int, Userspace<const sockaddr*>, socklen_t) override;
     virtual KResultOr<size_t> recvfrom(FileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Time&) override;
     virtual KResult getsockopt(FileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
+    virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual KResult chown(FileDescription&, uid_t, gid_t) override;
     virtual KResult chmod(FileDescription&, mode_t) override;
 

@@ -755,6 +755,14 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
     case SIOCSARP:
     case SIOCDARP:
         return ioctl_arp();
+
+    case FIONREAD: {
+        int readable = m_receive_buffer.immediatly_readable();
+        if (!copy_to_user(Userspace<int*>(arg), &readable))
+            return EFAULT;
+
+        return KSuccess;
+    }
     }
 
     return EINVAL;
