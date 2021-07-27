@@ -66,7 +66,7 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
             return EPERM;
 
         // Remove the old region from our regions tree, since were going to add another region
-        // with the exact same start address, but dont deallocate it yet
+        // with the exact same start address, but don't deallocate it yet.
         auto region = take_region(*old_region);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
@@ -90,12 +90,11 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
         return KSuccess;
     }
 
-    // Try again while checkin multiple regions at a time
-    // slow: without caching
-    const auto& regions = find_regions_intersecting(range_to_unmap);
+    // Try again while checking multiple regions at a time.
+    auto const& regions = find_regions_intersecting(range_to_unmap);
 
-    // Check if any of the regions is not mmapped, to not accidentally
-    // error-out with just half a region map left
+    // Check if any of the regions is not mmap'ed, to not accidentally
+    // error out with just half a region map left.
     for (auto* region : regions) {
         if (!region->is_mmap())
             return EPERM;
@@ -104,20 +103,20 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
     Vector<Region*, 2> new_regions;
 
     for (auto* old_region : regions) {
-        // if it's a full match we can delete the complete old region
+        // If it's a full match we can remove the entire old region.
         if (old_region->range().intersect(range_to_unmap).size() == old_region->size()) {
             deallocate_region(*old_region);
             continue;
         }
 
         // Remove the old region from our regions tree, since were going to add another region
-        // with the exact same start address, but dont deallocate it yet
+        // with the exact same start address, but don't deallocate it yet.
         auto region = take_region(*old_region);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
         region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
 
-        // Otherwise just split the regions and collect them for future mapping
+        // Otherwise, split the regions and collect them for future mapping.
         auto split_regions_or_error = try_split_region_around_range(*region, range_to_unmap);
         if (split_regions_or_error.is_error())
             return split_regions_or_error.error();
@@ -125,9 +124,11 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
         if (new_regions.try_extend(split_regions_or_error.value()))
             return ENOMEM;
     }
-    // Instead we give back the unwanted VM manually at the end.
+
+    // Give back any unwanted VM to the range allocator.
     page_directory().range_allocator().deallocate(range_to_unmap);
-    // And finally we map the new region(s) using our page directory (they were just allocated and don't have one).
+
+    // And finally map the new region(s) into our page directory.
     for (auto* new_region : new_regions) {
         new_region->map(page_directory());
     }
@@ -208,10 +209,8 @@ KResultOr<Region*> Space::allocate_region_with_vmobject(Range const& range, Nonn
     auto* added_region = add_region(region.release_nonnull());
     if (!added_region)
         return ENOMEM;
-    if (!added_region->map(page_directory())) {
-        // FIXME: What is an appropriate error code here, really?
+    if (!added_region->map(page_directory()))
         return ENOMEM;
-    }
     return added_region;
 }
 
@@ -266,7 +265,6 @@ Vector<Region*> Space::find_regions_intersecting(const Range& range)
 
     ScopedSpinLock lock(m_lock);
 
-    // FIXME: Maybe take the cache from the single lookup?
     auto found_region = m_regions.find_largest_not_above(range.base().get());
     if (!found_region)
         return regions;
