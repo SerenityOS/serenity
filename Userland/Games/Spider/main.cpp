@@ -91,6 +91,26 @@ int main(int argc, char** argv)
             GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
     };
 
+    auto total_wins = [&]() {
+        return static_cast<u32>(config->read_num_entry("TotalWins", mode_id(), 0));
+    };
+    auto increment_total_wins = [&]() {
+        config->write_num_entry("TotalWins", mode_id(), static_cast<int>(total_wins() + 1));
+
+        if (!config->sync())
+            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+    };
+
+    auto total_losses = [&]() {
+        return static_cast<u32>(config->read_num_entry("TotalLosses", mode_id(), 0));
+    };
+    auto increment_total_losses = [&]() {
+        config->write_num_entry("TotalLosses", mode_id(), static_cast<int>(total_losses() + 1));
+
+        if (!config->sync())
+            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+    };
+
     if (mode >= Spider::Mode::__Count)
         update_mode(Spider::Mode::SingleSuit);
 
@@ -138,10 +158,17 @@ int main(int argc, char** argv)
         statusbar.set_text(2, "Time: 00:00:00");
     };
     game.on_game_end = [&](Spider::GameOverReason reason, uint32_t score) {
-        if (timer->is_active())
+        auto game_was_in_progress = timer->is_active();
+        if (game_was_in_progress) {
             timer->stop();
 
+            if (reason != Spider::GameOverReason::Victory)
+                increment_total_losses();
+        }
+
         if (reason == Spider::GameOverReason::Victory) {
+            increment_total_wins();
+
             if (score > high_score()) {
                 update_high_score(score);
                 statusbar.set_text(1, String::formatted("High Score: {}", score));
@@ -159,7 +186,7 @@ int main(int argc, char** argv)
         auto game_in_progress = timer->is_active();
         if (game_in_progress) {
             auto result = GUI::MessageBox::show(window,
-                "A game is still in progress, are you sure you would like to quit?",
+                "A game is still in progress, are you sure you would like to quit? Doing so will count as a loss.",
                 "Game in progress",
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::YesNoCancel);
@@ -171,6 +198,9 @@ int main(int argc, char** argv)
         }
 
         return GUI::Window::CloseRequestDecision::Close;
+    };
+    window->on_close = [&]() {
+        game.on_game_end(Spider::GameOverReason::Quit, 0);
     };
 
     GUI::ActionGroup suit_actions;
