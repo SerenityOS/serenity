@@ -141,7 +141,7 @@ apic_ap_start64:
 
     /* push the Processor pointer this CPU is going to use */
     movq (ap_cpu_init_processor_info_array - apic_ap_start)(%ebp), %rax
-    leaq kernel_load_base(%rip), %r8
+    leaq kernel_mapping_base(%rip), %r8
     movq (%r8), %r8
     addq %r8, %rax
     movq 0(%rax, %rsi, 4), %rax
