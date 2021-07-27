@@ -15,7 +15,7 @@
 
 namespace Kernel {
 
-OwnPtr<Space> Space::create(Process& process, const Space* parent)
+OwnPtr<Space> Space::try_create(Process& process, Space const* parent)
 {
     auto page_directory = PageDirectory::create_for_userspace(parent ? &parent->page_directory().range_allocator() : nullptr);
     if (!page_directory)

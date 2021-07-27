@@ -18,7 +18,7 @@ namespace Kernel {
 
 class Space {
 public:
-    static OwnPtr<Space> create(Process&, const Space* parent);
+    static OwnPtr<Space> try_create(Process&, Space const* parent);
     ~Space();
 
     PageDirectory& page_directory() { return *m_page_directory; }
