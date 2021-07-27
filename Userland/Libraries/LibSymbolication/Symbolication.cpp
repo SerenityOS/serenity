@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Checked.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
@@ -192,7 +193,12 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
     for (auto address : stack) {
         const RegionWithSymbols* found_region = nullptr;
         for (auto& region : regions) {
-            if (address >= region.base && address < (region.base + region.size)) {
+            FlatPtr region_end;
+            if (Checked<FlatPtr>::addition_would_overflow(region.base, region.size))
+                region_end = NumericLimits<FlatPtr>::max();
+            else
+                region_end = region.base + region.size;
+            if (address >= region.base && address < region_end) {
                 found_region = &region;
                 break;
             }
