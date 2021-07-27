@@ -2,6 +2,10 @@ name: Discord notifications
 
 on: [push, pull_request_target]
 
+concurrency:
+  group: ${{ github.head_ref || format('{0}-{1}', github.ref, github.run_number) }}
+  cancel-in-progress: true
+
 jobs:
   notify_discord:
     runs-on: ubuntu-20.04
