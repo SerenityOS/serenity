@@ -515,6 +515,13 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
     if (role == ModelRole::Icon) {
         return icon_for(node);
     }
+
+    if (role == ModelRole::IconOpacity) {
+        if (node.name.starts_with('.'))
+            return 0.5f;
+        return {};
+    }
+
     return {};
 }
 
