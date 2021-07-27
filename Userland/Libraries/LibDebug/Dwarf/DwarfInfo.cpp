@@ -90,7 +90,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
-        value.data.as_u32 = data;
+        value.data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::Data2: {
@@ -98,7 +98,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
-        value.data.as_u32 = data;
+        value.data.as_signed = data;
         break;
     }
     case AttributeDataForm::Addr: {
@@ -110,19 +110,19 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         break;
     }
     case AttributeDataForm::SData: {
-        ssize_t data;
+        i64 data;
         debug_info_stream.read_LEB128_signed(data);
         VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::SignedNumber;
-        value.data.as_i32 = data;
+        value.data.as_signed = data;
         break;
     }
     case AttributeDataForm::UData: {
-        size_t data;
+        u64 data;
         debug_info_stream.read_LEB128_unsigned(data);
         VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
-        value.data.as_u32 = data;
+        value.data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::SecOffset: {
@@ -130,7 +130,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::SecOffset;
-        value.data.as_u32 = data;
+        value.data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::Data4: {
@@ -138,15 +138,15 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::UnsignedNumber;
-        value.data.as_u32 = data;
+        value.data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::Data8: {
         u64 data;
         debug_info_stream >> data;
         VERIFY(!debug_info_stream.has_any_error());
-        value.type = AttributeValue::Type::LongUnsignedNumber;
-        value.data.as_u64 = data;
+        value.type = AttributeValue::Type::UnsignedNumber;
+        value.data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::Ref4: {
@@ -155,7 +155,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         VERIFY(!debug_info_stream.has_any_error());
         value.type = AttributeValue::Type::DieReference;
         VERIFY(unit);
-        value.data.as_u32 = data + unit->offset();
+        value.data.as_unsigned = data + unit->offset();
         break;
     }
     case AttributeDataForm::FlagPresent: {
@@ -225,7 +225,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
     case AttributeDataForm::ImplicitConst: {
         /* Value is part of the abbreviation record. */
         value.type = AttributeValue::Type::SignedNumber;
-        value.data.as_i32 = implicit_const_value;
+        value.data.as_signed = implicit_const_value;
         break;
     }
     default:
@@ -250,7 +250,7 @@ void DwarfInfo::build_cached_dies() const
         if (!start.has_value() || !end.has_value())
             return {};
 
-        VERIFY(start->type == Dwarf::AttributeValue::Type::UnsignedNumber);
+        VERIFY(start->form == Dwarf::AttributeDataForm::Addr);
 
         // DW_AT_high_pc attribute can have different meanings depending on the attribute form.
         // (Dwarf version 5, section 2.17.2).
@@ -259,9 +259,9 @@ void DwarfInfo::build_cached_dies() const
         if (end->form == Dwarf::AttributeDataForm::Addr)
             range_end = end->data.as_addr;
         else
-            range_end = start->data.as_u32 + end->data.as_u32;
+            range_end = start->data.as_unsigned + end->data.as_unsigned;
 
-        return { DIERange { start.value().data.as_u32, range_end } };
+        return { DIERange { (FlatPtr)start.value().data.as_addr, range_end } };
     };
 
     // If we simply use a lambda, type deduction fails because it's used recursively.

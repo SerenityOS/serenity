@@ -13,9 +13,12 @@
 TEST_CASE(basic_scenario)
 {
     auto location = SourceLocation::current();
-    EXPECT_EQ(StringView(__FILE__), location.filename());
     EXPECT_EQ(StringView(__FUNCTION__), location.function_name());
-    EXPECT_EQ(__LINE__ - 3u, location.line_number());
+    EXPECT_EQ(__LINE__ - 2u, location.line_number());
+    // FIXME: On Clang, __FILE__ is a relative path, while location.path() is absolute
+#ifndef __clang__
+    EXPECT_EQ(StringView(__FILE__), location.filename());
+#endif
 }
 
 static StringView test_default_arg(const SourceLocation& loc = SourceLocation::current())
