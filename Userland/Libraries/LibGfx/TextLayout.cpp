@@ -139,24 +139,15 @@ Vector<String, 32> TextLayout::wrap_lines(TextElision elision, TextWrapping wrap
         case BlockType::Word: {
             size_t block_width = font().width(block.characters);
 
-            if (line_width > 0) {
-                block_width += font().glyph_width('x');
-
-                if (wrapping == TextWrapping::Wrap && line_width + block_width > static_cast<unsigned>(m_rect.width())) {
-                    lines.append(builder.to_string());
-                    builder.clear();
-                    line_width = 0;
-
-                    if (lines.size() == max_lines_that_can_fit && fit_within_rect == FitWithinRect::Yes) {
-                        did_not_finish = true;
-                        goto blocks_processed;
-                    }
-                }
+            if (wrapping == TextWrapping::Wrap && line_width + block_width > static_cast<unsigned>(m_rect.width())) {
+                lines.append(builder.to_string());
+                builder.clear();
+                line_width = 0;
             }
 
             if (lines.size() == max_lines_that_can_fit && fit_within_rect == FitWithinRect::Yes) {
                 did_not_finish = true;
-                break;
+                goto blocks_processed;
             }
 
             builder.append(block.characters.as_string());
