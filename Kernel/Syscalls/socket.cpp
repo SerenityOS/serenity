@@ -39,9 +39,10 @@ KResultOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
 
     if ((type & SOCK_TYPE_MASK) == SOCK_RAW && !is_superuser())
         return EACCES;
-    int fd = m_fds.allocate();
-    if (fd < 0)
-        return fd;
+    auto fd_or_error = m_fds.allocate();
+    if (fd_or_error.is_error())
+        return fd_or_error.error();
+    auto fd = fd_or_error.value();
     auto result = Socket::create(domain, type, protocol);
     if (result.is_error())
         return result.error();
@@ -100,9 +101,10 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
     if (user_address && !copy_from_user(&address_size, static_ptr_cast<const socklen_t*>(user_address_size)))
         return EFAULT;
 
-    int accepted_socket_fd = m_fds.allocate();
-    if (accepted_socket_fd < 0)
-        return accepted_socket_fd;
+    auto accepted_socket_fd_or_error = m_fds.allocate();
+    if (accepted_socket_fd_or_error.is_error())
+        return accepted_socket_fd_or_error.error();
+    auto accepted_socket_fd = accepted_socket_fd_or_error.value();
     auto accepting_socket_description = fds().file_description(accepting_socket_fd);
     if (!accepting_socket_description)
         return EBADF;
@@ -411,23 +413,22 @@ KResultOr<FlatPtr> Process::sys$socketpair(Userspace<const Syscall::SC_socketpai
     auto pair = result.value();
 
     int fds[2];
-    fds[0] = m_fds.allocate();
-    if (fds[0] < 0)
-        return ENFILE;
+    auto fd1_or_error = m_fds.allocate();
+    if (fd1_or_error.is_error())
+        return fd1_or_error.error();
+    fds[0] = fd1_or_error.value();
     setup_socket_fd(fds[0], pair.description1, params.type);
 
-    fds[1] = m_fds.allocate();
-    if (fds[1] < 0) {
-        // FIXME: This leaks fds[0]
-        return ENFILE;
-    }
+    auto fd2_or_error = m_fds.allocate();
+    if (fd2_or_error.is_error())
+        return fd2_or_error.error();
+    fds[1] = fd2_or_error.value();
     setup_socket_fd(fds[1], pair.description2, params.type);
 
     if (!copy_to_user(params.sv, fds, sizeof(fds))) {
         // FIXME: This leaks both file descriptors
         return EFAULT;
     }
-
     return KSuccess;
 }
 }

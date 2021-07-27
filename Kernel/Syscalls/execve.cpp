@@ -591,7 +591,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
     int main_program_fd = -1;
     if (interpreter_description) {
-        main_program_fd = m_fds.allocate();
+        main_program_fd = m_fds.allocate().value();
         VERIFY(main_program_fd >= 0);
         auto seek_result = main_program_description->seek(0, SEEK_SET);
         VERIFY(!seek_result.is_error());

@@ -46,9 +46,10 @@ KResultOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
     if (!socket.is_local())
         return EAFNOSUPPORT;
 
-    int new_fd = m_fds.allocate();
-    if (new_fd < 0)
-        return new_fd;
+    auto new_fd_or_error = m_fds.allocate();
+    if (new_fd_or_error.is_error())
+        return new_fd_or_error.error();
+    auto new_fd = new_fd_or_error.value();
 
     auto& local_socket = static_cast<LocalSocket&>(socket);
     auto received_descriptor_or_error = local_socket.recvfd(*socket_description);

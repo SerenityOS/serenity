@@ -30,13 +30,19 @@ KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
     if (open_writer_result.is_error())
         return open_writer_result.error();
 
-    int reader_fd = m_fds.allocate();
+    auto reader_fd_or_error = m_fds.allocate();
+    if (reader_fd_or_error.is_error())
+        return reader_fd_or_error.error();
+    auto reader_fd = reader_fd_or_error.value();
     m_fds[reader_fd].set(open_reader_result.release_value(), fd_flags);
     m_fds[reader_fd].description()->set_readable(true);
     if (!copy_to_user(&pipefd[0], &reader_fd))
         return EFAULT;
 
-    int writer_fd = m_fds.allocate();
+    auto writer_fd_or_error = m_fds.allocate();
+    if (writer_fd_or_error.is_error())
+        return writer_fd_or_error.error();
+    auto writer_fd = writer_fd_or_error.value();
     m_fds[writer_fd].set(open_writer_result.release_value(), fd_flags);
     m_fds[writer_fd].description()->set_writable(true);
     if (!copy_to_user(&pipefd[1], &writer_fd))
