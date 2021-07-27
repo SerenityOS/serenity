@@ -1076,7 +1076,13 @@ NonnullRefPtr<EnumDeclaration> Parser::parse_enum_declaration(ASTNode& parent)
     enum_decl->set_name(text_of_token(name_token));
     consume(Token::Type::LeftCurly);
     while (!eof() && peek().type() != Token::Type::RightCurly) {
-        enum_decl->add_entry(text_of_token(consume(Token::Type::Identifier)));
+        auto name = text_of_token(consume(Token::Type::Identifier));
+        RefPtr<Expression> value;
+        if (peek().type() == Token::Type::Equals) {
+            consume();
+            value = parse_expression(enum_decl);
+        }
+        enum_decl->add_entry(name, move(value));
         if (peek().type() != Token::Type::Comma) {
             break;
         }

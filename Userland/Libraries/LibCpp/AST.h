@@ -616,11 +616,15 @@ public:
     };
 
     void set_type(Type type) { m_type = type; }
-    void add_entry(StringView entry) { m_entries.append(move(entry)); }
+    void add_entry(StringView entry, RefPtr<Expression> value = nullptr) { m_entries.append({ entry, move(value) }); }
 
 private:
     Type m_type { Type::RegularEnum };
-    Vector<StringView> m_entries;
+    struct EnumerationEntry {
+        StringView name;
+        RefPtr<Expression> value;
+    };
+    Vector<EnumerationEntry> m_entries;
 };
 
 class StructOrClassDeclaration : public Declaration {
