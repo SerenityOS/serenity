@@ -193,7 +193,7 @@ static Optional<Dwarf::DIE> parse_variable_type_die(Dwarf::DIE const& variable_d
 
     VERIFY(type_die_offset.value().type == Dwarf::AttributeValue::Type::DieReference);
 
-    auto type_die = variable_die.compilation_unit().get_die_at_offset(type_die_offset.value().data.as_u32);
+    auto type_die = variable_die.compilation_unit().get_die_at_offset(type_die_offset.value().data.as_unsigned);
     auto type_name = type_die.get_attribute(Dwarf::Attribute::Name);
     if (type_name.has_value()) {
         variable_info.type_name = type_name.value().data.as_string;
@@ -258,10 +258,10 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(Dwarf::DIE const
         VERIFY(constant.has_value());
         switch (constant.value().type) {
         case Dwarf::AttributeValue::Type::UnsignedNumber:
-            variable_info->constant_data.as_u32 = constant.value().data.as_u32;
+            variable_info->constant_data.as_u32 = constant.value().data.as_unsigned;
             break;
         case Dwarf::AttributeValue::Type::SignedNumber:
-            variable_info->constant_data.as_i32 = constant.value().data.as_i32;
+            variable_info->constant_data.as_i32 = constant.value().data.as_signed;
             break;
         case Dwarf::AttributeValue::Type::String:
             variable_info->constant_data.as_string = constant.value().data.as_string;
@@ -298,7 +298,7 @@ void DebugInfo::add_type_info_to_variable(Dwarf::DIE const& type_die, PtraceRegi
         if (is_array_type && member.tag() == Dwarf::EntryTag::SubRangeType) {
             auto upper_bound = member.get_attribute(Dwarf::Attribute::UpperBound);
             VERIFY(upper_bound.has_value());
-            auto size = upper_bound.value().data.as_u32 + 1;
+            auto size = upper_bound.value().data.as_unsigned + 1;
             type_info->dimension_sizes.append(size);
             return;
         }
@@ -433,11 +433,11 @@ Optional<Dwarf::LineProgram::DirectoryAndFile> DebugInfo::get_source_path_of_inl
         u32 file_index = 0;
 
         if (caller_file->type == Dwarf::AttributeValue::Type::UnsignedNumber) {
-            file_index = caller_file->data.as_u32;
+            file_index = caller_file->data.as_unsigned;
         } else if (caller_file->type == Dwarf::AttributeValue::Type::SignedNumber) {
             // For some reason, the file_index is sometimes stored as a signed number.
-            VERIFY(caller_file->data.as_i32 >= 0);
-            file_index = (u32)caller_file->data.as_i32;
+            VERIFY(caller_file->data.as_signed >= 0);
+            file_index = (u32)caller_file->data.as_signed;
         } else {
             return {};
         }
@@ -455,7 +455,7 @@ Optional<uint32_t> DebugInfo::get_line_of_inline(Dwarf::DIE const& die) const
 
     if (caller_line->type != Dwarf::AttributeValue::Type::UnsignedNumber)
         return {};
-    return caller_line.value().data.as_u32;
+    return caller_line.value().data.as_unsigned;
 }
 
 }

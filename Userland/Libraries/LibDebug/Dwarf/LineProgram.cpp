@@ -63,7 +63,7 @@ void LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, 
                     entry.path = value.data.as_string;
                     break;
                 case ContentType::DirectoryIndex:
-                    entry.directory_index = value.data.as_u32;
+                    entry.directory_index = value.data.as_unsigned;
                     break;
                 default:
                     dbgln_if(DWARF_DEBUG, "Unhandled path list attribute: {}", (int)format_description.type);

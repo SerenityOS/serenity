@@ -75,7 +75,7 @@ void DIE::for_each_child(Function<void(DIE const& child)> callback) const
         auto sibling = current_child->get_attribute(Attribute::Sibling);
         u32 sibling_offset = 0;
         if (sibling.has_value()) {
-            sibling_offset = sibling.value().data.as_u32;
+            sibling_offset = sibling.value().data.as_unsigned;
         }
 
         if (!sibling.has_value()) {
