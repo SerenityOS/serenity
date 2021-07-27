@@ -255,6 +255,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
 
         if (to_check.bounding_box().contains(click_location)) {
             if (to_check.type() == CardStack::Type::Stock) {
+                start_timer_if_necessary();
                 draw_cards();
             } else if (!to_check.is_empty()) {
                 auto& top_card = to_check.peek();
