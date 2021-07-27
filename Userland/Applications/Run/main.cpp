@@ -20,7 +20,7 @@ int main(int argc, char** argv)
     auto app = GUI::Application::construct(argc, argv);
     auto window = RunWindow::construct();
 
-    window->move_to(12, GUI::Desktop::the().rect().bottom() - GUI::Desktop::the().taskbar_height() - 12 - window->height());
+    window->move_to(16, GUI::Desktop::the().rect().bottom() - GUI::Desktop::the().taskbar_height() - 16 - window->height());
     window->show();
 
     return app->exec();
