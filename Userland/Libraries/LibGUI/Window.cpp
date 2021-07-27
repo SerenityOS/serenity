@@ -809,6 +809,10 @@ void Window::set_hovered_widget(Widget* widget)
 
     if (m_hovered_widget)
         Core::EventLoop::current().post_event(*m_hovered_widget, make<Event>(Event::Enter));
+
+    auto* app = Application::the();
+    if (app && app->hover_debugging_enabled())
+        update();
 }
 
 void Window::set_current_backing_store(WindowBackingStore& backing_store, bool flush_immediately)

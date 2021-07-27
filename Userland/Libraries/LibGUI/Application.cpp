@@ -81,6 +81,9 @@ Application::Application(int argc, char** argv, Core::EventLoop::MakeInspectable
     if (getenv("GUI_FOCUS_DEBUG"))
         m_focus_debugging_enabled = true;
 
+    if (getenv("GUI_HOVER_DEBUG"))
+        m_hover_debugging_enabled = true;
+
     if (getenv("GUI_DND_DEBUG"))
         m_dnd_debugging_enabled = true;
 

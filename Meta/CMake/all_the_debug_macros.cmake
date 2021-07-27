@@ -200,6 +200,8 @@ set(WSSCREEN_DEBUG ON)
 # set(DT_DEBUG ON)
 # False positive: GUI_DND_DEBUG is a flag, but passed as an envvar.
 # set(GUI_DND_DEBUG ON)
+# False positive: GUI_HOVER_DEBUG is a flag, but passed as an envvar.
+# set(GUI_HOVER_DEBUG ON)
 # False positive: GUI_FOCUS_DEBUG is a flag, but passed as an envvar.
 # set(GUI_FOCUS_DEBUG ON)
 # False positive: LOG_DEBUG is a flag, but for a bitset, not a feature.
