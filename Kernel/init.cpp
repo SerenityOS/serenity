@@ -68,7 +68,7 @@ extern ctor_func_t start_ctors[];
 extern ctor_func_t end_ctors[];
 
 extern size_t __stack_chk_guard;
-size_t __stack_chk_guard;
+READONLY_AFTER_INIT size_t __stack_chk_guard;
 
 extern "C" u8 start_of_safemem_text[];
 extern "C" u8 end_of_safemem_text[];
