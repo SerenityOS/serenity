@@ -137,6 +137,19 @@ const JsonObject Reader::process_info() const
     // FIXME: Maybe just cache this on the Reader instance after first access.
 }
 
+ELF::Core::MemoryRegionInfo const* Reader::first_region_for_object(StringView object_name) const
+{
+    ELF::Core::MemoryRegionInfo const* ret = nullptr;
+    for_each_memory_region_info([&ret, &object_name](auto& region_info) {
+        if (region_info.object_name() == object_name) {
+            ret = &region_info;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return ret;
+}
+
 const ELF::Core::MemoryRegionInfo* Reader::region_containing(FlatPtr address) const
 {
     const ELF::Core::MemoryRegionInfo* ret = nullptr;
