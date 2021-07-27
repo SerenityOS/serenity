@@ -166,7 +166,7 @@ TEST_CASE(multiple_attributes)
 
 TEST_CASE(character_reference_in_attribute)
 {
-    auto tokens = run_tokenizer("<p foo=a&amp;b bar='a&amp;b' baz=\"a&amp;b\">");
+    auto tokens = run_tokenizer("<p foo=a&amp;b bar='a&#38;b' baz=\"a&#x26;b\">");
     BEGIN_ENUMERATION(tokens);
     EXPECT_START_TAG_TOKEN(p);
     EXPECT_TAG_TOKEN_ATTRIBUTE_COUNT(3);
