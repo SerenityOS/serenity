@@ -42,6 +42,7 @@ public:
         Blue,
         Yellow,
         Magenta,
+        Orange,
         DarkGray,
         MidGray,
         LightGray,
@@ -448,6 +449,9 @@ constexpr Color::Color(NamedColor named)
         break;
     case WarmGray:
         rgb = { 212, 208, 200 };
+        break;
+    case Orange:
+        rgb = { 255, 128, 0 };
         break;
     default:
         VERIFY_NOT_REACHED();
