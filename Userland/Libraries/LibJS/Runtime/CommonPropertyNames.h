@@ -368,8 +368,10 @@ namespace JS {
     P(toISOString)                           \
     P(toJSON)                                \
     P(toLocaleDateString)                    \
+    P(toLocaleLowerCase)                     \
     P(toLocaleString)                        \
     P(toLocaleTimeString)                    \
+    P(toLocaleUpperCase)                     \
     P(toLowerCase)                           \
     P(toPlainDate)                           \
     P(toString)                              \
