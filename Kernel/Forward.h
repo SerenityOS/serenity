@@ -55,7 +55,7 @@ class RangeAllocator;
 class RecursiveSpinLock;
 class Region;
 class Scheduler;
-class SchedulerPerProcessorData;
+class SchedulerData;
 class SharedInodeVMObject;
 class Socket;
 class Space;

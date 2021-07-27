@@ -21,9 +21,13 @@
 namespace Kernel {
 
 class ProcessorInfo;
-class SchedulerPerProcessorData;
-struct MemoryManagerData;
 struct ProcessorMessageEntry;
+
+enum class ProcessorSpecificDataID {
+    MemoryManager,
+    Scheduler,
+    __Count,
+};
 
 #if ARCH(X86_64)
 #    define MSR_FS_BASE 0xc0000100
@@ -127,8 +131,6 @@ class Processor {
     u8 m_physical_address_bit_width;
 
     ProcessorInfo* m_info;
-    MemoryManagerData* m_mm_data;
-    SchedulerPerProcessorData* m_scheduler_data;
     Thread* m_current_thread;
     Thread* m_idle_thread;
 
@@ -141,6 +143,8 @@ class Processor {
     DeferredCallEntry* m_pending_deferred_calls; // in reverse order
     DeferredCallEntry* m_free_deferred_call_pool_entry;
     DeferredCallEntry m_deferred_call_pool[5];
+
+    void* m_processor_specific_data[(size_t)ProcessorSpecificDataID::__Count];
 
     void gdt_init();
     void write_raw_gdt_entry(u16 selector, u32 low, u32 high);
@@ -259,24 +263,15 @@ public:
             read_gs_ptr(__builtin_offsetof(Processor, m_self)) != 0;
     }
 
-    ALWAYS_INLINE void set_scheduler_data(SchedulerPerProcessorData& scheduler_data)
+    template<typename T>
+    T* get_specific()
     {
-        m_scheduler_data = &scheduler_data;
+        return static_cast<T*>(m_processor_specific_data[static_cast<size_t>(T::processor_specific_data_id())]);
     }
 
-    ALWAYS_INLINE SchedulerPerProcessorData& get_scheduler_data() const
+    void set_specific(ProcessorSpecificDataID specific_id, void* ptr)
     {
-        return *m_scheduler_data;
-    }
-
-    ALWAYS_INLINE void set_mm_data(MemoryManagerData& mm_data)
-    {
-        m_mm_data = &mm_data;
-    }
-
-    ALWAYS_INLINE MemoryManagerData& get_mm_data() const
-    {
-        return *m_mm_data;
+        m_processor_specific_data[static_cast<size_t>(specific_id)] = ptr;
     }
 
     ALWAYS_INLINE void set_idle_thread(Thread& idle_thread)
@@ -447,6 +442,19 @@ public:
     static Vector<FlatPtr> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
     String platform_string() const;
+};
+
+template<typename T>
+class ProcessorSpecific {
+public:
+    static void initialize()
+    {
+        Processor::current().set_specific(T::processor_specific_data_id(), new T);
+    }
+    static T& get()
+    {
+        return *Processor::current().get_specific<T>();
+    }
 };
 
 }
