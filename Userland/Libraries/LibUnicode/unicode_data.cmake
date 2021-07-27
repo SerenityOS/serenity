@@ -9,6 +9,9 @@ set(SPECIAL_CASING_PATH ${CMAKE_BINARY_DIR}/UCD/SpecialCasing.txt)
 set(PROP_LIST_URL https://www.unicode.org/Public/13.0.0/ucd/PropList.txt)
 set(PROP_LIST_PATH ${CMAKE_BINARY_DIR}/UCD/PropList.txt)
 
+set(WORD_BREAK_URL https://www.unicode.org/Public/13.0.0/ucd/auxiliary/WordBreakProperty.txt)
+set(WORD_BREAK_PATH ${CMAKE_BINARY_DIR}/UCD/WordBreakProperty.txt)
+
 if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     if (NOT EXISTS ${UNICODE_DATA_PATH})
         message(STATUS "Downloading UCD UnicodeData.txt from ${UNICODE_DATA_URL}...")
@@ -21,6 +24,10 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
     if (NOT EXISTS ${PROP_LIST_PATH})
         message(STATUS "Downloading UCD PropList.txt from ${PROP_LIST_URL}...")
         file(DOWNLOAD ${PROP_LIST_URL} ${PROP_LIST_PATH} INACTIVITY_TIMEOUT 10)
+    endif()
+    if (NOT EXISTS ${WORD_BREAK_PATH})
+        message(STATUS "Downloading UCD WordBreakProperty.txt from ${WORD_BREAK_URL}...")
+        file(DOWNLOAD ${WORD_BREAK_URL} ${WORD_BREAK_PATH} INACTIVITY_TIMEOUT 10)
     endif()
 
     set(UNICODE_GENERATOR CodeGenerators/GenerateUnicodeData)
@@ -39,7 +46,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
 
     add_custom_command(
         OUTPUT ${UNICODE_DATA_HEADER}
-        COMMAND ${write_if_different} ${UNICODE_DATA_HEADER} ${UNICODE_GENERATOR} -h -u ${UNICODE_DATA_PATH} -s ${SPECIAL_CASING_PATH} -p ${PROP_LIST_PATH}
+        COMMAND ${write_if_different} ${UNICODE_DATA_HEADER} ${UNICODE_GENERATOR} -h -u ${UNICODE_DATA_PATH} -s ${SPECIAL_CASING_PATH} -p ${PROP_LIST_PATH} -w ${WORD_BREAK_PATH}
         VERBATIM
         DEPENDS GenerateUnicodeData
         MAIN_DEPENDENCY ${UNICODE_DATA_PATH} ${SPECIAL_CASING_PATH}
@@ -47,7 +54,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
 
     add_custom_command(
         OUTPUT ${UNICODE_DATA_IMPLEMENTATION}
-        COMMAND ${write_if_different} ${UNICODE_DATA_IMPLEMENTATION} ${UNICODE_GENERATOR} -c -u ${UNICODE_DATA_PATH} -s ${SPECIAL_CASING_PATH} -p ${PROP_LIST_PATH}
+        COMMAND ${write_if_different} ${UNICODE_DATA_IMPLEMENTATION} ${UNICODE_GENERATOR} -c -u ${UNICODE_DATA_PATH} -s ${SPECIAL_CASING_PATH} -p ${PROP_LIST_PATH} -w ${WORD_BREAK_PATH}
         VERBATIM
         DEPENDS GenerateUnicodeData
         MAIN_DEPENDENCY ${UNICODE_DATA_PATH} ${SPECIAL_CASING_PATH}
