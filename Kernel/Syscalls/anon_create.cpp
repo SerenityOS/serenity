@@ -25,10 +25,10 @@ KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
 
-    int new_fd = m_fds.allocate();
-    if (new_fd < 0)
-        return new_fd;
-
+    auto new_fd_or_error = m_fds.allocate();
+    if (new_fd_or_error.is_error())
+        return new_fd_or_error.error();
+    auto new_fd = new_fd_or_error.value();
     auto vmobject = AnonymousVMObject::try_create_purgeable_with_size(size, AllocationStrategy::Reserve);
     if (!vmobject)
         return ENOMEM;

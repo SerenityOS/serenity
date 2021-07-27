@@ -641,7 +641,7 @@ public:
         void enumerate(Function<void(const FileDescriptionAndFlags&)>) const;
         void change_each(Function<void(FileDescriptionAndFlags&)>);
 
-        int allocate(int first_candidate_fd = 0);
+        KResultOr<int> allocate(int first_candidate_fd = 0);
         size_t open_count() const;
 
         bool try_resize(size_t size) { return m_fds_metadatas.try_resize(size); }
