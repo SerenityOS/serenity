@@ -381,33 +381,23 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 // 22.1.3.26 String.prototype.toLowerCase ( ), https://tc39.es/ecma262/#sec-string.prototype.tolowercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 {
-    auto string = utf16_string_from(vm, global_object);
-    if (vm.exception())
+    auto string = ak_string_from(vm, global_object);
+    if (!string.has_value())
         return {};
 
-    Utf16View utf16_string_view { string };
-    StringBuilder builder;
-
-    for (auto code_point : utf16_string_view)
-        builder.append_code_point(Unicode::to_unicode_lowercase(code_point));
-
-    return js_string(vm, builder.to_string());
+    auto lowercase = Unicode::to_unicode_lowercase_full(*string);
+    return js_string(vm, move(lowercase));
 }
 
 // 22.1.3.28 String.prototype.toUpperCase ( ), https://tc39.es/ecma262/#sec-string.prototype.touppercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 {
-    auto string = utf16_string_from(vm, global_object);
-    if (vm.exception())
+    auto string = ak_string_from(vm, global_object);
+    if (!string.has_value())
         return {};
 
-    Utf16View utf16_string_view { string };
-    StringBuilder builder;
-
-    for (auto code_point : utf16_string_view)
-        builder.append_code_point(Unicode::to_unicode_uppercase(code_point));
-
-    return js_string(vm, builder.to_string());
+    auto uppercase = Unicode::to_unicode_uppercase_full(*string);
+    return js_string(vm, move(uppercase));
 }
 
 // 22.1.3.27 String.prototype.toString ( ), https://tc39.es/ecma262/#sec-string.prototype.tostring
