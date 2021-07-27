@@ -58,28 +58,23 @@ int main(int argc, char** argv)
             GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
     };
 
-    auto high_score = [&]() {
+    auto mode_id = [&]() {
         switch (mode) {
         case Spider::Mode::SingleSuit:
-            return static_cast<u32>(config->read_num_entry("HighScores", "SingleSuit", 0));
+            return "SingleSuit";
         case Spider::Mode::TwoSuit:
-            return static_cast<u32>(config->read_num_entry("HighScores", "TwoSuit", 0));
+            return "TwoSuit";
         default:
             VERIFY_NOT_REACHED();
         }
     };
 
+    auto high_score = [&]() {
+        return static_cast<u32>(config->read_num_entry("HighScores", mode_id(), 0));
+    };
+
     auto update_high_score = [&](u32 new_high_score) {
-        switch (mode) {
-        case Spider::Mode::SingleSuit:
-            config->write_num_entry("HighScores", "SingleSuit", static_cast<int>(new_high_score));
-            break;
-        case Spider::Mode::TwoSuit:
-            config->write_num_entry("HighScores", "TwoSuit", static_cast<int>(new_high_score));
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
+        config->write_num_entry("HighScores", mode_id(), static_cast<int>(new_high_score));
 
         if (!config->sync())
             GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
