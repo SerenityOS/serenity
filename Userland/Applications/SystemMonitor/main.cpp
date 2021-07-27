@@ -353,8 +353,13 @@ int main(int argc, char** argv)
             process_properties_action->activate();
     };
 
+    static pid_t last_selected_pid;
+
     process_table_view.on_selection_change = [&] {
         pid_t pid = selected_id(ProcessModel::Column::PID);
+        if (pid == last_selected_pid || pid < 1)
+            return;
+        last_selected_pid = pid;
         bool has_access = can_access_pid(pid);
         kill_action->set_enabled(has_access);
         stop_action->set_enabled(has_access);
