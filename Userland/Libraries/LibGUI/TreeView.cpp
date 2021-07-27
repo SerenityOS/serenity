@@ -8,7 +8,6 @@
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Scrollbar.h>
 #include <LibGUI/TreeView.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
@@ -254,17 +253,13 @@ void TreeView::paint_event(PaintEvent& event)
             text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
 
         Color background_color;
-        Color key_column_background_color;
         if (is_selected_row) {
             background_color = is_focused() ? palette().selection() : palette().inactive_selection();
-            key_column_background_color = is_focused() ? palette().selection() : palette().inactive_selection();
         } else {
             if (alternating_row_colors() && (painted_row_index % 2)) {
                 background_color = Color(220, 220, 220);
-                key_column_background_color = Color(200, 200, 200);
             } else {
                 background_color = palette().color(background_role());
-                key_column_background_color = Color(220, 220, 220);
             }
         }
 
