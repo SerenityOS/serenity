@@ -17,6 +17,11 @@ fi
 
 line_number=0
 while read -r line; do
+  # break on git cut line, used by git commit --verbose
+  if [[ "$line" == "# ------------------------ >8 ------------------------" ]]; then
+    break
+  fi
+
   # ignore comment lines
   [[ "$line" =~ ^#.* ]] && continue
 
