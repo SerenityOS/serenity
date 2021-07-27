@@ -15,7 +15,6 @@ struct AttributeValue {
     enum class Type : u8 {
         UnsignedNumber,
         SignedNumber,
-        LongUnsignedNumber,
         String,
         DieReference, // Reference to another DIE in the same compilation unit
         Boolean,
@@ -26,9 +25,8 @@ struct AttributeValue {
 
     union {
         FlatPtr as_addr;
-        u32 as_u32;
-        i32 as_i32;
-        u64 as_u64;
+        u64 as_unsigned;
+        i64 as_signed;
         const char* as_string; // points to bytes in the memory mapped elf image
         bool as_bool;
         struct {
