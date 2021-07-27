@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Keyboard Settings");
-    window->resize(300, 70);
+    window->resize(300, 78);
     window->set_resizable(false);
     window->set_minimizable(false);
     window->set_icon(app_icon.bitmap_for_size(16));
@@ -155,7 +155,8 @@ int main(int argc, char** argv)
     auto& bottom_widget = root_widget.add<GUI::Widget>();
     bottom_widget.set_layout<GUI::HorizontalBoxLayout>();
     bottom_widget.layout()->add_spacer();
-    bottom_widget.set_fixed_height(22);
+    bottom_widget.set_fixed_height(30);
+    bottom_widget.set_content_margins({ 0, 4, 0, 4 });
 
     auto& ok_button = bottom_widget.add<GUI::Button>();
     ok_button.set_text("OK");
