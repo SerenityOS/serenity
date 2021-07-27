@@ -68,6 +68,8 @@ private:
     NonnullRefPtr<FileSystemModel> m_model;
     String m_selected_file;
 
+    RefPtr<GUI::Label> m_error_label;
+
     RefPtr<TextBox> m_filename_textbox;
     RefPtr<TextBox> m_location_textbox;
     Vector<CommonLocationButton> m_common_location_buttons;
