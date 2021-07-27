@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title("Calculator");
     window->set_resizable(false);
-    window->resize(254, 215);
+    window->resize(250, 215);
 
     auto& widget = window->set_main_widget<CalculatorWidget>();
 
