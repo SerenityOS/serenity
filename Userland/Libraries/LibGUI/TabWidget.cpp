@@ -224,19 +224,21 @@ void TabWidget::paint_event(PaintEvent& event)
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
-        auto tab_button_content_rect = button_rect.translated(4, m_tab_position == TabPosition::Top ? 1 : 0);
+        auto tab_button_content_rect = button_rect.translated(0, m_tab_position == TabPosition::Top ? 1 : 0);
         paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
         tab_button_content_rect.set_width(tab_button_content_rect.width() - (m_close_button_enabled ? 16 : 2));
 
         Gfx::IntRect text_rect { 0, 0, min(tab_button_content_rect.width(), font().width(m_tabs[i].title)), font().glyph_height() };
-        text_rect.inflate(6, 4);
         text_rect.align_within(tab_button_content_rect, m_text_alignment);
         text_rect.intersect(tab_button_content_rect);
 
         painter.draw_text(text_rect, m_tabs[i].title, Gfx::TextAlignment::CenterLeft, palette().button_text(), Gfx::TextElision::Right);
 
         if (is_focused()) {
-            painter.draw_focus_rect(text_rect, palette().focus_outline());
+            auto focus_rect = text_rect;
+            focus_rect.inflate(6, 4);
+
+            painter.draw_focus_rect(focus_rect, palette().focus_outline());
         }
 
         if (m_tab_position == TabPosition::Top) {
