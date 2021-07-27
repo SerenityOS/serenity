@@ -54,6 +54,7 @@ public:
     void set_system_palette(Core::AnonymousBuffer&);
 
     bool focus_debugging_enabled() const { return m_focus_debugging_enabled; }
+    bool hover_debugging_enabled() const { return m_hover_debugging_enabled; }
     bool dnd_debugging_enabled() const { return m_dnd_debugging_enabled; }
 
     Core::EventLoop& event_loop() { return *m_event_loop; }
@@ -102,6 +103,7 @@ private:
     WeakPtr<Window> m_active_window;
     bool m_quit_when_last_window_deleted { true };
     bool m_focus_debugging_enabled { false };
+    bool m_hover_debugging_enabled { false };
     bool m_dnd_debugging_enabled { false };
     String m_invoked_as;
     Vector<String> m_args;
