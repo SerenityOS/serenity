@@ -65,6 +65,7 @@ struct CodePointData {
     Optional<u32> simple_titlecase_mapping;
     Vector<u32> special_casing_indices;
     Vector<StringView> prop_list;
+    StringView word_break_property;
 };
 
 struct UnicodeData {
@@ -81,6 +82,8 @@ struct UnicodeData {
 
     PropList prop_list;
     u32 largest_prop_list_size { 0 };
+
+    PropList word_break_prop_list;
 };
 
 static constexpr auto s_desired_fields = Array {
@@ -152,7 +155,7 @@ static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
     quick_sort(unicode_data.conditions);
 }
 
-static void parse_prop_list(Core::File& file, UnicodeData& unicode_data)
+static void parse_prop_list(Core::File& file, PropList& prop_list)
 {
     while (file.can_read_line()) {
         auto line = file.read_line();
@@ -169,7 +172,7 @@ static void parse_prop_list(Core::File& file, UnicodeData& unicode_data)
         auto property = segments[1].trim_whitespace().to_string();
         property.replace("_", "", true);
 
-        auto& code_points = unicode_data.prop_list.ensure(property);
+        auto& code_points = prop_list.ensure(property);
 
         if (code_point_range.contains(".."sv)) {
             segments = code_point_range.split_view(".."sv);
@@ -253,6 +256,19 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
             }
         }
 
+        for (auto const& property : unicode_data.word_break_prop_list) {
+            for (auto const& range : property.value) {
+                if ((range.first <= data.code_point) && (data.code_point <= range.last)) {
+                    data.word_break_property = property.key;
+                    break;
+                }
+            }
+            if (!data.word_break_property.is_empty())
+                break;
+        }
+        if (data.word_break_property.is_empty())
+            data.word_break_property = "Other"sv;
+
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
         unicode_data.largest_prop_list_size = max(unicode_data.largest_prop_list_size, data.prop_list.size());
 
@@ -333,6 +349,21 @@ enum class Property {)~~~");
     generator.append(R"~~~(
 };
 
+enum class WordBreakProperty {
+    Other,)~~~");
+
+    properties = unicode_data.word_break_prop_list.keys();
+    quick_sort(properties);
+
+    for (auto const& property : properties) {
+        generator.set("property", property);
+        generator.append(R"~~~(
+    @property@,)~~~");
+    }
+
+    generator.append(R"~~~(
+};
+
 struct SpecialCasing {
     u32 code_point { 0 };
 
@@ -385,6 +416,8 @@ struct UnicodeData {
 
     Property prop_list[@prop_list_size@] {};
     u32 prop_list_size { 0 };
+
+    WordBreakProperty word_break_property { WordBreakProperty::Other };
 };
 
 Optional<UnicodeData> unicode_data_for_code_point(u32 code_point);
@@ -484,6 +517,7 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
         append_field("simple_titlecase_mapping", String::formatted("{:#x}", data.simple_titlecase_mapping.value_or(data.code_point)));
         append_list_and_size(data.special_casing_indices, "&s_special_casing[{}]"sv);
         append_list_and_size(data.prop_list, "Property::{}"sv);
+        generator.append(String::formatted(", WordBreakProperty::{}", data.word_break_property));
         generator.append(" },");
     }
 
@@ -540,6 +574,7 @@ int main(int argc, char** argv)
     char const* unicode_data_path = nullptr;
     char const* special_casing_path = nullptr;
     char const* prop_list_path = nullptr;
+    char const* word_break_path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generate_header, "Generate the Unicode Data header file", "generate-header", 'h');
@@ -547,6 +582,7 @@ int main(int argc, char** argv)
     args_parser.add_option(unicode_data_path, "Path to UnicodeData.txt file", "unicode-data-path", 'u', "unicode-data-path");
     args_parser.add_option(special_casing_path, "Path to SpecialCasing.txt file", "special-casing-path", 's', "special-casing-path");
     args_parser.add_option(prop_list_path, "Path to PropList.txt file", "prop-list-path", 'p', "prop-list-path");
+    args_parser.add_option(word_break_path, "Path to WordBreakProperty.txt file", "word-break-path", 'w', "word-break-path");
     args_parser.parse(argc, argv);
 
     if (!generate_header && !generate_implementation) {
@@ -569,6 +605,11 @@ int main(int argc, char** argv)
         args_parser.print_usage(stderr, argv[0]);
         return 1;
     }
+    if (!word_break_path) {
+        warnln("-w/--word-break-path is required");
+        args_parser.print_usage(stderr, argv[0]);
+        return 1;
+    }
 
     auto unicode_data_file_or_error = Core::File::open(unicode_data_path, Core::OpenMode::ReadOnly);
     if (unicode_data_file_or_error.is_error()) {
@@ -588,9 +629,16 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    auto word_break_file_or_error = Core::File::open(word_break_path, Core::OpenMode::ReadOnly);
+    if (word_break_file_or_error.is_error()) {
+        warnln("Failed to open {}: {}", word_break_path, word_break_file_or_error.release_error());
+        return 1;
+    }
+
     UnicodeData unicode_data {};
     parse_special_casing(special_casing_file_or_error.value(), unicode_data);
-    parse_prop_list(prop_list_file_or_error.value(), unicode_data);
+    parse_prop_list(prop_list_file_or_error.value(), unicode_data.prop_list);
+    parse_prop_list(word_break_file_or_error.value(), unicode_data.word_break_prop_list);
     parse_unicode_data(unicode_data_file_or_error.value(), unicode_data);
 
     if (generate_header)
