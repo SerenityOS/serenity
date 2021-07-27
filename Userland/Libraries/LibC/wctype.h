@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Format.h>
 #include <assert.h>
 #include <ctype.h>
 #include <wchar.h>
