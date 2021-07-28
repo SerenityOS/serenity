@@ -83,8 +83,6 @@ struct UnicodeData {
     u32 last_contiguous_code_point { 0 };
 
     PropList prop_list;
-    u32 largest_prop_list_size { 0 };
-
     PropList word_break_prop_list;
 };
 
@@ -254,6 +252,8 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
                 }
             }
         }
+        if (data.prop_list.is_empty())
+            data.prop_list.append("None"sv);
 
         for (auto const& property : unicode_data.word_break_prop_list) {
             for (auto const& range : property.value) {
@@ -269,7 +269,6 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
             data.word_break_property = "Other"sv;
 
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
-        unicode_data.largest_prop_list_size = max(unicode_data.largest_prop_list_size, data.prop_list.size());
 
         if (!unicode_data.general_categories.contains_slow(data.general_category))
             unicode_data.general_categories.append(data.general_category);
@@ -287,27 +286,61 @@ static void generate_unicode_data_header(UnicodeData& unicode_data)
     SourceGenerator generator { builder };
     generator.set("casing_transform_size", String::number(unicode_data.largest_casing_transform_size));
     generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
-    generator.set("prop_list_size", String::number(unicode_data.largest_prop_list_size));
 
-    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values) {
+    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, bool as_bitmask = false) {
+        VERIFY((values.size() + !default_.is_empty()) <= 64);
         quick_sort(values);
 
         generator.set("name", name);
-        generator.append(R"~~~(
+        generator.set("underlying", String::formatted("{}UnderlyingType", name));
+
+        if (as_bitmask) {
+            generator.append(R"~~~(
+using @underlying@ = u64;
+
+enum class @name@ : @underlying@ {)~~~");
+        } else {
+            generator.append(R"~~~(
 enum class @name@ {)~~~");
+        }
 
-        if (!default_.is_empty())
-            values.prepend(default_);
+        if (!default_.is_empty()) {
+            generator.set("default", default_);
+            generator.append(R"~~~(
+    @default@,)~~~");
+        }
 
+        u8 index = 0;
         for (auto const& value : values) {
             generator.set("value", value);
-            generator.append(R"~~~(
+
+            if (as_bitmask) {
+                generator.set("index", String::number(index++));
+                generator.append(R"~~~(
+    @value@ = static_cast<@underlying@>(1) << @index@,)~~~");
+            } else {
+                generator.append(R"~~~(
     @value@,)~~~");
+            }
         }
 
         generator.append(R"~~~(
 };
 )~~~");
+
+        if (as_bitmask) {
+            generator.append(R"~~~(
+constexpr @name@ operator&(@name@ value1, @name@ value2)
+{
+    return static_cast<@name@>(static_cast<@underlying@>(value1) & static_cast<@underlying@>(value2));
+}
+
+constexpr @name@ operator|(@name@ value1, @name@ value2)
+{
+    return static_cast<@name@>(static_cast<@underlying@>(value1) | static_cast<@underlying@>(value2));
+}
+)~~~");
+        }
     };
 
     generator.append(R"~~~(
@@ -322,7 +355,7 @@ namespace Unicode {
     generate_enum("Locale"sv, "None"sv, move(unicode_data.locales));
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
     generate_enum("GeneralCategory"sv, {}, move(unicode_data.general_categories));
-    generate_enum("Property"sv, {}, unicode_data.prop_list.keys());
+    generate_enum("Property"sv, "None"sv, unicode_data.prop_list.keys(), true);
     generate_enum("WordBreakProperty"sv, "Other"sv, unicode_data.word_break_prop_list.keys());
 
     generator.append(R"~~~(
@@ -376,9 +409,7 @@ struct UnicodeData {
     SpecialCasing const* special_casing[@special_casing_size@] {};
     u32 special_casing_size { 0 };
 
-    Property prop_list[@prop_list_size@] {};
-    u32 prop_list_size { 0 };
-
+    Property properties { Property::None };
     WordBreakProperty word_break_property { WordBreakProperty::Other };
 };
 
@@ -478,7 +509,14 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
         append_field("simple_lowercase_mapping", String::formatted("{:#x}", data.simple_lowercase_mapping.value_or(data.code_point)));
         append_field("simple_titlecase_mapping", String::formatted("{:#x}", data.simple_titlecase_mapping.value_or(data.code_point)));
         append_list_and_size(data.special_casing_indices, "&s_special_casing[{}]"sv);
-        append_list_and_size(data.prop_list, "Property::{}"sv);
+
+        bool first = true;
+        for (auto const& property : data.prop_list) {
+            generator.append(first ? ", " : " | ");
+            generator.append(String::formatted("Property::{}", property));
+            first = false;
+        }
+
         generator.append(String::formatted(", WordBreakProperty::{}", data.word_break_property));
         generator.append(" },");
     }
