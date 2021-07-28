@@ -32,6 +32,7 @@ void PlainTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.second, second_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.millisecond, millisecond_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.microsecond, microsecond_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.nanosecond, nanosecond_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.valueOf, value_of, 0, attr);
@@ -126,6 +127,19 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::microsecond_getter)
 
     // 3. Return 𝔽(temporalTime.[[ISOMicrosecond]]).
     return Value(temporal_time->iso_microsecond());
+}
+
+// 4.3.9 get Temporal.PlainTime.prototype.nanosecond, https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.nanosecond
+JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::nanosecond_getter)
+{
+    // 1. Let temporalTime be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
+    auto* temporal_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return 𝔽(temporalTime.[[ISONanosecond]]).
+    return Value(temporal_time->iso_nanosecond());
 }
 
 // 4.3.23 Temporal.PlainTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.valueof

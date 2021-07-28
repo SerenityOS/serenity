@@ -275,6 +275,7 @@ namespace JS {
     P(monthsInYear)                          \
     P(multiline)                             \
     P(name)                                  \
+    P(nanosecond)                            \
     P(nanoseconds)                           \
     P(negated)                               \
     P(next)                                  \
