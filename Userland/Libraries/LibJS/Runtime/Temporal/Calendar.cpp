@@ -364,7 +364,9 @@ Object* get_temporal_calendar_with_iso_default(GlobalObject& global_object, Obje
         return &static_cast<PlainDate&>(item).calendar();
     if (is<PlainDateTime>(item))
         return &static_cast<PlainDateTime&>(item).calendar();
-    // TODO: The rest of the Temporal built-ins (PlainMonthDay, PlainTime, PlainYearMonth, ZonedDateTime)
+    if (is<PlainTime>(item))
+        return &static_cast<PlainTime&>(item).calendar();
+    // TODO: The rest of the Temporal built-ins (PlainMonthDay, PlainYearMonth, ZonedDateTime)
 
     // 2. Let calendar be ? Get(item, "calendar").
     auto calendar = item.get(vm.names.calendar);
