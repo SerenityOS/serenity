@@ -22,11 +22,11 @@ describe("normal behavior", () => {
             calendar: calendar,
             isoDay: 23,
             isoHour: 0,
-            isoMicrosecond: 200,
+            isoMicrosecond: 456,
             isoMillisecond: 123,
             isoMinute: 42,
             isoMonth: 7,
-            isoNanosecond: 21,
+            isoNanosecond: 789,
             isoSecond: 18,
             isoYear: 2021,
         });
