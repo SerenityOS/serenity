@@ -1891,6 +1891,10 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
         RefPtr<Expression> default_value;
         if (match(TokenType::Equals)) {
             consume();
+
+            if (is_rest)
+                syntax_error("Rest parameter may not have a default initializer");
+
             TemporaryChange change(m_state.in_function_context, true);
             has_default_parameter = true;
             function_length = parameters.size();
@@ -1899,6 +1903,8 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
             bool is_generator = parse_options & FunctionNodeParseOptions::IsGeneratorFunction;
             if ((is_generator || m_state.strict_mode) && default_value && default_value->fast_is<Identifier>() && static_cast<Identifier&>(*default_value).string() == "yield"sv)
                 syntax_error("Generator function parameter initializer cannot contain a reference to an identifier named \"yield\"");
+            if (default_value && is<YieldExpression>(*default_value))
+                syntax_error("Yield expression not allowed in formal parameter");
         }
         parameters.append({ move(parameter), default_value, is_rest });
         if (match(TokenType::ParenClose))
