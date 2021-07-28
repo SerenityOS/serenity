@@ -40,9 +40,11 @@ static bool matches_attribute(CSS::Selector::SimpleSelector::Attribute const& at
     case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
         return element.attribute(attribute.name).contains(attribute.value);
         break;
-    case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment:
-        return element.attribute(attribute.name).split_view('-').first() == attribute.value;
+    case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment: {
+        auto segments = element.attribute(attribute.name).split_view('-');
+        return !segments.is_empty() && segments.first() == attribute.value;
         break;
+    }
     case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
         return element.attribute(attribute.name).starts_with(attribute.value);
         break;
