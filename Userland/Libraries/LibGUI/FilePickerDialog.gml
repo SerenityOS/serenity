@@ -36,7 +36,7 @@
         }
 
         @GUI::Widget {
-            fixed_height: 24
+            fixed_height: 20
         }
     }
 
