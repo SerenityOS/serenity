@@ -132,7 +132,7 @@ NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration(ASTNode& p
 
     consume(Token::Type::RightParen);
 
-    if (match_keyword("const")) {
+    while (match_keyword("const") || match_keyword("override")) {
         consume();
         // FIXME: Note that this function is supposed to be a class member, and `this` has to be const, somehow.
     }
@@ -744,7 +744,7 @@ bool Parser::match_function_declaration()
 
     while (consume().type() != Token::Type::RightParen && !eof()) { };
 
-    if (match_keyword("const"))
+    while (match_keyword("const") || match_keyword("override"))
         consume();
 
     if (peek(Token::Type::Semicolon).has_value() || peek(Token::Type::LeftCurly).has_value())
