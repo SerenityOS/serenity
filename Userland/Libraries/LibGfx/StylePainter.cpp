@@ -18,9 +18,9 @@ BaseStylePainter& StylePainter::current()
     return style;
 }
 
-void StylePainter::paint_tab_button(Painter& painter, const IntRect& rect, const Palette& palette, bool active, bool hovered, bool enabled, bool top)
+void StylePainter::paint_tab_button(Painter& painter, const IntRect& rect, const Palette& palette, bool active, bool hovered, bool enabled, bool top, bool in_active_window)
 {
-    current().paint_tab_button(painter, rect, palette, active, hovered, enabled, top);
+    current().paint_tab_button(painter, rect, palette, active, hovered, enabled, top, in_active_window);
 }
 
 void StylePainter::paint_button(Painter& painter, const IntRect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused)

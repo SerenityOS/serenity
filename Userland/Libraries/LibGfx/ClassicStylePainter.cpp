@@ -14,7 +14,7 @@
 
 namespace Gfx {
 
-void ClassicStylePainter::paint_tab_button(Painter& painter, const IntRect& rect, const Palette& palette, bool active, bool hovered, bool enabled, bool top)
+void ClassicStylePainter::paint_tab_button(Painter& painter, const IntRect& rect, const Palette& palette, bool active, bool hovered, bool enabled, bool top, bool in_active_window)
 {
     Color base_color = palette.button();
     Color highlight_color2 = palette.threed_highlight();
@@ -32,7 +32,17 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, const IntRect& rect
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 1 }, base_color);
 
         // Top line
-        painter.draw_line({ 2, 0 }, { rect.width() - 3, 0 }, highlight_color2);
+        if (active) {
+            auto accent = palette.accent();
+            if (!in_active_window)
+                accent = accent.to_grayscale();
+            painter.draw_line({ 3, 0 }, { rect.width() - 3, 0 }, accent.darkened());
+            Gfx::IntRect accent_rect { 1, 1, rect.width() - 2, 2 };
+            painter.fill_rect_with_gradient(accent_rect, accent, accent.lightened(1.5f));
+            painter.set_pixel({ 2, 0 }, highlight_color2);
+        } else {
+            painter.draw_line({ 2, 0 }, { rect.width() - 3, 0 }, highlight_color2);
+        }
 
         // Left side
         painter.draw_line({ 0, 2 }, { 0, rect.height() - 1 }, highlight_color2);
@@ -54,7 +64,16 @@ void ClassicStylePainter::paint_tab_button(Painter& painter, const IntRect& rect
         painter.fill_rect({ 0, 0, rect.width() - 1, rect.height() }, base_color);
 
         // Bottom line
-        painter.draw_line({ 2, rect.height() - 1 }, { rect.width() - 3, rect.height() - 1 }, shadow_color2);
+        if (active) {
+            auto accent = palette.accent();
+            if (!in_active_window)
+                accent = accent.to_grayscale();
+            Gfx::IntRect accent_rect { 1, rect.height() - 3, rect.width() - 2, 2 };
+            painter.fill_rect_with_gradient(accent_rect, accent, accent.lightened(1.5f));
+            painter.draw_line({ 2, rect.height() - 1 }, { rect.width() - 3, rect.height() - 1 }, accent.darkened());
+        } else {
+            painter.draw_line({ 2, rect.height() - 1 }, { rect.width() - 3, rect.height() - 1 }, shadow_color2);
+        }
 
         // Left side
         painter.draw_line({ 0, 0 }, { 0, rect.height() - 3 }, highlight_color2);

@@ -204,7 +204,7 @@ void TabWidget::paint_event(PaintEvent& event)
             continue;
         bool hovered = m_hovered_tab_index.has_value() && i == m_hovered_tab_index.value();
         auto button_rect = this->button_rect(i);
-        Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
+        Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top, window()->is_active());
         auto tab_button_content_rect = button_rect.translated(4, m_tab_position == TabPosition::Top ? 1 : 0);
 
         paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
@@ -223,7 +223,7 @@ void TabWidget::paint_event(PaintEvent& event)
             continue;
         bool hovered = m_hovered_tab_index.has_value() && i == m_hovered_tab_index.value();
         auto button_rect = this->button_rect(i);
-        Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
+        Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top, window()->is_active());
         auto tab_button_content_rect = button_rect.translated(4, m_tab_position == TabPosition::Top ? 1 : 0);
         paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
         tab_button_content_rect.set_width(tab_button_content_rect.width() - (m_close_button_enabled ? 16 : 2));
