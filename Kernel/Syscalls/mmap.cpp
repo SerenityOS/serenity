@@ -472,8 +472,10 @@ KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, i
         return EINVAL;
     if (set_volatile || set_nonvolatile) {
         if (!region->vmobject().is_anonymous())
-            return EPERM;
+            return EINVAL;
         auto& vmobject = static_cast<AnonymousVMObject&>(region->vmobject());
+        if (!vmobject.is_purgeable())
+            return EINVAL;
         bool was_purged = false;
         auto result = vmobject.set_volatile(set_volatile, was_purged);
         if (result.is_error())
