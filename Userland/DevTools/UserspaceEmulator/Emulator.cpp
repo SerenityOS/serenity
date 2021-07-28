@@ -378,13 +378,10 @@ Vector<FlatPtr> Emulator::raw_backtrace()
 MmapRegion const* Emulator::find_text_region(FlatPtr address)
 {
     MmapRegion const* matching_region = nullptr;
-    mmu().for_each_region([&](auto& region) {
-        if (!is<MmapRegion>(region))
+    mmu().for_each_region_of_type<MmapRegion>([&](auto& region) {
+        if (!(region.is_executable() && address >= region.base() && address < region.base() + region.size()))
             return IterationDecision::Continue;
-        auto const& mmap_region = static_cast<MmapRegion const&>(region);
-        if (!(mmap_region.is_executable() && address >= mmap_region.base() && address < mmap_region.base() + mmap_region.size()))
-            return IterationDecision::Continue;
-        matching_region = &mmap_region;
+        matching_region = &region;
         return IterationDecision::Break;
     });
     return matching_region;
