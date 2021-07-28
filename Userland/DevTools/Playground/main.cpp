@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "GMLAutocompleteProvider.h"
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
+#include <LibGUI/GMLAutocompleteProvider.h>
 #include <LibGUI/GMLFormatter.h>
 #include <LibGUI/GMLLexer.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
     auto& preview = splitter.add<GUI::Frame>();
 
     editor.set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
-    editor.set_autocomplete_provider(make<GMLAutocompleteProvider>());
+    editor.set_autocomplete_provider(make<GUI::GMLAutocompleteProvider>());
     editor.set_should_autocomplete_automatically(true);
     editor.set_automatic_indentation_enabled(true);
 
