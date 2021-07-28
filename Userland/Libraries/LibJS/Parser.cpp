@@ -820,7 +820,7 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
 
             auto arrow_function_result = try_parse_arrow_function_expression(true);
             if (!arrow_function_result.is_null())
-                return { arrow_function_result.release_nonnull() };
+                return { arrow_function_result.release_nonnull(), false };
 
             set_try_parse_arrow_function_expression_failed_at_position(paren_position, true);
         }
@@ -846,7 +846,7 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         if (!try_parse_arrow_function_expression_failed_at_position(position())) {
             auto arrow_function_result = try_parse_arrow_function_expression(false);
             if (!arrow_function_result.is_null())
-                return { arrow_function_result.release_nonnull() };
+                return { arrow_function_result.release_nonnull(), false };
 
             set_try_parse_arrow_function_expression_failed_at_position(position(), true);
         }
