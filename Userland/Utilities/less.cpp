@@ -400,10 +400,12 @@ int main(int argc, char** argv)
             if (sequence == "" || sequence == "q") {
                 break;
             } else if (sequence == "j" || sequence == "\e[B" || sequence == "\n") {
-                if (!modifier_buffer.is_empty())
-                    pager.down_n(modifier_buffer.build().to_uint().value_or(1));
-                else
-                    pager.down();
+                if (!emulate_more) {
+                    if (!modifier_buffer.is_empty())
+                        pager.down_n(modifier_buffer.build().to_uint().value_or(1));
+                    else
+                        pager.down();
+                }
             } else if (sequence == "k" || sequence == "\e[A") {
                 if (!emulate_more) {
                     if (!modifier_buffer.is_empty())
@@ -412,22 +414,26 @@ int main(int argc, char** argv)
                         pager.up();
                 }
             } else if (sequence == "g") {
-                if (!modifier_buffer.is_empty())
-                    pager.go_to_line(modifier_buffer.build().to_uint().value());
-                else
-                    pager.top();
+                if (!emulate_more) {
+                    if (!modifier_buffer.is_empty())
+                        pager.go_to_line(modifier_buffer.build().to_uint().value());
+                    else
+                        pager.top();
+                }
             } else if (sequence == "G") {
-                if (!modifier_buffer.is_empty())
-                    pager.go_to_line(modifier_buffer.build().to_uint().value());
-                else
-                    pager.bottom();
+                if (!emulate_more) {
+                    if (!modifier_buffer.is_empty())
+                        pager.go_to_line(modifier_buffer.build().to_uint().value());
+                    else
+                        pager.bottom();
+                }
             } else if (sequence == " " || sequence == "\e[6~") {
                 pager.down_page();
-            } else if (sequence == "\e[5~") {
+            } else if (sequence == "\e[5~" && !emulate_more) {
                 pager.up_page();
             } else if (sequence == "d") {
                 pager.down_half_page();
-            } else if (sequence == "u") {
+            } else if (sequence == "u" && !emulate_more) {
                 pager.up_half_page();
             }
 
