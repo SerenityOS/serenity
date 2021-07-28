@@ -1197,9 +1197,18 @@ Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of
 Optional<URL> Parser::parse_url_function(ParsingContext const& context, StyleComponentValueRule const& component_value)
 {
     // FIXME: Handle list of media queries. https://www.w3.org/TR/css-cascade-3/#conditional-import
+    // FIXME: Handle data: urls (RFC2397)
 
-    if (component_value.is(Token::Type::Url))
-        return context.complete_url(component_value.token().url());
+    auto is_data_url = [](StringView& url_string) -> bool {
+        return url_string.starts_with("data:", CaseSensitivity::CaseInsensitive);
+    };
+
+    if (component_value.is(Token::Type::Url)) {
+        auto url_string = component_value.token().url();
+        if (is_data_url(url_string))
+            return {};
+        return context.complete_url(url_string);
+    }
     if (component_value.is_function() && component_value.function().name().equals_ignoring_case("url")) {
         auto& function_values = component_value.function().values();
         // FIXME: Handle url-modifiers. https://www.w3.org/TR/css-values-4/#url-modifiers
@@ -1208,11 +1217,12 @@ Optional<URL> Parser::parse_url_function(ParsingContext const& context, StyleCom
             if (value.is(Token::Type::Whitespace))
                 continue;
             if (value.is(Token::Type::String)) {
-                // FIXME: RFC2397
-                if (value.token().string().starts_with("data:"))
-                    break;
-                return context.complete_url(value.token().string());
+                auto url_string = value.token().string();
+                if (is_data_url(url_string))
+                    return {};
+                return context.complete_url(url_string);
             }
+            break;
         }
     }
 
