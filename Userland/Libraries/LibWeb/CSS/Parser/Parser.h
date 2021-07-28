@@ -52,7 +52,7 @@ public:
 
     bool has_next_token();
     T const& next_token();
-    T const& peek_token();
+    T const& peek_token(int offset = 0);
     T const& current_token();
     void reconsume_current_input_token();
 

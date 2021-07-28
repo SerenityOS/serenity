@@ -73,12 +73,12 @@ bool TokenStream<T>::has_next_token()
 }
 
 template<typename T>
-T const& TokenStream<T>::peek_token()
+T const& TokenStream<T>::peek_token(int offset)
 {
     if (!has_next_token())
         return m_eof;
 
-    return m_tokens.at(m_iterator_offset + 1);
+    return m_tokens.at(m_iterator_offset + offset + 1);
 }
 
 template<typename T>
