@@ -79,8 +79,8 @@ BINUTILS_BASE_URL="http://ftp.gnu.org/gnu/binutils"
 
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
-GCC_VERSION="11.1.0"
-GCC_MD5SUM="333068a65c119e74c9d7bfcc75a8eeba"
+GCC_VERSION="11.2.0"
+GCC_MD5SUM="dc6886bd44bb49e2d3d662aed9729278"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.gz"
 GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
