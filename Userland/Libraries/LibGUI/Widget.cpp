@@ -1143,20 +1143,4 @@ bool Widget::is_visible_for_timer_purposes() const
     return is_visible() && Object::is_visible_for_timer_purposes();
 }
 
-bool Widget::is_parent_of(Widget const* widget) const
-{
-    if (widget == nullptr)
-        return false;
-
-    Widget const* current_widget = widget->parent_widget();
-
-    while (current_widget != nullptr) {
-        if (current_widget == this)
-            return true;
-        current_widget = current_widget->parent_widget();
-    }
-
-    return false;
-}
-
 }
