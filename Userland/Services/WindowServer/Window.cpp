@@ -803,9 +803,8 @@ void Window::ensure_window_menu()
             m_window_menu_pin_item->set_icon(&pin_icon());
             m_window_menu_pin_item->set_checkable(true);
             m_window_menu->add_item(move(pin_item));
+            m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
         }
-
-        m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
         auto close_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::Close, "&Close");
         m_window_menu_close_item = close_item.ptr();
