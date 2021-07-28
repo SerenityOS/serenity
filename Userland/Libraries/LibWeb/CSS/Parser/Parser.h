@@ -165,6 +165,8 @@ private:
     [[nodiscard]] Optional<StyleProperty> convert_to_style_property(StyleDeclarationRule&);
 
     static Optional<float> try_parse_float(StringView string);
+    static Optional<Color> parse_color(ParsingContext const&, StyleComponentValueRule const&);
+    static Optional<Length> parse_length(ParsingContext const&, StyleComponentValueRule const&);
     static Optional<URL> parse_url_function(ParsingContext const&, StyleComponentValueRule const&);
 
     static RefPtr<StyleValue> parse_keyword_or_custom_value(ParsingContext const&, StyleComponentValueRule const&);
