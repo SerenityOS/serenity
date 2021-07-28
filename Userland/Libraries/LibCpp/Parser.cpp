@@ -695,6 +695,19 @@ bool Parser::match_class_declaration()
 
     consume(Token::Type::Identifier);
 
+    if (peek().type() == Token::Type::Colon) {
+        do {
+            consume();
+
+            while (match_keyword("private") || match_keyword("public") || match_keyword("protected") || match_keyword("virtual"))
+                consume();
+
+            if (!match_name())
+                return false;
+            parse_name(get_dummy_node());
+        } while (peek().type() == Token::Type::Comma);
+    }
+
     return match(Token::Type::LeftCurly);
 }
 
@@ -1136,6 +1149,18 @@ NonnullRefPtr<StructOrClassDeclaration> Parser::parse_class_declaration(ASTNode&
 
     auto name_token = consume(Token::Type::Identifier);
     decl->set_name(text_of_token(name_token));
+
+    // FIXME: Don't ignore this.
+    if (peek().type() == Token::Type::Colon) {
+        do {
+            consume();
+
+            while (match_keyword("private") || match_keyword("public") || match_keyword("protected") || match_keyword("virtual"))
+                consume();
+
+            parse_name(get_dummy_node());
+        } while (peek().type() == Token::Type::Comma);
+    }
 
     consume(Token::Type::LeftCurly);
 
