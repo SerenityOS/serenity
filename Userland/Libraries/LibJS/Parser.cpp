@@ -2084,6 +2084,22 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
                 // FIXME: We should check the var_scopes here as well however this has edges cases with for loops.
                 //        See duplicated-variable-declarations.js.
 
+                if (!m_state.function_parameters.is_empty() && m_state.current_scope->parent->type == Scope::Function) {
+                    for (auto& parameter : m_state.function_parameters.last()) {
+                        parameter.binding.visit(
+                            [&](FlyString const& parameter_name) {
+                                if (parameter_name == name)
+                                    syntax_error(String::formatted("Identifier '{}' has already been declared", name), identifier_start.position());
+                            },
+                            [&](NonnullRefPtr<BindingPattern> const& binding) {
+                                binding->for_each_bound_name([&](auto& bound_name) {
+                                    if (bound_name == name)
+                                        syntax_error(String::formatted("Identifier '{}' has already been declared", name), identifier_start.position());
+                                });
+                            });
+                    }
+                }
+
                 for (auto& declaration : declarations) {
                     check_declarations(declaration);
                 }
@@ -2092,9 +2108,21 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
             target = pattern.release_nonnull();
 
             if ((declaration_kind == DeclarationKind::Let || declaration_kind == DeclarationKind::Const)) {
-                target.get<NonnullRefPtr<BindingPattern>>()->for_each_bound_name([this](auto& name) {
+                target.get<NonnullRefPtr<BindingPattern>>()->for_each_bound_name([this, &declarations](auto& name) {
                     if (name == "let"sv)
                         syntax_error("Lexical binding may not be called 'let'");
+
+                    // FIXME: Again we do not check everything here see for example the parameter check above.
+                    //        However a more sustainable solution should be used since these checks are now spread over multiple sites.
+
+                    for (auto& declaration : declarations) {
+                        declaration.target().visit(
+                            [&](NonnullRefPtr<Identifier> const& identifier) {
+                                if (identifier->string() == name)
+                                    syntax_error(String::formatted("Identifier '{}' has already been declared", name));
+                            },
+                            [&](auto const&) {});
+                    }
                 });
             }
         } else if (!m_state.in_generator_function_context && match(TokenType::Yield)) {
