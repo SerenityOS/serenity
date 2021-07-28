@@ -573,6 +573,7 @@ int main(int argc, char** argv)
     char const* unicode_data_path = nullptr;
     char const* special_casing_path = nullptr;
     char const* prop_list_path = nullptr;
+    char const* derived_core_prop_path = nullptr;
     char const* word_break_path = nullptr;
 
     Core::ArgsParser args_parser;
@@ -581,6 +582,7 @@ int main(int argc, char** argv)
     args_parser.add_option(unicode_data_path, "Path to UnicodeData.txt file", "unicode-data-path", 'u', "unicode-data-path");
     args_parser.add_option(special_casing_path, "Path to SpecialCasing.txt file", "special-casing-path", 's', "special-casing-path");
     args_parser.add_option(prop_list_path, "Path to PropList.txt file", "prop-list-path", 'p', "prop-list-path");
+    args_parser.add_option(derived_core_prop_path, "Path to DerivedCoreProperties.txt file", "derived-core-prop-path", 'd', "derived-core-prop-path");
     args_parser.add_option(word_break_path, "Path to WordBreakProperty.txt file", "word-break-path", 'w', "word-break-path");
     args_parser.parse(argc, argv);
 
@@ -609,11 +611,13 @@ int main(int argc, char** argv)
     auto unicode_data_file = open_file(unicode_data_path, "-u/--unicode-data-path");
     auto special_casing_file = open_file(special_casing_path, "-s/--special-casing-path");
     auto prop_list_file = open_file(prop_list_path, "-p/--prop-list-path");
+    auto derived_core_prop_file = open_file(derived_core_prop_path, "-d/--derived-core-prop-path");
     auto word_break_file = open_file(word_break_path, "-w/--word-break-path");
 
     UnicodeData unicode_data {};
     parse_special_casing(special_casing_file, unicode_data);
     parse_prop_list(prop_list_file, unicode_data.prop_list);
+    parse_prop_list(derived_core_prop_file, unicode_data.prop_list);
     parse_prop_list(word_break_file, unicode_data.word_break_prop_list);
     parse_unicode_data(unicode_data_file, unicode_data);
 
