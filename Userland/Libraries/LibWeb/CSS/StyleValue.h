@@ -241,20 +241,13 @@ public:
     bool is_length() const { return type() == Type::Length; }
     bool is_custom_property() const { return type() == Type::CustomProperty; }
     bool is_numeric() const { return type() == Type::Numeric; }
-    bool is_value_list() const
-    {
-        return type() == Type::ValueList;
-    }
+    bool is_value_list() const { return type() == Type::ValueList; }
+    bool is_box_shadow() const { return type() == Type::BoxShadow; }
+    bool is_calculated() const { return type() == Type::Calculated; }
 
     bool is_builtin_or_dynamic() const
     {
-        return is_inherit() || is_initial() || is_custom_property();
-    }
-    bool is_box_shadow() const { return type() == Type::BoxShadow; }
-
-    bool is_calculated() const
-    {
-        return type() == Type::Calculated;
+        return is_inherit() || is_initial() || is_custom_property() || is_calculated();
     }
 
     virtual String to_string() const = 0;
