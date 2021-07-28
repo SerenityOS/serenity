@@ -79,6 +79,8 @@
 #include <LibJS/Runtime/Temporal/PlainDatePrototype.h>
 #include <LibJS/Runtime/Temporal/PlainDateTimeConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainDateTimePrototype.h>
+#include <LibJS/Runtime/Temporal/PlainTimeConstructor.h>
+#include <LibJS/Runtime/Temporal/PlainTimePrototype.h>
 #include <LibJS/Runtime/Temporal/Temporal.h>
 #include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
 #include <LibJS/Runtime/Temporal/TimeZonePrototype.h>

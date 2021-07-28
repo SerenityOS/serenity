@@ -177,6 +177,7 @@
     M(TemporalInvalidOffsetNanosecondsValue, "Invalid offset nanoseconds value, must be in range -86400 * 10^9 to 86400 * 10^9")        \
     M(TemporalInvalidPlainDate, "Invalid plain date")                                                                                   \
     M(TemporalInvalidPlainDateTime, "Invalid plain date time")                                                                          \
+    M(TemporalInvalidPlainTime, "Invalid plain time")                                                                                   \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
     M(TemporalInvalidTimeZoneName, "Invalid time zone name")                                                                            \
     M(TemporalMissingRequiredProperty, "Required property {} is missing or undefined")                                                  \

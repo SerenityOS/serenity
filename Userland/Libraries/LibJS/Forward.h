@@ -82,6 +82,7 @@
     __JS_ENUMERATE(Instant, instant, InstantPrototype, InstantConstructor)                           \
     __JS_ENUMERATE(PlainDate, plain_date, PlainDatePrototype, PlainDateConstructor)                  \
     __JS_ENUMERATE(PlainDateTime, plain_date_time, PlainDateTimePrototype, PlainDateTimeConstructor) \
+    __JS_ENUMERATE(PlainTime, plain_time, PlainTimePrototype, PlainTimeConstructor)                  \
     __JS_ENUMERATE(TimeZone, time_zone, TimeZonePrototype, TimeZoneConstructor)
 
 #define JS_ENUMERATE_ITERATOR_PROTOTYPES                         \
