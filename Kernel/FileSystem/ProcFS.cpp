@@ -130,7 +130,7 @@ InodeMetadata ProcFSInode::metadata() const
     MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
-    metadata.mode = m_associated_component->required_mode();
+    metadata.mode = S_IFREG | m_associated_component->required_mode();
     metadata.uid = m_associated_component->owner_user();
     metadata.gid = m_associated_component->owner_group();
     metadata.size = m_associated_component->size();
