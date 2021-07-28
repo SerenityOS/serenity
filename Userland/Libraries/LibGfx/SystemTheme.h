@@ -15,6 +15,7 @@
 namespace Gfx {
 
 #define ENUMERATE_COLOR_ROLES(C)   \
+    C(Accent)                      \
     C(ActiveLink)                  \
     C(ActiveWindowBorder1)         \
     C(ActiveWindowBorder2)         \

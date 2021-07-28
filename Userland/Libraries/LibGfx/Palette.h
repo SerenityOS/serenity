@@ -48,6 +48,7 @@ public:
     explicit Palette(const PaletteImpl&);
     ~Palette();
 
+    Color accent() const { return color(ColorRole::Accent); }
     Color window() const { return color(ColorRole::Window); }
     Color window_text() const { return color(ColorRole::WindowText); }
     Color selection() const { return color(ColorRole::Selection); }
