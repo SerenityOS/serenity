@@ -802,7 +802,7 @@ void Window::set_hovered_widget(Widget* widget)
     if (widget == m_hovered_widget)
         return;
 
-    if (m_hovered_widget && !m_hovered_widget->is_parent_of(widget))
+    if (m_hovered_widget)
         Core::EventLoop::current().post_event(*m_hovered_widget, make<Event>(Event::Leave));
 
     m_hovered_widget = widget;
