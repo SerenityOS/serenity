@@ -141,7 +141,7 @@ public:
     {
         clear_status();
 
-        while (n - (m_lines.size() - m_line) > 0) {
+        while (n - (m_lines.size() - m_line) + m_height - 1 > 0) {
             if (!read_line())
                 break;
         }
@@ -158,8 +158,6 @@ public:
 
     void bottom()
     {
-        while (read_line())
-            ;
         down_n(m_lines.size() - m_line);
     }
 
