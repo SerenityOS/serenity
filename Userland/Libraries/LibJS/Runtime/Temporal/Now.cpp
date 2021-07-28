@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/Temporal/Now.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
+#include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <time.h>
 
@@ -38,6 +39,7 @@ void Now::initialize(GlobalObject& global_object)
     define_native_function(vm.names.plainDateTimeISO, plain_date_time_iso, 0, attr);
     define_native_function(vm.names.plainDate, plain_date, 1, attr);
     define_native_function(vm.names.plainDateISO, plain_date_iso, 0, attr);
+    define_native_function(vm.names.plainTimeISO, plain_time_iso, 0, attr);
 }
 
 // 2.2.1 Temporal.Now.timeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.timezone
@@ -110,6 +112,24 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_iso)
 
     // 3. Return ? CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
     return create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar());
+}
+
+// 2.2.9 Temporal.Now.plainTimeISO ( [ temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaintimeiso
+JS_DEFINE_NATIVE_FUNCTION(Now::plain_time_iso)
+{
+    auto temporal_time_zone_like = vm.argument(0);
+
+    // 1. Let calendar be ? GetISO8601Calendar().
+    // NOTE: No exception check needed for GetISO8601Calendar, see https://github.com/tc39/proposal-temporal/pull/1643
+    auto* calendar = get_iso8601_calendar(global_object);
+
+    // 2. Let dateTime be ? SystemDateTime(temporalTimeZoneLike, calendar).
+    auto date_time = system_date_time(global_object, temporal_time_zone_like, calendar);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? CreateTemporalTime(dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+    return create_temporal_time(global_object, date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
 }
 
 // 2.3.1 SystemTimeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal-systemtimezone
