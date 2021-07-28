@@ -144,14 +144,14 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
         if (!symbol.address)
             break;
         if (!symbol.symbol) {
-            dbgln("{:p}", symbol.address);
+            dbgln("Kernel + {:p}", symbol.address - kernel_load_base);
             continue;
         }
         size_t offset = symbol.address - symbol.symbol->address;
         if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096)
-            dbgln("{:p}", symbol.address);
+            dbgln("Kernel + {:p}", symbol.address - kernel_load_base);
         else
-            dbgln("{:p}  {} +{:#x}", symbol.address, symbol.symbol->name, offset);
+            dbgln("Kernel + {:p}  {} +{:#x}", symbol.address - kernel_load_base, symbol.symbol->name, offset);
     }
 }
 
