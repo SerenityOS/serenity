@@ -97,6 +97,7 @@ private:
     void flush_file_content_to_langauge_server();
     void set_syntax_highlighter_for(const CodeDocument&);
     void set_language_client_for(const CodeDocument&);
+    void set_autocomplete_provider_for(CodeDocument const&);
     void handle_function_parameters_hint_request();
 
     explicit Editor();
