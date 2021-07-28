@@ -1219,6 +1219,9 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
     if (match_keyword("auto")) {
         consume(Token::Type::Keyword);
         named_type->set_auto(true);
+        auto original_qualifiers = named_type->qualifiers();
+        original_qualifiers.extend(parse_type_qualifiers());
+        named_type->set_qualifiers(move(original_qualifiers));
         named_type->set_end(position());
         return named_type;
     }
@@ -1234,6 +1237,10 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
     }
     named_type->set_name(parse_name(*named_type));
 
+    auto original_qualifiers = named_type->qualifiers();
+    original_qualifiers.extend(parse_type_qualifiers());
+    named_type->set_qualifiers(move(original_qualifiers));
+
     NonnullRefPtr<Type> type = named_type;
     while (!eof() && peek().type() == Token::Type::Asterisk) {
         type->set_end(position());
@@ -1241,6 +1248,7 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
         auto ptr = create_ast_node<Pointer>(parent, type->start(), asterisk.end());
         type->set_parent(*ptr);
         ptr->set_pointee(type);
+        ptr->set_qualifiers(parse_type_qualifiers());
         ptr->set_end(position());
         type = ptr;
     }
