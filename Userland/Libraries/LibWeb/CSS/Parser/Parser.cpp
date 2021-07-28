@@ -1386,7 +1386,7 @@ Optional<float> Parser::try_parse_float(StringView string)
     return is_negative ? -value : value;
 }
 
-RefPtr<StyleValue> Parser::parse_keyword_or_custom_value(ParsingContext const&, StyleComponentValueRule const& component_value)
+RefPtr<StyleValue> Parser::parse_builtin_or_dynamic_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
 {
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
@@ -1804,8 +1804,8 @@ RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, Proper
         }
     }
 
-    if (auto keyword_or_custom = parse_keyword_or_custom_value(context, component_value))
-        return keyword_or_custom;
+    if (auto builtin_or_dynamic = parse_builtin_or_dynamic_value(context, component_value))
+        return builtin_or_dynamic;
 
     if (auto length = parse_length_value(context, component_value))
         return length;
