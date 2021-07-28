@@ -166,8 +166,7 @@ static void parse_prop_list(Core::File& file, PropList& prop_list)
         VERIFY(segments.size() == 2);
 
         auto code_point_range = segments[0].trim_whitespace();
-        auto property = segments[1].trim_whitespace().to_string();
-        property.replace("_", "", true);
+        auto property = segments[1].trim_whitespace();
 
         auto& code_points = prop_list.ensure(property);
 
