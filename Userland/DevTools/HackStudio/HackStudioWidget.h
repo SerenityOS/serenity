@@ -13,6 +13,7 @@
 #include "Debugger/DisassemblyWidget.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
+#include "GMLPreviewWidget.h"
 #include "Git/DiffViewer.h"
 #include "Git/GitWidget.h"
 #include "Locator.h"
@@ -119,6 +120,8 @@ private:
     void hide_action_tabs();
     bool any_document_is_dirty() const;
 
+    void update_gml_preview();
+
     NonnullRefPtrVector<EditorWrapper> m_all_editor_wrappers;
     RefPtr<EditorWrapper> m_current_editor_wrapper;
 
@@ -135,6 +138,7 @@ private:
     RefPtr<GUI::Splitter> m_editors_splitter;
     RefPtr<DiffViewer> m_diff_viewer;
     RefPtr<GitWidget> m_git_widget;
+    RefPtr<GMLPreviewWidget> m_gml_preview_widget;
     RefPtr<ClassViewWidget> m_class_view;
     RefPtr<GUI::Menu> m_project_tree_view_context_menu;
     RefPtr<GUI::Statusbar> m_statusbar;

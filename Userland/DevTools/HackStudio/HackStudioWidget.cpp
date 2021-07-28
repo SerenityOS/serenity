@@ -285,6 +285,9 @@ bool HackStudioWidget::open_file(const String& full_filename)
     current_editor().set_focus(true);
 
     current_editor().on_cursor_change = [this] { update_statusbar(); };
+    current_editor().on_change = [this] { update_gml_preview(); };
+    update_gml_preview();
+
     return true;
 }
 
@@ -501,6 +504,7 @@ void HackStudioWidget::add_new_editor(GUI::Widget& parent)
     wrapper->editor().set_focus(true);
     wrapper->set_project_root(LexicalPath(m_project->root_path()));
     wrapper->editor().on_cursor_change = [this] { update_statusbar(); };
+    wrapper->editor().on_change = [this] { update_gml_preview(); };
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_action()
@@ -905,6 +909,7 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
     });
+    m_gml_preview_widget = m_action_tab_widget->add_tab<GMLPreviewWidget>("GML Preview", "");
 
     ToDoEntries::the().on_update = [this]() {
         m_todo_entries_widget->refresh();
@@ -1145,6 +1150,12 @@ bool HackStudioWidget::any_document_is_dirty() const
         }
     }
     return false;
+}
+
+void HackStudioWidget::update_gml_preview()
+{
+    auto gml_content = current_editor_wrapper().filename().ends_with(".gml") ? current_editor_wrapper().editor().text() : "";
+    m_gml_preview_widget->load_gml(gml_content);
 }
 
 }
