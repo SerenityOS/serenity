@@ -15,8 +15,8 @@ namespace Kernel {
 class FileDescription;
 
 struct SocketPair {
+    NonnullRefPtr<FileDescription> description0;
     NonnullRefPtr<FileDescription> description1;
-    NonnullRefPtr<FileDescription> description2;
 };
 
 class LocalSocket final : public Socket {
