@@ -16,7 +16,7 @@ class PlainDateTime final : public Object {
     JS_OBJECT(PlainDateTime, Object);
 
 public:
-    PlainDateTime(i32 iso_year, u8 iso_month, u8 iso_day, u8 iso_hour, u8 iso_minute, u8 iso_second, u8 iso_millisecond, u8 iso_microsecond, u8 iso_nanosecond, Object& calendar, Object& prototype);
+    PlainDateTime(i32 iso_year, u8 iso_month, u8 iso_day, u8 iso_hour, u8 iso_minute, u8 iso_second, u16 iso_millisecond, u16 iso_microsecond, u16 iso_nanosecond, Object& calendar, Object& prototype);
     virtual ~PlainDateTime() override = default;
 
     [[nodiscard]] i32 iso_year() const { return m_iso_year; }
