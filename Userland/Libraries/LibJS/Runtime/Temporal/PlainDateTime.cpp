@@ -15,7 +15,7 @@
 namespace JS::Temporal {
 
 // 5 Temporal.PlainDateTime Objects, https://tc39.es/proposal-temporal/#sec-temporal-plaindatetime-objects
-PlainDateTime::PlainDateTime(i32 iso_year, u8 iso_month, u8 iso_day, u8 iso_hour, u8 iso_minute, u8 iso_second, u8 iso_millisecond, u8 iso_microsecond, u8 iso_nanosecond, Object& calendar, Object& prototype)
+PlainDateTime::PlainDateTime(i32 iso_year, u8 iso_month, u8 iso_day, u8 iso_hour, u8 iso_minute, u8 iso_second, u16 iso_millisecond, u16 iso_microsecond, u16 iso_nanosecond, Object& calendar, Object& prototype)
     : Object(prototype)
     , m_iso_year(iso_year)
     , m_iso_month(iso_month)
