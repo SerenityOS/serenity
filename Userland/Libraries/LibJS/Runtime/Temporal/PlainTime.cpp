@@ -1,13 +1,36 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
-#include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/Temporal/PlainTimeConstructor.h>
 
 namespace JS::Temporal {
+
+// 4 Temporal.PlainTime Objects, https://tc39.es/proposal-temporal/#sec-temporal-plaintime-objects
+PlainTime::PlainTime(u8 iso_hour, u8 iso_minute, u8 iso_second, u16 iso_millisecond, u16 iso_microsecond, u16 iso_nanosecond, Calendar& calendar, Object& prototype)
+    : Object(prototype)
+    , m_iso_hour(iso_hour)
+    , m_iso_minute(iso_minute)
+    , m_iso_second(iso_second)
+    , m_iso_millisecond(iso_millisecond)
+    , m_iso_microsecond(iso_microsecond)
+    , m_iso_nanosecond(iso_nanosecond)
+    , m_calendar(calendar)
+{
+}
+
+void PlainTime::visit_edges(Visitor& visitor)
+{
+    visitor.visit(&m_calendar);
+}
 
 // 4.5.5 IsValidTime ( hour, minute, second, millisecond, microsecond, nanosecond ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidtime
 bool is_valid_time(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
@@ -105,6 +128,40 @@ DaysAndTime balance_time(i64 hour, i64 minute, i64 second, i64 millisecond, i64 
         .microsecond = static_cast<u16>(microsecond),
         .nanosecond = static_cast<u16>(nanosecond),
     };
+}
+
+// 4.5.8 CreateTemporalTime ( hour, minute, second, millisecond, microsecond, nanosecond [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltime
+PlainTime* create_temporal_time(GlobalObject& global_object, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, FunctionObject* new_target)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
+
+    // 2. If ! IsValidTime(hour, minute, second, millisecond, microsecond, nanosecond) is false, throw a RangeError exception.
+    if (!is_valid_time(hour, minute, second, millisecond, microsecond, nanosecond)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidPlainTime);
+        return {};
+    }
+
+    // 3. If newTarget is not present, set it to %Temporal.PlainTime%.
+    if (!new_target)
+        new_target = global_object.temporal_plain_time_constructor();
+
+    // 4. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.PlainTime.prototype%", « [[InitializedTemporalTime]], [[ISOHour]], [[ISOMinute]], [[ISOSecond]], [[ISOMillisecond]], [[ISOMicrosecond]], [[ISONanosecond]], [[Calendar]] »).
+    // 5. Set object.[[ISOHour]] to hour.
+    // 6. Set object.[[ISOMinute]] to minute.
+    // 7. Set object.[[ISOSecond]] to second.
+    // 8. Set object.[[ISOMillisecond]] to millisecond.
+    // 9. Set object.[[ISOMicrosecond]] to microsecond.
+    // 10. Set object.[[ISONanosecond]] to nanosecond.
+    // 11. Set object.[[Calendar]] to ? GetISO8601Calendar().
+    // NOTE: No exception check needed for GetISO8601Calendar, see https://github.com/tc39/proposal-temporal/pull/1643
+    auto* object = ordinary_create_from_constructor<PlainTime>(global_object, *new_target, &GlobalObject::temporal_plain_time_prototype, hour, minute, second, millisecond, microsecond, nanosecond, *get_iso8601_calendar(global_object));
+    if (vm.exception())
+        return {};
+
+    // 12. Return object.
+    return object;
 }
 
 }
