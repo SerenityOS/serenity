@@ -265,6 +265,7 @@ namespace JS {
     P(microseconds)                          \
     P(milliseconds)                          \
     P(min)                                   \
+    P(minute)                                \
     P(minutes)                               \
     P(month)                                 \
     P(monthCode)                             \
