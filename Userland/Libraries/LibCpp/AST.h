@@ -281,6 +281,33 @@ private:
     RefPtr<Type> m_pointee;
 };
 
+class Reference : public Type {
+public:
+    virtual ~Reference() override = default;
+    virtual const char* class_name() const override { return "Reference"; }
+    virtual void dump(FILE* = stdout, size_t indent = 0) const override;
+    virtual String to_string() const override;
+
+    enum class Kind {
+        Lvalue,
+        Rvalue,
+    };
+
+    Reference(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename, Kind kind)
+        : Type(parent, start, end, filename)
+        , m_kind(kind)
+    {
+    }
+
+    const Type* referenced_type() const { return m_referenced_type.ptr(); }
+    void set_referenced_type(RefPtr<Type>&& pointee) { m_referenced_type = move(pointee); }
+    Kind kind() const { return m_kind; }
+
+private:
+    RefPtr<Type const> m_referenced_type;
+    Kind m_kind;
+};
+
 class FunctionDefinition : public ASTNode {
 public:
     virtual ~FunctionDefinition() override = default;
