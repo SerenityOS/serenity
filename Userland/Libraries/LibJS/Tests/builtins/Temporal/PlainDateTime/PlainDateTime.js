@@ -32,7 +32,6 @@ describe("errors", () => {
         for (let i = 0; i < 9; ++i) {
             const args = [0, 1, 1, 0, 0, 0, 0, 0, 0];
             args[i] = badValues[i];
-            console.log(args);
             expect(() => {
                 new Temporal.PlainDateTime(...args);
             }).toThrowWithMessage(RangeError, "Invalid plain date time");

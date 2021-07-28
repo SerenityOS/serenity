@@ -1,6 +1,5 @@
 test("use with array", () => {
     let names = Object.getOwnPropertySymbols([1, 2, 3]);
-    console.log(names);
     expect(names).toEqual([]);
 });
 
