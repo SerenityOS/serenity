@@ -1311,7 +1311,7 @@ Vector<StringView> Parser::parse_function_qualifiers()
         if (token.type() != Token::Type::Keyword)
             break;
         auto text = text_of_token(token);
-        if (text == "static" || text == "inline" || text == "extern") {
+        if (text == "static" || text == "inline" || text == "extern" || text == "virtual") {
             qualifiers.append(text);
             consume();
         } else {
@@ -1595,6 +1595,9 @@ bool Parser::match_destructor(const StringView& class_name)
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
 
+    if (match_keyword("virtual"))
+        consume();
+
     if (!match(Token::Type::Tilde))
         return false;
     consume();
@@ -1611,13 +1614,19 @@ bool Parser::match_destructor(const StringView& class_name)
 
     while (consume().type() != Token::Type::RightParen && !eof()) { };
 
+    if (match_keyword("override"))
+        consume();
+
     return (peek(Token::Type::Semicolon).has_value() || peek(Token::Type::LeftCurly).has_value());
 }
 
 void Parser::parse_constructor_or_destructor_impl(FunctionDeclaration& func, CtorOrDtor type)
 {
-    if (type == CtorOrDtor::Dtor)
+    if (type == CtorOrDtor::Dtor) {
+        if (match_keyword("virtual"))
+            func.set_qualifiers({ consume().text() });
         consume(Token::Type::Tilde);
+    }
 
     auto name_token = consume();
     if (name_token.type() != Token::Type::Identifier && name_token.type() != Token::Type::KnownType) {
@@ -1635,6 +1644,9 @@ void Parser::parse_constructor_or_destructor_impl(FunctionDeclaration& func, Cto
     }
 
     consume(Token::Type::RightParen);
+
+    if (type == CtorOrDtor::Dtor && match_keyword("override"))
+        consume();
 
     // TODO: Parse =default, =delete.
 
