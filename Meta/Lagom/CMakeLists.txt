@@ -40,6 +40,8 @@ if (NOT APPLE)
 endif()
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+set(CMAKE_INSTALL_MESSAGE NEVER)
+
 if (ENABLE_ADDRESS_SANITIZER)
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=address")
@@ -89,18 +91,97 @@ include_directories(../../Userland/Libraries/)
 include_directories(${CMAKE_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-function(lagom_lib target_name fs_name)
+# install rules, think about moving to its own helper cmake file
+# Don't install Lagom libs into the target Root/
+# FIXME: Remove this check for 4594
+if (CMAKE_SOURCE_DIR MATCHES ".*/Lagom")
+    include(CMakePackageConfigHelpers)
+    include(GNUInstallDirs)
+
+    # find_package(<package>) call for consumers to find this project
+    set(package Lagom)
+
+    write_basic_package_version_file(
+        "${package}ConfigVersion.cmake"
+        COMPATIBILITY SameMajorVersion
+    )
+
+    # Allow package maintainers to freely override the path for the configs
+    set(Lagom_INSTALL_CMAKEDIR "${CMAKE_INSTALL_DATADIR}/${package}"
+        CACHE PATH "CMake package config location relative to the install prefix")
+    mark_as_advanced(Lagom_INSTALL_CMAKEDIR)
+
+    install(
+        FILES ${SERENITY_PROJECT_ROOT}/Meta/CMake/lagom-install-config.cmake
+        DESTINATION "${Lagom_INSTALL_CMAKEDIR}"
+        RENAME "${package}Config.cmake"
+        COMPONENT Lagom_Development
+    )
+
+    install(
+        FILES "${PROJECT_BINARY_DIR}/${package}ConfigVersion.cmake"
+        DESTINATION "${Lagom_INSTALL_CMAKEDIR}"
+        COMPONENT Lagom_Development
+    )
+
+    install(
+        EXPORT LagomTargets
+        NAMESPACE Lagom::
+        DESTINATION "${Lagom_INSTALL_CMAKEDIR}"
+        COMPONENT Lagom_Development
+    )
+
+    # Manually install AK
+    install(
+        DIRECTORY "${SERENITY_PROJECT_ROOT}/AK"
+        COMPONENT Lagom_Development
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h"
+    )
+endif()
+
+function(lagom_lib library fs_name)
     cmake_parse_arguments(LAGOM_LIBRARY "" "" "SOURCES;LIBS" ${ARGN})
+    # FIXME: Consider whether to care about -DBUILD_SHARED_LIBS=OFF
+    # Possibly a cmake presets value?
+    set(target_name "Lagom${library}")
     add_library(${target_name} SHARED ${LAGOM_LIBRARY_SOURCES})
-    set_target_properties(${target_name} PROPERTIES OUTPUT_NAME lagom-${fs_name})
+    # alias for pretty exports
+    add_library(Lagom::${library} ALIAS ${target_name})
+
+    set_target_properties(
+        ${target_name} PROPERTIES
+        VERSION "${PROJECT_VERSION}"
+        SOVERSION "${PROJECT_VERSION_MAJOR}"
+        EXPORT_NAME ${library}
+        OUTPUT_NAME lagom-${fs_name}
+    )
     target_link_libraries(${target_name} ${LAGOM_LIBRARY_LIBS})
     if (NOT ${target_name} STREQUAL "LagomCore")
         target_link_libraries(${target_name} LagomCore)
     endif()
     # Don't install Lagom libs into the target Root/
-    # FIXME: Remove this for 4594
+    # FIXME: Remove this check for 4594
     if (CMAKE_SOURCE_DIR MATCHES ".*/Lagom")
-        install(TARGETS ${target_name})
+        install(
+            TARGETS ${target_name}
+            EXPORT LagomTargets
+            RUNTIME #
+                COMPONENT Lagom_Runtime
+            LIBRARY #
+                COMPONENT Lagom_Runtime
+                NAMELINK_COMPONENT Lagom_Development
+            ARCHIVE #
+                COMPONENT Lagom_Development
+            INCLUDES #
+                DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        )
+        install(
+            DIRECTORY "${SERENITY_PROJECT_ROOT}/Userland/Libraries/Lib${library}"
+            COMPONENT Lagom_Development
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+            FILES_MATCHING PATTERN "*.h"
+        )
     endif()
 endfunction()
 
@@ -120,7 +201,7 @@ endfunction()
 # Note: AK is included in LagomCore for the host build instead of LibC per the target build
 file(GLOB AK_SOURCES CONFIGURE_DEPENDS "../../AK/*.cpp")
 file(GLOB LIBCORE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCore/*.cpp")
-lagom_lib(LagomCore core
+lagom_lib(Core core
     SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES}
     LIBS Threads::Threads
 )
@@ -133,20 +214,20 @@ if (BUILD_LAGOM)
 
     # Archive
     file(GLOB LIBARCHIVE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibArchive/*.cpp")
-    lagom_lib(LagomArchive archive
+    lagom_lib(Archive archive
         SOURCES ${LIBARCHIVE_SOURCES}
     )
 
     # Audio
     file(GLOB LIBAUDIO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibAudio/*.cpp")
     list(REMOVE_ITEM LIBAUDIO_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibAudio/ClientConnection.cpp")
-    lagom_lib(LagomAudio audio
+    lagom_lib(Audio audio
         SOURCES ${LIBAUDIO_SOURCES}
     )
 
     # Compress
     file(GLOB LIBCOMPRESS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCompress/*.cpp")
-    lagom_lib(LagomCompress compress
+    lagom_lib(Compress compress
         SOURCES ${LIBCOMPRESS_SOURCES}
         LIBS LagomCrypto
     )
@@ -155,7 +236,7 @@ if (BUILD_LAGOM)
     file(GLOB LIBCRYPTO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*.cpp")
     file(GLOB LIBCRYPTO_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*/*.cpp")
     file(GLOB LIBCRYPTO_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*/*/*.cpp")
-    lagom_lib(LagomCrypto crypto
+    lagom_lib(Crypto crypto
         SOURCES ${LIBCRYPTO_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBCRYPTO_SUBSUBDIR_SOURCES}
     )
 
@@ -163,13 +244,13 @@ if (BUILD_LAGOM)
     file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
     # There's no way we can reliably make the dymamic loading classes cross platform
     list(FILTER LIBELF_SOURCES EXCLUDE REGEX ".*Dynamic.*.cpp$")
-    lagom_lib(LagomELF elf
+    lagom_lib(ELF elf
         SOURCES ${LIBELF_SOURCES}
     )
 
     # Gemini
     file(GLOB LIBGEMINI_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGemini/*.cpp")
-    lagom_lib(LagomGemini gemini
+    lagom_lib(Gemini gemini
         SOURCES ${LIBGEMINI_SOURCES}
         LIBS LagomTLS
     )
@@ -177,7 +258,7 @@ if (BUILD_LAGOM)
     # GFX
     file(GLOB LIBGFX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/*.cpp")
     file(GLOB LIBGFX_TTF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGfx/TrueTypeFont/*.cpp")
-    lagom_lib(LagomGfx gfx
+    lagom_lib(Gfx gfx
         SOURCES ${LIBGFX_SOURCES} ${LIBGFX_TTF_SOURCES}
         LIBS m LagomCompress LagomTextCodec LagomIPC
     )
@@ -186,27 +267,27 @@ if (BUILD_LAGOM)
     file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML*.cpp")
     list(REMOVE_ITEM LIBGUI_GML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibGUI/GMLAutocompleteProvider.cpp")
     list(REMOVE_ITEM LIBGUI_GML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibGUI/GMLSyntaxHighlighter.cpp")
-    lagom_lib(LagomGML gml
+    lagom_lib(GML gml
         SOURCES ${LIBGUI_GML_SOURCES}
     )
 
     # HTTP
     file(GLOB LIBHTTP_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibHTTP/*.cpp")
-    lagom_lib(LagomHTTP http
+    lagom_lib(HTTP http
         SOURCES ${LIBHTTP_SOURCES}
         LIBS LagomCompress LagomTLS
     )
 
     # IMAP
     file(GLOB LIBIMAP_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibIMAP/*.cpp")
-    lagom_lib(LagomIMAP imap
+    lagom_lib(IMAP imap
         SOURCES ${LIBIMAP_SOURCES}
         LIBS LagomTLS
     )
 
     # IPC
     file(GLOB LIBIPC_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibIPC/*.cpp")
-    lagom_lib(LagomIPC ipc
+    lagom_lib(IPC ipc
         SOURCES ${LIBIPC_SOURCES}
     )
 
@@ -215,20 +296,20 @@ if (BUILD_LAGOM)
     file(GLOB LIBJS_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*/*.cpp")
     file(GLOB LIBJS_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*/*/*.cpp")
     list(REMOVE_ITEM LIBJS_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibJS/SyntaxHighlighter.cpp")
-    lagom_lib(LagomJS js
+    lagom_lib(JS js
         SOURCES ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBJS_SUBSUBDIR_SOURCES}
         LIBS m LagomCrypto LagomRegex LagomUnicode
     )
 
     # Line
     file(GLOB LIBLINE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibLine/*.cpp")
-    lagom_lib(LagomLine line
+    lagom_lib(Line line
         SOURCES ${LIBLINE_SOURCES}
     )
 
     # Markdown
     file(GLOB LIBMARKDOWN_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibMarkdown/*.cpp")
-    lagom_lib(LagomMarkdown markdown
+    lagom_lib(Markdown markdown
         SOURCES ${LIBMARKDOWN_SOURCES}
         LIBS LagomJS
     )
@@ -236,7 +317,7 @@ if (BUILD_LAGOM)
     # Regex
     file(GLOB LIBREGEX_LIBC_SOURCES "../../Userland/Libraries/LibRegex/C/Regex.cpp")
     file(GLOB LIBREGEX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibRegex/*.cpp")
-    lagom_lib(LagomRegex regex
+    lagom_lib(Regex regex
         SOURCES ${LIBREGEX_SOURCES} ${LIBREGEX_LIBC_SOURCES}
     )
 
@@ -244,7 +325,7 @@ if (BUILD_LAGOM)
     file(GLOB SHELL_SOURCES CONFIGURE_DEPENDS "../../Userland/Shell/*.cpp")
     list(REMOVE_ITEM SHELL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Shell/SyntaxHighlighter.cpp")
     list(FILTER SHELL_SOURCES EXCLUDE REGEX ".*main.cpp$")
-    lagom_lib(LagomShell shell
+    lagom_lib(Shell shell
         SOURCES ${SHELL_SOURCES}
         LIBS LagomLine LagomRegex
     )
@@ -253,19 +334,19 @@ if (BUILD_LAGOM)
     file(GLOB_RECURSE LIBSQL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/*.cpp")
     list(REMOVE_ITEM LIBSQL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibSQL/AST/SyntaxHighlighter.cpp")
     list(REMOVE_ITEM LIBSQL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibSQL/SQLClient.cpp")
-    lagom_lib(LagomSQL sql
+    lagom_lib(SQL sql
         SOURCES ${LIBSQL_SOURCES}
     )
 
     # TextCodec
     file(GLOB LIBTEXTCODEC_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTextCodec/*.cpp")
-    lagom_lib(LagomTextCodec textcodec
+    lagom_lib(TextCodec textcodec
         SOURCES ${LIBTEXTCODEC_SOURCES}
     )
 
     # TLS
     file(GLOB LIBTLS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTLS/*.cpp")
-    lagom_lib(LagomTLS tls
+    lagom_lib(TLS tls
         SOURCES ${LIBTLS_SOURCES}
         LIBS LagomCrypto
     )
@@ -281,19 +362,19 @@ if (BUILD_LAGOM)
         include(../../Userland/Libraries/LibUnicode/unicode_data.cmake)
     endif()
     file(GLOB LIBUNICODE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibUnicode/*.cpp")
-    lagom_lib(LagomUnicode unicode
+    lagom_lib(Unicode unicode
         SOURCES ${LIBUNICODE_SOURCES} ${UNICODE_DATA_SOURCES}
     )
 
     # WASM
     file(GLOB LIBWASM_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWasm/*/*.cpp")
-    lagom_lib(LagomWasm wasm
+    lagom_lib(Wasm wasm
         SOURCES ${LIBWASM_SOURCES}
     )
 
     # x86
     file(GLOB LIBX86_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibX86/*.cpp")
-    lagom_lib(LagomX86 x86
+    lagom_lib(X86 x86
         SOURCES ${LIBX86_SOURCES}
     )
 
