@@ -52,6 +52,15 @@ public:
     void set_malloc_metadata(Badge<MallocTracer>, NonnullOwnPtr<MallocRegionMetadata> metadata) { m_malloc_metadata = move(metadata); }
 
     const String& name() const { return m_name; }
+    String lib_name() const
+    {
+        if (m_name.contains("Loader.so"sv))
+            return "Loader.so";
+        auto const maybe_separator = m_name.find(':');
+        if (!maybe_separator.has_value())
+            return {};
+        return m_name.substring(0, *maybe_separator);
+    }
     void set_name(String name) { m_name = move(name); }
 
 private:

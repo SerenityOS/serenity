@@ -276,19 +276,10 @@ void Emulator::handle_repl()
     auto saved_eip = m_cpu.eip();
     m_cpu.save_base_eip();
     auto insn = X86::Instruction::from_stream(m_cpu, true, true);
-    // FIXME: This does not respect inlineing
+    // FIXME: This does not respect inlining
     //        another way of getting the current function is at need
-    if (auto const* region = load_library_from_address(m_cpu.base_eip())) {
-        auto separator_index = region->name().find(":").value();
-        String lib_name = region->name().substring(0, separator_index);
-        String lib_path = lib_name;
-        if (region->name().contains(".so"))
-            lib_path = String::formatted("/usr/lib/{}", lib_path);
-
-        auto it = m_dynamic_library_cache.find(lib_path);
-        auto& elf = it->value.debug_info->elf();
-        String symbol = elf.symbolicate(m_cpu.base_eip() - region->base());
-        outln("[{}]: {}", lib_name, symbol);
+    if (auto symbol = symbol_at(m_cpu.base_eip()); symbol.has_value()) {
+        outln("[{}]: {}", symbol->lib_name, symbol->symbol);
     }
 
     outln("==> {}", create_instruction_line(m_cpu.base_eip(), insn));
@@ -405,11 +396,11 @@ MmapRegion const* Emulator::load_library_from_address(FlatPtr address)
     auto const* region = find_text_region(address);
     if (!region)
         return {};
-    auto separator_index = region->name().find(':');
-    if (!separator_index.has_value())
+
+    String lib_name = region->lib_name();
+    if (lib_name.is_null())
         return {};
 
-    String lib_name = region->name().substring(0, separator_index.value());
     String lib_path = lib_name;
     if (region->name().contains(".so"))
         lib_path = String::formatted("/usr/lib/{}", lib_path);
@@ -426,30 +417,49 @@ MmapRegion const* Emulator::load_library_from_address(FlatPtr address)
     return region;
 }
 
-String Emulator::create_backtrace_line(FlatPtr address)
+MmapRegion const* Emulator::first_region_for_object(StringView name)
 {
-    auto minimal = String::formatted("=={{{}}}==    {:p}", getpid(), (void*)address);
-    auto const* region = load_library_from_address(address);
-    if (!region)
-        return minimal;
-    // FIXME: This is redundant
-    auto separator_index = region->name().find(":").value();
-    String lib_name = region->name().substring(0, separator_index);
-    String lib_path = lib_name;
-    if (region->name().contains(".so"))
-        lib_path = String::formatted("/usr/lib/{}", lib_path);
+    MmapRegion* ret = nullptr;
+    mmu().for_each_region_of_type<MmapRegion>([&](auto& region) {
+        if (region.lib_name() == name) {
+            ret = &region;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return ret;
+}
+
+// FIXME: This disregards function inlining.
+Optional<Emulator::SymbolInfo> Emulator::symbol_at(FlatPtr address)
+{
+    auto const* address_region = load_library_from_address(address);
+    if (!address_region)
+        return {};
+    auto lib_name = address_region->lib_name();
+    auto const* first_region = (lib_name.is_null() || lib_name.is_empty()) ? address_region : first_region_for_object(lib_name);
+    VERIFY(first_region);
+    auto lib_path = lib_name.contains(".so"sv) ? String::formatted("/usr/lib/{}", lib_name) : lib_name;
 
     auto it = m_dynamic_library_cache.find(lib_path);
-    auto& elf = it->value.debug_info->elf();
-    String symbol = elf.symbolicate(address - region->base());
+    auto const& elf = it->value.debug_info->elf();
+    auto symbol = elf.symbolicate(address - first_region->base());
 
-    auto line_without_source_info = String::formatted("=={{{}}}==    {:p}  [{}]: {}", getpid(), (void*)address, lib_name, symbol);
+    auto source_position = it->value.debug_info->get_source_position(address - first_region->base());
+    return { { lib_name, symbol, source_position } };
+}
 
-    auto source_position = it->value.debug_info->get_source_position(address - region->base());
-    if (source_position.has_value())
-        return String::formatted("=={{{}}}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), (void*)address, lib_name, symbol, LexicalPath::basename(source_position.value().file_path), source_position.value().line_number);
-
-    return line_without_source_info;
+String Emulator::create_backtrace_line(FlatPtr address)
+{
+    auto maybe_symbol = symbol_at(address);
+    if (!maybe_symbol.has_value()) {
+        return String::formatted("=={{{}}}==    {:p}", getpid(), address);
+    } else if (!maybe_symbol->source_position.has_value()) {
+        return String::formatted("=={{{}}}==    {:p}  [{}]: {}", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol);
+    } else {
+        auto const& source_position = maybe_symbol->source_position.value();
+        return String::formatted("=={{{}}}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), address, maybe_symbol->lib_name, maybe_symbol->symbol, LexicalPath::basename(source_position.file_path), source_position.line_number);
+    }
 }
 
 void Emulator::dump_backtrace(Vector<FlatPtr> const& backtrace)
@@ -486,26 +496,11 @@ void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_nam
 
 String Emulator::create_instruction_line(FlatPtr address, X86::Instruction insn)
 {
-    auto minimal = String::formatted("{:p}: {}", (void*)address, insn.to_string(address));
-    auto const* region = load_library_from_address(address);
-    if (!region)
-        return minimal;
-    // FIXME: This is redundant
-    auto separator_index = region->name().find(":").value();
-    String lib_name = region->name().substring(0, separator_index);
-    String lib_path = lib_name;
-    if (region->name().contains(".so"))
-        lib_path = String::formatted("/usr/lib/{}", lib_path);
-
-    auto it = m_dynamic_library_cache.find(lib_path);
-    auto& elf = it->value.debug_info->elf();
-    String symbol = elf.symbolicate(address - region->base());
-
-    auto source_position = it->value.debug_info->get_source_position(address - region->base());
-    if (!source_position.has_value())
-        return minimal;
-
-    return String::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", (void*)address, insn.to_string(address), LexicalPath::basename(source_position.value().file_path), source_position.value().line_number);
+    auto symbol = symbol_at(address);
+    if (!symbol.has_value() || !symbol->source_position.has_value())
+        return String::formatted("{:p}: {}", address, insn.to_string(address));
+    else
+        return String::formatted("{:p}: {} \e[34;1m{}\e[0m:{}", address, insn.to_string(address), LexicalPath::basename(symbol->source_position->file_path), symbol->source_position.value().line_number);
 }
 
 static void emulator_signal_handler(int signum)

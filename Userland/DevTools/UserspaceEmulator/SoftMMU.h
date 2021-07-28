@@ -71,6 +71,16 @@ public:
         }
     }
 
+    template<typename Type, typename Callback>
+    void for_each_region_of_type(Callback callback)
+    {
+        return for_each_region([callback](auto& region) {
+            if (!is<Type>(region))
+                return IterationDecision::Continue;
+            return callback(static_cast<Type&>(region));
+        });
+    }
+
     template<typename Callback>
     void for_regions_in(X86::LogicalAddress address, size_t size, Callback callback)
     {
