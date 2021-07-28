@@ -30,7 +30,11 @@ static constexpr size_t CHUNK_SIZE = 64;
 #endif
 
 #define POOL_SIZE (2 * MiB)
-#define ETERNAL_RANGE_SIZE (4 * MiB)
+#define ETERNAL_HEAPS_PREALLOCATED_MEMORY_SIZE (100 * KiB)
+// FIXME: Clang doesn't build if we set this value to be 3 MiB. We should probably
+// find a way to add more eternal heaps before initializing the MemoryManager,
+// so we don't need to expand it further.
+#define FIRST_ETERNAL_RANGE_SIZE (4 * MiB)
 
 namespace std {
 const nothrow_t nothrow;
@@ -189,17 +193,69 @@ struct KmallocGlobalHeap {
     }
 };
 
+[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc_static_eternal(size_t);
+
+class EternalHeap {
+    AK_MAKE_NONCOPYABLE(EternalHeap);
+    AK_MAKE_NONMOVABLE(EternalHeap);
+
+public:
+    void* operator new(size_t, void* pointer) { return pointer; }
+    void* operator new(size_t) { VERIFY_NOT_REACHED(); }
+
+public:
+    EternalHeap(u8* memory, size_t memory_size)
+        : m_memory_start(memory)
+        , m_memory_size(memory_size)
+    {
+    }
+    EternalHeap(NonnullOwnPtr<Memory::Region>&& region)
+        : m_region(move(region))
+        , m_memory_start(m_region->vaddr().as_ptr())
+        , m_memory_size(m_region->size())
+    {
+    }
+
+    void* allocate(size_t size)
+    {
+        size = round_up_to_power_of_two(size, sizeof(void*));
+        if (free_bytes() < size)
+            return nullptr;
+        void* ptr = VirtualAddress(m_memory_start).offset(m_allocated_bytes_count).as_ptr();
+        m_allocated_bytes_count += size;
+        return ptr;
+    }
+
+    u8 const* memory() const { return m_memory_start; }
+    size_t total_bytes() const { return m_memory_size; }
+    size_t free_bytes() const { return m_memory_size - m_allocated_bytes_count; }
+    size_t allocated_bytes() const { return m_allocated_bytes_count; }
+
+private:
+    ~EternalHeap() { VERIFY_NOT_REACHED(); }
+
+    OwnPtr<Memory::Region> m_region;
+    const u8* m_memory_start;
+    const size_t m_memory_size;
+    size_t m_allocated_bytes_count { 0 };
+};
+
+// Note: We ensure we are aligned because kmalloc_static_eternal() does the same.
+static_assert(round_up_to_power_of_two(sizeof(EternalHeap), sizeof(void*)) == sizeof(EternalHeap));
+
 READONLY_AFTER_INIT static KmallocGlobalHeap* g_kmalloc_global;
 alignas(KmallocGlobalHeap) static u8 g_kmalloc_global_heap[sizeof(KmallocGlobalHeap)];
 
 // Treat the heap as logically separate from .bss
-__attribute__((section(".heap"))) static u8 kmalloc_eternal_heap[ETERNAL_RANGE_SIZE];
+__attribute__((section(".heap"))) static u8 kmalloc_eternal_heaps[ETERNAL_HEAPS_PREALLOCATED_MEMORY_SIZE];
+__attribute__((section(".heap"))) static u8 kmalloc_first_eternal_heap[FIRST_ETERNAL_RANGE_SIZE];
 __attribute__((section(".heap"))) static u8 kmalloc_pool_heap[POOL_SIZE];
 
 static size_t g_kmalloc_bytes_eternal = 0;
 static size_t g_kmalloc_call_count;
 static size_t g_kfree_call_count;
 static size_t g_nested_kfree_calls;
+static size_t g_dynamic_eternal_heaps_count = 0;
 bool g_dump_kmalloc_stacks;
 
 static u8* s_next_eternal_ptr;
@@ -223,17 +279,32 @@ static inline void kmalloc_verify_nospinlock_held()
     }
 }
 
+static void* allocate_new_eternal_heap_slot()
+{
+    // Note: Only Eternal heaps should be in the static eternal heap of the kernel,
+    // therefore each chunk in the static eternal heap must be an EternalHeap object and only it!
+    kmalloc_verify_nospinlock_held();
+    size_t size = sizeof(EternalHeap);
+    SpinlockLocker lock(s_lock);
+    void* ptr = s_next_eternal_ptr;
+    s_next_eternal_ptr += size;
+    VERIFY(s_next_eternal_ptr < s_end_of_eternal_range);
+    g_kmalloc_bytes_eternal += size;
+    g_dynamic_eternal_heaps_count++;
+    return ptr;
+}
+
 UNMAP_AFTER_INIT void kmalloc_init()
 {
     // Zero out heap since it's placed after end_of_kernel_bss.
-    memset(kmalloc_eternal_heap, 0, sizeof(kmalloc_eternal_heap));
+    memset(kmalloc_eternal_heaps, 0, sizeof(kmalloc_eternal_heaps));
     memset(kmalloc_pool_heap, 0, sizeof(kmalloc_pool_heap));
     g_kmalloc_global = new (g_kmalloc_global_heap) KmallocGlobalHeap(kmalloc_pool_heap, sizeof(kmalloc_pool_heap));
-
     s_lock.initialize();
 
-    s_next_eternal_ptr = kmalloc_eternal_heap;
-    s_end_of_eternal_range = s_next_eternal_ptr + sizeof(kmalloc_eternal_heap);
+    s_next_eternal_ptr = kmalloc_eternal_heaps;
+    s_end_of_eternal_range = s_next_eternal_ptr + sizeof(kmalloc_eternal_heaps);
+    new (allocate_new_eternal_heap_slot()) EternalHeap(kmalloc_first_eternal_heap, FIRST_ETERNAL_RANGE_SIZE);
 }
 
 void* kmalloc_eternal(size_t size)
@@ -243,10 +314,38 @@ void* kmalloc_eternal(size_t size)
     size = round_up_to_power_of_two(size, sizeof(void*));
 
     SpinlockLocker lock(s_lock);
-    void* ptr = s_next_eternal_ptr;
-    s_next_eternal_ptr += size;
-    VERIFY(s_next_eternal_ptr < s_end_of_eternal_range);
-    g_kmalloc_bytes_eternal += size;
+    // Note: Only Eternal heap metadata objects should be in the static eternal heap of the kernel,
+    // therefore we know that each pointer must point to object which is EternalHeap.
+
+    // Note: we iterate over the eternal heaps because we might not allocate their memory ranges
+    // to their full potential capacity. To illustrate what is meant here, consider the following
+    // condition: a caller wants to allocate 10 KiB of eternal memory, so he gets this from
+    // the first eternal heap. Then, a caller wants to allocate 1 MiB of eternal memory,
+    // but because we already allocated 10 KiB of memory in the first eternal heap.
+    // So we need to allocate from a new eternal heap. If we want again to allocate 10 KiB
+    // of memory, we should do that on the first eternal heap because it has plenty
+    // of memory to give and not using it is a waste of precious eternal ranges.
+    // This essentially makes it more expensive to allocate eternal memory in the
+    // time aspect (we iterate on all currently-existing eternal heaps), but comes
+    // with the general idea of not wasting memory as much as possible and minimizing
+    // the usage of eternal heaps as much as possible.
+
+    EternalHeap* eternal_heaps_metadata = reinterpret_cast<EternalHeap*>(kmalloc_eternal_heaps);
+    for (size_t heap_index = 0; heap_index < g_dynamic_eternal_heaps_count; heap_index++) {
+        if (auto* ptr = eternal_heaps_metadata[heap_index].allocate(size); ptr != nullptr)
+            return ptr;
+    }
+
+    // Note: It's very unlikely that the MemoryManager was not initialized at this stage!
+    VERIFY(Memory::MemoryManager::is_initialized());
+    // Allocate a region. If the allocation fails, assert.
+    auto new_eternal_heap_size = max(size, 1 * MiB);
+    auto region_or_error = MM.allocate_kernel_region(Memory::page_round_up(new_eternal_heap_size), "kmalloc eternal heap", Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
+    VERIFY(!region_or_error.is_error());
+    auto* new_eternal_heap = new (allocate_new_eternal_heap_slot()) EternalHeap(region_or_error.release_value());
+    auto* ptr = new_eternal_heap->allocate(size);
+    // Note: We have a fresh new eternal heap, so there's no sane way to be out of memory with it now.
+    VERIFY(ptr);
     return ptr;
 }
 
