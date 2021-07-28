@@ -178,6 +178,19 @@ private:
     static RefPtr<StyleValue> parse_image_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_box_shadow_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
 
+    // calc() parsing, according to https://www.w3.org/TR/css-values-3/#calc-syntax
+    static OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_sum(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
+    static OwnPtr<CalculatedStyleValue::CalcProduct> parse_calc_product(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
+    static Optional<CalculatedStyleValue::CalcValue> parse_calc_value(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
+    static OwnPtr<CalculatedStyleValue::CalcNumberSum> parse_calc_number_sum(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
+    static OwnPtr<CalculatedStyleValue::CalcNumberProduct> parse_calc_number_product(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
+    static Optional<CalculatedStyleValue::CalcNumberValue> parse_calc_number_value(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
+    static OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> parse_calc_product_part_with_operator(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
+    static OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> parse_calc_sum_part_with_operator(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
+    static OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> parse_calc_number_product_part_with_operator(ParsingContext const&, TokenStream<StyleComponentValueRule>& tokens);
+    static OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
+    static OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(ParsingContext const&, Vector<StyleComponentValueRule> const&);
+
     template<typename T>
     Optional<SelectorList> parse_a_selector_list(TokenStream<T>&);
     template<typename T>
