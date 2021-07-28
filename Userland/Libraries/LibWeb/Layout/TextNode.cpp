@@ -36,6 +36,42 @@ static bool is_all_whitespace(const StringView& string)
     return true;
 }
 
+void TextNode::paint_text_decoration(Gfx::Painter& painter, LineBoxFragment const& fragment) const
+{
+    Gfx::IntPoint line_start_point {};
+    Gfx::IntPoint line_end_point {};
+
+    auto& font = fragment.layout_node().font();
+    auto fragment_box = enclosing_int_rect(fragment.absolute_rect());
+    auto glyph_height = font.glyph_height();
+    auto baseline = fragment_box.height() / 2 - (glyph_height + 4) / 2 + glyph_height;
+
+    switch (computed_values().text_decoration_line()) {
+    case CSS::TextDecorationLine::None:
+        return;
+        break;
+    case CSS::TextDecorationLine::Underline:
+        line_start_point = fragment_box.top_left().translated(0, baseline + 2);
+        line_end_point = fragment_box.top_right().translated(0, baseline + 2);
+        break;
+    case CSS::TextDecorationLine::Overline:
+        line_start_point = fragment_box.top_left().translated(0, baseline - glyph_height);
+        line_end_point = fragment_box.top_right().translated(0, baseline - glyph_height);
+        break;
+    case CSS::TextDecorationLine::LineThrough: {
+        auto x_height = font.x_height();
+        line_start_point = fragment_box.top_left().translated(0, baseline - x_height / 2);
+        line_end_point = fragment_box.top_right().translated(0, baseline - x_height / 2);
+        break;
+    } break;
+    case CSS::TextDecorationLine::Blink:
+        // Conforming user agents may simply not blink the text
+        break;
+    }
+
+    painter.draw_line(line_start_point, line_end_point, computed_values().color());
+}
+
 void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& fragment, PaintPhase phase) const
 {
     auto& painter = context.painter();
@@ -50,8 +86,7 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
         if (document().inspected_node() == &dom_node())
             context.painter().draw_rect(enclosing_int_rect(fragment.absolute_rect()), Color::Magenta);
 
-        if (computed_values().text_decoration_line() == CSS::TextDecorationLine::Underline)
-            painter.draw_line(enclosing_int_rect(fragment.absolute_rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.absolute_rect()).bottom_right().translated(0, 1), computed_values().color());
+        paint_text_decoration(painter, fragment);
 
         // FIXME: text-transform should be done already in layout, since uppercase glyphs may be wider than lowercase, etc.
         auto text = m_text_for_rendering;
