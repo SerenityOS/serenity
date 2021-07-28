@@ -81,7 +81,7 @@ Calendar* get_builtin_calendar(GlobalObject& global_object, String const& identi
 // 12.1.4 GetISO8601Calendar ( )
 Calendar* get_iso8601_calendar(GlobalObject& global_object)
 {
-    // 1. Return ? GetBuiltinCalendar("iso8601").
+    // 1. Return ! GetBuiltinCalendar("iso8601").
     return get_builtin_calendar(global_object, "iso8601");
 }
 
@@ -346,7 +346,7 @@ Object* to_temporal_calendar_with_iso_default(GlobalObject& global_object, Value
 {
     // 1. If temporalCalendarLike is undefined, then
     if (temporal_calendar_like.is_undefined()) {
-        // a. Return ? GetISO8601Calendar().
+        // a. Return ! GetISO8601Calendar().
         return get_iso8601_calendar(global_object);
     }
     // 2. Return ? ToTemporalCalendar(temporalCalendarLike).

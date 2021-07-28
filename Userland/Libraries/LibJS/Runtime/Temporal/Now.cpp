@@ -71,10 +71,8 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time_iso)
 {
     auto temporal_time_zone_like = vm.argument(0);
 
-    // 1, Let calendar be ? GetISO8601Calendar().
+    // 1, Let calendar be ! GetISO8601Calendar().
     auto* calendar = get_iso8601_calendar(global_object);
-    if (vm.exception())
-        return {};
 
     // 2. Return ? SystemDateTime(temporalTimeZoneLike, calendar).
     return system_date_time(global_object, temporal_time_zone_like, calendar);
@@ -91,7 +89,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date)
     if (vm.exception())
         return {};
 
-    // 2. Return ? CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
+    // 2. Return ! CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
     return create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar());
 }
 
@@ -100,17 +98,15 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_iso)
 {
     auto temporal_time_zone_like = vm.argument(0);
 
-    // 1. Let calendar be ? GetISO8601Calendar().
+    // 1. Let calendar be ! GetISO8601Calendar().
     auto* calendar = get_iso8601_calendar(global_object);
-    if (vm.exception())
-        return {};
 
     // 2. Let dateTime be ? SystemDateTime(temporalTimeZoneLike, calendar).
     auto* date_time = system_date_time(global_object, temporal_time_zone_like, calendar);
     if (vm.exception())
         return {};
 
-    // 3. Return ? CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
+    // 3. Return ! CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
     return create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar());
 }
 
@@ -119,16 +115,15 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_time_iso)
 {
     auto temporal_time_zone_like = vm.argument(0);
 
-    // 1. Let calendar be ? GetISO8601Calendar().
-    // NOTE: No exception check needed for GetISO8601Calendar, see https://github.com/tc39/proposal-temporal/pull/1643
+    // 1. Let calendar be ! GetISO8601Calendar().
     auto* calendar = get_iso8601_calendar(global_object);
 
     // 2. Let dateTime be ? SystemDateTime(temporalTimeZoneLike, calendar).
-    auto date_time = system_date_time(global_object, temporal_time_zone_like, calendar);
+    auto* date_time = system_date_time(global_object, temporal_time_zone_like, calendar);
     if (vm.exception())
         return {};
 
-    // 3. Return ? CreateTemporalTime(dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+    // 3. Return ! CreateTemporalTime(dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
     return create_temporal_time(global_object, date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
 }
 
