@@ -1237,6 +1237,16 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
         type = ptr;
     }
 
+    if (!eof() && (peek().type() == Token::Type::And || peek().type() == Token::Type::AndAnd)) {
+        type->set_end(position());
+        auto ref_token = consume();
+        auto ref = create_ast_node<Reference>(parent, type->start(), ref_token.end(), ref_token.type() == Token::Type::And ? Reference::Kind::Lvalue : Reference::Kind::Rvalue);
+        type->set_parent(*ref);
+        ref->set_referenced_type(type);
+        ref->set_end(position());
+        type = ref;
+    }
+
     type->set_end(position());
     return type;
 }
