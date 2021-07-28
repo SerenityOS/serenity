@@ -25,12 +25,7 @@ namespace Unicode {
 
 static bool has_property(UnicodeData const& unicode_data, Property property)
 {
-    for (u32 i = 0; i < unicode_data.prop_list_size; ++i) {
-        if (unicode_data.prop_list[i] == property)
-            return true;
-    }
-
-    return false;
+    return (unicode_data.properties & property) == property;
 }
 
 static bool is_cased_letter(UnicodeData const& unicode_data)
