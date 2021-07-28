@@ -58,6 +58,8 @@ private:
             obj.add("packets_out", adapter.packets_out());
             obj.add("bytes_out", adapter.bytes_out());
             obj.add("link_up", adapter.link_up());
+            obj.add("link_speed", adapter.link_speed());
+            obj.add("link_full_duplex", adapter.link_full_duplex());
             obj.add("mtu", adapter.mtu());
         });
         array.finish();
