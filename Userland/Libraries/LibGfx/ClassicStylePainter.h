@@ -17,7 +17,6 @@ class ClassicStylePainter : public BaseStylePainter {
 public:
     void paint_button(Painter&, const IntRect&, const Palette&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true, bool focused = false) override;
     void paint_tab_button(Painter&, const IntRect&, const Palette&, bool active, bool hovered, bool enabled, bool top) override;
-    void paint_surface(Painter&, const IntRect&, const Palette&, bool paint_vertical_lines = true, bool paint_top_line = true) override;
     void paint_frame(Painter&, const IntRect&, const Palette&, FrameShape, FrameShadow, int thickness, bool skip_vertical_lines = false) override;
     void paint_window_frame(Painter&, const IntRect&, const Palette&) override;
     void paint_progressbar(Painter&, const IntRect&, const Palette&, int min, int max, int value, const StringView& text, Orientation = Orientation::Horizontal) override;
