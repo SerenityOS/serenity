@@ -19,6 +19,7 @@
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/GMLAutocompleteProvider.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
 #include <LibGUI/Label.h>
@@ -480,6 +481,8 @@ void Editor::set_document(GUI::TextDocument& doc)
         }
         m_language_client->open_file(code_document.file_path(), fd);
         close(fd);
+    } else {
+        set_autocomplete_provider_for(code_document);
     }
 }
 
@@ -605,6 +608,17 @@ void Editor::set_syntax_highlighter_for(const CodeDocument& document)
         break;
     default:
         set_syntax_highlighter({});
+    }
+}
+
+void Editor::set_autocomplete_provider_for(CodeDocument const& document)
+{
+    switch (document.language()) {
+    case Language::GML:
+        set_autocomplete_provider(make<GUI::GMLAutocompleteProvider>());
+        break;
+    default:
+        set_autocomplete_provider({});
     }
 }
 
