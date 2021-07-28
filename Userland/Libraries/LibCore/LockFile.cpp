@@ -19,7 +19,7 @@ LockFile::LockFile(char const* filename, Type type)
     if (!Core::File::ensure_parent_directories(m_filename))
         return;
 
-    m_fd = open(filename, O_RDONLY | O_CREAT, 0666);
+    m_fd = open(filename, O_RDONLY | O_CREAT | O_CLOEXEC, 0666);
     if (m_fd == -1) {
         m_errno = errno;
         return;
