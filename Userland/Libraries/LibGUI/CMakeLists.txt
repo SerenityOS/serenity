@@ -39,6 +39,7 @@ set(SOURCES
     FontPicker.cpp
     FontPickerDialogGML.h
     Frame.cpp
+    GMLAutocompleteProvider.cpp
     GMLFormatter.cpp
     GMLLexer.cpp
     GMLParser.cpp

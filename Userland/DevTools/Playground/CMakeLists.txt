@@ -6,7 +6,6 @@ serenity_component(
 
 set(SOURCES
     main.cpp
-    GMLAutocompleteProvider.cpp
 )
 
 serenity_app(Playground ICON app-playground)

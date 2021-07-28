@@ -6,7 +6,9 @@
 
 #pragma once
 
-#include <LibGUI/AutocompleteProvider.h>
+#include "AutocompleteProvider.h"
+
+namespace GUI {
 
 class GMLAutocompleteProvider final : public virtual GUI::AutocompleteProvider {
 public:
@@ -21,3 +23,5 @@ private:
 
     virtual void provide_completions(Function<void(Vector<Entry>)> callback) override;
 };
+
+}
