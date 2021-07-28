@@ -15,7 +15,25 @@ Preprocessor::Preprocessor(const String& filename, const StringView& program)
     : m_filename(filename)
     , m_program(program)
 {
-    m_lines = m_program.split_view('\n', true);
+    GenericLexer program_lexer { m_program };
+    for (;;) {
+        if (program_lexer.is_eof())
+            break;
+        auto line = program_lexer.consume_until('\n');
+        bool has_multiline = false;
+        while (line.ends_with('\\') && !program_lexer.is_eof()) {
+            auto continuation = program_lexer.consume_until('\n');
+            line = StringView { line.characters_without_null_termination(), line.length() + continuation.length() + 1 };
+            // Append an empty line to keep the line count correct.
+            m_lines.append({});
+            has_multiline = true;
+        }
+
+        if (has_multiline)
+            m_lines.last() = line;
+        else
+            m_lines.append(line);
+    }
 }
 
 const String& Preprocessor::process()
@@ -45,9 +63,28 @@ const String& Preprocessor::process()
 
 static void consume_whitespace(GenericLexer& lexer)
 {
-    lexer.ignore_while([](char ch) { return isspace(ch); });
-    if (lexer.peek() == '/' && lexer.peek(1) == '/')
-        lexer.ignore_until([](char ch) { return ch == '\n'; });
+    auto ignore_line = [&] {
+        for (;;) {
+            if (lexer.consume_specific("\\\n"sv)) {
+                lexer.ignore(2);
+            } else {
+                lexer.ignore_until('\n');
+                break;
+            }
+        }
+    };
+    for (;;) {
+        if (lexer.consume_specific("//"sv))
+            ignore_line();
+        else if (lexer.consume_specific("/*"sv))
+            lexer.ignore_until("*/");
+        else if (lexer.next_is("\\\n"sv))
+            lexer.ignore(2);
+        else if (lexer.is_eof() || !lexer.next_is(isspace))
+            break;
+        else
+            lexer.ignore();
+    }
 }
 
 Preprocessor::PreprocessorKeyword Preprocessor::handle_preprocessor_line(const StringView& line)

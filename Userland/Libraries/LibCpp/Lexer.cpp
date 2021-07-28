@@ -556,8 +556,16 @@ Vector<Token> Lexer::lex()
                     begin_token();
                 }
             } else {
-                while (peek() && peek() != '\n')
-                    consume();
+                while (peek()) {
+                    if (peek() == '\\' && peek(1) == '\n') {
+                        consume();
+                        consume();
+                    } else if (peek() == '\n') {
+                        break;
+                    } else {
+                        consume();
+                    }
+                }
 
                 commit_token(Token::Type::PreprocessorStatement);
             }
