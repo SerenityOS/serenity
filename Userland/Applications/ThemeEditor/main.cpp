@@ -116,6 +116,7 @@ int main(int argc, char** argv)
         preview_palette.set_color(role, color_input.color());
         preview_widget.set_preview_palette(preview_palette);
     };
+    color_input.set_color(preview_palette.color(Gfx::ColorRole::Window));
 
     window->resize(480, 385);
     window->set_resizable(false);
