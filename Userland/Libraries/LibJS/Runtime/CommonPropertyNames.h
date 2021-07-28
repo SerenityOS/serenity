@@ -210,6 +210,7 @@ namespace JS {
     P(hasIndices)                            \
     P(hasOwn)                                \
     P(hasOwnProperty)                        \
+    P(hour)                                  \
     P(hours)                                 \
     P(hypot)                                 \
     P(id)                                    \

@@ -20,6 +20,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
+    JS_DECLARE_NATIVE_FUNCTION(hour_getter);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
 };
 
