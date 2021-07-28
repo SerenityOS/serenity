@@ -45,7 +45,7 @@ public:
     // NOTE: This is for the JS bindings
     const FlyString& namespace_uri() const { return namespace_(); }
 
-    bool has_attribute(const FlyString& name) const { return !attribute(name).is_null(); }
+    bool has_attribute(const FlyString& name) const { return find_attribute(name) != nullptr; }
     bool has_attributes() const { return !m_attributes.is_empty(); }
     String attribute(const FlyString& name) const;
     String get_attribute(const FlyString& name) const { return attribute(name); }

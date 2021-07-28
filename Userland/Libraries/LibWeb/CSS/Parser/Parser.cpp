@@ -416,7 +416,12 @@ Result<Selector::SimpleSelector, Parser::SelectorParsingResult> Parser::parse_si
             .type = Selector::SimpleSelector::Type::Attribute,
             .attribute = {
                 .match_type = Selector::SimpleSelector::Attribute::MatchType::HasAttribute,
-                .name = attribute_part.token().ident(),
+                // FIXME: Case-sensitivity is defined by the document language.
+                // HTML is insensitive with attribute names, and our code generally assumes
+                // they are converted to lowercase, so we do that here too. If we want to be
+                // correct with XML later, we'll need to keep the original case and then do
+                // a case-insensitive compare later.
+                .name = attribute_part.token().ident().to_lowercase_string(),
             }
         };
 
