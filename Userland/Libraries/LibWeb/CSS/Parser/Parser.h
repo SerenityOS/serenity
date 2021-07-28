@@ -176,6 +176,7 @@ private:
     static RefPtr<StyleValue> parse_color_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_string_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_image_value(ParsingContext const&, StyleComponentValueRule const&);
+    static RefPtr<StyleValue> parse_box_shadow_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
 
     template<typename T>
     Optional<SelectorList> parse_a_selector_list(TokenStream<T>&);

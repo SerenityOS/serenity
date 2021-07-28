@@ -1714,6 +1714,47 @@ RefPtr<StyleValue> Parser::parse_image_value(ParsingContext const& context, Styl
     return {};
 }
 
+RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    // FIXME: Also support inset, spread-radius and multiple comma-seperated box-shadows
+    Length offset_x {};
+    Length offset_y {};
+    Length blur_radius {};
+    Color color {};
+
+    if (component_values.size() < 3 || component_values.size() > 4)
+        return nullptr;
+
+    auto maybe_x = parse_length(context, component_values[0]);
+    if (!maybe_x.has_value())
+        return nullptr;
+    offset_x = maybe_x.value();
+
+    auto maybe_y = parse_length(context, component_values[1]);
+    if (!maybe_y.has_value())
+        return nullptr;
+    offset_y = maybe_y.value();
+
+    if (component_values.size() == 3) {
+        auto parsed_color = parse_color(context, component_values[2]);
+        if (!parsed_color.has_value())
+            return nullptr;
+        color = parsed_color.value();
+    } else if (component_values.size() == 4) {
+        auto maybe_blur_radius = parse_length(context, component_values[2]);
+        if (!maybe_blur_radius.has_value())
+            return nullptr;
+        blur_radius = maybe_blur_radius.value();
+
+        auto parsed_color = parse_color(context, component_values[3]);
+        if (!parsed_color.has_value())
+            return nullptr;
+        color = parsed_color.value();
+    }
+
+    return BoxShadowStyleValue::create(offset_x, offset_y, blur_radius, color);
+}
+
 RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
 {
     Vector<StyleComponentValueRule> component_values;
@@ -1734,6 +1775,12 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
 
     if (component_values.is_empty())
         return {};
+
+    // Special-case property handling
+    if (property_id == PropertyID::BoxShadow) {
+        if (auto parsed_box_shadow = parse_box_shadow_value(m_context, component_values))
+            return parsed_box_shadow;
+    }
 
     if (component_values.size() == 1)
         return parse_css_value(m_context, property_id, component_values.first());
