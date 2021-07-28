@@ -1,7 +1,7 @@
-diff -Naur binutils-2.36.1/bfd/config.bfd binutils-2.36.1.serenity/bfd/config.bfd
---- binutils-2.36.1/bfd/config.bfd	2021-01-09 11:47:33.000000000 +0100
-+++ binutils-2.36.1.serenity/bfd/config.bfd	2021-04-27 20:27:28.646876773 +0200
-@@ -224,7 +224,24 @@
+diff -Naur binutils-2.37/bfd/config.bfd binutils-2.37.serenity/bfd/config.bfd
+--- binutils-2.37/bfd/config.bfd	2021-07-08 13:37:19.000000000 +0200
++++ binutils-2.37.serenity/bfd/config.bfd	2021-07-28 18:03:58.972705458 +0200
+@@ -223,7 +223,24 @@
  
  case "${targ}" in
  # START OF targmatch.h
@@ -26,10 +26,10 @@ diff -Naur binutils-2.36.1/bfd/config.bfd binutils-2.36.1.serenity/bfd/config.bf
    aarch64-*-darwin*)
      targ_defvec=aarch64_mach_o_vec
      targ_selvecs="arm_mach_o_vec mach_o_le_vec mach_o_be_vec mach_o_fat_vec"
-diff -Naur binutils-2.36.1/config.sub binutils-2.36.1.serenity/config.sub
---- binutils-2.36.1/config.sub	2021-01-09 11:47:33.000000000 +0100
-+++ binutils-2.36.1.serenity/config.sub	2021-04-27 20:23:15.975422803 +0200
-@@ -1693,6 +1693,7 @@
+diff -Naur binutils-2.37/config.sub binutils-2.37.serenity/config.sub
+--- binutils-2.37/config.sub	2021-07-08 13:37:19.000000000 +0200
++++ binutils-2.37.serenity/config.sub	2021-07-28 18:03:58.972705458 +0200
+@@ -1700,6 +1700,7 @@
  	# The portable systems comes first.
  	# Each alternative MUST end in a * to match a version number.
  	gnu* | android* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
@@ -37,9 +37,9 @@ diff -Naur binutils-2.36.1/config.sub binutils-2.36.1.serenity/config.sub
  	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]* \
  	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
  	     | sym* |  plan9* | psp* | sim* | xray* | os68k* | v88r* \
-diff -Naur binutils-2.36.1/gas/configure.tgt binutils-2.36.1.serenity/gas/configure.tgt
---- binutils-2.36.1/gas/configure.tgt	2021-01-09 11:47:33.000000000 +0100
-+++ binutils-2.36.1.serenity/gas/configure.tgt	2021-04-27 20:23:15.975422803 +0200
+diff -Naur binutils-2.37/gas/configure.tgt binutils-2.37.serenity/gas/configure.tgt
+--- binutils-2.37/gas/configure.tgt	2021-07-08 13:37:19.000000000 +0200
++++ binutils-2.37.serenity/gas/configure.tgt	2021-07-28 18:03:58.972705458 +0200
 @@ -123,6 +123,8 @@
  generic_target=${cpu_type}-$vendor-$os
  # Note: This table is alpha-sorted, please try to keep it that way.
@@ -48,10 +48,10 @@ diff -Naur binutils-2.36.1/gas/configure.tgt binutils-2.36.1.serenity/gas/config
 +  arm-*-serenity*)                      fmt=elf;;
    aarch64*-*-elf*)			fmt=elf;;
    aarch64*-*-fuchsia*)			fmt=elf;;
-   aarch64*-*-linux*)			fmt=elf em=linux
-diff -Naur binutils-2.36.1/ld/configure.tgt binutils-2.36.1.serenity/ld/configure.tgt
---- binutils-2.36.1/ld/configure.tgt	2021-01-09 11:47:34.000000000 +0100
-+++ binutils-2.36.1.serenity/ld/configure.tgt	2021-04-27 20:23:15.975422803 +0200
+   aarch64*-*-genode*)			fmt=elf;;
+diff -Naur binutils-2.37/ld/configure.tgt binutils-2.37.serenity/ld/configure.tgt
+--- binutils-2.37/ld/configure.tgt	2021-07-08 13:37:20.000000000 +0200
++++ binutils-2.37.serenity/ld/configure.tgt	2021-07-28 18:03:58.972705458 +0200
 @@ -43,6 +43,19 @@
  # Please try to keep this table more or less in alphabetic order - it
  # makes it much easier to lookup a specific archictecture.
@@ -72,9 +72,9 @@ diff -Naur binutils-2.36.1/ld/configure.tgt binutils-2.36.1.serenity/ld/configur
  aarch64_be-*-elf)	targ_emul=aarch64elfb
  			targ_extra_emuls="aarch64elf aarch64elf32 aarch64elf32b armelfb armelf"
  			;;
-diff -Naur binutils-2.36.1/ld/emulparams/armelf_serenity.sh binutils-2.36.1.serenity/ld/emulparams/armelf_serenity.sh
---- binutils-2.36.1/ld/emulparams/armelf_serenity.sh	1970-01-01 01:00:00.000000000 +0100
-+++ binutils-2.36.1.serenity/ld/emulparams/armelf_serenity.sh	2021-04-27 20:23:15.975422803 +0200
+diff -Naur binutils-2.37/ld/emulparams/armelf_serenity.sh binutils-2.37.serenity/ld/emulparams/armelf_serenity.sh
+--- binutils-2.37/ld/emulparams/armelf_serenity.sh	1970-01-01 01:00:00.000000000 +0100
++++ binutils-2.37.serenity/ld/emulparams/armelf_serenity.sh	2021-07-28 18:03:58.972705458 +0200
 @@ -0,0 +1,7 @@
 +. ${srcdir}/emulparams/armelf.sh
 +MAXPAGESIZE="CONSTANT (MAXPAGESIZE)"
@@ -83,21 +83,21 @@ diff -Naur binutils-2.36.1/ld/emulparams/armelf_serenity.sh binutils-2.36.1.sere
 +
 +unset STACK_ADDR
 +unset EMBEDDED
-diff -Naur binutils-2.36.1/ld/emulparams/elf_i386_serenity.sh binutils-2.36.1.serenity/ld/emulparams/elf_i386_serenity.sh
---- binutils-2.36.1/ld/emulparams/elf_i386_serenity.sh	1970-01-01 01:00:00.000000000 +0100
-+++ binutils-2.36.1.serenity/ld/emulparams/elf_i386_serenity.sh	2021-04-27 20:23:15.975422803 +0200
+diff -Naur binutils-2.37/ld/emulparams/elf_i386_serenity.sh binutils-2.37.serenity/ld/emulparams/elf_i386_serenity.sh
+--- binutils-2.37/ld/emulparams/elf_i386_serenity.sh	1970-01-01 01:00:00.000000000 +0100
++++ binutils-2.37.serenity/ld/emulparams/elf_i386_serenity.sh	2021-07-28 18:03:58.972705458 +0200
 @@ -0,0 +1,3 @@
 +. ${srcdir}/emulparams/elf_i386.sh
 +GENERATE_SHLIB_SCRIPT=yes
 +GENERATE_PIE_SCRIPT=yes
-diff -Naur binutils-2.36.1/ld/emulparams/elf_x86_64_serenity.sh binutils-2.36.1.serenity/ld/emulparams/elf_x86_64_serenity.sh
---- binutils-2.36.1/ld/emulparams/elf_x86_64_serenity.sh	1970-01-01 01:00:00.000000000 +0100
-+++ binutils-2.36.1.serenity/ld/emulparams/elf_x86_64_serenity.sh	2021-04-27 20:23:15.975422803 +0200
+diff -Naur binutils-2.37/ld/emulparams/elf_x86_64_serenity.sh binutils-2.37.serenity/ld/emulparams/elf_x86_64_serenity.sh
+--- binutils-2.37/ld/emulparams/elf_x86_64_serenity.sh	1970-01-01 01:00:00.000000000 +0100
++++ binutils-2.37.serenity/ld/emulparams/elf_x86_64_serenity.sh	2021-07-28 18:03:58.972705458 +0200
 @@ -0,0 +1 @@
 +. ${srcdir}/emulparams/elf_x86_64.sh
-diff -Naur binutils-2.36.1/ld/Makefile.am binutils-2.36.1.serenity/ld/Makefile.am
---- binutils-2.36.1/ld/Makefile.am	2021-01-09 11:47:34.000000000 +0100
-+++ binutils-2.36.1.serenity/ld/Makefile.am	2021-04-27 20:23:15.975422803 +0200
+diff -Naur binutils-2.37/ld/Makefile.am binutils-2.37.serenity/ld/Makefile.am
+--- binutils-2.37/ld/Makefile.am	2021-07-08 13:37:20.000000000 +0200
++++ binutils-2.37.serenity/ld/Makefile.am	2021-07-28 18:03:58.972705458 +0200
 @@ -174,6 +174,7 @@
  	earmelf_nbsd.c \
  	earmelf_phoenix.c \
@@ -106,10 +106,10 @@ diff -Naur binutils-2.36.1/ld/Makefile.am binutils-2.36.1.serenity/ld/Makefile.a
  	earmelfb.c \
  	earmelfb_fbsd.c \
  	earmelfb_fuchsia.c \
-diff -Naur binutils-2.36.1/ld/Makefile.in binutils-2.36.1.serenity/ld/Makefile.in
---- binutils-2.36.1/ld/Makefile.in	2021-02-06 10:03:32.000000000 +0100
-+++ binutils-2.36.1.serenity/ld/Makefile.in	2021-04-27 20:23:15.975422803 +0200
-@@ -663,6 +663,7 @@
+diff -Naur binutils-2.37/ld/Makefile.in binutils-2.37.serenity/ld/Makefile.in
+--- binutils-2.37/ld/Makefile.in	2021-07-18 18:38:34.000000000 +0200
++++ binutils-2.37.serenity/ld/Makefile.in	2021-07-28 18:03:58.972705458 +0200
+@@ -664,6 +664,7 @@
  	earmelf_nbsd.c \
  	earmelf_phoenix.c \
  	earmelf_vxworks.c \
@@ -117,7 +117,7 @@ diff -Naur binutils-2.36.1/ld/Makefile.in binutils-2.36.1.serenity/ld/Makefile.i
  	earmelfb.c \
  	earmelfb_fbsd.c \
  	earmelfb_fuchsia.c \
-@@ -780,6 +781,7 @@
+@@ -774,6 +775,7 @@
  	eelf_i386_vxworks.c \
  	eelf_iamcu.c \
  	eelf_s390.c \
@@ -133,15 +133,19 @@ diff -Naur binutils-2.36.1/ld/Makefile.in binutils-2.36.1.serenity/ld/Makefile.i
  	ehppa64linux.c \
  	ei386pep.c \
  	emmo.c
-diff -Naur binutils-2.36.1/binutils/objcopy.c binutils-2.36.1.serenity/binutils/objcopy.c
---- binutils-2.36.1/binutils/objcopy.c	2021-02-05 15:13:40.000000000 +0100
-+++ binutils-2.36.1.serenity/binutils/objcopy.c	2021-06-07 08:28:08.961581287 +0200
-@@ -3769,7 +3769,7 @@
-   /* To allow us to do "strip *" without dying on the first
-      non-object file, failures are nonfatal.  */
-   ibfd = bfd_openr (input_filename, input_target);
--  if (ibfd == NULL || fstat (fileno (ibfd->iostream), in_stat) != 0)
-+  if (ibfd == NULL || bfd_stat (ibfd, in_stat) != 0)
-     {
-       bfd_nonfatal_message (input_filename, NULL, NULL, NULL);
-       status = 1;
+diff -Naur binutils-2.37/libiberty/rust-demangle.c binutils-2.37.serenity/libiberty/rust-demangle.c
+--- binutils-2.37/libiberty/rust-demangle.c	2021-07-15 16:19:46.000000000 +0200
++++ binutils-2.37.serenity/libiberty/rust-demangle.c	2021-07-28 18:14:23.231031885 +0200
+@@ -75,10 +75,10 @@
+   int version;
+ 
+   /* Recursion depth.  */
+-  uint recursion;
++  unsigned int recursion;
+   /* Maximum number of times demangle_path may be called recursively.  */
+ #define RUST_MAX_RECURSION_COUNT  1024
+-#define RUST_NO_RECURSION_LIMIT   ((uint) -1)
++#define RUST_NO_RECURSION_LIMIT   ((unsigned int) -1)
+ 
+   uint64_t bound_lifetime_depth;
+ };
