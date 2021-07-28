@@ -46,6 +46,7 @@
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
+#include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
@@ -469,6 +470,13 @@ static void print_temporal_plain_date_time(JS::Object const& object, HashTable<J
     out(" \033[34;1m{:04}-{:02}-{:02} {:02}:{:02}:{:02}.{:03}{:03}{:03}\033[0m", plain_date_time.iso_year(), plain_date_time.iso_month(), plain_date_time.iso_day(), plain_date_time.iso_hour(), plain_date_time.iso_minute(), plain_date_time.iso_second(), plain_date_time.iso_millisecond(), plain_date_time.iso_microsecond(), plain_date_time.iso_nanosecond());
 }
 
+static void print_temporal_plain_time(JS::Object const& object, HashTable<JS::Object*>&)
+{
+    auto& plain_time = static_cast<JS::Temporal::PlainTime const&>(object);
+    print_type("Temporal.PlainTime");
+    out(" \033[34;1m{:02}:{:02}:{:02}.{:03}{:03}{:03}\033[0m", plain_time.iso_hour(), plain_time.iso_minute(), plain_time.iso_second(), plain_time.iso_millisecond(), plain_time.iso_microsecond(), plain_time.iso_nanosecond());
+}
+
 static void print_temporal_time_zone(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& time_zone = static_cast<JS::Temporal::TimeZone const&>(object);
@@ -548,6 +556,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_temporal_plain_date(object, seen_objects);
         if (is<JS::Temporal::PlainDateTime>(object))
             return print_temporal_plain_date_time(object, seen_objects);
+        if (is<JS::Temporal::PlainTime>(object))
+            return print_temporal_plain_time(object, seen_objects);
         if (is<JS::Temporal::TimeZone>(object))
             return print_temporal_time_zone(object, seen_objects);
         return print_object(object, seen_objects);
