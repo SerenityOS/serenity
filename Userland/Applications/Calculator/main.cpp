@@ -46,7 +46,6 @@ int main(int argc, char** argv)
 
     auto& widget = window->set_main_widget<CalculatorWidget>();
 
-    window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& file_menu = window->add_menu("&File");
@@ -70,5 +69,8 @@ int main(int argc, char** argv)
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Calculator", app_icon, window));
+
+    window->show();
+
     return app->exec();
 }
