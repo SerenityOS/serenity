@@ -5,8 +5,10 @@
  */
 
 #include "GMLAutocompleteProvider.h"
+#include "GMLLexer.h"
 #include <AK/QuickSort.h>
-#include <LibGUI/GMLLexer.h>
+
+namespace GUI {
 
 void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> callback)
 {
@@ -206,4 +208,6 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     entries.extend(move(class_entries));
 
     callback(move(entries));
+}
+
 }
