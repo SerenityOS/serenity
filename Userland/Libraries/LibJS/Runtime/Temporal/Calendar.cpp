@@ -334,7 +334,7 @@ Object* to_temporal_calendar(GlobalObject& global_object, Value temporal_calenda
         identifier = move(*parsed_identifier);
     }
 
-    // 4. Return ? CreateTemporalCalendar(identifier).
+    // 4. Return ! CreateTemporalCalendar(identifier).
     return create_temporal_calendar(global_object, identifier);
 }
 
