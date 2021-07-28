@@ -49,7 +49,7 @@ KResultOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
     auto new_fd_or_error = m_fds.allocate();
     if (new_fd_or_error.is_error())
         return new_fd_or_error.error();
-    auto new_fd = new_fd_or_error.value();
+    auto new_fd = new_fd_or_error.release_value();
 
     auto& local_socket = static_cast<LocalSocket&>(socket);
     auto received_descriptor_or_error = local_socket.recvfd(*socket_description);
@@ -61,8 +61,8 @@ KResultOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
     if (options & O_CLOEXEC)
         fd_flags |= FD_CLOEXEC;
 
-    m_fds[new_fd].set(*received_descriptor_or_error.value(), fd_flags);
-    return new_fd;
+    m_fds[new_fd.fd].set(*received_descriptor_or_error.value(), fd_flags);
+    return new_fd.fd;
 }
 
 }

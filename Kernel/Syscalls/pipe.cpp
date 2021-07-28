@@ -33,19 +33,20 @@ KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
     auto reader_fd_or_error = m_fds.allocate();
     if (reader_fd_or_error.is_error())
         return reader_fd_or_error.error();
-    auto reader_fd = reader_fd_or_error.value();
-    m_fds[reader_fd].set(open_reader_result.release_value(), fd_flags);
-    m_fds[reader_fd].description()->set_readable(true);
-    if (!copy_to_user(&pipefd[0], &reader_fd))
+    auto reader_fd = reader_fd_or_error.release_value();
+    m_fds[reader_fd.fd].set(open_reader_result.release_value(), fd_flags);
+    m_fds[reader_fd.fd].description()->set_readable(true);
+    if (!copy_to_user(&pipefd[0], &reader_fd.fd))
         return EFAULT;
 
     auto writer_fd_or_error = m_fds.allocate();
     if (writer_fd_or_error.is_error())
         return writer_fd_or_error.error();
-    auto writer_fd = writer_fd_or_error.value();
-    m_fds[writer_fd].set(open_writer_result.release_value(), fd_flags);
-    m_fds[writer_fd].description()->set_writable(true);
-    if (!copy_to_user(&pipefd[1], &writer_fd))
+    auto writer_fd = writer_fd_or_error.release_value();
+    m_fds[writer_fd.fd].set(open_writer_result.release_value(), fd_flags);
+    m_fds[writer_fd.fd].description()->set_writable(true);
+
+    if (!copy_to_user(&pipefd[1], &writer_fd.fd))
         return EFAULT;
 
     return 0;

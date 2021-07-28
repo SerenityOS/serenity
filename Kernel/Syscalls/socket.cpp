@@ -42,15 +42,15 @@ KResultOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
     auto fd_or_error = m_fds.allocate();
     if (fd_or_error.is_error())
         return fd_or_error.error();
-    auto fd = fd_or_error.value();
+    auto socket_fd = fd_or_error.release_value();
     auto result = Socket::create(domain, type, protocol);
     if (result.is_error())
         return result.error();
     auto description_result = FileDescription::create(*result.value());
     if (description_result.is_error())
         return description_result.error();
-    setup_socket_fd(fd, description_result.value(), type);
-    return fd;
+    setup_socket_fd(socket_fd.fd, description_result.value(), type);
+    return socket_fd.fd;
 }
 
 KResultOr<FlatPtr> Process::sys$bind(int sockfd, Userspace<const sockaddr*> address, socklen_t address_length)
@@ -104,7 +104,7 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
     auto accepted_socket_fd_or_error = m_fds.allocate();
     if (accepted_socket_fd_or_error.is_error())
         return accepted_socket_fd_or_error.error();
-    auto accepted_socket_fd = accepted_socket_fd_or_error.value();
+    auto accepted_socket_fd = accepted_socket_fd_or_error.release_value();
     auto accepting_socket_description = fds().file_description(accepting_socket_fd);
     if (!accepting_socket_description)
         return EBADF;
@@ -145,11 +145,11 @@ KResultOr<FlatPtr> Process::sys$accept4(Userspace<const Syscall::SC_accept4_para
     int fd_flags = 0;
     if (flags & SOCK_CLOEXEC)
         fd_flags |= FD_CLOEXEC;
-    m_fds[accepted_socket_fd].set(accepted_socket_description_result.release_value(), fd_flags);
+    m_fds[accepted_socket_fd.fd].set(accepted_socket_description_result.release_value(), fd_flags);
 
     // NOTE: Moving this state to Completed is what causes connect() to unblock on the client side.
     accepted_socket->set_setup_state(Socket::SetupState::Completed);
-    return accepted_socket_fd;
+    return accepted_socket_fd.fd;
 }
 
 KResultOr<FlatPtr> Process::sys$connect(int sockfd, Userspace<const sockaddr*> user_address, socklen_t user_address_size)
@@ -416,13 +416,13 @@ KResultOr<FlatPtr> Process::sys$socketpair(Userspace<const Syscall::SC_socketpai
     auto fd1_or_error = m_fds.allocate();
     if (fd1_or_error.is_error())
         return fd1_or_error.error();
-    fds[0] = fd1_or_error.value();
+    fds[0] = fd1_or_error.value().fd;
     setup_socket_fd(fds[0], pair.description1, params.type);
 
     auto fd2_or_error = m_fds.allocate();
     if (fd2_or_error.is_error())
         return fd2_or_error.error();
-    fds[1] = fd2_or_error.value();
+    fds[1] = fd2_or_error.value().fd;
     setup_socket_fd(fds[1], pair.description2, params.type);
 
     if (!copy_to_user(params.sv, fds, sizeof(fds))) {
