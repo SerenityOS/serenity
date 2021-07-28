@@ -337,7 +337,7 @@ func_defined pre_configure || pre_configure() {
 }
 func_defined configure || configure() {
     chmod +x "${workdir}"/"$configscript"
-    run ./"$configscript" --host="${SERENITY_ARCH}-pc-serenity" $configopts
+    run ./"$configscript" --host="${SERENITY_ARCH}-pc-serenity" --with-sysroot="${DESTDIR}" $configopts
 }
 func_defined post_configure || post_configure() {
     :
