@@ -132,6 +132,11 @@ NonnullRefPtr<FunctionDeclaration> Parser::parse_function_declaration(ASTNode& p
 
     consume(Token::Type::RightParen);
 
+    if (match_keyword("const")) {
+        consume();
+        // FIXME: Note that this function is supposed to be a class member, and `this` has to be const, somehow.
+    }
+
     RefPtr<FunctionDefinition> body;
     Position func_end {};
     if (peek(Token::Type::LeftCurly).has_value()) {
@@ -738,6 +743,9 @@ bool Parser::match_function_declaration()
     consume();
 
     while (consume().type() != Token::Type::RightParen && !eof()) { };
+
+    if (match_keyword("const"))
+        consume();
 
     if (peek(Token::Type::Semicolon).has_value() || peek(Token::Type::LeftCurly).has_value())
         return true;
