@@ -412,21 +412,23 @@ KResultOr<FlatPtr> Process::sys$socketpair(Userspace<const Syscall::SC_socketpai
         return result.error();
     auto pair = result.value();
 
-    int fds[2];
+    auto fd0_or_error = m_fds.allocate();
+    if (fd0_or_error.is_error())
+        return fd0_or_error.error();
     auto fd1_or_error = m_fds.allocate();
     if (fd1_or_error.is_error())
         return fd1_or_error.error();
-    fds[0] = fd1_or_error.value().fd;
-    setup_socket_fd(fds[0], pair.description1, params.type);
 
-    auto fd2_or_error = m_fds.allocate();
-    if (fd2_or_error.is_error())
-        return fd2_or_error.error();
-    fds[1] = fd2_or_error.value().fd;
-    setup_socket_fd(fds[1], pair.description2, params.type);
+    int fds[2];
+    fds[0] = fd0_or_error.value().fd;
+    fds[1] = fd1_or_error.value().fd;
+    setup_socket_fd(fds[0], pair.description0, params.type);
+    setup_socket_fd(fds[1], pair.description1, params.type);
 
     if (!copy_to_user(params.sv, fds, sizeof(fds))) {
-        // FIXME: This leaks both file descriptors
+        // Avoid leaking both file descriptors on error.
+        m_fds[fds[0]] = {};
+        m_fds[fds[1]] = {};
         return EFAULT;
     }
     return KSuccess;
