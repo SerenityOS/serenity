@@ -34,6 +34,7 @@ set(SOURCES
     Git/GitFilesView.cpp
     Git/GitRepo.cpp
     Git/GitWidget.cpp
+    GMLPreviewWidget.cpp
     HackStudioWidget.cpp
     Language.cpp
     LanguageClient.cpp
