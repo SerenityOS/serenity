@@ -41,7 +41,6 @@ int main(int argc, char** argv)
     window->set_main_widget<KeyboardMapperWidget>();
     window->resize(775, 315);
     window->set_resizable(false);
-    window->show();
 
     auto keyboard_mapper_widget = (KeyboardMapperWidget*)window->main_widget();
     if (path != nullptr) {
@@ -91,6 +90,8 @@ int main(int argc, char** argv)
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Keyboard Mapper", app_icon, window));
+
+    window->show();
 
     return app->exec();
 }
