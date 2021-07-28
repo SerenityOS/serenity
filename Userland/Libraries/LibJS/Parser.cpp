@@ -831,7 +831,10 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
         auto expression = parse_expression(0);
         consume(TokenType::ParenClose);
         if (is<FunctionExpression>(*expression)) {
-            static_cast<FunctionExpression&>(*expression).set_cannot_auto_rename();
+            auto& function = static_cast<FunctionExpression&>(*expression);
+            function.set_cannot_auto_rename();
+            if (function.kind() == FunctionKind::Generator && function.name() == "yield"sv)
+                syntax_error("function is not allowed to be called 'yield' in this context", function.source_range().start);
         }
         return { move(expression) };
     }
@@ -1072,7 +1075,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             property_type = ObjectProperty::Type::KeyValue;
             property_name = parse_property_key();
             function_kind = FunctionKind ::Generator;
-        } else if (match(TokenType::Identifier)) {
+        } else if (match_identifier()) {
             auto identifier = consume().value();
             if (identifier == "get" && match_property_key()) {
                 property_type = ObjectProperty::Type::Getter;
@@ -1750,6 +1753,8 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
         check_identifier_name_for_assignment_validity(name);
     }
+    TemporaryChange generator_change(m_state.in_generator_function_context, is_generator);
+
     consume(TokenType::ParenOpen);
     i32 function_length = -1;
     auto parameters = parse_formal_parameters(function_length, parse_options);
@@ -1759,7 +1764,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
         function_length = parameters.size();
 
     TemporaryChange change(m_state.in_function_context, true);
-    TemporaryChange generator_change(m_state.in_generator_function_context, m_state.in_generator_function_context || is_generator);
+
     auto old_labels_in_scope = move(m_state.labels_in_scope);
     ScopeGuard guard([&]() {
         m_state.labels_in_scope = move(old_labels_in_scope);
@@ -1775,12 +1780,15 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     auto body = parse_block_statement(is_strict, has_binding);
 
     // If the function contains 'use strict' we need to check the parameters (again).
-    if (is_strict) {
+    if (is_strict || is_generator) {
         Vector<StringView> parameter_names;
         for (auto& parameter : parameters) {
             parameter.binding.visit(
                 [&](FlyString const& parameter_name) {
-                    check_identifier_name_for_assignment_validity(parameter_name, true);
+                    check_identifier_name_for_assignment_validity(parameter_name, is_strict);
+                    if (is_generator && parameter_name == "yield"sv)
+                        syntax_error("Parameter name 'yield' not allowed in this context");
+
                     for (auto& previous_name : parameter_names) {
                         if (previous_name == parameter_name) {
                             syntax_error(String::formatted("Duplicate parameter '{}' not allowed in strict mode", parameter_name));
@@ -1791,6 +1799,9 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
                 },
                 [&](NonnullRefPtr<BindingPattern> const& binding) {
                     binding->for_each_bound_name([&](auto& bound_name) {
+                        if (is_generator && bound_name == "yield"sv)
+                            syntax_error("Parameter name 'yield' not allowed in this context");
+
                         for (auto& previous_name : parameter_names) {
                             if (previous_name == bound_name) {
                                 syntax_error(String::formatted("Duplicate parameter '{}' not allowed in strict mode", bound_name));
@@ -1801,7 +1812,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
                     });
                 });
         }
-        check_identifier_name_for_assignment_validity(name, true);
+        check_identifier_name_for_assignment_validity(name, is_strict);
     }
 
     m_state.function_parameters.take_last();
@@ -2404,7 +2415,7 @@ NonnullRefPtr<CatchClause> Parser::parse_catch_clause()
     if (match(TokenType::ParenOpen)) {
         should_expect_parameter = true;
         consume();
-        if (match_identifier_name())
+        if (match_identifier_name() && (!match(TokenType::Yield) || !m_state.in_generator_function_context))
             parameter = consume().value();
         else
             pattern_parameter = parse_binding_pattern();
@@ -2722,7 +2733,8 @@ bool Parser::match_variable_declaration() const
 bool Parser::match_identifier() const
 {
     return m_state.current_token.type() == TokenType::Identifier
-        || m_state.current_token.type() == TokenType::Let; // See note in Parser::parse_identifier().
+        || (m_state.current_token.type() == TokenType::Let && !m_state.strict_mode)
+        || (m_state.current_token.type() == TokenType::Yield && !m_state.in_generator_function_context && !m_state.strict_mode); // See note in Parser::parse_identifier().
 }
 
 bool Parser::match_identifier_name() const
@@ -2785,6 +2797,12 @@ Token Parser::consume_identifier()
     if (match(TokenType::Let)) {
         if (m_state.strict_mode)
             syntax_error("'let' is not allowed as an identifier in strict mode");
+        return consume();
+    }
+
+    if (match(TokenType::Yield)) {
+        if (m_state.strict_mode || m_state.in_generator_function_context)
+            syntax_error("Identifier must not be a reserved word in strict mode ('yield')");
         return consume();
     }
 
@@ -2910,7 +2928,7 @@ void Parser::check_identifier_name_for_assignment_validity(StringView name, bool
         if (name.is_one_of("arguments"sv, "eval"sv))
             syntax_error("Binding pattern target may not be called 'arguments' or 'eval' in strict mode");
         else if (is_strict_reserved_word(name))
-            syntax_error("Binding pattern target may not be called 'yield' in strict mode");
+            syntax_error(String::formatted("Binding pattern target may not be called '{}' in strict mode", name));
     }
 }
 
