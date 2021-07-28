@@ -28,51 +28,6 @@ static bool has_property(UnicodeData const& unicode_data, Property property)
     return (unicode_data.properties & property) == property;
 }
 
-static bool is_cased_letter(UnicodeData const& unicode_data)
-{
-    // A character C is defined to be cased if and only if C has the Lowercase or Uppercase property
-    // or has a General_Category value of Titlecase_Letter.
-    switch (unicode_data.general_category) {
-    case GeneralCategory::Ll:
-    case GeneralCategory::Lu:
-    case GeneralCategory::Lt:
-        return true;
-    default:
-        break;
-    }
-
-    return has_property(unicode_data, Property::OtherLowercase) || has_property(unicode_data, Property::OtherUppercase);
-}
-
-static bool is_case_ignorable(UnicodeData const& unicode_data)
-{
-    // A character C is defined to be case-ignorable if C has the value MidLetter (ML),
-    // MidNumLet (MB), or Single_Quote (SQ) for the Word_Break property or its General_Category is
-    // one of Nonspacing_Mark (Mn), Enclosing_Mark (Me), Format (Cf), Modifier_Letter (Lm), or
-    // Modifier_Symbol (Sk).
-    switch (unicode_data.general_category) {
-    case GeneralCategory::Mn:
-    case GeneralCategory::Me:
-    case GeneralCategory::Cf:
-    case GeneralCategory::Lm:
-    case GeneralCategory::Sk:
-        return true;
-    default:
-        break;
-    }
-
-    switch (unicode_data.word_break_property) {
-    case WordBreakProperty::MidLetter:
-    case WordBreakProperty::MidNumLet:
-    case WordBreakProperty::SingleQuote:
-        return true;
-    default:
-        break;
-    }
-
-    return false;
-}
-
 static bool is_final_code_point(Utf8View const& string, size_t index, size_t byte_length)
 {
     // C is preceded by a sequence consisting of a cased letter and then zero or more case-ignorable
@@ -90,9 +45,12 @@ static bool is_final_code_point(Utf8View const& string, size_t index, size_t byt
         if (!unicode_data.has_value())
             return false;
 
-        if (is_cased_letter(*unicode_data) && !is_case_ignorable(*unicode_data))
+        bool is_cased = has_property(*unicode_data, Property::Cased);
+        bool is_case_ignorable = has_property(*unicode_data, Property::Case_Ignorable);
+
+        if (is_cased && !is_case_ignorable)
             ++cased_letter_count;
-        else if (!is_case_ignorable(*unicode_data))
+        else if (!is_case_ignorable)
             cased_letter_count = 0;
     }
 
@@ -104,9 +62,12 @@ static bool is_final_code_point(Utf8View const& string, size_t index, size_t byt
         if (!unicode_data.has_value())
             return false;
 
-        if (is_case_ignorable(*unicode_data))
+        bool is_cased = has_property(*unicode_data, Property::Cased);
+        bool is_case_ignorable = has_property(*unicode_data, Property::Case_Ignorable);
+
+        if (is_case_ignorable)
             continue;
-        if (is_cased_letter(*unicode_data))
+        if (is_cased)
             return false;
 
         break;
