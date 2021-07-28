@@ -17,6 +17,9 @@ public:
     explicit PlainTimePrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~PlainTimePrototype() override = default;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(value_of);
 };
 
 }
