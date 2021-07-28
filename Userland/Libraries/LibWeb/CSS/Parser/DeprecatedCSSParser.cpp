@@ -1428,17 +1428,28 @@ public:
         }
 
         // FIXME: We ignore other @-rules completely for now.
-        while (peek() != 0 && peek() != '{')
-            consume_one();
         int level = 0;
-        for (;;) {
+        bool in_comment = false;
+
+        while (peek() != 0) {
             auto ch = consume_one();
-            if (ch == '{') {
-                ++level;
-            } else if (ch == '}') {
-                --level;
-                if (level == 0)
-                    break;
+
+            if (!in_comment) {
+                if (ch == '/' && peek() == '*') {
+                    consume_one();
+                    in_comment = true;
+                } else if (ch == '{') {
+                    ++level;
+                } else if (ch == '}') {
+                    --level;
+                    if (level == 0)
+                        break;
+                }
+            } else {
+                if (ch == '*' && peek() == '/') {
+                    consume_one();
+                    in_comment = false;
+                }
             }
         }
     }
