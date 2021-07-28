@@ -202,7 +202,7 @@ void TabWidget::paint_event(PaintEvent& event)
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget == m_active_widget)
             continue;
-        bool hovered = static_cast<int>(i) == m_hovered_tab_index;
+        bool hovered = m_hovered_tab_index.has_value() && i == m_hovered_tab_index.value();
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
         auto tab_button_content_rect = button_rect.translated(4, m_tab_position == TabPosition::Top ? 1 : 0);
@@ -221,7 +221,7 @@ void TabWidget::paint_event(PaintEvent& event)
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget != m_active_widget)
             continue;
-        bool hovered = static_cast<int>(i) == m_hovered_tab_index;
+        bool hovered = m_hovered_tab_index.has_value() && i == m_hovered_tab_index.value();
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
         auto tab_button_content_rect = button_rect.translated(4, m_tab_position == TabPosition::Top ? 1 : 0);
@@ -254,8 +254,8 @@ void TabWidget::paint_event(PaintEvent& event)
         return;
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
-        bool hovered_close_button = static_cast<int>(i) == m_hovered_close_button_index;
-        bool pressed_close_button = static_cast<int>(i) == m_pressed_close_button_index;
+        bool hovered_close_button = m_hovered_close_button_index.has_value() && i == m_hovered_close_button_index.value();
+        bool pressed_close_button = m_pressed_close_button_index.has_value() && i == m_pressed_close_button_index.value();
         auto close_button_rect = this->close_button_rect(i);
 
         if (hovered_close_button)
@@ -287,12 +287,12 @@ void TabWidget::set_bar_visible(bool bar_visible)
     update_bar();
 }
 
-Gfx::IntRect TabWidget::button_rect(int index) const
+Gfx::IntRect TabWidget::button_rect(size_t index) const
 {
     int x_offset = bar_margin();
     int close_button_offset = m_close_button_enabled ? 16 : 0;
 
-    for (int i = 0; i < index; ++i) {
+    for (size_t i = 0; i < index; ++i) {
         auto tab_width = m_uniform_tabs ? uniform_tab_width() : m_tabs[i].width(font()) + close_button_offset;
         x_offset += tab_width;
     }
@@ -308,7 +308,7 @@ Gfx::IntRect TabWidget::button_rect(int index) const
     return rect;
 }
 
-Gfx::IntRect TabWidget::close_button_rect(int index) const
+Gfx::IntRect TabWidget::close_button_rect(size_t index) const
 {
     auto rect = button_rect(index);
     Gfx::IntRect close_button_rect { 0, 0, 12, 12 };
@@ -358,26 +358,26 @@ void TabWidget::mouseup_event(MouseEvent& event)
     if (event.button() != MouseButton::Left)
         return;
 
-    if (!m_close_button_enabled || m_pressed_close_button_index == -1)
+    if (!m_close_button_enabled || !m_pressed_close_button_index.has_value())
         return;
 
-    auto close_button_rect = this->close_button_rect(m_pressed_close_button_index);
-    m_pressed_close_button_index = -1;
+    auto close_button_rect = this->close_button_rect(m_pressed_close_button_index.value());
 
     if (close_button_rect.contains(event.position())) {
-        auto* widget = m_tabs[m_pressed_close_button_index].widget;
+        auto* widget = m_tabs[m_pressed_close_button_index.value()].widget;
         deferred_invoke([this, widget](auto&) {
             if (on_tab_close_click && widget)
                 on_tab_close_click(*widget);
         });
-        return;
     }
+
+    m_pressed_close_button_index = {};
 }
 
 void TabWidget::mousemove_event(MouseEvent& event)
 {
-    int hovered_tab = -1;
-    int hovered_close_button = -1;
+    Optional<size_t> hovered_tab = {};
+    Optional<size_t> hovered_close_button = {};
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         auto button_rect = this->button_rect(i);
@@ -392,7 +392,7 @@ void TabWidget::mousemove_event(MouseEvent& event)
         if (m_tabs[i].widget == m_active_widget)
             break;
     }
-    if (hovered_tab == m_hovered_tab_index && hovered_close_button == m_hovered_close_button_index)
+    if (!hovered_tab.has_value() && !hovered_close_button.has_value())
         return;
     m_hovered_tab_index = hovered_tab;
     m_hovered_close_button_index = hovered_close_button;
@@ -401,18 +401,20 @@ void TabWidget::mousemove_event(MouseEvent& event)
 
 void TabWidget::leave_event(Core::Event&)
 {
-    if (m_hovered_tab_index != -1 || m_hovered_close_button_index != -1) {
-        m_hovered_tab_index = -1;
-        m_hovered_close_button_index = -1;
+    if (m_hovered_tab_index.has_value() || m_hovered_close_button_index.has_value()) {
+        m_hovered_tab_index = {};
+        m_hovered_close_button_index = {};
         update_bar();
     }
 }
 
 void TabWidget::update_bar()
 {
+    if (m_tabs.is_empty())
+        return;
     auto invalidation_rect = bar_rect();
     invalidation_rect.set_height(invalidation_rect.height() + 1);
-    invalidation_rect.set_right(button_rect(static_cast<int>(m_tabs.size() - 1)).right());
+    invalidation_rect.set_right(button_rect(m_tabs.size() - 1).right());
     update(invalidation_rect);
 }
 
@@ -426,13 +428,13 @@ void TabWidget::set_tab_position(TabPosition tab_position)
     update();
 }
 
-int TabWidget::active_tab_index() const
+Optional<size_t> TabWidget::active_tab_index() const
 {
     for (size_t i = 0; i < m_tabs.size(); i++) {
         if (m_tabs.at(i).widget == m_active_widget)
             return i;
     }
-    return -1;
+    return {};
 }
 
 void TabWidget::set_tab_title(Widget& tab, const StringView& title)
@@ -463,22 +465,28 @@ void TabWidget::activate_next_tab()
 {
     if (m_tabs.size() <= 1)
         return;
-    int index = active_tab_index();
-    ++index;
-    if (index >= (int)m_tabs.size())
-        index = 0;
-    set_active_widget(m_tabs.at(index).widget);
+    auto index = active_tab_index();
+    if (!index.has_value())
+        return;
+    auto next_index = index.value() + 1;
+    if (next_index >= m_tabs.size())
+        next_index = 0;
+    set_active_widget(m_tabs.at(next_index).widget);
 }
 
 void TabWidget::activate_previous_tab()
 {
     if (m_tabs.size() <= 1)
         return;
-    int index = active_tab_index();
-    --index;
-    if (index < 0)
-        index = m_tabs.size() - 1;
-    set_active_widget(m_tabs.at(index).widget);
+    auto index = active_tab_index();
+    if (!index.has_value())
+        return;
+    size_t previous_index = 0;
+    if (index.value() == 0)
+        previous_index = m_tabs.size() - 1;
+    else
+        previous_index = index.value() - 1;
+    set_active_widget(m_tabs.at(previous_index).widget);
 }
 
 void TabWidget::keydown_event(KeyEvent& event)

@@ -24,7 +24,7 @@ public:
     TabPosition tab_position() const { return m_tab_position; }
     void set_tab_position(TabPosition);
 
-    int active_tab_index() const;
+    Optional<size_t> active_tab_index() const;
 
     Widget* active_widget() { return m_active_widget.ptr(); }
     const Widget* active_widget() const { return m_active_widget.ptr(); }
@@ -88,8 +88,8 @@ protected:
 
 private:
     Gfx::IntRect child_rect_for_size(const Gfx::IntSize&) const;
-    Gfx::IntRect button_rect(int index) const;
-    Gfx::IntRect close_button_rect(int index) const;
+    Gfx::IntRect button_rect(size_t index) const;
+    Gfx::IntRect close_button_rect(size_t index) const;
     Gfx::IntRect bar_rect() const;
     Gfx::IntRect container_rect() const;
     void update_bar();
@@ -106,9 +106,9 @@ private:
     };
     Vector<TabData> m_tabs;
     TabPosition m_tab_position { TabPosition::Top };
-    int m_hovered_tab_index { -1 };
-    int m_hovered_close_button_index { -1 };
-    int m_pressed_close_button_index { -1 };
+    Optional<size_t> m_hovered_tab_index;
+    Optional<size_t> m_hovered_close_button_index;
+    Optional<size_t> m_pressed_close_button_index;
     GUI::Margins m_container_margins { 2, 2, 2, 2 };
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
     bool m_uniform_tabs { false };
