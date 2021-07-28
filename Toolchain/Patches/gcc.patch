@@ -1,6 +1,6 @@
-diff -Naur gcc-11.1.0-RC-20210420/config.sub gcc-11.1.0-RC-20210420.serenity/config.sub
---- gcc-11.1.0-RC-20210420/config.sub	2021-04-20 16:53:32.000000000 +0200
-+++ gcc-11.1.0-RC-20210420.serenity/config.sub	2021-04-22 15:22:17.925049835 +0200
+diff -Naur gcc-11.2.0/config.sub gcc-11.2.0.serenity/config.sub
+--- gcc-11.2.0/config.sub	2021-07-28 08:55:06.620278039 +0200
++++ gcc-11.2.0.serenity/config.sub	2021-07-28 18:28:53.251904345 +0200
 @@ -2,7 +2,7 @@
  # Configuration validation subroutine script.
  #   Copyright 1992-2021 Free Software Foundation, Inc.
@@ -19,9 +19,9 @@ diff -Naur gcc-11.1.0-RC-20210420/config.sub gcc-11.1.0-RC-20210420.serenity/con
  		;;
  	# This one is extra strict with allowed versions
  	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)
-diff -Naur gcc-11.1.0-RC-20210420/fixincludes/mkfixinc.sh gcc-11.1.0-RC-20210420.serenity/fixincludes/mkfixinc.sh
---- gcc-11.1.0-RC-20210420/fixincludes/mkfixinc.sh	2021-04-20 16:53:32.000000000 +0200
-+++ gcc-11.1.0-RC-20210420.serenity/fixincludes/mkfixinc.sh	2021-04-22 15:21:33.700763279 +0200
+diff -Naur gcc-11.2.0/fixincludes/mkfixinc.sh gcc-11.2.0.serenity/fixincludes/mkfixinc.sh
+--- gcc-11.2.0/fixincludes/mkfixinc.sh	2021-07-28 08:55:06.644278372 +0200
++++ gcc-11.2.0.serenity/fixincludes/mkfixinc.sh	2021-07-28 18:28:53.251904345 +0200
 @@ -11,6 +11,7 @@
  
  # Check for special fix rules for particular targets
@@ -30,9 +30,21 @@ diff -Naur gcc-11.1.0-RC-20210420/fixincludes/mkfixinc.sh gcc-11.1.0-RC-20210420
      i?86-*-cygwin* | \
      i?86-*-mingw32* | \
      x86_64-*-mingw32* | \
-diff -Naur gcc-11.1.0-RC-20210420/gcc/config/arm/serenity-elf.h gcc-11.1.0-RC-20210420.serenity/gcc/config/arm/serenity-elf.h
---- gcc-11.1.0-RC-20210420/gcc/config/arm/serenity-elf.h	1970-01-01 01:00:00.000000000 +0100
-+++ gcc-11.1.0-RC-20210420.serenity/gcc/config/arm/serenity-elf.h	2021-04-22 15:21:33.700763279 +0200
+diff -Naur gcc-11.2.0/gcc/common.opt gcc-11.2.0.serenity/gcc/common.opt
+--- gcc-11.2.0/gcc/common.opt	2021-07-28 08:55:06.996283283 +0200
++++ gcc-11.2.0.serenity/gcc/common.opt	2021-07-28 18:28:53.285238207 +0200
+@@ -3490,4 +3490,8 @@
+ Common Var(flag_ipa_ra) Optimization
+ Use caller save register across calls if possible.
+ 
++arch
++Driver Ignore Separate
++-arch <name>	Generate output for architecture <name>.
++
+ ; This comment is to ensure we retain the blank line above.
+diff -Naur gcc-11.2.0/gcc/config/arm/serenity-elf.h gcc-11.2.0.serenity/gcc/config/arm/serenity-elf.h
+--- gcc-11.2.0/gcc/config/arm/serenity-elf.h	1970-01-01 01:00:00.000000000 +0100
++++ gcc-11.2.0.serenity/gcc/config/arm/serenity-elf.h	2021-07-28 18:28:53.251904345 +0200
 @@ -0,0 +1,65 @@
 +/* Definitions of target machine for GNU compiler, NetBSD/arm ELF version.
 +   Copyright (C) 2002-2018 Free Software Foundation, Inc.
@@ -99,9 +111,23 @@ diff -Naur gcc-11.1.0-RC-20210420/gcc/config/arm/serenity-elf.h gcc-11.1.0-RC-20
 +
 +#undef PTRDIFF_TYPE
 +#define PTRDIFF_TYPE "long int"
-diff -Naur gcc-11.1.0-RC-20210420/gcc/config/serenity.h gcc-11.1.0-RC-20210420.serenity/gcc/config/serenity.h
---- gcc-11.1.0-RC-20210420/gcc/config/serenity.h	1970-01-01 01:00:00.000000000 +0100
-+++ gcc-11.1.0-RC-20210420.serenity/gcc/config/serenity.h	2021-04-22 15:21:33.700763279 +0200
+diff -Naur gcc-11.2.0/gcc/config/host-darwin.c gcc-11.2.0.serenity/gcc/config/host-darwin.c
+--- gcc-11.2.0/gcc/config/host-darwin.c	2021-07-28 08:55:07.060284175 +0200
++++ gcc-11.2.0.serenity/gcc/config/host-darwin.c	2021-07-28 18:28:53.285238207 +0200
+@@ -22,6 +22,10 @@
+ #include "coretypes.h"
+ #include "diagnostic-core.h"
+ #include "config/host-darwin.h"
++#include "hosthooks.h"
++#include "hosthooks-def.h"
++
++const struct host_hooks host_hooks = HOST_HOOKS_INITIALIZER;
+ 
+ /* Yes, this is really supposed to work.  */
+ /* This allows for a pagesize of 16384, which we have on Darwin20, but should
+diff -Naur gcc-11.2.0/gcc/config/serenity.h gcc-11.2.0.serenity/gcc/config/serenity.h
+--- gcc-11.2.0/gcc/config/serenity.h	1970-01-01 01:00:00.000000000 +0100
++++ gcc-11.2.0.serenity/gcc/config/serenity.h	2021-07-28 18:28:53.251904345 +0200
 @@ -0,0 +1,44 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
@@ -147,9 +173,9 @@ diff -Naur gcc-11.1.0-RC-20210420/gcc/config/serenity.h gcc-11.1.0-RC-20210420.s
 +    builtin_assert ("system=unix");   \
 +    builtin_assert ("system=posix");   \
 +  } while(0);
-diff -Naur gcc-11.1.0-RC-20210420/gcc/config/serenity.opt gcc-11.1.0-RC-20210420.serenity/gcc/config/serenity.opt
---- gcc-11.1.0-RC-20210420/gcc/config/serenity.opt	1970-01-01 01:00:00.000000000 +0100
-+++ gcc-11.1.0-RC-20210420.serenity/gcc/config/serenity.opt	2021-04-22 15:21:33.700763279 +0200
+diff -Naur gcc-11.2.0/gcc/config/serenity.opt gcc-11.2.0.serenity/gcc/config/serenity.opt
+--- gcc-11.2.0/gcc/config/serenity.opt	1970-01-01 01:00:00.000000000 +0100
++++ gcc-11.2.0.serenity/gcc/config/serenity.opt	2021-07-28 18:28:53.251904345 +0200
 @@ -0,0 +1,32 @@
 +; SerenityOS options.
 +
@@ -183,9 +209,9 @@ diff -Naur gcc-11.1.0-RC-20210420/gcc/config/serenity.opt gcc-11.1.0-RC-20210420
 +Driver
 +
 +; This comment is to ensure we retain the blank line above.
-diff -Naur gcc-11.1.0-RC-20210420/gcc/config.gcc gcc-11.1.0-RC-20210420.serenity/gcc/config.gcc
---- gcc-11.1.0-RC-20210420/gcc/config.gcc	2021-04-20 16:53:32.000000000 +0200
-+++ gcc-11.1.0-RC-20210420.serenity/gcc/config.gcc	2021-04-22 15:21:33.700763279 +0200
+diff -Naur gcc-11.2.0/gcc/config.gcc gcc-11.2.0.serenity/gcc/config.gcc
+--- gcc-11.2.0/gcc/config.gcc	2021-07-28 08:55:07.000283339 +0200
++++ gcc-11.2.0.serenity/gcc/config.gcc	2021-07-28 18:28:53.251904345 +0200
 @@ -686,6 +686,12 @@
  
  # Common parts for widely ported systems.
@@ -215,10 +241,10 @@ diff -Naur gcc-11.1.0-RC-20210420/gcc/config.gcc gcc-11.1.0-RC-20210420.serenity
  aarch64*-*-elf | aarch64*-*-fuchsia* | aarch64*-*-rtems*)
  	tm_file="${tm_file} dbxelf.h elfos.h newlib-stdint.h"
  	tm_file="${tm_file} aarch64/aarch64-elf.h aarch64/aarch64-errata.h aarch64/aarch64-elf-raw.h"
-diff -Naur gcc-11.1.0-RC-20210420/gcc/configure gcc-11.1.0-RC-20210420.serenity/gcc/configure
---- gcc-11.1.0-RC-20210420/gcc/configure	2021-04-20 16:53:37.000000000 +0200
-+++ gcc-11.1.0-RC-20210420.serenity/gcc/configure	2021-04-22 15:21:33.710763496 +0200
-@@ -30982,6 +30982,9 @@
+diff -Naur gcc-11.2.0/gcc/configure gcc-11.2.0.serenity/gcc/configure
+--- gcc-11.2.0/gcc/configure	2021-07-28 08:55:07.172285739 +0200
++++ gcc-11.2.0.serenity/gcc/configure	2021-07-28 18:28:53.255237729 +0200
+@@ -30992,6 +30992,9 @@
    *-linux-musl*)
      gcc_cv_target_dl_iterate_phdr=yes
      ;;
@@ -228,9 +254,9 @@ diff -Naur gcc-11.1.0-RC-20210420/gcc/configure gcc-11.1.0-RC-20210420.serenity/
  esac
  
  if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
-diff -Naur gcc-11.1.0-RC-20210420/libgcc/config/t-slibgcc gcc-11.1.0-RC-20210420.serenity/libgcc/config/t-slibgcc
---- gcc-11.1.0-RC-20210420/libgcc/config/t-slibgcc	2021-04-20 16:53:34.000000000 +0200
-+++ gcc-11.1.0-RC-20210420.serenity/libgcc/config/t-slibgcc	2021-04-22 15:21:33.700763279 +0200
+diff -Naur gcc-11.2.0/libgcc/config/t-slibgcc gcc-11.2.0.serenity/libgcc/config/t-slibgcc
+--- gcc-11.2.0/libgcc/config/t-slibgcc	2021-07-28 08:55:08.804308510 +0200
++++ gcc-11.2.0.serenity/libgcc/config/t-slibgcc	2021-07-28 18:28:53.258571117 +0200
 @@ -26,7 +26,6 @@
  SHLIB_OBJS = @shlib_objs@
  SHLIB_DIR = @multilib_dir@
@@ -248,10 +274,10 @@ diff -Naur gcc-11.1.0-RC-20210420/libgcc/config/t-slibgcc gcc-11.1.0-RC-20210420
  	rm -f $(SHLIB_DIR)/$(SHLIB_SOLINK) && \
  	if [ -f $(SHLIB_DIR)/$(SHLIB_SONAME) ]; then \
  	  mv -f $(SHLIB_DIR)/$(SHLIB_SONAME) \
-diff -Naur gcc-11.1.0-RC-20210420/libgcc/config.host gcc-11.1.0-RC-20210420.serenity/libgcc/config.host
---- gcc-11.1.0-RC-20210420/libgcc/config.host	2021-04-20 16:53:34.000000000 +0200
-+++ gcc-11.1.0-RC-20210420.serenity/libgcc/config.host	2021-04-22 15:21:33.700763279 +0200
-@@ -1500,6 +1500,22 @@
+diff -Naur gcc-11.2.0/libgcc/config.host gcc-11.2.0.serenity/libgcc/config.host
+--- gcc-11.2.0/libgcc/config.host	2021-07-28 08:55:08.752307785 +0200
++++ gcc-11.2.0.serenity/libgcc/config.host	2021-07-28 18:28:53.258571117 +0200
+@@ -1504,6 +1504,22 @@
  	tmake_file="$tmake_file nvptx/t-nvptx"
  	extra_parts="crt0.o"
  	;;
@@ -274,9 +300,9 @@ diff -Naur gcc-11.1.0-RC-20210420/libgcc/config.host gcc-11.1.0-RC-20210420.sere
  *)
  	echo "*** Configuration ${host} not supported" 1>&2
  	exit 1
-diff -Naur gcc-11.1.0-RC-20210420/libgcc/unwind-dw2-fde-dip.c gcc-11.1.0-RC-20210420.serenity/libgcc/unwind-dw2-fde-dip.c
---- gcc-11.1.0-RC-20210420/libgcc/unwind-dw2-fde-dip.c	2021-04-20 16:53:34.000000000 +0200
-+++ gcc-11.1.0-RC-20210420.serenity/libgcc/unwind-dw2-fde-dip.c	2021-04-22 15:21:33.707430091 +0200
+diff -Naur gcc-11.2.0/libgcc/unwind-dw2-fde-dip.c gcc-11.2.0.serenity/libgcc/unwind-dw2-fde-dip.c
+--- gcc-11.2.0/libgcc/unwind-dw2-fde-dip.c	2021-07-28 08:55:08.812308622 +0200
++++ gcc-11.2.0.serenity/libgcc/unwind-dw2-fde-dip.c	2021-07-28 18:28:53.258571117 +0200
 @@ -59,6 +59,12 @@
  
  #if !defined(inhibit_libc) && defined(HAVE_LD_EH_FRAME_HDR) \
@@ -290,10 +316,27 @@ diff -Naur gcc-11.1.0-RC-20210420/libgcc/unwind-dw2-fde-dip.c gcc-11.1.0-RC-2021
      && defined(__linux__)
  # define USE_PT_GNU_EH_FRAME
  #endif
-diff -Naur gcc-11.1.0-RC-20210420/libstdc++-v3/configure gcc-11.1.0-RC-20210420.serenity/libstdc++-v3/configure
---- gcc-11.1.0-RC-20210420/libstdc++-v3/configure	2021-04-20 16:53:35.000000000 +0200
-+++ gcc-11.1.0-RC-20210420.serenity/libstdc++-v3/configure	2021-04-22 15:21:33.707430091 +0200
-@@ -29270,6 +29270,5986 @@
+diff -Naur gcc-11.2.0/libstdc++-v3/configure gcc-11.2.0.serenity/libstdc++-v3/configure
+--- gcc-11.2.0/libstdc++-v3/configure	2021-07-28 08:55:09.228314429 +0200
++++ gcc-11.2.0.serenity/libstdc++-v3/configure	2021-07-28 18:28:53.281904818 +0200
+@@ -4219,15 +4219,7 @@
+ }
+ _ACEOF
+ # FIXME: Cleanup?
+-if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_link\""; } >&5
+-  (eval $ac_link) 2>&5
+-  ac_status=$?
+-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+-  test $ac_status = 0; }; then :
+-  gcc_no_link=no
+-else
+-  gcc_no_link=yes
+-fi
++gcc_no_link=yes
+ if test x$gcc_no_link = xyes; then
+   # Setting cross_compile will disable run tests; it will
+   # also disable AC_CHECK_FILE but that's generally
+@@ -29270,6 +29262,5986 @@
  
  # Base decisions on target environment.
  case "${host}" in
@@ -6280,9 +6323,9 @@ diff -Naur gcc-11.1.0-RC-20210420/libstdc++-v3/configure gcc-11.1.0-RC-20210420.
    arm*-*-symbianelf*)
      # This is a freestanding configuration; there is nothing to do here.
      ;;
-diff -Naur gcc-11.1.0-RC-20210420/libstdc++-v3/crossconfig.m4 gcc-11.1.0-RC-20210420.serenity/libstdc++-v3/crossconfig.m4
---- gcc-11.1.0-RC-20210420/libstdc++-v3/crossconfig.m4	2021-04-20 16:53:35.000000000 +0200
-+++ gcc-11.1.0-RC-20210420.serenity/libstdc++-v3/crossconfig.m4	2021-04-22 15:21:33.707430091 +0200
+diff -Naur gcc-11.2.0/libstdc++-v3/crossconfig.m4 gcc-11.2.0.serenity/libstdc++-v3/crossconfig.m4
+--- gcc-11.2.0/libstdc++-v3/crossconfig.m4	2021-07-28 08:55:09.228314429 +0200
++++ gcc-11.2.0.serenity/libstdc++-v3/crossconfig.m4	2021-07-28 18:28:53.275238049 +0200
 @@ -5,6 +5,13 @@
  AC_DEFUN([GLIBCXX_CROSSCONFIG],[
  # Base decisions on target environment.
@@ -6297,49 +6340,3 @@ diff -Naur gcc-11.1.0-RC-20210420/libstdc++-v3/crossconfig.m4 gcc-11.1.0-RC-2021
    arm*-*-symbianelf*)
      # This is a freestanding configuration; there is nothing to do here.
      ;;
-diff -Naur gcc-11.1.0/libstdc++-v3/configure gcc-11.1.0.serenity/libstdc++-v3/configure
---- gcc-11.1.0/libstdc++-v3/configure	2021-05-08 23:33:02.665399548 +0200
-+++ gcc-11.1.0.serenity/libstdc++-v3/configure	2021-05-09 08:49:22.325309643 +0200
-@@ -4219,15 +4219,7 @@
- }
- _ACEOF
- # FIXME: Cleanup?
--if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_link\""; } >&5
--  (eval $ac_link) 2>&5
--  ac_status=$?
--  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
--  test $ac_status = 0; }; then :
--  gcc_no_link=no
--else
--  gcc_no_link=yes
--fi
-+gcc_no_link=yes
- if test x$gcc_no_link = xyes; then
-   # Setting cross_compile will disable run tests; it will
-   # also disable AC_CHECK_FILE but that's generally
-diff -Naur gcc-11.1.0/gcc/config/host-darwin.c gcc-11.1.0.serenity/gcc/config/host-darwin.c
---- gcc-11.1.0/gcc/config/host-darwin.c	2021-04-27 03:00:13.000000000 -0700
-+++ gcc-11.1.0.serenity/gcc/config/host-darwin.c	2021-06-11 14:49:13.754000000 -0700
-@@ -22,6 +22,10 @@
- #include "coretypes.h"
- #include "diagnostic-core.h"
- #include "config/host-darwin.h"
-+#include "hosthooks.h"
-+#include "hosthooks-def.h"
-+
-+const struct host_hooks host_hooks = HOST_HOOKS_INITIALIZER;
- 
- /* Yes, this is really supposed to work.  */
- /* This allows for a pagesize of 16384, which we have on Darwin20, but should
-diff -Naur gcc-11.1.0/gcc/common.opt gcc-11.1.0.serenity/gcc/common.opt
---- gcc-11.1.0/gcc/common.opt	2021-07-24 02:52:10.000000000 +0200
-+++ gcc-11.1.0.serenity/gcc/common.opt	2021-04-27 12:00:13.000000000 +0200
-@@ -3490,4 +3490,8 @@
- Common Var(flag_ipa_ra) Optimization
- Use caller save register across calls if possible.
- 
-+arch
-+Driver Ignore Separate
-+-arch <name>	Generate output for architecture <name>.
-+
- ; This comment is to ensure we retain the blank line above.
