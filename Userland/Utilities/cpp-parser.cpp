@@ -13,7 +13,9 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     const char* path = nullptr;
     bool tokens_mode = false;
+    bool preprocess_mode = false;
     args_parser.add_option(tokens_mode, "Print Tokens", "tokens", 'T');
+    args_parser.add_option(preprocess_mode, "Print Preprocessed source", "preprocessed", 'P');
     args_parser.add_positional_argument(path, "Cpp File", "cpp-file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -26,7 +28,15 @@ int main(int argc, char** argv)
     }
     auto content = file->read_all();
     StringView content_view(content);
-    ::Cpp::Parser parser(content_view, path);
+
+    ::Cpp::Preprocessor processor(path, content_view);
+    auto preprocessed_content = processor.process();
+    if (preprocess_mode) {
+        outln(preprocessed_content);
+        return 0;
+    }
+
+    ::Cpp::Parser parser(preprocessed_content, path);
     if (tokens_mode) {
         parser.print_tokens();
         return 0;
