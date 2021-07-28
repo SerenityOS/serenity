@@ -597,6 +597,19 @@ public:
         operator bool() const { return !!m_description; }
 
         bool is_valid() const { return !m_description.is_null(); }
+        bool is_allocated() const { return m_is_allocated; }
+        void allocate()
+        {
+            VERIFY(!m_is_allocated);
+            VERIFY(!is_valid());
+            m_is_allocated = true;
+        }
+        void deallocate()
+        {
+            VERIFY(m_is_allocated);
+            VERIFY(!is_valid());
+            m_is_allocated = false;
+        }
 
         FileDescription* description() { return m_description; }
         const FileDescription* description() const { return m_description; }
@@ -610,6 +623,7 @@ public:
 
     private:
         RefPtr<FileDescription> m_description;
+        bool m_is_allocated { false };
         u32 m_flags { 0 };
 
         // Note: This is needed so when we generate inodes for ProcFS, we know that
@@ -617,6 +631,7 @@ public:
         InodeIndex m_global_procfs_inode_index;
     };
 
+    class ScopedDescriptionAllocation;
     class FileDescriptions {
         friend class Process;
 
@@ -641,7 +656,7 @@ public:
         void enumerate(Function<void(const FileDescriptionAndFlags&)>) const;
         void change_each(Function<void(FileDescriptionAndFlags&)>);
 
-        KResultOr<int> allocate(int first_candidate_fd = 0);
+        KResultOr<ScopedDescriptionAllocation> allocate(int first_candidate_fd = 0);
         size_t open_count() const;
 
         bool try_resize(size_t size) { return m_fds_metadatas.try_resize(size); }
@@ -666,6 +681,37 @@ public:
         static constexpr size_t m_max_open_file_descriptors { FD_SETSIZE };
         mutable SpinLock<u8> m_fds_lock;
         Vector<FileDescriptionAndFlags> m_fds_metadatas;
+    };
+
+    class ScopedDescriptionAllocation {
+        AK_MAKE_NONCOPYABLE(ScopedDescriptionAllocation);
+
+    public:
+        ScopedDescriptionAllocation() = default;
+        ScopedDescriptionAllocation(int tracked_fd, FileDescriptionAndFlags* description)
+            : fd(tracked_fd)
+            , m_description(description)
+        {
+        }
+
+        ScopedDescriptionAllocation(ScopedDescriptionAllocation&& other)
+            : fd(other.fd)
+        {
+            // Take over the responsibility of tracking to deallocation.
+            swap(m_description, other.m_description);
+        }
+
+        ~ScopedDescriptionAllocation()
+        {
+            if (m_description && m_description->is_allocated() && !m_description->is_valid()) {
+                m_description->deallocate();
+            }
+        }
+
+        const int fd { -1 };
+
+    private:
+        FileDescriptionAndFlags* m_description { nullptr };
     };
 
     FileDescriptions& fds() { return m_fds; }
