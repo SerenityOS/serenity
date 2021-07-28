@@ -87,8 +87,10 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     auto& toolbar_container = add<GUI::ToolbarContainer>();
 
     auto& outer_splitter = add<GUI::HorizontalSplitter>();
+    outer_splitter.layout()->set_spacing(5);
 
     auto& left_hand_splitter = outer_splitter.add<GUI::VerticalSplitter>();
+    left_hand_splitter.layout()->set_spacing(5);
     left_hand_splitter.set_fixed_width(150);
     create_project_tab(left_hand_splitter);
     m_project_tree_view_context_menu = create_project_tree_view_context_menu();
@@ -104,6 +106,7 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     m_diff_viewer = m_right_hand_stack->add<DiffViewer>();
 
     m_editors_splitter = m_right_hand_stack->add<GUI::VerticalSplitter>();
+    m_editors_splitter->layout()->set_spacing(5);
     m_editors_splitter->layout()->set_margins({ 0, 3, 0, 0 });
     add_new_editor(*m_editors_splitter);
 
