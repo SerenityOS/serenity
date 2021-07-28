@@ -2516,8 +2516,19 @@ NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode
             syntax_error("need exactly one variable declaration in for..in/of");
         else if (declarations.first().init() != nullptr)
             syntax_error("variable initializer not allowed in for..in/of");
+    } else if (!lhs->is_identifier() && !is<ObjectExpression>(*lhs) && !is<MemberExpression>(*lhs) && !is<ArrayExpression>(*lhs)) {
+        syntax_error(String::formatted("Invalid left-hand side in for-loop ('{}')", lhs->class_name()));
     }
     auto in_or_of = consume();
+
+    if (in_or_of.type() != TokenType::In) {
+        if (is<MemberExpression>(*lhs)) {
+            auto& member = static_cast<MemberExpression const&>(*lhs);
+            if (member.object().is_identifier() && static_cast<Identifier const&>(member.object()).string() == "let"sv)
+                syntax_error("For of statement may not start with let.");
+        }
+    }
+
     auto rhs = parse_expression(0);
     consume(TokenType::ParenClose);
 
