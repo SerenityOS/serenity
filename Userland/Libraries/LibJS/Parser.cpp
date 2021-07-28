@@ -1834,7 +1834,7 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
     Vector<FunctionNode::Parameter> parameters;
 
     auto consume_identifier_or_binding_pattern = [&]() -> Variant<FlyString, NonnullRefPtr<BindingPattern>> {
-        if (auto pattern = parse_binding_pattern())
+        if (auto pattern = parse_binding_pattern(true))
             return pattern.release_nonnull();
 
         auto token = consume_identifier();
@@ -1919,7 +1919,8 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
 }
 
 static constexpr AK::Array<StringView, 36> s_reserved_words = { "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "import", "in", "instanceof", "new", "null", "return", "super", "switch", "this", "throw", "true", "try", "typeof", "var", "void", "while", "with" };
-RefPtr<BindingPattern> Parser::parse_binding_pattern()
+
+RefPtr<BindingPattern> Parser::parse_binding_pattern(bool strict_checks)
 {
     auto rule_start = push_start();
 
@@ -1964,7 +1965,12 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
                     consume().value());
             } else if (match(TokenType::BracketOpen)) {
                 consume();
-                name = parse_expression(0);
+                auto expression = parse_expression(0);
+
+                if (strict_checks && m_state.in_generator_function_context && is<YieldExpression>(*expression))
+                    syntax_error("Yield expression not allowed in formal parameter within generator context");
+
+                name = move(expression);
                 consume(TokenType::BracketClose);
             } else {
                 expected("identifier or computed property name");
@@ -1974,14 +1980,16 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
             if (!is_rest && match(TokenType::Colon)) {
                 consume();
                 if (match(TokenType::CurlyOpen) || match(TokenType::BracketOpen)) {
-                    auto binding_pattern = parse_binding_pattern();
+                    auto binding_pattern = parse_binding_pattern(strict_checks);
                     if (!binding_pattern)
                         return {};
                     alias = binding_pattern.release_nonnull();
                 } else if (match_identifier_name()) {
                     alias = create_ast_node<Identifier>(
                         { m_state.current_token.filename(), rule_start.position(), position() },
-                        consume().value());
+                        consume_identifier().value());
+                    if (strict_checks && match(TokenType::BracketOpen))
+                        syntax_error("Illegal property in declaration context");
                 } else {
                     expected("identifier or binding pattern");
                     return {};
@@ -1990,11 +1998,21 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
         } else {
             if (match_identifier_name()) {
                 // BindingElement must always have an Empty name field
+                auto identifier_name = consume_identifier().value();
                 alias = create_ast_node<Identifier>(
                     { m_state.current_token.filename(), rule_start.position(), position() },
-                    consume().value());
+                    identifier_name);
+
+                if (strict_checks) {
+                    for (auto& entry : entries) {
+                        if (entry.alias.has<NonnullRefPtr<Identifier>>()) {
+                            if (entry.alias.get<NonnullRefPtr<Identifier>>()->string() == identifier_name)
+                                syntax_error("Duplicate parameter names in bindings");
+                        }
+                    }
+                }
             } else if (match(TokenType::BracketOpen) || match(TokenType::CurlyOpen)) {
-                auto pattern = parse_binding_pattern();
+                auto pattern = parse_binding_pattern(strict_checks);
                 if (!pattern) {
                     expected("binding pattern");
                     return {};
@@ -2019,6 +2037,8 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
                 expected("initialization expression");
                 return {};
             }
+            if (strict_checks && is<YieldExpression>(*initializer))
+                syntax_error("Yield expression is not allow in formal parameter");
         }
 
         entries.append(BindingPattern::BindingEntry { move(name), move(alias), move(initializer), is_rest });
@@ -2041,7 +2061,16 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
     auto pattern = adopt_ref(*new BindingPattern);
     pattern->entries = move(entries);
     pattern->kind = kind;
-    pattern->for_each_bound_name([this](auto& name) { check_identifier_name_for_assignment_validity(name); });
+
+    Vector<StringView> bound_names;
+    pattern->for_each_bound_name([&](auto& name) {
+        if (strict_checks) {
+            if (bound_names.contains_slow(name))
+                syntax_error("Duplicate parameter names in bindings");
+            bound_names.append(name);
+        }
+        check_identifier_name_for_assignment_validity(name);
+    });
 
     return pattern;
 }
@@ -2121,7 +2150,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
                     check_declarations(declaration);
                 }
             }
-        } else if (auto pattern = parse_binding_pattern()) {
+        } else if (auto pattern = parse_binding_pattern(declaration_kind != DeclarationKind::Var)) {
             target = pattern.release_nonnull();
 
             if ((declaration_kind == DeclarationKind::Let || declaration_kind == DeclarationKind::Const)) {
@@ -2424,7 +2453,7 @@ NonnullRefPtr<CatchClause> Parser::parse_catch_clause()
         if (match_identifier_name() && (!match(TokenType::Yield) || !m_state.in_generator_function_context))
             parameter = consume().value();
         else
-            pattern_parameter = parse_binding_pattern();
+            pattern_parameter = parse_binding_pattern(true);
         consume(TokenType::ParenClose);
     }
 

@@ -42,7 +42,7 @@ public:
     template<typename FunctionNodeType>
     NonnullRefPtr<FunctionNodeType> parse_function_node(u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName);
     Vector<FunctionNode::Parameter> parse_formal_parameters(int& function_length, u8 parse_options = 0);
-    RefPtr<BindingPattern> parse_binding_pattern();
+    RefPtr<BindingPattern> parse_binding_pattern(bool strict_checks = false);
 
     struct PrimaryExpressionParseResult {
         NonnullRefPtr<Expression> result;
