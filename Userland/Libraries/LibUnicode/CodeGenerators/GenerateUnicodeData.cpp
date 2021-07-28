@@ -42,10 +42,12 @@ struct SpecialCasing {
 
 // PropList source: https://www.unicode.org/Public/13.0.0/ucd/PropList.txt
 // Property descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#PropList.txt
+//                        https://www.unicode.org/reports/tr44/tr44-13.html#WordBreakProperty.txt
 using PropList = HashMap<String, Vector<CodePointRange>>;
 
 // UnicodeData source: https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
 // Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#UnicodeData.txt
+//                     https://www.unicode.org/reports/tr44/#General_Category_Values
 struct CodePointData {
     u32 index { 0 };
     u32 code_point { 0 };
@@ -150,9 +152,6 @@ static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
 
         unicode_data.special_casing.append(move(casing));
     }
-
-    quick_sort(unicode_data.locales);
-    quick_sort(unicode_data.conditions);
 }
 
 static void parse_prop_list(Core::File& file, PropList& prop_list)
@@ -279,17 +278,37 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
         unicode_data.code_point_data.append(move(data));
     }
 
-    quick_sort(unicode_data.general_categories);
     unicode_data.last_contiguous_code_point = *last_contiguous_code_point;
 }
 
-static void generate_unicode_data_header(UnicodeData const& unicode_data)
+static void generate_unicode_data_header(UnicodeData& unicode_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
     generator.set("casing_transform_size", String::number(unicode_data.largest_casing_transform_size));
     generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
     generator.set("prop_list_size", String::number(unicode_data.largest_prop_list_size));
+
+    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values) {
+        quick_sort(values);
+
+        generator.set("name", name);
+        generator.append(R"~~~(
+enum class @name@ {)~~~");
+
+        if (!default_.is_empty())
+            values.prepend(default_);
+
+        for (auto const& value : values) {
+            generator.set("value", value);
+            generator.append(R"~~~(
+    @value@,)~~~");
+        }
+
+        generator.append(R"~~~(
+};
+)~~~");
+    };
 
     generator.append(R"~~~(
 #pragma once
@@ -298,72 +317,15 @@ static void generate_unicode_data_header(UnicodeData const& unicode_data)
 #include <AK/Types.h>
 
 namespace Unicode {
+)~~~");
 
-enum class Locale {
-    None,)~~~");
-
-    for (auto const& locale : unicode_data.locales) {
-        generator.set("locale", locale);
-        generator.append(R"~~~(
-    @locale@,)~~~");
-    }
+    generate_enum("Locale"sv, "None"sv, move(unicode_data.locales));
+    generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
+    generate_enum("GeneralCategory"sv, {}, move(unicode_data.general_categories));
+    generate_enum("Property"sv, {}, unicode_data.prop_list.keys());
+    generate_enum("WordBreakProperty"sv, "Other"sv, unicode_data.word_break_prop_list.keys());
 
     generator.append(R"~~~(
-};
-
-enum class Condition {
-    None,)~~~");
-
-    for (auto const& condition : unicode_data.conditions) {
-        generator.set("condition", condition);
-        generator.append(R"~~~(
-    @condition@,)~~~");
-    }
-
-    generator.append(R"~~~(
-};
-
-// https://www.unicode.org/reports/tr44/#General_Category_Values
-enum class GeneralCategory {)~~~");
-
-    for (auto const& general_category : unicode_data.general_categories) {
-        generator.set("general_category", general_category);
-        generator.append(R"~~~(
-    @general_category@,)~~~");
-    }
-
-    generator.append(R"~~~(
-};
-
-enum class Property {)~~~");
-
-    auto properties = unicode_data.prop_list.keys();
-    quick_sort(properties);
-
-    for (auto const& property : properties) {
-        generator.set("property", property);
-        generator.append(R"~~~(
-    @property@,)~~~");
-    }
-
-    generator.append(R"~~~(
-};
-
-enum class WordBreakProperty {
-    Other,)~~~");
-
-    properties = unicode_data.word_break_prop_list.keys();
-    quick_sort(properties);
-
-    for (auto const& property : properties) {
-        generator.set("property", property);
-        generator.append(R"~~~(
-    @property@,)~~~");
-    }
-
-    generator.append(R"~~~(
-};
-
 struct SpecialCasing {
     u32 code_point { 0 };
 
@@ -590,56 +552,33 @@ int main(int argc, char** argv)
         args_parser.print_usage(stderr, argv[0]);
         return 1;
     }
-    if (!unicode_data_path) {
-        warnln("-u/--unicode-data-path is required");
-        args_parser.print_usage(stderr, argv[0]);
-        return 1;
-    }
-    if (!special_casing_path) {
-        warnln("-s/--special-casing-path is required");
-        args_parser.print_usage(stderr, argv[0]);
-        return 1;
-    }
-    if (!prop_list_path) {
-        warnln("-p/--prop-list-path is required");
-        args_parser.print_usage(stderr, argv[0]);
-        return 1;
-    }
-    if (!word_break_path) {
-        warnln("-w/--word-break-path is required");
-        args_parser.print_usage(stderr, argv[0]);
-        return 1;
-    }
 
-    auto unicode_data_file_or_error = Core::File::open(unicode_data_path, Core::OpenMode::ReadOnly);
-    if (unicode_data_file_or_error.is_error()) {
-        warnln("Failed to open {}: {}", unicode_data_path, unicode_data_file_or_error.release_error());
-        return 1;
-    }
+    auto open_file = [&](StringView path, StringView flags) {
+        if (path.is_empty()) {
+            warnln("{} is required", flags);
+            args_parser.print_usage(stderr, argv[0]);
+            exit(1);
+        }
 
-    auto special_casing_file_or_error = Core::File::open(special_casing_path, Core::OpenMode::ReadOnly);
-    if (special_casing_file_or_error.is_error()) {
-        warnln("Failed to open {}: {}", special_casing_path, special_casing_file_or_error.release_error());
-        return 1;
-    }
+        auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+        if (file_or_error.is_error()) {
+            warnln("Failed to open {}: {}", path, file_or_error.release_error());
+            exit(1);
+        }
 
-    auto prop_list_file_or_error = Core::File::open(prop_list_path, Core::OpenMode::ReadOnly);
-    if (prop_list_file_or_error.is_error()) {
-        warnln("Failed to open {}: {}", prop_list_path, prop_list_file_or_error.release_error());
-        return 1;
-    }
+        return file_or_error.release_value();
+    };
 
-    auto word_break_file_or_error = Core::File::open(word_break_path, Core::OpenMode::ReadOnly);
-    if (word_break_file_or_error.is_error()) {
-        warnln("Failed to open {}: {}", word_break_path, word_break_file_or_error.release_error());
-        return 1;
-    }
+    auto unicode_data_file = open_file(unicode_data_path, "-u/--unicode-data-path");
+    auto special_casing_file = open_file(special_casing_path, "-s/--special-casing-path");
+    auto prop_list_file = open_file(prop_list_path, "-p/--prop-list-path");
+    auto word_break_file = open_file(word_break_path, "-w/--word-break-path");
 
     UnicodeData unicode_data {};
-    parse_special_casing(special_casing_file_or_error.value(), unicode_data);
-    parse_prop_list(prop_list_file_or_error.value(), unicode_data.prop_list);
-    parse_prop_list(word_break_file_or_error.value(), unicode_data.word_break_prop_list);
-    parse_unicode_data(unicode_data_file_or_error.value(), unicode_data);
+    parse_special_casing(special_casing_file, unicode_data);
+    parse_prop_list(prop_list_file, unicode_data.prop_list);
+    parse_prop_list(word_break_file, unicode_data.word_break_prop_list);
+    parse_unicode_data(unicode_data_file, unicode_data);
 
     if (generate_header)
         generate_unicode_data_header(unicode_data);
