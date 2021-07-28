@@ -143,6 +143,7 @@ public:
     virtual gid_t owner_group() const override { return m_associated_process ? m_associated_process->gid() : 0; }
     virtual KResult refresh_data(FileDescription&) const override;
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
+    virtual mode_t required_mode() const override { return 0500; }
 
     virtual void prepare_for_deletion() override;
 
@@ -233,6 +234,8 @@ public:
             return false;
         return process->gid();
     }
+
+    virtual mode_t required_mode() const override { return 0400; }
 
 protected:
     ProcFSProcessInformation(StringView name, const ProcFSProcessDirectory& process_directory)

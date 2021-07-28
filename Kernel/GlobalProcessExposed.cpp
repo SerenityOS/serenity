@@ -539,6 +539,8 @@ class ProcFSDmesg final : public ProcFSGlobalInformation {
 public:
     static NonnullRefPtr<ProcFSDmesg> must_create();
 
+    virtual mode_t required_mode() const override { return 0400; }
+
 private:
     ProcFSDmesg();
     virtual bool output(KBufferBuilder& builder) override
@@ -670,6 +672,8 @@ class ProcFSModules final : public ProcFSGlobalInformation {
 public:
     static NonnullRefPtr<ProcFSModules> must_create();
 
+    virtual mode_t required_mode() const override { return 0400; }
+
 private:
     ProcFSModules();
     virtual bool output(KBufferBuilder& builder) override
@@ -694,6 +698,8 @@ private:
 class ProcFSProfile final : public ProcFSGlobalInformation {
 public:
     static NonnullRefPtr<ProcFSProfile> must_create();
+
+    virtual mode_t required_mode() const override { return 0400; }
 
 private:
     ProcFSProfile();
