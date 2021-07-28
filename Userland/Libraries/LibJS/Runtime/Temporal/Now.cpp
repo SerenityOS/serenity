@@ -40,21 +40,21 @@ void Now::initialize(GlobalObject& global_object)
     define_native_function(vm.names.plainDateISO, plain_date_iso, 0, attr);
 }
 
-// 2.1.1 Temporal.Now.timeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.timezone
+// 2.2.1 Temporal.Now.timeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.timezone
 JS_DEFINE_NATIVE_FUNCTION(Now::time_zone)
 {
     // 1. Return ! SystemTimeZone().
     return system_time_zone(global_object);
 }
 
-// 2.1.2 Temporal.Now.instant ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.instant
+// 2.2.2 Temporal.Now.instant ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.instant
 JS_DEFINE_NATIVE_FUNCTION(Now::instant)
 {
     // 1. Return ! SystemInstant().
     return system_instant(global_object);
 }
 
-// 2.1.3 Temporal.Now.plainDateTime ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetime
+// 2.2.3 Temporal.Now.plainDateTime ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetime
 JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time)
 {
     auto calendar = vm.argument(0);
@@ -64,7 +64,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time)
     return system_date_time(global_object, temporal_time_zone_like, calendar);
 }
 
-// 2.1.4 Temporal.Now.plainDateTimeISO ( [ temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetimeiso
+// 2.2.4 Temporal.Now.plainDateTimeISO ( [ temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindatetimeiso
 JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time_iso)
 {
     auto temporal_time_zone_like = vm.argument(0);
@@ -78,7 +78,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time_iso)
     return system_date_time(global_object, temporal_time_zone_like, calendar);
 }
 
-// 2.1.7 Temporal.Now.plainDate ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindate
+// 2.2.7 Temporal.Now.plainDate ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindate
 JS_DEFINE_NATIVE_FUNCTION(Now::plain_date)
 {
     auto calendar = vm.argument(0);
@@ -93,7 +93,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date)
     return create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar());
 }
 
-// 2.1.8 Temporal.Now.plainDateISO ( [ temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindateiso
+// 2.2.8 Temporal.Now.plainDateISO ( [ temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindateiso
 JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_iso)
 {
     auto temporal_time_zone_like = vm.argument(0);
@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_iso)
     return create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar());
 }
 
-// 2.2.1 SystemTimeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal-systemtimezone
+// 2.3.1 SystemTimeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal-systemtimezone
 TimeZone* system_time_zone(GlobalObject& global_object)
 {
     // 1. Let identifier be ! DefaultTimeZone().
@@ -122,7 +122,7 @@ TimeZone* system_time_zone(GlobalObject& global_object)
     return create_temporal_time_zone(global_object, identifier);
 }
 
-// 2.2.2 SystemUTCEpochNanoseconds ( ), https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochnanoseconds
+// 2.3.2 SystemUTCEpochNanoseconds ( ), https://tc39.es/proposal-temporal/#sec-temporal-systemutcepochnanoseconds
 BigInt* system_utc_epoch_nanoseconds(GlobalObject& global_object)
 {
     // 1. Let ns be the approximate current UTC date and time, in nanoseconds since the epoch.
@@ -145,7 +145,7 @@ BigInt* system_utc_epoch_nanoseconds(GlobalObject& global_object)
     return js_bigint(global_object.heap(), move(ns));
 }
 
-// 2.2.3 SystemInstant ( ), https://tc39.es/proposal-temporal/#sec-temporal-systeminstant
+// 2.3.3 SystemInstant ( ), https://tc39.es/proposal-temporal/#sec-temporal-systeminstant
 Instant* system_instant(GlobalObject& global_object)
 {
     // 1. Let ns be ! SystemUTCEpochNanoseconds().
@@ -155,7 +155,7 @@ Instant* system_instant(GlobalObject& global_object)
     return create_temporal_instant(global_object, *ns);
 }
 
-// 2.2.4 SystemDateTime ( temporalTimeZoneLike, calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-systemdatetime
+// 2.3.4 SystemDateTime ( temporalTimeZoneLike, calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-systemdatetime
 PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time_zone_like, Value calendar_like)
 {
     auto& vm = global_object.vm();
