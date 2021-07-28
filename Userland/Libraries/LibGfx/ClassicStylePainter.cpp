@@ -189,17 +189,6 @@ void ClassicStylePainter::paint_button(Painter& painter, const IntRect& rect, co
     }
 }
 
-void ClassicStylePainter::paint_surface(Painter& painter, const IntRect& rect, const Palette& palette, bool paint_vertical_lines, bool paint_top_line)
-{
-    painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, palette.button());
-    painter.draw_line(rect.top_left(), rect.top_right(), paint_top_line ? palette.threed_highlight() : palette.button());
-    painter.draw_line(rect.bottom_left(), rect.bottom_right(), palette.threed_shadow1());
-    if (paint_vertical_lines) {
-        painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), palette.threed_highlight());
-        painter.draw_line(rect.top_right(), rect.bottom_right().translated(0, -1), palette.threed_shadow1());
-    }
-}
-
 void ClassicStylePainter::paint_frame(Painter& painter, const IntRect& rect, const Palette& palette, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)
 {
     Color top_left_color;

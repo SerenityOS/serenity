@@ -28,11 +28,6 @@ void StylePainter::paint_button(Painter& painter, const IntRect& rect, const Pal
     current().paint_button(painter, rect, palette, button_style, pressed, hovered, checked, enabled, focused);
 }
 
-void StylePainter::paint_surface(Painter& painter, const IntRect& rect, const Palette& palette, bool paint_vertical_lines, bool paint_top_line)
-{
-    current().paint_surface(painter, rect, palette, paint_vertical_lines, paint_top_line);
-}
-
 void StylePainter::paint_frame(Painter& painter, const IntRect& rect, const Palette& palette, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)
 {
     current().paint_frame(painter, rect, palette, shape, shadow, thickness, skip_vertical_lines);
