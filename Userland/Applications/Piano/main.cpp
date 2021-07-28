@@ -53,7 +53,6 @@ int main(int argc, char** argv)
     window->set_title("Piano");
     window->resize(840, 600);
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->show();
 
     auto main_widget_updater = Core::Timer::construct(static_cast<int>((1 / 60.0) * 1000), [&] {
         Core::EventLoop::current().post_event(main_widget, make<Core::CustomEvent>(0));
@@ -84,6 +83,8 @@ int main(int argc, char** argv)
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Piano", app_icon, window));
+
+    window->show();
 
     return app->exec();
 }
