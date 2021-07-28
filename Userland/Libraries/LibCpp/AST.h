@@ -308,6 +308,26 @@ private:
     Kind m_kind;
 };
 
+class FunctionType : public Type {
+public:
+    virtual ~FunctionType() override = default;
+    virtual const char* class_name() const override { return "FunctionType"; }
+    virtual void dump(FILE* = stdout, size_t indent = 0) const override;
+    virtual String to_string() const override;
+
+    FunctionType(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+        : Type(parent, start, end, filename)
+    {
+    }
+
+    void set_return_type(Type& type) { m_return_type = type; }
+    void set_parameters(NonnullRefPtrVector<Parameter> parameters) { m_parameters = move(parameters); }
+
+private:
+    RefPtr<Type> m_return_type;
+    NonnullRefPtrVector<Parameter> m_parameters;
+};
+
 class FunctionDefinition : public ASTNode {
 public:
     virtual ~FunctionDefinition() override = default;

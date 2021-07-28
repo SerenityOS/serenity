@@ -113,6 +113,27 @@ String Reference::to_string() const
     return builder.to_string();
 }
 
+String FunctionType::to_string() const
+{
+    StringBuilder builder;
+    builder.append(m_return_type->to_string());
+    builder.append("(");
+    bool first = true;
+    for (auto& parameter : m_parameters) {
+        if (first)
+            first = false;
+        else
+            builder.append(", ");
+        builder.append(parameter.type()->to_string());
+        if (!parameter.name().is_empty()) {
+            builder.append(" ");
+            builder.append(parameter.name());
+        }
+    }
+    builder.append(")");
+    return builder.to_string();
+}
+
 void Parameter::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
@@ -380,6 +401,19 @@ void Reference::dump(FILE* output, size_t indent) const
     if (!m_referenced_type.is_null()) {
         m_referenced_type->dump(output, indent + 1);
     }
+}
+
+void FunctionType::dump(FILE* output, size_t indent) const
+{
+    ASTNode::dump(output, indent);
+    if (m_return_type)
+        m_return_type->dump(output, indent + 1);
+    print_indent(output, indent + 1);
+    outln("(");
+    for (auto& parameter : m_parameters)
+        parameter.dump(output, indent + 2);
+    print_indent(output, indent + 1);
+    outln(")");
 }
 
 void MemberExpression::dump(FILE* output, size_t indent) const

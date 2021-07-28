@@ -1255,7 +1255,19 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
         type = ref;
     }
 
+    if (peek().type() == Token::Type::LeftParen) {
+        consume();
+        auto fn_type = create_ast_node<FunctionType>(parent, type->start(), position());
+        fn_type->set_return_type(*type);
+        type->set_parent(*fn_type);
+        if (auto parameters = parse_parameter_list(*type); parameters.has_value())
+            fn_type->set_parameters(parameters.release_value());
+        consume(Token::Type::RightParen);
+        type = fn_type;
+    }
+
     type->set_end(position());
+
     return type;
 }
 
