@@ -29,6 +29,7 @@ void PlainTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.hour, hour_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.minute, minute_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.second, second_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.valueOf, value_of, 0, attr);
@@ -84,6 +85,19 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::minute_getter)
 
     // 3. Return 𝔽(temporalTime.[[ISOMinute]]).
     return Value(temporal_time->iso_minute());
+}
+
+// 4.3.6 get Temporal.PlainTime.prototype.second, https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.second
+JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::second_getter)
+{
+    // 1. Let temporalTime be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
+    auto* temporal_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return 𝔽(temporalTime.[[ISOSecond]]).
+    return Value(temporal_time->iso_second());
 }
 
 // 4.3.23 Temporal.PlainTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.valueof
