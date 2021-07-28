@@ -18,6 +18,11 @@ PlainTimePrototype::PlainTimePrototype(GlobalObject& global_object)
 void PlainTimePrototype::initialize(GlobalObject& global_object)
 {
     Object::initialize(global_object);
+
+    auto& vm = this->vm();
+
+    // 4.3.2 Temporal.PlainTime.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype-@@tostringtag
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.PlainTime"), Attribute::Configurable);
 }
 
 }
