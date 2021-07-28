@@ -145,11 +145,11 @@ diff -Naur gcc-11.2.0/gcc/config/serenity.h gcc-11.2.0.serenity/gcc/config/seren
 +/* Files that are linked before user code.
 +   The %s tells GCC to look for these files in the library directory. */
 +#undef STARTFILE_SPEC
-+#define STARTFILE_SPEC "%{!shared:crt0.o%s} crti.o%s %{shared: %{!fbuilding-libgcc:crt0_shared.o%s}} %{shared|pie:crtbeginS.o%s; :crtbegin.o%s}"
++#define STARTFILE_SPEC "%{!shared:crt0.o%s} crti.o%s %{shared: %{!fbuilding-libgcc:crt0_shared.o%s}} %{shared|static-pie|!no-pie:crtbeginS.o%s; :crtbegin.o%s}"
 +
 +/* Files that are linked after user code. */
 +#undef ENDFILE_SPEC
-+#define ENDFILE_SPEC "%{shared|pie:crtendS.o%s; :crtend.o%s} crtn.o%s"
++#define ENDFILE_SPEC "%{shared|static-pie|!no-pie:crtendS.o%s; :crtend.o%s} crtn.o%s"
 +
 +#undef LINK_SPEC
 +#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!static: %{rdynamic:-export-dynamic} %{!fbuilding-libgcc:%{!nodefaultlibs:-lgcc_s} -dynamic-linker /usr/lib/Loader.so}}"
