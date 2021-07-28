@@ -262,6 +262,7 @@ namespace JS {
     P(map)                                   \
     P(max)                                   \
     P(message)                               \
+    P(microsecond)                           \
     P(microseconds)                          \
     P(millisecond)                           \
     P(milliseconds)                          \
