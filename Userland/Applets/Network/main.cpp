@@ -124,6 +124,8 @@ private:
             auto& if_object = value.as_object();
             auto ip_address = if_object.get("ipv4_address").to_string();
             auto ifname = if_object.get("name").to_string();
+            auto link_up = if_object.get("link_up").as_bool();
+            auto link_speed = if_object.get("link_speed").to_i32();
 
             if (!include_loopback)
                 if (ifname == "loop")
@@ -134,7 +136,11 @@ private:
             if (!adapter_info.is_empty())
                 adapter_info.append('\n');
 
-            adapter_info.appendff("{}: {}", ifname, ip_address);
+            adapter_info.appendff("{}: {} ", ifname, ip_address);
+            if (!link_up)
+                adapter_info.appendff("(down)");
+            else
+                adapter_info.appendff("({} Mb/s)", link_speed);
         });
 
         // show connected icon so long as at least one adapter is connected
