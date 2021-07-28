@@ -591,12 +591,13 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
     int main_program_fd = -1;
     if (interpreter_description) {
-        main_program_fd = m_fds.allocate().value();
-        VERIFY(main_program_fd >= 0);
+        auto main_program_fd_wrapper = m_fds.allocate().release_value();
+        VERIFY(main_program_fd_wrapper.fd >= 0);
         auto seek_result = main_program_description->seek(0, SEEK_SET);
         VERIFY(!seek_result.is_error());
         main_program_description->set_readable(true);
-        m_fds[main_program_fd].set(move(main_program_description), FD_CLOEXEC);
+        m_fds[main_program_fd_wrapper.fd].set(move(main_program_description), FD_CLOEXEC);
+        main_program_fd = main_program_fd_wrapper.fd;
     }
 
     new_main_thread = nullptr;

@@ -169,9 +169,14 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     }
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
     auto description = device_to_use_as_tty.open(O_RDWR).value();
-    process->m_fds[0].set(*description);
-    process->m_fds[1].set(*description);
-    process->m_fds[2].set(*description);
+
+    auto setup_description = [&process, &description](int fd) {
+        process->m_fds.m_fds_metadatas[fd].allocate();
+        process->m_fds[fd].set(*description);
+    };
+    setup_description(0);
+    setup_description(1);
+    setup_description(2);
 
     error = process->exec(path, move(arguments), move(environment));
     if (error != 0) {
@@ -411,11 +416,13 @@ RefPtr<Process> Process::from_pid(ProcessID pid)
 const Process::FileDescriptionAndFlags& Process::FileDescriptions::at(size_t i) const
 {
     ScopedSpinLock lock(m_fds_lock);
+    VERIFY(m_fds_metadatas[i].is_allocated());
     return m_fds_metadatas[i];
 }
 Process::FileDescriptionAndFlags& Process::FileDescriptions::at(size_t i)
 {
     ScopedSpinLock lock(m_fds_lock);
+    VERIFY(m_fds_metadatas[i].is_allocated());
     return m_fds_metadatas[i];
 }
 
@@ -465,14 +472,16 @@ size_t Process::FileDescriptions::open_count() const
     return count;
 }
 
-KResultOr<int> Process::FileDescriptions::allocate(int first_candidate_fd)
+KResultOr<Process::ScopedDescriptionAllocation> Process::FileDescriptions::allocate(int first_candidate_fd)
 {
     ScopedSpinLock lock(m_fds_lock);
     for (size_t i = first_candidate_fd; i < max_open(); ++i) {
-        if (!m_fds_metadatas[i])
-            return i;
+        if (!m_fds_metadatas[i].is_allocated()) {
+            m_fds_metadatas[i].allocate();
+            return Process::ScopedDescriptionAllocation { static_cast<int>(i), &m_fds_metadatas[i] };
+        }
     }
-    return KResult(EMFILE);
+    return EMFILE;
 }
 
 Time kgettimeofday()

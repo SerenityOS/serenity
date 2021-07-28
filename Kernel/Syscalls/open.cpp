@@ -49,7 +49,7 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
     auto fd_or_error = m_fds.allocate();
     if (fd_or_error.is_error())
         return fd_or_error.error();
-    auto fd = fd_or_error.value();
+    auto new_fd = fd_or_error.release_value();
     RefPtr<Custody> base;
     if (dirfd == AT_FDCWD) {
         base = current_directory();
@@ -73,8 +73,8 @@ KResultOr<FlatPtr> Process::sys$open(Userspace<const Syscall::SC_open_params*> u
         return ENXIO;
 
     u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
-    m_fds[fd].set(move(description), fd_flags);
-    return fd;
+    m_fds[new_fd.fd].set(move(description), fd_flags);
+    return new_fd.fd;
 }
 
 KResultOr<FlatPtr> Process::sys$close(int fd)

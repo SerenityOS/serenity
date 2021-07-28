@@ -28,7 +28,7 @@ KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
     auto new_fd_or_error = m_fds.allocate();
     if (new_fd_or_error.is_error())
         return new_fd_or_error.error();
-    auto new_fd = new_fd_or_error.value();
+    auto new_fd = new_fd_or_error.release_value();
     auto vmobject = AnonymousVMObject::try_create_purgeable_with_size(size, AllocationStrategy::Reserve);
     if (!vmobject)
         return ENOMEM;
@@ -48,8 +48,8 @@ KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
     if (options & O_CLOEXEC)
         fd_flags |= FD_CLOEXEC;
 
-    m_fds[new_fd].set(move(description), fd_flags);
-    return new_fd;
+    m_fds[new_fd.fd].set(move(description), fd_flags);
+    return new_fd.fd;
 }
 
 }
