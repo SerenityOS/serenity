@@ -19,6 +19,7 @@ public:
     virtual ~PlainTimePrototype() override = default;
 
 private:
+    JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
 };
 
