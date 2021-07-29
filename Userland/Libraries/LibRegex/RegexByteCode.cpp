@@ -9,6 +9,7 @@
 #include "RegexDebug.h"
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
+#include <LibUnicode/CharacterTypes.h>
 
 namespace regex {
 
@@ -532,6 +533,10 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             if (!compare_string(input, state, str, had_zero_length_match))
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
+        } else if (compare_type == CharacterCompareType::Property) {
+            auto property = static_cast<Unicode::Property>(m_bytecode->at(offset++));
+            compare_property(input, state, property, current_inversion_state(), inverse_matched);
+
         } else {
             warnln("Undefined comparison: {}", (int)compare_type);
             VERIFY_NOT_REACHED();
@@ -714,6 +719,22 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_range(MatchInput const& inp
     }
 
     if (ch >= from && ch <= to) {
+        if (inverse)
+            inverse_matched = true;
+        else
+            ++state.string_position;
+    }
+}
+
+ALWAYS_INLINE void OpCode_Compare::compare_property(MatchInput const& input, MatchState& state, Unicode::Property property, bool inverse, bool& inverse_matched)
+{
+    if (state.string_position == input.view.length())
+        return;
+
+    u32 code_point = input.view[state.string_position];
+    bool equal = Unicode::code_point_has_property(code_point, property);
+
+    if (equal) {
         if (inverse)
             inverse_matched = true;
         else
