@@ -13,9 +13,11 @@ enum class Language {
     Unknown,
     Cpp,
     JavaScript,
+    HTML,
     GML,
     Ini,
     Shell,
+    SQL,
 };
 
 Language language_from_file_extension(const String&);
