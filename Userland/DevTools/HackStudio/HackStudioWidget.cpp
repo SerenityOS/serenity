@@ -124,6 +124,8 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     m_add_terminal_action = create_add_terminal_action();
     m_remove_current_terminal_action = create_remove_current_terminal_action();
 
+    m_open_gml_preview_window_action = create_open_gml_preview_window_action();
+
     m_locator = add<Locator>();
 
     m_terminal_wrapper->on_command_exit = [this] {
@@ -175,6 +177,7 @@ void HackStudioWidget::update_actions()
 
     m_remove_current_editor_action->set_enabled(m_all_editor_wrappers.size() > 1);
     m_remove_current_terminal_action->set_enabled(is_remove_terminal_enabled());
+    m_open_gml_preview_window_action->set_enabled(current_editor_wrapper().filename().ends_with(".gml"));
 }
 
 void HackStudioWidget::on_action_tab_change()
@@ -289,6 +292,8 @@ bool HackStudioWidget::open_file(const String& full_filename)
 
     current_editor().on_cursor_change = [this] { update_statusbar(); };
     current_editor().on_change = [this] { update_gml_preview(); };
+
+    m_open_gml_preview_window_action->set_enabled(current_editor_wrapper().filename().ends_with(".gml"));
     update_gml_preview();
 
     return true;
@@ -614,6 +619,21 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_terminal_acti
             return;
         m_action_tab_widget->remove_tab(terminal);
         update_actions();
+    });
+}
+
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_gml_preview_window_action()
+{
+    return GUI::Action::create("Open GML preview in a new window", { Mod_Ctrl | Mod_Alt, Key_P }, [this](auto&) {
+        if (!m_gml_preview_dialog)
+            m_gml_preview_dialog = GMLPreviewDialog::construct(current_editor().text(), current_editor_wrapper().filename());
+
+        if (m_gml_preview_dialog->is_visible()) {
+            m_gml_preview_dialog->move_to_front();
+            return;
+        }
+
+        m_gml_preview_dialog->exec();
     });
 }
 
@@ -1036,6 +1056,9 @@ void HackStudioWidget::create_view_menu(GUI::Window& window)
     view_menu.add_action(*m_remove_current_editor_action);
     view_menu.add_action(*m_add_terminal_action);
     view_menu.add_action(*m_remove_current_terminal_action);
+
+    view_menu.add_separator();
+    view_menu.add_action(*m_open_gml_preview_window_action);
 }
 
 void HackStudioWidget::create_help_menu(GUI::Window& window)
@@ -1157,8 +1180,12 @@ bool HackStudioWidget::any_document_is_dirty() const
 
 void HackStudioWidget::update_gml_preview()
 {
-    auto gml_content = current_editor_wrapper().filename().ends_with(".gml") ? current_editor_wrapper().editor().text() : "";
+    auto filename = current_editor_wrapper().filename();
+    auto gml_content = filename.ends_with(".gml") ? current_editor_wrapper().editor().text() : "";
     m_gml_preview_widget->load_gml(gml_content);
+
+    if (m_gml_preview_dialog)
+        m_gml_preview_dialog->load_gml(gml_content, filename);
 }
 
 }

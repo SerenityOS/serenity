@@ -11,6 +11,7 @@
 #include "ClassViewWidget.h"
 #include "Debugger/DebugInfoWidget.h"
 #include "Debugger/DisassemblyWidget.h"
+#include "Dialogs/GML/GMLPreviewDialog.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
 #include "GMLPreviewWidget.h"
@@ -86,6 +87,7 @@ private:
     NonnullRefPtr<GUI::Action> create_add_editor_action();
     NonnullRefPtr<GUI::Action> create_add_terminal_action();
     NonnullRefPtr<GUI::Action> create_remove_current_terminal_action();
+    NonnullRefPtr<GUI::Action> create_open_gml_preview_window_action();
     NonnullRefPtr<GUI::Action> create_debug_action();
     NonnullRefPtr<GUI::Action> create_build_action();
     NonnullRefPtr<GUI::Action> create_run_action();
@@ -167,6 +169,7 @@ private:
     RefPtr<GUI::Action> m_add_editor_action;
     RefPtr<GUI::Action> m_add_terminal_action;
     RefPtr<GUI::Action> m_remove_current_terminal_action;
+    RefPtr<GUI::Action> m_open_gml_preview_window_action;
     RefPtr<GUI::Action> m_stop_action;
     RefPtr<GUI::Action> m_debug_action;
     RefPtr<GUI::Action> m_build_action;
@@ -176,5 +179,7 @@ private:
     RefPtr<GUI::Action> m_no_wrapping_action;
     RefPtr<GUI::Action> m_wrap_anywhere_action;
     RefPtr<GUI::Action> m_wrap_at_words_action;
+
+    RefPtr<GMLPreviewDialog> m_gml_preview_dialog;
 };
 }
