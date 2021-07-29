@@ -31,6 +31,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.year, year_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.month, month_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.day, day_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.valueOf, value_of, 0, attr);
@@ -110,6 +111,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::month_code_getter)
 
     // 4. Return ? CalendarMonthCode(calendar, dateTime).
     return js_string(vm, calendar_month_code(global_object, calendar, *date_time));
+}
+
+// 5.3.7 get Temporal.PlainDateTime.prototype.day, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.day
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::day_getter)
+{
+    // 1. Let dateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
+    auto* date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be dateTime.[[Calendar]].
+    auto& calendar = date_time->calendar();
+
+    // 4. Return ? CalendarDay(calendar, dateTime).
+    return Value(calendar_day(global_object, calendar, *date_time));
 }
 
 // 5.3.35 Temporal.PlainDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.valueof
