@@ -8,6 +8,7 @@
 
 #include <LibGUI/Frame.h>
 #include <LibGfx/TextAlignment.h>
+#include <LibGfx/TextWrapping.h>
 
 namespace GUI {
 
@@ -26,6 +27,9 @@ public:
 
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
     void set_text_alignment(Gfx::TextAlignment text_alignment) { m_text_alignment = text_alignment; }
+
+    Gfx::TextWrapping text_wrapping() const { return m_text_wrapping; }
+    void set_text_wrapping(Gfx::TextWrapping text_wrapping) { m_text_wrapping = text_wrapping; }
 
     bool should_stretch_icon() const { return m_should_stretch_icon; }
     void set_should_stretch_icon(bool b) { m_should_stretch_icon = b; }
@@ -49,6 +53,7 @@ private:
     String m_text;
     RefPtr<Gfx::Bitmap> m_icon;
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
+    Gfx::TextWrapping m_text_wrapping { Gfx::TextWrapping::Wrap };
     bool m_should_stretch_icon { false };
     bool m_autosize { false };
 };
