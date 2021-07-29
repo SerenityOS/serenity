@@ -41,5 +41,6 @@ int mprotect(void*, size_t, int prot);
 int set_mmap_name(void*, size_t, const char*);
 int madvise(void*, size_t, int advice);
 void* allocate_tls(const char* initial_data, size_t);
+int mlock(const void*, size_t);
 
 __END_DECLS
