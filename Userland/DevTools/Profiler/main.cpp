@@ -143,14 +143,22 @@ int main(int argc, char** argv)
     auto& disassembly_view = bottom_splitter.add<GUI::TableView>();
     disassembly_view.set_visible(false);
 
+    auto update_disassembly_model = [&] {
+        if (disassembly_view.is_visible() && !tree_view.selection().is_empty()) {
+            profile->set_disassembly_index(tree_view.selection().first());
+            disassembly_view.set_model(profile->disassembly_model());
+        } else {
+            disassembly_view.set_model(nullptr);
+        }
+    };
+
     tree_view.on_selection_change = [&] {
-        const auto& index = tree_view.selection().first();
-        profile->set_disassembly_index(index);
-        disassembly_view.set_model(profile->disassembly_model());
+        update_disassembly_model();
     };
 
     auto disassembly_action = GUI::Action::create_checkable("Show &Disassembly", { Mod_Ctrl, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/x86.png"), [&](auto& action) {
         disassembly_view.set_visible(action.is_checked());
+        update_disassembly_model();
     });
 
     auto& samples_tab = tab_widget.add_tab<GUI::Widget>("Samples");
