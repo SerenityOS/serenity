@@ -21,6 +21,7 @@ Label::Label(String text)
     : m_text(move(text))
 {
     REGISTER_TEXT_ALIGNMENT_PROPERTY("text_alignment", text_alignment, set_text_alignment);
+    REGISTER_TEXT_WRAPPING_PROPERTY("text_wrapping", text_wrapping, set_text_wrapping);
 
     set_frame_thickness(0);
     set_frame_shadow(Gfx::FrameShadow::Plain);
@@ -91,10 +92,10 @@ void Label::paint_event(PaintEvent& event)
 
     auto text_rect = this->text_rect();
     if (is_enabled()) {
-        painter.draw_text(text_rect, text(), m_text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right, Gfx::TextWrapping::Wrap);
+        painter.draw_text(text_rect, text(), text_alignment(), palette().color(foreground_role()), Gfx::TextElision::Right, text_wrapping());
     } else {
-        painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), Color::White, Gfx::TextElision::Right, Gfx::TextWrapping::Wrap);
-        painter.draw_text(text_rect, text(), font(), text_alignment(), Color::from_rgb(0x808080), Gfx::TextElision::Right, Gfx::TextWrapping::Wrap);
+        painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), Color::White, Gfx::TextElision::Right, text_wrapping());
+        painter.draw_text(text_rect, text(), font(), text_alignment(), Color::from_rgb(0x808080), Gfx::TextElision::Right, text_wrapping());
     }
 }
 
