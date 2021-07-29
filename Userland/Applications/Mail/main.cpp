@@ -33,24 +33,20 @@ int main(int argc, char** argv)
     window->set_title("Mail");
     window->resize(640, 400);
 
-    auto menubar = GUI::Menubar::construct();
-
-    auto& file_menu = menubar->add_menu("&File");
+    auto& file_menu = window->add_menu("&File");
 
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         mail_widget.on_window_close();
         app->quit();
     }));
 
-    auto& help_menu = menubar->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Mail", app_icon, window));
 
     window->on_close_request = [&] {
         mail_widget.on_window_close();
         return GUI::Window::CloseRequestDecision::Close;
     };
-
-    window->set_menubar(menubar);
 
     window->show();
 
