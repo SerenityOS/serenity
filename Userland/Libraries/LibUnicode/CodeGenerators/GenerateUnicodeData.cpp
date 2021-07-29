@@ -404,6 +404,7 @@ constexpr @name@ operator|(@name@ value1, @name@ value2)
 
 #include <AK/Optional.h>
 #include <AK/Types.h>
+#include <LibUnicode/Forward.h>
 
 namespace Unicode {
 )~~~");
@@ -411,7 +412,7 @@ namespace Unicode {
     generate_enum("Locale"sv, "None"sv, move(unicode_data.locales));
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
     generate_enum("GeneralCategory"sv, {}, move(unicode_data.general_categories));
-    generate_enum("Property"sv, "Assigned"sv, unicode_data.prop_list.keys(), move(unicode_data.prop_aliases), true);
+    generate_enum("Property"sv, "Assigned"sv, unicode_data.prop_list.keys(), unicode_data.prop_aliases, true);
     generate_enum("WordBreakProperty"sv, "Other"sv, unicode_data.word_break_prop_list.keys());
 
     generator.append(R"~~~(
@@ -469,7 +470,12 @@ struct UnicodeData {
     WordBreakProperty word_break_property { WordBreakProperty::Other };
 };
 
+namespace Detail {
+
 Optional<UnicodeData> unicode_data_for_code_point(u32 code_point);
+Optional<Property> property_from_string(StringView const& property);
+
+}
 
 })~~~");
 
@@ -489,6 +495,7 @@ static void generate_unicode_data_implementation(UnicodeData unicode_data)
 #include <AK/Array.h>
 #include <AK/CharacterTypes.h>
 #include <AK/Find.h>
+#include <AK/StringView.h>
 #include <LibUnicode/UnicodeData.h>
 
 namespace Unicode {
@@ -597,6 +604,8 @@ static Optional<u32> index_of_code_point_in_range(u32 code_point)
     return {};
 }
 
+namespace Detail {
+
 Optional<UnicodeData> unicode_data_for_code_point(u32 code_point)
 {
     VERIFY(is_unicode(code_point));
@@ -616,6 +625,30 @@ Optional<UnicodeData> unicode_data_for_code_point(u32 code_point)
         return *it;
 
     return {};
+}
+
+Optional<Property> property_from_string(StringView const& property)
+{
+    if (property == "Assigned"sv)
+        return Property::Assigned;)~~~");
+
+    for (auto const& property : unicode_data.prop_list) {
+        generator.set("property", property.key);
+        generator.append(R"~~~(
+    if (property == "@property@"sv)
+        return Property::@property@;)~~~");
+    }
+    for (auto const& alias : unicode_data.prop_aliases) {
+        generator.set("property", alias.alias);
+        generator.append(R"~~~(
+    if (property == "@property@"sv)
+        return Property::@property@;)~~~");
+    }
+
+    generator.append(R"~~~(
+    return {};
+}
+
 }
 
 })~~~");
