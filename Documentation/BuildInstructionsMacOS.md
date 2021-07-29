@@ -8,10 +8,10 @@ Make sure you also have all the following dependencies installed:
 
 ```console
 # core
-brew install coreutils qemu bash gcc@10 ninja cmake ccache rsync
+brew install coreutils e2fsprogs qemu bash gcc@10 ninja cmake ccache rsync
 
 # (option 1) fuse + ext2
-brew install e2fsprogs m4 autoconf automake libtool
+brew install m4 autoconf automake libtool
 brew install --cask osxfuse
 Toolchain/BuildFuseExt2.sh
 
