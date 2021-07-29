@@ -362,7 +362,7 @@ Menu* MenuManager::previous_menu(Menu* current)
         return nullptr;
     Menu* found = nullptr;
     Menu* previous = nullptr;
-    wm.window_with_active_menu()->menubar()->for_each_menu([&](Menu& menu) {
+    wm.window_with_active_menu()->menubar().for_each_menu([&](Menu& menu) {
         if (current == &menu) {
             found = previous;
             return IterationDecision::Break;
@@ -380,7 +380,7 @@ Menu* MenuManager::next_menu(Menu* current)
     auto& wm = WindowManager::the();
     if (!wm.window_with_active_menu())
         return nullptr;
-    wm.window_with_active_menu()->menubar()->for_each_menu([&](Menu& menu) {
+    wm.window_with_active_menu()->menubar().for_each_menu([&](Menu& menu) {
         if (is_next) {
             found = &menu;
             return IterationDecision::Break;

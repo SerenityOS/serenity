@@ -3,13 +3,10 @@
 
 endpoint WindowServer
 {
-    create_menubar(i32 menubar_id) =|
-    destroy_menubar(i32 menubar_id) =|
-
     create_menu(i32 menu_id, [UTF8] String menu_title) =|
     destroy_menu(i32 menu_id) =|
 
-    add_menu_to_menubar(i32 menubar_id, i32 menu_id) =|
+    add_menu(i32 window_id, i32 menu_id) =|
 
     add_menu_item(
         i32 menu_id,
@@ -52,8 +49,6 @@ endpoint WindowServer
         Gfx::IntRect launch_origin_rect) =|
 
     destroy_window(i32 window_id) => (Vector<i32> destroyed_window_ids)
-
-    set_window_menubar(i32 window_id, i32 menubar_id) =|
 
     set_window_title(i32 window_id, [UTF8] String title) =|
     get_window_title(i32 window_id) => ([UTF8] String title)

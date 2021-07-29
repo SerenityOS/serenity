@@ -66,6 +66,7 @@ Window* Window::from_window_id(int window_id)
 
 Window::Window(Core::Object* parent)
     : Core::Object(parent)
+    , m_menubar(Menubar::construct())
 {
     all_windows->set(this);
     m_rect_when_windowless = { -5000, -5000, 140, 140 };
@@ -92,8 +93,6 @@ Window::Window(Core::Object* parent)
 
 Window::~Window()
 {
-    if (m_menubar)
-        m_menubar->notify_removed_from_window({});
     all_windows->remove(this);
     hide();
 }
@@ -162,11 +161,11 @@ void Window::show()
 
     apply_icon();
 
-    if (m_menubar) {
-        // This little dance makes us create a server-side menubar.
-        auto menubar = move(m_menubar);
-        set_menubar(menubar);
-    }
+    m_menubar->for_each_menu([&](Menu& menu) {
+        menu.realize_menu_if_needed();
+        WindowServerConnection::the().async_add_menu(m_window_id, menu.menu_id());
+        return IterationDecision::Continue;
+    });
 
     reified_windows->set(m_window_id, this);
     Application::the()->did_create_window({});
@@ -1172,22 +1171,12 @@ Gfx::Bitmap* Window::back_bitmap()
 
 Menu& Window::add_menu(String name)
 {
-    if (!m_menubar)
-        set_menubar(GUI::Menubar::construct());
-    return m_menubar->add_menu(move(name));
-}
-
-void Window::set_menubar(RefPtr<Menubar> menubar)
-{
-    if (m_menubar == menubar)
-        return;
-    if (m_menubar)
-        m_menubar->notify_removed_from_window({});
-    m_menubar = move(menubar);
-    if (m_window_id && m_menubar) {
-        m_menubar->notify_added_to_window({});
-        WindowServerConnection::the().async_set_window_menubar(m_window_id, m_menubar->menubar_id());
+    Menu& menu = m_menubar->add_menu({}, move(name));
+    if (m_window_id) {
+        menu.realize_menu_if_needed();
+        WindowServerConnection::the().async_add_menu(m_window_id, menu.menu_id());
     }
+    return menu;
 }
 
 bool Window::is_modified() const
