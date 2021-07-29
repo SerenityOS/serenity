@@ -23,7 +23,8 @@ struct AtExitEntry {
     bool has_been_called { false };
 };
 
-static constexpr size_t max_atexit_entry_count = PAGE_SIZE / sizeof(AtExitEntry);
+static constexpr auto atexit_region_size = 4 * PAGE_SIZE;
+static constexpr size_t max_atexit_entry_count = atexit_region_size / sizeof(AtExitEntry);
 
 static AtExitEntry* atexit_entries;
 static size_t atexit_entry_count = 0;
@@ -31,7 +32,7 @@ static pthread_mutex_t atexit_mutex = __PTHREAD_MUTEX_INITIALIZER;
 
 static void lock_atexit_handlers()
 {
-    if (mprotect(atexit_entries, PAGE_SIZE, PROT_READ) < 0) {
+    if (mprotect(atexit_entries, atexit_region_size, PROT_READ) < 0) {
         perror("lock_atexit_handlers");
         _exit(1);
     }
@@ -39,7 +40,7 @@ static void lock_atexit_handlers()
 
 static void unlock_atexit_handlers()
 {
-    if (mprotect(atexit_entries, PAGE_SIZE, PROT_READ | PROT_WRITE) < 0) {
+    if (mprotect(atexit_entries, atexit_region_size, PROT_READ | PROT_WRITE) < 0) {
         perror("unlock_atexit_handlers");
         _exit(1);
     }
@@ -55,7 +56,7 @@ int __cxa_atexit(AtExitFunction exit_function, void* parameter, void* dso_handle
     }
 
     if (!atexit_entries) {
-        atexit_entries = (AtExitEntry*)mmap(nullptr, PAGE_SIZE, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+        atexit_entries = (AtExitEntry*)mmap(nullptr, atexit_region_size, PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
         if (atexit_entries == MAP_FAILED) {
             __pthread_mutex_unlock(&atexit_mutex);
             perror("__cxa_atexit mmap");
