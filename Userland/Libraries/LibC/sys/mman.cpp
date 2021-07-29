@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
@@ -81,5 +82,11 @@ void* allocate_tls(const char* initial_data, size_t size)
         return MAP_FAILED;
     }
     return (void*)rc;
+}
+
+int mlock(const void*, size_t)
+{
+    dbgln("FIXME: Implement mlock()");
+    return 0;
 }
 }
