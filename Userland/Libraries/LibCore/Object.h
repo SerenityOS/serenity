@@ -377,4 +377,10 @@ T* Object::find_descendant_of_type_named(String const& name) requires IsBaseOf<O
         { Gfx::FontWeight::ExtraBold, "ExtraBold" },                 \
         { Gfx::FontWeight::Black, "Black" },                         \
         { Gfx::FontWeight::ExtraBlack, "ExtraBlack" })
+
+#define REGISTER_TEXT_WRAPPING_PROPERTY(property_name, getter, setter) \
+    REGISTER_ENUM_PROPERTY(                                            \
+        property_name, getter, setter, Gfx::TextWrapping,              \
+        { Gfx::TextWrapping::Wrap, "Wrap" },                           \
+        { Gfx::TextWrapping::DontWrap, "DontWrap" })
 }
