@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
@@ -12,8 +13,6 @@
 
 #if ENABLE_UNICODE_DATA
 #    include <LibUnicode/UnicodeData.h>
-#else
-#    include <AK/CharacterTypes.h>
 #endif
 
 // For details on the algorithms used here, see Section 3.13 Default Case Algorithms
@@ -41,7 +40,7 @@ static bool is_final_code_point(Utf8View const& string, size_t index, size_t byt
     size_t cased_letter_count = 0;
 
     for (auto code_point : preceding_view) {
-        auto unicode_data = unicode_data_for_code_point(code_point);
+        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
         if (!unicode_data.has_value())
             return false;
 
@@ -58,7 +57,7 @@ static bool is_final_code_point(Utf8View const& string, size_t index, size_t byt
         return false;
 
     for (auto code_point : following_view) {
-        auto unicode_data = unicode_data_for_code_point(code_point);
+        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
         if (!unicode_data.has_value())
             return false;
 
@@ -107,7 +106,7 @@ static SpecialCasing const* find_matching_special_case(Utf8View const& string, s
 u32 to_unicode_lowercase(u32 code_point)
 {
 #if ENABLE_UNICODE_DATA
-    auto unicode_data = unicode_data_for_code_point(code_point);
+    auto unicode_data = Detail::unicode_data_for_code_point(code_point);
     if (unicode_data.has_value())
         return unicode_data->simple_lowercase_mapping;
     return code_point;
@@ -119,7 +118,7 @@ u32 to_unicode_lowercase(u32 code_point)
 u32 to_unicode_uppercase(u32 code_point)
 {
 #if ENABLE_UNICODE_DATA
-    auto unicode_data = unicode_data_for_code_point(code_point);
+    auto unicode_data = Detail::unicode_data_for_code_point(code_point);
     if (unicode_data.has_value())
         return unicode_data->simple_uppercase_mapping;
     return code_point;
@@ -139,7 +138,7 @@ String to_unicode_lowercase_full(StringView const& string)
         u32 code_point = *it;
         size_t byte_length = it.underlying_code_point_length_in_bytes();
 
-        auto unicode_data = unicode_data_for_code_point(code_point);
+        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
         if (!unicode_data.has_value()) {
             builder.append_code_point(code_point);
             index += byte_length;
@@ -174,7 +173,7 @@ String to_unicode_uppercase_full(StringView const& string)
         u32 code_point = *it;
         size_t byte_length = it.underlying_code_point_length_in_bytes();
 
-        auto unicode_data = unicode_data_for_code_point(code_point);
+        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
         if (!unicode_data.has_value()) {
             builder.append_code_point(code_point);
             index += byte_length;
@@ -195,6 +194,31 @@ String to_unicode_uppercase_full(StringView const& string)
     return builder.build();
 #else
     return string.to_uppercase_string();
+#endif
+}
+
+Optional<Property> property_from_string([[maybe_unused]] StringView const& property)
+{
+#if ENABLE_UNICODE_DATA
+    return Detail::property_from_string(property);
+#else
+    return {};
+#endif
+}
+
+bool code_point_has_property([[maybe_unused]] u32 code_point, [[maybe_unused]] Property property)
+{
+#if ENABLE_UNICODE_DATA
+    if (property == Property::Any)
+        return is_unicode(code_point);
+
+    auto unicode_data = Detail::unicode_data_for_code_point(code_point);
+    if (!unicode_data.has_value())
+        return false;
+
+    return has_property(*unicode_data, property);
+#else
+    return false;
 #endif
 }
 
