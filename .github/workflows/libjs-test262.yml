@@ -62,19 +62,19 @@ jobs:
       - name: Check versions
         run: set +e; g++ --version; g++-10 --version; python --version; python3 --version; ninja --version
 
-      - name: Build libLagom.a and test-js
+      - name: Build test-js
         run: |
           mkdir -p Build/lagom
           cd Build/lagom
           cmake -GNinja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 -DBUILD_LAGOM=ON ../../Meta/Lagom
-          ninja libLagom.a test-js
+          ninja test-js
 
       - name: Build libjs-test262-runner
         working-directory: libjs-test262
         run: |
           mkdir -p Build
           cd Build
-          cmake -GNinja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 ..
+          cmake -GNinja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 -DSERENITY_SOURCE_DIR=${{ env.SERENITY_SOURCE_DIR }} ..
           ninja libjs-test262-runner
 
       - name: Run test262 and test262-parser-tests
