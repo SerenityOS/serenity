@@ -184,6 +184,7 @@ if (BUILD_LAGOM)
 
     # GUI-GML
     file(GLOB LIBGUI_GML_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibGUI/GML*.cpp")
+    list(REMOVE_ITEM LIBGUI_GML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibGUI/GMLAutocompleteProvider.cpp")
     list(REMOVE_ITEM LIBGUI_GML_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibGUI/GMLSyntaxHighlighter.cpp")
     lagom_lib(LagomGML gml
         SOURCES ${LIBGUI_GML_SOURCES}
