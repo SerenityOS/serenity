@@ -25,6 +25,8 @@ public:
 
     void disallow_html_comments() { m_allow_html_comments = false; };
 
+    Token force_slash_as_regex();
+
 private:
     void consume();
     bool consume_exponent();
@@ -46,6 +48,8 @@ private:
     template<typename Callback>
     bool match_numeric_literal_separator_followed_by(Callback) const;
     bool slash_means_division() const;
+
+    TokenType consume_regex_literal();
 
     StringView m_source;
     size_t m_position { 0 };

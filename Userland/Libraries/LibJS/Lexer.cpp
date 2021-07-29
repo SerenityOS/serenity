@@ -360,10 +360,15 @@ bool Lexer::slash_means_division() const
     return type == TokenType::BigIntLiteral
         || type == TokenType::BoolLiteral
         || type == TokenType::BracketClose
+        || type == TokenType::CurlyClose
         || type == TokenType::Identifier
+        || type == TokenType::In
+        || type == TokenType::Instanceof
+        || type == TokenType::MinusMinus
         || type == TokenType::NullLiteral
         || type == TokenType::NumericLiteral
         || type == TokenType::ParenClose
+        || type == TokenType::PlusPlus
         || type == TokenType::RegexLiteral
         || type == TokenType::StringLiteral
         || type == TokenType::TemplateLiteralEnd
@@ -563,27 +568,7 @@ Token Lexer::next()
         }
     } else if (m_current_char == '/' && !slash_means_division()) {
         consume();
-        token_type = TokenType::RegexLiteral;
-
-        while (!is_eof()) {
-            if (m_current_char == '[') {
-                m_regex_is_in_character_class = true;
-            } else if (m_current_char == ']') {
-                m_regex_is_in_character_class = false;
-            } else if (!m_regex_is_in_character_class && m_current_char == '/') {
-                break;
-            }
-
-            if (match('\\', '/') || match('\\', '[') || match('\\', '\\') || (m_regex_is_in_character_class && match('\\', ']')))
-                consume();
-            consume();
-        }
-
-        if (is_eof()) {
-            token_type = TokenType::UnterminatedRegexLiteral;
-        } else {
-            consume();
-        }
+        token_type = consume_regex_literal();
     } else if (m_eof) {
         if (unterminated_comment) {
             token_type = TokenType::Invalid;
@@ -675,6 +660,75 @@ Token Lexer::next()
     }
 
     return m_current_token;
+}
+
+Token Lexer::force_slash_as_regex()
+{
+    VERIFY(m_current_token.type() == TokenType::Slash || m_current_token.type() == TokenType::SlashEquals);
+
+    bool has_equals = m_current_token.type() == TokenType::SlashEquals;
+
+    VERIFY(m_position > 0);
+    size_t value_start = m_position - 1;
+
+    if (has_equals) {
+        VERIFY(m_source[value_start - 1] == '=');
+        --value_start;
+        --m_position;
+        m_current_char = '=';
+    }
+
+    TokenType token_type = consume_regex_literal();
+
+    m_current_token = Token(
+        token_type,
+        "",
+        m_current_token.trivia(),
+        m_source.substring_view(value_start - 1, m_position - value_start),
+        m_filename,
+        m_current_token.line_number(),
+        m_current_token.line_column(),
+        m_position);
+
+    if constexpr (LEXER_DEBUG) {
+        dbgln("------------------------------");
+        dbgln("Token: {}", m_current_token.name());
+        dbgln("Trivia: _{}_", m_current_token.trivia());
+        dbgln("Value: _{}_", m_current_token.value());
+        dbgln("Line: {}, Column: {}", m_current_token.line_number(), m_current_token.line_column());
+        dbgln("------------------------------");
+    }
+
+    return m_current_token;
+}
+
+TokenType Lexer::consume_regex_literal()
+{
+    TokenType token_type = TokenType::RegexLiteral;
+
+    while (!is_eof()) {
+        if (is_line_terminator() || (!m_regex_is_in_character_class && m_current_char == '/')) {
+            break;
+        } else if (m_current_char == '[') {
+            m_regex_is_in_character_class = true;
+        } else if (m_current_char == ']') {
+            m_regex_is_in_character_class = false;
+        } else if (!m_regex_is_in_character_class && m_current_char == '/') {
+            break;
+        }
+
+        if (match('\\', '/') || match('\\', '[') || match('\\', '\\') || (m_regex_is_in_character_class && match('\\', ']')))
+            consume();
+        consume();
+    }
+
+    if (m_current_char == '/') {
+        consume();
+        return TokenType::RegexLiteral;
+    } else {
+        return TokenType::UnterminatedRegexLiteral;
+    }
+    return token_type;
 }
 
 }
