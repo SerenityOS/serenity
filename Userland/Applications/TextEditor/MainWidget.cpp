@@ -625,9 +625,10 @@ void MainWidget::set_path(StringView const& path)
         m_extension = lexical_path.extension();
     }
 
-    if (m_extension == "c" || m_extension == "cc" || m_extension == "cxx" || m_extension == "cpp" || m_extension == "h") {
+    if (m_extension == "c" || m_extension == "cc" || m_extension == "cxx" || m_extension == "cpp" || m_extension == "c++"
+        || m_extension == "h" || m_extension == "hh" || m_extension == "hxx" || m_extension == "hpp" || m_extension == "h++") {
         m_cpp_highlight->activate();
-    } else if (m_extension == "js" || m_extension == "json") {
+    } else if (m_extension == "js" || m_extension == "mjs" || m_extension == "json") {
         m_js_highlight->activate();
     } else if (m_extension == "gml") {
         m_gml_highlight->activate();

@@ -11,9 +11,10 @@ namespace HackStudio {
 Language language_from_file_extension(const String& extension)
 {
     VERIFY(!extension.starts_with("."));
-    if (extension == "cpp" || extension == "h")
+    if (extension == "c" || extension == "cc" || extension == "cxx" || extension == "cpp" || extension == "c++"
+        || extension == "h" || extension == "cc" || extension == "hxx" || extension == "hpp" || extension == "h++")
         return Language::Cpp;
-    if (extension == "js" || extension == "json")
+    if (extension == "js" || extension == "mjs" || extension == "json")
         return Language::JavaScript;
     if (extension == "html" || extension == "htm")
         return Language::HTML;
@@ -44,9 +45,10 @@ Language language_from_name(const String& name)
 String language_name_from_file_extension(const String& extension)
 {
     VERIFY(!extension.starts_with("."));
-    if (extension == "cpp" || extension == "h")
+    if (extension == "c" || extension == "cc" || extension == "cxx" || extension == "cpp" || extension == "c++"
+        || extension == "h" || extension == "hh" || extension == "hxx" || extension == "hpp" || extension == "h++")
         return "C++";
-    if (extension == "js" || extension == "json")
+    if (extension == "js" || extension == "mjs" || extension == "json")
         return "JavaScript";
     if (extension == "gml")
         return "GML";
