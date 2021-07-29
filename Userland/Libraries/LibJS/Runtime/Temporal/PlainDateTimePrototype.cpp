@@ -38,6 +38,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.millisecond, millisecond_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.microsecond, microsecond_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.nanosecond, nanosecond_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.dayOfWeek, day_of_week_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.valueOf, value_of, 0, attr);
@@ -211,6 +212,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::nanosecond_getter)
 
     // 3. Return 𝔽(dateTime.[[ISONanosecond]]).
     return Value(date_time->iso_nanosecond());
+}
+
+// 5.3.14 get Temporal.PlainDateTime.prototype.dayOfWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.dayofweek
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::day_of_week_getter)
+{
+    // 1. Let dateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
+    auto* date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be dateTime.[[Calendar]].
+    auto& calendar = date_time->calendar();
+
+    // 4. Return ? CalendarDayOfWeek(calendar, dateTime).
+    return calendar_day_of_week(global_object, calendar, *date_time);
 }
 
 // 5.3.35 Temporal.PlainDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.valueof
