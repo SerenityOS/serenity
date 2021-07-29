@@ -79,6 +79,11 @@ struct ucred {
     gid_t gid;
 };
 
+struct linger {
+    int l_onoff;
+    int l_linger;
+};
+
 #define SOL_SOCKET 1
 #define SOMAXCONN 128
 
@@ -95,6 +100,7 @@ enum {
     SO_KEEPALIVE,
     SO_TIMESTAMP,
     SO_BROADCAST,
+    SO_LINGER,
 };
 #define SO_RCVTIMEO SO_RCVTIMEO
 #define SO_SNDTIMEO SO_SNDTIMEO
@@ -108,6 +114,7 @@ enum {
 #define SO_BROADCAST SO_BROADCAST
 #define SO_SNDBUF SO_SNDBUF
 #define SO_RCVBUF SO_RCVBUF
+#define SO_LINGER SO_LINGER
 
 enum {
     SCM_TIMESTAMP,
