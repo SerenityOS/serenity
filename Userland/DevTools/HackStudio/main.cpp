@@ -70,8 +70,10 @@ int main(int argc, char** argv)
 
     s_window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         s_hack_studio_widget->locator().close();
-        if (s_hack_studio_widget->warn_unsaved_changes("There are unsaved changes, do you want to save before exiting?") == HackStudioWidget::ContinueDecision::Yes)
+        if (s_hack_studio_widget->warn_unsaved_changes("There are unsaved changes, do you want to save before exiting?") == HackStudioWidget::ContinueDecision::Yes) {
+            s_hack_studio_widget->close();
             return GUI::Window::CloseRequestDecision::Close;
+        }
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 

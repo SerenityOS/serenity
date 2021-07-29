@@ -1188,4 +1188,10 @@ void HackStudioWidget::update_gml_preview()
         m_gml_preview_dialog->load_gml(gml_content, filename);
 }
 
+void HackStudioWidget::close()
+{
+    if (m_gml_preview_dialog)
+        m_gml_preview_dialog->close();
+}
+
 }

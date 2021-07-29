@@ -45,6 +45,7 @@ public:
 
     const String& active_file() const { return m_current_editor_wrapper->filename(); }
     void initialize_menubar(GUI::Window&);
+    void close();
 
     Locator& locator()
     {
