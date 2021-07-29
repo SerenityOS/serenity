@@ -1,13 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=bash
-version=5.0
+version=5.1.8
 useconfigure=true
 configopts="--disable-nls --without-bash-malloc"
-files="https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz bash-${version}.tar.gz
-https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz.sig bash-${version}.tar.gz.sig
-https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
-auth_type="sig"
-auth_opts="--keyring ./gnu-keyring.gpg bash-${version}.tar.gz.sig"
+files="https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz bash-${version}.tar.gz 0cfb5c9bb1a29f800a97bd242d19511c997a1013815b805e0fdd32214113d6be"
+auth_type="sha256"
 
 build() {
     run_replace_in_file "s/define GETCWD_BROKEN 1/undef GETCWD_BROKEN/" config.h
