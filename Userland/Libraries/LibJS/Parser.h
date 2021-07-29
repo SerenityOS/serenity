@@ -159,8 +159,9 @@ private:
     bool match_secondary_expression(const Vector<TokenType>& forbidden = {}) const;
     bool match_statement() const;
     bool match_export_or_import() const;
-    bool match_declaration() const;
-    bool match_variable_declaration() const;
+    bool match_declaration();
+    bool try_match_let_declaration();
+    bool match_variable_declaration();
     bool match_identifier() const;
     bool match_identifier_name() const;
     bool match_property_key() const;
