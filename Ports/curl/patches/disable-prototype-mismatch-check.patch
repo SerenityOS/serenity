@@ -1,11 +1,9 @@
-diff -Nru curl-7.77.0/configure curl-7.77.0-patched/configure
---- curl-7.77.0/configure	2021-05-25 12:57:08.000000000 +0200
-+++ curl-7.77.0-patched/configure	2021-05-27 08:37:58.177939141 +0200
-@@ -19371,51 +19371,6 @@
- fi
+--- curl-7.78.0/configure	2021-07-19 13:47:17.000000000 +0100
++++ curl-7.78.0.serenity/configure	2021-07-29 23:44:57.345323249 +0100
+@@ -18920,48 +18920,6 @@
  rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
  
--
+ 
 -    { $as_echo "$as_me:${as_lineno-$LINENO}: checking if compiler halts on function prototype mismatch" >&5
 -$as_echo_n "checking if compiler halts on function prototype mismatch... " >&6; }
 -  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -48,15 +46,12 @@ diff -Nru curl-7.77.0/configure curl-7.77.0-patched/configure
 -
 -fi
 -rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
--
--
+ 
+ 
        { $as_echo "$as_me:${as_lineno-$LINENO}: checking if compiler supports hiding library internal symbols" >&5
- $as_echo_n "checking if compiler supports hiding library internal symbols... " >&6; }
-   supports_symbol_hiding="no"
-diff -Nru curl-7.77.0/configure.ac curl-7.77.0-patched/configure.ac
---- curl-7.77.0/configure.ac	2021-05-25 12:50:36.000000000 +0200
-+++ curl-7.77.0-patched/configure.ac	2021-05-27 08:37:16.162807155 +0200
-@@ -400,7 +400,6 @@
+--- curl-7.78.0/configure.ac	2021-07-19 08:19:57.000000000 +0100
++++ curl-7.78.0.serenity/configure.ac	2021-07-29 23:45:23.365054651 +0100
+@@ -402,7 +402,6 @@
  
  CURL_CHECK_COMPILER_HALT_ON_ERROR
  CURL_CHECK_COMPILER_ARRAY_SIZE_NEGATIVE
