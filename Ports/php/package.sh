@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=php
 useconfigure="true"
-version="8.0.6"
-files="https://www.php.net/distributions/php-${version}.tar.xz php-${version}.tar.xz e9871d3b6c391fe9e89f86f6334852dcc10eeaaa8d5565beb8436e7f0cf30e20"
+version="8.0.8"
+files="https://www.php.net/distributions/php-${version}.tar.xz php-${version}.tar.xz dc1668d324232dec1d05175ec752dade92d29bb3004275118bc3f7fc7cbfbb1c"
 auth_type=sha256
 depends="libiconv libxml2 openssl readline sqlite zlib"
 configopts="
@@ -15,7 +15,7 @@ configopts="
     --without-pcre-jit
 "
 
-export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/libxml2/"
+export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/libxml2"
 export LIBS="-ldl"
 export LIBXML_CFLAGS="y"
 export LIBXML_LIBS="-lxml2"
