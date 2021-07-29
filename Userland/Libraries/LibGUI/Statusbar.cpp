@@ -43,6 +43,7 @@ NonnullRefPtr<Label> Statusbar::create_label()
     label->set_frame_shape(Gfx::FrameShape::Panel);
     label->set_frame_thickness(1);
     label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    label->set_text_wrapping(Gfx::TextWrapping::DontWrap);
     return label;
 }
 
