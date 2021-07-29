@@ -2748,18 +2748,49 @@ bool Parser::match_export_or_import() const
         || type == TokenType::Import;
 }
 
-bool Parser::match_declaration() const
+bool Parser::match_declaration()
 {
     auto type = m_state.current_token.type();
+
+    if (type == TokenType::Let && !m_state.strict_mode) {
+        return try_match_let_declaration();
+    }
+
     return type == TokenType::Function
         || type == TokenType::Class
         || type == TokenType::Const
         || type == TokenType::Let;
 }
 
-bool Parser::match_variable_declaration() const
+bool Parser::try_match_let_declaration()
+{
+    VERIFY(m_state.current_token.type() == TokenType::Let);
+
+    save_state();
+
+    ScopeGuard state_rollback = [&] {
+        load_state();
+    };
+
+    consume(TokenType::Let);
+
+    if (match_identifier_name() && m_state.current_token.value() != "in"sv)
+        return true;
+
+    if (match(TokenType::CurlyOpen) || match(TokenType::BracketOpen))
+        return true;
+
+    return false;
+}
+
+bool Parser::match_variable_declaration()
 {
     auto type = m_state.current_token.type();
+
+    if (type == TokenType::Let && !m_state.strict_mode) {
+        return try_match_let_declaration();
+    }
+
     return type == TokenType::Var
         || type == TokenType::Let
         || type == TokenType::Const;
