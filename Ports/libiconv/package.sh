@@ -3,12 +3,8 @@ port=libiconv
 version=1.16
 useconfigure=true
 configopts="--enable-shared --disable-nls"
-files="https://ftpmirror.gnu.org/gnu/libiconv/libiconv-${version}.tar.gz libiconv-${version}.tar.gz
-https://ftpmirror.gnu.org/gnu/libiconv/libiconv-${version}.tar.gz.sig libiconv-${version}.tar.gz.sig
-https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
-
-auth_type="sig"
-auth_opts="--keyring ./gnu-keyring.gpg libiconv-${version}.tar.gz.sig"
+files="https://ftpmirror.gnu.org/gnu/libiconv/libiconv-${version}.tar.gz libiconv-${version}.tar.gz e6a1b1b589654277ee790cce3734f07876ac4ccfaecbee8afa0b649cf529cc04"
+auth_type="sha256"
 
 install() {
     run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
