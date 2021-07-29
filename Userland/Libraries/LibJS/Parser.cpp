@@ -400,6 +400,10 @@ NonnullRefPtr<Statement> Parser::parse_statement(AllowLabelledFunction allow_lab
     case TokenType::Semicolon:
         consume();
         return create_ast_node<EmptyStatement>({ m_state.current_token.filename(), rule_start.position(), position() });
+    case TokenType::Slash:
+    case TokenType::SlashEquals:
+        m_state.current_token = m_state.lexer.force_slash_as_regex();
+        [[fallthrough]];
     default:
         if (match_identifier_name()) {
             auto result = try_parse_labelled_statement(allow_labelled_function);
@@ -2556,6 +2560,8 @@ bool Parser::match_expression() const
         || type == TokenType::This
         || type == TokenType::Super
         || type == TokenType::RegexLiteral
+        || type == TokenType::Slash       // Wrongly recognized regex by lexer
+        || type == TokenType::SlashEquals // Wrongly recognized regex by lexer (/=a/ is a valid regex)
         || type == TokenType::Yield
         || match_unary_prefixed_expression();
 }
