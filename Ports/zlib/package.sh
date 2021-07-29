@@ -2,12 +2,8 @@
 port=zlib
 version=1.2.11
 useconfigure=true
-files="https://www.zlib.net/zlib-${version}.tar.gz zlib-${version}.tar.gz
-https://www.zlib.net/zlib-${version}.tar.gz.asc zlib-${version}.tar.gz.asc"
-
-auth_type="sig"
-auth_import_key="783FCD8E58BCAFBA"
-auth_opts="zlib-${version}.tar.gz.asc"
+files="https://www.zlib.net/zlib-${version}.tar.gz zlib-${version}.tar.gz c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1"
+auth_type="sha256"
 
 configure() {
     run ./configure
