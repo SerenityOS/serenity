@@ -301,7 +301,7 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
             }
         }
         if (data.prop_list.is_empty())
-            data.prop_list.append("None"sv);
+            data.prop_list.append("Assigned"sv);
 
         for (auto const& property : unicode_data.word_break_prop_list) {
             for (auto const& range : property.value) {
@@ -411,7 +411,7 @@ namespace Unicode {
     generate_enum("Locale"sv, "None"sv, move(unicode_data.locales));
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
     generate_enum("GeneralCategory"sv, {}, move(unicode_data.general_categories));
-    generate_enum("Property"sv, "None"sv, unicode_data.prop_list.keys(), move(unicode_data.prop_aliases), true);
+    generate_enum("Property"sv, "Assigned"sv, unicode_data.prop_list.keys(), move(unicode_data.prop_aliases), true);
     generate_enum("WordBreakProperty"sv, "Other"sv, unicode_data.word_break_prop_list.keys());
 
     generator.append(R"~~~(
@@ -465,7 +465,7 @@ struct UnicodeData {
     SpecialCasing const* special_casing[@special_casing_size@] {};
     u32 special_casing_size { 0 };
 
-    Property properties { Property::None };
+    Property properties { Property::Assigned };
     WordBreakProperty word_break_property { WordBreakProperty::Other };
 };
 
@@ -680,6 +680,15 @@ int main(int argc, char** argv)
     parse_prop_list(derived_core_prop_file, unicode_data.prop_list);
     parse_alias_list(prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases);
     parse_prop_list(word_break_file, unicode_data.word_break_prop_list);
+
+    // The Unicode standard defines additional properties (Any, Assigned, ASCII) which are not in
+    // any UCD file. Assigned is set as the default enum value 0 so "property & Assigned == Assigned"
+    // is always true. Any is not assigned code points here because this file only parses assigned
+    // code points, whereas Any will include unassigned code points.
+    // https://unicode.org/reports/tr18/#General_Category_Property
+    unicode_data.prop_list.set("Any"sv, {});
+    unicode_data.prop_list.set("ASCII"sv, { { 0, 0, 0x7f } });
+
     parse_unicode_data(unicode_data_file, unicode_data);
 
     if (generate_header)
