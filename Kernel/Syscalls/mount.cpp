@@ -8,6 +8,7 @@
 #include <Kernel/FileSystem/DevFS.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
+#include <Kernel/FileSystem/ISO9660FileSystem.h>
 #include <Kernel/FileSystem/Plan9FileSystem.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/FileSystem/SysFS.h>
@@ -98,6 +99,21 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
         fs = SysFS::create();
     } else if (fs_type == "tmp"sv || fs_type == "TmpFS"sv) {
         fs = TmpFS::create();
+    } else if (fs_type == "iso9660"sv || fs_type == "ISO9660FS"sv) {
+        if (description.is_null())
+            return EBADF;
+        if (!description->file().is_seekable()) {
+            dbgln("mount: this is not a seekable file");
+            return ENODEV;
+        }
+
+        dbgln("mount: attempting to mount {} on {}", description->absolute_path(), target);
+
+        auto maybe_fs = ISO9660FS::try_create(*description);
+        if (maybe_fs.is_error()) {
+            return maybe_fs.error();
+        }
+        fs = maybe_fs.release_value();
     } else {
         return ENODEV;
     }

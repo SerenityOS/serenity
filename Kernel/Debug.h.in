@@ -126,6 +126,14 @@
 #cmakedefine01 IO_DEBUG
 #endif
 
+#ifndef ISO9660_DEBUG
+#cmakedefine01 ISO9660_DEBUG
+#endif
+
+#ifndef ISO9660_VERY_DEBUG
+#cmakedefine01 ISO9660_VERY_DEBUG
+#endif
+
 #ifndef IPV4_DEBUG
 #cmakedefine01 IPV4_DEBUG
 #endif
