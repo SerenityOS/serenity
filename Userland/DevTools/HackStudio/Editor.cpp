@@ -29,9 +29,11 @@
 #include <LibGUI/Window.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
+#include <LibSQL/AST/SyntaxHighlighter.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
+#include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <Shell/SyntaxHighlighter.h>
 #include <fcntl.h>
@@ -597,6 +599,9 @@ void Editor::set_syntax_highlighter_for(const CodeDocument& document)
     case Language::GML:
         set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
         break;
+    case Language::HTML:
+        set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
+        break;
     case Language::JavaScript:
         set_syntax_highlighter(make<JS::SyntaxHighlighter>());
         break;
@@ -605,6 +610,9 @@ void Editor::set_syntax_highlighter_for(const CodeDocument& document)
         break;
     case Language::Shell:
         set_syntax_highlighter(make<Shell::SyntaxHighlighter>());
+        break;
+    case Language::SQL:
+        set_syntax_highlighter(make<SQL::AST::SyntaxHighlighter>());
         break;
     default:
         set_syntax_highlighter({});
