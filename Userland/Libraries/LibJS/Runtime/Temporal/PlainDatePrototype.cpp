@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -41,6 +42,7 @@ void PlainDatePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.inLeapYear, in_leap_year_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
@@ -262,6 +264,34 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::in_leap_year_getter)
 
     // 4. Return ? CalendarInLeapYear(calendar, temporalDate).
     return Value(calendar_in_leap_year(global_object, calendar, *temporal_date));
+}
+
+// 3.3.18 Temporal.PlainDate.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.getisofields
+JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::get_iso_fields)
+{
+    // 1. Let temporalDate be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
+    auto* temporal_date = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let fields be ! OrdinaryObjectCreate(%Object.prototype%).
+    auto* fields = Object::create(global_object, global_object.object_prototype());
+
+    // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", temporalDate.[[Calendar]]).
+    fields->create_data_property_or_throw(vm.names.calendar, Value(&temporal_date->calendar()));
+
+    // 5. Perform ! CreateDataPropertyOrThrow(fields, "isoDay", 𝔽(temporalDate.[[ISODay]])).
+    fields->create_data_property_or_throw(vm.names.isoDay, Value(temporal_date->iso_day()));
+
+    // 6. Perform ! CreateDataPropertyOrThrow(fields, "isoMonth", 𝔽(temporalDate.[[ISOMonth]])).
+    fields->create_data_property_or_throw(vm.names.isoMonth, Value(temporal_date->iso_month()));
+
+    // 7. Perform ! CreateDataPropertyOrThrow(fields, "isoYear", 𝔽(temporalDate.[[ISOYear]])).
+    fields->create_data_property_or_throw(vm.names.isoYear, Value(temporal_date->iso_year()));
+
+    // 8. Return fields.
+    return fields;
 }
 
 // 3.3.22 Temporal.PlainDate.prototype.withCalendar ( calendar ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.withcalendar
