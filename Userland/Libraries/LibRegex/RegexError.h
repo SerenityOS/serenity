@@ -34,6 +34,7 @@ enum class Error : u8 {
     EmptySubExpression = __Regex_EmptySubExpression,                 // Sub expression has empty content.
     InvalidCaptureGroup = __Regex_InvalidCaptureGroup,               // Content of capture group is invalid.
     InvalidNameForCaptureGroup = __Regex_InvalidNameForCaptureGroup, // Name of capture group is invalid.
+    InvalidNameForProperty = __Regex_InvalidNameForProperty,         // Name of property is invalid.
 };
 
 inline String get_error_string(Error error)
@@ -73,6 +74,8 @@ inline String get_error_string(Error error)
         return "Content of capture group is invalid.";
     case Error::InvalidNameForCaptureGroup:
         return "Name of capture group is invalid.";
+    case Error::InvalidNameForProperty:
+        return "Name of property is invalid.";
     }
     return "Undefined error.";
 }

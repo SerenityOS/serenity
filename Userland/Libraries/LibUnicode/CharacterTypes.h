@@ -23,5 +23,6 @@ String to_unicode_uppercase_full(StringView const&);
 
 Optional<Property> property_from_string(StringView const&);
 bool code_point_has_property(u32 code_point, Property property);
+bool is_ecma262_property(Property);
 
 }

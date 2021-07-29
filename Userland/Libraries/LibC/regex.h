@@ -37,6 +37,7 @@ enum __Regex_Error {
     __Regex_EmptySubExpression,         // Sub expression has empty content.
     __Regex_InvalidCaptureGroup,        // Content of capture group is invalid.
     __Regex_InvalidNameForCaptureGroup, // Name of capture group is invalid.
+    __Regex_InvalidNameForProperty,     // Name of property is invalid.
 };
 
 enum ReError {
