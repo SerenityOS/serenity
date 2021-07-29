@@ -27,6 +27,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(microsecond_getter);
     JS_DECLARE_NATIVE_FUNCTION(nanosecond_getter);
     JS_DECLARE_NATIVE_FUNCTION(to_plain_date_time);
+    JS_DECLARE_NATIVE_FUNCTION(get_iso_fields);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
 };
 

@@ -38,6 +38,7 @@ void PlainTimePrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.toPlainDateTime, to_plain_date_time, 1, attr);
+    define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
@@ -161,6 +162,43 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_plain_date_time)
 
     // 4. Return ? CreateTemporalDateTime(temporalDate.[[ISOYear]], temporalDate.[[ISOMonth]], temporalDate.[[ISODay]], temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], temporalDate.[[Calendar]]).
     return create_temporal_date_time(global_object, temporal_date->iso_year(), temporal_date->iso_month(), temporal_date->iso_day(), temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), temporal_date->calendar());
+}
+
+// 4.3.19 Temporal.PlainTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.getisofields
+JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::get_iso_fields)
+{
+    // 1. Let temporalTime be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
+    auto* temporal_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let fields be ! OrdinaryObjectCreate(%Object.prototype%).
+    auto* fields = Object::create(global_object, global_object.object_prototype());
+
+    // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", temporalTime.[[Calendar]]).
+    fields->create_data_property_or_throw(vm.names.calendar, Value(&temporal_time->calendar()));
+
+    // 5. Perform ! CreateDataPropertyOrThrow(fields, "isoHour", 𝔽(temporalTime.[[ISOHour]])).
+    fields->create_data_property_or_throw(vm.names.isoHour, Value(temporal_time->iso_hour()));
+
+    // 6. Perform ! CreateDataPropertyOrThrow(fields, "isoMicrosecond", 𝔽(temporalTime.[[ISOMicrosecond]])).
+    fields->create_data_property_or_throw(vm.names.isoMicrosecond, Value(temporal_time->iso_microsecond()));
+
+    // 7. Perform ! CreateDataPropertyOrThrow(fields, "isoMillisecond", 𝔽(temporalTime.[[ISOMillisecond]])).
+    fields->create_data_property_or_throw(vm.names.isoMillisecond, Value(temporal_time->iso_millisecond()));
+
+    // 8. Perform ! CreateDataPropertyOrThrow(fields, "isoMinute", 𝔽(temporalTime.[[ISOMinute]])).
+    fields->create_data_property_or_throw(vm.names.isoMinute, Value(temporal_time->iso_minute()));
+
+    // 9. Perform ! CreateDataPropertyOrThrow(fields, "isoNanosecond", 𝔽(temporalTime.[[ISONanosecond]])).
+    fields->create_data_property_or_throw(vm.names.isoNanosecond, Value(temporal_time->iso_nanosecond()));
+
+    // 10. Perform ! CreateDataPropertyOrThrow(fields, "isoSecond", 𝔽(temporalTime.[[ISOSecond]])).
+    fields->create_data_property_or_throw(vm.names.isoSecond, Value(temporal_time->iso_second()));
+
+    // 11. Return fields.
+    return fields;
 }
 
 // 4.3.23 Temporal.PlainTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.valueof
