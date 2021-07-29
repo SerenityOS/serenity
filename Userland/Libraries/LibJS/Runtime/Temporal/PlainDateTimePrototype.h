@@ -24,6 +24,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(month_getter);
     JS_DECLARE_NATIVE_FUNCTION(month_code_getter);
     JS_DECLARE_NATIVE_FUNCTION(day_getter);
+    JS_DECLARE_NATIVE_FUNCTION(hour_getter);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
     JS_DECLARE_NATIVE_FUNCTION(to_plain_date);
     JS_DECLARE_NATIVE_FUNCTION(get_iso_fields);
