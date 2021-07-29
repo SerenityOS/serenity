@@ -12,6 +12,8 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/TemporaryChange.h>
+#include <LibJS/Runtime/RegExpObject.h>
+#include <LibRegex/Regex.h>
 
 namespace JS {
 
@@ -848,21 +850,29 @@ NonnullRefPtr<RegExpLiteral> Parser::parse_regexp_literal()
     auto pattern = consume().value();
     // Remove leading and trailing slash.
     pattern = pattern.substring_view(1, pattern.length() - 2);
+
     auto flags = String::empty();
+    auto parsed_flags = RegExpObject::default_flags;
+
     if (match(TokenType::RegexFlags)) {
         auto flags_start = position();
         flags = consume().value();
-        HashTable<char> seen_flags;
-        for (size_t i = 0; i < flags.length(); ++i) {
-            auto flag = flags.substring_view(i, 1);
-            if (!flag.is_one_of("d", "g", "i", "m", "s", "u", "y"))
-                syntax_error(String::formatted("Invalid RegExp flag '{}'", flag), Position { flags_start.line, flags_start.column + i });
-            if (seen_flags.contains(*flag.characters_without_null_termination()))
-                syntax_error(String::formatted("Repeated RegExp flag '{}'", flag), Position { flags_start.line, flags_start.column + i });
-            seen_flags.set(*flag.characters_without_null_termination());
-        }
+
+        auto parsed_flags_or_error = regex_flags_from_string(flags);
+        if (parsed_flags_or_error.is_error())
+            syntax_error(parsed_flags_or_error.release_error(), flags_start);
+        else
+            parsed_flags = parsed_flags_or_error.release_value();
     }
-    return create_ast_node<RegExpLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, pattern, flags);
+
+    auto parsed_pattern = parse_regex_pattern(pattern, parsed_flags.has_flag_set(ECMAScriptFlags::Unicode));
+    auto parsed_regex = Regex<ECMA262>::parse_pattern(parsed_pattern, parsed_flags);
+
+    if (parsed_regex.error != regex::Error::NoError)
+        syntax_error(String::formatted("RegExp compile error: {}", Regex<ECMA262>(parsed_regex, parsed_pattern, parsed_flags).error_string()), rule_start.position());
+
+    SourceRange range { m_state.current_token.filename(), rule_start.position(), position() };
+    return create_ast_node<RegExpLiteral>(move(range), move(parsed_regex), move(parsed_pattern), move(parsed_flags), pattern.to_string(), move(flags));
 }
 
 NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()

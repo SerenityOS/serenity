@@ -19,6 +19,7 @@
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/SourceRange.h>
+#include <LibRegex/Regex.h>
 
 namespace JS {
 
@@ -758,8 +759,11 @@ public:
 
 class RegExpLiteral final : public Literal {
 public:
-    explicit RegExpLiteral(SourceRange source_range, String pattern, String flags)
+    RegExpLiteral(SourceRange source_range, regex::Parser::Result parsed_regex, String parsed_pattern, regex::RegexOptions<ECMAScriptFlags> parsed_flags, String pattern, String flags)
         : Literal(source_range)
+        , m_parsed_regex(move(parsed_regex))
+        , m_parsed_pattern(move(parsed_pattern))
+        , m_parsed_flags(move(parsed_flags))
         , m_pattern(move(pattern))
         , m_flags(move(flags))
     {
@@ -769,10 +773,16 @@ public:
     virtual void dump(int indent) const override;
     virtual void generate_bytecode(Bytecode::Generator&) const override;
 
+    regex::Parser::Result const& parsed_regex() const { return m_parsed_regex; }
+    String const& parsed_pattern() const { return m_parsed_pattern; }
+    regex::RegexOptions<ECMAScriptFlags> const& parsed_flags() const { return m_parsed_flags; }
     String const& pattern() const { return m_pattern; }
     String const& flags() const { return m_flags; }
 
 private:
+    regex::Parser::Result m_parsed_regex;
+    String m_parsed_pattern;
+    regex::RegexOptions<ECMAScriptFlags> m_parsed_flags;
     String m_pattern;
     String m_flags;
 };

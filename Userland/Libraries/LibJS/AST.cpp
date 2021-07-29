@@ -2020,7 +2020,9 @@ void RegExpLiteral::dump(int indent) const
 Value RegExpLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return regexp_create(global_object, js_string(interpreter.heap(), pattern()), js_string(interpreter.heap(), flags()));
+
+    Regex<ECMA262> regex(parsed_regex(), parsed_pattern(), parsed_flags());
+    return RegExpObject::create(global_object, move(regex), pattern(), flags());
 }
 
 void ArrayExpression::dump(int indent) const

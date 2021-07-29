@@ -52,3 +52,11 @@ test("regexp object as pattern parameter", () => {
     expect(RegExp(regex_like_object_with_flags, "").toString()).toBe("/foo/");
     expect(RegExp(regex_like_object_with_flags, "y").toString()).toBe("/foo/y");
 });
+
+test("regexp literals are re-useable", () => {
+    for (var i = 0; i < 2; ++i) {
+        const re = /test/;
+        expect(re.test("te")).toBeFalse();
+        expect(re.test("test")).toBeTrue();
+    }
+});
