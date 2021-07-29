@@ -32,6 +32,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(nanosecond_getter);
     JS_DECLARE_NATIVE_FUNCTION(day_of_week_getter);
     JS_DECLARE_NATIVE_FUNCTION(day_of_year_getter);
+    JS_DECLARE_NATIVE_FUNCTION(week_of_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(value_of);
     JS_DECLARE_NATIVE_FUNCTION(to_plain_date);
     JS_DECLARE_NATIVE_FUNCTION(get_iso_fields);
