@@ -7,4 +7,4 @@ set(SOURCES
 )
 
 serenity_lib(LibRegex regex)
-target_link_libraries(LibRegex LibC LibCore)
+target_link_libraries(LibRegex LibC LibCore LibUnicode)

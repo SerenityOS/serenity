@@ -12,6 +12,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <AK/Utf16View.h>
+#include <LibUnicode/CharacterTypes.h>
 
 namespace regex {
 
@@ -1238,12 +1239,12 @@ bool ECMA262Parser::parse_atom(ByteCode& stack, size_t& match_length_minimum, bo
 
     if (match(TokenType::LeftBracket)) {
         // Character class.
-        return parse_character_class(stack, match_length_minimum, unicode && !m_should_use_browser_extended_grammar, named);
+        return parse_character_class(stack, match_length_minimum, unicode, named);
     }
 
     if (match(TokenType::LeftParen)) {
         // Non-capturing group, or a capture group.
-        return parse_capture_group(stack, match_length_minimum, unicode && !m_should_use_browser_extended_grammar, named);
+        return parse_capture_group(stack, match_length_minimum, unicode, named);
     }
 
     if (match(TokenType::Period)) {
@@ -1541,13 +1542,14 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     if (unicode) {
-        if (try_skip("p{")) {
-            // FIXME: Implement this path, Unicode property match.
-            TODO();
-        }
-        if (try_skip("P{")) {
-            // FIXME: Implement this path, Unicode property match.
-            TODO();
+        Unicode::Property property {};
+        bool negated = false;
+
+        if (parse_unicode_property_escape(property, negated)) {
+            if (negated)
+                stack.insert_bytecode_compare_values({ { CharacterCompareType::Inverse, 0 } });
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Property, (ByteCodeValueType)(property) } });
+            return true;
         }
     }
 
@@ -1692,10 +1694,12 @@ struct CharClassRangeElement {
     union {
         CharClass character_class;
         u32 code_point { 0 };
+        Unicode::Property property;
     };
 
     bool is_negated { false };
     bool is_character_class { false };
+    bool is_property_escape { false };
 };
 
 bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>& ranges, bool unicode)
@@ -1779,11 +1783,11 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             if (unicode) {
                 if (try_skip("-"))
                     return { CharClassRangeElement { .code_point = '-', .is_character_class = false } };
-            }
 
-            if (try_skip("p{") || try_skip("P{")) {
-                // FIXME: Implement these; unicode properties.
-                TODO();
+                Unicode::Property property {};
+                bool negated = false;
+                if (parse_unicode_property_escape(property, negated))
+                    return { CharClassRangeElement { .property = property, .is_negated = negated, .is_character_class = true, .is_property_escape = true } };
             }
 
             if (try_skip("d"))
@@ -1820,6 +1824,20 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
         return read_class_atom_no_dash();
     };
 
+    auto empend_atom = [&](auto& atom) {
+        if (atom.is_character_class) {
+            if (atom.is_negated)
+                ranges.empend(CompareTypeAndValuePair { CharacterCompareType::TemporaryInverse, 0 });
+            if (atom.is_property_escape)
+                ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Property, (ByteCodeValueType)(atom.property) });
+            else
+                ranges.empend(CompareTypeAndValuePair { CharacterCompareType::CharClass, (ByteCodeValueType)atom.character_class });
+        } else {
+            VERIFY(!atom.is_negated);
+            ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Char, atom.code_point });
+        }
+    };
+
     while (!match(TokenType::RightBracket)) {
         if (match(TokenType::Eof)) {
             set_error(Error::MismatchingBracket);
@@ -1848,18 +1866,11 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                         set_error(Error::InvalidRange);
                         return false;
                     }
+
                     // CharacterRangeOrUnion > !Unicode > CharClass
-                    if (first_atom->is_character_class)
-                        ranges.empend(CompareTypeAndValuePair { CharacterCompareType::CharClass, (ByteCodeValueType)first_atom->character_class });
-                    else
-                        ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Char, (ByteCodeValueType)first_atom->code_point });
-
+                    empend_atom(*first_atom);
                     ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Char, (ByteCodeValueType)'-' });
-
-                    if (second_atom->is_character_class)
-                        ranges.empend(CompareTypeAndValuePair { CharacterCompareType::CharClass, (ByteCodeValueType)second_atom->character_class });
-                    else
-                        ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Char, (ByteCodeValueType)second_atom->code_point });
+                    empend_atom(*second_atom);
                     continue;
                 } else {
                     set_error(Error::InvalidRange);
@@ -1882,19 +1893,37 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
     read_as_single_atom:;
 
         auto atom = first_atom.value();
-
-        if (atom.is_character_class) {
-            if (atom.is_negated)
-                ranges.empend(CompareTypeAndValuePair { CharacterCompareType::TemporaryInverse, 0 });
-            ranges.empend(CompareTypeAndValuePair { CharacterCompareType::CharClass, (ByteCodeValueType)first_atom.value().character_class });
-        } else {
-            VERIFY(!atom.is_negated);
-            ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Char, first_atom.value().code_point });
-        }
+        empend_atom(atom);
     }
 
     consume(TokenType::RightBracket, Error::MismatchingBracket);
 
+    return true;
+}
+
+bool ECMA262Parser::parse_unicode_property_escape(Unicode::Property& property, bool& negated)
+{
+    negated = false;
+
+    if (try_skip("p"))
+        negated = false;
+    else if (try_skip("P"))
+        negated = true;
+    else
+        return false;
+
+    auto parsed_property = read_unicode_property_escape();
+    if (!parsed_property.has_value()) {
+        set_error(Error::InvalidNameForProperty);
+        return false;
+    }
+
+    if (!Unicode::is_ecma262_property(*parsed_property)) {
+        set_error(Error::InvalidNameForProperty);
+        return false;
+    }
+
+    property = *parsed_property;
     return true;
 }
 
@@ -1917,6 +1946,24 @@ StringView ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_
         set_error(Error::InvalidNameForCaptureGroup);
 
     return name;
+}
+
+Optional<Unicode::Property> ECMA262Parser::read_unicode_property_escape()
+{
+    consume(TokenType::LeftCurly, Error::InvalidPattern);
+
+    auto start_token = m_parser_state.current_token;
+    size_t offset = 0;
+    while (match(TokenType::Char)) {
+        if (m_parser_state.current_token.value() == "}")
+            break;
+        offset += consume().value().length();
+    }
+
+    consume(TokenType::RightCurly, Error::InvalidPattern);
+
+    StringView property_name { start_token.value().characters_without_null_termination(), offset };
+    return Unicode::property_from_string(property_name);
 }
 
 bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)

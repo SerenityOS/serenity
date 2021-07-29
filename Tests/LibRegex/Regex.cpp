@@ -515,6 +515,13 @@ TEST_CASE(ECMA262_parse)
         { "\\u{10ffff", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
         { "\\u{10ffffx", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
         { "\\u{110000}", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\p", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\p{", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\p{}", regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
+        { "\\p{AsCiI}", regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
+        { "\\p{hello friends}", regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
+        { "\\p{Prepended_Concatenation_Mark}", regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
+        { "\\p{ASCII}", regex::Error::NoError, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
@@ -617,6 +624,47 @@ TEST_CASE(ECMA262_unicode_match)
 
     for (auto& test : tests) {
         Regex<ECMA262> re(test.pattern, (ECMAScriptFlags)regex::AllFlags::Global | test.options);
+
+        auto subject = AK::utf8_to_utf16(test.subject);
+        Utf16View view { subject };
+
+        if constexpr (REGEX_DEBUG) {
+            dbgln("\n");
+            RegexDebug regex_dbg(stderr);
+            regex_dbg.print_raw_bytecode(re);
+            regex_dbg.print_header();
+            regex_dbg.print_bytecode(re);
+            dbgln("\n");
+        }
+
+        EXPECT_EQ(re.parser_result.error, Error::NoError);
+        EXPECT_EQ(re.match(view).success, test.matches);
+    }
+}
+
+TEST_CASE(ECMA262_property_match)
+{
+    struct _test {
+        char const* pattern;
+        char const* subject;
+        bool matches { true };
+        ECMAScriptFlags options {};
+    };
+
+    constexpr _test tests[] {
+        { "\\p{ASCII}", "a", false },
+        { "\\p{ASCII}", "p{ASCII}", true },
+        { "\\p{ASCII}", "a", true, ECMAScriptFlags::Unicode },
+        { "\\p{ASCII}", "😀", false, ECMAScriptFlags::Unicode },
+        { "\\p{ASCII_Hex_Digit}", "1", true, ECMAScriptFlags::Unicode },
+        { "\\p{ASCII_Hex_Digit}", "a", true, ECMAScriptFlags::Unicode },
+        { "\\p{ASCII_Hex_Digit}", "x", false, ECMAScriptFlags::Unicode },
+        { "\\p{Any}", "\xcd\xb8", true, ECMAScriptFlags::Unicode },       // U+0378, which is an unassigned code point.
+        { "\\p{Assigned}", "\xcd\xb8", false, ECMAScriptFlags::Unicode }, // U+0378, which is an unassigned code point.
+    };
+
+    for (auto& test : tests) {
+        Regex<ECMA262> re(test.pattern, (ECMAScriptFlags)regex::AllFlags::Global | regex::ECMAScriptFlags::BrowserExtended | test.options);
 
         auto subject = AK::utf8_to_utf16(test.subject);
         Utf16View view { subject };

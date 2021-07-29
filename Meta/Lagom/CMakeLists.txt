@@ -319,6 +319,7 @@ if (BUILD_LAGOM)
     file(GLOB LIBREGEX_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibRegex/*.cpp")
     lagom_lib(Regex regex
         SOURCES ${LIBREGEX_SOURCES} ${LIBREGEX_LIBC_SOURCES}
+        LIBS LagomUnicode
     )
 
     # Shell
