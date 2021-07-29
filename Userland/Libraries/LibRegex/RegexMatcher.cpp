@@ -19,22 +19,45 @@ static RegexDebug s_regex_dbg(stderr);
 #endif
 
 template<class Parser>
-Regex<Parser>::Regex(StringView pattern, typename ParserTraits<Parser>::OptionsType regex_options)
+Regex<Parser>::Regex(String pattern, typename ParserTraits<Parser>::OptionsType regex_options)
+    : pattern_value(move(pattern))
 {
-    pattern_value = pattern.to_string();
-    regex::Lexer lexer(pattern);
+    regex::Lexer lexer(pattern_value);
 
     Parser parser(lexer, regex_options);
     parser_result = parser.parse();
 
     if (parser_result.error == regex::Error::NoError)
-        matcher = make<Matcher<Parser>>(*this, regex_options);
+        matcher = make<Matcher<Parser>>(this, regex_options);
+}
+
+template<class Parser>
+Regex<Parser>::Regex(Regex&& regex)
+    : pattern_value(move(regex.pattern_value))
+    , parser_result(move(regex.parser_result))
+    , matcher(move(regex.matcher))
+    , start_offset(regex.start_offset)
+{
+    if (matcher)
+        matcher->reset_pattern({}, this);
+}
+
+template<class Parser>
+Regex<Parser>& Regex<Parser>::operator=(Regex&& regex)
+{
+    pattern_value = move(regex.pattern_value);
+    parser_result = move(regex.parser_result);
+    matcher = move(regex.matcher);
+    if (matcher)
+        matcher->reset_pattern({}, this);
+    start_offset = regex.start_offset;
+    return *this;
 }
 
 template<class Parser>
 typename ParserTraits<Parser>::OptionsType Regex<Parser>::options() const
 {
-    if (parser_result.error != Error::NoError)
+    if (!matcher || parser_result.error != Error::NoError)
         return {};
 
     return matcher->options();
@@ -71,7 +94,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
 {
     // If the pattern *itself* isn't stateful, reset any changes to start_offset.
     if (!((AllFlags)m_regex_options.value() & AllFlags::Internal_Stateful))
-        m_pattern.start_offset = 0;
+        m_pattern->start_offset = 0;
 
     size_t match_count { 0 };
 
@@ -80,7 +103,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
     MatchOutput output;
 
     input.regex_options = m_regex_options | regex_options.value_or({}).value();
-    input.start_offset = m_pattern.start_offset;
+    input.start_offset = m_pattern->start_offset;
     output.operations = 0;
     size_t lines_to_skip = 0;
 
@@ -107,8 +130,8 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
         state.capture_group_matches.ensure_capacity(c_match_preallocation_count);
         state.named_capture_group_matches.ensure_capacity(c_match_preallocation_count);
 
-        auto& capture_groups_count = m_pattern.parser_result.capture_groups_count;
-        auto& named_capture_groups_count = m_pattern.parser_result.named_capture_groups_count;
+        auto& capture_groups_count = m_pattern->parser_result.capture_groups_count;
+        auto& named_capture_groups_count = m_pattern->parser_result.named_capture_groups_count;
 
         for (size_t j = 0; j < c_match_preallocation_count; ++j) {
             state.matches.empend();
@@ -152,11 +175,11 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
         dbgln_if(REGEX_DEBUG, "[match] Starting match with view ({}): _{}_", view.length(), view);
 
         auto view_length = view.length();
-        size_t view_index = m_pattern.start_offset;
+        size_t view_index = m_pattern->start_offset;
         state.string_position = view_index;
         bool succeeded = false;
 
-        if (view_index == view_length && m_pattern.parser_result.match_length_minimum == 0) {
+        if (view_index == view_length && m_pattern->parser_result.match_length_minimum == 0) {
             // Run the code until it tries to consume something.
             // This allows non-consuming code to run on empty strings, for instance
             // e.g. "Exit"
@@ -183,7 +206,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
         }
 
         for (; view_index < view_length; ++view_index) {
-            auto& match_length_minimum = m_pattern.parser_result.match_length_minimum;
+            auto& match_length_minimum = m_pattern->parser_result.match_length_minimum;
             // FIXME: More performant would be to know the remaining minimum string
             //        length needed to match from the current position onwards within
             //        the vm. Add new OpCode for MinMatchLengthFromSp with the value of
@@ -249,7 +272,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
         input.global_offset += view.length() + 1; // +1 includes the line break character
 
         if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
-            m_pattern.start_offset = state.string_position;
+            m_pattern->start_offset = state.string_position;
 
         if (succeeded && !continue_search)
             break;
@@ -262,7 +285,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
         if (output_copy.capture_group_matches.size() < match_count)
             output_copy.capture_group_matches.resize(match_count);
         for (auto& matches : output_copy.capture_group_matches)
-            matches.resize(m_pattern.parser_result.capture_groups_count + 1);
+            matches.resize(m_pattern->parser_result.capture_groups_count + 1);
         if (!input.regex_options.has_flag_set(AllFlags::SkipTrimEmptyMatches)) {
             for (auto& matches : output_copy.capture_group_matches)
                 matches.template remove_all_matching([](auto& match) { return match.view.is_null(); });
@@ -286,8 +309,8 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
         move(output_copy.capture_group_matches),
         move(output_copy.named_capture_group_matches),
         output.operations,
-        m_pattern.parser_result.capture_groups_count,
-        m_pattern.parser_result.named_capture_groups_count,
+        m_pattern->parser_result.capture_groups_count,
+        m_pattern->parser_result.named_capture_groups_count,
     };
 }
 
@@ -301,7 +324,7 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
     MatchState fork_high_prio_state;
     Optional<bool> success;
 
-    auto& bytecode = m_pattern.parser_result.bytecode;
+    auto& bytecode = m_pattern->parser_result.bytecode;
 
     for (;;) {
         ++output.operations;
