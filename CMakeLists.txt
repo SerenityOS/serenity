@@ -175,6 +175,7 @@ else()
     set(CMAKE_STRIP ${TOOLCHAIN_PREFIX}strip)
     set(CMAKE_AR ${TOOLCHAIN_PREFIX}gcc-ar)
     set(CMAKE_OBJCOPY ${TOOLCHAIN_PREFIX}objcopy)
+    set(CMAKE_CXXFILT ${TOOLCHAIN_PREFIX}c++filt)
 endif()
 
 foreach(lang ASM C CXX OBJC OBJCXX)

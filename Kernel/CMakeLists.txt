@@ -451,7 +451,7 @@ add_dependencies(Kernel kernel_heap)
 
 add_custom_command(
     TARGET Kernel POST_BUILD
-    COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
+    COMMAND ${CMAKE_COMMAND} -E env CXXFILT=${CMAKE_CXXFILT} sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
     COMMAND ${CMAKE_COMMAND} -E env OBJCOPY=${CMAKE_OBJCOPY} sh ${CMAKE_CURRENT_SOURCE_DIR}/embedmap.sh
     COMMAND ${CMAKE_OBJCOPY} --only-keep-debug Kernel Kernel.debug
     COMMAND ${CMAKE_OBJCOPY} --strip-debug Kernel
