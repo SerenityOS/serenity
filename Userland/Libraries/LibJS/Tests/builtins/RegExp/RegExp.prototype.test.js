@@ -91,3 +91,15 @@ test("override exec with non-function", () => {
     re.exec = 3;
     expect(re.test("test")).toBe(true);
 });
+
+test("property escapes", () => {
+    expect(/\p{ASCII}/.test("a")).toBeFalse();
+    expect(/\p{ASCII}/.test("p{ASCII}")).toBeTrue();
+    expect(/\p{ASCII}/u.test("a")).toBeTrue();
+    expect(/\p{ASCII}/u.test("😀")).toBeFalse();
+    expect(/\p{ASCII_Hex_Digit}/u.test("1")).toBeTrue();
+    expect(/\p{ASCII_Hex_Digit}/u.test("a")).toBeTrue();
+    expect(/\p{ASCII_Hex_Digit}/u.test("x")).toBeFalse();
+    expect(/\p{Any}/u.test("\u0378")).toBeTrue();
+    expect(/\p{Assigned}/u.test("\u0378")).toBeFalse();
+});
