@@ -44,7 +44,7 @@ template<class Parser>
 class Matcher final {
 
 public:
-    Matcher(Regex<Parser> const& pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
+    Matcher(Regex<Parser> const* pattern, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {})
         : m_pattern(pattern)
         , m_regex_options(regex_options.value_or({}))
     {
@@ -59,11 +59,16 @@ public:
         return m_regex_options;
     }
 
+    void reset_pattern(Badge<Regex<Parser>>, Regex<Parser> const* pattern)
+    {
+        m_pattern = pattern;
+    }
+
 private:
     Optional<bool> execute(MatchInput const& input, MatchState& state, MatchOutput& output, size_t recursion_level) const;
     ALWAYS_INLINE Optional<bool> execute_low_prio_forks(MatchInput const& input, MatchState& original_state, MatchOutput& output, Vector<MatchState> states, size_t recursion_level) const;
 
-    Regex<Parser> const& m_pattern;
+    Regex<Parser> const* m_pattern;
     typename ParserTraits<Parser>::OptionsType const m_regex_options;
 };
 
@@ -75,10 +80,10 @@ public:
     OwnPtr<Matcher<Parser>> matcher { nullptr };
     mutable size_t start_offset { 0 };
 
-    explicit Regex(StringView pattern, typename ParserTraits<Parser>::OptionsType regex_options = {});
+    explicit Regex(String pattern, typename ParserTraits<Parser>::OptionsType regex_options = {});
     ~Regex() = default;
-    Regex(Regex&&) = default;
-    Regex& operator=(Regex&&) = default;
+    Regex(Regex&&);
+    Regex& operator=(Regex&&);
 
     typename ParserTraits<Parser>::OptionsType options() const;
     void print_bytecode(FILE* f = stdout) const;
