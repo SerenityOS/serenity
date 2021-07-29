@@ -20,7 +20,6 @@
 #include <WindowServer/Cursor.h>
 #include <WindowServer/Event.h>
 #include <WindowServer/MenuManager.h>
-#include <WindowServer/Menubar.h>
 #include <WindowServer/ScreenLayout.h>
 #include <WindowServer/WMClientConnection.h>
 #include <WindowServer/WindowSwitcher.h>

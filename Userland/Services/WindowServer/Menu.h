@@ -15,13 +15,14 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <WindowServer/Cursor.h>
+#include <WindowServer/Event.h>
 #include <WindowServer/MenuItem.h>
-#include <WindowServer/Window.h>
 
 namespace WindowServer {
 
 class ClientConnection;
 class Menubar;
+class Window;
 
 class Menu final : public Core::Object {
     C_OBJECT(Menu);

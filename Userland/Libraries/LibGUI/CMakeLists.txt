@@ -59,7 +59,6 @@ set(SOURCES
     LinkLabel.cpp
     ListView.cpp
     Menu.cpp
-    Menubar.cpp
     MenuItem.cpp
     MessageBox.cpp
     Model.cpp

@@ -56,7 +56,7 @@ static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& re
 {
     if (window.is_frameless())
         return rect;
-    int menu_row_count = (window.menubar() && window.should_show_menubar()) ? 1 : 0;
+    int menu_row_count = (window.menubar().has_menus() && window.should_show_menubar()) ? 1 : 0;
     return Gfx::WindowTheme::current().frame_rect_for_window(to_theme_window_type(window.type()), rect, WindowManager::the().palette(), menu_row_count);
 }
 
@@ -199,7 +199,7 @@ void WindowFrame::did_set_maximized(Badge<Window>, bool maximized)
 
 Gfx::IntRect WindowFrame::menubar_rect() const
 {
-    if (!m_window.menubar() || !m_window.should_show_menubar())
+    if (!m_window.menubar().has_menus() || !m_window.should_show_menubar())
         return {};
     return Gfx::WindowTheme::current().menubar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette(), menu_row_count());
 }
@@ -261,7 +261,7 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
     painter.add_clip_rect(menubar_rect);
     painter.translate(menubar_rect.location());
 
-    m_window.menubar()->for_each_menu([&](Menu& menu) {
+    m_window.menubar().for_each_menu([&](Menu& menu) {
         auto text_rect = menu.rect_in_window_menubar();
         Color text_color = palette.window_text();
         auto is_open = menu.is_open();
@@ -283,7 +283,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
     auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
     Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), m_window.computed_title(), m_window.icon(), palette, leftmost_button_rect, menu_row_count(), m_window.is_modified());
 
-    if (m_window.menubar() && m_window.should_show_menubar())
+    if (m_window.menubar().has_menus() && m_window.should_show_menubar())
         paint_menubar(painter);
 }
 
@@ -812,7 +812,7 @@ void WindowFrame::handle_menubar_mouse_event(const MouseEvent& event)
     Menu* hovered_menu = nullptr;
     auto menubar_rect = this->menubar_rect();
     auto adjusted_position = event.position().translated(-menubar_rect.location());
-    m_window.menubar()->for_each_menu([&](Menu& menu) {
+    m_window.menubar().for_each_menu([&](Menu& menu) {
         if (menu.rect_in_window_menubar().contains(adjusted_position)) {
             hovered_menu = &menu;
             handle_menu_mouse_event(menu, event);
@@ -968,7 +968,7 @@ int WindowFrame::menu_row_count() const
 {
     if (!m_window.should_show_menubar())
         return 0;
-    return m_window.menubar() ? 1 : 0;
+    return m_window.menubar().has_menus() ? 1 : 0;
 }
 
 }

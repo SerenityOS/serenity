@@ -18,8 +18,8 @@ set(SOURCES
     Cursor.cpp
     EventLoop.cpp
     main.cpp
-    Menubar.cpp
     Menu.cpp
+    Menubar.cpp
     MenuItem.cpp
     MenuManager.cpp
     MultiScaleBitmaps.cpp

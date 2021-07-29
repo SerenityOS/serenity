@@ -1,15 +1,18 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/Forward.h>
+#include <AK/Badge.h>
+#include <AK/IterationDecision.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/Menu.h>
 
 namespace GUI {
 
@@ -17,22 +20,27 @@ class Menubar : public Core::Object {
     C_OBJECT(Menubar);
 
 public:
-    ~Menubar();
+    ~Menubar() { }
 
-    Menu& add_menu(String name);
+    Menu& add_menu(Badge<Window>, String name)
+    {
+        auto& menu = add<Menu>(move(name));
+        m_menus.append(menu);
+        return menu;
+    }
 
-    void notify_added_to_window(Badge<Window>);
-    void notify_removed_from_window(Badge<Window>);
-
-    int menubar_id() const { return m_menubar_id; }
+    void for_each_menu(Function<IterationDecision(Menu&)> callback)
+    {
+        for (auto& menu : m_menus) {
+            if (callback(menu) == IterationDecision::Break) {
+                return;
+            }
+        }
+    }
 
 private:
-    Menubar();
+    Menubar() { }
 
-    int realize_menubar();
-    void unrealize_menubar();
-
-    int m_menubar_id { -1 };
     NonnullRefPtrVector<Menu> m_menus;
 };
 

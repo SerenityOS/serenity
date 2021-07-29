@@ -10,6 +10,7 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
 
@@ -53,11 +54,13 @@ private:
     void unrealize_menu();
     void realize_if_needed(const RefPtr<Action>& default_action);
 
+    void realize_menu_item(MenuItem&, int item_id);
+
     int m_menu_id { -1 };
     String m_name;
     RefPtr<Gfx::Bitmap> m_icon;
     NonnullOwnPtrVector<MenuItem> m_items;
-    WeakPtr<Action> m_last_default_action;
+    WeakPtr<Action> m_current_default_action;
     bool m_visible { false };
 };
 
