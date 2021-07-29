@@ -1630,7 +1630,7 @@ NonnullRefPtr<YieldExpression> Parser::parse_yield_expression()
             yield_from = true;
         }
 
-        if (yield_from || match_expression())
+        if (yield_from || match_expression() || match(TokenType::Class))
             argument = parse_expression(0);
     }
 
