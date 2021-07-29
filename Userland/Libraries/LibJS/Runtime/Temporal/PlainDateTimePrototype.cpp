@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainDateTimePrototype.h>
@@ -27,6 +28,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.PlainDateTime"), Attribute::Configurable);
 
     define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.year, year_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.valueOf, value_of, 0, attr);
@@ -58,6 +60,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::calendar_getter)
 
     // 3. Return dateTime.[[Calendar]].
     return Value(&date_time->calendar());
+}
+
+// 5.3.4 get Temporal.PlainDateTime.prototype.year, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.year
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::year_getter)
+{
+    // 1. Let dateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
+    auto* date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be dateTime.[[Calendar]].
+    auto& calendar = date_time->calendar();
+
+    // 4. Return ? CalendarYear(calendar, dateTime).
+    return Value(calendar_year(global_object, calendar, *date_time));
 }
 
 // 5.3.35 Temporal.PlainDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.valueof
