@@ -37,6 +37,12 @@ Result<NonnullRefPtr<MappedFile>, OSError> MappedFile::map(const String& path)
     if (ptr == MAP_FAILED)
         return OSError(errno);
 
+#ifdef __serenity__
+    if (set_mmap_name(ptr, size, path.characters()) < 0) {
+        perror("set_mmap_name");
+    }
+#endif
+
     return adopt_ref(*new MappedFile(ptr, size));
 }
 
