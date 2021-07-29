@@ -522,6 +522,8 @@ enum {
     SO_BINDTODEVICE,
     SO_KEEPALIVE,
     SO_TIMESTAMP,
+    SO_BROADCAST,
+    SO_LINGER,
 };
 
 enum {
