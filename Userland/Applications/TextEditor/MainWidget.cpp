@@ -633,9 +633,11 @@ void MainWidget::set_path(StringView const& path)
         m_gml_highlight->activate();
     } else if (m_extension == "ini") {
         m_ini_highlight->activate();
+    } else if (m_extension == "sh" || m_extension == "bash") {
+        m_shell_highlight->activate();
     } else if (m_extension == "sql") {
         m_sql_highlight->activate();
-    } else if (m_extension == "html") {
+    } else if (m_extension == "html" || m_extension == "htm") {
         m_html_highlight->activate();
     } else {
         m_plain_text_highlight->activate();
@@ -644,7 +646,7 @@ void MainWidget::set_path(StringView const& path)
     if (m_auto_detect_preview_mode) {
         if (m_extension == "md")
             set_preview_mode(PreviewMode::Markdown);
-        else if (m_extension == "html")
+        else if (m_extension == "html" || m_extension == "htm")
             set_preview_mode(PreviewMode::HTML);
         else
             set_preview_mode(PreviewMode::None);
