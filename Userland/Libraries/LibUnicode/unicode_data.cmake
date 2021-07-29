@@ -30,23 +30,17 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
         file(DOWNLOAD ${WORD_BREAK_URL} ${WORD_BREAK_PATH} INACTIVITY_TIMEOUT 10)
     endif()
 
-    set(UNICODE_GENERATOR CodeGenerators/GenerateUnicodeData)
-    set(UNICODE_DATA_HEADER UnicodeData.h)
-    set(UNICODE_DATA_IMPLEMENTATION UnicodeData.cpp)
+    set(UNICODE_DATA_HEADER LibUnicode/UnicodeData.h)
+    set(UNICODE_DATA_IMPLEMENTATION LibUnicode/UnicodeData.cpp)
 
-    if (CMAKE_SOURCE_DIR MATCHES ".*/Lagom") # Lagom-only build.
-        set(UNICODE_GENERATOR LibUnicode/CodeGenerators/GenerateUnicodeData)
-        set(UNICODE_DATA_HEADER LibUnicode/UnicodeData.h)
-        set(UNICODE_DATA_IMPLEMENTATION LibUnicode/UnicodeData.cpp)
-    elseif (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/Lagom") # Lagom build within the main SerenityOS build.
-        set(UNICODE_GENERATOR ../../Userland/Libraries/LibUnicode/CodeGenerators/GenerateUnicodeData)
-        set(UNICODE_DATA_HEADER LibUnicode/UnicodeData.h)
-        set(UNICODE_DATA_IMPLEMENTATION LibUnicode/UnicodeData.cpp)
+    if (CMAKE_CURRENT_BINARY_DIR MATCHES ".*/LibUnicode") # Serenity build.
+        set(UNICODE_DATA_HEADER UnicodeData.h)
+        set(UNICODE_DATA_IMPLEMENTATION UnicodeData.cpp)
     endif()
 
     add_custom_command(
         OUTPUT ${UNICODE_DATA_HEADER}
-        COMMAND ${write_if_different} ${UNICODE_DATA_HEADER} ${UNICODE_GENERATOR} -h -u ${UNICODE_DATA_PATH} -s ${SPECIAL_CASING_PATH} -p ${PROP_LIST_PATH} -w ${WORD_BREAK_PATH}
+        COMMAND ${write_if_different} ${UNICODE_DATA_HEADER} $<TARGET_FILE:GenerateUnicodeData> -h -u ${UNICODE_DATA_PATH} -s ${SPECIAL_CASING_PATH} -p ${PROP_LIST_PATH} -w ${WORD_BREAK_PATH}
         VERBATIM
         DEPENDS GenerateUnicodeData
         MAIN_DEPENDENCY ${UNICODE_DATA_PATH} ${SPECIAL_CASING_PATH}
@@ -54,7 +48,7 @@ if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
 
     add_custom_command(
         OUTPUT ${UNICODE_DATA_IMPLEMENTATION}
-        COMMAND ${write_if_different} ${UNICODE_DATA_IMPLEMENTATION} ${UNICODE_GENERATOR} -c -u ${UNICODE_DATA_PATH} -s ${SPECIAL_CASING_PATH} -p ${PROP_LIST_PATH} -w ${WORD_BREAK_PATH}
+        COMMAND ${write_if_different} ${UNICODE_DATA_IMPLEMENTATION} $<TARGET_FILE:GenerateUnicodeData> -c -u ${UNICODE_DATA_PATH} -s ${SPECIAL_CASING_PATH} -p ${PROP_LIST_PATH} -w ${WORD_BREAK_PATH}
         VERBATIM
         DEPENDS GenerateUnicodeData
         MAIN_DEPENDENCY ${UNICODE_DATA_PATH} ${SPECIAL_CASING_PATH}
