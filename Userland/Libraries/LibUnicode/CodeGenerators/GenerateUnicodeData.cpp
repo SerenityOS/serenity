@@ -45,6 +45,12 @@ struct SpecialCasing {
 //                        https://www.unicode.org/reports/tr44/tr44-13.html#WordBreakProperty.txt
 using PropList = HashMap<String, Vector<CodePointRange>>;
 
+// PropertyAliases source: https://www.unicode.org/Public/13.0.0/ucd/PropertyAliases.txt
+struct Alias {
+    String property;
+    String alias;
+};
+
 // UnicodeData source: https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
 // Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#UnicodeData.txt
 //                     https://www.unicode.org/reports/tr44/#General_Category_Values
@@ -83,6 +89,7 @@ struct UnicodeData {
     u32 last_contiguous_code_point { 0 };
 
     PropList prop_list;
+    Vector<Alias> prop_aliases;
     PropList word_break_prop_list;
 };
 
@@ -180,6 +187,48 @@ static void parse_prop_list(Core::File& file, PropList& prop_list)
         } else {
             auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(code_point_range).value();
             code_points.append({ 0, code_point, code_point });
+        }
+    }
+}
+
+static void parse_alias_list(Core::File& file, PropList const& prop_list, Vector<Alias>& prop_aliases)
+{
+    String current_property;
+
+    auto append_alias = [&](auto alias, auto property) {
+        // Note: The alias files contain lines such as "Hyphen = Hyphen", which we should just skip.
+        if (alias == property)
+            return;
+
+        // FIXME: We will, eventually, need to find where missing properties are located and parse them.
+        if (!prop_list.contains(property))
+            return;
+
+        prop_aliases.append({ property, alias });
+    };
+
+    while (file.can_read_line()) {
+        auto line = file.read_line();
+        if (line.is_empty() || line.starts_with('#')) {
+            if (line.ends_with("Properties"sv))
+                current_property = line.substring(2);
+            continue;
+        }
+
+        // Note: For now, we only care about Binary Property aliases for Unicode property escapes.
+        if (current_property != "Binary Properties"sv)
+            continue;
+
+        auto segments = line.split_view(';', true);
+        VERIFY((segments.size() == 2) || (segments.size() == 3));
+
+        auto alias = segments[0].trim_whitespace();
+        auto property = segments[1].trim_whitespace();
+        append_alias(alias, property);
+
+        if (segments.size() == 3) {
+            alias = segments[2].trim_whitespace();
+            append_alias(alias, property);
         }
     }
 }
@@ -286,9 +335,10 @@ static void generate_unicode_data_header(UnicodeData& unicode_data)
     generator.set("casing_transform_size", String::number(unicode_data.largest_casing_transform_size));
     generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
 
-    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, bool as_bitmask = false) {
+    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> aliases = {}, bool as_bitmask = false) {
         VERIFY((values.size() + !default_.is_empty()) <= 64);
         quick_sort(values);
+        quick_sort(aliases, [](auto& alias1, auto& alias2) { return alias1.alias < alias2.alias; });
 
         generator.set("name", name);
         generator.set("underlying", String::formatted("{}UnderlyingType", name));
@@ -323,6 +373,13 @@ enum class @name@ {)~~~");
             }
         }
 
+        for (auto const& alias : aliases) {
+            generator.set("alias", alias.alias);
+            generator.set("value", alias.property);
+            generator.append(R"~~~(
+    @alias@ = @value@,)~~~");
+        }
+
         generator.append(R"~~~(
 };
 )~~~");
@@ -354,7 +411,7 @@ namespace Unicode {
     generate_enum("Locale"sv, "None"sv, move(unicode_data.locales));
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
     generate_enum("GeneralCategory"sv, {}, move(unicode_data.general_categories));
-    generate_enum("Property"sv, "None"sv, unicode_data.prop_list.keys(), true);
+    generate_enum("Property"sv, "None"sv, unicode_data.prop_list.keys(), move(unicode_data.prop_aliases), true);
     generate_enum("WordBreakProperty"sv, "Other"sv, unicode_data.word_break_prop_list.keys());
 
     generator.append(R"~~~(
@@ -574,6 +631,7 @@ int main(int argc, char** argv)
     char const* special_casing_path = nullptr;
     char const* prop_list_path = nullptr;
     char const* derived_core_prop_path = nullptr;
+    char const* prop_alias_path = nullptr;
     char const* word_break_path = nullptr;
 
     Core::ArgsParser args_parser;
@@ -583,6 +641,7 @@ int main(int argc, char** argv)
     args_parser.add_option(special_casing_path, "Path to SpecialCasing.txt file", "special-casing-path", 's', "special-casing-path");
     args_parser.add_option(prop_list_path, "Path to PropList.txt file", "prop-list-path", 'p', "prop-list-path");
     args_parser.add_option(derived_core_prop_path, "Path to DerivedCoreProperties.txt file", "derived-core-prop-path", 'd', "derived-core-prop-path");
+    args_parser.add_option(prop_alias_path, "Path to PropertyAliases.txt file", "prop-alias-path", 'a', "prop-alias-path");
     args_parser.add_option(word_break_path, "Path to WordBreakProperty.txt file", "word-break-path", 'w', "word-break-path");
     args_parser.parse(argc, argv);
 
@@ -612,12 +671,14 @@ int main(int argc, char** argv)
     auto special_casing_file = open_file(special_casing_path, "-s/--special-casing-path");
     auto prop_list_file = open_file(prop_list_path, "-p/--prop-list-path");
     auto derived_core_prop_file = open_file(derived_core_prop_path, "-d/--derived-core-prop-path");
+    auto prop_alias_file = open_file(prop_alias_path, "-a/--prop-alias-path");
     auto word_break_file = open_file(word_break_path, "-w/--word-break-path");
 
     UnicodeData unicode_data {};
     parse_special_casing(special_casing_file, unicode_data);
     parse_prop_list(prop_list_file, unicode_data.prop_list);
     parse_prop_list(derived_core_prop_file, unicode_data.prop_list);
+    parse_alias_list(prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases);
     parse_prop_list(word_break_file, unicode_data.word_break_prop_list);
     parse_unicode_data(unicode_data_file, unicode_data);
 
