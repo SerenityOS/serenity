@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,26 +8,27 @@
 #pragma once
 
 #include "Menu.h"
+#include <AK/Function.h>
+#include <AK/IterationDecision.h>
 #include <AK/Vector.h>
-#include <AK/WeakPtr.h>
-#include <AK/Weakable.h>
 
 namespace WindowServer {
 
-class Menubar
-    : public RefCounted<Menubar>
-    , public Weakable<Menubar> {
+class Menubar {
 public:
-    static NonnullRefPtr<Menubar> create(ClientConnection& client, int menubar_id) { return adopt_ref(*new Menubar(client, menubar_id)); }
-    ~Menubar();
+    void add_menu(Menu& menu, Gfx::IntRect window_rect)
+    {
+        // FIXME: Check against duplicate menu additions.
+        m_menus.append(menu);
+        layout_menu(menu, window_rect);
+    }
 
-    ClientConnection& client() { return m_client; }
-    const ClientConnection& client() const { return m_client; }
-    int menubar_id() const { return m_menubar_id; }
-    void add_menu(Menu&);
+    bool has_menus()
+    {
+        return !m_menus.is_empty();
+    }
 
-    template<typename Callback>
-    void for_each_menu(Callback callback)
+    void for_each_menu(Function<IterationDecision(Menu&)> callback)
     {
         for (auto& menu : m_menus) {
             if (callback(menu) == IterationDecision::Break)
@@ -35,11 +37,13 @@ public:
     }
 
 private:
-    Menubar(ClientConnection&, int menubar_id);
+    void layout_menu(Menu&, Gfx::IntRect window_rect);
 
-    ClientConnection& m_client;
-    int m_menubar_id { 0 };
     Vector<Menu&> m_menus;
+
+    // FIXME: This doesn't support removing menus from a menubar or inserting a
+    //        menu in the middle.
+    Gfx::IntPoint m_next_menu_location { 0, 0 };
 };
 
 }

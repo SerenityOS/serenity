@@ -74,6 +74,7 @@ static Gfx::Bitmap& pin_icon()
         s_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-pin.png").leak_ref();
     return *s_icon;
 }
+
 Window::Window(Core::Object& parent, WindowType type)
     : Core::Object(&parent)
     , m_type(type)
@@ -577,15 +578,16 @@ void Window::handle_keydown_event(const KeyEvent& event)
         popup_window_menu(position, WindowMenuDefaultAction::Close);
         return;
     }
-    if (event.modifiers() == Mod_Alt && event.code_point() && menubar()) {
+    if (event.modifiers() == Mod_Alt && event.code_point() && m_menubar.has_menus()) {
         Menu* menu_to_open = nullptr;
-        menubar()->for_each_menu([&](Menu& menu) {
+        m_menubar.for_each_menu([&](Menu& menu) {
             if (to_ascii_lowercase(menu.alt_shortcut_character()) == to_ascii_lowercase(event.code_point())) {
                 menu_to_open = &menu;
                 return IterationDecision::Break;
             }
             return IterationDecision::Continue;
         });
+
         if (menu_to_open) {
             frame().open_menubar_menu(*menu_to_open);
             if (!menu_to_open->is_empty())
@@ -875,8 +877,8 @@ void Window::popup_window_menu(const Gfx::IntPoint& position, WindowMenuDefaultA
     m_window_menu_maximize_item->set_default(default_action == WindowMenuDefaultAction::Maximize || default_action == WindowMenuDefaultAction::Restore);
     m_window_menu_maximize_item->set_icon(m_maximized ? &restore_icon() : &maximize_icon());
     m_window_menu_close_item->set_default(default_action == WindowMenuDefaultAction::Close);
-    m_window_menu_menubar_visibility_item->set_enabled(menubar());
-    m_window_menu_menubar_visibility_item->set_checked(menubar() && m_should_show_menubar);
+    m_window_menu_menubar_visibility_item->set_enabled(m_menubar.has_menus());
+    m_window_menu_menubar_visibility_item->set_checked(m_menubar.has_menus() && m_should_show_menubar);
 
     m_window_menu->popup(position);
 }
@@ -1237,32 +1239,16 @@ Optional<HitTestResult> Window::hit_test(Gfx::IntPoint const& position, bool inc
     };
 }
 
-void Window::set_menubar(Menubar* menubar)
+void Window::add_menu(Menu& menu)
 {
-    if (m_menubar == menubar)
-        return;
-    m_menubar = menubar;
-    if (m_menubar) {
-        // FIXME: Maybe move this to the theming system?
-        static constexpr auto menubar_menu_margin = 14;
-
-        auto& wm = WindowManager::the();
-        Gfx::IntPoint next_menu_location { 0, 0 };
-        auto menubar_rect = Gfx::WindowTheme::current().menubar_rect(Gfx::WindowTheme::WindowType::Normal, rect(), wm.palette(), 1);
-        m_menubar->for_each_menu([&](Menu& menu) {
-            int text_width = wm.font().width(Gfx::parse_ampersand_string(menu.name()));
-            menu.set_rect_in_window_menubar({ next_menu_location.x(), 0, text_width + menubar_menu_margin, menubar_rect.height() });
-            next_menu_location.translate_by(menu.rect_in_window_menubar().width(), 0);
-            return IterationDecision::Continue;
-        });
-    }
+    m_menubar.add_menu(menu, rect());
     Compositor::the().invalidate_occlusions();
     frame().invalidate();
 }
 
 void Window::invalidate_menubar()
 {
-    if (!m_should_show_menubar || !menubar())
+    if (!m_should_show_menubar || !m_menubar.has_menus())
         return;
     frame().invalidate_menubar();
 }

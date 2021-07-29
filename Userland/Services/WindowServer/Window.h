@@ -14,6 +14,7 @@
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Rect.h>
 #include <WindowServer/Cursor.h>
+#include <WindowServer/Menubar.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowFrame.h>
 #include <WindowServer/WindowType.h>
@@ -25,7 +26,6 @@ class ClientConnection;
 class Cursor;
 class KeyEvent;
 class Menu;
-class Menubar;
 class MenuItem;
 class MouseEvent;
 class WindowStack;
@@ -338,9 +338,10 @@ public:
     // area needs to be rendered
     auto& affected_transparency_rects() { return m_affected_transparency_rects; }
 
-    Menubar* menubar() { return m_menubar; }
-    const Menubar* menubar() const { return m_menubar; }
-    void set_menubar(Menubar*);
+    Menubar& menubar() { return m_menubar; }
+    Menubar const& menubar() const { return m_menubar; }
+
+    void add_menu(Menu& menu);
 
     WindowStack& window_stack()
     {
@@ -395,7 +396,7 @@ private:
     Vector<WeakPtr<Window>> m_child_windows;
     Vector<WeakPtr<Window>> m_accessory_windows;
 
-    RefPtr<Menubar> m_menubar;
+    Menubar m_menubar;
 
     String m_title;
     Gfx::IntRect m_rect;

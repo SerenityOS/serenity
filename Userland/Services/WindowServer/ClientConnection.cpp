@@ -13,7 +13,6 @@
 #include <WindowServer/Compositor.h>
 #include <WindowServer/Menu.h>
 #include <WindowServer/MenuItem.h>
-#include <WindowServer/Menubar.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/Window.h>
 #include <WindowServer/WindowClientEndpoint.h>
@@ -91,22 +90,6 @@ void ClientConnection::notify_about_new_screen_rects()
     async_screen_rects_changed(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns());
 }
 
-void ClientConnection::create_menubar(i32 menubar_id)
-{
-    auto menubar = Menubar::create(*this, menubar_id);
-    m_menubars.set(menubar_id, move(menubar));
-}
-
-void ClientConnection::destroy_menubar(i32 menubar_id)
-{
-    auto it = m_menubars.find(menubar_id);
-    if (it == m_menubars.end()) {
-        did_misbehave("DestroyMenubar: Bad menubar ID");
-        return;
-    }
-    m_menubars.remove(it);
-}
-
 void ClientConnection::create_menu(i32 menu_id, String const& menu_title)
 {
     auto menu = Menu::construct(this, menu_id, menu_title);
@@ -126,44 +109,21 @@ void ClientConnection::destroy_menu(i32 menu_id)
     remove_child(menu);
 }
 
-void ClientConnection::set_window_menubar(i32 window_id, i32 menubar_id)
+void ClientConnection::add_menu(i32 window_id, i32 menu_id)
 {
-    RefPtr<Window> window;
-    {
-        auto it = m_windows.find(window_id);
-        if (it == m_windows.end()) {
-            did_misbehave("SetWindowMenubar: Bad window ID");
-            return;
-        }
-        window = it->value;
-    }
-    RefPtr<Menubar> menubar;
-    if (menubar_id != -1) {
-        auto it = m_menubars.find(menubar_id);
-        if (it == m_menubars.end()) {
-            did_misbehave("SetWindowMenubar: Bad menubar ID");
-            return;
-        }
-        menubar = *(*it).value;
-    }
-    window->set_menubar(menubar);
-}
-
-void ClientConnection::add_menu_to_menubar(i32 menubar_id, i32 menu_id)
-{
-    auto it = m_menubars.find(menubar_id);
+    auto it = m_windows.find(window_id);
     auto jt = m_menus.find(menu_id);
-    if (it == m_menubars.end()) {
-        did_misbehave("AddMenuToMenubar: Bad menubar ID");
+    if (it == m_windows.end()) {
+        did_misbehave("AddMenu: Bad window ID");
         return;
     }
     if (jt == m_menus.end()) {
-        did_misbehave("AddMenuToMenubar: Bad menu ID");
+        did_misbehave("AddMenu: Bad menu ID");
         return;
     }
-    auto& menubar = *(*it).value;
+    auto& window = *(*it).value;
     auto& menu = *(*jt).value;
-    menubar.add_menu(menu);
+    window.add_menu(menu);
 }
 
 void ClientConnection::add_menu_item(i32 menu_id, i32 identifier, i32 submenu_id,
