@@ -6,7 +6,8 @@ files="https://www.zlib.net/zlib-${version}.tar.gz zlib-${version}.tar.gz c3e5e9
 auth_type="sha256"
 
 configure() {
-    run ./configure
+    # Set uname to linux to prevent it finding the host's `libtool` on e.g. Darwin
+    run ./configure --uname=linux
 }
 
 install() {
