@@ -223,7 +223,6 @@ public:
         Color,
         Identifier,
         Image,
-        Position,
         CustomProperty,
         Numeric,
         ValueList,
@@ -240,7 +239,6 @@ public:
     bool is_image() const { return type() == Type::Image; }
     bool is_string() const { return type() == Type::String; }
     bool is_length() const { return type() == Type::Length; }
-    bool is_position() const { return type() == Type::Position; }
     bool is_custom_property() const { return type() == Type::CustomProperty; }
     bool is_numeric() const { return type() == Type::Numeric; }
     bool is_value_list() const
