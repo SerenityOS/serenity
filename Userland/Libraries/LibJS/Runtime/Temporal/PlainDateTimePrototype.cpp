@@ -48,6 +48,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.inLeapYear, in_leap_year_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.withPlainDate, with_plain_date, 1, attr);
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.toPlainDate, to_plain_date, 0, attr);
@@ -348,6 +349,29 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::in_leap_year_getter)
 
     // 4. Return ? CalendarInLeapYear(calendar, dateTime).
     return calendar_in_leap_year(global_object, calendar, *date_time);
+}
+
+// 5.3.24 Temporal.PlainDateTime.prototype.withPlainDate ( plainDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withplaindate
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with_plain_date)
+{
+    // 1. Let temporalDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalDateTime, [[InitializedTemporalDateTime]]).
+    auto* date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let plainDate be ? ToTemporalDate(plainDateLike).
+    auto* plain_date = to_temporal_date(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. Let calendar be ? ConsolidateCalendars(temporalDateTime.[[Calendar]], plainDate.[[Calendar]]).
+    auto* calendar = consolidate_calendars(global_object, date_time->calendar(), plain_date->calendar());
+    if (vm.exception())
+        return {};
+
+    // 5. Return ? CreateTemporalDateTime(plainDate.[[ISOYear]], plainDate.[[ISOMonth]], plainDate.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], calendar).
+    return create_temporal_date_time(global_object, plain_date->iso_year(), plain_date->iso_month(), plain_date->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), *calendar);
 }
 
 // 5.3.25 Temporal.PlainDateTime.prototype.withCalendar ( calendar ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.withcalendar
