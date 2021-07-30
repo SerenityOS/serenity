@@ -428,6 +428,41 @@ bool calendar_equals(GlobalObject& global_object, Object& one, Object& two)
     return false;
 }
 
+// 12.1.29 ConsolidateCalendars ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-consolidatecalendars
+Object* consolidate_calendars(GlobalObject& global_object, Object& one, Object& two)
+{
+    auto& vm = global_object.vm();
+    // 1. If one and two are the same Object value, return two.
+    if (&one == &two)
+        return &two;
+
+    // 2. Let calendarOne be ? ToString(one).
+    auto calendar_one = Value(&one).to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendarTwo be ? ToString(two).
+    auto calendar_two = Value(&two).to_string(global_object);
+    if (vm.exception())
+        return {};
+
+    // 4. If calendarOne is calendarTwo, return two.
+    if (calendar_one == calendar_two)
+        return &two;
+
+    // 5. If calendarOne is "iso8601", return two.
+    if (calendar_one == "iso8601"sv)
+        return &two;
+
+    // 6. If calendarTwo is "iso8601", return one.
+    if (calendar_two == "iso8601"sv)
+        return &one;
+
+    // 7. Throw a RangeError exception.
+    vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidCalendar);
+    return {};
+}
+
 // 12.1.30 IsISOLeapYear ( year ), https://tc39.es/proposal-temporal/#sec-temporal-isisoleapyear
 bool is_iso_leap_year(i32 year)
 {
