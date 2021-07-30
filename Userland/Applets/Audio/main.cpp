@@ -123,10 +123,8 @@ private:
     {
         if (m_audio_muted)
             return;
-        int volume = clamp(m_audio_volume - event.wheel_delta() * 5, 0, 100);
-        float volume_log = ((volume / 100.0f) * (volume / 100.0f)) * 100.0f;
-        m_audio_client->set_main_mix_volume(volume_log);
-        m_slider->set_value(20 - (volume / 5));
+        int new_slider_value = m_slider->value() + event.wheel_delta() / 4;
+        m_slider->set_value(new_slider_value);
         update();
     }
 
