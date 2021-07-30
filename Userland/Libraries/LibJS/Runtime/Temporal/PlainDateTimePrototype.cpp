@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainDateTimePrototype.h>
+#include <LibJS/Runtime/Temporal/PlainTime.h>
 
 namespace JS::Temporal {
 
@@ -52,6 +53,7 @@ void PlainDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.toPlainDate, to_plain_date, 0, attr);
+    define_native_function(vm.names.toPlainTime, to_plain_time, 0, attr);
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
 }
 
@@ -411,6 +413,19 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_date)
 
     // 3. Return ? CreateTemporalDate(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[Calendar]]).
     return create_temporal_date(global_object, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->calendar());
+}
+
+// 5.3.40 Temporal.PlainDateTime.prototype.toPlainTime ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.toplaintime
+JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::to_plain_time)
+{
+    // 1. Let dateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(dateTime, [[InitializedTemporalDateTime]]).
+    auto* date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? CreateTemporalTime(dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]]).
+    return create_temporal_time(global_object, date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond());
 }
 
 // 5.3.41 Temporal.PlainDateTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype.getisofields
