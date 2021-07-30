@@ -73,7 +73,7 @@ private:
     void set_edit_mode(EditMode);
 
     NonnullRefPtr<GUI::Menu> create_project_tree_view_context_menu();
-    NonnullRefPtr<GUI::Action> create_new_file_action();
+    NonnullRefPtr<GUI::Action> create_new_file_action(String const& label, String const& icon, String const& extension);
     NonnullRefPtr<GUI::Action> create_new_directory_action();
     NonnullRefPtr<GUI::Action> create_open_selected_action();
     NonnullRefPtr<GUI::Action> create_delete_action();
@@ -158,7 +158,9 @@ private:
     RefPtr<Threading::Thread> m_debugger_thread;
     RefPtr<EditorWrapper> m_current_editor_in_execution;
 
-    RefPtr<GUI::Action> m_new_file_action;
+    NonnullRefPtrVector<GUI::Action> m_new_file_actions;
+    RefPtr<GUI::Action> m_new_plain_file_action;
+
     RefPtr<GUI::Action> m_new_directory_action;
     RefPtr<GUI::Action> m_open_selected_action;
     RefPtr<GUI::Action> m_show_in_file_manager_action;
