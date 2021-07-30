@@ -11,12 +11,15 @@
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Frame.h>
+#include <LibGUI/GroupBox.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Layout.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 
 #include <unistd.h>
@@ -32,6 +35,7 @@ class TodoList : public GUI::Window {
     RefPtr<GUI::Button> set_done;
     RefPtr<GUI::Label> todo_title;
     RefPtr<GUI::Button> delete_task;
+    RefPtr<GUI::TextBox> new_task_box;
 
     TaskListModel* task_list_model = nullptr;
 
@@ -47,4 +51,6 @@ public:
     }
 
     GUI::Menu& get_file_menu();
+
+    void perform_add_new_task();
 };
