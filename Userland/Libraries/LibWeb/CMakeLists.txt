@@ -19,7 +19,6 @@ set(SOURCES
     CSS/CSSStyleSheet.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Length.cpp
-    CSS/Parser/DeprecatedCSSParser.cpp
     CSS/Parser/Parser.cpp
     CSS/Parser/StyleRules.cpp
     CSS/Parser/Token.cpp

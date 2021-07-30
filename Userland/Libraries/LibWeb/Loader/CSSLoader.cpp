@@ -6,7 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/URL.h>
-#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Loader/CSSLoader.h>
@@ -21,7 +21,7 @@ CSSLoader::CSSLoader(DOM::Element& owner_element)
 
 void CSSLoader::load_from_text(const String& text)
 {
-    m_style_sheet = parse_css(CSS::DeprecatedParsingContext(m_owner_element.document()), text);
+    m_style_sheet = parse_css(CSS::ParsingContext(m_owner_element.document()), text);
     if (!m_style_sheet) {
         m_style_sheet = CSS::CSSStyleSheet::create({});
         m_style_sheet->set_owner_node(&m_owner_element);
@@ -49,7 +49,7 @@ void CSSLoader::resource_did_load()
         dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Resource did load, has encoded data. URL: {}", resource()->url());
     }
 
-    auto sheet = parse_css(CSS::DeprecatedParsingContext(m_owner_element.document()), resource()->encoded_data());
+    auto sheet = parse_css(CSS::ParsingContext(m_owner_element.document()), resource()->encoded_data());
     if (!sheet) {
         dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Failed to parse stylesheet: {}", resource()->url());
         return;

@@ -6,7 +6,7 @@
 
 #include <AK/ScopeGuard.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
-#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Element.h>
 
 namespace Web::Bindings {
@@ -48,7 +48,7 @@ bool CSSStyleDeclarationWrapper::internal_set(JS::PropertyName const& name, JS::
     if (vm().exception())
         return false;
 
-    auto new_value = parse_css_value(CSS::DeprecatedParsingContext {}, css_text, property_id);
+    auto new_value = parse_css_value(CSS::ParsingContext {}, css_text, property_id);
     // FIXME: What are we supposed to do if we can't parse it?
     if (!new_value)
         return false;

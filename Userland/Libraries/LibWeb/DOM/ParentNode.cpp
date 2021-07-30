@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/Dump.h>
@@ -13,17 +13,22 @@ namespace Web::DOM {
 
 RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
 {
-    auto selector = parse_selector(CSS::DeprecatedParsingContext(*this), selector_text);
-    if (!selector)
+    auto maybe_selectors = parse_selector(CSS::ParsingContext(*this), selector_text);
+    if (!maybe_selectors.has_value())
         return {};
 
-    dump_selector(*selector);
+    auto selectors = maybe_selectors.value();
+
+    for (auto& selector : selectors)
+        dump_selector(selector);
 
     RefPtr<Element> result;
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (SelectorEngine::matches(*selector, element)) {
-            result = element;
-            return IterationDecision::Break;
+        for (auto& selector : selectors) {
+            if (SelectorEngine::matches(selector, element)) {
+                result = element;
+                return IterationDecision::Break;
+            }
         }
         return IterationDecision::Continue;
     });
@@ -33,16 +38,21 @@ RefPtr<Element> ParentNode::query_selector(const StringView& selector_text)
 
 NonnullRefPtrVector<Element> ParentNode::query_selector_all(const StringView& selector_text)
 {
-    auto selector = parse_selector(CSS::DeprecatedParsingContext(*this), selector_text);
-    if (!selector)
+    auto maybe_selectors = parse_selector(CSS::ParsingContext(*this), selector_text);
+    if (!maybe_selectors.has_value())
         return {};
 
-    dump_selector(*selector);
+    auto selectors = maybe_selectors.value();
+
+    for (auto& selector : selectors)
+        dump_selector(selector);
 
     NonnullRefPtrVector<Element> elements;
     for_each_in_inclusive_subtree_of_type<Element>([&](auto& element) {
-        if (SelectorEngine::matches(*selector, element)) {
-            elements.append(element);
+        for (auto& selector : selectors) {
+            if (SelectorEngine::matches(selector, element)) {
+                elements.append(element);
+            }
         }
         return IterationDecision::Continue;
     });
