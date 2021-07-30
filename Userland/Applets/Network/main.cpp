@@ -122,7 +122,7 @@ private:
         int connected_adapters = 0;
         json.value().as_array().for_each([&adapter_info, include_loopback, &connected_adapters](auto& value) {
             auto& if_object = value.as_object();
-            auto ip_address = if_object.get("ipv4_address").to_string();
+            auto ip_address = if_object.get("ipv4_address").as_string_or("no IP");
             auto ifname = if_object.get("name").to_string();
             auto link_up = if_object.get("link_up").as_bool();
             auto link_speed = if_object.get("link_speed").to_i32();
