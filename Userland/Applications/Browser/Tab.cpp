@@ -21,6 +21,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
@@ -145,6 +146,11 @@ Tab::Tab(BrowserWindow& window, Type type)
     m_location_box->set_placeholder("Address");
 
     m_location_box->on_return_pressed = [this] {
+        if (m_location_box->text().starts_with('?') && g_search_engine.is_empty()) {
+            GUI::MessageBox::show(&this->window(), "Select a search engine in the Settings menu before searching.", "No search engine selected", GUI::MessageBox::Type::Information);
+            return;
+        }
+
         auto url = url_from_user_input(m_location_box->text());
         load(url);
         view().set_focus(true);
