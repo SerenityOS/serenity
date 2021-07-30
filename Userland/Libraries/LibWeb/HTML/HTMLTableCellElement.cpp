@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/HTML/HTMLTableCellElement.h>
 
 namespace Web::HTML {

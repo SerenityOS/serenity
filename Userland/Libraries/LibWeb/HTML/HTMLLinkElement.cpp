@@ -7,7 +7,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/URL.h>
-#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLLinkElement.h>
 #include <LibWeb/Loader/ResourceLoader.h>
