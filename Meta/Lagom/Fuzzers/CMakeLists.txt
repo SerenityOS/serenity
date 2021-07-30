@@ -3,7 +3,7 @@ function(add_simple_fuzzer name)
 
   if (ENABLE_OSS_FUZZ)
       target_link_libraries(${name}
-          PUBLIC {$ARGN} LagomCore)
+          PUBLIC ${ARGN} LagomCore)
   else()
     target_compile_options(${name}
       PRIVATE $<$<CXX_COMPILER_ID:Clang>:-g -O1 -fsanitize=fuzzer>
