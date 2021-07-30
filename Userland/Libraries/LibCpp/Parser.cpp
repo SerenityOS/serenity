@@ -700,7 +700,12 @@ bool Parser::match_class_declaration()
 
     consume(Token::Type::Identifier);
 
-    if (peek().type() == Token::Type::Colon) {
+    auto has_final = match_keyword("final");
+
+    if (peek(has_final ? 1 : 0).type() == Token::Type::Colon) {
+        if (has_final)
+            consume();
+
         do {
             consume();
 
@@ -1158,8 +1163,13 @@ NonnullRefPtr<StructOrClassDeclaration> Parser::parse_class_declaration(ASTNode&
     auto name_token = consume(Token::Type::Identifier);
     decl->set_name(text_of_token(name_token));
 
+    auto has_final = match_keyword("final");
+
     // FIXME: Don't ignore this.
-    if (peek().type() == Token::Type::Colon) {
+    if (peek(has_final ? 1 : 0).type() == Token::Type::Colon) {
+        if (has_final)
+            consume();
+
         do {
             consume();
 
