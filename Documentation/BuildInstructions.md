@@ -18,12 +18,7 @@ On Ubuntu gcc-10 is available in the repositories of 20.04 (Focal) and later - a
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 ```
 
-On Debian you can use the Debian testing branch:
-
-```console
-sudo echo "deb http://http.us.debian.org/debian/ testing non-free contrib main" >> /etc/apt/sources.list
-sudo apt update
-```
+On Debian your system must be on the _testing_ or _unstable_ branch as gcc 10 is not available on _stable_ or in the backports. If you want to switch from _stable_ to _testing_, see the instructions on the Debian website on [switching to testing](https://wiki.debian.org/DebianTesting). Alternatively, if you want to stay on _stable_, you can build SerenityOS in a Debian testing or Ubuntu [Docker](https://www.docker.com/) container.
 
 Now on Ubuntu or Debian you can install gcc-10 with apt like this:
 
