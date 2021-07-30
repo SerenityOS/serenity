@@ -19,6 +19,15 @@ static RegexDebug s_regex_dbg(stderr);
 #endif
 
 template<class Parser>
+regex::Parser::Result Regex<Parser>::parse_pattern(StringView pattern, typename ParserTraits<Parser>::OptionsType regex_options)
+{
+    regex::Lexer lexer(pattern);
+
+    Parser parser(lexer, regex_options);
+    return parser.parse();
+}
+
+template<class Parser>
 Regex<Parser>::Regex(String pattern, typename ParserTraits<Parser>::OptionsType regex_options)
     : pattern_value(move(pattern))
 {
@@ -27,6 +36,15 @@ Regex<Parser>::Regex(String pattern, typename ParserTraits<Parser>::OptionsType 
     Parser parser(lexer, regex_options);
     parser_result = parser.parse();
 
+    if (parser_result.error == regex::Error::NoError)
+        matcher = make<Matcher<Parser>>(this, regex_options);
+}
+
+template<class Parser>
+Regex<Parser>::Regex(regex::Parser::Result parse_result, String pattern, typename ParserTraits<Parser>::OptionsType regex_options)
+    : pattern_value(move(pattern))
+    , parser_result(move(parse_result))
+{
     if (parser_result.error == regex::Error::NoError)
         matcher = make<Matcher<Parser>>(this, regex_options);
 }
