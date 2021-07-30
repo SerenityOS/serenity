@@ -407,6 +407,7 @@ namespace JS {
     P(weeks)                                 \
     P(with)                                  \
     P(withCalendar)                          \
+    P(withPlainDate)                         \
     P(writable)                              \
     P(year)                                  \
     P(years)
