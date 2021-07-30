@@ -75,6 +75,6 @@ Optional<TemporalDate> parse_temporal_date_string(GlobalObject&, String const& i
 Optional<TemporalDuration> parse_temporal_duration_string(GlobalObject&, String const& iso_string);
 Optional<TemporalTimeZone> parse_temporal_time_zone_string(GlobalObject&, String const& iso_string);
 double to_positive_integer_or_infinity(GlobalObject&, Value argument);
-Object* prepare_temporal_fields(GlobalObject&, Object& fields, Vector<String> field_names, Vector<StringView> required_fields);
+Object* prepare_temporal_fields(GlobalObject&, Object& fields, Vector<String> const& field_names, Vector<StringView> const& required_fields);
 
 }
