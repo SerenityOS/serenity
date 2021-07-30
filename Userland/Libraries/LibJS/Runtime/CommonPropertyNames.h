@@ -382,6 +382,7 @@ namespace JS {
     P(toLowerCase)                           \
     P(toPlainDate)                           \
     P(toPlainDateTime)                       \
+    P(toPlainTime)                           \
     P(toString)                              \
     P(toTemporalInstant)                     \
     P(toTimeString)                          \
