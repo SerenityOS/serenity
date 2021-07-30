@@ -56,7 +56,10 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
                 return String::formatted("{} Mb/s {}-duplex", object.get("link_speed").to_i32(),
                     object.get("link_full_duplex").as_bool() ? "full" : "half");
             });
-        net_adapters_fields.empend("ipv4_address", "IPv4", Gfx::TextAlignment::CenterLeft);
+        net_adapters_fields.empend("IPv4", Gfx::TextAlignment::CenterLeft,
+            [this](JsonObject const& object) -> String {
+                return object.get("ipv4_address").as_string_or("");
+            });
         net_adapters_fields.empend("packets_in", "Pkt In", Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("packets_out", "Pkt Out", Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("bytes_in", "Bytes In", Gfx::TextAlignment::CenterRight);
