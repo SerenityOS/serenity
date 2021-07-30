@@ -362,20 +362,25 @@ match "$(make_some_value)" {
 History expansion may be utilized to reuse previously typed words or commands.
 Such expressions are of the general form `!<event_designator>(:<word_designator>)`, where `event_designator` would select an entry in the shell history, and `word_designator` would select a word (or a range of words) from that entry.
 
-| Event designator | effect                      |
+| Event designator | Effect                      |
 | :-               | :-----                      |
-| `!`              | Select the immediately preceding command |
-| _n_              | Select the _n_'th entry in the history   |
-| -_n_             | Select the last _n_'th entry in the history |
-| _str_            | Select the most recent entry starting with _str_ |
-| ?_str_           | Select the most recent entry containing _str_ |
+| `!`              | The immediately preceding command |
+| _n_              | The _n_'th entry in the history, starting with 1 as the first entry |
+| -_n_             | The last _n_'th entry in the history, starting with -1 as the previous entry |
+| _str_            | The most recent entry starting with _str_ |
+| `?`_str_         | The most recent entry containing _str_ |
 
-| Word designator  | effect                      |
+| Word designator  | Effect                      |
 | :--              | :-----                      |
-| _n_              | The _n_'th word, starting with 0 as the command |
-| `^`              | The first word (index 0) |
-| `$`              | The last word |
-| _x_-_y_          | The range of words starting at _x_ and ending at _y_ (inclusive) |
+| _n_              | The word at index _n_, starting with 0 as the first word (usually the command) |
+| `^`              | The first argument (index 1) |
+| `$`              | The last argument |
+| _x_-_y_          | The range of words starting at _x_ and ending at _y_ (inclusive). _x_ defaults to 0 if omitted |
+| `*`              | All the arguments. Equivalent to `^`-`$` |
+| _x_`*`           | The range of words starting at _x_ and ending at the last word (`$`) (inclusive) |
+| _x_-             | The range of words starting at _x_ and ending at the second to last word (inclusive). _x_ defaults to 0 if omitted |
+
+Note: The event designator and the word designator should usually be separated by a colon (`:`). This colon can be omitted only if the word designator starts with `^`, `$` or `*` (such as `!1^` for the first argument of the first entry in the history).
 
 ## Formal Grammar
 

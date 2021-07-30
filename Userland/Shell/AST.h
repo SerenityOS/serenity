@@ -917,7 +917,7 @@ struct HistorySelector {
             if (kind == Index)
                 return selector;
             if (kind == Last)
-                return size - 1;
+                return size - selector - 1;
             VERIFY_NOT_REACHED();
         }
     };

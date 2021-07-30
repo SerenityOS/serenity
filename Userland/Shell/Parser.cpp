@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1589,7 +1589,17 @@ RefPtr<AST::Node> Parser::parse_history_designator()
             nullptr }
     };
 
+    bool is_word_selector = false;
+
     switch (peek()) {
+    case ':':
+        consume();
+        [[fallthrough]];
+    case '^':
+    case '$':
+    case '*':
+        is_word_selector = true;
+        break;
     case '!':
         consume();
         selector.event.kind = AST::HistorySelector::EventKind::IndexFromEnd;
@@ -1601,7 +1611,7 @@ RefPtr<AST::Node> Parser::parse_history_designator()
         selector.event.kind = AST::HistorySelector::EventKind::ContainingStringLookup;
         [[fallthrough]];
     default: {
-        TemporaryChange chars_change { m_extra_chars_not_allowed_in_barewords, { ':' } };
+        TemporaryChange chars_change { m_extra_chars_not_allowed_in_barewords, { ':', '^', '$', '*' } };
 
         auto bareword = parse_bareword();
         if (!bareword || !bareword->is_bareword()) {
@@ -1622,91 +1632,102 @@ RefPtr<AST::Node> Parser::parse_history_designator()
                 selector.event.kind = AST::HistorySelector::EventKind::IndexFromEnd;
             else
                 selector.event.kind = AST::HistorySelector::EventKind::IndexFromStart;
-            auto number = selector.event.text.to_int();
-            if (number.has_value())
-                selector.event.index = abs(number.value());
+            auto number = abs(selector.event.text.to_int().value_or(0));
+            if (number != 0)
+                selector.event.index = number - 1;
             else
                 syntax_error = create<AST::SyntaxError>("History entry index value invalid or out of range");
         }
-        break;
+        if (":^$*"sv.contains(peek())) {
+            is_word_selector = true;
+            if (peek() == ':')
+                consume();
+        }
     }
     }
 
-    if (peek() != ':') {
+    if (!is_word_selector) {
         auto node = create<AST::HistoryEvent>(move(selector));
         if (syntax_error)
             node->set_is_syntax_error(*syntax_error);
         return node;
     }
 
-    consume();
-
     // Word selectors
     auto parse_word_selector = [&]() -> Optional<AST::HistorySelector::WordSelector> {
-        auto rule_start = push_start();
         auto c = peek();
+        AST::HistorySelector::WordSelectorKind word_selector_kind;
+        ssize_t offset = -1;
         if (isdigit(c)) {
             auto num = consume_while(is_digit);
             auto value = num.to_uint();
-            if (!value.has_value()) {
-                return AST::HistorySelector::WordSelector {
-                    AST::HistorySelector::WordSelectorKind::Index,
-                    0,
-                    { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
-                    syntax_error ? NonnullRefPtr(*syntax_error) : create<AST::SyntaxError>("Word selector value invalid or out of range")
-                };
-            }
-            return AST::HistorySelector::WordSelector {
-                AST::HistorySelector::WordSelectorKind::Index,
-                value.value(),
-                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
-                syntax_error
-            };
-        }
-        if (c == '^') {
+            if (!value.has_value())
+                return {};
+            word_selector_kind = AST::HistorySelector::WordSelectorKind::Index;
+            offset = value.value();
+        } else if (c == '^') {
             consume();
-            return AST::HistorySelector::WordSelector {
-                AST::HistorySelector::WordSelectorKind::Index,
-                0,
-                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
-                syntax_error
-            };
-        }
-        if (c == '$') {
+            word_selector_kind = AST::HistorySelector::WordSelectorKind::Index;
+            offset = 1;
+        } else if (c == '$') {
             consume();
-            return AST::HistorySelector::WordSelector {
-                AST::HistorySelector::WordSelectorKind::Last,
-                0,
-                { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
-                syntax_error
-            };
+            word_selector_kind = AST::HistorySelector::WordSelectorKind::Last;
+            offset = 0;
         }
-        return {};
+        if (offset == -1)
+            return {};
+        return AST::HistorySelector::WordSelector {
+            word_selector_kind,
+            static_cast<size_t>(offset),
+            { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
+            syntax_error
+        };
     };
 
-    auto start = parse_word_selector();
-    if (!start.has_value()) {
+    auto make_word_selector = [&](AST::HistorySelector::WordSelectorKind word_selector_kind, size_t offset) {
+        return AST::HistorySelector::WordSelector {
+            word_selector_kind,
+            offset,
+            { m_rule_start_offsets.last(), m_offset, m_rule_start_lines.last(), line() },
+            syntax_error
+        };
+    };
+
+    auto first_char = peek();
+    if (!(is_digit(first_char) || "^$-*"sv.contains(first_char))) {
         if (!syntax_error)
             syntax_error = create<AST::SyntaxError>("Expected a word selector after ':' in a history event designator", true);
-        auto node = create<AST::HistoryEvent>(move(selector));
-        node->set_is_syntax_error(*syntax_error);
-        return node;
-    }
-    selector.word_selector_range.start = start.release_value();
-
-    if (peek() == '-') {
+    } else if (first_char == '*') {
         consume();
-        auto end = parse_word_selector();
-        if (!end.has_value()) {
-            if (!syntax_error)
-                syntax_error = create<AST::SyntaxError>("Expected a word selector after '-' in a history event designator word selector", true);
-            auto node = create<AST::HistoryEvent>(move(selector));
-            node->set_is_syntax_error(*syntax_error);
-            return node;
-        }
-        selector.word_selector_range.end = move(end);
+        selector.word_selector_range.start = make_word_selector(AST::HistorySelector::WordSelectorKind::Index, 1);
+        selector.word_selector_range.end = make_word_selector(AST::HistorySelector::WordSelectorKind::Last, 0);
+    } else if (first_char == '-') {
+        consume();
+        selector.word_selector_range.start = make_word_selector(AST::HistorySelector::WordSelectorKind::Index, 0);
+        auto last_selector = parse_word_selector();
+        if (!last_selector.has_value())
+            selector.word_selector_range.end = make_word_selector(AST::HistorySelector::WordSelectorKind::Last, 1);
+        else
+            selector.word_selector_range.end = last_selector.release_value();
     } else {
-        selector.word_selector_range.end.clear();
+        auto first_selector = parse_word_selector();
+        // peek() should be a digit, ^, or $ here, so this should always have value.
+        VERIFY(first_selector.has_value());
+        selector.word_selector_range.start = first_selector.release_value();
+        if (peek() == '-') {
+            consume();
+            auto last_selector = parse_word_selector();
+            if (last_selector.has_value()) {
+                selector.word_selector_range.end = last_selector.release_value();
+            } else {
+                selector.word_selector_range.end = make_word_selector(AST::HistorySelector::WordSelectorKind::Last, 1);
+            }
+        } else if (peek() == '*') {
+            consume();
+            selector.word_selector_range.end = make_word_selector(AST::HistorySelector::WordSelectorKind::Last, 0);
+        } else {
+            selector.word_selector_range.end.clear();
+        }
     }
 
     auto node = create<AST::HistoryEvent>(move(selector));
