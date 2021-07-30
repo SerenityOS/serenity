@@ -80,7 +80,10 @@ public:
     OwnPtr<Matcher<Parser>> matcher { nullptr };
     mutable size_t start_offset { 0 };
 
+    static regex::Parser::Result parse_pattern(StringView pattern, typename ParserTraits<Parser>::OptionsType regex_options = {});
+
     explicit Regex(String pattern, typename ParserTraits<Parser>::OptionsType regex_options = {});
+    Regex(regex::Parser::Result parse_result, String pattern, typename ParserTraits<Parser>::OptionsType regex_options = {});
     ~Regex() = default;
     Regex(Regex&&);
     Regex& operator=(Regex&&);
