@@ -30,4 +30,4 @@ add_custom_command(
 )
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Prekernel" DESTINATION boot)
-set_source_files_properties(${SOURCES} PROPERTIES COMPILE_FLAGS "-fno-sanitize-coverage=trace-pc")
+set_source_files_properties(${SOURCES} PROPERTIES COMPILE_FLAGS "-fno-sanitize-coverage=trace-pc -fno-sanitize=kernel-address")
