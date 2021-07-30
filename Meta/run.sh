@@ -96,8 +96,12 @@ fi
 
 if [ "$(uname)" = "Darwin" ]; then
     SERENITY_AUDIO_BACKEND="-audiodev coreaudio,id=snd0"
-else
+elif (uname -a | grep -iq WSL) || (uname -a | grep -iq microsoft); then
+    SERENITY_AUDIO_BACKEND="-audiodev dsound,id=snd0"
+elif "$SERENITY_QEMU_BIN" -audio-help 2>&1 | grep -- "-audiodev id=sdl" >/dev/null; then
     SERENITY_AUDIO_BACKEND="-audiodev sdl,id=snd0"
+else
+    SERENITY_AUDIO_BACKEND="-audiodev pa,id=snd0"
 fi
 
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
