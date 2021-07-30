@@ -39,17 +39,16 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
     if (!MM.commit_user_physical_pages(new_cow_pages_needed))
         return {};
 
-    // Create or replace the committed cow pages. When cloning a previously
-    // cloned vmobject, we want to essentially "fork", leaving us and the
-    // new clone with one set of shared committed cow pages, and the original
-    // one would keep the one it still has. This ensures that the original
-    // one and this one, as well as the clone have sufficient resources
-    // to cow all pages as needed
-    m_shared_committed_cow_pages = try_create<CommittedCowPages>(new_cow_pages_needed);
-
-    if (!m_shared_committed_cow_pages) {
-        MM.uncommit_user_physical_pages(new_cow_pages_needed);
-        return {};
+    if (m_shared_committed_cow_pages) {
+        // We already have shared committed COW pages with another object.
+        // That sharing pool grows and the clone joins it.
+        m_shared_committed_cow_pages->m_committed_pages += new_cow_pages_needed;
+    } else {
+        m_shared_committed_cow_pages = try_create<CommittedCowPages>(new_cow_pages_needed);
+        if (!m_shared_committed_cow_pages) {
+            MM.uncommit_user_physical_pages(new_cow_pages_needed);
+            return {};
+        }
     }
 
     // Both original and clone become COW. So create a COW map for ourselves
