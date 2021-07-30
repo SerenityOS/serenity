@@ -142,6 +142,7 @@ AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other)
     , m_unused_committed_pages(other.m_unused_committed_pages)
     , m_cow_map()                                                      // do *not* clone this
     , m_shared_committed_cow_pages(other.m_shared_committed_cow_pages) // share the pool
+    , m_purgeable(other.m_purgeable)
 {
     // We can't really "copy" a spinlock. But we're holding it. Clear in the clone
     VERIFY(other.m_lock.is_locked());
