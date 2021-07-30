@@ -45,7 +45,6 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
     auto range_or_error = Range::expand_to_page_boundaries(addr.get(), size);
     if (range_or_error.is_error())
         return range_or_error.error();
-
     auto range_to_unmap = range_or_error.value();
 
     if (!is_user_range(range_to_unmap))
@@ -92,6 +91,8 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
 
     // Try again while checking multiple regions at a time.
     auto const& regions = find_regions_intersecting(range_to_unmap);
+    if (regions.is_empty())
+        return EINVAL;
 
     // Check if any of the regions is not mmap'ed, to not accidentally
     // error out with just half a region map left.
