@@ -393,7 +393,7 @@ double get_offset_nanoseconds_for(GlobalObject& global_object, Object& time_zone
 
     // 5. If ! IsIntegralNumber(offsetNanoseconds) is false, throw a RangeError exception.
     if (!offset_nanoseconds_value.is_integral_number()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::IsNotA, "Offset nanoseconds value", "integral number");
+        vm.throw_exception<RangeError>(global_object, ErrorType::IsNotAn, "Offset nanoseconds value", "integral number");
         return {};
     }
 
