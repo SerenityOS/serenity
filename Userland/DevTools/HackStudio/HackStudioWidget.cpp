@@ -355,28 +355,50 @@ void HackStudioWidget::set_edit_mode(EditMode mode)
 
 NonnullRefPtr<GUI::Menu> HackStudioWidget::create_project_tree_view_context_menu()
 {
+    m_new_file_actions.append(create_new_file_action("C++ Source File", "/res/icons/16x16/filetype-cplusplus.png", "cpp"));
+    m_new_file_actions.append(create_new_file_action("C++ Header File", "/res/icons/16x16/filetype-header.png", "h"));
+    // FIXME: Create a file icon for GML files
+    m_new_file_actions.append(create_new_file_action("GML File", "/res/icons/16x16/new.png", "gml"));
+    m_new_file_actions.append(create_new_file_action("JavaScript Source File", "/res/icons/16x16/filetype-javascript.png", "js"));
+    m_new_file_actions.append(create_new_file_action("HTML File", "/res/icons/16x16/filetype-html.png", "html"));
+    // FIXME: Create a file icon for CSS files
+    m_new_file_actions.append(create_new_file_action("CSS File", "/res/icons/16x16/new.png", "css"));
+
+    m_new_plain_file_action = create_new_file_action("Plain File", "/res/icons/16x16/new.png", "");
+
     m_open_selected_action = create_open_selected_action();
     m_show_in_file_manager_action = create_show_in_file_manager_action();
-    m_new_file_action = create_new_file_action();
+
     m_new_directory_action = create_new_directory_action();
     m_delete_action = create_delete_action();
     auto project_tree_view_context_menu = GUI::Menu::construct("Project Files");
+
+    auto& new_file_submenu = project_tree_view_context_menu->add_submenu("New");
+    for (auto& new_file_action : m_new_file_actions) {
+        new_file_submenu.add_action(new_file_action);
+    }
+    new_file_submenu.add_action(*m_new_plain_file_action);
+    new_file_submenu.add_separator();
+    new_file_submenu.add_action(*m_new_directory_action);
+
     project_tree_view_context_menu->add_action(*m_open_selected_action);
     project_tree_view_context_menu->add_action(*m_show_in_file_manager_action);
     // TODO: Rename, cut, copy, duplicate with new name...
     project_tree_view_context_menu->add_separator();
-    project_tree_view_context_menu->add_action(*m_new_file_action);
-    project_tree_view_context_menu->add_action(*m_new_directory_action);
     project_tree_view_context_menu->add_action(*m_delete_action);
     return project_tree_view_context_menu;
 }
 
-NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action()
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action(String const& label, String const& icon, String const& extension)
 {
-    return GUI::Action::create("New &File...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
+    return GUI::Action::create(label, Gfx::Bitmap::try_load_from_file(icon), [this, extension](const GUI::Action&) {
         String filename;
         if (GUI::InputBox::show(window(), filename, "Enter name of new file:", "Add new file to project") != GUI::InputBox::ExecOK)
             return;
+
+        if (!extension.is_empty() && !filename.ends_with(String::formatted(".{}", extension))) {
+            filename = String::formatted("{}.{}", filename, extension);
+        }
 
         auto path_to_selected = selected_file_paths();
 
@@ -914,7 +936,7 @@ void HackStudioWidget::create_open_files_view(GUI::Widget& parent)
 void HackStudioWidget::create_toolbar(GUI::Widget& parent)
 {
     auto& toolbar = parent.add<GUI::Toolbar>();
-    toolbar.add_action(*m_new_file_action);
+    toolbar.add_action(*m_new_plain_file_action);
     toolbar.add_action(*m_new_directory_action);
     toolbar.add_action(*m_save_action);
     toolbar.add_action(*m_delete_action);
@@ -1029,8 +1051,13 @@ void HackStudioWidget::create_file_menu(GUI::Window& window)
 void HackStudioWidget::create_project_menu(GUI::Window& window)
 {
     auto& project_menu = window.add_menu("&Project");
-    project_menu.add_action(*m_new_file_action);
-    project_menu.add_action(*m_new_directory_action);
+    auto& new_submenu = project_menu.add_submenu("New");
+    for (auto& new_file_action : m_new_file_actions) {
+        new_submenu.add_action(new_file_action);
+    }
+    new_submenu.add_action(*m_new_plain_file_action);
+    new_submenu.add_separator();
+    new_submenu.add_action(*m_new_directory_action);
 }
 
 void HackStudioWidget::create_edit_menu(GUI::Window& window)
