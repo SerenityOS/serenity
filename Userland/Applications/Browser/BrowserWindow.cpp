@@ -333,7 +333,7 @@ void BrowserWindow::build_menus()
     add_search_engine("Google", "https://google.com/search?q={}");
     add_search_engine("Yandex", "https://yandex.com/search/?text={}");
 
-    auto custom_search_engine_action = GUI::Action::create_checkable("Custom", [&](auto& action) {
+    auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
         String search_engine;
         if (GUI::InputBox::show(this, search_engine, "Enter URL template:", "Custom Search Engine", "https://host/search?q={}") != GUI::InputBox::ExecOK || search_engine.is_empty()) {
             m_disable_search_engine_action->activate();
@@ -471,7 +471,7 @@ void BrowserWindow::build_menus()
     add_user_agent("Firefox Android Mobile", "Mozilla/5.0 (Android 11; Mobile; rv:68.0) Gecko/68.0 Firefox/86.0");
     add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1");
 
-    auto custom_user_agent = GUI::Action::create_checkable("Custom", [this](auto& action) {
+    auto custom_user_agent = GUI::Action::create_checkable("Custom...", [this](auto& action) {
         auto& tab = active_tab();
         String user_agent;
         if (GUI::InputBox::show(this, user_agent, "Enter User Agent:", "Custom User Agent") != GUI::InputBox::ExecOK || user_agent.is_empty() || user_agent.is_null()) {
