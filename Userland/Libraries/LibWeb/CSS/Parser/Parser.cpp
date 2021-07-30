@@ -173,7 +173,9 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet(TokenStream<T>& tokens)
     }
 
     auto stylesheet = CSSStyleSheet::create(rules);
-    dump_sheet(stylesheet);
+    if constexpr (CSS_PARSER_DEBUG) {
+        dump_sheet(stylesheet);
+    }
     return stylesheet;
 }
 
