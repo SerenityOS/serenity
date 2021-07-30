@@ -75,59 +75,56 @@ public:
 
     // The normal parser entry point, for parsing stylesheets.
     NonnullRefPtr<CSSStyleSheet> parse_as_stylesheet();
-    template<typename T>
-    NonnullRefPtr<CSSStyleSheet> parse_as_stylesheet(TokenStream<T>&);
-
     // For the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
     NonnullRefPtrVector<CSSRule> parse_as_list_of_rules();
-    template<typename T>
-    NonnullRefPtrVector<CSSRule> parse_as_list_of_rules(TokenStream<T>&);
-
     // For use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
     RefPtr<CSSRule> parse_as_rule();
-    template<typename T>
-    RefPtr<CSSRule> parse_as_rule(TokenStream<T>&);
-
     // Used in @supports conditions. [CSS3-CONDITIONAL]
     Optional<StyleProperty> parse_as_declaration();
-    template<typename T>
-    Optional<StyleProperty> parse_as_declaration(TokenStream<T>&);
-
     // For the contents of a style attribute, which parses text into the contents of a single style rule.
     RefPtr<CSSStyleDeclaration> parse_as_list_of_declarations();
-    template<typename T>
-    RefPtr<CSSStyleDeclaration> parse_as_list_of_declarations(TokenStream<T>&);
-
     // For things that need to consume a single value, like the parsing rules for attr().
     Optional<StyleComponentValueRule> parse_as_component_value();
-    template<typename T>
-    Optional<StyleComponentValueRule> parse_as_component_value(TokenStream<T>&);
-
     // For the contents of presentational attributes, which parse text into a single declaration’s value, or for parsing a stand-alone selector [SELECT] or list of Media Queries [MEDIAQ], as in Selectors API or the media HTML attribute.
     Vector<StyleComponentValueRule> parse_as_list_of_component_values();
-    template<typename T>
-    Vector<StyleComponentValueRule> parse_as_list_of_component_values(TokenStream<T>&);
-
     Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values();
-    template<typename T>
-    Vector<Vector<StyleComponentValueRule>> parse_as_comma_separated_list_of_component_values(TokenStream<T>&);
 
-    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&);
-
-    // FIXME: https://www.w3.org/TR/selectors-4/
     // Contrary to the name, these parse a comma-separated list of selectors, according to the spec.
-    Optional<SelectorList> parse_a_selector();
-    template<typename T>
-    Optional<SelectorList> parse_a_selector(TokenStream<T>&);
+    Optional<SelectorList> parse_as_selector();
+    Optional<SelectorList> parse_as_relative_selector();
 
-    Optional<SelectorList> parse_a_relative_selector();
-    template<typename T>
-    Optional<SelectorList> parse_a_relative_selector(TokenStream<T>&);
-
+    // FIXME: These want to be private, but StyleResolver still uses them for now.
     RefPtr<StyleValue> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
     static RefPtr<StyleValue> parse_css_value(ParsingContext const&, PropertyID, StyleComponentValueRule const&);
 
 private:
+    template<typename T>
+    NonnullRefPtr<CSSStyleSheet> parse_a_stylesheet(TokenStream<T>&);
+    template<typename T>
+    NonnullRefPtrVector<CSSRule> parse_a_list_of_rules(TokenStream<T>&);
+    template<typename T>
+    RefPtr<CSSRule> parse_a_rule(TokenStream<T>&);
+    template<typename T>
+    Optional<StyleProperty> parse_a_declaration(TokenStream<T>&);
+    template<typename T>
+    RefPtr<CSSStyleDeclaration> parse_a_list_of_declarations(TokenStream<T>&);
+    template<typename T>
+    Optional<StyleComponentValueRule> parse_a_component_value(TokenStream<T>&);
+    template<typename T>
+    Vector<StyleComponentValueRule> parse_a_list_of_component_values(TokenStream<T>&);
+    template<typename T>
+    Vector<Vector<StyleComponentValueRule>> parse_a_comma_separated_list_of_component_values(TokenStream<T>&);
+    template<typename T>
+    Optional<SelectorList> parse_a_selector(TokenStream<T>&);
+    template<typename T>
+    Optional<SelectorList> parse_a_relative_selector(TokenStream<T>&);
+    template<typename T>
+    Optional<SelectorList> parse_a_selector_list(TokenStream<T>&);
+    template<typename T>
+    Optional<SelectorList> parse_a_relative_selector_list(TokenStream<T>&);
+
+    Optional<Selector::SimpleSelector::ANPlusBPattern> parse_a_n_plus_b_pattern(TokenStream<StyleComponentValueRule>&);
+
     [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(bool top_level);
     template<typename T>
     [[nodiscard]] NonnullRefPtrVector<StyleRule> consume_a_list_of_rules(TokenStream<T>&, bool top_level);
@@ -190,11 +187,6 @@ private:
     static OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> parse_calc_number_product_part_with_operator(ParsingContext const&, TokenStream<StyleComponentValueRule>& tokens);
     static OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(ParsingContext const&, TokenStream<StyleComponentValueRule>&);
     static OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(ParsingContext const&, Vector<StyleComponentValueRule> const&);
-
-    template<typename T>
-    Optional<SelectorList> parse_a_selector_list(TokenStream<T>&);
-    template<typename T>
-    Optional<SelectorList> parse_a_relative_selector_list(TokenStream<T>&);
 
     enum class SelectorParsingResult {
         Done,
