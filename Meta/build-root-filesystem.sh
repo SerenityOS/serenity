@@ -32,19 +32,16 @@ fi
 umask 0022
 
 printf "installing base system... "
-if command -v rsync >/dev/null; then
-    if rsync --chown 2>&1 | grep "missing argument" >/dev/null; then
-        rsync -aH --chown=0:0 --inplace "$SERENITY_SOURCE_DIR"/Base/ mnt/
-        rsync -aH --chown=0:0 --inplace Root/ mnt/
-    else
-        rsync -aH --inplace "$SERENITY_SOURCE_DIR"/Base/ mnt/
-        rsync -aH --inplace Root/ mnt/
-        chown -R 0:0 mnt/
-    fi
+if ! command -v rsync >/dev/null; then
+    die "Please install rsync."
+fi
+
+if rsync --chown 2>&1 | grep "missing argument" >/dev/null; then
+    rsync -aH --chown=0:0 --inplace "$SERENITY_SOURCE_DIR"/Base/ mnt/
+    rsync -aH --chown=0:0 --inplace Root/ mnt/
 else
-    echo "Please install rsync to speed up image creation times, falling back to cp for now"
-    $CP -PdR "$SERENITY_SOURCE_DIR"/Base/* mnt/
-    $CP -PdR Root/* mnt/
+    rsync -aH --inplace "$SERENITY_SOURCE_DIR"/Base/ mnt/
+    rsync -aH --inplace Root/ mnt/
     chown -R 0:0 mnt/
 fi
 SERENITY_ARCH="${SERENITY_ARCH:-i686}"
