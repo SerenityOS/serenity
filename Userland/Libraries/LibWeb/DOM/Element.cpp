@@ -6,7 +6,7 @@
 
 #include <AK/AnyOf.h>
 #include <AK/StringBuilder.h>
-#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleInvalidator.h>
 #include <LibWeb/DOM/DOMException.h>
@@ -158,7 +158,7 @@ void Element::parse_attribute(const FlyString& name, const String& value)
             m_classes.unchecked_append(new_class);
         }
     } else if (name == HTML::AttributeNames::style) {
-        m_inline_style = parse_css_declaration(CSS::DeprecatedParsingContext(document()), value);
+        m_inline_style = parse_css_declaration(CSS::ParsingContext(document()), value);
         set_needs_style_update(true);
     }
 }
