@@ -1777,6 +1777,13 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context,
     return BoxShadowStyleValue::create(offset_x, offset_y, blur_radius, color);
 }
 
+RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
+{
+    auto component_values = parse_as_list_of_component_values();
+    auto tokens = TokenStream(component_values);
+    return parse_css_value(property_id, tokens);
+}
+
 RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<StyleComponentValueRule>& tokens)
 {
     Vector<StyleComponentValueRule> component_values;
@@ -2402,6 +2409,49 @@ OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_sum(ParsingContext cons
     tokens.skip_whitespace();
 
     return make<CalculatedStyleValue::CalcSum>(parsed_calc_product.release_nonnull(), move(additional));
+}
+
+}
+
+namespace Web {
+
+RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const& context, StringView const& css)
+{
+    if (css.is_empty())
+        return CSS::CSSStyleSheet::create({});
+    CSS::Parser parser(context, css);
+    return parser.parse_as_stylesheet();
+}
+
+RefPtr<CSS::CSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const& context, StringView const& css)
+{
+    if (css.is_empty())
+        return CSS::CSSStyleDeclaration::create({}, {});
+    CSS::Parser parser(context, css);
+    return parser.parse_as_list_of_declarations();
+}
+
+RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const& context, StringView const& string, CSS::PropertyID property_id)
+{
+    if (string.is_empty())
+        return {};
+    CSS::Parser parser(context, string);
+    return parser.parse_as_css_value(property_id);
+}
+
+Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const& context, StringView const& selector_text)
+{
+    CSS::Parser parser(context, selector_text);
+    return parser.parse_as_selector();
+}
+
+RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const& document, StringView const& string)
+{
+    auto integer = string.to_int();
+    if (integer.has_value())
+        return CSS::LengthStyleValue::create(CSS::Length::make_px(integer.value()));
+    // FIXME: The const_cast is a hack.
+    return parse_css_value(CSS::ParsingContext(const_cast<DOM::Document&>(document)), string);
 }
 
 }

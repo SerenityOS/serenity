@@ -93,6 +93,8 @@ public:
     Optional<SelectorList> parse_as_selector();
     Optional<SelectorList> parse_as_relative_selector();
 
+    RefPtr<StyleValue> parse_as_css_value(PropertyID);
+
     // FIXME: These want to be private, but StyleResolver still uses them for now.
     RefPtr<StyleValue> parse_css_value(PropertyID, TokenStream<StyleComponentValueRule>&);
     static RefPtr<StyleValue> parse_css_value(ParsingContext const&, PropertyID, StyleComponentValueRule const&);
@@ -204,5 +206,16 @@ private:
     Vector<Token> m_tokens;
     TokenStream<Token> m_token_stream;
 };
+
+}
+
+namespace Web {
+
+RefPtr<CSS::CSSStyleSheet> parse_css(CSS::ParsingContext const&, StringView const&);
+RefPtr<CSS::CSSStyleDeclaration> parse_css_declaration(CSS::ParsingContext const&, StringView const&);
+RefPtr<CSS::StyleValue> parse_css_value(CSS::ParsingContext const&, StringView const&, CSS::PropertyID property_id = CSS::PropertyID::Invalid);
+Optional<CSS::SelectorList> parse_selector(CSS::ParsingContext const&, StringView const&);
+
+RefPtr<CSS::StyleValue> parse_html_length(DOM::Document const&, StringView const&);
 
 }
