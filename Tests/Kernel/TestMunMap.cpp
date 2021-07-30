@@ -10,8 +10,7 @@
 
 TEST_CASE(munmap_zero_page)
 {
-    // munmap of the unmapped zero page should always fail.
+    // munmap of the unmapped zero page should always "succeed".
     auto res = munmap(0x0, 0xF);
-    EXPECT_EQ(res, -1);
-    EXPECT_EQ(errno, EINVAL);
+    EXPECT_EQ(res, 0);
 }

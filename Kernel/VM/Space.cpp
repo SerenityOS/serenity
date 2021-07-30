@@ -92,7 +92,7 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
     // Try again while checking multiple regions at a time.
     auto const& regions = find_regions_intersecting(range_to_unmap);
     if (regions.is_empty())
-        return EINVAL;
+        return KSuccess;
 
     // Check if any of the regions is not mmap'ed, to not accidentally
     // error out with just half a region map left.
