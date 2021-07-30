@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Platform.h>
 
@@ -133,6 +134,14 @@ private:
 
 template<typename T>
 using NetworkOrdered = BigEndian<T>;
+
+template<typename T>
+requires(HasFormatter<T>) struct Formatter<LittleEndian<T>> : Formatter<T> {
+};
+
+template<typename T>
+requires(HasFormatter<T>) struct Formatter<BigEndian<T>> : Formatter<T> {
+};
 
 }
 
