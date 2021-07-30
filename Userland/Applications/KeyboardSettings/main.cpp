@@ -32,7 +32,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // If there is no command line parameter go for GUI.
     auto app = GUI::Application::construct(argc, argv);
 
     if (pledge("stdio rpath cpath wpath recvfd sendfd proc exec", nullptr) < 0) {
