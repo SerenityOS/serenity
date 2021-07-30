@@ -155,11 +155,11 @@ Parser::~Parser()
 
 NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet()
 {
-    return parse_as_stylesheet(m_token_stream);
+    return parse_a_stylesheet(m_token_stream);
 }
 
 template<typename T>
-NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet(TokenStream<T>& tokens)
+NonnullRefPtr<CSSStyleSheet> Parser::parse_a_stylesheet(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_stylesheet");
 
@@ -179,7 +179,7 @@ NonnullRefPtr<CSSStyleSheet> Parser::parse_as_stylesheet(TokenStream<T>& tokens)
     return stylesheet;
 }
 
-Optional<SelectorList> Parser::parse_a_selector()
+Optional<SelectorList> Parser::parse_as_selector()
 {
     return parse_a_selector(m_token_stream);
 }
@@ -196,7 +196,7 @@ Optional<SelectorList> Parser::parse_a_selector(TokenStream<T>& tokens)
     return {};
 }
 
-Optional<SelectorList> Parser::parse_a_relative_selector()
+Optional<SelectorList> Parser::parse_as_relative_selector()
 {
     return parse_a_relative_selector(m_token_stream);
 }
@@ -218,7 +218,7 @@ Optional<SelectorList> Parser::parse_a_selector_list(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_a_selector_list");
 
-    auto comma_separated_lists = parse_as_comma_separated_list_of_component_values(tokens);
+    auto comma_separated_lists = parse_a_comma_separated_list_of_component_values(tokens);
 
     NonnullRefPtrVector<Selector> selectors;
     for (auto& selector_parts : comma_separated_lists) {
@@ -241,7 +241,7 @@ Optional<SelectorList> Parser::parse_a_relative_selector_list(TokenStream<T>& to
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_a_relative_selector_list");
 
-    auto comma_separated_lists = parse_as_comma_separated_list_of_component_values(tokens);
+    auto comma_separated_lists = parse_a_comma_separated_list_of_component_values(tokens);
 
     NonnullRefPtrVector<Selector> selectors;
     for (auto& selector_parts : comma_separated_lists) {
@@ -991,11 +991,11 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations(TokenStream<T
 
 RefPtr<CSSRule> Parser::parse_as_rule()
 {
-    return parse_as_rule(m_token_stream);
+    return parse_a_rule(m_token_stream);
 }
 
 template<typename T>
-RefPtr<CSSRule> Parser::parse_as_rule(TokenStream<T>& tokens)
+RefPtr<CSSRule> Parser::parse_a_rule(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_rule");
 
@@ -1030,11 +1030,11 @@ RefPtr<CSSRule> Parser::parse_as_rule(TokenStream<T>& tokens)
 
 NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules()
 {
-    return parse_as_list_of_rules(m_token_stream);
+    return parse_a_list_of_rules(m_token_stream);
 }
 
 template<typename T>
-NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules(TokenStream<T>& tokens)
+NonnullRefPtrVector<CSSRule> Parser::parse_a_list_of_rules(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_list_of_rules");
 
@@ -1052,11 +1052,11 @@ NonnullRefPtrVector<CSSRule> Parser::parse_as_list_of_rules(TokenStream<T>& toke
 
 Optional<StyleProperty> Parser::parse_as_declaration()
 {
-    return parse_as_declaration(m_token_stream);
+    return parse_a_declaration(m_token_stream);
 }
 
 template<typename T>
-Optional<StyleProperty> Parser::parse_as_declaration(TokenStream<T>& tokens)
+Optional<StyleProperty> Parser::parse_a_declaration(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_declaration");
 
@@ -1077,11 +1077,11 @@ Optional<StyleProperty> Parser::parse_as_declaration(TokenStream<T>& tokens)
 
 RefPtr<CSSStyleDeclaration> Parser::parse_as_list_of_declarations()
 {
-    return parse_as_list_of_declarations(m_token_stream);
+    return parse_a_list_of_declarations(m_token_stream);
 }
 
 template<typename T>
-RefPtr<CSSStyleDeclaration> Parser::parse_as_list_of_declarations(TokenStream<T>& tokens)
+RefPtr<CSSStyleDeclaration> Parser::parse_a_list_of_declarations(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_list_of_declarations");
 
@@ -1114,11 +1114,11 @@ RefPtr<CSSStyleDeclaration> Parser::parse_as_list_of_declarations(TokenStream<T>
 
 Optional<StyleComponentValueRule> Parser::parse_as_component_value()
 {
-    return parse_as_component_value(m_token_stream);
+    return parse_a_component_value(m_token_stream);
 }
 
 template<typename T>
-Optional<StyleComponentValueRule> Parser::parse_as_component_value(TokenStream<T>& tokens)
+Optional<StyleComponentValueRule> Parser::parse_a_component_value(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_component_value");
 
@@ -1144,11 +1144,11 @@ Optional<StyleComponentValueRule> Parser::parse_as_component_value(TokenStream<T
 
 Vector<StyleComponentValueRule> Parser::parse_as_list_of_component_values()
 {
-    return parse_as_list_of_component_values(m_token_stream);
+    return parse_a_list_of_component_values(m_token_stream);
 }
 
 template<typename T>
-Vector<StyleComponentValueRule> Parser::parse_as_list_of_component_values(TokenStream<T>& tokens)
+Vector<StyleComponentValueRule> Parser::parse_a_list_of_component_values(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_list_of_component_values");
 
@@ -1167,11 +1167,11 @@ Vector<StyleComponentValueRule> Parser::parse_as_list_of_component_values(TokenS
 
 Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of_component_values()
 {
-    return parse_as_comma_separated_list_of_component_values(m_token_stream);
+    return parse_a_comma_separated_list_of_component_values(m_token_stream);
 }
 
 template<typename T>
-Vector<Vector<StyleComponentValueRule>> Parser::parse_as_comma_separated_list_of_component_values(TokenStream<T>& tokens)
+Vector<Vector<StyleComponentValueRule>> Parser::parse_a_comma_separated_list_of_component_values(TokenStream<T>& tokens)
 {
     dbgln_if(CSS_PARSER_DEBUG, "Parser::parse_as_comma_separated_list_of_component_values");
 
@@ -1293,7 +1293,7 @@ RefPtr<CSSStyleDeclaration> Parser::convert_to_declaration(NonnullRefPtr<StyleBl
         return {};
 
     auto stream = TokenStream(block->m_values);
-    return parse_as_list_of_declarations(stream);
+    return parse_a_list_of_declarations(stream);
 }
 
 Optional<StyleProperty> Parser::convert_to_style_property(StyleDeclarationRule& declaration)
