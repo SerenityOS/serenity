@@ -15,17 +15,24 @@ describe("correct behavior", () => {
                 return 86400000000000;
             },
         };
+
+        const plainDateTimeToEpochSeconds = plainDateTime =>
+            (plainDateTime.year - 1970) * 31_556_952 +
+            plainDateTime.month * 2_630_000 +
+            plainDateTime.day * 86_400 +
+            plainDateTime.hour * 3_600 +
+            plainDateTime.minute * 60 +
+            plainDateTime.second +
+            plainDateTime.millisecond / 1_000 +
+            plainDateTime.microsecond / 1_000_000 +
+            plainDateTime.nanosecond / 1_000_000_000;
+
         const plainDateTime = Temporal.Now.plainDateTimeISO();
         const plainDateTimeWithOffset = Temporal.Now.plainDateTimeISO(timeZone);
-        // Yes, this will fail if a day, month, or year change happens between the above two lines :^)
-        // FIXME: enable these once the getters are implemented
-        // expect(plainDateTimeWithOffset.year).toBe(plainDateTime.year);
-        // expect(plainDateTimeWithOffset.month).toBe(plainDateTime.month);
-        // expect(plainDateTimeWithOffset.day).toBe(plainDateTime.day + 1);
-        // expect(plainDateTimeWithOffset.hour).not.toBe(plainDateTime.hour);
-        // expect(plainDateTimeWithOffset.minute).not.toBe(plainDateTime.minute);
-        // expect(plainDateTimeWithOffset.second).not.toBe(plainDateTime.second);
-        // expect(plainDateTimeWithOffset.millisecond).not.toBe(plainDateTime.millisecond);
-        // microsecond, and nanosecond not checked here as they could easily be the same for both
+        // Let's hope the duration between the above two lines is less than a second :^)
+        const differenceSeconds =
+            plainDateTimeToEpochSeconds(plainDateTimeWithOffset) -
+            plainDateTimeToEpochSeconds(plainDateTime);
+        expect(Math.floor(differenceSeconds)).toBe(86400);
     });
 });
