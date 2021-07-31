@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BumpAllocator.h>
 #include <AK/Debug.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -334,12 +335,70 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
     };
 }
 
+template<typename T>
+class BumpAllocatedLinkedList {
+public:
+    BumpAllocatedLinkedList() = default;
+
+    ALWAYS_INLINE void append(T value)
+    {
+        auto new_node = m_allocator.allocate();
+        VERIFY(new_node);
+        auto node_ptr = new (new_node) Node { move(value), nullptr, nullptr };
+
+        if (!m_first) {
+            m_first = new_node;
+            m_last = new_node;
+            return;
+        }
+
+        node_ptr->previous = m_last;
+        m_last->next = node_ptr;
+        m_last = node_ptr;
+    }
+
+    ALWAYS_INLINE T take_last()
+    {
+        VERIFY(m_last);
+        T value = move(m_last->value);
+        if (m_last == m_first) {
+            m_last = nullptr;
+            m_first = nullptr;
+        } else {
+            m_last = m_last->previous;
+            m_last->next = nullptr;
+        }
+        return value;
+    }
+
+    ALWAYS_INLINE T& last()
+    {
+        return m_last->value;
+    }
+
+    ALWAYS_INLINE bool is_empty() const
+    {
+        return m_first == nullptr;
+    }
+
+private:
+    struct Node {
+        T value;
+        Node* next { nullptr };
+        Node* previous { nullptr };
+    };
+
+    UniformBumpAllocator<Node, true> m_allocator;
+    Node* m_first { nullptr };
+    Node* m_last { nullptr };
+};
+
 template<class Parser>
 Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& state, MatchOutput& output) const
 {
     state.recursion_level = 0;
 
-    Vector<MatchState, 64> states_to_try_next;
+    BumpAllocatedLinkedList<MatchState> states_to_try_next;
 
     auto& bytecode = m_pattern->parser_result.bytecode;
 
