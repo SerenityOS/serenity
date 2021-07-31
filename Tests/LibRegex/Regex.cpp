@@ -661,6 +661,12 @@ TEST_CASE(ECMA262_property_match)
         { "\\p{ASCII_Hex_Digit}", "x", false, ECMAScriptFlags::Unicode },
         { "\\p{Any}", "\xcd\xb8", true, ECMAScriptFlags::Unicode },       // U+0378, which is an unassigned code point.
         { "\\p{Assigned}", "\xcd\xb8", false, ECMAScriptFlags::Unicode }, // U+0378, which is an unassigned code point.
+        { "\\p{Lu}", "a", false, ECMAScriptFlags::Unicode },
+        { "\\p{Lu}", "A", true, ECMAScriptFlags::Unicode },
+        { "\\p{Lu}", "9", false, ECMAScriptFlags::Unicode },
+        { "\\p{Cased_Letter}", "a", true, ECMAScriptFlags::Unicode },
+        { "\\p{Cased_Letter}", "A", true, ECMAScriptFlags::Unicode },
+        { "\\p{Cased_Letter}", "9", false, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {

@@ -1542,13 +1542,19 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     if (unicode) {
-        Unicode::Property property {};
+        PropertyEscape property {};
         bool negated = false;
 
         if (parse_unicode_property_escape(property, negated)) {
             if (negated)
                 stack.insert_bytecode_compare_values({ { CharacterCompareType::Inverse, 0 } });
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Property, (ByteCodeValueType)(property) } });
+            property.visit(
+                [&](Unicode::Property property) {
+                    stack.insert_bytecode_compare_values({ { CharacterCompareType::Property, (ByteCodeValueType)(property) } });
+                },
+                [&](Unicode::GeneralCategory general_category) {
+                    stack.insert_bytecode_compare_values({ { CharacterCompareType::GeneralCategory, (ByteCodeValueType)(general_category) } });
+                });
             return true;
         }
     }
@@ -1695,11 +1701,13 @@ struct CharClassRangeElement {
         CharClass character_class;
         u32 code_point { 0 };
         Unicode::Property property;
+        Unicode::GeneralCategory general_category;
     };
 
     bool is_negated { false };
     bool is_character_class { false };
-    bool is_property_escape { false };
+    bool is_property { false };
+    bool is_general_category { false };
 };
 
 bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>& ranges, bool unicode)
@@ -1784,10 +1792,17 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                 if (try_skip("-"))
                     return { CharClassRangeElement { .code_point = '-', .is_character_class = false } };
 
-                Unicode::Property property {};
+                PropertyEscape property {};
                 bool negated = false;
-                if (parse_unicode_property_escape(property, negated))
-                    return { CharClassRangeElement { .property = property, .is_negated = negated, .is_character_class = true, .is_property_escape = true } };
+                if (parse_unicode_property_escape(property, negated)) {
+                    return property.visit(
+                        [&](Unicode::Property property) {
+                            return CharClassRangeElement { .property = property, .is_negated = negated, .is_character_class = true, .is_property = true };
+                        },
+                        [&](Unicode::GeneralCategory general_category) {
+                            return CharClassRangeElement { .general_category = general_category, .is_negated = negated, .is_character_class = true, .is_general_category = true };
+                        });
+                }
             }
 
             if (try_skip("d"))
@@ -1828,8 +1843,11 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
         if (atom.is_character_class) {
             if (atom.is_negated)
                 ranges.empend(CompareTypeAndValuePair { CharacterCompareType::TemporaryInverse, 0 });
-            if (atom.is_property_escape)
+
+            if (atom.is_property)
                 ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Property, (ByteCodeValueType)(atom.property) });
+            else if (atom.is_general_category)
+                ranges.empend(CompareTypeAndValuePair { CharacterCompareType::GeneralCategory, (ByteCodeValueType)(atom.general_category) });
             else
                 ranges.empend(CompareTypeAndValuePair { CharacterCompareType::CharClass, (ByteCodeValueType)atom.character_class });
         } else {
@@ -1901,7 +1919,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
     return true;
 }
 
-bool ECMA262Parser::parse_unicode_property_escape(Unicode::Property& property, bool& negated)
+bool ECMA262Parser::parse_unicode_property_escape(PropertyEscape& property, bool& negated)
 {
     negated = false;
 
@@ -1918,13 +1936,19 @@ bool ECMA262Parser::parse_unicode_property_escape(Unicode::Property& property, b
         return false;
     }
 
-    if (!Unicode::is_ecma262_property(*parsed_property)) {
-        set_error(Error::InvalidNameForProperty);
-        return false;
-    }
+    property = move(*parsed_property);
 
-    property = *parsed_property;
-    return true;
+    return property.visit(
+        [this](Unicode::Property property) {
+            if (!Unicode::is_ecma262_property(property)) {
+                set_error(Error::InvalidNameForProperty);
+                return false;
+            }
+            return true;
+        },
+        [](Unicode::GeneralCategory) {
+            return true;
+        });
 }
 
 StringView ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_bracket)
@@ -1948,7 +1972,7 @@ StringView ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_
     return name;
 }
 
-Optional<Unicode::Property> ECMA262Parser::read_unicode_property_escape()
+Optional<ECMA262Parser::PropertyEscape> ECMA262Parser::read_unicode_property_escape()
 {
     consume(TokenType::LeftCurly, Error::InvalidPattern);
 
@@ -1960,10 +1984,14 @@ Optional<Unicode::Property> ECMA262Parser::read_unicode_property_escape()
         offset += consume().value().length();
     }
 
+    StringView property_name { start_token.value().characters_without_null_termination(), offset };
     consume(TokenType::RightCurly, Error::InvalidPattern);
 
-    StringView property_name { start_token.value().characters_without_null_termination(), offset };
-    return Unicode::property_from_string(property_name);
+    if (auto property = Unicode::property_from_string(property_name); property.has_value())
+        return { *property };
+    if (auto general_category = Unicode::general_category_from_string(property_name); general_category.has_value())
+        return { *general_category };
+    return {};
 }
 
 bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool named)
