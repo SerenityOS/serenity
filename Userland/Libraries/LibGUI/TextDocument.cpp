@@ -11,7 +11,6 @@
 #include <AK/Utf8View.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/TextDocument.h>
-#include <LibGUI/TextEditor.h>
 #include <LibRegex/Regex.h>
 
 namespace GUI {

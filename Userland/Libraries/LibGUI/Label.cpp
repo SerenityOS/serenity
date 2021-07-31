@@ -8,7 +8,6 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/TextLayout.h>
 #include <LibGfx/TextWrapping.h>

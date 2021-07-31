@@ -11,7 +11,6 @@
 #include <LibGUI/FontPickerWeightModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
-#include <LibGUI/Scrollbar.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/FontDatabase.h>

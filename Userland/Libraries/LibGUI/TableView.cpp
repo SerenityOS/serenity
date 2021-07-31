@@ -11,9 +11,7 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Scrollbar.h>
 #include <LibGUI/TableView.h>
-#include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 

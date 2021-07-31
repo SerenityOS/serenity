@@ -6,10 +6,8 @@
 
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/CommonLocationsProvider.h>
