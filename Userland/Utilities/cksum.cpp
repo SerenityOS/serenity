@@ -63,7 +63,7 @@ int main(int argc, char** argv)
                 fail = true;
                 continue;
             }
-            outln("{} {} {}", crc32.digest(), st.st_size, path);
+            outln("{:08x} {} {}", crc32.digest(), st.st_size, path);
         } else if (algorithm == "adler32") {
             Crypto::Checksum::Adler32 adler32;
             while (!file->eof() && !file->has_error())
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
                 fail = true;
                 continue;
             }
-            outln("{} {} {}", adler32.digest(), st.st_size, path);
+            outln("{:08x} {} {}", adler32.digest(), st.st_size, path);
         } else {
             warnln("{}: Unknown checksum algorithm: {}", argv[0], algorithm);
             exit(1);
