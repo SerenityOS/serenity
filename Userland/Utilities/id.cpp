@@ -134,7 +134,7 @@ static bool print_full_id_list(Core::Account const& account)
     out("uid={}({}) gid={}({})", uid, pw ? pw->pw_name : "n/a", gid, gr ? gr->gr_name : "n/a");
 
     for (auto extra_gid : account.extra_gids()) {
-        auto* gr = getgrgid(gid);
+        auto* gr = getgrgid(extra_gid);
         if (gr)
             out(" {}({})", extra_gid, gr->gr_name);
         else
