@@ -5,7 +5,6 @@
  */
 
 #include <AK/StringView.h>
-#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Process.h>
 

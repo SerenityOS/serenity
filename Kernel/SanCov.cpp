@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Devices/KCOVDevice.h>
-#include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 
 extern bool g_in_early_boot;

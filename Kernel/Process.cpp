@@ -20,7 +20,6 @@
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Module.h>
-#include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
@@ -32,7 +31,6 @@
 #include <Kernel/Thread.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/PageDirectory.h>
-#include <Kernel/VM/PrivateInodeVMObject.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/limits.h>

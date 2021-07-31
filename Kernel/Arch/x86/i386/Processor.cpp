@@ -7,7 +7,6 @@
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
-#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>

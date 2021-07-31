@@ -5,7 +5,6 @@
  */
 
 #include <AK/Optional.h>
-#include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/APIC.h>

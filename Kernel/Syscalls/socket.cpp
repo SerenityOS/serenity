@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/FileSystem/FileDescription.h>
-#include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/UnixTypes.h>
