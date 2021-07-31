@@ -10,7 +10,6 @@
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Bytecode/PassManager.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>

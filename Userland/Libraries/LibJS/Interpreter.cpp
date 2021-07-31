@@ -6,7 +6,6 @@
  */
 
 #include <AK/ScopeGuard.h>
-#include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>

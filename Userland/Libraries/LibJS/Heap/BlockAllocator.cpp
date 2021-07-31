@@ -6,10 +6,8 @@
 
 #include <AK/Platform.h>
 #include <AK/Vector.h>
-#include <LibJS/Forward.h>
 #include <LibJS/Heap/BlockAllocator.h>
 #include <LibJS/Heap/HeapBlock.h>
-#include <stdlib.h>
 #include <sys/mman.h>
 
 #ifdef HAS_ADDRESS_SANITIZER

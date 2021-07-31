@@ -7,7 +7,6 @@
  */
 
 #include <AK/HashTable.h>
-#include <LibJS/AST.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Runtime/Array.h>

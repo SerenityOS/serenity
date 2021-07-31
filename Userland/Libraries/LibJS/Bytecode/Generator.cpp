@@ -10,7 +10,6 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
-#include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
 

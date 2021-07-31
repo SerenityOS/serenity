@@ -5,8 +5,6 @@
  */
 
 #include <AK/Debug.h>
-#include <LibGUI/TextEditor.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/SyntaxHighlighter.h>
