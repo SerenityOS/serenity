@@ -10,7 +10,6 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <ctype.h>
-#include <stdio.h>
 
 static String title_casify(const String& dashy_name)
 {

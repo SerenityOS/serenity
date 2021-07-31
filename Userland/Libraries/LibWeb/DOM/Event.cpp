@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
 #include <AK/TypeCasts.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Node.h>

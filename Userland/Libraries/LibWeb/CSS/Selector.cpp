@@ -6,7 +6,6 @@
 
 #include "Selector.h"
 #include <AK/StringUtils.h>
-#include <LibWeb/CSS/Selector.h>
 #include <ctype.h>
 
 namespace Web::CSS {

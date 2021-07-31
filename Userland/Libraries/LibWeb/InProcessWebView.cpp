@@ -5,10 +5,8 @@
  */
 
 #include <AK/URL.h>
-#include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/Clipboard.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -19,7 +17,6 @@
 #include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
-#include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/BrowsingContext.h>

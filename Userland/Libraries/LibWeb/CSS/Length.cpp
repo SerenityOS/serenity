@@ -6,7 +6,6 @@
  */
 
 #include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Variant.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Document.h>

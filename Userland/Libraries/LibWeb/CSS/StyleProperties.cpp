@@ -9,7 +9,6 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/FontCache.h>
-#include <ctype.h>
 
 namespace Web::CSS {
 

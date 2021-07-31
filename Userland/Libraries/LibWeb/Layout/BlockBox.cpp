@@ -5,7 +5,6 @@
  */
 
 #include <LibGfx/Painter.h>
-#include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
