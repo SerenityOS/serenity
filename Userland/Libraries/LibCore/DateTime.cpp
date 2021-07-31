@@ -9,7 +9,6 @@
 #include <AK/Time.h>
 #include <LibCore/DateTime.h>
 #include <errno.h>
-#include <sys/time.h>
 #include <time.h>
 
 namespace Core {

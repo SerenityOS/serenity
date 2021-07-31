@@ -8,7 +8,6 @@
 #include <AK/Random.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
-#include <LibCore/File.h>
 #ifndef AK_OS_MACOS
 #    include <crypt.h>
 #endif

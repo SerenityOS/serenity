@@ -7,21 +7,16 @@
 
 #include "FileWatcher.h"
 #include <AK/Debug.h>
-#include <AK/Function.h>
 #include <AK/LexicalPath.h>
-#include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/RefCounted.h>
 #include <AK/Result.h>
 #include <AK/String.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/API/InodeWatcherFlags.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/Notifier.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 namespace Core {
