@@ -139,6 +139,7 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 * **Max Wipfli** - [MaxWipfli](https://github.com/MaxWipfli)
 * **Daniel Bertalan** - [BertalanD](https://github.com/BertalanD)
 * **Jelle Raaijmakers** - [GMTA](https://github.com/GMTA)
+* **Sam Atkins** - [AtkinsSJ](http://github.com/AtkinsSJ)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
