@@ -27,6 +27,7 @@ void TimeZonePrototype::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_accessor(vm.names.id, id_getter, {}, Attribute::Configurable);
     define_native_function(vm.names.getOffsetNanosecondsFor, get_offset_nanoseconds_for, 1, attr);
+    define_native_function(vm.names.getOffsetStringFor, get_offset_string_for, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 
@@ -77,6 +78,27 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
 
     // 5. Return ! GetIANATimeZoneOffsetNanoseconds(instant.[[Nanoseconds]], timeZone.[[Identifier]]).
     return Value((double)get_iana_time_zone_offset_nanoseconds(instant->nanoseconds(), time_zone->identifier()));
+}
+
+// 11.4.5 Temporal.TimeZone.prototype.getOffsetStringFor ( instant ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.getoffsetstringfor
+JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
+{
+    // 1. Let timeZone be the this value.
+    // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
+    auto* time_zone = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Set instant to ? ToTemporalInstant(instant).
+    auto* instant = to_temporal_instant(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
+    auto offset_string = builtin_time_zone_get_offset_string_for(global_object, *time_zone, *instant);
+    if (vm.exception())
+        return {};
+    return js_string(vm, move(*offset_string));
 }
 
 // 11.4.11 Temporal.TimeZone.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype.tostring
