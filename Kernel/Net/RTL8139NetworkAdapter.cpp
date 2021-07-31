@@ -260,6 +260,9 @@ void RTL8139NetworkAdapter::reset()
     // choose irqs, then clear any pending
     out16(REG_IMR, INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_BUFFER_OVERFLOW | INT_LINK_CHANGE | INT_RX_FIFO_OVERFLOW | INT_LENGTH_CHANGE | INT_SYSTEM_ERROR);
     out16(REG_ISR, 0xffff);
+
+    // Set the initial link up status.
+    m_link_up = (in8(REG_MSR) & MSR_LINKB) == 0;
 }
 
 UNMAP_AFTER_INIT void RTL8139NetworkAdapter::read_mac_address()
