@@ -11,7 +11,6 @@
 #include <Applications/HexEditor/FindDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/TextBox.h>

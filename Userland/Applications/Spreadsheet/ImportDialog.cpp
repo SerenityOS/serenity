@@ -6,8 +6,6 @@
 
 #include "ImportDialog.h"
 #include "Spreadsheet.h"
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
 #include <Applications/Spreadsheet/CSVImportGML.h>
@@ -21,7 +19,6 @@
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
-#include <LibGUI/Wizards/AbstractWizardPage.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGUI/Wizards/WizardPage.h>
 

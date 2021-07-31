@@ -5,9 +5,7 @@
  */
 
 #include "DesktopSettingsWidget.h"
-#include <AK/StringBuilder.h>
 #include <Applications/DisplaySettings/DesktopSettingsGML.h>
-#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>

@@ -16,7 +16,6 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Toolbar.h>
-#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <unistd.h>
 

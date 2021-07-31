@@ -7,7 +7,6 @@
 #include "HexEditorWidget.h"
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menubar.h>
-#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <unistd.h>
 

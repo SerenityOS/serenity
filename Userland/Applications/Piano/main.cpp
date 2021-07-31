@@ -10,14 +10,11 @@
 #include "AudioPlayerLoop.h"
 #include "MainWidget.h"
 #include "TrackManager.h"
-#include <AK/Array.h>
 #include <AK/Queue.h>
 #include <LibAudio/Buffer.h>
 #include <LibAudio/ClientConnection.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
-#include <LibCore/Object.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
@@ -25,8 +22,6 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Bitmap.h>
-#include <LibThreading/Thread.h>
 
 int main(int argc, char** argv)
 {

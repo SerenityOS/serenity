@@ -8,8 +8,6 @@
 #include "Spreadsheet.h"
 #include "Workbook.h"
 #include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <Applications/Spreadsheet/CSVExportGML.h>
@@ -21,9 +19,7 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/RadioButton.h>
-#include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
-#include <LibGUI/Wizards/AbstractWizardPage.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGUI/Wizards/WizardPage.h>
 #include <unistd.h>

@@ -8,13 +8,11 @@
 #include <AK/LexicalPath.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
-#include <AK/RefCounted.h>
 #include <AK/URL.h>
 #include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibDesktop/Launcher.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Breadcrumbbar.h>
 #include <LibGUI/Clipboard.h>

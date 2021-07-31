@@ -5,12 +5,9 @@
  */
 
 #include "M3UParser.h"
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Utf8View.h>
-#include <LibCore/FileStream.h>
-#include <ctype.h>
 
 M3UParser::M3UParser()
 {

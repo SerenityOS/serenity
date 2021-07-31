@@ -6,7 +6,6 @@
 
 #include "BarsVisualizationWidget.h"
 #include "AudioAlgorithms.h"
-#include <AK/Complex.h>
 #include <AK/Math.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Menu.h>

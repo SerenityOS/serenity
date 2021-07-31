@@ -10,7 +10,6 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <unistd.h>
 

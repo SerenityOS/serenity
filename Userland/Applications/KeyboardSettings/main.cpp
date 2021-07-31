@@ -7,7 +7,6 @@
 #include "CharacterMapFileListModel.h"
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
-#include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>

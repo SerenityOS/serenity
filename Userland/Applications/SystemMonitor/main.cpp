@@ -37,7 +37,6 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
-#include <LibGUI/Toolbar.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>

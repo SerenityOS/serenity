@@ -20,7 +20,6 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGfx/BitmapFont.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
 static constexpr int s_max_width = 32;

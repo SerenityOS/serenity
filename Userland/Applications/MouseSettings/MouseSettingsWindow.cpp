@@ -12,11 +12,9 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Event.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Widget.h>
-#include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>

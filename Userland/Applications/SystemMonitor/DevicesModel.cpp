@@ -5,7 +5,6 @@
  */
 
 #include "DevicesModel.h"
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCore/DirIterator.h>

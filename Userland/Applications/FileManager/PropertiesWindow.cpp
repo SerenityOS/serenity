@@ -7,7 +7,6 @@
 #include "PropertiesWindow.h"
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
-#include <AK/StringBuilder.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
@@ -20,7 +19,6 @@
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/TabWidget.h>
 #include <grp.h>
-#include <limits.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
