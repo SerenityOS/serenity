@@ -6,7 +6,6 @@
  */
 
 #include "DirectoryView.h"
-#include "FileOperationProgressWidget.h"
 #include "FileUtils.h"
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>

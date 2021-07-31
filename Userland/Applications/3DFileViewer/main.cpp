@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
@@ -22,7 +21,6 @@
 #include <unistd.h>
 
 #include "Mesh.h"
-#include "MeshLoader.h"
 #include "WavefrontOBJLoader.h"
 
 static constexpr u16 RENDER_WIDTH = 640;

@@ -6,13 +6,11 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
-#include <AK/Demangle.h>
 #include <AK/OwnPtr.h>
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibDebug/DebugSession.h>
 #include <LibLine/Editor.h>
@@ -21,7 +19,6 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
 
 RefPtr<Line::Editor> editor;

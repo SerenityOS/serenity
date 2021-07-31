@@ -16,7 +16,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
-#include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -28,8 +27,6 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FileSystemModel.h>
-#include <LibGUI/InputBox.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
@@ -37,7 +34,6 @@
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Statusbar.h>
-#include <LibGUI/TextEditor.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/TreeView.h>
@@ -45,9 +41,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>
 #include <pthread.h>
-#include <serenity.h>
 #include <signal.h>
-#include <spawn.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/wait.h>

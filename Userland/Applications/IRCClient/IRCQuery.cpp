@@ -6,7 +6,6 @@
 
 #include "IRCQuery.h"
 #include "IRCClient.h"
-#include <stdio.h>
 
 IRCQuery::IRCQuery(IRCClient& client, const String& name)
     : m_client(client)

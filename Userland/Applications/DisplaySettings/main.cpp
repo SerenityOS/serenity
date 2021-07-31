@@ -9,7 +9,6 @@
 #include "DesktopSettingsWidget.h"
 #include "FontSettingsWidget.h"
 #include "MonitorSettingsWidget.h"
-#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -18,7 +17,6 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <unistd.h>
 

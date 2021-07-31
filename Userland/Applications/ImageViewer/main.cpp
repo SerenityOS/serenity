@@ -7,7 +7,6 @@
 #include "ViewWidget.h"
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/MimeData.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
