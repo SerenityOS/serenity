@@ -1976,21 +1976,44 @@ Optional<ECMA262Parser::PropertyEscape> ECMA262Parser::read_unicode_property_esc
 {
     consume(TokenType::LeftCurly, Error::InvalidPattern);
 
-    auto start_token = m_parser_state.current_token;
-    size_t offset = 0;
-    while (match(TokenType::Char)) {
-        if (m_parser_state.current_token.value() == "}")
-            break;
-        offset += consume().value().length();
+    // Note: clang-format is disabled here because it doesn't handle templated lambdas yet.
+    // clang-format off
+    auto read_until = [&]<typename... Ts>(Ts&&... terminators) {
+        auto start_token = m_parser_state.current_token;
+        size_t offset = 0;
+
+        while (match(TokenType::Char)) {
+            if (m_parser_state.current_token.value().is_one_of(forward<Ts>(terminators)...))
+                break;
+            offset += consume().value().length();
+        }
+
+        return StringView { start_token.value().characters_without_null_termination(), offset };
+    };
+    // clang-format on
+
+    StringView property_type;
+    StringView property_name = read_until("="sv, "}"sv);
+
+    if (try_skip("="sv)) {
+        if (property_name.is_empty())
+            return {};
+        property_type = property_name;
+        property_name = read_until("}"sv);
     }
 
-    StringView property_name { start_token.value().characters_without_null_termination(), offset };
     consume(TokenType::RightCurly, Error::InvalidPattern);
 
-    if (auto property = Unicode::property_from_string(property_name); property.has_value())
-        return { *property };
-    if (auto general_category = Unicode::general_category_from_string(property_name); general_category.has_value())
-        return { *general_category };
+    if (property_type.is_empty()) {
+        if (auto property = Unicode::property_from_string(property_name); property.has_value())
+            return { *property };
+        if (auto general_category = Unicode::general_category_from_string(property_name); general_category.has_value())
+            return { *general_category };
+    } else if ((property_type == "General_Category"sv) || (property_type == "gc"sv)) {
+        if (auto general_category = Unicode::general_category_from_string(property_name); general_category.has_value())
+            return { *general_category };
+    }
+
     return {};
 }
 
