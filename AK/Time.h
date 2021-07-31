@@ -139,9 +139,9 @@ public:
     }
     static Time from_timespec(const struct timespec&);
     static Time from_timeval(const struct timeval&);
-    static Time min() { return Time(-0x8000'0000'0000'0000LL, 0); };
-    static Time zero() { return Time(0, 0); };
-    static Time max() { return Time(0x7fff'ffff'ffff'ffffLL, 999'999'999); };
+    constexpr static Time min() { return Time(-0x8000'0000'0000'0000LL, 0); };
+    constexpr static Time zero() { return Time(0, 0); };
+    constexpr static Time max() { return Time(0x7fff'ffff'ffff'ffffLL, 999'999'999); };
 
     // Truncates towards zero (2.8s to 2s, -2.8s to -2s).
     i64 to_truncated_seconds() const;
