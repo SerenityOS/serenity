@@ -5,7 +5,6 @@
  */
 
 #include "Mixer.h"
-#include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
 
 int main(int, char**)

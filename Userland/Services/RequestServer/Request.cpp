@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Badge.h>
 #include <RequestServer/ClientConnection.h>
 #include <RequestServer/Request.h>
 

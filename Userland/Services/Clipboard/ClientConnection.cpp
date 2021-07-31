@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Badge.h>
 #include <Clipboard/ClientConnection.h>
 #include <Clipboard/ClipboardClientEndpoint.h>
 #include <Clipboard/Storage.h>
