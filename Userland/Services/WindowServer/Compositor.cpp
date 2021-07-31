@@ -322,32 +322,33 @@ void Compositor::compose()
     {
         // Paint any desktop wallpaper rects that are not somehow underneath any window transparency
         // rects and outside of any opaque window areas
-        auto paint_desktop_wallpaper = [&]<bool is_opaque>(const Gfx::IntRect& render_rect) {
+        m_opaque_wallpaper_rects.for_each_intersected(dirty_screen_rects, [&](auto& render_rect) {
             Screen::for_each([&](auto& screen) {
                 auto screen_rect = screen.rect();
                 auto screen_render_rect = screen_rect.intersected(render_rect);
                 if (!screen_render_rect.is_empty()) {
-                    if constexpr (is_opaque) {
-                        dbgln_if(COMPOSE_DEBUG, "  render wallpaper opaque: {} on screen #{}", screen_render_rect, screen.index());
-                        prepare_rect(screen, render_rect);
-                        auto& back_painter = *screen.compositor_screen_data().m_back_painter;
-                        paint_wallpaper(screen, back_painter, render_rect, screen_rect);
-                    } else {
-                        dbgln_if(COMPOSE_DEBUG, "  render wallpaper transparent: {} on screen #{}", screen_render_rect, screen.index());
-                        prepare_transparency_rect(screen, render_rect);
-                        auto& temp_painter = *screen.compositor_screen_data().m_temp_painter;
-                        paint_wallpaper(screen, temp_painter, render_rect, screen_rect);
-                    }
+                    dbgln_if(COMPOSE_DEBUG, "  render wallpaper opaque: {} on screen #{}", screen_render_rect, screen.index());
+                    prepare_rect(screen, render_rect);
+                    auto& back_painter = *screen.compositor_screen_data().m_back_painter;
+                    paint_wallpaper(screen, back_painter, render_rect, screen_rect);
                 }
                 return IterationDecision::Continue;
             });
             return IterationDecision::Continue;
-        };
-        m_opaque_wallpaper_rects.for_each_intersected(dirty_screen_rects, [&](auto& render_rect) {
-            return paint_desktop_wallpaper.template operator()<true>(render_rect);
         });
         m_transparent_wallpaper_rects.for_each_intersected(dirty_screen_rects, [&](auto& render_rect) {
-            return paint_desktop_wallpaper.template operator()<false>(render_rect);
+            Screen::for_each([&](auto& screen) {
+                auto screen_rect = screen.rect();
+                auto screen_render_rect = screen_rect.intersected(render_rect);
+                if (!screen_render_rect.is_empty()) {
+                    dbgln_if(COMPOSE_DEBUG, "  render wallpaper transparent: {} on screen #{}", screen_render_rect, screen.index());
+                    prepare_transparency_rect(screen, render_rect);
+                    auto& temp_painter = *screen.compositor_screen_data().m_temp_painter;
+                    paint_wallpaper(screen, temp_painter, render_rect, screen_rect);
+                }
+                return IterationDecision::Continue;
+            });
+            return IterationDecision::Continue;
         });
     }
 
