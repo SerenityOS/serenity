@@ -16,9 +16,25 @@
 #include <netinet/in.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath tty", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/proc/net/arp", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     static bool flag_set;
     static bool flag_delete;
     const char* value_ipv4_address = nullptr;
