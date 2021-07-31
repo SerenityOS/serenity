@@ -7,6 +7,7 @@
 #include "PropertiesWindow.h"
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
+#include <Applications/FileManager/DirectoryView.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
@@ -217,6 +218,9 @@ bool PropertiesWindow::apply_changes()
         m_old_mode = m_mode;
         m_permissions_dirty = false;
     }
+
+    auto directory_view = parent()->find_descendant_of_type_named<FileManager::DirectoryView>("directory_view");
+    directory_view->refresh();
 
     update();
     m_apply_button->set_enabled(false);
