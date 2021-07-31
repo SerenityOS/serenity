@@ -7,7 +7,6 @@
 #include <AK/StringBuilder.h>
 #include <LibX86/Instruction.h>
 #include <LibX86/Interpreter.h>
-#include <stdio.h>
 
 #if defined(__GNUC__) && !defined(__clang__)
 #    pragma GCC optimize("O3")
