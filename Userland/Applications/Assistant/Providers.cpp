@@ -8,6 +8,7 @@
 #include "FuzzyMatch.h"
 #include <AK/LexicalPath.h>
 #include <AK/URL.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
@@ -23,6 +24,7 @@
 #include <fcntl.h>
 #include <serenity.h>
 #include <spawn.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 namespace Assistant {
@@ -45,6 +47,24 @@ void CalculatorResult::activate() const
 void FileResult::activate() const
 {
     Desktop::Launcher::open(URL::create_with_file_protocol(title()));
+}
+
+void ScreenshotResult::activate() const
+{
+    auto home_folder = Core::StandardPaths::home_directory();
+    auto full_path = LexicalPath::join(home_folder, title()).string();
+
+    pid_t pid;
+    int status;
+    char const* argv[] = { "shot", full_path.characters(), nullptr };
+
+    if ((errno = posix_spawn(&pid, "/bin/shot", nullptr, nullptr, const_cast<char**>(argv), environ)))
+        perror("posix_spawn");
+
+    if (waitpid(pid, &status, 0) < 0) 
+            perror("waitpid");
+
+    Desktop::Launcher::open(URL::create_with_file_protocol(full_path));
 }
 
 void TerminalResult::activate() const
@@ -202,6 +222,22 @@ void FileProvider::build_filesystem_cache()
         [this](auto) {
             m_building_cache = false;
         });
+}
+
+void ScreenshotProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+{
+    if (!query.starts_with("shot"))
+        return;
+
+    // Take filename or auto-generate filename
+    auto filename = query.substring(4).trim_whitespace();
+
+    if (filename.is_empty())
+        filename = Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png");
+
+    NonnullRefPtrVector<Result> results;
+    results.append(adopt_ref(*new ScreenshotResult(move(filename))));
+    on_complete(move(results));
 }
 
 void TerminalProvider::query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)

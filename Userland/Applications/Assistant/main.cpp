@@ -126,6 +126,7 @@ public:
         m_providers.append(make<AppProvider>());
         m_providers.append(make<CalculatorProvider>());
         m_providers.append(make<FileProvider>());
+        m_providers.append(make<ScreenshotProvider>());
         m_providers.append(make<TerminalProvider>());
         m_providers.append(make<URLProvider>());
     }

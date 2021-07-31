@@ -96,6 +96,22 @@ public:
     virtual Gfx::Bitmap const* bitmap() const override;
 };
 
+class ScreenshotResult final : public Result {
+public:
+    explicit ScreenshotResult(String title)
+        : Result(move(title), "'Enter' will write screenshot to home folder and open it in Image Viewer"sv, 100)
+        , m_bitmap(GUI::Icon::default_icon("filetype-image").bitmap_for_size(16))
+    {
+    }
+    ~ScreenshotResult() override = default;
+    void activate() const override;
+
+    virtual Gfx::Bitmap const* bitmap() const override { return m_bitmap; }
+
+private:
+    RefPtr<Gfx::Bitmap> m_bitmap;
+};
+
 class TerminalResult final : public Result {
 public:
     explicit TerminalResult(String command)
@@ -160,6 +176,11 @@ private:
 };
 
 class TerminalProvider final : public Provider {
+public:
+    void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
+};
+
+class ScreenshotProvider final : public Provider {
 public:
     void query(String const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
 };
