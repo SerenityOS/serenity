@@ -4,13 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "RegexMatcher.h"
-#include "RegexDebug.h"
-#include "RegexParser.h"
 #include <AK/Debug.h>
-#include <AK/ScopedValueRollback.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#if REGEX_DEBUG
+#    include <LibRegex/RegexDebug.h>
+#endif
+#include <LibRegex/RegexMatcher.h>
+#include <LibRegex/RegexParser.h>
 
 namespace regex {
 
