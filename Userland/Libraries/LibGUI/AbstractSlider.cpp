@@ -9,7 +9,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Slider.h>
 #include <LibGfx/Palette.h>
-#include <LibGfx/StylePainter.h>
 
 namespace GUI {
 

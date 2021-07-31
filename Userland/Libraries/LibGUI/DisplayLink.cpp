@@ -5,7 +5,6 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <LibGUI/DisplayLink.h>
 #include <LibGUI/WindowServerConnection.h>

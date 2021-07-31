@@ -10,7 +10,6 @@
 #include <AK/Queue.h>
 #include <LibGUI/GMLLexer.h>
 #include <LibGUI/GMLParser.h>
-#include <ctype.h>
 
 namespace GUI {
 
