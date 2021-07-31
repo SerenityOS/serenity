@@ -5,8 +5,6 @@
  */
 
 #include <LibCore/AnonymousBuffer.h>
-#include <LibIPC/Decoder.h>
-#include <LibIPC/Encoder.h>
 #include <LibIPC/File.h>
 #include <fcntl.h>
 #include <stdio.h>

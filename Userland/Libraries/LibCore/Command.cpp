@@ -5,13 +5,11 @@
  */
 
 #include "Command.h"
-#include <AK/ByteBuffer.h>
 #include <AK/Format.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/File.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
