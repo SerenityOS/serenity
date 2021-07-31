@@ -478,7 +478,7 @@ namespace Unicode {
 
     generate_enum("Locale"sv, "None"sv, move(unicode_data.locales));
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
-    generate_enum("GeneralCategory"sv, "None"sv, move(unicode_data.general_categories), move(unicode_data.general_category_unions), move(unicode_data.general_category_aliases), true);
+    generate_enum("GeneralCategory"sv, "None"sv, unicode_data.general_categories, unicode_data.general_category_unions, unicode_data.general_category_aliases, true);
     generate_enum("Property"sv, "Assigned"sv, unicode_data.prop_list.keys(), {}, unicode_data.prop_aliases, true);
     generate_enum("WordBreakProperty"sv, "Other"sv, unicode_data.word_break_prop_list.keys());
 
@@ -541,6 +541,7 @@ namespace Detail {
 
 Optional<UnicodeData> unicode_data_for_code_point(u32 code_point);
 Optional<Property> property_from_string(StringView const& property);
+Optional<GeneralCategory> general_category_from_string(StringView const& general_category);
 
 }
 
@@ -710,6 +711,32 @@ Optional<Property> property_from_string(StringView const& property)
         generator.append(R"~~~(
     if (property == "@property@"sv)
         return Property::@property@;)~~~");
+    }
+
+    generator.append(R"~~~(
+    return {};
+}
+
+Optional<GeneralCategory> general_category_from_string(StringView const& general_category)
+{)~~~");
+
+    for (auto const& general_category : unicode_data.general_categories) {
+        generator.set("general_category", general_category);
+        generator.append(R"~~~(
+    if (general_category == "@general_category@"sv)
+        return GeneralCategory::@general_category@;)~~~");
+    }
+    for (auto const& union_ : unicode_data.general_category_unions) {
+        generator.set("general_category", union_.alias);
+        generator.append(R"~~~(
+    if (general_category == "@general_category@"sv)
+        return GeneralCategory::@general_category@;)~~~");
+    }
+    for (auto const& alias : unicode_data.general_category_aliases) {
+        generator.set("general_category", alias.alias);
+        generator.append(R"~~~(
+    if (general_category == "@general_category@"sv)
+        return GeneralCategory::@general_category@;)~~~");
     }
 
     generator.append(R"~~~(
