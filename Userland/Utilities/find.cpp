@@ -12,7 +12,6 @@
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <errno.h>
-#include <getopt.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>

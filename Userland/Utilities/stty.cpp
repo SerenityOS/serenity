@@ -13,7 +13,6 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
-#include <LibCore/ArgsParser.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <getopt.h>

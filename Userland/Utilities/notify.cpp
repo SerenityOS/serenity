@@ -8,7 +8,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Notification.h>
 #include <LibGfx/Bitmap.h>
-#include <stdio.h>
 
 int main(int argc, char** argv)
 {
