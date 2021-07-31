@@ -25,7 +25,6 @@
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
-#include <Kernel/ThreadTracer.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UnveilNode.h>
 #include <Kernel/VM/Space.h>

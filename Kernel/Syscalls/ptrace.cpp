@@ -7,6 +7,7 @@
 
 #include <AK/ScopeGuard.h>
 #include <Kernel/Process.h>
+#include <Kernel/ThreadTracer.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PrivateInodeVMObject.h>
 #include <Kernel/VM/ProcessPagingScope.h>
