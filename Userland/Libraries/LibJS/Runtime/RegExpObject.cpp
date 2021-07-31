@@ -5,7 +5,6 @@
  */
 
 #include <AK/Function.h>
-#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/RegExpObject.h>

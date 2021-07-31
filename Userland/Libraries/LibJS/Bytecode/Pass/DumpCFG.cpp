@@ -5,7 +5,6 @@
  */
 
 #include <LibJS/Bytecode/PassManager.h>
-#include <stdio.h>
 
 namespace JS::Bytecode::Passes {
 
