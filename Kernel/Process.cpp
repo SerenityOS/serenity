@@ -12,7 +12,9 @@
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/CoreDump.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/KCOVDevice.h>
+#ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
+#    include <Kernel/Devices/KCOVDevice.h>
+#endif
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
