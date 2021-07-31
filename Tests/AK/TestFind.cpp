@@ -8,7 +8,6 @@
 
 #include <AK/Array.h>
 #include <AK/Find.h>
-#include <AK/Vector.h>
 
 TEST_CASE(should_return_end_if_not_in_container)
 {
