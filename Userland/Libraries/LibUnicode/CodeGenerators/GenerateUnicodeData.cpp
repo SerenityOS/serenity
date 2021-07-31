@@ -85,8 +85,23 @@ struct UnicodeData {
 
     Vector<CodePointData> code_point_data;
     Vector<CodePointRange> code_point_ranges;
-    Vector<String> general_categories;
     u32 last_contiguous_code_point { 0 };
+
+    // The Unicode standard defines General Category values which are not in any UCD file. These
+    // values are simply unions of other values.
+    // https://www.unicode.org/reports/tr44/#GC_Values_Table
+    Vector<String> general_categories;
+    Vector<Alias> general_category_unions {
+        { "Ll | Lu | Lt"sv, "LC"sv },
+        { "Lu | Ll | Lt | Lm | Lo"sv, "L"sv },
+        { "Mn | Mc | Me"sv, "M"sv },
+        { "Nd | Nl | No"sv, "N"sv },
+        { "Pc | Pd | Ps | Pe | Pi | Pf | Po"sv, "P"sv },
+        { "Sm | Sc | Sk | So"sv, "S"sv },
+        { "Zs | Zl | Zp"sv, "Z"sv },
+        { "Cc | Cf | Cs | Co"sv, "C"sv }, // FIXME: This union should also contain "Cn" (Unassigned), which we don't parse yet.
+    };
+    Vector<Alias> general_category_aliases;
 
     PropList prop_list;
     Vector<Alias> prop_aliases;
@@ -233,6 +248,42 @@ static void parse_alias_list(Core::File& file, PropList const& prop_list, Vector
     }
 }
 
+static void parse_value_alias_list(Core::File& file, StringView desired_category, Vector<String> const& value_list, Vector<Alias>& prop_unions, Vector<Alias>& prop_aliases)
+{
+    auto append_alias = [&](auto alias, auto value) {
+        // FIXME: We will, eventually, need to find where missing properties are located and parse them.
+        if (!value_list.contains_slow(value) && !any_of(prop_unions, [&](auto const& u) { return value == u.alias; }))
+            return;
+
+        prop_aliases.append({ value, alias });
+    };
+
+    while (file.can_read_line()) {
+        auto line = file.read_line();
+        if (line.is_empty() || line.starts_with('#'))
+            continue;
+
+        if (auto index = line.find('#'); index.has_value())
+            line = line.substring(0, *index);
+
+        auto segments = line.split_view(';', true);
+        auto category = segments[0].trim_whitespace();
+
+        if (category != desired_category)
+            continue;
+
+        VERIFY((segments.size() == 3) || (segments.size() == 4));
+        auto value = segments[1].trim_whitespace();
+        auto alias = segments[2].trim_whitespace();
+        append_alias(alias, value);
+
+        if (segments.size() == 4) {
+            alias = segments[3].trim_whitespace();
+            append_alias(alias, value);
+        }
+    }
+}
+
 static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
 {
     Optional<u32> code_point_range_start;
@@ -335,9 +386,10 @@ static void generate_unicode_data_header(UnicodeData& unicode_data)
     generator.set("casing_transform_size", String::number(unicode_data.largest_casing_transform_size));
     generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
 
-    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> aliases = {}, bool as_bitmask = false) {
+    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> unions = {}, Vector<Alias> aliases = {}, bool as_bitmask = false) {
         VERIFY((values.size() + !default_.is_empty()) <= 64);
         quick_sort(values);
+        quick_sort(unions, [](auto& union1, auto& union2) { return union1.alias < union2.alias; });
         quick_sort(aliases, [](auto& alias1, auto& alias2) { return alias1.alias < alias2.alias; });
 
         generator.set("name", name);
@@ -373,6 +425,12 @@ enum class @name@ {)~~~");
             }
         }
 
+        for (auto const& union_ : unions) {
+            generator.set("union", union_.alias);
+            generator.set("value", union_.property);
+            generator.append(R"~~~(
+    @union@ = @value@,)~~~");
+        }
         for (auto const& alias : aliases) {
             generator.set("alias", alias.alias);
             generator.set("value", alias.property);
@@ -411,8 +469,8 @@ namespace Unicode {
 
     generate_enum("Locale"sv, "None"sv, move(unicode_data.locales));
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
-    generate_enum("GeneralCategory"sv, {}, move(unicode_data.general_categories));
-    generate_enum("Property"sv, "Assigned"sv, unicode_data.prop_list.keys(), unicode_data.prop_aliases, true);
+    generate_enum("GeneralCategory"sv, "None"sv, move(unicode_data.general_categories), move(unicode_data.general_category_unions), move(unicode_data.general_category_aliases), true);
+    generate_enum("Property"sv, "Assigned"sv, unicode_data.prop_list.keys(), {}, unicode_data.prop_aliases, true);
     generate_enum("WordBreakProperty"sv, "Other"sv, unicode_data.word_break_prop_list.keys());
 
     generator.append(R"~~~(
@@ -665,6 +723,7 @@ int main(int argc, char** argv)
     char const* prop_list_path = nullptr;
     char const* derived_core_prop_path = nullptr;
     char const* prop_alias_path = nullptr;
+    char const* prop_value_alias_path = nullptr;
     char const* word_break_path = nullptr;
 
     Core::ArgsParser args_parser;
@@ -675,6 +734,7 @@ int main(int argc, char** argv)
     args_parser.add_option(prop_list_path, "Path to PropList.txt file", "prop-list-path", 'p', "prop-list-path");
     args_parser.add_option(derived_core_prop_path, "Path to DerivedCoreProperties.txt file", "derived-core-prop-path", 'd', "derived-core-prop-path");
     args_parser.add_option(prop_alias_path, "Path to PropertyAliases.txt file", "prop-alias-path", 'a', "prop-alias-path");
+    args_parser.add_option(prop_value_alias_path, "Path to PropertyValueAliases.txt file", "prop-value-alias-path", 'v', "prop-value-alias-path");
     args_parser.add_option(word_break_path, "Path to WordBreakProperty.txt file", "word-break-path", 'w', "word-break-path");
     args_parser.parse(argc, argv);
 
@@ -705,6 +765,7 @@ int main(int argc, char** argv)
     auto prop_list_file = open_file(prop_list_path, "-p/--prop-list-path");
     auto derived_core_prop_file = open_file(derived_core_prop_path, "-d/--derived-core-prop-path");
     auto prop_alias_file = open_file(prop_alias_path, "-a/--prop-alias-path");
+    auto prop_value_alias_file = open_file(prop_value_alias_path, "-v/--prop-value-alias-path");
     auto word_break_file = open_file(word_break_path, "-w/--word-break-path");
 
     UnicodeData unicode_data {};
@@ -723,6 +784,7 @@ int main(int argc, char** argv)
     unicode_data.prop_list.set("ASCII"sv, { { 0, 0, 0x7f } });
 
     parse_unicode_data(unicode_data_file, unicode_data);
+    parse_value_alias_list(prop_value_alias_file, "gc"sv, unicode_data.general_categories, unicode_data.general_category_unions, unicode_data.general_category_aliases);
 
     if (generate_header)
         generate_unicode_data_header(unicode_data);

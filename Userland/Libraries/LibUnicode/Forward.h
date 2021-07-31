@@ -11,7 +11,7 @@
 namespace Unicode {
 
 enum class Condition;
-enum class GeneralCategory;
+enum class GeneralCategory : u64;
 enum class Locale;
 enum class Property : u64;
 enum class WordBreakProperty;
