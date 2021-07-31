@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Terminal.h"
 #include <AK/Debug.h>
 #include <AK/Queue.h>
 #include <AK/StringBuilder.h>
