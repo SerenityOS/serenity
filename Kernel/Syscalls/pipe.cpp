@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/FileSystem/FIFO.h>
-#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {

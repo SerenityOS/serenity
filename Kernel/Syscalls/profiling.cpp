@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/CoreDump.h>
-#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>

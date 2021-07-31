@@ -5,7 +5,6 @@
  */
 
 #include <AK/Checked.h>
-#include <AK/Singleton.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GraphicsManagement.h>

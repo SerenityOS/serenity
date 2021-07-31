@@ -8,7 +8,6 @@
 
 #include <AK/Concepts.h>
 #include <AK/EnumBits.h>
-#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>

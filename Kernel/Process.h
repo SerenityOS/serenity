@@ -6,11 +6,9 @@
 
 #pragma once
 
-#include <AK/Checked.h>
 #include <AK/Concepts.h>
 #include <AK/HashMap.h>
 #include <AK/IntrusiveList.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
 #include <AK/Userspace.h>
@@ -30,8 +28,6 @@
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UnveilNode.h>
-#include <Kernel/VM/AllocationStrategy.h>
-#include <Kernel/VM/RangeAllocator.h>
 #include <Kernel/VM/Space.h>
 #include <LibC/elf.h>
 #include <LibC/signal_numbers.h>

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
