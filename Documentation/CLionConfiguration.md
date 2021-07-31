@@ -12,6 +12,8 @@ After opening the `serenity` repository in CLion as a new project, the "`Open Pr
 
 `CMake Options`: `-G Ninja -DBUILD_LAGOM=ON -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10`
 
+> The `gcc-10` and `g++-10` are not special-meaning strings, they're paths to your GCC compiler executables, and should be findable through `PATH`. It is entirely possible you might have to instead use something like `-DCMAKE_C_COMPILER=/opt/homebrew/bin/gcc-11 -DCMAKE_CXX_COMPILER=/opt/homebrew/bin/g++-11` instead of the above.
+
 `Build Directory`: `Build/i686`
 
 > _If you have not built the Toolchain at this point, please do so: `./Toolchain/BuildIt.sh`_
