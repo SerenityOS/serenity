@@ -6,8 +6,6 @@
 
 #include <LibGUI/INILexer.h>
 #include <LibGUI/INISyntaxHighlighter.h>
-#include <LibGUI/TextEditor.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
 namespace GUI {

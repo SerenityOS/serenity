@@ -7,7 +7,6 @@
 #include <LibGUI/Event.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowManagerServerConnection.h>
-#include <WindowServer/Window.h>
 
 namespace GUI {
 

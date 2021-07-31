@@ -9,7 +9,6 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <string.h>
-#include <unistd.h>
 
 namespace GUI {
 

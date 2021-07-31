@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Badge.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ModelSelection.h>

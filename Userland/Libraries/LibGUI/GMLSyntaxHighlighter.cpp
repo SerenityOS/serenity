@@ -6,8 +6,6 @@
 
 #include <LibGUI/GMLLexer.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
-#include <LibGUI/TextEditor.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
 namespace GUI {
