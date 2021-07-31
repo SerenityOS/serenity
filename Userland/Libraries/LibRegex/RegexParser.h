@@ -213,7 +213,9 @@ private:
     StringView read_digits_as_string(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, bool hex = false, int max_count = -1);
     Optional<unsigned> read_digits(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, bool hex = false, int max_count = -1);
     StringView read_capture_group_specifier(bool take_starting_angle_bracket = false);
-    Optional<Unicode::Property> read_unicode_property_escape();
+
+    using PropertyEscape = Variant<Unicode::Property, Unicode::GeneralCategory>;
+    Optional<PropertyEscape> read_unicode_property_escape();
 
     bool parse_pattern(ByteCode&, size_t&, bool unicode, bool named);
     bool parse_disjunction(ByteCode&, size_t&, bool unicode, bool named);
@@ -227,7 +229,7 @@ private:
     bool parse_capture_group(ByteCode&, size_t&, bool unicode, bool named);
     Optional<CharClass> parse_character_class_escape(bool& out_inverse, bool expect_backslash = false);
     bool parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&, bool unicode);
-    bool parse_unicode_property_escape(Unicode::Property& property, bool& negated);
+    bool parse_unicode_property_escape(PropertyEscape& property, bool& negated);
 
     // Used only by B.1.4, Regular Expression Patterns (Extended for use in browsers)
     bool parse_quantifiable_assertion(ByteCode&, size_t&, bool named);

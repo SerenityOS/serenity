@@ -537,6 +537,10 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             auto property = static_cast<Unicode::Property>(m_bytecode->at(offset++));
             compare_property(input, state, property, current_inversion_state(), inverse_matched);
 
+        } else if (compare_type == CharacterCompareType::GeneralCategory) {
+            auto general_category = static_cast<Unicode::GeneralCategory>(m_bytecode->at(offset++));
+            compare_general_category(input, state, general_category, current_inversion_state(), inverse_matched);
+
         } else {
             warnln("Undefined comparison: {}", (int)compare_type);
             VERIFY_NOT_REACHED();
@@ -733,6 +737,22 @@ ALWAYS_INLINE void OpCode_Compare::compare_property(MatchInput const& input, Mat
 
     u32 code_point = input.view[state.string_position];
     bool equal = Unicode::code_point_has_property(code_point, property);
+
+    if (equal) {
+        if (inverse)
+            inverse_matched = true;
+        else
+            ++state.string_position;
+    }
+}
+
+ALWAYS_INLINE void OpCode_Compare::compare_general_category(MatchInput const& input, MatchState& state, Unicode::GeneralCategory general_category, bool inverse, bool& inverse_matched)
+{
+    if (state.string_position == input.view.length())
+        return;
+
+    u32 code_point = input.view[state.string_position];
+    bool equal = Unicode::code_point_has_general_category(code_point, general_category);
 
     if (equal) {
         if (inverse)
