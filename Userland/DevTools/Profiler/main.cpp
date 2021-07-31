@@ -12,7 +12,6 @@
 #include "TimelineView.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/Timer.h>
 #include <LibDesktop/Launcher.h>

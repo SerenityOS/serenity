@@ -6,10 +6,8 @@
 
 #include "ProfileModel.h"
 #include "Profile.h"
-#include <AK/StringBuilder.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibSymbolication/Symbolication.h>
-#include <ctype.h>
 #include <stdio.h>
 
 namespace Profiler {

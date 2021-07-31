@@ -12,7 +12,6 @@
 #include <LibSymbolication/Symbolication.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/ELFSymbolProvider.h>
-#include <ctype.h>
 #include <stdio.h>
 
 namespace HackStudio {
