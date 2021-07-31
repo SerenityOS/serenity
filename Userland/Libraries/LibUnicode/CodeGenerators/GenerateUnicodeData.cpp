@@ -103,8 +103,17 @@ struct UnicodeData {
     };
     Vector<Alias> general_category_aliases;
 
-    PropList prop_list;
+    // The Unicode standard defines additional properties (Any, Assigned, ASCII) which are not in
+    // any UCD file. Assigned is set as the default enum value 0 so "property & Assigned == Assigned"
+    // is always true. Any is not assigned code points here because this file only parses assigned
+    // code points, whereas Any will include unassigned code points.
+    // https://unicode.org/reports/tr18/#General_Category_Property
+    PropList prop_list {
+        { "Any"sv, {} },
+        { "ASCII"sv, { { 0, 0, 0x7f } } },
+    };
     Vector<Alias> prop_aliases;
+
     PropList word_break_prop_list;
 };
 
@@ -774,15 +783,6 @@ int main(int argc, char** argv)
     parse_prop_list(derived_core_prop_file, unicode_data.prop_list);
     parse_alias_list(prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases);
     parse_prop_list(word_break_file, unicode_data.word_break_prop_list);
-
-    // The Unicode standard defines additional properties (Any, Assigned, ASCII) which are not in
-    // any UCD file. Assigned is set as the default enum value 0 so "property & Assigned == Assigned"
-    // is always true. Any is not assigned code points here because this file only parses assigned
-    // code points, whereas Any will include unassigned code points.
-    // https://unicode.org/reports/tr18/#General_Category_Property
-    unicode_data.prop_list.set("Any"sv, {});
-    unicode_data.prop_list.set("ASCII"sv, { { 0, 0, 0x7f } });
-
     parse_unicode_data(unicode_data_file, unicode_data);
     parse_value_alias_list(prop_value_alias_file, "gc"sv, unicode_data.general_categories, unicode_data.general_category_unions, unicode_data.general_category_aliases);
 
