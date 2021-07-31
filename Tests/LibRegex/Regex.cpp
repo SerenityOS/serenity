@@ -726,3 +726,19 @@ TEST_CASE(case_insensitive_match)
         EXPECT_EQ(result.matches.at(0).column, 4ul);
     }
 }
+
+TEST_CASE(extremely_long_fork_chain)
+{
+    Regex<ECMA262> re("(?:aa)*");
+    auto result = re.match(String::repeated('a', 100'000));
+    EXPECT_EQ(result.success, true);
+}
+
+static auto g_lots_of_a_s = String::repeated('a', 10'000'000);
+
+BENCHMARK_CASE(fork_performance)
+{
+    Regex<ECMA262> re("(?:aa)*");
+    auto result = re.match(g_lots_of_a_s);
+    EXPECT_EQ(result.success, true);
+}
