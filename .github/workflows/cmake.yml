@@ -48,9 +48,6 @@ jobs:
         sudo add-apt-repository ppa:canonical-server/server-backports
         sudo apt-get update
         sudo apt-get install libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 ccache
-    - name: Use GCC 10 instead
-      run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10
-
     - name: Install JS dependencies
       run: sudo npm install -g prettier@2.2.1
     - name: Install Python dependencies
