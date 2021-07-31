@@ -65,8 +65,7 @@ public:
     }
 
 private:
-    Optional<bool> execute(MatchInput const& input, MatchState& state, MatchOutput& output, size_t recursion_level) const;
-    ALWAYS_INLINE Optional<bool> execute_low_prio_forks(MatchInput const& input, MatchState& original_state, MatchOutput& output, Vector<MatchState> states, size_t recursion_level) const;
+    Optional<bool> execute(MatchInput const& input, MatchState& state, MatchOutput& output) const;
 
     Regex<Parser> const* m_pattern;
     typename ParserTraits<Parser>::OptionsType const m_regex_options;
