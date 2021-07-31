@@ -7,7 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/HashMap.h>
-#include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/String.h>
