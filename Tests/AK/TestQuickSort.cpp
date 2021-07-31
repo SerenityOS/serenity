@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Checked.h>
 #include <AK/Noncopyable.h>
 #include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>

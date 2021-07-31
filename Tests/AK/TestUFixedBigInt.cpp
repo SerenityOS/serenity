@@ -11,8 +11,6 @@
 #include <AK/Random.h>
 #include <AK/UFixedBigInt.h>
 
-#include <time.h>
-
 constexpr int test_iterations = 32;
 
 TEST_CASE(one_plus_one)
