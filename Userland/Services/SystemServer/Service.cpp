@@ -14,9 +14,6 @@
 #include <LibCore/File.h>
 #include <LibCore/Socket.h>
 #include <fcntl.h>
-#include <grp.h>
-#include <libgen.h>
-#include <pwd.h>
 #include <sched.h>
 #include <stdio.h>
 #include <sys/ioctl.h>

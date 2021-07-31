@@ -8,7 +8,6 @@
 #include <LibGemini/GeminiRequest.h>
 #include <RequestServer/GeminiProtocol.h>
 #include <RequestServer/GeminiRequest.h>
-#include <fcntl.h>
 
 namespace RequestServer {
 

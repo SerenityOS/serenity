@@ -5,14 +5,12 @@
  */
 
 #include "Client.h"
-#include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/TCPServer.h>
-#include <LibCore/TCPSocket.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>

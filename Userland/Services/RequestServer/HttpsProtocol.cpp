@@ -10,11 +10,9 @@
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/URL.h>
-#include <LibHTTP/HttpsJob.h>
 #include <RequestServer/ClientConnection.h>
 #include <RequestServer/HttpCommon.h>
 #include <RequestServer/HttpsProtocol.h>
-#include <RequestServer/HttpsRequest.h>
 #include <RequestServer/Request.h>
 
 namespace RequestServer {

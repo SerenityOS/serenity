@@ -10,7 +10,6 @@
 #include <AudioServer/ClientConnection.h>
 #include <AudioServer/Mixer.h>
 #include <pthread.h>
-#include <strings.h>
 
 namespace AudioServer {
 
