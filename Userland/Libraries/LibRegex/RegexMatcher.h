@@ -52,7 +52,7 @@ public:
     ~Matcher() = default;
 
     RegexResult match(RegexStringView const&, Optional<typename ParserTraits<Parser>::OptionsType> = {}) const;
-    RegexResult match(Vector<RegexStringView> const, Optional<typename ParserTraits<Parser>::OptionsType> = {}) const;
+    RegexResult match(Vector<RegexStringView> const&, Optional<typename ParserTraits<Parser>::OptionsType> = {}) const;
 
     typename ParserTraits<Parser>::OptionsType options() const
     {
