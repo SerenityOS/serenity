@@ -6,7 +6,6 @@
 
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Filters/FastBoxBlurFilter.h>
-#include <LibGfx/Filters/SpatialGaussianBlurFilter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>

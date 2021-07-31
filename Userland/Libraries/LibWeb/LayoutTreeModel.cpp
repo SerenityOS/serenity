@@ -8,7 +8,6 @@
 #include <AK/StringBuilder.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/DOM/Text.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <ctype.h>

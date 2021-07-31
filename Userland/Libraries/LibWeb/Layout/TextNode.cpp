@@ -5,7 +5,6 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/DOM/Document.h>
