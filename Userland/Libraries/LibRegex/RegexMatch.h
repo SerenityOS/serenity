@@ -469,6 +469,7 @@ struct MatchState {
     Vector<Match> matches;
     Vector<Vector<Match>> capture_group_matches;
     Vector<HashMap<String, Match>> named_capture_group_matches;
+    size_t recursion_level { 0 };
 };
 
 struct MatchOutput {

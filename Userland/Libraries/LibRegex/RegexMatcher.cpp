@@ -7,11 +7,12 @@
 #include <AK/Debug.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <LibRegex/RegexMatcher.h>
+#include <LibRegex/RegexParser.h>
+
 #if REGEX_DEBUG
 #    include <LibRegex/RegexDebug.h>
 #endif
-#include <LibRegex/RegexMatcher.h>
-#include <LibRegex/RegexParser.h>
 
 namespace regex {
 
@@ -210,10 +211,10 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
             state.string_position = view_index;
             state.instruction_position = 0;
 
-            auto success = execute(input, state, temp_output, 0);
+            auto success = execute(input, state, temp_output);
             // This success is acceptable only if it doesn't read anything from the input (input length is 0).
             if (state.string_position <= view_index) {
-                if (success.value()) {
+                if (success.has_value() && success.value()) {
                     output = move(temp_output);
                     if (!match_count) {
                         // Nothing was *actually* matched, so append an empty match.
@@ -241,7 +242,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
             state.string_position = view_index;
             state.instruction_position = 0;
 
-            auto success = execute(input, state, output, 0);
+            auto success = execute(input, state, output);
             if (!success.has_value())
                 return { false, 0, {}, {}, {}, output.operations };
 
@@ -334,14 +335,11 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional
 }
 
 template<class Parser>
-Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& state, MatchOutput& output, size_t recursion_level) const
+Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& state, MatchOutput& output) const
 {
-    if (recursion_level > c_max_recursion)
-        return false;
+    state.recursion_level = 0;
 
-    Vector<MatchState, 64> reversed_fork_low_prio_states;
-    MatchState fork_high_prio_state;
-    Optional<bool> success;
+    Vector<MatchState, 64> states_to_try_next;
 
     auto& bytecode = m_pattern->parser_result.bytecode;
 
@@ -350,7 +348,7 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
         auto& opcode = bytecode.get_opcode(state);
 
 #if REGEX_DEBUG
-        s_regex_dbg.print_opcode("VM", opcode, state, recursion_level, false);
+        s_regex_dbg.print_opcode("VM", opcode, state, state.recursion_level, false);
 #endif
 
         ExecutionResult result;
@@ -369,59 +367,38 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
 
         switch (result) {
         case ExecutionResult::Fork_PrioLow:
-            reversed_fork_low_prio_states.append(state);
+            states_to_try_next.append(state);
+            states_to_try_next.last().instruction_position = state.fork_at_position;
             continue;
         case ExecutionResult::Fork_PrioHigh:
-            fork_high_prio_state = state;
-            fork_high_prio_state.instruction_position = fork_high_prio_state.fork_at_position;
-            success = execute(input, fork_high_prio_state, output, ++recursion_level);
-            if (!success.has_value())
-                return {};
-
-            if (success.value()) {
-                state = fork_high_prio_state;
-                return true;
-            }
-
+            states_to_try_next.append(state);
+            state.instruction_position = state.fork_at_position;
+            ++state.recursion_level;
             continue;
         case ExecutionResult::Continue:
             continue;
         case ExecutionResult::Succeeded:
             return true;
         case ExecutionResult::Failed:
+            if (!states_to_try_next.is_empty()) {
+                state = states_to_try_next.take_last();
+                continue;
+            }
             return false;
         case ExecutionResult::Failed_ExecuteLowPrioForks: {
-            Vector<MatchState> fork_low_prio_states;
-            fork_low_prio_states.ensure_capacity(reversed_fork_low_prio_states.size());
-            for (ssize_t i = reversed_fork_low_prio_states.size() - 1; i >= 0; i--)
-                fork_low_prio_states.unchecked_append(move(reversed_fork_low_prio_states[i]));
-            return execute_low_prio_forks(input, state, output, move(fork_low_prio_states), recursion_level + 1);
+            if (states_to_try_next.is_empty()) {
+                if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
+                    return {};
+                return false;
+            }
+            state = states_to_try_next.take_last();
+            ++state.recursion_level;
+            continue;
         }
         }
     }
 
     VERIFY_NOT_REACHED();
-}
-
-template<class Parser>
-ALWAYS_INLINE Optional<bool> Matcher<Parser>::execute_low_prio_forks(MatchInput const& input, MatchState& original_state, MatchOutput& output, Vector<MatchState> states, size_t recursion_level) const
-{
-    for (auto& state : states) {
-
-        state.instruction_position = state.fork_at_position;
-        dbgln_if(REGEX_DEBUG, "Forkstay... ip = {}, sp = {}", state.instruction_position, state.string_position);
-        auto success = execute(input, state, output, recursion_level);
-        if (!success.has_value())
-            return {};
-        if (success.value()) {
-            dbgln_if(REGEX_DEBUG, "Forkstay succeeded... ip = {}, sp = {}", state.instruction_position, state.string_position);
-            original_state = state;
-            return true;
-        }
-    }
-
-    original_state.string_position = 0;
-    return false;
 }
 
 template class Matcher<PosixBasicParser>;
