@@ -5,6 +5,7 @@
  */
 
 #include "WebAssemblyInstanceObject.h"
+#include <AK/TypeCasts.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceObjectPrototype.h>
 
 namespace Web::Bindings {

@@ -5,6 +5,7 @@
  */
 
 #include <AK/HashTable.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/WeakSetPrototype.h>
 
 namespace JS {

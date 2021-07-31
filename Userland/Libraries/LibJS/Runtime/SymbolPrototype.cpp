@@ -6,7 +6,7 @@
  */
 
 #include <AK/Function.h>
-#include <LibJS/Heap/Heap.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
