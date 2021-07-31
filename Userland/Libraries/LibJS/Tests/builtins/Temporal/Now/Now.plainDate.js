@@ -19,9 +19,19 @@ describe("correct behavior", () => {
         };
         const plainDate = Temporal.Now.plainDate(calendar);
         const plainDateWithOffset = Temporal.Now.plainDate(calendar, timeZone);
-        // Yes, this will fail if a day, month, or year change happens between the above two lines :^)
-        expect(plainDateWithOffset.year).toBe(plainDate.year);
-        expect(plainDateWithOffset.month).toBe(plainDate.month);
-        expect(plainDateWithOffset.day).toBe(plainDate.day + 1);
+        if (plainDate.dayOfYear === plainDate.daysInYear) {
+            expect(plainDateWithOffset.year).toBe(plainDate.year + 1);
+            expect(plainDateWithOffset.month).toBe(1);
+            expect(plainDateWithOffset.day).toBe(1);
+        } else {
+            expect(plainDateWithOffset.year).toBe(plainDate.year);
+            if (plainDate.day === plainDate.daysInMonth) {
+                expect(plainDateWithOffset.month).toBe(plainDate.month + 1);
+                expect(plainDateWithOffset.day).toBe(1);
+            } else {
+                expect(plainDateWithOffset.month).toBe(plainDate.month);
+                expect(plainDateWithOffset.day).toBe(plainDate.day + 1);
+            }
+        }
     });
 });
