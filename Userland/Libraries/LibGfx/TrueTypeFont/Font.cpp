@@ -10,7 +10,6 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/File.h>
-#include <LibGfx/FontDatabase.h>
 #include <LibGfx/TrueTypeFont/Cmap.h>
 #include <LibGfx/TrueTypeFont/Font.h>
 #include <LibGfx/TrueTypeFont/Glyf.h>

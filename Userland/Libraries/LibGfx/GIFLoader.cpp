@@ -5,7 +5,6 @@
  */
 
 #include <AK/Array.h>
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
@@ -14,7 +13,6 @@
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibGfx/GIFLoader.h>
-#include <stdio.h>
 #include <string.h>
 
 namespace Gfx {
