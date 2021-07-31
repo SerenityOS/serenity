@@ -196,7 +196,7 @@ PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time
     auto* instant = system_instant(global_object);
 
     // 5. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
-    return builtin_time_zone_get_plain_date_time_for(global_object, *time_zone, *instant, *calendar);
+    return builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar);
 }
 
 }

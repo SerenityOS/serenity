@@ -367,12 +367,12 @@ Object* to_temporal_time_zone(GlobalObject& global_object, Value temporal_time_z
 }
 
 // 11.6.11 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
-double get_offset_nanoseconds_for(GlobalObject& global_object, Object& time_zone, Instant& instant)
+double get_offset_nanoseconds_for(GlobalObject& global_object, Value time_zone, Instant& instant)
 {
     auto& vm = global_object.vm();
 
     // 1. Let getOffsetNanosecondsFor be ? GetMethod(timeZone, "getOffsetNanosecondsFor").
-    auto* get_offset_nanoseconds_for = Value(&time_zone).get_method(global_object, vm.names.getOffsetNanosecondsFor);
+    auto* get_offset_nanoseconds_for = time_zone.get_method(global_object, vm.names.getOffsetNanosecondsFor);
     if (vm.exception())
         return {};
 
@@ -381,7 +381,7 @@ double get_offset_nanoseconds_for(GlobalObject& global_object, Object& time_zone
         get_offset_nanoseconds_for = global_object.temporal_time_zone_prototype_get_offset_nanoseconds_for_function();
 
     // 3. Let offsetNanoseconds be ? Call(getOffsetNanosecondsFor, timeZone, « instant »).
-    auto offset_nanoseconds_value = vm.call(*get_offset_nanoseconds_for, &time_zone, &instant);
+    auto offset_nanoseconds_value = vm.call(*get_offset_nanoseconds_for, time_zone, &instant);
     if (vm.exception())
         return {};
 
@@ -416,7 +416,7 @@ Optional<String> builtin_time_zone_get_offset_string_for(GlobalObject& global_ob
     auto& vm = global_object.vm();
 
     // 1. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
-    auto offset_nanoseconds = get_offset_nanoseconds_for(global_object, time_zone, instant);
+    auto offset_nanoseconds = get_offset_nanoseconds_for(global_object, &time_zone, instant);
     if (vm.exception())
         return {};
 
@@ -425,7 +425,7 @@ Optional<String> builtin_time_zone_get_offset_string_for(GlobalObject& global_ob
 }
 
 // 11.6.13 BuiltinTimeZoneGetPlainDateTimeFor ( timeZone, instant, calendar ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetplaindatetimefor
-PlainDateTime* builtin_time_zone_get_plain_date_time_for(GlobalObject& global_object, Object& time_zone, Instant& instant, Object& calendar)
+PlainDateTime* builtin_time_zone_get_plain_date_time_for(GlobalObject& global_object, Value time_zone, Instant& instant, Object& calendar)
 {
     auto& vm = global_object.vm();
 
