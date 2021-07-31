@@ -6,7 +6,6 @@
 
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <errno.h>
 #include <stdio.h>
 #include <unistd.h>
 

@@ -4,10 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <LibCore/File.h>
-#include <assert.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 

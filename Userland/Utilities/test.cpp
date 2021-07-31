@@ -9,7 +9,6 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/File.h>
-#include <getopt.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>

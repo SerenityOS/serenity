@@ -6,7 +6,6 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <stdlib.h>
 
 int main(int argc, char** argv)
 {

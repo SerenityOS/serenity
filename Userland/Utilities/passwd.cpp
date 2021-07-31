@@ -5,10 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Types.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibCore/GetPassword.h>
 #include <string.h>
 #include <unistd.h>

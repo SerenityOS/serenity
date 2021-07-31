@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AK/Forward.h"
-#include "LibCpp/AST.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCpp/Parser.h>

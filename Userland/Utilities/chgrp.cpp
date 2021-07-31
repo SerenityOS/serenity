@@ -4,14 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <grp.h>
-#include <pwd.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)

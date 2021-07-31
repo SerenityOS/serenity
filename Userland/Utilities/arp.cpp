@@ -5,7 +5,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/IPv4Address.h>
 #include <AK/JsonObject.h>
 #include <AK/MACAddress.h>
@@ -13,7 +12,6 @@
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <net/if.h>
 #include <net/route.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>

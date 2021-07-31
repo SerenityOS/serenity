@@ -4,12 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Vector.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/GetPassword.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
 extern "C" int main(int, char**);

@@ -10,7 +10,6 @@
 #include <LibCore/StandardPaths.h>
 #include <LibLine/Editor.h>
 #include <LibSQL/AST/Lexer.h>
-#include <LibSQL/AST/Parser.h>
 #include <LibSQL/AST/Token.h>
 #include <LibSQL/SQLClient.h>
 #include <unistd.h>
