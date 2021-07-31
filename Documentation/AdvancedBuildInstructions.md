@@ -43,6 +43,7 @@ There are some optional features that can be enabled during compilation that are
 - `BUILD_LAGOM`: builds [Lagom](../Meta/Lagom/ReadMe.md), which makes various SerenityOS libraries and programs available on the host system.
 - `ENABLE_KERNEL_LTO`: builds the kernel with link-time optimization.
 - `INCLUDE_WASM_SPEC_TESTS`: downloads and includes the WebAssembly spec testsuite tests. In order to use this option, you will need to install `prettier` and `wabt`. wabt version 1.0.23 or higher is required to pre-process the WebAssembly spec testsuite.
+- `USE_CLANG_TOOLCHAIN`: uses the alternative Clang-based toolchain for building SerenityOS instead of the established GCC-based one. See the [Clang-based toolchain](#clang-based-toolchain) section below.
 - `BUILD_<component>`: builds the specified component, e.g. `BUILD_HEARTS` (note: must be all caps). Check the components.ini file in your build directory for a list of available components. Make sure to run `ninja clean` and `rm -rf Build/i686/Root` after disabling components. These options can be easily configured by using the `ConfigureComponents` utility. See the [Component Configuration](#component-configuration) section below.
 - `BUILD_EVERYTHING`: builds all optional components, overrides other `BUILD_<component>` flags when enabled
 
@@ -90,3 +91,24 @@ network path `\\wsl$\{distro-name}`.
 Alternatively, you may prefer to copy `Build/_disk_image` and `Build/Kernel/Kernel` to a native Windows partition (e.g.
 `/mnt/c`) before running `ninja run`, in which case `SERENITY_DISK_IMAGE` will be a regular Windows path (e.g.
 `'D:\serenity\_disk_image'`).
+
+## Clang-based toolchain
+
+SerenityOS can also be built with the [Clang](https://en.wikipedia.org/wiki/Clang) compiler instead of GCC. This is
+useful for stopping us from relying on compiler-specific behavior, and the built-in static analyzer helps us catch more
+bugs.  Code compiled with both of these toolchains works identically in most cases, with the limitation that ports
+can't be built with Clang yet.
+
+Note that `Meta/serenity.sh` is not yet supported, so the appropriate `ninja` targets (`install`, `image` and `run`)
+need to be invoked manually.
+
+To build the Clang-based toolchain, run `BuildClang.sh` from the `Toolchain` directory. The script defaults to building
+the tooling needed for 32-bit SerenityOS, but the `ARCH=x86_64` environment variable can be set to build the 64-bit
+toolchain.
+
+**Warning:** While the build script is running, your computer may slow down extremely or even lock up for short
+intervals.  This generally happens if you have more CPU cores than free RAM in gigabytes. To fix this, limit the number
+of parallel compile tasks be setting the `MAKEJOBS` environment variable to a number less than your CPU core count.
+
+Once the build script finishes, you can use it to compile SerenityOS if you enable the `USE_CLANG_TOOLCHAIN` build
+option as shown [above](#cmake-build-options).
