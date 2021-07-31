@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/DurationConstructor.h>

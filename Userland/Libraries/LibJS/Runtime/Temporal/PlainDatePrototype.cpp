@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>

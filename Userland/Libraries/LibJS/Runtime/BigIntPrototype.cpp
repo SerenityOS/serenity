@@ -5,6 +5,7 @@
  */
 
 #include <AK/Function.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BigIntPrototype.h>
 #include <LibJS/Runtime/Error.h>
