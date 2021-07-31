@@ -14,7 +14,6 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
