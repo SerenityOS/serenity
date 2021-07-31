@@ -23,9 +23,14 @@ public:
         : m_target(target)
         , m_pid(pid)
     {
+        m_target.register_client(*this);
         refresh();
     }
-    virtual ~ProcessStateModel() override { }
+
+    virtual ~ProcessStateModel() override
+    {
+        m_target.unregister_client(*this);
+    }
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_target.column_count({}); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 2; }
