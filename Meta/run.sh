@@ -104,6 +104,12 @@ else
     SERENITY_AUDIO_BACKEND="-audiodev pa,id=snd0"
 fi
 
+if [ "$installed_major_version" -gt 5 ]; then
+    SERENITY_AUDIO_HW="-machine pcspk-audiodev=snd0"
+else
+    SERENITY_AUDIO_HW="-soundhw pcspk"
+fi
+
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
 if  [ "$SERENITY_SPICE" ]; then
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-spice-app}"
@@ -157,7 +163,7 @@ $SERENITY_SPICE_SERVER_CHARDEV
 -device isa-debugcon,chardev=stdout
 -device virtio-rng-pci
 $SERENITY_AUDIO_BACKEND
--machine pcspk-audiodev=snd0
+$SERENITY_AUDIO_HW
 -device sb16,audiodev=snd0
 -device pci-bridge,chassis_nr=1,id=bridge1 -device $SERENITY_ETHERNET_DEVICE_TYPE,bus=bridge1
 -device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
@@ -199,7 +205,8 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device virtconsole,chardev=stdout
 -device isa-debugcon,chardev=stdout
 -device virtio-rng-pci
--soundhw pcspk
+$SERENITY_AUDIO_BACKEND
+$SERENITY_AUDIO_HW
 -device sb16
 "
 
