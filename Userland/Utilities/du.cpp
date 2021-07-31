@@ -14,13 +14,10 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibCore/Object.h>
-#include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 struct DuOption {
     enum class TimeType {

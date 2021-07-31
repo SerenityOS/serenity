@@ -6,7 +6,6 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/GenericLexer.h>
-#include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>

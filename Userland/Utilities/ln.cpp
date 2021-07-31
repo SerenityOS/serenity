@@ -6,9 +6,7 @@
 
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
-#include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)

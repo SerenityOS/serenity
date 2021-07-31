@@ -8,7 +8,6 @@
 
 #include <LibCore/ArgsParser.h>
 #include <ctype.h>
-#include <errno.h>
 #include <grp.h>
 #include <string.h>
 #include <unistd.h>
