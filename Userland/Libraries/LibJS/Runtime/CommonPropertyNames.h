@@ -183,6 +183,7 @@ namespace JS {
     P(getMinutes)                            \
     P(getMonth)                              \
     P(getOffsetNanosecondsFor)               \
+    P(getOffsetStringFor)                    \
     P(getOwnPropertyDescriptor)              \
     P(getOwnPropertyDescriptors)             \
     P(getOwnPropertyNames)                   \

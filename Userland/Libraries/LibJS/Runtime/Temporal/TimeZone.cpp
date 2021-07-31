@@ -410,6 +410,20 @@ double get_offset_nanoseconds_for(GlobalObject& global_object, Object& time_zone
     return offset_nanoseconds;
 }
 
+// 11.6.12 BuiltinTimeZoneGetOffsetStringFor ( timeZone, instant )
+Optional<String> builtin_time_zone_get_offset_string_for(GlobalObject& global_object, TimeZone& time_zone, Instant& instant)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
+    auto offset_nanoseconds = get_offset_nanoseconds_for(global_object, time_zone, instant);
+    if (vm.exception())
+        return {};
+
+    // 2. Return ! FormatTimeZoneOffsetString(offsetNanoseconds).
+    return format_time_zone_offset_string(offset_nanoseconds);
+}
+
 // 11.6.13 BuiltinTimeZoneGetPlainDateTimeFor ( timeZone, instant, calendar ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetplaindatetimefor
 PlainDateTime* builtin_time_zone_get_plain_date_time_for(GlobalObject& global_object, Object& time_zone, Instant& instant, Object& calendar)
 {
