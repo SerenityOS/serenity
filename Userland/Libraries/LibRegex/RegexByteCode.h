@@ -67,6 +67,7 @@ enum class OpCodeId : ByteCodeValueType {
     __ENUMERATE_CHARACTER_COMPARE_TYPE(Reference)        \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(NamedReference)   \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(Property)         \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(GeneralCategory)  \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(RangeExpressionDummy)
 
 enum class CharacterCompareType : ByteCodeValueType {
@@ -725,6 +726,7 @@ private:
     ALWAYS_INLINE static void compare_character_class(MatchInput const& input, MatchState& state, CharClass character_class, u32 ch, bool inverse, bool& inverse_matched);
     ALWAYS_INLINE static void compare_character_range(MatchInput const& input, MatchState& state, u32 from, u32 to, u32 ch, bool inverse, bool& inverse_matched);
     ALWAYS_INLINE static void compare_property(MatchInput const& input, MatchState& state, Unicode::Property property, bool inverse, bool& inverse_matched);
+    ALWAYS_INLINE static void compare_general_category(MatchInput const& input, MatchState& state, Unicode::GeneralCategory general_category, bool inverse, bool& inverse_matched);
 };
 
 template<typename T>
