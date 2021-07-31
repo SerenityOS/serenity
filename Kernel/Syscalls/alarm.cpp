@@ -15,13 +15,14 @@ KResultOr<FlatPtr> Process::sys$alarm(unsigned seconds)
     REQUIRE_PROMISE(stdio);
     unsigned previous_alarm_remaining = 0;
     if (m_alarm_timer) {
-        if (TimerQueue::the().cancel_timer(*m_alarm_timer)) {
+        bool was_in_use = false;
+        if (TimerQueue::the().cancel_timer(*m_alarm_timer, &was_in_use)) {
             // The timer hasn't fired. Round up the remaining time (if any)
             Time remaining = m_alarm_timer->remaining() + Time::from_nanoseconds(999'999'999);
             previous_alarm_remaining = remaining.to_truncated_seconds();
         }
         // We had an existing alarm, must return a non-zero value here!
-        if (previous_alarm_remaining == 0)
+        if (was_in_use && previous_alarm_remaining == 0)
             previous_alarm_remaining = 1;
     }
 
