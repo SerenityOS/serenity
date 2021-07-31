@@ -15,20 +15,29 @@
 
 TEST_CASE(load_form)
 {
-    FILE* fp = fopen("test.frm", "r");
-    VERIFY(fp);
+    String raw_form_json = R"(
+    {
+        "name": "Form1",
+        "widgets": [
+            {
+                "enabled": true,
+                "forecolor": "#000000ff",
+                "ruler_visible": false,
+                "autofill": false,
+                "x": 155,
+                "tooltip": null,
+                "height": 121,
+                "width": 126,
+                "y": 10,
+                "class": "GTextEditor",
+                "text": "Hi",
+                "backcolor": "#c0c0c0ff",
+                "visible":true
+            }
+        ]
+    })";
 
-    StringBuilder builder;
-    for (;;) {
-        char buffer[1024];
-        if (!fgets(buffer, sizeof(buffer), fp))
-            break;
-        builder.append(buffer);
-    }
-
-    fclose(fp);
-
-    JsonValue form_json = JsonValue::from_string(builder.to_string()).value();
+    JsonValue form_json = JsonValue::from_string(raw_form_json).value();
 
     EXPECT(form_json.is_object());
 

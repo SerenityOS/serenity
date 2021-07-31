@@ -71,6 +71,3 @@ set(AK_TEST_SOURCES
 foreach(source ${AK_TEST_SOURCES})
     serenity_test(${source} AK)
 endforeach()
-
-get_filename_component(TEST_FRM_RESOLVED ./test.frm REALPATH)
-install(FILES ${TEST_FRM_RESOLVED} DESTINATION usr/Tests/AK)
