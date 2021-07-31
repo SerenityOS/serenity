@@ -14,7 +14,6 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <stdio.h>
