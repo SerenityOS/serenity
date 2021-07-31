@@ -8,6 +8,7 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
+#include <AK/TypeCasts.h>
 #include <LibCore/DateTime.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Runtime/BigInt.h>

@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>

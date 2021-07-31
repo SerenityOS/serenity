@@ -6,6 +6,7 @@
 
 #include <AK/HashTable.h>
 #include <AK/StringBuilder.h>
+#include <AK/TypeCasts.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/Runtime/Array.h>
