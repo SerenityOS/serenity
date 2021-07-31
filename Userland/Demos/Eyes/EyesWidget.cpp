@@ -6,7 +6,6 @@
 
 #include "EyesWidget.h"
 #include <AK/Math.h>
-#include <AK/StdLibExtraDetails.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>

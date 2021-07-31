@@ -13,7 +13,6 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <WindowServer/Screen.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
