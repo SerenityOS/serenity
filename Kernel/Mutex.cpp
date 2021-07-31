@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/SourceLocation.h>
+#ifdef LOCK_DEBUG
+#    include <AK/SourceLocation.h>
+#endif
 #include <Kernel/Debug.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Mutex.h>
