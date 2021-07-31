@@ -28,7 +28,6 @@
 #include <Kernel/KResult.h>
 #include <Kernel/LockMode.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/ThreadTracer.h>
 #include <Kernel/TimerQueue.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/Range.h>

@@ -17,6 +17,7 @@
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
+#include <Kernel/ThreadTracer.h>
 
 #include <LibC/mallocdefs.h>
 

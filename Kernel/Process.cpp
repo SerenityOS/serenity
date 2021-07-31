@@ -31,6 +31,7 @@
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>
+#include <Kernel/ThreadTracer.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/SharedInodeVMObject.h>
