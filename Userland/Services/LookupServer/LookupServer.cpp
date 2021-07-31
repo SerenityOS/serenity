@@ -7,7 +7,6 @@
 #include "LookupServer.h"
 #include "ClientConnection.h"
 #include "DNSPacket.h"
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/Random.h>
@@ -16,7 +15,6 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
-#include <LibCore/LocalSocket.h>
 #include <LibCore/UDPSocket.h>
 #include <stdio.h>
 #include <time.h>

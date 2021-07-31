@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Badge.h>
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibGfx/Bitmap.h>

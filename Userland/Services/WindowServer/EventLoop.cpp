@@ -6,22 +6,14 @@
 
 #include <AK/Debug.h>
 #include <Kernel/API/MousePacket.h>
-#include <LibCore/LocalSocket.h>
-#include <LibCore/Object.h>
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/Cursor.h>
-#include <WindowServer/Event.h>
 #include <WindowServer/EventLoop.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WMClientConnection.h>
 #include <WindowServer/WindowManager.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <time.h>
 #include <unistd.h>
 
 namespace WindowServer {

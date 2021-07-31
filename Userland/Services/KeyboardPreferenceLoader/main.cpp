@@ -7,7 +7,6 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <errno.h>
-#include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <sys/ioctl.h>

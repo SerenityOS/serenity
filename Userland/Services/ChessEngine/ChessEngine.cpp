@@ -6,7 +6,6 @@
 
 #include "ChessEngine.h"
 #include "MCTSTree.h"
-#include <AK/Debug.h>
 #include <AK/Random.h>
 #include <LibCore/ElapsedTimer.h>
 

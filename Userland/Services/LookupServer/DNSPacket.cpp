@@ -9,11 +9,9 @@
 #include "DNSName.h"
 #include "DNSPacketHeader.h"
 #include <AK/Debug.h>
-#include <AK/IPv4Address.h>
 #include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <arpa/inet.h>
-#include <ctype.h>
 #include <stdlib.h>
 
 namespace LookupServer {

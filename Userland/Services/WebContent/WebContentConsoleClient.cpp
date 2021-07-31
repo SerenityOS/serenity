@@ -6,14 +6,10 @@
  */
 
 #include "WebContentConsoleClient.h"
-#include <LibJS/Console.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/Parser.h>
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
-#include <LibWeb/DOM/DocumentType.h>
-#include <LibWeb/DOM/Text.h>
-#include <LibWeb/DOMTreeModel.h>
 
 namespace WebContent {
 

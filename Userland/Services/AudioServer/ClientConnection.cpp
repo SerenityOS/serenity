@@ -8,12 +8,6 @@
 #include "Mixer.h"
 #include <AudioServer/AudioClientEndpoint.h>
 #include <LibAudio/Buffer.h>
-#include <errno.h>
-#include <stdio.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <unistd.h>
 
 namespace AudioServer {
 
