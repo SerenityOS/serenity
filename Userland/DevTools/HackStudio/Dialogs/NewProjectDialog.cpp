@@ -18,11 +18,8 @@
 #include <LibGUI/IconView.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGUI/RadioButton.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
 #include <LibRegex/Regex.h>
 
 namespace HackStudio {

@@ -10,7 +10,6 @@
 #include "ToDoEntries.h"
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
 #include <LibGUI/Notification.h>
 
 namespace HackStudio {

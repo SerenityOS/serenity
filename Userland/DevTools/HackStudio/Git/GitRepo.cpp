@@ -6,8 +6,6 @@
 
 #include "GitRepo.h"
 #include <LibCore/Command.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 namespace HackStudio {
 

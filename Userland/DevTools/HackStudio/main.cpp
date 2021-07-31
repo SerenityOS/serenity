@@ -10,7 +10,6 @@
 #include "Project.h"
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Menubar.h>

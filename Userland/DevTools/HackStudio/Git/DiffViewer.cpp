@@ -11,7 +11,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGfx/Color.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 

@@ -9,12 +9,9 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
-#include <Kernel/API/InodeWatcherEvent.h>
 #include <LibCore/DirIterator.h>
-#include <LibGUI/Icon.h>
 #include <LibGUI/Variant.h>
 #include <LibGfx/TextAlignment.h>
-#include <ctype.h>
 #include <stdio.h>
 
 namespace HackStudio {
