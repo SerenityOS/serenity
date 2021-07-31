@@ -196,7 +196,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device secondary-vga
 -device bochs-display,bus=pcie.6,addr=0x10.0x0
 -device piix3-ide
--drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
+-drive file=${SERENITY_DISK_IMAGE},format=raw,id=disk,if=none
 -device ahci,id=ahci
 -device ide-hd,bus=ahci.0,drive=disk,unit=0
 -usb
