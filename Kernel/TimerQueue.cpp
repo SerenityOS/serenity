@@ -91,6 +91,7 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 
     timer->clear_cancelled();
     timer->clear_callback_finished();
+    timer->set_in_use();
 
     auto& queue = queue_for_timer(*timer);
     if (queue.list.is_empty()) {
@@ -190,12 +191,23 @@ bool TimerQueue::cancel_timer(TimerId id)
     return true;
 }
 
-bool TimerQueue::cancel_timer(Timer& timer)
+bool TimerQueue::cancel_timer(Timer& timer, bool* was_in_use)
 {
+    bool in_use = timer.is_in_use();
+    if (was_in_use)
+        *was_in_use = in_use;
+
+    // If the timer isn't in use, the cancellation is a no-op.
+    if (!in_use) {
+        VERIFY(!timer.m_list_node.is_in_list());
+        return false;
+    }
+
     bool did_already_run = timer.set_cancelled();
     auto& timer_queue = queue_for_timer(timer);
-
     if (!did_already_run) {
+        timer.clear_in_use();
+
         ScopedSpinLock lock(g_timerqueue_lock);
         if (timer_queue.list.contains(timer)) {
             // The timer has not fired, remove it
@@ -219,7 +231,7 @@ bool TimerQueue::cancel_timer(Timer& timer)
     while (!timer.is_callback_finished())
         Processor::wait_check();
 
-    return true;
+    return false;
 }
 
 void TimerQueue::remove_timer_locked(Queue& queue, Timer& timer)
@@ -266,6 +278,7 @@ void TimerQueue::fire()
                     ScopedSpinLock lock(g_timerqueue_lock);
                     m_timers_executing.remove(*timer);
                 }
+                timer->clear_in_use();
                 timer->set_callback_finished();
                 // Drop the reference we added when queueing the timer
                 timer->unref();

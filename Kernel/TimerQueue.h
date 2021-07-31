@@ -45,6 +45,7 @@ private:
     Function<void()> m_callback;
     Atomic<bool> m_cancelled { false };
     Atomic<bool> m_callback_finished { false };
+    Atomic<bool> m_in_use { false };
 
     bool operator<(const Timer& rhs) const
     {
@@ -58,11 +59,18 @@ private:
     {
         return m_id == rhs.m_id;
     }
+
     void clear_cancelled() { return m_cancelled.store(false, AK::memory_order_release); }
     bool set_cancelled() { return m_cancelled.exchange(true, AK::memory_order_acq_rel); }
+
+    bool is_in_use() { return m_in_use.load(AK::memory_order_acquire); };
+    void set_in_use() { m_in_use.store(true, AK::memory_order_release); }
+    void clear_in_use() { return m_in_use.store(false, AK::memory_order_release); }
+
     bool is_callback_finished() const { return m_callback_finished.load(AK::memory_order_acquire); }
     void clear_callback_finished() { m_callback_finished.store(false, AK::memory_order_release); }
     void set_callback_finished() { m_callback_finished.store(true, AK::memory_order_release); }
+
     Time now(bool) const;
 
     bool is_queued() const { return m_list_node.is_in_list(); }
@@ -83,7 +91,7 @@ public:
     bool add_timer_without_id(NonnullRefPtr<Timer>, clockid_t, const Time&, Function<void()>&&);
     TimerId add_timer(clockid_t, const Time& timeout, Function<void()>&& callback);
     bool cancel_timer(TimerId id);
-    bool cancel_timer(Timer&);
+    bool cancel_timer(Timer& timer, bool* was_in_use = nullptr);
     bool cancel_timer(NonnullRefPtr<Timer>&& timer)
     {
         return cancel_timer(*move(timer));
