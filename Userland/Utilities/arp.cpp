@@ -8,6 +8,7 @@
 #include <AK/IPv4Address.h>
 #include <AK/JsonObject.h>
 #include <AK/MACAddress.h>
+#include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
@@ -48,25 +49,78 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(value_hw_address, "Hardware address", "hwaddress", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    auto file = Core::File::construct("/proc/net/arp");
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open {}: {}", file->name(), file->error_string());
-        return 1;
-    }
+    enum class Alignment {
+        Left,
+        Right
+    };
+
+    struct Column {
+        String title;
+        Alignment alignment { Alignment::Left };
+        int width { 0 };
+        String buffer;
+    };
+
+    Vector<Column> columns;
+
+    int proto_address_column = -1;
+    int hw_address_column = -1;
+
+    auto add_column = [&](auto title, auto alignment, auto width) {
+        columns.append({ title, alignment, width, {} });
+        return columns.size() - 1;
+    };
+
+    proto_address_column = add_column("Address", Alignment::Left, 15);
+    hw_address_column = add_column("HWaddress", Alignment::Left, 15);
+
+    auto print_column = [](auto& column, auto& string) {
+        if (!column.width) {
+            out("{}", string);
+            return;
+        }
+        if (column.alignment == Alignment::Right) {
+            out("{:>{1}}  "sv, string, column.width);
+        } else {
+            out("{:<{1}}  "sv, string, column.width);
+        }
+    };
+
+    for (auto& column : columns)
+        print_column(column, column.title);
+    outln();
 
     if (!flag_set && !flag_delete) {
-        outln("Address          HWaddress");
+        auto file = Core::File::construct("/proc/net/arp");
+        if (!file->open(Core::OpenMode::ReadOnly)) {
+            warnln("Failed to open {}: {}", file->name(), file->error_string());
+            return 1;
+        }
+
         auto file_contents = file->read_all();
         auto json = JsonValue::from_string(file_contents);
         VERIFY(json.has_value());
-        json.value().as_array().for_each([](auto& value) {
+
+        Vector<JsonValue> sorted_regions = json.value().as_array().values();
+        quick_sort(sorted_regions, [](auto& a, auto& b) {
+            return a.as_object().get("ip_address").to_string() < b.as_object().get("ip_address").to_string();
+        });
+
+        for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
             auto ip_address = if_object.get("ip_address").to_string();
             auto mac_address = if_object.get("mac_address").to_string();
 
-            outln("{:15}  {:17}", ip_address, mac_address);
-        });
+            if (proto_address_column != -1)
+                columns[proto_address_column].buffer = ip_address;
+            if (hw_address_column != -1)
+                columns[hw_address_column].buffer = mac_address;
+
+            for (auto& column : columns)
+                print_column(column, column.buffer);
+            outln();
+        };
     }
 
     if (flag_set || flag_delete) {
