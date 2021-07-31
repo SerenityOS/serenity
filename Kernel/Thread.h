@@ -12,7 +12,9 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#include <AK/SourceLocation.h>
+#ifdef LOCK_DEBUG
+#    include <AK/SourceLocation.h>
+#endif
 #include <AK/String.h>
 #include <AK/Time.h>
 #include <AK/Vector.h>
