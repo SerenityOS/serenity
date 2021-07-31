@@ -21,6 +21,9 @@ u32 to_unicode_uppercase(u32 code_point);
 String to_unicode_lowercase_full(StringView const&);
 String to_unicode_uppercase_full(StringView const&);
 
+Optional<GeneralCategory> general_category_from_string(StringView const&);
+bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);
+
 Optional<Property> property_from_string(StringView const&);
 bool code_point_has_property(u32 code_point, Property property);
 bool is_ecma262_property(Property);
