@@ -285,6 +285,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
     desktop_widget.set_layout<GUI::VerticalBoxLayout>();
 
     auto& directory_view = desktop_widget.add<DirectoryView>(DirectoryView::Mode::Desktop);
+    directory_view.set_name("directory_view");
 
     auto cut_action = GUI::CommonActions::make_cut_action(
         [&](auto&) {
@@ -462,6 +463,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     bool is_reacting_to_tree_view_selection_change = false;
 
     auto& directory_view = splitter.add<DirectoryView>(DirectoryView::Mode::Normal);
+    directory_view.set_name("directory_view");
 
     location_textbox.on_escape_pressed = [&] {
         directory_view.set_focus(true);
