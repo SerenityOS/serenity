@@ -59,15 +59,17 @@ private:
 
 template<typename T, typename... TRest>
 struct Tuple<T, TRest...> : Tuple<TRest...> {
-    Tuple(T&& first, TRest&&... rest)
-        : Tuple<TRest...>(forward<TRest>(rest)...)
-        , value(forward<T>(first))
+
+    template<typename FirstT, typename... RestT>
+    Tuple(FirstT&& first, RestT&&... rest)
+        : Tuple<TRest...>(forward<RestT>(rest)...)
+        , value(forward<FirstT>(first))
     {
     }
 
-    Tuple(const T& first, const TRest&... rest)
-        : Tuple<TRest...>(rest...)
-        , value(first)
+    Tuple(T&& first, TRest&&... rest)
+        : Tuple<TRest...>(move(rest)...)
+        , value(move(first))
     {
     }
 
