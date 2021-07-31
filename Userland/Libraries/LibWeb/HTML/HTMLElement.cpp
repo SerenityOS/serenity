@@ -34,12 +34,12 @@ HTMLElement::ContentEditableState HTMLElement::content_editable_state() const
 {
     auto contenteditable = attribute(HTML::AttributeNames::contenteditable);
     // "true", an empty string or a missing value map to the "true" state.
-    if (contenteditable.is_empty() || contenteditable.equals_ignoring_case("true"))
+    if ((!contenteditable.is_null() && contenteditable.is_empty()) || contenteditable.equals_ignoring_case("true"))
         return ContentEditableState::True;
     // "false" maps to the "false" state.
     if (contenteditable.equals_ignoring_case("false"))
         return ContentEditableState::False;
-    // An invalid value maps to the "inherit" state.
+    // Having no such attribute or an invalid value maps to the "inherit" state.
     return ContentEditableState::Inherit;
 }
 

@@ -40,9 +40,9 @@ public:
 
     struct Attribute {
         String prefix;
-        String local_name;
+        String local_name { "" };
         String namespace_;
-        String value;
+        String value { "" };
         Position name_start_position;
         Position value_start_position;
         Position name_end_position;
