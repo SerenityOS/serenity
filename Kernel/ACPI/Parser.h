@@ -80,14 +80,15 @@ protected:
 
 private:
     static void set_the(Parser&);
-
     void locate_static_data();
     void locate_main_system_description_table();
     void initialize_main_system_description_table();
-    size_t get_table_size(PhysicalAddress);
-    u8 get_table_revision(PhysicalAddress);
     void init_fadt();
     void init_facs();
+
+protected:
+    size_t get_table_size(PhysicalAddress);
+    u8 get_table_revision(PhysicalAddress);
 
     bool validate_reset_register();
     void access_generic_address(const Structures::GenericAddressStructure&, u32 value);

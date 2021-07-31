@@ -21,6 +21,22 @@ set(KERNEL_SOURCES
     ACPI/Initialize.cpp
     ACPI/MultiProcessorParser.cpp
     ACPI/Parser.cpp
+    ACPI/Bytecode/Alias.cpp
+    ACPI/Bytecode/Device.cpp
+    ACPI/Bytecode/ElementsPackage.cpp
+    ACPI/Bytecode/EncodedObjectOpcode.cpp
+    ACPI/Bytecode/EncodedTermOpcode.cpp
+    ACPI/Bytecode/FieldList.cpp
+    ACPI/Bytecode/GlobalScope.cpp
+    ACPI/Bytecode/Name.cpp
+    ACPI/Bytecode/NamedObject.cpp
+    ACPI/Bytecode/NameString.cpp
+    ACPI/Bytecode/Package.cpp
+    ACPI/Bytecode/Processor.cpp
+    ACPI/Bytecode/Scope.cpp
+    ACPI/Bytecode/ScopeBase.cpp
+    ACPI/Bytecode/TermObjectEnumerator.cpp
+    ACPI/Bytecode/TermObjectEvaluator.cpp
     AddressSanitizer.cpp
     Arch/PC/BIOS.cpp
     Arch/x86/SmapDisabler.h

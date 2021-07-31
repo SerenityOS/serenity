@@ -297,7 +297,7 @@ struct [[gnu::packed]] MADT {
 
 struct [[gnu::packed]] AMLTable {
     SDTHeader h;
-    char aml_code[];
+    u8 aml_code[];
 };
 
 struct [[gnu::packed]] PCI_MMIO_Descriptor {

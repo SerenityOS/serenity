@@ -10,6 +10,10 @@
 #cmakedefine01 ACPI_DEBUG
 #endif
 
+#ifndef ACPI_AML_DEBUG
+#cmakedefine01 ACPI_AML_DEBUG
+#endif
+
 #ifndef APIC_DEBUG
 #cmakedefine01 APIC_DEBUG
 #endif

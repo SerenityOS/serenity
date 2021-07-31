@@ -7,6 +7,7 @@
 #include <Kernel/ACPI/DynamicParser.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel::ACPI {
 
@@ -15,6 +16,7 @@ UNMAP_AFTER_INIT DynamicParser::DynamicParser(PhysicalAddress rsdp)
     , Parser(rsdp)
 {
     dmesgln("ACPI: Dynamic Parsing Enabled, Can parse AML");
+    build_namespace();
     register_interrupt_handler();
 }
 
@@ -52,8 +54,10 @@ void DynamicParser::try_acpi_shutdown()
 
 void DynamicParser::build_namespace()
 {
-    // FIXME: Implement AML Interpretation to build the ACPI namespace
-    VERIFY_NOT_REACHED();
+    Vector<PhysicalAddress> aml_table_addresses;
+    auto fadt = Memory::map_typed<Structures::FADT>(m_fadt);
+    aml_table_addresses.append(PhysicalAddress(fadt->dsdt_ptr));
+    m_acpi_namespace_scope = GlobalScope::must_create(aml_table_addresses);
 }
 
 }

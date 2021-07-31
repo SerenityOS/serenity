@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <Kernel/ACPI/Bytecode/GlobalScope.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Mutex.h>
@@ -38,6 +39,7 @@ private:
     virtual bool handle_irq(const RegisterState&) override;
 
     OwnPtr<Memory::Region> m_acpi_namespace;
+    OwnPtr<GlobalScope> m_acpi_namespace_scope;
 };
 
 }
