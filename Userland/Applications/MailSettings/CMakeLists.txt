@@ -13,5 +13,5 @@ set(SOURCES
     MailSettingsWindowGML.h
 )
 
-serenity_app(MailSettings ICON app-mail-settings)
+serenity_app(MailSettings ICON app-mail)
 target_link_libraries(MailSettings LibGUI)
