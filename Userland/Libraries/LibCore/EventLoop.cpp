@@ -5,7 +5,6 @@
  */
 
 #include <AK/Badge.h>
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/IDAllocator.h>
@@ -26,11 +25,9 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>
 #include <sys/socket.h>
-#include <sys/stat.h>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
