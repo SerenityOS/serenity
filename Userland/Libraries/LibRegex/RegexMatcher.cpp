@@ -111,7 +111,7 @@ RegexResult Matcher<Parser>::match(RegexStringView const& view, Optional<typenam
 }
 
 template<typename Parser>
-RegexResult Matcher<Parser>::match(Vector<RegexStringView> const views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
+RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optional<typename ParserTraits<Parser>::OptionsType> regex_options) const
 {
     // If the pattern *itself* isn't stateful, reset any changes to start_offset.
     if (!((AllFlags)m_regex_options.value() & AllFlags::Internal_Stateful))
