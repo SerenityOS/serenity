@@ -10,7 +10,7 @@
             margins: [16, 24, 16, 6]
         }
 
-        title: "Virtual Desktops"
+        title: "Workspaces"
         shrink_to_fit: true
 
         @GUI::Widget {
@@ -60,12 +60,12 @@
                     margins: [6, 6, 6, 6]
                 }
                 @GUI::Label {
-                    text: "Use the Ctrl+Alt+Arrow hotkeys to move between virtual desktops."
+                    text: "Use the Ctrl+Alt+Arrow hotkeys to move between workspaces."
                     text_alignment: "TopLeft"
                     word_wrap: true
                 }
                 @GUI::Label {
-                    text: "Use the Ctrl+Shift+Alt+Arrow hotkeys to move between virtual desktops and move the active window."
+                    text: "Use the Ctrl+Shift+Alt+Arrow hotkeys to move between\nworkspaces and move the active window."
                     text_alignment: "TopLeft"
                     word_wrap: true
                 }
