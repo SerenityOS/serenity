@@ -20,8 +20,7 @@ describe("correct behavior", () => {
 
         const plainDateTimeToEpochSeconds = plainDateTime =>
             (plainDateTime.year - 1970) * 31_556_952 +
-            plainDateTime.month * 2_630_000 +
-            plainDateTime.day * 86_400 +
+            plainDateTime.dayOfYear * 86_400 +
             plainDateTime.hour * 3_600 +
             plainDateTime.minute * 60 +
             plainDateTime.second +
