@@ -8,10 +8,8 @@
 #include <AK/Types.h>
 #include <Kernel/ConsoleDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
-#include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
-#include <Kernel/Process.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/kstdio.h>

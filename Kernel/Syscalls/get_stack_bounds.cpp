@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/Region.h>
 
