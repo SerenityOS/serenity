@@ -7,6 +7,8 @@
 #pragma once
 
 #include <AK/RefPtr.h>
+#include <Kernel/ACPI/Bytecode/Device.h>
+#include <Kernel/ACPI/Bytecode/ElementsPackage.h>
 #include <Kernel/ACPI/Bytecode/GlobalScope.h>
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -38,8 +40,13 @@ private:
     // ^IRQHandler
     virtual bool handle_irq(const RegisterState&) override;
 
+    void enumerate_all_devices();
+    void enumerate_objects_in_a_scope(const ScopeBase&);
+
     OwnPtr<Memory::Region> m_acpi_namespace;
     OwnPtr<GlobalScope> m_acpi_namespace_scope;
+    Vector<RefPtr<ACPI::Device>> m_acpi_devices;
+    RefPtr<ElementsPackage> m_s5_package;
 };
 
 }

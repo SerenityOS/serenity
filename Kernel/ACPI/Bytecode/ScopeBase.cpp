@@ -17,11 +17,26 @@ namespace Kernel::ACPI {
 
 void ScopeBase::add_named_object(Badge<TermObjectEnumerator>, NamedObject& object)
 {
-    m_named_objects.append(object);
+    MutexLocker locker(m_named_objects.lock(), Mutex::Mode::Shared);
+    m_named_objects.resource().append(object);
 }
 
 void ScopeBase::add_named_object(Badge<TermObjectEnumerator>, const NamedObject& object)
 {
-    m_named_objects.append(const_cast<NamedObject&>(object));
+    MutexLocker locker(m_named_objects.lock(), Mutex::Mode::Shared);
+    m_named_objects.resource().append(const_cast<NamedObject&>(object));
 }
+size_t ScopeBase::named_objects_count_slow() const
+{
+    MutexLocker locker(m_named_objects.lock(), Mutex::Mode::Shared);
+    return m_named_objects.resource().size_slow();
+}
+
+void ScopeBase::for_each_named_object(Function<void(const NamedObject&)> callback) const
+{
+    MutexLocker locker(m_named_objects.lock(), Mutex::Mode::Shared);
+    for (auto& named_object : m_named_objects.resource())
+        callback(named_object);
+}
+
 }

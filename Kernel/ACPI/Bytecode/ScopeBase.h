@@ -13,6 +13,8 @@
 #include <AK/RefPtr.h>
 #include <Kernel/ACPI/Bytecode/NamedObject.h>
 #include <Kernel/ACPI/Definitions.h>
+#include <Kernel/Locking/Lockable.h>
+#include <Kernel/Locking/Mutex.h>
 
 namespace Kernel::ACPI {
 
@@ -22,8 +24,11 @@ public:
     void add_named_object(Badge<TermObjectEnumerator> enumerator, NamedObject&);
     void add_named_object(Badge<TermObjectEnumerator> enumerator, const NamedObject&);
 
+    void for_each_named_object(Function<void(const NamedObject&)> callback) const;
+    size_t named_objects_count_slow() const;
+
 protected:
-    IntrusiveList<NamedObject, RefPtr<NamedObject>, &NamedObject::m_list_node> m_named_objects;
+    mutable Lockable<IntrusiveList<NamedObject, RefPtr<NamedObject>, &NamedObject::m_list_node>> m_named_objects;
 };
 
 }

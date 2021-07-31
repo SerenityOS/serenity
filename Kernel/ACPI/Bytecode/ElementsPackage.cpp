@@ -46,6 +46,25 @@ NonnullRefPtr<ElementsPackage::Element> ElementsPackage::Element::must_create(By
     return adopt_ref_if_nonnull(new ElementsPackage::Element(buffer, size)).release_nonnull();
 }
 
+RefPtr<ElementsPackage::Element> ElementsPackage::element_at(size_t index) const
+{
+    MutexLocker locker(m_elements.lock(), Mutex::Mode::Shared);
+    size_t current_index = 0;
+    for (auto it = m_elements.resource().begin(); it != m_elements.resource().end();) {
+        if (current_index == index)
+            return *it;
+        ++it;
+    }
+    return {};
+}
+
+void ElementsPackage::for_each_element(Function<void(const Element&)> callback) const
+{
+    MutexLocker locker(m_elements.lock(), Mutex::Mode::Shared);
+    for (auto& element : m_elements.resource())
+        callback(element);
+}
+
 ElementsPackage::Element::Element(ConstObjectType const_opcode)
 {
     m_possible_data.const_opcode = const_opcode;
@@ -232,6 +251,7 @@ NonnullRefPtr<ElementsPackage> ElementsPackage::must_create(size_t package_size,
 
 void ElementsPackage::enumerate_associated_data(Span<const u8> encoded_elements)
 {
+    MutexLocker locker(m_elements.lock(), Mutex::Mode::Shared);
     auto current_encoded_elements = encoded_elements;
     while (current_encoded_elements.size() > 0) {
         TermObjectEvaluator evaluator(current_encoded_elements);
@@ -241,32 +261,32 @@ void ElementsPackage::enumerate_associated_data(Span<const u8> encoded_elements)
         case EvaluatedValue::Type::Package: {
             auto package = possible_value.as_package();
             add_to_get_to_next_object = package->encoded_length();
-            m_elements.append(Element::must_create(*package));
+            m_elements.resource().append(Element::must_create(*package));
             break;
         }
         case EvaluatedValue::Type::ByteData: {
             add_to_get_to_next_object = 2;
-            m_elements.append(Element::must_create(possible_value.as_u8()));
+            m_elements.resource().append(Element::must_create(possible_value.as_u8()));
             break;
         }
         case EvaluatedValue::Type::WordData: {
             add_to_get_to_next_object = 3;
-            m_elements.append(Element::must_create(possible_value.as_u16()));
+            m_elements.resource().append(Element::must_create(possible_value.as_u16()));
             break;
         }
         case EvaluatedValue::Type::DWordData: {
             add_to_get_to_next_object = 5;
-            m_elements.append(Element::must_create(possible_value.as_u32()));
+            m_elements.resource().append(Element::must_create(possible_value.as_u32()));
             break;
         }
         case EvaluatedValue::Type::QWordData: {
             add_to_get_to_next_object = 9;
-            m_elements.append(Element::must_create(possible_value.as_u64()));
+            m_elements.resource().append(Element::must_create(possible_value.as_u64()));
             break;
         }
         case EvaluatedValue::Type::Const: {
             add_to_get_to_next_object = 1;
-            m_elements.append(Element::must_create(possible_value.as_const_object_type()));
+            m_elements.resource().append(Element::must_create(possible_value.as_const_object_type()));
             break;
         }
         case EvaluatedValue::Type::NotEvaluated: {
@@ -274,7 +294,7 @@ void ElementsPackage::enumerate_associated_data(Span<const u8> encoded_elements)
             auto name_string = NameString::try_to_evaluate_with_validation(current_encoded_elements);
             VERIFY(name_string);
             dbgln_if(ACPI_AML_DEBUG, "Found package element with name {}", name_string->full_name());
-            m_elements.append(Element::must_create(*name_string));
+            m_elements.resource().append(Element::must_create(*name_string));
             add_to_get_to_next_object = name_string->encoded_length();
             break;
         }

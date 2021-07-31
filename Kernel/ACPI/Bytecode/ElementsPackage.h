@@ -97,9 +97,12 @@ public:
 
     size_t encoded_length() const;
 
+    void for_each_element(Function<void(const Element&)> callback) const;
+    RefPtr<Element> element_at(size_t index) const;
+
 private:
     ElementsPackage(size_t package_size, size_t encoding_package_length);
-    IntrusiveList<Element, RefPtr<Element>, &Element::list_node> m_elements;
+    mutable Lockable<IntrusiveList<Element, RefPtr<Element>, &Element::list_node>> m_elements;
     size_t m_package_length;
     size_t m_encoding_package_length;
 };

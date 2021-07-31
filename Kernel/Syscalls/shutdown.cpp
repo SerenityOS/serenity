@@ -47,6 +47,13 @@ KResultOr<FlatPtr> Process::sys$halt()
     dbgln("syncing mounted filesystems...");
     FileSystem::sync();
     dbgln("attempting system shutdown...");
+    // Note: General ACPI shutdown, if available, is the best method.
+    if (ACPI::is_enabled() && ACPI::Parser::the()->can_shutdown()) {
+        dbgln("attempting system shutdown via ACPI...");
+        ACPI::Parser::the()->try_acpi_shutdown();
+        Processor::halt();
+    }
+    dbgln("attempting system shutdown via specific-emulator methods...");
     // QEMU Shutdown
     IO::out16(0x604, 0x2000);
     // If we're here, the shutdown failed. Try VirtualBox shutdown.
