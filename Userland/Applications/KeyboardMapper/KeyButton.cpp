@@ -5,7 +5,6 @@
  */
 
 #include "KeyButton.h"
-#include <LibGUI/Button.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font.h>

@@ -25,10 +25,8 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
-#include <LibGUI/TextEditor.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
-#include <stdio.h>
 #include <string.h>
 
 REGISTER_WIDGET(HexEditor, HexEditor);

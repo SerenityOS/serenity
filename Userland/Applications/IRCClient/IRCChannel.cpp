@@ -7,7 +7,6 @@
 #include "IRCChannel.h"
 #include "IRCChannelMemberListModel.h"
 #include "IRCClient.h"
-#include <stdio.h>
 
 IRCChannel::IRCChannel(IRCClient& client, const String& name)
     : m_client(client)

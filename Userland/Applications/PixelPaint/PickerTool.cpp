@@ -7,7 +7,6 @@
 #include "PickerTool.h"
 #include "ImageEditor.h"
 #include "Layer.h"
-#include <LibGfx/Bitmap.h>
 
 namespace PixelPaint {
 

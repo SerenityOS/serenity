@@ -5,7 +5,6 @@
  */
 
 #include <LibAudio/ClientConnection.h>
-#include <LibCore/EventLoop.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ImageWidget.h>

@@ -17,10 +17,8 @@
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibWeb/Bindings/DOMExceptionWrapper.h>
 #include <LibWeb/DOM/DocumentType.h>
-#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOMTreeModel.h>
-#include <LibWeb/HTML/HTMLBodyElement.h>
 
 namespace Browser {
 

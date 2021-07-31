@@ -13,8 +13,6 @@
 #include <LibGUI/RadioButton.h>
 #include <LibKeyboard/CharacterMap.h>
 #include <LibKeyboard/CharacterMapFile.h>
-#include <fcntl.h>
-#include <stdio.h>
 #include <string.h>
 
 KeyboardMapperWidget::KeyboardMapperWidget()

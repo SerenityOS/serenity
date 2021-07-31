@@ -8,7 +8,6 @@
 #include "CellSyntaxHighlighter.h"
 #include "HelpWindow.h"
 #include "LibGUI/InputBox.h"
-#include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/FilePicker.h>
