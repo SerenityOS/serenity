@@ -7,7 +7,6 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
-#include <LibWeb/DOM/Node.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Painting/StackingContext.h>

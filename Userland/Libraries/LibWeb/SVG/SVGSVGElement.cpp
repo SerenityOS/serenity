@@ -9,9 +9,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/Layout/SVGSVGBox.h>
-#include <LibWeb/SVG/SVGPathElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
-#include <ctype.h>
 
 namespace Web::SVG {
 

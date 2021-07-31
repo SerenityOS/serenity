@@ -9,7 +9,6 @@
 #include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleInvalidator.h>
-#include <LibWeb/CSS/StyleResolver.h>
 #include <LibWeb/DOM/DOMException.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
