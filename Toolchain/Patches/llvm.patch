@@ -1,0 +1,933 @@
+diff --git a/clang/lib/Basic/Targets.cpp b/clang/lib/Basic/Targets.cpp
+index 90a67d03b..ad21af415 100644
+--- a/clang/lib/Basic/Targets.cpp
++++ b/clang/lib/Basic/Targets.cpp
+@@ -527,6 +527,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+       return new MCUX86_32TargetInfo(Triple, Opts);
+     case llvm::Triple::Hurd:
+       return new HurdTargetInfo<X86_32TargetInfo>(Triple, Opts);
++    case llvm::Triple::Serenity:
++      return new SerenityTargetInfo<X86_32TargetInfo>(Triple, Opts);
+     default:
+       return new X86_32TargetInfo(Triple, Opts);
+     }
+@@ -579,6 +581,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+       return new NaClTargetInfo<X86_64TargetInfo>(Triple, Opts);
+     case llvm::Triple::PS4:
+       return new PS4OSTargetInfo<X86_64TargetInfo>(Triple, Opts);
++    case llvm::Triple::Serenity:
++      return new SerenityTargetInfo<X86_64TargetInfo>(Triple, Opts);
+     default:
+       return new X86_64TargetInfo(Triple, Opts);
+     }
+diff --git a/clang/lib/Basic/Targets/OSTargets.h b/clang/lib/Basic/Targets/OSTargets.h
+index 67fa1a537..9dd9039bb 100644
+--- a/clang/lib/Basic/Targets/OSTargets.h
++++ b/clang/lib/Basic/Targets/OSTargets.h
+@@ -947,6 +947,22 @@ public:
+       : WebAssemblyOSTargetInfo<Target>(Triple, Opts) {}
+ };
+ 
++// SerenityOS Target
++template <typename Target>
++class LLVM_LIBRARY_VISIBILITY SerenityTargetInfo : public OSTargetInfo<Target> {
++protected:
++  void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
++                    MacroBuilder &Builder) const override {
++    Builder.defineMacro("__serenity__");
++    Builder.defineMacro("__unix__");
++    Builder.defineMacro("__ELF__");
++  }
++
++public:
++  SerenityTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
++      : OSTargetInfo<Target>(Triple, Opts) {}
++};
++
+ } // namespace targets
+ } // namespace clang
+ #endif // LLVM_CLANG_LIB_BASIC_TARGETS_OSTARGETS_H
+diff --git a/clang/lib/Driver/CMakeLists.txt b/clang/lib/Driver/CMakeLists.txt
+index aeffcf0bb..43bec8fd7 100644
+--- a/clang/lib/Driver/CMakeLists.txt
++++ b/clang/lib/Driver/CMakeLists.txt
+@@ -66,6 +66,7 @@ add_clang_library(clangDriver
+   ToolChains/OpenBSD.cpp
+   ToolChains/PS4CPU.cpp
+   ToolChains/RISCVToolchain.cpp
++  ToolChains/Serenity.cpp
+   ToolChains/Solaris.cpp
+   ToolChains/TCE.cpp
+   ToolChains/VEToolchain.cpp
+diff --git a/clang/lib/Driver/Driver.cpp b/clang/lib/Driver/Driver.cpp
+index 418e1d3e8..672aadc4d 100644
+--- a/clang/lib/Driver/Driver.cpp
++++ b/clang/lib/Driver/Driver.cpp
+@@ -41,6 +41,7 @@
+ #include "ToolChains/PPCLinux.h"
+ #include "ToolChains/PS4CPU.h"
+ #include "ToolChains/RISCVToolchain.h"
++#include "ToolChains/Serenity.h"
+ #include "ToolChains/Solaris.h"
+ #include "ToolChains/TCE.h"
+ #include "ToolChains/VEToolchain.h"
+@@ -5128,6 +5129,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
+     case llvm::Triple::Fuchsia:
+       TC = std::make_unique<toolchains::Fuchsia>(*this, Target, Args);
+       break;
++    case llvm::Triple::Serenity:
++      TC = std::make_unique<toolchains::Serenity>(*this, Target, Args);
++      break;
+     case llvm::Triple::Solaris:
+       TC = std::make_unique<toolchains::Solaris>(*this, Target, Args);
+       break;
+diff --git a/clang/lib/Driver/ToolChain.cpp b/clang/lib/Driver/ToolChain.cpp
+index b2ddef141..48880a612 100644
+--- a/clang/lib/Driver/ToolChain.cpp
++++ b/clang/lib/Driver/ToolChain.cpp
+@@ -398,6 +398,8 @@ StringRef ToolChain::getOSLibName() const {
+     return "sunos";
+   case llvm::Triple::AIX:
+     return "aix";
++  case llvm::Triple::Serenity:
++    return "serenity";
+   default:
+     return getOS();
+   }
+diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
+new file mode 100644
+index 000000000..8840188eb
+--- /dev/null
++++ b/clang/lib/Driver/ToolChains/Serenity.cpp
+@@ -0,0 +1,220 @@
++//===--- Serenity.cpp - SerenityOS ToolChain Implementations ----*- C++ -*-===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#include "Serenity.h"
++#include "CommonArgs.h"
++#include "InputInfo.h"
++#include "clang/Driver/Compilation.h"
++#include "clang/Driver/Driver.h"
++#include "clang/Driver/Options.h"
++#include "clang/Driver/SanitizerArgs.h"
++#include "llvm/Option/ArgList.h"
++#include "llvm/Support/VirtualFileSystem.h"
++
++using namespace clang::driver;
++using namespace clang::driver::toolchains;
++using namespace clang;
++using namespace llvm::opt;
++
++static bool getPIE(const ArgList &Args, const ToolChain &TC) {
++  if (Args.hasArg(options::OPT_static, options::OPT_shared,
++                  options::OPT_static_pie))
++    return false;
++  Arg *Last = Args.getLastArg(options::OPT_pie, options::OPT_no_pie,
++                              options::OPT_nopie);
++  return Last ? Last->getOption().matches(options::OPT_pie) : TC.isPIEDefault();
++}
++
++void tools::serenity::Linker::ConstructJob(Compilation &C, const JobAction &JA,
++                                           const InputInfo &Output,
++                                           const InputInfoList &Inputs,
++                                           const ArgList &Args,
++                                           const char *LinkingOutput) const {
++  const auto &TC = getToolChain();
++  const auto &D = TC.getDriver();
++  const bool IsShared = Args.hasArg(options::OPT_shared);
++  const bool IsStatic =
++      Args.hasArg(options::OPT_static) && !Args.hasArg(options::OPT_static_pie);
++  const bool IsRdynamic = Args.hasArg(options::OPT_rdynamic);
++  const bool IsStaticPIE = Args.hasArg(options::OPT_static_pie);
++  const bool IsPIE = getPIE(Args, TC);
++  ArgStringList CmdArgs;
++
++  if (!D.SysRoot.empty())
++    CmdArgs.push_back(Args.MakeArgString("--sysroot=" + D.SysRoot));
++
++  if (IsPIE || IsStaticPIE)
++    CmdArgs.push_back("-pie");
++
++  if (IsShared)
++    CmdArgs.push_back("-shared");
++
++  if (IsStatic || IsStaticPIE)
++    CmdArgs.push_back("-static");
++
++  if (IsStaticPIE) {
++    CmdArgs.push_back("--no-dynamic-linker");
++    CmdArgs.push_back("-z");
++    CmdArgs.push_back("text");
++  }
++
++  if (!IsStatic && !IsStaticPIE) {
++    if (IsRdynamic)
++      CmdArgs.push_back("-export-dynamic");
++    CmdArgs.push_back("-dynamic-linker");
++    CmdArgs.push_back("/usr/lib/Loader.so");
++  }
++
++  if (!IsStatic || IsStaticPIE)
++    CmdArgs.push_back("--eh-frame-hdr");
++
++  if (Output.isFilename()) {
++    CmdArgs.push_back("-o");
++    CmdArgs.push_back(Output.getFilename());
++  }
++
++  if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nostartfiles)) {
++    CmdArgs.push_back(Args.MakeArgString(
++        TC.GetFilePath((IsShared) ? "crt0_shared.o" : "crt0.o")));
++    CmdArgs.push_back(Args.MakeArgString(TC.GetFilePath("crti.o")));
++
++    std::string crtbegin_path;
++    if (TC.GetRuntimeLibType(Args) == ToolChain::RLT_CompilerRT) {
++      std::string crtbegin =
++          TC.getCompilerRT(Args, "crtbegin", ToolChain::FT_Object);
++      if (TC.getVFS().exists(crtbegin))
++        crtbegin_path = crtbegin;
++    }
++    if (crtbegin_path.empty()) {
++      const char *crtbegin = (IsShared || IsPIE) ? "crtbeginS.o" : "crtbegin.o";
++      crtbegin_path = TC.GetFilePath(crtbegin);
++    }
++    CmdArgs.push_back(Args.MakeArgString(crtbegin_path));
++  }
++
++  Args.AddAllArgs(CmdArgs, options::OPT_L);
++  Args.AddAllArgs(CmdArgs, options::OPT_u);
++
++  TC.AddFilePathLibArgs(Args, CmdArgs);
++
++  if (D.isUsingLTO()) {
++    assert(!Inputs.empty() && "Must have at least one input.");
++    addLTOOptions(TC, Args, CmdArgs, Output, Inputs[0],
++                  D.getLTOMode() == LTOK_Thin);
++  }
++
++  Args.AddAllArgs(CmdArgs, options::OPT_T_Group);
++  Args.AddAllArgs(CmdArgs, options::OPT_e);
++  Args.AddAllArgs(CmdArgs, options::OPT_s);
++  Args.AddAllArgs(CmdArgs, options::OPT_t);
++  Args.AddAllArgs(CmdArgs, options::OPT_Z_Flag);
++  Args.AddAllArgs(CmdArgs, options::OPT_r);
++
++  addLinkerCompressDebugSectionsOption(TC, Args, CmdArgs);
++
++  AddLinkerInputs(TC, Inputs, Args, CmdArgs, JA);
++
++  if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
++    AddRunTimeLibs(TC, D, CmdArgs, Args);
++
++    // We supply our own sanitizer runtimes
++    // FIXME: What if we want to use Clang-supplied ones as well?
++    const SanitizerArgs &Sanitize = TC.getSanitizerArgs();
++    if (Sanitize.needsUbsanRt())
++      CmdArgs.push_back("-lubsan");
++  }
++
++  if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
++    if (D.CCCIsCXX()) {
++      if (TC.ShouldLinkCXXStdlib(Args))
++        TC.AddCXXStdlibLibArgs(Args, CmdArgs);
++      CmdArgs.push_back("-lm");
++    }
++  }
++
++  if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nodefaultlibs)) {
++    if (Args.hasArg(options::OPT_pthread, options::OPT_pthreads))
++      CmdArgs.push_back("-lpthread");
++
++    if (!Args.hasArg(options::OPT_nolibc))
++      CmdArgs.push_back("-lc");
++  }
++
++  if (!Args.hasArg(options::OPT_nostdlib, options::OPT_nostartfiles)) {
++    std::string crtend_path;
++    if (TC.GetRuntimeLibType(Args) == ToolChain::RLT_CompilerRT) {
++      std::string crtend =
++          TC.getCompilerRT(Args, "crtend", ToolChain::FT_Object);
++      if (TC.getVFS().exists(crtend))
++        crtend_path = crtend;
++    }
++    if (crtend_path.empty()) {
++      const char *crtend = (IsShared || IsPIE) ? "crtendS.o" : "crtend.o";
++      crtend_path = TC.GetFilePath(crtend);
++    }
++    CmdArgs.push_back(Args.MakeArgString(crtend_path));
++
++    CmdArgs.push_back(Args.MakeArgString(TC.GetFilePath("crtn.o")));
++  }
++
++  Args.AddAllArgs(CmdArgs, options::OPT_T);
++
++  const char *Exec = Args.MakeArgString(TC.GetLinkerPath());
++  C.addCommand(std::make_unique<Command>(JA, *this,
++                                         ResponseFileSupport::AtFileCurCP(),
++                                         Exec, CmdArgs, Inputs, Output));
++}
++
++Serenity::Serenity(const Driver &D, const llvm::Triple &Triple,
++                   const ArgList &Args)
++    : Generic_ELF(D, Triple, Args) {
++  getFilePaths().push_back(getDriver().Dir + "/../lib");
++  if (!getDriver().SysRoot.empty())
++    getFilePaths().push_back(getDriver().SysRoot + "/usr/lib");
++}
++
++Tool *Serenity::buildLinker() const {
++  return new tools::serenity::Linker(*this);
++}
++
++void Serenity::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
++                                         ArgStringList &CC1Args) const {
++  const Driver &D = getDriver();
++
++  if (DriverArgs.hasArg(options::OPT_nostdinc))
++    return;
++
++  if (!DriverArgs.hasArg(options::OPT_nobuiltininc)) {
++    addSystemInclude(DriverArgs, CC1Args, D.ResourceDir + "/include");
++  }
++
++  if (DriverArgs.hasArg(options::OPT_nostdlibinc))
++    return;
++
++  if (!D.SysRoot.empty()) {
++    addExternCSystemInclude(DriverArgs, CC1Args, D.SysRoot + "/usr/include");
++  }
++}
++
++void Serenity::AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
++                                            ArgStringList &CC1Args) const {
++  if (DriverArgs.hasArg(options::OPT_nostdlibinc, options::OPT_nostdincxx))
++    return;
++
++  switch (GetCXXStdlibType(DriverArgs)) {
++  case ToolChain::CST_Libcxx: {
++    addSystemInclude(DriverArgs, CC1Args,
++                     getDriver().SysRoot + "/usr/include/c++/v1");
++    addSystemInclude(DriverArgs, CC1Args,
++                     getDriver().Dir + "/../include/c++/v1");
++    break;
++  }
++  default:
++    llvm_unreachable("invalid stdlib name");
++  }
++}
+diff --git a/clang/lib/Driver/ToolChains/Serenity.h b/clang/lib/Driver/ToolChains/Serenity.h
+new file mode 100644
+index 000000000..a45a0c853
+--- /dev/null
++++ b/clang/lib/Driver/ToolChains/Serenity.h
+@@ -0,0 +1,78 @@
++//===--- Serenity.h - SerenityOS ToolChain Implementations ------*- C++ -*-===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SERENITY_H
++#define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SERENITY_H
++
++#include "Gnu.h"
++#include "clang/Driver/Tool.h"
++#include "clang/Driver/ToolChain.h"
++
++namespace clang {
++namespace driver {
++namespace tools {
++/// Serenity -- Directly call GNU Binutils assembler and linker
++namespace serenity {
++
++class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
++public:
++  Linker(const ToolChain &TC) : Tool("serenity::Linker", "linker", TC) {}
++
++  bool hasIntegratedCPP() const override { return false; }
++  bool isLinkJob() const override { return true; }
++
++  void ConstructJob(Compilation &C, const JobAction &JA,
++                    const InputInfo &Output, const InputInfoList &Inputs,
++                    const llvm::opt::ArgList &TCArgs,
++                    const char *LinkingOutput) const override;
++};
++} // end namespace serenity
++} // end namespace tools
++
++namespace toolchains {
++
++class LLVM_LIBRARY_VISIBILITY Serenity : public Generic_ELF {
++public:
++  Serenity(const Driver &D, const llvm::Triple &Triple,
++           const llvm::opt::ArgList &Args);
++
++  void
++  AddClangSystemIncludeArgs(const llvm::opt::ArgList &DriverArgs,
++                            llvm::opt::ArgStringList &CC1Args) const override;
++
++  void AddClangCXXStdlibIncludeArgs(
++      const llvm::opt::ArgList &DriverArgs,
++      llvm::opt::ArgStringList &CC1Args) const override;
++
++  RuntimeLibType GetDefaultRuntimeLibType() const override {
++    return ToolChain::RLT_CompilerRT;
++  }
++
++  UnwindLibType GetDefaultUnwindLibType() const override {
++    return ToolChain::UNW_CompilerRT;
++  }
++
++  CXXStdlibType GetDefaultCXXStdlibType() const override {
++    return ToolChain::CST_Libcxx;
++  }
++  const char *getDefaultLinker() const override { return "ld.lld"; }
++
++  bool HasNativeLLVMSupport() const override { return true; }
++  bool IsIntegratedAssemblerDefault() const override { return true; }
++
++  unsigned GetDefaultDwarfVersion() const override { return 5; }
++
++protected:
++  Tool *buildLinker() const override;
++};
++
++} // end namespace toolchains
++} // end namespace driver
++} // end namespace clang
++
++#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SERENITY_H
+diff --git a/clang/lib/Frontend/InitHeaderSearch.cpp b/clang/lib/Frontend/InitHeaderSearch.cpp
+index bc31445d6..a4a3fbc89 100644
+--- a/clang/lib/Frontend/InitHeaderSearch.cpp
++++ b/clang/lib/Frontend/InitHeaderSearch.cpp
+@@ -229,6 +229,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
+     case llvm::Triple::PS4:
+     case llvm::Triple::ELFIAMCU:
+     case llvm::Triple::Fuchsia:
++    case llvm::Triple::Serenity:
+       break;
+     case llvm::Triple::Win32:
+       if (triple.getEnvironment() != llvm::Triple::Cygnus)
+@@ -428,6 +429,7 @@ void InitHeaderSearch::AddDefaultIncludePaths(const LangOptions &Lang,
+   case llvm::Triple::Solaris:
+   case llvm::Triple::WASI:
+   case llvm::Triple::AIX:
++  case llvm::Triple::Serenity:
+     return;
+ 
+   case llvm::Triple::Win32:
+diff --git a/libcxx/include/__config b/libcxx/include/__config
+index a3838c89e..8a20731ef 100644
+--- a/libcxx/include/__config
++++ b/libcxx/include/__config
+@@ -1132,6 +1132,7 @@ extern "C" _LIBCPP_FUNC_VIS void __sanitizer_annotate_contiguous_container(
+       defined(__CloudABI__) || \
+       defined(__sun__) || \
+       defined(__MVS__) || \
++      defined(__serenity__) || \
+       (defined(__MINGW32__) && __has_include(<pthread.h>))
+ #    define _LIBCPP_HAS_THREAD_API_PTHREAD
+ #  elif defined(__Fuchsia__)
+diff --git a/libcxx/include/__string b/libcxx/include/__string
+index d8b672e4c..638cf1698 100644
+--- a/libcxx/include/__string
++++ b/libcxx/include/__string
+@@ -451,6 +451,7 @@ char_traits<char>::find(const char_type* __s, size_t __n, const char_type& __a)
+ }
+ 
+ 
++#ifndef __serenity__
+ // char_traits<wchar_t>
+ 
+ template <>
+@@ -531,6 +532,7 @@ char_traits<wchar_t>::compare(const char_type* __s1, const char_type* __s2, size
+ #endif
+ }
+ 
++#endif
+ 
+ template <class _Traits>
+ _LIBCPP_INLINE_VISIBILITY
+@@ -543,6 +545,7 @@ inline size_t __char_traits_length_checked(const typename _Traits::char_type* __
+ #endif
+ }
+ 
++#ifndef __serenity__
+ inline _LIBCPP_CONSTEXPR_AFTER_CXX14
+ size_t
+ char_traits<wchar_t>::length(const char_type* __s) _NOEXCEPT
+@@ -579,6 +582,7 @@ char_traits<wchar_t>::find(const char_type* __s, size_t __n, const char_type& __
+     return nullptr;
+ #endif
+ }
++#endif
+ 
+ 
+ #ifndef _LIBCPP_NO_HAS_CHAR8_T
+diff --git a/libcxx/include/cwchar b/libcxx/include/cwchar
+index 451c621f9..1e83b8e60 100644
+--- a/libcxx/include/cwchar
++++ b/libcxx/include/cwchar
+@@ -112,11 +112,13 @@ size_t wcsrtombs(char* restrict dst, const wchar_t** restrict src, size_t len,
+ 
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
+-using ::mbstate_t;
+ using ::size_t;
++using ::FILE;
++
++#ifndef __serenity__
++using ::mbstate_t;
+ using ::tm;
+ using ::wint_t;
+-using ::FILE;
+ using ::fwprintf;
+ using ::fwscanf;
+ using ::swprintf;
+@@ -186,6 +188,7 @@ using ::putwchar;
+ using ::vwprintf;
+ using ::wprintf;
+ #endif
++#endif
+ 
+ _LIBCPP_END_NAMESPACE_STD
+ 
+diff --git a/libcxx/include/cwctype b/libcxx/include/cwctype
+index 575fd5661..c401b6cf0 100644
+--- a/libcxx/include/cwctype
++++ b/libcxx/include/cwctype
+@@ -59,6 +59,7 @@ wctrans_t wctrans(const char* property);
+ 
+ _LIBCPP_BEGIN_NAMESPACE_STD
+ 
++#ifndef __serenity__
+ using ::wint_t;
+ using ::wctrans_t;
+ using ::wctype_t;
+@@ -80,6 +81,7 @@ using ::towlower;
+ using ::towupper;
+ using ::towctrans;
+ using ::wctrans;
++#endif
+ 
+ _LIBCPP_END_NAMESPACE_STD
+ 
+diff --git a/libcxx/include/initializer_list b/libcxx/include/initializer_list
+index 893736f57..70a0d1ccf 100644
+--- a/libcxx/include/initializer_list
++++ b/libcxx/include/initializer_list
+@@ -43,7 +43,9 @@ template<class E> const E* end(initializer_list<E> il) noexcept; // constexpr in
+ */
+ 
+ #include <__config>
++#ifndef KERNEL
+ #include <cstddef>
++#endif
+ 
+ #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+ #pragma GCC system_header
+diff --git a/libcxx/include/iosfwd b/libcxx/include/iosfwd
+index 0a0de99ff..790dc4023 100644
+--- a/libcxx/include/iosfwd
++++ b/libcxx/include/iosfwd
+@@ -92,7 +92,11 @@ typedef fpos<char_traits<wchar_t>::state_type> wstreampos;
+ */
+ 
+ #include <__config>
++#if 0
+ #include <wchar.h>  // for mbstate_t
++#endif
++
++#define mbstate_t void
+ 
+ #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
+ #pragma GCC system_header
+@@ -109,7 +113,9 @@ template<> struct char_traits<char8_t>;
+ #endif
+ template<> struct char_traits<char16_t>;
+ template<> struct char_traits<char32_t>;
++#if 0
+ template<> struct char_traits<wchar_t>;
++#endif
+ 
+ template<class _Tp>     class _LIBCPP_TEMPLATE_VIS allocator;
+ 
+diff --git a/libcxx/include/new b/libcxx/include/new
+index 0562cef45..82f4ca8be 100644
+--- a/libcxx/include/new
++++ b/libcxx/include/new
+@@ -301,6 +301,8 @@ inline _LIBCPP_INLINE_VISIBILITY void __libcpp_deallocate_unsized(void* __ptr, s
+ #endif
+ }
+ 
++#define _LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION
++
+ #if !defined(_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION)
+ // Low-level helpers to call the aligned allocation and deallocation functions
+ // on the target platform. This is used to implement libc++'s own memory
+diff --git a/libcxx/include/string b/libcxx/include/string
+index 687795c79..f3a216647 100644
+--- a/libcxx/include/string
++++ b/libcxx/include/string
+@@ -1728,8 +1728,10 @@ _LIBCPP_STRING_UNSTABLE_EXTERN_TEMPLATE_LIST(_LIBCPP_EXTERN_TEMPLATE, char)
+ _LIBCPP_STRING_UNSTABLE_EXTERN_TEMPLATE_LIST(_LIBCPP_EXTERN_TEMPLATE, wchar_t)
+ #else
+ _LIBCPP_STRING_V1_EXTERN_TEMPLATE_LIST(_LIBCPP_EXTERN_TEMPLATE, char)
++#ifndef __serenity__
+ _LIBCPP_STRING_V1_EXTERN_TEMPLATE_LIST(_LIBCPP_EXTERN_TEMPLATE, wchar_t)
+ #endif
++#endif
+ 
+ 
+ #ifndef _LIBCPP_HAS_NO_DEDUCTION_GUIDES
+@@ -4527,11 +4529,13 @@ inline namespace literals
+         return basic_string<char> (__str, __len);
+     }
+ 
++#ifndef __serenity__
+     inline _LIBCPP_INLINE_VISIBILITY
+     basic_string<wchar_t> operator "" s( const wchar_t *__str, size_t __len )
+     {
+         return basic_string<wchar_t> (__str, __len);
+     }
++#endif
+ 
+ #ifndef _LIBCPP_NO_HAS_CHAR8_T
+     inline _LIBCPP_INLINE_VISIBILITY
+diff --git a/libcxx/include/string_view b/libcxx/include/string_view
+index bc0245cf2..55f9b62c4 100644
+--- a/libcxx/include/string_view
++++ b/libcxx/include/string_view
+@@ -204,7 +204,9 @@ typedef basic_string_view<char8_t>  u8string_view;
+ #endif
+ typedef basic_string_view<char16_t> u16string_view;
+ typedef basic_string_view<char32_t> u32string_view;
++#ifndef __serenity__
+ typedef basic_string_view<wchar_t>  wstring_view;
++#endif
+ 
+ template<class _CharT, class _Traits>
+ class
+@@ -214,7 +216,9 @@ class
+ #endif
+     _LIBCPP_PREFERRED_NAME(u16string_view)
+     _LIBCPP_PREFERRED_NAME(u32string_view)
++#ifndef __serenity__
+     _LIBCPP_PREFERRED_NAME(wstring_view)
++#endif
+     basic_string_view {
+ public:
+     // types
+@@ -836,11 +840,13 @@ inline namespace literals
+         return basic_string_view<char> (__str, __len);
+     }
+ 
++#ifndef __serenity__
+     inline _LIBCPP_INLINE_VISIBILITY _LIBCPP_CONSTEXPR
+     basic_string_view<wchar_t> operator "" sv(const wchar_t *__str, size_t __len) _NOEXCEPT
+     {
+         return basic_string_view<wchar_t> (__str, __len);
+     }
++#endif
+ 
+ #ifndef _LIBCPP_NO_HAS_CHAR8_T
+     inline _LIBCPP_INLINE_VISIBILITY _LIBCPP_CONSTEXPR
+diff --git a/libcxx/include/wchar.h b/libcxx/include/wchar.h
+index b21a78968..ae20183ed 100644
+--- a/libcxx/include/wchar.h
++++ b/libcxx/include/wchar.h
+@@ -132,6 +132,7 @@ size_t wcsrtombs(char* restrict dst, const wchar_t** restrict src, size_t len,
+ #endif
+ 
+ #if defined(__cplusplus) && !defined(_LIBCPP_WCHAR_H_HAS_CONST_OVERLOADS) && defined(_LIBCPP_PREFERRED_OVERLOAD)
++#ifndef __serenity__
+ extern "C++" {
+ inline _LIBCPP_INLINE_VISIBILITY
+ wchar_t* __libcpp_wcschr(const wchar_t* __s, wchar_t __c) {return (wchar_t*)wcschr(__s, __c);}
+@@ -178,5 +179,6 @@ size_t wcsnrtombs(char *__restrict dst, const wchar_t **__restrict src,
+                   size_t nwc, size_t len, mbstate_t *__restrict ps);
+ }  // extern "C++"
+ #endif  // __cplusplus && _LIBCPP_MSVCRT
++#endif
+ 
+ #endif  // _LIBCPP_WCHAR_H
+diff --git a/libcxx/src/string.cpp b/libcxx/src/string.cpp
+index 5105594cf..ca85269db 100644
+--- a/libcxx/src/string.cpp
++++ b/libcxx/src/string.cpp
+@@ -131,6 +131,7 @@ as_integer( const string& func, const string& s, size_t* idx, int base )
+     return as_integer_helper<unsigned long long>( func, s, idx, base, strtoull );
+ }
+ 
++#ifndef __serenity__
+ // wstring
+ template<>
+ inline
+@@ -175,6 +176,7 @@ as_integer( const string& func, const wstring& s, size_t* idx, int base )
+ {
+     return as_integer_helper<unsigned long long>( func, s, idx, base, wcstoull );
+ }
++#endif
+ 
+ // as_float
+ 
+@@ -226,6 +228,8 @@ as_float( const string& func, const string& s, size_t* idx )
+     return as_float_helper<long double>( func, s, idx, strtold );
+ }
+ 
++
++#ifndef __serenity__
+ template<>
+ inline
+ float
+@@ -249,6 +253,7 @@ as_float( const string& func, const wstring& s, size_t* idx )
+ {
+     return as_float_helper<long double>( func, s, idx, wcstold );
+ }
++#endif
+ 
+ }  // unnamed namespace
+ 
+@@ -258,11 +263,13 @@ stoi(const string& str, size_t* idx, int base)
+     return as_integer<int>( "stoi", str, idx, base );
+ }
+ 
++#ifndef __serenity__
+ int
+ stoi(const wstring& str, size_t* idx, int base)
+ {
+     return as_integer<int>( "stoi", str, idx, base );
+ }
++#endif
+ 
+ long
+ stol(const string& str, size_t* idx, int base)
+@@ -270,11 +277,13 @@ stol(const string& str, size_t* idx, int base)
+     return as_integer<long>( "stol", str, idx, base );
+ }
+ 
++#ifndef __serenity__
+ long
+ stol(const wstring& str, size_t* idx, int base)
+ {
+     return as_integer<long>( "stol", str, idx, base );
+ }
++#endif
+ 
+ unsigned long
+ stoul(const string& str, size_t* idx, int base)
+@@ -282,11 +291,13 @@ stoul(const string& str, size_t* idx, int base)
+     return as_integer<unsigned long>( "stoul", str, idx, base );
+ }
+ 
++#ifndef __serenity__
+ unsigned long
+ stoul(const wstring& str, size_t* idx, int base)
+ {
+     return as_integer<unsigned long>( "stoul", str, idx, base );
+ }
++#endif
+ 
+ long long
+ stoll(const string& str, size_t* idx, int base)
+@@ -294,11 +305,13 @@ stoll(const string& str, size_t* idx, int base)
+     return as_integer<long long>( "stoll", str, idx, base );
+ }
+ 
++#ifndef __serenity__
+ long long
+ stoll(const wstring& str, size_t* idx, int base)
+ {
+     return as_integer<long long>( "stoll", str, idx, base );
+ }
++#endif
+ 
+ unsigned long long
+ stoull(const string& str, size_t* idx, int base)
+@@ -306,11 +319,13 @@ stoull(const string& str, size_t* idx, int base)
+     return as_integer<unsigned long long>( "stoull", str, idx, base );
+ }
+ 
++#ifndef __serenity__
+ unsigned long long
+ stoull(const wstring& str, size_t* idx, int base)
+ {
+     return as_integer<unsigned long long>( "stoull", str, idx, base );
+ }
++#endif
+ 
+ float
+ stof(const string& str, size_t* idx)
+@@ -318,11 +333,13 @@ stof(const string& str, size_t* idx)
+     return as_float<float>( "stof", str, idx );
+ }
+ 
++#ifndef __serenity__
+ float
+ stof(const wstring& str, size_t* idx)
+ {
+     return as_float<float>( "stof", str, idx );
+ }
++#endif
+ 
+ double
+ stod(const string& str, size_t* idx)
+@@ -330,11 +347,13 @@ stod(const string& str, size_t* idx)
+     return as_float<double>( "stod", str, idx );
+ }
+ 
++#ifndef __serenity__
+ double
+ stod(const wstring& str, size_t* idx)
+ {
+     return as_float<double>( "stod", str, idx );
+ }
++#endif
+ 
+ long double
+ stold(const string& str, size_t* idx)
+@@ -342,11 +361,13 @@ stold(const string& str, size_t* idx)
+     return as_float<long double>( "stold", str, idx );
+ }
+ 
++#ifndef __serenity__
+ long double
+ stold(const wstring& str, size_t* idx)
+ {
+     return as_float<long double>( "stold", str, idx );
+ }
++#endif
+ 
+ // to_string
+ 
+@@ -397,6 +418,7 @@ struct initial_string<string>
+     }
+ };
+ 
++#ifndef __serenity__
+ template <>
+ struct initial_string<wstring>
+ {
+@@ -408,7 +430,9 @@ struct initial_string<wstring>
+         return s;
+     }
+ };
++#endif
+ 
++#ifndef __serenity__
+ typedef int (*wide_printf)(wchar_t* __restrict, size_t, const wchar_t*__restrict, ...);
+ 
+ inline
+@@ -421,6 +445,7 @@ get_swprintf()
+     return static_cast<int (__cdecl*)(wchar_t* __restrict, size_t, const wchar_t*__restrict, ...)>(_snwprintf);
+ #endif
+ }
++#endif
+ 
+ template <typename S, typename V>
+ S i_to_string(const V v)
+@@ -444,20 +469,24 @@ string  to_string (unsigned val)           { return i_to_string< string>(val); }
+ string  to_string (unsigned long val)      { return i_to_string< string>(val); }
+ string  to_string (unsigned long long val) { return i_to_string< string>(val); }
+ 
++#ifndef __serenity__
+ wstring to_wstring(int val)                { return i_to_string<wstring>(val); }
+ wstring to_wstring(long val)               { return i_to_string<wstring>(val); }
+ wstring to_wstring(long long val)          { return i_to_string<wstring>(val); }
+ wstring to_wstring(unsigned val)           { return i_to_string<wstring>(val); }
+ wstring to_wstring(unsigned long val)      { return i_to_string<wstring>(val); }
+ wstring to_wstring(unsigned long long val) { return i_to_string<wstring>(val); }
++#endif
+ 
+ 
+ string  to_string (float val)       { return as_string(snprintf,       initial_string< string>()(),   "%f", val); }
+ string  to_string (double val)      { return as_string(snprintf,       initial_string< string>()(),   "%f", val); }
+ string  to_string (long double val) { return as_string(snprintf,       initial_string< string>()(),  "%Lf", val); }
+ 
++#ifndef __serenity__
+ wstring to_wstring(float val)       { return as_string(get_swprintf(), initial_string<wstring>()(),  L"%f", val); }
+ wstring to_wstring(double val)      { return as_string(get_swprintf(), initial_string<wstring>()(),  L"%f", val); }
+ wstring to_wstring(long double val) { return as_string(get_swprintf(), initial_string<wstring>()(), L"%Lf", val); }
++#endif
+ 
+ _LIBCPP_END_NAMESPACE_STD
+diff --git a/libunwind/src/AddressSpace.hpp b/libunwind/src/AddressSpace.hpp
+index 171318ff6..aa7345a19 100644
+--- a/libunwind/src/AddressSpace.hpp
++++ b/libunwind/src/AddressSpace.hpp
+@@ -24,7 +24,7 @@
+ #include "Registers.hpp"
+ 
+ #ifndef _LIBUNWIND_USE_DLADDR
+-  #if !defined(_LIBUNWIND_IS_BAREMETAL) && !defined(_WIN32)
++  #if !defined(_LIBUNWIND_IS_BAREMETAL) && !defined(_WIN32) && !defined(__serenity__)
+     #define _LIBUNWIND_USE_DLADDR 1
+   #else
+     #define _LIBUNWIND_USE_DLADDR 0
+diff --git a/llvm/include/llvm/ADT/Triple.h b/llvm/include/llvm/ADT/Triple.h
+index eed315c92..11e53b8ac 100644
+--- a/llvm/include/llvm/ADT/Triple.h
++++ b/llvm/include/llvm/ADT/Triple.h
+@@ -198,7 +198,8 @@ public:
+     Hurd,       // GNU/Hurd
+     WASI,       // Experimental WebAssembly OS
+     Emscripten,
+-    LastOSType = Emscripten
++    Serenity,
++    LastOSType = Serenity
+   };
+   enum EnvironmentType {
+     UnknownEnvironment,
+@@ -626,6 +627,11 @@ public:
+     return getOS() == Triple::AIX;
+   }
+ 
++  /// Tests whether the OS is SerenityOS
++  bool isOSSerenity() const {
++    return getOS() == Triple::Serenity;
++  }
++
+   /// Tests whether the OS uses the ELF binary format.
+   bool isOSBinFormatELF() const {
+     return getObjectFormat() == Triple::ELF;
+diff --git a/llvm/include/llvm/Support/SwapByteOrder.h b/llvm/include/llvm/Support/SwapByteOrder.h
+index e8612ba66..f0109f4b3 100644
+--- a/llvm/include/llvm/Support/SwapByteOrder.h
++++ b/llvm/include/llvm/Support/SwapByteOrder.h
+@@ -22,7 +22,7 @@
+ #endif
+ 
+ #if defined(__linux__) || defined(__GNU__) || defined(__HAIKU__) ||            \
+-    defined(__Fuchsia__) || defined(__EMSCRIPTEN__)
++    defined(__Fuchsia__) || defined(__EMSCRIPTEN__) || defined(__serenity__)
+ #include <endian.h>
+ #elif defined(_AIX)
+ #include <sys/machine.h>
+diff --git a/llvm/lib/Support/Triple.cpp b/llvm/lib/Support/Triple.cpp
+index 4f483c965..bdbda22c9 100644
+--- a/llvm/lib/Support/Triple.cpp
++++ b/llvm/lib/Support/Triple.cpp
+@@ -215,6 +215,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
+   case PS4: return "ps4";
+   case RTEMS: return "rtems";
+   case Solaris: return "solaris";
++  case Serenity: return "serenity";
+   case TvOS: return "tvos";
+   case WASI: return "wasi";
+   case WatchOS: return "watchos";
+@@ -531,6 +532,7 @@ static Triple::OSType parseOS(StringRef OSName) {
+     .StartsWith("hurd", Triple::Hurd)
+     .StartsWith("wasi", Triple::WASI)
+     .StartsWith("emscripten", Triple::Emscripten)
++    .StartsWith("serenity", Triple::Serenity)
+     .Default(Triple::UnknownOS);
+ }
+ 

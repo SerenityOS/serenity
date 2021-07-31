@@ -71,6 +71,7 @@ echo SYSROOT is "$SYSROOT"
 
 mkdir -p "$DIR/Tarballs"
 
+# Note: The version number and hash in BuildClang.sh needs to be kept in sync with this.
 BINUTILS_VERSION="2.37"
 BINUTILS_MD5SUM="1e55743d73c100b7a0d67ffb32398cdb"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"

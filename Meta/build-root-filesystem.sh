@@ -45,7 +45,18 @@ else
     chown -R 0:0 mnt/
 fi
 SERENITY_ARCH="${SERENITY_ARCH:-i686}"
-$CP "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libgcc_s.so mnt/usr/lib/
+LLVM_VERSION="${LLVM_VERSION:-12.0.1}"
+
+if [ "$USE_CLANG_TOOLCHAIN" = "ON" ]; then
+    TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR"/Toolchain/Local/clang/"$SERENITY_ARCH"
+    mkdir -p mnt/usr/lib/clang/"$LLVM_VERSION"/lib/serenity
+    $CP "$TOOLCHAIN_DIR"/lib/clang/"$LLVM_VERSION"/lib/serenity/* mnt/usr/lib/clang/"$LLVM_VERSION"/lib/serenity
+    $CP "$TOOLCHAIN_DIR"/lib/libunwind* mnt/usr/lib
+    $CP "$TOOLCHAIN_DIR"/lib/libc++* mnt/usr/lib
+else
+    $CP "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libgcc_s.so mnt/usr/lib
+fi
+
 # If umask was 027 or similar when the repo was cloned,
 # file permissions in Base/ are too restrictive. Restore
 # the permissions needed in the image.
