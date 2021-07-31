@@ -24,7 +24,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 
 ## Kernel features
 
-* x86 (32-bit) kernel with pre-emptive multi-threading
+* x86 (32-bit) and x86_64 (64-bit) kernel with pre-emptive multi-threading
 * Hardware protections (SMEP, SMAP, UMIP, NX, WP, TSD, ...)
 * IPv4 stack with ARP, TCP, UDP and ICMP protocols
 * ext2 filesystem
