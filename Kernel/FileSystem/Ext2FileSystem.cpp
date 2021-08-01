@@ -89,6 +89,7 @@ const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
 bool Ext2FS::initialize()
 {
     MutexLocker locker(m_lock);
+
     VERIFY((sizeof(ext2_super_block) % logical_block_size()) == 0);
     auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
     bool success = raw_read_blocks(2, (sizeof(ext2_super_block) / logical_block_size()), super_block_buffer);
@@ -114,6 +115,11 @@ bool Ext2FS::initialize()
 
     set_block_size(EXT2_BLOCK_SIZE(&super_block));
     set_fragment_size(EXT2_FRAG_SIZE(&super_block));
+
+    // Note: This depends on the block size being available.
+    auto baseclass_result = BlockBasedFileSystem::initialize();
+    if (!baseclass_result)
+        return baseclass_result;
 
     VERIFY(block_size() <= (int)max_block_size);
 
