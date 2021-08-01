@@ -413,7 +413,8 @@ namespace JS {
     P(withPlainDate)                         \
     P(writable)                              \
     P(year)                                  \
-    P(years)
+    P(years)                                 \
+    P(zonedDateTime)
 
 struct CommonPropertyNames {
     PropertyName and_ { "and", PropertyName::StringMayBeNumber::No };

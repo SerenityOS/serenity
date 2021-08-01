@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <time.h>
 
 namespace JS::Temporal {
@@ -37,6 +38,7 @@ void Now::initialize(GlobalObject& global_object)
     define_native_function(vm.names.instant, instant, 0, attr);
     define_native_function(vm.names.plainDateTime, plain_date_time, 1, attr);
     define_native_function(vm.names.plainDateTimeISO, plain_date_time_iso, 0, attr);
+    define_native_function(vm.names.zonedDateTime, zoned_date_time, 1, attr);
     define_native_function(vm.names.plainDate, plain_date, 1, attr);
     define_native_function(vm.names.plainDateISO, plain_date_iso, 0, attr);
     define_native_function(vm.names.plainTimeISO, plain_time_iso, 0, attr);
@@ -76,6 +78,16 @@ JS_DEFINE_NATIVE_FUNCTION(Now::plain_date_time_iso)
 
     // 2. Return ? SystemDateTime(temporalTimeZoneLike, calendar).
     return system_date_time(global_object, temporal_time_zone_like, calendar);
+}
+
+// 2.2.5 Temporal.Now.zonedDateTime ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.zoneddatetime
+JS_DEFINE_NATIVE_FUNCTION(Now::zoned_date_time)
+{
+    auto calendar = vm.argument(0);
+    auto temporal_time_zone_like = vm.argument(1);
+
+    // 1. Return ? SystemZonedDateTime(temporalTimeZoneLike, calendar).
+    return system_zoned_date_time(global_object, temporal_time_zone_like, calendar);
 }
 
 // 2.2.7 Temporal.Now.plainDate ( calendar [ , temporalTimeZoneLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.now.plaindate
@@ -180,7 +192,9 @@ PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time
     if (temporal_time_zone_like.is_undefined()) {
         // a. Let timeZone be ! SystemTimeZone().
         time_zone = system_time_zone(global_object);
-    } else {
+    }
+    // 2. Else,
+    else {
         // a. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).
         time_zone = to_temporal_time_zone(global_object, temporal_time_zone_like);
         if (vm.exception())
@@ -197,6 +211,37 @@ PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time
 
     // 5. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
     return builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar);
+}
+
+// 2.3.5 SystemZonedDateTime ( temporalTimeZoneLike, calendarLike )
+ZonedDateTime* system_zoned_date_time(GlobalObject& global_object, Value temporal_time_zone_like, Value calendar_like)
+{
+    auto& vm = global_object.vm();
+    Object* time_zone;
+
+    // 1. If temporalTimeZoneLike is undefined, then
+    if (temporal_time_zone_like.is_undefined()) {
+        // a. Let timeZone be ! SystemTimeZone().
+        time_zone = system_time_zone(global_object);
+    }
+    // 2. Else,
+    else {
+        // a. Let timeZone be ? ToTemporalTimeZone(temporalTimeZoneLike).
+        time_zone = to_temporal_time_zone(global_object, temporal_time_zone_like);
+        if (vm.exception())
+            return {};
+    }
+
+    // 3. Let calendar be ? ToTemporalCalendar(calendarLike).
+    auto* calendar = to_temporal_calendar(global_object, calendar_like);
+    if (vm.exception())
+        return {};
+
+    // 4. Let ns be ! SystemUTCEpochNanoseconds().
+    auto* ns = system_utc_epoch_nanoseconds(global_object);
+
+    // 5. Return ? CreateTemporalZonedDateTime(ns, timeZone, calendar).
+    return create_temporal_zoned_date_time(global_object, *ns, *time_zone, *calendar);
 }
 
 }

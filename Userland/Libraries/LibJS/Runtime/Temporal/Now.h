@@ -23,6 +23,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(instant);
     JS_DECLARE_NATIVE_FUNCTION(plain_date_time);
     JS_DECLARE_NATIVE_FUNCTION(plain_date_time_iso);
+    JS_DECLARE_NATIVE_FUNCTION(zoned_date_time);
     JS_DECLARE_NATIVE_FUNCTION(plain_date);
     JS_DECLARE_NATIVE_FUNCTION(plain_date_iso);
     JS_DECLARE_NATIVE_FUNCTION(plain_time_iso);
@@ -32,5 +33,6 @@ TimeZone* system_time_zone(GlobalObject&);
 BigInt* system_utc_epoch_nanoseconds(GlobalObject&);
 Instant* system_instant(GlobalObject&);
 PlainDateTime* system_date_time(GlobalObject&, Value temporal_time_zone_like, Value calendar_like);
+ZonedDateTime* system_zoned_date_time(GlobalObject&, Value temporal_time_zone_like, Value calendar_like);
 
 }
