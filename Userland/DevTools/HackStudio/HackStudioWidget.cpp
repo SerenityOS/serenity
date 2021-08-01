@@ -301,6 +301,33 @@ bool HackStudioWidget::open_file(const String& full_filename)
     return true;
 }
 
+void HackStudioWidget::close_file_in_all_editors(String const& filename)
+{
+    m_open_files.remove(filename);
+    m_open_files_vector.remove_all_matching(
+        [&filename](String const& element) { return element == filename; });
+
+    for (auto& editor_wrapper : m_all_editor_wrappers) {
+        Editor& editor = editor_wrapper.editor();
+        String editor_file_path = editor.code_document().file_path();
+        String relative_editor_file_path = LexicalPath::relative_path(editor_file_path, project().root_path());
+
+        if (relative_editor_file_path == filename) {
+            if (m_open_files_vector.is_empty()) {
+                editor.set_document(CodeDocument::create());
+                editor_wrapper.set_filename("");
+            } else {
+                auto& first_path = m_open_files_vector[0];
+                auto& document = m_open_files.get(first_path).value()->code_document();
+                editor.set_document(document);
+                editor_wrapper.set_filename(first_path);
+            }
+        }
+    }
+
+    m_open_files_view->model()->invalidate();
+}
+
 EditorWrapper& HackStudioWidget::current_editor_wrapper()
 {
     VERIFY(m_current_editor_wrapper);
@@ -1121,29 +1148,7 @@ void HackStudioWidget::update_statusbar()
 
 void HackStudioWidget::handle_external_file_deletion(const String& filepath)
 {
-    m_open_files.remove(filepath);
-    m_open_files_vector.remove_all_matching(
-        [&filepath](const String& element) { return element == filepath; });
-
-    for (auto& editor_wrapper : m_all_editor_wrappers) {
-        Editor& editor = editor_wrapper.editor();
-        String editor_file_path = editor.code_document().file_path();
-        String relative_editor_file_path = LexicalPath::relative_path(editor_file_path, project().root_path());
-
-        if (relative_editor_file_path == filepath) {
-            if (m_open_files_vector.is_empty()) {
-                editor.set_document(CodeDocument::create());
-                editor_wrapper.set_filename("");
-            } else {
-                auto& first_path = m_open_files_vector[0];
-                auto& document = m_open_files.get(first_path).value()->code_document();
-                editor.set_document(document);
-                editor_wrapper.set_filename(first_path);
-            }
-        }
-    }
-
-    m_open_files_view->model()->invalidate();
+    close_file_in_all_editors(filepath);
 }
 
 HackStudioWidget::~HackStudioWidget()
