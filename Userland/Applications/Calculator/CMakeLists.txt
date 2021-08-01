@@ -10,6 +10,7 @@ set(SOURCES
     Calculator.cpp
     CalculatorWidget.cpp
     Keypad.cpp
+    KeypadValue.cpp
     CalculatorGML.h
 )
 
