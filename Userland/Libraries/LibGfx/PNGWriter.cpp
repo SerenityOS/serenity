@@ -79,8 +79,8 @@ void PNGChunk::store_type()
 
 void PNGChunk::store_data_length()
 {
-    auto data_lenth = BigEndian(m_data.size() - sizeof(data_length_type) - m_type.length());
-    __builtin_memcpy(m_data.offset_pointer(0), &data_lenth, sizeof(u32));
+    auto data_length = BigEndian(m_data.size() - sizeof(data_length_type) - m_type.length());
+    __builtin_memcpy(m_data.offset_pointer(0), &data_length, sizeof(u32));
 }
 
 u32 PNGChunk::crc()
