@@ -10,6 +10,7 @@
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/WindowServerConnection.h>
 
 class MouseCursorModel final : public GUI::Model {
 public:
@@ -57,17 +58,19 @@ public:
     {
         m_cursors.clear();
 
-        Core::DirIterator iterator("/res/cursors", Core::DirIterator::Flags::SkipDots);
+        Core::DirIterator iterator(String::formatted("/res/cursor-themes/{}", GUI::WindowServerConnection::the().get_cursor_theme()), Core::DirIterator::Flags::SkipDots);
 
         while (iterator.has_next()) {
             auto path = iterator.next_full_path();
+            if (path.ends_with(".ini"))
+                continue;
             if (path.contains("2x"))
                 continue;
             Cursor cursor;
             cursor.path = move(path);
             cursor.bitmap = Gfx::Bitmap::try_load_from_file(cursor.path);
             auto filename_split = cursor.path.split('/');
-            cursor.name = filename_split[2];
+            cursor.name = filename_split[3];
             m_cursors.append(move(cursor));
         }
 

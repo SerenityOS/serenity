@@ -58,12 +58,6 @@ WindowManager::~WindowManager()
 {
 }
 
-RefPtr<Cursor> WindowManager::get_cursor(String const& name)
-{
-    static auto const s_default_cursor_path = "/res/cursors/arrow.x2y2.png";
-    return Cursor::create(m_config->read_entry("Cursor", name, s_default_cursor_path), s_default_cursor_path);
-}
-
 void WindowManager::reload_config()
 {
     m_config = Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes);
@@ -77,31 +71,7 @@ void WindowManager::reload_config()
     apply_virtual_desktop_settings(virtual_desktop_rows, virtual_desktop_columns, false);
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
-
-    auto* current_cursor = Compositor::the().current_cursor();
-    auto reload_cursor = [&](RefPtr<Cursor>& cursor, const String& name) {
-        bool is_current_cursor = current_cursor && current_cursor == cursor.ptr();
-        cursor = get_cursor(name);
-        if (is_current_cursor)
-            Compositor::the().current_cursor_was_reloaded(cursor.ptr());
-    };
-
-    reload_cursor(m_hidden_cursor, "Hidden");
-    reload_cursor(m_arrow_cursor, "Arrow");
-    reload_cursor(m_hand_cursor, "Hand");
-    reload_cursor(m_help_cursor, "Help");
-    reload_cursor(m_resize_horizontally_cursor, "ResizeH");
-    reload_cursor(m_resize_vertically_cursor, "ResizeV");
-    reload_cursor(m_resize_diagonally_tlbr_cursor, "ResizeDTLBR");
-    reload_cursor(m_resize_diagonally_bltr_cursor, "ResizeDBLTR");
-    reload_cursor(m_resize_column_cursor, "ResizeColumn");
-    reload_cursor(m_resize_row_cursor, "ResizeRow");
-    reload_cursor(m_i_beam_cursor, "IBeam");
-    reload_cursor(m_disallowed_cursor, "Disallowed");
-    reload_cursor(m_move_cursor, "Move");
-    reload_cursor(m_drag_cursor, "Drag");
-    reload_cursor(m_wait_cursor, "Wait");
-    reload_cursor(m_crosshair_cursor, "Crosshair");
+    apply_cursor_theme(m_config->read_entry("Mouse", "CursorTheme", "Default"));
 
     auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, String const& name) {
         if (bitmap) {
@@ -2068,6 +2038,51 @@ void WindowManager::set_window_with_active_menu(Window* window)
 WindowStack& WindowManager::get_rendering_window_stacks(WindowStack*& transitioning_window_stack)
 {
     return Compositor::the().get_rendering_window_stacks(transitioning_window_stack);
+}
+
+void WindowManager::apply_cursor_theme(const String& theme_name)
+{
+    auto cursor_theme_config = Core::ConfigFile::open(String::formatted("/res/cursor-themes/{}/{}", theme_name, "Config.ini"));
+
+    auto* current_cursor = Compositor::the().current_cursor();
+    auto reload_cursor = [&](RefPtr<Cursor>& cursor, const String& name) {
+        bool is_current_cursor = current_cursor && current_cursor == cursor.ptr();
+
+        static auto const s_default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png";
+        cursor = Cursor::create(String::formatted("/res/cursor-themes/{}/{}", theme_name, cursor_theme_config->read_entry("Cursor", name)), s_default_cursor_path);
+
+        if (is_current_cursor) {
+            Compositor::the().current_cursor_was_reloaded(cursor.ptr());
+
+            if (m_hovered_window) {
+                if (auto* modal_window = const_cast<Window&>(*m_hovered_window).blocking_modal_window()) {
+                    modal_window->set_cursor(cursor);
+                } else if (m_hovered_window->cursor()) {
+                    m_hovered_window->set_cursor(cursor);
+                }
+            }
+        }
+    };
+
+    reload_cursor(m_hidden_cursor, "Hidden");
+    reload_cursor(m_arrow_cursor, "Arrow");
+    reload_cursor(m_hand_cursor, "Hand");
+    reload_cursor(m_help_cursor, "Help");
+    reload_cursor(m_resize_horizontally_cursor, "ResizeH");
+    reload_cursor(m_resize_vertically_cursor, "ResizeV");
+    reload_cursor(m_resize_diagonally_tlbr_cursor, "ResizeDTLBR");
+    reload_cursor(m_resize_diagonally_bltr_cursor, "ResizeDBLTR");
+    reload_cursor(m_resize_column_cursor, "ResizeColumn");
+    reload_cursor(m_resize_row_cursor, "ResizeRow");
+    reload_cursor(m_i_beam_cursor, "IBeam");
+    reload_cursor(m_disallowed_cursor, "Disallowed");
+    reload_cursor(m_move_cursor, "Move");
+    reload_cursor(m_drag_cursor, "Drag");
+    reload_cursor(m_wait_cursor, "Wait");
+    reload_cursor(m_crosshair_cursor, "Crosshair");
+
+    Compositor::the().invalidate_cursor();
+    m_config->write_entry("Mouse", "CursorTheme", theme_name);
 }
 
 }
