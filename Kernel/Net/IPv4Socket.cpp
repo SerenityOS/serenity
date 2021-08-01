@@ -35,22 +35,31 @@ Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
     return *s_table;
 }
 
+OwnPtr<DoubleBuffer> IPv4Socket::create_receive_buffer()
+{
+    return DoubleBuffer::try_create(256 * KiB);
+}
+
 KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
 {
+    auto receive_buffer = IPv4Socket::create_receive_buffer();
+    if (!receive_buffer)
+        return ENOMEM;
+
     if (type == SOCK_STREAM) {
-        auto tcp_socket = TCPSocket::create(protocol);
+        auto tcp_socket = TCPSocket::create(protocol, receive_buffer.release_nonnull());
         if (tcp_socket.is_error())
             return tcp_socket.error();
         return tcp_socket.release_value();
     }
     if (type == SOCK_DGRAM) {
-        auto udp_socket = UDPSocket::create(protocol);
+        auto udp_socket = UDPSocket::create(protocol, receive_buffer.release_nonnull());
         if (udp_socket.is_error())
             return udp_socket.error();
         return udp_socket.release_value();
     }
     if (type == SOCK_RAW) {
-        auto raw_socket = adopt_ref_if_nonnull(new (nothrow) IPv4Socket(type, protocol));
+        auto raw_socket = adopt_ref_if_nonnull(new (nothrow) IPv4Socket(type, protocol, receive_buffer.release_nonnull()));
         if (raw_socket)
             return raw_socket.release_nonnull();
         return ENOMEM;
@@ -58,8 +67,9 @@ KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
     return EINVAL;
 }
 
-IPv4Socket::IPv4Socket(int type, int protocol)
+IPv4Socket::IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
     : Socket(AF_INET, type, protocol)
+    , m_receive_buffer(move(receive_buffer))
 {
     dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}) created with type={}, protocol={}", this, type, protocol);
     m_buffer_mode = type == SOCK_STREAM ? BufferMode::Bytes : BufferMode::Packets;
@@ -248,7 +258,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
 KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>)
 {
     MutexLocker locker(lock());
-    if (m_receive_buffer.is_empty()) {
+    if (m_receive_buffer->is_empty()) {
         if (protocol_is_disconnected())
             return 0;
         if (!description.is_blocking())
@@ -270,14 +280,14 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
 
     KResultOr<size_t> nreceived_or_error { 0 };
     if (flags & MSG_PEEK)
-        nreceived_or_error = m_receive_buffer.peek(buffer, buffer_length);
+        nreceived_or_error = m_receive_buffer->peek(buffer, buffer_length);
     else
-        nreceived_or_error = m_receive_buffer.read(buffer, buffer_length);
+        nreceived_or_error = m_receive_buffer->read(buffer, buffer_length);
 
     if (!nreceived_or_error.is_error() && nreceived_or_error.value() > 0 && !(flags & MSG_PEEK))
         Thread::current()->did_ipv4_socket_read(nreceived_or_error.value());
 
-    set_can_read(!m_receive_buffer.is_empty());
+    set_can_read(!m_receive_buffer->is_empty());
     return nreceived_or_error;
 }
 
@@ -406,7 +416,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     auto packet_size = packet.size();
 
     if (buffer_mode() == BufferMode::Bytes) {
-        size_t space_in_receive_buffer = m_receive_buffer.space_for_writing();
+        size_t space_in_receive_buffer = m_receive_buffer->space_for_writing();
         if (packet_size > space_in_receive_buffer) {
             dbgln("IPv4Socket({}): did_receive refusing packet since buffer is full.", this);
             VERIFY(m_can_read);
@@ -416,10 +426,10 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
         auto nreceived_or_error = protocol_receive(ReadonlyBytes { packet.data(), packet.size() }, scratch_buffer, m_scratch_buffer.value().size(), 0);
         if (nreceived_or_error.is_error())
             return false;
-        auto nwritten_or_error = m_receive_buffer.write(scratch_buffer, nreceived_or_error.value());
+        auto nwritten_or_error = m_receive_buffer->write(scratch_buffer, nreceived_or_error.value());
         if (nwritten_or_error.is_error())
             return false;
-        set_can_read(!m_receive_buffer.is_empty());
+        set_can_read(!m_receive_buffer->is_empty());
     } else {
         if (m_receive_queue.size() > 2000) {
             dbgln("IPv4Socket({}): did_receive refusing packet since queue is full.", this);
