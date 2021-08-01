@@ -120,11 +120,6 @@ public:
         return adopt_own_if_nonnull(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
-    [[nodiscard]] static KBuffer create_with_size(size_t size, Region::Access access = Region::Access::Read | Region::Access::Write, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
-    {
-        return KBuffer(KBufferImpl::create_with_size(size, access, name, strategy));
-    }
-
     [[nodiscard]] static KBuffer copy(const void* data, size_t size, Region::Access access = Region::Access::Read | Region::Access::Write, StringView name = "KBuffer")
     {
         return KBuffer(KBufferImpl::copy(data, size, access, name));
