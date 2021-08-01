@@ -278,7 +278,7 @@ void Emulator::handle_repl()
     auto insn = X86::Instruction::from_stream(m_cpu, true, true);
     // FIXME: This does not respect inlineing
     //        another way of getting the current function is at need
-    if (auto const* region = load_library_from_adress(m_cpu.base_eip())) {
+    if (auto const* region = load_library_from_address(m_cpu.base_eip())) {
         auto separator_index = region->name().find(":").value();
         String lib_name = region->name().substring(0, separator_index);
         String lib_path = lib_name;
@@ -400,7 +400,7 @@ MmapRegion const* Emulator::find_text_region(FlatPtr address)
 }
 
 // FIXME: This interface isn't the nicest
-MmapRegion const* Emulator::load_library_from_adress(FlatPtr address)
+MmapRegion const* Emulator::load_library_from_address(FlatPtr address)
 {
     auto const* region = find_text_region(address);
     if (!region)
@@ -429,7 +429,7 @@ MmapRegion const* Emulator::load_library_from_adress(FlatPtr address)
 String Emulator::create_backtrace_line(FlatPtr address)
 {
     auto minimal = String::formatted("=={{{}}}==    {:p}", getpid(), (void*)address);
-    auto const* region = load_library_from_adress(address);
+    auto const* region = load_library_from_address(address);
     if (!region)
         return minimal;
     // FIXME: This is redundant
@@ -487,7 +487,7 @@ void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_nam
 String Emulator::create_instruction_line(FlatPtr address, X86::Instruction insn)
 {
     auto minimal = String::formatted("{:p}: {}", (void*)address, insn.to_string(address));
-    auto const* region = load_library_from_adress(address);
+    auto const* region = load_library_from_address(address);
     if (!region)
         return minimal;
     // FIXME: This is redundant
