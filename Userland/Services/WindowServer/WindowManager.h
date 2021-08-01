@@ -315,9 +315,9 @@ public:
 
     MultiScaleBitmaps const* overlay_rect_shadow() const { return m_overlay_rect_shadow.ptr(); }
 
-private:
-    RefPtr<Cursor> get_cursor(String const& name);
+    void apply_cursor_theme(String const& name);
 
+private:
     void notify_new_active_window(Window&);
     void notify_new_active_input_window(Window&);
     void notify_previous_active_window(Window&);
