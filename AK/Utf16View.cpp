@@ -111,6 +111,23 @@ u16 Utf16View::code_unit_at(size_t index) const
     return m_code_units[index];
 }
 
+u32 Utf16View::code_point_at(size_t index) const
+{
+    VERIFY(index < length_in_code_units());
+
+    u32 code_point = code_unit_at(index);
+    if (!is_high_surrogate(code_point) && !is_low_surrogate(code_point))
+        return code_point;
+    if (is_low_surrogate(code_point) || (index + 1 == length_in_code_units()))
+        return code_point;
+
+    auto second = code_unit_at(index + 1);
+    if (!is_low_surrogate(second))
+        return code_point;
+
+    return decode_surrogate_pair(code_point, second);
+}
+
 size_t Utf16View::code_point_offset_of(size_t code_unit_offset) const
 {
     size_t code_point_offset = 0;

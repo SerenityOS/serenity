@@ -240,7 +240,10 @@ public:
                 return ch;
             },
             [&](Utf32View& view) -> u32 { return view[index]; },
+            [&](Utf16View& view) -> u32 { return view.code_point_at(index); },
             [&](auto& view) -> u32 {
+                // FIXME: Iterating to the code point is inefficient, particularly for very large
+                // strings. Implement something like code_point_at to Utf8View.
                 size_t i = index;
                 for (auto it = view.begin(); it != view.end(); ++it, --i) {
                     if (i == 0)
