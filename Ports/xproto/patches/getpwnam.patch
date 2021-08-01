@@ -1,0 +1,11 @@
+--- xproto-7.0.31.old/Xos_r.h	2021-07-22 23:15:08.000333232 -0600
++++ xproto-7.0.31/Xos_r.h	2021-07-26 23:39:16.598498451 -0600
+@@ -318,7 +318,7 @@
+   (_Xos_processUnlock), \
+   (p).pwp )
+ 
+-#elif !defined(_POSIX_THREAD_SAFE_FUNCTIONS) && !defined(__APPLE__)
++#elif !defined(_POSIX_THREAD_SAFE_FUNCTIONS) && !defined(__APPLE__) && !defined(__serenity__)
+ # define X_NEEDS_PWPARAMS
+ typedef struct {
+   struct passwd pws;

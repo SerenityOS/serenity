@@ -1,0 +1,20 @@
+--- libSM-1.2.3.old/config.sub	2021-07-27 21:18:52.369771326 -0600
++++ libSM-1.2.3/config.sub	2021-07-27 21:18:58.226483431 -0600
+@@ -2,7 +2,7 @@
+ # Configuration validation subroutine script.
+ #   Copyright 1992-2018 Free Software Foundation, Inc.
+ 
+-timestamp='2018-02-22'
++timestamp='2021-07-27'
+ 
+ # This file is free software; you can redistribute it and/or modify it
+ # under the terms of the GNU General Public License as published by
+@@ -1390,7 +1390,7 @@
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+ 	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* \
+ 	      | -onefs* | -tirtos* | -phoenix* | -fuchsia* | -redox* | -bme* \
+-	      | -midnightbsd*)
++	      | -midnightbsd* | -serenity* )
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)

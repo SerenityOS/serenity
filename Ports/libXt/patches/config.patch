@@ -1,0 +1,11 @@
+--- libXt-1.1.3.old/config.sub	2021-07-31 20:21:29.567906475 -0600
++++ libXt-1.1.3/config.sub	2021-07-31 20:21:34.914617212 -0600
+@@ -1725,7 +1725,7 @@
+ 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
+ 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+ 	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
+-	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx*)
++	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* | serenity* )
+ 		;;
+ 	# This one is extra strict with allowed versions
+ 	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)

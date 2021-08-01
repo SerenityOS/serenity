@@ -1,0 +1,11 @@
+--- libX11-1.7.2.old/config.sub	2021-07-22 21:49:35.998789268 -0600
++++ libX11-1.7.2/config.sub	2021-07-22 21:49:50.048836219 -0600
+@@ -1720,7 +1720,7 @@
+ 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
+ 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+ 	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
+-	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx*)
++	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* | serenity*)
+ 		;;
+ 	# This one is extra strict with allowed versions
+ 	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)

@@ -1,0 +1,20 @@
+--- xeyes-1.1.2.old/configure.ac	2021-08-01 12:29:28.469451247 -0600
++++ xeyes-1.1.2/configure.ac	2021-08-01 12:33:48.779988969 -0600
+@@ -28,9 +28,17 @@
+ AC_CONFIG_SRCDIR([Makefile.am])
+ AC_CONFIG_HEADERS([config.h])
+ 
++# Set common system defines for POSIX extensions, such as _GNU_SOURCE
++# Must be called before any macros that run the compiler (like AC_PROG_LIBTOOL)
++# to avoid autoconf errors.
++AC_USE_SYSTEM_EXTENSIONS
++
+ # Initialize Automake
+ AM_INIT_AUTOMAKE([foreign dist-bzip2])
+ 
++# Initialize libtool
++AC_PROG_LIBTOOL
++
+ # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+ m4_ifndef([XORG_MACROS_VERSION],
+           [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])

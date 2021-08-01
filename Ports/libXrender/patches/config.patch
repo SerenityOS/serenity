@@ -1,0 +1,21 @@
+--- libXrender-0.9.10.old/config.sub	2021-07-31 21:55:27.093959184 -0600
++++ libXrender-0.9.10/config.sub	2021-07-31 21:56:08.120981691 -0600
+@@ -2,7 +2,7 @@
+ # Configuration validation subroutine script.
+ #   Copyright 1992-2013 Free Software Foundation, Inc.
+ 
+-timestamp='2013-08-10'
++timestamp='2021-07-31'
+ 
+ # This file is free software; you can redistribute it and/or modify it
+ # under the terms of the GNU General Public License as published by
+@@ -1374,7 +1374,8 @@
+ 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
+ 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
+ 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
+-	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es*)
++	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* \
++	      | -serenity* )
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	-qnx*)
