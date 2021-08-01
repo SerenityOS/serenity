@@ -8,6 +8,12 @@ describe("correct behavior", () => {
         expect(Temporal.Instant.from(instant).epochNanoseconds).toBe(123n);
     });
 
+    test("ZonedDateTime instance argument", () => {
+        const timeZone = new Temporal.TimeZone("UTC");
+        const zonedDateTime = new Temporal.ZonedDateTime(123n, timeZone);
+        expect(Temporal.Instant.from(zonedDateTime).epochNanoseconds).toBe(123n);
+    });
+
     // Un-skip once ParseISODateTime & ParseTemporalTimeZoneString are implemented
     test.skip("Instant string argument", () => {
         expect(Temporal.Instant.from("1975-02-02T14:25:36.123456789Z").epochNanoseconds).toBe(

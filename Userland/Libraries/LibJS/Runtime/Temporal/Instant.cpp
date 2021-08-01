@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/Temporal/InstantConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 
 namespace JS::Temporal {
 
@@ -81,9 +82,14 @@ Instant* to_temporal_instant(GlobalObject& global_object, Value item)
             // i. Return item.
             return &static_cast<Instant&>(item.as_object());
         }
-        // TODO:
+
         // b. If item has an [[InitializedTemporalZonedDateTime]] internal slot, then
-        // i. Return ! CreateTemporalInstant(item.[[Nanoseconds]]).
+        if (is<ZonedDateTime>(item.as_object())) {
+            auto& zoned_date_time = static_cast<ZonedDateTime&>(item.as_object());
+
+            // i. Return ! CreateTemporalInstant(item.[[Nanoseconds]]).
+            return create_temporal_instant(global_object, zoned_date_time.nanoseconds());
+        }
     }
 
     // 2. Let string be ? ToString(item).
