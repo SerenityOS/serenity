@@ -181,14 +181,13 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, Userspace<vo
     case SO_ERROR: {
         if (size < sizeof(int))
             return EINVAL;
-        dbgln("getsockopt(SO_ERROR): FIXME!");
-        int errno = 0;
+        int errno = so_error().error();
         if (!copy_to_user(static_ptr_cast<int*>(value), &errno))
             return EFAULT;
         size = sizeof(int);
         if (!copy_to_user(value_size, &size))
             return EFAULT;
-        return KSuccess;
+        return set_so_error(KSuccess);
     }
     case SO_BINDTODEVICE:
         if (size < IFNAMSIZ)
