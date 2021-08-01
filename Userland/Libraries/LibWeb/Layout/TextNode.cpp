@@ -48,7 +48,6 @@ void TextNode::paint_text_decoration(Gfx::Painter& painter, LineBoxFragment cons
     switch (computed_values().text_decoration_line()) {
     case CSS::TextDecorationLine::None:
         return;
-        break;
     case CSS::TextDecorationLine::Underline:
         line_start_point = fragment_box.top_left().translated(0, baseline + 2);
         line_end_point = fragment_box.top_right().translated(0, baseline + 2);
@@ -66,7 +65,6 @@ void TextNode::paint_text_decoration(Gfx::Painter& painter, LineBoxFragment cons
     case CSS::TextDecorationLine::Blink:
         // Conforming user agents may simply not blink the text
         return;
-        break;
     }
 
     painter.draw_line(line_start_point, line_end_point, computed_values().color());
