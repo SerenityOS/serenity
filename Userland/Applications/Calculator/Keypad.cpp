@@ -6,6 +6,8 @@
  */
 
 #include "Keypad.h"
+#include "KeypadValue.h"
+#include <AK/Math.h>
 #include <AK/StringBuilder.h>
 
 Keypad::Keypad()
@@ -97,51 +99,29 @@ void Keypad::type_backspace()
     }
 }
 
-double Keypad::value() const
+KeypadValue Keypad::value() const
 {
-    double res = 0.0;
-
-    u64 frac = m_frac_value.value();
-    for (int i = 0; i < m_frac_length; i++) {
-        u8 digit = frac % 10;
-        res += digit;
-        res /= 10.0;
-        frac /= 10;
-    }
-
-    res += m_int_value.value();
+    KeypadValue frac_part = { (i64)m_frac_value.value(), m_frac_length };
+    KeypadValue int_part = { (i64)m_int_value.value() };
+    KeypadValue res = int_part + frac_part;
     if (m_negative)
         res = -res;
-
     return res;
 }
 
-void Keypad::set_value(double value)
+void Keypad::set_value(KeypadValue value)
 {
     m_state = State::External;
 
-    if (value < 0.0) {
+    if (value.m_value < 0) {
         m_negative = true;
         value = -value;
     } else
         m_negative = false;
 
-    m_int_value = value;
-    value -= m_int_value.value();
-
-    m_frac_value = 0;
-    m_frac_length = 0;
-    while (value != 0) {
-        value *= 10.0;
-        int digit = value;
-        m_frac_value *= 10;
-        m_frac_value += digit;
-        m_frac_length++;
-        value -= digit;
-
-        if (m_frac_length > 6)
-            break;
-    }
+    m_int_value = value.m_value / (u64)AK::pow(10.0, (double)value.m_decimal_places);
+    m_frac_value = value.m_value % (u64)AK::pow(10.0, (double)value.m_decimal_places);
+    m_frac_length = value.m_decimal_places;
 }
 
 String Keypad::to_string() const
