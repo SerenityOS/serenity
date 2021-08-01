@@ -16,7 +16,8 @@ if [ "$#" -eq "0" ]; then
 else
     files=()
     for file in "$@"; do
-        if [[ "${file}" == *".sh" ]]; then
+        echo $file
+        if [[ "${file}" == *".sh" ]] && [[ ! "${file}" == "Ports/"* ]]; then
             files+=("${file}")
         fi
     done
