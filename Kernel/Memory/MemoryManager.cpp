@@ -218,10 +218,18 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     Vector<ContiguousPhysicalVirtualRange> contiguous_physical_ranges;
 
     for (auto* mmap = mmap_begin; mmap < mmap_end; mmap++) {
-        dmesgln("MM: Multiboot mmap: address={:p}, length={}, type={}", mmap->addr, mmap->len, mmap->type);
-
-        auto start_address = PhysicalAddress(mmap->addr);
+        // We have to copy these onto the stack, because we take a reference to these when printing them out,
+        // and doing so on a packed struct field is UB.
+        auto address = mmap->addr;
         auto length = mmap->len;
+        ArmedScopeGuard write_back_guard = [&]() {
+            mmap->addr = address;
+            mmap->len = length;
+        };
+
+        dmesgln("MM: Multiboot mmap: address={:p}, length={}, type={}", address, length, mmap->type);
+
+        auto start_address = PhysicalAddress(address);
         switch (mmap->type) {
         case (MULTIBOOT_MEMORY_AVAILABLE):
             m_physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_address, length });
@@ -249,23 +257,23 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
             continue;
 
         // Fix up unaligned memory regions.
-        auto diff = (FlatPtr)mmap->addr % PAGE_SIZE;
+        auto diff = (FlatPtr)address % PAGE_SIZE;
         if (diff != 0) {
-            dmesgln("MM: Got an unaligned physical_region from the bootloader; correcting {:p} by {} bytes", mmap->addr, diff);
+            dmesgln("MM: Got an unaligned physical_region from the bootloader; correcting {:p} by {} bytes", address, diff);
             diff = PAGE_SIZE - diff;
-            mmap->addr += diff;
-            mmap->len -= diff;
+            address += diff;
+            length -= diff;
         }
-        if ((mmap->len % PAGE_SIZE) != 0) {
-            dmesgln("MM: Got an unaligned physical_region from the bootloader; correcting length {} by {} bytes", mmap->len, mmap->len % PAGE_SIZE);
-            mmap->len -= mmap->len % PAGE_SIZE;
+        if ((length % PAGE_SIZE) != 0) {
+            dmesgln("MM: Got an unaligned physical_region from the bootloader; correcting length {} by {} bytes", length, length % PAGE_SIZE);
+            length -= length % PAGE_SIZE;
         }
-        if (mmap->len < PAGE_SIZE) {
-            dmesgln("MM: Memory physical_region from bootloader is too small; we want >= {} bytes, but got {} bytes", PAGE_SIZE, mmap->len);
+        if (length < PAGE_SIZE) {
+            dmesgln("MM: Memory physical_region from bootloader is too small; we want >= {} bytes, but got {} bytes", PAGE_SIZE, length);
             continue;
         }
 
-        for (PhysicalSize page_base = mmap->addr; page_base <= (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
+        for (PhysicalSize page_base = address; page_base <= (address + length); page_base += PAGE_SIZE) {
             auto addr = PhysicalAddress(page_base);
 
             // Skip used memory ranges.
