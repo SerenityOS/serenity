@@ -48,6 +48,7 @@
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLine/Editor.h>
@@ -489,6 +490,18 @@ static void print_temporal_time_zone(JS::Object const& object, HashTable<JS::Obj
     }
 }
 
+static void print_temporal_zoned_date_time(JS::Object const& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& zoned_date_time = static_cast<JS::Temporal::ZonedDateTime const&>(object);
+    print_type("Temporal.ZonedDateTime");
+    out("\n  epochNanoseconds: ");
+    print_value(&zoned_date_time.nanoseconds(), seen_objects);
+    out("\n  timeZone: ");
+    print_value(&zoned_date_time.time_zone(), seen_objects);
+    out("\n  calendar: ");
+    print_value(&zoned_date_time.calendar(), seen_objects);
+}
+
 static void print_primitive_wrapper_object(FlyString const& name, JS::Object const& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -560,6 +573,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_temporal_plain_time(object, seen_objects);
         if (is<JS::Temporal::TimeZone>(object))
             return print_temporal_time_zone(object, seen_objects);
+        if (is<JS::Temporal::ZonedDateTime>(object))
+            return print_temporal_zoned_date_time(object, seen_objects);
         return print_object(object, seen_objects);
     }
 
