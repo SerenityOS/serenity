@@ -33,7 +33,13 @@ void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
 
 KResultOr<NonnullRefPtr<Socket>> LocalSocket::create(int type)
 {
-    auto socket = adopt_ref_if_nonnull(new (nothrow) LocalSocket(type));
+    auto client_buffer = DoubleBuffer::try_create();
+    if (!client_buffer)
+        return ENOMEM;
+    auto server_buffer = DoubleBuffer::try_create();
+    if (!server_buffer)
+        return ENOMEM;
+    auto socket = adopt_ref_if_nonnull(new (nothrow) LocalSocket(type, client_buffer.release_nonnull(), server_buffer.release_nonnull()));
     if (socket)
         return socket.release_nonnull();
     return ENOMEM;
@@ -41,10 +47,11 @@ KResultOr<NonnullRefPtr<Socket>> LocalSocket::create(int type)
 
 KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
 {
-    auto socket = adopt_ref_if_nonnull(new (nothrow) LocalSocket(type));
-    if (!socket)
-        return ENOMEM;
+    auto socket_or_error = LocalSocket::create(type);
+    if (socket_or_error.is_error())
+        return socket_or_error.error();
 
+    auto socket = static_ptr_cast<LocalSocket>(socket_or_error.release_value());
     auto description1_result = FileDescription::create(*socket);
     if (description1_result.is_error())
         return description1_result.error();
@@ -66,8 +73,10 @@ KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
     return SocketPair { description1_result.release_value(), description2_result.release_value() };
 }
 
-LocalSocket::LocalSocket(int type)
+LocalSocket::LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, NonnullOwnPtr<DoubleBuffer> server_buffer)
     : Socket(AF_LOCAL, type, 0)
+    , m_for_client(move(client_buffer))
+    , m_for_server(move(server_buffer))
 {
     {
         MutexLocker locker(all_sockets().lock());
@@ -79,10 +88,10 @@ LocalSocket::LocalSocket(int type)
     m_prebind_gid = current_process->egid();
     m_prebind_mode = 0666;
 
-    m_for_client.set_unblock_callback([this]() {
+    m_for_client->set_unblock_callback([this]() {
         evaluate_block_conditions();
     });
-    m_for_server.set_unblock_callback([this]() {
+    m_for_server->set_unblock_callback([this]() {
         evaluate_block_conditions();
     });
 
@@ -260,9 +269,9 @@ bool LocalSocket::can_read(const FileDescription& description, size_t) const
     if (role == Role::Listener)
         return can_accept();
     if (role == Role::Accepted)
-        return !has_attached_peer(description) || !m_for_server.is_empty();
+        return !has_attached_peer(description) || !m_for_server->is_empty();
     if (role == Role::Connected)
-        return !has_attached_peer(description) || !m_for_client.is_empty();
+        return !has_attached_peer(description) || !m_for_client->is_empty();
     return false;
 }
 
@@ -280,9 +289,9 @@ bool LocalSocket::can_write(const FileDescription& description, size_t) const
 {
     auto role = this->role(description);
     if (role == Role::Accepted)
-        return !has_attached_peer(description) || m_for_client.space_for_writing();
+        return !has_attached_peer(description) || m_for_client->space_for_writing();
     if (role == Role::Connected)
-        return !has_attached_peer(description) || m_for_server.space_for_writing();
+        return !has_attached_peer(description) || m_for_server->space_for_writing();
     return false;
 }
 
@@ -303,9 +312,9 @@ DoubleBuffer* LocalSocket::receive_buffer_for(FileDescription& description)
 {
     auto role = this->role(description);
     if (role == Role::Accepted)
-        return &m_for_server;
+        return m_for_server.ptr();
     if (role == Role::Connected)
-        return &m_for_client;
+        return m_for_client.ptr();
     return nullptr;
 }
 
@@ -313,9 +322,9 @@ DoubleBuffer* LocalSocket::send_buffer_for(FileDescription& description)
 {
     auto role = this->role(description);
     if (role == Role::Connected)
-        return &m_for_server;
+        return m_for_server.ptr();
     if (role == Role::Accepted)
-        return &m_for_client;
+        return m_for_client.ptr();
     return nullptr;
 }
 
