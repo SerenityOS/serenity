@@ -1,21 +1,22 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
+    <meta charset="UTF-8" />
     <title>Welcome!</title>
     <!-- this is a comment -->
-    <style type="text/css">
+    <style>
         /* css comment */
         body {
             background-color: #000;
+            background-image: url("90s-bg.png");
             color: #fff;
             /* another css comment */
         }
-
         /* lol
    a
    css
    comment */
+
         h1 {
             color: #a00;
         }
@@ -35,112 +36,139 @@
         span#loadtime {
             color: yellow;
         }
+
+        .page-list {
+            column-width: 250px;
+        }
     </style>
     <script src="welcome.js"></script>
 </head>
 
-<body link="#44f" vlink="#c4c" background="90s-bg.png">
+<body background="90s-bg.png">
     <h1>Welcome to the Serenity Browser!</h1>
     <p>This is a very simple browser built on the LibWeb and LibJS engines.</p>
     <p>Your user agent is: <b><span id="ua"></span></b></p>
     <p>This page loaded in <b><span id="loadtime"></span></b> ms</p>
-    <p>Some small test pages:</p>
-    <ul>
-        <li><a href="box-shadow.html">Box-shadow</a></li>
-        <li><a href="calc.html">calc Property</a></li>
-        <li><a href="opacity.html">CSS opacity property</a></li>
-        <li><a href="justify-content.html">Flexbox justify-content</a></li>
-        <li><a href="lists.html">Lists</a></li>
-        <li><a href="text-decoration.html">Text-decoration</a></li>
-        <li><a href="fonts.html">Fonts</a></li>
-        <li><a href="border-radius.html">Border-Radius</a></li>
-        <li><a href="custom-properties.html">Custom Properties</a></li>
-        <li><a href="flex.html">Flexboxes</a></li>
-        <li><a href="mandelbrot-wasm.html">WebAssembly Mandelbrot Rendering Demo</a></li>
-        <li><a href="ddssuite.html">DDS test suite</a></li>
-        <li><a href="websocket.html">WebSocket API Test</a></li>
-        <li><a href="cookie.html">document.cookie</a></li>
-        <li><a href="last-of-type.html">CSS :last-of-type selector</a></li>
-        <li><a href="first-of-type.html">CSS :first-of-type selector</a></li>
-        <li><a href="css-import.html">CSS @import</a></li>
-        <li><a href="background-repeat-test.html">background image with repetition rules</a></li>
-        <li><a href="link-over-zindex-block.html">link elements with background box placed with z-index</a></li>
-        <li><a href="contenteditable.html">contenteditable</a></li>
-        <li><a href="clear-1.html">clearing floats</a></li>
-        <li><a href="float-1.html">floating boxes</a></li>
-        <li><a href="float-3.html">floating boxes with overflow=hidden</a></li>
-        <li><a href="padding-inline.html">inline elements with padding</a></li>
-        <li><a href="event-bubbling-and-multiple-listeners.html">event bubbling and multiple listeners</a></li>
-        <li><a href="button.html">button</a></li>
-        <li><a href="radio.html">radio button</a></li>
-        <li><a href="checkbox.html">checkbox</a></li>
-        <li><a href="canvas-rotate.html">canvas rotate()</a></li>
-        <li><a href="margin-collapse-2.html">margin collapsing 2</a></li>
-        <li><a href="margin-collapse-1.html">margin collapsing 1</a></li>
-        <li><a href="position-absolute-from-edges.html">position: absolute, offset from edges</a></li>
-        <li><a href="svg.html">svg element</a></li>
-        <li><a href="iframe.html">iframe</a></li>
-        <li><a href="many-buggies.html">many buggies</a></li>
-        <li><a href="bmpsuite.html">BMP test suite</a></li>
-        <li><a href="jpg.html">JPG Images</a></li>
-        <li><a href="gifsuite.html">GIF test suite</a></li>
-        <li><a href="palette.html">system palette color css extension</a></li>
-        <li><a href="inline-block-link.html">link inside display: inline-block</a></li>
-        <li><a href="set-interval.html">setInterval() test</a></li>
-        <li><a href="html-escape-test.html">html character escape test</a></li>
-        <li><a href="location.html">window.location property</a></li>
-        <li><a href="percent-css.html">CSS percentage values</a></li>
-        <li><a href="inline-block.html">display: inline-block; test</a></li>
-        <li><a href="canvas-path-quadratic-curve.html">canvas path quadratic curve test</a></li>
-        <li><a href="canvas-path-rect.html">canvas path rect test</a></li>
-        <li><a href="pngsuite_siz_png.html">pngsuite odd sizes test</a></li>
-        <li><a href="pngsuite_bas_png.html">pngsuite basic formats test</a></li>
-        <li><a href="pngsuite_int_png.html">pngsuite interlacing test</a></li>
-        <li><a href="canvas-path.html">canvas path house!</a></li>
-        <li><a href="img-canvas.html">canvas drawImage() test</a></li>
-        <li><a href="trigonometry.html">canvas + trigonometry functions</a></li>
-        <li><a href="qsa.html">querySelectorAll test</a></li>
-        <li><a href="innerHTML.html">innerHTML property test</a></li>
-        <li><a href="position-absolute-top-left.html">position: absolute; for top and left</a></li>
-        <li><a href="demo.html">fun demo</a></li>
-        <li><a href="raf.html">requestAnimationFrame test</a></li>
-        <li><a href="canvas.html">canvas 2D test</a></li>
-        <li><a href="events.html">simple DOM events test</a></li>
-        <li><a href="dom.html">simple DOM JS test</a></li>
-        <li><a href="alert.html">alert() test</a></li>
-        <li><a href="small.html">small</a></li>
-        <li><a href="first-child.html">:first-child</a></li>
-        <li><a href="last-child.html">:last-child</a></li>
-        <li><a href="only-child.html">:only-child</a></li>
-        <li><a href="nth-child.html">:nth-child</a></li>
-        <li><a href="nth-last-child.html">:nth-last-child</a></li>
-        <li><a href="empty.html">:empty</a></li>
-        <li><a href="root.html">:root</a></li>
-        <li><a href="not-selector.html">:not</a></li>
-        <li><a href="form.html">form</a></li>
-        <li><a href="borders.html">borders</a></li>
-        <li><a href="css.html">css</a></li>
-        <li><a href="colors.html">css colors</a></li>
-        <li><a href="acid1.html">acid1</a></li>
-        <li><a href="acid2.html">acid2</a></li>
-        <li><a href="attrselectors.html">attribute selectors</a></li>
-        <li><a href="lorem.html">lorem ipsum</a></li>
-        <li><a href="phint.html">presentational hints</a></li>
-        <li><a href="images.html">images</a></li>
-        <li><a href="selectors.html">selectors</a></li>
-        <li><a href="link.html">link element</a></li>
-        <li><a href="blink.html">blink element</a></li>
-        <li><a href="br.html">br element</a></li>
-        <li><a href="hover.html">hover element</a></li>
-        <li><a href="afrag.html">links with fragments</a></li>
-        <li><a href="bmfw.html">better mother fricken website</a></li>
-        <li><a href="http://bettermotherfuckingwebsite.com/">bettermotherfuckingwebsite</a></li>
-        <li><a href="http://serenityos.org/">serenityos.org</a></li>
-        <li><a href="pbmsuite.html">PBM test suite</a></li>
-        <li><a href="pgmsuite.html">PGM test suite</a></li>
-        <li><a href="ppmsuite.html">PPM test suite</a></li>
-        <li><a href="data-url.html">data: url images</a></li>
-    </ul>
+    <nav class="page-list">
+        <h2>HTML</h2>
+        <ul>
+            <li><a href="contenteditable.html">contenteditable</a></li>
+            <li><a href="many-buggies.html">many buggies</a></li>
+            <li><a href="html-escape-test.html">html character escape test</a></li>
+            <li><a href="phint.html">presentational hints</a></li>
+            <li><a href="lorem.html">lorem ipsum</a></li>
+            <li><h3>Elements</h3></li>
+            <li><a href="iframe.html">iframe</a></li>
+            <li><a href="button.html">button</a></li>
+            <li><a href="radio.html">radio button</a></li>
+            <li><a href="checkbox.html">checkbox</a></li>
+            <li><a href="form.html">form</a></li>
+            <li><a href="images.html">images</a></li>
+            <li><a href="svg.html">svg</a></li>
+            <li><a href="small.html">small</a></li>
+            <li><a href="link.html">link</a></li>
+            <li><a href="afrag.html">links with fragments</a></li>
+            <li><a href="blink.html">blink</a></li>
+            <li><a href="br.html">br</a></li>
+        </ul>
+
+        <h2>CSS</h2>
+        <ul>
+            <li><h3>Selectors</h3></li>
+            <li><a href="selectors.html">Selectors</a></li>
+            <li><a href="attrselectors.html">Attribute selectors</a></li>
+            <li><a href="first-child.html">:first-child</a></li>
+            <li><a href="last-child.html">:last-child</a></li>
+            <li><a href="nth-child.html">:nth-child</a></li>
+            <li><a href="nth-last-child.html">:nth-last-child</a></li>
+            <li><a href="only-child.html">:only-child</a></li>
+            <li><a href="last-of-type.html">:last-of-type</a></li>
+            <li><a href="first-of-type.html">:first-of-type</a></li>
+            <li><a href="empty.html">:empty</a></li>
+            <li><a href="root.html">:root</a></li>
+            <li><a href="not-selector.html">:not</a></li>
+            <li><a href="hover.html">:hover</a></li>
+            <li><h3>Properties</h3></li>
+            <li><a href="box-shadow.html">Box-shadow</a></li>
+            <li><a href="opacity.html">Opacity</a></li>
+            <li><a href="text-decoration.html">Text-decoration</a></li>
+            <li><a href="fonts.html">Fonts</a></li>
+            <li><a href="borders.html">Borders</a></li>
+            <li><a href="border-radius.html">Border-Radius</a></li>
+            <li><a href="lists.html">Lists</a></li>
+            <li><a href="flex.html">Flexboxes</a></li>
+            <li><a href="justify-content.html">Flexbox justify-content</a></li>
+            <li><a href="inline-block.html">display: inline-block;</a></li>
+            <li><a href="inline-block-link.html">link inside display: inline-block</a></li>
+            <li><a href="padding-inline.html">inline elements with padding</a></li>
+            <li><a href="custom-properties.html">Custom Properties</a></li>
+            <li><a href="float-1.html">Floating boxes</a></li>
+            <li><a href="float-3.html">Floating boxes with overflow=hidden</a></li>
+            <li><a href="clear-1.html">Float clearing</a></li>
+            <li><h3>Features</h3></li>
+            <li><a href="css.html">Basic functionality</a></li>
+            <li><a href="colors.html">css colors</a></li>
+            <li><a href="palette.html">system palette color css extension</a></li>
+            <li><a href="calc.html">calc()</a></li>
+            <li><a href="css-import.html">@import</a></li>
+            <li><a href="margin-collapse-1.html">margin collapsing 1</a></li>
+            <li><a href="margin-collapse-2.html">margin collapsing 2</a></li>
+            <li><a href="position-absolute-from-edges.html">position: absolute, offset from edges</a></li>
+            <li><a href="background-repeat-test.html">background image with repetition rules</a></li>
+            <li><a href="link-over-zindex-block.html">link elements with background box placed with z-index</a></li>
+            <li><a href="percent-css.html">Percentage values</a></li>
+            <li><a href="position-absolute-top-left.html">position: absolute; for top and left</a></li>
+        </ul>
+
+        <h2>JavaScript/WASM</h2>
+        <ul>
+            <li><a href="websocket.html">WebSocket API Test</a></li>
+            <li><a href="cookie.html">document.cookie</a></li>
+            <li><a href="event-bubbling-and-multiple-listeners.html">event bubbling and multiple listeners</a></li>
+            <li><a href="raf.html">requestAnimationFrame</a></li>
+            <li><a href="events.html">simple DOM events</a></li>
+            <li><a href="dom.html">simple DOM JS</a></li>
+            <li><a href="alert.html">alert()</a></li>
+            <li><a href="qsa.html">querySelectorAll()</a></li>
+            <li><a href="innerHTML.html">innerHTML()</a></li>
+            <li><a href="demo.html">fun demo</a></li>
+            <li><a href="set-interval.html">setInterval()</a></li>
+            <li><a href="location.html">window.location property</a></li>
+            <li><h3>Canvas</h3></li>
+            <li><a href="canvas.html">canvas 2D test</a></li>
+            <li><a href="canvas-rotate.html">canvas rotate()</a></li>
+            <li><a href="canvas-path-rect.html">canvas path rect test</a></li>
+            <li><a href="canvas-path-quadratic-curve.html">canvas path quadratic curve test</a></li>
+            <li><a href="img-canvas.html">canvas drawImage() test</a></li>
+            <li><a href="canvas-path.html">canvas path house!</a></li>
+            <li><a href="trigonometry.html">canvas + trigonometry functions</a></li>
+            <li><h3>WASM</h3></li>
+            <li><a href="mandelbrot-wasm.html">WebAssembly Mandelbrot Rendering Demo</a></li>
+        </ul>
+
+        <h2>Image Formats</h2>
+        <ul>
+            <li><a href="pngsuite_siz_png.html">pngsuite odd sizes test</a></li>
+            <li><a href="pngsuite_bas_png.html">pngsuite basic formats test</a></li>
+            <li><a href="pngsuite_int_png.html">pngsuite interlacing test</a></li>
+            <li><a href="bmpsuite.html">BMP test suite</a></li>
+            <li><a href="jpg.html">JPG Images</a></li>
+            <li><a href="gifsuite.html">GIF test suite</a></li>
+            <li><a href="ddssuite.html">DDS test suite</a></li>
+            <li><a href="pbmsuite.html">PBM test suite</a></li>
+            <li><a href="pgmsuite.html">PGM test suite</a></li>
+            <li><a href="ppmsuite.html">PPM test suite</a></li>
+            <li><a href="data-url.html">"data:..." images</a></li>
+        </ul>
+
+        <h2>Test Sites</h2>
+        <ul>
+            <li><a href="acid1.html">acid1</a></li>
+            <li><a href="acid2.html">acid2</a></li>
+            <li><a href="bmfw.html">better mother fricken website</a></li>
+            <li><a href="http://serenityos.org/">serenityos.org</a></li>
+        </ul>
+    </nav>
     <script>
         document.getElementById("loadtime").innerHTML = performance.now();
     </script>
