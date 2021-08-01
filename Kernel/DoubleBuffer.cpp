@@ -26,11 +26,6 @@ OwnPtr<DoubleBuffer> DoubleBuffer::try_create(size_t capacity)
     return adopt_own_if_nonnull(new (nothrow) DoubleBuffer(capacity, storage.release_nonnull()));
 }
 
-DoubleBuffer::DoubleBuffer(size_t capacity)
-    : DoubleBuffer(capacity, KBuffer::try_create_with_size(capacity * 2, Region::Access::Read | Region::Access::Write, "DoubleBuffer").release_nonnull())
-{
-}
-
 DoubleBuffer::DoubleBuffer(size_t capacity, NonnullOwnPtr<KBuffer> storage)
     : m_write_buffer(&m_buffer1)
     , m_read_buffer(&m_buffer2)
