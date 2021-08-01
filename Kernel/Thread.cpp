@@ -824,10 +824,10 @@ bool Thread::has_signal_handler(u8 signal) const
     return !action.handler_or_sigaction.is_null();
 }
 
-static bool push_value_on_user_stack(FlatPtr* stack, FlatPtr data)
+static bool push_value_on_user_stack(FlatPtr& stack, FlatPtr data)
 {
-    *stack -= sizeof(FlatPtr);
-    return copy_to_user((FlatPtr*)*stack, &data);
+    stack -= sizeof(FlatPtr);
+    return copy_to_user((FlatPtr*)stack, &data);
 }
 
 void Thread::resume_from_stopped()
@@ -946,15 +946,15 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     auto setup_stack = [&](RegisterState& state) {
 #if ARCH(I386)
-        FlatPtr* stack = &state.userspace_esp;
-        FlatPtr old_esp = *stack;
+        FlatPtr stack = state.userspace_esp;
+        FlatPtr old_esp = stack;
         FlatPtr ret_eip = state.eip;
         FlatPtr ret_eflags = state.eflags;
 
         dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to EIP {:p}, ESP {:p}", ret_eip, old_esp);
 #elif ARCH(X86_64)
-        FlatPtr* stack = &state.userspace_rsp;
-        FlatPtr old_rsp = *stack;
+        FlatPtr stack = state.userspace_rsp;
+        FlatPtr old_rsp = stack;
         FlatPtr ret_rip = state.rip;
         FlatPtr ret_rflags = state.rflags;
 
@@ -967,8 +967,8 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         // so we need to account for this here.
         // 56 % 16 = 8, so we only need to take 8 bytes into consideration for
         // the stack alignment.
-        FlatPtr stack_alignment = (*stack - 8) % 16;
-        *stack -= stack_alignment;
+        FlatPtr stack_alignment = (stack - 8) % 16;
+        stack -= stack_alignment;
 
         push_value_on_user_stack(stack, ret_eflags);
 
@@ -988,8 +988,8 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         // 22 % 2 = 0, so we dont need to take anything into consideration
         // for the alignment.
         // We also are not allowed to touch the thread's red-zone of 128 bytes
-        FlatPtr stack_alignment = *stack % 16;
-        *stack -= 128 + stack_alignment;
+        FlatPtr stack_alignment = stack % 16;
+        stack -= 128 + stack_alignment;
 
         push_value_on_user_stack(stack, ret_rflags);
 
@@ -1019,7 +1019,15 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         push_value_on_user_stack(stack, handler_vaddr.get());
         push_value_on_user_stack(stack, 0); // push fake return address
 
-        VERIFY((*stack % 16) == 0);
+        // We write back the adjusted stack value into the register state.
+        // We have to do this because we can't just pass around a reference to a packed field, as it's UB.
+#if ARCH(I386)
+        state.userspace_esp = stack;
+#else
+        state.userspace_rsp = stack;
+#endif
+
+        VERIFY((stack % 16) == 0);
     };
 
     // We now place the thread state on the userspace stack.
