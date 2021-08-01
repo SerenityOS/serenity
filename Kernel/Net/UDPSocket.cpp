@@ -69,7 +69,7 @@ KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     VERIFY(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
     size_t read_size = min(buffer_size, udp_packet.length() - sizeof(UDPPacket));
     if (!buffer.write(udp_packet.payload(), read_size))
-        return EFAULT;
+        return set_so_error(EFAULT);
     return read_size;
 }
 
@@ -77,20 +77,20 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
 {
     auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
-        return EHOSTUNREACH;
+        return set_so_error(EHOSTUNREACH);
     auto ipv4_payload_offset = routing_decision.adapter->ipv4_payload_offset();
     data_length = min(data_length, routing_decision.adapter->mtu() - ipv4_payload_offset - sizeof(UDPPacket));
     const size_t udp_buffer_size = sizeof(UDPPacket) + data_length;
     auto packet = routing_decision.adapter->acquire_packet_buffer(ipv4_payload_offset + udp_buffer_size);
     if (!packet)
-        return ENOMEM;
+        return set_so_error(ENOMEM);
     memset(packet->buffer->data() + ipv4_payload_offset, 0, sizeof(UDPPacket));
     auto& udp_packet = *reinterpret_cast<UDPPacket*>(packet->buffer->data() + ipv4_payload_offset);
     udp_packet.set_source_port(local_port());
     udp_packet.set_destination_port(peer_port());
     udp_packet.set_length(udp_buffer_size);
     if (!data.read(udp_packet.payload(), data_length))
-        return EFAULT;
+        return set_so_error(EFAULT);
 
     routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(), routing_decision.next_hop,
         peer_address(), IPv4Protocol::UDP, udp_buffer_size, ttl());
@@ -126,7 +126,7 @@ KResultOr<u16> UDPSocket::protocol_allocate_local_port()
             if (port == first_scan_port)
                 break;
         }
-        return EADDRINUSE;
+        return set_so_error(EADDRINUSE);
     });
 }
 
@@ -134,7 +134,7 @@ KResult UDPSocket::protocol_bind()
 {
     return sockets_by_port().with_exclusive([&](auto& table) -> KResult {
         if (table.contains(local_port()))
-            return EADDRINUSE;
+            return set_so_error(EADDRINUSE);
         table.set(local_port(), this);
         return KSuccess;
     });

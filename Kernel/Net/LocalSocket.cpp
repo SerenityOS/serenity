@@ -122,14 +122,14 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
 {
     VERIFY(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_un))
-        return EINVAL;
+        return set_so_error(EINVAL);
 
     sockaddr_un address;
     if (!copy_from_user(&address, user_address, sizeof(sockaddr_un)))
-        return EFAULT;
+        return set_so_error(EFAULT);
 
     if (address.sun_family != AF_LOCAL)
-        return EINVAL;
+        return set_so_error(EINVAL);
 
     auto path = String(address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)));
 
@@ -140,7 +140,7 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
     auto result = VirtualFileSystem::the().open(path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current()->current_directory(), owner);
     if (result.is_error()) {
         if (result.error() == -EEXIST)
-            return EADDRINUSE;
+            return set_so_error(EADDRINUSE);
         return result.error();
     }
 
@@ -148,7 +148,7 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
 
     VERIFY(file->inode());
     if (!file->inode()->bind_socket(*this))
-        return EADDRINUSE;
+        return set_so_error(EADDRINUSE);
 
     m_file = move(file);
 
@@ -161,33 +161,33 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
 {
     VERIFY(!m_bound);
     if (address_size != sizeof(sockaddr_un))
-        return EINVAL;
+        return set_so_error(EINVAL);
     u16 sa_family_copy;
     auto* user_address = reinterpret_cast<const sockaddr*>(address.unsafe_userspace_ptr());
     if (!copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)))
-        return EFAULT;
+        return set_so_error(EFAULT);
     if (sa_family_copy != AF_LOCAL)
-        return EINVAL;
+        return set_so_error(EINVAL);
     if (is_connected())
-        return EISCONN;
+        return set_so_error(EISCONN);
 
     const auto& local_address = *reinterpret_cast<const sockaddr_un*>(user_address);
     char safe_address[sizeof(local_address.sun_path) + 1] = { 0 };
     if (!copy_from_user(&safe_address[0], &local_address.sun_path[0], sizeof(safe_address) - 1))
-        return EFAULT;
+        return set_so_error(EFAULT);
     safe_address[sizeof(safe_address) - 1] = '\0';
 
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({})", this, safe_address);
 
     auto description_or_error = VirtualFileSystem::the().open(safe_address, O_RDWR, 0, Process::current()->current_directory());
     if (description_or_error.is_error())
-        return ECONNREFUSED;
+        return set_so_error(ECONNREFUSED);
 
     m_file = move(description_or_error.value());
 
     VERIFY(m_file->inode());
     if (!m_file->inode()->socket())
-        return ECONNREFUSED;
+        return set_so_error(ECONNREFUSED);
 
     m_address.sun_family = sa_family_copy;
     memcpy(m_address.sun_path, safe_address, sizeof(m_address.sun_path));
@@ -210,14 +210,14 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
     auto unblock_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
     if (Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags).was_interrupted()) {
         set_connect_side_role(Role::None);
-        return EINTR;
+        return set_so_error(EINTR);
     }
 
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({}) status is {}", this, safe_address, to_string(setup_state()));
 
     if (!has_flag(unblock_flags, Thread::FileDescriptionBlocker::BlockFlags::Connect)) {
         set_connect_side_role(Role::None);
-        return ECONNREFUSED;
+        return set_so_error(ECONNREFUSED);
     }
     set_connect_side_role(Role::Connected);
     return KSuccess;
@@ -227,7 +227,7 @@ KResult LocalSocket::listen(size_t backlog)
 {
     MutexLocker locker(lock());
     if (type() != SOCK_STREAM)
-        return EOPNOTSUPP;
+        return set_so_error(EOPNOTSUPP);
     set_backlog(backlog);
     auto previous_role = m_role;
     m_role = Role::Listener;
@@ -300,10 +300,10 @@ bool LocalSocket::can_write(const FileDescription& description, size_t) const
 KResultOr<size_t> LocalSocket::sendto(FileDescription& description, const UserOrKernelBuffer& data, size_t data_size, int, Userspace<const sockaddr*>, socklen_t)
 {
     if (!has_attached_peer(description))
-        return EPIPE;
+        return set_so_error(EPIPE);
     auto* socket_buffer = send_buffer_for(description);
     if (!socket_buffer)
-        return EINVAL;
+        return set_so_error(EINVAL);
     auto nwritten_or_error = socket_buffer->write(data, data_size);
     if (!nwritten_or_error.is_error() && nwritten_or_error.value() > 0)
         Thread::current()->did_unix_socket_write(nwritten_or_error.value());
@@ -334,17 +334,18 @@ KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKern
 {
     auto* socket_buffer = receive_buffer_for(description);
     if (!socket_buffer)
-        return EINVAL;
+        return set_so_error(EINVAL);
     if (!description.is_blocking()) {
         if (socket_buffer->is_empty()) {
             if (!has_attached_peer(description))
                 return 0;
-            return EAGAIN;
+            return set_so_error(EAGAIN);
         }
     } else if (!can_read(description, 0)) {
         auto unblock_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
-        if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags).was_interrupted())
-            return EINTR;
+        if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags).was_interrupted()) {
+            return set_so_error(EINTR);
+        }
     }
     if (!has_attached_peer(description) && socket_buffer->is_empty())
         return 0;
@@ -447,7 +448,7 @@ KResult LocalSocket::chown(FileDescription&, uid_t uid, gid_t gid)
 
     auto current_process = Process::current();
     if (!current_process->is_superuser() && (current_process->euid() != uid || !current_process->in_group(gid)))
-        return EPERM;
+        return set_so_error(EPERM);
 
     m_prebind_uid = uid;
     m_prebind_gid = gid;
@@ -479,13 +480,13 @@ KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescr
     MutexLocker locker(lock());
     auto role = this->role(socket_description);
     if (role != Role::Connected && role != Role::Accepted)
-        return EINVAL;
+        return set_so_error(EINVAL);
     auto& queue = sendfd_queue_for(socket_description);
     // FIXME: Figure out how we should limit this properly.
     if (queue.size() > 128)
-        return EBUSY;
+        return set_so_error(EBUSY);
     if (!queue.try_append(move(passing_description)))
-        return ENOMEM;
+        return set_so_error(ENOMEM);
     return KSuccess;
 }
 
@@ -494,11 +495,11 @@ KResultOr<NonnullRefPtr<FileDescription>> LocalSocket::recvfd(const FileDescript
     MutexLocker locker(lock());
     auto role = this->role(socket_description);
     if (role != Role::Connected && role != Role::Accepted)
-        return EINVAL;
+        return set_so_error(EINVAL);
     auto& queue = recvfd_queue_for(socket_description);
     if (queue.is_empty()) {
         // FIXME: Figure out the perfect error code for this.
-        return EAGAIN;
+        return set_so_error(EAGAIN);
     }
     return queue.take_first();
 }

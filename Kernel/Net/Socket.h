@@ -130,6 +130,13 @@ protected:
 
     Role m_role { Role::None };
 
+    KResult so_error() const { return m_so_error; }
+    KResult set_so_error(KResult error)
+    {
+        m_so_error = error;
+        return error;
+    }
+
 protected:
     ucred m_origin { 0, 0, 0 };
     ucred m_acceptor { 0, 0, 0 };
@@ -153,6 +160,8 @@ private:
     Time m_receive_timeout {};
     Time m_send_timeout {};
     int m_timestamp { 0 };
+
+    KResult m_so_error { KSuccess };
 
     NonnullRefPtrVector<Socket> m_pending;
 };

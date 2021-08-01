@@ -71,9 +71,9 @@ KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
     dbgln_if(SOCKET_DEBUG, "Socket({}) queueing connection", this);
     MutexLocker locker(m_lock);
     if (m_pending.size() >= m_backlog)
-        return ECONNREFUSED;
+        return set_so_error(ECONNREFUSED);
     if (!m_pending.try_append(peer))
-        return ENOMEM;
+        return set_so_error(ENOMEM);
     evaluate_block_conditions();
     return KSuccess;
 }
@@ -235,7 +235,7 @@ KResultOr<size_t> Socket::read(FileDescription& description, u64, UserOrKernelBu
 KResultOr<size_t> Socket::write(FileDescription& description, u64, const UserOrKernelBuffer& data, size_t size)
 {
     if (is_shut_down_for_writing())
-        return EPIPE;
+        return set_so_error(EPIPE);
     return sendto(description, data, size, 0, {}, 0);
 }
 
@@ -243,9 +243,9 @@ KResult Socket::shutdown(int how)
 {
     MutexLocker locker(lock());
     if (type() == SOCK_STREAM && !is_connected())
-        return ENOTCONN;
+        return set_so_error(ENOTCONN);
     if (m_role == Role::Listener)
-        return ENOTCONN;
+        return set_so_error(ENOTCONN);
     if (!m_shut_down_for_writing && (how & SHUT_WR))
         shut_down_for_writing();
     if (!m_shut_down_for_reading && (how & SHUT_RD))
