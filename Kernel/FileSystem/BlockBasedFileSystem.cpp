@@ -20,13 +20,14 @@ struct CacheEntry {
 
 class DiskCache {
 public:
-    explicit DiskCache(BlockBasedFileSystem& fs)
+    static constexpr size_t EntryCount = 10000;
+    explicit DiskCache(BlockBasedFileSystem& fs, NonnullOwnPtr<KBuffer> cached_block_data, NonnullOwnPtr<KBuffer> entries_buffer)
         : m_fs(fs)
-        , m_cached_block_data(KBuffer::create_with_size(m_entry_count * m_fs.block_size()))
-        , m_entries(KBuffer::create_with_size(m_entry_count * sizeof(CacheEntry)))
+        , m_cached_block_data(move(cached_block_data))
+        , m_entries(move(entries_buffer))
     {
-        for (size_t i = 0; i < m_entry_count; ++i) {
-            entries()[i].data = m_cached_block_data.data() + i * m_fs.block_size();
+        for (size_t i = 0; i < EntryCount; ++i) {
+            entries()[i].data = m_cached_block_data->data() + i * m_fs.block_size();
             m_clean_list.append(entries()[i]);
         }
     }
@@ -83,8 +84,8 @@ public:
         return new_entry;
     }
 
-    const CacheEntry* entries() const { return (const CacheEntry*)m_entries.data(); }
-    CacheEntry* entries() { return (CacheEntry*)m_entries.data(); }
+    const CacheEntry* entries() const { return (const CacheEntry*)m_entries->data(); }
+    CacheEntry* entries() { return (CacheEntry*)m_entries->data(); }
 
     template<typename Callback>
     void for_each_dirty_entry(Callback callback)
@@ -95,12 +96,11 @@ public:
 
 private:
     BlockBasedFileSystem& m_fs;
-    size_t m_entry_count { 10000 };
     mutable HashMap<BlockBasedFileSystem::BlockIndex, CacheEntry*> m_hash;
     mutable IntrusiveList<CacheEntry, RawPtr<CacheEntry>, &CacheEntry::list_node> m_clean_list;
     mutable IntrusiveList<CacheEntry, RawPtr<CacheEntry>, &CacheEntry::list_node> m_dirty_list;
-    KBuffer m_cached_block_data;
-    KBuffer m_entries;
+    NonnullOwnPtr<KBuffer> m_cached_block_data;
+    NonnullOwnPtr<KBuffer> m_entries;
     bool m_dirty { false };
 };
 
@@ -112,6 +112,25 @@ BlockBasedFileSystem::BlockBasedFileSystem(FileDescription& file_description)
 
 BlockBasedFileSystem::~BlockBasedFileSystem()
 {
+}
+
+bool BlockBasedFileSystem::initialize()
+{
+    VERIFY(block_size() != 0);
+    auto cached_block_data = KBuffer::try_create_with_size(DiskCache::EntryCount * block_size());
+    if (!cached_block_data)
+        return false;
+
+    auto entries_data = KBuffer::try_create_with_size(DiskCache::EntryCount * sizeof(CacheEntry));
+    if (!entries_data)
+        return false;
+
+    auto disk_cache = adopt_own_if_nonnull(new (nothrow) DiskCache(*this, cached_block_data.release_nonnull(), entries_data.release_nonnull()));
+    if (!disk_cache)
+        return false;
+
+    m_cache = move(disk_cache);
+    return true;
 }
 
 KResult BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
@@ -293,8 +312,6 @@ void BlockBasedFileSystem::flush_writes()
 
 DiskCache& BlockBasedFileSystem::cache() const
 {
-    if (!m_cache)
-        m_cache = make<DiskCache>(const_cast<BlockBasedFileSystem&>(*this));
     return *m_cache;
 }
 
