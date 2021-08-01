@@ -84,8 +84,8 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
     auto packet = routing_decision.adapter->acquire_packet_buffer(ipv4_payload_offset + udp_buffer_size);
     if (!packet)
         return ENOMEM;
-    memset(packet->buffer.data() + ipv4_payload_offset, 0, sizeof(UDPPacket));
-    auto& udp_packet = *reinterpret_cast<UDPPacket*>(packet->buffer.data() + ipv4_payload_offset);
+    memset(packet->buffer->data() + ipv4_payload_offset, 0, sizeof(UDPPacket));
+    auto& udp_packet = *reinterpret_cast<UDPPacket*>(packet->buffer->data() + ipv4_payload_offset);
     udp_packet.set_source_port(local_port());
     udp_packet.set_destination_port(peer_port());
     udp_packet.set_length(udp_buffer_size);
@@ -94,7 +94,7 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
 
     routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(), routing_decision.next_hop,
         peer_address(), IPv4Protocol::UDP, udp_buffer_size, ttl());
-    routing_decision.adapter->send_packet({ packet->buffer.data(), packet->buffer.size() });
+    routing_decision.adapter->send_packet(packet->bytes());
     return data_length;
 }
 

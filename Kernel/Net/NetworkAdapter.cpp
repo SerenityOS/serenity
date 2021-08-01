@@ -48,9 +48,9 @@ void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Addres
     VERIFY(ipv4_packet_size <= mtu());
 
     size_t ethernet_frame_size = ipv4_payload_offset() + payload_size;
-    VERIFY(packet.buffer.size() == ethernet_frame_size);
-    memset(packet.buffer.data(), 0, ipv4_payload_offset());
-    auto& eth = *(EthernetFrameHeader*)packet.buffer.data();
+    VERIFY(packet.buffer->size() == ethernet_frame_size);
+    memset(packet.buffer->data(), 0, ipv4_payload_offset());
+    auto& eth = *(EthernetFrameHeader*)packet.buffer->data();
     eth.set_source(mac_address());
     eth.set_destination(destination_mac);
     eth.set_ether_type(EtherType::IPv4);
@@ -83,7 +83,7 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
         return;
     }
 
-    memcpy(packet->buffer.data(), payload.data(), payload.size());
+    memcpy(packet->buffer->data(), payload.data(), payload.size());
 
     m_packet_queue.append(*packet);
     m_packet_queue_size++;
@@ -101,9 +101,9 @@ size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, Time& pack
     m_packet_queue_size--;
     packet_timestamp = packet_with_timestamp->timestamp;
     auto& packet_buffer = packet_with_timestamp->buffer;
-    size_t packet_size = packet_buffer.size();
+    size_t packet_size = packet_buffer->size();
     VERIFY(packet_size <= buffer_size);
-    memcpy(buffer, packet_buffer.data(), packet_size);
+    memcpy(buffer, packet_buffer->data(), packet_size);
     release_packet_buffer(*packet_with_timestamp);
     return packet_size;
 }
@@ -112,26 +112,30 @@ RefPtr<PacketWithTimestamp> NetworkAdapter::acquire_packet_buffer(size_t size)
 {
     InterruptDisabler disabler;
     if (m_unused_packets.is_empty()) {
-        auto buffer = KBuffer::create_with_size(size, Region::Access::Read | Region::Access::Write, "Packet Buffer", AllocationStrategy::AllocateNow);
-        auto packet = adopt_ref_if_nonnull(new (nothrow) PacketWithTimestamp { move(buffer), kgettimeofday() });
+        auto buffer = KBuffer::try_create_with_size(size, Region::Access::Read | Region::Access::Write, "Packet Buffer", AllocationStrategy::AllocateNow);
+        if (!buffer)
+            return {};
+        auto packet = adopt_ref_if_nonnull(new (nothrow) PacketWithTimestamp { buffer.release_nonnull(), kgettimeofday() });
         if (!packet)
-            return nullptr;
-        packet->buffer.set_size(size);
+            return {};
+        packet->buffer->set_size(size);
         return packet;
     }
 
     auto packet = m_unused_packets.take_first();
-    if (packet->buffer.capacity() >= size) {
+    if (packet->buffer->capacity() >= size) {
         packet->timestamp = kgettimeofday();
-        packet->buffer.set_size(size);
+        packet->buffer->set_size(size);
         return packet;
     }
 
-    auto buffer = KBuffer::create_with_size(size, Region::Access::Read | Region::Access::Write, "Packet Buffer", AllocationStrategy::AllocateNow);
-    packet = adopt_ref_if_nonnull(new (nothrow) PacketWithTimestamp { move(buffer), kgettimeofday() });
+    auto buffer = KBuffer::try_create_with_size(size, Region::Access::Read | Region::Access::Write, "Packet Buffer", AllocationStrategy::AllocateNow);
+    if (!buffer)
+        return {};
+    packet = adopt_ref_if_nonnull(new (nothrow) PacketWithTimestamp { buffer.release_nonnull(), kgettimeofday() });
     if (!packet)
-        return nullptr;
-    packet->buffer.set_size(size);
+        return {};
+    packet->buffer->set_size(size);
     return packet;
 }
 

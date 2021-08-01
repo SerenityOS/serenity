@@ -254,8 +254,8 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
             return;
         }
         adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, icmp_packet_size, 64);
-        memset(packet->buffer.data() + ipv4_payload_offset, 0, sizeof(ICMPEchoPacket));
-        auto& response = *(ICMPEchoPacket*)(packet->buffer.data() + ipv4_payload_offset);
+        memset(packet->buffer->data() + ipv4_payload_offset, 0, sizeof(ICMPEchoPacket));
+        auto& response = *(ICMPEchoPacket*)(packet->buffer->data() + ipv4_payload_offset);
         response.header.set_type(ICMPType::EchoReply);
         response.header.set_code(0);
         response.identifier = request.identifier;
@@ -264,7 +264,7 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
             memcpy(response.payload(), request.payload(), icmp_payload_size);
         response.header.set_checksum(internet_checksum(&response, icmp_packet_size));
         // FIXME: What is the right TTL value here? Is 64 ok? Should we use the same TTL as the echo request?
-        adapter->send_packet({ packet->buffer.data(), packet->buffer.size() });
+        adapter->send_packet(packet->bytes());
         adapter->release_packet_buffer(*packet);
     }
 }
@@ -359,7 +359,7 @@ void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, Re
     rst_packet.set_flags(TCPFlags::RST | TCPFlags::ACK);
     rst_packet.set_checksum(TCPSocket::compute_tcp_checksum(ipv4_packet.source(), ipv4_packet.destination(), rst_packet, 0));
 
-    routing_decision.adapter->send_packet({ packet->buffer.data(), packet->buffer.size() });
+    routing_decision.adapter->send_packet(packet->bytes());
     routing_decision.adapter->release_packet_buffer(*packet);
 }
 
