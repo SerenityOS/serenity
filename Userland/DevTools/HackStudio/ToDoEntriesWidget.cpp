@@ -91,6 +91,12 @@ void ToDoEntriesWidget::refresh()
     m_result_view->set_model(results_model);
 }
 
+void ToDoEntriesWidget::clear()
+{
+    ToDoEntries::the().clear_entries();
+    refresh();
+}
+
 ToDoEntriesWidget::ToDoEntriesWidget()
 {
     set_layout<GUI::VerticalBoxLayout>();
