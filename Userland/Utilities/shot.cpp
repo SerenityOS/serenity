@@ -7,6 +7,7 @@
 
 #include <AK/Format.h>
 #include <AK/Optional.h>
+#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
@@ -166,6 +167,25 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    outln("{}", output_path);
+    bool printed_hyperlink = false;
+    if (isatty(STDOUT_FILENO)) {
+        auto full_path = Core::File::real_path_for(output_path);
+        if (!full_path.is_null()) {
+            char hostname[HOST_NAME_MAX];
+            VERIFY(gethostname(hostname, sizeof(hostname)) == 0);
+
+            auto url = URL::create_with_file_scheme(full_path, {}, hostname);
+            out("\033]8;;{}\033\\", url.serialize());
+            printed_hyperlink = true;
+        }
+    }
+
+    out("{}", output_path);
+
+    if (printed_hyperlink) {
+        out("\033]8;;\033\\");
+    }
+
+    outln("");
     return 0;
 }
