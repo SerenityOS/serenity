@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Guide.h"
 #include "Image.h"
 #include "Selection.h"
 #include <LibGUI/Frame.h>
@@ -37,6 +38,12 @@ public:
     void did_complete_action();
     bool undo();
     bool redo();
+
+    void add_guide(NonnullRefPtr<Guide> guide) { m_guides.append(guide); }
+    void remove_guide(Guide const& guide)
+    {
+        m_guides.remove_first_matching([&](auto& entry) { return &guide == entry.ptr(); });
+    }
 
     void layers_did_change();
 
@@ -77,6 +84,8 @@ public:
     Gfx::FloatPoint image_position_to_editor_position(Gfx::IntPoint const&) const;
     Gfx::FloatPoint editor_position_to_image_position(Gfx::IntPoint const&) const;
 
+    NonnullRefPtrVector<Guide> const& guides() const { return m_guides; }
+
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
 
@@ -105,6 +114,8 @@ private:
     NonnullRefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
     OwnPtr<GUI::UndoStack> m_undo_stack;
+
+    NonnullRefPtrVector<Guide> m_guides;
 
     Tool* m_active_tool { nullptr };
 
