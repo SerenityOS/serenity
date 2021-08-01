@@ -31,4 +31,9 @@ Vector<Cpp::Parser::TodoEntry> ToDoEntries::get_entries()
     return ret;
 }
 
+void ToDoEntries::clear_entries()
+{
+    m_document_to_entries.clear();
+}
+
 }
