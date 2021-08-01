@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Temporal {
@@ -300,7 +301,9 @@ Object* to_temporal_calendar(GlobalObject& global_object, Value temporal_calenda
             return &static_cast<PlainDateTime&>(temporal_calendar_like_object).calendar();
         if (is<PlainTime>(temporal_calendar_like_object))
             return &static_cast<PlainTime&>(temporal_calendar_like_object).calendar();
-        // TODO: The rest of the Temporal built-ins (PlainMonthDay, PlainYearMonth, ZonedDateTime)
+        if (is<ZonedDateTime>(temporal_calendar_like_object))
+            return &static_cast<ZonedDateTime&>(temporal_calendar_like_object).calendar();
+        // TODO: The rest of the Temporal built-ins (PlainMonthDay, PlainYearMonth)
 
         // b. If ? HasProperty(temporalCalendarLike, "calendar") is false, return temporalCalendarLike.
         auto has_property = temporal_calendar_like_object.has_property(vm.names.calendar);
