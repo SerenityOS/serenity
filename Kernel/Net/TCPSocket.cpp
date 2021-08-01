@@ -96,7 +96,10 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
             return {};
     }
 
-    auto result = TCPSocket::create(protocol());
+    auto receive_buffer = create_receive_buffer();
+    if (!receive_buffer)
+        return {};
+    auto result = TCPSocket::create(protocol(), receive_buffer.release_nonnull());
     if (result.is_error())
         return {};
 
@@ -131,8 +134,8 @@ void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
     [[maybe_unused]] auto rc = queue_connection_from(*socket);
 }
 
-TCPSocket::TCPSocket(int protocol)
-    : IPv4Socket(SOCK_STREAM, protocol)
+TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
+    : IPv4Socket(SOCK_STREAM, protocol, move(receive_buffer))
 {
     m_last_retransmit_time = kgettimeofday();
 }
@@ -147,9 +150,9 @@ TCPSocket::~TCPSocket()
     dbgln_if(TCP_SOCKET_DEBUG, "~TCPSocket in state {}", to_string(state()));
 }
 
-KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::create(int protocol)
+KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
-    auto socket = adopt_ref_if_nonnull(new (nothrow) TCPSocket(protocol));
+    auto socket = adopt_ref_if_nonnull(new (nothrow) TCPSocket(protocol, move(receive_buffer)));
     if (socket)
         return socket.release_nonnull();
     return ENOMEM;

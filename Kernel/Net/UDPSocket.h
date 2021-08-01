@@ -13,14 +13,14 @@ namespace Kernel {
 
 class UDPSocket final : public IPv4Socket {
 public:
-    static KResultOr<NonnullRefPtr<UDPSocket>> create(int protocol);
+    static KResultOr<NonnullRefPtr<UDPSocket>> create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~UDPSocket() override;
 
     static SocketHandle<UDPSocket> from_port(u16);
     static void for_each(Function<void(const UDPSocket&)>);
 
 private:
-    explicit UDPSocket(int protocol);
+    explicit UDPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual StringView class_name() const override { return "UDPSocket"; }
     static Lockable<HashMap<u16, UDPSocket*>>& sockets_by_port();
 

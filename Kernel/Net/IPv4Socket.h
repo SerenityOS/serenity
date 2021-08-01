@@ -74,7 +74,7 @@ public:
     BufferMode buffer_mode() const { return m_buffer_mode; }
 
 protected:
-    IPv4Socket(int type, int protocol);
+    IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual StringView class_name() const override { return "IPv4Socket"; }
 
     PortAllocationResult allocate_local_port_if_needed();
@@ -91,6 +91,8 @@ protected:
 
     void set_local_address(IPv4Address address) { m_local_address = address; }
     void set_peer_address(IPv4Address address) { m_peer_address = address; }
+
+    static OwnPtr<DoubleBuffer> create_receive_buffer();
 
 private:
     virtual bool is_ipv4() const override { return true; }
@@ -115,7 +117,7 @@ private:
 
     SinglyLinkedListWithCount<ReceivedPacket> m_receive_queue;
 
-    DoubleBuffer m_receive_buffer { 256 * KiB };
+    NonnullOwnPtr<DoubleBuffer> m_receive_buffer;
 
     u16 m_local_port { 0 };
     u16 m_peer_port { 0 };

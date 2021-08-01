@@ -43,8 +43,8 @@ SocketHandle<UDPSocket> UDPSocket::from_port(u16 port)
     return { *socket };
 }
 
-UDPSocket::UDPSocket(int protocol)
-    : IPv4Socket(SOCK_DGRAM, protocol)
+UDPSocket::UDPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
+    : IPv4Socket(SOCK_DGRAM, protocol, move(receive_buffer))
 {
 }
 
@@ -54,9 +54,9 @@ UDPSocket::~UDPSocket()
     sockets_by_port().resource().remove(local_port());
 }
 
-KResultOr<NonnullRefPtr<UDPSocket>> UDPSocket::create(int protocol)
+KResultOr<NonnullRefPtr<UDPSocket>> UDPSocket::create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
-    auto socket = adopt_ref_if_nonnull(new (nothrow) UDPSocket(protocol));
+    auto socket = adopt_ref_if_nonnull(new (nothrow) UDPSocket(protocol, move(receive_buffer)));
     if (socket)
         return socket.release_nonnull();
     return ENOMEM;
