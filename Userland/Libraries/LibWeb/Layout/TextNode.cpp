@@ -65,6 +65,7 @@ void TextNode::paint_text_decoration(Gfx::Painter& painter, LineBoxFragment cons
     } break;
     case CSS::TextDecorationLine::Blink:
         // Conforming user agents may simply not blink the text
+        return;
         break;
     }
 
