@@ -24,9 +24,7 @@ public:
 
 private:
     // 12.5 Properties of Temporal.Calendar Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-calendar-instances
-
-    // [[Identifier]]
-    String m_identifier;
+    String m_identifier; // [[Identifier]]
 };
 
 Calendar* create_temporal_calendar(GlobalObject&, String const& identifier, FunctionObject* new_target = nullptr);
