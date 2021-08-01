@@ -77,8 +77,8 @@ DebugInfoWidget::DebugInfoWidget()
         // We currently only reconstruct eip & ebp. Ideally would also reconstruct the other registers somehow.
         // (Other registers may be needed to get the values of variables who are not stored on the stack)
         PtraceRegisters frame_regs {};
-        frame_regs.eip = model.frames()[index.row()].instruction_address;
-        frame_regs.ebp = model.frames()[index.row()].frame_base;
+        frame_regs.set_ip(model.frames()[index.row()].instruction_address);
+        frame_regs.set_bp(model.frames()[index.row()].frame_base);
 
         m_variables_view->set_model(VariablesModel::create(frame_regs));
     };
@@ -108,7 +108,7 @@ RefPtr<GUI::Menu> DebugInfoWidget::get_context_menu_for_variable(const GUI::Mode
         }));
     }
 
-    auto variable_address = (u32*)variable->location_data.address;
+    auto variable_address = (FlatPtr*)variable->location_data.address;
     if (Debugger::the().session()->watchpoint_exists(variable_address)) {
         context_menu->add_action(GUI::Action::create("Remove watchpoint", [variable_address](auto&) {
             Debugger::the().session()->remove_watchpoint(variable_address);

@@ -14,7 +14,7 @@ namespace HackStudio {
 
 struct RegisterData {
     String name;
-    u32 value;
+    FlatPtr value;
     bool changed { false };
 };
 
