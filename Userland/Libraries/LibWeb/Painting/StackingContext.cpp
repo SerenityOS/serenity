@@ -31,6 +31,9 @@ StackingContext::StackingContext(Box& box, StackingContext* parent)
 
 void StackingContext::paint_descendants(PaintContext& context, Node& box, StackingContextPaintPhase phase)
 {
+    if (phase == StackingContextPaintPhase::Foreground)
+        box.before_children_paint(context, PaintPhase::Foreground);
+
     box.for_each_child([&](auto& child) {
         if (child.establishes_stacking_context())
             return;
@@ -55,9 +58,7 @@ void StackingContext::paint_descendants(PaintContext& context, Node& box, Stacki
         case StackingContextPaintPhase::Foreground:
             if (!child.is_positioned()) {
                 child.paint(context, PaintPhase::Foreground);
-                child.before_children_paint(context, PaintPhase::Foreground);
                 paint_descendants(context, child, phase);
-                child.after_children_paint(context, PaintPhase::Foreground);
             }
             break;
         case StackingContextPaintPhase::FocusAndOverlay:
@@ -69,6 +70,9 @@ void StackingContext::paint_descendants(PaintContext& context, Node& box, Stacki
             break;
         }
     });
+
+    if (phase == StackingContextPaintPhase::Foreground)
+        box.after_children_paint(context, PaintPhase::Foreground);
 }
 
 void StackingContext::paint_internal(PaintContext& context)
