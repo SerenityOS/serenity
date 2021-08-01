@@ -96,5 +96,11 @@
     "author": "awesomekling",
     "url": "https://discord.com/channels/830522505605283862/830739873119207426/870071227929202738",
     "utc_time": 1627511606
+  },
+  {
+    "quote": "Changelog: All boogs fixed, thar be no moar boogs",
+    "author": "CxByte",
+    "utc_time": "1627859603",
+    "url": "https://github.com/SerenityOS/serenity/pull/9127#issuecomment-890603297"
   }
 ]
