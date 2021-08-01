@@ -758,6 +758,18 @@ Messages::WindowServer::GetSystemThemeResponse ClientConnection::get_system_them
     return name;
 }
 
+void ClientConnection::apply_cursor_theme(String const& name)
+{
+    WindowManager::the().apply_cursor_theme(name);
+}
+
+Messages::WindowServer::GetCursorThemeResponse ClientConnection::get_cursor_theme()
+{
+    auto config = Core::ConfigFile::open("/etc/WindowServer.ini");
+    auto name = config->read_entry("Mouse", "CursorTheme");
+    return name;
+}
+
 Messages::WindowServer::SetSystemFontsResponse ClientConnection::set_system_fonts(String const& default_font_query, String const& fixed_width_font_query)
 {
     if (!Gfx::FontDatabase::the().get_by_name(default_font_query)

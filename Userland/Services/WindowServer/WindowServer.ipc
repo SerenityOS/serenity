@@ -114,6 +114,9 @@ endpoint WindowServer
     get_system_theme() => ([UTF8] String theme_name)
     refresh_system_theme() =|
 
+    apply_cursor_theme(String name) =|
+    get_cursor_theme() => (String name)
+
     set_system_fonts(String default_font_query, String fixed_width_font_query) => (bool success)
 
     set_window_base_size_and_size_increment(i32 window_id, Gfx::IntSize base_size, Gfx::IntSize size_increment) =|
