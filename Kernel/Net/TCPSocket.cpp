@@ -171,7 +171,7 @@ KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     dbgln_if(TCP_SOCKET_DEBUG, "payload_size {}, will it fit in {}?", payload_size, buffer_size);
     VERIFY(buffer_size >= payload_size);
     if (!buffer.write(tcp_packet.payload(), payload_size))
-        return EFAULT;
+        return set_so_error(EFAULT);
     return payload_size;
 }
 
@@ -179,7 +179,7 @@ KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_
 {
     RoutingDecision routing_decision = route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
-        return EHOSTUNREACH;
+        return set_so_error(EHOSTUNREACH);
     size_t mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
     data_length = min(data_length, mss);
     int err = send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, &data, data_length, &routing_decision);
@@ -199,7 +199,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
 {
     RoutingDecision routing_decision = user_routing_decision ? *user_routing_decision : route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
-        return EHOSTUNREACH;
+        return set_so_error(EHOSTUNREACH);
 
     auto ipv4_payload_offset = routing_decision.adapter->ipv4_payload_offset();
 
@@ -209,7 +209,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     const size_t buffer_size = ipv4_payload_offset + tcp_header_size + payload_size;
     auto packet = routing_decision.adapter->acquire_packet_buffer(buffer_size);
     if (!packet)
-        return ENOMEM;
+        return set_so_error(ENOMEM);
     routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(),
         routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
         buffer_size - ipv4_payload_offset, ttl());
@@ -231,7 +231,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
 
     if (payload && !payload->read(tcp_packet.payload(), payload_size)) {
         routing_decision.adapter->release_packet_buffer(*packet);
-        return EFAULT;
+        return set_so_error(EFAULT);
     }
 
     if (flags & TCPFlags::SYN) {
@@ -370,7 +370,7 @@ KResult TCPSocket::protocol_bind()
     if (has_specific_local_address() && !m_adapter) {
         m_adapter = NetworkingManagement::the().from_ipv4_address(local_address());
         if (!m_adapter)
-            return EADDRNOTAVAIL;
+            return set_so_error(EADDRNOTAVAIL);
     }
 
     return KSuccess;
@@ -386,7 +386,7 @@ KResult TCPSocket::protocol_listen(bool did_allocate_port)
             return true;
         });
         if (!ok)
-            return EADDRINUSE;
+            return set_so_error(EADDRINUSE);
     }
 
     set_direction(Direction::Passive);
@@ -401,7 +401,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
 
     auto routing_decision = route_to(peer_address(), local_address());
     if (routing_decision.is_zero())
-        return EHOSTUNREACH;
+        return set_so_error(EHOSTUNREACH);
     if (!has_specific_local_address())
         set_local_address(routing_decision.adapter->ipv4_address());
 
@@ -425,20 +425,20 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
         locker.unlock();
         auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
         if (Thread::current()->block<Thread::ConnectBlocker>({}, description, unblock_flags).was_interrupted())
-            return EINTR;
+            return set_so_error(EINTR);
         locker.lock();
         VERIFY(setup_state() == SetupState::Completed);
         if (has_error()) { // TODO: check unblock_flags
             m_role = Role::None;
             if (error() == TCPSocket::Error::RetransmitTimeout)
-                return ETIMEDOUT;
+                return set_so_error(ETIMEDOUT);
             else
-                return ECONNREFUSED;
+                return set_so_error(ECONNREFUSED);
         }
         return KSuccess;
     }
 
-    return EINPROGRESS;
+    return set_so_error(EINPROGRESS);
 }
 
 KResultOr<u16> TCPSocket::protocol_allocate_local_port()
@@ -464,7 +464,7 @@ KResultOr<u16> TCPSocket::protocol_allocate_local_port()
             if (port == first_scan_port)
                 break;
         }
-        return EADDRINUSE;
+        return set_so_error(EADDRINUSE);
     });
 }
 

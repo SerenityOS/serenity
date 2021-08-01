@@ -108,20 +108,20 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
 {
     VERIFY(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_in))
-        return EINVAL;
+        return set_so_error(EINVAL);
 
     sockaddr_in address;
     if (!copy_from_user(&address, user_address, sizeof(sockaddr_in)))
-        return EFAULT;
+        return set_so_error(EFAULT);
 
     if (address.sin_family != AF_INET)
-        return EINVAL;
+        return set_so_error(EINVAL);
 
     auto requested_local_port = ntohs(address.sin_port);
     if (!Process::current()->is_superuser()) {
         if (requested_local_port > 0 && requested_local_port < 1024) {
             dbgln("UID {} attempted to bind {} to port {}", Process::current()->uid(), class_name(), requested_local_port);
-            return EACCES;
+            return set_so_error(EACCES);
         }
     }
 
@@ -152,19 +152,19 @@ KResult IPv4Socket::listen(size_t backlog)
 KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockaddr*> address, socklen_t address_size, ShouldBlock should_block)
 {
     if (address_size != sizeof(sockaddr_in))
-        return EINVAL;
+        return set_so_error(EINVAL);
     u16 sa_family_copy;
     auto* user_address = reinterpret_cast<const sockaddr*>(address.unsafe_userspace_ptr());
     if (!copy_from_user(&sa_family_copy, &user_address->sa_family, sizeof(u16)))
-        return EFAULT;
+        return set_so_error(EFAULT);
     if (sa_family_copy != AF_INET)
-        return EINVAL;
+        return set_so_error(EINVAL);
     if (m_role == Role::Connected)
-        return EISCONN;
+        return set_so_error(EISCONN);
 
     sockaddr_in safe_address;
     if (!copy_from_user(&safe_address, (const sockaddr_in*)user_address, sizeof(sockaddr_in)))
-        return EFAULT;
+        return set_so_error(EFAULT);
 
     m_peer_address = IPv4Address((const u8*)&safe_address.sin_addr.s_addr);
     if (m_peer_address == IPv4Address { 0, 0, 0, 0 })
@@ -205,16 +205,16 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     MutexLocker locker(lock());
 
     if (addr && addr_length != sizeof(sockaddr_in))
-        return EINVAL;
+        return set_so_error(EINVAL);
 
     if (addr) {
         sockaddr_in ia;
         if (!copy_from_user(&ia, Userspace<const sockaddr_in*>(addr.ptr())))
-            return EFAULT;
+            return set_so_error(EFAULT);
 
         if (ia.sin_family != AF_INET) {
             dmesgln("sendto: Bad address family: {} is not AF_INET", ia.sin_family);
-            return EAFNOSUPPORT;
+            return set_so_error(EAFNOSUPPORT);
         }
 
         m_peer_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
@@ -222,11 +222,11 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     }
 
     if (!is_connected() && m_peer_address.is_zero())
-        return EPIPE;
+        return set_so_error(EPIPE);
 
     auto routing_decision = route_to(m_peer_address, m_local_address, bound_interface());
     if (routing_decision.is_zero())
-        return EHOSTUNREACH;
+        return set_so_error(EHOSTUNREACH);
 
     if (m_local_address.to_u32() == 0)
         m_local_address = routing_decision.adapter->ipv4_address();
@@ -241,12 +241,12 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
         data_length = min(data_length, routing_decision.adapter->mtu() - ipv4_payload_offset);
         auto packet = routing_decision.adapter->acquire_packet_buffer(ipv4_payload_offset + data_length);
         if (!packet)
-            return ENOMEM;
+            return set_so_error(ENOMEM);
         routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(), routing_decision.next_hop,
             m_peer_address, (IPv4Protocol)protocol(), data_length, m_ttl);
         if (!data.read(packet->buffer->data() + ipv4_payload_offset, data_length)) {
             routing_decision.adapter->release_packet_buffer(*packet);
-            return EFAULT;
+            return set_so_error(EFAULT);
         }
         routing_decision.adapter->send_packet(packet->bytes());
         routing_decision.adapter->release_packet_buffer(*packet);
@@ -266,7 +266,7 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
         if (protocol_is_disconnected())
             return 0;
         if (!description.is_blocking())
-            return EAGAIN;
+            return set_so_error(EAGAIN);
 
         locker.unlock();
         auto unblocked_flags = BlockFlags::None;
@@ -275,10 +275,10 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
 
         if (!has_flag(unblocked_flags, BlockFlags::Read)) {
             if (res.was_interrupted())
-                return EINTR;
+                return set_so_error(EINTR);
 
             // Unblocked due to timeout.
-            return EAGAIN;
+            return set_so_error(EAGAIN);
         }
     }
 
@@ -306,7 +306,7 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
             if (protocol_is_disconnected())
                 return 0;
             if (!description.is_blocking())
-                return EAGAIN;
+                return set_so_error(EAGAIN);
         }
 
         if (!m_receive_queue.is_empty()) {
@@ -336,10 +336,10 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
 
         if (!has_flag(unblocked_flags, BlockFlags::Read)) {
             if (res.was_interrupted())
-                return EINTR;
+                return set_so_error(EINTR);
 
             // Unblocked due to timeout.
-            return EAGAIN;
+            return set_so_error(EAGAIN);
         }
         VERIFY(m_can_read);
         VERIFY(!m_receive_queue.is_empty());
@@ -369,18 +369,18 @@ KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& descripti
         out_addr.sin_family = AF_INET;
         Userspace<sockaddr_in*> dest_addr = addr.ptr();
         if (!copy_to_user(dest_addr, &out_addr))
-            return EFAULT;
+            return set_so_error(EFAULT);
 
         socklen_t out_length = sizeof(sockaddr_in);
         VERIFY(addr_length);
         if (!copy_to_user(addr_length, &out_length))
-            return EFAULT;
+            return set_so_error(EFAULT);
     }
 
     if (type() == SOCK_RAW) {
         size_t bytes_written = min(packet.data.value().size(), buffer_length);
         if (!buffer.write(packet.data.value().data(), bytes_written))
-            return EFAULT;
+            return set_so_error(EFAULT);
         return bytes_written;
     }
 
@@ -392,9 +392,9 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKerne
     if (user_addr_length) {
         socklen_t addr_length;
         if (!copy_from_user(&addr_length, user_addr_length.unsafe_userspace_ptr()))
-            return EFAULT;
+            return set_so_error(EFAULT);
         if (addr_length < sizeof(sockaddr_in))
-            return EINVAL;
+            return set_so_error(EINVAL);
     }
 
     dbgln_if(IPV4_SOCKET_DEBUG, "recvfrom: type={}, local_port={}", type(), local_port());
