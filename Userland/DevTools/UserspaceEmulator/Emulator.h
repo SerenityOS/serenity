@@ -210,7 +210,7 @@ private:
 
     void dispatch_one_pending_signal();
     MmapRegion const* find_text_region(FlatPtr address);
-    MmapRegion const* load_library_from_adress(FlatPtr address);
+    MmapRegion const* load_library_from_address(FlatPtr address);
     String symbol_at(FlatPtr address);
     String create_backtrace_line(FlatPtr address);
     String create_instruction_line(FlatPtr address, X86::Instruction insn);
