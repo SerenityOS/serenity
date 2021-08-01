@@ -18,6 +18,7 @@ public:
 
     void run_command(const String&);
     void kill_running_command();
+    void clear_including_history();
 
     bool user_spawned() const { return m_user_spawned; }
     VT::TerminalWidget& terminal() { return *m_terminal_widget; }

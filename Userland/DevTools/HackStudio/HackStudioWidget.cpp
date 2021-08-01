@@ -200,6 +200,7 @@ void HackStudioWidget::open_project(const String& root_path)
         m_open_files_vector.clear();
         add_new_editor(*m_editors_splitter);
         m_todo_entries_widget->clear();
+        m_terminal_wrapper->clear_including_history();
     }
     m_project = Project::open_with_root_path(root_path);
     VERIFY(m_project);
