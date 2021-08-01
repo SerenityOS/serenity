@@ -8,6 +8,11 @@ project(
     LANGUAGES C CXX
 )
 
+option(BUILD_SHARED_LIBS "Build shared libraries instead of static libraries" ON)
+if (ENABLE_OSS_FUZZ)
+    set(BUILD_SHARED_LIBS OFF) # Don't use shared libraries on oss-fuzz, for ease of integration with their infrastructure
+endif()
+
 # This is required for CMake (when invoked for a Lagom-only build) to
 # ignore any files downloading during the build, e.g. UnicodeData.txt.
 # https://cmake.org/cmake/help/latest/policy/CMP0058.html
@@ -142,10 +147,8 @@ endif()
 
 function(lagom_lib library fs_name)
     cmake_parse_arguments(LAGOM_LIBRARY "" "" "SOURCES;LIBS" ${ARGN})
-    # FIXME: Consider whether to care about -DBUILD_SHARED_LIBS=OFF
-    # Possibly a cmake presets value?
     set(target_name "Lagom${library}")
-    add_library(${target_name} SHARED ${LAGOM_LIBRARY_SOURCES})
+    add_library(${target_name} ${LAGOM_LIBRARY_SOURCES})
     # alias for pretty exports
     add_library(Lagom::${library} ALIAS ${target_name})
 
@@ -422,7 +425,6 @@ if (BUILD_LAGOM)
         list(FILTER LIBTEST_SOURCES EXCLUDE REGEX ".*Main.cpp$")
         add_library(
             LagomTest
-            SHARED
             ${LIBTEST_SOURCES}
         )
         target_link_libraries(LagomTest LagomCore)
