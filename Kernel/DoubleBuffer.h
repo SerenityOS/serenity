@@ -17,7 +17,6 @@ namespace Kernel {
 class DoubleBuffer {
 public:
     [[nodiscard]] static OwnPtr<DoubleBuffer> try_create(size_t capacity = 65536);
-    explicit DoubleBuffer(size_t capacity = 65536);
     [[nodiscard]] KResultOr<size_t> write(const UserOrKernelBuffer&, size_t);
     [[nodiscard]] KResultOr<size_t> write(const u8* data, size_t size)
     {
