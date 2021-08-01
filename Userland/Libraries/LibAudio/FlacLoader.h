@@ -22,11 +22,26 @@ class FlacInputStream : public Variant<Core::InputFileStream, InputMemoryStream>
 public:
     using Variant<Core::InputFileStream, InputMemoryStream>::Variant;
 
-    void seek(size_t pos)
+    bool seek(size_t pos)
     {
-        this->visit(
-            [&](auto& stream) {
+        return this->visit(
+            [&](Core::InputFileStream& stream) {
+                return stream.seek(pos);
+            },
+            [&](InputMemoryStream& stream) {
+                if (pos >= stream.bytes().size()) {
+                    return false;
+                }
                 stream.seek(pos);
+                return true;
+            });
+    }
+
+    bool handle_any_error()
+    {
+        return this->visit(
+            [&](auto& stream) {
+                return stream.handle_any_error();
             });
     }
 
@@ -56,6 +71,11 @@ class FlacLoaderPlugin : public LoaderPlugin {
 public:
     FlacLoaderPlugin(const StringView& path);
     FlacLoaderPlugin(const ByteBuffer& buffer);
+    ~FlacLoaderPlugin()
+    {
+        if (m_stream)
+            m_stream->handle_any_error();
+    }
 
     virtual bool sniff() override;
 

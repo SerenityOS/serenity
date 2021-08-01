@@ -11,6 +11,7 @@
 #include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/Math.h>
+#include <AK/ScopeGuard.h>
 #include <AK/Stream.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -33,6 +34,8 @@ FlacLoaderPlugin::FlacLoaderPlugin(const StringView& path)
 
     m_stream = make<FlacInputStream>(Core::InputFileStream(*m_file));
     reset();
+    if (!m_valid)
+        return;
 
     m_resampler = make<ResampleHelper<double>>(m_sample_rate, 44100);
 }
@@ -49,6 +52,8 @@ FlacLoaderPlugin::FlacLoaderPlugin(const ByteBuffer& buffer)
     if (!m_valid)
         return;
     reset();
+    if (!m_valid)
+        return;
 
     m_resampler = make<ResampleHelper<double>>(m_sample_rate, 44100);
 }
@@ -70,10 +75,12 @@ bool FlacLoaderPlugin::parse_header()
         }
         return InputBitStream(m_stream->get<InputMemoryStream>());
     }();
+    ScopeGuard clear_bit_input_errors([&bit_input] { bit_input.handle_any_error(); });
 
 #define CHECK_OK(msg)                                                      \
     do {                                                                   \
         if (!ok) {                                                         \
+            m_stream->handle_any_error();                                  \
             m_error_string = String::formatted("Parsing failed: {}", msg); \
             return {};                                                     \
         }                                                                  \
@@ -94,6 +101,7 @@ bool FlacLoaderPlugin::parse_header()
     CHECK_OK("First block type");
     InputMemoryStream streaminfo_data_memory(streaminfo.data.bytes());
     InputBitStream streaminfo_data(streaminfo_data_memory);
+    ScopeGuard clear_streaminfo_errors([&streaminfo_data] { streaminfo_data.handle_any_error(); });
 
     // STREAMINFO block
     m_min_block_size = streaminfo_data.read_bits_big_endian(16);
@@ -125,9 +133,13 @@ bool FlacLoaderPlugin::parse_header()
     }
 
     m_total_samples = streaminfo_data.read_bits_big_endian(36);
+    ok = ok && (m_total_samples > 0);
+    CHECK_OK("Number of samples");
     // Parse checksum into a buffer first
     ByteBuffer md5_checksum = ByteBuffer::create_uninitialized(128 / 8);
-    streaminfo_data.read(md5_checksum);
+    auto md5_bytes_read = streaminfo_data.read(md5_checksum);
+    ok = ok && (md5_bytes_read == md5_checksum.size());
+    CHECK_OK("MD5 Checksum");
     md5_checksum.bytes().copy_to({ m_md5_checksum, sizeof(m_md5_checksum) });
 
     // Parse other blocks
@@ -141,6 +153,11 @@ bool FlacLoaderPlugin::parse_header()
         ++total_meta_blocks;
         ok = ok && m_error_string.is_empty();
         CHECK_OK(m_error_string);
+    }
+
+    if (m_stream->handle_any_error()) {
+        m_error_string = "Parsing failed: Stream";
+        return false;
     }
 
     if constexpr (AFLACLOADER_DEBUG) {
@@ -203,11 +220,13 @@ void FlacLoaderPlugin::reset()
 
 void FlacLoaderPlugin::seek(const int position)
 {
-    m_stream->seek(position);
+    if (!m_stream->seek(position)) {
+        m_error_string = String::formatted("Invalid seek position {}", position);
+        m_valid = false;
+    }
 }
 
-// TODO implement these
-RefPtr<Buffer> FlacLoaderPlugin::get_more_samples([[maybe_unused]] size_t max_bytes_to_read_from_input)
+RefPtr<Buffer> FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
 {
     Vector<Frame> samples;
     ssize_t remaining_samples = m_total_samples - m_loaded_samples;
@@ -220,7 +239,7 @@ RefPtr<Buffer> FlacLoaderPlugin::get_more_samples([[maybe_unused]] size_t max_by
         if (!m_current_frame.has_value()) {
             next_frame();
             if (!m_error_string.is_empty()) {
-                dbgln("Frame parsing error: {}", m_error_string);
+                m_error_string = String::formatted("Frame parsing error: {}", m_error_string);
                 return nullptr;
             }
             // HACK: Test the start of the next subframe
@@ -248,6 +267,7 @@ void FlacLoaderPlugin::next_frame()
         if (!ok) {                                                                                                         \
             m_error_string = String::formatted("Frame parsing failed: {}", msg);                                           \
             bit_stream.align_to_byte_boundary();                                                                           \
+            bit_stream.handle_any_error();                                                                                 \
             dbgln_if(AFLACLOADER_DEBUG, "Crash in FLAC loader: next bytes are {:x}", bit_stream.read_bits_big_endian(32)); \
             return;                                                                                                        \
         }                                                                                                                  \
@@ -834,5 +854,4 @@ i32 rice_to_signed(u32 x)
     // copies the sign's sign onto the actual magnitude of x
     return (i32)(sign ^ (x >> 1));
 }
-
 }
