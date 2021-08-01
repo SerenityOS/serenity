@@ -148,6 +148,9 @@ set(SOURCES
     Runtime/Temporal/TimeZone.cpp
     Runtime/Temporal/TimeZoneConstructor.cpp
     Runtime/Temporal/TimeZonePrototype.cpp
+    Runtime/Temporal/ZonedDateTime.cpp
+    Runtime/Temporal/ZonedDateTimeConstructor.cpp
+    Runtime/Temporal/ZonedDateTimePrototype.cpp
     Runtime/TypedArray.cpp
     Runtime/TypedArrayConstructor.cpp
     Runtime/TypedArrayPrototype.cpp
