@@ -24,6 +24,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(plain_date_time);
     JS_DECLARE_NATIVE_FUNCTION(plain_date_time_iso);
     JS_DECLARE_NATIVE_FUNCTION(zoned_date_time);
+    JS_DECLARE_NATIVE_FUNCTION(zoned_date_time_iso);
     JS_DECLARE_NATIVE_FUNCTION(plain_date);
     JS_DECLARE_NATIVE_FUNCTION(plain_date_iso);
     JS_DECLARE_NATIVE_FUNCTION(plain_time_iso);
