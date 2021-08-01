@@ -20,7 +20,9 @@ KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
         return EINVAL;
 
     u32 fd_flags = (flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
-    auto fifo = FIFO::create(uid());
+    auto fifo = FIFO::try_create(uid());
+    if (!fifo)
+        return ENOMEM;
 
     auto open_reader_result = fifo->open_direction(FIFO::Direction::Reader);
     if (open_reader_result.is_error())
