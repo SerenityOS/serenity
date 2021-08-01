@@ -40,7 +40,7 @@ KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
     if (m_freelist.is_empty())
         return EBUSY;
     auto master_index = m_freelist.take_last();
-    auto master = try_create<MasterPTY>(master_index);
+    auto master = MasterPTY::try_create(master_index);
     if (!master)
         return ENOMEM;
     dbgln_if(PTMX_DEBUG, "PTYMultiplexer::open: Vending master {}", master->index());

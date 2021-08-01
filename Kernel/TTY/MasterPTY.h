@@ -16,7 +16,7 @@ class SlavePTY;
 
 class MasterPTY final : public CharacterDevice {
 public:
-    explicit MasterPTY(unsigned index);
+    [[nodiscard]] static RefPtr<MasterPTY> try_create(unsigned index);
     virtual ~MasterPTY() override;
 
     unsigned index() const { return m_index; }
@@ -33,6 +33,7 @@ public:
     virtual String device_name() const override;
 
 private:
+    explicit MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer);
     // ^CharacterDevice
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
@@ -46,7 +47,7 @@ private:
     RefPtr<SlavePTY> m_slave;
     unsigned m_index;
     bool m_closed { false };
-    DoubleBuffer m_buffer;
+    NonnullOwnPtr<DoubleBuffer> m_buffer;
     String m_pts_name;
 };
 
