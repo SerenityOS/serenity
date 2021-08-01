@@ -26,9 +26,7 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     // 8.4 Properties of Temporal.Instant Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-instant-instances
-
-    // [[Nanoseconds]]
-    BigInt& m_nanoseconds;
+    BigInt& m_nanoseconds; // [[Nanoseconds]]
 };
 
 // -86400 * 10^17

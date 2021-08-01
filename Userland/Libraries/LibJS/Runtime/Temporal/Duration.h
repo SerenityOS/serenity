@@ -31,7 +31,6 @@ public:
 
 private:
     // 7.4 Properties of Temporal.Duration Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-duration-instances
-
     double m_years;        // [[Years]]
     double m_months;       // [[Months]]
     double m_weeks;        // [[Weeks]]
