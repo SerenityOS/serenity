@@ -84,6 +84,8 @@
 #include <LibJS/Runtime/Temporal/Temporal.h>
 #include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
 #include <LibJS/Runtime/Temporal/TimeZonePrototype.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTimeConstructor.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTimePrototype.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/TypedArrayConstructor.h>
 #include <LibJS/Runtime/TypedArrayPrototype.h>
