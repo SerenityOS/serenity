@@ -66,6 +66,10 @@ public:
 
     Function<void(String const&)> on_image_title_change;
 
+    Function<void(Gfx::IntPoint const&)> on_image_mouse_position_change;
+
+    Function<void(void)> on_leave;
+
     Gfx::FloatRect layer_rect_to_editor_rect(Layer const&, Gfx::IntRect const&) const;
     Gfx::FloatRect image_rect_to_editor_rect(Gfx::IntRect const&) const;
     Gfx::FloatRect editor_rect_to_image_rect(Gfx::IntRect const&) const;
@@ -86,6 +90,7 @@ private:
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
+    virtual void leave_event(Core::Event&) override;
 
     virtual void image_did_change(Gfx::IntRect const&) override;
     virtual void image_select_layer(Layer*) override;

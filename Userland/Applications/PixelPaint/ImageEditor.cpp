@@ -207,6 +207,10 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
     auto image_event = event_with_pan_and_scale_applied(event);
 
     m_active_tool->on_mousemove(*m_active_layer, layer_event, image_event);
+
+    if (on_image_mouse_position_change) {
+        on_image_mouse_position_change(image_event.position());
+    }
 }
 
 void ImageEditor::mouseup_event(GUI::MouseEvent& event)
@@ -247,6 +251,12 @@ void ImageEditor::keyup_event(GUI::KeyEvent& event)
 {
     if (m_active_tool)
         m_active_tool->on_keyup(event);
+}
+
+void ImageEditor::leave_event(Core::Event&)
+{
+    if (on_leave)
+        on_leave();
 }
 
 void ImageEditor::set_active_layer(Layer* layer)

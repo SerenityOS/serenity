@@ -572,6 +572,21 @@ int main(int argc, char** argv)
             tab_widget.set_tab_title(image_editor, title);
         };
 
+        auto& statusbar = *main_widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+        image_editor.on_image_mouse_position_change = [&](auto const& mouse_position) {
+            auto const& image_size = current_image_editor()->image().size();
+            auto image_rectangle = Gfx::IntRect { 0, 0, image_size.width(), image_size.height() };
+            if (image_rectangle.contains(mouse_position)) {
+                statusbar.set_override_text(mouse_position.to_string());
+            } else {
+                statusbar.set_override_text({});
+            }
+        };
+
+        image_editor.on_leave = [&]() {
+            statusbar.set_override_text({});
+        };
+
         // NOTE: We invoke the above hook directly here to make sure the tab title is set up.
         image_editor.on_image_title_change(image->title());
 
