@@ -168,15 +168,15 @@ private:
     bool m_block_group_descriptors_dirty { false };
 
     struct CachedBitmap {
-        CachedBitmap(BlockIndex bi, KBuffer&& buf)
+        CachedBitmap(BlockIndex bi, NonnullOwnPtr<KBuffer> buf)
             : bitmap_block_index(bi)
             , buffer(move(buf))
         {
         }
         BlockIndex bitmap_block_index { 0 };
         bool dirty { false };
-        KBuffer buffer;
-        BitmapView bitmap(u32 blocks_per_group) { return BitmapView { buffer.data(), blocks_per_group }; }
+        NonnullOwnPtr<KBuffer> buffer;
+        BitmapView bitmap(u32 blocks_per_group) { return BitmapView { buffer->data(), blocks_per_group }; }
     };
 
     KResultOr<CachedBitmap*> get_bitmap_block(BlockIndex);
