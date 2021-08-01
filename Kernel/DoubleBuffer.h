@@ -16,8 +16,8 @@ namespace Kernel {
 
 class DoubleBuffer {
 public:
+    [[nodiscard]] static OwnPtr<DoubleBuffer> try_create(size_t capacity = 65536);
     explicit DoubleBuffer(size_t capacity = 65536);
-
     [[nodiscard]] KResultOr<size_t> write(const UserOrKernelBuffer&, size_t);
     [[nodiscard]] KResultOr<size_t> write(const u8* data, size_t size)
     {
@@ -47,6 +47,7 @@ public:
     }
 
 private:
+    explicit DoubleBuffer(size_t capacity, NonnullOwnPtr<KBuffer> storage);
     void flip();
     void compute_lockfree_metadata();
 
@@ -60,7 +61,7 @@ private:
     InnerBuffer m_buffer1;
     InnerBuffer m_buffer2;
 
-    KBuffer m_storage;
+    NonnullOwnPtr<KBuffer> m_storage;
     Function<void()> m_unblock_callback;
     size_t m_capacity { 0 };
     size_t m_read_buffer_index { 0 };
