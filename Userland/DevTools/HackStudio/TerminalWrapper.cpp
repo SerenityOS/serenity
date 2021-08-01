@@ -152,6 +152,11 @@ void TerminalWrapper::kill_running_command()
     [[maybe_unused]] auto rc = killpg(m_pid, SIGTERM);
 }
 
+void TerminalWrapper::clear_including_history()
+{
+    m_terminal_widget->clear_including_history();
+}
+
 TerminalWrapper::TerminalWrapper(bool user_spawned)
     : m_user_spawned(user_spawned)
 {
