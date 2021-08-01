@@ -74,7 +74,7 @@ public:
     BufferMode buffer_mode() const { return m_buffer_mode; }
 
 protected:
-    IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
+    IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, OwnPtr<KBuffer> optional_scratch_buffer);
     virtual StringView class_name() const override { return "IPv4Socket"; }
 
     PortAllocationResult allocate_local_port_if_needed();
@@ -130,7 +130,7 @@ private:
 
     BufferMode m_buffer_mode { BufferMode::Packets };
 
-    Optional<KBuffer> m_scratch_buffer;
+    OwnPtr<KBuffer> m_scratch_buffer;
 };
 
 }
