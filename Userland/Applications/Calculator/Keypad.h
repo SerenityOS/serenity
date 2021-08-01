@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "KeypadValue.h"
 #include <AK/String.h>
 
 // This type implements number typing and
@@ -22,8 +23,8 @@ public:
     void type_decimal_point();
     void type_backspace();
 
-    double value() const;
-    void set_value(double);
+    KeypadValue value() const;
+    void set_value(KeypadValue);
 
     String to_string() const;
 

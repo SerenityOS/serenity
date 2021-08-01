@@ -9,6 +9,7 @@
 
 #include "Calculator.h"
 #include "Keypad.h"
+#include "KeypadValue.h"
 #include <AK/Vector.h>
 #include <LibGUI/Widget.h>
 
@@ -17,7 +18,7 @@ class CalculatorWidget final : public GUI::Widget {
 public:
     virtual ~CalculatorWidget() override;
     String get_entry();
-    void set_entry(double);
+    void set_entry(KeypadValue);
 
 private:
     CalculatorWidget();

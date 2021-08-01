@@ -5,6 +5,7 @@
  */
 
 #include "Calculator.h"
+#include "KeypadValue.h"
 #include <AK/Assertions.h>
 #include <AK/Math.h>
 
@@ -16,9 +17,9 @@ Calculator::~Calculator()
 {
 }
 
-double Calculator::begin_operation(Operation operation, double argument)
+KeypadValue Calculator::begin_operation(Operation operation, KeypadValue argument)
 {
-    double res = 0.0;
+    KeypadValue res = 0;
 
     switch (operation) {
     case Operation::None:
@@ -33,30 +34,30 @@ double Calculator::begin_operation(Operation operation, double argument)
         return argument;
 
     case Operation::Sqrt:
-        if (argument < 0.0) {
+        if (argument < 0) {
             m_has_error = true;
             return argument;
         }
-        res = AK::sqrt(argument);
+        res = KeypadValue { AK::sqrt((double)argument) };
         clear_operation();
         break;
     case Operation::Inverse:
-        if (argument == 0.0) {
+        if (argument == 0) {
             m_has_error = true;
             return argument;
         }
-        res = 1 / argument;
+        res = KeypadValue { 1.0 / (double)argument };
         clear_operation();
         break;
     case Operation::Percent:
-        res = argument * 0.01;
+        res = argument * KeypadValue { 1, 2 }; // also known as `KeypadValue{0.01}`
         break;
     case Operation::ToggleSign:
         res = -argument;
         break;
 
     case Operation::MemClear:
-        m_mem = 0.0;
+        m_mem = 0;
         res = argument;
         break;
     case Operation::MemRecall:
@@ -67,7 +68,7 @@ double Calculator::begin_operation(Operation operation, double argument)
         res = argument;
         break;
     case Operation::MemAdd:
-        m_mem += argument;
+        m_mem = m_mem + argument; //avoids the need for operator+=()
         res = m_mem;
         break;
     }
@@ -75,9 +76,9 @@ double Calculator::begin_operation(Operation operation, double argument)
     return res;
 }
 
-double Calculator::finish_operation(double argument)
+KeypadValue Calculator::finish_operation(KeypadValue argument)
 {
-    double res = 0.0;
+    KeypadValue res = 0;
 
     switch (m_operation_in_progress) {
     case Operation::None:
@@ -93,11 +94,11 @@ double Calculator::finish_operation(double argument)
         res = m_saved_argument * argument;
         break;
     case Operation::Divide:
-        if (argument == 0.0) {
+        if (argument == 0) {
             m_has_error = true;
             return argument;
         }
-        res = m_saved_argument / argument;
+        res = KeypadValue { (double)m_saved_argument / (double)argument };
         break;
 
     case Operation::Sqrt:
@@ -118,6 +119,6 @@ double Calculator::finish_operation(double argument)
 void Calculator::clear_operation()
 {
     m_operation_in_progress = Operation::None;
-    m_saved_argument = 0.0;
+    m_saved_argument = 0;
     clear_error();
 }
