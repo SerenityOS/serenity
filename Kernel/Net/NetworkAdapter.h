@@ -28,13 +28,15 @@ class NetworkAdapter;
 using NetworkByteBuffer = AK::Detail::ByteBuffer<1500>;
 
 struct PacketWithTimestamp : public RefCounted<PacketWithTimestamp> {
-    PacketWithTimestamp(KBuffer buffer, Time timestamp)
+    PacketWithTimestamp(NonnullOwnPtr<KBuffer> buffer, Time timestamp)
         : buffer(move(buffer))
         , timestamp(timestamp)
     {
     }
 
-    KBuffer buffer;
+    ReadonlyBytes bytes() { return { buffer->data(), buffer->size() }; };
+
+    NonnullOwnPtr<KBuffer> buffer;
     Time timestamp;
     IntrusiveListNode<PacketWithTimestamp, RefPtr<PacketWithTimestamp>> packet_node;
 };
