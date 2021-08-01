@@ -59,7 +59,7 @@ int main(int argc, char** argv)
             while (!file->eof() && !file->has_error())
                 crc32.update(file->read(PAGE_SIZE));
             if (file->has_error()) {
-                warnln("Failed to read {}: {}", filepath, file->error_string());
+                warnln("{}: Failed to read {}: {}", argv[0], filepath, file->error_string());
                 fail = true;
                 continue;
             }
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
             while (!file->eof() && !file->has_error())
                 adler32.update(file->read(PAGE_SIZE));
             if (file->has_error()) {
-                warnln("Failed to read {}: {}", filepath, file->error_string());
+                warnln("{}: Failed to read {}: {}", argv[0], filepath, file->error_string());
                 fail = true;
                 continue;
             }
