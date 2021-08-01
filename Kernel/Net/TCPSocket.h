@@ -18,7 +18,7 @@ namespace Kernel {
 class TCPSocket final : public IPv4Socket {
 public:
     static void for_each(Function<void(const TCPSocket&)>);
-    static KResultOr<NonnullRefPtr<TCPSocket>> create(int protocol);
+    static KResultOr<NonnullRefPtr<TCPSocket>> create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~TCPSocket() override;
 
     enum class Direction {
@@ -165,7 +165,7 @@ protected:
     void set_direction(Direction direction) { m_direction = direction; }
 
 private:
-    explicit TCPSocket(int protocol);
+    explicit TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual StringView class_name() const override { return "TCPSocket"; }
 
     virtual void shut_down_for_writing() override;
