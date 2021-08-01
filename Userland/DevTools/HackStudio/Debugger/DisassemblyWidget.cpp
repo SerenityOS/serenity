@@ -44,10 +44,10 @@ void DisassemblyWidget::update_state(const Debug::DebugSession& debug_session, c
     m_disassembly_view->set_model(DisassemblyModel::create(debug_session, regs));
 
     if (m_disassembly_view->model()->row_count() > 0) {
-        auto lib = debug_session.library_at(regs.eip);
+        auto lib = debug_session.library_at(regs.ip());
         if (!lib)
             return;
-        auto containing_function = lib->debug_info->get_containing_function(regs.eip - lib->base_address);
+        auto containing_function = lib->debug_info->get_containing_function(regs.ip() - lib->base_address);
         if (containing_function.has_value())
             m_function_name_label->set_text(containing_function.value().name);
         else

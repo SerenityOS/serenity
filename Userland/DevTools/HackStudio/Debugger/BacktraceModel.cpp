@@ -33,11 +33,11 @@ GUI::ModelIndex BacktraceModel::index(int row, int column, const GUI::ModelIndex
 
 Vector<BacktraceModel::FrameInfo> BacktraceModel::create_backtrace(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
 {
-    u32 current_ebp = regs.ebp;
-    u32 current_instruction = regs.eip;
+    FlatPtr current_ebp = regs.bp();
+    FlatPtr current_instruction = regs.ip();
     Vector<BacktraceModel::FrameInfo> frames;
     do {
-        auto lib = debug_session.library_at(regs.eip);
+        auto lib = debug_session.library_at(regs.ip());
         if (!lib)
             continue;
         String name = lib->debug_info->name_of_containing_function(current_instruction - lib->base_address);
