@@ -24,6 +24,8 @@ public:
 
     Vector<Cpp::Parser::TodoEntry> get_entries();
 
+    void clear_entries();
+
     Function<void()> on_update = nullptr;
 
 private:

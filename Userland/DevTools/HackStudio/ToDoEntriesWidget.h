@@ -18,6 +18,8 @@ public:
 
     void refresh();
 
+    void clear();
+
 private:
     explicit ToDoEntriesWidget();
 
