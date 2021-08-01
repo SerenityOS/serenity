@@ -351,6 +351,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector-strong")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nodefaultlibs -nostdlib")
 
+if (USE_CLANG_TOOLCHAIN)
+    add_compile_options(-Waddress-of-packed-member)
+endif()
+
 # Apply any flags that are only available on >= GCC 11.1
 if (NOT USE_CLANG_TOOLCHAIN AND CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 11.1)
     # Zero any registers used within a function on return (to reduce data lifetime and ROP gadgets).
