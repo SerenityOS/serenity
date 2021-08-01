@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
@@ -11,6 +12,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
@@ -18,6 +20,7 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Palette.h>
 #include <unistd.h>
 
 #include "Mesh.h"
@@ -35,6 +38,13 @@ public:
     void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
     void toggle_rotate_z() { m_rotate_z = !m_rotate_z; }
     void set_rotation_speed(float speed) { m_rotation_speed = speed; }
+    void set_stat_label(RefPtr<GUI::Label> l) { m_stats = l; };
+
+    void toggle_show_frame_rate()
+    {
+        m_show_frame_rate = !m_show_frame_rate;
+        m_stats->set_visible(m_show_frame_rate);
+    }
 
 private:
     GLContextWidget()
@@ -83,6 +93,10 @@ private:
     float m_angle_z = 0.0;
     Gfx::IntPoint m_last_mouse;
     float m_rotation_speed = 1.f;
+    bool m_show_frame_rate = false;
+    int m_cycles = 0;
+    int m_accumulated_time = 0;
+    RefPtr<GUI::Label> m_stats;
 };
 
 void GLContextWidget::paint_event(GUI::PaintEvent& event)
@@ -109,6 +123,9 @@ void GLContextWidget::mousemove_event(GUI::MouseEvent& event)
 
 void GLContextWidget::timer_event(Core::TimerEvent&)
 {
+    Core::ElapsedTimer timer;
+    timer.start();
+
     glCallList(m_init_list);
 
     if (m_rotate_x)
@@ -128,7 +145,18 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
         m_mesh->draw();
 
     m_context->present();
+
+    if ((m_cycles % 30) == 0) {
+        int render_time = m_accumulated_time / 30;
+        int frame_rate = render_time > 0 ? 1000 / render_time : 0;
+        m_stats->set_text(String::formatted("{} fps, {} ms", frame_rate, render_time));
+        m_accumulated_time = 0;
+    }
+
     update();
+
+    m_accumulated_time += timer.elapsed();
+    m_cycles++;
 }
 
 bool GLContextWidget::load(const String& filename)
@@ -204,6 +232,13 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(true);
     auto& widget = window->set_main_widget<GLContextWidget>();
 
+    auto& time = widget.add<GUI::Label>();
+    time.set_visible(false);
+    time.set_foreground_role(ColorRole::HoverHighlight);
+    time.set_relative_rect({ 0, 8, 86, 10 });
+    time.move_by({ window->width() - time.width(), 0 });
+    widget.set_stat_label(time);
+
     auto& file_menu = window->add_menu("&File");
 
     auto load_model = [&](StringView const& filename) {
@@ -277,6 +312,12 @@ int main(int argc, char** argv)
     rotation_speed_menu.add_action(*fast_rotation_action);
 
     normal_rotation_action->set_checked(true);
+
+    auto show_frame_rate_action = GUI::Action::create_checkable("Show Frame &Rate", [&widget](auto&) {
+        widget.toggle_show_frame_rate();
+    });
+
+    view_menu.add_action(*show_frame_rate_action);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("3D File Viewer", app_icon, window));
