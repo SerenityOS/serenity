@@ -343,9 +343,8 @@ KResultOr<size_t> LocalSocket::recvfrom(FileDescription& description, UserOrKern
         }
     } else if (!can_read(description, 0)) {
         auto unblock_flags = Thread::FileDescriptionBlocker::BlockFlags::None;
-        if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags).was_interrupted()) {
+        if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags).was_interrupted())
             return set_so_error(EINTR);
-        }
     }
     if (!has_attached_peer(description) && socket_buffer->is_empty())
         return 0;
