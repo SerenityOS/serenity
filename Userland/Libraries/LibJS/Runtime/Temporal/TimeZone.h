@@ -28,12 +28,8 @@ public:
 
 private:
     // 11.5 Properties of Temporal.TimeZone Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-timezone-instances
-
-    // [[Identifier]]
-    String m_identifier;
-
-    // [[OffsetNanoseconds]]
-    Optional<OffsetType> m_offset_nanoseconds;
+    String m_identifier;                       // [[Identifier]]
+    Optional<OffsetType> m_offset_nanoseconds; // [[OffsetNanoseconds]]
 };
 
 bool is_valid_time_zone_name(String const& time_zone);
