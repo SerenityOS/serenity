@@ -1,6 +1,5 @@
 
-struct MyStruct
-{
+struct MyStruct {
     int x;
     struct s* next;
 };
