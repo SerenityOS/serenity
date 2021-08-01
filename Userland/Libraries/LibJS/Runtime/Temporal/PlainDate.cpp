@@ -8,10 +8,13 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
+#include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
+#include <LibJS/Runtime/Temporal/TimeZone.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 
 namespace JS::Temporal {
 
@@ -89,10 +92,20 @@ PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* opt
         }
 
         // b. If item has an [[InitializedTemporalZonedDateTime]] internal slot, then
-        // i. Let instant be ! CreateTemporalInstant(item.[[Nanoseconds]]).
-        // ii. Let plainDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
-        // iii. Return ! CreateTemporalDate(plainDateTime.[[ISOYear]], plainDateTime.[[ISOMonth]], plainDateTime.[[ISODay]], plainDateTime.[[Calendar]]).
-        // TODO
+        if (is<ZonedDateTime>(item_object)) {
+            auto& zoned_date_time = static_cast<ZonedDateTime&>(item_object);
+
+            // i. Let instant be ! CreateTemporalInstant(item.[[Nanoseconds]]).
+            auto* instant = create_temporal_instant(global_object, zoned_date_time.nanoseconds());
+
+            // ii. Let plainDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(item.[[TimeZone]], instant, item.[[Calendar]]).
+            auto* plain_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &zoned_date_time.time_zone(), *instant, zoned_date_time.calendar());
+            if (vm.exception())
+                return {};
+
+            // iii. Return ! CreateTemporalDate(plainDateTime.[[ISOYear]], plainDateTime.[[ISOMonth]], plainDateTime.[[ISODay]], plainDateTime.[[Calendar]]).
+            return create_temporal_date(global_object, plain_date_time->iso_year(), plain_date_time->iso_month(), plain_date_time->iso_day(), plain_date_time->calendar());
+        }
 
         // c. If item has an [[InitializedTemporalDateTime]] internal slot, then
         if (is<PlainDateTime>(item_object)) {
