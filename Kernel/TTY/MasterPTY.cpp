@@ -16,17 +16,36 @@
 
 namespace Kernel {
 
-MasterPTY::MasterPTY(unsigned index)
+RefPtr<MasterPTY> MasterPTY::try_create(unsigned int index)
+{
+    auto buffer = DoubleBuffer::try_create();
+    if (!buffer)
+        return {};
+
+    auto master_pty = adopt_ref_if_nonnull(new (nothrow) MasterPTY(index, buffer.release_nonnull()));
+    if (!master_pty)
+        return {};
+
+    auto slave_pty = adopt_ref_if_nonnull(new (nothrow) SlavePTY(*master_pty, index));
+    if (!slave_pty)
+        return {};
+
+    master_pty->m_slave = slave_pty;
+
+    return master_pty;
+}
+
+MasterPTY::MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer)
     : CharacterDevice(200, index)
-    , m_slave(adopt_ref(*new SlavePTY(*this, index)))
     , m_index(index)
+    , m_buffer(move(buffer))
 {
     m_pts_name = String::formatted("/dev/pts/{}", m_index);
     auto process = Process::current();
     set_uid(process->uid());
     set_gid(process->gid());
 
-    m_buffer.set_unblock_callback([this]() {
+    m_buffer->set_unblock_callback([this]() {
         if (m_slave)
             evaluate_block_conditions();
     });
@@ -45,9 +64,9 @@ String MasterPTY::pts_name() const
 
 KResultOr<size_t> MasterPTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
-    if (!m_slave && m_buffer.is_empty())
+    if (!m_slave && m_buffer->is_empty())
         return 0;
-    return m_buffer.read(buffer, size);
+    return m_buffer->read(buffer, size);
 }
 
 KResultOr<size_t> MasterPTY::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
@@ -62,7 +81,7 @@ bool MasterPTY::can_read(const FileDescription&, size_t) const
 {
     if (!m_slave)
         return true;
-    return !m_buffer.is_empty();
+    return !m_buffer->is_empty();
 }
 
 bool MasterPTY::can_write(const FileDescription&, size_t) const
@@ -83,14 +102,14 @@ KResultOr<size_t> MasterPTY::on_slave_write(const UserOrKernelBuffer& data, size
 {
     if (m_closed)
         return EIO;
-    return m_buffer.write(data, size);
+    return m_buffer->write(data, size);
 }
 
 bool MasterPTY::can_write_from_slave() const
 {
     if (m_closed)
         return true;
-    return m_buffer.space_for_writing();
+    return m_buffer->space_for_writing();
 }
 
 KResult MasterPTY::close()
