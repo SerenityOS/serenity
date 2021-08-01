@@ -7,6 +7,7 @@
  */
 
 #include "CalculatorWidget.h"
+#include "KeypadValue.h"
 #include <Applications/Calculator/CalculatorGML.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
@@ -96,8 +97,8 @@ CalculatorWidget::CalculatorWidget()
 
     m_equals_button = *find_descendant_of_type_named<GUI::Button>("equal_button");
     m_equals_button->on_click = [this](auto) {
-        double argument = m_keypad.value();
-        double res = m_calculator.finish_operation(argument);
+        KeypadValue argument = m_keypad.value();
+        KeypadValue res = m_calculator.finish_operation(argument);
         m_keypad.set_value(res);
         update_display();
     };
@@ -110,8 +111,8 @@ CalculatorWidget::~CalculatorWidget()
 void CalculatorWidget::add_operation_button(GUI::Button& button, Calculator::Operation operation)
 {
     button.on_click = [this, operation](auto) {
-        double argument = m_keypad.value();
-        double res = m_calculator.begin_operation(operation, argument);
+        KeypadValue argument = m_keypad.value();
+        KeypadValue res = m_calculator.begin_operation(operation, argument);
         m_keypad.set_value(res);
         update_display();
     };
@@ -130,7 +131,7 @@ String CalculatorWidget::get_entry()
     return m_entry->text();
 }
 
-void CalculatorWidget::set_entry(double value)
+void CalculatorWidget::set_entry(KeypadValue value)
 {
     m_keypad.set_value(value);
     update_display();
