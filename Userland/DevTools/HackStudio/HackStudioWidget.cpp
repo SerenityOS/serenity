@@ -192,6 +192,13 @@ void HackStudioWidget::open_project(const String& root_path)
         perror("chdir");
         exit(1);
     }
+    if (m_project) {
+        m_editors_splitter->remove_all_children();
+        m_all_editor_wrappers.clear();
+        m_open_files.clear();
+        m_open_files_vector.clear();
+        add_new_editor(*m_editors_splitter);
+    }
     m_project = Project::open_with_root_path(root_path);
     VERIFY(m_project);
     if (m_project_tree_view) {
