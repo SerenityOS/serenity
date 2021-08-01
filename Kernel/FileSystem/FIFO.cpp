@@ -24,9 +24,12 @@ static Lockable<HashTable<FIFO*>>& all_fifos()
 
 static int s_next_fifo_id = 1;
 
-NonnullRefPtr<FIFO> FIFO::create(uid_t uid)
+RefPtr<FIFO> FIFO::try_create(uid_t uid)
 {
-    return adopt_ref(*new FIFO(uid));
+    auto buffer = DoubleBuffer::try_create();
+    if (buffer)
+        return adopt_ref_if_nonnull(new (nothrow) FIFO(uid, buffer.release_nonnull()));
+    return {};
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction(FIFO::Direction direction)
@@ -70,15 +73,16 @@ KResultOr<NonnullRefPtr<FileDescription>> FIFO::open_direction_blocking(FIFO::Di
     return description;
 }
 
-FIFO::FIFO(uid_t uid)
-    : m_uid(uid)
+FIFO::FIFO(uid_t uid, NonnullOwnPtr<DoubleBuffer> buffer)
+    : m_buffer(move(buffer))
+    , m_uid(uid)
 {
     MutexLocker locker(all_fifos().lock());
     all_fifos().resource().set(this);
     m_fifo_id = ++s_next_fifo_id;
 
     // Use the same block condition for read and write
-    m_buffer.set_unblock_callback([this]() {
+    m_buffer->set_unblock_callback([this]() {
         evaluate_block_conditions();
     });
 }
@@ -115,19 +119,19 @@ void FIFO::detach(Direction direction)
 
 bool FIFO::can_read(const FileDescription&, size_t) const
 {
-    return !m_buffer.is_empty() || !m_writers;
+    return !m_buffer->is_empty() || !m_writers;
 }
 
 bool FIFO::can_write(const FileDescription&, size_t) const
 {
-    return m_buffer.space_for_writing() || !m_readers;
+    return m_buffer->space_for_writing() || !m_readers;
 }
 
 KResultOr<size_t> FIFO::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
-    if (!m_writers && m_buffer.is_empty())
+    if (!m_writers && m_buffer->is_empty())
         return 0;
-    return m_buffer.read(buffer, size);
+    return m_buffer->read(buffer, size);
 }
 
 KResultOr<size_t> FIFO::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
@@ -137,7 +141,7 @@ KResultOr<size_t> FIFO::write(FileDescription&, u64, const UserOrKernelBuffer& b
         return EPIPE;
     }
 
-    return m_buffer.write(buffer, size);
+    return m_buffer->write(buffer, size);
 }
 
 String FIFO::absolute_path(const FileDescription&) const

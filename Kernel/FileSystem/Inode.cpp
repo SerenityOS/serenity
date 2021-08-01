@@ -185,8 +185,11 @@ NonnullRefPtr<FIFO> Inode::fifo()
     VERIFY(metadata().is_fifo());
 
     // FIXME: Release m_fifo when it is closed by all readers and writers
-    if (!m_fifo)
-        m_fifo = FIFO::create(metadata().uid);
+    if (!m_fifo) {
+        m_fifo = FIFO::try_create(metadata().uid);
+        // FIXME: We need to be able to observe OOM here.
+        VERIFY(!m_fifo.is_null());
+    }
 
     VERIFY(m_fifo);
     return *m_fifo;
