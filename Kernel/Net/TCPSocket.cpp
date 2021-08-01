@@ -134,8 +134,8 @@ void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
     [[maybe_unused]] auto rc = queue_connection_from(*socket);
 }
 
-TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
-    : IPv4Socket(SOCK_STREAM, protocol, move(receive_buffer))
+TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, OwnPtr<KBuffer> scratch_buffer)
+    : IPv4Socket(SOCK_STREAM, protocol, move(receive_buffer), move(scratch_buffer))
 {
     m_last_retransmit_time = kgettimeofday();
 }
@@ -152,7 +152,12 @@ TCPSocket::~TCPSocket()
 
 KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
-    auto socket = adopt_ref_if_nonnull(new (nothrow) TCPSocket(protocol, move(receive_buffer)));
+    // Note: Scratch buffer is only used for SOCK_STREAM sockets.
+    auto scratch_buffer = KBuffer::try_create_with_size(65536);
+    if (!scratch_buffer)
+        return ENOMEM;
+
+    auto socket = adopt_ref_if_nonnull(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer)));
     if (socket)
         return socket.release_nonnull();
     return ENOMEM;

@@ -44,7 +44,7 @@ SocketHandle<UDPSocket> UDPSocket::from_port(u16 port)
 }
 
 UDPSocket::UDPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
-    : IPv4Socket(SOCK_DGRAM, protocol, move(receive_buffer))
+    : IPv4Socket(SOCK_DGRAM, protocol, move(receive_buffer), {})
 {
 }
 

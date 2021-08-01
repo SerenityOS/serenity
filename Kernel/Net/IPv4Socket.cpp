@@ -59,7 +59,7 @@ KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
         return udp_socket.release_value();
     }
     if (type == SOCK_RAW) {
-        auto raw_socket = adopt_ref_if_nonnull(new (nothrow) IPv4Socket(type, protocol, receive_buffer.release_nonnull()));
+        auto raw_socket = adopt_ref_if_nonnull(new (nothrow) IPv4Socket(type, protocol, receive_buffer.release_nonnull(), {}));
         if (raw_socket)
             return raw_socket.release_nonnull();
         return ENOMEM;
@@ -67,14 +67,15 @@ KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
     return EINVAL;
 }
 
-IPv4Socket::IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
+IPv4Socket::IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, OwnPtr<KBuffer> optional_scratch_buffer)
     : Socket(AF_INET, type, protocol)
     , m_receive_buffer(move(receive_buffer))
+    , m_scratch_buffer(move(optional_scratch_buffer))
 {
     dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}) created with type={}, protocol={}", this, type, protocol);
     m_buffer_mode = type == SOCK_STREAM ? BufferMode::Bytes : BufferMode::Packets;
     if (m_buffer_mode == BufferMode::Bytes) {
-        m_scratch_buffer = KBuffer::create_with_size(65536);
+        VERIFY(m_scratch_buffer);
     }
     MutexLocker locker(all_sockets().lock());
     all_sockets().resource().set(this);
@@ -422,8 +423,8 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
             VERIFY(m_can_read);
             return false;
         }
-        auto scratch_buffer = UserOrKernelBuffer::for_kernel_buffer(m_scratch_buffer.value().data());
-        auto nreceived_or_error = protocol_receive(ReadonlyBytes { packet.data(), packet.size() }, scratch_buffer, m_scratch_buffer.value().size(), 0);
+        auto scratch_buffer = UserOrKernelBuffer::for_kernel_buffer(m_scratch_buffer->data());
+        auto nreceived_or_error = protocol_receive(packet, scratch_buffer, m_scratch_buffer->size(), 0);
         if (nreceived_or_error.is_error())
             return false;
         auto nwritten_or_error = m_receive_buffer->write(scratch_buffer, nreceived_or_error.value());
