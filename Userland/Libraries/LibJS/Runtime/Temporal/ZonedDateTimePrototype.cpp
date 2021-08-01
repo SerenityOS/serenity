@@ -27,6 +27,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.ZonedDateTime"), Attribute::Configurable);
 
     define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.timeZone, time_zone_getter, {}, Attribute::Configurable);
 }
 
 static ZonedDateTime* typed_this(GlobalObject& global_object)
@@ -53,6 +54,19 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::calendar_getter)
 
     // 3. Return zonedDateTime.[[Calendar]].
     return Value(&zoned_date_time->calendar());
+}
+
+// 6.3.4 get Temporal.ZonedDateTime.prototype.timeZone, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.timezone
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::time_zone_getter)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return zonedDateTime.[[TimeZone]].
+    return Value(&zoned_date_time->time_zone());
 }
 
 }
