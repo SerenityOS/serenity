@@ -51,7 +51,7 @@ public:
     virtual KResult chmod(FileDescription&, mode_t) override;
 
 private:
-    explicit LocalSocket(int type);
+    explicit LocalSocket(int type, NonnullOwnPtr<DoubleBuffer> client_buffer, NonnullOwnPtr<DoubleBuffer> server_buffer);
     virtual StringView class_name() const override { return "LocalSocket"; }
     virtual bool is_local() const override { return true; }
     bool has_attached_peer(const FileDescription&) const;
@@ -93,8 +93,8 @@ private:
     bool m_accept_side_fd_open { false };
     sockaddr_un m_address { 0, { 0 } };
 
-    DoubleBuffer m_for_client;
-    DoubleBuffer m_for_server;
+    NonnullOwnPtr<DoubleBuffer> m_for_client;
+    NonnullOwnPtr<DoubleBuffer> m_for_server;
 
     NonnullRefPtrVector<FileDescription> m_fds_for_client;
     NonnullRefPtrVector<FileDescription> m_fds_for_server;
