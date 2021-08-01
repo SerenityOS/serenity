@@ -24,11 +24,11 @@
 
 namespace Kernel {
 
-static void handle_arp(const EthernetFrameHeader&, size_t frame_size);
-static void handle_ipv4(const EthernetFrameHeader&, size_t frame_size, const Time& packet_timestamp);
-static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&, const Time& packet_timestamp);
-static void handle_udp(const IPv4Packet&, const Time& packet_timestamp);
-static void handle_tcp(const IPv4Packet&, const Time& packet_timestamp);
+static void handle_arp(EthernetFrameHeader const&, size_t frame_size);
+static void handle_ipv4(EthernetFrameHeader const&, size_t frame_size, Time const& packet_timestamp);
+static void handle_icmp(EthernetFrameHeader const&, IPv4Packet const&, Time const& packet_timestamp);
+static void handle_udp(IPv4Packet const&, Time const& packet_timestamp);
+static void handle_tcp(IPv4Packet const&, Time const& packet_timestamp);
 static void send_delayed_tcp_ack(RefPtr<TCPSocket> socket);
 static void flush_delayed_tcp_acks();
 static void retransmit_tcp_packets();
@@ -104,7 +104,7 @@ void NetworkTask_main(void*)
             dbgln("NetworkTask: Packet is too small to be an Ethernet packet! ({})", packet_size);
             continue;
         }
-        auto& eth = *(const EthernetFrameHeader*)buffer;
+        auto& eth = *(EthernetFrameHeader const*)buffer;
         dbgln_if(ETHERNET_DEBUG, "NetworkTask: From {} to {}, ether_type={:#04x}, packet_size={}", eth.source().to_string(), eth.destination().to_string(), eth.ether_type(), packet_size);
 
         switch (eth.ether_type()) {
@@ -123,14 +123,14 @@ void NetworkTask_main(void*)
     }
 }
 
-void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
+void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
 {
     constexpr size_t minimum_arp_frame_size = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
     if (frame_size < minimum_arp_frame_size) {
         dbgln("handle_arp: Frame too small ({}, need {})", frame_size, minimum_arp_frame_size);
         return;
     }
-    auto& packet = *static_cast<const ARPPacket*>(eth.payload());
+    auto& packet = *static_cast<ARPPacket const*>(eth.payload());
     if (packet.hardware_type() != 1 || packet.hardware_address_length() != sizeof(MACAddress)) {
         dbgln("handle_arp: Hardware type not ethernet ({:#04x}, len={})", packet.hardware_type(), packet.hardware_address_length());
         return;
@@ -171,14 +171,14 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
     }
 }
 
-void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const Time& packet_timestamp)
+void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, Time const& packet_timestamp)
 {
     constexpr size_t minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet);
     if (frame_size < minimum_ipv4_frame_size) {
         dbgln("handle_ipv4: Frame too small ({}, need {})", frame_size, minimum_ipv4_frame_size);
         return;
     }
-    auto& packet = *static_cast<const IPv4Packet*>(eth.payload());
+    auto& packet = *static_cast<IPv4Packet const*>(eth.payload());
 
     if (packet.length() < sizeof(IPv4Packet)) {
         dbgln("handle_ipv4: IPv4 packet too short ({}, need {})", packet.length(), sizeof(IPv4Packet));
@@ -215,9 +215,9 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const Time& 
     }
 }
 
-void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
+void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
 {
-    auto& icmp_header = *static_cast<const ICMPHeader*>(ipv4_packet.payload());
+    auto& icmp_header = *static_cast<ICMPHeader const*>(ipv4_packet.payload());
     dbgln_if(ICMP_DEBUG, "handle_icmp: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), icmp_header.type(), icmp_header.code());
 
     {
@@ -239,7 +239,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
         return;
 
     if (icmp_header.type() == ICMPType::EchoRequest) {
-        auto& request = reinterpret_cast<const ICMPEchoPacket&>(icmp_header);
+        auto& request = reinterpret_cast<ICMPEchoPacket const&>(icmp_header);
         dbgln("handle_icmp: EchoRequest from {}: id={}, seq={}", ipv4_packet.source(), (u16)request.identifier, (u16)request.sequence_number);
         size_t icmp_packet_size = ipv4_packet.payload_size();
         if (icmp_packet_size < sizeof(ICMPEchoPacket)) {
@@ -268,14 +268,14 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
     }
 }
 
-void handle_udp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
+void handle_udp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
 {
     if (ipv4_packet.payload_size() < sizeof(UDPPacket)) {
         dbgln("handle_udp: Packet too small ({}, need {})", ipv4_packet.payload_size(), sizeof(UDPPacket));
         return;
     }
 
-    auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
+    auto& udp_packet = *static_cast<UDPPacket const*>(ipv4_packet.payload());
     dbgln_if(UDP_DEBUG, "handle_udp: source={}:{}, destination={}:{}, length={}",
         ipv4_packet.source(), udp_packet.source_port(),
         ipv4_packet.destination(), udp_packet.destination_port(),
@@ -328,14 +328,14 @@ void flush_delayed_tcp_acks()
     }
 }
 
-void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
+void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
 {
     if (ipv4_packet.payload_size() < sizeof(TCPPacket)) {
         dbgln("handle_tcp: IPv4 payload is too small to be a TCP packet ({}, need {})", ipv4_packet.payload_size(), sizeof(TCPPacket));
         return;
     }
 
-    auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
+    auto& tcp_packet = *static_cast<TCPPacket const*>(ipv4_packet.payload());
 
     size_t minimum_tcp_header_size = 5 * sizeof(u32);
     size_t maximum_tcp_header_size = 15 * sizeof(u32);
