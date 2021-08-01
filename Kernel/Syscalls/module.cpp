@@ -35,10 +35,12 @@ KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, si
         return payload_or_error.error();
 
     auto& payload = *payload_or_error.value();
-    auto storage = KBuffer::create_with_size(payload.size());
-    memcpy(storage.data(), payload.data(), payload.size());
+    auto storage = KBuffer::try_create_with_size(payload.size());
+    if (!storage)
+        return ENOMEM;
+    memcpy(storage->data(), payload.data(), payload.size());
 
-    auto elf_image = try_make<ELF::Image>(storage.data(), storage.size());
+    auto elf_image = try_make<ELF::Image>(storage->data(), storage->size());
     if (!elf_image)
         return ENOMEM;
     if (!elf_image->parse())
