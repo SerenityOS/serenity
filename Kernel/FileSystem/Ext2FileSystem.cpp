@@ -701,7 +701,7 @@ void Ext2FS::flush_writes()
         }
         for (auto& cached_bitmap : m_cached_bitmaps) {
             if (cached_bitmap->dirty) {
-                auto buffer = UserOrKernelBuffer::for_kernel_buffer(cached_bitmap->buffer.data());
+                auto buffer = UserOrKernelBuffer::for_kernel_buffer(cached_bitmap->buffer->data());
                 if (auto result = write_block(cached_bitmap->bitmap_block_index, buffer, block_size()); result.is_error()) {
                     dbgln("Ext2FS[{}]::flush_writes(): Failed to write blocks: {}", fsid(), result.error());
                 }
@@ -1499,13 +1499,15 @@ KResultOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_bloc
             return cached_bitmap;
     }
 
-    auto block = KBuffer::create_with_size(block_size(), Region::Access::Read | Region::Access::Write, "Ext2FS: Cached bitmap block");
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(block.data());
+    auto block = KBuffer::try_create_with_size(block_size(), Region::Access::Read | Region::Access::Write, "Ext2FS: Cached bitmap block");
+    if (!block)
+        return ENOMEM;
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
     if (auto result = read_block(bitmap_block_index, &buffer, block_size()); result.is_error()) {
         dbgln("Ext2FS: Failed to load bitmap block {}", bitmap_block_index);
         return result;
     }
-    auto new_bitmap = adopt_own_if_nonnull(new (nothrow) CachedBitmap(bitmap_block_index, move(block)));
+    auto new_bitmap = adopt_own_if_nonnull(new (nothrow) CachedBitmap(bitmap_block_index, block.release_nonnull()));
     if (!new_bitmap)
         return ENOMEM;
     if (!m_cached_bitmaps.try_append(move(new_bitmap)))
