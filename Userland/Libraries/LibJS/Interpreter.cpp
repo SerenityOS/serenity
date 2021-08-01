@@ -175,10 +175,10 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
     auto& block = static_cast<const ScopeNode&>(statement);
     enter_scope(block, scope_type, global_object);
 
-    Value last_value;
+    Value last_value = js_undefined();
     for (auto& node : block.children()) {
         auto value = node.execute(*this, global_object);
-        if (!value.is_empty())
+        if (!value.is_empty() && !(value.is_undefined() && is<BlockStatement>(node)))
             last_value = value;
         if (vm().should_unwind()) {
             if (!block.label().is_null() && vm().should_unwind_until(ScopeType::Breakable, block.label()))
