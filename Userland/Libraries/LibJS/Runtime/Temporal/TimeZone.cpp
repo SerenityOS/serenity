@@ -14,6 +14,7 @@
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
 #include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
+#include <LibJS/Runtime/Temporal/ZonedDateTime.h>
 
 namespace JS::Temporal {
 
@@ -326,9 +327,13 @@ Object* to_temporal_time_zone(GlobalObject& global_object, Value temporal_time_z
 
     // 1. If Type(temporalTimeZoneLike) is Object, then
     if (temporal_time_zone_like.is_object()) {
-        // TODO:
         // a. If temporalTimeZoneLike has an [[InitializedTemporalZonedDateTime]] internal slot, then
-        //     i. Return temporalTimeZoneLike.[[TimeZone]].
+        if (is<ZonedDateTime>(temporal_time_zone_like.as_object())) {
+            auto& zoned_date_time = static_cast<ZonedDateTime&>(temporal_time_zone_like.as_object());
+
+            // i. Return temporalTimeZoneLike.[[TimeZone]].
+            return &zoned_date_time.time_zone();
+        }
 
         // b. If ? HasProperty(temporalTimeZoneLike, "timeZone") is false, return temporalTimeZoneLike.
         auto has_property = temporal_time_zone_like.as_object().has_property(vm.names.timeZone);
