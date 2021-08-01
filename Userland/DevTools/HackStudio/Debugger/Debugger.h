@@ -78,13 +78,13 @@ private:
 
         bool should_stop_single_stepping(const Debug::DebugInfo::SourcePosition& current_source_position) const;
         void clear_temporary_breakpoints();
-        void add_temporary_breakpoint(u32 address);
-        const Vector<u32>& temporary_breakpoints() const { return m_addresses_of_temporary_breakpoints; }
+        void add_temporary_breakpoint(FlatPtr address);
+        const Vector<FlatPtr>& temporary_breakpoints() const { return m_addresses_of_temporary_breakpoints; }
 
     private:
         State m_state { Normal };
         Optional<Debug::DebugInfo::SourcePosition> m_original_source_position; // The source position at which we started the current single step
-        Vector<u32> m_addresses_of_temporary_breakpoints;
+        Vector<FlatPtr> m_addresses_of_temporary_breakpoints;
     };
 
     explicit Debugger(

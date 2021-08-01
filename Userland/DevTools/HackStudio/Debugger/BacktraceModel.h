@@ -38,8 +38,8 @@ public:
 
     struct FrameInfo {
         String function_name;
-        u32 instruction_address;
-        u32 frame_base;
+        FlatPtr instruction_address;
+        FlatPtr frame_base;
     };
 
     const Vector<FrameInfo>& frames() const { return m_frames; }

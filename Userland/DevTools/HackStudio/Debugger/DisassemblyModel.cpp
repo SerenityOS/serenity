@@ -18,10 +18,10 @@ namespace HackStudio {
 
 DisassemblyModel::DisassemblyModel(const Debug::DebugSession& debug_session, const PtraceRegisters& regs)
 {
-    auto lib = debug_session.library_at(regs.eip);
+    auto lib = debug_session.library_at(regs.ip());
     if (!lib)
         return;
-    auto containing_function = lib->debug_info->get_containing_function(regs.eip - lib->base_address);
+    auto containing_function = lib->debug_info->get_containing_function(regs.ip() - lib->base_address);
     if (!containing_function.has_value()) {
         dbgln("Cannot disassemble as the containing function was not found.");
         return;

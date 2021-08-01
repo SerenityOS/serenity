@@ -87,7 +87,7 @@ bool Debugger::set_execution_position(const String& file, size_t line)
     if (!address.has_value())
         return false;
     auto registers = session->get_registers();
-    registers.eip = address.value().address;
+    registers.set_ip(address.value().address);
     session->set_registers(registers);
     return true;
 }
@@ -143,7 +143,7 @@ int Debugger::debugger_loop()
         VERIFY(optional_regs.has_value());
         const PtraceRegisters& regs = optional_regs.value();
 
-        auto source_position = m_debug_session->get_source_position(regs.eip);
+        auto source_position = m_debug_session->get_source_position(regs.ip());
         if (!source_position.has_value())
             return Debug::DebugSession::DebugDecision::SingleStep;
 
@@ -232,7 +232,7 @@ void Debugger::DebuggingState::clear_temporary_breakpoints()
 {
     m_addresses_of_temporary_breakpoints.clear();
 }
-void Debugger::DebuggingState::add_temporary_breakpoint(u32 address)
+void Debugger::DebuggingState::add_temporary_breakpoint(FlatPtr address)
 {
     m_addresses_of_temporary_breakpoints.append(address);
 }
@@ -249,12 +249,12 @@ void Debugger::do_step_over(const PtraceRegisters& regs)
 {
     // To step over, we insert a temporary breakpoint at each line in the current function,
     // as well as at the current function's return point, and continue execution.
-    auto lib = m_debug_session->library_at(regs.eip);
+    auto lib = m_debug_session->library_at(regs.ip());
     if (!lib)
         return;
-    auto current_function = lib->debug_info->get_containing_function(regs.eip - lib->base_address);
+    auto current_function = lib->debug_info->get_containing_function(regs.ip() - lib->base_address);
     if (!current_function.has_value()) {
-        dbgln("cannot perform step_over, failed to find containing function of: {:p}", regs.eip);
+        dbgln("cannot perform step_over, failed to find containing function of: {:p}", regs.ip());
         return;
     }
     VERIFY(current_function.has_value());
@@ -267,9 +267,9 @@ void Debugger::do_step_over(const PtraceRegisters& regs)
 
 void Debugger::insert_temporary_breakpoint_at_return_address(const PtraceRegisters& regs)
 {
-    auto frame_info = Debug::StackFrameUtils::get_info(*m_debug_session, regs.ebp);
+    auto frame_info = Debug::StackFrameUtils::get_info(*m_debug_session, regs.bp());
     VERIFY(frame_info.has_value());
-    u32 return_address = frame_info.value().return_address;
+    FlatPtr return_address = frame_info.value().return_address;
     insert_temporary_breakpoint(return_address);
 }
 
