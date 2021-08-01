@@ -37,6 +37,7 @@ void SVGSVGBox::after_children_paint(PaintContext& context, PaintPhase phase)
     SVGGraphicsBox::after_children_paint(context, phase);
     if (phase != PaintPhase::Foreground)
         return;
+    context.clear_svg_context();
 }
 
 }

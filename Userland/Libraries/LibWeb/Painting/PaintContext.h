@@ -29,6 +29,7 @@ public:
     bool has_svg_context() const { return m_svg_context.has_value(); }
     SVGContext& svg_context() { return m_svg_context.value(); }
     void set_svg_context(SVGContext context) { m_svg_context = context; }
+    void clear_svg_context() { m_svg_context.clear(); }
 
     bool should_show_line_box_borders() const { return m_should_show_line_box_borders; }
     void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
