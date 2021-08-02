@@ -10,6 +10,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf16View.h>
 
 namespace JS {
 
@@ -102,6 +103,16 @@ String Token::string_value(StringValueStatus& status) const
         return {};
     };
 
+    auto decode_surrogate = [&lexer]() -> Optional<u16> {
+        u16 surrogate = 0;
+        for (int j = 0; j < 4; ++j) {
+            if (!lexer.next_is(is_ascii_hex_digit))
+                return {};
+            surrogate = (surrogate << 4u) | hex2int(lexer.consume());
+        }
+        return surrogate;
+    };
+
     StringBuilder builder;
     while (!lexer.is_eof()) {
         // No escape, consume one char and continue
@@ -157,10 +168,24 @@ String Token::string_value(StringValueStatus& status) const
                 }
                 lexer.ignore();
             } else {
-                for (int j = 0; j < 4; ++j) {
-                    if (!lexer.next_is(is_ascii_hex_digit))
+                auto high_surrogate = decode_surrogate();
+                if (!high_surrogate.has_value())
+                    return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
+
+                if (Utf16View::is_high_surrogate(*high_surrogate) && lexer.consume_specific("\\u"sv)) {
+                    auto low_surrogate = decode_surrogate();
+                    if (!low_surrogate.has_value())
                         return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
-                    code_point = (code_point << 4u) | hex2int(lexer.consume());
+
+                    if (Utf16View::is_low_surrogate(*low_surrogate)) {
+                        code_point = Utf16View::decode_surrogate_pair(*high_surrogate, *low_surrogate);
+                    } else {
+                        builder.append_code_point(*high_surrogate);
+                        code_point = *low_surrogate;
+                    }
+
+                } else {
+                    code_point = *high_surrogate;
                 }
             }
             builder.append_code_point(code_point);

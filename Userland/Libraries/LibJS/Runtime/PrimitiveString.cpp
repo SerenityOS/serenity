@@ -63,17 +63,6 @@ PrimitiveString* js_string(Heap& heap, String string)
             return &heap.vm().single_ascii_character_string(ch);
     }
 
-    // UTF-8 strings must first be transcoded to UTF-16, even though they are stored as String objects
-    // internally, to parse encoded surrogate pairs. As an optimization to reduce string copying, only
-    // perform that transcoding if there are non-ASCII codepoints in the string.
-    for (auto it : string) {
-        auto ch = static_cast<u8>(it);
-        if (!is_ascii(ch)) {
-            auto utf16_string = AK::utf8_to_utf16(string);
-            return js_string(heap, Utf16View { utf16_string });
-        }
-    }
-
     return heap.allocate_without_global_object<PrimitiveString>(move(string));
 }
 
