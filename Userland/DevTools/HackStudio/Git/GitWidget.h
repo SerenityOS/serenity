@@ -24,6 +24,7 @@ public:
     void refresh();
     void set_view_diff_callback(ViewDiffCallback callback);
     bool initialized() const { return !m_git_repo.is_null(); };
+    void change_repo(LexicalPath const& repo_root);
 
 private:
     explicit GitWidget(const LexicalPath& repo_root);
