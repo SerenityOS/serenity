@@ -28,11 +28,15 @@ FlacLoaderPlugin::FlacLoaderPlugin(const StringView& path)
         return;
     }
 
+    m_stream = make<FlacInputStream>(Core::InputFileStream(*m_file));
+    if (!m_stream) {
+        m_error_string = String::formatted("Can't open memory stream");
+        return;
+    }
+
     m_valid = parse_header();
     if (!m_valid)
         return;
-
-    m_stream = make<FlacInputStream>(Core::InputFileStream(*m_file));
     reset();
     if (!m_valid)
         return;
