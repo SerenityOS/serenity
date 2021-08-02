@@ -4,14 +4,19 @@ serenity_component(
     TARGETS MouseSettings
 )
 
-compile_gml(MouseSettingsWindow.gml MouseSettingsWindowGML.h mouse_settings_window_gml)
+compile_gml(Mouse.gml MouseWidgetGML.h mouse_widget_gml)
+compile_gml(Theme.gml ThemeWidgetGML.h theme_widget_gml)
 
 set(SOURCES
     main.cpp
     DoubleClickArrowWidget.cpp
     MouseSettingsWindow.cpp
-    MouseSettingsWindow.h
-    MouseSettingsWindowGML.h
+    MouseWidget.cpp
+    MouseWidget.h
+    MouseWidgetGML.h
+    ThemeWidget.cpp
+    ThemeWidget.h
+    ThemeWidgetGML.h
 )
 
 serenity_app(MouseSettings ICON app-mouse)
