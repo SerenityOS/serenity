@@ -1546,15 +1546,18 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
         bool negated = false;
 
         if (parse_unicode_property_escape(property, negated)) {
+            Vector<CompareTypeAndValuePair> compares;
             if (negated)
-                stack.insert_bytecode_compare_values({ { CharacterCompareType::Inverse, 0 } });
+                compares.empend(CompareTypeAndValuePair { CharacterCompareType::Inverse, 0 });
             property.visit(
                 [&](Unicode::Property property) {
-                    stack.insert_bytecode_compare_values({ { CharacterCompareType::Property, (ByteCodeValueType)(property) } });
+                    compares.empend(CompareTypeAndValuePair { CharacterCompareType::Property, (ByteCodeValueType)property });
                 },
                 [&](Unicode::GeneralCategory general_category) {
-                    stack.insert_bytecode_compare_values({ { CharacterCompareType::GeneralCategory, (ByteCodeValueType)(general_category) } });
+                    compares.empend(CompareTypeAndValuePair { CharacterCompareType::GeneralCategory, (ByteCodeValueType)general_category });
                 });
+            stack.insert_bytecode_compare_values(move(compares));
+            match_length_minimum += 1;
             return true;
         }
     }
