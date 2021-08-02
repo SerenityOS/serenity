@@ -448,10 +448,16 @@ void DirectoryView::launch(URL const&, LauncherHandler const& launcher_handler) 
 {
     pid_t child;
     if (launcher_handler.details().launcher_type == Desktop::Launcher::LauncherType::Application) {
+        posix_spawn_file_actions_t spawn_actions;
+        posix_spawn_file_actions_init(&spawn_actions);
+        posix_spawn_file_actions_addchdir(&spawn_actions, path().characters());
+
         char const* argv[] = { launcher_handler.details().name.characters(), nullptr };
-        posix_spawn(&child, launcher_handler.details().executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ);
+        posix_spawn(&child, launcher_handler.details().executable.characters(), &spawn_actions, nullptr, const_cast<char**>(argv), environ);
         if (disown(child) < 0)
             perror("disown");
+
+        posix_spawn_file_actions_destroy(&spawn_actions);
     } else {
         for (auto& path : selected_file_paths()) {
             char const* argv[] = { launcher_handler.details().name.characters(), path.characters(), nullptr };
