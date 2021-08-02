@@ -198,6 +198,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
         auto view_length = view.length();
         size_t view_index = m_pattern->start_offset;
         state.string_position = view_index;
+        state.string_position_in_code_units = view_index;
         bool succeeded = false;
 
         if (view_index == view_length && m_pattern->parser_result.match_length_minimum == 0) {
@@ -210,6 +211,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
             input.match_index = match_count;
 
             state.string_position = view_index;
+            state.string_position_in_code_units = view_index;
             state.instruction_position = 0;
 
             auto success = execute(input, state, temp_output);
@@ -241,6 +243,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
             input.match_index = match_count;
 
             state.string_position = view_index;
+            state.string_position_in_code_units = view_index;
             state.instruction_position = 0;
 
             auto success = execute(input, state, output);
@@ -388,7 +391,7 @@ private:
         Node* previous { nullptr };
     };
 
-    UniformBumpAllocator<Node, true> m_allocator;
+    UniformBumpAllocator<Node, true, 8 * MiB> m_allocator;
     Node* m_first { nullptr };
     Node* m_last { nullptr };
 };
