@@ -95,10 +95,35 @@ public:
                 [](auto const& view) { return view.length(); });
         }
 
+        return length_in_code_units();
+    }
+
+    size_t length_in_code_units() const
+    {
         return m_view.visit(
             [](Utf16View const& view) { return view.length_in_code_units(); },
             [](Utf8View const& view) { return view.byte_length(); },
             [](auto const& view) { return view.length(); });
+    }
+
+    size_t length_of_code_point(u32 code_point) const
+    {
+        return m_view.visit(
+            [](Utf32View const&) { return 1; },
+            [&](Utf16View const&) {
+                if (code_point < 0x10000)
+                    return 1;
+                return 2;
+            },
+            [&](auto const&) {
+                if (code_point <= 0x7f)
+                    return 1;
+                else if (code_point <= 0x07ff)
+                    return 2;
+                else if (code_point <= 0xffff)
+                    return 3;
+                return 4;
+            });
     }
 
     RegexStringView typed_null_view()
@@ -230,6 +255,7 @@ public:
             });
     }
 
+    // Note: index must always be the code unit offset to return.
     u32 operator[](size_t index) const
     {
         return m_view.visit(
@@ -239,17 +265,12 @@ public:
                     return 256u + ch;
                 return ch;
             },
-            [&](Utf32View& view) -> u32 { return view[index]; },
-            [&](Utf16View& view) -> u32 { return view.code_point_at(index); },
-            [&](auto& view) -> u32 {
-                // FIXME: Iterating to the code point is inefficient, particularly for very large
-                // strings. Implement something like code_point_at to Utf8View.
-                size_t i = index;
-                for (auto it = view.begin(); it != view.end(); ++it, --i) {
-                    if (i == 0)
-                        return *it;
-                }
-                VERIFY_NOT_REACHED();
+            [&](Utf32View const& view) -> u32 { return view[index]; },
+            [&](Utf16View const& view) -> u32 { return view.code_point_at(index); },
+            [&](Utf8View const& view) -> u32 {
+                auto it = view.iterator_at_byte_offset(index);
+                VERIFY(it != view.end());
+                return *it;
             });
     }
 
@@ -462,11 +483,13 @@ struct MatchInput {
 
     mutable size_t fail_counter { 0 };
     mutable Vector<size_t> saved_positions;
+    mutable Vector<size_t> saved_code_unit_positions;
 };
 
 struct MatchState {
     size_t string_position_before_match { 0 };
     size_t string_position { 0 };
+    size_t string_position_in_code_units { 0 };
     size_t instruction_position { 0 };
     size_t fork_at_position { 0 };
     Vector<Match> matches;

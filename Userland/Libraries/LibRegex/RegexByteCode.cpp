@@ -88,6 +88,36 @@ static char const* character_class_name(CharClass ch_class)
     }
 }
 
+static void advance_string_position(MatchState& state, RegexStringView const& view, Optional<u32> code_point = {})
+{
+    ++state.string_position;
+
+    if (view.unicode()) {
+        if (!code_point.has_value() && (state.string_position_in_code_units < view.length_in_code_units()))
+            code_point = view[state.string_position_in_code_units];
+        if (code_point.has_value())
+            state.string_position_in_code_units += view.length_of_code_point(*code_point);
+    } else {
+        ++state.string_position_in_code_units;
+    }
+}
+
+static void save_string_position(MatchInput const& input, MatchState const& state)
+{
+    input.saved_positions.append(state.string_position);
+    input.saved_code_unit_positions.append(state.string_position_in_code_units);
+}
+
+static bool restore_string_position(MatchInput const& input, MatchState& state)
+{
+    if (input.saved_positions.is_empty())
+        return false;
+
+    state.string_position = input.saved_positions.take_last();
+    state.string_position_in_code_units = input.saved_code_unit_positions.take_last();
+    return true;
+}
+
 OwnPtr<OpCode> ByteCode::s_opcodes[(size_t)OpCodeId::Last + 1];
 bool ByteCode::s_opcodes_initialized { false };
 
@@ -188,16 +218,14 @@ ALWAYS_INLINE ExecutionResult OpCode_Exit::execute(MatchInput const& input, Matc
 
 ALWAYS_INLINE ExecutionResult OpCode_Save::execute(MatchInput const& input, MatchState& state, MatchOutput&) const
 {
-    input.saved_positions.append(state.string_position);
+    save_string_position(input, state);
     return ExecutionResult::Continue;
 }
 
 ALWAYS_INLINE ExecutionResult OpCode_Restore::execute(MatchInput const& input, MatchState& state, MatchOutput&) const
 {
-    if (input.saved_positions.is_empty())
+    if (!restore_string_position(input, state))
         return ExecutionResult::Failed;
-
-    state.string_position = input.saved_positions.take_last();
     return ExecutionResult::Continue;
 }
 
@@ -254,7 +282,7 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckBoundary::execute(MatchInput const& in
     auto isword = [](auto ch) { return is_ascii_alphanumeric(ch) || ch == '_'; };
     auto is_word_boundary = [&] {
         if (state.string_position == input.view.length()) {
-            if (state.string_position > 0 && isword(input.view[state.string_position - 1]))
+            if (state.string_position > 0 && isword(input.view[state.string_position_in_code_units - 1]))
                 return true;
             return false;
         }
@@ -266,7 +294,7 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckBoundary::execute(MatchInput const& in
             return false;
         }
 
-        return !!(isword(input.view[state.string_position]) ^ isword(input.view[state.string_position - 1]));
+        return !!(isword(input.view[state.string_position_in_code_units]) ^ isword(input.view[state.string_position_in_code_units - 1]));
     };
     switch (type()) {
     case BoundaryCheckType::Word: {
@@ -455,7 +483,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             VERIFY(!current_inversion_state());
-            ++state.string_position;
+            advance_string_position(state, input.view);
 
         } else if (compare_type == CharacterCompareType::String) {
             VERIFY(!current_inversion_state());
@@ -484,7 +512,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             auto character_class = (CharClass)m_bytecode->at(offset++);
-            auto ch = input.view[state.string_position];
+            auto ch = input.view[state.string_position_in_code_units];
 
             compare_character_class(input, state, character_class, ch, current_inversion_state(), inverse_matched);
 
@@ -496,7 +524,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
 
             auto from = value.from;
             auto to = value.to;
-            auto ch = input.view[state.string_position];
+            auto ch = input.view[state.string_position_in_code_units];
 
             compare_character_range(input, state, from, to, ch, current_inversion_state(), inverse_matched);
 
@@ -549,7 +577,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
     }
 
     if (current_inversion_state() && !inverse_matched)
-        ++state.string_position;
+        advance_string_position(state, input.view);
 
     if ((!had_zero_length_match && string_position == state.string_position) || state.string_position > input.view.length())
         return ExecutionResult::Failed_ExecuteLowPrioForks;
@@ -576,7 +604,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(MatchInput const& input, MatchSt
         if (inverse)
             inverse_matched = true;
         else
-            ++state.string_position;
+            advance_string_position(state, input.view, ch1);
     }
 }
 
@@ -616,19 +644,19 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     case CharClass::Alpha:
         if (is_ascii_alpha(ch))
-            ++state.string_position;
+            advance_string_position(state, input.view, ch);
         break;
     case CharClass::Blank:
         if (is_ascii_blank(ch)) {
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     case CharClass::Cntrl:
@@ -636,7 +664,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     case CharClass::Digit:
@@ -644,7 +672,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     case CharClass::Graph:
@@ -652,7 +680,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     case CharClass::Lower:
@@ -660,7 +688,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     case CharClass::Print:
@@ -668,7 +696,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     case CharClass::Punct:
@@ -676,7 +704,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     case CharClass::Space:
@@ -684,7 +712,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     case CharClass::Upper:
@@ -692,7 +720,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     case CharClass::Word:
@@ -700,7 +728,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     case CharClass::Xdigit:
@@ -708,7 +736,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_class(MatchInput const& inp
             if (inverse)
                 inverse_matched = true;
             else
-                ++state.string_position;
+                advance_string_position(state, input.view, ch);
         }
         break;
     }
@@ -726,7 +754,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_character_range(MatchInput const& inp
         if (inverse)
             inverse_matched = true;
         else
-            ++state.string_position;
+            advance_string_position(state, input.view, ch);
     }
 }
 
@@ -735,14 +763,14 @@ ALWAYS_INLINE void OpCode_Compare::compare_property(MatchInput const& input, Mat
     if (state.string_position == input.view.length())
         return;
 
-    u32 code_point = input.view[state.string_position];
+    u32 code_point = input.view[state.string_position_in_code_units];
     bool equal = Unicode::code_point_has_property(code_point, property);
 
     if (equal) {
         if (inverse)
             inverse_matched = true;
         else
-            ++state.string_position;
+            advance_string_position(state, input.view, code_point);
     }
 }
 
@@ -751,14 +779,14 @@ ALWAYS_INLINE void OpCode_Compare::compare_general_category(MatchInput const& in
     if (state.string_position == input.view.length())
         return;
 
-    u32 code_point = input.view[state.string_position];
+    u32 code_point = input.view[state.string_position_in_code_units];
     bool equal = Unicode::code_point_has_general_category(code_point, general_category);
 
     if (equal) {
         if (inverse)
             inverse_matched = true;
         else
-            ++state.string_position;
+            advance_string_position(state, input.view, code_point);
     }
 }
 
