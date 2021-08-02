@@ -199,6 +199,7 @@ void HackStudioWidget::open_project(const String& root_path)
         m_open_files.clear();
         m_open_files_vector.clear();
         add_new_editor(*m_editors_splitter);
+        m_find_in_files_widget->reset();
         m_todo_entries_widget->clear();
         m_terminal_wrapper->clear_including_history();
         stop_debugger_if_running();
