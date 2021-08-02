@@ -1,5 +1,6 @@
 compile_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
 compile_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
+compile_gml(PasswordInputDialog.gml PasswordInputDialogGML.h password_input_dialog_gml)
 
 set(SOURCES
     AboutDialog.cpp
@@ -68,6 +69,8 @@ set(SOURCES
     Notification.cpp
     OpacitySlider.cpp
     Painter.cpp
+    PasswordInputDialog.cpp
+    PasswordInputDialogGML.h
     ProcessChooser.cpp
     Progressbar.cpp
     RadioButton.cpp
