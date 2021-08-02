@@ -656,17 +656,27 @@ TEST_CASE(ECMA262_property_match)
         { "\\p{ASCII}", "p{ASCII}", true },
         { "\\p{ASCII}", "a", true, ECMAScriptFlags::Unicode },
         { "\\p{ASCII}", "😀", false, ECMAScriptFlags::Unicode },
+        { "\\P{ASCII}", "a", false, ECMAScriptFlags::Unicode },
+        { "\\P{ASCII}", "😀", true, ECMAScriptFlags::Unicode },
         { "\\p{ASCII_Hex_Digit}", "1", true, ECMAScriptFlags::Unicode },
         { "\\p{ASCII_Hex_Digit}", "a", true, ECMAScriptFlags::Unicode },
         { "\\p{ASCII_Hex_Digit}", "x", false, ECMAScriptFlags::Unicode },
+        { "\\P{ASCII_Hex_Digit}", "1", false, ECMAScriptFlags::Unicode },
+        { "\\P{ASCII_Hex_Digit}", "a", false, ECMAScriptFlags::Unicode },
+        { "\\P{ASCII_Hex_Digit}", "x", true, ECMAScriptFlags::Unicode },
         { "\\p{Any}", "\xcd\xb8", true, ECMAScriptFlags::Unicode },       // U+0378, which is an unassigned code point.
+        { "\\P{Any}", "\xcd\xb8", false, ECMAScriptFlags::Unicode },      // U+0378, which is an unassigned code point.
         { "\\p{Assigned}", "\xcd\xb8", false, ECMAScriptFlags::Unicode }, // U+0378, which is an unassigned code point.
+        { "\\P{Assigned}", "\xcd\xb8", true, ECMAScriptFlags::Unicode },  // U+0378, which is an unassigned code point.
         { "\\p{Lu}", "a", false, ECMAScriptFlags::Unicode },
         { "\\p{Lu}", "A", true, ECMAScriptFlags::Unicode },
         { "\\p{Lu}", "9", false, ECMAScriptFlags::Unicode },
         { "\\p{Cased_Letter}", "a", true, ECMAScriptFlags::Unicode },
         { "\\p{Cased_Letter}", "A", true, ECMAScriptFlags::Unicode },
         { "\\p{Cased_Letter}", "9", false, ECMAScriptFlags::Unicode },
+        { "\\P{Cased_Letter}", "a", false, ECMAScriptFlags::Unicode },
+        { "\\P{Cased_Letter}", "A", false, ECMAScriptFlags::Unicode },
+        { "\\P{Cased_Letter}", "9", true, ECMAScriptFlags::Unicode },
         { "\\p{General_Category=Cased_Letter}", "a", true, ECMAScriptFlags::Unicode },
         { "\\p{General_Category=Cased_Letter}", "A", true, ECMAScriptFlags::Unicode },
         { "\\p{General_Category=Cased_Letter}", "9", false, ECMAScriptFlags::Unicode },
