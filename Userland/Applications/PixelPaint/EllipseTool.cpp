@@ -8,8 +8,12 @@
 #include "ImageEditor.h"
 #include "Layer.h"
 #include <LibGUI/Action.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/RadioButton.h>
+#include <LibGUI/Slider.h>
 #include <LibGfx/Rect.h>
 
 namespace PixelPaint {
@@ -91,32 +95,51 @@ void EllipseTool::on_keydown(GUI::KeyEvent& event)
     }
 }
 
-void EllipseTool::on_tool_button_contextmenu(GUI::ContextMenuEvent& event)
+GUI::Widget* EllipseTool::get_properties_widget()
 {
-    if (!m_context_menu) {
-        m_context_menu = GUI::Menu::construct();
-        m_context_menu->add_action(GUI::Action::create("Outline", [this](auto&) {
-            m_mode = Mode::Outline;
-        }));
-        m_context_menu->add_action(GUI::Action::create("Fill", [this](auto&) {
-            m_mode = Mode::Fill;
-        }));
-        m_context_menu->add_separator();
-        m_thickness_actions.set_exclusive(true);
-        auto insert_action = [&](int size, bool checked = false) {
-            auto action = GUI::Action::create_checkable(String::number(size), [this, size](auto&) {
-                m_thickness = size;
-            });
-            action->set_checked(checked);
-            m_thickness_actions.add_action(*action);
-            m_context_menu->add_action(move(action));
+    if (!m_properties_widget) {
+        m_properties_widget = GUI::Widget::construct();
+        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+
+        auto& thickness_container = m_properties_widget->add<GUI::Widget>();
+        thickness_container.set_fixed_height(20);
+        thickness_container.set_layout<GUI::HorizontalBoxLayout>();
+
+        auto& thickness_label = thickness_container.add<GUI::Label>("Thickness:");
+        thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        thickness_label.set_fixed_size(80, 20);
+
+        auto& thickness_slider = thickness_container.add<GUI::HorizontalSlider>();
+        thickness_slider.set_fixed_height(20);
+        thickness_slider.set_range(1, 10);
+        thickness_slider.set_value(m_thickness);
+        thickness_slider.on_change = [&](int value) {
+            m_thickness = value;
         };
-        insert_action(1, true);
-        insert_action(2);
-        insert_action(3);
-        insert_action(4);
+
+        auto& mode_container = m_properties_widget->add<GUI::Widget>();
+        mode_container.set_fixed_height(46);
+        mode_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto& mode_label = mode_container.add<GUI::Label>("Mode:");
+        mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        mode_label.set_fixed_size(80, 20);
+
+        auto& mode_radio_container = mode_container.add<GUI::Widget>();
+        mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
+        auto& outline_mode_radio = mode_radio_container.add<GUI::RadioButton>("Outline");
+        auto& fill_mode_radio = mode_radio_container.add<GUI::RadioButton>("Fill");
+
+        outline_mode_radio.on_checked = [&](bool) {
+            m_mode = Mode::Outline;
+        };
+        fill_mode_radio.on_checked = [&](bool) {
+            m_mode = Mode::Fill;
+        };
+
+        outline_mode_radio.set_checked(true);
     }
-    m_context_menu->popup(event.screen_position());
+
+    return m_properties_widget.ptr();
 }
 
 }

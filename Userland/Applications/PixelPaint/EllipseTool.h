@@ -20,9 +20,9 @@ public:
     virtual void on_mousedown(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
     virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
     virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
-    virtual void on_tool_button_contextmenu(GUI::ContextMenuEvent&) override;
     virtual void on_second_paint(Layer const&, GUI::PaintEvent&) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
+    virtual GUI::Widget* get_properties_widget() override;
 
 private:
     enum class Mode {
@@ -32,12 +32,11 @@ private:
 
     void draw_using(GUI::Painter&, Gfx::IntRect const&);
 
+    RefPtr<GUI::Widget> m_properties_widget;
     GUI::MouseButton m_drawing_button { GUI::MouseButton::None };
     Gfx::IntPoint m_ellipse_start_position;
     Gfx::IntPoint m_ellipse_end_position;
-    RefPtr<GUI::Menu> m_context_menu;
     int m_thickness { 1 };
-    GUI::ActionGroup m_thickness_actions;
     Mode m_mode { Mode::Outline };
 };
 
