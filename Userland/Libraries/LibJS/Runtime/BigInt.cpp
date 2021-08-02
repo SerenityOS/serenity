@@ -26,6 +26,11 @@ BigInt* js_bigint(Heap& heap, Crypto::SignedBigInteger big_integer)
     return heap.allocate_without_global_object<BigInt>(move(big_integer));
 }
 
+BigInt* js_bigint(VM& vm, Crypto::SignedBigInteger big_integer)
+{
+    return js_bigint(vm.heap(), move(big_integer));
+}
+
 // 21.2.1.1.1 NumberToBigInt ( number ), https://tc39.es/ecma262/#sec-numbertobigint
 BigInt* number_to_bigint(GlobalObject& global_object, Value number)
 {
@@ -39,7 +44,7 @@ BigInt* number_to_bigint(GlobalObject& global_object, Value number)
     }
 
     // 2. Return the BigInt value that represents ℝ(number).
-    return js_bigint(vm.heap(), Crypto::SignedBigInteger::create_from((i64)number.as_double()));
+    return js_bigint(vm, Crypto::SignedBigInteger::create_from((i64)number.as_double()));
 }
 
 }

@@ -106,7 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_microseconds_getter)
     auto [us, _] = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000 });
 
     // 5. Return ℤ(µs).
-    return js_bigint(vm.heap(), move(us));
+    return js_bigint(vm, move(us));
 }
 
 // 8.3.6 get Temporal.Instant.prototype.epochNanoseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochnanoseconds
