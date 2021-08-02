@@ -8,8 +8,11 @@
 #include "ImageEditor.h"
 #include "Layer.h"
 #include <LibGUI/Action.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/RadioButton.h>
 #include <LibGfx/Rect.h>
 
 namespace PixelPaint {
@@ -96,21 +99,39 @@ void RectangleTool::on_keydown(GUI::KeyEvent& event)
     }
 }
 
-void RectangleTool::on_tool_button_contextmenu(GUI::ContextMenuEvent& event)
+GUI::Widget* RectangleTool::get_properties_widget()
 {
-    if (!m_context_menu) {
-        m_context_menu = GUI::Menu::construct();
-        m_context_menu->add_action(GUI::Action::create("Fill", [this](auto&) {
-            m_mode = Mode::Fill;
-        }));
-        m_context_menu->add_action(GUI::Action::create("Outline", [this](auto&) {
+    if (!m_properties_widget) {
+        m_properties_widget = GUI::Widget::construct();
+        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+
+        auto& mode_container = m_properties_widget->add<GUI::Widget>();
+        mode_container.set_fixed_height(70);
+        mode_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto& mode_label = mode_container.add<GUI::Label>("Mode:");
+        mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        mode_label.set_fixed_size(80, 20);
+
+        auto& mode_radio_container = mode_container.add<GUI::Widget>();
+        mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
+        auto& outline_mode_radio = mode_radio_container.add<GUI::RadioButton>("Outline");
+        auto& fill_mode_radio = mode_radio_container.add<GUI::RadioButton>("Fill");
+        auto& gradient_mode_radio = mode_radio_container.add<GUI::RadioButton>("Gradient");
+
+        outline_mode_radio.on_checked = [&](bool) {
             m_mode = Mode::Outline;
-        }));
-        m_context_menu->add_action(GUI::Action::create("Gradient", [this](auto&) {
+        };
+        fill_mode_radio.on_checked = [&](bool) {
+            m_mode = Mode::Fill;
+        };
+        gradient_mode_radio.on_checked = [&](bool) {
             m_mode = Mode::Gradient;
-        }));
+        };
+
+        outline_mode_radio.set_checked(true);
     }
-    m_context_menu->popup(event.screen_position());
+
+    return m_properties_widget.ptr();
 }
 
 }
