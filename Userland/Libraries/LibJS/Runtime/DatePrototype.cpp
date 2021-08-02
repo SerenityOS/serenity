@@ -873,7 +873,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_temporal_instant)
     auto* ns = number_to_bigint(global_object, t);
     if (vm.exception())
         return {};
-    ns = js_bigint(vm.heap(), ns->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }));
+    ns = js_bigint(vm, ns->big_integer().multiplied_by(Crypto::UnsignedBigInteger { 1'000'000 }));
 
     // 3. Return ! CreateTemporalInstant(ns).
     return Temporal::create_temporal_instant(global_object, *ns);

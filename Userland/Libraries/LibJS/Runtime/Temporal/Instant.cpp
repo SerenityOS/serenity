@@ -142,7 +142,7 @@ BigInt* parse_temporal_instant(GlobalObject& global_object, String const& iso_st
         return {};
 
     // 8. Return utc − offsetNanoseconds.
-    return js_bigint(vm.heap(), utc->big_integer().minus(Crypto::SignedBigInteger::create_from(offset_nanoseconds)));
+    return js_bigint(vm, utc->big_integer().minus(Crypto::SignedBigInteger::create_from(offset_nanoseconds)));
 }
 
 // 8.5.5 CompareEpochNanoseconds ( epochNanosecondsOne, epochNanosecondsTwo )

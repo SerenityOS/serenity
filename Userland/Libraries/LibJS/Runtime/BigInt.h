@@ -26,6 +26,7 @@ private:
 };
 
 BigInt* js_bigint(Heap&, Crypto::SignedBigInteger);
+BigInt* js_bigint(VM&, Crypto::SignedBigInteger);
 BigInt* number_to_bigint(GlobalObject&, Value);
 
 }
