@@ -201,6 +201,7 @@ void HackStudioWidget::open_project(const String& root_path)
         add_new_editor(*m_editors_splitter);
         m_todo_entries_widget->clear();
         m_terminal_wrapper->clear_including_history();
+        stop_debugger_if_running();
     }
     m_project = Project::open_with_root_path(root_path);
     VERIFY(m_project);
@@ -1153,7 +1154,7 @@ void HackStudioWidget::handle_external_file_deletion(const String& filepath)
     close_file_in_all_editors(filepath);
 }
 
-HackStudioWidget::~HackStudioWidget()
+void HackStudioWidget::stop_debugger_if_running()
 {
     if (!m_debugger_thread.is_null()) {
         Debugger::the().stop();
@@ -1164,6 +1165,11 @@ HackStudioWidget::~HackStudioWidget()
             dbgln("error joining debugger thread");
         }
     }
+}
+
+HackStudioWidget::~HackStudioWidget()
+{
+    stop_debugger_if_running();
 }
 
 HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(const String& prompt)

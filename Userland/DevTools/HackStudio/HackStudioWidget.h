@@ -103,6 +103,7 @@ private:
     void update_statusbar();
 
     void handle_external_file_deletion(const String& filepath);
+    void stop_debugger_if_running();
 
     void create_open_files_view(GUI::Widget& parent);
     void create_toolbar(GUI::Widget& parent);
