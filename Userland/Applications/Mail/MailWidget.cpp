@@ -11,9 +11,9 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/PasswordInputDialog.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
@@ -120,7 +120,7 @@ bool MailWidget::connect_and_login()
 
     auto password = config->read_entry("User", "Password", {});
     while (password.is_empty()) {
-        if (GUI::InputBox::show(window(), password, String::formatted("Enter password for {}:", username), "Login", {}, GUI::InputType::Password) != GUI::InputBox::ExecOK)
+        if (GUI::PasswordInputDialog::show(window(), password, "Login", server, username) != GUI::Dialog::ExecOK)
             return false;
     }
 
