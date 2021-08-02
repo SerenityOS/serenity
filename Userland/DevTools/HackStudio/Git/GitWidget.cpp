@@ -164,4 +164,12 @@ void GitWidget::show_diff(const LexicalPath& file_path)
     VERIFY(original_content.has_value() && diff.has_value());
     m_view_diff_callback(original_content.value(), diff.value());
 }
+
+void GitWidget::change_repo(LexicalPath const& repo_root)
+{
+    m_repo_root = repo_root;
+    m_git_repo = nullptr;
+    m_unstaged_files->set_model(nullptr);
+    m_staged_files->set_model(nullptr);
+}
 }
