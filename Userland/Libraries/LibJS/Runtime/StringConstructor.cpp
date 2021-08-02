@@ -5,6 +5,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <AK/Utf16View.h>
 #include <AK/Utf32View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -124,22 +125,25 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 // 22.1.2.1 String.fromCharCode ( ...codeUnits ), https://tc39.es/ecma262/#sec-string.fromcharcode
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
 {
-    StringBuilder builder;
+    Vector<u16> string;
+    string.ensure_capacity(vm.argument_count());
+
     for (size_t i = 0; i < vm.argument_count(); ++i) {
-        auto char_code = vm.argument(i).to_i32(global_object);
+        auto code_unit = vm.argument(i).to_u16(global_object);
         if (vm.exception())
             return {};
-        auto truncated = char_code & 0xffff;
-        // FIXME: We need an Utf16View :^)
-        builder.append(Utf32View((u32*)&truncated, 1));
+        string.append(code_unit);
     }
-    return js_string(vm, builder.build());
+
+    return js_string(vm, move(string));
 }
 
 // 22.1.2.2 String.fromCodePoint ( ...codePoints ), https://tc39.es/ecma262/#sec-string.fromcodepoint
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
 {
-    StringBuilder builder;
+    Vector<u16> string;
+    string.ensure_capacity(vm.argument_count()); // This will be an under-estimate if any code point is > 0xffff.
+
     for (size_t i = 0; i < vm.argument_count(); ++i) {
         auto next_code_point = vm.argument(i).to_number(global_object);
         if (vm.exception())
@@ -153,9 +157,11 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
             vm.throw_exception<RangeError>(global_object, ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
             return {};
         }
-        builder.append_code_point(code_point);
+
+        AK::code_point_to_utf16(string, static_cast<u32>(code_point));
     }
-    return js_string(vm, builder.build());
+
+    return js_string(vm, move(string));
 }
 
 }

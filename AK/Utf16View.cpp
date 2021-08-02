@@ -25,15 +25,8 @@ static Vector<u16> to_utf16_impl(UtfViewType const& view) requires(IsSame<UtfVie
 {
     Vector<u16> utf16_data;
 
-    for (auto code_point : view) {
-        if (code_point < first_supplementary_plane_code_point) {
-            utf16_data.append(static_cast<u16>(code_point));
-        } else {
-            code_point -= first_supplementary_plane_code_point;
-            utf16_data.append(static_cast<u16>(high_surrogate_min | (code_point >> 10)));
-            utf16_data.append(static_cast<u16>(low_surrogate_min | (code_point & 0x3ff)));
-        }
-    }
+    for (auto code_point : view)
+        code_point_to_utf16(utf16_data, code_point);
 
     return utf16_data;
 }
@@ -51,6 +44,19 @@ Vector<u16> utf8_to_utf16(Utf8View const& utf8_view)
 Vector<u16> utf32_to_utf16(Utf32View const& utf32_view)
 {
     return to_utf16_impl(utf32_view);
+}
+
+void code_point_to_utf16(Vector<u16>& string, u32 code_point)
+{
+    VERIFY(is_unicode(code_point));
+
+    if (code_point < first_supplementary_plane_code_point) {
+        string.append(static_cast<u16>(code_point));
+    } else {
+        code_point -= first_supplementary_plane_code_point;
+        string.append(static_cast<u16>(high_surrogate_min | (code_point >> 10)));
+        string.append(static_cast<u16>(low_surrogate_min | (code_point & 0x3ff)));
+    }
 }
 
 bool Utf16View::is_high_surrogate(u16 code_unit)
