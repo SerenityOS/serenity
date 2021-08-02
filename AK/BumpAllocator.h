@@ -13,15 +13,15 @@
 
 namespace AK {
 
-template<bool use_mmap = false>
+template<bool use_mmap = false, size_t chunk_size = use_mmap ? 4 * MiB : 4 * KiB>
 class BumpAllocator {
 public:
     BumpAllocator()
     {
         if constexpr (use_mmap)
-            m_chunk_size = 4 * MiB;
+            m_chunk_size = chunk_size;
         else
-            m_chunk_size = kmalloc_good_size(4 * KiB);
+            m_chunk_size = kmalloc_good_size(chunk_size);
     }
 
     ~BumpAllocator()
@@ -137,8 +137,10 @@ protected:
     // size_t m_allocations_in_previous_chunk { 0 };
 };
 
-template<typename T, bool use_mmap = false>
-class UniformBumpAllocator : protected BumpAllocator<use_mmap> {
+template<typename T, bool use_mmap = false, size_t chunk_size = use_mmap ? 4 * MiB : 4 * KiB>
+class UniformBumpAllocator : protected BumpAllocator<use_mmap, chunk_size> {
+    using Allocator = BumpAllocator<use_mmap, chunk_size>;
+
 public:
     UniformBumpAllocator() = default;
     ~UniformBumpAllocator()
@@ -148,19 +150,19 @@ public:
 
     T* allocate()
     {
-        return BumpAllocator<use_mmap>::template allocate<T>();
+        return Allocator::template allocate<T>();
     }
 
     void deallocate_all()
     {
         destroy_all();
-        BumpAllocator<use_mmap>::deallocate_all();
+        Allocator::deallocate_all();
     }
 
     void destroy_all()
     {
         this->for_each_chunk([&](auto chunk) {
-            auto base_ptr = align_up_to(chunk + sizeof(typename BumpAllocator<use_mmap>::ChunkHeader), alignof(T));
+            auto base_ptr = align_up_to(chunk + sizeof(typename Allocator::ChunkHeader), alignof(T));
             FlatPtr end_offset = this->m_chunk_size;
             if (chunk == this->m_current_chunk)
                 end_offset = this->m_byte_offset_into_current_chunk;
