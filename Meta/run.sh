@@ -96,7 +96,7 @@ fi
 
 if [ "$(uname)" = "Darwin" ]; then
     SERENITY_AUDIO_BACKEND="-audiodev coreaudio,id=snd0"
-elif (uname -a | grep -iq WSL) || (uname -a | grep -iq microsoft); then
+elif command -v wslpath >/dev/null; then
     SERENITY_AUDIO_BACKEND="-audiodev dsound,id=snd0"
 elif "$SERENITY_QEMU_BIN" -audio-help 2>&1 | grep -- "-audiodev id=sdl" >/dev/null; then
     SERENITY_AUDIO_BACKEND="-audiodev sdl,id=snd0"
@@ -113,7 +113,7 @@ fi
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
 if  [ "$SERENITY_SPICE" ]; then
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-spice-app}"
-elif (uname -a | grep -iq WSL) || (uname -a | grep -iq microsoft); then
+elif command -v wslpath >/dev/null; then
     # QEMU for windows does not like gl=on, so detect if we are building in wsl, and if so, disable it
     # Also, when using the GTK backend we run into this problem: https://github.com/SerenityOS/serenity/issues/7657
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=off}"
