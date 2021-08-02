@@ -20,6 +20,8 @@ public:
 
     void focus_textbox_and_select_all();
 
+    void reset();
+
 private:
     explicit FindInFilesWidget();
 

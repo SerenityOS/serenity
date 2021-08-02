@@ -148,5 +148,9 @@ void FindInFilesWidget::focus_textbox_and_select_all()
     m_textbox->select_all();
     m_textbox->set_focus(true);
 }
+void FindInFilesWidget::reset()
+{
+    m_result_view->set_model(nullptr);
+}
 
 }
