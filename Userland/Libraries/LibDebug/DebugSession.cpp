@@ -345,11 +345,7 @@ void* DebugSession::single_step()
     regs.rflags &= ~(TRAP_FLAG);
 #endif
     set_registers(regs);
-#if ARCH(I386)
-    return (void*)regs.eip;
-#else
-    TODO();
-#endif
+    return (void*)regs.ip();
 }
 
 void DebugSession::detach()
