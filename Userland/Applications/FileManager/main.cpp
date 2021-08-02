@@ -98,8 +98,9 @@ int main(int argc, char** argv)
 
     // our initial location is defined as, in order of precedence:
     // 1. the command-line path argument (e.g. FileManager /bin)
-    // 2. the user's home directory
-    // 3. the root directory
+    // 2. the current directory
+    // 3. the user's home directory
+    // 4. the root directory
 
     if (!initial_location.is_empty()) {
         if (!ignore_path_resolution)
@@ -108,6 +109,9 @@ int main(int argc, char** argv)
         if (!Core::File::is_directory(initial_location))
             is_selection_mode = true;
     }
+
+    if (initial_location.is_empty())
+        initial_location = Core::File::current_working_directory();
 
     if (initial_location.is_empty())
         initial_location = Core::StandardPaths::home_directory();
