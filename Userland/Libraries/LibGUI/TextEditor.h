@@ -203,6 +203,9 @@ public:
 
     void delete_text_range(TextRange);
 
+    bool text_is_secret() const { return m_text_is_secret; }
+    void set_text_is_secret(bool text_is_secret);
+
 protected:
     explicit TextEditor(Type = Type::MultiLine);
 
@@ -387,6 +390,8 @@ private:
     Gfx::IntPoint m_last_mousemove_position;
 
     RefPtr<Gfx::Bitmap> m_icon;
+
+    bool m_text_is_secret { false };
 };
 
 }

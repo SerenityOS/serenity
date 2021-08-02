@@ -1478,7 +1478,7 @@ void TextEditor::set_mode(const Mode mode)
     m_mode = mode;
     switch (mode) {
     case Editable:
-        m_cut_action->set_enabled(has_selection());
+        m_cut_action->set_enabled(has_selection() && !text_is_secret());
         m_delete_action->set_enabled(true);
         m_paste_action->set_enabled(true);
         set_accepts_emoji_input(true);
@@ -1502,8 +1502,8 @@ void TextEditor::set_mode(const Mode mode)
 
 void TextEditor::did_update_selection()
 {
-    m_cut_action->set_enabled(is_editable() && has_selection());
-    m_copy_action->set_enabled(has_selection());
+    m_cut_action->set_enabled(is_editable() && has_selection() && !text_is_secret());
+    m_copy_action->set_enabled(has_selection() && !text_is_secret());
     if (on_selection_change)
         on_selection_change();
     if (is_wrapping_enabled()) {
@@ -1774,8 +1774,8 @@ void TextEditor::document_did_update_undo_stack()
         return builder.to_string();
     };
 
-    m_undo_action->set_enabled(can_undo());
-    m_redo_action->set_enabled(can_redo());
+    m_undo_action->set_enabled(can_undo() && !text_is_secret());
+    m_redo_action->set_enabled(can_redo() && !text_is_secret());
 
     m_undo_action->set_text(make_action_text("&Undo", document().undo_stack().undo_action_text()));
     m_redo_action->set_text(make_action_text("&Redo", document().undo_stack().redo_action_text()));
@@ -1978,6 +1978,13 @@ void TextEditor::redo()
 {
     clear_selection();
     document().redo();
+}
+
+void TextEditor::set_text_is_secret(bool text_is_secret)
+{
+    m_text_is_secret = text_is_secret;
+    document_did_update_undo_stack();
+    did_update_selection();
 }
 
 }
