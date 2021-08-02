@@ -203,6 +203,7 @@ void HackStudioWidget::open_project(const String& root_path)
         m_todo_entries_widget->clear();
         m_terminal_wrapper->clear_including_history();
         stop_debugger_if_running();
+        update_gml_preview();
     }
     m_project = Project::open_with_root_path(root_path);
     VERIFY(m_project);
