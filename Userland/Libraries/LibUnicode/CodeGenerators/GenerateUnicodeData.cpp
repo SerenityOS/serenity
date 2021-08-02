@@ -121,6 +121,18 @@ static constexpr auto s_desired_fields = Array {
     "simple_lowercase_mapping"sv,
 };
 
+static void write_to_file_if_different(Core::File& file, StringView contents)
+{
+    auto const current_contents = file.read_all();
+
+    if (StringView { current_contents.bytes() } == contents)
+        return;
+
+    VERIFY(file.seek(0));
+    VERIFY(file.truncate(0));
+    VERIFY(file.write(contents));
+}
+
 static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
 {
     auto parse_code_point_list = [&](auto const& line) {
@@ -372,7 +384,7 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
     }
 }
 
-static void generate_unicode_data_header(UnicodeData& unicode_data)
+static void generate_unicode_data_header(Core::File& file, UnicodeData& unicode_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -529,12 +541,13 @@ Optional<GeneralCategory> general_category_from_string(StringView const& general
 
 }
 
-})~~~");
+}
+)~~~");
 
-    outln("{}", generator.as_string_view());
+    write_to_file_if_different(file, generator.as_string_view());
 }
 
-static void generate_unicode_data_implementation(UnicodeData unicode_data)
+static void generate_unicode_data_implementation(Core::File& file, UnicodeData const& unicode_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -735,15 +748,16 @@ Optional<GeneralCategory> general_category_from_string(StringView const& general
 
 }
 
-})~~~");
+}
+)~~~");
 
-    outln("{}", generator.as_string_view());
+    write_to_file_if_different(file, generator.as_string_view());
 }
 
 int main(int argc, char** argv)
 {
-    bool generate_header = false;
-    bool generate_implementation = false;
+    char const* generated_header_path = nullptr;
+    char const* generated_implementation_path = nullptr;
     char const* unicode_data_path = nullptr;
     char const* special_casing_path = nullptr;
     char const* prop_list_path = nullptr;
@@ -753,8 +767,8 @@ int main(int argc, char** argv)
     char const* word_break_path = nullptr;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(generate_header, "Generate the Unicode Data header file", "generate-header", 'h');
-    args_parser.add_option(generate_implementation, "Generate the Unicode Data implementation file", "generate-implementation", 'c');
+    args_parser.add_option(generated_header_path, "Path to the Unicode Data header file to generate", "generated-header-path", 'h', "generated-header-path");
+    args_parser.add_option(generated_implementation_path, "Path to the Unicode Data implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
     args_parser.add_option(unicode_data_path, "Path to UnicodeData.txt file", "unicode-data-path", 'u', "unicode-data-path");
     args_parser.add_option(special_casing_path, "Path to SpecialCasing.txt file", "special-casing-path", 's', "special-casing-path");
     args_parser.add_option(prop_list_path, "Path to PropList.txt file", "prop-list-path", 'p', "prop-list-path");
@@ -764,20 +778,14 @@ int main(int argc, char** argv)
     args_parser.add_option(word_break_path, "Path to WordBreakProperty.txt file", "word-break-path", 'w', "word-break-path");
     args_parser.parse(argc, argv);
 
-    if (!generate_header && !generate_implementation) {
-        warnln("At least one of -h/--generate-header or -c/--generate-implementation is required");
-        args_parser.print_usage(stderr, argv[0]);
-        return 1;
-    }
-
-    auto open_file = [&](StringView path, StringView flags) {
+    auto open_file = [&](StringView path, StringView flags, Core::OpenMode mode = Core::OpenMode::ReadOnly) {
         if (path.is_empty()) {
             warnln("{} is required", flags);
             args_parser.print_usage(stderr, argv[0]);
             exit(1);
         }
 
-        auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+        auto file_or_error = Core::File::open(path, mode);
         if (file_or_error.is_error()) {
             warnln("Failed to open {}: {}", path, file_or_error.release_error());
             exit(1);
@@ -786,6 +794,8 @@ int main(int argc, char** argv)
         return file_or_error.release_value();
     };
 
+    auto generated_header_file = open_file(generated_header_path, "-h/--generated-header-path", Core::OpenMode::ReadWrite);
+    auto generated_implementation_file = open_file(generated_implementation_path, "-c/--generated-implementation-path", Core::OpenMode::ReadWrite);
     auto unicode_data_file = open_file(unicode_data_path, "-u/--unicode-data-path");
     auto special_casing_file = open_file(special_casing_path, "-s/--special-casing-path");
     auto prop_list_file = open_file(prop_list_path, "-p/--prop-list-path");
@@ -803,10 +813,8 @@ int main(int argc, char** argv)
     parse_unicode_data(unicode_data_file, unicode_data);
     parse_value_alias_list(prop_value_alias_file, "gc"sv, unicode_data.general_categories, unicode_data.general_category_unions, unicode_data.general_category_aliases);
 
-    if (generate_header)
-        generate_unicode_data_header(unicode_data);
-    if (generate_implementation)
-        generate_unicode_data_implementation(move(unicode_data));
+    generate_unicode_data_header(generated_header_file, unicode_data);
+    generate_unicode_data_implementation(generated_implementation_file, unicode_data);
 
     return 0;
 }
