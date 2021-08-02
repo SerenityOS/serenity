@@ -587,7 +587,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_editor_action
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_open_action()
 {
     return GUI::Action::create("&Open Project...", { Mod_Ctrl | Mod_Shift, Key_O }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"), [this](auto&) {
-        auto open_path = GUI::FilePicker::get_open_filepath(window(), "Open project", Core::StandardPaths::home_directory(), true);
+        auto open_path = GUI::FilePicker::get_open_filepath(window(), "Open project", m_project->root_path(), true);
         if (!open_path.has_value())
             return;
         open_project(open_path.value());
