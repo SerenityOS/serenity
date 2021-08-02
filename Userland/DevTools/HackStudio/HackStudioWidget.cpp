@@ -202,6 +202,10 @@ void HackStudioWidget::open_project(const String& root_path)
         m_project_tree_view->set_model(m_project->model());
         m_project_tree_view->update();
     }
+    if (m_git_widget) {
+        m_git_widget->change_repo(LexicalPath(root_path));
+        m_git_widget->refresh();
+    }
     if (Debugger::is_initialized()) {
         auto& debugger = Debugger::the();
         debugger.reset_breakpoints();
