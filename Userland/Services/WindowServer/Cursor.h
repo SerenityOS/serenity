@@ -8,32 +8,10 @@
 
 #include <AK/HashMap.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/CursorParams.h>
 #include <LibGfx/StandardCursor.h>
 
 namespace WindowServer {
-
-class CursorParams {
-    friend class Cursor;
-
-public:
-    static CursorParams parse_from_filename(const StringView&, const Gfx::IntPoint&);
-    CursorParams(const Gfx::IntPoint& hotspot)
-        : m_hotspot(hotspot)
-    {
-    }
-    CursorParams constrained(const Gfx::Bitmap&) const;
-
-    const Gfx::IntPoint& hotspot() const { return m_hotspot; }
-    unsigned frames() const { return m_frames; }
-    unsigned frame_ms() const { return m_frame_ms; }
-
-private:
-    CursorParams() = default;
-    Gfx::IntPoint m_hotspot;
-    unsigned m_frames { 1 };
-    unsigned m_frame_ms { 0 };
-    bool m_have_hotspot { false };
-};
 
 class Cursor : public RefCounted<Cursor> {
 public:
@@ -42,7 +20,7 @@ public:
     static RefPtr<Cursor> create(Gfx::StandardCursor);
     ~Cursor() = default;
 
-    const CursorParams& params() const { return m_params; }
+    const Gfx::CursorParams& params() const { return m_params; }
     const Gfx::Bitmap& bitmap(int scale_factor) const
     {
         auto it = m_bitmaps.find(scale_factor);
@@ -69,13 +47,13 @@ public:
 
 private:
     Cursor() { }
-    Cursor(NonnullRefPtr<Gfx::Bitmap>&&, int, const CursorParams&);
+    Cursor(NonnullRefPtr<Gfx::Bitmap>&&, int, const Gfx::CursorParams&);
 
     bool load(const StringView&, const StringView&);
     void update_rect_if_animated();
 
     HashMap<int, NonnullRefPtr<Gfx::Bitmap>> m_bitmaps;
-    CursorParams m_params;
+    Gfx::CursorParams m_params;
     Gfx::IntRect m_rect;
 };
 
