@@ -88,27 +88,6 @@ void SprayTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&)
     }
 }
 
-void SprayTool::on_tool_button_contextmenu(GUI::ContextMenuEvent& event)
-{
-    if (!m_context_menu) {
-        m_context_menu = GUI::Menu::construct();
-        m_thickness_actions.set_exclusive(true);
-        auto insert_action = [&](int size, bool checked = false) {
-            auto action = GUI::Action::create_checkable(String::number(size), [this, size](auto&) {
-                m_thickness = size;
-            });
-            action->set_checked(checked);
-            m_thickness_actions.add_action(*action);
-            m_context_menu->add_action(move(action));
-        };
-        insert_action(1, true);
-        insert_action(2);
-        insert_action(3);
-        insert_action(4);
-    }
-    m_context_menu->popup(event.screen_position());
-}
-
 GUI::Widget* SprayTool::get_properties_widget()
 {
     if (!m_properties_widget) {
