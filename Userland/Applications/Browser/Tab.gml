@@ -1,5 +1,6 @@
 @GUI::Widget {
     layout: @GUI::VerticalBoxLayout {
+        spacing: 2
     }
 
     @GUI::ToolbarContainer {
