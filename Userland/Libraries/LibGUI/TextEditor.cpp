@@ -1478,14 +1478,14 @@ void TextEditor::set_mode(const Mode mode)
     m_mode = mode;
     switch (mode) {
     case Editable:
-        m_cut_action->set_enabled(true && has_selection());
+        m_cut_action->set_enabled(has_selection());
         m_delete_action->set_enabled(true);
         m_paste_action->set_enabled(true);
         set_accepts_emoji_input(true);
         break;
     case DisplayOnly:
     case ReadOnly:
-        m_cut_action->set_enabled(false && has_selection());
+        m_cut_action->set_enabled(false);
         m_delete_action->set_enabled(false);
         m_paste_action->set_enabled(false);
         set_accepts_emoji_input(false);
