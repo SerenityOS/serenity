@@ -7,6 +7,7 @@
 #include <LibGUI/TextBox.h>
 
 REGISTER_WIDGET(GUI, TextBox)
+REGISTER_WIDGET(GUI, PasswordBox)
 
 namespace GUI {
 
