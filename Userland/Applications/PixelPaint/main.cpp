@@ -369,6 +369,31 @@ int main(int argc, char** argv)
         },
         window));
     layer_menu.add_separator();
+    layer_menu.add_action(GUI::CommonActions::make_move_to_front_action(
+        [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+            auto active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+            editor->image().move_layer_to_front(*active_layer);
+            editor->layers_did_change();
+        },
+        window));
+    layer_menu.add_action(GUI::CommonActions::make_move_to_back_action(
+        [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+            auto active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+            editor->image().move_layer_to_back(*active_layer);
+            editor->layers_did_change();
+        },
+        window));
+    layer_menu.add_separator();
     layer_menu.add_action(GUI::Action::create(
         "Move Active Layer &Up", { Mod_Ctrl, Key_PageUp }, [&](auto&) {
             auto* editor = current_image_editor();
@@ -393,7 +418,7 @@ int main(int argc, char** argv)
         window));
     layer_menu.add_separator();
     layer_menu.add_action(GUI::Action::create(
-        "&Remove Active Layer", { Mod_Ctrl, Key_D }, [&](auto&) {
+        "&Remove Active Layer", { Mod_Ctrl, Key_D }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/delete.png"), [&](auto&) {
             auto* editor = current_image_editor();
             if (!editor)
                 return;

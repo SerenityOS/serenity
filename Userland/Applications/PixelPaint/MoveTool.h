@@ -19,14 +19,11 @@ public:
     virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
     virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
     virtual void on_keydown(GUI::KeyEvent&) override;
-    virtual void on_context_menu(Layer&, GUI::ContextMenuEvent&) override;
 
 private:
     RefPtr<Layer> m_layer_being_moved;
     Gfx::IntPoint m_event_origin;
     Gfx::IntPoint m_layer_origin;
-    RefPtr<GUI::Menu> m_context_menu;
-    RefPtr<Layer> m_context_menu_layer;
 };
 
 }
