@@ -12,6 +12,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/StandardPaths.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -190,13 +191,20 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             } else {
                 argv[0] = app.executable.characters();
             }
+
+            posix_spawn_file_actions_t spawn_actions;
+            posix_spawn_file_actions_init(&spawn_actions);
+            auto home_directory = Core::StandardPaths::home_directory();
+            posix_spawn_file_actions_addchdir(&spawn_actions, home_directory.characters());
+
             pid_t child_pid;
-            if ((errno = posix_spawn(&child_pid, argv[0], nullptr, nullptr, const_cast<char**>(argv), environ))) {
+            if ((errno = posix_spawn(&child_pid, argv[0], &spawn_actions, nullptr, const_cast<char**>(argv), environ))) {
                 perror("posix_spawn");
             } else {
                 if (disown(child_pid) < 0)
                     perror("disown");
             }
+            posix_spawn_file_actions_destroy(&spawn_actions);
         }));
         ++app_identifier;
     }
@@ -261,14 +269,21 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         }
     }));
     system_menu->add_action(GUI::Action::create("Run...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-run.png"), [](auto&) {
+        posix_spawn_file_actions_t spawn_actions;
+        posix_spawn_file_actions_init(&spawn_actions);
+        auto home_directory = Core::StandardPaths::home_directory();
+        posix_spawn_file_actions_addchdir(&spawn_actions, home_directory.characters());
+
         pid_t child_pid;
         const char* argv[] = { "/bin/Run", nullptr };
-        if ((errno = posix_spawn(&child_pid, "/bin/Run", nullptr, nullptr, const_cast<char**>(argv), environ))) {
+        if ((errno = posix_spawn(&child_pid, "/bin/Run", &spawn_actions, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
         } else {
             if (disown(child_pid) < 0)
                 perror("disown");
         }
+
+        posix_spawn_file_actions_destroy(&spawn_actions);
     }));
     system_menu->add_separator();
     system_menu->add_action(GUI::Action::create("Exit...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/power.png"), [](auto&) {
