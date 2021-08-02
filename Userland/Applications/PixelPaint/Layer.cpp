@@ -90,6 +90,25 @@ void Layer::set_name(String name)
     m_image.layer_did_modify_properties({}, *this);
 }
 
+void Layer::flip(Gfx::Orientation orientation)
+{
+    m_bitmap->flip(orientation);
+    did_modify_bitmap({});
+}
+
+Result<void, String> Layer::rotate(Gfx::RotationDirection rotation_direction)
+{
+    auto rotated_bitmap = m_bitmap->rotated(rotation_direction);
+    if (!rotated_bitmap) {
+        return String("Layer rotation failed");
+    }
+
+    m_bitmap = rotated_bitmap.release_nonnull();
+    did_modify_bitmap({});
+
+    return {};
+}
+
 RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
 {
     if (selection.is_empty()) {

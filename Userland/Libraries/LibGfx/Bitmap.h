@@ -110,6 +110,8 @@ public:
 
     [[nodiscard]] RefPtr<Gfx::Bitmap> clone() const;
 
+    void flip(Gfx::Orientation);
+
     [[nodiscard]] RefPtr<Gfx::Bitmap> rotated(Gfx::RotationDirection) const;
     [[nodiscard]] RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
     [[nodiscard]] RefPtr<Gfx::Bitmap> scaled(int sx, int sy) const;
@@ -243,6 +245,8 @@ private:
     static Optional<BackingStore> try_allocate_backing_store(BitmapFormat format, IntSize const& size, int scale_factor);
 
     void allocate_palette_from_format(BitmapFormat, const Vector<RGBA32>& source_palette);
+    void flip_horizontally();
+    void flip_vertically();
 
     IntSize m_size;
     int m_scale;

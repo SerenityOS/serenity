@@ -437,6 +437,73 @@ int main(int argc, char** argv)
         },
         window));
 
+    layer_menu.add_separator();
+    auto& layer_transform_menu = layer_menu.add_submenu("Transform");
+    layer_transform_menu.add_action(GUI::Action::create(
+        "Flip Horizontally", [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+
+            auto* active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+
+            active_layer->flip(Gfx::Orientation::Horizontal);
+            editor->did_complete_action();
+        },
+        window));
+    layer_transform_menu.add_action(GUI::Action::create(
+        "Flip Vertically", [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+
+            auto* active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+
+            active_layer->flip(Gfx::Orientation::Vertical);
+            editor->did_complete_action();
+        },
+        window));
+    layer_transform_menu.add_action(GUI::Action::create(
+        "Rotate 90 Degrees Clockwise", [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+
+            auto* active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+
+            auto result = active_layer->rotate(Gfx::RotationDirection::Clockwise);
+            if (result.is_error()) {
+                GUI::MessageBox::show_error(window, result.error());
+            }
+
+            editor->did_complete_action();
+        },
+        window));
+    layer_transform_menu.add_action(GUI::Action::create(
+        "Rotate 90 Degrees Counterclockwise", [&](auto&) {
+            auto* editor = current_image_editor();
+            if (!editor)
+                return;
+
+            auto* active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+
+            auto result = active_layer->rotate(Gfx::RotationDirection::CounterClockwise);
+            if (result.is_error()) {
+                GUI::MessageBox::show_error(window, result.error());
+            }
+
+            editor->did_complete_action();
+        },
+        window));
+
     auto& filter_menu = window->add_menu("&Filter");
     auto& spatial_filters_menu = filter_menu.add_submenu("&Spatial");
 

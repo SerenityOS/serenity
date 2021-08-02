@@ -8,6 +8,7 @@
 
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
+#include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Bitmap.h>
@@ -56,6 +57,9 @@ public:
 
     int opacity_percent() const { return m_opacity_percent; }
     void set_opacity_percent(int);
+
+    void flip(Gfx::Orientation orientation);
+    Result<void, String> rotate(Gfx::RotationDirection rotation_direction);
 
     RefPtr<Gfx::Bitmap> try_copy_bitmap(Selection const&) const;
 

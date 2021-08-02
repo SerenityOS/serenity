@@ -302,6 +302,14 @@ RefPtr<Gfx::Bitmap> Bitmap::clone() const
     return new_bitmap;
 }
 
+void Bitmap::flip(Gfx::Orientation orientation)
+{
+    if (orientation == Orientation::Vertical)
+        this->flip_vertically();
+    else
+        this->flip_horizontally();
+}
+
 RefPtr<Gfx::Bitmap> Bitmap::rotated(Gfx::RotationDirection rotation_direction) const
 {
     auto new_bitmap = Gfx::Bitmap::try_create(this->format(), { height(), width() }, scale());
@@ -595,6 +603,32 @@ void Bitmap::allocate_palette_from_format(BitmapFormat format, const Vector<RGBA
     if (!source_palette.is_empty()) {
         VERIFY(source_palette.size() == size);
         memcpy(m_palette, source_palette.data(), size * sizeof(RGBA32));
+    }
+}
+
+void Bitmap::flip_vertically()
+{
+    auto w = this->physical_width();
+    auto h = this->physical_height();
+    for (int i = 0; i < w; i++) {
+        for (int j = 0; j < h / 2; j++) {
+            Color tmp = this->get_pixel(i, j);
+            this->set_pixel(i, j, this->get_pixel(i, h - j - 1));
+            this->set_pixel(i, h - j - 1, tmp);
+        }
+    }
+}
+
+void Bitmap::flip_horizontally()
+{
+    auto w = this->physical_width();
+    auto h = this->physical_height();
+    for (int i = 0; i < w / 2; i++) {
+        for (int j = 0; j < h; j++) {
+            Color tmp = this->get_pixel(i, j);
+            this->set_pixel(i, j, this->get_pixel(w - i - 1, j));
+            this->set_pixel(w - i - 1, j, tmp);
+        }
     }
 }
 
