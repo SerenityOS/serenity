@@ -125,12 +125,10 @@ void BrowserWindow::build_menus()
     auto& file_menu = add_menu("&File");
     file_menu.add_action(WindowActions::the().create_new_tab_action());
 
-    auto close_tab_action = GUI::Action::create(
-        "&Close Tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
-            active_tab().on_tab_close_request(active_tab());
-        },
+    auto close_tab_action = GUI::CommonActions::make_close_tab_action([this](auto&) {
+        active_tab().on_tab_close_request(active_tab());
+    },
         this);
-    close_tab_action->set_status_tip("Close current tab");
     file_menu.add_action(close_tab_action);
 
     file_menu.add_separator();
@@ -220,7 +218,7 @@ void BrowserWindow::build_menus()
     auto& settings_menu = add_menu("&Settings");
 
     m_change_homepage_action = GUI::Action::create(
-        "Set Homepage URL", [this](auto&) {
+        "Set Homepage URL...", [this](auto&) {
             auto homepage_url = Config::read_string("Browser", "Preferences", "Home", "about:blank");
             if (GUI::InputBox::show(this, homepage_url, "Enter URL", "Change homepage URL") == GUI::InputBox::ExecOK) {
                 if (URL(homepage_url).is_valid()) {
@@ -237,7 +235,7 @@ void BrowserWindow::build_menus()
 
     m_search_engine_actions.set_exclusive(true);
     auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");
-
+    search_engine_menu.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"));
     bool search_engine_set = false;
     auto add_search_engine = [&](auto& name, auto& url_format) {
         auto action = GUI::Action::create_checkable(
