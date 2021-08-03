@@ -165,6 +165,7 @@ void AbstractButton::keyup_event(KeyEvent& event)
     m_being_pressed = false;
     if (was_being_pressed && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Space)) {
         click(event.modifiers());
+        update();
         event.accept();
         return;
     }
