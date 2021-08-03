@@ -113,8 +113,11 @@ GUI::Widget* EllipseTool::get_properties_widget()
         thickness_slider.set_fixed_height(20);
         thickness_slider.set_range(1, 10);
         thickness_slider.set_value(m_thickness);
+        thickness_slider.set_tooltip(String::formatted("{}px", m_thickness));
+
         thickness_slider.on_change = [&](int value) {
             m_thickness = value;
+            thickness_slider.set_tooltip(String::formatted("{}px", value));
         };
 
         auto& mode_container = m_properties_widget->add<GUI::Widget>();
