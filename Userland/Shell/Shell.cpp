@@ -568,8 +568,11 @@ int Shell::run_command(const StringView& cmd, Optional<SourcePosition> source_po
     }
 
     tcgetattr(0, &termios);
+    tcsetattr(0, TCSANOW, &default_termios);
 
     command->run(*this);
+
+    tcsetattr(0, TCSANOW, &termios);
 
     if (!has_error(ShellError::None)) {
         possibly_print_error();
