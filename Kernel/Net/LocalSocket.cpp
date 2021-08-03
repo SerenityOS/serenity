@@ -399,9 +399,9 @@ KResult LocalSocket::getsockopt(FileDescription& description, int level, int opt
 
     switch (option) {
     case SO_SNDBUF:
-        TODO();
+        return ENOTSUP;
     case SO_RCVBUF:
-        TODO();
+        return ENOTSUP;
     case SO_PEERCRED: {
         if (size < sizeof(ucred))
             return EINVAL;
