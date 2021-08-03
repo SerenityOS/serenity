@@ -189,6 +189,8 @@ void HackStudioWidget::on_action_tab_change()
 
 void HackStudioWidget::open_project(const String& root_path)
 {
+    if (warn_unsaved_changes("There are unsaved changes, do you want to save before closing current project?") == ContinueDecision::No)
+        return;
     if (chdir(root_path.characters()) < 0) {
         perror("chdir");
         exit(1);
