@@ -38,9 +38,12 @@ PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
 SERENITY_RUN="${SERENITY_RUN:-$1}"
 
 if [ -z "$SERENITY_QEMU_BIN" ]; then
-    if [ "$SERENITY_ARCH" = "x86_64" ]; then
+    if command -v qemu-system-x86_64 >/dev/null; then
         SERENITY_QEMU_BIN="qemu-system-x86_64"
     else
+        if [ "$SERENITY_ARCH" = "x86_64" ]; then
+            die "Please install the 64-bit QEMU system emulator (qemu-system-x86_64)."
+        fi
         SERENITY_QEMU_BIN="qemu-system-i386"
     fi
 fi
