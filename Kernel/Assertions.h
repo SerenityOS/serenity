@@ -25,4 +25,6 @@ extern "C" {
 
 #define VERIFY_INTERRUPTS_DISABLED() VERIFY(!(cpu_flags() & 0x200))
 #define VERIFY_INTERRUPTS_ENABLED() VERIFY(cpu_flags() & 0x200)
-#define TODO VERIFY_NOT_REACHED
+
+static constexpr bool TODO = false;
+#define TODO() VERIFY(TODO)
