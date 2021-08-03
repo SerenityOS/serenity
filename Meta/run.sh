@@ -38,13 +38,21 @@ PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
 SERENITY_RUN="${SERENITY_RUN:-$1}"
 
 if [ -z "$SERENITY_QEMU_BIN" ]; then
-    if command -v qemu-system-x86_64 >/dev/null; then
-        SERENITY_QEMU_BIN="qemu-system-x86_64"
+    if command -v wslpath >/dev/null; then
+        QEMU_INSTALL_DIR=$(reg.exe query 'HKLM\Software\QEMU' /v Install_Dir /t REG_SZ | grep '^    Install_Dir' | sed 's/    / /g' | cut -f4- -d' ')
+        if [ -z "$QEMU_INSTALL_DIR" ]; then
+            die "Could not determine where QEMU for Windows is installed. Please make sure QEMU is installed or set SERENITY_QEMU_BIN if it is already installed."
+        fi
+        QEMU_BINARY_PREFIX="$(wslpath -- "${QEMU_INSTALL_DIR}" | tr -d '\r\n')/"
+        QEMU_BINARY_SUFFIX=".exe"
+    fi
+    if command -v "${QEMU_BINARY_PREFIX}qemu-system-x86_64${QEMU_BINARY_SUFFIX}" >/dev/null; then
+        SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-x86_64${QEMU_BINARY_SUFFIX}"
     else
         if [ "$SERENITY_ARCH" = "x86_64" ]; then
             die "Please install the 64-bit QEMU system emulator (qemu-system-x86_64)."
         fi
-        SERENITY_QEMU_BIN="qemu-system-i386"
+        SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-i386${QEMU_BINARY_SUFFIX}"
     fi
 fi
 
