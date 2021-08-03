@@ -9,11 +9,6 @@
 
 namespace SQL {
 
-Key::Key()
-    : Tuple()
-{
-}
-
 Key::Key(TupleDescriptor const& descriptor)
     : Tuple(descriptor)
 {

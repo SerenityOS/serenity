@@ -14,12 +14,11 @@ namespace SQL {
 
 class Key : public Tuple {
 public:
-    Key();
+    Key() = default;
     explicit Key(TupleDescriptor const&);
     explicit Key(RefPtr<IndexDef>);
     Key(TupleDescriptor const&, ByteBuffer&, size_t& offset);
     Key(RefPtr<IndexDef>, ByteBuffer&, size_t& offset);
-    Key(Key const&) = default;
     RefPtr<IndexDef> index() const { return m_index; }
     [[nodiscard]] virtual size_t data_length() const override { return Tuple::data_length() + sizeof(u32); }
 
