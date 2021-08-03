@@ -208,35 +208,6 @@ static inline void set_property_border_style(StyleProperties& style, StyleValue 
         style.set_property(CSS::PropertyID::BorderLeftStyle, value);
 }
 
-static inline bool is_background_repeat(StyleValue const& value)
-{
-    if (value.is_builtin_or_dynamic())
-        return true;
-
-    switch (value.to_identifier()) {
-    case CSS::ValueID::NoRepeat:
-    case CSS::ValueID::Repeat:
-    case CSS::ValueID::RepeatX:
-    case CSS::ValueID::RepeatY:
-    case CSS::ValueID::Round:
-    case CSS::ValueID::Space:
-        return true;
-    default:
-        return false;
-    }
-}
-
-static inline bool is_background_image(StyleValue const& value)
-{
-    if (value.is_builtin_or_dynamic())
-        return true;
-    if (value.is_image())
-        return true;
-    if (value.to_identifier() == ValueID::None)
-        return true;
-    return false;
-}
-
 static inline bool is_color(StyleValue const& value)
 {
     if (value.is_builtin_or_dynamic())
@@ -748,98 +719,33 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Background) {
-        if (value.to_identifier() == ValueID::None) {
-            style.set_property(CSS::PropertyID::BackgroundColor, ColorStyleValue::create(Color::Transparent));
+        auto set_single_background = [&](CSS::BackgroundStyleValue const& background) {
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, background.color(), document);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, background.image(), document);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, background.repeat_x(), document, true);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, background.repeat_y(), document, true);
+        };
+
+        if (value.is_background()) {
+            auto& background = static_cast<CSS::BackgroundStyleValue const&>(value);
+            set_single_background(background);
             return;
         }
-
-        if (is_background_image(value)) {
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document);
-            return;
-        }
-
-        if (is_color(value)) {
-            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, value, document);
-            return;
-        }
-
-        if (value.is_component_value_list()) {
-            auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
-
-            RefPtr<StyleValue> background_color_value;
-            RefPtr<StyleValue> background_image_value;
-            RefPtr<StyleValue> repeat_x_value;
-            RefPtr<StyleValue> repeat_y_value;
-            // FIXME: Implement background-position.
-            // FIXME: Implement background-size.
-            // FIXME: Implement background-attachment.
-            // FIXME: Implement background-clip.
-            // FIXME: Implement background-origin.
-
-            for (size_t i = 0; i < parts.size(); ++i) {
-                auto& part = parts[i];
-
-                // FIXME: Handle multiple backgrounds.
-                if (part.is(Token::Type::Comma))
-                    break;
-
-                auto value = Parser::parse_css_value(context, property_id, part);
-                if (!value) {
-                    dbgln("Unable to parse token in `background` as a CSS value: '{}'", part.to_debug_string());
-                    return;
-                }
-
-                if (value->is_color()) {
-                    if (background_color_value)
-                        return;
-                    background_color_value = move(value);
-                    continue;
-                }
-                if (is_background_image(*value)) {
-                    if (background_image_value)
-                        return;
-                    background_image_value = move(value);
-                    continue;
-                }
-                if (is_background_repeat(*value)) {
-                    if (repeat_x_value)
-                        return;
-
-                    auto value_id = value->to_identifier();
-                    if (value_id == ValueID::RepeatX || value_id == ValueID::RepeatY) {
-                        repeat_x_value = IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::Repeat : ValueID::NoRepeat);
-                        repeat_y_value = IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::NoRepeat : ValueID::Repeat);
-                        continue;
-                    }
-
-                    // Check following value, if it's also a repeat, set both.
-                    if (i + 1 < parts.size()) {
-                        auto next_value = Parser::parse_css_value(context, property_id, parts[i + 1]);
-                        if (next_value && is_background_repeat(*next_value)) {
-                            ++i;
-                            repeat_x_value = move(value);
-                            repeat_y_value = move(next_value);
-                            continue;
-                        }
-                    }
-                    repeat_x_value = value;
-                    repeat_y_value = value;
-                    continue;
-                }
-
-                dbgln("Unhandled token in `background` declaration: '{}'", part.to_debug_string());
-                return;
+        if (value.is_value_list()) {
+            auto& background_list = static_cast<CSS::StyleValueList const&>(value).values();
+            // FIXME: Handle multiple backgrounds.
+            if (!background_list.is_empty()) {
+                auto& background = background_list.first();
+                if (background.is_background())
+                    set_single_background(static_cast<CSS::BackgroundStyleValue const&>(background));
             }
-
-            if (background_color_value)
-                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, background_color_value.release_nonnull(), document);
-            if (background_image_value)
-                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, background_image_value.release_nonnull(), document);
-            if (repeat_x_value)
-                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, repeat_x_value.release_nonnull(), document, true);
-            if (repeat_y_value)
-                set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, repeat_y_value.release_nonnull(), document, true);
-
+            return;
+        }
+        if (value.is_builtin()) {
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundColor, value, document);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundImage, value, document);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatX, value, document, true);
+            set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundRepeatY, value, document, true);
             return;
         }
 
@@ -847,11 +753,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::BackgroundImage) {
-        if (is_background_image(value)) {
-            style.set_property(CSS::PropertyID::BackgroundImage, value);
-            return;
-        }
-
         // FIXME: Remove string parsing once DeprecatedCSSParser is gone.
         if (value.is_string()) {
             return;
@@ -882,7 +783,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        dbgln("Unsure what to do with CSS background-image value '{}'", value.to_string());
+        style.set_property(CSS::PropertyID::BackgroundImage, value);
         return;
     }
 
@@ -899,10 +800,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                 set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, value, document, true);
             }
         };
-
-        if (is_background_repeat(value)) {
-            assign_background_repeat_from_single_value(value);
-        }
 
         if (value.is_component_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
@@ -922,8 +819,10 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                 set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, repeat_values[0], document, true);
                 set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, repeat_values[1], document, true);
             }
+            return;
         }
 
+        assign_background_repeat_from_single_value(value);
         return;
     }
 

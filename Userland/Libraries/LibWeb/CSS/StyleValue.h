@@ -229,6 +229,7 @@ public:
         ValueList,
         ComponentValueList,
         Calculated,
+        Background,
         BoxShadow,
         Font,
     };
@@ -247,6 +248,7 @@ public:
     bool is_value_list() const { return type() == Type::ValueList; }
     bool is_component_value_list() const { return type() == Type::ComponentValueList; }
     bool is_calculated() const { return type() == Type::Calculated; }
+    bool is_background() const { return type() == Type::Background; }
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
     bool is_font() const { return type() == Type::Font; }
 
@@ -623,6 +625,52 @@ private:
     URL m_url;
     WeakPtr<DOM::Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
+};
+
+class BackgroundStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<BackgroundStyleValue> create(
+        NonnullRefPtr<StyleValue> color,
+        NonnullRefPtr<StyleValue> image,
+        NonnullRefPtr<StyleValue> repeat_x,
+        NonnullRefPtr<StyleValue> repeat_y)
+    {
+        return adopt_ref(*new BackgroundStyleValue(color, image, repeat_x, repeat_y));
+    }
+    virtual ~BackgroundStyleValue() override { }
+
+    NonnullRefPtr<StyleValue> color() const { return m_color; }
+    NonnullRefPtr<StyleValue> image() const { return m_image; }
+    NonnullRefPtr<StyleValue> repeat_x() const { return m_repeat_x; }
+    NonnullRefPtr<StyleValue> repeat_y() const { return m_repeat_y; }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("Background color: {}, image: {}, repeat: {}/{}", m_color->to_string(), m_image->to_string(), m_repeat_x->to_string(), m_repeat_y->to_string());
+    }
+
+private:
+    BackgroundStyleValue(
+        NonnullRefPtr<StyleValue> color,
+        NonnullRefPtr<StyleValue> image,
+        NonnullRefPtr<StyleValue> repeat_x,
+        NonnullRefPtr<StyleValue> repeat_y)
+        : StyleValue(Type::Background)
+        , m_color(color)
+        , m_image(image)
+        , m_repeat_x(repeat_x)
+        , m_repeat_y(repeat_y)
+    {
+    }
+    NonnullRefPtr<StyleValue> m_color;
+    NonnullRefPtr<StyleValue> m_image;
+    // FIXME: background-position
+    // FIXME: background-size
+    NonnullRefPtr<StyleValue> m_repeat_x;
+    NonnullRefPtr<StyleValue> m_repeat_y;
+    // FIXME: background-attachment
+    // FIXME: background-clip
+    // FIXME: background-origin
 };
 
 class FontStyleValue final : public StyleValue {
