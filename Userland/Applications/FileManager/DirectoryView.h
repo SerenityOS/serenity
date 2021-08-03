@@ -20,6 +20,7 @@
 
 namespace FileManager {
 
+String limit_error_path(String const& path_name, int saved_errno);
 void spawn_terminal(String const& directory);
 
 class LauncherHandler : public RefCounted<LauncherHandler> {

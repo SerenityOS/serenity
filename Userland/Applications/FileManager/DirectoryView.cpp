@@ -26,6 +26,11 @@
 
 namespace FileManager {
 
+String limit_error_path(String const& path_name, int saved_errno)
+{
+    return (saved_errno == ENAMETOOLONG) ? "<very long path>" : String::formatted("\"{}\"", path_name);
+}
+
 void spawn_terminal(String const& directory)
 {
     posix_spawn_file_actions_t spawn_actions;
@@ -159,9 +164,9 @@ GUI::FileSystemModel::Node const& DirectoryView::node(GUI::ModelIndex const& ind
 
 void DirectoryView::setup_model()
 {
-    m_model->on_directory_change_error = [this](int, char const* error_string) {
+    m_model->on_directory_change_error = [this](int saved_errno, char const* error_string) {
         auto failed_path = m_model->root_path();
-        auto error_message = String::formatted("Could not read {}:\n{}", failed_path, error_string);
+        auto error_message = String::formatted("Could not read {}:\n{}", limit_error_path(failed_path, saved_errno), error_string);
         m_error_label->set_text(error_message);
         set_active_widget(m_error_label);
 
@@ -175,6 +180,7 @@ void DirectoryView::setup_model()
     };
 
     m_model->on_rename_error = [this](int, char const* error_string) {
+        // TODO: Output the path of the file that couldn't be renamed (`m_model->root_path()`?) inside of `limit_error_path()`
         GUI::MessageBox::show_error(window(), String::formatted("Unable to rename file: {}", error_string));
     };
 
@@ -511,7 +517,7 @@ void DirectoryView::setup_actions()
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
                 auto saved_errno = errno;
-                GUI::MessageBox::show(window(), String::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), String::formatted("mkdir({}) failed: {}", limit_error_path(new_dir_path, saved_errno), strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
             }
         }
     });
@@ -524,7 +530,7 @@ void DirectoryView::setup_actions()
             int rc = stat(new_file_path.characters(), &st);
             if ((rc < 0 && errno != ENOENT)) {
                 auto saved_errno = errno;
-                GUI::MessageBox::show(window(), String::formatted("stat(\"{}\") failed: {}", new_file_path, strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), String::formatted("stat({}) failed: {}", limit_error_path(new_file_path, saved_errno), strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
                 return;
             }
             if (rc == 0) {
@@ -534,7 +540,7 @@ void DirectoryView::setup_actions()
             int fd = creat(new_file_path.characters(), 0666);
             if (fd < 0) {
                 auto saved_errno = errno;
-                GUI::MessageBox::show(window(), String::formatted("creat(\"{}\") failed: {}", new_file_path, strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
+                GUI::MessageBox::show(window(), String::formatted("creat({}) failed: {}", limit_error_path(new_file_path, saved_errno), strerror(saved_errno)), "Error", GUI::MessageBox::Type::Error);
                 return;
             }
             rc = close(fd);
