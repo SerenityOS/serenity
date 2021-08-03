@@ -23,7 +23,6 @@
 //     3400;<CJK Ideograph Extension A, First>;Lo;0;L;;;;;N;;;;;
 //     4DBF;<CJK Ideograph Extension A, Last>;Lo;0;L;;;;;N;;;;;
 struct CodePointRange {
-    u32 index;
     u32 first;
     u32 last;
 };
@@ -55,7 +54,6 @@ struct Alias {
 // Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#UnicodeData.txt
 //                     https://www.unicode.org/reports/tr44/#General_Category_Values
 struct CodePointData {
-    u32 index { 0 };
     u32 code_point { 0 };
     String name;
     String general_category;
@@ -110,7 +108,7 @@ struct UnicodeData {
     // https://unicode.org/reports/tr18/#General_Category_Property
     PropList prop_list {
         { "Any"sv, {} },
-        { "ASCII"sv, { { 0, 0, 0x7f } } },
+        { "ASCII"sv, { { 0, 0x7f } } },
     };
     Vector<Alias> prop_aliases;
 
@@ -207,10 +205,10 @@ static void parse_prop_list(Core::File& file, PropList& prop_list)
 
             auto begin = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
             auto end = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[1]).value();
-            code_points.append({ 0, begin, end });
+            code_points.append({ begin, end });
         } else {
             auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(code_point_range).value();
-            code_points.append({ 0, code_point, code_point });
+            code_points.append({ code_point, code_point });
         }
     }
 }
@@ -296,10 +294,6 @@ static void parse_value_alias_list(Core::File& file, StringView desired_category
 static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
 {
     Optional<u32> code_point_range_start;
-    Optional<u32> code_point_range_index;
-
-    Optional<u32> last_contiguous_code_point;
-    u32 previous_code_point = 0;
 
     while (file.can_read_line()) {
         auto line = file.read_line();
@@ -310,7 +304,6 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
         VERIFY(segments.size() == 15);
 
         CodePointData data {};
-        data.index = static_cast<u32>(unicode_data.code_point_data.size());
         data.code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
         data.name = move(segments[1]);
         data.general_category = move(segments[2]);
@@ -328,23 +321,17 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
         data.simple_titlecase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[14]);
 
         if (data.name.starts_with("<"sv) && data.name.ends_with(", First>")) {
-            VERIFY(!code_point_range_start.has_value() && !code_point_range_index.has_value());
-
+            VERIFY(!code_point_range_start.has_value());
             code_point_range_start = data.code_point;
-            code_point_range_index = data.index;
 
             data.name = data.name.substring(1, data.name.length() - 9);
         } else if (data.name.starts_with("<"sv) && data.name.ends_with(", Last>")) {
-            VERIFY(code_point_range_start.has_value() && code_point_range_index.has_value());
+            VERIFY(code_point_range_start.has_value());
 
-            unicode_data.code_point_ranges.append({ *code_point_range_index, *code_point_range_start, data.code_point });
+            unicode_data.code_point_ranges.append({ *code_point_range_start, data.code_point });
             data.name = data.name.substring(1, data.name.length() - 8);
 
             code_point_range_start.clear();
-            code_point_range_index.clear();
-        } else if ((data.code_point > 0) && (data.code_point - previous_code_point) != 1) {
-            if (!last_contiguous_code_point.has_value())
-                last_contiguous_code_point = previous_code_point;
         }
 
         for (auto const& casing : unicode_data.special_casing) {
@@ -381,11 +368,8 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
         if (!unicode_data.general_categories.contains_slow(data.general_category))
             unicode_data.general_categories.append(data.general_category);
 
-        previous_code_point = data.code_point;
         unicode_data.code_point_data.append(move(data));
     }
-
-    unicode_data.last_contiguous_code_point = *last_contiguous_code_point;
 }
 
 static void generate_unicode_data_header(UnicodeData& unicode_data)
@@ -557,12 +541,11 @@ static void generate_unicode_data_implementation(UnicodeData unicode_data)
 
     generator.set("special_casing_size", String::number(unicode_data.special_casing.size()));
     generator.set("code_point_data_size", String::number(unicode_data.code_point_data.size()));
-    generator.set("last_contiguous_code_point", String::formatted("0x{:x}", unicode_data.last_contiguous_code_point));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
 #include <AK/CharacterTypes.h>
-#include <AK/Find.h>
+#include <AK/HashMap.h>
 #include <AK/StringView.h>
 #include <LibUnicode/UnicodeData.h>
 
@@ -655,17 +638,27 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
     generator.append(R"~~~(
 } };
 
+static HashMap<u32, UnicodeData const*> const& ensure_code_point_map()
+{
+    static HashMap<u32, UnicodeData const*> code_point_to_data_map;
+    code_point_to_data_map.ensure_capacity(s_unicode_data.size());
+
+    for (auto const& unicode_data : s_unicode_data)
+        code_point_to_data_map.set(unicode_data.code_point, &unicode_data);
+
+    return code_point_to_data_map;
+}
+
 static Optional<u32> index_of_code_point_in_range(u32 code_point)
 {)~~~");
 
     for (auto const& range : unicode_data.code_point_ranges) {
-        generator.set("index", String::formatted("{}", range.index));
         generator.set("first", String::formatted("{:#x}", range.first));
         generator.set("last", String::formatted("{:#x}", range.last));
 
         generator.append(R"~~~(
     if ((code_point > @first@) && (code_point < @last@))
-        return @index@;)~~~");
+        return @first@;)~~~");
     }
 
     generator.append(R"~~~(
@@ -676,21 +669,18 @@ namespace Detail {
 
 Optional<UnicodeData> unicode_data_for_code_point(u32 code_point)
 {
+    static auto const& code_point_to_data_map = ensure_code_point_map();
     VERIFY(is_unicode(code_point));
 
-    if (code_point <= @last_contiguous_code_point@)
-        return s_unicode_data[code_point];
+    if (auto data = code_point_to_data_map.get(code_point); data.has_value())
+        return *(data.value());
 
     if (auto index = index_of_code_point_in_range(code_point); index.has_value()) {
-        auto data_for_range = s_unicode_data[*index];
+        auto data_for_range = *(code_point_to_data_map.get(*index).value());
         data_for_range.simple_uppercase_mapping = code_point;
         data_for_range.simple_lowercase_mapping = code_point;
         return data_for_range;
     }
-
-    auto it = AK::find_if(s_unicode_data.begin(), s_unicode_data.end(), [code_point](auto const& data) { return data.code_point == code_point; });
-    if (it != s_unicode_data.end())
-        return *it;
 
     return {};
 }
