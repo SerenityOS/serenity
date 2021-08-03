@@ -4,9 +4,55 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Atomic.h>
 #include <AK/Time.h>
+#include <LibCore/ElapsedTimer.h>
 #include <LibTest/TestCase.h>
+#include <signal.h>
+#include <signal_numbers.h>
 #include <unistd.h>
+
+class SuccessContext {
+public:
+    static Atomic<bool> alarm_fired;
+
+    static Core::ElapsedTimer signal_timer;
+
+    static constexpr auto timer_value = Time::from_seconds(1);
+
+    static void test_signal_handler(int signal)
+    {
+        auto actual_duration = Time::from_milliseconds(SuccessContext::signal_timer.elapsed());
+        auto expected_duration = SuccessContext::timer_value;
+
+        // Add a small buffer to allow for latency on the system.
+        constexpr auto buffer_duration = Time::from_milliseconds(50);
+
+        dbgln("Signal Times - Actual: {} Expected: {}", actual_duration.to_milliseconds(), expected_duration.to_milliseconds());
+        EXPECT(actual_duration >= expected_duration);
+        EXPECT(actual_duration < expected_duration + buffer_duration);
+
+        EXPECT_EQ(signal, SIGALRM);
+        SuccessContext::alarm_fired = true;
+    }
+};
+
+Atomic<bool> SuccessContext::alarm_fired { false };
+Core::ElapsedTimer SuccessContext::signal_timer {};
+
+TEST_CASE(success_case)
+{
+    signal(SIGALRM, SuccessContext::test_signal_handler);
+
+    SuccessContext::signal_timer.start();
+    auto previous_time = alarm(SuccessContext::timer_value.to_seconds());
+    EXPECT_EQ(previous_time, 0u);
+
+    auto sleep_time = SuccessContext::timer_value + Time::from_seconds(1);
+    sleep(sleep_time.to_seconds());
+
+    EXPECT(SuccessContext::alarm_fired);
+}
 
 // Regression test for issues #9071
 // See: https://github.com/SerenityOS/serenity/issues/9071
