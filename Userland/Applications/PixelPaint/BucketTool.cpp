@@ -102,8 +102,11 @@ GUI::Widget* BucketTool::get_properties_widget()
         threshold_slider.set_fixed_height(20);
         threshold_slider.set_range(0, 100);
         threshold_slider.set_value(m_threshold);
-        threshold_slider.on_change = [this](int value) {
+        threshold_slider.set_tooltip(String::formatted("{}%", m_threshold));
+
+        threshold_slider.on_change = [&](int value) {
             m_threshold = value;
+            threshold_slider.set_tooltip(String::formatted("{}%", value));
         };
     }
 

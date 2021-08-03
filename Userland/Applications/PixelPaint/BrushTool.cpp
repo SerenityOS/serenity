@@ -130,8 +130,11 @@ GUI::Widget* BrushTool::get_properties_widget()
         size_slider.set_fixed_height(20);
         size_slider.set_range(1, 100);
         size_slider.set_value(m_size);
-        size_slider.on_change = [this](int value) {
+        size_slider.set_tooltip(String::formatted("{}px", m_size));
+
+        size_slider.on_change = [&](int value) {
             m_size = value;
+            size_slider.set_tooltip(String::formatted("{}px", value));
         };
 
         auto& hardness_container = m_properties_widget->add<GUI::Widget>();
@@ -146,8 +149,11 @@ GUI::Widget* BrushTool::get_properties_widget()
         hardness_slider.set_fixed_height(20);
         hardness_slider.set_range(1, 99);
         hardness_slider.set_value(m_hardness);
-        hardness_slider.on_change = [this](int value) {
+        hardness_slider.set_tooltip(String::formatted("{}%", m_hardness));
+
+        hardness_slider.on_change = [&](int value) {
             m_hardness = value;
+            hardness_slider.set_tooltip(String::formatted("{}%", value));
         };
     }
 

@@ -47,8 +47,11 @@ GUI::Widget* ZoomTool::get_properties_widget()
         sensitivity_slider.set_fixed_height(20);
         sensitivity_slider.set_range(1, 100);
         sensitivity_slider.set_value(100 * m_sensitivity);
-        sensitivity_slider.on_change = [this](int value) {
+        sensitivity_slider.set_tooltip(String::formatted("{:.2}", (double)m_sensitivity / 100.0));
+
+        sensitivity_slider.on_change = [&](int value) {
             m_sensitivity = (double)value / 100.0;
+            sensitivity_slider.set_tooltip(String::formatted("{:.2}", (double)value / 100.0));
         };
     }
 
