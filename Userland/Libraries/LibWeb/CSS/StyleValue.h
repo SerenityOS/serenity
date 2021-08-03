@@ -232,6 +232,7 @@ public:
         Background,
         BoxShadow,
         Font,
+        ListStyle,
     };
 
     Type type() const { return m_type; }
@@ -251,6 +252,7 @@ public:
     bool is_background() const { return type() == Type::Background; }
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
     bool is_font() const { return type() == Type::Font; }
+    bool is_list_style() const { return type() == Type::ListStyle; }
 
     bool is_builtin() const { return is_inherit() || is_initial(); }
 
@@ -715,6 +717,43 @@ private:
     NonnullRefPtr<StyleValue> m_line_height;
     NonnullRefPtrVector<StyleValue> m_font_families;
     // FIXME: Implement font-stretch and font-variant.
+};
+
+class ListStyleStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<ListStyleStyleValue> create(
+        NonnullRefPtr<StyleValue> position,
+        NonnullRefPtr<StyleValue> image,
+        NonnullRefPtr<StyleValue> style_type)
+    {
+        return adopt_ref(*new ListStyleStyleValue(position, image, style_type));
+    }
+    virtual ~ListStyleStyleValue() override { }
+
+    NonnullRefPtr<StyleValue> position() const { return m_position; }
+    NonnullRefPtr<StyleValue> image() const { return m_image; }
+    NonnullRefPtr<StyleValue> style_type() const { return m_style_type; }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("ListStyle position: {}, image: {}, style_type: {}", m_position->to_string(), m_image->to_string(), m_style_type->to_string());
+    }
+
+private:
+    ListStyleStyleValue(
+        NonnullRefPtr<StyleValue> position,
+        NonnullRefPtr<StyleValue> image,
+        NonnullRefPtr<StyleValue> style_type)
+        : StyleValue(Type::ListStyle)
+        , m_position(position)
+        , m_image(image)
+        , m_style_type(style_type)
+    {
+    }
+
+    NonnullRefPtr<StyleValue> m_position;
+    NonnullRefPtr<StyleValue> m_image;
+    NonnullRefPtr<StyleValue> m_style_type;
 };
 
 class StyleValueList final : public StyleValue {
