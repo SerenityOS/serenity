@@ -97,6 +97,7 @@ set(SOURCES
     ToolbarContainer.cpp
     TreeView.cpp
     UndoStack.cpp
+    ValueSlider.cpp
     Variant.cpp
     VimEditingEngine.cpp
     Widget.cpp

@@ -74,6 +74,7 @@ class FontsChangeEvent;
 class Toolbar;
 class ToolbarContainer;
 class TreeView;
+class ValueSlider;
 class Variant;
 class VerticalBoxLayout;
 class VerticalSlider;

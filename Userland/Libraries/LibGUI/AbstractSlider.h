@@ -27,7 +27,7 @@ public:
     bool jump_to_cursor() const { return m_jump_to_cursor; }
 
     void set_range(int min, int max);
-    void set_value(int);
+    virtual void set_value(int);
 
     void set_min(int min) { set_range(min, max()); }
     void set_max(int max) { set_range(min(), max); }
