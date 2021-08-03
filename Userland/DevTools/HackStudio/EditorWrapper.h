@@ -52,6 +52,8 @@ public:
     void update_diff();
     Vector<Diff::Hunk> const& hunks() const { return m_hunks; }
 
+    Function<void()> on_change;
+
 private:
     EditorWrapper();
 

@@ -43,6 +43,8 @@ EditorWrapper::EditorWrapper()
     };
 
     m_editor->on_change = [this] {
+        if (this->on_change)
+            this->on_change();
         bool was_dirty = m_document_dirty;
         m_document_dirty = true;
         if (!was_dirty)
