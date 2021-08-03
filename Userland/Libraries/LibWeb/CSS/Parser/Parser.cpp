@@ -1787,6 +1787,180 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context,
     return BoxShadowStyleValue::create(offset_x, offset_y, blur_radius, color);
 }
 
+RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto is_font_size = [](StyleValue const& value) -> bool {
+        if (value.is_length())
+            return true;
+        switch (value.to_identifier()) {
+        case ValueID::XxSmall:
+        case ValueID::XSmall:
+        case ValueID::Small:
+        case ValueID::Medium:
+        case ValueID::Large:
+        case ValueID::XLarge:
+        case ValueID::XxLarge:
+        case ValueID::XxxLarge:
+        case ValueID::Smaller:
+        case ValueID::Larger:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    auto is_font_style = [](StyleValue const& value) -> bool {
+        // FIXME: Handle angle parameter to `oblique`: https://www.w3.org/TR/css-fonts-4/#font-style-prop
+        switch (value.to_identifier()) {
+        case ValueID::Normal:
+        case ValueID::Italic:
+        case ValueID::Oblique:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    auto is_font_weight = [](StyleValue const& value) -> bool {
+        if (value.is_numeric()) {
+            auto weight = static_cast<NumericStyleValue const&>(value).value();
+            return (weight >= 1 && weight <= 1000);
+        }
+        switch (value.to_identifier()) {
+        case ValueID::Normal:
+        case ValueID::Bold:
+        case ValueID::Bolder:
+        case ValueID::Lighter:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    auto is_line_height = [](StyleValue const& value) -> bool {
+        if (value.is_numeric())
+            return true;
+        if (value.is_length())
+            return true;
+        if (value.to_identifier() == ValueID::Normal)
+            return true;
+        return false;
+    };
+
+    auto is_font_family = [](StyleValue const& value) -> bool {
+        if (value.is_string())
+            return true;
+        switch (value.to_identifier()) {
+        case ValueID::Cursive:
+        case ValueID::Fantasy:
+        case ValueID::Monospace:
+        case ValueID::Serif:
+        case ValueID::SansSerif:
+        case ValueID::UiMonospace:
+        case ValueID::UiRounded:
+        case ValueID::UiSerif:
+        case ValueID::UiSansSerif:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    RefPtr<StyleValue> font_style;
+    RefPtr<StyleValue> font_weight;
+    RefPtr<StyleValue> font_size;
+    RefPtr<StyleValue> line_height;
+    NonnullRefPtrVector<StyleValue> font_families;
+    // FIXME: Implement font-stretch and font-variant.
+
+    // FIXME: Handle system fonts. (caption, icon, menu, message-box, small-caption, status-bar)
+
+    // Several sub-properties can be "normal", and appear in any order: style, variant, weight, stretch
+    // So, we have to handle that separately.
+    int normal_count = 0;
+
+    for (size_t i = 0; i < component_values.size(); ++i) {
+        auto value = parse_css_value(context, PropertyID::Font, component_values[i]);
+        if (!value)
+            return nullptr;
+
+        if (value->to_identifier() == ValueID::Normal) {
+            normal_count++;
+            continue;
+        }
+        if (is_font_style(*value)) {
+            if (font_style)
+                return nullptr;
+            font_style = value.release_nonnull();
+            continue;
+        }
+        if (is_font_weight(*value)) {
+            if (font_weight)
+                return nullptr;
+            font_weight = value.release_nonnull();
+            continue;
+        }
+        if (is_font_size(*value)) {
+            if (font_size)
+                return nullptr;
+            font_size = value.release_nonnull();
+
+            // Consume `/ line-height` if present
+            if (i + 2 < component_values.size()) {
+                auto maybe_solidus = component_values[i + 1];
+                if (maybe_solidus.is(Token::Type::Delim) && maybe_solidus.token().delim() == "/"sv) {
+                    auto maybe_line_height = parse_css_value(context, PropertyID::Font, component_values[i + 2]);
+                    if (!(maybe_line_height && is_line_height(*maybe_line_height)))
+                        return nullptr;
+                    line_height = maybe_line_height.release_nonnull();
+                    i += 2;
+                }
+            }
+
+            // Consume font-family
+            // FIXME: Handle multiple font-families separated by commas, for fallback purposes.
+            if (i + 1 < component_values.size()) {
+                auto& font_family_part = component_values[i + 1];
+                auto maybe_font_family = parse_css_value(context, PropertyID::Font, font_family_part);
+                if (!maybe_font_family) {
+                    // Single-word font-families may not be quoted. We convert it to a String for convenience.
+                    if (font_family_part.is(Token::Type::Ident))
+                        maybe_font_family = StringStyleValue::create(font_family_part.token().ident());
+                    else
+                        return nullptr;
+                } else if (!is_font_family(*maybe_font_family)) {
+                    dbgln("Unable to parse '{}' as a font-family.", font_family_part.to_debug_string());
+                    return nullptr;
+                }
+
+                font_families.append(maybe_font_family.release_nonnull());
+            }
+            break;
+        }
+
+        return nullptr;
+    }
+
+    // Since normal is the default value for all the properties that can have it, we don't have to actually
+    // set anything to normal here. It'll be set when we create the FontStyleValue below.
+    // We just need to make sure we were not given more normals than will fit.
+    int unset_value_count = (font_style ? 1 : 0) + (font_weight ? 1 : 0);
+    if (unset_value_count < normal_count)
+        return nullptr;
+
+    if (!font_size || font_families.is_empty())
+        return nullptr;
+
+    if (!font_style)
+        font_style = IdentifierStyleValue::create(ValueID::Normal);
+    if (!font_weight)
+        font_weight = IdentifierStyleValue::create(ValueID::Normal);
+    if (!line_height)
+        line_height = IdentifierStyleValue::create(ValueID::Normal);
+
+    return FontStyleValue::create(font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), move(font_families));
+}
+
 RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 {
     auto component_values = parse_as_list_of_component_values();
@@ -1816,9 +1990,17 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         return {};
 
     // Special-case property handling
-    if (property_id == PropertyID::BoxShadow) {
+    switch (property_id) {
+    case PropertyID::BoxShadow:
         if (auto parsed_box_shadow = parse_box_shadow_value(m_context, component_values))
             return parsed_box_shadow;
+        break;
+    case PropertyID::Font:
+        if (auto parsed_value = parse_font_value(m_context, component_values))
+            return parsed_value;
+        break;
+    default:
+        break;
     }
 
     if (component_values.size() == 1)
