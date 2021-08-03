@@ -295,7 +295,7 @@ bool HackStudioWidget::open_file(const String& full_filename)
     current_editor().set_focus(true);
 
     current_editor().on_cursor_change = [this] { update_statusbar(); };
-    current_editor().on_change = [this] { update_gml_preview(); };
+    current_editor_wrapper().on_change = [this] { update_gml_preview(); };
     update_gml_preview();
 
     return true;
@@ -541,7 +541,7 @@ void HackStudioWidget::add_new_editor(GUI::Widget& parent)
     wrapper->editor().set_focus(true);
     wrapper->set_project_root(LexicalPath(m_project->root_path()));
     wrapper->editor().on_cursor_change = [this] { update_statusbar(); };
-    wrapper->editor().on_change = [this] { update_gml_preview(); };
+    wrapper->on_change = [this] { update_gml_preview(); };
     set_edit_mode(EditMode::Text);
 }
 
