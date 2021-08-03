@@ -31,6 +31,7 @@ static int max_ms;
 static const char* host;
 static int payload_size = -1;
 static int interval = 1;
+static int ttl = 64;
 
 static void closing_statistics()
 {
@@ -64,6 +65,7 @@ int main(int argc, char** argv)
     args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets.", "count", 'c', "count");
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
     args_parser.add_option(interval, "Packet interval in seconds", "interval", 'i', "interval");
+    args_parser.add_option(ttl, "TTL of the ECHO_REQUEST packets.", "ttl", 'm', "ttl");
     args_parser.parse(argc, argv);
 
     if (payload_size < 0) {
@@ -102,6 +104,12 @@ int main(int argc, char** argv)
     };
 
     int rc = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    if (rc < 0) {
+        perror("setsockopt");
+        return 1;
+    }
+
+    rc = setsockopt(fd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl));
     if (rc < 0) {
         perror("setsockopt");
         return 1;
