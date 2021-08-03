@@ -30,6 +30,7 @@ static int min_ms;
 static int max_ms;
 static const char* host;
 static int payload_size = -1;
+static int interval = 1;
 
 static void closing_statistics()
 {
@@ -62,11 +63,17 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(host, "Host to ping", "host");
     args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets.", "count", 'c', "count");
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
+    args_parser.add_option(interval, "Packet interval in seconds", "interval", 'i', "interval");
     args_parser.parse(argc, argv);
 
     if (payload_size < 0) {
         // Use the default.
         payload_size = 32 - sizeof(struct icmphdr);
+    }
+
+    if (interval < 1) {
+        warnln("Interval must be at least 1 second.");
+        return 1;
     }
 
     int fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
@@ -213,7 +220,7 @@ int main(int argc, char** argv)
             break;
         }
 
-        sleep(1);
+        sleep(interval);
     }
 
     return 0;
