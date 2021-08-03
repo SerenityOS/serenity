@@ -71,6 +71,11 @@ int main(int argc, char** argv)
         payload_size = 32 - sizeof(struct icmphdr);
     }
 
+    if (payload_size > (int)(10 * MiB)) {
+        warnln("Payload size too big - maximum is 10 MiB.");
+        return 1;
+    }
+
     if (interval < 1) {
         warnln("Interval must be at least 1 second.");
         return 1;
