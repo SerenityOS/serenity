@@ -2063,6 +2063,116 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
     return FontStyleValue::create(font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), move(font_families));
 }
 
+RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto is_list_style_image = [](StyleValue const& value) -> bool {
+        if (value.is_image())
+            return true;
+        if (value.is_identifier() && value.to_identifier() == ValueID::None)
+            return true;
+
+        return false;
+    };
+
+    auto is_list_style_position = [](StyleValue const& value) -> bool {
+        switch (value.to_identifier()) {
+        case ValueID::Inside:
+        case ValueID::Outside:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    auto is_list_style_type = [](StyleValue const& value) -> bool {
+        // FIXME: Handle strings and symbols("...") syntax
+        switch (value.to_identifier()) {
+        case CSS::ValueID::None:
+        case CSS::ValueID::Disc:
+        case CSS::ValueID::Circle:
+        case CSS::ValueID::Square:
+        case CSS::ValueID::Decimal:
+        case CSS::ValueID::DecimalLeadingZero:
+        case CSS::ValueID::LowerAlpha:
+        case CSS::ValueID::LowerLatin:
+        case CSS::ValueID::UpperAlpha:
+        case CSS::ValueID::UpperLatin:
+        case CSS::ValueID::UpperRoman:
+        case CSS::ValueID::LowerRoman:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    if (component_values.size() > 3)
+        return nullptr;
+
+    RefPtr<StyleValue> list_position;
+    RefPtr<StyleValue> list_image;
+    RefPtr<StyleValue> list_type;
+    int found_nones = 0;
+
+    for (auto& part : component_values) {
+        auto value = parse_css_value(context, PropertyID::ListStyle, part);
+        if (!value)
+            return nullptr;
+
+        if (value->to_identifier() == ValueID::None) {
+            found_nones++;
+            continue;
+        }
+
+        if (is_list_style_position(*value)) {
+            if (list_position)
+                return nullptr;
+            list_position = value.release_nonnull();
+            continue;
+        }
+        if (is_list_style_image(*value)) {
+            if (list_image)
+                return nullptr;
+            list_image = value.release_nonnull();
+            continue;
+        }
+        if (is_list_style_type(*value)) {
+            if (list_type)
+                return nullptr;
+            list_type = value.release_nonnull();
+            continue;
+        }
+    }
+
+    if (found_nones > 2)
+        return nullptr;
+
+    if (found_nones == 2) {
+        if (list_image || list_type)
+            return nullptr;
+        auto none = IdentifierStyleValue::create(ValueID::None);
+        list_image = none;
+        list_type = none;
+
+    } else if (found_nones == 1) {
+        if (list_image && list_type)
+            return nullptr;
+        auto none = IdentifierStyleValue::create(ValueID::None);
+        if (!list_image)
+            list_image = none;
+        if (!list_type)
+            list_type = none;
+    }
+
+    if (!list_position)
+        list_position = IdentifierStyleValue::create(ValueID::Outside);
+    if (!list_image)
+        list_image = IdentifierStyleValue::create(ValueID::None);
+    if (!list_type)
+        list_type = IdentifierStyleValue::create(ValueID::Disc);
+
+    return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
+}
+
 RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 {
     auto component_values = parse_as_list_of_component_values();
@@ -2103,6 +2213,10 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         break;
     case PropertyID::Font:
         if (auto parsed_value = parse_font_value(m_context, component_values))
+            return parsed_value;
+        break;
+    case PropertyID::ListStyle:
+        if (auto parsed_value = parse_list_style_value(m_context, component_values))
             return parsed_value;
         break;
     default:
