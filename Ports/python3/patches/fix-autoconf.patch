@@ -1,5 +1,5 @@
---- Python-3.9.6/config.sub	2021-02-21 20:22:43.901024503 +0100
-+++ Python-3.9.6/config.sub	2021-02-21 20:24:35.079400552 +0100
+--- Python-3.10.0rc1/config.sub	2021-08-03 19:03:07.361000000 +0100
++++ Python-3.10.0rc1/config.sub	2021-08-03 19:04:06.425786525 +0100
 @@ -1485,6 +1485,8 @@
  	-oss*)
  		os=-sysv3
@@ -9,8 +9,8 @@
  	-svr4*)
  		os=-sysv4
  		;;
---- Python-3.9.6/configure.ac	2021-05-03 15:54:42.000000000 +0100
-+++ Python-3.9.6/configure.ac	2021-05-06 16:40:34.503092204 +0100
+--- Python-3.10.0rc1/configure.ac	2021-08-03 19:04:59.784000000 +0100
++++ Python-3.10.0rc1/configure.ac	2021-08-03 19:08:42.069896469 +0100
 @@ -391,6 +391,9 @@
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
@@ -39,9 +39,18 @@
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
---- Python-3.9.6/configure	2021-07-07 19:12:57.444219201 +0100
-+++ Python-3.9.6/configure	2021-07-07 19:14:55.184825202 +0100
-@@ -3295,6 +3295,9 @@
+@@ -2757,7 +2764,7 @@
+ 	    LINKFORSHARED="-Wl,-E -Wl,+s";;
+ #	    LINKFORSHARED="-Wl,-E -Wl,+s -Wl,+b\$(BINLIBDEST)/lib-dynload";;
+ 	Linux-android*) LINKFORSHARED="-pie -Xlinker -export-dynamic";;
+-	Linux*|GNU*) LINKFORSHARED="-Xlinker -export-dynamic";;
++	Linux*|GNU*|SerenityOS*) LINKFORSHARED="-Xlinker -export-dynamic";;
+ 	# -u libsys_s pulls in all symbols in libsys
+ 	Darwin/*)
+ 		LINKFORSHARED="$extra_undefs -framework CoreFoundation"
+--- Python-3.10.0rc1/configure	2021-08-03 19:06:33.593000000 +0100
++++ Python-3.10.0rc1/configure	2021-08-03 19:08:53.870858123 +0100
+@@ -3697,6 +3697,9 @@
         # a lot of different things including 'define_xopen_source'
         # in the case statement below.
  	case "$host" in
@@ -51,7 +60,7 @@
  	*-*-linux-android*)
  		ac_sys_system=Linux-android
  		;;
-@@ -3333,6 +3336,7 @@
+@@ -3735,6 +3738,7 @@
  	linux*) MACHDEP="linux";;
  	cygwin*) MACHDEP="cygwin";;
  	darwin*) MACHDEP="darwin";;
@@ -59,8 +68,8 @@
  	'')	MACHDEP="unknown";;
      esac
  fi
-@@ -3342,6 +3346,9 @@
-
+@@ -3744,6 +3748,9 @@
+ 
  if test "$cross_compiling" = yes; then
  	case "$host" in
 +	*-*-serenity*)
@@ -69,11 +78,12 @@
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
-@@ -9649,6 +9656,7 @@
+@@ -10788,7 +10795,7 @@
+ 	    LINKFORSHARED="-Wl,-E -Wl,+s";;
  #	    LINKFORSHARED="-Wl,-E -Wl,+s -Wl,+b\$(BINLIBDEST)/lib-dynload";;
  	Linux-android*) LINKFORSHARED="-pie -Xlinker -export-dynamic";;
- 	Linux*|GNU*) LINKFORSHARED="-Xlinker -export-dynamic";;
-+	SerenityOS*) LINKFORSHARED="-Xlinker -export-dynamic";;
+-	Linux*|GNU*) LINKFORSHARED="-Xlinker -export-dynamic";;
++	Linux*|GNU*|SerenityOS*) LINKFORSHARED="-Xlinker -export-dynamic";;
  	# -u libsys_s pulls in all symbols in libsys
  	Darwin/*)
  		LINKFORSHARED="$extra_undefs -framework CoreFoundation"

@@ -18,9 +18,3 @@ Make some tweaks to Python's `setup.py` files:
 
 - Add `/usr/local/lib` / `/usr/local/include` to the system lib / include dirs, relative to the sysroot when crosscompiling. These are by default only included when not crosscompiling for some reason.
 - Add `/usr/local/include/ncurses` to the curses include paths so it can build the `_curses` module. This is by default included for a bunch of extensions, but not `_curses`.
-
-## `webbrowser.patch`
-
-Register the SerenityOS Browser in the [`webbrowser`](https://docs.python.org/3/library/webbrowser.html) module.
-
-Note: This change [has been added to upstream CPython](https://github.com/python/cpython/pull/25947) and will be included in the Python 3.10 release :^)
