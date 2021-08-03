@@ -324,10 +324,10 @@ Tab::Tab(BrowserWindow& window)
     };
 
     m_tab_context_menu = GUI::Menu::construct();
-    m_tab_context_menu->add_action(GUI::Action::create("&Reload Tab", [this](auto&) {
+    m_tab_context_menu->add_action(GUI::CommonActions::make_reload_action([this](auto&) {
         this->window().reload_action().activate();
     }));
-    m_tab_context_menu->add_action(GUI::Action::create("&Close Tab", [this](auto&) {
+    m_tab_context_menu->add_action(GUI::CommonActions::make_close_tab_action([this](auto&) {
         on_tab_close_request(*this);
     }));
     m_tab_context_menu->add_action(GUI::Action::create("&Duplicate Tab", [this](auto&) {

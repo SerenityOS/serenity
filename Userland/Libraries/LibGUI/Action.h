@@ -40,6 +40,7 @@ NonnullRefPtr<Action> make_help_action(Function<void(Action&)>, Core::Object* pa
 NonnullRefPtr<Action> make_go_back_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_go_forward_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_go_home_action(Function<void(Action&)> callback, Core::Object* parent = nullptr);
+NonnullRefPtr<Action> make_close_tab_action(Function<void(Action&)> callback, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_reload_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_select_all_action(Function<void(Action&)>, Core::Object* parent = nullptr);
 NonnullRefPtr<Action> make_rename_action(Function<void(Action&)>, Core::Object* parent = nullptr);

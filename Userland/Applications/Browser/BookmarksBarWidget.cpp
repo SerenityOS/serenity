@@ -135,10 +135,10 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
             on_bookmark_click(m_context_menu_url, Mod_Ctrl);
     }));
     m_context_menu->add_separator();
-    m_context_menu->add_action(GUI::Action::create("&Edit", [this](auto&) {
+    m_context_menu->add_action(GUI::Action::create("&Edit...", [this](auto&) {
         edit_bookmark(m_context_menu_url);
     }));
-    m_context_menu->add_action(GUI::Action::create("&Delete", [this](auto&) {
+    m_context_menu->add_action(GUI::CommonActions::make_delete_action([this](auto&) {
         remove_bookmark(m_context_menu_url);
     }));
 

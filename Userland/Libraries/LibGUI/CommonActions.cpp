@@ -136,6 +136,13 @@ NonnullRefPtr<Action> make_go_home_action(Function<void(Action&)> callback, Core
     return Action::create("Go &Home", { Mod_Alt, Key_Home }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-home.png"), move(callback), parent);
 }
 
+NonnullRefPtr<Action> make_close_tab_action(Function<void(Action&)> callback, Core::Object* parent)
+{
+    auto action = Action::create("&Close Tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/close-tab.png"), move(callback), parent);
+    action->set_status_tip("Close current tab");
+    return action;
+}
+
 NonnullRefPtr<Action> make_reload_action(Function<void(Action&)> callback, Core::Object* parent)
 {
     return Action::create("&Reload", { Mod_Ctrl, Key_R }, Key_F5, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"), move(callback), parent);
