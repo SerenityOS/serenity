@@ -431,7 +431,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     auto& layer_menu = window.add_menu("&Layer");
     layer_menu.add_action(GUI::Action::create(
-        "New &Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, [&](auto&) {
+        "New &Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-layer.png"), [&](auto&) {
             auto* editor = current_image_editor();
             if (!editor)
                 return;
@@ -458,11 +458,11 @@ void MainWidget::initialize_menubar(GUI::Window& window)
             m_layer_list_widget->cycle_through_selection(-1);
         }));
     layer_menu.add_action(GUI::Action::create(
-        "Select &Top Layer", { 0, Key_Home }, [&](auto&) {
+        "Select &Top Layer", { 0, Key_Home }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/top-layer.png"), [&](auto&) {
             m_layer_list_widget->select_top_layer();
         }));
     layer_menu.add_action(GUI::Action::create(
-        "Select B&ottom Layer", { 0, Key_End }, [&](auto&) {
+        "Select B&ottom Layer", { 0, Key_End }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/bottom-layer.png"), [&](auto&) {
             m_layer_list_widget->select_bottom_layer();
         }));
     layer_menu.add_separator();
