@@ -12,5 +12,6 @@
 #    include <assert.h>
 #    define VERIFY assert
 #    define VERIFY_NOT_REACHED() assert(false)
-#    define TODO VERIFY_NOT_REACHED
+static constexpr bool TODO = false;
+#    define TODO() VERIFY(TODO)
 #endif
