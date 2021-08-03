@@ -211,7 +211,6 @@ public:
     virtual String action_text() const override;
     const String& text() const { return m_text; }
     const TextRange& range() const { return m_range; }
-
 private:
     String m_text;
     TextRange m_range;
@@ -225,10 +224,16 @@ public:
     const TextRange& range() const { return m_range; }
     virtual bool merge_with(GUI::Command const&) override;
     virtual String action_text() const override;
-
 private:
     String m_text;
     TextRange m_range;
+};
+
+class SaveFileCommand : public TextDocumentUndoCommand {
+public:
+    SaveFileCommand(TextDocument&);
+    virtual bool no_action() const override;
+    virtual String action_text() const override;
 };
 
 }

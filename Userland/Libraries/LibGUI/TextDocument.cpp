@@ -881,6 +881,21 @@ void RemoveTextCommand::undo()
     m_document.set_all_cursors(new_cursor);
 }
 
+SaveFileCommand::SaveFileCommand(TextDocument& document)
+    : TextDocumentUndoCommand(document)
+{
+}
+
+String SaveFileCommand::action_text() const
+{
+    return "Save file";
+}
+
+bool SaveFileCommand::no_action() const 
+{
+    return true;
+}
+
 TextPosition TextDocument::insert_at(const TextPosition& position, const StringView& text, const Client* client)
 {
     TextPosition cursor = position;

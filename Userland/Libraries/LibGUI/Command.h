@@ -18,6 +18,7 @@ public:
     virtual void redo() { }
 
     virtual String action_text() const { return {}; }
+    virtual bool no_action() const { return false; }
     virtual bool merge_with(Command const&) { return false; }
 
 protected:
