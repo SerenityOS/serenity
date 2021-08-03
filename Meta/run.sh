@@ -82,6 +82,7 @@ fi
 
 SERENITY_QEMU_MIN_REQ_VERSION=5
 installed_major_version=$("$SERENITY_QEMU_BIN" -version | head -n 1 | sed -E 's/QEMU emulator version ([1-9][0-9]*|0).*/\1/')
+installed_minor_version=$("$SERENITY_QEMU_BIN" -version | head -n 1 | sed -E 's/QEMU emulator version [0-9]+\.([1-9][0-9]*|0).*/\1/')
 if [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ]; then
     echo "Required QEMU >= 5.0! Found $($SERENITY_QEMU_BIN -version | head -n 1)"
     echo "Please install a newer version of QEMU or use the Toolchain/BuildQemu.sh script."
@@ -104,10 +105,10 @@ else
     SERENITY_AUDIO_BACKEND="-audiodev pa,id=snd0"
 fi
 
-if [ "$installed_major_version" -gt 5 ]; then
-    SERENITY_AUDIO_HW="-machine pcspk-audiodev=snd0"
-else
+if [ "$installed_major_version" -eq 5 ] && [ "$installed_minor_version" -eq 0 ]; then
     SERENITY_AUDIO_HW="-soundhw pcspk"
+else
+    SERENITY_AUDIO_HW="-machine pcspk-audiodev=snd0"
 fi
 
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
