@@ -230,6 +230,8 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
 
         m_volatile = true;
         m_was_purged = false;
+
+        for_each_region([&](auto& region) { region.remap(); });
         return KSuccess;
     }
     // When a VMObject is made non-volatile, we try to commit however many pages are not currently available.
@@ -258,6 +260,7 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
 
     m_volatile = false;
     m_was_purged = false;
+    for_each_region([&](auto& region) { region.remap(); });
     return KSuccess;
 }
 
