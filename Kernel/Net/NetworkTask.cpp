@@ -347,8 +347,9 @@ void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, Re
     routing_decision.adapter->fill_in_ipv4_header(*packet, ipv4_packet.destination(),
         routing_decision.next_hop, ipv4_packet.source(), IPv4Protocol::TCP,
         buffer_size - ipv4_payload_offset, 64);
-    memset(packet->buffer.data() + ipv4_payload_offset, 0, sizeof(TCPPacket));
-    auto& rst_packet = *(TCPPacket*)(packet->buffer.data() + ipv4_payload_offset);
+
+    auto& rst_packet = *(TCPPacket*)(packet->buffer->data() + ipv4_payload_offset);
+    rst_packet = {};
     rst_packet.set_source_port(tcp_packet.destination_port());
     rst_packet.set_destination_port(tcp_packet.source_port());
     rst_packet.set_window_size(0);
