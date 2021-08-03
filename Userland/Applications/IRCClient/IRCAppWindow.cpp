@@ -73,8 +73,10 @@ void IRCAppWindow::setup_client()
 
     if (m_client->hostname().is_empty()) {
         String value;
-        if (GUI::InputBox::show(this, value, "Enter server:", "Connect to server") == GUI::InputBox::ExecCancel)
-            ::exit(0);
+        if (GUI::InputBox::show(this, value, "Enter server:", "Connect to server") == GUI::InputBox::ExecCancel) {
+            GUI::Application::the()->quit();
+            return;
+        }
 
         m_client->set_server(value, 6667);
     }
