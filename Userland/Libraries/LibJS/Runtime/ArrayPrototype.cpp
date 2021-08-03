@@ -58,6 +58,8 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.includes, includes, 1, attr);
     define_native_function(vm.names.find, find, 1, attr);
     define_native_function(vm.names.findIndex, find_index, 1, attr);
+    define_native_function(vm.names.findLast, find_last, 1, attr);
+    define_native_function(vm.names.findLastIndex, find_last_index, 1, attr);
     define_native_function(vm.names.some, some, 1, attr);
     define_native_function(vm.names.every, every, 1, attr);
     define_native_function(vm.names.splice, splice, 2, attr);
@@ -77,12 +79,15 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_iterator(), get(vm.names.values), attr);
 
     // 23.1.3.34 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
+    // With proposal, https://tc39.es/proposal-array-find-from-last/index.html#sec-array.prototype-@@unscopables
     auto* unscopable_list = Object::create(global_object, nullptr);
     unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true));
     unscopable_list->create_data_property_or_throw(vm.names.entries, Value(true));
     unscopable_list->create_data_property_or_throw(vm.names.fill, Value(true));
     unscopable_list->create_data_property_or_throw(vm.names.find, Value(true));
     unscopable_list->create_data_property_or_throw(vm.names.findIndex, Value(true));
+    unscopable_list->create_data_property_or_throw(vm.names.findLast, Value(true));
+    unscopable_list->create_data_property_or_throw(vm.names.findLastIndex, Value(true));
     unscopable_list->create_data_property_or_throw(vm.names.flat, Value(true));
     unscopable_list->create_data_property_or_throw(vm.names.flatMap, Value(true));
     unscopable_list->create_data_property_or_throw(vm.names.includes, Value(true));
@@ -1486,6 +1491,104 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_index)
             return Value(k);
 
         // e. Set k to k + 1.
+    }
+
+    // 6. Return -1𝔽.
+    return Value(-1);
+}
+
+// 1 Array.prototype.findLast ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/index.html#sec-array.prototype.findlast
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
+{
+    auto predicate = vm.argument(0);
+    auto this_arg = vm.argument(1);
+
+    // 1. Let O be ? ToObject(this value).
+    auto* object = vm.this_value(global_object).to_object(global_object);
+    if (vm.exception())
+        return {};
+
+    // 2. Let len be ? LengthOfArrayLike(O).
+    auto length = length_of_array_like(global_object, *object);
+    if (vm.exception())
+        return {};
+
+    // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+    if (!predicate.is_function()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, predicate.to_string_without_side_effects());
+        return {};
+    }
+
+    // 4. Let k be len - 1.
+    // 5. Repeat, while k ≥ 0,
+    for (i64 k = length - 1; k >= 0; --k) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        auto property_name = PropertyName { k };
+
+        // b. Let kValue be ? Get(O, Pk).
+        auto k_value = object->get(property_name);
+        if (vm.exception())
+            return {};
+
+        // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+        auto test_result = vm.call(predicate.as_function(), this_arg, k_value, Value((double)k), object);
+        if (vm.exception())
+            return {};
+
+        // d. If testResult is true, return kValue.
+        if (test_result.to_boolean())
+            return k_value;
+
+        // e. Set k to k - 1.
+    }
+
+    // 6. Return undefined.
+    return js_undefined();
+}
+
+// 2 Array.prototype.findLastIndex ( predicate [ , thisArg ] ), https://tc39.es/proposal-array-find-from-last/index.html#sec-array.prototype.findlastindex
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
+{
+    auto predicate = vm.argument(0);
+    auto this_arg = vm.argument(1);
+
+    // 1. Let O be ? ToObject(this value).
+    auto* object = vm.this_value(global_object).to_object(global_object);
+    if (vm.exception())
+        return {};
+
+    // 2. Let len be ? LengthOfArrayLike(O).
+    auto length = length_of_array_like(global_object, *object);
+    if (vm.exception())
+        return {};
+
+    // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+    if (!predicate.is_function()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, predicate.to_string_without_side_effects());
+        return {};
+    }
+
+    // 4. Let k be len - 1.
+    // 5. Repeat, while k ≥ 0,
+    for (i64 k = length - 1; k >= 0; --k) {
+        // a. Let Pk be ! ToString(𝔽(k)).
+        auto property_name = PropertyName { k };
+
+        // b. Let kValue be ? Get(O, Pk).
+        auto k_value = object->get(property_name);
+        if (vm.exception())
+            return {};
+
+        // c. Let testResult be ! ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+        auto test_result = vm.call(predicate.as_function(), this_arg, k_value, Value((double)k), object);
+        if (vm.exception())
+            return {};
+
+        // d. If testResult is true, return 𝔽(k).
+        if (test_result.to_boolean())
+            return Value((double)k);
+
+        // e. Set k to k - 1.
     }
 
     // 6. Return -1𝔽.

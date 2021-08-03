@@ -146,6 +146,8 @@ namespace JS {
     P(filter)                                \
     P(finally)                               \
     P(find)                                  \
+    P(findLast)                              \
+    P(findLastIndex)                         \
     P(findIndex)                             \
     P(fixed)                                 \
     P(flags)                                 \
