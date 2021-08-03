@@ -14,6 +14,7 @@ enum class Condition;
 enum class GeneralCategory : u64;
 enum class Locale;
 enum class Property : u64;
+enum class Script;
 enum class WordBreakProperty;
 
 struct SpecialCasing;

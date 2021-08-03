@@ -71,6 +71,7 @@ struct CodePointData {
     Optional<u32> simple_titlecase_mapping;
     Vector<u32> special_casing_indices;
     Vector<StringView> prop_list;
+    StringView script;
     StringView word_break_property;
 };
 
@@ -111,6 +112,11 @@ struct UnicodeData {
         { "ASCII"sv, { { 0, 0x7f } } },
     };
     Vector<Alias> prop_aliases;
+
+    PropList script_list {
+        { "Unknown"sv, {} },
+    };
+    Vector<Alias> script_aliases;
 
     PropList word_break_prop_list;
 };
@@ -267,9 +273,15 @@ static void parse_alias_list(Core::File& file, PropList const& prop_list, Vector
     }
 }
 
-static void parse_value_alias_list(Core::File& file, StringView desired_category, Vector<String> const& value_list, Vector<Alias>& prop_unions, Vector<Alias>& prop_aliases)
+static void parse_value_alias_list(Core::File& file, StringView desired_category, Vector<String> const& value_list, Vector<Alias> const& prop_unions, Vector<Alias>& prop_aliases, bool primary_value_is_first = true)
 {
+    VERIFY(file.seek(0));
+
     auto append_alias = [&](auto alias, auto value) {
+        // Note: The value alias file contains lines such as "Ahom = Ahom", which we should just skip.
+        if (alias == value)
+            return;
+
         // FIXME: We will, eventually, need to find where missing properties are located and parse them.
         if (!value_list.contains_slow(value) && !any_of(prop_unions, [&](auto const& u) { return value == u.alias; }))
             return;
@@ -292,8 +304,8 @@ static void parse_value_alias_list(Core::File& file, StringView desired_category
             continue;
 
         VERIFY((segments.size() == 3) || (segments.size() == 4));
-        auto value = segments[1].trim_whitespace();
-        auto alias = segments[2].trim_whitespace();
+        auto value = primary_value_is_first ? segments[1].trim_whitespace() : segments[2].trim_whitespace();
+        auto alias = primary_value_is_first ? segments[2].trim_whitespace() : segments[1].trim_whitespace();
         append_alias(alias, value);
 
         if (segments.size() == 4) {
@@ -306,6 +318,34 @@ static void parse_value_alias_list(Core::File& file, StringView desired_category
 static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
 {
     Optional<u32> code_point_range_start;
+
+    auto assign_code_point_property = [&](u32 code_point, auto const& list, auto& property, StringView default_) {
+        using PropertyType = RemoveCVReference<decltype(property)>;
+        constexpr bool is_single_item = IsSame<PropertyType, StringView>;
+
+        auto assign_property = [&](auto const& item) {
+            if constexpr (is_single_item)
+                property = item;
+            else
+                property.append(item);
+        };
+
+        for (auto const& item : list) {
+            for (auto const& range : item.value) {
+                if ((range.first <= code_point) && (code_point <= range.last)) {
+                    assign_property(item.key);
+                    break;
+                }
+            }
+            if constexpr (is_single_item) {
+                if (!property.is_empty())
+                    break;
+            }
+        }
+
+        if (property.is_empty())
+            assign_property(default_);
+    };
 
     while (file.can_read_line()) {
         auto line = file.read_line();
@@ -351,29 +391,9 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
                 data.special_casing_indices.append(casing.index);
         }
 
-        for (auto const& property : unicode_data.prop_list) {
-            for (auto const& range : property.value) {
-                if ((range.first <= data.code_point) && (data.code_point <= range.last)) {
-                    data.prop_list.append(property.key);
-                    break;
-                }
-            }
-        }
-        if (data.prop_list.is_empty())
-            data.prop_list.append("Assigned"sv);
-
-        for (auto const& property : unicode_data.word_break_prop_list) {
-            for (auto const& range : property.value) {
-                if ((range.first <= data.code_point) && (data.code_point <= range.last)) {
-                    data.word_break_property = property.key;
-                    break;
-                }
-            }
-            if (!data.word_break_property.is_empty())
-                break;
-        }
-        if (data.word_break_property.is_empty())
-            data.word_break_property = "Other"sv;
+        assign_code_point_property(data.code_point, unicode_data.prop_list, data.prop_list, "Assigned"sv);
+        assign_code_point_property(data.code_point, unicode_data.script_list, data.script, "Unknown"sv);
+        assign_code_point_property(data.code_point, unicode_data.word_break_prop_list, data.word_break_property, "Other"sv);
 
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
 
@@ -392,7 +412,7 @@ static void generate_unicode_data_header(Core::File& file, UnicodeData& unicode_
     generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
 
     auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> unions = {}, Vector<Alias> aliases = {}, bool as_bitmask = false) {
-        VERIFY((values.size() + !default_.is_empty()) <= 64);
+        VERIFY(!as_bitmask || (values.size() <= 64));
         quick_sort(values);
         quick_sort(unions, [](auto& union1, auto& union2) { return union1.alias < union2.alias; });
         quick_sort(aliases, [](auto& alias1, auto& alias2) { return alias1.alias < alias2.alias; });
@@ -476,6 +496,7 @@ namespace Unicode {
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
     generate_enum("GeneralCategory"sv, "None"sv, unicode_data.general_categories, unicode_data.general_category_unions, unicode_data.general_category_aliases, true);
     generate_enum("Property"sv, "Assigned"sv, unicode_data.prop_list.keys(), {}, unicode_data.prop_aliases, true);
+    generate_enum("Script"sv, {}, unicode_data.script_list.keys(), {}, unicode_data.script_aliases);
     generate_enum("WordBreakProperty"sv, "Other"sv, unicode_data.word_break_prop_list.keys());
 
     generator.append(R"~~~(
@@ -530,6 +551,7 @@ struct UnicodeData {
     u32 special_casing_size { 0 };
 
     Property properties { Property::Assigned };
+    Script script { Script::Unknown };
     WordBreakProperty word_break_property { WordBreakProperty::Other };
 };
 
@@ -538,6 +560,7 @@ namespace Detail {
 Optional<UnicodeData> unicode_data_for_code_point(u32 code_point);
 Optional<Property> property_from_string(StringView const& property);
 Optional<GeneralCategory> general_category_from_string(StringView const& general_category);
+Optional<Script> script_from_string(StringView const& script);
 
 }
 
@@ -644,6 +667,7 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
             first = false;
         }
 
+        generator.append(String::formatted(", Script::{}", data.script));
         generator.append(String::formatted(", WordBreakProperty::{}", data.word_break_property));
         generator.append(" },");
     }
@@ -746,6 +770,26 @@ Optional<GeneralCategory> general_category_from_string(StringView const& general
     return {};
 }
 
+Optional<Script> script_from_string(StringView const& script)
+{)~~~");
+
+    for (auto const& script : unicode_data.script_list) {
+        generator.set("script", script.key);
+        generator.append(R"~~~(
+    if (script == "@script@"sv)
+        return Script::@script@;)~~~");
+    }
+    for (auto const& alias : unicode_data.script_aliases) {
+        generator.set("script", alias.alias);
+        generator.append(R"~~~(
+    if (script == "@script@"sv)
+        return Script::@script@;)~~~");
+    }
+
+    generator.append(R"~~~(
+    return {};
+}
+
 }
 
 }
@@ -764,6 +808,7 @@ int main(int argc, char** argv)
     char const* derived_core_prop_path = nullptr;
     char const* prop_alias_path = nullptr;
     char const* prop_value_alias_path = nullptr;
+    char const* scripts_path = nullptr;
     char const* word_break_path = nullptr;
 
     Core::ArgsParser args_parser;
@@ -775,6 +820,7 @@ int main(int argc, char** argv)
     args_parser.add_option(derived_core_prop_path, "Path to DerivedCoreProperties.txt file", "derived-core-prop-path", 'd', "derived-core-prop-path");
     args_parser.add_option(prop_alias_path, "Path to PropertyAliases.txt file", "prop-alias-path", 'a', "prop-alias-path");
     args_parser.add_option(prop_value_alias_path, "Path to PropertyValueAliases.txt file", "prop-value-alias-path", 'v', "prop-value-alias-path");
+    args_parser.add_option(scripts_path, "Path to Scripts.txt file", "scripts-path", 'r', "scripts-path");
     args_parser.add_option(word_break_path, "Path to WordBreakProperty.txt file", "word-break-path", 'w', "word-break-path");
     args_parser.parse(argc, argv);
 
@@ -802,6 +848,7 @@ int main(int argc, char** argv)
     auto derived_core_prop_file = open_file(derived_core_prop_path, "-d/--derived-core-prop-path");
     auto prop_alias_file = open_file(prop_alias_path, "-a/--prop-alias-path");
     auto prop_value_alias_file = open_file(prop_value_alias_path, "-v/--prop-value-alias-path");
+    auto scripts_file = open_file(scripts_path, "-r/--scripts-path");
     auto word_break_file = open_file(word_break_path, "-w/--word-break-path");
 
     UnicodeData unicode_data {};
@@ -809,9 +856,12 @@ int main(int argc, char** argv)
     parse_prop_list(prop_list_file, unicode_data.prop_list);
     parse_prop_list(derived_core_prop_file, unicode_data.prop_list);
     parse_alias_list(prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases);
+    parse_prop_list(scripts_file, unicode_data.script_list);
     parse_prop_list(word_break_file, unicode_data.word_break_prop_list);
+
     parse_unicode_data(unicode_data_file, unicode_data);
     parse_value_alias_list(prop_value_alias_file, "gc"sv, unicode_data.general_categories, unicode_data.general_category_unions, unicode_data.general_category_aliases);
+    parse_value_alias_list(prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), {}, unicode_data.script_aliases, false);
 
     generate_unicode_data_header(generated_header_file, unicode_data);
     generate_unicode_data_implementation(generated_implementation_file, unicode_data);
