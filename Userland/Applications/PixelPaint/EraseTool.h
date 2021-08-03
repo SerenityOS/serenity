@@ -30,6 +30,7 @@ private:
 
     bool m_use_secondary_color { false };
     int m_thickness { 1 };
+    const int m_base_eraser_size { 10 };
 };
 
 }

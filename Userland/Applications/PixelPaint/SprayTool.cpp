@@ -94,20 +94,23 @@ GUI::Widget* SprayTool::get_properties_widget()
         m_properties_widget = GUI::Widget::construct();
         m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
 
-        auto& thickness_container = m_properties_widget->add<GUI::Widget>();
-        thickness_container.set_fixed_height(20);
-        thickness_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto& size_container = m_properties_widget->add<GUI::Widget>();
+        size_container.set_fixed_height(20);
+        size_container.set_layout<GUI::HorizontalBoxLayout>();
 
-        auto& thickness_label = thickness_container.add<GUI::Label>("Thickness:");
-        thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        thickness_label.set_fixed_size(80, 20);
+        auto& size_label = size_container.add<GUI::Label>("Size:");
+        size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        size_label.set_fixed_size(80, 20);
 
-        auto& thickness_slider = thickness_container.add<GUI::HorizontalSlider>();
-        thickness_slider.set_fixed_height(20);
-        thickness_slider.set_range(1, 20);
-        thickness_slider.set_value(m_thickness);
-        thickness_slider.on_change = [this](int value) {
+        auto& size_slider = size_container.add<GUI::HorizontalSlider>();
+        size_slider.set_fixed_height(20);
+        size_slider.set_range(1, 20);
+        size_slider.set_value(m_thickness);
+        size_slider.set_tooltip(String::formatted("{}", m_thickness));
+
+        size_slider.on_change = [&](int value) {
             m_thickness = value;
+            size_slider.set_tooltip(String::formatted("{}", value));
         };
 
         auto& density_container = m_properties_widget->add<GUI::Widget>();
@@ -122,8 +125,11 @@ GUI::Widget* SprayTool::get_properties_widget()
         density_slider.set_fixed_height(30);
         density_slider.set_range(1, 100);
         density_slider.set_value(m_density);
-        density_slider.on_change = [this](int value) {
+        density_slider.set_tooltip(String::formatted("{}%", m_density));
+
+        density_slider.on_change = [&](int value) {
             m_density = value;
+            density_slider.set_tooltip(String::formatted("{}%", value));
         };
     }
 

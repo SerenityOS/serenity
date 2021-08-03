@@ -81,8 +81,11 @@ GUI::Widget* PenTool::get_properties_widget()
         thickness_slider.set_fixed_height(20);
         thickness_slider.set_range(1, 20);
         thickness_slider.set_value(m_thickness);
-        thickness_slider.on_change = [this](int value) {
+        thickness_slider.set_tooltip(String::formatted("{}px", m_thickness));
+
+        thickness_slider.on_change = [&](int value) {
             m_thickness = value;
+            thickness_slider.set_tooltip(String::formatted("{}px", value));
         };
     }
 
