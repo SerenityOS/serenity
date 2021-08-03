@@ -52,18 +52,18 @@ void Screensaver::mousemove_event(GUI::MouseEvent& event)
     if (m_mouse_origin.is_null()) {
         m_mouse_origin = event.position();
     } else if (event.position().distance_from(m_mouse_origin) > max_distance_move) {
-        ::exit(0);
+        GUI::Application::the()->quit();
     }
 }
 
 void Screensaver::mousedown_event(GUI::MouseEvent&)
 {
-    ::exit(0);
+    GUI::Application::the()->quit();
 }
 
 void Screensaver::keydown_event(GUI::KeyEvent&)
 {
-    ::exit(0);
+    GUI::Application::the()->quit();
 }
 
 void Screensaver::paint_event(GUI::PaintEvent& event)

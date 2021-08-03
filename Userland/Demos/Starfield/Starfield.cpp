@@ -80,12 +80,12 @@ void Starfield::mousemove_event(GUI::MouseEvent&)
 
 void Starfield::mousedown_event(GUI::MouseEvent&)
 {
-    ::exit(0);
+    GUI::Application::the()->quit();
 }
 
 void Starfield::keydown_event(GUI::KeyEvent&)
 {
-    ::exit(0);
+    GUI::Application::the()->quit();
 }
 
 void Starfield::paint_event(GUI::PaintEvent& event)
