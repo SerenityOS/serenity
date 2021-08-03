@@ -595,7 +595,7 @@ Vector<i32> FlacLoaderPlugin::parse_subframe(FlacSubframeHeader& subframe_header
 
         samples.ensure_capacity(m_current_frame->sample_count);
         for (u32 i = 0; i < m_current_frame->sample_count; ++i) {
-            samples.unchecked_append(constant_value);
+            samples.unchecked_append(sign_extend(constant_value, subframe_header.bits_per_sample));
         }
         break;
     }
@@ -694,7 +694,7 @@ Vector<i32> FlacLoaderPlugin::decode_fixed_lpc(FlacSubframeHeader& subframe, Inp
 
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
-        decoded.unchecked_append(bit_input.read_bits_big_endian(subframe.bits_per_sample - subframe.wasted_bits_per_sample));
+        decoded.unchecked_append(sign_extend(bit_input.read_bits_big_endian(subframe.bits_per_sample - subframe.wasted_bits_per_sample), subframe.bits_per_sample));
     }
 
     decode_residual(decoded, subframe, bit_input);
