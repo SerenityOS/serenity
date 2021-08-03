@@ -69,13 +69,11 @@ bool FlacLoaderPlugin::sniff()
 
 bool FlacLoaderPlugin::parse_header()
 {
-    Optional<Core::InputFileStream> fis;
     bool ok = true;
 
     InputBitStream bit_input = [&]() -> InputBitStream {
         if (m_file) {
-            fis = Core::InputFileStream(*m_file);
-            return InputBitStream(*fis);
+            return InputBitStream(m_stream->get<Core::InputFileStream>());
         }
         return InputBitStream(m_stream->get<InputMemoryStream>());
     }();
