@@ -621,10 +621,17 @@ Vector<i32> FlacLoaderPlugin::parse_subframe(FlacSubframeHeader& subframe_header
     return resampler.resample(samples);
 }
 
-// Decode a subframe that isn't actually encoded
-Vector<i32> FlacLoaderPlugin::decode_verbatim([[maybe_unused]] FlacSubframeHeader& subframe, [[maybe_unused]] InputBitStream& bit_input)
+// Decode a subframe that isn't actually encoded, usually seen in random data
+Vector<i32> FlacLoaderPlugin::decode_verbatim(FlacSubframeHeader& subframe, InputBitStream& bit_input)
 {
-    TODO();
+    Vector<i32> decoded;
+    decoded.ensure_capacity(m_current_frame->sample_count);
+
+    for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
+        decoded.unchecked_append(sign_extend(bit_input.read_bits_big_endian(subframe.bits_per_sample - subframe.wasted_bits_per_sample), subframe.bits_per_sample - subframe.wasted_bits_per_sample));
+    }
+
+    return decoded;
 }
 
 // Decode a subframe encoded with a custom linear predictor coding, i.e. the subframe provides the polynomial order and coefficients
