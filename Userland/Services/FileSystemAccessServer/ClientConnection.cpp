@@ -34,7 +34,6 @@ void ClientConnection::die()
 {
     s_connections.remove(client_id());
     GUI::Application::the()->quit();
-    exit(0);
 }
 
 RefPtr<GUI::Window> ClientConnection::create_dummy_child_window(i32 window_server_client_id, i32 parent_window_id)
