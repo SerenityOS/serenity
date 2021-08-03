@@ -1746,6 +1746,108 @@ RefPtr<StyleValue> Parser::parse_image_value(ParsingContext const& context, Styl
     return {};
 }
 
+RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto is_background_repeat = [](StyleValue const& value) -> bool {
+        switch (value.to_identifier()) {
+        case CSS::ValueID::NoRepeat:
+        case CSS::ValueID::Repeat:
+        case CSS::ValueID::RepeatX:
+        case CSS::ValueID::RepeatY:
+        case CSS::ValueID::Round:
+        case CSS::ValueID::Space:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    auto is_background_image = [](StyleValue const& value) -> bool {
+        if (value.is_image())
+            return true;
+        if (value.to_identifier() == ValueID::None)
+            return true;
+        return false;
+    };
+
+    RefPtr<StyleValue> background_color;
+    RefPtr<StyleValue> background_image;
+    RefPtr<StyleValue> repeat_x;
+    RefPtr<StyleValue> repeat_y;
+    // FIXME: Implement background-position.
+    // FIXME: Implement background-size.
+    // FIXME: Implement background-attachment.
+    // FIXME: Implement background-clip.
+    // FIXME: Implement background-origin.
+
+    for (size_t i = 0; i < component_values.size(); ++i) {
+        auto& part = component_values[i];
+
+        // FIXME: Handle multiple backgrounds, by returning a List of BackgroundStyleValues.
+        if (part.is(Token::Type::Comma)) {
+            dbgln("CSS Parser does not yet support multiple comma-separated values for background.");
+            break;
+        }
+
+        auto value = parse_css_value(context, PropertyID::Background, part);
+        if (!value) {
+            return nullptr;
+        }
+
+        if (value->is_color()) {
+            if (background_color)
+                return nullptr;
+            background_color = value.release_nonnull();
+            continue;
+        }
+        if (is_background_image(*value)) {
+            if (background_image)
+                return nullptr;
+            background_image = value.release_nonnull();
+            continue;
+        }
+        if (is_background_repeat(*value)) {
+            if (repeat_x)
+                return nullptr;
+
+            auto value_id = value->to_identifier();
+            if (value_id == ValueID::RepeatX || value_id == ValueID::RepeatY) {
+                repeat_x = IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::Repeat : ValueID::NoRepeat);
+                repeat_y = IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::NoRepeat : ValueID::Repeat);
+                continue;
+            }
+
+            // Check following value, if it's also a repeat, set both.
+            if (i + 1 < component_values.size()) {
+                auto next_value = parse_css_value(context, PropertyID::Background, component_values[i + 1]);
+                if (next_value && is_background_repeat(*next_value)) {
+                    ++i;
+                    repeat_x = value.release_nonnull();
+                    repeat_y = next_value.release_nonnull();
+                    continue;
+                }
+            }
+            auto repeat = value.release_nonnull();
+            repeat_x = repeat;
+            repeat_y = repeat;
+            continue;
+        }
+
+        return nullptr;
+    }
+
+    if (!background_color)
+        background_color = ColorStyleValue::create(Color::Transparent);
+    if (!background_image)
+        background_image = IdentifierStyleValue::create(ValueID::None);
+    if (!repeat_x)
+        repeat_x = IdentifierStyleValue::create(ValueID::Repeat);
+    if (!repeat_y)
+        repeat_y = IdentifierStyleValue::create(ValueID::Repeat);
+
+    return BackgroundStyleValue::create(background_color.release_nonnull(), background_image.release_nonnull(), repeat_x.release_nonnull(), repeat_y.release_nonnull());
+}
+
 RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
     // FIXME: Also support inset, spread-radius and multiple comma-seperated box-shadows
@@ -1991,6 +2093,10 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
 
     // Special-case property handling
     switch (property_id) {
+    case PropertyID::Background:
+        if (auto parsed_value = parse_background_value(m_context, component_values))
+            return parsed_value;
+        break;
     case PropertyID::BoxShadow:
         if (auto parsed_box_shadow = parse_box_shadow_value(m_context, component_values))
             return parsed_box_shadow;
