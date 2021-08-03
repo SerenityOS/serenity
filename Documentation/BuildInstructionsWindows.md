@@ -34,12 +34,6 @@ will need to install the tools as well as the system emulators for i386 and x86_
 
 ![QEMU Components](QEMU_Components.png)
 
-Locate the `qemu-system-x86_64.exe` executable in WSL.
-By default this will be at `/mnt/c/Program Files/qemu/qemu-system-x86_64.exe`.
-
-Set the `SERENITY_QEMU_BIN` environment variable to that location. For example: \
-`export SERENITY_QEMU_BIN='/mnt/c/Program Files/qemu/qemu-system-x86_64.exe'`
-
 Run `Meta/serenity.sh run` to build and run SerenityOS as usual.
 
 ### Hardware acceleration
