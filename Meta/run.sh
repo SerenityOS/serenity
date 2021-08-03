@@ -60,16 +60,6 @@ fi
 
 [ -z "$SERENITY_RAM_SIZE" ] && SERENITY_RAM_SIZE=512M
 
-if command -v wslpath >/dev/null; then
-    case "$SERENITY_QEMU_BIN" in
-        /mnt/?/*)
-            [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max,vmx=off"
-            SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE disable_virtio"
-    esac
-fi
-
-[ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max"
-
 [ -z "$SERENITY_DISK_IMAGE" ] && {
     if [ "$SERENITY_RUN" = qgrub ]; then
         SERENITY_DISK_IMAGE="grub_disk_image"
@@ -99,6 +89,23 @@ if [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ]; then
     echo "Please install a newer version of QEMU or use the Toolchain/BuildQemu.sh script."
     die
 fi
+
+if command -v wslpath >/dev/null; then
+    case "$SERENITY_QEMU_BIN" in
+        /mnt/?/*)
+            if [ -z "$SERENITY_VIRT_TECH_ARG" ]; then
+                if [ "$installed_major_version" -gt 5 ]; then
+                    SERENITY_VIRT_TECH_ARG="-accel whpx,kernel-irqchip=off -accel tcg"
+                else
+                    SERENITY_VIRT_TECH_ARG="-accel whpx -accel tcg"
+                fi
+            fi
+            [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max,vmx=off"
+            SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE disable_virtio"
+    esac
+fi
+
+[ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max"
 
 if [ -z "$SERENITY_SPICE" ] && "${SERENITY_QEMU_BIN}" -chardev help | grep -iq qemu-vdagent; then
     SERENITY_SPICE_SERVER_CHARDEV="-chardev qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent"

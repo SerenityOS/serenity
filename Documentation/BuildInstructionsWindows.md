@@ -48,10 +48,6 @@ following command in an elevated PowerShell session: \
 
 ![WHPX Windows Feature](WHPX_Feature.png)
 
-Set the `SERENITY_VIRT_TECH_ARG` environment variable in your WSL2 shell: \
-`export SERENITY_VIRT_TECH_ARG="-accel whpx,kernel-irqchip=off"`
+You may have to reboot after enabling the WHPX feature.
 
-You might want to add those environment variables to your shell's configuration file, so that you don't have to set them
-manually each time you start a new shell.
-
-Start the VM with `Meta/serenity.sh run` as usual.
+Afterwards you can start the VM with `Meta/serenity.sh run` as usual.
