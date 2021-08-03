@@ -569,7 +569,6 @@ FlacSubframeHeader FlacLoaderPlugin::next_subframe_header(InputBitStream& bit_st
     u8 k = 0;
     if (has_wasted_bits) {
         bool current_k_bit = 0;
-        u8 k = 0;
         do {
             current_k_bit = bit_stream.read_bit_big_endian();
             ++k;
