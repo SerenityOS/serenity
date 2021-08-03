@@ -30,6 +30,7 @@ private:
     virtual bool can_write(const FileDescription&, size_t) const override { return true; }
     virtual bool can_read(const FileDescription&, size_t) const override;
     virtual StringView class_name() const override { return "NullDevice"; }
+    virtual bool is_seekable() const override { return true; }
 };
 
 }
