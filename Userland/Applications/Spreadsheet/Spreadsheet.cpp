@@ -90,12 +90,13 @@ static size_t convert_from_string(StringView str, unsigned base = 26, StringView
     VERIFY(base >= 2 && base <= map.length());
 
     size_t value = 0;
-    for (size_t i = str.length(); i > 0; --i) {
-        auto digit_value = map.find(str[i - 1]).value_or(0);
+    auto const len = str.length();
+    for (auto i = 0u; i < len; i++) {
+        size_t digit_value = map.find(str[i]).value_or(0);
         // NOTE: Refer to the note in `String::bijective_base_from()'.
-        if (i == str.length() && str.length() > 1)
+        if (i == 0 && len > 1)
             ++digit_value;
-        value = value * base + digit_value;
+        value += digit_value * AK::pow<float>(base, len - 1 - i);
     }
 
     return value;
