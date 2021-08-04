@@ -240,7 +240,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
         if (!packet)
             return ENOMEM;
         routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(), routing_decision.next_hop,
-            m_peer_address, (IPv4Protocol)protocol(), data_length, m_ttl);
+            m_peer_address, (IPv4Protocol)protocol(), data_length, m_ttl, m_dontfrag);
         if (!data.read(packet->buffer->data() + ipv4_payload_offset, data_length)) {
             routing_decision.adapter->release_packet_buffer(*packet);
             return EFAULT;
@@ -504,6 +504,17 @@ KResult IPv4Socket::setsockopt(int level, int option, Userspace<const void*> use
         m_ttl = value;
         return KSuccess;
     }
+    case IP_DONTFRAG: {
+        if (user_value_size < sizeof(int))
+            return EINVAL;
+        int value;
+        if (!copy_from_user(&value, static_ptr_cast<const int*>(user_value)))
+            return EFAULT;
+        if (value < 0 || value > 1)
+            return EINVAL;
+        m_dontfrag = value == 1;
+        return KSuccess;
+    }
     case IP_MULTICAST_LOOP: {
         if (user_value_size != 1)
             return EINVAL;
@@ -564,6 +575,17 @@ KResult IPv4Socket::getsockopt(FileDescription& description, int level, int opti
         if (!copy_to_user(value_size, &size))
             return EFAULT;
         return KSuccess;
+    case IP_DONTFRAG: {
+        if (size < sizeof(int))
+            return EINVAL;
+        int kvalue = m_dontfrag ? 1 : 0;
+        if (!copy_to_user(static_ptr_cast<int*>(value), &kvalue))
+            return EFAULT;
+        size = sizeof(int);
+        if (!copy_to_user(value_size, &size))
+            return EFAULT;
+        return KSuccess;
+    }
     case IP_MULTICAST_LOOP: {
         if (size < 1)
             return EINVAL;

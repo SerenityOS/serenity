@@ -42,7 +42,7 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     send_packet({ (const u8*)eth, size_in_bytes });
 }
 
-void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Address const& source_ipv4, MACAddress const& destination_mac, IPv4Address const& destination_ipv4, IPv4Protocol protocol, size_t payload_size, u8 ttl)
+void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Address const& source_ipv4, MACAddress const& destination_mac, IPv4Address const& destination_ipv4, IPv4Protocol protocol, size_t payload_size, u8 ttl, bool dont_fragment)
 {
     size_t ipv4_packet_size = sizeof(IPv4Packet) + payload_size;
     VERIFY(ipv4_packet_size <= mtu());
@@ -63,6 +63,7 @@ void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Addres
     ipv4.set_length(sizeof(IPv4Packet) + payload_size);
     ipv4.set_ident(1);
     ipv4.set_ttl(ttl);
+    ipv4.set_dont_fragment(dont_fragment);
     ipv4.set_checksum(ipv4.compute_checksum());
 }
 

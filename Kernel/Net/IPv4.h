@@ -70,6 +70,13 @@ public:
         else
             m_flags_and_fragment = (u16)m_flags_and_fragment & ((u16)IPv4PacketFlags::MoreFragments);
     }
+    void set_dont_fragment(bool dont_fragment)
+    {
+        if (dont_fragment)
+            m_flags_and_fragment = (u16)m_flags_and_fragment | ((u16)IPv4PacketFlags::DontFragment);
+        else
+            m_flags_and_fragment = (u16)m_flags_and_fragment & ((u16)IPv4PacketFlags::DontFragment);
+    }
     void set_fragment_offset(u16 offset)
     {
         m_flags_and_fragment = flags() | (offset & 0x1fff);

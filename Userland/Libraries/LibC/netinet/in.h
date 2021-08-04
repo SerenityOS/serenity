@@ -27,6 +27,7 @@ in_addr_t inet_addr(const char*);
 #define IP_DROP_MEMBERSHIP 5
 #define IP_MULTICAST_IF 6
 #define IP_MULTICAST_TTL 7
+#define IP_DONTFRAG 8
 
 /* Make sure these don't overlap with any other IPv4 and IPv6 options */
 #define MCAST_JOIN_SOURCE_GROUP 100

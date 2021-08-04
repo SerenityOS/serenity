@@ -539,6 +539,9 @@ enum {
 #define IP_MULTICAST_LOOP 3
 #define IP_ADD_MEMBERSHIP 4
 #define IP_DROP_MEMBERSHIP 5
+#define IP_MULTICAST_IF 6
+#define IP_MULTICAST_TTL 7
+#define IP_DONTFRAG 8
 
 struct ucred {
     pid_t pid;

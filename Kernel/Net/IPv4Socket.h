@@ -125,6 +125,7 @@ private:
     u32 m_bytes_received { 0 };
 
     u8 m_ttl { 64 };
+    bool m_dontfrag { false };
 
     bool m_can_read { false };
 
