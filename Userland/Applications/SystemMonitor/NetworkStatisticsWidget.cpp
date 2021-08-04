@@ -49,7 +49,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_adapters_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("mac_address", "MAC", Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("Link status", Gfx::TextAlignment::CenterLeft,
-            [this](JsonObject const& object) -> String {
+            [](JsonObject const& object) -> String {
                 if (!object.get("link_up").as_bool())
                     return "Down";
 
@@ -57,7 +57,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
                     object.get("link_full_duplex").as_bool() ? "full" : "half");
             });
         net_adapters_fields.empend("IPv4", Gfx::TextAlignment::CenterLeft,
-            [this](JsonObject const& object) -> String {
+            [](JsonObject const& object) -> String {
                 return object.get("ipv4_address").as_string_or("");
             });
         net_adapters_fields.empend("packets_in", "Pkt In", Gfx::TextAlignment::CenterRight);
