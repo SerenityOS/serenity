@@ -155,16 +155,10 @@ AnonymousVMObject::AnonymousVMObject(Span<NonnullRefPtr<PhysicalPage>> physical_
 
 AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other)
     : VMObject(other)
-    , m_cow_map()                                                      // do *not* clone this
-    , m_shared_committed_cow_pages(other.m_shared_committed_cow_pages) // share the pool
+    , m_shared_committed_cow_pages(other.m_shared_committed_cow_pages)
     , m_purgeable(other.m_purgeable)
 {
-    // We can't really "copy" a spinlock. But we're holding it. Clear in the clone
-    VERIFY(other.m_lock.is_locked());
-    m_lock.initialize();
-
-    // The clone also becomes COW
-    ensure_or_reset_cow_map();
+    ensure_cow_map();
 }
 
 AnonymousVMObject::~AnonymousVMObject()
