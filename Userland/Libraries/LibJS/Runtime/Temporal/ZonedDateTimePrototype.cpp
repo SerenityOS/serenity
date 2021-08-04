@@ -44,6 +44,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.nanosecond, nanosecond_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.epochSeconds, epoch_seconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.epochMilliseconds, epoch_milliseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.epochMicroseconds, epoch_microseconds_getter, {}, Attribute::Configurable);
 }
 
 static ZonedDateTime* typed_this(GlobalObject& global_object)
@@ -391,6 +392,25 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_milliseconds_getter)
 
     // 5. Return 𝔽(ms).
     return Value((double)ms.to_base(10).to_int<i64>().value());
+}
+
+// 6.3.17 get Temporal.ZonedDateTime.prototype.epochMicroseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.epochmicroseconds
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_microseconds_getter)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let ns be zonedDateTime.[[Nanoseconds]].
+    auto& ns = zoned_date_time->nanoseconds();
+
+    // 4. Let µs be RoundTowardsZero(ℝ(ns) / 10^3).
+    auto us = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000 }).quotient;
+
+    // 5. Return ℤ(µs).
+    return js_bigint(vm, move(us));
 }
 
 }
