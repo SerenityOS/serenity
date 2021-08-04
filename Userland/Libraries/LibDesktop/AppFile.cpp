@@ -124,11 +124,9 @@ bool AppFile::spawn() const
     if ((errno = posix_spawn(&child_pid, executable().characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
         return false;
-    } else {
-        if (disown(child_pid) < 0) {
-            perror("disown");
-            return false;
-        }
+    } else if (disown(child_pid) < 0) {
+        perror("disown");
+        return false;
     }
 
     return true;
