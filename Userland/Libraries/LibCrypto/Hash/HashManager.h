@@ -196,6 +196,11 @@ public:
         return m_kind == kind;
     }
 
+    inline HashKind kind() const
+    {
+        return m_kind;
+    }
+
 private:
     using AlgorithmVariant = Variant<Empty, MD5, SHA1, SHA256, SHA384, SHA512>;
     AlgorithmVariant m_algorithm { Empty {} };
