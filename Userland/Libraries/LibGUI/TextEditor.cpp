@@ -1281,7 +1281,9 @@ bool TextEditor::write_to_file_and_close(int fd)
         }
     }
     document().set_unmodified();
-    execute<SaveFileCommand>();
+
+    m_merge_command = false;
+
     return true;
 }
 

@@ -203,7 +203,7 @@ protected:
 
 class InsertTextCommand : public TextDocumentUndoCommand {
 public:
-    InsertTextCommand(TextDocument&, const String&, const TextPosition&);
+    InsertTextCommand(TextDocument&, const String&, const TextPosition&, bool);
     virtual void perform_formatting(const TextDocument::Client&) override;
     virtual void undo() override;
     virtual void redo() override;
@@ -211,29 +211,27 @@ public:
     virtual String action_text() const override;
     const String& text() const { return m_text; }
     const TextRange& range() const { return m_range; }
+    virtual bool merge() const override { return m_merge; }
+
 private:
     String m_text;
     TextRange m_range;
+    bool m_merge;
 };
 
 class RemoveTextCommand : public TextDocumentUndoCommand {
 public:
-    RemoveTextCommand(TextDocument&, const String&, const TextRange&);
+    RemoveTextCommand(TextDocument&, const String&, const TextRange&, bool);
     virtual void undo() override;
     virtual void redo() override;
     const TextRange& range() const { return m_range; }
     virtual bool merge_with(GUI::Command const&) override;
     virtual String action_text() const override;
+    virtual bool merge() const override { return m_merge; }
+
 private:
     String m_text;
     TextRange m_range;
+    bool m_merge;
 };
-
-class SaveFileCommand : public TextDocumentUndoCommand {
-public:
-    SaveFileCommand(TextDocument&);
-    virtual bool no_action() const override;
-    virtual String action_text() const override;
-};
-
 }

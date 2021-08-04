@@ -39,7 +39,6 @@ private:
     NonnullOwnPtrVector<Command> m_stack;
     size_t m_stack_index { 0 };
     Optional<size_t> m_clean_index;
-    bool m_merge { true };
 };
 
 }

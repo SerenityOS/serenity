@@ -743,10 +743,11 @@ TextDocumentUndoCommand::~TextDocumentUndoCommand()
 {
 }
 
-InsertTextCommand::InsertTextCommand(TextDocument& document, const String& text, const TextPosition& position)
+InsertTextCommand::InsertTextCommand(TextDocument& document, const String& text, const TextPosition& position, bool merge)
     : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range({ position, position })
+    , m_merge(merge)
 {
 }
 
@@ -837,10 +838,11 @@ void InsertTextCommand::undo()
     m_document.set_all_cursors(m_range.start());
 }
 
-RemoveTextCommand::RemoveTextCommand(TextDocument& document, const String& text, const TextRange& range)
+RemoveTextCommand::RemoveTextCommand(TextDocument& document, const String& text, const TextRange& range, bool merge)
     : TextDocumentUndoCommand(document)
     , m_text(text)
     , m_range(range)
+    , m_merge(merge)
 {
 }
 
@@ -879,21 +881,6 @@ void RemoveTextCommand::undo()
 {
     auto new_cursor = m_document.insert_at(m_range.start(), m_text);
     m_document.set_all_cursors(new_cursor);
-}
-
-SaveFileCommand::SaveFileCommand(TextDocument& document)
-    : TextDocumentUndoCommand(document)
-{
-}
-
-String SaveFileCommand::action_text() const
-{
-    return "Save file";
-}
-
-bool SaveFileCommand::no_action() const 
-{
-    return true;
 }
 
 TextPosition TextDocument::insert_at(const TextPosition& position, const StringView& text, const Client* client)

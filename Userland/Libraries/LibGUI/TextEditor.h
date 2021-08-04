@@ -312,11 +312,12 @@ private:
     template<class T, class... Args>
     inline void execute(Args&&... args)
     {
-        auto command = make<T>(*m_document, forward<Args>(args)...);
+        auto command = make<T>(*m_document, forward<Args>(args)..., m_merge_command);
         command->perform_formatting(*this);
         will_execute(*command);
         command->execute_from(*this);
         m_document->add_to_undo_stack(move(command));
+        m_merge_command = true;
     }
 
     virtual void will_execute(TextDocumentUndoCommand const&) { }
@@ -392,6 +393,8 @@ private:
     RefPtr<Gfx::Bitmap> m_icon;
 
     bool m_text_is_secret { false };
+
+    bool m_merge_command { true };
 };
 
 }
