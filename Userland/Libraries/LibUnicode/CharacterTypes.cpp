@@ -340,4 +340,25 @@ bool code_point_has_script([[maybe_unused]] u32 code_point, [[maybe_unused]] Scr
 #endif
 }
 
+bool code_point_has_script_extension([[maybe_unused]] u32 code_point, [[maybe_unused]] Script script)
+{
+#if ENABLE_UNICODE_DATA
+    auto unicode_data = Detail::unicode_data_for_code_point(code_point);
+    if (!unicode_data.has_value())
+        return false;
+
+    if (unicode_data->script == script)
+        return true;
+
+    for (u32 i = 0; i < unicode_data->script_extensions_size; ++i) {
+        if (unicode_data->script_extensions[i] == script)
+            return true;
+    }
+
+    return false;
+#else
+    return false;
+#endif
+}
+
 }
