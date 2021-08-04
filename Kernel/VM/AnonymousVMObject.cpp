@@ -46,18 +46,20 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
     // one would keep the one it still has. This ensures that the original
     // one and this one, as well as the clone have sufficient resources
     // to cow all pages as needed
-    m_shared_committed_cow_pages = try_create<SharedCommittedCowPages>(committed_pages.release_value());
+    auto new_shared_committed_cow_pages = try_create<SharedCommittedCowPages>(committed_pages.release_value());
 
-    if (!m_shared_committed_cow_pages)
+    if (!new_shared_committed_cow_pages)
         return {};
+
+    auto clone = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(*this, *new_shared_committed_cow_pages));
+    if (!clone)
+        return {};
+
+    m_shared_committed_cow_pages = move(new_shared_committed_cow_pages);
 
     // Both original and clone become COW. So create a COW map for ourselves
     // or reset all pages to be copied again if we were previously cloned
     ensure_or_reset_cow_map();
-
-    // FIXME: If this allocation fails, we need to rollback all changes.
-    auto clone = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(*this));
-    VERIFY(clone);
 
     if (m_unused_committed_pages.has_value() && !m_unused_committed_pages->is_empty()) {
         // The parent vmobject didn't use up all committed pages. When
@@ -153,9 +155,9 @@ AnonymousVMObject::AnonymousVMObject(Span<NonnullRefPtr<PhysicalPage>> physical_
     }
 }
 
-AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other)
+AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other, NonnullRefPtr<SharedCommittedCowPages> shared_committed_cow_pages)
     : VMObject(other)
-    , m_shared_committed_cow_pages(other.m_shared_committed_cow_pages)
+    , m_shared_committed_cow_pages(move(shared_committed_cow_pages))
     , m_purgeable(other.m_purgeable)
 {
     ensure_cow_map();
