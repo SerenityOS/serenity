@@ -83,6 +83,7 @@ public:
     Function<void()> on_close;
     Function<CloseRequestDecision()> on_close_request;
     Function<void(bool is_active_input)> on_active_input_change;
+    Function<void(bool is_active_window)> on_active_window_change;
 
     int x() const { return rect().x(); }
     int y() const { return rect().y(); }
