@@ -218,7 +218,7 @@ u32 Tokenizer::next_code_point()
         return TOKENIZER_EOF;
     m_prev_utf8_iterator = m_utf8_iterator;
     ++m_utf8_iterator;
-    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Next code_point: {:c}", (char)*m_prev_utf8_iterator);
+    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Next code_point: {:d}", *m_prev_utf8_iterator);
     return *m_prev_utf8_iterator;
 }
 
@@ -229,35 +229,31 @@ u32 Tokenizer::peek_code_point(size_t offset) const
         ++it;
     if (it == m_utf8_view.end())
         return TOKENIZER_EOF;
+    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Peek code_point: {:d}", *m_prev_utf8_iterator);
     return *it;
 }
 
 U32Twin Tokenizer::peek_twin() const
 {
-    U32Twin values;
+    U32Twin values { TOKENIZER_EOF, TOKENIZER_EOF };
     auto it = m_utf8_iterator;
     for (size_t i = 0; i < 2 && it != m_utf8_view.end(); ++i) {
-        if (it == m_utf8_view.end())
-            values.set(i, TOKENIZER_EOF);
-        else
-            values.set(i, *it);
+        values.set(i, *it);
         ++it;
     }
-
+    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Peek twin: {:d},{:d}", values.first, values.second);
     return values;
 }
 
 U32Triplet Tokenizer::peek_triplet() const
 {
-    U32Triplet values;
+    U32Triplet values { TOKENIZER_EOF, TOKENIZER_EOF, TOKENIZER_EOF };
     auto it = m_utf8_iterator;
     for (size_t i = 0; i < 3 && it != m_utf8_view.end(); ++i) {
-        if (it == m_utf8_view.end())
-            values.set(i, TOKENIZER_EOF);
-        else
-            values.set(i, *it);
+        values.set(i, *it);
         ++it;
     }
+    dbgln_if(CSS_TOKENIZER_DEBUG, "(Tokenizer) Peek triplet: {:d},{:d},{:d}", values.first, values.second, values.third);
     return values;
 }
 
