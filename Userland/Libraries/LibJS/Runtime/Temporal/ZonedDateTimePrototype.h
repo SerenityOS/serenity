@@ -35,6 +35,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(epoch_milliseconds_getter);
     JS_DECLARE_NATIVE_FUNCTION(epoch_microseconds_getter);
     JS_DECLARE_NATIVE_FUNCTION(epoch_nanoseconds_getter);
+    JS_DECLARE_NATIVE_FUNCTION(day_of_week_getter);
 };
 
 }
