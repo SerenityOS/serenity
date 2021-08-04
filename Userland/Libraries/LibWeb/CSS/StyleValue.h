@@ -233,6 +233,7 @@ public:
         BoxShadow,
         Font,
         ListStyle,
+        TextDecoration,
     };
 
     Type type() const { return m_type; }
@@ -253,6 +254,7 @@ public:
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
     bool is_font() const { return type() == Type::Font; }
     bool is_list_style() const { return type() == Type::ListStyle; }
+    bool is_text_decoration() const { return type() == Type::TextDecoration; }
 
     bool is_builtin() const { return is_inherit() || is_initial(); }
 
@@ -754,6 +756,43 @@ private:
     NonnullRefPtr<StyleValue> m_position;
     NonnullRefPtr<StyleValue> m_image;
     NonnullRefPtr<StyleValue> m_style_type;
+};
+
+class TextDecorationStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<TextDecorationStyleValue> create(
+        NonnullRefPtr<StyleValue> line,
+        NonnullRefPtr<StyleValue> style,
+        NonnullRefPtr<StyleValue> color)
+    {
+        return adopt_ref(*new TextDecorationStyleValue(line, style, color));
+    }
+    virtual ~TextDecorationStyleValue() override { }
+
+    NonnullRefPtr<StyleValue> line() const { return m_line; }
+    NonnullRefPtr<StyleValue> style() const { return m_style; }
+    NonnullRefPtr<StyleValue> color() const { return m_color; }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("TextDecoration line: {}, style: {}, color: {}", m_line->to_string(), m_style->to_string(), m_color->to_string());
+    }
+
+private:
+    TextDecorationStyleValue(
+        NonnullRefPtr<StyleValue> line,
+        NonnullRefPtr<StyleValue> style,
+        NonnullRefPtr<StyleValue> color)
+        : StyleValue(Type::TextDecoration)
+        , m_line(line)
+        , m_style(style)
+        , m_color(color)
+    {
+    }
+
+    NonnullRefPtr<StyleValue> m_line;
+    NonnullRefPtr<StyleValue> m_style;
+    NonnullRefPtr<StyleValue> m_color;
 };
 
 class StyleValueList final : public StyleValue {
