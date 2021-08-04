@@ -491,6 +491,8 @@ void Window::handle_became_active_or_inactive_event(Core::Event& event)
         Application::the()->window_did_become_active({}, *this);
     else
         Application::the()->window_did_become_inactive({}, *this);
+    if (on_active_window_change)
+        on_active_window_change(event.type() == Event::WindowBecameActive);
     if (m_main_widget)
         m_main_widget->dispatch_event(event, this);
     if (m_focused_widget)
