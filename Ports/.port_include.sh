@@ -99,7 +99,8 @@ ensure_build() {
 
 install_main_icon() {
     if [ -n "$icon_file" ] && [ -n "$launcher_command" ]; then
-        install_icon "$icon_file" "$launcher_command"
+        local launcher_binary="${launcher_command%% *}"
+        install_icon "$icon_file" "${launcher_binary}"
     fi
 }
 
@@ -108,27 +109,29 @@ install_icon() {
         echo "Syntax: install_icon <icon> <launcher>"
         exit 1
     fi
-    icon="$1"
-    launcher="$2"
+    local icon="$1"
+    local launcher="$2"
 
-    command -v convert >/dev/null 2>&1
-    convert_exists=$?
+    command -v convert >/dev/null || true
+    local convert_exists=$?
+    command -v identify >/dev/null || true
+    local identify_exists=$?
 
-    command -v identify >/dev/null 2>&1
-    identify_exists=$?
-
-    if [ "$convert_exists" == "0" ] && [ "$identify_exists" == "0" ]; then
-        for icon_size in "16x16" "32x32"; do
-            index=$(run identify "$icon" | grep "$icon_size" | grep -oE "\[[0-9]+\]" | tr -d "[]" | head -n1)
-            if [ -n "$index" ]; then
-                run convert "${icon}[${index}]" "app-${icon_size}.png"
-            else
-                run convert "$icon" -resize $icon_size "app-${icon_size}.png"
-            fi
-        done
-        run objcopy --add-section serenity_icon_s="app-16x16.png" "${DESTDIR}${launcher}"
-        run objcopy --add-section serenity_icon_m="app-32x32.png" "${DESTDIR}${launcher}"
+    if [ "${convert_exists}" != "0" ] || [ "${identify_exists}" != 0 ]; then
+        echo 'Unable to install icon: missing convert or identify, did you install ImageMagick?'
+        return
     fi
+
+    for icon_size in "16x16" "32x32"; do
+        index=$(run identify "$icon" | grep "$icon_size" | grep -oE "\[[0-9]+\]" | tr -d "[]" | head -n1)
+        if [ -n "$index" ]; then
+            run convert "${icon}[${index}]" "app-${icon_size}.png"
+        else
+            run convert "$icon" -resize $icon_size "app-${icon_size}.png"
+        fi
+    done
+    run objcopy --add-section serenity_icon_s="app-16x16.png" "${DESTDIR}${launcher}"
+    run objcopy --add-section serenity_icon_m="app-32x32.png" "${DESTDIR}${launcher}"
 }
 
 install_main_launcher() {
