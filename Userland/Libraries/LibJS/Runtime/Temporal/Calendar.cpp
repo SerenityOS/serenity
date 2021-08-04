@@ -659,7 +659,7 @@ double resolve_iso_month(GlobalObject& global_object, Object& fields)
 }
 
 // 12.1.38 ISODateFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isodatefromfields
-Optional<TemporalDate> iso_date_from_fields(GlobalObject& global_object, Object& fields, Object& options)
+Optional<ISODate> iso_date_from_fields(GlobalObject& global_object, Object& fields, Object& options)
 {
     auto& vm = global_object.vm();
 
