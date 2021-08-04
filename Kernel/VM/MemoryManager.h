@@ -248,7 +248,7 @@ private:
     SystemMemoryInfo m_system_memory_info;
 
     NonnullOwnPtrVector<PhysicalRegion> m_user_physical_regions;
-    NonnullOwnPtrVector<PhysicalRegion> m_super_physical_regions;
+    OwnPtr<PhysicalRegion> m_super_physical_region;
     OwnPtr<PhysicalRegion> m_physical_pages_region;
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };
