@@ -36,7 +36,8 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
 
     dbgln_if(COMMIT_DEBUG, "Cloning {:p}, need {} committed cow pages", this, new_cow_pages_needed);
 
-    if (!MM.commit_user_physical_pages(new_cow_pages_needed))
+    auto committed_pages = MM.commit_user_physical_pages(new_cow_pages_needed);
+    if (!committed_pages.has_value())
         return {};
 
     // Create or replace the committed cow pages. When cloning a previously
@@ -45,29 +46,43 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
     // one would keep the one it still has. This ensures that the original
     // one and this one, as well as the clone have sufficient resources
     // to cow all pages as needed
-    m_shared_committed_cow_pages = try_create<CommittedCowPages>(new_cow_pages_needed);
+    m_shared_committed_cow_pages = try_create<SharedCommittedCowPages>(committed_pages.release_value());
 
-    if (!m_shared_committed_cow_pages) {
-        MM.uncommit_user_physical_pages(new_cow_pages_needed);
+    if (!m_shared_committed_cow_pages)
         return {};
-    }
 
     // Both original and clone become COW. So create a COW map for ourselves
     // or reset all pages to be copied again if we were previously cloned
     ensure_or_reset_cow_map();
 
     // FIXME: If this allocation fails, we need to rollback all changes.
-    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(*this));
+    auto clone = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(*this));
+    VERIFY(clone);
+
+    if (m_unused_committed_pages.has_value() && !m_unused_committed_pages->is_empty()) {
+        // The parent vmobject didn't use up all committed pages. When
+        // cloning (fork) we will overcommit. For this purpose we drop all
+        // lazy-commit references and replace them with shared zero pages.
+        for (size_t i = 0; i < page_count(); i++) {
+            auto& page = clone->m_physical_pages[i];
+            if (page && page->is_lazy_committed_page()) {
+                page = MM.shared_zero_page();
+            }
+        }
+    }
+
+    return clone;
 }
 
-RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_with_size(size_t size, AllocationStrategy commit)
+RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_with_size(size_t size, AllocationStrategy strategy)
 {
-    if (commit == AllocationStrategy::Reserve || commit == AllocationStrategy::AllocateNow) {
-        // We need to attempt to commit before actually creating the object
-        if (!MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))))
+    Optional<CommittedPhysicalPageSet> committed_pages;
+    if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
+        committed_pages = MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE)));
+        if (!committed_pages.has_value())
             return {};
     }
-    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, commit));
+    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages)));
 }
 
 RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)
@@ -78,14 +93,15 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_physically_contiguous_wi
     return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(contiguous_physical_pages.span()));
 }
 
-RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_purgeable_with_size(size_t size, AllocationStrategy commit)
+RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_purgeable_with_size(size_t size, AllocationStrategy strategy)
 {
-    if (commit == AllocationStrategy::Reserve || commit == AllocationStrategy::AllocateNow) {
-        // We need to attempt to commit before actually creating the object
-        if (!MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))))
+    Optional<CommittedPhysicalPageSet> committed_pages;
+    if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
+        committed_pages = MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE)));
+        if (!committed_pages.has_value())
             return {};
     }
-    auto vmobject = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, commit));
+    auto vmobject = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages)));
     if (!vmobject)
         return {};
     vmobject->m_purgeable = true;
@@ -106,9 +122,9 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_for_physical_range(Physi
     return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(paddr, size));
 }
 
-AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy)
+AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy, Optional<CommittedPhysicalPageSet> committed_pages)
     : VMObject(size)
-    , m_unused_committed_pages(strategy == AllocationStrategy::Reserve ? page_count() : 0)
+    , m_unused_committed_pages(move(committed_pages))
 {
     if (strategy == AllocationStrategy::AllocateNow) {
         // Allocate all pages right now. We know we can get all because we committed the amount needed
@@ -139,7 +155,6 @@ AnonymousVMObject::AnonymousVMObject(Span<NonnullRefPtr<PhysicalPage>> physical_
 
 AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other)
     : VMObject(other)
-    , m_unused_committed_pages(other.m_unused_committed_pages)
     , m_cow_map()                                                      // do *not* clone this
     , m_shared_committed_cow_pages(other.m_shared_committed_cow_pages) // share the pool
     , m_purgeable(other.m_purgeable)
@@ -150,28 +165,10 @@ AnonymousVMObject::AnonymousVMObject(AnonymousVMObject const& other)
 
     // The clone also becomes COW
     ensure_or_reset_cow_map();
-
-    if (m_unused_committed_pages > 0) {
-        // The original vmobject didn't use up all committed pages. When
-        // cloning (fork) we will overcommit. For this purpose we drop all
-        // lazy-commit references and replace them with shared zero pages.
-        for (size_t i = 0; i < page_count(); i++) {
-            auto& phys_page = m_physical_pages[i];
-            if (phys_page && phys_page->is_lazy_committed_page()) {
-                phys_page = MM.shared_zero_page();
-                if (--m_unused_committed_pages == 0)
-                    break;
-            }
-        }
-        VERIFY(m_unused_committed_pages == 0);
-    }
 }
 
 AnonymousVMObject::~AnonymousVMObject()
 {
-    // Return any unused committed pages
-    if (m_unused_committed_pages > 0)
-        MM.uncommit_user_physical_pages(m_unused_committed_pages);
 }
 
 size_t AnonymousVMObject::purge()
@@ -218,11 +215,7 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
                 page = MM.shared_zero_page();
         }
 
-        if (m_unused_committed_pages) {
-            MM.uncommit_user_physical_pages(m_unused_committed_pages);
-            m_unused_committed_pages = 0;
-        }
-
+        m_unused_committed_pages = {};
         m_shared_committed_cow_pages = nullptr;
 
         if (!m_cow_map.is_null())
@@ -248,10 +241,9 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
         return KSuccess;
     }
 
-    if (!MM.commit_user_physical_pages(committed_pages_needed))
+    m_unused_committed_pages = MM.commit_user_physical_pages(committed_pages_needed);
+    if (!m_unused_committed_pages.has_value())
         return ENOMEM;
-
-    m_unused_committed_pages = committed_pages_needed;
 
     for (auto& page : m_physical_pages) {
         if (page->is_shared_zero_page())
@@ -266,12 +258,7 @@ KResult AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged)
 
 NonnullRefPtr<PhysicalPage> AnonymousVMObject::allocate_committed_page(Badge<Region>)
 {
-    {
-        ScopedSpinLock lock(m_lock);
-        VERIFY(m_unused_committed_pages > 0);
-        --m_unused_committed_pages;
-    }
-    return MM.allocate_committed_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+    return m_unused_committed_pages->take_one();
 }
 
 Bitmap& AnonymousVMObject::ensure_cow_map()
@@ -339,7 +326,7 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
     RefPtr<PhysicalPage> page;
     if (m_shared_committed_cow_pages) {
         dbgln_if(PAGE_FAULT_DEBUG, "    >> It's a committed COW page and it's time to COW!");
-        page = m_shared_committed_cow_pages->allocate_one();
+        page = m_shared_committed_cow_pages->take_one();
     } else {
         dbgln_if(PAGE_FAULT_DEBUG, "    >> It's a COW page and it's time to COW!");
         page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
@@ -371,24 +358,19 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
     return PageFaultResponse::Continue;
 }
 
-CommittedCowPages::CommittedCowPages(size_t committed_pages)
-    : m_committed_pages(committed_pages)
+AnonymousVMObject::SharedCommittedCowPages::SharedCommittedCowPages(CommittedPhysicalPageSet&& committed_pages)
+    : m_committed_pages(move(committed_pages))
 {
 }
 
-CommittedCowPages::~CommittedCowPages()
+AnonymousVMObject::SharedCommittedCowPages::~SharedCommittedCowPages()
 {
-    // Return unused committed pages
-    if (m_committed_pages > 0)
-        MM.uncommit_user_physical_pages(m_committed_pages);
 }
 
-NonnullRefPtr<PhysicalPage> CommittedCowPages::allocate_one()
+NonnullRefPtr<PhysicalPage> AnonymousVMObject::SharedCommittedCowPages::take_one()
 {
-    VERIFY(m_committed_pages > 0);
-    m_committed_pages--;
-
-    return MM.allocate_committed_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+    ScopedSpinLock locker(m_lock);
+    return m_committed_pages.take_one();
 }
 
 }

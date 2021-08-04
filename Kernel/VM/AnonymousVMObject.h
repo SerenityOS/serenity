@@ -14,22 +14,6 @@
 
 namespace Kernel {
 
-class CommittedCowPages : public RefCounted<CommittedCowPages> {
-    AK_MAKE_NONCOPYABLE(CommittedCowPages);
-
-public:
-    CommittedCowPages() = delete;
-
-    explicit CommittedCowPages(size_t);
-    ~CommittedCowPages();
-
-    [[nodiscard]] NonnullRefPtr<PhysicalPage> allocate_one();
-    [[nodiscard]] size_t is_empty() const { return m_committed_pages == 0; }
-
-public:
-    size_t m_committed_pages { 0 };
-};
-
 class AnonymousVMObject final : public VMObject {
 public:
     virtual ~AnonymousVMObject() override;
@@ -55,7 +39,7 @@ public:
     size_t purge();
 
 private:
-    explicit AnonymousVMObject(size_t, AllocationStrategy);
+    explicit AnonymousVMObject(size_t, AllocationStrategy, Optional<CommittedPhysicalPageSet>);
     explicit AnonymousVMObject(PhysicalAddress, size_t);
     explicit AnonymousVMObject(Span<NonnullRefPtr<PhysicalPage>>);
     explicit AnonymousVMObject(AnonymousVMObject const&);
@@ -71,11 +55,28 @@ private:
     Bitmap& ensure_cow_map();
     void ensure_or_reset_cow_map();
 
-    size_t m_unused_committed_pages { 0 };
+    Optional<CommittedPhysicalPageSet> m_unused_committed_pages;
     Bitmap m_cow_map;
 
-    // We share a pool of committed cow-pages with clones
-    RefPtr<CommittedCowPages> m_shared_committed_cow_pages;
+    // AnonymousVMObject shares committed COW pages with cloned children (happens on fork)
+    class SharedCommittedCowPages : public RefCounted<SharedCommittedCowPages> {
+        AK_MAKE_NONCOPYABLE(SharedCommittedCowPages);
+
+    public:
+        SharedCommittedCowPages() = delete;
+
+        explicit SharedCommittedCowPages(CommittedPhysicalPageSet&&);
+        ~SharedCommittedCowPages();
+
+        [[nodiscard]] NonnullRefPtr<PhysicalPage> take_one();
+        [[nodiscard]] bool is_empty() const { return m_committed_pages.is_empty(); }
+
+    public:
+        SpinLock<u8> m_lock;
+        CommittedPhysicalPageSet m_committed_pages;
+    };
+
+    RefPtr<SharedCommittedCowPages> m_shared_committed_cow_pages;
 
     bool m_purgeable { false };
     bool m_volatile { false };

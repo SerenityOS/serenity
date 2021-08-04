@@ -69,10 +69,9 @@ UNMAP_AFTER_INIT MemoryManager::MemoryManager()
     protect_kernel_image();
 
     // We're temporarily "committing" to two pages that we need to allocate below
-    if (!commit_user_physical_pages(2))
-        VERIFY_NOT_REACHED();
+    auto committed_pages = commit_user_physical_pages(2);
 
-    m_shared_zero_page = allocate_committed_user_physical_page();
+    m_shared_zero_page = committed_pages->take_one();
 
     // We're wasting a page here, we just need a special tag (physical
     // address) so that we know when we need to lazily allocate a page
@@ -80,7 +79,7 @@ UNMAP_AFTER_INIT MemoryManager::MemoryManager()
     // than potentially failing if no pages are available anymore.
     // By using a tag we don't have to query the VMObject for every page
     // whether it was committed or not
-    m_lazy_committed_page = allocate_committed_user_physical_page();
+    m_lazy_committed_page = committed_pages->take_one();
 }
 
 UNMAP_AFTER_INIT MemoryManager::~MemoryManager()
@@ -766,21 +765,22 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmo
     return allocate_kernel_region_with_vmobject(range.value(), vmobject, name, access, cacheable);
 }
 
-bool MemoryManager::commit_user_physical_pages(size_t page_count)
+Optional<CommittedPhysicalPageSet> MemoryManager::commit_user_physical_pages(size_t page_count)
 {
     VERIFY(page_count > 0);
     ScopedSpinLock lock(s_mm_lock);
     if (m_system_memory_info.user_physical_pages_uncommitted < page_count)
-        return false;
+        return {};
 
     m_system_memory_info.user_physical_pages_uncommitted -= page_count;
     m_system_memory_info.user_physical_pages_committed += page_count;
-    return true;
+    return CommittedPhysicalPageSet { {}, page_count };
 }
 
-void MemoryManager::uncommit_user_physical_pages(size_t page_count)
+void MemoryManager::uncommit_user_physical_pages(Badge<CommittedPhysicalPageSet>, size_t page_count)
 {
     VERIFY(page_count > 0);
+
     ScopedSpinLock lock(s_mm_lock);
     VERIFY(m_system_memory_info.user_physical_pages_committed >= page_count);
 
@@ -1122,6 +1122,19 @@ void MemoryManager::set_page_writable_direct(VirtualAddress vaddr, bool writable
         return;
     pte->set_writable(writable);
     flush_tlb(&kernel_page_directory(), vaddr);
+}
+
+CommittedPhysicalPageSet::~CommittedPhysicalPageSet()
+{
+    if (m_page_count)
+        MM.uncommit_user_physical_pages({}, m_page_count);
+}
+
+NonnullRefPtr<PhysicalPage> CommittedPhysicalPageSet::take_one()
+{
+    VERIFY(m_page_count > 0);
+    --m_page_count;
+    return MM.allocate_committed_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
 }
 
 }
