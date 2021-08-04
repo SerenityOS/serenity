@@ -72,6 +72,7 @@ struct CodePointData {
     Vector<u32> special_casing_indices;
     Vector<StringView> prop_list;
     StringView script;
+    Vector<StringView> script_extensions;
     StringView word_break_property;
 };
 
@@ -116,6 +117,8 @@ struct UnicodeData {
         { "Unknown"sv, {} },
     };
     Vector<Alias> script_aliases;
+    PropList script_extensions;
+    u32 largest_script_extensions_size { 0 };
 
     PropList word_break_prop_list;
 };
@@ -198,7 +201,7 @@ static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
     }
 }
 
-static void parse_prop_list(Core::File& file, PropList& prop_list)
+static void parse_prop_list(Core::File& file, PropList& prop_list, bool multi_value_property = false)
 {
     while (file.can_read_line()) {
         auto line = file.read_line();
@@ -212,20 +215,27 @@ static void parse_prop_list(Core::File& file, PropList& prop_list)
         VERIFY(segments.size() == 2);
 
         auto code_point_range = segments[0].trim_whitespace();
-        auto property = segments[1].trim_whitespace();
+        Vector<StringView> properties;
 
-        auto& code_points = prop_list.ensure(property);
+        if (multi_value_property)
+            properties = segments[1].trim_whitespace().split_view(' ');
+        else
+            properties = { segments[1].trim_whitespace() };
 
-        if (code_point_range.contains(".."sv)) {
-            segments = code_point_range.split_view(".."sv);
-            VERIFY(segments.size() == 2);
+        for (auto const& property : properties) {
+            auto& code_points = prop_list.ensure(property.trim_whitespace());
 
-            auto begin = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
-            auto end = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[1]).value();
-            code_points.append({ begin, end });
-        } else {
-            auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(code_point_range).value();
-            code_points.append({ code_point, code_point });
+            if (code_point_range.contains(".."sv)) {
+                segments = code_point_range.split_view(".."sv);
+                VERIFY(segments.size() == 2);
+
+                auto begin = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
+                auto end = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[1]).value();
+                code_points.append({ begin, end });
+            } else {
+                auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(code_point_range).value();
+                code_points.append({ code_point, code_point });
+            }
         }
     }
 }
@@ -342,7 +352,7 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
             }
         }
 
-        if (property.is_empty())
+        if (property.is_empty() && !default_.is_empty())
             assign_property(default_);
     };
 
@@ -392,9 +402,11 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
 
         assign_code_point_property(data.code_point, unicode_data.prop_list, data.prop_list, "Assigned"sv);
         assign_code_point_property(data.code_point, unicode_data.script_list, data.script, "Unknown"sv);
+        assign_code_point_property(data.code_point, unicode_data.script_extensions, data.script_extensions, {});
         assign_code_point_property(data.code_point, unicode_data.word_break_prop_list, data.word_break_property, "Other"sv);
 
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
+        unicode_data.largest_script_extensions_size = max(unicode_data.largest_script_extensions_size, data.script_extensions.size());
 
         if (!unicode_data.general_categories.contains_slow(data.general_category))
             unicode_data.general_categories.append(data.general_category);
@@ -409,6 +421,7 @@ static void generate_unicode_data_header(Core::File& file, UnicodeData& unicode_
     SourceGenerator generator { builder };
     generator.set("casing_transform_size", String::number(unicode_data.largest_casing_transform_size));
     generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
+    generator.set("script_extensions_size", String::number(unicode_data.largest_script_extensions_size));
 
     auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> unions = {}, Vector<Alias> aliases = {}, bool as_bitmask = false) {
         VERIFY(!as_bitmask || (values.size() <= 64));
@@ -550,7 +563,11 @@ struct UnicodeData {
     u32 special_casing_size { 0 };
 
     Property properties { Property::Assigned };
+
     Script script { Script::Unknown };
+    Script script_extensions[@script_extensions_size@];
+    u32 script_extensions_size { 0 };
+
     WordBreakProperty word_break_property { WordBreakProperty::Other };
 };
 
@@ -667,6 +684,7 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
         }
 
         generator.append(String::formatted(", Script::{}", data.script));
+        append_list_and_size(data.script_extensions, "Script::{}"sv);
         generator.append(String::formatted(", WordBreakProperty::{}", data.word_break_property));
         generator.append(" },");
     }
@@ -808,6 +826,7 @@ int main(int argc, char** argv)
     char const* prop_alias_path = nullptr;
     char const* prop_value_alias_path = nullptr;
     char const* scripts_path = nullptr;
+    char const* script_extensions_path = nullptr;
     char const* word_break_path = nullptr;
 
     Core::ArgsParser args_parser;
@@ -820,6 +839,7 @@ int main(int argc, char** argv)
     args_parser.add_option(prop_alias_path, "Path to PropertyAliases.txt file", "prop-alias-path", 'a', "prop-alias-path");
     args_parser.add_option(prop_value_alias_path, "Path to PropertyValueAliases.txt file", "prop-value-alias-path", 'v', "prop-value-alias-path");
     args_parser.add_option(scripts_path, "Path to Scripts.txt file", "scripts-path", 'r', "scripts-path");
+    args_parser.add_option(script_extensions_path, "Path to ScriptExtensions.txt file", "script-extensions-path", 'x', "script-extensions-path");
     args_parser.add_option(word_break_path, "Path to WordBreakProperty.txt file", "word-break-path", 'w', "word-break-path");
     args_parser.parse(argc, argv);
 
@@ -848,6 +868,7 @@ int main(int argc, char** argv)
     auto prop_alias_file = open_file(prop_alias_path, "-a/--prop-alias-path");
     auto prop_value_alias_file = open_file(prop_value_alias_path, "-v/--prop-value-alias-path");
     auto scripts_file = open_file(scripts_path, "-r/--scripts-path");
+    auto script_extensions_file = open_file(script_extensions_path, "-x/--script-extensions-path");
     auto word_break_file = open_file(word_break_path, "-w/--word-break-path");
 
     UnicodeData unicode_data {};
@@ -856,6 +877,7 @@ int main(int argc, char** argv)
     parse_prop_list(derived_core_prop_file, unicode_data.prop_list);
     parse_alias_list(prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases);
     parse_prop_list(scripts_file, unicode_data.script_list);
+    parse_prop_list(script_extensions_file, unicode_data.script_extensions, true);
     parse_prop_list(word_break_file, unicode_data.word_break_prop_list);
 
     parse_unicode_data(unicode_data_file, unicode_data);
