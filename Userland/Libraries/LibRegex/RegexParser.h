@@ -214,7 +214,7 @@ private:
     Optional<unsigned> read_digits(ReadDigitsInitialZeroState initial_zero = ReadDigitsInitialZeroState::Allow, bool hex = false, int max_count = -1);
     StringView read_capture_group_specifier(bool take_starting_angle_bracket = false);
 
-    using PropertyEscape = Variant<Unicode::Property, Unicode::GeneralCategory>;
+    using PropertyEscape = Variant<Unicode::Property, Unicode::GeneralCategory, Unicode::Script>;
     Optional<PropertyEscape> read_unicode_property_escape();
 
     bool parse_pattern(ByteCode&, size_t&, bool unicode, bool named);

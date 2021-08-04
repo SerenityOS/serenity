@@ -683,6 +683,12 @@ TEST_CASE(ECMA262_property_match)
         { "\\p{gc=Cased_Letter}", "a", true, ECMAScriptFlags::Unicode },
         { "\\p{gc=Cased_Letter}", "A", true, ECMAScriptFlags::Unicode },
         { "\\p{gc=Cased_Letter}", "9", false, ECMAScriptFlags::Unicode },
+        { "\\p{Script=Latin}", "a", true, ECMAScriptFlags::Unicode },
+        { "\\p{Script=Latin}", "A", true, ECMAScriptFlags::Unicode },
+        { "\\p{Script=Latin}", "9", false, ECMAScriptFlags::Unicode },
+        { "\\p{sc=Latin}", "a", true, ECMAScriptFlags::Unicode },
+        { "\\p{sc=Latin}", "A", true, ECMAScriptFlags::Unicode },
+        { "\\p{sc=Latin}", "9", false, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
