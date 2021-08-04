@@ -71,6 +71,7 @@ struct AppMetadata {
     String executable;
     String name;
     String category;
+    GUI::Icon icon;
     bool run_in_terminal;
 };
 Vector<AppMetadata> g_apps;
@@ -91,7 +92,7 @@ Vector<String> discover_apps_and_categories()
     HashTable<String> seen_app_categories;
     Desktop::AppFile::for_each([&](auto af) {
         if (access(af->executable().characters(), X_OK) == 0) {
-            g_apps.append({ af->executable(), af->name(), af->category(), af->run_in_terminal() });
+            g_apps.append({ af->executable(), af->name(), af->category(), af->icon(), af->run_in_terminal() });
             seen_app_categories.set(af->category());
         }
     });
@@ -172,7 +173,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             continue;
         }
 
-        auto icon = GUI::FileIconProvider::icon_for_executable(app.executable).bitmap_for_size(16);
+        auto icon = app.icon.bitmap_for_size(16);
 
         if constexpr (SYSTEM_MENU_DEBUG) {
             if (icon)
