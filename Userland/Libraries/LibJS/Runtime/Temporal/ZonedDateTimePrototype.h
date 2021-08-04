@@ -30,6 +30,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(second_getter);
     JS_DECLARE_NATIVE_FUNCTION(millisecond_getter);
     JS_DECLARE_NATIVE_FUNCTION(microsecond_getter);
+    JS_DECLARE_NATIVE_FUNCTION(nanosecond_getter);
 };
 
 }
