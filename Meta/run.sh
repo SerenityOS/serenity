@@ -10,7 +10,8 @@ die() {
 
 #SERENITY_PACKET_LOGGING_ARG="-object filter-dump,id=hue,netdev=breh,file=e1000.pcap"
 
-[ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && SERENITY_VIRT_TECH_ARG="-enable-kvm"
+KVM_SUPPORT="0"
+[ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && KVM_SUPPORT="1"
 
 [ -z "$SERENITY_BOCHS_BIN" ] && SERENITY_BOCHS_BIN="bochs"
 
@@ -41,10 +42,14 @@ if [ -z "$SERENITY_QEMU_BIN" ]; then
     if command -v wslpath >/dev/null; then
         QEMU_INSTALL_DIR=$(reg.exe query 'HKLM\Software\QEMU' /v Install_Dir /t REG_SZ | grep '^    Install_Dir' | sed 's/    / /g' | cut -f4- -d' ')
         if [ -z "$QEMU_INSTALL_DIR" ]; then
-            die "Could not determine where QEMU for Windows is installed. Please make sure QEMU is installed or set SERENITY_QEMU_BIN if it is already installed."
+            if [ "$KVM_SUPPORT" -eq "0" ]; then
+                die "Could not determine where QEMU for Windows is installed. Please make sure QEMU is installed or set SERENITY_QEMU_BIN if it is already installed."
+            fi
+        else
+            KVM_SUPPORT="0"
+            QEMU_BINARY_PREFIX="$(wslpath -- "${QEMU_INSTALL_DIR}" | tr -d '\r\n')/"
+            QEMU_BINARY_SUFFIX=".exe"
         fi
-        QEMU_BINARY_PREFIX="$(wslpath -- "${QEMU_INSTALL_DIR}" | tr -d '\r\n')/"
-        QEMU_BINARY_SUFFIX=".exe"
     fi
     if command -v "${QEMU_BINARY_PREFIX}qemu-system-x86_64${QEMU_BINARY_SUFFIX}" >/dev/null; then
         SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-x86_64${QEMU_BINARY_SUFFIX}"
@@ -55,6 +60,8 @@ if [ -z "$SERENITY_QEMU_BIN" ]; then
         SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-i386${QEMU_BINARY_SUFFIX}"
     fi
 fi
+
+[ "$KVM_SUPPORT" -eq "1" ] && SERENITY_VIRT_TECH_ARG="-enable-kvm"
 
 [ -z "$SERENITY_KERNEL_CMDLINE" ] && SERENITY_KERNEL_CMDLINE="hello"
 
@@ -90,6 +97,8 @@ if [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ]; then
     die
 fi
 
+NATIVE_WINDOWS_QEMU="0"
+
 if command -v wslpath >/dev/null; then
     case "$SERENITY_QEMU_BIN" in
         /mnt/?/*)
@@ -102,6 +111,8 @@ if command -v wslpath >/dev/null; then
             fi
             [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max,vmx=off"
             SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE disable_virtio"
+            NATIVE_WINDOWS_QEMU="1"
+            ;;
     esac
 fi
 
@@ -115,7 +126,7 @@ fi
 
 if [ "$(uname)" = "Darwin" ]; then
     SERENITY_AUDIO_BACKEND="-audiodev coreaudio,id=snd0"
-elif command -v wslpath >/dev/null; then
+elif [ "$NATIVE_WINDOWS_QEMU" -eq "1" ]; then
     SERENITY_AUDIO_BACKEND="-audiodev dsound,id=snd0"
 elif "$SERENITY_QEMU_BIN" -audio-help 2>&1 | grep -- "-audiodev id=sdl" >/dev/null; then
     SERENITY_AUDIO_BACKEND="-audiodev sdl,id=snd0"
@@ -130,15 +141,15 @@ else
 fi
 
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
-if  [ "$SERENITY_SPICE" ]; then
+if [ "$SERENITY_SPICE" ]; then
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-spice-app}"
-elif command -v wslpath >/dev/null; then
+elif [ "$NATIVE_WINDOWS_QEMU" -eq "1" ]; then
     # QEMU for windows does not like gl=on, so detect if we are building in wsl, and if so, disable it
     # Also, when using the GTK backend we run into this problem: https://github.com/SerenityOS/serenity/issues/7657
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=off}"
 elif [ $SERENITY_SCREENS -gt 1 ] && "${SERENITY_QEMU_BIN}" --display help | grep -iq sdl; then
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=off}"
-elif ("${SERENITY_QEMU_BIN}" --display help | grep -iq sdl) && (ldconfig -p | grep -iq virglrenderer); then
+elif ! command -v wslpath >/dev/null && ("${SERENITY_QEMU_BIN}" --display help | grep -iq sdl) && (ldconfig -p | grep -iq virglrenderer); then
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=on}"
 elif "${SERENITY_QEMU_BIN}" --display help | grep -iq cocoa; then
     # QEMU for OSX seems to only support cocoa
