@@ -2173,6 +2173,80 @@ RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context,
     return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
 }
 
+RefPtr<StyleValue> Parser::parse_text_decoration_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto is_text_decoration_line = [](StyleValue const& value) -> bool {
+        switch (value.to_identifier()) {
+        case ValueID::None:
+        case ValueID::Underline:
+        case ValueID::Overline:
+        case ValueID::LineThrough:
+        case ValueID::Blink:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    auto is_text_decoration_style = [](StyleValue const& value) -> bool {
+        switch (value.to_identifier()) {
+        case ValueID::Solid:
+        case ValueID::Double:
+        case ValueID::Dotted:
+        case ValueID::Dashed:
+        case ValueID::Wavy:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    if (component_values.size() > 3)
+        return nullptr;
+
+    RefPtr<StyleValue> decoration_line;
+    RefPtr<StyleValue> decoration_style;
+    RefPtr<StyleValue> decoration_color;
+    // FIXME: Implement 'text-decoration-thickness' parameter. https://www.w3.org/TR/css-text-decor-4/#text-decoration-width-property
+
+    for (auto& part : component_values) {
+        auto value = parse_css_value(context, PropertyID::TextDecoration, part);
+        if (!value)
+            return nullptr;
+
+        if (value->is_color()) {
+            if (decoration_color)
+                return nullptr;
+            decoration_color = value.release_nonnull();
+            continue;
+        }
+        if (is_text_decoration_line(*value)) {
+            if (decoration_line)
+                return nullptr;
+            decoration_line = value.release_nonnull();
+            continue;
+        }
+        if (is_text_decoration_style(*value)) {
+            if (decoration_style)
+                return nullptr;
+            decoration_style = value.release_nonnull();
+            continue;
+        }
+
+        return nullptr;
+    }
+
+    if (!decoration_line)
+        decoration_line = IdentifierStyleValue::create(ValueID::None);
+    if (!decoration_style)
+        decoration_style = IdentifierStyleValue::create(ValueID::Solid);
+    // FIXME: Should default to 'currentcolor' special value: https://www.w3.org/TR/css-color-3/#currentcolor
+    if (!decoration_color)
+        decoration_color = InitialStyleValue::create();
+
+    return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull());
+}
+
 RefPtr<StyleValue> Parser::parse_as_css_value(PropertyID property_id)
 {
     auto component_values = parse_as_list_of_component_values();
@@ -2217,6 +2291,10 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         break;
     case PropertyID::ListStyle:
         if (auto parsed_value = parse_list_style_value(m_context, component_values))
+            return parsed_value;
+        break;
+    case PropertyID::TextDecoration:
+        if (auto parsed_value = parse_text_decoration_value(m_context, component_values))
             return parsed_value;
         break;
     default:
