@@ -31,6 +31,7 @@ class InodeWatcher;
 class KBuffer;
 class KResult;
 class LocalSocket;
+class MemoryManager;
 class Mutex;
 class MappedROM;
 class MasterPTY;
