@@ -1889,6 +1889,98 @@ RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context,
     return BoxShadowStyleValue::create(offset_x, offset_y, blur_radius, color);
 }
 
+RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto is_flex_grow_or_shrink = [](StyleValue const& value) -> bool {
+        if (value.is_numeric())
+            return true;
+        return false;
+    };
+
+    auto is_flex_basis = [](StyleValue const& value) -> bool {
+        if (value.is_length())
+            return true;
+        switch (value.to_identifier()) {
+        case ValueID::Auto:
+        case ValueID::Content:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    if (component_values.size() == 1) {
+        auto value = parse_css_value(context, PropertyID::Flex, component_values[0]);
+        if (!value)
+            return nullptr;
+
+        switch (value->to_identifier()) {
+        case ValueID::Auto: {
+            auto one = NumericStyleValue::create(1);
+            return FlexStyleValue::create(one, one, IdentifierStyleValue::create(ValueID::Auto));
+        }
+        case ValueID::None: {
+            auto zero = NumericStyleValue::create(0);
+            return FlexStyleValue::create(zero, zero, IdentifierStyleValue::create(ValueID::Auto));
+        }
+        default:
+            break;
+        }
+    }
+
+    RefPtr<StyleValue> flex_grow;
+    RefPtr<StyleValue> flex_shrink;
+    RefPtr<StyleValue> flex_basis;
+
+    for (size_t i = 0; i < component_values.size(); ++i) {
+        auto value = parse_css_value(context, PropertyID::Flex, component_values[i]);
+        if (!value)
+            return nullptr;
+
+        // Zero is a valid value for basis, but only if grow and shrink are already specified.
+        if (value->is_numeric() && static_cast<NumericStyleValue&>(*value).value() == 0) {
+            if (flex_grow && flex_shrink && !flex_basis) {
+                flex_basis = LengthStyleValue::create(Length(0, Length::Type::Px));
+                continue;
+            }
+        }
+
+        if (is_flex_grow_or_shrink(*value)) {
+            if (flex_grow)
+                return nullptr;
+            flex_grow = value.release_nonnull();
+
+            // Flex-shrink may optionally follow directly after.
+            if (i + 1 < component_values.size()) {
+                auto second_value = parse_css_value(context, PropertyID::Flex, component_values[i + 1]);
+                if (second_value && is_flex_grow_or_shrink(*second_value)) {
+                    flex_shrink = second_value.release_nonnull();
+                    i++;
+                }
+            }
+            continue;
+        }
+
+        if (is_flex_basis(*value)) {
+            if (flex_basis)
+                return nullptr;
+            flex_basis = value.release_nonnull();
+            continue;
+        }
+
+        return nullptr;
+    }
+
+    if (!flex_grow)
+        flex_grow = NumericStyleValue::create(0);
+    if (!flex_shrink)
+        flex_shrink = NumericStyleValue::create(1);
+    if (!flex_basis)
+        flex_basis = IdentifierStyleValue::create(ValueID::Auto);
+
+    return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
+}
+
 RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
     auto is_font_size = [](StyleValue const& value) -> bool {
@@ -2284,6 +2376,10 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     case PropertyID::BoxShadow:
         if (auto parsed_box_shadow = parse_box_shadow_value(m_context, component_values))
             return parsed_box_shadow;
+        break;
+    case PropertyID::Flex:
+        if (auto parsed_value = parse_flex_value(m_context, component_values))
+            return parsed_value;
         break;
     case PropertyID::Font:
         if (auto parsed_value = parse_font_value(m_context, component_values))

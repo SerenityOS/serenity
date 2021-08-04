@@ -250,31 +250,6 @@ static inline bool is_flex_wrap(StyleValue const& value)
     }
 }
 
-static inline bool is_flex_grow_or_shrink(StyleValue const& value)
-{
-    if (value.is_builtin_or_dynamic())
-        return true;
-
-    if (value.is_numeric())
-        return true;
-
-    return false;
-}
-
-static inline bool is_flex_basis(StyleValue const& value)
-{
-    if (value.is_builtin_or_dynamic())
-        return true;
-
-    if (value.is_length())
-        return true;
-
-    if (value.is_identifier() && value.to_identifier() == ValueID::Content)
-        return true;
-
-    return false;
-}
-
 static inline bool is_font_family(StyleValue const& value)
 {
     if (value.is_builtin_or_dynamic())
@@ -801,61 +776,19 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Flex) {
-        if (value.is_length() || (value.is_identifier() && value.to_identifier() == CSS::ValueID::Content)) {
+        if (value.is_flex()) {
+            auto& flex = static_cast<CSS::FlexStyleValue const&>(value);
+            style.set_property(CSS::PropertyID::FlexGrow, flex.grow());
+            style.set_property(CSS::PropertyID::FlexShrink, flex.shrink());
+            style.set_property(CSS::PropertyID::FlexBasis, flex.basis());
+            return;
+        }
+        if (value.is_builtin()) {
+            style.set_property(CSS::PropertyID::FlexGrow, value);
+            style.set_property(CSS::PropertyID::FlexShrink, value);
             style.set_property(CSS::PropertyID::FlexBasis, value);
             return;
         }
-
-        if (value.is_component_value_list()) {
-            auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
-            if (parts.size() == 1) {
-                auto value = Parser::parse_css_value(context, property_id, parts[0]);
-                if (!value)
-                    return;
-                if (is_flex_basis(*value)) {
-                    style.set_property(CSS::PropertyID::FlexBasis, *value);
-                } else if (is_flex_grow_or_shrink(*value)) {
-                    style.set_property(CSS::PropertyID::FlexGrow, *value);
-                }
-                return;
-            }
-
-            if (parts.size() == 2) {
-                auto flex_grow = Parser::parse_css_value(context, property_id, parts[0]);
-                auto second_value = Parser::parse_css_value(context, property_id, parts[1]);
-                if (!flex_grow || !second_value)
-                    return;
-
-                style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
-
-                if (is_flex_basis(*second_value)) {
-                    style.set_property(CSS::PropertyID::FlexBasis, *second_value);
-                } else if (is_flex_grow_or_shrink(*second_value)) {
-                    style.set_property(CSS::PropertyID::FlexShrink, *second_value);
-                }
-                return;
-            }
-
-            if (parts.size() == 3) {
-                auto flex_grow = Parser::parse_css_value(context, property_id, parts[0]);
-                auto flex_shrink = Parser::parse_css_value(context, property_id, parts[1]);
-                auto flex_basis = Parser::parse_css_value(context, property_id, parts[2]);
-                if (!flex_grow || !flex_shrink || !flex_basis)
-                    return;
-
-                style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
-                style.set_property(CSS::PropertyID::FlexShrink, *flex_shrink);
-
-                if (is_flex_basis(*flex_basis))
-                    style.set_property(CSS::PropertyID::FlexBasis, *flex_basis);
-
-                return;
-            }
-
-            return;
-        }
-
-        dbgln("Unsure what to do with CSS flex value '{}'", value.to_string());
         return;
     }
 
