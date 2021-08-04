@@ -145,21 +145,22 @@ install_launcher() {
         echo "Syntax: install_launcher <name> <category> <command>"
         exit 1
     fi
-    launcher_name="$1"
-    launcher_category="$2"
-    launcher_command="$3"
-    launcher_filename="${launcher_name,,}"
+    local launcher_name="$1"
+    local launcher_category="$2"
+    local launcher_command="$3"
+    local launcher_filename="${launcher_name,,}"
     launcher_filename="${launcher_filename// /}"
+    local icon_override=""
     case "$launcher_command" in
         *\ *)
             mkdir -p $DESTDIR/usr/local/libexec
             launcher_executable="/usr/local/libexec/$launcher_filename"
             cat >"$DESTDIR/$launcher_executable" <<SCRIPT
 #!/bin/sh
-set -e
 exec $(printf '%q ' $launcher_command)
 SCRIPT
             chmod +x "$DESTDIR/$launcher_executable"
+            icon_override="IconPath=${launcher_command%% *}"
             ;;
         *)
             launcher_executable="$launcher_command"
@@ -172,8 +173,8 @@ Name=$launcher_name
 Executable=$launcher_executable
 Category=$launcher_category
 RunInTerminal=$launcher_run_in_terminal
+${icon_override}
 CONFIG
-    unset launcher_filename
 }
 # Checks if a function is defined. In this case, if the function is not defined in the port's script, then we will use our defaults. This way, ports don't need to include these functions every time, but they can override our defaults if needed.
 func_defined() {
