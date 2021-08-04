@@ -127,7 +127,7 @@ install_icon() {
         if [ -n "$index" ]; then
             run convert "${icon}[${index}]" "app-${icon_size}.png"
         else
-            run convert "$icon" -resize $icon_size "app-${icon_size}.png"
+            run convert "$icon[0]" -resize $icon_size "app-${icon_size}.png"
         fi
     done
     run objcopy --add-section serenity_icon_s="app-16x16.png" "${DESTDIR}${launcher}"
