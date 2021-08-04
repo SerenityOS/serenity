@@ -161,7 +161,7 @@ PlainDate* to_temporal_date(GlobalObject& global_object, Value item, Object* opt
 }
 
 // 3.5.4 RegulateISODate ( year, month, day, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-regulateisodate
-Optional<TemporalDate> regulate_iso_date(GlobalObject& global_object, double year, double month, double day, String const& overflow)
+Optional<ISODate> regulate_iso_date(GlobalObject& global_object, double year, double month, double day, String const& overflow)
 {
     auto& vm = global_object.vm();
     // 1. Assert: year, month, and day are integers.
@@ -187,7 +187,7 @@ Optional<TemporalDate> regulate_iso_date(GlobalObject& global_object, double yea
             return {};
         }
         // b. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
-        return TemporalDate { .year = y, .month = m, .day = d, .calendar = {} };
+        return ISODate { .year = y, .month = m, .day = d };
     }
     // 4. If overflow is "constrain", then
     else if (overflow == "constrain"sv) {
@@ -206,7 +206,7 @@ Optional<TemporalDate> regulate_iso_date(GlobalObject& global_object, double yea
         day = constrain_to_range(day, 1, iso_days_in_month(y, month));
 
         // c. Return the Record { [[Year]]: year, [[Month]]: month, [[Day]]: day }.
-        return TemporalDate { .year = y, .month = static_cast<u8>(month), .day = static_cast<u8>(day), .calendar = {} };
+        return ISODate { .year = y, .month = static_cast<u8>(month), .day = static_cast<u8>(day) };
     }
     VERIFY_NOT_REACHED();
 }
