@@ -46,6 +46,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.epochMilliseconds, epoch_milliseconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.epochMicroseconds, epoch_microseconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.epochNanoseconds, epoch_nanoseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.dayOfWeek, day_of_week_getter, {}, Attribute::Configurable);
 }
 
 static ZonedDateTime* typed_this(GlobalObject& global_object)
@@ -425,6 +426,33 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::epoch_nanoseconds_getter)
 
     // 3. Return zonedDateTime.[[Nanoseconds]].
     return &zoned_date_time->nanoseconds();
+}
+
+// 6.3.19 get Temporal.ZonedDateTime.prototype.dayOfWeek, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.dayofweek
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_of_week_getter)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let timeZone be zonedDateTime.[[TimeZone]].
+    auto& time_zone = zoned_date_time->time_zone();
+
+    // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
+    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds());
+
+    // 5. Let calendar be zonedDateTime.[[Calendar]].
+    auto& calendar = zoned_date_time->calendar();
+
+    // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
+    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
+    if (vm.exception())
+        return {};
+
+    // 7. Return ? CalendarDayOfWeek(calendar, temporalDateTime).
+    return calendar_day_of_week(global_object, calendar, *temporal_date_time);
 }
 
 }
