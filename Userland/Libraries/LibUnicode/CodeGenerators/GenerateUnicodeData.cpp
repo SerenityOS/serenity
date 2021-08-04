@@ -828,6 +828,7 @@ int main(int argc, char** argv)
     char const* scripts_path = nullptr;
     char const* script_extensions_path = nullptr;
     char const* word_break_path = nullptr;
+    char const* emoji_data_path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode Data header file to generate", "generated-header-path", 'h', "generated-header-path");
@@ -841,6 +842,7 @@ int main(int argc, char** argv)
     args_parser.add_option(scripts_path, "Path to Scripts.txt file", "scripts-path", 'r', "scripts-path");
     args_parser.add_option(script_extensions_path, "Path to ScriptExtensions.txt file", "script-extensions-path", 'x', "script-extensions-path");
     args_parser.add_option(word_break_path, "Path to WordBreakProperty.txt file", "word-break-path", 'w', "word-break-path");
+    args_parser.add_option(emoji_data_path, "Path to emoji-data.txt file", "emoji-data-path", 'e', "emoji-data-path");
     args_parser.parse(argc, argv);
 
     auto open_file = [&](StringView path, StringView flags, Core::OpenMode mode = Core::OpenMode::ReadOnly) {
@@ -870,11 +872,13 @@ int main(int argc, char** argv)
     auto scripts_file = open_file(scripts_path, "-r/--scripts-path");
     auto script_extensions_file = open_file(script_extensions_path, "-x/--script-extensions-path");
     auto word_break_file = open_file(word_break_path, "-w/--word-break-path");
+    auto emoji_data_file = open_file(emoji_data_path, "-e/--emoji-data-path");
 
     UnicodeData unicode_data {};
     parse_special_casing(special_casing_file, unicode_data);
     parse_prop_list(prop_list_file, unicode_data.prop_list);
     parse_prop_list(derived_core_prop_file, unicode_data.prop_list);
+    parse_prop_list(emoji_data_file, unicode_data.prop_list);
     parse_alias_list(prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases);
     parse_prop_list(scripts_file, unicode_data.script_list);
     parse_prop_list(script_extensions_file, unicode_data.script_extensions, true);
