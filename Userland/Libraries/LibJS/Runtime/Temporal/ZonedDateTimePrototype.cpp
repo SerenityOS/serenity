@@ -55,6 +55,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.monthsInYear, months_in_year_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.inLeapYear, in_leap_year_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.offsetNanoseconds, offset_nanoseconds_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.offset, offset_getter, {}, Attribute::Configurable);
 }
 
 static ZonedDateTime* typed_this(GlobalObject& global_object)
@@ -669,6 +670,25 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_nanoseconds_getter)
 
     // 5. Return 𝔽(? GetOffsetNanosecondsFor(timeZone, instant)).
     return Value(get_offset_nanoseconds_for(global_object, &time_zone, *instant));
+}
+
+// 6.3.29 get Temporal.ZonedDateTime.prototype.offset, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.offset
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
+    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds());
+
+    // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(zonedDateTime.[[TimeZone]], instant).
+    auto offset_string = builtin_time_zone_get_offset_string_for(global_object, zoned_date_time->time_zone(), *instant);
+    if (vm.exception())
+        return {};
+    return js_string(vm, move(*offset_string));
 }
 
 }
