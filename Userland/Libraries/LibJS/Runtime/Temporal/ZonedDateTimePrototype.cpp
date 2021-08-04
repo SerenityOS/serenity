@@ -51,6 +51,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.weekOfYear, week_of_year_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.daysInWeek, days_in_week_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.daysInMonth, days_in_month_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.daysInYear, days_in_year_getter, {}, Attribute::Configurable);
 }
 
 static ZonedDateTime* typed_this(GlobalObject& global_object)
@@ -565,6 +566,33 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_month_getter)
 
     // 7. Return ? CalendarDaysInMonth(calendar, temporalDateTime).
     return calendar_days_in_month(global_object, calendar, *temporal_date_time);
+}
+
+// 6.3.25 get Temporal.ZonedDateTime.prototype.daysInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.daysinyear
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::days_in_year_getter)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let timeZone be zonedDateTime.[[TimeZone]].
+    auto& time_zone = zoned_date_time->time_zone();
+
+    // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
+    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds());
+
+    // 5. Let calendar be zonedDateTime.[[Calendar]].
+    auto& calendar = zoned_date_time->calendar();
+
+    // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
+    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
+    if (vm.exception())
+        return {};
+
+    // 7. Return ? CalendarDaysInYear(calendar, temporalDateTime).
+    return calendar_days_in_year(global_object, calendar, *temporal_date_time);
 }
 
 }
