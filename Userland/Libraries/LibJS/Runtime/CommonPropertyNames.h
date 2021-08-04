@@ -283,6 +283,7 @@ namespace JS {
     P(next)                                  \
     P(now)                                   \
     P(of)                                    \
+    P(offset)                                \
     P(offsetNanoseconds)                     \
     P(ownKeys)                               \
     P(padEnd)                                \

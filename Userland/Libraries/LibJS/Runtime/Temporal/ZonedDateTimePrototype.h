@@ -44,6 +44,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(months_in_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(in_leap_year_getter);
     JS_DECLARE_NATIVE_FUNCTION(offset_nanoseconds_getter);
+    JS_DECLARE_NATIVE_FUNCTION(offset_getter);
 };
 
 }
