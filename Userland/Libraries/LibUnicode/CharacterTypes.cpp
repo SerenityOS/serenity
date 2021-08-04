@@ -262,7 +262,7 @@ bool is_ecma262_property([[maybe_unused]] Property property)
     case Unicode::Property::Any:
     case Unicode::Property::Assigned:
     case Unicode::Property::Bidi_Control:
-    // case Unicode::Property::Bidi_Mirrored:
+    case Unicode::Property::Bidi_Mirrored:
     case Unicode::Property::Case_Ignorable:
     case Unicode::Property::Cased:
     case Unicode::Property::Changes_When_Casefolded:
