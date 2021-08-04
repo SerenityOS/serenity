@@ -69,6 +69,7 @@ enum class OpCodeId : ByteCodeValueType {
     __ENUMERATE_CHARACTER_COMPARE_TYPE(Property)         \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(GeneralCategory)  \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(Script)           \
+    __ENUMERATE_CHARACTER_COMPARE_TYPE(ScriptExtension)  \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(RangeExpressionDummy)
 
 enum class CharacterCompareType : ByteCodeValueType {
@@ -729,6 +730,7 @@ private:
     ALWAYS_INLINE static void compare_property(MatchInput const& input, MatchState& state, Unicode::Property property, bool inverse, bool& inverse_matched);
     ALWAYS_INLINE static void compare_general_category(MatchInput const& input, MatchState& state, Unicode::GeneralCategory general_category, bool inverse, bool& inverse_matched);
     ALWAYS_INLINE static void compare_script(MatchInput const& input, MatchState& state, Unicode::Script script, bool inverse, bool& inverse_matched);
+    ALWAYS_INLINE static void compare_script_extension(MatchInput const& input, MatchState& state, Unicode::Script script, bool inverse, bool& inverse_matched);
 };
 
 template<typename T>
