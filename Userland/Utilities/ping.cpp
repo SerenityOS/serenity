@@ -32,6 +32,7 @@ static const char* host;
 static int payload_size = -1;
 static int interval = 1;
 static int ttl = 64;
+static bool dont_frag = false;
 
 static void closing_statistics()
 {
@@ -66,6 +67,7 @@ int main(int argc, char** argv)
     args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
     args_parser.add_option(interval, "Packet interval in seconds", "interval", 'i', "interval");
     args_parser.add_option(ttl, "TTL of the ECHO_REQUEST packets.", "ttl", 'm', "ttl");
+    args_parser.add_option(dont_frag, "Disable fragmentation.", "df", 'D');
     args_parser.parse(argc, argv);
 
     if (payload_size < 0) {
@@ -113,6 +115,15 @@ int main(int argc, char** argv)
     if (rc < 0) {
         perror("setsockopt");
         return 1;
+    }
+
+    if (dont_frag) {
+        int value = 1;
+        rc = setsockopt(fd, IPPROTO_IP, IP_DONTFRAG, &value, sizeof(value));
+        if (rc < 0) {
+            perror("setsockopt");
+            return 1;
+        }
     }
 
     auto* hostent = gethostbyname(host);
