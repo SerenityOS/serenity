@@ -280,6 +280,10 @@ int main(int argc, char** argv)
     text_box.on_escape_pressed = []() {
         GUI::Application::the()->quit();
     };
+    window->on_active_window_change = [](bool is_active_window) {
+        if (!is_active_window)
+            GUI::Application::the()->quit();
+    };
 
     db.on_new_results = [&](auto results) {
         if (results.is_empty())
