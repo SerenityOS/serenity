@@ -689,6 +689,12 @@ TEST_CASE(ECMA262_property_match)
         { "\\p{sc=Latin}", "a", true, ECMAScriptFlags::Unicode },
         { "\\p{sc=Latin}", "A", true, ECMAScriptFlags::Unicode },
         { "\\p{sc=Latin}", "9", false, ECMAScriptFlags::Unicode },
+        { "\\p{Script_Extensions=Deva}", "a", false, ECMAScriptFlags::Unicode },
+        { "\\p{Script_Extensions=Beng}", "\xe1\xb3\x95", true, ECMAScriptFlags::Unicode }, // U+01CD5
+        { "\\p{Script_Extensions=Deva}", "\xe1\xb3\x95", true, ECMAScriptFlags::Unicode }, // U+01CD5
+        { "\\p{scx=Deva}", "a", false, ECMAScriptFlags::Unicode },
+        { "\\p{scx=Beng}", "\xe1\xb3\x95", true, ECMAScriptFlags::Unicode }, // U+01CD5
+        { "\\p{scx=Deva}", "\xe1\xb3\x95", true, ECMAScriptFlags::Unicode }, // U+01CD5
     };
 
     for (auto& test : tests) {
