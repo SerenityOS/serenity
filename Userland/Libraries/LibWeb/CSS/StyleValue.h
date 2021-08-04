@@ -231,6 +231,7 @@ public:
         Calculated,
         Background,
         BoxShadow,
+        Flex,
         Font,
         ListStyle,
         TextDecoration,
@@ -252,6 +253,7 @@ public:
     bool is_calculated() const { return type() == Type::Calculated; }
     bool is_background() const { return type() == Type::Background; }
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
+    bool is_flex() const { return type() == Type::Flex; }
     bool is_font() const { return type() == Type::Font; }
     bool is_list_style() const { return type() == Type::ListStyle; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
@@ -675,6 +677,43 @@ private:
     // FIXME: background-attachment
     // FIXME: background-clip
     // FIXME: background-origin
+};
+
+class FlexStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<FlexStyleValue> create(
+        NonnullRefPtr<StyleValue> grow,
+        NonnullRefPtr<StyleValue> shrink,
+        NonnullRefPtr<StyleValue> basis)
+    {
+        return adopt_ref(*new FlexStyleValue(grow, shrink, basis));
+    }
+    virtual ~FlexStyleValue() override { }
+
+    NonnullRefPtr<StyleValue> grow() const { return m_grow; }
+    NonnullRefPtr<StyleValue> shrink() const { return m_shrink; }
+    NonnullRefPtr<StyleValue> basis() const { return m_basis; }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("Flex grow: {}, shrink: {}, basis: {}", m_grow->to_string(), m_shrink->to_string(), m_basis->to_string());
+    }
+
+private:
+    FlexStyleValue(
+        NonnullRefPtr<StyleValue> grow,
+        NonnullRefPtr<StyleValue> shrink,
+        NonnullRefPtr<StyleValue> basis)
+        : StyleValue(Type::Flex)
+        , m_grow(grow)
+        , m_shrink(shrink)
+        , m_basis(basis)
+    {
+    }
+
+    NonnullRefPtr<StyleValue> m_grow;
+    NonnullRefPtr<StyleValue> m_shrink;
+    NonnullRefPtr<StyleValue> m_basis;
 };
 
 class FontStyleValue final : public StyleValue {
