@@ -28,6 +28,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(hour_getter);
     JS_DECLARE_NATIVE_FUNCTION(minute_getter);
     JS_DECLARE_NATIVE_FUNCTION(second_getter);
+    JS_DECLARE_NATIVE_FUNCTION(millisecond_getter);
 };
 
 }
