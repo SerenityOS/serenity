@@ -26,7 +26,7 @@ namespace Kernel {
 void __panic(const char* file, unsigned int line, const char* function)
 {
     critical_dmesgln("at {}:{} in {}", file, line, function);
-    dump_backtrace();
+    dump_backtrace(PrintToScreen::Yes);
     if (kernel_command_line().boot_mode() == BootMode::SelfTest)
         __shutdown();
     else
