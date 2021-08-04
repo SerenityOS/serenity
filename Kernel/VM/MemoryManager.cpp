@@ -299,13 +299,12 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     VERIFY(virtual_to_low_physical((FlatPtr)super_pages) + sizeof(super_pages) < 0x1000000);
 
     // Append statically-allocated super physical physical_region.
-    m_super_physical_regions.append(PhysicalRegion::try_create(
+    m_super_physical_region = PhysicalRegion::try_create(
         PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages))),
-        PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages + sizeof(super_pages)))))
-                                        .release_nonnull());
+        PhysicalAddress(virtual_to_low_physical(FlatPtr(super_pages + sizeof(super_pages)))));
+    VERIFY(m_super_physical_region);
 
-    for (auto& region : m_super_physical_regions)
-        m_system_memory_info.super_physical_pages += region.size();
+    m_system_memory_info.super_physical_pages += m_super_physical_region->size();
 
     for (auto& region : m_user_physical_regions)
         m_system_memory_info.user_physical_pages += region.size();
@@ -327,10 +326,8 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         dmesgln("MM: {} range @ {} - {} (size {:#x})", UserMemoryRangeTypeNames[to_underlying(used_range.type)], used_range.start, used_range.end.offset(-1), used_range.end.as_ptr() - used_range.start.as_ptr());
     }
 
-    for (auto& region : m_super_physical_regions) {
-        dmesgln("MM: Super physical region: {} - {} (size {:#x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
-        region.initialize_zones();
-    }
+    dmesgln("MM: Super physical region: {} - {} (size {:#x})", m_super_physical_region->lower(), m_super_physical_region->upper().offset(-1), PAGE_SIZE * m_super_physical_region->size());
+    m_super_physical_region->initialize_zones();
 
     for (auto& region : m_user_physical_regions) {
         dmesgln("MM: User physical region: {} - {} (size {:#x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
@@ -811,18 +808,11 @@ void MemoryManager::deallocate_physical_page(PhysicalAddress paddr)
     }
 
     // If it's not a user page, it should be a supervisor page.
-    for (auto& region : m_super_physical_regions) {
-        if (!region.contains(paddr)) {
-            dbgln("MM: deallocate_supervisor_physical_page: {} not in {} - {}", paddr, region.lower(), region.upper());
-            continue;
-        }
+    if (!m_super_physical_region->contains(paddr))
+        PANIC("MM: deallocate_user_physical_page couldn't figure out region for page @ {}", paddr);
 
-        region.return_page(paddr);
-        --m_system_memory_info.super_physical_pages_used;
-        return;
-    }
-
-    PANIC("MM: deallocate_user_physical_page couldn't figure out region for page @ {}", paddr);
+    m_super_physical_region->return_page(paddr);
+    --m_system_memory_info.super_physical_pages_used;
 }
 
 RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
@@ -908,19 +898,9 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
     VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(s_mm_lock);
     size_t count = ceil_div(size, static_cast<size_t>(PAGE_SIZE));
-    NonnullRefPtrVector<PhysicalPage> physical_pages;
-
-    for (auto& region : m_super_physical_regions) {
-        physical_pages = region.take_contiguous_free_pages(count);
-        if (!physical_pages.is_empty())
-            continue;
-    }
+    auto physical_pages = m_super_physical_region->take_contiguous_free_pages(count);
 
     if (physical_pages.is_empty()) {
-        if (m_super_physical_regions.is_empty()) {
-            dmesgln("MM: no super physical regions available (?)");
-        }
-
         dmesgln("MM: no super physical pages available");
         VERIFY_NOT_REACHED();
         return {};
@@ -935,19 +915,9 @@ NonnullRefPtrVector<PhysicalPage> MemoryManager::allocate_contiguous_supervisor_
 RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 {
     ScopedSpinLock lock(s_mm_lock);
-    RefPtr<PhysicalPage> page;
-
-    for (auto& region : m_super_physical_regions) {
-        page = region.take_free_page();
-        if (!page.is_null())
-            break;
-    }
+    auto page = m_super_physical_region->take_free_page();
 
     if (!page) {
-        if (m_super_physical_regions.is_empty()) {
-            dmesgln("MM: no super physical regions available (?)");
-        }
-
         dmesgln("MM: no super physical pages available");
         VERIFY_NOT_REACHED();
         return {};
