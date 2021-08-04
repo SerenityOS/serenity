@@ -125,7 +125,7 @@ protected:
         return true;
     }
 
-    constexpr static FlatPtr chunk_magic = sizeof(FlatPtr) == sizeof(u32) ? 0xdfdfdfdfu : 0xdfdfdfdfdfdfdfdfull;
+    constexpr static FlatPtr chunk_magic = explode_byte(0xdf);
     struct ChunkHeader {
         FlatPtr magic;
         FlatPtr next_chunk;
