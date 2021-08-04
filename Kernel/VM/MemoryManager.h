@@ -102,6 +102,37 @@ struct MemoryManagerData {
 
 extern RecursiveSpinLock s_mm_lock;
 
+// This class represents a set of committed physical pages.
+// When you ask MemoryManager to commit pages for you, you get one of these in return.
+// You can allocate pages from it via `take_one()`
+// It will uncommit any (unallocated) remaining pages when destroyed.
+class CommittedPhysicalPageSet {
+    AK_MAKE_NONCOPYABLE(CommittedPhysicalPageSet);
+
+public:
+    CommittedPhysicalPageSet(Badge<MemoryManager>, size_t page_count)
+        : m_page_count(page_count)
+    {
+    }
+
+    CommittedPhysicalPageSet(CommittedPhysicalPageSet&& other)
+        : m_page_count(exchange(other.m_page_count, 0))
+    {
+    }
+
+    ~CommittedPhysicalPageSet();
+
+    bool is_empty() const { return m_page_count == 0; }
+    size_t page_count() const { return m_page_count; }
+
+    [[nodiscard]] NonnullRefPtr<PhysicalPage> take_one();
+
+    void operator=(CommittedPhysicalPageSet&&) = delete;
+
+private:
+    size_t m_page_count { 0 };
+};
+
 class MemoryManager {
     AK_MAKE_ETERNAL
     friend class PageDirectory;
@@ -139,8 +170,9 @@ public:
         Yes
     };
 
-    bool commit_user_physical_pages(size_t);
-    void uncommit_user_physical_pages(size_t);
+    Optional<CommittedPhysicalPageSet> commit_user_physical_pages(size_t page_count);
+    void uncommit_user_physical_pages(Badge<CommittedPhysicalPageSet>, size_t page_count);
+
     NonnullRefPtr<PhysicalPage> allocate_committed_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes);
     RefPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
     RefPtr<PhysicalPage> allocate_supervisor_physical_page();
