@@ -87,6 +87,21 @@ String AppFile::category() const
     return m_config->read_entry("App", "Category").trim_whitespace();
 }
 
+String AppFile::icon_path() const
+{
+    return m_config->read_entry("App", "IconPath").trim_whitespace();
+}
+
+GUI::Icon AppFile::icon() const
+{
+    auto override_icon = icon_path();
+    // FIXME: support pointing to actual .ico files
+    if (!override_icon.is_empty())
+        return GUI::FileIconProvider::icon_for_path(override_icon);
+
+    return GUI::FileIconProvider::icon_for_path(executable());
+}
+
 bool AppFile::run_in_terminal() const
 {
     return m_config->read_bool_entry("App", "RunInTerminal", false);
