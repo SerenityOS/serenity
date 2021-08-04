@@ -1,0 +1,14 @@
+diff -Naur gettext-0.21/gettext-tools/gnulib-lib/fnmatch_loop.c gettext-0.21.serenity/gettext-tools/gnulib-lib/fnmatch_loop.c
+--- diffutils-3.7/lib/fnmatch_loop.c	2020-06-26 21:57:10.000000000 +0200
++++ diffutils-3.7.serenity/lib/fnmatch_loop.c	2021-05-08 05:06:59.944736766 +0200
+@@ -19,6 +19,10 @@
+ 
+ /* Match STRING against the file name pattern PATTERN, returning zero if
+    it matches, nonzero if not.  */
++#ifdef __serenity__
++# define FNM_EXTMATCH 9000
++#endif
++
+ static int EXT (INT opt, const CHAR *pattern, const CHAR *string,
+                 const CHAR *string_end, bool no_leading_period, int flags)
+      internal_function;
