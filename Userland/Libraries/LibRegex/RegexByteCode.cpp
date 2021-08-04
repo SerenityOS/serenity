@@ -569,6 +569,10 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             auto general_category = static_cast<Unicode::GeneralCategory>(m_bytecode->at(offset++));
             compare_general_category(input, state, general_category, current_inversion_state(), inverse_matched);
 
+        } else if (compare_type == CharacterCompareType::Script) {
+            auto script = static_cast<Unicode::Script>(m_bytecode->at(offset++));
+            compare_script(input, state, script, current_inversion_state(), inverse_matched);
+
         } else {
             warnln("Undefined comparison: {}", (int)compare_type);
             VERIFY_NOT_REACHED();
@@ -781,6 +785,22 @@ ALWAYS_INLINE void OpCode_Compare::compare_general_category(MatchInput const& in
 
     u32 code_point = input.view[state.string_position_in_code_units];
     bool equal = Unicode::code_point_has_general_category(code_point, general_category);
+
+    if (equal) {
+        if (inverse)
+            inverse_matched = true;
+        else
+            advance_string_position(state, input.view, code_point);
+    }
+}
+
+ALWAYS_INLINE void OpCode_Compare::compare_script(MatchInput const& input, MatchState& state, Unicode::Script script, bool inverse, bool& inverse_matched)
+{
+    if (state.string_position == input.view.length())
+        return;
+
+    u32 code_point = input.view[state.string_position_in_code_units];
+    bool equal = Unicode::code_point_has_script(code_point, script);
 
     if (equal) {
         if (inverse)

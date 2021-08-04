@@ -1555,6 +1555,9 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
                 },
                 [&](Unicode::GeneralCategory general_category) {
                     compares.empend(CompareTypeAndValuePair { CharacterCompareType::GeneralCategory, (ByteCodeValueType)general_category });
+                },
+                [&](Unicode::Script script) {
+                    compares.empend(CompareTypeAndValuePair { CharacterCompareType::Script, (ByteCodeValueType)script });
                 });
             stack.insert_bytecode_compare_values(move(compares));
             match_length_minimum += 1;
@@ -1705,12 +1708,14 @@ struct CharClassRangeElement {
         u32 code_point { 0 };
         Unicode::Property property;
         Unicode::GeneralCategory general_category;
+        Unicode::Script script;
     };
 
     bool is_negated { false };
     bool is_character_class { false };
     bool is_property { false };
     bool is_general_category { false };
+    bool is_script { false };
 };
 
 bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>& ranges, bool unicode)
@@ -1804,6 +1809,9 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                         },
                         [&](Unicode::GeneralCategory general_category) {
                             return CharClassRangeElement { .general_category = general_category, .is_negated = negated, .is_character_class = true, .is_general_category = true };
+                        },
+                        [&](Unicode::Script script) {
+                            return CharClassRangeElement { .script = script, .is_negated = negated, .is_character_class = true, .is_script = true };
                         });
                 }
             }
@@ -1851,6 +1859,8 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                 ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Property, (ByteCodeValueType)(atom.property) });
             else if (atom.is_general_category)
                 ranges.empend(CompareTypeAndValuePair { CharacterCompareType::GeneralCategory, (ByteCodeValueType)(atom.general_category) });
+            else if (atom.is_script)
+                ranges.empend(CompareTypeAndValuePair { CharacterCompareType::Script, (ByteCodeValueType)(atom.script) });
             else
                 ranges.empend(CompareTypeAndValuePair { CharacterCompareType::CharClass, (ByteCodeValueType)atom.character_class });
         } else {
@@ -1949,9 +1959,8 @@ bool ECMA262Parser::parse_unicode_property_escape(PropertyEscape& property, bool
             }
             return true;
         },
-        [](Unicode::GeneralCategory) {
-            return true;
-        });
+        [](Unicode::GeneralCategory) { return true; },
+        [](Unicode::Script) { return true; });
 }
 
 StringView ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_bracket)
@@ -2015,6 +2024,9 @@ Optional<ECMA262Parser::PropertyEscape> ECMA262Parser::read_unicode_property_esc
     } else if ((property_type == "General_Category"sv) || (property_type == "gc"sv)) {
         if (auto general_category = Unicode::general_category_from_string(property_name); general_category.has_value())
             return { *general_category };
+    } else if ((property_type == "Script"sv) || (property_type == "sc"sv)) {
+        if (auto script = Unicode::script_from_string(property_name); script.has_value())
+            return { *script };
     }
 
     return {};
