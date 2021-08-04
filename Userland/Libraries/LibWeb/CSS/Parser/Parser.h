@@ -177,6 +177,7 @@ private:
     static RefPtr<StyleValue> parse_image_value(ParsingContext const&, StyleComponentValueRule const&);
     static RefPtr<StyleValue> parse_background_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_box_shadow_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
+    static RefPtr<StyleValue> parse_flex_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_font_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_list_style_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_text_decoration_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
