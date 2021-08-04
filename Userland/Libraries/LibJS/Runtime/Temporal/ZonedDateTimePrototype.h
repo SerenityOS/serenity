@@ -33,6 +33,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(nanosecond_getter);
     JS_DECLARE_NATIVE_FUNCTION(epoch_seconds_getter);
     JS_DECLARE_NATIVE_FUNCTION(epoch_milliseconds_getter);
+    JS_DECLARE_NATIVE_FUNCTION(epoch_microseconds_getter);
 };
 
 }
