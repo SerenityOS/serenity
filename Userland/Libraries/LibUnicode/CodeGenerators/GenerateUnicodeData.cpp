@@ -823,6 +823,7 @@ int main(int argc, char** argv)
     char const* special_casing_path = nullptr;
     char const* prop_list_path = nullptr;
     char const* derived_core_prop_path = nullptr;
+    char const* derived_binary_prop_path = nullptr;
     char const* prop_alias_path = nullptr;
     char const* prop_value_alias_path = nullptr;
     char const* scripts_path = nullptr;
@@ -837,6 +838,7 @@ int main(int argc, char** argv)
     args_parser.add_option(special_casing_path, "Path to SpecialCasing.txt file", "special-casing-path", 's', "special-casing-path");
     args_parser.add_option(prop_list_path, "Path to PropList.txt file", "prop-list-path", 'p', "prop-list-path");
     args_parser.add_option(derived_core_prop_path, "Path to DerivedCoreProperties.txt file", "derived-core-prop-path", 'd', "derived-core-prop-path");
+    args_parser.add_option(derived_binary_prop_path, "Path to DerivedBinaryProperties.txt file", "derived-binary-prop-path", 'b', "derived-binary-prop-path");
     args_parser.add_option(prop_alias_path, "Path to PropertyAliases.txt file", "prop-alias-path", 'a', "prop-alias-path");
     args_parser.add_option(prop_value_alias_path, "Path to PropertyValueAliases.txt file", "prop-value-alias-path", 'v', "prop-value-alias-path");
     args_parser.add_option(scripts_path, "Path to Scripts.txt file", "scripts-path", 'r', "scripts-path");
@@ -867,6 +869,7 @@ int main(int argc, char** argv)
     auto special_casing_file = open_file(special_casing_path, "-s/--special-casing-path");
     auto prop_list_file = open_file(prop_list_path, "-p/--prop-list-path");
     auto derived_core_prop_file = open_file(derived_core_prop_path, "-d/--derived-core-prop-path");
+    auto derived_binary_prop_file = open_file(derived_binary_prop_path, "-b/--derived-binary-prop-path");
     auto prop_alias_file = open_file(prop_alias_path, "-a/--prop-alias-path");
     auto prop_value_alias_file = open_file(prop_value_alias_path, "-v/--prop-value-alias-path");
     auto scripts_file = open_file(scripts_path, "-r/--scripts-path");
@@ -878,6 +881,7 @@ int main(int argc, char** argv)
     parse_special_casing(special_casing_file, unicode_data);
     parse_prop_list(prop_list_file, unicode_data.prop_list);
     parse_prop_list(derived_core_prop_file, unicode_data.prop_list);
+    parse_prop_list(derived_binary_prop_file, unicode_data.prop_list);
     parse_prop_list(emoji_data_file, unicode_data.prop_list);
     parse_alias_list(prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases);
     parse_prop_list(scripts_file, unicode_data.script_list);
