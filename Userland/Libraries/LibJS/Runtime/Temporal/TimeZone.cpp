@@ -416,7 +416,7 @@ double get_offset_nanoseconds_for(GlobalObject& global_object, Value time_zone, 
 }
 
 // 11.6.12 BuiltinTimeZoneGetOffsetStringFor ( timeZone, instant )
-Optional<String> builtin_time_zone_get_offset_string_for(GlobalObject& global_object, TimeZone& time_zone, Instant& instant)
+Optional<String> builtin_time_zone_get_offset_string_for(GlobalObject& global_object, Object& time_zone, Instant& instant)
 {
     auto& vm = global_object.vm();
 
