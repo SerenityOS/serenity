@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -215,7 +216,20 @@ TEST_CASE(data_url)
     EXPECT(url.host().is_null());
     EXPECT_EQ(url.data_mime_type(), "text/html");
     EXPECT_EQ(url.data_payload(), "test");
+    EXPECT(!url.data_payload_is_base64());
     EXPECT_EQ(url.serialize(), "data:text/html,test");
+}
+
+TEST_CASE(data_url_default_mime_type)
+{
+    URL url("data:,test");
+    EXPECT(url.is_valid());
+    EXPECT_EQ(url.scheme(), "data");
+    EXPECT(url.host().is_null());
+    EXPECT_EQ(url.data_mime_type(), "text/plain");
+    EXPECT_EQ(url.data_payload(), "test");
+    EXPECT(!url.data_payload_is_base64());
+    EXPECT_EQ(url.serialize(), "data:text/plain,test");
 }
 
 TEST_CASE(data_url_encoded)
@@ -226,6 +240,7 @@ TEST_CASE(data_url_encoded)
     EXPECT(url.host().is_null());
     EXPECT_EQ(url.data_mime_type(), "text/html");
     EXPECT_EQ(url.data_payload(), "Hello friends,%0X%X0");
+    EXPECT(!url.data_payload_is_base64());
     EXPECT_EQ(url.serialize(), "data:text/html,Hello friends,%0X%X0");
 }
 
@@ -237,7 +252,32 @@ TEST_CASE(data_url_base64_encoded)
     EXPECT(url.host().is_null());
     EXPECT_EQ(url.data_mime_type(), "text/html");
     EXPECT_EQ(url.data_payload(), "test");
+    EXPECT(url.data_payload_is_base64());
     EXPECT_EQ(url.serialize(), "data:text/html;base64,test");
+}
+
+TEST_CASE(data_url_base64_encoded_default_mime_type)
+{
+    URL url("data:;base64,test");
+    EXPECT(url.is_valid());
+    EXPECT_EQ(url.scheme(), "data");
+    EXPECT(url.host().is_null());
+    EXPECT_EQ(url.data_mime_type(), "text/plain");
+    EXPECT_EQ(url.data_payload(), "test");
+    EXPECT(url.data_payload_is_base64());
+    EXPECT_EQ(url.serialize(), "data:text/plain;base64,test");
+}
+
+TEST_CASE(data_url_base64_encoded_with_whitespace)
+{
+    URL url("data: text/html ;     bAsE64 , test with whitespace ");
+    EXPECT(url.is_valid());
+    EXPECT_EQ(url.scheme(), "data");
+    EXPECT(url.host().is_null());
+    EXPECT_EQ(url.data_mime_type(), "text/html");
+    EXPECT_EQ(url.data_payload(), " test with whitespace ");
+    EXPECT(url.data_payload_is_base64());
+    EXPECT_EQ(url.serialize(), "data:text/html;base64, test with whitespace ");
 }
 
 TEST_CASE(trailing_slash_with_complete_url)

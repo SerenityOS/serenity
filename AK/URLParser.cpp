@@ -116,7 +116,7 @@ constexpr bool is_double_dot_path_segment(StringView const& input)
 }
 
 // https://fetch.spec.whatwg.org/#data-urls
-// FIXME: This only loosely follow the spec, as we use the same class for "regular" and data URLs, unlike the spec.
+// FIXME: This only loosely follows the spec, as we use the same class for "regular" and data URLs, unlike the spec.
 Optional<URL> URLParser::parse_data_url(StringView const& raw_input)
 {
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse_data_url: Parsing '{}'.", raw_input);
@@ -125,24 +125,28 @@ Optional<URL> URLParser::parse_data_url(StringView const& raw_input)
     auto comma_offset = input.find(',');
     if (!comma_offset.has_value())
         return {};
-    auto mime_type = input.substring_view(0, comma_offset.value());
-    // FIXME: Strip leading and trailing ASCII whitespace from mimeType
+    auto mime_type = StringUtils::trim(input.substring_view(0, comma_offset.value()), "\t\n\f\r ", TrimMode::Both);
     auto encoded_body = input.substring_view(comma_offset.value() + 1);
     auto body = URL::percent_decode(encoded_body);
-    bool is_base_64_encoded = false;
-    if (mime_type.ends_with(";base64", CaseSensitivity::CaseInsensitive)) {
-        is_base_64_encoded = true;
-        mime_type = mime_type.substring_view(0, mime_type.length() - 7);
+    bool is_base64_encoded = false;
+    if (mime_type.ends_with("base64", CaseSensitivity::CaseInsensitive)) {
+        auto substring_view = mime_type.substring_view(0, mime_type.length() - 6);
+        auto trimmed_substring_view = StringUtils::trim(substring_view, " ", TrimMode::Right);
+        if (trimmed_substring_view.ends_with(';')) {
+            is_base64_encoded = true;
+            mime_type = trimmed_substring_view.substring_view(0, trimmed_substring_view.length() - 1);
+        }
     }
 
-    if (mime_type.starts_with(";")) {
-        StringBuilder builder;
+    StringBuilder builder;
+    if (mime_type.starts_with(";") || mime_type.is_empty()) {
         builder.append("text/plain");
         builder.append(mime_type);
-        mime_type = builder.to_string();
+        mime_type = builder.string_view();
     }
 
-    URL url { mime_type, move(body), is_base_64_encoded };
+    // FIXME: Parse the MIME type's components according to https://mimesniff.spec.whatwg.org/#parse-a-mime-type
+    URL url { StringUtils::trim(mime_type, "\n\r\t ", TrimMode::Both), move(body), is_base64_encoded };
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse_data_url: Parsed data URL to be '{}'.", url.serialize());
     return url;
 }
