@@ -35,6 +35,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.year, year_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.month, month_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.day, day_getter, {}, Attribute::Configurable);
 }
 
 static ZonedDateTime* typed_this(GlobalObject& global_object)
@@ -155,6 +156,33 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::month_code_getter)
 
     // 7. Return ? CalendarMonthCode(calendar, temporalDateTime).
     return js_string(vm, calendar_month_code(global_object, calendar, *temporal_date_time));
+}
+
+// 6.3.8 get Temporal.ZonedDateTime.prototype.day, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.day
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::day_getter)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let timeZone be zonedDateTime.[[TimeZone]].
+    auto& time_zone = zoned_date_time->time_zone();
+
+    // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
+    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds());
+
+    // 5. Let calendar be zonedDateTime.[[Calendar]].
+    auto& calendar = zoned_date_time->calendar();
+
+    // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
+    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
+    if (vm.exception())
+        return {};
+
+    // 7. Return ? CalendarDay(calendar, temporalDateTime).
+    return Value(calendar_day(global_object, calendar, *temporal_date_time));
 }
 
 }
