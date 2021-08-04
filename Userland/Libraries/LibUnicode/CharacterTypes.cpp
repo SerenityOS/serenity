@@ -275,12 +275,12 @@ bool is_ecma262_property([[maybe_unused]] Property property)
     case Unicode::Property::Default_Ignorable_Code_Point:
     case Unicode::Property::Deprecated:
     case Unicode::Property::Diacritic:
-    // case Unicode::Property::Emoji:
-    // case Unicode::Property::Emoji_Component:
-    // case Unicode::Property::Emoji_Modifier:
-    // case Unicode::Property::Emoji_Modifier_Base:
-    // case Unicode::Property::Emoji_Presentation:
-    // case Unicode::Property::Extended_Pictographic:
+    case Unicode::Property::Emoji:
+    case Unicode::Property::Emoji_Component:
+    case Unicode::Property::Emoji_Modifier:
+    case Unicode::Property::Emoji_Modifier_Base:
+    case Unicode::Property::Emoji_Presentation:
+    case Unicode::Property::Extended_Pictographic:
     case Unicode::Property::Extender:
     case Unicode::Property::Grapheme_Base:
     case Unicode::Property::Grapheme_Extend:
