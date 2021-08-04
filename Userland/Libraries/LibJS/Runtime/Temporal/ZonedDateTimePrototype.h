@@ -22,6 +22,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
     JS_DECLARE_NATIVE_FUNCTION(time_zone_getter);
     JS_DECLARE_NATIVE_FUNCTION(year_getter);
+    JS_DECLARE_NATIVE_FUNCTION(month_getter);
 };
 
 }
