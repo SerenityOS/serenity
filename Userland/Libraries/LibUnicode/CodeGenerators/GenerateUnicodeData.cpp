@@ -84,7 +84,6 @@ struct UnicodeData {
 
     Vector<CodePointData> code_point_data;
     Vector<CodePointRange> code_point_ranges;
-    u32 last_contiguous_code_point { 0 };
 
     // The Unicode standard defines General Category values which are not in any UCD file. These
     // values are simply unions of other values.
