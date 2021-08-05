@@ -21,6 +21,9 @@ float Length::relative_length_to_px(const Layout::Node& layout_node) const
         return m_value * layout_node.font().x_height();
     case Type::Em:
         return m_value * layout_node.font_size();
+    case Type::Ch:
+        // FIXME: Use layout_node.font().glyph_height() when writing-mode is not horizontal-tb (it has to be implemented first)
+        return m_value * (layout_node.font().glyph_width('0') + layout_node.font().glyph_spacing());
     case Type::Rem:
         return m_value * layout_node.document().document_element()->layout_node()->font_size();
     case Type::Vw:
@@ -180,6 +183,8 @@ const char* Length::unit_name() const
         return "ex";
     case Type::Em:
         return "em";
+    case Type::Ch:
+        return "ch";
     case Type::Rem:
         return "rem";
     case Type::Auto:
