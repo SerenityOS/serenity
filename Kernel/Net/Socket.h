@@ -51,17 +51,17 @@ public:
         Connecting
     };
 
-    static const char* to_string(SetupState setup_state)
+    static StringView to_string(SetupState setup_state)
     {
         switch (setup_state) {
         case SetupState::Unstarted:
-            return "Unstarted";
+            return "Unstarted"sv;
         case SetupState::InProgress:
-            return "InProgress";
+            return "InProgress"sv;
         case SetupState::Completed:
-            return "Completed";
+            return "Completed"sv;
         default:
-            return "None";
+            return "None"sv;
         }
     }
 
