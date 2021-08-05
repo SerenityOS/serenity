@@ -9,10 +9,8 @@
 #include <AK/Vector.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/Process.h>
 #include <LibDesktop/AppFile.h>
-#include <errno.h>
-#include <serenity.h>
-#include <spawn.h>
 
 namespace Desktop {
 
@@ -134,15 +132,9 @@ bool AppFile::spawn() const
     if (!is_valid())
         return false;
 
-    pid_t child_pid;
-    const char* argv[] = { executable().characters(), nullptr };
-    if ((errno = posix_spawn(&child_pid, executable().characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
+    auto pid = Core::Process::spawn(executable());
+    if (pid < 0)
         return false;
-    } else if (disown(child_pid) < 0) {
-        perror("disown");
-        return false;
-    }
 
     return true;
 }

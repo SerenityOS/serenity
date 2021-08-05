@@ -11,6 +11,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/Process.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -37,9 +38,7 @@
 #include <errno.h>
 #include <pty.h>
 #include <pwd.h>
-#include <serenity.h>
 #include <signal.h>
-#include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -379,14 +378,7 @@ int main(int argc, char** argv)
 
     auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
-        pid_t child;
-        const char* argv[] = { "Terminal", nullptr };
-        if ((errno = posix_spawn(&child, "/bin/Terminal", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(child) < 0)
-                perror("disown");
-        }
+        Core::Process::spawn("/bin/Terminal");
     }));
 
     file_menu.add_action(open_settings_action);

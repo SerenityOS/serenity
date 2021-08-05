@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/Process.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -14,7 +15,6 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <serenity.h>
-#include <spawn.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -108,17 +108,7 @@ int main(int argc, char** argv)
 
         auto launch_origin_rect = icon_view.to_widget_rect(icon_view.content_rect(index)).translated(icon_view.screen_relative_rect().location());
         setenv("__libgui_launch_origin_rect", String::formatted("{},{},{},{}", launch_origin_rect.x(), launch_origin_rect.y(), launch_origin_rect.width(), launch_origin_rect.height()).characters(), 1);
-
-        pid_t child_pid;
-        const char* argv[] = { executable.characters(), nullptr };
-
-        if ((errno = posix_spawn(&child_pid, executable.characters(), nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-            return;
-        }
-
-        if (disown(child_pid) < 0)
-            perror("disown");
+        Core::Process::spawn(executable);
     };
 
     auto& statusbar = main_widget.add<GUI::Statusbar>();

@@ -7,6 +7,7 @@
 #include "WelcomeWidget.h"
 #include <Applications/Welcome/WelcomeWindowGML.h>
 #include <LibCore/File.h>
+#include <LibCore/Process.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
@@ -16,7 +17,6 @@
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <serenity.h>
-#include <spawn.h>
 #include <time.h>
 
 WelcomeWidget::WelcomeWidget()
@@ -52,14 +52,7 @@ WelcomeWidget::WelcomeWidget()
     m_help_button = *find_descendant_of_type_named<GUI::Button>("help_button");
     m_help_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png"));
     m_help_button->on_click = [](auto) {
-        pid_t pid;
-        const char* argv[] = { "Help", nullptr };
-        if ((errno = posix_spawn(&pid, "/bin/Help", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(pid) < 0)
-                perror("disown");
-        }
+        Core::Process::spawn("/bin/Help"sv);
     };
 
     m_new_button = *find_descendant_of_type_named<GUI::Button>("new_button");
