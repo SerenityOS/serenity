@@ -27,6 +27,7 @@ public:
         Pc,
         Ex,
         Em,
+        Ch,
         Rem,
         Vh,
         Vw,
@@ -93,6 +94,7 @@ public:
     {
         return m_type == Type::Ex
             || m_type == Type::Em
+            || m_type == Type::Ch
             || m_type == Type::Rem
             || m_type == Type::Vh
             || m_type == Type::Vw

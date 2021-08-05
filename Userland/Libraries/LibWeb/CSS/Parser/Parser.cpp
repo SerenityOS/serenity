@@ -1466,6 +1466,8 @@ Optional<Length> Parser::parse_length(ParsingContext const& context, StyleCompon
             type = Length::Type::Em;
         } else if (unit_string.equals_ignoring_case("ex")) {
             type = Length::Type::Ex;
+        } else if (unit_string.equals_ignoring_case("ch")) {
+            type = Length::Type::Ch;
         } else if (unit_string.equals_ignoring_case("vw")) {
             type = Length::Type::Vw;
         } else if (unit_string.equals_ignoring_case("vh")) {
