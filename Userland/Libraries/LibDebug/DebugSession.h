@@ -129,12 +129,14 @@ public:
     struct LoadedLibrary {
         String name;
         NonnullRefPtr<MappedFile> file;
+        NonnullOwnPtr<ELF::Image> image;
         NonnullOwnPtr<DebugInfo> debug_info;
         FlatPtr base_address;
 
-        LoadedLibrary(String const& name, NonnullRefPtr<MappedFile> file, NonnullOwnPtr<DebugInfo>&& debug_info, FlatPtr base_address)
+        LoadedLibrary(String const& name, NonnullRefPtr<MappedFile> file, NonnullOwnPtr<ELF::Image> image, NonnullOwnPtr<DebugInfo>&& debug_info, FlatPtr base_address)
             : name(name)
             , file(move(file))
+            , image(move(image))
             , debug_info(move(debug_info))
             , base_address(base_address)
         {

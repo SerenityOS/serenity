@@ -15,11 +15,11 @@
 
 namespace Debug {
 
-DebugInfo::DebugInfo(NonnullOwnPtr<const ELF::Image> elf, String source_root, FlatPtr base_address)
-    : m_elf(move(elf))
+DebugInfo::DebugInfo(ELF::Image const& elf, String source_root, FlatPtr base_address)
+    : m_elf(elf)
     , m_source_root(move(source_root))
     , m_base_address(base_address)
-    , m_dwarf_info(*m_elf)
+    , m_dwarf_info(m_elf)
 {
     prepare_variable_scopes();
     prepare_lines();

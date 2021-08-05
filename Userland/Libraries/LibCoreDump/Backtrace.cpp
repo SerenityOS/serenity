@@ -35,7 +35,8 @@ ELFObjectInfo const* Backtrace::object_info_for_region(ELF::Core::MemoryRegionIn
         return nullptr;
 
     auto image = make<ELF::Image>(file_or_error.value()->bytes());
-    auto info = make<ELFObjectInfo>(file_or_error.release_value(), make<Debug::DebugInfo>(move(image)));
+    auto& image_reference = *image;
+    auto info = make<ELFObjectInfo>(file_or_error.release_value(), make<Debug::DebugInfo>(image_reference), move(image));
     auto* info_ptr = info.ptr();
     m_debug_info_cache.set(path, move(info));
     return info_ptr;

@@ -24,9 +24,9 @@ class DebugInfo {
     AK_MAKE_NONMOVABLE(DebugInfo);
 
 public:
-    explicit DebugInfo(NonnullOwnPtr<const ELF::Image>, String source_root = {}, FlatPtr base_address = 0);
+    explicit DebugInfo(ELF::Image const&, String source_root = {}, FlatPtr base_address = 0);
 
-    ELF::Image const& elf() const { return *m_elf; }
+    ELF::Image const& elf() const { return m_elf; }
 
     struct SourcePosition {
         FlyString file_path;
@@ -124,7 +124,7 @@ private:
     Optional<Dwarf::LineProgram::DirectoryAndFile> get_source_path_of_inline(const Dwarf::DIE&) const;
     Optional<uint32_t> get_line_of_inline(const Dwarf::DIE&) const;
 
-    NonnullOwnPtr<const ELF::Image> m_elf;
+    ELF::Image const& m_elf;
     String m_source_root;
     FlatPtr m_base_address { 0 };
     Dwarf::DwarfInfo m_dwarf_info;
