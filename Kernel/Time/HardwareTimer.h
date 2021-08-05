@@ -35,7 +35,7 @@ public:
     // classes then should forward this to e.g. GenericInterruptHandler.
     virtual void will_be_destroyed() = 0;
 
-    virtual const char* model() const = 0;
+    virtual StringView model() const = 0;
     virtual HardwareTimerType timer_type() const = 0;
     virtual Function<void(const RegisterState&)> set_callback(Function<void(const RegisterState&)>) = 0;
 

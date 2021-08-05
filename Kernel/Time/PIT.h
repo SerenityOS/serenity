@@ -36,7 +36,7 @@ class PIT final : public HardwareTimer<IRQHandler> {
 public:
     static NonnullRefPtr<PIT> initialize(Function<void(const RegisterState&)>);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::i8253; }
-    virtual const char* model() const override { return "i8254"; }
+    virtual StringView model() const override { return "i8254"sv; }
     virtual size_t ticks_per_second() const override;
 
     virtual bool is_periodic() const override { return m_periodic; }
