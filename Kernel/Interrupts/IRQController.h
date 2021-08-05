@@ -33,7 +33,7 @@ public:
     virtual u32 gsi_base() const = 0;
     virtual u16 get_isr() const = 0;
     virtual u16 get_irr() const = 0;
-    virtual const char* model() const = 0;
+    virtual StringView model() const = 0;
     virtual IRQControllerType type() const = 0;
 
 protected:
