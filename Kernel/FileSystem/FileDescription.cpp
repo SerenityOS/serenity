@@ -270,7 +270,7 @@ KResultOr<size_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_bu
     flush_stream_to_output_buffer();
 
     if (result.is_error()) {
-        // We should only return -EFAULT when the userspace buffer is too small,
+        // We should only return EFAULT when the userspace buffer is too small,
         // so that userspace can reliably use it as a signal to increase its
         // buffer size.
         VERIFY(result != -EFAULT);

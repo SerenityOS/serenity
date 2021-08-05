@@ -465,7 +465,7 @@ KResult TTY::ioctl(FileDescription&, unsigned request, Userspace<void*> arg)
     // FIXME: When should we block things?
     //        How do we make this work together with MasterPTY forwarding to us?
     if (current_process.tty() && current_process.tty() != this) {
-        return -ENOTTY;
+        return ENOTTY;
     }
 #endif
     switch (request) {

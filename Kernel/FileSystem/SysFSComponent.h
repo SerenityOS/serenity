@@ -24,7 +24,7 @@ public:
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const { VERIFY_NOT_REACHED(); }
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
     virtual RefPtr<SysFSComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
-    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*) { return -EROFS; }
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, FileDescription*) { return EROFS; }
     virtual size_t size() const { return 0; }
 
     virtual NonnullRefPtr<Inode> to_inode(SysFS const&) const;
