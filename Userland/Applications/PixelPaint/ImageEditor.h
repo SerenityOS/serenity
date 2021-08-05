@@ -81,6 +81,7 @@ public:
     Gfx::FloatPoint editor_position_to_image_position(Gfx::IntPoint const&) const;
 
     NonnullRefPtrVector<Guide> const& guides() const { return m_guides; }
+    void toggle_guide_visibility() { m_show_guides = !m_show_guides; }
 
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);
@@ -111,6 +112,7 @@ private:
     OwnPtr<GUI::UndoStack> m_undo_stack;
 
     NonnullRefPtrVector<Guide> m_guides;
+    bool m_show_guides { true };
 
     Tool* m_active_tool { nullptr };
 
