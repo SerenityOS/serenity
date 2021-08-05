@@ -80,7 +80,7 @@ int main(int argc, char** argv)
 
     if (arg[0] > Syscall::Function::__Count) {
         for (int sc = 0; sc < Syscall::Function::__Count; ++sc) {
-            if (strcmp(Syscall::to_string((Syscall::Function)sc), (char*)arg[0]) == 0) {
+            if (Syscall::to_string((Syscall::Function)sc) == (char const*)arg[0]) {
                 arg[0] = sc;
                 break;
             }

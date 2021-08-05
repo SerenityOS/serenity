@@ -28,19 +28,19 @@ public:
         Passive,
     };
 
-    static const char* to_string(Direction direction)
+    static StringView to_string(Direction direction)
     {
         switch (direction) {
         case Direction::Unspecified:
-            return "Unspecified";
+            return "Unspecified"sv;
         case Direction::Outgoing:
-            return "Outgoing";
+            return "Outgoing"sv;
         case Direction::Incoming:
-            return "Incoming";
+            return "Incoming"sv;
         case Direction::Passive:
-            return "Passive";
+            return "Passive"sv;
         default:
-            return "None";
+            return "None"sv;
         }
     }
 
@@ -58,31 +58,31 @@ public:
         TimeWait,
     };
 
-    static const char* to_string(State state)
+    static StringView to_string(State state)
     {
         switch (state) {
         case State::Closed:
-            return "Closed";
+            return "Closed"sv;
         case State::Listen:
-            return "Listen";
+            return "Listen"sv;
         case State::SynSent:
-            return "SynSent";
+            return "SynSent"sv;
         case State::SynReceived:
-            return "SynReceived";
+            return "SynReceived"sv;
         case State::Established:
-            return "Established";
+            return "Established"sv;
         case State::CloseWait:
-            return "CloseWait";
+            return "CloseWait"sv;
         case State::LastAck:
-            return "LastAck";
+            return "LastAck"sv;
         case State::FinWait1:
-            return "FinWait1";
+            return "FinWait1"sv;
         case State::FinWait2:
-            return "FinWait2";
+            return "FinWait2"sv;
         case State::Closing:
-            return "Closing";
+            return "Closing"sv;
         case State::TimeWait:
-            return "TimeWait";
+            return "TimeWait"sv;
         default:
             return "None";
         }
@@ -96,19 +96,19 @@ public:
         RetransmitTimeout,
     };
 
-    static const char* to_string(Error error)
+    static StringView to_string(Error error)
     {
         switch (error) {
         case Error::None:
-            return "None";
+            return "None"sv;
         case Error::FINDuringConnect:
-            return "FINDuringConnect";
+            return "FINDuringConnect"sv;
         case Error::RSTDuringConnect:
-            return "RSTDuringConnect";
+            return "RSTDuringConnect"sv;
         case Error::UnexpectedFlagsDuringConnect:
-            return "UnexpectedFlagsDuringConnect";
+            return "UnexpectedFlagsDuringConnect"sv;
         default:
-            return "Invalid";
+            return "Invalid"sv;
         }
     }
 
