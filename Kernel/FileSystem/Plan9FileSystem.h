@@ -89,7 +89,7 @@ private:
         {
             set_block_condition(fs.m_completion_blocker);
         }
-        virtual const char* state_string() const override { return "Waiting"; }
+        virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Plan9FS; }
         virtual void not_blocking(bool) override;
 

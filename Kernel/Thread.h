@@ -292,7 +292,7 @@ public:
             Wait
         };
         virtual ~Blocker();
-        virtual const char* state_string() const = 0;
+        virtual StringView state_string() const = 0;
         virtual bool should_block() { return true; }
         virtual Type blocker_type() const = 0;
         virtual const BlockTimeout& override_timeout(const BlockTimeout& timeout) { return timeout; }
@@ -510,7 +510,7 @@ public:
     public:
         explicit JoinBlocker(Thread& joinee, KResult& try_join_result, void*& joinee_exit_value);
         virtual Type blocker_type() const override { return Type::Join; }
-        virtual const char* state_string() const override { return "Joining"; }
+        virtual StringView state_string() const override { return "Joining"sv; }
         virtual bool can_be_interrupted() const override { return false; }
         virtual bool should_block() override { return !m_join_error && m_should_block; }
         virtual void not_blocking(bool) override;
@@ -531,7 +531,7 @@ public:
         virtual ~QueueBlocker();
 
         virtual Type blocker_type() const override { return Type::Queue; }
-        virtual const char* state_string() const override { return m_block_reason ? m_block_reason : "Queue"; }
+        virtual StringView state_string() const override { return m_block_reason.is_null() ? m_block_reason : "Queue"sv; }
         virtual void not_blocking(bool) override { }
 
         virtual bool should_block() override
@@ -542,7 +542,7 @@ public:
         bool unblock();
 
     protected:
-        const char* const m_block_reason;
+        StringView m_block_reason;
         bool m_should_block { true };
         bool m_did_unblock { false };
     };
@@ -553,7 +553,7 @@ public:
         virtual ~FutexBlocker();
 
         virtual Type blocker_type() const override { return Type::Futex; }
-        virtual const char* state_string() const override { return "Futex"; }
+        virtual StringView state_string() const override { return "Futex"sv; }
         virtual void not_blocking(bool) override { }
 
         virtual bool should_block() override
@@ -633,19 +633,19 @@ public:
     class AcceptBlocker final : public FileDescriptionBlocker {
     public:
         explicit AcceptBlocker(FileDescription&, BlockFlags&);
-        virtual const char* state_string() const override { return "Accepting"; }
+        virtual StringView state_string() const override { return "Accepting"sv; }
     };
 
     class ConnectBlocker final : public FileDescriptionBlocker {
     public:
         explicit ConnectBlocker(FileDescription&, BlockFlags&);
-        virtual const char* state_string() const override { return "Connecting"; }
+        virtual StringView state_string() const override { return "Connecting"sv; }
     };
 
     class WriteBlocker final : public FileDescriptionBlocker {
     public:
         explicit WriteBlocker(FileDescription&, BlockFlags&);
-        virtual const char* state_string() const override { return "Writing"; }
+        virtual StringView state_string() const override { return "Writing"sv; }
         virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
 
     private:
@@ -655,7 +655,7 @@ public:
     class ReadBlocker final : public FileDescriptionBlocker {
     public:
         explicit ReadBlocker(FileDescription&, BlockFlags&);
-        virtual const char* state_string() const override { return "Reading"; }
+        virtual StringView state_string() const override { return "Reading"sv; }
         virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
 
     private:
@@ -665,7 +665,7 @@ public:
     class SleepBlocker final : public Blocker {
     public:
         explicit SleepBlocker(const BlockTimeout&, Time* = nullptr);
-        virtual const char* state_string() const override { return "Sleeping"; }
+        virtual StringView state_string() const override { return "Sleeping"sv; }
         virtual Type blocker_type() const override { return Type::Sleep; }
         virtual const BlockTimeout& override_timeout(const BlockTimeout&) override;
         virtual void not_blocking(bool) override;
@@ -694,7 +694,7 @@ public:
         virtual bool unblock(bool, void*) override;
         virtual void not_blocking(bool) override;
         virtual void was_unblocked(bool) override;
-        virtual const char* state_string() const override { return "Selecting"; }
+        virtual StringView state_string() const override { return "Selecting"sv; }
 
     private:
         size_t collect_unblocked_flags();
@@ -713,7 +713,7 @@ public:
         };
 
         WaitBlocker(int wait_options, idtype_t id_type, pid_t id, KResultOr<siginfo_t>& result);
-        virtual const char* state_string() const override { return "Waiting"; }
+        virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Wait; }
         virtual bool should_block() override { return m_should_block; }
         virtual void not_blocking(bool) override;
@@ -819,7 +819,7 @@ public:
     ThreadRegisters const& regs() const { return m_regs; }
 
     State state() const { return m_state; }
-    const char* state_string() const;
+    StringView state_string() const;
 
     VirtualAddress thread_specific_data() const { return m_thread_specific_data; }
     size_t thread_specific_region_size() const;

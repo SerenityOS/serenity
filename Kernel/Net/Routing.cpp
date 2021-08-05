@@ -21,7 +21,7 @@ class ARPTableBlocker : public Thread::Blocker {
 public:
     ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr);
 
-    virtual const char* state_string() const override { return "Routing (ARP)"; }
+    virtual StringView state_string() const override { return "Routing (ARP)"sv; }
     virtual Type blocker_type() const override { return Type::Routing; }
     virtual bool should_block() override { return m_should_block; }
 
