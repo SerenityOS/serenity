@@ -8,11 +8,12 @@
 #include <LibCore/Process.h>
 #include <errno.h>
 #include <spawn.h>
-#include <unistd.h>
 
 #ifdef __serenity__
 #    include <serenity.h>
 #endif
+
+extern char** environ;
 
 namespace Core {
 
