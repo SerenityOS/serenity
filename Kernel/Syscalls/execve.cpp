@@ -634,7 +634,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     // NOTE: Be careful to not trigger any page faults below!
 
     m_name = parts.take_last();
-    new_main_thread->set_name(m_name);
+    new_main_thread->set_name(KString::try_create(m_name));
 
     {
         ProtectedDataMutationScope scope { *this };

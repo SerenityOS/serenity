@@ -54,7 +54,7 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
     // So give it a unique name until the user calls $set_thread_name on it
     // length + 4 to give space for our extra junk at the end
     StringBuilder builder(m_name.length() + 4);
-    thread->set_name(String::formatted("{} [{}]", m_name, thread->tid().value()));
+    thread->set_name(KString::try_create(String::formatted("{} [{}]", m_name, thread->tid().value())));
 
     if (!is_thread_joinable)
         thread->detach();
@@ -186,12 +186,14 @@ KResultOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<const char*
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    auto name = copy_string_from_user(user_name, user_name_length);
-    if (name.is_null())
-        return EFAULT;
+
+    auto name_or_error = try_copy_kstring_from_user(user_name, user_name_length);
+    if (name_or_error.is_error())
+        return name_or_error.error();
+    auto name = name_or_error.release_value();
 
     const size_t max_thread_name_size = 64;
-    if (name.length() > max_thread_name_size)
+    if (name->length() > max_thread_name_size)
         return EINVAL;
 
     auto thread = Thread::from_tid(tid);
@@ -213,12 +215,20 @@ KResultOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buff
     if (!thread || thread->pid() != pid())
         return ESRCH;
 
-    // We must make a temporary copy here to avoid a race with sys$set_thread_name
+    ScopedSpinLock locker(thread->get_lock());
     auto thread_name = thread->name();
+
+    if (thread_name.is_null()) {
+        char null_terminator = '\0';
+        if (!copy_to_user(buffer, &null_terminator, sizeof(null_terminator)))
+            return EFAULT;
+        return 0;
+    }
+
     if (thread_name.length() + 1 > buffer_size)
         return ENAMETOOLONG;
 
-    if (!copy_to_user(buffer, thread_name.characters(), thread_name.length() + 1))
+    if (!copy_to_user(buffer, thread_name.characters_without_null_termination(), thread_name.length() + 1))
         return EFAULT;
     return 0;
 }

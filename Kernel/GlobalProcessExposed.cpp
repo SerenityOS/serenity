@@ -464,6 +464,7 @@ private:
             process_object.add("kernel", process.is_kernel_process());
             auto thread_array = process_object.add_array("threads");
             process.for_each_thread([&](const Thread& thread) {
+                ScopedSpinLock locker(thread.get_lock());
                 auto thread_object = thread_array.add_object();
 #if LOCK_DEBUG
                 thread_object.add("lock_count", thread.lock_count());
