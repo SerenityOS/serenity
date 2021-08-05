@@ -1631,7 +1631,7 @@ void Painter::draw_physical_pixel(const IntPoint& physical_position, Color color
     fill_physical_rect(rect, color);
 }
 
-void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color, int thickness, LineStyle style)
+void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color, int thickness, LineStyle style, Color alternate_color)
 {
     if (color.alpha() == 0)
         return;
@@ -1644,6 +1644,8 @@ void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color,
     auto point1 = to_physical(p1);
     auto point2 = to_physical(p2);
     thickness *= scale();
+
+    auto alternate_color_is_transparent = alternate_color == Color::Transparent;
 
     // Special case: vertical line.
     if (point1.x() == point2.x()) {
@@ -1666,6 +1668,11 @@ void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color,
                 draw_physical_pixel({ x, y }, color, thickness);
                 draw_physical_pixel({ x, min(y + thickness, max_y) }, color, thickness);
                 draw_physical_pixel({ x, min(y + thickness * 2, max_y) }, color, thickness);
+                if (!alternate_color_is_transparent) {
+                    draw_physical_pixel({ x, min(y + thickness * 3, max_y) }, alternate_color, thickness);
+                    draw_physical_pixel({ x, min(y + thickness * 4, max_y) }, alternate_color, thickness);
+                    draw_physical_pixel({ x, min(y + thickness * 5, max_y) }, alternate_color, thickness);
+                }
             }
         } else {
             for (int y = min_y; y <= max_y; y += thickness)
@@ -1695,6 +1702,11 @@ void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color,
                 draw_physical_pixel({ x, y }, color, thickness);
                 draw_physical_pixel({ min(x + thickness, max_x), y }, color, thickness);
                 draw_physical_pixel({ min(x + thickness * 2, max_x), y }, color, thickness);
+                if (!alternate_color_is_transparent) {
+                    draw_physical_pixel({ min(x + thickness * 3, max_x), y }, alternate_color, thickness);
+                    draw_physical_pixel({ min(x + thickness * 4, max_x), y }, alternate_color, thickness);
+                    draw_physical_pixel({ min(x + thickness * 5, max_x), y }, alternate_color, thickness);
+                }
             }
         } else {
             for (int x = min_x; x <= max_x; x += thickness)
