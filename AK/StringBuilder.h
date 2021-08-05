@@ -57,7 +57,7 @@ public:
                 first = false;
             else
                 append(separator);
-            append(item);
+            appendff("{}", item);
         }
     }
 
