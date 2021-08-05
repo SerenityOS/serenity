@@ -30,12 +30,15 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
         return EFAULT;
 
     auto source_fd = params.source_fd;
-    auto target = copy_string_from_user(params.target);
-    if (target.is_null())
-        return EFAULT;
-    auto fs_type = copy_string_from_user(params.fs_type);
-    if (fs_type.is_null())
-        return EFAULT;
+    auto target_or_error = try_copy_kstring_from_user(params.target);
+    if (target_or_error.is_error())
+        return target_or_error.error();
+    auto fs_type_or_error = try_copy_kstring_from_user(params.fs_type);
+    if (fs_type_or_error.is_error())
+        return fs_type_or_error.error();
+
+    auto target = target_or_error.value()->view();
+    auto fs_type = fs_type_or_error.value()->view();
 
     auto description = fds().file_description(source_fd);
     if (!description.is_null())
