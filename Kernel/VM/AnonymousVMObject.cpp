@@ -131,7 +131,7 @@ AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy, O
     if (strategy == AllocationStrategy::AllocateNow) {
         // Allocate all pages right now. We know we can get all because we committed the amount needed
         for (size_t i = 0; i < page_count(); ++i)
-            physical_pages()[i] = MM.allocate_committed_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+            physical_pages()[i] = m_unused_committed_pages->take_one();
     } else {
         auto& initial_page = (strategy == AllocationStrategy::Reserve) ? MM.lazy_committed_page() : MM.shared_zero_page();
         for (size_t i = 0; i < page_count(); ++i)
