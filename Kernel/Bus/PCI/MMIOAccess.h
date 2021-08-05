@@ -51,7 +51,6 @@ private:
 protected:
     explicit MMIOAccess(PhysicalAddress mcfg);
 
-    virtual const char* access_type() const override { return "MMIOAccess"; };
     virtual u32 segment_count() const override;
     virtual void enumerate_hardware(Function<void(Address, ID)>) override;
     virtual void write8_field(Address address, u32, u8) override;

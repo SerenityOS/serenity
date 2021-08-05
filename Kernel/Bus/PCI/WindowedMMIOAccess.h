@@ -39,7 +39,6 @@ public:
 
 private:
     explicit WindowedMMIOAccess(PhysicalAddress mcfg);
-    virtual const char* access_type() const override { return "WindowedMMIOAccess"; };
     virtual void write8_field(Address address, u32, u8) override;
     virtual void write16_field(Address address, u32, u16) override;
     virtual void write32_field(Address address, u32, u32) override;

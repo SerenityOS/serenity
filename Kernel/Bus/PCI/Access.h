@@ -62,7 +62,6 @@ public:
     virtual uint32_t segment_count() const = 0;
     virtual uint8_t segment_start_bus(u32 segment) const = 0;
     virtual uint8_t segment_end_bus(u32 segment) const = 0;
-    virtual const char* access_type() const = 0;
 
     virtual void write8_field(Address address, u32 field, u8 value) = 0;
     virtual void write16_field(Address address, u32 field, u16 value) = 0;
