@@ -618,7 +618,7 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
         return KResult((ErrnoCode)error_code);
     } else if (reply_type == Message::Type::Rerror) {
         // Contains an error message. We could attempt to parse it, but for now
-        // we simply return -EIO instead. In 9P200.u, it can also contain a
+        // we simply return EIO instead. In 9P200.u, it can also contain a
         // numerical errno in an unspecified encoding; we ignore those too.
         StringView error_name;
         message >> error_name;
