@@ -307,15 +307,14 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
 
     auto& page_slot = physical_pages()[page_index];
 
+    // If we were sharing committed COW pages with another process, and the other process
+    // has exhausted the supply, we can stop counting the shared pages.
+    if (m_shared_committed_cow_pages && m_shared_committed_cow_pages->is_empty())
+        m_shared_committed_cow_pages = nullptr;
+
     if (page_slot->ref_count() == 1) {
         dbgln_if(PAGE_FAULT_DEBUG, "    >> It's a COW page but nobody is sharing it anymore. Remap r/w");
         set_should_cow(page_index, false);
-
-        // If we were sharing committed COW pages with another process, and the other process
-        // has exhausted the supply, we can stop counting the shared pages.
-        if (m_shared_committed_cow_pages && m_shared_committed_cow_pages->is_empty())
-            m_shared_committed_cow_pages = nullptr;
-
         return PageFaultResponse::Continue;
     }
 
