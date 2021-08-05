@@ -239,7 +239,7 @@ public:
     bool is_identifier() const { return type() == Type::Identifier; }
     bool is_image() const { return type() == Type::Image; }
     bool is_string() const { return type() == Type::String; }
-    bool is_length() const { return type() == Type::Length; }
+    virtual bool is_length() const { return type() == Type::Length; }
     bool is_custom_property() const { return type() == Type::CustomProperty; }
     bool is_numeric() const { return type() == Type::Numeric; }
     bool is_value_list() const { return type() == Type::ValueList; }
@@ -302,6 +302,9 @@ public:
     {
         return adopt_ref(*new NumericStyleValue(value));
     }
+
+    virtual bool is_length() const override { return m_value == 0; }
+    virtual Length to_length() const override { return Length(0, Length::Type::Px); }
 
     float value() const { return m_value; }
     String to_string() const override { return String::formatted("{}", m_value); }

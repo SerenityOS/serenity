@@ -1503,7 +1503,12 @@ Optional<Length> Parser::parse_length(ParsingContext const& context, StyleCompon
 
 RefPtr<StyleValue> Parser::parse_length_value(ParsingContext const& context, StyleComponentValueRule const& component_value)
 {
-    if (component_value.is(Token::Type::Dimension) || component_value.is(Token::Type::Number) || component_value.is(Token::Type::Percentage)) {
+    // Numbers with no units can be lengths, in two situations:
+    // 1) We're in quirks mode, and it's an integer.
+    // 2) It's a 0.
+    // We handle case 1 here. Case 2 is handled by NumericStyleValue pretending to be a LengthStyleValue if it is 0.
+    if (component_value.is(Token::Type::Dimension) || component_value.is(Token::Type::Percentage)
+        || (context.in_quirks_mode() && component_value.is(Token::Type::Number) && component_value.token().m_value.string_view() != "0"sv)) {
         auto length = parse_length(context, component_value);
         if (length.has_value())
             return LengthStyleValue::create(length.value());
