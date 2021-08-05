@@ -5,13 +5,12 @@
  */
 
 #include "ClockWidget.h"
+#include <LibCore/Process.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
-#include <serenity.h>
-#include <spawn.h>
 
 namespace Taskbar {
 
@@ -158,14 +157,7 @@ ClockWidget::ClockWidget()
     m_calendar_launcher->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-calendar.png"));
     m_calendar_launcher->set_tooltip("Calendar");
     m_calendar_launcher->on_click = [](auto) {
-        pid_t pid;
-        const char* argv[] = { "Calendar", nullptr };
-        if ((errno = posix_spawn(&pid, "/bin/Calendar", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(pid) < 0)
-                perror("disown");
-        }
+        Core::Process::spawn("/bin/Calendar"sv);
     };
 }
 

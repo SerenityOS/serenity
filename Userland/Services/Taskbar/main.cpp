@@ -12,6 +12,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/AppFile.h>
 #include <LibGUI/ActionGroup.h>
@@ -113,14 +114,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"); // HIGH VOLTAGE SIGN
 
     system_menu->add_action(GUI::Action::create("About SerenityOS", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/ladyball.png"), [](auto&) {
-        pid_t child_pid;
-        const char* argv[] = { "/bin/About", nullptr };
-        if ((errno = posix_spawn(&child_pid, "/bin/About", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(child_pid) < 0)
-                perror("disown");
-        }
+        Core::Process::spawn("/bin/About"sv);
     }));
 
     system_menu->add_separator();
@@ -248,26 +242,12 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     }
 
     system_menu->add_action(GUI::Action::create("Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-settings.png"), [](auto&) {
-        pid_t child_pid;
-        const char* argv[] = { "/bin/Settings", nullptr };
-        if ((errno = posix_spawn(&child_pid, "/bin/Settings", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(child_pid) < 0)
-                perror("disown");
-        }
+        Core::Process::spawn("/bin/Settings"sv);
     }));
 
     system_menu->add_separator();
     system_menu->add_action(GUI::Action::create("Help", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png"), [](auto&) {
-        pid_t child_pid;
-        const char* argv[] = { "/bin/Help", nullptr };
-        if ((errno = posix_spawn(&child_pid, "/bin/Help", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(child_pid) < 0)
-                perror("disown");
-        }
+        Core::Process::spawn("/bin/Help"sv);
     }));
     system_menu->add_action(GUI::Action::create("Run...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-run.png"), [](auto&) {
         posix_spawn_file_actions_t spawn_actions;
@@ -293,13 +273,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         if (command.size() == 0)
             return;
 
-        pid_t child_pid;
-        if ((errno = posix_spawn(&child_pid, command[0], nullptr, nullptr, const_cast<char**>(command.data()), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(child_pid) < 0)
-                perror("disown");
-        }
+        Core::Process::spawn(command[0]);
     }));
 
     return system_menu;
