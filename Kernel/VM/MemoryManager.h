@@ -126,6 +126,7 @@ public:
     size_t page_count() const { return m_page_count; }
 
     [[nodiscard]] NonnullRefPtr<PhysicalPage> take_one();
+    void uncommit_one();
 
     void operator=(CommittedPhysicalPageSet&&) = delete;
 
