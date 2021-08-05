@@ -19,14 +19,8 @@ class PageDirectory : public RefCounted<PageDirectory> {
     friend class MemoryManager;
 
 public:
-    static RefPtr<PageDirectory> create_for_userspace(const RangeAllocator* parent_range_allocator = nullptr)
-    {
-        auto page_directory = adopt_ref(*new PageDirectory(parent_range_allocator));
-        if (!page_directory->is_valid())
-            return {};
-        return page_directory;
-    }
-    static NonnullRefPtr<PageDirectory> create_kernel_page_directory() { return adopt_ref(*new PageDirectory); }
+    static RefPtr<PageDirectory> try_create_for_userspace(RangeAllocator const* parent_range_allocator = nullptr);
+    static NonnullRefPtr<PageDirectory> must_create_kernel_page_directory();
     static RefPtr<PageDirectory> find_by_cr3(FlatPtr);
 
     ~PageDirectory();
@@ -47,8 +41,6 @@ public:
 
     RangeAllocator& identity_range_allocator() { return m_identity_range_allocator; }
 
-    bool is_valid() const { return m_valid; }
-
     Space* space() { return m_space; }
     const Space* space() const { return m_space; }
 
@@ -57,7 +49,6 @@ public:
     RecursiveSpinLock& get_lock() { return m_lock; }
 
 private:
-    explicit PageDirectory(const RangeAllocator* parent_range_allocator);
     PageDirectory();
 
     Space* m_space { nullptr };
@@ -74,7 +65,6 @@ private:
 #endif
     HashMap<FlatPtr, RefPtr<PhysicalPage>> m_page_tables;
     RecursiveSpinLock m_lock;
-    bool m_valid { false };
 };
 
 }
