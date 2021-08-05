@@ -735,7 +735,7 @@ KResult Process::send_signal(u8 signal, Process* sender)
     return ESRCH;
 }
 
-RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, const String& name, u32 affinity, bool joinable)
+RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, OwnPtr<KString> name, u32 affinity, bool joinable)
 {
     VERIFY((priority >= THREAD_PRIORITY_MIN) && (priority <= THREAD_PRIORITY_MAX));
 
@@ -746,7 +746,7 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
         return {};
 
     auto thread = thread_or_error.release_value();
-    thread->set_name(name);
+    thread->set_name(move(name));
     thread->set_affinity(affinity);
     thread->set_priority(priority);
     if (!joinable)

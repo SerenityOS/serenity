@@ -52,18 +52,20 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
     if (!block_timer)
         return ENOMEM;
 
-    auto thread = adopt_ref_if_nonnull(new (nothrow) Thread(move(process), kernel_stack_region.release_nonnull(), block_timer.release_nonnull(), fpu_state.release_nonnull()));
+    auto name = KString::try_create(process->name());
+
+    auto thread = adopt_ref_if_nonnull(new (nothrow) Thread(move(process), kernel_stack_region.release_nonnull(), block_timer.release_nonnull(), fpu_state.release_nonnull(), move(name)));
     if (!thread)
         return ENOMEM;
 
     return thread.release_nonnull();
 }
 
-Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, NonnullOwnPtr<FPUState> fpu_state)
+Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, NonnullOwnPtr<FPUState> fpu_state, OwnPtr<KString> name)
     : m_process(move(process))
     , m_kernel_stack_region(move(kernel_stack_region))
     , m_fpu_state(move(fpu_state))
-    , m_name(m_process->name())
+    , m_name(move(name))
     , m_block_timer(block_timer)
     , m_global_procfs_inode_index(ProcFSComponentRegistry::the().allocate_inode_index())
 {
@@ -1020,7 +1022,7 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
         push_value_on_user_stack(stack, signal);
         push_value_on_user_stack(stack, handler_vaddr.get());
-        push_value_on_user_stack(stack, 0); //push fake return address
+        push_value_on_user_stack(stack, 0); // push fake return address
 
         VERIFY((*stack % 16) == 0);
     };

@@ -185,7 +185,7 @@ public:
     static NonnullRefPtrVector<Process> all_processes();
 
     template<typename EntryFunction>
-    RefPtr<Thread> create_kernel_thread(EntryFunction entry, u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true)
+    RefPtr<Thread> create_kernel_thread(EntryFunction entry, u32 priority, OwnPtr<KString> name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true)
     {
         auto* entry_func = new EntryFunction(move(entry));
         return create_kernel_thread([](void* data) {
@@ -193,9 +193,9 @@ public:
             (*func)();
             delete func;
         },
-            priority, name, affinity, joinable);
+            priority, move(name), affinity, joinable);
     }
-    RefPtr<Thread> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, const String& name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
+    RefPtr<Thread> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, OwnPtr<KString> name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
     bool is_profiling() const { return m_profiling; }
     void set_profiling(bool profiling) { m_profiling = profiling; }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,6 +26,7 @@
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
+#include <Kernel/KString.h>
 #include <Kernel/LockMode.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/TimerQueue.h>
@@ -178,19 +179,15 @@ public:
     Process& process() { return m_process; }
     const Process& process() const { return m_process; }
 
-    String name() const
+    // NOTE: This returns a null-terminated string.
+    StringView name() const
     {
-        // Because the name can be changed, we can't return a const
-        // reference here. We must make a copy
-        ScopedSpinLock lock(m_lock);
-        return m_name;
+        // NOTE: Whoever is calling this needs to be holding our lock while reading the name.
+        VERIFY(m_lock.own_lock());
+        return m_name ? m_name->view() : StringView {};
     }
-    void set_name(const StringView& s)
-    {
-        ScopedSpinLock lock(m_lock);
-        m_name = s;
-    }
-    void set_name(String&& name)
+
+    void set_name(OwnPtr<KString> name)
     {
         ScopedSpinLock lock(m_lock);
         m_name = move(name);
@@ -1218,7 +1215,7 @@ public:
     String backtrace();
 
 private:
-    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>, NonnullOwnPtr<FPUState>);
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>, NonnullOwnPtr<FPUState>, OwnPtr<KString>);
 
     IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
@@ -1349,7 +1346,7 @@ private:
 
     OwnPtr<FPUState> m_fpu_state;
     State m_state { Invalid };
-    String m_name;
+    OwnPtr<KString> m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
 
     State m_stop_state { Invalid };
