@@ -219,37 +219,6 @@ static inline bool is_color(StyleValue const& value)
     return false;
 }
 
-static inline bool is_flex_direction(StyleValue const& value)
-{
-    if (value.is_builtin_or_dynamic())
-        return true;
-
-    switch (value.to_identifier()) {
-    case ValueID::Row:
-    case ValueID::RowReverse:
-    case ValueID::Column:
-    case ValueID::ColumnReverse:
-        return true;
-    default:
-        return false;
-    }
-}
-
-static inline bool is_flex_wrap(StyleValue const& value)
-{
-    if (value.is_builtin_or_dynamic())
-        return true;
-
-    switch (value.to_identifier()) {
-    case ValueID::Wrap:
-    case ValueID::Nowrap:
-    case ValueID::WrapReverse:
-        return true;
-    default:
-        return false;
-    }
-}
-
 static inline bool is_font_family(StyleValue const& value)
 {
     if (value.is_builtin_or_dynamic())
@@ -793,40 +762,17 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::FlexFlow) {
-        if (value.is_component_value_list()) {
-            auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
-            if (parts.is_empty() || parts.size() > 2)
-                return;
-
-            RefPtr<StyleValue> flex_direction_value;
-            RefPtr<StyleValue> flex_wrap_value;
-
-            for (auto& part : parts) {
-                auto value = Parser::parse_css_value(context, property_id, part);
-                if (!value)
-                    return;
-                if (is_flex_direction(*value)) {
-                    if (flex_direction_value)
-                        return;
-                    flex_direction_value = move(value);
-                    continue;
-                }
-                if (is_flex_wrap(*value)) {
-                    if (flex_wrap_value)
-                        return;
-                    flex_wrap_value = move(value);
-                    continue;
-                }
-            }
-
-            if (flex_direction_value)
-                style.set_property(CSS::PropertyID::FlexDirection, *flex_direction_value);
-            if (flex_wrap_value)
-                style.set_property(CSS::PropertyID::FlexWrap, *flex_wrap_value);
-
+        if (value.is_flex_flow()) {
+            auto& flex_flow = static_cast<FlexFlowStyleValue const&>(value);
+            style.set_property(CSS::PropertyID::FlexDirection, flex_flow.flex_direction());
+            style.set_property(CSS::PropertyID::FlexWrap, flex_flow.flex_wrap());
             return;
         }
-
+        if (value.is_builtin()) {
+            style.set_property(CSS::PropertyID::FlexDirection, value);
+            style.set_property(CSS::PropertyID::FlexWrap, value);
+            return;
+        }
         return;
     }
 

@@ -232,6 +232,7 @@ public:
         Background,
         BoxShadow,
         Flex,
+        FlexFlow,
         Font,
         ListStyle,
         TextDecoration,
@@ -254,6 +255,7 @@ public:
     bool is_background() const { return type() == Type::Background; }
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
     bool is_flex() const { return type() == Type::Flex; }
+    bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
     bool is_list_style() const { return type() == Type::ListStyle; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
@@ -714,6 +716,34 @@ private:
     NonnullRefPtr<StyleValue> m_grow;
     NonnullRefPtr<StyleValue> m_shrink;
     NonnullRefPtr<StyleValue> m_basis;
+};
+
+class FlexFlowStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<FlexFlowStyleValue> create(NonnullRefPtr<StyleValue> flex_direction, NonnullRefPtr<StyleValue> flex_wrap)
+    {
+        return adopt_ref(*new FlexFlowStyleValue(flex_direction, flex_wrap));
+    }
+    virtual ~FlexFlowStyleValue() override { }
+
+    NonnullRefPtr<StyleValue> flex_direction() const { return m_flex_direction; }
+    NonnullRefPtr<StyleValue> flex_wrap() const { return m_flex_wrap; }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("FlexFlow flex_direction: {}, flex_wrap: {}", m_flex_direction->to_string(), m_flex_wrap->to_string());
+    }
+
+private:
+    FlexFlowStyleValue(NonnullRefPtr<StyleValue> flex_direction, NonnullRefPtr<StyleValue> flex_wrap)
+        : StyleValue(Type::FlexFlow)
+        , m_flex_direction(flex_direction)
+        , m_flex_wrap(flex_wrap)
+    {
+    }
+
+    NonnullRefPtr<StyleValue> m_flex_direction;
+    NonnullRefPtr<StyleValue> m_flex_wrap;
 };
 
 class FontStyleValue final : public StyleValue {
