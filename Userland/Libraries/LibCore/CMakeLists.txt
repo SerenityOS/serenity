@@ -21,6 +21,7 @@ set(SOURCES
     NetworkResponse.cpp
     Notifier.cpp
     Object.cpp
+    Process.cpp
     ProcessStatisticsReader.cpp
     Property.cpp
     Socket.cpp
