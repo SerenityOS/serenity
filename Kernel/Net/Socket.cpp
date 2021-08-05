@@ -108,10 +108,10 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
         if (user_value_size != IFNAMSIZ)
             return EINVAL;
         auto user_string = static_ptr_cast<const char*>(user_value);
-        auto ifname = copy_string_from_user(user_string, user_value_size);
-        if (ifname.is_null())
-            return EFAULT;
-        auto device = NetworkingManagement::the().lookup_by_name(ifname);
+        auto ifname_or_error = try_copy_kstring_from_user(user_string, user_value_size);
+        if (ifname_or_error.is_error())
+            return ifname_or_error.error();
+        auto device = NetworkingManagement::the().lookup_by_name(ifname_or_error.value()->view());
         if (!device)
             return ENODEV;
         m_bound_interface = device;
