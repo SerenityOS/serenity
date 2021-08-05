@@ -54,7 +54,7 @@ public:
 
     virtual ~AsyncDeviceRequest();
 
-    virtual const char* name() const = 0;
+    virtual StringView name() const = 0;
     virtual void start() = 0;
 
     void add_sub_request(NonnullRefPtr<AsyncDeviceRequest>);
