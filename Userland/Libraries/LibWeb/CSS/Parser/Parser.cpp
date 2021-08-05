@@ -1981,6 +1981,63 @@ RefPtr<StyleValue> Parser::parse_flex_value(ParsingContext const& context, Vecto
     return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
 }
 
+RefPtr<StyleValue> Parser::parse_flex_flow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto is_flex_direction = [](StyleValue const& value) -> bool {
+        switch (value.to_identifier()) {
+        case ValueID::Row:
+        case ValueID::RowReverse:
+        case ValueID::Column:
+        case ValueID::ColumnReverse:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    auto is_flex_wrap = [](StyleValue const& value) -> bool {
+        switch (value.to_identifier()) {
+        case ValueID::Wrap:
+        case ValueID::Nowrap:
+        case ValueID::WrapReverse:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    if (component_values.size() > 2)
+        return nullptr;
+
+    RefPtr<StyleValue> flex_direction;
+    RefPtr<StyleValue> flex_wrap;
+
+    for (auto& part : component_values) {
+        auto value = Parser::parse_css_value(context, PropertyID::FlexFlow, part);
+        if (!value)
+            return nullptr;
+        if (is_flex_direction(*value)) {
+            if (flex_direction)
+                return nullptr;
+            flex_direction = value.release_nonnull();
+            continue;
+        }
+        if (is_flex_wrap(*value)) {
+            if (flex_wrap)
+                return nullptr;
+            flex_wrap = value.release_nonnull();
+            continue;
+        }
+    }
+
+    if (!flex_direction)
+        flex_direction = IdentifierStyleValue::create(ValueID::Row);
+    if (!flex_wrap)
+        flex_wrap = IdentifierStyleValue::create(ValueID::Nowrap);
+
+    return FlexFlowStyleValue::create(flex_direction.release_nonnull(), flex_wrap.release_nonnull());
+}
+
 RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
     auto is_font_size = [](StyleValue const& value) -> bool {
@@ -2379,6 +2436,10 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         break;
     case PropertyID::Flex:
         if (auto parsed_value = parse_flex_value(m_context, component_values))
+            return parsed_value;
+        break;
+    case PropertyID::FlexFlow:
+        if (auto parsed_value = parse_flex_flow_value(m_context, component_values))
             return parsed_value;
         break;
     case PropertyID::Font:
