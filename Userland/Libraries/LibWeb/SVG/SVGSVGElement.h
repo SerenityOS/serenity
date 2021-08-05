@@ -22,6 +22,9 @@ public:
     unsigned width() const;
     unsigned height() const;
 
+    virtual bool requires_svg_container() const override { return false; }
+    virtual bool is_svg_container() const override { return true; }
+
 private:
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
