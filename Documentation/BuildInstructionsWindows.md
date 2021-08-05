@@ -29,8 +29,9 @@ Please see the general build instructions for a list of tools you need to instal
 
 ## Setting up QEMU
 
-Grab the latest QEMU binaries from [here](https://www.qemu.org/download/#windows) and install them. At a minimum you
-will need to install the tools as well as the system emulators for i386 and x86_64.
+Grab the QEMU binaries from [here](https://www.qemu.org/download/#windows) and install them.
+Make sure you install version 6.0.0 as the latest version (6.1.0-rc0) has a [bug](https://gitlab.com/qemu-project/qemu/-/issues/500) which results serenity's build system not being able to run qemu.
+At a minimum you will need to install the tools as well as the system emulators for i386 and x86_64.
 
 ![QEMU Components](QEMU_Components.png)
 
