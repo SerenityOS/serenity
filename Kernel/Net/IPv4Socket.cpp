@@ -589,11 +589,11 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
         if (!copy_from_user(&route, user_route))
             return EFAULT;
 
-        auto copied_ifname = copy_string_from_user(route.rt_dev, IFNAMSIZ);
-        if (copied_ifname.is_null())
-            return EFAULT;
+        auto ifname_or_error = try_copy_kstring_from_user(route.rt_dev, IFNAMSIZ);
+        if (ifname_or_error.is_error())
+            return ifname_or_error.error();
 
-        auto adapter = NetworkingManagement::the().lookup_by_name(copied_ifname);
+        auto adapter = NetworkingManagement::the().lookup_by_name(ifname_or_error.value()->view());
         if (!adapter)
             return ENODEV;
 
