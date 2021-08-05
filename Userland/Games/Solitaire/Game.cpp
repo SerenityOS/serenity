@@ -175,6 +175,9 @@ void Game::setup(Mode mode)
     for (uint8_t i = 0; i < 200; ++i)
         m_new_deck.append(m_new_deck.take(get_random_uniform(m_new_deck.size())));
 
+    m_focused_stack = nullptr;
+    m_focused_cards.clear();
+
     m_new_game_animation = true;
     start_timer(s_timer_interval_ms);
     update();
