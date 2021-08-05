@@ -448,8 +448,9 @@ void DebugSession::update_loaded_libs()
             return IterationDecision::Continue;
 
         FlatPtr base_address = entry.as_object().get("address").to_addr();
-        auto debug_info = make<DebugInfo>(make<ELF::Image>(file_or_error.value()->bytes()), m_source_root, base_address);
-        auto lib = make<LoadedLibrary>(lib_name, file_or_error.release_value(), move(debug_info), base_address);
+        auto image = make<ELF::Image>(file_or_error.value()->bytes());
+        auto debug_info = make<DebugInfo>(*image, m_source_root, base_address);
+        auto lib = make<LoadedLibrary>(lib_name, file_or_error.release_value(), move(image), move(debug_info), base_address);
         m_loaded_libraries.set(lib_name, move(lib));
 
         return IterationDecision::Continue;

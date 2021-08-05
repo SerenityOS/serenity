@@ -257,6 +257,7 @@ private:
     struct CachedELF {
         NonnullRefPtr<MappedFile> mapped_file;
         NonnullOwnPtr<Debug::DebugInfo> debug_info;
+        NonnullOwnPtr<ELF::Image> image;
     };
 
     HashMap<String, CachedELF> m_dynamic_library_cache;

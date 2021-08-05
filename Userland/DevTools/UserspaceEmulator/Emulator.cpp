@@ -419,8 +419,9 @@ MmapRegion const* Emulator::load_library_from_adress(FlatPtr address)
         if (file_or_error.is_error())
             return {};
 
-        auto debug_info = make<Debug::DebugInfo>(make<ELF::Image>(file_or_error.value()->bytes()));
-        m_dynamic_library_cache.set(lib_path, CachedELF { file_or_error.release_value(), move(debug_info) });
+        auto image = make<ELF::Image>(file_or_error.value()->bytes());
+        auto debug_info = make<Debug::DebugInfo>(*image);
+        m_dynamic_library_cache.set(lib_path, CachedELF { file_or_error.release_value(), move(debug_info), move(image) });
     }
     return region;
 }
