@@ -17,6 +17,7 @@ set(SOURCES
     CreateNewLayerDialog.cpp
     EllipseTool.cpp
     EraseTool.cpp
+    GuideTool.cpp
     Image.cpp
     ImageEditor.cpp
     Layer.cpp
