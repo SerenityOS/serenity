@@ -315,6 +315,12 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
     if (page_slot->ref_count() == 1) {
         dbgln_if(PAGE_FAULT_DEBUG, "    >> It's a COW page but nobody is sharing it anymore. Remap r/w");
         set_should_cow(page_index, false);
+
+        if (m_shared_committed_cow_pages) {
+            m_shared_committed_cow_pages->uncommit_one();
+            if (!m_shared_committed_cow_pages->is_empty())
+                m_shared_committed_cow_pages = nullptr;
+        }
         return PageFaultResponse::Continue;
     }
 
@@ -366,6 +372,12 @@ NonnullRefPtr<PhysicalPage> AnonymousVMObject::SharedCommittedCowPages::take_one
 {
     ScopedSpinLock locker(m_lock);
     return m_committed_pages.take_one();
+}
+
+void AnonymousVMObject::SharedCommittedCowPages::uncommit_one()
+{
+    ScopedSpinLock locker(m_lock);
+    m_committed_pages.uncommit_one();
 }
 
 }

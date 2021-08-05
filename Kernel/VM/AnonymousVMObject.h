@@ -70,8 +70,10 @@ private:
         explicit SharedCommittedCowPages(CommittedPhysicalPageSet&&);
         ~SharedCommittedCowPages();
 
-        [[nodiscard]] NonnullRefPtr<PhysicalPage> take_one();
         [[nodiscard]] bool is_empty() const { return m_committed_pages.is_empty(); }
+
+        [[nodiscard]] NonnullRefPtr<PhysicalPage> take_one();
+        void uncommit_one();
 
     public:
         SpinLock<u8> m_lock;

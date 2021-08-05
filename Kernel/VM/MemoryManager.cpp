@@ -1137,4 +1137,11 @@ NonnullRefPtr<PhysicalPage> CommittedPhysicalPageSet::take_one()
     return MM.allocate_committed_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
 }
 
+void CommittedPhysicalPageSet::uncommit_one()
+{
+    VERIFY(m_page_count > 0);
+    --m_page_count;
+    MM.uncommit_user_physical_pages({}, 1);
+}
+
 }
