@@ -75,6 +75,9 @@ void Game::setup(Mode mode)
     while (!deck.is_empty())
         m_new_deck.append(deck.take(get_random_uniform(deck.size())));
 
+    m_focused_stack = nullptr;
+    m_focused_cards.clear();
+
     m_new_game_animation = true;
     start_timer(s_timer_interval_ms);
     update();
