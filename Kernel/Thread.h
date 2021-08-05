@@ -1038,7 +1038,7 @@ public:
     u32 pending_signals() const;
     u32 pending_signals_for_state() const;
 
-    FPUState& fpu_state() { return *m_fpu_state; }
+    FPUState& fpu_state() { return m_fpu_state; }
 
     KResult make_thread_specific_region(Badge<Process>);
 
@@ -1215,7 +1215,7 @@ public:
     String backtrace();
 
 private:
-    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>, NonnullOwnPtr<FPUState>, OwnPtr<KString>);
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>, OwnPtr<KString>);
 
     IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
@@ -1344,7 +1344,7 @@ private:
     unsigned m_ipv4_socket_read_bytes { 0 };
     unsigned m_ipv4_socket_write_bytes { 0 };
 
-    OwnPtr<FPUState> m_fpu_state;
+    FPUState m_fpu_state {};
     State m_state { Invalid };
     OwnPtr<KString> m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
