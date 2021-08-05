@@ -14,7 +14,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Slider.h>
+#include <LibGUI/ValueSlider.h>
 
 namespace PixelPaint {
 
@@ -153,16 +153,13 @@ GUI::Widget* RectangleSelectTool::get_properties_widget()
     feather_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     feather_label.set_fixed_size(80, 20);
 
-    const int feather_slider_max = 10000;
-    auto& feather_slider = feather_container.add<GUI::HorizontalSlider>();
-    feather_slider.set_fixed_height(20);
+    const int feather_slider_max = 100;
+    auto& feather_slider = feather_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
     feather_slider.set_range(0, feather_slider_max);
     feather_slider.set_value((int)floorf(m_edge_feathering * (float)feather_slider_max));
-    feather_slider.set_tooltip(String::formatted("{:.2}", (float)m_edge_feathering / (float)feather_slider_max));
 
     feather_slider.on_change = [&](int value) {
         m_edge_feathering = (float)value / (float)feather_slider_max;
-        feather_slider.set_tooltip(String::formatted("{:.2}", (float)value / (float)feather_slider_max));
     };
 
     auto& mode_container = m_properties_widget->add<GUI::Widget>();

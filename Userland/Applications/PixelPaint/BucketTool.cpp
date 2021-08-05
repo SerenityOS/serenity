@@ -11,7 +11,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Slider.h>
+#include <LibGUI/ValueSlider.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
 
@@ -98,15 +98,12 @@ GUI::Widget* BucketTool::get_properties_widget()
         threshold_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         threshold_label.set_fixed_size(80, 20);
 
-        auto& threshold_slider = threshold_container.add<GUI::HorizontalSlider>();
-        threshold_slider.set_fixed_height(20);
+        auto& threshold_slider = threshold_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
         threshold_slider.set_range(0, 100);
         threshold_slider.set_value(m_threshold);
-        threshold_slider.set_tooltip(String::formatted("{}%", m_threshold));
 
         threshold_slider.on_change = [&](int value) {
             m_threshold = value;
-            threshold_slider.set_tooltip(String::formatted("{}%", value));
         };
     }
 

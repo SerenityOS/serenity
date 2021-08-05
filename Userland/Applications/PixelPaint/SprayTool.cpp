@@ -14,7 +14,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Slider.h>
+#include <LibGUI/ValueSlider.h>
 #include <LibGfx/Bitmap.h>
 
 namespace PixelPaint {
@@ -102,15 +102,12 @@ GUI::Widget* SprayTool::get_properties_widget()
         size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label.set_fixed_size(80, 20);
 
-        auto& size_slider = size_container.add<GUI::HorizontalSlider>();
-        size_slider.set_fixed_height(20);
+        auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
         size_slider.set_range(1, 20);
         size_slider.set_value(m_thickness);
-        size_slider.set_tooltip(String::formatted("{}", m_thickness));
 
         size_slider.on_change = [&](int value) {
             m_thickness = value;
-            size_slider.set_tooltip(String::formatted("{}", value));
         };
 
         auto& density_container = m_properties_widget->add<GUI::Widget>();
@@ -121,15 +118,12 @@ GUI::Widget* SprayTool::get_properties_widget()
         density_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         density_label.set_fixed_size(80, 20);
 
-        auto& density_slider = density_container.add<GUI::HorizontalSlider>();
-        density_slider.set_fixed_height(30);
+        auto& density_slider = density_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
         density_slider.set_range(1, 100);
         density_slider.set_value(m_density);
-        density_slider.set_tooltip(String::formatted("{}%", m_density));
 
         density_slider.on_change = [&](int value) {
             m_density = value;
-            density_slider.set_tooltip(String::formatted("{}%", value));
         };
     }
 
