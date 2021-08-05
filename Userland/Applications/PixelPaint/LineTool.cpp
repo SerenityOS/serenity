@@ -13,7 +13,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Slider.h>
+#include <LibGUI/ValueSlider.h>
 
 namespace PixelPaint {
 
@@ -114,15 +114,12 @@ GUI::Widget* LineTool::get_properties_widget()
         thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_label.set_fixed_size(80, 20);
 
-        auto& thickness_slider = thickness_container.add<GUI::HorizontalSlider>();
-        thickness_slider.set_fixed_height(20);
+        auto& thickness_slider = thickness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
         thickness_slider.set_range(1, 10);
         thickness_slider.set_value(m_thickness);
-        thickness_slider.set_tooltip(String::formatted("{}px", m_thickness));
 
         thickness_slider.on_change = [&](int value) {
             m_thickness = value;
-            thickness_slider.set_tooltip(String::formatted("{}px", value));
         };
     }
 

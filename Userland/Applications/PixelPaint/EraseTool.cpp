@@ -13,7 +13,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Slider.h>
+#include <LibGUI/ValueSlider.h>
 #include <LibGfx/Bitmap.h>
 
 namespace PixelPaint {
@@ -28,7 +28,7 @@ EraseTool::~EraseTool()
 
 Gfx::IntRect EraseTool::build_rect(Gfx::IntPoint const& pos, Gfx::IntRect const& widget_rect)
 {
-    const int eraser_size = (m_base_eraser_size * m_thickness);
+    const int eraser_size = m_thickness;
     const int eraser_radius = eraser_size / 2;
     const auto ex = pos.x();
     const auto ey = pos.y();
@@ -83,15 +83,12 @@ GUI::Widget* EraseTool::get_properties_widget()
         thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_label.set_fixed_size(80, 20);
 
-        auto& thickness_slider = thickness_container.add<GUI::HorizontalSlider>();
-        thickness_slider.set_fixed_height(20);
-        thickness_slider.set_range(1, 5);
+        auto& thickness_slider = thickness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        thickness_slider.set_range(1, 50);
         thickness_slider.set_value(m_thickness);
-        thickness_slider.set_tooltip(String::formatted("{}px", m_base_eraser_size * m_thickness));
 
         thickness_slider.on_change = [&](int value) {
             m_thickness = value;
-            thickness_slider.set_tooltip(String::formatted("{}px", m_base_eraser_size * value));
         };
 
         auto& checkbox_container = m_properties_widget->add<GUI::Widget>();
