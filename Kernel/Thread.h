@@ -527,7 +527,7 @@ public:
 
     class QueueBlocker : public Blocker {
     public:
-        explicit QueueBlocker(WaitQueue&, const char* block_reason = nullptr);
+        explicit QueueBlocker(WaitQueue&, StringView block_reason = {});
         virtual ~QueueBlocker();
 
         virtual Type blocker_type() const override { return Type::Queue; }

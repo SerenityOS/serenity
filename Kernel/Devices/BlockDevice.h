@@ -29,13 +29,13 @@ public:
     size_t buffer_size() const { return m_buffer_size; }
 
     virtual void start() override;
-    virtual const char* name() const override
+    virtual StringView name() const override
     {
         switch (m_request_type) {
         case Read:
-            return "BlockDeviceRequest (read)";
+            return "BlockDeviceRequest (read)"sv;
         case Write:
-            return "BlockDeviceRequest (write)";
+            return "BlockDeviceRequest (write)"sv;
         default:
             VERIFY_NOT_REACHED();
         }
