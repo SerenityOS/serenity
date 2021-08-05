@@ -9,6 +9,7 @@
 #include "BucketTool.h"
 #include "EllipseTool.h"
 #include "EraseTool.h"
+#include "GuideTool.h"
 #include "LineTool.h"
 #include "MoveTool.h"
 #include "PenTool.h"
@@ -79,6 +80,7 @@ void ToolboxWidget::setup_tools()
     add_tool("Ellipse", "circle", { Mod_Ctrl | Mod_Shift, Key_E }, make<EllipseTool>());
     add_tool("Zoom", "zoom", { 0, Key_Z }, make<ZoomTool>());
     add_tool("Rectangle Select", "rectangle-select", { 0, Key_R }, make<RectangleSelectTool>());
+    add_tool("Guides", "guides", { 0, Key_G }, make<GuideTool>());
 }
 
 }
