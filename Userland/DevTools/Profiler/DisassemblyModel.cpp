@@ -7,6 +7,7 @@
 #include "DisassemblyModel.h"
 #include "Profile.h"
 #include <AK/MappedFile.h>
+#include <LibDebug/DebugInfo.h>
 #include <LibELF/Image.h>
 #include <LibGUI/Painter.h>
 #include <LibSymbolication/Symbolication.h>
@@ -75,6 +76,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     X86::ELFSymbolProvider symbol_provider(*elf);
     X86::SimpleInstructionStream stream((const u8*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
+    Debug::DebugInfo debug_info { *elf, {}, base_address };
 
     size_t offset_into_symbol = 0;
     for (;;) {
@@ -89,7 +91,7 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
         u32 samples_at_this_instruction = m_node.events_per_address().get(address_in_profiled_program).value_or(0);
         float percent = ((float)samples_at_this_instruction / (float)m_node.event_count()) * 100.0f;
 
-        m_instructions.append({ insn.value(), disassembly, instruction_bytes, address_in_profiled_program, samples_at_this_instruction, percent });
+        m_instructions.append({ insn.value(), disassembly, instruction_bytes, address_in_profiled_program, samples_at_this_instruction, percent, debug_info.get_source_position_with_inlines(address_in_profiled_program - base_address) });
 
         offset_into_symbol += insn.value().length();
     }
@@ -115,6 +117,8 @@ String DisassemblyModel::column_name(int column) const
         return "Insn Bytes";
     case Column::Disassembly:
         return "Disassembly";
+    case Column::SourceLocation:
+        return "Source Location";
     default:
         VERIFY_NOT_REACHED();
         return {};
@@ -164,8 +168,10 @@ GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole
                 return ((float)insn.event_count / (float)m_node.event_count()) * 100.0f;
             return insn.event_count;
         }
+
         if (index.column() == Column::Address)
             return String::formatted("{:p}", insn.address);
+
         if (index.column() == Column::InstructionBytes) {
             StringBuilder builder;
             for (auto ch : insn.bytes) {
@@ -173,8 +179,29 @@ GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole
             }
             return builder.to_string();
         }
+
         if (index.column() == Column::Disassembly)
             return insn.disassembly;
+
+        if (index.column() == Column::SourceLocation) {
+            StringBuilder builder;
+            auto first = true;
+            for (auto& entry : insn.source_position_with_inlines.inline_chain) {
+                if (first)
+                    first = false;
+                else
+                    builder.append(" => ");
+                builder.appendff("{}:{}", entry.file_path, entry.line_number);
+            }
+            if (insn.source_position_with_inlines.source_position.has_value()) {
+                if (!first)
+                    builder.append(" => ");
+                auto& entry = insn.source_position_with_inlines.source_position.value();
+                builder.appendff("{}:{}", entry.file_path, entry.line_number);
+            }
+            return builder.build();
+        }
+
         return {};
     }
     return {};
