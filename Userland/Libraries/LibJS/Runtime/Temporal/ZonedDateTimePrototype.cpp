@@ -59,6 +59,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.toInstant, to_instant, 0, attr);
 }
 
 static ZonedDateTime* typed_this(GlobalObject& global_object)
@@ -700,6 +701,19 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::value_of)
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.ZonedDateTime", "a primitive value");
     return {};
+}
+
+// 6.3.46 Temporal.ZonedDateTime.prototype.toInstant ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.toinstant
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_instant)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
+    return create_temporal_instant(global_object, zoned_date_time->nanoseconds());
 }
 
 }
