@@ -10,6 +10,7 @@
 #include "SimpleRegion.h"
 #include "SoftCPU.h"
 #include <AK/Debug.h>
+#include <AK/FileStream.h>
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
@@ -25,6 +26,10 @@
 #if defined(__GNUC__) && !defined(__clang__)
 #    pragma GCC optimize("O3")
 #endif
+
+extern bool g_dump_profile;
+extern unsigned g_profile_instruction_interval;
+extern Optional<OutputFileStream> g_profile_stream;
 
 namespace UserspaceEmulator {
 
@@ -218,6 +223,10 @@ int Emulator::exec()
 
     constexpr bool trace = false;
 
+    size_t instructions_until_next_profile_dump = g_profile_instruction_interval;
+    if (g_dump_profile && m_loader_text_size.has_value())
+        emit_profile_event(*g_profile_stream, "mmap", String::formatted(R"("ptr": {}, "size": {}, "name": "/usr/lib/Loader.so")", *m_loader_text_base, *m_loader_text_size));
+
     while (!m_shutdown) {
         if (m_steps_til_pause) [[likely]] {
             m_cpu.save_base_eip();
@@ -228,6 +237,15 @@ int Emulator::exec()
             }
 
             (m_cpu.*insn.handler())(insn);
+
+            if (g_dump_profile) {
+                if (instructions_until_next_profile_dump == 0) {
+                    instructions_until_next_profile_dump = g_profile_instruction_interval;
+                    emit_profile_sample(*g_profile_stream);
+                } else {
+                    --instructions_until_next_profile_dump;
+                }
+            }
 
             if constexpr (trace) {
                 m_cpu.dump();
@@ -443,6 +461,26 @@ void Emulator::dump_backtrace(Vector<FlatPtr> const& backtrace)
 void Emulator::dump_backtrace()
 {
     dump_backtrace(raw_backtrace());
+}
+
+void Emulator::emit_profile_sample(AK::OutputStream& output)
+{
+    StringBuilder builder;
+    timeval tv {};
+    gettimeofday(&tv, nullptr);
+    builder.appendff(R"~(, {{"type": "sample", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": [)~", getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000);
+    builder.join(',', raw_backtrace());
+    builder.append("]}");
+    output.write_or_error(builder.string_view().bytes());
+}
+
+void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_name, String contents)
+{
+    StringBuilder builder;
+    timeval tv {};
+    gettimeofday(&tv, nullptr);
+    builder.appendff(R"~(, {{"type": "{}", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": [], {}}})~", event_name, getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000, contents);
+    output.write_or_error(builder.string_view().bytes());
 }
 
 String Emulator::create_instruction_line(FlatPtr address, X86::Instruction insn)

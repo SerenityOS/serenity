@@ -8,6 +8,7 @@
 #include "MmapRegion.h"
 #include "SimpleRegion.h"
 #include <AK/Debug.h>
+#include <AK/FileStream.h>
 #include <AK/Format.h>
 #include <fcntl.h>
 #include <sched.h>
@@ -26,6 +27,9 @@
 #if defined(__GNUC__) && !defined(__clang__)
 #    pragma GCC optimize("O3")
 #endif
+
+extern bool g_dump_profile;
+extern Optional<OutputFileStream> g_profile_stream;
 
 namespace UserspaceEmulator {
 
@@ -812,6 +816,8 @@ static void round_to_page_size(FlatPtr& address, size_t& size)
 
 u32 Emulator::virt$munmap(FlatPtr address, size_t size)
 {
+    if (g_dump_profile)
+        emit_profile_event(*g_profile_stream, "munmap", String::formatted("\"ptr\": {}, \"size\": {}", address, size));
     round_to_page_size(address, size);
     Vector<Region*, 4> marked_for_deletion;
     bool has_non_mmap_region = false;
@@ -869,6 +875,9 @@ u32 Emulator::virt$mmap(u32 params_addr)
         mmu().copy_from_vm(name.data(), (FlatPtr)params.name.characters, params.name.length);
         name_str = { name.data(), name.size() };
     }
+
+    if (g_dump_profile)
+        emit_profile_event(*g_profile_stream, "mmap", String::formatted(R"("ptr": {}, "size": {}, "name": "{}")", final_address, final_size, name_str));
 
     if (params.flags & MAP_ANONYMOUS) {
         mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot, move(name_str)));
