@@ -230,6 +230,7 @@ public:
         ComponentValueList,
         Calculated,
         Background,
+        Border,
         BoxShadow,
         Flex,
         FlexFlow,
@@ -253,6 +254,7 @@ public:
     bool is_component_value_list() const { return type() == Type::ComponentValueList; }
     bool is_calculated() const { return type() == Type::Calculated; }
     bool is_background() const { return type() == Type::Background; }
+    bool is_border() const { return type() == Type::Border; }
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
     bool is_flex() const { return type() == Type::Flex; }
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
@@ -679,6 +681,43 @@ private:
     // FIXME: background-attachment
     // FIXME: background-clip
     // FIXME: background-origin
+};
+
+class BorderStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<BorderStyleValue> create(
+        NonnullRefPtr<StyleValue> border_width,
+        NonnullRefPtr<StyleValue> border_style,
+        NonnullRefPtr<StyleValue> border_color)
+    {
+        return adopt_ref(*new BorderStyleValue(border_width, border_style, border_color));
+    }
+    virtual ~BorderStyleValue() override { }
+
+    NonnullRefPtr<StyleValue> border_width() const { return m_border_width; }
+    NonnullRefPtr<StyleValue> border_style() const { return m_border_style; }
+    NonnullRefPtr<StyleValue> border_color() const { return m_border_color; }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("Border border_width: {}, border_style: {}, border_color: {}", m_border_width->to_string(), m_border_style->to_string(), m_border_color->to_string());
+    }
+
+private:
+    BorderStyleValue(
+        NonnullRefPtr<StyleValue> border_width,
+        NonnullRefPtr<StyleValue> border_style,
+        NonnullRefPtr<StyleValue> border_color)
+        : StyleValue(Type::Border)
+        , m_border_width(border_width)
+        , m_border_style(border_style)
+        , m_border_color(border_color)
+    {
+    }
+
+    NonnullRefPtr<StyleValue> m_border_width;
+    NonnullRefPtr<StyleValue> m_border_style;
+    NonnullRefPtr<StyleValue> m_border_color;
 };
 
 class FlexStyleValue final : public StyleValue {
