@@ -15,7 +15,7 @@ class RealTimeClock final : public HardwareTimer<IRQHandler> {
 public:
     static NonnullRefPtr<RealTimeClock> create(Function<void(const RegisterState&)> callback);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RTC; }
-    virtual const char* model() const override { return "Real Time Clock"; }
+    virtual StringView model() const override { return "Real Time Clock"sv; }
     virtual size_t ticks_per_second() const override;
 
     virtual bool is_periodic() const override { return true; }

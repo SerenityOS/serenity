@@ -16,7 +16,7 @@ class APICTimer final : public HardwareTimer<GenericInterruptHandler> {
 public:
     static APICTimer* initialize(u8, HardwareTimerBase&);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::LocalAPICTimer; }
-    virtual const char* model() const override { return "LocalAPIC"; }
+    virtual StringView model() const override { return "LocalAPIC"sv; }
     virtual size_t ticks_per_second() const override;
 
     virtual bool is_periodic() const override { return m_timer_mode == APIC::TimerMode::Periodic; }
