@@ -840,7 +840,7 @@ RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page(bool committed)
     return page;
 }
 
-NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_user_physical_page(ShouldZeroFill should_zero_fill)
+NonnullRefPtr<PhysicalPage> MemoryManager::allocate_committed_user_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill should_zero_fill)
 {
     ScopedSpinLock lock(s_mm_lock);
     auto page = find_free_user_physical_page(true);
@@ -1134,7 +1134,7 @@ NonnullRefPtr<PhysicalPage> CommittedPhysicalPageSet::take_one()
 {
     VERIFY(m_page_count > 0);
     --m_page_count;
-    return MM.allocate_committed_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+    return MM.allocate_committed_user_physical_page({}, MemoryManager::ShouldZeroFill::Yes);
 }
 
 void CommittedPhysicalPageSet::uncommit_one()
