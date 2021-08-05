@@ -376,6 +376,7 @@ namespace JS {
     P(toDateString)                          \
     P(toFixed)                               \
     P(toGMTString)                           \
+    P(toInstant)                             \
     P(toISOString)                           \
     P(toJSON)                                \
     P(toLocaleDateString)                    \
