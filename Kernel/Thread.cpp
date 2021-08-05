@@ -480,25 +480,25 @@ auto Thread::sleep_until(clockid_t clock_id, const Time& deadline) -> BlockResul
     return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(true, &deadline, nullptr, clock_id));
 }
 
-const char* Thread::state_string() const
+StringView Thread::state_string() const
 {
     switch (state()) {
     case Thread::Invalid:
-        return "Invalid";
+        return "Invalid"sv;
     case Thread::Runnable:
-        return "Runnable";
+        return "Runnable"sv;
     case Thread::Running:
-        return "Running";
+        return "Running"sv;
     case Thread::Dying:
-        return "Dying";
+        return "Dying"sv;
     case Thread::Dead:
-        return "Dead";
+        return "Dead"sv;
     case Thread::Stopped:
-        return "Stopped";
+        return "Stopped"sv;
     case Thread::Blocked: {
         ScopedSpinLock block_lock(m_block_lock);
         if (m_blocking_lock)
-            return "Mutex";
+            return "Mutex"sv;
         if (m_blocker)
             return m_blocker->state_string();
         VERIFY_NOT_REACHED();
