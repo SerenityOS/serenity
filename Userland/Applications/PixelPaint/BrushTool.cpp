@@ -11,7 +11,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Slider.h>
+#include <LibGUI/ValueSlider.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
 
@@ -126,15 +126,12 @@ GUI::Widget* BrushTool::get_properties_widget()
         size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label.set_fixed_size(80, 20);
 
-        auto& size_slider = size_container.add<GUI::HorizontalSlider>();
-        size_slider.set_fixed_height(20);
+        auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
         size_slider.set_range(1, 100);
         size_slider.set_value(m_size);
-        size_slider.set_tooltip(String::formatted("{}px", m_size));
 
         size_slider.on_change = [&](int value) {
             m_size = value;
-            size_slider.set_tooltip(String::formatted("{}px", value));
         };
 
         auto& hardness_container = m_properties_widget->add<GUI::Widget>();
@@ -145,15 +142,12 @@ GUI::Widget* BrushTool::get_properties_widget()
         hardness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         hardness_label.set_fixed_size(80, 20);
 
-        auto& hardness_slider = hardness_container.add<GUI::HorizontalSlider>();
-        hardness_slider.set_fixed_height(20);
+        auto& hardness_slider = hardness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
         hardness_slider.set_range(1, 99);
         hardness_slider.set_value(m_hardness);
-        hardness_slider.set_tooltip(String::formatted("{}%", m_hardness));
 
         hardness_slider.on_change = [&](int value) {
             m_hardness = value;
-            hardness_slider.set_tooltip(String::formatted("{}%", value));
         };
     }
 

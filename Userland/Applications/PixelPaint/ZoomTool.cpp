@@ -8,7 +8,7 @@
 #include "ImageEditor.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Slider.h>
+#include <LibGUI/ValueSlider.h>
 
 namespace PixelPaint {
 
@@ -43,15 +43,12 @@ GUI::Widget* ZoomTool::get_properties_widget()
         sensitivity_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         sensitivity_label.set_fixed_size(80, 20);
 
-        auto& sensitivity_slider = sensitivity_container.add<GUI::HorizontalSlider>();
-        sensitivity_slider.set_fixed_height(20);
+        auto& sensitivity_slider = sensitivity_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
         sensitivity_slider.set_range(1, 100);
         sensitivity_slider.set_value(100 * m_sensitivity);
-        sensitivity_slider.set_tooltip(String::formatted("{:.2}", (double)m_sensitivity / 100.0));
 
         sensitivity_slider.on_change = [&](int value) {
             m_sensitivity = (double)value / 100.0;
-            sensitivity_slider.set_tooltip(String::formatted("{:.2}", (double)value / 100.0));
         };
     }
 
