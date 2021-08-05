@@ -875,9 +875,26 @@ void Process::set_dumpable(bool dumpable)
     m_dumpable = dumpable;
 }
 
-void Process::set_coredump_metadata(const String& key, String value)
+KResult Process::set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value)
 {
-    m_coredump_metadata.set(key, move(value));
+    // Write it into the first available property slot.
+    for (auto& slot : m_coredump_properties) {
+        if (slot.key)
+            continue;
+        slot.key = move(key);
+        slot.value = move(value);
+        return KSuccess;
+    }
+    return ENOBUFS;
 }
+
+KResult Process::try_set_coredump_property(StringView key, StringView value)
+{
+    auto key_kstring = KString::try_create(key);
+    auto value_kstring = KString::try_create(value);
+    if (key_kstring && value_kstring)
+        return set_coredump_property(key_kstring.release_nonnull(), value_kstring.release_nonnull());
+    return ENOMEM;
+};
 
 }

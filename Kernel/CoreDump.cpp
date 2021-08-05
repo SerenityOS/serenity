@@ -291,8 +291,9 @@ ByteBuffer CoreDump::create_notes_metadata_data() const
     StringBuilder builder;
     {
         JsonObjectSerializer metadata_obj { builder };
-        for (auto& it : m_process->coredump_metadata())
-            metadata_obj.add(it.key, it.value);
+        m_process->for_each_coredump_property([&](auto& key, auto& value) {
+            metadata_obj.add(key.view(), value.view());
+        });
     }
     builder.append(0);
     metadata_data.append(builder.string_view().characters_without_null_termination(), builder.length());
