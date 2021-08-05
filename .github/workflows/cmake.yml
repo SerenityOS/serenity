@@ -21,12 +21,15 @@ jobs:
         debug-options: ['ALL_DEBUG', 'NORMAL_DEBUG']
         os: [ubuntu-20.04]
         arch: ['i686', 'x86_64']
+        compiler: ['GCC', 'Clang']
         # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
         ccache-mark: [0]
         exclude:
           # We currently manually disable the ALL_DEBUG build on x86_64 for sake of saving CI time, as it is not our main target right now
           - debug-options: 'ALL_DEBUG'
             arch: 'x86_64'
+          - debug-options: 'ALL_DEBUG'
+            compiler: 'Clang'
 
     steps:
     - uses: actions/checkout@v2
@@ -83,9 +86,13 @@ jobs:
         # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
         # This is wrong, and causes more Toolchain rebuilds than necessary.
         # However, we want to avoid false cache hits at all costs.
-        key: ${{ runner.os }}-toolchain-${{ matrix.arch }}-${{ steps.stamps.outputs.libc_headers }}
-    - name: Restore or regenerate Toolchain
+        key: ${{ runner.os }}-toolchain-${{ matrix.arch }}-${{ matrix.compiler }}-${{ steps.stamps.outputs.libc_headers }}
+    - name: Restore or regenerate GCC Toolchain
       run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
+      if: ${{ matrix.compiler == 'GCC' }}
+    - name: Restore or regenerate Clang Toolchain
+      run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildClang.sh
+      if: ${{ matrix.compiler == 'Clang' }}
     - name: ccache(1) cache
       # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
       # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
@@ -99,10 +106,10 @@ jobs:
         # This is achieved by using the "prefix-timestamp" format,
         # and permitting the restore-key "prefix-" without specifying a timestamp.
         # For this trick to work, the timestamp *must* come last, and it *must* be missing in 'restore-keys'.
-        key: ${{ runner.os }}-ccache-${{ matrix.arch }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-time${{ steps.stamps.outputs.time }}
+        key: ${{ runner.os }}-ccache-${{ matrix.arch }}-${{ matrix.compiler }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-time${{ steps.stamps.outputs.time }}
         # IMPORTANT: Keep these two in sync!
         restore-keys: |
-          ${{ runner.os }}-ccache-${{ matrix.arch }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-
+          ${{ runner.os }}-ccache-${{ matrix.arch }}-${{ matrix.compiler }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-
     - name: Show ccache stats before build and configure
       run: |
         # We only have 5 GiB of cache available *in total*. Beyond that, GitHub deletes caches.
@@ -127,13 +134,13 @@ jobs:
       working-directory: ${{ github.workspace }}/Build
       # Build the entire project with all available debug options turned on, to prevent code rot.
       # However, it is unweildy and slow to run tests with them enabled, so we will build twice.
-      run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DBUILD_LAGOM=ON -DENABLE_ALL_DEBUG_FACILITIES=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+      run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DUSE_CLANG_TOOLCHAIN=${{ matrix.compiler == 'Clang' }} -DBUILD_LAGOM=ON -DENABLE_ALL_DEBUG_FACILITIES=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
       if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
     - name: Create build environment
       working-directory: ${{ github.workspace }}/Build
       # Note that we do not set BUILD_LAGOM for the normal debug build
       # We build and run the Lagom tests in a separate job, and sanitizer builds take a good while longer than non-sanitized.
-      run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DENABLE_UNDEFINED_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+      run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DUSE_CLANG_TOOLCHAIN=${{ matrix.compiler == 'Clang' }} -DENABLE_UNDEFINED_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
       if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
 
     # === ACTUALLY BUILD ===
