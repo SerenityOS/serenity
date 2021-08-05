@@ -14,6 +14,8 @@ class SVGElement : public DOM::Element {
 public:
     using WrapperType = Bindings::SVGElementWrapper;
 
+    virtual bool requires_svg_container() const override { return true; }
+
 protected:
     SVGElement(DOM::Document&, QualifiedName);
 };

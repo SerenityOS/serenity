@@ -69,6 +69,9 @@ public:
     bool is_parent_node() const { return is_element() || is_document() || is_document_fragment(); }
     bool is_slottable() const { return is_element() || is_text(); }
 
+    virtual bool requires_svg_container() const { return false; }
+    virtual bool is_svg_container() const { return false; }
+
     // NOTE: This is intended for the JS bindings.
     u16 node_type() const { return (u16)m_type; }
 
