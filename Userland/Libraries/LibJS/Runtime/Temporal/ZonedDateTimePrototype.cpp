@@ -56,6 +56,9 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.inLeapYear, in_leap_year_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.offsetNanoseconds, offset_nanoseconds_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.offset, offset_getter, {}, Attribute::Configurable);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
 static ZonedDateTime* typed_this(GlobalObject& global_object)
@@ -689,6 +692,14 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
     if (vm.exception())
         return {};
     return js_string(vm, move(*offset_string));
+}
+
+// 6.3.44 Temporal.ZonedDateTime.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.valueof
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::value_of)
+{
+    // 1. Throw a TypeError exception.
+    vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.ZonedDateTime", "a primitive value");
+    return {};
 }
 
 }
