@@ -499,9 +499,17 @@ public:
     void unblock_waiters(Thread::WaitBlocker::UnblockFlags, u8 signal = 0);
     Thread::WaitBlockCondition& wait_block_condition() { return m_wait_block_condition; }
 
-    HashMap<String, String>& coredump_metadata() { return m_coredump_metadata; }
-    const HashMap<String, String>& coredump_metadata() const { return m_coredump_metadata; }
-    void set_coredump_metadata(const String& key, String value);
+    template<typename Callback>
+    void for_each_coredump_property(Callback callback) const
+    {
+        for (auto& property : m_coredump_properties) {
+            if (property.key && property.value)
+                callback(*property.key, *property.value);
+        }
+    }
+
+    KResult set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value);
+    KResult try_set_coredump_property(StringView key, StringView value);
 
     const NonnullRefPtrVector<Thread>& threads_for_coredump(Badge<CoreDump>) const { return m_threads_for_coredump; }
 
@@ -757,7 +765,12 @@ private:
 
     Thread::WaitBlockCondition m_wait_block_condition;
 
-    HashMap<String, String> m_coredump_metadata;
+    struct CoredumpProperty {
+        OwnPtr<KString> key;
+        OwnPtr<KString> value;
+    };
+
+    Array<CoredumpProperty, 4> m_coredump_properties;
 
     NonnullRefPtrVector<Thread> m_threads_for_coredump;
 
@@ -915,8 +928,8 @@ inline ProcessID Thread::pid() const
         if (Process::current()->has_promises()                       \
             && !Process::current()->has_promised(Pledge::promise)) { \
             dbgln("Has not pledged {}", #promise);                   \
-            Process::current()->coredump_metadata().set(             \
-                "pledge_violation", #promise);                       \
+            (void)Process::current()->try_set_coredump_property(     \
+                "pledge_violation"sv, #promise);                     \
             Process::current()->crash(SIGABRT, 0);                   \
             VERIFY_NOT_REACHED();                                    \
         }                                                            \

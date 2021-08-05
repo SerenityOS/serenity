@@ -577,7 +577,8 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     m_unveiled_paths.clear();
     m_unveiled_paths.set_metadata({ "/", UnveilAccess::None, false });
 
-    m_coredump_metadata.clear();
+    for (auto& property : m_coredump_properties)
+        property = {};
 
     auto current_thread = Thread::current();
     current_thread->clear_signals();
