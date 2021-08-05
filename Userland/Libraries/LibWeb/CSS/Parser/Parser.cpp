@@ -1848,6 +1848,84 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
     return BackgroundStyleValue::create(background_color.release_nonnull(), background_image.release_nonnull(), repeat_x.release_nonnull(), repeat_y.release_nonnull());
 }
 
+RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, PropertyID property_id, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto is_line_style = [](StyleValue const& value) -> bool {
+        switch (value.to_identifier()) {
+        case ValueID::Dotted:
+        case ValueID::Dashed:
+        case ValueID::Solid:
+        case ValueID::Double:
+        case ValueID::Groove:
+        case ValueID::Ridge:
+        case ValueID::None:
+        case ValueID::Hidden:
+        case ValueID::Inset:
+        case ValueID::Outset:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    auto is_line_width = [](StyleValue const& value) -> bool {
+        if (value.is_length())
+            return true;
+
+        // FIXME: Implement thin/medium/thick
+        switch (value.to_identifier()) {
+        case ValueID::None:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    if (component_values.size() > 3)
+        return nullptr;
+
+    RefPtr<StyleValue> border_width;
+    RefPtr<StyleValue> border_color;
+    RefPtr<StyleValue> border_style;
+
+    for (auto& part : component_values) {
+        auto value = parse_css_value(context, property_id, part);
+        if (!value)
+            return nullptr;
+
+        if (is_line_width(*value)) {
+            if (border_width)
+                return nullptr;
+            border_width = value.release_nonnull();
+            continue;
+        }
+        if (value->is_color()) {
+            if (border_color)
+                return nullptr;
+            border_color = value.release_nonnull();
+            continue;
+        }
+        if (is_line_style(*value)) {
+            if (border_style)
+                return nullptr;
+            border_style = value.release_nonnull();
+            continue;
+        }
+
+        return nullptr;
+    }
+
+    if (!border_width)
+        border_width = IdentifierStyleValue::create(ValueID::Medium);
+    if (!border_style)
+        border_style = IdentifierStyleValue::create(ValueID::None);
+    // FIXME: Default should be `currentcolor` special value. https://www.w3.org/TR/css-color-4/#currentcolor-color
+    if (!border_color)
+        border_color = ColorStyleValue::create(Gfx::Color::Black);
+
+    return BorderStyleValue::create(border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull());
+}
+
 RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
     // FIXME: Also support inset, spread-radius and multiple comma-seperated box-shadows
@@ -2013,7 +2091,7 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(ParsingContext const& context, 
     RefPtr<StyleValue> flex_wrap;
 
     for (auto& part : component_values) {
-        auto value = Parser::parse_css_value(context, PropertyID::FlexFlow, part);
+        auto value = parse_css_value(context, PropertyID::FlexFlow, part);
         if (!value)
             return nullptr;
         if (is_flex_direction(*value)) {
@@ -2428,6 +2506,14 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     switch (property_id) {
     case PropertyID::Background:
         if (auto parsed_value = parse_background_value(m_context, component_values))
+            return parsed_value;
+        break;
+    case PropertyID::Border:
+    case PropertyID::BorderBottom:
+    case PropertyID::BorderLeft:
+    case PropertyID::BorderRight:
+    case PropertyID::BorderTop:
+        if (auto parsed_value = parse_border_value(m_context, property_id, component_values))
             return parsed_value;
         break;
     case PropertyID::BoxShadow:
