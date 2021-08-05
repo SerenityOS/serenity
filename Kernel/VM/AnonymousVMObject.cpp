@@ -318,7 +318,7 @@ PageFaultResponse AnonymousVMObject::handle_cow_fault(size_t page_index, Virtual
 
         if (m_shared_committed_cow_pages) {
             m_shared_committed_cow_pages->uncommit_one();
-            if (!m_shared_committed_cow_pages->is_empty())
+            if (m_shared_committed_cow_pages->is_empty())
                 m_shared_committed_cow_pages = nullptr;
         }
         return PageFaultResponse::Continue;
