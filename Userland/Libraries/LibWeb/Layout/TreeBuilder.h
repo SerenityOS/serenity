@@ -19,7 +19,11 @@ public:
     RefPtr<Layout::Node> build(DOM::Node&);
 
 private:
-    void create_layout_tree(DOM::Node&);
+    struct Context {
+        bool has_svg_root = false;
+    };
+
+    void create_layout_tree(DOM::Node&, Context&);
 
     void push_parent(Layout::NodeWithStyle& node) { m_parent_stack.append(&node); }
     void pop_parent() { m_parent_stack.take_last(); }

@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Optional.h>
+#include <AK/TemporaryChange.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/ParentNode.h>
@@ -70,11 +72,19 @@ static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent
     return layout_parent;
 }
 
-void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
+void TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::Context& context)
 {
     // If the parent doesn't have a layout node, we don't need one either.
     if (dom_node.parent_or_shadow_host() && !dom_node.parent_or_shadow_host()->layout_node())
         return;
+
+    Optional<TemporaryChange<bool>> has_svg_root_change;
+
+    if (dom_node.is_svg_container()) {
+        has_svg_root_change.emplace(context.has_svg_root, true);
+    } else if (dom_node.requires_svg_container() && !context.has_svg_root) {
+        return;
+    }
 
     auto layout_node = dom_node.create_layout_node();
     if (!layout_node)
@@ -108,9 +118,9 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
     if ((dom_node.has_children() || shadow_root) && layout_node->can_have_children()) {
         push_parent(verify_cast<NodeWithStyle>(*layout_node));
         if (shadow_root)
-            create_layout_tree(*shadow_root);
+            create_layout_tree(*shadow_root, context);
         verify_cast<DOM::ParentNode>(dom_node).for_each_child([&](auto& dom_child) {
-            create_layout_tree(dom_child);
+            create_layout_tree(dom_child, context);
         });
         pop_parent();
     }
@@ -124,7 +134,8 @@ RefPtr<Node> TreeBuilder::build(DOM::Node& dom_node)
             m_parent_stack.prepend(verify_cast<NodeWithStyle>(ancestor));
     }
 
-    create_layout_tree(dom_node);
+    Context context;
+    create_layout_tree(dom_node, context);
 
     if (auto* root = dom_node.document().layout_node())
         fixup_tables(*root);
