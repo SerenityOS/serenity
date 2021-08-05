@@ -65,6 +65,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toPlainDate, to_plain_date, 0, attr);
     define_native_function(vm.names.toPlainTime, to_plain_time, 0, attr);
     define_native_function(vm.names.toPlainDateTime, to_plain_date_time, 0, attr);
+    define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
 }
 
 static ZonedDateTime* typed_this(GlobalObject& global_object)
@@ -790,6 +791,78 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_date_time)
 
     // 5. Return ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, zonedDateTime.[[Calendar]]).
     return builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, zoned_date_time->calendar());
+}
+
+// 6.3.52 Temporal.ZonedDateTime.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype.getisofields
+JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
+{
+    // 1. Let zonedDateTime be the this value.
+    // 2. Perform ? RequireInternalSlot(zonedDateTime, [[InitializedTemporalZonedDateTime]]).
+    auto* zoned_date_time = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let fields be ! OrdinaryObjectCreate(%Object.prototype%).
+    auto* fields = Object::create(global_object, global_object.object_prototype());
+
+    // 4. Let timeZone be zonedDateTime.[[TimeZone]].
+    auto& time_zone = zoned_date_time->time_zone();
+
+    // 5. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
+    auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds());
+
+    // 6. Let calendar be zonedDateTime.[[Calendar]].
+    auto& calendar = zoned_date_time->calendar();
+
+    // 7. Let dateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
+    auto* date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
+    if (vm.exception())
+        return {};
+
+    // 8. Let offset be ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
+    auto maybe_offset = builtin_time_zone_get_offset_string_for(global_object, time_zone, *instant);
+    if (vm.exception())
+        return {};
+    auto offset = move(*maybe_offset);
+
+    // 9. Perform ! CreateDataPropertyOrThrow(fields, "calendar", calendar).
+    fields->create_data_property_or_throw(vm.names.calendar, Value(&calendar));
+
+    // 10. Perform ! CreateDataPropertyOrThrow(fields, "isoDay", dateTime.[[ISODay]]).
+    fields->create_data_property_or_throw(vm.names.isoDay, Value(date_time->iso_day()));
+
+    // 11. Perform ! CreateDataPropertyOrThrow(fields, "isoHour", dateTime.[[ISOHour]]).
+    fields->create_data_property_or_throw(vm.names.isoHour, Value(date_time->iso_hour()));
+
+    // 12. Perform ! CreateDataPropertyOrThrow(fields, "isoMicrosecond", dateTime.[[ISOMicrosecond]]).
+    fields->create_data_property_or_throw(vm.names.isoMicrosecond, Value(date_time->iso_microsecond()));
+
+    // 13. Perform ! CreateDataPropertyOrThrow(fields, "isoMillisecond", dateTime.[[ISOMillisecond]]).
+    fields->create_data_property_or_throw(vm.names.isoMillisecond, Value(date_time->iso_millisecond()));
+
+    // 14. Perform ! CreateDataPropertyOrThrow(fields, "isoMinute", dateTime.[[ISOMinute]]).
+    fields->create_data_property_or_throw(vm.names.isoMinute, Value(date_time->iso_minute()));
+
+    // 15. Perform ! CreateDataPropertyOrThrow(fields, "isoMonth", dateTime.[[ISOMonth]]).
+    fields->create_data_property_or_throw(vm.names.isoMonth, Value(date_time->iso_month()));
+
+    // 16. Perform ! CreateDataPropertyOrThrow(fields, "isoNanosecond", dateTime.[[ISONanosecond]]).
+    fields->create_data_property_or_throw(vm.names.isoNanosecond, Value(date_time->iso_nanosecond()));
+
+    // 17. Perform ! CreateDataPropertyOrThrow(fields, "isoSecond", dateTime.[[ISOSecond]]).
+    fields->create_data_property_or_throw(vm.names.isoSecond, Value(date_time->iso_second()));
+
+    // 18. Perform ! CreateDataPropertyOrThrow(fields, "isoYear", dateTime.[[ISOYear]]).
+    fields->create_data_property_or_throw(vm.names.isoYear, Value(date_time->iso_year()));
+
+    // 19. Perform ! CreateDataPropertyOrThrow(fields, "offset", offset).
+    fields->create_data_property_or_throw(vm.names.offset, js_string(vm, offset));
+
+    // 20. Perform ! CreateDataPropertyOrThrow(fields, "timeZone", timeZone).
+    fields->create_data_property_or_throw(vm.names.timeZone, Value(&time_zone));
+
+    // 21. Return fields.
+    return fields;
 }
 
 }
