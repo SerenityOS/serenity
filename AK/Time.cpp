@@ -18,39 +18,6 @@
 
 namespace AK {
 
-int day_of_year(int year, unsigned month, int day)
-{
-    VERIFY(month >= 1 && month <= 12);
-
-    constexpr Array seek_table = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
-    int day_of_year = seek_table[month - 1] + day - 1;
-
-    if (is_leap_year(year) && month >= 3)
-        day_of_year++;
-
-    return day_of_year;
-}
-
-int days_in_month(int year, unsigned month)
-{
-    VERIFY(month >= 1 && month <= 12);
-    if (month == 2)
-        return is_leap_year(year) ? 29 : 28;
-
-    bool is_long_month = (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12);
-    return is_long_month ? 31 : 30;
-}
-
-unsigned day_of_week(int year, unsigned month, int day)
-{
-    VERIFY(month >= 1 && month <= 12);
-    constexpr Array seek_table = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
-    if (month < 3)
-        --year;
-
-    return (year + year / 4 - year / 100 + year / 400 + seek_table[month - 1] + day) % 7;
-}
-
 Time Time::from_timespec(const struct timespec& ts)
 {
     i32 nsecs = ts.tv_nsec;

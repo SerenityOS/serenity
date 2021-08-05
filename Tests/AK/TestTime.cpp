@@ -261,3 +261,113 @@ TEST_CASE(truncation)
     EXPECT_EQ(TIME(9223372036854, 775'807'000).to_truncated_microseconds(), 0x7fff'ffff'ffff'ffff);
     EXPECT_EQ(TIME(9223372036854, 775'808'000).to_truncated_microseconds(), 0x7fff'ffff'ffff'ffff);
 }
+
+TEST_CASE(leap_year_multiple_of_4)
+{
+    EXPECT(is_leap_year(1980));
+    EXPECT(!is_leap_year(1981));
+    EXPECT(!is_leap_year(1981));
+    EXPECT(!is_leap_year(1981));
+    EXPECT(is_leap_year(1984));
+
+    static_assert(is_leap_year(1980));
+    static_assert(!is_leap_year(1981));
+    static_assert(!is_leap_year(1981));
+    static_assert(!is_leap_year(1981));
+    static_assert(is_leap_year(1984));
+}
+
+TEST_CASE(leap_year_multiple_of_400_not_100)
+{
+    EXPECT(is_leap_year(2000));
+    EXPECT(!is_leap_year(1900));
+
+    static_assert(is_leap_year(2000));
+    static_assert(!is_leap_year(1900));
+}
+
+TEST_CASE(days_in_year)
+{
+    EXPECT_EQ(days_in_year(2000), 366u);
+    EXPECT_EQ(days_in_year(2001), 365u);
+
+    static_assert(days_in_year(2000) == 366u);
+    static_assert(days_in_year(2001) == 365u);
+}
+
+TEST_CASE(years_to_days_since_epoch)
+{
+    EXPECT_EQ(years_to_days_since_epoch(2000), 10957);
+    EXPECT_EQ(years_to_days_since_epoch(1950), -7305);
+
+    static_assert(years_to_days_since_epoch(2000) == 10957);
+    static_assert(years_to_days_since_epoch(1950) == -7305);
+}
+
+TEST_CASE(day_of_year)
+{
+    EXPECT_EQ(day_of_year(2000, 1, 1), 0);
+    EXPECT_EQ(day_of_year(2000, 3, 1), 60);
+    EXPECT_EQ(day_of_year(2001, 3, 1), 59);
+
+    static_assert(day_of_year(2000, 1, 1) == 0);
+    static_assert(day_of_year(2000, 3, 1) == 60);
+    static_assert(day_of_year(2001, 3, 1) == 59);
+}
+
+TEST_CASE(day_of_week)
+{
+    EXPECT_EQ(day_of_week(2000, 1, 1), 6u);
+    EXPECT_EQ(day_of_week(2000, 3, 1), 3u);
+    EXPECT_EQ(day_of_week(2001, 3, 1), 4u);
+
+    static_assert(day_of_week(2000, 1, 1) == 6u);
+    static_assert(day_of_week(2000, 3, 1) == 3u);
+    static_assert(day_of_week(2001, 3, 1) == 4u);
+}
+
+TEST_CASE(days_in_month)
+{
+    EXPECT_EQ(days_in_month(2000, 1), 31);
+    EXPECT_EQ(days_in_month(2000, 2), 29);
+    EXPECT_EQ(days_in_month(2000, 3), 31);
+    EXPECT_EQ(days_in_month(2000, 4), 30);
+    EXPECT_EQ(days_in_month(2000, 5), 31);
+    EXPECT_EQ(days_in_month(2000, 6), 30);
+    EXPECT_EQ(days_in_month(2000, 7), 31);
+    EXPECT_EQ(days_in_month(2000, 8), 31);
+    EXPECT_EQ(days_in_month(2000, 9), 30);
+    EXPECT_EQ(days_in_month(2000, 10), 31);
+    EXPECT_EQ(days_in_month(2000, 11), 30);
+    EXPECT_EQ(days_in_month(2000, 12), 31);
+
+    EXPECT_EQ(days_in_month(2001, 2), 28);
+
+    static_assert(days_in_month(2000, 1) == 31);
+    static_assert(days_in_month(2000, 2) == 29);
+    static_assert(days_in_month(2000, 3) == 31);
+    static_assert(days_in_month(2000, 4) == 30);
+    static_assert(days_in_month(2000, 5) == 31);
+    static_assert(days_in_month(2000, 6) == 30);
+    static_assert(days_in_month(2000, 7) == 31);
+    static_assert(days_in_month(2000, 8) == 31);
+    static_assert(days_in_month(2000, 9) == 30);
+    static_assert(days_in_month(2000, 10) == 31);
+    static_assert(days_in_month(2000, 11) == 30);
+    static_assert(days_in_month(2000, 12) == 31);
+
+    static_assert(days_in_month(2001, 2) == 28);
+}
+
+TEST_CASE(constexpr_default_constructor)
+{
+    constexpr auto t = Time {};
+    static_assert(t.is_zero());
+}
+
+TEST_CASE(constexpr_equality)
+{
+    constexpr auto t = Time {};
+    static_assert(t == Time {});
+    static_assert(t != Time {}.from_seconds(1));
+}

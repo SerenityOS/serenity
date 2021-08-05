@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Assertions.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
@@ -27,33 +28,17 @@ concept TimeSpecType = requires(T t)
 // clang-format off
 namespace AK {
 
-// Month and day start at 1. Month must be >= 1 and <= 12.
-// The return value is 0-indexed, that is 0 is Sunday, 1 is Monday, etc.
-// Day may be negative or larger than the number of days
-// in the given month.
-unsigned day_of_week(int year, unsigned month, int day);
-
-// Month and day start at 1. Month must be >= 1 and <= 12.
-// The return value is 0-indexed, that is Jan 1 is day 0.
-// Day may be negative or larger than the number of days
-// in the given month. If day is negative enough, the result
-// can be negative.
-int day_of_year(int year, unsigned month, int day);
-
-// Month starts at 1. Month must be >= 1 and <= 12.
-int days_in_month(int year, unsigned month);
-
-inline bool is_leap_year(int year)
+constexpr bool is_leap_year(int year)
 {
     return year % 4 == 0 && (year % 100 != 0 || year % 400 == 0);
 }
 
-inline unsigned days_in_year(int year)
+constexpr unsigned days_in_year(int year)
 {
     return 365 + is_leap_year(year);
 }
 
-inline int years_to_days_since_epoch(int year)
+constexpr int years_to_days_since_epoch(int year)
 {
     int days = 0;
     for (int current_year = 1970; current_year < year; ++current_year)
@@ -61,6 +46,55 @@ inline int years_to_days_since_epoch(int year)
     for (int current_year = year; current_year < 1970; ++current_year)
         days -= days_in_year(current_year);
     return days;
+}
+
+// Month and day start at 1. Month must be >= 1 and <= 12.
+// The return value is 0-indexed, that is 0 is Sunday, 1 is Monday, etc.
+// Day may be negative or larger than the number of days
+// in the given month.
+constexpr unsigned day_of_week(int year, unsigned month, int day)
+{
+    VERIFY(month >= 1 && month <= 12);
+    constexpr Array seek_table = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
+    if (month < 3)
+        --year;
+
+    return (year + year / 4 - year / 100 + year / 400 + seek_table[month - 1] + day) % 7;
+}
+
+// Month and day start at 1. Month must be >= 1 and <= 12.
+// The return value is 0-indexed, that is Jan 1 is day 0.
+// Day may be negative or larger than the number of days
+// in the given month. If day is negative enough, the result
+// can be negative.
+constexpr int day_of_year(int year, unsigned month, int day)
+{
+    VERIFY(month >= 1 && month <= 12);
+
+    constexpr Array seek_table = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334 };
+    auto day_of_year = seek_table[month - 1] + day - 1;
+
+    if (is_leap_year(year) && month >= 3)
+        ++day_of_year;
+
+    return day_of_year;
+}
+
+// Month starts at 1. Month must be >= 1 and <= 12.
+constexpr int days_in_month(int year, unsigned month)
+{
+    VERIFY(month >= 1 && month <= 12);
+    if (month == 2)
+        return is_leap_year(year) ? 29 : 28;
+
+    bool const is_long_month = (month == 1 ||
+                                month == 3 ||
+                                month == 5 ||
+                                month == 7 ||
+                                month == 8 ||
+                                month == 10 ||
+                                month == 12);
+    return is_long_month ? 31 : 30;
 }
 
 /*
@@ -73,23 +107,11 @@ inline int years_to_days_since_epoch(int year)
  */
 class Time {
 public:
-    Time() = default;
-    Time(const Time&) = default;
-    Time& operator=(const Time&) = default;
-
-    Time(Time&& other)
-        : m_seconds(exchange(other.m_seconds, 0))
-        , m_nanoseconds(exchange(other.m_nanoseconds, 0))
-    {
-    }
-    Time& operator=(Time&& other)
-    {
-        if (this != &other) {
-            m_seconds = exchange(other.m_seconds, 0);
-            m_nanoseconds = exchange(other.m_nanoseconds, 0);
-        }
-        return *this;
-    }
+    constexpr Time() = default;
+    constexpr Time(const Time&) = default;
+    constexpr Time& operator=(const Time&) = default;
+    constexpr Time(Time&& other) = default;
+    constexpr Time& operator=(Time&& other) = default;
 
 private:
     // This must be part of the header in order to make the various 'from_*' functions constexpr.
@@ -156,10 +178,10 @@ public:
     // Rounds towards -inf (it was the easiest to implement).
     timeval to_timeval() const;
 
-    bool is_zero() const { return !m_seconds && !m_nanoseconds; }
+    constexpr bool is_zero() const { return !m_seconds && !m_nanoseconds; }
 
-    bool operator==(const Time& other) const { return this->m_seconds == other.m_seconds && this->m_nanoseconds == other.m_nanoseconds; }
-    bool operator!=(const Time& other) const { return !(*this == other); }
+    constexpr bool operator==(const Time& other) const { return this->m_seconds == other.m_seconds && this->m_nanoseconds == other.m_nanoseconds; }
+    constexpr bool operator!=(const Time& other) const { return !(*this == other); }
     Time operator+(const Time& other) const;
     Time& operator+=(const Time& other);
     Time operator-(const Time& other) const;
