@@ -18,6 +18,7 @@ namespace Symbolication {
 struct CachedELF {
     NonnullRefPtr<MappedFile> mapped_file;
     NonnullOwnPtr<Debug::DebugInfo> debug_info;
+    NonnullOwnPtr<ELF::Image> image;
 };
 
 static HashMap<String, OwnPtr<CachedELF>> s_cache;
@@ -73,7 +74,7 @@ Optional<Symbol> symbolicate(String const& path, FlatPtr address)
             s_cache.set(path, {});
             {};
         }
-        auto cached_elf = make<CachedELF>(mapped_file.release_value(), make<Debug::DebugInfo>(move(elf)));
+        auto cached_elf = make<CachedELF>(mapped_file.release_value(), make<Debug::DebugInfo>(*elf), move(elf));
         s_cache.set(path, move(cached_elf));
     }
 
