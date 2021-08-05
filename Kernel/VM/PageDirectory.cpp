@@ -31,77 +31,73 @@ RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
     return cr3_map().get(cr3).value_or({});
 }
 
-UNMAP_AFTER_INIT PageDirectory::PageDirectory()
+UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_page_directory()
 {
+    auto directory = adopt_ref_if_nonnull(new (nothrow) PageDirectory).release_nonnull();
+
     // make sure this starts in a new page directory to make MemoryManager::initialize_physical_pages() happy
     FlatPtr start_of_range = ((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000;
-    m_range_allocator.initialize_with_range(VirtualAddress(start_of_range), KERNEL_PD_END - start_of_range);
-    m_identity_range_allocator.initialize_with_range(VirtualAddress(FlatPtr(0x00000000)), 0x00200000);
+    directory->m_range_allocator.initialize_with_range(VirtualAddress(start_of_range), KERNEL_PD_END - start_of_range);
+    directory->m_identity_range_allocator.initialize_with_range(VirtualAddress(FlatPtr(0x00000000)), 0x00200000);
+
+    return directory;
 }
 
-UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
-{
-    // Adopt the page tables already set up by boot.S
-#if ARCH(X86_64)
-    dmesgln("MM: boot_pml4t @ {}", boot_pml4t);
-    m_pml4t = PhysicalPage::create(boot_pml4t, MayReturnToFreeList::No);
-#endif
-    dmesgln("MM: boot_pdpt @ {}", boot_pdpt);
-    dmesgln("MM: boot_pd0 @ {}", boot_pd0);
-    dmesgln("MM: boot_pd_kernel @ {}", boot_pd_kernel);
-    m_directory_table = PhysicalPage::create(boot_pdpt, MayReturnToFreeList::No);
-    m_directory_pages[0] = PhysicalPage::create(boot_pd0, MayReturnToFreeList::No);
-    m_directory_pages[(kernel_mapping_base >> 30) & 0x1ff] = PhysicalPage::create(boot_pd_kernel, MayReturnToFreeList::No);
-}
-
-PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
+RefPtr<PageDirectory> PageDirectory::try_create_for_userspace(RangeAllocator const* parent_range_allocator)
 {
     constexpr FlatPtr userspace_range_base = 0x00800000;
-    FlatPtr userspace_range_ceiling = USER_RANGE_CEILING;
+    FlatPtr const userspace_range_ceiling = USER_RANGE_CEILING;
 
-    ScopedSpinLock lock(s_mm_lock);
+    auto directory = adopt_ref_if_nonnull(new (nothrow) PageDirectory);
+    if (!directory)
+        return {};
+
     if (parent_range_allocator) {
-        m_range_allocator.initialize_from_parent(*parent_range_allocator);
+        directory->m_range_allocator.initialize_from_parent(*parent_range_allocator);
     } else {
         size_t random_offset = (get_fast_random<u8>() % 32 * MiB) & PAGE_MASK;
         u32 base = userspace_range_base + random_offset;
-        m_range_allocator.initialize_with_range(VirtualAddress(base), userspace_range_ceiling - base);
+        directory->m_range_allocator.initialize_with_range(VirtualAddress(base), userspace_range_ceiling - base);
     }
 
-    // Set up a userspace page directory
+    // NOTE: Take the MM lock since we need it for quickmap.
+    ScopedSpinLock lock(s_mm_lock);
+
 #if ARCH(X86_64)
-    m_pml4t = MM.allocate_user_physical_page();
-    if (!m_pml4t)
-        return;
+    directory->m_pml4t = MM.allocate_user_physical_page();
+    if (!directory->m_pml4t)
+        return {};
 #endif
-    m_directory_table = MM.allocate_user_physical_page();
-    if (!m_directory_table)
-        return;
+
+    directory->m_directory_table = MM.allocate_user_physical_page();
+    if (!directory->m_directory_table)
+        return {};
     auto kernel_pd_index = (kernel_mapping_base >> 30) & 0x1ffu;
     for (size_t i = 0; i < kernel_pd_index; i++) {
-        m_directory_pages[i] = MM.allocate_user_physical_page();
-        if (!m_directory_pages[i])
-            return;
+        directory->m_directory_pages[i] = MM.allocate_user_physical_page();
+        if (!directory->m_directory_pages[i])
+            return {};
     }
+
     // Share the top 1 GiB of kernel-only mappings (>=kernel_mapping_base)
-    m_directory_pages[kernel_pd_index] = MM.kernel_page_directory().m_directory_pages[kernel_pd_index];
+    directory->m_directory_pages[kernel_pd_index] = MM.kernel_page_directory().m_directory_pages[kernel_pd_index];
 
 #if ARCH(X86_64)
     {
-        auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*m_pml4t);
-        table.raw[0] = (FlatPtr)m_directory_table->paddr().as_ptr() | 7;
+        auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*directory->m_pml4t);
+        table.raw[0] = (FlatPtr)directory->m_directory_table->paddr().as_ptr() | 7;
         MM.unquickmap_page();
     }
 #endif
 
     {
-        auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*m_directory_table);
+        auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*directory->m_directory_table);
         for (size_t i = 0; i < sizeof(m_directory_pages) / sizeof(m_directory_pages[0]); i++) {
-            if (m_directory_pages[i]) {
+            if (directory->m_directory_pages[i]) {
 #if ARCH(I386)
-                table.raw[i] = (FlatPtr)m_directory_pages[i]->paddr().as_ptr() | 1;
+                table.raw[i] = (FlatPtr)directory->m_directory_pages[i]->paddr().as_ptr() | 1;
 #else
-                table.raw[i] = (FlatPtr)m_directory_pages[i]->paddr().as_ptr() | 7;
+                table.raw[i] = (FlatPtr)directory->m_directory_pages[i]->paddr().as_ptr() | 7;
 #endif
             }
         }
@@ -136,13 +132,30 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
     PageDirectoryEntry buffer;
     auto* kernel_pd = MM.quickmap_pd(MM.kernel_page_directory(), 0);
     memcpy(&buffer, kernel_pd, sizeof(PageDirectoryEntry));
-    auto* new_pd = MM.quickmap_pd(*this, 0);
+    auto* new_pd = MM.quickmap_pd(*directory, 0);
     memcpy(new_pd, &buffer, sizeof(PageDirectoryEntry));
 
-    // If we got here, we successfully created it. Set m_space now
-    m_valid = true;
+    cr3_map().set(directory->cr3(), directory.ptr());
+    return directory;
+}
 
-    cr3_map().set(cr3(), this);
+PageDirectory::PageDirectory()
+{
+}
+
+UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
+{
+    // Adopt the page tables already set up by boot.S
+#if ARCH(X86_64)
+    dmesgln("MM: boot_pml4t @ {}", boot_pml4t);
+    m_pml4t = PhysicalPage::create(boot_pml4t, MayReturnToFreeList::No);
+#endif
+    dmesgln("MM: boot_pdpt @ {}", boot_pdpt);
+    dmesgln("MM: boot_pd0 @ {}", boot_pd0);
+    dmesgln("MM: boot_pd_kernel @ {}", boot_pd_kernel);
+    m_directory_table = PhysicalPage::create(boot_pdpt, MayReturnToFreeList::No);
+    m_directory_pages[0] = PhysicalPage::create(boot_pd0, MayReturnToFreeList::No);
+    m_directory_pages[(kernel_mapping_base >> 30) & 0x1ff] = PhysicalPage::create(boot_pd_kernel, MayReturnToFreeList::No);
 }
 
 PageDirectory::~PageDirectory()

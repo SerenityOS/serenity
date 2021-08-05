@@ -392,7 +392,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     m_used_memory_ranges.append({ UsedMemoryRangeType::PhysicalPages, m_physical_pages_region->lower(), m_physical_pages_region->upper() });
 
     // Create the bare page directory. This is not a fully constructed page directory and merely contains the allocators!
-    m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
+    m_kernel_page_directory = PageDirectory::must_create_kernel_page_directory();
 
     // Allocate a virtual address range for our array
     auto range = m_kernel_page_directory->range_allocator().allocate_anywhere(physical_page_array_pages * PAGE_SIZE);
