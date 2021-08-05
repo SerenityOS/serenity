@@ -225,7 +225,7 @@ int main(int argc, char** argv)
                 "A game is still in progress, are you sure you would like to quit? Doing so will count as a loss.",
                 "Game in progress",
                 GUI::MessageBox::Type::Warning,
-                GUI::MessageBox::InputType::YesNoCancel);
+                GUI::MessageBox::InputType::YesNo);
 
             if (result == GUI::MessageBox::ExecYes)
                 return GUI::Window::CloseRequestDecision::Close;
