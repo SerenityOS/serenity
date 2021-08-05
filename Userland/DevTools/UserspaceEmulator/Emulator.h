@@ -96,6 +96,9 @@ private:
     void register_signal_handlers();
     void setup_signal_trampoline();
 
+    void emit_profile_sample(AK::OutputStream&);
+    void emit_profile_event(AK::OutputStream&, StringView event_name, String contents);
+
     int virt$emuctl(FlatPtr, FlatPtr, FlatPtr);
     int virt$fork();
     int virt$execve(FlatPtr);
