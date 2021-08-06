@@ -9,7 +9,7 @@
 #include <AK/Bitmap.h>
 #include <AK/IntrusiveList.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 // A PhysicalZone is an allocator that manages a sub-area of a PhysicalRegion.
 // Its total size is always a power of two.

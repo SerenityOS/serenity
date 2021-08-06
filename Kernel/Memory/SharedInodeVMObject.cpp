@@ -7,7 +7,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 RefPtr<SharedInodeVMObject> SharedInodeVMObject::try_create_with_inode(Inode& inode)
 {

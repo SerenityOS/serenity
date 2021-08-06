@@ -124,8 +124,8 @@ UNMAP_AFTER_INIT RefPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::try_to_ini
 UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
     : PCI::Device(address, irq)
     , m_io_base(PCI::get_BAR0(pci_address()) & ~1)
-    , m_rx_buffer(MM.allocate_contiguous_kernel_region(page_round_up(RX_BUFFER_SIZE + PACKET_SIZE_MAX), "RTL8139 RX", Region::Access::Read | Region::Access::Write))
-    , m_packet_buffer(MM.allocate_contiguous_kernel_region(page_round_up(PACKET_SIZE_MAX), "RTL8139 Packet buffer", Region::Access::Read | Region::Access::Write))
+    , m_rx_buffer(MM.allocate_contiguous_kernel_region(Memory::page_round_up(RX_BUFFER_SIZE + PACKET_SIZE_MAX), "RTL8139 RX", Memory::Region::Access::Read | Memory::Region::Access::Write))
+    , m_packet_buffer(MM.allocate_contiguous_kernel_region(Memory::page_round_up(PACKET_SIZE_MAX), "RTL8139 Packet buffer", Memory::Region::Access::Read | Memory::Region::Access::Write))
 {
     m_tx_buffers.ensure_capacity(RTL8139_TX_BUFFER_COUNT);
     set_interface_name(address);
@@ -144,7 +144,7 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address addre
     dbgln("RTL8139: RX buffer: {}", m_rx_buffer->physical_page(0)->paddr());
 
     for (int i = 0; i < RTL8139_TX_BUFFER_COUNT; i++) {
-        m_tx_buffers.append(MM.allocate_contiguous_kernel_region(page_round_up(TX_BUFFER_SIZE), "RTL8139 TX", Region::Access::Write | Region::Access::Read));
+        m_tx_buffers.append(MM.allocate_contiguous_kernel_region(Memory::page_round_up(TX_BUFFER_SIZE), "RTL8139 TX", Memory::Region::Access::Write | Memory::Region::Access::Read));
         dbgln("RTL8139: TX buffer {}: {}", i, m_tx_buffers[i]->physical_page(0)->paddr());
     }
 

@@ -89,7 +89,7 @@ private:
         u32 high() const { return m_high; }
     };
 
-    OwnPtr<Region> m_apic_base;
+    OwnPtr<Memory::Region> m_apic_base;
     Vector<OwnPtr<Processor>> m_ap_processor_info;
     Vector<Thread*> m_ap_idle_threads;
     Atomic<u8> m_apic_ap_count { 0 };

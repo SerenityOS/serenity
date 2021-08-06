@@ -10,7 +10,7 @@
 
 #define VM_GUARD_PAGES
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 RangeAllocator::RangeAllocator()
     : m_total_range({}, 0)

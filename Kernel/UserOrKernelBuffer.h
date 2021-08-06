@@ -22,13 +22,13 @@ public:
 
     static UserOrKernelBuffer for_kernel_buffer(u8* kernel_buffer)
     {
-        VERIFY(!kernel_buffer || !is_user_address(VirtualAddress(kernel_buffer)));
+        VERIFY(!kernel_buffer || !Memory::is_user_address(VirtualAddress(kernel_buffer)));
         return UserOrKernelBuffer(kernel_buffer);
     }
 
     static Optional<UserOrKernelBuffer> for_user_buffer(u8* user_buffer, size_t size)
     {
-        if (user_buffer && !is_user_range(VirtualAddress(user_buffer), size))
+        if (user_buffer && !Memory::is_user_range(VirtualAddress(user_buffer), size))
             return {};
         return UserOrKernelBuffer(user_buffer);
     }
@@ -36,7 +36,7 @@ public:
     template<typename UserspaceType>
     static Optional<UserOrKernelBuffer> for_user_buffer(UserspaceType userspace, size_t size)
     {
-        if (!is_user_range(VirtualAddress(userspace.unsafe_userspace_ptr()), size))
+        if (!Memory::is_user_range(VirtualAddress(userspace.unsafe_userspace_ptr()), size))
             return {};
         return UserOrKernelBuffer(const_cast<u8*>((const u8*)userspace.unsafe_userspace_ptr()));
     }

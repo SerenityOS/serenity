@@ -23,7 +23,7 @@
 
 namespace Kernel {
 
-static bool should_make_executable_exception_for_dynamic_loader(bool make_readable, bool make_writable, bool make_executable, const Region& region)
+static bool should_make_executable_exception_for_dynamic_loader(bool make_readable, bool make_writable, bool make_executable, Memory::Region const& region)
 {
     // Normally we don't allow W -> X transitions, but we have to make an exception
     // for the dynamic loader, which needs to do this after performing text relocations.
@@ -48,7 +48,7 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
     if (!region.vmobject().is_private_inode())
         return false;
 
-    auto& inode_vm = static_cast<const InodeVMObject&>(region.vmobject());
+    auto& inode_vm = static_cast<Memory::InodeVMObject const&>(region.vmobject());
     auto& inode = inode_vm.inode();
 
     ElfW(Ehdr) header;
@@ -69,7 +69,7 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
     return true;
 }
 
-static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, const Region* region = nullptr)
+static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, Memory::Region const* region = nullptr)
 {
     bool make_readable = prot & PROT_READ;
     bool make_writable = prot & PROT_WRITE;
@@ -154,10 +154,10 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
     if (alignment & ~PAGE_MASK)
         return EINVAL;
 
-    if (page_round_up_would_wrap(size))
+    if (Memory::page_round_up_would_wrap(size))
         return EINVAL;
 
-    if (!is_user_range(VirtualAddress(addr), page_round_up(size)))
+    if (!Memory::is_user_range(VirtualAddress(addr), Memory::page_round_up(size)))
         return EFAULT;
 
     OwnPtr<KString> name;
@@ -198,11 +198,11 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
     if (map_stack && (!map_private || !map_anonymous))
         return EINVAL;
 
-    Region* region = nullptr;
-    Optional<Range> range;
+    Memory::Region* region = nullptr;
+    Optional<Memory::Range> range;
 
     if (map_randomized) {
-        range = space().page_directory().range_allocator().allocate_randomized(page_round_up(size), alignment);
+        range = space().page_directory().range_allocator().allocate_randomized(Memory::page_round_up(size), alignment);
     } else {
         range = space().allocate_range(VirtualAddress(addr), size, alignment);
         if (!range.has_value()) {
@@ -218,11 +218,11 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
-        RefPtr<AnonymousVMObject> vmobject;
+        RefPtr<Memory::AnonymousVMObject> vmobject;
         if (flags & MAP_PURGEABLE)
-            vmobject = AnonymousVMObject::try_create_purgeable_with_size(page_round_up(size), strategy);
+            vmobject = Memory::AnonymousVMObject::try_create_purgeable_with_size(Memory::page_round_up(size), strategy);
         else
-            vmobject = AnonymousVMObject::try_create_with_size(page_round_up(size), strategy);
+            vmobject = Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(size), strategy);
         if (!vmobject)
             return ENOMEM;
         auto region_or_error = space().allocate_region_with_vmobject(range.value(), vmobject.release_nonnull(), 0, {}, prot, map_shared);
@@ -272,21 +272,21 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
     return region->vaddr().get();
 }
 
-static KResultOr<Range> expand_range_to_page_boundaries(FlatPtr address, size_t size)
+static KResultOr<Memory::Range> expand_range_to_page_boundaries(FlatPtr address, size_t size)
 {
-    if (page_round_up_would_wrap(size))
+    if (Memory::page_round_up_would_wrap(size))
         return EINVAL;
 
     if ((address + size) < address)
         return EINVAL;
 
-    if (page_round_up_would_wrap(address + size))
+    if (Memory::page_round_up_would_wrap(address + size))
         return EINVAL;
 
     auto base = VirtualAddress { address }.page_base();
-    auto end = page_round_up(address + size);
+    auto end = Memory::page_round_up(address + size);
 
-    return Range { base, end - base.get() };
+    return Memory::Range { base, end - base.get() };
 }
 
 KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int prot)
@@ -314,10 +314,10 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
             return EPERM;
         if (!validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region))
             return EINVAL;
-        if (whole_region->access() == prot_to_region_access_flags(prot))
+        if (whole_region->access() == Memory::prot_to_region_access_flags(prot))
             return 0;
         if (whole_region->vmobject().is_inode()
-            && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(whole_region->vmobject()).inode(), whole_region->is_shared())) {
+            && !validate_inode_mmap_prot(*this, prot, static_cast<Memory::InodeVMObject const&>(whole_region->vmobject()).inode(), whole_region->is_shared())) {
             return EACCES;
         }
         whole_region->set_readable(prot & PROT_READ);
@@ -334,10 +334,10 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
             return EPERM;
         if (!validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region))
             return EINVAL;
-        if (old_region->access() == prot_to_region_access_flags(prot))
+        if (old_region->access() == Memory::prot_to_region_access_flags(prot))
             return 0;
         if (old_region->vmobject().is_inode()
-            && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(old_region->vmobject()).inode(), old_region->is_shared())) {
+            && !validate_inode_mmap_prot(*this, prot, static_cast<Memory::InodeVMObject const&>(old_region->vmobject()).inode(), old_region->is_shared())) {
             return EACCES;
         }
 
@@ -346,7 +346,7 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
         auto region = space().take_region(*old_region);
 
         // Unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+        region->unmap(Memory::Region::ShouldDeallocateVirtualMemoryRange::No);
 
         // This vector is the region(s) adjacent to our range.
         // We need to allocate a new region for the range we wanted to change permission bits on.
@@ -380,10 +380,10 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
                 return EPERM;
             if (!validate_mmap_prot(prot, region->is_stack(), region->vmobject().is_anonymous(), region))
                 return EINVAL;
-            if (region->access() == prot_to_region_access_flags(prot))
+            if (region->access() == Memory::prot_to_region_access_flags(prot))
                 return 0;
             if (region->vmobject().is_inode()
-                && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(region->vmobject()).inode(), region->is_shared())) {
+                && !validate_inode_mmap_prot(*this, prot, static_cast<Memory::InodeVMObject const&>(region->vmobject()).inode(), region->is_shared())) {
                 return EACCES;
             }
             full_size_found += region->range().intersect(range_to_mprotect).size();
@@ -409,7 +409,7 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
             auto region = space().take_region(*old_region);
 
             // Unmap the old region here, specifying that we *don't* want the VM deallocated.
-            region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+            region->unmap(Memory::Region::ShouldDeallocateVirtualMemoryRange::No);
 
             // This vector is the region(s) adjacent to our range.
             // We need to allocate a new region for the range we wanted to change permission bits on.
@@ -473,7 +473,7 @@ KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, i
     if (set_volatile || set_nonvolatile) {
         if (!region->vmobject().is_anonymous())
             return EINVAL;
-        auto& vmobject = static_cast<AnonymousVMObject&>(region->vmobject());
+        auto& vmobject = static_cast<Memory::AnonymousVMObject&>(region->vmobject());
         if (!vmobject.is_purgeable())
             return EINVAL;
         bool was_purged = false;
@@ -557,16 +557,16 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
         auto range = old_region->range();
         auto old_prot = region_access_flags_to_prot(old_region->access());
         auto old_offset = old_region->offset_in_vmobject();
-        NonnullRefPtr inode = static_cast<SharedInodeVMObject&>(old_region->vmobject()).inode();
+        NonnullRefPtr inode = static_cast<Memory::SharedInodeVMObject&>(old_region->vmobject()).inode();
 
-        auto new_vmobject = PrivateInodeVMObject::try_create_with_inode(inode);
+        auto new_vmobject = Memory::PrivateInodeVMObject::try_create_with_inode(inode);
         if (!new_vmobject)
             return ENOMEM;
 
         auto old_name = old_region->take_name();
 
         // Unmap without deallocating the VM range since we're going to reuse it.
-        old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+        old_region->unmap(Memory::Region::ShouldDeallocateVirtualMemoryRange::No);
         space().deallocate_region(*old_region);
 
         auto new_region_or_error = space().allocate_region_with_vmobject(range, new_vmobject.release_nonnull(), old_offset, old_name->view(), old_prot, false);
@@ -654,10 +654,10 @@ KResultOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
         return 0;
     }
 
-    if (!is_user_address(VirtualAddress { address }))
+    if (!Memory::is_user_address(VirtualAddress { address }))
         return EFAULT;
 
-    auto* region = space().find_region_containing(Range { VirtualAddress { address }, 1 });
+    auto* region = space().find_region_containing(Memory::Range { VirtualAddress { address }, 1 });
     if (!region)
         return EINVAL;
 

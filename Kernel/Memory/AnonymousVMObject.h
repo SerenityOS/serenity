@@ -12,7 +12,7 @@
 #include <Kernel/Memory/VMObject.h>
 #include <Kernel/PhysicalAddress.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 class AnonymousVMObject final : public VMObject {
 public:

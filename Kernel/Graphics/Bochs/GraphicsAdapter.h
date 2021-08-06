@@ -57,7 +57,7 @@ private:
     void set_y_offset(size_t);
 
     PhysicalAddress m_mmio_registers;
-    TypedMapping<BochsDisplayMMIORegisters volatile> m_registers;
+    Memory::TypedMapping<BochsDisplayMMIORegisters volatile> m_registers;
     RefPtr<FramebufferDevice> m_framebuffer_device;
     RefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
     SpinLock<u8> m_console_mode_switch_lock;

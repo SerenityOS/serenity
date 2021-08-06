@@ -20,7 +20,7 @@ inline bool KBufferBuilder::check_expand(size_t size)
     size_t new_buffer_size = m_size + size;
     if (Checked<size_t>::addition_would_overflow(new_buffer_size, 1 * MiB))
         return false;
-    new_buffer_size = page_round_up(new_buffer_size + 1 * MiB);
+    new_buffer_size = Memory::page_round_up(new_buffer_size + 1 * MiB);
     return m_buffer->expand(new_buffer_size);
 }
 
@@ -41,7 +41,7 @@ OwnPtr<KBuffer> KBufferBuilder::build()
 }
 
 KBufferBuilder::KBufferBuilder()
-    : m_buffer(KBufferImpl::try_create_with_size(4 * MiB, Region::Access::Read | Region::Access::Write))
+    : m_buffer(KBufferImpl::try_create_with_size(4 * MiB, Memory::Region::Access::Read | Memory::Region::Access::Write))
 {
 }
 

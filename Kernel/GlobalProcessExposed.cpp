@@ -376,7 +376,7 @@ private:
         kmalloc_stats stats;
         get_kmalloc_stats(stats);
 
-        auto system_memory = MemoryManager::the().get_system_memory_info();
+        auto system_memory = MM.get_system_memory_info();
 
         JsonObjectSerializer<KBufferBuilder> json { builder };
         json.add("kmalloc_allocated", stats.bytes_allocated);

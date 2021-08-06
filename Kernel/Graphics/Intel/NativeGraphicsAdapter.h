@@ -168,7 +168,7 @@ private:
     Graphics::VideoInfoBlock m_crt_edid;
     const PhysicalAddress m_registers;
     const PhysicalAddress m_framebuffer_addr;
-    OwnPtr<Region> m_registers_region;
+    OwnPtr<Memory::Region> m_registers_region;
 };
 
 }

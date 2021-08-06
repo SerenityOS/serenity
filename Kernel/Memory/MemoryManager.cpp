@@ -40,7 +40,7 @@ extern size_t multiboot_copy_boot_modules_count;
 // Treat the super pages as logically separate from .bss
 __attribute__((section(".super_pages"))) static u8 super_pages[1 * MiB];
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 // NOTE: We can NOT use AK::Singleton for this class, because
 // MemoryManager::initialize is called *before* global constructors are
@@ -49,7 +49,7 @@ namespace Kernel {
 static MemoryManager* s_the;
 RecursiveSpinLock s_mm_lock;
 
-MemoryManager& MM
+MemoryManager& MemoryManager::the()
 {
     return *s_the;
 }

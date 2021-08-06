@@ -22,20 +22,20 @@ KResult KCOVInstance::buffer_allocate(size_t buffer_size_in_entries)
 
     // first entry contains index of last PC
     this->m_buffer_size_in_entries = buffer_size_in_entries - 1;
-    this->m_buffer_size_in_bytes = page_round_up(buffer_size_in_entries * KCOV_ENTRY_SIZE);
+    this->m_buffer_size_in_bytes = Memory::page_round_up(buffer_size_in_entries * KCOV_ENTRY_SIZE);
 
     // one single vmobject is representing the buffer
     // - we allocate one kernel region using that vmobject
     // - when an mmap call comes in, we allocate another userspace region,
     //   backed by the same vmobject
-    this->vmobject = AnonymousVMObject::try_create_with_size(
+    this->vmobject = Memory::AnonymousVMObject::try_create_with_size(
         this->m_buffer_size_in_bytes, AllocationStrategy::AllocateNow);
     if (!this->vmobject)
         return ENOMEM;
 
     this->m_kernel_region = MM.allocate_kernel_region_with_vmobject(
         *this->vmobject, this->m_buffer_size_in_bytes, String::formatted("kcov_{}", this->m_pid),
-        Region::Access::Read | Region::Access::Write);
+        Memory::Region::Access::Read | Memory::Region::Access::Write);
     if (!this->m_kernel_region)
         return ENOMEM;
 

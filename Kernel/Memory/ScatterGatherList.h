@@ -12,7 +12,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/PhysicalAddress.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 // A Scatter-Gather List type that owns its buffers
 

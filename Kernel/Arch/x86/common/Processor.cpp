@@ -469,7 +469,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             if (max_frames != 0 && count > max_frames)
                 break;
 
-            if (is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
+            if (Memory::is_user_range(VirtualAddress(stack_ptr), sizeof(FlatPtr) * 2)) {
                 if (!copy_from_user(&retaddr, &((FlatPtr*)stack_ptr)[1]) || !retaddr)
                     break;
                 stack_trace.append(retaddr);
@@ -545,7 +545,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             ProcessPagingScope paging_scope(thread.process());
             auto& regs = thread.regs();
             FlatPtr* stack_top = reinterpret_cast<FlatPtr*>(regs.sp());
-            if (is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
+            if (Memory::is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
                 if (!copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]))
                     frame_ptr = 0;
             } else {
@@ -657,9 +657,9 @@ void Processor::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     }
 }
 
-void Processor::flush_tlb(const PageDirectory* page_directory, VirtualAddress vaddr, size_t page_count)
+void Processor::flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
 {
-    if (s_smp_enabled && (!is_user_address(vaddr) || Process::current()->thread_count() > 1))
+    if (s_smp_enabled && (!Memory::is_user_address(vaddr) || Process::current()->thread_count() > 1))
         smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
     else
         flush_tlb_local(vaddr, page_count);
@@ -818,9 +818,9 @@ bool Processor::smp_process_pending_messages()
                 msg->invoke_callback();
                 break;
             case ProcessorMessage::FlushTlb:
-                if (is_user_address(VirtualAddress(msg->flush_tlb.ptr))) {
+                if (Memory::is_user_address(VirtualAddress(msg->flush_tlb.ptr))) {
                     // We assume that we don't cross into kernel land!
-                    VERIFY(is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
+                    VERIFY(Memory::is_user_range(VirtualAddress(msg->flush_tlb.ptr), msg->flush_tlb.page_count * PAGE_SIZE));
                     if (read_cr3() != msg->flush_tlb.page_directory->cr3()) {
                         // This processor isn't using this page directory right now, we can ignore this request
                         dbgln_if(SMP_DEBUG, "SMP[{}]: No need to flush {} pages at {}", id(), msg->flush_tlb.page_count, VirtualAddress(msg->flush_tlb.ptr));
@@ -949,7 +949,7 @@ void Processor::smp_unicast(u32 cpu, Function<void()> callback, bool async)
     smp_unicast_message(cpu, msg, async);
 }
 
-void Processor::smp_broadcast_flush_tlb(const PageDirectory* page_directory, VirtualAddress vaddr, size_t page_count)
+void Processor::smp_broadcast_flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
 {
     auto& msg = smp_get_from_pool();
     msg.async = false;

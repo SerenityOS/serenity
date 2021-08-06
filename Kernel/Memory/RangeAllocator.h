@@ -11,7 +11,7 @@
 #include <Kernel/Memory/Range.h>
 #include <Kernel/SpinLock.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 class RangeAllocator {
 public:
@@ -42,7 +42,7 @@ private:
 
 namespace AK {
 template<>
-struct Traits<Kernel::Range> : public GenericTraits<Kernel::Range> {
+struct Traits<Kernel::Memory::Range> : public GenericTraits<Kernel::Memory::Range> {
     static constexpr bool is_trivial() { return true; }
 };
 }

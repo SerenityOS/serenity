@@ -121,7 +121,7 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
         Kernel::Syscall::SC_ptrace_peek_params peek_params {};
         if (!copy_from_user(&peek_params, reinterpret_cast<Kernel::Syscall::SC_ptrace_peek_params*>(params.addr)))
             return EFAULT;
-        if (!is_user_address(VirtualAddress { peek_params.address }))
+        if (!Memory::is_user_address(VirtualAddress { peek_params.address }))
             return EFAULT;
         auto result = peer->process().peek_user_data(Userspace<const u32*> { (FlatPtr)peek_params.address });
         if (result.is_error())
@@ -132,7 +132,7 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
     }
 
     case PT_POKE:
-        if (!is_user_address(VirtualAddress { params.addr }))
+        if (!Memory::is_user_address(VirtualAddress { params.addr }))
             return EFAULT;
         return peer->process().poke_user_data(Userspace<u32*> { (FlatPtr)params.addr }, params.data);
 
@@ -194,7 +194,7 @@ KResultOr<u32> Process::peek_user_data(Userspace<const u32*> address)
 
 KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
 {
-    Range range = { VirtualAddress(address), sizeof(u32) };
+    Memory::Range range = { VirtualAddress(address), sizeof(u32) };
     auto* region = space().find_region_containing(range);
     if (!region)
         return EFAULT;
@@ -203,7 +203,7 @@ KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
         // If the region is shared, we change its vmobject to a PrivateInodeVMObject
         // to prevent the write operation from changing any shared inode data
         VERIFY(region->vmobject().is_shared_inode());
-        auto vmobject = PrivateInodeVMObject::try_create_with_inode(static_cast<SharedInodeVMObject&>(region->vmobject()).inode());
+        auto vmobject = Memory::PrivateInodeVMObject::try_create_with_inode(static_cast<Memory::SharedInodeVMObject&>(region->vmobject()).inode());
         if (!vmobject)
             return ENOMEM;
         region->set_vmobject(vmobject.release_nonnull());

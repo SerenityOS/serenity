@@ -11,20 +11,20 @@ namespace Kernel::USB {
 
 RefPtr<Transfer> Transfer::try_create(Pipe& pipe, u16 len)
 {
-    auto vmobject = AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE);
+    auto vmobject = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE);
     if (!vmobject)
         return nullptr;
 
     return AK::try_create<Transfer>(pipe, len, *vmobject);
 }
 
-Transfer::Transfer(Pipe& pipe, u16 len, AnonymousVMObject& vmobject)
+Transfer::Transfer(Pipe& pipe, u16 len, Memory::AnonymousVMObject& vmobject)
     : m_pipe(pipe)
     , m_transfer_data_size(len)
 {
     // Initialize data buffer for transfer
     // This will definitely need to be refactored in the future, I doubt this will scale well...
-    m_data_buffer = MemoryManager::the().allocate_kernel_region_with_vmobject(vmobject, PAGE_SIZE, "USB Transfer Buffer", Region::Access::Read | Region::Access::Write);
+    m_data_buffer = MM.allocate_kernel_region_with_vmobject(vmobject, PAGE_SIZE, "USB Transfer Buffer", Memory::Region::Access::Read | Memory::Region::Access::Write);
 }
 
 Transfer::~Transfer()

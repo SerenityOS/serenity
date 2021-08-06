@@ -14,7 +14,7 @@
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/UnixTypes.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 class Space {
 public:

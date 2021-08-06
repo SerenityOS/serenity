@@ -9,7 +9,7 @@
 #include <AK/StringView.h>
 #include <Kernel/Memory/MemoryManager.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 template<typename T>
 struct TypedMapping {

@@ -13,14 +13,14 @@ namespace Kernel {
 
 class AnonymousFile final : public File {
 public:
-    static RefPtr<AnonymousFile> create(NonnullRefPtr<AnonymousVMObject> vmobject)
+    static RefPtr<AnonymousFile> create(NonnullRefPtr<Memory::AnonymousVMObject> vmobject)
     {
         return adopt_ref_if_nonnull(new (nothrow) AnonymousFile(move(vmobject)));
     }
 
     virtual ~AnonymousFile() override;
 
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, u64 offset, int prot, bool shared) override;
+    virtual KResultOr<Memory::Region*> mmap(Process&, FileDescription&, Memory::Range const&, u64 offset, int prot, bool shared) override;
 
 private:
     virtual StringView class_name() const override { return "AnonymousFile"; }
@@ -30,9 +30,9 @@ private:
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override { return ENOTSUP; }
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return ENOTSUP; }
 
-    explicit AnonymousFile(NonnullRefPtr<AnonymousVMObject>);
+    explicit AnonymousFile(NonnullRefPtr<Memory::AnonymousVMObject>);
 
-    NonnullRefPtr<AnonymousVMObject> m_vmobject;
+    NonnullRefPtr<Memory::AnonymousVMObject> m_vmobject;
 };
 
 }

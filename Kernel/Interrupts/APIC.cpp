@@ -228,7 +228,7 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
     dbgln_if(APIC_DEBUG, "Initializing APIC, base: {}", apic_base);
     set_base(apic_base);
 
-    m_apic_base = MM.allocate_kernel_region(apic_base.page_base(), PAGE_SIZE, {}, Region::Access::Read | Region::Access::Write);
+    m_apic_base = MM.allocate_kernel_region(apic_base.page_base(), PAGE_SIZE, {}, Memory::Region::Access::Read | Memory::Region::Access::Write);
     if (!m_apic_base) {
         dbgln("APIC: Failed to allocate memory for APIC base");
         return false;
@@ -245,7 +245,7 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
         return false;
     }
 
-    auto madt = map_typed<ACPI::Structures::MADT>(madt_address);
+    auto madt = Memory::map_typed<ACPI::Structures::MADT>(madt_address);
     size_t entry_index = 0;
     size_t entries_length = madt->h.length - sizeof(ACPI::Structures::MADT);
     auto* madt_entry = madt->entries;
@@ -283,13 +283,13 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
     // Also account for the data appended to:
     // * aps_to_enable u32 values for ap_cpu_init_stacks
     // * aps_to_enable u32 values for ap_cpu_init_processor_info_array
-    auto apic_startup_region = MM.allocate_kernel_region_identity(PhysicalAddress(0x8000), page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))), {}, Region::Access::Read | Region::Access::Write | Region::Access::Execute);
+    auto apic_startup_region = MM.allocate_kernel_region_identity(PhysicalAddress(0x8000), Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))), {}, Memory::Region::Access::Read | Memory::Region::Access::Write | Memory::Region::Access::Execute);
     memcpy(apic_startup_region->vaddr().as_ptr(), reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
 
     // Allocate enough stacks for all APs
-    Vector<OwnPtr<Region>> apic_ap_stacks;
+    Vector<OwnPtr<Memory::Region>> apic_ap_stacks;
     for (u32 i = 0; i < aps_to_enable; i++) {
-        auto stack_region = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
+        auto stack_region = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Memory::Region::Access::Read | Memory::Region::Access::Write, AllocationStrategy::AllocateNow);
         if (!stack_region) {
             dbgln("APIC: Failed to allocate stack for AP #{}", i);
             return;

@@ -50,8 +50,8 @@ private:
     u16 m_receive_queue {};
     u16 m_transmit_queue {};
 
-    OwnPtr<RingBuffer> m_receive_buffer;
-    OwnPtr<RingBuffer> m_transmit_buffer;
+    OwnPtr<Memory::RingBuffer> m_receive_buffer;
+    OwnPtr<Memory::RingBuffer> m_transmit_buffer;
 
     VirtIOConsole& m_console;
     unsigned m_port;

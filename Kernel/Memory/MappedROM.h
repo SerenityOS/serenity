@@ -10,7 +10,7 @@
 #include <Kernel/Memory/Region.h>
 #include <Kernel/PhysicalAddress.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 class MappedROM {
 public:

@@ -67,14 +67,14 @@ public:
         }
     }
 
-    inline static void add_mmap_perf_event(Process& current_process, Region const& region)
+    inline static void add_mmap_perf_event(Process& current_process, Memory::Region const& region)
     {
         if (auto* event_buffer = current_process.current_perf_events_buffer()) {
             [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MMAP, region.vaddr().get(), region.size(), region.name());
         }
     }
 
-    inline static void add_unmap_perf_event(Process& current_process, Range const& region)
+    inline static void add_unmap_perf_event(Process& current_process, Memory::Range const& region)
     {
         if (auto* event_buffer = current_process.current_perf_events_buffer()) {
             [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MUNMAP, region.base().get(), region.size(), nullptr);

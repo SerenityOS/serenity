@@ -23,7 +23,7 @@ public:
     static NonnullRefPtr<FramebufferDevice> create(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
 
     virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, u64 offset, int prot, bool shared) override;
+    virtual KResultOr<Memory::Region*> mmap(Process&, FileDescription&, Memory::Range const&, u64 offset, int prot, bool shared) override;
 
     // ^Device
     virtual mode_t required_mode() const override { return 0660; }
@@ -55,15 +55,15 @@ private:
 
     SpinLock<u8> m_activation_lock;
 
-    RefPtr<AnonymousVMObject> m_real_framebuffer_vmobject;
-    RefPtr<AnonymousVMObject> m_swapped_framebuffer_vmobject;
-    OwnPtr<Region> m_real_framebuffer_region;
-    OwnPtr<Region> m_swapped_framebuffer_region;
+    RefPtr<Memory::AnonymousVMObject> m_real_framebuffer_vmobject;
+    RefPtr<Memory::AnonymousVMObject> m_swapped_framebuffer_vmobject;
+    OwnPtr<Memory::Region> m_real_framebuffer_region;
+    OwnPtr<Memory::Region> m_swapped_framebuffer_region;
 
     bool m_graphical_writes_enabled { true };
 
-    RefPtr<AnonymousVMObject> m_userspace_real_framebuffer_vmobject;
-    Region* m_userspace_framebuffer_region { nullptr };
+    RefPtr<Memory::AnonymousVMObject> m_userspace_real_framebuffer_vmobject;
+    Memory::Region* m_userspace_framebuffer_region { nullptr };
 
     size_t m_y_offset { 0 };
     size_t m_output_port_index;

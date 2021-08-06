@@ -129,7 +129,7 @@ KResult KCOVDevice::ioctl(FileDescription&, unsigned request, Userspace<void*> a
     return return_value;
 }
 
-KResultOr<Region*> KCOVDevice::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> KCOVDevice::mmap(Process& process, FileDescription&, Memory::Range const& range, u64 offset, int prot, bool shared)
 {
     auto pid = process.pid();
     auto maybe_kcov_instance = proc_instance->get(pid);

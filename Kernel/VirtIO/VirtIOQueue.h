@@ -93,7 +93,7 @@ private:
     OwnPtr<VirtIOQueueDescriptor> m_descriptors { nullptr };
     OwnPtr<VirtIOQueueDriver> m_driver { nullptr };
     OwnPtr<VirtIOQueueDevice> m_device { nullptr };
-    OwnPtr<Region> m_queue_region;
+    OwnPtr<Memory::Region> m_queue_region;
     SpinLock<u8> m_lock;
 
     friend class VirtIOQueueChain;

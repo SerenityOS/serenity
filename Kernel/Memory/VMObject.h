@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Mutex.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 class VMObjectDeletedHandler {
 public:

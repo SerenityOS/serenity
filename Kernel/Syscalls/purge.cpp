@@ -20,7 +20,7 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
         return EPERM;
     size_t purged_page_count = 0;
     if (mode & PURGE_ALL_VOLATILE) {
-        NonnullRefPtrVector<AnonymousVMObject> vmobjects;
+        NonnullRefPtrVector<Memory::AnonymousVMObject> vmobjects;
         {
             KResult result(KSuccess);
             MM.for_each_vmobject([&](auto& vmobject) {
@@ -43,14 +43,14 @@ KResultOr<FlatPtr> Process::sys$purge(int mode)
         }
     }
     if (mode & PURGE_ALL_CLEAN_INODE) {
-        NonnullRefPtrVector<InodeVMObject> vmobjects;
+        NonnullRefPtrVector<Memory::InodeVMObject> vmobjects;
         {
             KResult result(KSuccess);
             MM.for_each_vmobject([&](auto& vmobject) {
                 if (vmobject.is_inode()) {
                     // In the event that the append fails, only attempt to continue
                     // the purge if we have already appended something successfully.
-                    if (!vmobjects.try_append(static_cast<InodeVMObject&>(vmobject)) && vmobjects.is_empty()) {
+                    if (!vmobjects.try_append(static_cast<Memory::InodeVMObject&>(vmobject)) && vmobjects.is_empty()) {
                         result = ENOMEM;
                         return IterationDecision::Break;
                     }

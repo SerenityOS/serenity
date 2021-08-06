@@ -65,7 +65,7 @@ private:
     explicit HPET(PhysicalAddress acpi_hpet);
     PhysicalAddress m_physical_acpi_hpet_table;
     PhysicalAddress m_physical_acpi_hpet_registers;
-    OwnPtr<Region> m_hpet_mmio_region;
+    OwnPtr<Memory::Region> m_hpet_mmio_region;
 
     u64 m_main_counter_last_read { 0 };
     u64 m_main_counter_drift { 0 };

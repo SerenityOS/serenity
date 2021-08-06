@@ -84,8 +84,8 @@ public:
 
     void will_be_destroyed();
 
-    void set_shared_vmobject(SharedInodeVMObject&);
-    RefPtr<SharedInodeVMObject> shared_vmobject() const;
+    void set_shared_vmobject(Memory::SharedInodeVMObject&);
+    RefPtr<Memory::SharedInodeVMObject> shared_vmobject() const;
 
     static void sync();
 
@@ -116,7 +116,7 @@ protected:
 private:
     FileSystem& m_file_system;
     InodeIndex m_index { 0 };
-    WeakPtr<SharedInodeVMObject> m_shared_vmobject;
+    WeakPtr<Memory::SharedInodeVMObject> m_shared_vmobject;
     RefPtr<LocalSocket> m_socket;
     HashTable<InodeWatcher*> m_watchers;
     bool m_metadata_dirty { false };

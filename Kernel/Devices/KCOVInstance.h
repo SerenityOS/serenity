@@ -42,7 +42,7 @@ public:
         TRACING = 2,
     } state;
 
-    RefPtr<AnonymousVMObject> vmobject;
+    RefPtr<Memory::AnonymousVMObject> vmobject;
 
 private:
     ProcessID m_pid = { 0 };
@@ -51,7 +51,7 @@ private:
     kcov_pc_t* m_buffer = { nullptr };
 
     // Here to ensure it's not garbage collected at the end of open()
-    OwnPtr<Region> m_kernel_region;
+    OwnPtr<Memory::Region> m_kernel_region;
 };
 
 }

@@ -93,7 +93,7 @@ protected:
     const String m_class_name;
 
     struct MappedMMIO {
-        OwnPtr<Region> base;
+        OwnPtr<Memory::Region> base;
         size_t size { 0 };
 
         template<typename T>

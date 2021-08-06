@@ -23,7 +23,7 @@ public:
 
 public:
     Transfer() = delete;
-    Transfer(Pipe& pipe, u16 len, AnonymousVMObject&);
+    Transfer(Pipe& pipe, u16 len, Memory::AnonymousVMObject&);
     ~Transfer();
 
     void set_setup_packet(const USBRequestData& request);
@@ -41,11 +41,11 @@ public:
     bool error_occurred() const { return m_error_occurred; }
 
 private:
-    Pipe& m_pipe;                    // Pipe that initiated this transfer
-    USBRequestData m_request;        // USB request
-    OwnPtr<Region> m_data_buffer;    // DMA Data buffer for transaction
-    u16 m_transfer_data_size { 0 };  // Size of the transfer's data stage
-    bool m_complete { false };       // Has this transfer been completed?
-    bool m_error_occurred { false }; // Did an error occur during this transfer?
+    Pipe& m_pipe;                         // Pipe that initiated this transfer
+    USBRequestData m_request;             // USB request
+    OwnPtr<Memory::Region> m_data_buffer; // DMA Data buffer for transaction
+    u16 m_transfer_data_size { 0 };       // Size of the transfer's data stage
+    bool m_complete { false };            // Has this transfer been completed?
+    bool m_error_occurred { false };      // Did an error occur during this transfer?
 };
 }

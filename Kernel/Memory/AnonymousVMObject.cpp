@@ -11,7 +11,7 @@
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Process.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 RefPtr<VMObject> AnonymousVMObject::try_clone()
 {

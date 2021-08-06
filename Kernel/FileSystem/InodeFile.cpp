@@ -93,14 +93,14 @@ KResult InodeFile::ioctl(FileDescription& description, unsigned request, Userspa
     }
 }
 
-KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, const Range& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> InodeFile::mmap(Process& process, FileDescription& description, Memory::Range const& range, u64 offset, int prot, bool shared)
 {
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
-    RefPtr<InodeVMObject> vmobject;
+    RefPtr<Memory::InodeVMObject> vmobject;
     if (shared)
-        vmobject = SharedInodeVMObject::try_create_with_inode(inode());
+        vmobject = Memory::SharedInodeVMObject::try_create_with_inode(inode());
     else
-        vmobject = PrivateInodeVMObject::try_create_with_inode(inode());
+        vmobject = Memory::PrivateInodeVMObject::try_create_with_inode(inode());
     if (!vmobject)
         return ENOMEM;
     return process.space().allocate_region_with_vmobject(range, vmobject.release_nonnull(), offset, description.absolute_path(), prot, shared);

@@ -27,17 +27,17 @@
 
 namespace Kernel {
 
-extern Region* g_signal_trampoline_region;
+extern Memory::Region* g_signal_trampoline_region;
 
 struct LoadResult {
-    OwnPtr<Space> space;
+    OwnPtr<Memory::Space> space;
     FlatPtr load_base { 0 };
     FlatPtr entry_eip { 0 };
     size_t size { 0 };
-    WeakPtr<Region> tls_region;
+    WeakPtr<Memory::Region> tls_region;
     size_t tls_size { 0 };
     size_t tls_alignment { 0 };
-    WeakPtr<Region> stack_region;
+    WeakPtr<Memory::Region> stack_region;
 };
 
 static Vector<ELF::AuxiliaryValue> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, uid_t uid, uid_t euid, gid_t gid, gid_t egid, String executable_path, int main_program_fd);
@@ -68,7 +68,7 @@ static bool validate_stack_size(const Vector<String>& arguments, const Vector<St
     return true;
 }
 
-static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] ThreadRegisters& regs, Region& region, Vector<String> arguments,
+static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] ThreadRegisters& regs, Memory::Region& region, Vector<String> arguments,
     Vector<String> environment, Vector<ELF::AuxiliaryValue> auxiliary_values)
 {
     FlatPtr new_sp = region.range().end().get();
@@ -162,7 +162,7 @@ struct RequiredLoadRange {
 static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& program_description)
 {
     auto& inode = *(program_description.inode());
-    auto vmobject = SharedInodeVMObject::try_create_with_inode(inode);
+    auto vmobject = Memory::SharedInodeVMObject::try_create_with_inode(inode);
     if (!vmobject) {
         dbgln("get_required_load_range: Unable to allocate SharedInodeVMObject");
         return ENOMEM;
@@ -170,7 +170,7 @@ static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& pro
 
     size_t executable_size = inode.size();
 
-    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, page_round_up(executable_size), "ELF memory range calculation", Region::Access::Read);
+    auto region = MM.allocate_kernel_region_with_vmobject(*vmobject, Memory::page_round_up(executable_size), "ELF memory range calculation", Memory::Region::Access::Read);
     if (!region) {
         dbgln("Could not allocate memory for ELF");
         return ENOMEM;
@@ -205,7 +205,7 @@ static KResultOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header
     constexpr FlatPtr minimum_load_offset_randomization_size = 10 * MiB;
 
     auto random_load_offset_in_range([](auto start, auto size) {
-        return page_round_down(start + get_good_random<FlatPtr>() % size);
+        return Memory::page_round_down(start + get_good_random<FlatPtr>() % size);
     });
 
     if (main_program_header.e_type == ET_DYN) {
@@ -263,11 +263,11 @@ enum class ShouldAllowSyscalls {
     Yes,
 };
 
-static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, FileDescription& object_description,
+static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::Space> new_space, FileDescription& object_description,
     FlatPtr load_offset, ShouldAllocateTls should_allocate_tls, ShouldAllowSyscalls should_allow_syscalls)
 {
     auto& inode = *(object_description.inode());
-    auto vmobject = SharedInodeVMObject::try_create_with_inode(inode);
+    auto vmobject = Memory::SharedInodeVMObject::try_create_with_inode(inode);
     if (!vmobject) {
         dbgln("load_elf_object: Unable to allocate SharedInodeVMObject");
         return ENOMEM;
@@ -280,7 +280,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
 
     size_t executable_size = inode.size();
 
-    auto executable_region = MM.allocate_kernel_region_with_vmobject(*vmobject, page_round_up(executable_size), "ELF loading", Region::Access::Read);
+    auto executable_region = MM.allocate_kernel_region_with_vmobject(*vmobject, Memory::page_round_up(executable_size), "ELF loading", Memory::Region::Access::Read);
     if (!executable_region) {
         dbgln("Could not allocate memory for ELF loading");
         return ENOMEM;
@@ -291,7 +291,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
     if (!elf_image.is_valid())
         return ENOEXEC;
 
-    Region* master_tls_region { nullptr };
+    Memory::Region* master_tls_region { nullptr };
     size_t master_tls_size = 0;
     size_t master_tls_alignment = 0;
     FlatPtr load_base_address = 0;
@@ -299,7 +299,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
     String elf_name = object_description.absolute_path();
     VERIFY(!Processor::current().in_critical());
 
-    MemoryManager::enter_space(*new_space);
+    Memory::MemoryManager::enter_space(*new_space);
 
     KResult ph_load_result = KSuccess;
     elf_image.for_each_program_header([&](const ELF::Image::ProgramHeader& program_header) {
@@ -356,8 +356,8 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
                 prot |= PROT_WRITE;
             auto region_name = String::formatted("{} (data-{}{})", elf_name, program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "");
 
-            auto range_base = VirtualAddress { page_round_down(program_header.vaddr().offset(load_offset).get()) };
-            auto range_end = VirtualAddress { page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
+            auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
+            auto range_end = VirtualAddress { Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
 
             auto range = new_space->allocate_range(range_base, range_end.get() - range_base.get());
             if (!range.has_value()) {
@@ -397,8 +397,8 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
         if (program_header.is_executable())
             prot |= PROT_EXEC;
 
-        auto range_base = VirtualAddress { page_round_down(program_header.vaddr().offset(load_offset).get()) };
-        auto range_end = VirtualAddress { page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
+        auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
+        auto range_end = VirtualAddress { Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()) };
         auto range = new_space->allocate_range(range_base, range_end.get() - range_base.get());
         if (!range.has_value()) {
             ph_load_result = ENOMEM;
@@ -453,12 +453,12 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
 KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description,
     RefPtr<FileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
 {
-    auto new_space = Space::try_create(*this, nullptr);
+    auto new_space = Memory::Space::try_create(*this, nullptr);
     if (!new_space)
         return ENOMEM;
 
     ScopeGuard space_guard([&]() {
-        MemoryManager::enter_process_paging_scope(*this);
+        Memory::MemoryManager::enter_process_paging_scope(*this);
     });
 
     auto load_offset = get_load_offset(main_program_header, main_program_description, interpreter_description);
@@ -560,7 +560,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
         TemporaryChange global_profiling_disabler(g_profiling_all_threads, false);
         m_space = load_result.space.release_nonnull();
     }
-    MemoryManager::enter_space(*m_space);
+    Memory::MemoryManager::enter_space(*m_space);
 
     auto signal_trampoline_region = m_space->allocate_region_with_vmobject(signal_trampoline_range.value(), g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true);
     if (signal_trampoline_region.is_error()) {

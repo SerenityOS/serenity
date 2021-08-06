@@ -46,10 +46,10 @@ RamdiskController::RamdiskController()
 {
     // Populate ramdisk controllers from Multiboot boot modules, if any.
     size_t count = 0;
-    for (auto& used_memory_range : MemoryManager::the().used_memory_ranges()) {
-        if (used_memory_range.type == UsedMemoryRangeType::BootModule) {
-            size_t length = page_round_up(used_memory_range.end.get()) - used_memory_range.start.get();
-            auto region = MemoryManager::the().allocate_kernel_region(used_memory_range.start, length, "Ramdisk", Region::Access::Read | Region::Access::Write);
+    for (auto& used_memory_range : MM.used_memory_ranges()) {
+        if (used_memory_range.type == Memory::UsedMemoryRangeType::BootModule) {
+            size_t length = Memory::page_round_up(used_memory_range.end.get()) - used_memory_range.start.get();
+            auto region = MM.allocate_kernel_region(used_memory_range.start, length, "Ramdisk", Memory::Region::Access::Read | Memory::Region::Access::Write);
             if (!region)
                 dmesgln("RamdiskController: Failed to allocate kernel region of size {}", length);
             else

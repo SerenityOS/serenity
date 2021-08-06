@@ -272,8 +272,8 @@ bool Scheduler::yield()
 
 bool Scheduler::context_switch(Thread* thread)
 {
-    if (s_mm_lock.own_lock()) {
-        PANIC("In context switch while holding s_mm_lock");
+    if (Memory::s_mm_lock.own_lock()) {
+        PANIC("In context switch while holding Memory::s_mm_lock");
     }
 
     thread->did_schedule();

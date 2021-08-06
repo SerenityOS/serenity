@@ -186,7 +186,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     s_bsp_processor.initialize(0);
 
     CommandLine::initialize();
-    MemoryManager::initialize(0);
+    Memory::MemoryManager::initialize(0);
 
     // Ensure that the safemem sections are not empty. This could happen if the linker accidentally discards the sections.
     VERIFY(start_of_safemem_text != end_of_safemem_text);
@@ -236,7 +236,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init_ap(FlatPtr cpu, Processor* pr
     processor_info->early_initialize(cpu);
 
     processor_info->initialize(cpu);
-    MemoryManager::initialize(cpu);
+    Memory::MemoryManager::initialize(cpu);
 
     Scheduler::set_idle_thread(APIC::the().get_idle_thread(cpu));
 

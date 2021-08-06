@@ -19,7 +19,7 @@ public:
     static NonnullRefPtr<MemoryDevice> must_create();
     ~MemoryDevice();
 
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, u64 offset, int prot, bool shared) override;
+    virtual KResultOr<Memory::Region*> mmap(Process&, FileDescription&, Memory::Range const&, u64 offset, int prot, bool shared) override;
 
     // ^Device
     virtual mode_t required_mode() const override { return 0660; }
@@ -36,7 +36,7 @@ private:
 
     virtual void did_seek(FileDescription&, off_t) override;
 
-    bool is_allowed_range(PhysicalAddress, const Range&) const;
+    bool is_allowed_range(PhysicalAddress, Memory::Range const&) const;
 };
 
 }

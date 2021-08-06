@@ -12,9 +12,9 @@
 namespace Kernel {
 
 static SpinLock<u8> g_global_futex_lock;
-static AK::Singleton<HashMap<VMObject*, FutexQueues>> g_global_futex_queues;
+static AK::Singleton<HashMap<Memory::VMObject*, FutexQueues>> g_global_futex_queues;
 
-FutexQueue::FutexQueue(FlatPtr user_address_or_offset, VMObject* vmobject)
+FutexQueue::FutexQueue(FlatPtr user_address_or_offset, Memory::VMObject* vmobject)
     : m_user_address_or_offset(user_address_or_offset)
     , m_is_global(vmobject != nullptr)
 {
@@ -40,7 +40,7 @@ FutexQueue::~FutexQueue()
         m_is_global ? " (global)" : " (local)");
 }
 
-void FutexQueue::vmobject_deleted(VMObject& vmobject)
+void FutexQueue::vmobject_deleted(Memory::VMObject& vmobject)
 {
     VERIFY(m_is_global); // If we got called we must be a global futex
     // Because we're taking ourselves out of the global queue, we need
@@ -127,9 +127,9 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
 
     // If this is a global lock, look up the underlying VMObject *before*
     // acquiring the queue lock
-    RefPtr<VMObject> vmobject, vmobject2;
+    RefPtr<Memory::VMObject> vmobject, vmobject2;
     if (!is_private) {
-        auto region = space().find_region_containing(Range { VirtualAddress { user_address_or_offset }, sizeof(u32) });
+        auto region = space().find_region_containing(Memory::Range { VirtualAddress { user_address_or_offset }, sizeof(u32) });
         if (!region)
             return EFAULT;
         vmobject = region->vmobject();
@@ -139,7 +139,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         case FUTEX_REQUEUE:
         case FUTEX_CMP_REQUEUE:
         case FUTEX_WAKE_OP: {
-            auto region2 = space().find_region_containing(Range { VirtualAddress { user_address_or_offset2 }, sizeof(u32) });
+            auto region2 = space().find_region_containing(Memory::Range { VirtualAddress { user_address_or_offset2 }, sizeof(u32) });
             if (!region2)
                 return EFAULT;
             vmobject2 = region2->vmobject();
@@ -149,7 +149,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         }
     }
 
-    auto find_global_futex_queues = [&](VMObject& vmobject, bool create_if_not_found) -> FutexQueues* {
+    auto find_global_futex_queues = [&](Memory::VMObject& vmobject, bool create_if_not_found) -> FutexQueues* {
         auto& global_queues = *g_global_futex_queues;
         auto it = global_queues.find(&vmobject);
         if (it != global_queues.end())
@@ -165,7 +165,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         return nullptr;
     };
 
-    auto find_futex_queue = [&](VMObject* vmobject, FlatPtr user_address_or_offset, bool create_if_not_found, bool* did_create = nullptr) -> RefPtr<FutexQueue> {
+    auto find_futex_queue = [&](Memory::VMObject* vmobject, FlatPtr user_address_or_offset, bool create_if_not_found, bool* did_create = nullptr) -> RefPtr<FutexQueue> {
         VERIFY(is_private || vmobject);
         VERIFY(!create_if_not_found || did_create != nullptr);
         auto* queues = is_private ? &m_futex_queues : find_global_futex_queues(*vmobject, create_if_not_found);
@@ -184,7 +184,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         return {};
     };
 
-    auto remove_futex_queue = [&](VMObject* vmobject, FlatPtr user_address_or_offset) {
+    auto remove_futex_queue = [&](Memory::VMObject* vmobject, FlatPtr user_address_or_offset) {
         auto* queues = is_private ? &m_futex_queues : find_global_futex_queues(*vmobject, false);
         if (queues) {
             if (auto it = queues->find(user_address_or_offset); it != queues->end()) {
@@ -198,7 +198,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         }
     };
 
-    auto do_wake = [&](VMObject* vmobject, FlatPtr user_address_or_offset, u32 count, Optional<u32> bitmask) -> int {
+    auto do_wake = [&](Memory::VMObject* vmobject, FlatPtr user_address_or_offset, u32 count, Optional<u32> bitmask) -> int {
         if (count == 0)
             return 0;
         ScopedSpinLock lock(queue_lock);

@@ -37,7 +37,9 @@
 
 namespace Kernel {
 
+namespace Memory {
 extern RecursiveSpinLock s_mm_lock;
+}
 
 enum class DispatchSignalResult {
     Deferred = 0,
@@ -847,7 +849,7 @@ public:
         VERIFY(!Processor::current().in_irq());
         VERIFY(this == Thread::current());
         ScopedCritical critical;
-        VERIFY(!s_mm_lock.own_lock());
+        VERIFY(!Memory::s_mm_lock.own_lock());
 
         ScopedSpinLock block_lock(m_block_lock);
         // We need to hold m_block_lock so that nobody can unblock a blocker as soon
@@ -1215,7 +1217,7 @@ public:
     String backtrace();
 
 private:
-    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>, OwnPtr<KString>);
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullRefPtr<Timer>, OwnPtr<KString>);
 
     IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
@@ -1304,9 +1306,9 @@ private:
     u32 m_signal_mask { 0 };
     FlatPtr m_kernel_stack_base { 0 };
     FlatPtr m_kernel_stack_top { 0 };
-    OwnPtr<Region> m_kernel_stack_region;
+    OwnPtr<Memory::Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
-    Optional<Range> m_thread_specific_range;
+    Optional<Memory::Range> m_thread_specific_range;
     Array<SignalActionData, NSIG> m_signal_action_data;
     Blocker* m_blocker { nullptr };
     Kernel::Mutex* m_blocking_lock { nullptr };

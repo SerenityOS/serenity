@@ -17,8 +17,8 @@ VirtIOConsolePort::VirtIOConsolePort(unsigned port, VirtIOConsole& console)
     , m_console(console)
     , m_port(port)
 {
-    m_receive_buffer = make<RingBuffer>("VirtIOConsolePort Receive", RINGBUFFER_SIZE);
-    m_transmit_buffer = make<RingBuffer>("VirtIOConsolePort Transmit", RINGBUFFER_SIZE);
+    m_receive_buffer = make<Memory::RingBuffer>("VirtIOConsolePort Receive", RINGBUFFER_SIZE);
+    m_transmit_buffer = make<Memory::RingBuffer>("VirtIOConsolePort Transmit", RINGBUFFER_SIZE);
     m_receive_queue = m_port == 0 ? 0 : m_port * 2 + 2;
     m_transmit_queue = m_port == 0 ? 1 : m_port * 2 + 3;
     init_receive_buffer();

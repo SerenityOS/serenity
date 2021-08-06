@@ -47,9 +47,9 @@ private:
     virtual void ata_write_sectors(bool, u16) override;
 
     PhysicalRegionDescriptor& prdt() { return *reinterpret_cast<PhysicalRegionDescriptor*>(m_prdt_region->vaddr().as_ptr()); }
-    OwnPtr<Region> m_prdt_region;
-    OwnPtr<Region> m_dma_buffer_region;
-    RefPtr<PhysicalPage> m_prdt_page;
-    RefPtr<PhysicalPage> m_dma_buffer_page;
+    OwnPtr<Memory::Region> m_prdt_region;
+    OwnPtr<Memory::Region> m_dma_buffer_region;
+    RefPtr<Memory::PhysicalPage> m_prdt_page;
+    RefPtr<Memory::PhysicalPage> m_dma_buffer_page;
 };
 }

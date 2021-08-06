@@ -53,7 +53,7 @@ UNMAP_AFTER_INIT DMIEntryPointExposedBlob::DMIEntryPointExposedBlob(PhysicalAddr
 
 OwnPtr<KBuffer> DMIEntryPointExposedBlob::try_to_generate_buffer() const
 {
-    auto dmi_blob = map_typed<u8>((m_dmi_entry_point), m_dmi_entry_point_length);
+    auto dmi_blob = Memory::map_typed<u8>((m_dmi_entry_point), m_dmi_entry_point_length);
     return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_dmi_entry_point_length });
 }
 
@@ -71,14 +71,14 @@ UNMAP_AFTER_INIT SMBIOSExposedTable::SMBIOSExposedTable(PhysicalAddress smbios_s
 
 OwnPtr<KBuffer> SMBIOSExposedTable::try_to_generate_buffer() const
 {
-    auto dmi_blob = map_typed<u8>((m_smbios_structure_table), m_smbios_structure_table_length);
+    auto dmi_blob = Memory::map_typed<u8>((m_smbios_structure_table), m_smbios_structure_table_length);
     return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_smbios_structure_table_length });
 }
 
 UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_64_bit_entry_initialization_values()
 {
     dbgln("BIOSSysFSDirectory: SMBIOS 64bit Entry point @ {}", m_dmi_entry_point);
-    auto smbios_entry = map_typed<SMBIOS::EntryPoint64bit>(m_dmi_entry_point, SMBIOS_SEARCH_AREA_SIZE);
+    auto smbios_entry = Memory::map_typed<SMBIOS::EntryPoint64bit>(m_dmi_entry_point, SMBIOS_SEARCH_AREA_SIZE);
     m_smbios_structure_table = PhysicalAddress(smbios_entry.ptr()->table_ptr);
     m_dmi_entry_point_length = smbios_entry.ptr()->length;
     m_smbios_structure_table_length = smbios_entry.ptr()->table_maximum_size;
@@ -87,7 +87,7 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_64_bit_entry_initialization_va
 UNMAP_AFTER_INIT void BIOSSysFSDirectory::set_dmi_32_bit_entry_initialization_values()
 {
     dbgln("BIOSSysFSDirectory: SMBIOS 32bit Entry point @ {}", m_dmi_entry_point);
-    auto smbios_entry = map_typed<SMBIOS::EntryPoint32bit>(m_dmi_entry_point, SMBIOS_SEARCH_AREA_SIZE);
+    auto smbios_entry = Memory::map_typed<SMBIOS::EntryPoint32bit>(m_dmi_entry_point, SMBIOS_SEARCH_AREA_SIZE);
     m_smbios_structure_table = PhysicalAddress(smbios_entry.ptr()->legacy_structure.smbios_table_ptr);
     m_dmi_entry_point_length = smbios_entry.ptr()->length;
     m_smbios_structure_table_length = smbios_entry.ptr()->legacy_structure.smboios_table_length;
@@ -130,7 +130,7 @@ UNMAP_AFTER_INIT void BIOSSysFSDirectory::initialize_dmi_exposer()
 
 OwnPtr<KBuffer> BIOSSysFSDirectory::smbios_structure_table() const
 {
-    auto dmi_blob = map_typed<u8>(m_smbios_structure_table, m_smbios_structure_table_length);
+    auto dmi_blob = Memory::map_typed<u8>(m_smbios_structure_table, m_smbios_structure_table_length);
     return KBuffer::try_create_with_bytes(Span<u8> { dmi_blob.ptr(), m_smbios_structure_table_length });
 }
 
@@ -160,26 +160,26 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> BIOSSysFSDirectory::find_dmi_entry32b
     return map_bios().find_chunk_starting_with("_SM_", 16);
 }
 
-MappedROM map_bios()
+Memory::MappedROM map_bios()
 {
-    MappedROM mapping;
+    Memory::MappedROM mapping;
     mapping.size = 128 * KiB;
     mapping.paddr = PhysicalAddress(0xe0000);
-    mapping.region = MM.allocate_kernel_region(mapping.paddr, page_round_up(mapping.size), {}, Region::Access::Read);
+    mapping.region = MM.allocate_kernel_region(mapping.paddr, Memory::page_round_up(mapping.size), {}, Memory::Region::Access::Read);
     return mapping;
 }
 
-MappedROM map_ebda()
+Memory::MappedROM map_ebda()
 {
-    auto ebda_segment_ptr = map_typed<u16>(PhysicalAddress(0x40e));
-    auto ebda_length_ptr_b0 = map_typed<u8>(PhysicalAddress(0x413));
-    auto ebda_length_ptr_b1 = map_typed<u8>(PhysicalAddress(0x414));
+    auto ebda_segment_ptr = Memory::map_typed<u16>(PhysicalAddress(0x40e));
+    auto ebda_length_ptr_b0 = Memory::map_typed<u8>(PhysicalAddress(0x413));
+    auto ebda_length_ptr_b1 = Memory::map_typed<u8>(PhysicalAddress(0x414));
 
     PhysicalAddress ebda_paddr(*ebda_segment_ptr << 4);
     size_t ebda_size = (*ebda_length_ptr_b1 << 8) | *ebda_length_ptr_b0;
 
-    MappedROM mapping;
-    mapping.region = MM.allocate_kernel_region(ebda_paddr.page_base(), page_round_up(ebda_size), {}, Region::Access::Read);
+    Memory::MappedROM mapping;
+    mapping.region = MM.allocate_kernel_region(ebda_paddr.page_base(), Memory::page_round_up(ebda_size), {}, Memory::Region::Access::Read);
     mapping.offset = ebda_paddr.offset_in_page();
     mapping.size = ebda_size;
     mapping.paddr = ebda_paddr;

@@ -10,7 +10,7 @@
 #include <Kernel/KResult.h>
 #include <Kernel/VirtualAddress.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 class Range {
     friend class RangeAllocator;
@@ -61,8 +61,8 @@ private:
 }
 
 template<>
-struct AK::Formatter<Kernel::Range> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, Kernel::Range value)
+struct AK::Formatter<Kernel::Memory::Range> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, Kernel::Memory::Range value)
     {
         return Formatter<FormatString>::format(builder, "{} - {} (size {:p})", value.base().as_ptr(), value.base().offset(value.size() - 1).as_ptr(), value.size());
     }

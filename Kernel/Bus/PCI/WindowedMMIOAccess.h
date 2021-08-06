@@ -30,7 +30,7 @@ public:
 
 private:
     Address m_device_address;
-    NonnullOwnPtr<Region> m_mapped_region;
+    NonnullOwnPtr<Memory::Region> m_mapped_region;
 };
 
 class WindowedMMIOAccess final : public MMIOAccess {
