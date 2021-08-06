@@ -20,7 +20,7 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
-#include <Kernel/Memory/Space.h>
+#include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/Mutex.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/ProcessGroup.h>
@@ -515,8 +515,8 @@ public:
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
 
-    Memory::Space& space() { return *m_space; }
-    Memory::Space const& space() const { return *m_space; }
+    Memory::AddressSpace& space() { return *m_space; }
+    Memory::AddressSpace const& space() const { return *m_space; }
 
     VirtualAddress signal_trampoline() const { return m_signal_trampoline; }
 
@@ -582,7 +582,7 @@ private:
 
     String m_name;
 
-    OwnPtr<Memory::Space> m_space;
+    OwnPtr<Memory::AddressSpace> m_space;
 
     RefPtr<ProcessGroup> m_pg;
 

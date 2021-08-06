@@ -41,17 +41,17 @@ public:
 
     VirtualRangeAllocator& identity_range_allocator() { return m_identity_range_allocator; }
 
-    Space* space() { return m_space; }
-    const Space* space() const { return m_space; }
+    AddressSpace* space() { return m_space; }
+    const AddressSpace* space() const { return m_space; }
 
-    void set_space(Badge<Space>, Space& space) { m_space = &space; }
+    void set_space(Badge<AddressSpace>, AddressSpace& space) { m_space = &space; }
 
     RecursiveSpinLock& get_lock() { return m_lock; }
 
 private:
     PageDirectory();
 
-    Space* m_space { nullptr };
+    AddressSpace* m_space { nullptr };
     VirtualRangeAllocator m_range_allocator;
     VirtualRangeAllocator m_identity_range_allocator;
 #if ARCH(X86_64)

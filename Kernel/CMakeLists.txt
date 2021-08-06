@@ -131,6 +131,7 @@ set(KERNEL_SOURCES
     KLexicalPath.cpp
     KString.cpp
     KSyms.cpp
+    Memory/AddressSpace.cpp
     Memory/AnonymousVMObject.cpp
     Memory/InodeVMObject.cpp
     Memory/MemoryManager.cpp
@@ -144,7 +145,6 @@ set(KERNEL_SOURCES
     Memory/RingBuffer.cpp
     Memory/ScatterGatherList.cpp
     Memory/SharedInodeVMObject.cpp
-    Memory/Space.cpp
     Memory/VMObject.cpp
     Memory/VirtualRange.cpp
     Memory/VirtualRangeAllocator.cpp

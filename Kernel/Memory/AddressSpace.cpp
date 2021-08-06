@@ -5,39 +5,39 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/InodeVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/Space.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/SpinLock.h>
 
 namespace Kernel::Memory {
 
-OwnPtr<Space> Space::try_create(Process& process, Space const* parent)
+OwnPtr<AddressSpace> AddressSpace::try_create(Process& process, AddressSpace const* parent)
 {
     auto page_directory = PageDirectory::try_create_for_userspace(parent ? &parent->page_directory().range_allocator() : nullptr);
     if (!page_directory)
         return {};
-    auto space = adopt_own_if_nonnull(new (nothrow) Space(process, page_directory.release_nonnull()));
+    auto space = adopt_own_if_nonnull(new (nothrow) AddressSpace(process, page_directory.release_nonnull()));
     if (!space)
         return {};
     space->page_directory().set_space({}, *space);
     return space;
 }
 
-Space::Space(Process& process, NonnullRefPtr<PageDirectory> page_directory)
+AddressSpace::AddressSpace(Process& process, NonnullRefPtr<PageDirectory> page_directory)
     : m_process(&process)
     , m_page_directory(move(page_directory))
 {
 }
 
-Space::~Space()
+AddressSpace::~AddressSpace()
 {
 }
 
-KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
+KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
 {
     if (!size)
         return EINVAL;
@@ -139,7 +139,7 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
     return KSuccess;
 }
 
-Optional<VirtualRange> Space::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
+Optional<VirtualRange> AddressSpace::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
 {
     vaddr.mask(PAGE_MASK);
     size = page_round_up(size);
@@ -148,7 +148,7 @@ Optional<VirtualRange> Space::allocate_range(VirtualAddress vaddr, size_t size, 
     return page_directory().range_allocator().allocate_specific(vaddr, size);
 }
 
-KResultOr<Region*> Space::try_allocate_split_region(Region const& source_region, VirtualRange const& range, size_t offset_in_vmobject)
+KResultOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_region, VirtualRange const& range, size_t offset_in_vmobject)
 {
     auto new_region = Region::try_create_user_accessible(
         range, source_region.vmobject(), offset_in_vmobject, KString::try_create(source_region.name()), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared());
@@ -168,7 +168,7 @@ KResultOr<Region*> Space::try_allocate_split_region(Region const& source_region,
     return region;
 }
 
-KResultOr<Region*> Space::allocate_region(VirtualRange const& range, StringView name, int prot, AllocationStrategy strategy)
+KResultOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, StringView name, int prot, AllocationStrategy strategy)
 {
     VERIFY(range.is_valid());
     auto vmobject = AnonymousVMObject::try_create_with_size(range.size(), strategy);
@@ -185,7 +185,7 @@ KResultOr<Region*> Space::allocate_region(VirtualRange const& range, StringView 
     return added_region;
 }
 
-KResultOr<Region*> Space::allocate_region_with_vmobject(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
+KResultOr<Region*> AddressSpace::allocate_region_with_vmobject(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
 {
     VERIFY(range.is_valid());
     size_t end_in_vmobject = offset_in_vmobject + range.size();
@@ -215,12 +215,12 @@ KResultOr<Region*> Space::allocate_region_with_vmobject(VirtualRange const& rang
     return added_region;
 }
 
-void Space::deallocate_region(Region& region)
+void AddressSpace::deallocate_region(Region& region)
 {
     take_region(region);
 }
 
-NonnullOwnPtr<Region> Space::take_region(Region& region)
+NonnullOwnPtr<Region> AddressSpace::take_region(Region& region)
 {
     ScopedSpinLock lock(m_lock);
 
@@ -232,7 +232,7 @@ NonnullOwnPtr<Region> Space::take_region(Region& region)
     return found_region;
 }
 
-Region* Space::find_region_from_range(VirtualRange const& range)
+Region* AddressSpace::find_region_from_range(VirtualRange const& range)
 {
     ScopedSpinLock lock(m_lock);
     if (m_region_lookup_cache.range.has_value() && m_region_lookup_cache.range.value() == range && m_region_lookup_cache.region)
@@ -250,7 +250,7 @@ Region* Space::find_region_from_range(VirtualRange const& range)
     return region;
 }
 
-Region* Space::find_region_containing(VirtualRange const& range)
+Region* AddressSpace::find_region_containing(VirtualRange const& range)
 {
     ScopedSpinLock lock(m_lock);
     auto candidate = m_regions.find_largest_not_above(range.base().get());
@@ -259,7 +259,7 @@ Region* Space::find_region_containing(VirtualRange const& range)
     return (*candidate)->range().contains(range) ? candidate->ptr() : nullptr;
 }
 
-Vector<Region*> Space::find_regions_intersecting(VirtualRange const& range)
+Vector<Region*> AddressSpace::find_regions_intersecting(VirtualRange const& range)
 {
     Vector<Region*> regions = {};
     size_t total_size_collected = 0;
@@ -282,7 +282,7 @@ Vector<Region*> Space::find_regions_intersecting(VirtualRange const& range)
     return regions;
 }
 
-Region* Space::add_region(NonnullOwnPtr<Region> region)
+Region* AddressSpace::add_region(NonnullOwnPtr<Region> region)
 {
     auto* ptr = region.ptr();
     ScopedSpinLock lock(m_lock);
@@ -291,7 +291,7 @@ Region* Space::add_region(NonnullOwnPtr<Region> region)
 }
 
 // Carve out a virtual address range from a region and return the two regions on either side
-KResultOr<Vector<Region*, 2>> Space::try_split_region_around_range(const Region& source_region, VirtualRange const& desired_range)
+KResultOr<Vector<Region*, 2>> AddressSpace::try_split_region_around_range(const Region& source_region, VirtualRange const& desired_range)
 {
     VirtualRange old_region_range = source_region.range();
     auto remaining_ranges_after_unmap = old_region_range.carve(desired_range);
@@ -312,7 +312,7 @@ KResultOr<Vector<Region*, 2>> Space::try_split_region_around_range(const Region&
     return new_regions;
 }
 
-void Space::dump_regions()
+void AddressSpace::dump_regions()
 {
     dbgln("Process regions:");
 #if ARCH(I386)
@@ -339,13 +339,13 @@ void Space::dump_regions()
     MM.dump_kernel_regions();
 }
 
-void Space::remove_all_regions(Badge<Process>)
+void AddressSpace::remove_all_regions(Badge<Process>)
 {
     ScopedSpinLock lock(m_lock);
     m_regions.clear();
 }
 
-size_t Space::amount_dirty_private() const
+size_t AddressSpace::amount_dirty_private() const
 {
     ScopedSpinLock lock(m_lock);
     // FIXME: This gets a bit more complicated for Regions sharing the same underlying VMObject.
@@ -359,7 +359,7 @@ size_t Space::amount_dirty_private() const
     return amount;
 }
 
-size_t Space::amount_clean_inode() const
+size_t AddressSpace::amount_clean_inode() const
 {
     ScopedSpinLock lock(m_lock);
     HashTable<const InodeVMObject*> vmobjects;
@@ -373,7 +373,7 @@ size_t Space::amount_clean_inode() const
     return amount;
 }
 
-size_t Space::amount_virtual() const
+size_t AddressSpace::amount_virtual() const
 {
     ScopedSpinLock lock(m_lock);
     size_t amount = 0;
@@ -383,7 +383,7 @@ size_t Space::amount_virtual() const
     return amount;
 }
 
-size_t Space::amount_resident() const
+size_t AddressSpace::amount_resident() const
 {
     ScopedSpinLock lock(m_lock);
     // FIXME: This will double count if multiple regions use the same physical page.
@@ -394,7 +394,7 @@ size_t Space::amount_resident() const
     return amount;
 }
 
-size_t Space::amount_shared() const
+size_t AddressSpace::amount_shared() const
 {
     ScopedSpinLock lock(m_lock);
     // FIXME: This will double count if multiple regions use the same physical page.
@@ -408,7 +408,7 @@ size_t Space::amount_shared() const
     return amount;
 }
 
-size_t Space::amount_purgeable_volatile() const
+size_t AddressSpace::amount_purgeable_volatile() const
 {
     ScopedSpinLock lock(m_lock);
     size_t amount = 0;
@@ -422,7 +422,7 @@ size_t Space::amount_purgeable_volatile() const
     return amount;
 }
 
-size_t Space::amount_purgeable_nonvolatile() const
+size_t AddressSpace::amount_purgeable_nonvolatile() const
 {
     ScopedSpinLock lock(m_lock);
     size_t amount = 0;

@@ -16,10 +16,10 @@
 
 namespace Kernel::Memory {
 
-class Space {
+class AddressSpace {
 public:
-    static OwnPtr<Space> try_create(Process&, Space const* parent);
-    ~Space();
+    static OwnPtr<AddressSpace> try_create(Process&, AddressSpace const* parent);
+    ~AddressSpace();
 
     PageDirectory& page_directory() { return *m_page_directory; }
     const PageDirectory& page_directory() const { return *m_page_directory; }
@@ -66,7 +66,7 @@ public:
     size_t amount_purgeable_nonvolatile() const;
 
 private:
-    Space(Process&, NonnullRefPtr<PageDirectory>);
+    AddressSpace(Process&, NonnullRefPtr<PageDirectory>);
 
     Process* m_process { nullptr };
     mutable RecursiveSpinLock m_lock;

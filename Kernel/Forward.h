@@ -66,6 +66,7 @@ class WaitQueue;
 class WorkQueue;
 
 namespace Memory {
+class AddressSpace;
 class AnonymousVMObject;
 class InodeVMObject;
 class MappedROM;
@@ -74,12 +75,11 @@ class PageDirectory;
 class PhysicalPage;
 class PhysicalRegion;
 class PrivateInodeVMObject;
-class VirtualRange;
-class VirtualRangeAllocator;
 class Region;
 class SharedInodeVMObject;
-class Space;
 class VMObject;
+class VirtualRange;
+class VirtualRangeAllocator;
 }
 
 template<typename BaseType>
