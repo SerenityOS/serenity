@@ -168,11 +168,11 @@ public:
 
     void set_page_directory(PageDirectory&);
     bool map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
-    enum class ShouldDeallocateVirtualMemoryVirtualRange {
+    enum class ShouldDeallocateVirtualRange {
         No,
         Yes,
     };
-    void unmap(ShouldDeallocateVirtualMemoryVirtualRange = ShouldDeallocateVirtualMemoryVirtualRange::Yes);
+    void unmap(ShouldDeallocateVirtualRange = ShouldDeallocateVirtualRange::Yes);
 
     void remap();
 

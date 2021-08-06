@@ -346,7 +346,7 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
         auto region = address_space().take_region(*old_region);
 
         // Unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Memory::Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
+        region->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
 
         // This vector is the region(s) adjacent to our range.
         // We need to allocate a new region for the range we wanted to change permission bits on.
@@ -409,7 +409,7 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
             auto region = address_space().take_region(*old_region);
 
             // Unmap the old region here, specifying that we *don't* want the VM deallocated.
-            region->unmap(Memory::Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
+            region->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
 
             // This vector is the region(s) adjacent to our range.
             // We need to allocate a new region for the range we wanted to change permission bits on.
@@ -566,7 +566,7 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
         auto old_name = old_region->take_name();
 
         // Unmap without deallocating the VM range since we're going to reuse it.
-        old_region->unmap(Memory::Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
+        old_region->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
         address_space().deallocate_region(*old_region);
 
         auto new_region_or_error = address_space().allocate_region_with_vmobject(range, new_vmobject.release_nonnull(), old_offset, old_name->view(), old_prot, false);
