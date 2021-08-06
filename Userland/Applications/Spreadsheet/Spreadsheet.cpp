@@ -82,7 +82,7 @@ size_t Sheet::add_row()
     return m_rows++;
 }
 
-static size_t convert_from_string(StringView str, unsigned base = 26, StringView map = {})
+static Optional<size_t> convert_from_string(StringView str, unsigned base = 26, StringView map = {})
 {
     if (map.is_null())
         map = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -92,7 +92,10 @@ static size_t convert_from_string(StringView str, unsigned base = 26, StringView
     size_t value = 0;
     auto const len = str.length();
     for (auto i = 0u; i < len; i++) {
-        size_t digit_value = map.find(str[i]).value_or(0);
+        auto maybe_index = map.find(str[i]);
+        if (!maybe_index.has_value())
+            return {};
+        size_t digit_value = maybe_index.value();
         // NOTE: Refer to the note in `String::bijective_base_from()'.
         if (i == 0 && len > 1)
             ++digit_value;
@@ -209,7 +212,11 @@ Optional<Position> Sheet::parse_cell_name(const StringView& name) const
 
 Optional<size_t> Sheet::column_index(const StringView& column_name) const
 {
-    auto index = convert_from_string(column_name);
+    auto maybe_index = convert_from_string(column_name);
+    if (!maybe_index.has_value())
+        return {};
+
+    auto index = maybe_index.value();
     if (m_columns.size() <= index || m_columns[index] != column_name) {
         auto it = m_columns.find(column_name);
         if (it == m_columns.end())
