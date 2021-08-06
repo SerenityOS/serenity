@@ -18,8 +18,8 @@ public:
     using ClientStub = typename ClientEndpoint::Stub;
     using IPCProxy = typename ServerEndpoint::template Proxy<ClientEndpoint>;
 
-    ServerConnection(ClientStub& local_endpoint, const StringView& address)
-        : Connection<ClientEndpoint, ServerEndpoint>(local_endpoint, Core::LocalSocket::construct())
+    ServerConnection(ClientStub& local_endpoint, const StringView& address, Core::Object* parent = nullptr)
+        : Connection<ClientEndpoint, ServerEndpoint>(local_endpoint, Core::LocalSocket::construct(), parent)
         , ServerEndpoint::template Proxy<ClientEndpoint>(*this, {})
     {
         // We want to rate-limit our clients

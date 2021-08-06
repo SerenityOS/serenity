@@ -30,8 +30,9 @@ class Connection : public Core::Object {
 public:
     using LocalStub = typename LocalEndpoint::Stub;
 
-    Connection(LocalStub& local_stub, NonnullRefPtr<Core::LocalSocket> socket)
-        : m_local_stub(local_stub)
+    Connection(LocalStub& local_stub, NonnullRefPtr<Core::LocalSocket> socket, Core::Object* parent = nullptr)
+        : Core::Object(parent)
+        , m_local_stub(local_stub)
         , m_socket(move(socket))
         , m_notifier(Core::Notifier::construct(m_socket->fd(), Core::Notifier::Read, this))
     {
