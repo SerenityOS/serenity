@@ -14,7 +14,7 @@
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/KString.h>
 #include <Kernel/Memory/PageFaultResponse.h>
-#include <Kernel/Memory/RangeAllocator.h>
+#include <Kernel/Memory/VirtualRangeAllocator.h>
 #include <Kernel/Sections.h>
 #include <Kernel/UnixTypes.h>
 
@@ -46,12 +46,12 @@ public:
         Yes,
     };
 
-    static OwnPtr<Region> try_create_user_accessible(Range const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
-    static OwnPtr<Region> try_create_kernel_only(Range const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
+    static OwnPtr<Region> try_create_user_accessible(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
+    static OwnPtr<Region> try_create_kernel_only(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
 
     ~Region();
 
-    Range const& range() const { return m_range; }
+    VirtualRange const& range() const { return m_range; }
     VirtualAddress vaddr() const { return m_range.base(); }
     size_t size() const { return m_range.size(); }
     bool is_readable() const { return m_access & Access::Read; }
@@ -94,7 +94,7 @@ public:
         return m_range.contains(vaddr);
     }
 
-    bool contains(Range const& range) const
+    bool contains(VirtualRange const& range) const
     {
         return m_range.contains(range);
     }
@@ -168,11 +168,11 @@ public:
 
     void set_page_directory(PageDirectory&);
     bool map(PageDirectory&, ShouldFlushTLB = ShouldFlushTLB::Yes);
-    enum class ShouldDeallocateVirtualMemoryRange {
+    enum class ShouldDeallocateVirtualMemoryVirtualRange {
         No,
         Yes,
     };
-    void unmap(ShouldDeallocateVirtualMemoryRange = ShouldDeallocateVirtualMemoryRange::Yes);
+    void unmap(ShouldDeallocateVirtualMemoryVirtualRange = ShouldDeallocateVirtualMemoryVirtualRange::Yes);
 
     void remap();
 
@@ -180,7 +180,7 @@ public:
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
 private:
-    Region(Range const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
+    Region(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
 
     bool remap_vmobject_page(size_t page_index, bool with_flush = true);
     bool do_remap_vmobject_page(size_t page_index, bool with_flush = true);
@@ -200,7 +200,7 @@ private:
     bool map_individual_page_impl(size_t page_index);
 
     RefPtr<PageDirectory> m_page_directory;
-    Range m_range;
+    VirtualRange m_range;
     size_t m_offset_in_vmobject { 0 };
     NonnullRefPtr<VMObject> m_vmobject;
     OwnPtr<KString> m_name;

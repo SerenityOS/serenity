@@ -40,7 +40,7 @@ KResult File::ioctl(FileDescription&, unsigned, Userspace<void*>)
     return ENOTTY;
 }
 
-KResultOr<Memory::Region*> File::mmap(Process&, FileDescription&, Memory::Range const&, u64, int, bool)
+KResultOr<Memory::Region*> File::mmap(Process&, FileDescription&, Memory::VirtualRange const&, u64, int, bool)
 {
     return ENODEV;
 }

@@ -46,7 +46,7 @@ inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)
     return virtual_ - physical_to_virtual_offset;
 }
 
-enum class UsedMemoryRangeType {
+enum class UsedMemoryVirtualRangeType {
     LowMemory = 0,
     Prekernel,
     Kernel,
@@ -54,7 +54,7 @@ enum class UsedMemoryRangeType {
     PhysicalPages,
 };
 
-static constexpr StringView UserMemoryRangeTypeNames[] {
+static constexpr StringView UserMemoryVirtualRangeTypeNames[] {
     "Low memory",
     "Prekernel",
     "Kernel",
@@ -62,18 +62,18 @@ static constexpr StringView UserMemoryRangeTypeNames[] {
     "Physical Pages"
 };
 
-struct UsedMemoryRange {
-    UsedMemoryRangeType type {};
+struct UsedMemoryVirtualRange {
+    UsedMemoryVirtualRangeType type {};
     PhysicalAddress start;
     PhysicalAddress end;
 };
 
-struct ContiguousReservedMemoryRange {
+struct ContiguousReservedMemoryVirtualRange {
     PhysicalAddress start;
     PhysicalSize length {};
 };
 
-enum class PhysicalMemoryRangeType {
+enum class PhysicalMemoryVirtualRangeType {
     Usable = 0,
     Reserved,
     ACPI_Reclaimable,
@@ -82,8 +82,8 @@ enum class PhysicalMemoryRangeType {
     Unknown,
 };
 
-struct PhysicalMemoryRange {
-    PhysicalMemoryRangeType type { PhysicalMemoryRangeType::Unknown };
+struct PhysicalMemoryVirtualRange {
+    PhysicalMemoryVirtualRangeType type { PhysicalMemoryVirtualRangeType::Unknown };
     PhysicalAddress start;
     PhysicalSize length {};
 };
@@ -185,7 +185,7 @@ public:
     OwnPtr<Region> allocate_kernel_region(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     OwnPtr<Region> allocate_kernel_region_identity(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     OwnPtr<Region> allocate_kernel_region_with_vmobject(VMObject&, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
-    OwnPtr<Region> allocate_kernel_region_with_vmobject(Range const&, VMObject&, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
+    OwnPtr<Region> allocate_kernel_region_with_vmobject(VirtualRange const&, VMObject&, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
 
     struct SystemMemoryInfo {
         PhysicalSize user_physical_pages { 0 };
@@ -230,8 +230,8 @@ public:
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
-    Vector<UsedMemoryRange> const& used_memory_ranges() { return m_used_memory_ranges; }
-    bool is_allowed_to_mmap_to_userspace(PhysicalAddress, Range const&) const;
+    Vector<UsedMemoryVirtualRange> const& used_memory_ranges() { return m_used_memory_ranges; }
+    bool is_allowed_to_mmap_to_userspace(PhysicalAddress, VirtualRange const&) const;
 
     PhysicalPageEntry& get_physical_page_entry(PhysicalAddress);
     PhysicalAddress get_physical_address(PhysicalPage const&);
@@ -288,9 +288,9 @@ private:
 
     Region::ListInMemoryManager m_user_regions;
     Region::ListInMemoryManager m_kernel_regions;
-    Vector<UsedMemoryRange> m_used_memory_ranges;
-    Vector<PhysicalMemoryRange> m_physical_memory_ranges;
-    Vector<ContiguousReservedMemoryRange> m_reserved_memory_ranges;
+    Vector<UsedMemoryVirtualRange> m_used_memory_ranges;
+    Vector<PhysicalMemoryVirtualRange> m_physical_memory_ranges;
+    Vector<ContiguousReservedMemoryVirtualRange> m_reserved_memory_ranges;
 
     VMObject::List m_vmobjects;
 };
@@ -307,7 +307,7 @@ inline bool is_user_range(VirtualAddress vaddr, size_t size)
     return is_user_address(vaddr) && is_user_address(vaddr.offset(size));
 }
 
-inline bool is_user_range(Range const& range)
+inline bool is_user_range(VirtualRange const& range)
 {
     return is_user_range(range.base(), range.size());
 }

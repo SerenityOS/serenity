@@ -380,7 +380,7 @@ InodeMetadata FileDescription::metadata() const
     return {};
 }
 
-KResultOr<Memory::Region*> FileDescription::mmap(Process& process, Memory::Range const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> FileDescription::mmap(Process& process, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     MutexLocker locker(m_lock);
     return m_file->mmap(process, *this, range, offset, prot, shared);

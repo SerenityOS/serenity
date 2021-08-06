@@ -19,7 +19,7 @@
 
 namespace Kernel::Memory {
 
-Region::Region(Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+Region::Region(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
     : m_range(range)
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
@@ -41,11 +41,11 @@ Region::~Region()
     m_vmobject->remove_region(*this);
 
     // Make sure we disable interrupts so we don't get interrupted between unmapping and unregistering.
-    // Unmapping the region will give the VM back to the RangeAllocator, so an interrupt handler would
+    // Unmapping the region will give the VM back to the VirtualRangeAllocator, so an interrupt handler would
     // find the address<->region mappings in an invalid state there.
     ScopedSpinLock lock(s_mm_lock);
     if (m_page_directory) {
-        unmap(ShouldDeallocateVirtualMemoryRange::Yes);
+        unmap(ShouldDeallocateVirtualMemoryVirtualRange::Yes);
         VERIFY(!m_page_directory);
     }
 
@@ -147,7 +147,7 @@ size_t Region::amount_shared() const
     return bytes;
 }
 
-OwnPtr<Region> Region::try_create_user_accessible(Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+OwnPtr<Region> Region::try_create_user_accessible(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
 {
     auto region = adopt_own_if_nonnull(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
     if (!region)
@@ -155,7 +155,7 @@ OwnPtr<Region> Region::try_create_user_accessible(Range const& range, NonnullRef
     return region;
 }
 
-OwnPtr<Region> Region::try_create_kernel_only(Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable)
+OwnPtr<Region> Region::try_create_kernel_only(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable)
 {
     return adopt_own_if_nonnull(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, false));
 }
@@ -234,7 +234,7 @@ bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
     return success;
 }
 
-void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
+void Region::unmap(ShouldDeallocateVirtualMemoryVirtualRange deallocate_range)
 {
     ScopedSpinLock lock(s_mm_lock);
     if (!m_page_directory)
@@ -246,7 +246,7 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
         MM.release_pte(*m_page_directory, vaddr, i == count - 1);
     }
     MM.flush_tlb(m_page_directory, vaddr(), page_count());
-    if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes) {
+    if (deallocate_range == ShouldDeallocateVirtualMemoryVirtualRange::Yes) {
         if (m_page_directory->range_allocator().contains(range()))
             m_page_directory->range_allocator().deallocate(range());
         else

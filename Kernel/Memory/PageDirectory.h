@@ -11,7 +11,7 @@
 #include <AK/RefPtr.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Memory/PhysicalPage.h>
-#include <Kernel/Memory/RangeAllocator.h>
+#include <Kernel/Memory/VirtualRangeAllocator.h>
 
 namespace Kernel::Memory {
 
@@ -19,7 +19,7 @@ class PageDirectory : public RefCounted<PageDirectory> {
     friend class MemoryManager;
 
 public:
-    static RefPtr<PageDirectory> try_create_for_userspace(RangeAllocator const* parent_range_allocator = nullptr);
+    static RefPtr<PageDirectory> try_create_for_userspace(VirtualRangeAllocator const* parent_range_allocator = nullptr);
     static NonnullRefPtr<PageDirectory> must_create_kernel_page_directory();
     static RefPtr<PageDirectory> find_by_cr3(FlatPtr);
 
@@ -36,10 +36,10 @@ public:
 #endif
     }
 
-    RangeAllocator& range_allocator() { return m_range_allocator; }
-    const RangeAllocator& range_allocator() const { return m_range_allocator; }
+    VirtualRangeAllocator& range_allocator() { return m_range_allocator; }
+    VirtualRangeAllocator const& range_allocator() const { return m_range_allocator; }
 
-    RangeAllocator& identity_range_allocator() { return m_identity_range_allocator; }
+    VirtualRangeAllocator& identity_range_allocator() { return m_identity_range_allocator; }
 
     Space* space() { return m_space; }
     const Space* space() const { return m_space; }
@@ -52,8 +52,8 @@ private:
     PageDirectory();
 
     Space* m_space { nullptr };
-    RangeAllocator m_range_allocator;
-    RangeAllocator m_identity_range_allocator;
+    VirtualRangeAllocator m_range_allocator;
+    VirtualRangeAllocator m_identity_range_allocator;
 #if ARCH(X86_64)
     RefPtr<PhysicalPage> m_pml4t;
 #endif

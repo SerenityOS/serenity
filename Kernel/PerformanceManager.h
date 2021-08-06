@@ -74,7 +74,7 @@ public:
         }
     }
 
-    inline static void add_unmap_perf_event(Process& current_process, Memory::Range const& region)
+    inline static void add_unmap_perf_event(Process& current_process, Memory::VirtualRange const& region)
     {
         if (auto* event_buffer = current_process.current_perf_events_buffer()) {
             [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MUNMAP, region.base().get(), region.size(), nullptr);

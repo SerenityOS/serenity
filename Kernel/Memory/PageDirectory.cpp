@@ -43,7 +43,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<PageDirectory> PageDirectory::must_create_kernel_
     return directory;
 }
 
-RefPtr<PageDirectory> PageDirectory::try_create_for_userspace(RangeAllocator const* parent_range_allocator)
+RefPtr<PageDirectory> PageDirectory::try_create_for_userspace(VirtualRangeAllocator const* parent_range_allocator)
 {
     constexpr FlatPtr userspace_range_base = 0x00800000;
     FlatPtr const userspace_range_ceiling = USER_RANGE_CEILING;

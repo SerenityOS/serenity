@@ -93,7 +93,7 @@ KResult InodeFile::ioctl(FileDescription& description, unsigned request, Userspa
     }
 }
 
-KResultOr<Memory::Region*> InodeFile::mmap(Process& process, FileDescription& description, Memory::Range const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> InodeFile::mmap(Process& process, FileDescription& description, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     RefPtr<Memory::InodeVMObject> vmobject;

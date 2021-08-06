@@ -140,14 +140,14 @@ set(KERNEL_SOURCES
     Memory/PhysicalZone.cpp
     Memory/PrivateInodeVMObject.cpp
     Memory/ProcessPagingScope.cpp
-    Memory/Range.cpp
-    Memory/RangeAllocator.cpp
     Memory/Region.cpp
     Memory/RingBuffer.cpp
     Memory/ScatterGatherList.cpp
     Memory/SharedInodeVMObject.cpp
     Memory/Space.cpp
     Memory/VMObject.cpp
+    Memory/VirtualRange.cpp
+    Memory/VirtualRangeAllocator.cpp
     MiniStdLib.cpp
     Mutex.cpp
     Net/E1000ENetworkAdapter.cpp

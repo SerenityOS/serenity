@@ -25,7 +25,7 @@ NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GraphicsDevice&
     return adopt_ref(*new FramebufferDevice(adapter, output_port_index, paddr, width, height, pitch));
 }
 
-KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, FileDescription&, Memory::Range const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, FileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     ScopedSpinLock lock(m_activation_lock);
     REQUIRE_PROMISE(video);

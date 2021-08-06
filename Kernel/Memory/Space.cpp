@@ -42,7 +42,7 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
     if (!size)
         return EINVAL;
 
-    auto range_or_error = Range::expand_to_page_boundaries(addr.get(), size);
+    auto range_or_error = VirtualRange::expand_to_page_boundaries(addr.get(), size);
     if (range_or_error.is_error())
         return range_or_error.error();
     auto range_to_unmap = range_or_error.value();
@@ -69,7 +69,7 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
         auto region = take_region(*old_region);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+        region->unmap(Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
 
         auto new_regions_or_error = try_split_region_around_range(*region, range_to_unmap);
         if (new_regions_or_error.is_error())
@@ -115,7 +115,7 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
         auto region = take_region(*old_region);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+        region->unmap(Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
 
         // Otherwise, split the regions and collect them for future mapping.
         auto split_regions_or_error = try_split_region_around_range(*region, range_to_unmap);
@@ -139,7 +139,7 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
     return KSuccess;
 }
 
-Optional<Range> Space::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
+Optional<VirtualRange> Space::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
 {
     vaddr.mask(PAGE_MASK);
     size = page_round_up(size);
@@ -148,7 +148,7 @@ Optional<Range> Space::allocate_range(VirtualAddress vaddr, size_t size, size_t 
     return page_directory().range_allocator().allocate_specific(vaddr, size);
 }
 
-KResultOr<Region*> Space::try_allocate_split_region(Region const& source_region, Range const& range, size_t offset_in_vmobject)
+KResultOr<Region*> Space::try_allocate_split_region(Region const& source_region, VirtualRange const& range, size_t offset_in_vmobject)
 {
     auto new_region = Region::try_create_user_accessible(
         range, source_region.vmobject(), offset_in_vmobject, KString::try_create(source_region.name()), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared());
@@ -168,7 +168,7 @@ KResultOr<Region*> Space::try_allocate_split_region(Region const& source_region,
     return region;
 }
 
-KResultOr<Region*> Space::allocate_region(Range const& range, StringView name, int prot, AllocationStrategy strategy)
+KResultOr<Region*> Space::allocate_region(VirtualRange const& range, StringView name, int prot, AllocationStrategy strategy)
 {
     VERIFY(range.is_valid());
     auto vmobject = AnonymousVMObject::try_create_with_size(range.size(), strategy);
@@ -185,7 +185,7 @@ KResultOr<Region*> Space::allocate_region(Range const& range, StringView name, i
     return added_region;
 }
 
-KResultOr<Region*> Space::allocate_region_with_vmobject(Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
+KResultOr<Region*> Space::allocate_region_with_vmobject(VirtualRange const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, StringView name, int prot, bool shared)
 {
     VERIFY(range.is_valid());
     size_t end_in_vmobject = offset_in_vmobject + range.size();
@@ -232,7 +232,7 @@ NonnullOwnPtr<Region> Space::take_region(Region& region)
     return found_region;
 }
 
-Region* Space::find_region_from_range(const Range& range)
+Region* Space::find_region_from_range(VirtualRange const& range)
 {
     ScopedSpinLock lock(m_lock);
     if (m_region_lookup_cache.range.has_value() && m_region_lookup_cache.range.value() == range && m_region_lookup_cache.region)
@@ -250,7 +250,7 @@ Region* Space::find_region_from_range(const Range& range)
     return region;
 }
 
-Region* Space::find_region_containing(const Range& range)
+Region* Space::find_region_containing(VirtualRange const& range)
 {
     ScopedSpinLock lock(m_lock);
     auto candidate = m_regions.find_largest_not_above(range.base().get());
@@ -259,7 +259,7 @@ Region* Space::find_region_containing(const Range& range)
     return (*candidate)->range().contains(range) ? candidate->ptr() : nullptr;
 }
 
-Vector<Region*> Space::find_regions_intersecting(const Range& range)
+Vector<Region*> Space::find_regions_intersecting(VirtualRange const& range)
 {
     Vector<Region*> regions = {};
     size_t total_size_collected = 0;
@@ -291,13 +291,13 @@ Region* Space::add_region(NonnullOwnPtr<Region> region)
 }
 
 // Carve out a virtual address range from a region and return the two regions on either side
-KResultOr<Vector<Region*, 2>> Space::try_split_region_around_range(const Region& source_region, const Range& desired_range)
+KResultOr<Vector<Region*, 2>> Space::try_split_region_around_range(const Region& source_region, VirtualRange const& desired_range)
 {
-    Range old_region_range = source_region.range();
+    VirtualRange old_region_range = source_region.range();
     auto remaining_ranges_after_unmap = old_region_range.carve(desired_range);
 
     VERIFY(!remaining_ranges_after_unmap.is_empty());
-    auto try_make_replacement_region = [&](const Range& new_range) -> KResultOr<Region*> {
+    auto try_make_replacement_region = [&](VirtualRange const& new_range) -> KResultOr<Region*> {
         VERIFY(old_region_range.contains(new_range));
         size_t new_range_offset_in_vmobject = source_region.offset_in_vmobject() + (new_range.base().get() - old_region_range.base().get());
         return try_allocate_split_region(source_region, new_range, new_range_offset_in_vmobject);
