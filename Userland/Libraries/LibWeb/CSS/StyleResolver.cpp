@@ -542,7 +542,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto& parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             if (!parts.is_empty() && parts.size() <= 3) {
                 RefPtr<StyleValue> color_value;
@@ -614,7 +614,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto& parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             if (parts.size() == 2) {
                 auto diagonal1 = Parser::parse_css_value(context, property_id, parts[0]);
@@ -691,7 +691,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto& parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
 
             if (parts.size() == 1) {
@@ -746,7 +746,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::BorderStyle) {
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto& parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             if (parts.size() == 4) {
                 auto top = Parser::parse_css_value(context, property_id, parts[0]);
@@ -799,7 +799,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::BorderWidth) {
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto& parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             if (parts.size() == 4) {
                 auto top_border_width = Parser::parse_css_value(context, property_id, parts[0]);
@@ -851,7 +851,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::BorderColor) {
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto& parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             if (parts.size() == 4) {
                 auto top = Parser::parse_css_value(context, property_id, parts[0]);
@@ -918,7 +918,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
 
             RefPtr<StyleValue> background_color_value;
@@ -1026,7 +1026,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             // FIXME: Handle multiple backgrounds.
             if (!parts.is_empty()) {
@@ -1059,7 +1059,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             assign_background_repeat_from_single_value(value);
         }
 
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             NonnullRefPtrVector<StyleValue> repeat_values;
             for (auto& part : parts) {
@@ -1100,7 +1100,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             if (parts.size() == 2) {
                 auto vertical = Parser::parse_css_value(context, property_id, parts[0]);
@@ -1151,7 +1151,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             if (parts.size() == 2) {
                 auto vertical = Parser::parse_css_value(context, property_id, parts[0]);
@@ -1194,7 +1194,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::ListStyle) {
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
 
             if (!parts.is_empty() && parts.size() <= 3) {
@@ -1251,7 +1251,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Font) {
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
 
             RefPtr<StyleValue> font_style_value;
@@ -1352,7 +1352,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::FontFamily) {
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             // FIXME: Handle multiple font-families separated by commas, for fallback purposes.
             for (auto& part : parts) {
@@ -1380,7 +1380,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             return;
         }
 
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             if (parts.size() == 1) {
                 auto value = Parser::parse_css_value(context, property_id, parts[0]);
@@ -1434,7 +1434,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::FlexFlow) {
-        if (value.is_value_list()) {
+        if (value.is_component_value_list()) {
             auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
             if (parts.is_empty() || parts.size() > 2)
                 return;
@@ -1471,7 +1471,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
-    if (value.is_value_list()) {
+    if (value.is_component_value_list()) {
         dbgln("Values list for CSS property '{}' went unhandled. List: '{}'", string_from_property_id(property_id), value.to_string());
         return;
     }
