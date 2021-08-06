@@ -9,6 +9,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
@@ -82,6 +83,28 @@ static void chown_wrapper(const char* path, uid_t uid, gid_t gid)
     }
 }
 
+static void chown_all_framebuffer_devices(group* phys_group)
+{
+    VERIFY(phys_group);
+    struct stat cur_file_stat;
+
+    Core::DirIterator di("/dev/", Core::DirIterator::SkipParentAndBaseDir);
+    if (di.has_error())
+        VERIFY_NOT_REACHED();
+    while (di.has_next()) {
+        auto entry_name = di.next_full_path();
+        auto rc = stat(entry_name.characters(), &cur_file_stat);
+        if (rc < 0)
+            continue;
+        if (!S_ISBLK(cur_file_stat.st_mode))
+            continue;
+        // FIXME: Try to find a way to not hardcode the major number of framebuffer device nodes.
+        if (major(cur_file_stat.st_rdev) != 29)
+            continue;
+        chown_wrapper(entry_name.characters(), 0, phys_group->gr_gid);
+    }
+}
+
 static void prepare_devfs()
 {
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
@@ -113,7 +136,7 @@ static void prepare_devfs()
 
     auto phys_group = getgrnam("phys");
     VERIFY(phys_group);
-    chown_wrapper("/dev/fb0", 0, phys_group->gr_gid);
+    chown_all_framebuffer_devices(phys_group);
 
     chown_wrapper("/dev/keyboard0", 0, phys_group->gr_gid);
 
