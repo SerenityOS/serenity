@@ -154,7 +154,7 @@ enum class NeedsBigProcessLock {
     S(realpath, NeedsBigProcessLock::Yes)                   \
     S(get_process_name, NeedsBigProcessLock::Yes)           \
     S(fchdir, NeedsBigProcessLock::Yes)                     \
-    S(getrandom, NeedsBigProcessLock::Yes)                  \
+    S(getrandom, NeedsBigProcessLock::No)                   \
     S(getkeymap, NeedsBigProcessLock::Yes)                  \
     S(setkeymap, NeedsBigProcessLock::Yes)                  \
     S(clock_gettime, NeedsBigProcessLock::Yes)              \
