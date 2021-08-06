@@ -36,7 +36,7 @@ public:
     virtual void invalidate() override;
 
     virtual bool is_column_sortable(int column_index) const override;
-    virtual void sort(int column, SortOrder) override;
+    virtual void sort(Vector<SortSpec> const&) override;
     void filter(String term);
 
     ModelRole sort_role() const { return m_sort_role; }
@@ -72,14 +72,14 @@ private:
 
     Mapping* get_or_create_mapping(const ModelIndex& source_parent);
 
-    bool less_than(ModelIndex const&, ModelIndex const&);
+    bool less_than(ModelIndex const& parent, int a, int b);
 
     void sort_mapping(Mapping&);
+    bool fails_filter(ModelIndex const&);
     void filter_mapping(Mapping&);
 
     void sort_impl();
     void filter_impl();
-    void update_mappings();
     Vector<SourceProxyPair> backup_persistent_indices(Mapping const&);
     void update_persistent_indices(Vector<SourceProxyPair> const&);
 
@@ -89,16 +89,24 @@ private:
     virtual void model_did_move_rows(ModelIndex const& source_parent, int first, int last, ModelIndex const& target_parent, int target_index) override;
     virtual void model_did_delete_rows(ModelIndex const& parent, int first, int last) override;
 
+    // If this flag is set when the model receives a generic model_did_update,
+    // then we don't invalidate anything (since we already granularly updated
+    // based on what the model told us).
+    bool m_received_granular_update { false };
+
     // NOTE: This maps from the source's parent indices to our mappings.
     HashMap<PersistentModelIndex, NonnullOwnPtr<Mapping>> m_mappings;
     NonnullRefPtr<Model> m_source;
 
     // Filtering
     String m_filter_term;
+
     // Sorting
-    int m_sort_column { -1 };
     ModelRole m_sort_role { ModelRole::Sort };
-    SortOrder m_sort_order { SortOrder::Ascending };
+    Vector<SortSpec> m_sort_specs {
+        { -1, SortOrder::Ascending }
+    };
+
     CaseSensitivity m_case_sensitivity { CaseSensitivity::CaseSensitive };
 };
 

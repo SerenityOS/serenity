@@ -111,10 +111,12 @@ public:
 
     NonnullRefPtr<Gfx::Font> font_for_index(const ModelIndex&) const;
 
-    void set_key_column_and_sort_order(int column, SortOrder);
+    int key_column() const { return m_sort_specs[0].column; }
+    SortOrder sort_order() const { return m_sort_specs[0].order; }
+    Vector<SortSpec> const& sort_specs() const { return m_sort_specs; }
 
-    int key_column() const { return m_key_column; }
-    SortOrder sort_order() const { return m_sort_order; }
+    void set_key_column_and_sort_order(int column, SortOrder);
+    void set_sort_specs(Vector<SortSpec> const& specs);
 
     virtual void scroll_into_view(const ModelIndex&, [[maybe_unused]] bool scroll_horizontally = true, [[maybe_unused]] bool scroll_vertically = true) { }
 
@@ -181,8 +183,9 @@ protected:
     Gfx::IntPoint m_left_mousedown_position;
     bool m_might_drag { false };
 
-    int m_key_column { -1 };
-    SortOrder m_sort_order;
+    Vector<SortSpec> m_sort_specs {
+        { -1, SortOrder::Ascending }
+    };
 
     PersistentModelIndex m_edit_index;
     PersistentModelIndex m_hovered_index;

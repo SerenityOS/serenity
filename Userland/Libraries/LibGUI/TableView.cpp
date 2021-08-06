@@ -90,7 +90,7 @@ void TableView::paint_event(PaintEvent& event)
             if (!column_header().is_section_visible(column_index))
                 continue;
             int column_width = this->column_width(column_index);
-            bool is_key_column = m_key_column == column_index;
+            bool is_key_column = key_column() == column_index;
             Gfx::IntRect cell_rect(horizontal_padding() + x, y, column_width, row_height());
             auto cell_rect_for_fill = cell_rect.inflated(horizontal_padding() * 2, 0);
             if (is_key_column && is_key_column_highlighted())

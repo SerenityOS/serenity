@@ -34,7 +34,7 @@ ViewModel::Mapping* ViewModel::mapping_for_index(ModelIndex const& proxy_index) 
 
 ModelIndex ViewModel::source_index_from_proxy(ModelIndex const& proxy_index) const
 {
-    //dbgln("ViewModel::source_index_from_proxy Trying to obtain source for: {}", proxy_index);
+    // dbgln("ViewModel::source_index_from_proxy Trying to obtain source for: {}", proxy_index);
     if (!proxy_index.is_valid()) {
         // dbgln("ViewModel::source_index_from_proxy The index wasn't valid");
         return {};
@@ -44,7 +44,7 @@ ModelIndex ViewModel::source_index_from_proxy(ModelIndex const& proxy_index) con
     if (mapping == nullptr)
         return {};
 
-    // dbgln("ViewModel::source_index_from_proxy Got mapping at {}", mapping);
+    // dbgln("ViewModel::source_index_from_proxy Mapping has {} children.", mapping->proxied_rows.size());
     auto target_persistent_index = mapping->proxied_rows.at(proxy_index.row());
     // dbgln("ViewModel::source_index_from_proxy Got persistent index {}", target_persistent_index);
     return m_source->index(target_persistent_index.row(), proxy_index.column(), mapping->source_parent);
@@ -247,58 +247,138 @@ void ViewModel::model_did_update(unsigned flags)
     if (flags & UpdateFlag::InvalidateAllIndices) {
         m_mappings.clear();
     } else {
-        update_mappings();
-        m_mappings.clear();
+        if (!m_received_granular_update) {
+            m_mappings.clear();
+        } else {
+            m_received_granular_update = false;
+        }
     }
 
     Model::did_update(flags);
 }
-void ViewModel::model_did_insert_rows(ModelIndex const& parent, int first, int last)
+
+void ViewModel::model_did_insert_rows(ModelIndex const& source_parent, int first, int last)
 {
-    dbgln("ViewModel::model_did_insert_rows {} {}-{}", parent, first, last);
+    dbgln("ViewModel::model_did_insert_rows {} {}-{}", source_parent, first, last);
+
+    auto it = m_mappings.find(source_parent);
+    // FIXME: Remove this before merge
+    VERIFY(it != m_mappings.end());
+    auto& mapping = *it->value;
+
+    Vector<ModelIndex> inserted_rows;
+    inserted_rows.ensure_capacity(last - first + 1);
+
+    for (int i = first; i <= last; i++) {
+        auto index = m_source->index(i, tree_column(), source_parent);
+        if (!fails_filter(index)) {
+            inserted_rows.append(move(index));
+        }
+    }
+
+    dbgln("I am sorting by the specs {}", m_sort_specs);
+
+    quick_sort(inserted_rows, [&](auto a, auto b) {
+        return less_than(source_parent, a.row(), b.row());
+    });
+
+    // Insert the sorted rows.
+    size_t mapping_index = 0;
+    size_t inserted_index = 0;
+    while (mapping_index < mapping.proxied_rows.size()) {
+        bool is_less_than = less_than(mapping.source_parent, mapping.proxied_rows[mapping_index].row(), inserted_rows[inserted_index].row());
+        if (is_less_than) {
+            mapping_index++;
+            continue;
+        }
+
+        begin_insert_rows(source_parent, mapping_index, mapping_index);
+        mapping.proxied_rows.insert(mapping_index, inserted_rows[inserted_index]);
+        end_insert_rows();
+
+        mapping_index++;
+        inserted_index++;
+    }
+
+    // Insert any rows that have to be inserted at the end.
+    for (; inserted_index < inserted_rows.size(); inserted_index++) {
+        auto mapping_size = mapping.proxied_rows.size();
+
+        begin_insert_rows(source_parent, mapping_size, mapping_size);
+        mapping.proxied_rows.insert(mapping_index, inserted_rows[inserted_index]);
+        end_insert_rows();
+    }
+
+    m_received_granular_update = true;
 }
 
 void ViewModel::model_did_move_rows(ModelIndex const& source_parent, int first, int last, ModelIndex const& target_parent, int target_index)
 {
     dbgln("ViewModel::model_did_move_rows from {} {}-{} to {} {}", source_parent, first, last, target_parent, target_index);
+
+    m_mappings.clear();
+    m_received_granular_update = true;
 }
 
 void ViewModel::model_did_delete_rows(ModelIndex const& parent, int first, int last)
 {
     dbgln("ViewModel::model_did_delete_rows {} {}-{}", parent, first, last);
+
+    m_mappings.clear();
+    m_received_granular_update = true;
 }
 
-bool ViewModel::less_than(ModelIndex const& a, ModelIndex const& b)
+bool ViewModel::less_than(ModelIndex const& parent, int a, int b)
 {
-    auto a_data = a.data(m_sort_role);
-    auto b_data = b.data(m_sort_role);
-    if (a_data.is_string() && b_data.is_string()) {
-        if (m_case_sensitivity == CaseSensitivity::CaseSensitive)
-            return a_data.as_string() < b_data.as_string();
-        else
-            return a_data.as_string().to_lowercase() < b_data.as_string().to_lowercase();
+    bool is_less_than = false;
+    for (auto& sort_spec : m_sort_specs) {
+        if (sort_spec.column == -1) {
+            // -1 means we want to preserve the original sort.
+            is_less_than = sort_spec.order == SortOrder::Ascending ? a < b : b < a;
+        } else {
+            auto a_data = m_source->index(a, sort_spec.column, parent).data(m_sort_role);
+            auto b_data = m_source->index(b, sort_spec.column, parent).data(m_sort_role);
+
+            bool raw_less_than;
+            if (a_data.is_string() && b_data.is_string()) {
+                if (m_case_sensitivity == CaseSensitivity::CaseSensitive)
+                    raw_less_than = a_data.as_string() < b_data.as_string();
+                else
+                    raw_less_than = a_data.as_string().to_lowercase() < b_data.as_string().to_lowercase();
+            } else {
+                raw_less_than = a_data < b_data;
+            }
+
+            is_less_than = sort_spec.order == SortOrder::Ascending ? raw_less_than : !raw_less_than;
+        }
     }
-    return a_data < b_data;
+
+    return is_less_than;
+}
+
+bool ViewModel::fails_filter(ModelIndex const& index)
+{
+    // FIXME: This behavior is ported as-is from FilteringProxyModel. Do we
+    // really want to filter column 0 everytime? Does data_matches care
+    // about the column?
+    auto filter_matches = m_source->data_matches(index, m_filter_term);
+    bool matches = filter_matches == TriState::True;
+    if (filter_matches == TriState::Unknown) {
+        // Default behavior: Try string comparison.
+        auto data = index.data();
+        // FIXME: Should we care about case sensitivity here?
+        if (data.is_string() && data.as_string().contains(m_filter_term))
+            matches = true;
+    }
+
+    return matches;
 }
 
 void ViewModel::sort_mapping(Mapping& mapping)
 {
-    if (m_sort_column == -1) {
-        // -1 means default order (no sorting).
-        quick_sort(mapping.proxied_rows, [](auto& a, auto& b) -> bool {
-            //dbgln("Sorting {} {}", a, b);
-            return a.row() < b.row();
-        });
-        return;
-    }
-
-    // dbgln("ViewModel::sort_mapping Sorting based on column {}", m_sort_column);
-    // TODO: granular updates!
     quick_sort(mapping.proxied_rows, [&](auto a, auto b) {
-        bool is_less_than = less_than(m_source->index(a.row(), m_sort_column, mapping.source_parent), m_source->index(b.row(), m_sort_column, mapping.source_parent));
-        return m_sort_order == SortOrder::Ascending ? is_less_than : !is_less_than;
+        return less_than(mapping.source_parent, a.row(), b.row());
     });
-    // dbgln("ViewModel::sort_mapping Sorting done");
 }
 
 void ViewModel::filter_mapping(Mapping& mapping)
@@ -320,31 +400,14 @@ void ViewModel::filter_mapping(Mapping& mapping)
             child_is_nonempty = !child_mapping.proxied_rows.is_empty();
         }
 
-        // FIXME: This behavior is ported as-is from FilteringProxyModel. Do we
-        // really want to filter column 0 everytime? Does data_matches care
-        // about the column?
         auto index_to_filter = m_source->index(source_row.row(), 0, mapping.source_parent);
-        auto filter_matches = m_source->data_matches(index_to_filter, m_filter_term);
-        bool matches = filter_matches == TriState::True;
-        if (filter_matches == TriState::Unknown) {
-            // Default behavior: Try string comparison.
-            auto data = index_to_filter.data();
-            // FIXME: Should we care about case sensitivity here?
-            if (data.is_string() && data.as_string().contains(m_filter_term))
-                matches = true;
-        }
 
         // NOTE: We don't want to hide the parent index if we found a match in a
         // child, since that would hide the child as well, so if the child
         // mapping is not empty, we must also stay visible.  This behavior can
         // be modified in the future if flattening the matched items is desired.
-        return matches || child_is_nonempty;
+        return fails_filter(index_to_filter) || child_is_nonempty;
     });
-}
-
-void ViewModel::update_mappings()
-{
-    // TODO
 }
 
 Vector<ViewModel::SourceProxyPair> ViewModel::backup_persistent_indices(Mapping const& mapping)
@@ -406,12 +469,12 @@ void ViewModel::filter_impl()
     sort_impl();
 }
 
-void ViewModel::sort(int column, SortOrder sort_order)
+void ViewModel::sort(Vector<SortSpec> const& specs)
 {
-    if (m_sort_column == column && m_sort_order == sort_order)
+    if (specs == m_sort_specs)
         return;
-    m_sort_column = column;
-    m_sort_order = sort_order;
+
+    m_sort_specs = specs;
 
     sort_impl();
     did_update(UpdateFlag::DontInvalidateIndices);
@@ -432,7 +495,7 @@ void ViewModel::set_sort_role(ModelRole role)
     if (m_sort_role == role)
         return;
     m_sort_role = role;
-    if (m_sort_column == -1)
+    if (m_sort_specs[0].column == -1)
         return;
 
     sort_impl();
@@ -443,7 +506,7 @@ void ViewModel::set_case_sensitivity(CaseSensitivity sensitivity)
     if (m_case_sensitivity == sensitivity)
         return;
     m_case_sensitivity = sensitivity;
-    if (m_sort_column == -1)
+    if (m_sort_specs[0].column == -1)
         return;
 
     sort_impl();

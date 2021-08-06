@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
@@ -27,6 +28,16 @@ enum class SortOrder {
     None,
     Ascending,
     Descending
+};
+
+struct SortSpec {
+    int column;
+    SortOrder order;
+
+    bool operator==(SortSpec other) const
+    {
+        return column == other.column && order == other.order;
+    }
 };
 
 class ModelClient {
@@ -76,7 +87,7 @@ public:
     virtual Vector<ModelIndex, 1> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) { return {}; }
 
     virtual bool is_column_sortable([[maybe_unused]] int column_index) const { return true; }
-    virtual void sort([[maybe_unused]] int column, SortOrder) { }
+    virtual void sort(Vector<SortSpec> const&) { }
 
     bool is_within_range(const ModelIndex& index) const
     {
@@ -201,5 +212,17 @@ inline ModelIndex ModelIndex::parent() const
 {
     return m_model ? m_model->parent_index(*this) : ModelIndex();
 }
+
+}
+
+namespace AK {
+
+template<>
+struct Formatter<GUI::SortSpec> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, GUI::SortSpec const& spec)
+    {
+        Formatter<FormatString>::format(builder, "SortSpec({}, {})", spec.column, spec.order == GUI::SortOrder::Ascending ? "Ascending" : "Descending");
+    }
+};
 
 }

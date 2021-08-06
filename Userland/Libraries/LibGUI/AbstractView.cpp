@@ -20,8 +20,7 @@
 namespace GUI {
 
 AbstractView::AbstractView()
-    : m_sort_order(SortOrder::Ascending)
-    , m_selection(*this)
+    : m_selection(*this)
 {
     REGISTER_BOOL_PROPERTY("activates_on_selection", activates_on_selection, set_activates_on_selection);
 
@@ -419,11 +418,17 @@ void AbstractView::set_selection_mode(SelectionMode selection_mode)
 
 void AbstractView::set_key_column_and_sort_order(int column, SortOrder sort_order)
 {
-    m_key_column = column;
-    m_sort_order = sort_order;
+    set_sort_specs({ { .column = column, .order = sort_order } });
+}
+
+void AbstractView::set_sort_specs(Vector<SortSpec> const& specs)
+{
+    VERIFY(!specs.is_empty());
+
+    m_sort_specs = specs;
 
     if (model())
-        model()->sort(column, sort_order);
+        model()->sort(specs);
 
     update();
 }
