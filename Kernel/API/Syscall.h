@@ -177,7 +177,7 @@ enum class NeedsBigProcessLock {
     S(unveil, NeedsBigProcessLock::Yes)                     \
     S(perf_event, NeedsBigProcessLock::Yes)                 \
     S(shutdown, NeedsBigProcessLock::Yes)                   \
-    S(get_stack_bounds, NeedsBigProcessLock::Yes)           \
+    S(get_stack_bounds, NeedsBigProcessLock::No)            \
     S(ptrace, NeedsBigProcessLock::Yes)                     \
     S(sendfd, NeedsBigProcessLock::Yes)                     \
     S(recvfd, NeedsBigProcessLock::Yes)                     \
