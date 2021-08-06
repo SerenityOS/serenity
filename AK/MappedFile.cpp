@@ -15,7 +15,7 @@
 
 namespace AK {
 
-Result<NonnullRefPtr<MappedFile>, OSError> MappedFile::map(const String& path)
+Result<NonnullRefPtr<MappedFile>, OSError> MappedFile::map(String const& path)
 {
     int fd = open(path.characters(), O_RDONLY | O_CLOEXEC, 0);
     if (fd < 0)
