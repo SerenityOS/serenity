@@ -181,7 +181,7 @@ enum class NeedsBigProcessLock {
     S(ptrace, NeedsBigProcessLock::Yes)                     \
     S(sendfd, NeedsBigProcessLock::Yes)                     \
     S(recvfd, NeedsBigProcessLock::Yes)                     \
-    S(sysconf, NeedsBigProcessLock::Yes)                    \
+    S(sysconf, NeedsBigProcessLock::No)                     \
     S(set_process_name, NeedsBigProcessLock::Yes)           \
     S(disown, NeedsBigProcessLock::Yes)                     \
     S(adjtime, NeedsBigProcessLock::Yes)                    \
