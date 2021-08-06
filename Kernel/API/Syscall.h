@@ -133,7 +133,7 @@ enum class NeedsBigProcessLock {
     S(exit_thread, NeedsBigProcessLock::Yes)                \
     S(mknod, NeedsBigProcessLock::Yes)                      \
     S(writev, NeedsBigProcessLock::Yes)                     \
-    S(beep, NeedsBigProcessLock::Yes)                       \
+    S(beep, NeedsBigProcessLock::No)                        \
     S(getsockname, NeedsBigProcessLock::Yes)                \
     S(getpeername, NeedsBigProcessLock::Yes)                \
     S(socketpair, NeedsBigProcessLock::Yes)                 \
