@@ -515,10 +515,6 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
 
     m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
 
-    auto default_favicon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png");
-    VERIFY(default_favicon);
-    m_tab_widget->set_tab_icon(new_tab, default_favicon);
-
     new_tab.on_title_change = [this, &new_tab](auto& title) {
         m_tab_widget->set_tab_title(new_tab, title);
         if (m_tab_widget->active_widget() == &new_tab)
