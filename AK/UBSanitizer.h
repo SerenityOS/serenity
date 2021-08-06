@@ -117,4 +117,10 @@ struct PointerOverflowData {
     SourceLocation location;
 };
 
+struct FloatCastOverflowData {
+    SourceLocation location;
+    TypeDescriptor const& from_type;
+    TypeDescriptor const& to_type;
+};
+
 }
