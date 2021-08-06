@@ -125,7 +125,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_nanoseconds_getter)
     return &ns;
 }
 
-// 8.3.11 Temporal.Instant.prototype.round ( options )
+// 8.3.11 Temporal.Instant.prototype.round ( options ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.round
 JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
 {
     // 1. Let instant be the this value.
