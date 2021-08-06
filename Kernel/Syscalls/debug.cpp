@@ -20,7 +20,7 @@ KResultOr<FlatPtr> Process::sys$dump_backtrace()
 
 KResultOr<FlatPtr> Process::sys$dbgputch(u8 ch)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     dbgputch(ch);
     return 0;
 }
