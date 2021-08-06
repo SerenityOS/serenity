@@ -36,6 +36,7 @@ void InstantPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.add, add, 1, attr);
+    define_native_function(vm.names.subtract, subtract, 1, attr);
     define_native_function(vm.names.round, round, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
@@ -145,6 +146,31 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
 
     // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
     auto* ns = add_instant(global_object, instant->nanoseconds(), duration->hours, duration->minutes, duration->seconds, duration->milliseconds, duration->microseconds, duration->nanoseconds);
+    if (vm.exception())
+        return {};
+
+    // 5. Return ! CreateTemporalInstant(ns).
+    return create_temporal_instant(global_object, *ns);
+}
+
+// 8.3.8 Temporal.Instant.prototype.subtract ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.subtract
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::subtract)
+{
+    auto temporal_duration_like = vm.argument(0);
+
+    // 1. Let instant be the this value.
+    // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
+    auto* instant = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
+    auto duration = to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv });
+    if (vm.exception())
+        return {};
+
+    // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], −duration.[[Hours]], −duration.[[Minutes]], −duration.[[Seconds]], −duration.[[Milliseconds]], −duration.[[Microseconds]], −duration.[[Nanoseconds]]).
+    auto* ns = add_instant(global_object, instant->nanoseconds(), -duration->hours, -duration->minutes, -duration->seconds, -duration->milliseconds, -duration->microseconds, -duration->nanoseconds);
     if (vm.exception())
         return {};
 
