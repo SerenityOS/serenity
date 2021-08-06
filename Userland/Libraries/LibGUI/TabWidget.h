@@ -48,6 +48,7 @@ public:
     }
 
     void remove_tab(Widget& tab) { remove_widget(tab); }
+    void remove_all_tabs_except(Widget& tab);
 
     void set_tab_title(Widget& tab, const StringView& title);
     void set_tab_icon(Widget& tab, const Gfx::Bitmap*);

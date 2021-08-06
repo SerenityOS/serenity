@@ -64,6 +64,22 @@ void TabWidget::remove_widget(Widget& widget)
         on_tab_count_change(m_tabs.size());
 }
 
+void TabWidget::remove_all_tabs_except(Widget& widget)
+{
+    VERIFY(widget.parent() == this);
+    set_active_widget(&widget);
+    m_tabs.remove_all_matching([this, &widget](auto& entry) {
+        bool is_other = &widget != entry.widget;
+        if (is_other)
+            remove_child(*entry.widget);
+        return is_other;
+    });
+    VERIFY(m_tabs.size() == 1);
+    update_focus_policy();
+    if (on_tab_count_change)
+        on_tab_count_change(1);
+}
+
 void TabWidget::update_focus_policy()
 {
     FocusPolicy policy;
