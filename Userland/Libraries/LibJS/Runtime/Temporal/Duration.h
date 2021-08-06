@@ -102,5 +102,6 @@ i8 duration_sign(double years, double months, double weeks, double days, double 
 bool is_valid_duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 PartialDuration to_partial_duration(GlobalObject&, Value temporal_duration_like);
 Duration* create_temporal_duration(GlobalObject&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, FunctionObject* new_target = nullptr);
+Optional<TemporalDuration> to_limited_temporal_duration(GlobalObject&, Value temporal_duration_like, Vector<StringView> const& disallowed_fields);
 
 }

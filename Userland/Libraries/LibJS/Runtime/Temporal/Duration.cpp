@@ -118,7 +118,7 @@ TemporalDuration to_temporal_duration_record(GlobalObject& global_object, Object
         // e. If floor(val) ≠ val, then
         if (floor(value.as_double()) != value.as_double()) {
             // i. Throw a RangeError exception.
-            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValue, property.as_string(), value.to_string_without_side_effects());
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonIntegral, property.as_string(), value.to_string_without_side_effects());
             return {};
         }
 
@@ -264,6 +264,58 @@ Duration* create_temporal_duration(GlobalObject& global_object, double years, do
 
     // 14. Return object.
     return object;
+}
+
+// 7.5.19 ToLimitedTemporalDuration ( temporalDurationLike, disallowedFields ),https://tc39.es/proposal-temporal/#sec-temporal-tolimitedtemporalduration
+Optional<TemporalDuration> to_limited_temporal_duration(GlobalObject& global_object, Value temporal_duration_like, Vector<StringView> const& disallowed_fields)
+{
+    auto& vm = global_object.vm();
+
+    Optional<TemporalDuration> duration;
+
+    // 1. If Type(temporalDurationLike) is not Object, then
+    if (!temporal_duration_like.is_object()) {
+        // a. Let str be ? ToString(temporalDurationLike).
+        auto str = temporal_duration_like.to_string(global_object);
+        if (vm.exception())
+            return {};
+
+        // b. Let duration be ? ParseTemporalDurationString(str).
+        duration = parse_temporal_duration_string(global_object, str);
+        if (vm.exception())
+            return {};
+    }
+    // 2. Else,
+    else {
+        // a. Let duration be ? ToTemporalDurationRecord(temporalDurationLike).
+        duration = to_temporal_duration_record(global_object, temporal_duration_like.as_object());
+        if (vm.exception())
+            return {};
+    }
+
+    // 3. If ! IsValidDuration(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]) is false, throw a RangeError exception.
+    if (!is_valid_duration(duration->years, duration->months, duration->weeks, duration->days, duration->hours, duration->minutes, duration->seconds, duration->milliseconds, duration->microseconds, duration->nanoseconds)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDuration);
+        return {};
+    }
+
+    // 4. For each row of Table 7, except the header row, in table order, do
+    for (auto& [internal_slot, property] : temporal_duration_like_properties<TemporalDuration, double>(vm)) {
+        // a. Let prop be the Property value of the current row.
+
+        // b. Let value be duration's internal slot whose name is the Internal Slot value of the current row.
+        auto value = (*duration).*internal_slot;
+
+        // If value is not 0 and disallowedFields contains prop, then
+        if (value != 0 && disallowed_fields.contains_slow(property.as_string())) {
+            // i. Throw a RangeError exception.
+            vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidDurationPropertyValueNonZero, property.as_string(), value);
+            return {};
+        }
+    }
+
+    // 5. Return duration.
+    return duration;
 }
 
 }

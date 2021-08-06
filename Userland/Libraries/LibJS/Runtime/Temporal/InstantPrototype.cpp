@@ -8,6 +8,7 @@
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
+#include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/Instant.h>
 #include <LibJS/Runtime/Temporal/InstantPrototype.h>
 
@@ -34,6 +35,7 @@ void InstantPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.epochNanoseconds, epoch_nanoseconds_getter, {}, Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.add, add, 1, attr);
     define_native_function(vm.names.round, round, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
@@ -123,6 +125,31 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_nanoseconds_getter)
 
     // 4. Return ns.
     return &ns;
+}
+
+// 8.3.7 Temporal.Instant.prototype.add ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.add
+JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::add)
+{
+    auto temporal_duration_like = vm.argument(0);
+
+    // 1. Let instant be the this value.
+    // 2. Perform ? RequireInternalSlot(instant, [[InitializedTemporalInstant]]).
+    auto* instant = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let duration be ? ToLimitedTemporalDuration(temporalDurationLike, « "years", "months", "weeks", "days" »).
+    auto duration = to_limited_temporal_duration(global_object, temporal_duration_like, { "years"sv, "months"sv, "weeks"sv, "days"sv });
+    if (vm.exception())
+        return {};
+
+    // 4. Let ns be ? AddInstant(instant.[[Nanoseconds]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]]).
+    auto* ns = add_instant(global_object, instant->nanoseconds(), duration->hours, duration->minutes, duration->seconds, duration->milliseconds, duration->microseconds, duration->nanoseconds);
+    if (vm.exception())
+        return {};
+
+    // 5. Return ! CreateTemporalInstant(ns).
+    return create_temporal_instant(global_object, *ns);
 }
 
 // 8.3.11 Temporal.Instant.prototype.round ( options ), https://tc39.es/proposal-temporal/#sec-temporal.instant.prototype.round
