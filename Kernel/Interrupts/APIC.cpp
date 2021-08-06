@@ -15,6 +15,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
+#include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -274,6 +275,19 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
     return true;
 }
 
+UNMAP_AFTER_INIT static NonnullOwnPtr<Memory::Region> create_identity_mapped_region(PhysicalAddress paddr, size_t size)
+{
+    auto vmobject = Memory::AnonymousVMObject::try_create_for_physical_range(paddr, size);
+    VERIFY(vmobject);
+    auto region = MM.allocate_kernel_region_with_vmobject(
+        Memory::VirtualRange { VirtualAddress { static_cast<FlatPtr>(paddr.get()) }, size },
+        vmobject.release_nonnull(),
+        {},
+        Memory::Region::Access::Read | Memory::Region::Access::Write | Memory::Region::Access::Execute);
+    VERIFY(region);
+    return region.release_nonnull();
+}
+
 UNMAP_AFTER_INIT void APIC::do_boot_aps()
 {
     VERIFY(m_processor_enabled_cnt > 1);
@@ -283,7 +297,7 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
     // Also account for the data appended to:
     // * aps_to_enable u32 values for ap_cpu_init_stacks
     // * aps_to_enable u32 values for ap_cpu_init_processor_info_array
-    auto apic_startup_region = MM.allocate_kernel_region_identity(PhysicalAddress(0x8000), Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))), {}, Memory::Region::Access::Read | Memory::Region::Access::Write | Memory::Region::Access::Execute);
+    auto apic_startup_region = create_identity_mapped_region(PhysicalAddress(0x8000), Memory::page_round_up(apic_ap_start_size + (2 * aps_to_enable * sizeof(u32))));
     memcpy(apic_startup_region->vaddr().as_ptr(), reinterpret_cast<const void*>(apic_ap_start), apic_ap_start_size);
 
     // Allocate enough stacks for all APs
@@ -362,6 +376,10 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
     }
 
     dbgln_if(APIC_DEBUG, "APIC: {} processors are initialized and running", m_processor_enabled_cnt);
+
+    // NOTE: Since this region is identity-mapped, we have to unmap it manually to prevent the virtual
+    //       address range from leaking into the general virtual range allocator.
+    apic_startup_region->unmap(Memory::Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
 }
 
 UNMAP_AFTER_INIT void APIC::boot_aps()

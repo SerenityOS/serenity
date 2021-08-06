@@ -733,19 +733,6 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
     return allocate_kernel_region_with_vmobject(range.value(), *vm_object, name, access, cacheable);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region_identity(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
-{
-    auto vm_object = AnonymousVMObject::try_create_for_physical_range(paddr, size);
-    if (!vm_object)
-        return {};
-    VERIFY(!(size % PAGE_SIZE));
-    ScopedSpinLock lock(s_mm_lock);
-    auto range = kernel_page_directory().identity_range_allocator().allocate_specific(VirtualAddress(paddr.get()), size);
-    if (!range.has_value())
-        return {};
-    return allocate_kernel_region_with_vmobject(range.value(), *vm_object, name, access, cacheable);
-}
-
 OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     ScopedSpinLock lock(s_mm_lock);

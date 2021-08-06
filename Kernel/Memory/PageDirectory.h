@@ -39,8 +39,6 @@ public:
     VirtualRangeAllocator& range_allocator() { return m_range_allocator; }
     VirtualRangeAllocator const& range_allocator() const { return m_range_allocator; }
 
-    VirtualRangeAllocator& identity_range_allocator() { return m_identity_range_allocator; }
-
     AddressSpace* address_space() { return m_space; }
     const AddressSpace* address_space() const { return m_space; }
 
@@ -53,7 +51,6 @@ private:
 
     AddressSpace* m_space { nullptr };
     VirtualRangeAllocator m_range_allocator;
-    VirtualRangeAllocator m_identity_range_allocator;
 #if ARCH(X86_64)
     RefPtr<PhysicalPage> m_pml4t;
 #endif
