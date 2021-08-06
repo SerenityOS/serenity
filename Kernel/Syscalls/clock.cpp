@@ -12,7 +12,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(stdio);
 
     if (!TimeManagement::is_valid_clock_id(clock_id))
