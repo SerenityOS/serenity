@@ -12,6 +12,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
@@ -40,7 +41,8 @@ protected:
 class Image : public RefCounted<Image> {
 public:
     static RefPtr<Image> try_create_with_size(Gfx::IntSize const&);
-    static Result<NonnullRefPtr<Image>, String> try_create_from_file(String const& file_path);
+    static Result<NonnullRefPtr<Image>, String> try_create_from_fd_and_close(int fd, String const& file_path);
+    static Result<NonnullRefPtr<Image>, String> try_create_from_path(String const& file_path);
     static RefPtr<Image> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap>);
 
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
@@ -58,9 +60,10 @@ public:
     void restore_snapshot(Image const&);
 
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect) const;
+    Result<void, String> write_to_fd_and_close(int fd) const;
     Result<void, String> write_to_file(String const& file_path) const;
-    Result<void, String> export_bmp_to_file(String const& file_path, bool preserve_alpha_channel);
-    Result<void, String> export_png_to_file(String const& file_path, bool preserve_alpha_channel);
+    Result<void, String> export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel);
+    Result<void, String> export_png_to_fd_and_close(int fd, bool preserve_alpha_channel);
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);
@@ -89,7 +92,9 @@ public:
 private:
     explicit Image(Gfx::IntSize const&);
 
-    static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_file(String const& file_path);
+    static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_fd(int fd, String const& file_path);
+    static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_path(String const& file_path);
+    static Result<NonnullRefPtr<Image>, String> try_create_from_pixel_paint_file(Core::File& file, String const& file_path);
 
     void did_change(Gfx::IntRect const& modified_rect = {});
     void did_modify_layer_stack();
