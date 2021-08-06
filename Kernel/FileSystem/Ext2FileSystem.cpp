@@ -132,7 +132,7 @@ bool Ext2FS::initialize()
 
     auto blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
     BlockIndex first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
-    m_cached_group_descriptor_table = KBuffer::try_create_with_size(block_size() * blocks_to_read, Memory::Region::Access::Read | Memory::Region::Access::Write, "Ext2FS: Block group descriptors");
+    m_cached_group_descriptor_table = KBuffer::try_create_with_size(block_size() * blocks_to_read, Memory::Region::Access::ReadWrite, "Ext2FS: Block group descriptors");
     if (!m_cached_group_descriptor_table) {
         dbgln("Ext2FS: Failed to allocate memory for group descriptor table");
         return false;
@@ -1505,7 +1505,7 @@ KResultOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_bloc
             return cached_bitmap;
     }
 
-    auto block = KBuffer::try_create_with_size(block_size(), Memory::Region::Access::Read | Memory::Region::Access::Write, "Ext2FS: Cached bitmap block");
+    auto block = KBuffer::try_create_with_size(block_size(), Memory::Region::Access::ReadWrite, "Ext2FS: Cached bitmap block");
     if (!block)
         return ENOMEM;
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());

@@ -195,7 +195,7 @@ UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
     m_io_base = IOAddress(PCI::get_BAR1(pci_address()) & ~1);
 
     size_t mmio_base_size = PCI::get_BAR_space_size(pci_address(), 0);
-    m_mmio_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(pci_address()))), Memory::page_round_up(mmio_base_size), "E1000 MMIO", Memory::Region::Access::Read | Memory::Region::Access::Write, Memory::Region::Cacheable::No);
+    m_mmio_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(pci_address()))), Memory::page_round_up(mmio_base_size), "E1000 MMIO", Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No);
     if (!m_mmio_region)
         return false;
     m_mmio_base = m_mmio_region->vaddr();
@@ -221,8 +221,8 @@ UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
 
 UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
     : PCI::Device(address, irq)
-    , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16), "E1000 RX Descriptors", Memory::Region::Access::Read | Memory::Region::Access::Write))
-    , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16), "E1000 TX Descriptors", Memory::Region::Access::Read | Memory::Region::Access::Write))
+    , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16), "E1000 RX Descriptors", Memory::Region::Access::ReadWrite))
+    , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16), "E1000 TX Descriptors", Memory::Region::Access::ReadWrite))
 {
     set_interface_name(pci_address());
 }
@@ -320,7 +320,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
     constexpr auto rx_buffer_size = 8192;
     constexpr auto rx_buffer_page_count = rx_buffer_size / PAGE_SIZE;
 
-    m_rx_buffer_region = MM.allocate_contiguous_kernel_region(rx_buffer_size * number_of_rx_descriptors, "E1000 RX buffers", Memory::Region::Access::Read | Memory::Region::Access::Write);
+    m_rx_buffer_region = MM.allocate_contiguous_kernel_region(rx_buffer_size * number_of_rx_descriptors, "E1000 RX buffers", Memory::Region::Access::ReadWrite);
     for (size_t i = 0; i < number_of_rx_descriptors; ++i) {
         auto& descriptor = rx_descriptors[i];
         m_rx_buffers[i] = m_rx_buffer_region->vaddr().as_ptr() + rx_buffer_size * i;
@@ -343,7 +343,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
 
     constexpr auto tx_buffer_size = 8192;
     constexpr auto tx_buffer_page_count = tx_buffer_size / PAGE_SIZE;
-    m_tx_buffer_region = MM.allocate_contiguous_kernel_region(tx_buffer_size * number_of_tx_descriptors, "E1000 TX buffers", Memory::Region::Access::Read | Memory::Region::Access::Write);
+    m_tx_buffer_region = MM.allocate_contiguous_kernel_region(tx_buffer_size * number_of_tx_descriptors, "E1000 TX buffers", Memory::Region::Access::ReadWrite);
 
     for (size_t i = 0; i < number_of_tx_descriptors; ++i) {
         auto& descriptor = tx_descriptors[i];

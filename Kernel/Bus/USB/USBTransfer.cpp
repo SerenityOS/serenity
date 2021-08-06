@@ -24,7 +24,7 @@ Transfer::Transfer(Pipe& pipe, u16 len, Memory::AnonymousVMObject& vmobject)
 {
     // Initialize data buffer for transfer
     // This will definitely need to be refactored in the future, I doubt this will scale well...
-    m_data_buffer = MM.allocate_kernel_region_with_vmobject(vmobject, PAGE_SIZE, "USB Transfer Buffer", Memory::Region::Access::Read | Memory::Region::Access::Write);
+    m_data_buffer = MM.allocate_kernel_region_with_vmobject(vmobject, PAGE_SIZE, "USB Transfer Buffer", Memory::Region::Access::ReadWrite);
 }
 
 Transfer::~Transfer()

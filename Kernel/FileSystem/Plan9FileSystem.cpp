@@ -560,7 +560,7 @@ KResult Plan9FS::read_and_dispatch_one_message()
     if (result.is_error())
         return result;
 
-    auto buffer = KBuffer::try_create_with_size(header.size, Memory::Region::Access::Read | Memory::Region::Access::Write);
+    auto buffer = KBuffer::try_create_with_size(header.size, Memory::Region::Access::ReadWrite);
     if (!buffer)
         return ENOMEM;
     // Copy the already read header into the buffer.

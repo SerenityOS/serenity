@@ -39,6 +39,9 @@ public:
         HasBeenReadable = 16,
         HasBeenWritable = 32,
         HasBeenExecutable = 64,
+        ReadOnly = Read,
+        ReadWrite = Read | Write,
+        ReadWriteExecute = Read | Write | Execute,
     };
 
     enum class Cacheable {

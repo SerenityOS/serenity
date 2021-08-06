@@ -55,7 +55,7 @@ KResultOr<FlatPtr> Process::sys$module_load(Userspace<const char*> user_path, si
     elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
         if (!section.size())
             return;
-        auto section_storage = KBuffer::copy(section.raw_data(), section.size(), Memory::Region::Access::Read | Memory::Region::Access::Write | Memory::Region::Access::Execute);
+        auto section_storage = KBuffer::copy(section.raw_data(), section.size(), Memory::Region::Access::ReadWriteExecute);
         section_storage_by_name.set(section.name(), section_storage.data());
         module->sections.append(move(section_storage));
     });
