@@ -96,7 +96,8 @@ enum class FlexWrap {
 
 enum class FlexBasis {
     Content,
-    Length
+    Length,
+    Auto,
 };
 
 enum class WhiteSpace {

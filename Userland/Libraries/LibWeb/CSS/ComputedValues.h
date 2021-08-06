@@ -41,7 +41,7 @@ public:
 };
 
 struct FlexBasisData {
-    CSS::FlexBasis type { CSS::FlexBasis::Content };
+    CSS::FlexBasis type { CSS::FlexBasis::Auto };
     CSS::Length length {};
 };
 
