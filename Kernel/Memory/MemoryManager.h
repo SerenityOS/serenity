@@ -46,7 +46,7 @@ inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)
     return virtual_ - physical_to_virtual_offset;
 }
 
-enum class UsedMemoryVirtualRangeType {
+enum class UsedMemoryRangeType {
     LowMemory = 0,
     Prekernel,
     Kernel,
@@ -54,7 +54,7 @@ enum class UsedMemoryVirtualRangeType {
     PhysicalPages,
 };
 
-static constexpr StringView UserMemoryVirtualRangeTypeNames[] {
+static constexpr StringView UserMemoryRangeTypeNames[] {
     "Low memory",
     "Prekernel",
     "Kernel",
@@ -62,18 +62,18 @@ static constexpr StringView UserMemoryVirtualRangeTypeNames[] {
     "Physical Pages"
 };
 
-struct UsedMemoryVirtualRange {
-    UsedMemoryVirtualRangeType type {};
+struct UsedMemoryRange {
+    UsedMemoryRangeType type {};
     PhysicalAddress start;
     PhysicalAddress end;
 };
 
-struct ContiguousReservedMemoryVirtualRange {
+struct ContiguousReservedMemoryRange {
     PhysicalAddress start;
     PhysicalSize length {};
 };
 
-enum class PhysicalMemoryVirtualRangeType {
+enum class PhysicalMemoryRangeType {
     Usable = 0,
     Reserved,
     ACPI_Reclaimable,
@@ -82,8 +82,8 @@ enum class PhysicalMemoryVirtualRangeType {
     Unknown,
 };
 
-struct PhysicalMemoryVirtualRange {
-    PhysicalMemoryVirtualRangeType type { PhysicalMemoryVirtualRangeType::Unknown };
+struct PhysicalMemoryRange {
+    PhysicalMemoryRangeType type { PhysicalMemoryRangeType::Unknown };
     PhysicalAddress start;
     PhysicalSize length {};
 };
@@ -229,7 +229,7 @@ public:
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
-    Vector<UsedMemoryVirtualRange> const& used_memory_ranges() { return m_used_memory_ranges; }
+    Vector<UsedMemoryRange> const& used_memory_ranges() { return m_used_memory_ranges; }
     bool is_allowed_to_mmap_to_userspace(PhysicalAddress, VirtualRange const&) const;
 
     PhysicalPageEntry& get_physical_page_entry(PhysicalAddress);
@@ -287,9 +287,9 @@ private:
 
     Region::ListInMemoryManager m_user_regions;
     Region::ListInMemoryManager m_kernel_regions;
-    Vector<UsedMemoryVirtualRange> m_used_memory_ranges;
-    Vector<PhysicalMemoryVirtualRange> m_physical_memory_ranges;
-    Vector<ContiguousReservedMemoryVirtualRange> m_reserved_memory_ranges;
+    Vector<UsedMemoryRange> m_used_memory_ranges;
+    Vector<PhysicalMemoryRange> m_physical_memory_ranges;
+    Vector<ContiguousReservedMemoryRange> m_reserved_memory_ranges;
 
     VMObject::List m_vmobjects;
 };
