@@ -20,6 +20,7 @@ class MappedFile : public RefCounted<MappedFile> {
 
 public:
     static Result<NonnullRefPtr<MappedFile>, OSError> map(const String& path);
+    static Result<NonnullRefPtr<MappedFile>, OSError> map_from_fd_and_close(int fd, String const& path);
     ~MappedFile();
 
     void* data() { return m_data; }
