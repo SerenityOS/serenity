@@ -10,6 +10,7 @@
 #include <FileSystemAccessServer/FileSystemAccessServerEndpoint.h>
 #include <LibCore/File.h>
 #include <LibCore/Promise.h>
+#include <LibCore/StandardPaths.h>
 #include <LibIPC/ServerConnection.h>
 
 namespace FileSystemAccessClient {
@@ -27,7 +28,7 @@ class Client final
 
 public:
     Result request_file(i32 parent_window_id, String const& path, Core::OpenMode mode);
-    Result open_file(i32 parent_window_id);
+    Result open_file(i32 parent_window_id, String const& window_title = {}, StringView const& path = Core::StandardPaths::home_directory());
     Result save_file(i32 parent_window_id, String const& name, String const ext);
 
     static Client& the();
