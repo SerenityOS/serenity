@@ -9,7 +9,7 @@ describe("correct behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("this value must be a Temporal.Calendar object", () => {
         expect(() => {
             Temporal.Calendar.prototype.toString.call("foo");

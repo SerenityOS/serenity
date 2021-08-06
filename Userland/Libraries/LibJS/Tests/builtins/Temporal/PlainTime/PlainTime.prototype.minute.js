@@ -5,7 +5,7 @@ describe("correct behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("this value must be a Temporal.PlainTime object", () => {
         expect(() => {
             Reflect.get(Temporal.PlainTime.prototype, "minute", "foo");

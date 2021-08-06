@@ -6,7 +6,7 @@ describe("correct behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("this value must be a Temporal.PlainDate object", () => {
         expect(() => {
             Reflect.get(Temporal.PlainDate.prototype, "calendar", "foo");
