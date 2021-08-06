@@ -542,6 +542,14 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
         });
     };
 
+    new_tab.on_tab_close_other_request = [this](auto& tab) {
+        m_tab_widget->deferred_invoke([this, &tab](auto&) {
+            m_tab_widget->remove_all_tabs_except(tab);
+            VERIFY(m_tab_widget->children().size() == 1);
+            m_tab_widget->set_bar_visible(false);
+        });
+    };
+
     new_tab.on_get_cookie = [this](auto& url, auto source) -> String {
         return m_cookie_jar.get_cookie(url, source);
     };
