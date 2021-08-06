@@ -28,13 +28,16 @@ public:
 
     Vector<Color> colors();
 
-    static Result<Vector<Color>, String> load_palette_file(String const&);
-    static Result<void, String> save_palette_file(Vector<Color>, String const&);
+    static Result<Vector<Color>, String> load_palette_fd_and_close(int);
+    static Result<Vector<Color>, String> load_palette_path(String const&);
+    static Result<void, String> save_palette_fd_and_close(Vector<Color>, int);
     static Vector<Color> fallback_colors();
 
     void set_image_editor(ImageEditor&);
 
 private:
+    static Result<Vector<Color>, String> load_palette_file(Core::File&);
+
     explicit PaletteWidget();
 
     ImageEditor* m_editor { nullptr };

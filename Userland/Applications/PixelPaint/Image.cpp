@@ -13,7 +13,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/File.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
@@ -85,13 +84,27 @@ RefPtr<Image> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
     return image;
 }
 
-Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(String const& file_path)
+Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_fd(int fd, String const& file_path)
+{
+    auto file = Core::File::construct();
+    file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
+    if (file->has_error())
+        return String { file->error_string() };
+
+    return try_create_from_pixel_paint_file(file, file_path);
+}
+
+Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_path(String const& file_path)
 {
     auto file_or_error = Core::File::open(file_path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error())
         return file_or_error.error();
 
-    auto& file = *file_or_error.value();
+    return try_create_from_pixel_paint_file(*file_or_error.value(), file_path);
+}
+
+Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(Core::File& file, String const& file_path)
+{
     auto contents = file.read_all();
 
     auto json_or_error = JsonValue::from_string(contents);
@@ -137,9 +150,33 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(Str
     return image.release_nonnull();
 }
 
-Result<NonnullRefPtr<Image>, String> Image::try_create_from_file(String const& file_path)
+Result<NonnullRefPtr<Image>, String> Image::try_create_from_fd_and_close(int fd, String const& file_path)
 {
-    auto image_or_error = try_create_from_pixel_paint_file(file_path);
+    auto image_or_error = try_create_from_pixel_paint_fd(fd, file_path);
+    if (!image_or_error.is_error()) {
+        close(fd);
+        return image_or_error.release_value();
+    }
+
+    auto file_or_error = MappedFile::map_from_fd_and_close(fd, file_path);
+    if (file_or_error.is_error())
+        return String::formatted("Unable to mmap file {}", file_or_error.error().string());
+
+    auto& mapped_file = *file_or_error.value();
+    // FIXME: Find a way to avoid the memory copy here.
+    auto bitmap = try_decode_bitmap(ByteBuffer::copy(mapped_file.bytes()));
+    if (!bitmap)
+        return String { "Unable to decode image"sv };
+    auto image = Image::try_create_from_bitmap(bitmap.release_nonnull());
+    if (!image)
+        return String { "Unable to allocate Image"sv };
+    image->set_path(file_path);
+    return image.release_nonnull();
+}
+
+Result<NonnullRefPtr<Image>, String> Image::try_create_from_path(String const& file_path)
+{
+    auto image_or_error = try_create_from_pixel_paint_path(file_path);
     if (!image_or_error.is_error())
         return image_or_error.release_value();
 
@@ -157,6 +194,40 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_file(String const& f
         return String { "Unable to allocate Image"sv };
     image->set_path(file_path);
     return image.release_nonnull();
+}
+
+Result<void, String> Image::write_to_fd_and_close(int fd) const
+{
+    StringBuilder builder;
+    JsonObjectSerializer json(builder);
+    json.add("width", m_size.width());
+    json.add("height", m_size.height());
+    {
+        auto json_layers = json.add_array("layers");
+        for (const auto& layer : m_layers) {
+            Gfx::BMPWriter bmp_dumber;
+            auto json_layer = json_layers.add_object();
+            json_layer.add("width", layer.size().width());
+            json_layer.add("height", layer.size().height());
+            json_layer.add("name", layer.name());
+            json_layer.add("locationx", layer.location().x());
+            json_layer.add("locationy", layer.location().y());
+            json_layer.add("opacity_percent", layer.opacity_percent());
+            json_layer.add("visible", layer.is_visible());
+            json_layer.add("selected", layer.is_selected());
+            json_layer.add("bitmap", encode_base64(bmp_dumber.dump(layer.bitmap())));
+        }
+    }
+    json.finish();
+
+    auto file = Core::File::construct();
+    file->open(fd, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate, Core::File::ShouldCloseFileDescriptor::Yes);
+    if (file->has_error())
+        return String { file->error_string() };
+
+    if (!file->write(builder.string_view()))
+        return String { file->error_string() };
+    return {};
 }
 
 Result<void, String> Image::write_to_file(const String& file_path) const
@@ -202,11 +273,12 @@ RefPtr<Gfx::Bitmap> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
     return bitmap;
 }
 
-Result<void, String> Image::export_bmp_to_file(String const& file_path, bool preserve_alpha_channel)
+Result<void, String> Image::export_bmp_to_fd_and_close(int fd, bool preserve_alpha_channel)
 {
-    auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
-    if (file_or_error.is_error())
-        return file_or_error.error();
+    auto file = Core::File::construct();
+    file->open(fd, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate, Core::File::ShouldCloseFileDescriptor::Yes);
+    if (file->has_error())
+        return String { file->error_string() };
 
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = try_compose_bitmap(bitmap_format);
@@ -216,18 +288,18 @@ Result<void, String> Image::export_bmp_to_file(String const& file_path, bool pre
     Gfx::BMPWriter dumper;
     auto encoded_data = dumper.dump(bitmap);
 
-    auto& file = *file_or_error.value();
-    if (!file.write(encoded_data.data(), encoded_data.size()))
+    if (!file->write(encoded_data.data(), encoded_data.size()))
         return String { "Failed to write encoded BMP data to file"sv };
 
     return {};
 }
 
-Result<void, String> Image::export_png_to_file(String const& file_path, bool preserve_alpha_channel)
+Result<void, String> Image::export_png_to_fd_and_close(int fd, bool preserve_alpha_channel)
 {
-    auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
-    if (file_or_error.is_error())
-        return file_or_error.error();
+    auto file = Core::File::construct();
+    file->open(fd, Core::OpenMode::WriteOnly | Core::OpenMode::Truncate, Core::File::ShouldCloseFileDescriptor::Yes);
+    if (file->has_error())
+        return String { file->error_string() };
 
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = try_compose_bitmap(bitmap_format);
@@ -235,8 +307,7 @@ Result<void, String> Image::export_png_to_file(String const& file_path, bool pre
         return String { "Failed to allocate bitmap for encoding"sv };
 
     auto encoded_data = Gfx::PNGWriter::encode(*bitmap);
-    auto& file = *file_or_error.value();
-    if (!file.write(encoded_data.data(), encoded_data.size()))
+    if (!file->write(encoded_data.data(), encoded_data.size()))
         return String { "Failed to write encoded PNG data to file"sv };
 
     return {};
