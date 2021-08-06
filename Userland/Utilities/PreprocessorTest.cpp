@@ -16,5 +16,8 @@ int main(int, char**)
     }
     auto content = file->read_all();
     Cpp::Preprocessor cpp("other.h", StringView { content });
-    dbgln("{}", cpp.process());
+    auto tokens = cpp.process_and_lex();
+    for (auto& token : tokens) {
+        dbgln("{}", token.to_string());
+    }
 }
