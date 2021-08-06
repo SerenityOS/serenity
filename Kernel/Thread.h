@@ -28,7 +28,7 @@
 #include <Kernel/KResult.h>
 #include <Kernel/KString.h>
 #include <Kernel/LockMode.h>
-#include <Kernel/Memory/Range.h>
+#include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/TimerQueue.h>
 #include <Kernel/UnixTypes.h>
@@ -1308,7 +1308,7 @@ private:
     FlatPtr m_kernel_stack_top { 0 };
     OwnPtr<Memory::Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
-    Optional<Memory::Range> m_thread_specific_range;
+    Optional<Memory::VirtualRange> m_thread_specific_range;
     Array<SignalActionData, NSIG> m_signal_action_data;
     Blocker* m_blocker { nullptr };
     Kernel::Mutex* m_blocking_lock { nullptr };

@@ -5,25 +5,25 @@
  */
 
 #include <AK/Checked.h>
-#include <Kernel/Memory/RangeAllocator.h>
+#include <Kernel/Memory/VirtualRangeAllocator.h>
 #include <Kernel/Random.h>
 
 #define VM_GUARD_PAGES
 
 namespace Kernel::Memory {
 
-RangeAllocator::RangeAllocator()
+VirtualRangeAllocator::VirtualRangeAllocator()
     : m_total_range({}, 0)
 {
 }
 
-void RangeAllocator::initialize_with_range(VirtualAddress base, size_t size)
+void VirtualRangeAllocator::initialize_with_range(VirtualAddress base, size_t size)
 {
     m_total_range = { base, size };
-    m_available_ranges.insert(base.get(), Range { base, size });
+    m_available_ranges.insert(base.get(), VirtualRange { base, size });
 }
 
-void RangeAllocator::initialize_from_parent(RangeAllocator const& parent_allocator)
+void VirtualRangeAllocator::initialize_from_parent(VirtualRangeAllocator const& parent_allocator)
 {
     ScopedSpinLock lock(parent_allocator.m_lock);
     m_total_range = parent_allocator.m_total_range;
@@ -33,16 +33,16 @@ void RangeAllocator::initialize_from_parent(RangeAllocator const& parent_allocat
     }
 }
 
-void RangeAllocator::dump() const
+void VirtualRangeAllocator::dump() const
 {
     VERIFY(m_lock.is_locked());
-    dbgln("RangeAllocator({})", this);
+    dbgln("VirtualRangeAllocator({})", this);
     for (auto& range : m_available_ranges) {
         dbgln("    {:x} -> {:x}", range.base().get(), range.end().get() - 1);
     }
 }
 
-void RangeAllocator::carve_at_iterator(auto& it, Range const& range)
+void VirtualRangeAllocator::carve_at_iterator(auto& it, VirtualRange const& range)
 {
     VERIFY(m_lock.is_locked());
     auto remaining_parts = (*it).carve(range);
@@ -56,7 +56,7 @@ void RangeAllocator::carve_at_iterator(auto& it, Range const& range)
     }
 }
 
-Optional<Range> RangeAllocator::allocate_randomized(size_t size, size_t alignment)
+Optional<VirtualRange> VirtualRangeAllocator::allocate_randomized(size_t size, size_t alignment)
 {
     if (!size)
         return {};
@@ -80,7 +80,7 @@ Optional<Range> RangeAllocator::allocate_randomized(size_t size, size_t alignmen
     return allocate_anywhere(size, alignment);
 }
 
-Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
+Optional<VirtualRange> VirtualRangeAllocator::allocate_anywhere(size_t size, size_t alignment)
 {
     if (!size)
         return {};
@@ -114,7 +114,7 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
         FlatPtr initial_base = available_range.base().offset(offset_from_effective_base).get();
         FlatPtr aligned_base = round_up_to_power_of_two(initial_base, alignment);
 
-        Range const allocated_range(VirtualAddress(aligned_base), size);
+        VirtualRange const allocated_range(VirtualAddress(aligned_base), size);
 
         VERIFY(m_total_range.contains(allocated_range));
 
@@ -125,11 +125,11 @@ Optional<Range> RangeAllocator::allocate_anywhere(size_t size, size_t alignment)
         carve_at_iterator(it, allocated_range);
         return allocated_range;
     }
-    dmesgln("RangeAllocator: Failed to allocate anywhere: size={}, alignment={}", size, alignment);
+    dmesgln("VirtualRangeAllocator: Failed to allocate anywhere: size={}, alignment={}", size, alignment);
     return {};
 }
 
-Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
+Optional<VirtualRange> VirtualRangeAllocator::allocate_specific(VirtualAddress base, size_t size)
 {
     if (!size)
         return {};
@@ -137,7 +137,7 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     VERIFY(base.is_page_aligned());
     VERIFY((size % PAGE_SIZE) == 0);
 
-    Range const allocated_range(base, size);
+    VirtualRange const allocated_range(base, size);
     if (!m_total_range.contains(allocated_range)) {
         return {};
     }
@@ -157,7 +157,7 @@ Optional<Range> RangeAllocator::allocate_specific(VirtualAddress base, size_t si
     return {};
 }
 
-void RangeAllocator::deallocate(Range const& range)
+void VirtualRangeAllocator::deallocate(VirtualRange const& range)
 {
     ScopedSpinLock lock(m_lock);
     VERIFY(m_total_range.contains(range));
@@ -166,7 +166,7 @@ void RangeAllocator::deallocate(Range const& range)
     VERIFY(range.base() < range.end());
     VERIFY(!m_available_ranges.is_empty());
 
-    Range merged_range = range;
+    VirtualRange merged_range = range;
 
     {
         // Try merging with preceding range.

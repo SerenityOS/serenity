@@ -12,12 +12,12 @@
 
 namespace Kernel::Memory {
 
-class Range {
-    friend class RangeAllocator;
+class VirtualRange {
+    friend class VirtualRangeAllocator;
 
 public:
-    Range() = delete;
-    Range(VirtualAddress base, size_t size)
+    VirtualRange() = delete;
+    VirtualRange(VirtualAddress base, size_t size)
         : m_base(base)
         , m_size(size)
     {
@@ -31,7 +31,7 @@ public:
 
     VirtualAddress end() const { return m_base.offset(m_size); }
 
-    bool operator==(const Range& other) const
+    bool operator==(VirtualRange const& other) const
     {
         return m_base == other.m_base && m_size == other.m_size;
     }
@@ -43,15 +43,15 @@ public:
         return base >= m_base && base.offset(size) <= end();
     }
 
-    bool contains(const Range& other) const
+    bool contains(VirtualRange const& other) const
     {
         return contains(other.base(), other.size());
     }
 
-    Vector<Range, 2> carve(const Range&) const;
-    Range intersect(const Range&) const;
+    Vector<VirtualRange, 2> carve(VirtualRange const&) const;
+    VirtualRange intersect(VirtualRange const&) const;
 
-    static KResultOr<Range> expand_to_page_boundaries(FlatPtr address, size_t size);
+    static KResultOr<VirtualRange> expand_to_page_boundaries(FlatPtr address, size_t size);
 
 private:
     VirtualAddress m_base;
@@ -61,8 +61,8 @@ private:
 }
 
 template<>
-struct AK::Formatter<Kernel::Memory::Range> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, Kernel::Memory::Range value)
+struct AK::Formatter<Kernel::Memory::VirtualRange> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, Kernel::Memory::VirtualRange value)
     {
         return Formatter<FormatString>::format(builder, "{} - {} (size {:p})", value.base().as_ptr(), value.base().offset(value.size() - 1).as_ptr(), value.size());
     }

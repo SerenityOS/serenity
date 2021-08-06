@@ -194,7 +194,7 @@ KResultOr<u32> Process::peek_user_data(Userspace<const u32*> address)
 
 KResult Process::poke_user_data(Userspace<u32*> address, u32 data)
 {
-    Memory::Range range = { VirtualAddress(address), sizeof(u32) };
+    Memory::VirtualRange range = { VirtualAddress(address), sizeof(u32) };
     auto* region = space().find_region_containing(range);
     if (!region)
         return EFAULT;

@@ -37,7 +37,7 @@ void MemoryDevice::did_seek(FileDescription&, off_t)
     TODO();
 }
 
-KResultOr<Memory::Region*> MemoryDevice::mmap(Process& process, FileDescription&, Memory::Range const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> MemoryDevice::mmap(Process& process, FileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     auto viewed_address = PhysicalAddress(offset);
 

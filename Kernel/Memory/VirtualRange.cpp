@@ -7,16 +7,16 @@
 
 #include <AK/Vector.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/Range.h>
+#include <Kernel/Memory/VirtualRange.h>
 #include <LibC/limits.h>
 
 namespace Kernel::Memory {
 
-Vector<Range, 2> Range::carve(const Range& taken) const
+Vector<VirtualRange, 2> VirtualRange::carve(VirtualRange const& taken) const
 {
     VERIFY((taken.size() % PAGE_SIZE) == 0);
 
-    Vector<Range, 2> parts;
+    Vector<VirtualRange, 2> parts;
     if (taken == *this)
         return {};
     if (taken.base() > base())
@@ -25,7 +25,7 @@ Vector<Range, 2> Range::carve(const Range& taken) const
         parts.append({ taken.end(), end().get() - taken.end().get() });
     return parts;
 }
-Range Range::intersect(const Range& other) const
+VirtualRange VirtualRange::intersect(VirtualRange const& other) const
 {
     if (*this == other) {
         return *this;
@@ -33,10 +33,10 @@ Range Range::intersect(const Range& other) const
     auto new_base = max(base(), other.base());
     auto new_end = min(end(), other.end());
     VERIFY(new_base < new_end);
-    return Range(new_base, (new_end - new_base).get());
+    return VirtualRange(new_base, (new_end - new_base).get());
 }
 
-KResultOr<Range> Range::expand_to_page_boundaries(FlatPtr address, size_t size)
+KResultOr<VirtualRange> VirtualRange::expand_to_page_boundaries(FlatPtr address, size_t size)
 {
     if (page_round_up_would_wrap(size))
         return EINVAL;
@@ -50,7 +50,7 @@ KResultOr<Range> Range::expand_to_page_boundaries(FlatPtr address, size_t size)
     auto base = VirtualAddress { address }.page_base();
     auto end = page_round_up(address + size);
 
-    return Range { base, end - base.get() };
+    return VirtualRange { base, end - base.get() };
 }
 
 }

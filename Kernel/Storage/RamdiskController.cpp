@@ -47,7 +47,7 @@ RamdiskController::RamdiskController()
     // Populate ramdisk controllers from Multiboot boot modules, if any.
     size_t count = 0;
     for (auto& used_memory_range : MM.used_memory_ranges()) {
-        if (used_memory_range.type == Memory::UsedMemoryRangeType::BootModule) {
+        if (used_memory_range.type == Memory::UsedMemoryVirtualRangeType::BootModule) {
             size_t length = Memory::page_round_up(used_memory_range.end.get()) - used_memory_range.start.get();
             auto region = MM.allocate_kernel_region(used_memory_range.start, length, "Ramdisk", Memory::Region::Access::Read | Memory::Region::Access::Write);
             if (!region)

@@ -35,20 +35,20 @@ public:
 
     KResult unmap_mmap_range(VirtualAddress, size_t);
 
-    Optional<Range> allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
+    Optional<VirtualRange> allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
 
-    KResultOr<Region*> allocate_region_with_vmobject(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
-    KResultOr<Region*> allocate_region(const Range&, StringView name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
+    KResultOr<Region*> allocate_region_with_vmobject(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
+    KResultOr<Region*> allocate_region(VirtualRange const&, StringView name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
     void deallocate_region(Region& region);
     NonnullOwnPtr<Region> take_region(Region& region);
 
-    KResultOr<Region*> try_allocate_split_region(Region const& source_region, Range const&, size_t offset_in_vmobject);
-    KResultOr<Vector<Region*, 2>> try_split_region_around_range(Region const& source_region, Range const&);
+    KResultOr<Region*> try_allocate_split_region(Region const& source_region, VirtualRange const&, size_t offset_in_vmobject);
+    KResultOr<Vector<Region*, 2>> try_split_region_around_range(Region const& source_region, VirtualRange const&);
 
-    Region* find_region_from_range(const Range&);
-    Region* find_region_containing(const Range&);
+    Region* find_region_from_range(VirtualRange const&);
+    Region* find_region_containing(VirtualRange const&);
 
-    Vector<Region*> find_regions_intersecting(const Range&);
+    Vector<Region*> find_regions_intersecting(VirtualRange const&);
 
     bool enforces_syscall_regions() const { return m_enforces_syscall_regions; }
     void set_enforces_syscall_regions(bool b) { m_enforces_syscall_regions = b; }
@@ -76,7 +76,7 @@ private:
     RedBlackTree<FlatPtr, NonnullOwnPtr<Region>> m_regions;
 
     struct RegionLookupCache {
-        Optional<Range> range;
+        Optional<VirtualRange> range;
         WeakPtr<Region> region;
     };
     RegionLookupCache m_region_lookup_cache;

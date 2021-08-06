@@ -241,7 +241,7 @@ KResult FrameBufferDevice::ioctl(FileDescription&, unsigned request, Userspace<v
     };
 }
 
-KResultOr<Memory::Region*> FrameBufferDevice::mmap(Process& process, FileDescription&, Memory::Range const& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> FrameBufferDevice::mmap(Process& process, FileDescription&, Memory::VirtualRange const& range, u64 offset, int prot, bool shared)
 {
     REQUIRE_PROMISE(video);
     if (!shared)
