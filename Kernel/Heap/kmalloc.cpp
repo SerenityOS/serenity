@@ -16,12 +16,12 @@
 #include <Kernel/Heap/Heap.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Sections.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/VM/MemoryManager.h>
 
 #define CHUNK_SIZE 32
 #define POOL_SIZE (2 * MiB)

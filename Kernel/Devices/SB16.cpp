@@ -11,10 +11,10 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/IO.h>
+#include <Kernel/Memory/AnonymousVMObject.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
-#include <Kernel/VM/AnonymousVMObject.h>
-#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 #define SB16_DEFAULT_IRQ 5

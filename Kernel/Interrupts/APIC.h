@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Time/HardwareTimer.h>
-#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 

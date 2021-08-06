@@ -15,7 +15,7 @@
 #include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
-#include <Kernel/VM/Region.h>
+#include <Kernel/Memory/Region.h>
 
 namespace Kernel {
 

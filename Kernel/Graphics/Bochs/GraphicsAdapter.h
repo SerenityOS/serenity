@@ -12,8 +12,8 @@
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
+#include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/PhysicalAddress.h>
-#include <Kernel/VM/TypedMapping.h>
 
 namespace Kernel {
 

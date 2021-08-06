@@ -5,10 +5,10 @@
  */
 
 #include <AK/NonnullRefPtrVector.h>
+#include <Kernel/Memory/AnonymousVMObject.h>
+#include <Kernel/Memory/InodeVMObject.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
-#include <Kernel/VM/AnonymousVMObject.h>
-#include <Kernel/VM/InodeVMObject.h>
-#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 

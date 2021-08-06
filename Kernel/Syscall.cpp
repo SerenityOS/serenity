@@ -7,11 +7,11 @@
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/Interrupts.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/ThreadTracer.h>
-#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 

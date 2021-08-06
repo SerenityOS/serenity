@@ -7,9 +7,9 @@
 #include <AK/Checked.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
-#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 

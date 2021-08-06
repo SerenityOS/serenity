@@ -7,6 +7,8 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/Noncopyable.h>
+#include <AK/kmalloc.h>
 
 namespace AK {
 

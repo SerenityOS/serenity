@@ -8,8 +8,8 @@
 
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/PhysicalAddress.h>
-#include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
 
 namespace Kernel {

@@ -6,8 +6,8 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
-#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/UserOrKernelBuffer.h>
-#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 

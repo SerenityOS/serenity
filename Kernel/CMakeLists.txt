@@ -131,6 +131,23 @@ set(KERNEL_SOURCES
     KLexicalPath.cpp
     KString.cpp
     KSyms.cpp
+    Memory/AnonymousVMObject.cpp
+    Memory/InodeVMObject.cpp
+    Memory/MemoryManager.cpp
+    Memory/PageDirectory.cpp
+    Memory/PhysicalPage.cpp
+    Memory/PhysicalRegion.cpp
+    Memory/PhysicalZone.cpp
+    Memory/PrivateInodeVMObject.cpp
+    Memory/ProcessPagingScope.cpp
+    Memory/Range.cpp
+    Memory/RangeAllocator.cpp
+    Memory/Region.cpp
+    Memory/RingBuffer.cpp
+    Memory/ScatterGatherList.cpp
+    Memory/SharedInodeVMObject.cpp
+    Memory/Space.cpp
+    Memory/VMObject.cpp
     MiniStdLib.cpp
     Mutex.cpp
     Net/E1000ENetworkAdapter.cpp
@@ -140,8 +157,8 @@ set(KERNEL_SOURCES
     Net/LoopbackAdapter.cpp
     Net/NE2000NetworkAdapter.cpp
     Net/NetworkAdapter.cpp
-    Net/NetworkingManagement.cpp
     Net/NetworkTask.cpp
+    Net/NetworkingManagement.cpp
     Net/RTL8139NetworkAdapter.cpp
     Net/RTL8168NetworkAdapter.cpp
     Net/Routing.cpp
@@ -255,23 +272,6 @@ set(KERNEL_SOURCES
     VirtIO/VirtIOConsolePort.cpp
     VirtIO/VirtIOQueue.cpp
     VirtIO/VirtIORNG.cpp
-    VM/AnonymousVMObject.cpp
-    VM/InodeVMObject.cpp
-    VM/MemoryManager.cpp
-    VM/PageDirectory.cpp
-    VM/PhysicalPage.cpp
-    VM/PhysicalRegion.cpp
-    VM/PhysicalZone.cpp
-    VM/PrivateInodeVMObject.cpp
-    VM/ProcessPagingScope.cpp
-    VM/Range.cpp
-    VM/RangeAllocator.cpp
-    VM/Region.cpp
-    VM/RingBuffer.cpp
-    VM/ScatterGatherList.cpp
-    VM/SharedInodeVMObject.cpp
-    VM/Space.cpp
-    VM/VMObject.cpp
     WaitQueue.cpp
     WorkQueue.cpp
     init.cpp

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Interrupts/IRQController.h>
-#include <Kernel/VM/TypedMapping.h>
+#include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel {
 struct [[gnu::packed]] ioapic_mmio_regs {

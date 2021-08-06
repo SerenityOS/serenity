@@ -9,8 +9,8 @@
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Bus/PCI/MMIOAccess.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Sections.h>
-#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 namespace PCI {

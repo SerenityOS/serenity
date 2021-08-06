@@ -8,10 +8,10 @@
 
 #include <AK/IntrusiveList.h>
 #include <AK/NonnullRefPtr.h>
+#include <Kernel/Memory/ProcessPagingScope.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UserOrKernelBuffer.h>
-#include <Kernel/VM/ProcessPagingScope.h>
 #include <Kernel/WaitQueue.h>
 
 namespace Kernel {

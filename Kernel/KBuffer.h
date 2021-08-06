@@ -20,8 +20,8 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/Region.h>
+#include <Kernel/Memory/MemoryManager.h>
+#include <Kernel/Memory/Region.h>
 
 namespace Kernel {
 

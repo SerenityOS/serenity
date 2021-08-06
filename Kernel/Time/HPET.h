@@ -10,8 +10,8 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <Kernel/Memory/Region.h>
 #include <Kernel/PhysicalAddress.h>
-#include <Kernel/VM/Region.h>
 
 namespace Kernel {
 

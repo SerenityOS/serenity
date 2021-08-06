@@ -20,6 +20,7 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
+#include <Kernel/Memory/Space.h>
 #include <Kernel/Mutex.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/ProcessGroup.h>
@@ -27,7 +28,6 @@
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/UnveilNode.h>
-#include <Kernel/VM/Space.h>
 #include <LibC/elf.h>
 #include <LibC/signal_numbers.h>
 

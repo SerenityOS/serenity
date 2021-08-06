@@ -9,9 +9,9 @@
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KBufferBuilder.h>
+#include <Kernel/Memory/MemoryManager.h>
+#include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/TypedMapping.h>
 
 namespace Kernel {
 

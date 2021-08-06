@@ -10,6 +10,7 @@
 #include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Mutex.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
@@ -17,7 +18,6 @@
 #include <Kernel/Storage/AHCIController.h>
 #include <Kernel/Storage/AHCIPort.h>
 #include <Kernel/Storage/StorageDevice.h>
-#include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
 
 namespace Kernel {

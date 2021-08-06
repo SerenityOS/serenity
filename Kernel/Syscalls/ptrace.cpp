@@ -6,13 +6,13 @@
  */
 
 #include <AK/ScopeGuard.h>
+#include <Kernel/Memory/MemoryManager.h>
+#include <Kernel/Memory/PrivateInodeVMObject.h>
+#include <Kernel/Memory/ProcessPagingScope.h>
+#include <Kernel/Memory/Region.h>
+#include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Process.h>
 #include <Kernel/ThreadTracer.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/PrivateInodeVMObject.h>
-#include <Kernel/VM/ProcessPagingScope.h>
-#include <Kernel/VM/Region.h>
-#include <Kernel/VM/SharedInodeVMObject.h>
 
 namespace Kernel {
 

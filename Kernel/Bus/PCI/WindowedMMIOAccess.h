@@ -13,10 +13,10 @@
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/MMIOAccess.h>
-#include <Kernel/VM/AnonymousVMObject.h>
-#include <Kernel/VM/PhysicalRegion.h>
-#include <Kernel/VM/Region.h>
-#include <Kernel/VM/VMObject.h>
+#include <Kernel/Memory/AnonymousVMObject.h>
+#include <Kernel/Memory/PhysicalRegion.h>
+#include <Kernel/Memory/Region.h>
+#include <Kernel/Memory/VMObject.h>
 
 namespace Kernel {
 namespace PCI {

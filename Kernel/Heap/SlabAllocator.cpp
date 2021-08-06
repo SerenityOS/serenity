@@ -8,8 +8,8 @@
 #include <AK/Memory.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/Memory/Region.h>
 #include <Kernel/Sections.h>
-#include <Kernel/VM/Region.h>
 
 #define SANITIZE_SLABS
 

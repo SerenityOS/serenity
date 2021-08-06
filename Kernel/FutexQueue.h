@@ -8,9 +8,9 @@
 
 #include <AK/Atomic.h>
 #include <AK/RefCounted.h>
+#include <Kernel/Memory/VMObject.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/Thread.h>
-#include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
 

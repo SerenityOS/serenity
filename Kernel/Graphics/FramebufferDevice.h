@@ -11,9 +11,9 @@
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
+#include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/SpinLock.h>
-#include <Kernel/VM/AnonymousVMObject.h>
 
 namespace Kernel {
 
