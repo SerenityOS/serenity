@@ -499,31 +499,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         directory_view.open(location_textbox.text());
     };
 
-    auto refresh_tree_view = [&] {
-        directories_model->invalidate();
-
-        auto current_path = directory_view.path();
-
-        struct stat st;
-        // If the directory no longer exists, we find a parent that does.
-        while (stat(current_path.characters(), &st) != 0) {
-            directory_view.open_parent_directory();
-            current_path = directory_view.path();
-            if (current_path == directories_model->root_path()) {
-                break;
-            }
-        }
-
-        // Reselect the existing folder in the tree.
-        auto new_index = directories_model->index(current_path, GUI::FileSystemModel::Column::Name);
-        if (new_index.is_valid()) {
-            tree_view.expand_all_parents_of(new_index);
-            tree_view.set_cursor(new_index, GUI::AbstractView::SelectionUpdate::Set, true);
-        }
-
-        directory_view.refresh();
-    };
-
     auto directory_context_menu = GUI::Menu::construct("Directory View Directory");
     auto directory_view_context_menu = GUI::Menu::construct("Directory View");
     auto tree_view_directory_context_menu = GUI::Menu::construct("Tree View Directory");
@@ -663,7 +638,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 VERIFY_NOT_REACHED();
 
             do_copy(paths, FileOperation::Move);
-            refresh_tree_view();
         },
         window);
     cut_action->set_enabled(false);
@@ -679,7 +653,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 VERIFY_NOT_REACHED();
 
             do_copy(paths, FileOperation::Copy);
-            refresh_tree_view();
         },
         window);
     copy_action->set_enabled(false);
@@ -746,7 +719,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                     return;
 
                 do_unzip_archive(paths, directory_view.window());
-                refresh_tree_view();
             },
             window);
 
@@ -777,7 +749,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             else
                 target_directory = directory_view.path();
             do_paste(target_directory, directory_view.window());
-            refresh_tree_view();
         },
         window);
 
@@ -789,7 +760,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             else
                 target_directory = directory_view.path();
             do_paste(target_directory, directory_view.window());
-            refresh_tree_view();
         },
         window);
 
@@ -819,7 +789,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto tree_view_delete_action = GUI::CommonActions::make_delete_action(
         [&](auto&) {
             delete_paths(tree_view_selected_file_paths(), true, window);
-            refresh_tree_view();
         },
         &tree_view);
 
@@ -830,18 +799,15 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             tree_view_delete_action->activate();
         else
             directory_view.delete_action().activate();
-        refresh_tree_view();
     });
     focus_dependent_delete_action->set_enabled(false);
 
     auto mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"), [&](GUI::Action const&) {
         directory_view.mkdir_action().activate();
-        refresh_tree_view();
     });
 
     auto touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"), [&](GUI::Action const&) {
         directory_view.touch_action().activate();
-        refresh_tree_view();
     });
 
     auto& file_menu = window->add_menu("&File");
@@ -866,7 +832,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto action_show_dotfiles = GUI::Action::create_checkable("&Show Dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
         directory_view.set_should_show_dotfiles(action.is_checked());
         directories_model->set_should_show_dotfiles(action.is_checked());
-        refresh_tree_view();
         config->write_bool_entry("DirectoryView", "ShowDotFiles", action.is_checked());
         config->sync();
     });
@@ -1013,10 +978,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         view_as_columns_action->set_enabled(can_read_in_path);
     };
 
-    directory_view.on_accepted_drop = [&] {
-        refresh_tree_view();
-    };
-
     directory_view.on_status_message = [&](StringView const& message) {
         statusbar.set_text(message);
     };
@@ -1150,7 +1111,6 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             dbgln("No files to copy");
             return;
         }
-        bool had_accepted_copy = false;
         for (auto& url_to_copy : urls) {
             if (!url_to_copy.is_valid() || url_to_copy.path() == directory)
                 continue;
@@ -1161,12 +1121,8 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             if (auto result = Core::File::copy_file_or_directory(url_to_copy.path(), new_path); result.is_error()) {
                 auto error_message = String::formatted("Could not copy {} into {}:\n {}", url_to_copy.to_string(), new_path, result.error().error_code);
                 GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
-            } else {
-                had_accepted_copy = true;
             }
         }
-        if (had_accepted_copy)
-            refresh_tree_view();
     };
 
     breadcrumbbar.on_segment_drop = [&](size_t segment_index, GUI::DropEvent const& event) {
