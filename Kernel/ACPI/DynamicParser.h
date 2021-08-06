@@ -37,7 +37,7 @@ private:
     // ^IRQHandler
     virtual bool handle_irq(const RegisterState&) override;
 
-    OwnPtr<Region> m_acpi_namespace;
+    OwnPtr<Memory::Region> m_acpi_namespace;
 };
 
 }

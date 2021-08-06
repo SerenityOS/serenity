@@ -47,7 +47,7 @@ struct KmallocGlobalHeap {
         bool m_adding { false };
         bool add_memory(size_t allocation_request)
         {
-            if (!MemoryManager::is_initialized()) {
+            if (!Memory::MemoryManager::is_initialized()) {
                 if constexpr (KMALLOC_DEBUG) {
                     dmesgln("kmalloc: Cannot expand heap before MM is initialized!");
                 }
@@ -94,12 +94,12 @@ struct KmallocGlobalHeap {
             // was big enough to likely satisfy the request
             if (subheap.free_bytes() < allocation_request) {
                 // Looks like we probably need more
-                size_t memory_size = page_round_up(decltype(m_global_heap.m_heap)::calculate_memory_for_bytes(allocation_request));
+                size_t memory_size = Memory::page_round_up(decltype(m_global_heap.m_heap)::calculate_memory_for_bytes(allocation_request));
                 // Add some more to the new heap. We're already using it for other
                 // allocations not including the original allocation_request
                 // that triggered heap expansion. If we don't allocate
                 memory_size += 1 * MiB;
-                region = MM.allocate_kernel_region(memory_size, "kmalloc subheap", Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
+                region = MM.allocate_kernel_region(memory_size, "kmalloc subheap", Memory::Region::Access::Read | Memory::Region::Access::Write, AllocationStrategy::AllocateNow);
                 if (region) {
                     dbgln("kmalloc: Adding even more memory to heap at {}, bytes: {}", region->vaddr(), region->size());
 
@@ -162,8 +162,8 @@ struct KmallocGlobalHeap {
     typedef ExpandableHeap<CHUNK_SIZE, KMALLOC_SCRUB_BYTE, KFREE_SCRUB_BYTE, ExpandGlobalHeap> HeapType;
 
     HeapType m_heap;
-    NonnullOwnPtrVector<Region> m_subheap_memory;
-    OwnPtr<Region> m_backup_memory;
+    NonnullOwnPtrVector<Memory::Region> m_subheap_memory;
+    OwnPtr<Memory::Region> m_backup_memory;
 
     KmallocGlobalHeap(u8* memory, size_t memory_size)
         : m_heap(memory, memory_size, ExpandGlobalHeap(*this))
@@ -173,7 +173,7 @@ struct KmallocGlobalHeap {
     {
         if (m_backup_memory)
             return;
-        m_backup_memory = MM.allocate_kernel_region(1 * MiB, "kmalloc subheap", Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
+        m_backup_memory = MM.allocate_kernel_region(1 * MiB, "kmalloc subheap", Memory::Region::Access::Read | Memory::Region::Access::Write, AllocationStrategy::AllocateNow);
     }
 
     size_t backup_memory_bytes() const

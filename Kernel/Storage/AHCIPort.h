@@ -107,11 +107,11 @@ private:
     mutable bool m_wait_for_completion { false };
     bool m_wait_connect_for_completion { false };
 
-    NonnullRefPtrVector<PhysicalPage> m_dma_buffers;
-    NonnullRefPtrVector<PhysicalPage> m_command_table_pages;
-    RefPtr<PhysicalPage> m_command_list_page;
-    OwnPtr<Region> m_command_list_region;
-    RefPtr<PhysicalPage> m_fis_receive_page;
+    NonnullRefPtrVector<Memory::PhysicalPage> m_dma_buffers;
+    NonnullRefPtrVector<Memory::PhysicalPage> m_command_table_pages;
+    RefPtr<Memory::PhysicalPage> m_command_list_page;
+    OwnPtr<Memory::Region> m_command_list_region;
+    RefPtr<Memory::PhysicalPage> m_fis_receive_page;
     RefPtr<StorageDevice> m_connected_device;
 
     u32 m_port_index;
@@ -120,7 +120,7 @@ private:
     AHCI::PortInterruptStatusBitField m_interrupt_status;
     AHCI::PortInterruptEnableBitField m_interrupt_enable;
 
-    RefPtr<ScatterGatherList> m_current_scatter_list;
+    RefPtr<Memory::ScatterGatherList> m_current_scatter_list;
     bool m_disabled_by_firmware { false };
 };
 }

@@ -9,7 +9,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <Kernel/PhysicalAddress.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 enum class MayReturnToFreeList : bool {
     No,

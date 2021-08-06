@@ -37,7 +37,7 @@ private:
         bool show_kernel_addresses = Process::current()->is_superuser();
         bool kernel_address_added = false;
         for (auto address : Processor::capture_stack_trace(*m_associated_thread, 1024)) {
-            if (!show_kernel_addresses && !is_user_address(VirtualAddress { address })) {
+            if (!show_kernel_addresses && !Memory::is_user_address(VirtualAddress { address })) {
                 if (kernel_address_added)
                     continue;
                 address = 0xdeadc0de;
@@ -456,7 +456,7 @@ private:
                 region_object.add("syscall", region->is_syscall_region());
                 region_object.add("purgeable", region->vmobject().is_anonymous());
                 if (region->vmobject().is_anonymous()) {
-                    region_object.add("volatile", static_cast<AnonymousVMObject const&>(region->vmobject()).is_volatile());
+                    region_object.add("volatile", static_cast<Memory::AnonymousVMObject const&>(region->vmobject()).is_volatile());
                 }
                 region_object.add("cacheable", region->is_cacheable());
                 region_object.add("address", region->vaddr().get());

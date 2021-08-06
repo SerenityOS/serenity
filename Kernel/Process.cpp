@@ -48,7 +48,7 @@ READONLY_AFTER_INIT Process::List* g_processes;
 READONLY_AFTER_INIT String* g_hostname;
 READONLY_AFTER_INIT Mutex* g_hostname_lock;
 READONLY_AFTER_INIT HashMap<String, OwnPtr<Module>>* g_modules;
-READONLY_AFTER_INIT Region* g_signal_trampoline_region;
+READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
 ProcessID Process::allocate_pid()
 {
@@ -267,7 +267,7 @@ Process::Process(const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool 
 
 KResult Process::attach_resources(RefPtr<Thread>& first_thread, Process* fork_parent)
 {
-    m_space = Space::try_create(*this, fork_parent ? &fork_parent->space() : nullptr);
+    m_space = Memory::Space::try_create(*this, fork_parent ? &fork_parent->space() : nullptr);
     if (!m_space)
         return ENOMEM;
 
@@ -361,7 +361,7 @@ extern "C" char const asm_signal_trampoline_end[];
 void create_signal_trampoline()
 {
     // NOTE: We leak this region.
-    g_signal_trampoline_region = MM.allocate_kernel_region(PAGE_SIZE, "Signal trampolines", Region::Access::Read | Region::Access::Write).leak_ptr();
+    g_signal_trampoline_region = MM.allocate_kernel_region(PAGE_SIZE, "Signal trampolines", Memory::Region::Access::Read | Memory::Region::Access::Write).leak_ptr();
     g_signal_trampoline_region->set_syscall_region(true);
 
     size_t trampoline_size = asm_signal_trampoline_end - asm_signal_trampoline;

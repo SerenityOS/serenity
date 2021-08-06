@@ -39,7 +39,7 @@ public:
     static size_t calculate_framebuffer_size(size_t width, size_t height)
     {
         // VirtIO resources can only map on page boundaries!
-        return page_round_up(sizeof(u32) * width * height);
+        return Memory::page_round_up(sizeof(u32) * width * height);
     }
 
     void flush_dirty_window(Protocol::Rect const&, Buffer&);
@@ -61,7 +61,7 @@ private:
     void set_buffer(int);
 
     virtual KResult ioctl(FileDescription&, unsigned request, Userspace<void*> arg) override;
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, u64 offset, int prot, bool shared) override;
+    virtual KResultOr<Memory::Region*> mmap(Process&, FileDescription&, Memory::Range const&, u64 offset, int prot, bool shared) override;
     virtual bool can_read(const FileDescription&, size_t) const override { return true; }
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override { return EINVAL; }
     virtual bool can_write(const FileDescription&, size_t) const override { return true; }
@@ -88,12 +88,12 @@ private:
     Atomic<int, AK::memory_order_relaxed> m_last_set_buffer_index { 0 };
     Buffer m_main_buffer;
     Buffer m_back_buffer;
-    OwnPtr<Region> m_framebuffer;
-    RefPtr<VMObject> m_framebuffer_sink_vmobject;
+    OwnPtr<Memory::Region> m_framebuffer;
+    RefPtr<Memory::VMObject> m_framebuffer_sink_vmobject;
     size_t m_buffer_size { 0 };
     bool m_are_writes_active { true };
     // FIXME: This needs to be cleaned up if the WindowServer exits while we are in a tty
-    WeakPtr<Region> m_userspace_mmap_region;
+    WeakPtr<Memory::Region> m_userspace_mmap_region;
 };
 
 }

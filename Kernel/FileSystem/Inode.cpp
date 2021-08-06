@@ -141,7 +141,7 @@ KResult Inode::decrement_link_count()
     return ENOTIMPL;
 }
 
-void Inode::set_shared_vmobject(SharedInodeVMObject& vmobject)
+void Inode::set_shared_vmobject(Memory::SharedInodeVMObject& vmobject)
 {
     MutexLocker locker(m_inode_lock);
     m_shared_vmobject = vmobject;
@@ -271,7 +271,7 @@ KResult Inode::prepare_to_write_data()
     return KSuccess;
 }
 
-RefPtr<SharedInodeVMObject> Inode::shared_vmobject() const
+RefPtr<Memory::SharedInodeVMObject> Inode::shared_vmobject() const
 {
     MutexLocker locker(m_inode_lock);
     return m_shared_vmobject.strong_ref();

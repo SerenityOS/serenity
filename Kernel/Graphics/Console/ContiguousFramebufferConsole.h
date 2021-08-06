@@ -22,7 +22,7 @@ private:
     {
         return m_framebuffer_region->vaddr().as_ptr();
     }
-    OwnPtr<Region> m_framebuffer_region;
+    OwnPtr<Memory::Region> m_framebuffer_region;
     ContiguousFramebufferConsole(PhysicalAddress, size_t width, size_t height, size_t pitch);
     PhysicalAddress m_framebuffer_address;
 };

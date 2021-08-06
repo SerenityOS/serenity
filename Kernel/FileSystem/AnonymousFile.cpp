@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-AnonymousFile::AnonymousFile(NonnullRefPtr<AnonymousVMObject> vmobject)
+AnonymousFile::AnonymousFile(NonnullRefPtr<Memory::AnonymousVMObject> vmobject)
     : m_vmobject(move(vmobject))
 {
 }
@@ -19,7 +19,7 @@ AnonymousFile::~AnonymousFile()
 {
 }
 
-KResultOr<Region*> AnonymousFile::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
+KResultOr<Memory::Region*> AnonymousFile::mmap(Process& process, FileDescription&, Memory::Range const& range, u64 offset, int prot, bool shared)
 {
     if (offset != 0)
         return EINVAL;

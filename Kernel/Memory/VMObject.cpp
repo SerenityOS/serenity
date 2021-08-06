@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,7 +7,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/VMObject.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 VMObject::VMObject(VMObject const& other)
     : m_physical_pages(other.m_physical_pages)

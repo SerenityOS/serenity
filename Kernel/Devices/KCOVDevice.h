@@ -22,7 +22,7 @@ public:
     static void free_process();
 
     // ^File
-    KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, u64 offset, int prot, bool shared) override;
+    KResultOr<Memory::Region*> mmap(Process&, FileDescription&, Memory::Range const&, u64 offset, int prot, bool shared) override;
     KResultOr<NonnullRefPtr<FileDescription>> open(int options) override;
 
     // ^Device

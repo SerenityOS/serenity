@@ -112,7 +112,7 @@ static SlabAllocator<128> s_slab_allocator_128;
 static SlabAllocator<256> s_slab_allocator_256;
 
 #if ARCH(I386)
-static_assert(sizeof(Region) <= s_slab_allocator_128.slab_size());
+static_assert(sizeof(Memory::Region) <= s_slab_allocator_128.slab_size());
 #endif
 
 template<typename Callback>

@@ -12,7 +12,7 @@
 #include <Kernel/Memory/PhysicalZone.h>
 #include <Kernel/Random.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 static constexpr u32 next_power_of_two(u32 value)
 {

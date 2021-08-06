@@ -48,10 +48,10 @@ private:
     RefPtr<StorageDevice> device_by_port(u32 index) const;
 
     volatile AHCI::PortRegisters& port(size_t port_number) const;
-    UNMAP_AFTER_INIT NonnullOwnPtr<Region> default_hba_region() const;
+    UNMAP_AFTER_INIT NonnullOwnPtr<Memory::Region> default_hba_region() const;
     volatile AHCI::HBA& hba() const;
 
-    NonnullOwnPtr<Region> m_hba_region;
+    NonnullOwnPtr<Memory::Region> m_hba_region;
     AHCI::HBADefinedCapabilities m_capabilities;
     NonnullRefPtrVector<AHCIPortHandler> m_handlers;
 };

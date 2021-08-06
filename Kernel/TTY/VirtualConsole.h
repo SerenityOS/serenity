@@ -146,7 +146,7 @@ private:
     void clear_in_line(u16 row, u16 first_column, u16 last_column);
     void put_character_at(unsigned row, unsigned column, u32 ch, const VT::Attribute&);
 
-    OwnPtr<Region> m_cells;
+    OwnPtr<Memory::Region> m_cells;
     Vector<VirtualConsole::Line> m_lines;
     ConsoleImpl m_console_impl;
 };

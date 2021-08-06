@@ -10,7 +10,7 @@
 #include <Kernel/Memory/InodeVMObject.h>
 #include <Kernel/UnixTypes.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 class SharedInodeVMObject final : public InodeVMObject {
     AK_MAKE_NONMOVABLE(SharedInodeVMObject);

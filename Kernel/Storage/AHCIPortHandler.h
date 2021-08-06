@@ -66,7 +66,7 @@ private:
     // Data members
     HashMap<u32, NonnullRefPtr<AHCIPort>> m_handled_ports;
     NonnullRefPtr<AHCIController> m_parent_controller;
-    NonnullRefPtrVector<PhysicalPage> m_identify_metadata_pages;
+    NonnullRefPtrVector<Memory::PhysicalPage> m_identify_metadata_pages;
     AHCI::MaskedBitField m_taken_ports;
     AHCI::MaskedBitField m_pending_ports_interrupts;
 };

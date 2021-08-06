@@ -17,7 +17,7 @@ namespace Kernel::Graphics::VirtIOGPU {
 
 GPU::GPU(PCI::Address address)
     : VirtIODevice(address, "GPU")
-    , m_scratch_space(MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Region::Access::Read | Region::Access::Write))
+    , m_scratch_space(MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::Read | Memory::Region::Access::Write))
 {
     VERIFY(!!m_scratch_space);
     if (auto cfg = get_config(ConfigurationType::Device)) {
@@ -138,7 +138,7 @@ ResourceID GPU::create_2d_resource(Protocol::Rect rect)
     return resource_id;
 }
 
-void GPU::ensure_backing_storage(Region const& region, size_t buffer_offset, size_t buffer_length, ResourceID resource_id)
+void GPU::ensure_backing_storage(Memory::Region const& region, size_t buffer_offset, size_t buffer_length, ResourceID resource_id)
 {
     VERIFY(m_operation_lock.is_locked());
 

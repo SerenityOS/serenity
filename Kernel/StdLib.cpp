@@ -15,7 +15,7 @@
 
 String copy_string_from_user(const char* user_str, size_t user_str_size)
 {
-    bool is_user = Kernel::is_user_range(VirtualAddress(user_str), user_str_size);
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(user_str), user_str_size);
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -44,7 +44,7 @@ String copy_string_from_user(Userspace<const char*> user_str, size_t user_str_si
 
 Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(const char* user_str, size_t user_str_size)
 {
-    bool is_user = Kernel::is_user_range(VirtualAddress(user_str), user_str_size);
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(user_str), user_str_size);
     if (!is_user)
         return EFAULT;
     Kernel::SmapDisabler disabler;
@@ -106,7 +106,7 @@ Optional<u32> user_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -117,7 +117,7 @@ Optional<u32> user_atomic_exchange_relaxed(volatile u32* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -128,7 +128,7 @@ Optional<u32> user_atomic_load_relaxed(volatile u32* var)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -139,7 +139,7 @@ bool user_atomic_store_relaxed(volatile u32* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return false; // not aligned!
-    bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
     if (!is_user)
         return false;
     Kernel::SmapDisabler disabler;
@@ -150,8 +150,8 @@ Optional<bool> user_atomic_compare_exchange_relaxed(volatile u32* var, u32& expe
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
-    VERIFY(!Kernel::is_user_range(VirtualAddress(&expected), sizeof(expected)));
-    bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    VERIFY(!Kernel::Memory::is_user_range(VirtualAddress(&expected), sizeof(expected)));
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -162,7 +162,7 @@ Optional<u32> user_atomic_fetch_and_relaxed(volatile u32* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -173,7 +173,7 @@ Optional<u32> user_atomic_fetch_and_not_relaxed(volatile u32* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -184,7 +184,7 @@ Optional<u32> user_atomic_fetch_or_relaxed(volatile u32* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -195,7 +195,7 @@ Optional<u32> user_atomic_fetch_xor_relaxed(volatile u32* var, u32 val)
 {
     if (FlatPtr(var) & 3)
         return {}; // not aligned!
-    bool is_user = Kernel::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(FlatPtr(var)), sizeof(*var));
     if (!is_user)
         return {};
     Kernel::SmapDisabler disabler;
@@ -206,10 +206,10 @@ extern "C" {
 
 bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
-    bool is_user = Kernel::is_user_range(VirtualAddress(dest_ptr), n);
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(dest_ptr), n);
     if (!is_user)
         return false;
-    VERIFY(!Kernel::is_user_range(VirtualAddress(src_ptr), n));
+    VERIFY(!Kernel::Memory::is_user_range(VirtualAddress(src_ptr), n));
     Kernel::SmapDisabler disabler;
     void* fault_at;
     if (!Kernel::safe_memcpy(dest_ptr, src_ptr, n, fault_at)) {
@@ -222,10 +222,10 @@ bool copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 
 bool copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
-    bool is_user = Kernel::is_user_range(VirtualAddress(src_ptr), n);
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(src_ptr), n);
     if (!is_user)
         return false;
-    VERIFY(!Kernel::is_user_range(VirtualAddress(dest_ptr), n));
+    VERIFY(!Kernel::Memory::is_user_range(VirtualAddress(dest_ptr), n));
     Kernel::SmapDisabler disabler;
     void* fault_at;
     if (!Kernel::safe_memcpy(dest_ptr, src_ptr, n, fault_at)) {
@@ -243,7 +243,7 @@ const void* memmem(const void* haystack, size_t haystack_length, const void* nee
 
 [[nodiscard]] bool memset_user(void* dest_ptr, int c, size_t n)
 {
-    bool is_user = Kernel::is_user_range(VirtualAddress(dest_ptr), n);
+    bool is_user = Kernel::Memory::is_user_range(VirtualAddress(dest_ptr), n);
     if (!is_user)
         return false;
     Kernel::SmapDisabler disabler;

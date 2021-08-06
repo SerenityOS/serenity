@@ -13,7 +13,7 @@
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/RangeAllocator.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 class PageDirectory : public RefCounted<PageDirectory> {
     friend class MemoryManager;

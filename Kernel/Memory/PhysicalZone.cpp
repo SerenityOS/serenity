@@ -9,7 +9,7 @@
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/PhysicalZone.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 PhysicalPageEntry& PhysicalZone::get_freelist_entry(ChunkIndex index) const
 {

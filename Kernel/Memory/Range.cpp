@@ -10,7 +10,7 @@
 #include <Kernel/Memory/Range.h>
 #include <LibC/limits.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 Vector<Range, 2> Range::carve(const Range& taken) const
 {

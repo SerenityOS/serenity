@@ -83,13 +83,13 @@ protected:
 
     IOAddress m_io_base;
     VirtualAddress m_mmio_base;
-    OwnPtr<Region> m_rx_descriptors_region;
-    OwnPtr<Region> m_tx_descriptors_region;
-    OwnPtr<Region> m_rx_buffer_region;
-    OwnPtr<Region> m_tx_buffer_region;
+    OwnPtr<Memory::Region> m_rx_descriptors_region;
+    OwnPtr<Memory::Region> m_tx_descriptors_region;
+    OwnPtr<Memory::Region> m_rx_buffer_region;
+    OwnPtr<Memory::Region> m_tx_buffer_region;
     Array<void*, number_of_rx_descriptors> m_rx_buffers;
     Array<void*, number_of_tx_descriptors> m_tx_buffers;
-    OwnPtr<Region> m_mmio_region;
+    OwnPtr<Memory::Region> m_mmio_region;
     u8 m_interrupt_line { 0 };
     bool m_has_eeprom { false };
     bool m_use_mmio { false };

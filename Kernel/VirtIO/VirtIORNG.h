@@ -36,7 +36,7 @@ private:
     virtual void handle_queue_update(u16 queue_index) override;
     void request_entropy_from_host();
 
-    OwnPtr<Region> m_entropy_buffer;
+    OwnPtr<Memory::Region> m_entropy_buffer;
     EntropySource m_entropy_source;
 };
 

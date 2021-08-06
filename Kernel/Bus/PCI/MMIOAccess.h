@@ -46,7 +46,7 @@ private:
     VirtualAddress get_device_configuration_space(Address address);
     SpinLock<u8> m_access_lock;
     u8 m_mapped_bus { 0 };
-    OwnPtr<Region> m_mapped_region;
+    OwnPtr<Memory::Region> m_mapped_region;
 
 protected:
     explicit MMIOAccess(PhysicalAddress mcfg);

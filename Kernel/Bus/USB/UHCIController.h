@@ -90,9 +90,9 @@ private:
     QueueHead* m_bulk_qh;
     QueueHead* m_dummy_qh; // Needed for PIIX4 hack
 
-    OwnPtr<Region> m_framelist;
-    OwnPtr<Region> m_qh_pool;
-    OwnPtr<Region> m_td_pool;
+    OwnPtr<Memory::Region> m_framelist;
+    OwnPtr<Memory::Region> m_qh_pool;
+    OwnPtr<Memory::Region> m_td_pool;
 
     Array<RefPtr<USB::Device>, 2> m_devices; // Devices connected to the root ports (of which there are two)
 };

@@ -32,7 +32,7 @@ bool GraphicsManagement::is_initialized()
 }
 
 UNMAP_AFTER_INIT GraphicsManagement::GraphicsManagement()
-    : m_vga_font_region(MM.allocate_kernel_region(PAGE_SIZE, "VGA font", Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow).release_nonnull())
+    : m_vga_font_region(MM.allocate_kernel_region(PAGE_SIZE, "VGA font", Memory::Region::Access::Read | Memory::Region::Access::Write, AllocationStrategy::AllocateNow).release_nonnull())
     , m_framebuffer_devices_allowed(!kernel_command_line().is_no_framebuffer_devices_mode())
 {
 }

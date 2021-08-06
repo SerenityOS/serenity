@@ -17,7 +17,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 Region::Region(Range const& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
     : m_range(range)

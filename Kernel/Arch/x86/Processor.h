@@ -57,7 +57,7 @@ struct ProcessorMessage {
         ProcessorMessage* next; // only valid while in the pool
         alignas(CallbackFunction) u8 callback_storage[sizeof(CallbackFunction)];
         struct {
-            const PageDirectory* page_directory;
+            Memory::PageDirectory const* page_directory;
             u8* ptr;
             size_t page_count;
         } flush_tlb;
@@ -211,7 +211,7 @@ public:
     }
 
     static void flush_tlb_local(VirtualAddress vaddr, size_t page_count);
-    static void flush_tlb(const PageDirectory*, VirtualAddress, size_t);
+    static void flush_tlb(Memory::PageDirectory const*, VirtualAddress, size_t);
 
     Descriptor& get_gdt_entry(u16 selector);
     void flush_gdt();
@@ -391,7 +391,7 @@ public:
     bool smp_process_pending_messages();
 
     static void smp_unicast(u32 cpu, Function<void()>, bool async);
-    static void smp_broadcast_flush_tlb(const PageDirectory*, VirtualAddress, size_t);
+    static void smp_broadcast_flush_tlb(Memory::PageDirectory const*, VirtualAddress, size_t);
     static u32 smp_wake_n_idle_processors(u32 wake_count);
 
     static void deferred_call_queue(Function<void()> callback);

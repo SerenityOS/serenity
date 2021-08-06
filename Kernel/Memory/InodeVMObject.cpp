@@ -7,7 +7,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Memory/InodeVMObject.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 InodeVMObject::InodeVMObject(Inode& inode, size_t size)
     : VMObject(size)

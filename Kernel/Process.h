@@ -515,8 +515,8 @@ public:
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
 
-    Space& space() { return *m_space; }
-    const Space& space() const { return *m_space; }
+    Memory::Space& space() { return *m_space; }
+    Memory::Space const& space() const { return *m_space; }
 
     VirtualAddress signal_trampoline() const { return m_signal_trampoline; }
 
@@ -582,7 +582,7 @@ private:
 
     String m_name;
 
-    OwnPtr<Space> m_space;
+    OwnPtr<Memory::Space> m_space;
 
     RefPtr<ProcessGroup> m_pg;
 
@@ -741,7 +741,7 @@ private:
 
     RefPtr<TTY> m_tty;
 
-    WeakPtr<Region> m_master_tls_region;
+    WeakPtr<Memory::Region> m_master_tls_region;
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
 

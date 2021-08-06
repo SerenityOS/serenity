@@ -7,7 +7,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 RefPtr<PrivateInodeVMObject> PrivateInodeVMObject::try_create_with_inode(Inode& inode)
 {

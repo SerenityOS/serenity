@@ -109,7 +109,7 @@ auto VirtIODevice::mapping_for_bar(u8 bar) -> MappedMMIO&
     auto& mapping = m_mmio[bar];
     if (!mapping.base) {
         mapping.size = PCI::get_BAR_space_size(pci_address(), bar);
-        mapping.base = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR(pci_address(), bar))), page_round_up(mapping.size), "VirtIO MMIO", Region::Access::Read | Region::Access::Write, Region::Cacheable::No);
+        mapping.base = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR(pci_address(), bar))), Memory::page_round_up(mapping.size), "VirtIO MMIO", Memory::Region::Access::Read | Memory::Region::Access::Write, Memory::Region::Cacheable::No);
         if (!mapping.base)
             dbgln("{}: Failed to map bar {}", m_class_name, bar);
     }

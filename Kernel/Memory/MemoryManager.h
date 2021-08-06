@@ -21,7 +21,7 @@
 #include <Kernel/Memory/VMObject.h>
 #include <Kernel/SpinLock.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 constexpr bool page_round_up_would_wrap(FlatPtr x)
 {
@@ -88,7 +88,7 @@ struct PhysicalMemoryRange {
     PhysicalSize length {};
 };
 
-#define MM Kernel::MemoryManager::the()
+#define MM Kernel::Memory::MemoryManager::the()
 
 struct MemoryManagerData {
     static ProcessorSpecificDataID processor_specific_data_id() { return ProcessorSpecificDataID::MemoryManager; }

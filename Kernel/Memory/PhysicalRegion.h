@@ -10,7 +10,7 @@
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/PhysicalZone.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 class PhysicalRegion {
     AK_MAKE_ETERNAL;

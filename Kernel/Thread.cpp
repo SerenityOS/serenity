@@ -39,7 +39,7 @@ UNMAP_AFTER_INIT void Thread::initialize()
 
 KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process)
 {
-    auto kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, {}, Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
+    auto kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, {}, Memory::Region::Access::Read | Memory::Region::Access::Write, AllocationStrategy::AllocateNow);
     if (!kernel_stack_region)
         return ENOMEM;
     kernel_stack_region->set_stack(true);
@@ -57,7 +57,7 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
     return thread.release_nonnull();
 }
 
-Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, OwnPtr<KString> name)
+Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, OwnPtr<KString> name)
     : m_process(move(process))
     , m_kernel_stack_region(move(kernel_stack_region))
     , m_name(move(name))
@@ -175,7 +175,7 @@ void Thread::block(Kernel::Mutex& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock,
     VERIFY(!Processor::current().in_irq());
     VERIFY(this == Thread::current());
     ScopedCritical critical;
-    VERIFY(!s_mm_lock.own_lock());
+    VERIFY(!Memory::s_mm_lock.own_lock());
 
     ScopedSpinLock block_lock(m_block_lock);
 
@@ -1155,7 +1155,7 @@ static bool symbolicate(RecognizedSymbol const& symbol, Process& process, String
 
     bool mask_kernel_addresses = !process.is_superuser();
     if (!symbol.symbol) {
-        if (!is_user_address(VirtualAddress(symbol.address))) {
+        if (!Memory::is_user_address(VirtualAddress(symbol.address))) {
             builder.append("0xdeadc0de\n");
         } else {
             if (auto* region = process.space().find_region_containing({ VirtualAddress(symbol.address), sizeof(FlatPtr) })) {
@@ -1188,7 +1188,7 @@ String Thread::backtrace()
     VERIFY(!g_scheduler_lock.own_lock());
     ProcessPagingScope paging_scope(process);
     for (auto& frame : stack_trace) {
-        if (is_user_range(VirtualAddress(frame), sizeof(FlatPtr) * 2)) {
+        if (Memory::is_user_range(VirtualAddress(frame), sizeof(FlatPtr) * 2)) {
             recognized_symbols.append({ frame });
         } else {
             recognized_symbols.append({ frame, symbolicate_kernel_address(frame) });

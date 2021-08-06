@@ -33,7 +33,7 @@ public:
 protected:
     VGAConsole(const VGACompatibleAdapter&, Mode, size_t width, size_t height);
 
-    NonnullOwnPtr<Region> m_vga_region;
+    NonnullOwnPtr<Memory::Region> m_vga_region;
     NonnullRefPtr<VGACompatibleAdapter> m_adapter;
     const Mode m_mode;
 };

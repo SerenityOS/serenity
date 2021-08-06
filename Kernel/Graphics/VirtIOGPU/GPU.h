@@ -102,7 +102,7 @@ private:
     void query_display_information();
     ResourceID create_2d_resource(Protocol::Rect rect);
     void delete_resource(ResourceID resource_id);
-    void ensure_backing_storage(Region const& region, size_t buffer_offset, size_t buffer_length, ResourceID resource_id);
+    void ensure_backing_storage(Memory::Region const& region, size_t buffer_offset, size_t buffer_length, ResourceID resource_id);
     void detach_backing_storage(ResourceID resource_id);
     void set_scanout_resource(ScanoutID scanout, ResourceID resource_id, Protocol::Rect rect);
     void transfer_framebuffer_data_to_host(ScanoutID scanout, Protocol::Rect const& rect, ResourceID resource_id);
@@ -118,7 +118,7 @@ private:
     // Synchronous commands
     WaitQueue m_outstanding_request;
     Mutex m_operation_lock;
-    OwnPtr<Region> m_scratch_space;
+    OwnPtr<Memory::Region> m_scratch_space;
 };
 
 }

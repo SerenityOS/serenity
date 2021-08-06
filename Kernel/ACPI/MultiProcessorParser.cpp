@@ -36,15 +36,15 @@ UNMAP_AFTER_INIT MultiProcessorParser::MultiProcessorParser(PhysicalAddress floa
 
 UNMAP_AFTER_INIT void MultiProcessorParser::parse_floating_pointer_data()
 {
-    auto floating_pointer = map_typed<MultiProcessor::FloatingPointer>(m_floating_pointer);
+    auto floating_pointer = Memory::map_typed<MultiProcessor::FloatingPointer>(m_floating_pointer);
     m_configuration_table = PhysicalAddress(floating_pointer->physical_address_ptr);
     dbgln("Features {}, IMCR? {}", floating_pointer->feature_info[0], (floating_pointer->feature_info[0] & (1 << 7)));
 }
 
 UNMAP_AFTER_INIT void MultiProcessorParser::parse_configuration_table()
 {
-    auto configuration_table_length = map_typed<MultiProcessor::ConfigurationTableHeader>(m_configuration_table)->length;
-    auto config_table = map_typed<MultiProcessor::ConfigurationTableHeader>(m_configuration_table, configuration_table_length);
+    auto configuration_table_length = Memory::map_typed<MultiProcessor::ConfigurationTableHeader>(m_configuration_table)->length;
+    auto config_table = Memory::map_typed<MultiProcessor::ConfigurationTableHeader>(m_configuration_table, configuration_table_length);
 
     size_t entry_count = config_table->entry_count;
     auto* entry = config_table->entries;

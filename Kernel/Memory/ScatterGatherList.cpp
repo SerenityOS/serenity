@@ -6,7 +6,7 @@
 
 #include <Kernel/Memory/ScatterGatherList.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 RefPtr<ScatterGatherList> ScatterGatherList::try_create(AsyncBlockDeviceRequest& request, Span<NonnullRefPtr<PhysicalPage>> allocated_pages, size_t device_block_size)
 {

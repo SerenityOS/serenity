@@ -13,7 +13,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/SpinLock.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 OwnPtr<Space> Space::try_create(Process& process, Space const* parent)
 {

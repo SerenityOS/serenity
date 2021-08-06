@@ -50,11 +50,11 @@ private:
 
     IOAddress m_io_base;
     u8 m_interrupt_line { 0 };
-    OwnPtr<Region> m_rx_buffer;
+    OwnPtr<Memory::Region> m_rx_buffer;
     u16 m_rx_buffer_offset { 0 };
-    Vector<OwnPtr<Region>> m_tx_buffers;
+    Vector<OwnPtr<Memory::Region>> m_tx_buffers;
     u8 m_tx_next_buffer { 0 };
-    OwnPtr<Region> m_packet_buffer;
+    OwnPtr<Memory::Region> m_packet_buffer;
     bool m_link_up { false };
     EntropySource m_entropy_source;
 };

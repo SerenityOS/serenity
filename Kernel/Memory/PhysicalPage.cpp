@@ -8,7 +8,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PhysicalPage.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 NonnullRefPtr<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, MayReturnToFreeList may_return_to_freelist)
 {

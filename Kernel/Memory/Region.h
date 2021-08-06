@@ -18,7 +18,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/UnixTypes.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 enum class ShouldFlushTLB {
     No,

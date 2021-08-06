@@ -124,7 +124,7 @@ UNMAP_AFTER_INIT bool HPET::test_and_initialize()
         return false;
     dmesgln("HPET @ {}", hpet);
 
-    auto sdt = map_typed<ACPI::Structures::HPET>(hpet);
+    auto sdt = Memory::map_typed<ACPI::Structures::HPET>(hpet);
 
     // Note: HPET is only usable from System Memory
     VERIFY(sdt->event_timer_block.address_space == (u8)ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
@@ -145,9 +145,9 @@ UNMAP_AFTER_INIT bool HPET::check_for_exisiting_periodic_timers()
     if (hpet.is_null())
         return false;
 
-    auto sdt = map_typed<ACPI::Structures::HPET>(hpet);
+    auto sdt = Memory::map_typed<ACPI::Structures::HPET>(hpet);
     VERIFY(sdt->event_timer_block.address_space == 0);
-    auto registers = map_typed<HPETRegistersBlock>(PhysicalAddress(sdt->event_timer_block.address));
+    auto registers = Memory::map_typed<HPETRegistersBlock>(PhysicalAddress(sdt->event_timer_block.address));
 
     size_t timers_count = ((registers->capabilities.attributes >> 8) & 0x1f) + 1;
     for (size_t index = 0; index < timers_count; index++) {
@@ -384,7 +384,7 @@ void HPET::set_comparators_to_optimal_interrupt_state(size_t)
 
 PhysicalAddress HPET::find_acpi_hpet_registers_block()
 {
-    auto sdt = map_typed<const volatile ACPI::Structures::HPET>(m_physical_acpi_hpet_table);
+    auto sdt = Memory::map_typed<const volatile ACPI::Structures::HPET>(m_physical_acpi_hpet_table);
     VERIFY(sdt->event_timer_block.address_space == (u8)ACPI::GenericAddressStructure::AddressSpace::SystemMemory);
     return PhysicalAddress(sdt->event_timer_block.address);
 }
@@ -413,11 +413,11 @@ u64 HPET::ns_to_raw_counter_ticks(u64 ns) const
 UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
     : m_physical_acpi_hpet_table(acpi_hpet)
     , m_physical_acpi_hpet_registers(find_acpi_hpet_registers_block())
-    , m_hpet_mmio_region(MM.allocate_kernel_region(m_physical_acpi_hpet_registers.page_base(), PAGE_SIZE, "HPET MMIO", Region::Access::Read | Region::Access::Write))
+    , m_hpet_mmio_region(MM.allocate_kernel_region(m_physical_acpi_hpet_registers.page_base(), PAGE_SIZE, "HPET MMIO", Memory::Region::Access::Read | Memory::Region::Access::Write))
 {
     s_hpet = this; // Make available as soon as possible so that IRQs can use it
 
-    auto sdt = map_typed<const volatile ACPI::Structures::HPET>(m_physical_acpi_hpet_table);
+    auto sdt = Memory::map_typed<const volatile ACPI::Structures::HPET>(m_physical_acpi_hpet_table);
     m_vendor_id = sdt->pci_vendor_id;
     m_minimum_tick = sdt->mininum_clock_tick;
     dmesgln("HPET: Minimum clock tick - {}", m_minimum_tick);

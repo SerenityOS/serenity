@@ -8,7 +8,7 @@
 #include <Kernel/Memory/RingBuffer.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 RingBuffer::RingBuffer(String region_name, size_t capacity)
     : m_region(MM.allocate_contiguous_kernel_region(page_round_up(capacity), move(region_name), Region::Access::Read | Region::Access::Write))

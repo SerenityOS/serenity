@@ -10,7 +10,7 @@
 #include <Kernel/Memory/VMObject.h>
 #include <Kernel/UnixTypes.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 class InodeVMObject : public VMObject {
 public:
