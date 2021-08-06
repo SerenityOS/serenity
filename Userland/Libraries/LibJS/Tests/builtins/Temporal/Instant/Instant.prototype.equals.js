@@ -7,7 +7,7 @@ describe("correct behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("this value must be a Temporal.Instant object", () => {
         expect(() => {
             Temporal.Instant.prototype.equals.call("foo", 1, 2);

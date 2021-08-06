@@ -24,7 +24,7 @@ describe("correct behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("argument must be coercible to BigInt", () => {
         expect(() => {
             Temporal.Instant.fromEpochMicroseconds(123);

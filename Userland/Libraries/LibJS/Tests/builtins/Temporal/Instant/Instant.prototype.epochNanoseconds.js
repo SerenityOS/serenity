@@ -16,7 +16,7 @@ describe("correct behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("this value must be a Temporal.Instant object", () => {
         expect(() => {
             Reflect.get(Temporal.Instant.prototype, "epochNanoseconds", "foo");

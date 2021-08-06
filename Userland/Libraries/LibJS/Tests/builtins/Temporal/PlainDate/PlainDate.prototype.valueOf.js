@@ -1,4 +1,4 @@
-test("errors", () => {
+describe("errors", () => {
     test("throws TypeError", () => {
         expect(() => {
             new Temporal.PlainDate(2021, 7, 21).valueOf();

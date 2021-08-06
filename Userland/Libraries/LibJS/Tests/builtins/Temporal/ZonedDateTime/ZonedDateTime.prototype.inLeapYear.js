@@ -6,7 +6,7 @@ describe("correct behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("this value must be a Temporal.ZonedDateTime object", () => {
         expect(() => {
             Reflect.get(Temporal.ZonedDateTime.prototype, "inLeapYear", "foo");

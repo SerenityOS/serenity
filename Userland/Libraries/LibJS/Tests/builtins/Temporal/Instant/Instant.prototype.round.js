@@ -19,7 +19,7 @@ describe("correct behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("this value must be a Temporal.Instant object", () => {
         expect(() => {
             Temporal.Instant.prototype.round.call("foo", {});

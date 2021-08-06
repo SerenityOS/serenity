@@ -16,7 +16,7 @@ describe("correct behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("this value must be a Temporal.TimeZone object", () => {
         expect(() => {
             Temporal.TimeZone.prototype.getOffsetStringFor.call("foo");

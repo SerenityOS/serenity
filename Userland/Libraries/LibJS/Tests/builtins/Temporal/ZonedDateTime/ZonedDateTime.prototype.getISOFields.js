@@ -40,7 +40,7 @@ describe("normal behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("this value must be a Temporal.ZonedDateTime object", () => {
         expect(() => {
             Temporal.ZonedDateTime.prototype.getISOFields.call("foo");
