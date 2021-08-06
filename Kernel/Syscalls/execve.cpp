@@ -639,8 +639,8 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
     {
         ProtectedDataMutationScope scope { *this };
-        m_promises = m_execpromises;
-        m_has_promises = m_has_execpromises;
+        m_promises = m_execpromises.load();
+        m_has_promises = m_has_execpromises.load();
 
         m_execpromises = 0;
         m_has_execpromises = false;
