@@ -39,7 +39,6 @@ Preprocessor::Preprocessor(const String& filename, const StringView& program)
 
 Vector<Token> Preprocessor::process_and_lex()
 {
-    Vector<Token> all_tokens;
     for (; m_line_index < m_lines.size(); ++m_line_index) {
         auto& line = m_lines[m_line_index];
 
@@ -53,14 +52,11 @@ Vector<Token> Preprocessor::process_and_lex()
         }
 
         if (include_in_processed_text) {
-            for (auto& token : process_line(line)) {
-                if (token.type() != Token::Type::Whitespace)
-                    all_tokens.append(token);
-            }
+            process_line(line);
         }
     }
 
-    return all_tokens;
+    return m_tokens;
 }
 
 static void consume_whitespace(GenericLexer& lexer)
@@ -231,14 +227,39 @@ void Preprocessor::handle_preprocessor_keyword(const StringView& keyword, Generi
     }
 }
 
-Vector<Token> Preprocessor::process_line(const StringView& line)
+void Preprocessor::process_line(StringView const& line)
 {
     Lexer line_lexer { line, m_line_index };
     auto tokens = line_lexer.lex();
 
-    // TODO: Go over tokens of line, do token substitution
+    for (auto& token : tokens) {
+        if (token.type() == Token::Type::Whitespace)
+            continue;
+        if (token.type() == Token::Type::Identifier) {
+            if (auto defined_value = m_definitions.find(token.text()); defined_value != m_definitions.end()) {
+                do_substitution(token, defined_value->value);
+                continue;
+            }
+        }
+        m_tokens.append(token);
+    }
+}
 
-    return tokens;
+void Preprocessor::do_substitution(Token const& replaced_token, DefinedValue const& defined_value)
+{
+    m_substitutions.append({ replaced_token, defined_value });
+
+    if (defined_value.value.is_null())
+        return;
+
+    Lexer lexer(m_substitutions.last().defined_value.value);
+    for (auto& token : lexer.lex()) {
+        if (token.type() == Token::Type::Whitespace)
+            continue;
+        token.set_start(replaced_token.start());
+        token.set_end(replaced_token.end());
+        m_tokens.append(token);
+    }
 }
 
 };

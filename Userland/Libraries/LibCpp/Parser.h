@@ -18,7 +18,7 @@ class Parser final {
     AK_MAKE_NONCOPYABLE(Parser);
 
 public:
-    explicit Parser(Vector<Token> const& tokens, const String& filename, Preprocessor::Definitions const& = {});
+    explicit Parser(Vector<Token> tokens, String const& filename);
     ~Parser() = default;
 
     NonnullRefPtr<TranslationUnit> parse();
@@ -33,7 +33,6 @@ public:
     StringView text_of_token(const Cpp::Token& token) const;
     void print_tokens() const;
     const Vector<String>& errors() const { return m_errors; }
-    const Preprocessor::Definitions& preprocessor_definitions() const { return m_preprocessor_definitions; }
 
     struct TodoEntry {
         String content;
@@ -43,11 +42,6 @@ public:
     };
     Vector<TodoEntry> get_todo_entries() const;
 
-    struct TokenAndPreprocessorDefinition {
-        Token token;
-        Preprocessor::DefinedValue preprocessor_value;
-    };
-    const Vector<TokenAndPreprocessorDefinition>& replaced_preprocessor_tokens() const { return m_replaced_preprocessor_tokens; }
     Vector<Token> tokens_in_range(Position start, Position end) const;
 
 private:
@@ -185,8 +179,6 @@ private:
     void consume_attribute_specification();
     void consume_access_specifier();
     bool match_ellipsis();
-    void initialize_program_tokens(Vector<Token> const& tokens);
-    void add_tokens_for_preprocessor(Token const& replaced_token, Preprocessor::DefinedValue&);
     Vector<StringView> parse_type_qualifiers();
     Vector<StringView> parse_function_qualifiers();
 
@@ -196,7 +188,6 @@ private:
     };
     void parse_constructor_or_destructor_impl(FunctionDeclaration&, CtorOrDtor);
 
-    Preprocessor::Definitions m_preprocessor_definitions;
     String m_filename;
     Vector<Token> m_tokens;
     State m_state;
@@ -204,8 +195,6 @@ private:
     RefPtr<TranslationUnit> m_root_node;
     Vector<String> m_errors;
     NonnullRefPtrVector<ASTNode> m_nodes;
-
-    Vector<TokenAndPreprocessorDefinition> m_replaced_preprocessor_tokens;
 };
 
 }
