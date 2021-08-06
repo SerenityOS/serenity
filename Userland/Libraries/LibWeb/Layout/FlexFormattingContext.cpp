@@ -311,6 +311,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
         } else {
             // E
             // FIXME: This is probably too naive.
+            // FIXME: Care about FlexBasis::Auto
             if (has_definite_main_size(child_box)) {
                 flex_item.flex_base_size = specified_main_size(child_box);
             } else {
