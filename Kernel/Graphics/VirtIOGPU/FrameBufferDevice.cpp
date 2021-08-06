@@ -259,7 +259,7 @@ KResultOr<Memory::Region*> FrameBufferDevice::mmap(Process& process, FileDescrip
     if (vmobject.is_null())
         return ENOMEM;
 
-    auto result = process.space().allocate_region_with_vmobject(
+    auto result = process.address_space().allocate_region_with_vmobject(
         range,
         vmobject.release_nonnull(),
         0,

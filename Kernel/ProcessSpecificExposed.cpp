@@ -443,8 +443,8 @@ private:
             return false;
         JsonArraySerializer array { builder };
         {
-            ScopedSpinLock lock(process->space().get_lock());
-            for (auto& region : process->space().regions()) {
+            ScopedSpinLock lock(process->address_space().get_lock());
+            for (auto& region : process->address_space().regions()) {
                 if (!region->is_user() && !Process::current()->is_superuser())
                     continue;
                 auto region_object = array.add_object();

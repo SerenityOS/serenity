@@ -51,7 +51,7 @@ KResultOr<Memory::Region*> MemoryDevice::mmap(Process& process, FileDescription&
     if (!vmobject)
         return ENOMEM;
     dbgln("MemoryDevice: Mapped physical memory at {} for range of {} bytes", viewed_address, range.size());
-    return process.space().allocate_region_with_vmobject(
+    return process.address_space().allocate_region_with_vmobject(
         range,
         vmobject.release_nonnull(),
         0,

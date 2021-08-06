@@ -515,8 +515,8 @@ public:
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
 
-    Memory::AddressSpace& space() { return *m_space; }
-    Memory::AddressSpace const& space() const { return *m_space; }
+    Memory::AddressSpace& address_space() { return *m_space; }
+    Memory::AddressSpace const& address_space() const { return *m_space; }
 
     VirtualAddress signal_trampoline() const { return m_signal_trampoline; }
 

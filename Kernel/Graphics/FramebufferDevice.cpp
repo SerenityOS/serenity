@@ -63,7 +63,7 @@ KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, FileDescrip
     } else {
         chosen_vmobject = m_swapped_framebuffer_vmobject;
     }
-    auto result = process.space().allocate_region_with_vmobject(
+    auto result = process.address_space().allocate_region_with_vmobject(
         range,
         chosen_vmobject.release_nonnull(),
         0,

@@ -42,7 +42,7 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     }
 
     dbgln_if(FORK_DEBUG, "fork: child={}", child);
-    child->space().set_enforces_syscall_regions(space().enforces_syscall_regions());
+    child->address_space().set_enforces_syscall_regions(address_space().enforces_syscall_regions());
 
 #if ARCH(I386)
     auto& child_regs = child_first_thread->m_regs;
@@ -92,8 +92,8 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 #endif
 
     {
-        ScopedSpinLock lock(space().get_lock());
-        for (auto& region : space().regions()) {
+        ScopedSpinLock lock(address_space().get_lock());
+        for (auto& region : address_space().regions()) {
             dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", region, region->name(), region->vaddr());
             auto region_clone = region->clone();
             if (!region_clone) {
@@ -102,13 +102,13 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
                 return ENOMEM;
             }
 
-            auto* child_region = child->space().add_region(region_clone.release_nonnull());
+            auto* child_region = child->address_space().add_region(region_clone.release_nonnull());
             if (!child_region) {
                 dbgln("fork: Cannot add region, insufficient memory");
                 // TODO: tear down new process?
                 return ENOMEM;
             }
-            child_region->map(child->space().page_directory(), Memory::ShouldFlushTLB::No);
+            child_region->map(child->address_space().page_directory(), Memory::ShouldFlushTLB::No);
 
             if (region == m_master_tls_region.unsafe_ptr())
                 child->m_master_tls_region = child_region;

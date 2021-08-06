@@ -202,13 +202,13 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
     Optional<Memory::VirtualRange> range;
 
     if (map_randomized) {
-        range = space().page_directory().range_allocator().allocate_randomized(Memory::page_round_up(size), alignment);
+        range = address_space().page_directory().range_allocator().allocate_randomized(Memory::page_round_up(size), alignment);
     } else {
-        range = space().allocate_range(VirtualAddress(addr), size, alignment);
+        range = address_space().allocate_range(VirtualAddress(addr), size, alignment);
         if (!range.has_value()) {
             if (addr && !map_fixed) {
                 // If there's an address but MAP_FIXED wasn't specified, the address is just a hint.
-                range = space().allocate_range({}, size, alignment);
+                range = address_space().allocate_range({}, size, alignment);
             }
         }
     }
@@ -225,7 +225,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
             vmobject = Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(size), strategy);
         if (!vmobject)
             return ENOMEM;
-        auto region_or_error = space().allocate_region_with_vmobject(range.value(), vmobject.release_nonnull(), 0, {}, prot, map_shared);
+        auto region_or_error = address_space().allocate_region_with_vmobject(range.value(), vmobject.release_nonnull(), 0, {}, prot, map_shared);
         if (region_or_error.is_error())
             return region_or_error.error().error();
         region = region_or_error.value();
@@ -309,7 +309,7 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
     if (!is_user_range(range_to_mprotect))
         return EFAULT;
 
-    if (auto* whole_region = space().find_region_from_range(range_to_mprotect)) {
+    if (auto* whole_region = address_space().find_region_from_range(range_to_mprotect)) {
         if (!whole_region->is_mmap())
             return EPERM;
         if (!validate_mmap_prot(prot, whole_region->is_stack(), whole_region->vmobject().is_anonymous(), whole_region))
@@ -329,7 +329,7 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
     }
 
     // Check if we can carve out the desired range from an existing region
-    if (auto* old_region = space().find_region_containing(range_to_mprotect)) {
+    if (auto* old_region = address_space().find_region_containing(range_to_mprotect)) {
         if (!old_region->is_mmap())
             return EPERM;
         if (!validate_mmap_prot(prot, old_region->is_stack(), old_region->vmobject().is_anonymous(), old_region))
@@ -343,20 +343,20 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
 
         // Remove the old region from our regions tree, since were going to add another region
         // with the exact same start address, but dont deallocate it yet
-        auto region = space().take_region(*old_region);
+        auto region = address_space().take_region(*old_region);
 
         // Unmap the old region here, specifying that we *don't* want the VM deallocated.
         region->unmap(Memory::Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
 
         // This vector is the region(s) adjacent to our range.
         // We need to allocate a new region for the range we wanted to change permission bits on.
-        auto adjacent_regions_or_error = space().try_split_region_around_range(*region, range_to_mprotect);
+        auto adjacent_regions_or_error = address_space().try_split_region_around_range(*region, range_to_mprotect);
         if (adjacent_regions_or_error.is_error())
             return adjacent_regions_or_error.error();
         auto& adjacent_regions = adjacent_regions_or_error.value();
 
         size_t new_range_offset_in_vmobject = region->offset_in_vmobject() + (range_to_mprotect.base().get() - region->range().base().get());
-        auto new_region_or_error = space().try_allocate_split_region(*region, range_to_mprotect, new_range_offset_in_vmobject);
+        auto new_region_or_error = address_space().try_allocate_split_region(*region, range_to_mprotect, new_range_offset_in_vmobject);
         if (new_region_or_error.is_error())
             return new_region_or_error.error();
         auto& new_region = *new_region_or_error.value();
@@ -366,13 +366,13 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
 
         // Map the new regions using our page directory (they were just allocated and don't have one).
         for (auto* adjacent_region : adjacent_regions) {
-            adjacent_region->map(space().page_directory());
+            adjacent_region->map(address_space().page_directory());
         }
-        new_region.map(space().page_directory());
+        new_region.map(address_space().page_directory());
         return 0;
     }
 
-    if (const auto& regions = space().find_regions_intersecting(range_to_mprotect); regions.size()) {
+    if (const auto& regions = address_space().find_regions_intersecting(range_to_mprotect); regions.size()) {
         size_t full_size_found = 0;
         // first check before doing anything
         for (const auto* region : regions) {
@@ -406,14 +406,14 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
             }
             // Remove the old region from our regions tree, since were going to add another region
             // with the exact same start address, but dont deallocate it yet
-            auto region = space().take_region(*old_region);
+            auto region = address_space().take_region(*old_region);
 
             // Unmap the old region here, specifying that we *don't* want the VM deallocated.
             region->unmap(Memory::Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
 
             // This vector is the region(s) adjacent to our range.
             // We need to allocate a new region for the range we wanted to change permission bits on.
-            auto adjacent_regions_or_error = space().try_split_region_around_range(*old_region, intersection_to_mprotect);
+            auto adjacent_regions_or_error = address_space().try_split_region_around_range(*old_region, intersection_to_mprotect);
             if (adjacent_regions_or_error.is_error())
                 return adjacent_regions_or_error.error();
             auto& adjacent_regions = adjacent_regions_or_error.value();
@@ -422,7 +422,7 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
             VERIFY(adjacent_regions.size() == 1);
 
             size_t new_range_offset_in_vmobject = old_region->offset_in_vmobject() + (intersection_to_mprotect.base().get() - old_region->range().base().get());
-            auto new_region_or_error = space().try_allocate_split_region(*region, intersection_to_mprotect, new_range_offset_in_vmobject);
+            auto new_region_or_error = address_space().try_allocate_split_region(*region, intersection_to_mprotect, new_range_offset_in_vmobject);
             if (new_region_or_error.is_error())
                 return new_region_or_error.error();
 
@@ -433,9 +433,9 @@ KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int
 
             // Map the new region using our page directory (they were just allocated and don't have one) if any.
             if (adjacent_regions.size())
-                adjacent_regions[0]->map(space().page_directory());
+                adjacent_regions[0]->map(address_space().page_directory());
 
-            new_region.map(space().page_directory());
+            new_region.map(address_space().page_directory());
         }
 
         return 0;
@@ -461,7 +461,7 @@ KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, i
     if (!is_user_range(range_to_madvise))
         return EFAULT;
 
-    auto* region = space().find_region_from_range(range_to_madvise);
+    auto* region = address_space().find_region_from_range(range_to_madvise);
     if (!region)
         return EINVAL;
     if (!region->is_mmap())
@@ -508,7 +508,7 @@ KResultOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mm
 
     auto range = range_or_error.value();
 
-    auto* region = space().find_region_from_range(range);
+    auto* region = address_space().find_region_from_range(range);
     if (!region)
         return EINVAL;
     if (!region->is_mmap())
@@ -525,7 +525,7 @@ KResultOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
 
-    auto result = space().unmap_mmap_range(VirtualAddress { addr }, size);
+    auto result = address_space().unmap_mmap_range(VirtualAddress { addr }, size);
     if (result.is_error())
         return result;
     return 0;
@@ -546,7 +546,7 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
 
     auto old_range = range_or_error.value();
 
-    auto* old_region = space().find_region_from_range(old_range);
+    auto* old_region = address_space().find_region_from_range(old_range);
     if (!old_region)
         return EINVAL;
 
@@ -567,9 +567,9 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
 
         // Unmap without deallocating the VM range since we're going to reuse it.
         old_region->unmap(Memory::Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
-        space().deallocate_region(*old_region);
+        address_space().deallocate_region(*old_region);
 
-        auto new_region_or_error = space().allocate_region_with_vmobject(range, new_vmobject.release_nonnull(), old_offset, old_name->view(), old_prot, false);
+        auto new_region_or_error = address_space().allocate_region_with_vmobject(range, new_vmobject.release_nonnull(), old_offset, old_name->view(), old_prot, false);
         if (new_region_or_error.is_error())
             return new_region_or_error.error().error();
         auto& new_region = *new_region_or_error.value();
@@ -608,11 +608,11 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
     if (multiple_threads)
         return EINVAL;
 
-    auto range = space().allocate_range({}, size);
+    auto range = address_space().allocate_range({}, size);
     if (!range.has_value())
         return ENOMEM;
 
-    auto region_or_error = space().allocate_region(range.value(), String("Master TLS"), PROT_READ | PROT_WRITE);
+    auto region_or_error = address_space().allocate_region(range.value(), String("Master TLS"), PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
         return region_or_error.error().error();
 
@@ -646,18 +646,18 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
 KResultOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
-    if (space().enforces_syscall_regions())
+    if (address_space().enforces_syscall_regions())
         return EPERM;
 
     if (!address) {
-        space().set_enforces_syscall_regions(true);
+        address_space().set_enforces_syscall_regions(true);
         return 0;
     }
 
     if (!Memory::is_user_address(VirtualAddress { address }))
         return EFAULT;
 
-    auto* region = space().find_region_containing(Memory::VirtualRange { VirtualAddress { address }, 1 });
+    auto* region = address_space().find_region_containing(Memory::VirtualRange { VirtualAddress { address }, 1 });
     if (!region)
         return EINVAL;
 

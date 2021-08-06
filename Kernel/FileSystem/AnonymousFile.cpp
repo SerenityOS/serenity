@@ -27,7 +27,7 @@ KResultOr<Memory::Region*> AnonymousFile::mmap(Process& process, FileDescription
     if (range.size() != m_vmobject->size())
         return EINVAL;
 
-    return process.space().allocate_region_with_vmobject(range, m_vmobject, offset, {}, prot, shared);
+    return process.address_space().allocate_region_with_vmobject(range, m_vmobject, offset, {}, prot, shared);
 }
 
 }

@@ -261,7 +261,7 @@ OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size
 
 void PerformanceEventBuffer::add_process(const Process& process, ProcessEventType event_type)
 {
-    ScopedSpinLock locker(process.space().get_lock());
+    ScopedSpinLock locker(process.address_space().get_lock());
 
     String executable;
     if (process.executable())
@@ -278,7 +278,7 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
             0, 0, PERF_EVENT_THREAD_CREATE, 0, 0, 0, nullptr);
     });
 
-    for (auto& region : process.space().regions()) {
+    for (auto& region : process.address_space().regions()) {
         [[maybe_unused]] auto rc = append_with_ip_and_bp(process.pid(), 0,
             0, 0, PERF_EVENT_MMAP, 0, region->range().base().get(), region->range().size(), region->name());
     }

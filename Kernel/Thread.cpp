@@ -117,7 +117,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
         m_regs.cs = GDT_SELECTOR_CODE3 | 3;
 #endif
 
-    m_regs.cr3 = m_process->space().page_directory().cr3();
+    m_regs.cr3 = m_process->address_space().page_directory().cr3();
 
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & ~(FlatPtr)0x7u;
@@ -404,8 +404,8 @@ void Thread::exit(void* exit_value)
     u32 unlock_count;
     [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
     if (m_thread_specific_range.has_value()) {
-        auto* region = process().space().find_region_from_range(m_thread_specific_range.value());
-        process().space().deallocate_region(*region);
+        auto* region = process().address_space().find_region_from_range(m_thread_specific_range.value());
+        process().address_space().deallocate_region(*region);
     }
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
     KCOVDevice::free_thread();
@@ -1158,7 +1158,7 @@ static bool symbolicate(RecognizedSymbol const& symbol, Process& process, String
         if (!Memory::is_user_address(VirtualAddress(symbol.address))) {
             builder.append("0xdeadc0de\n");
         } else {
-            if (auto* region = process.space().find_region_containing({ VirtualAddress(symbol.address), sizeof(FlatPtr) })) {
+            if (auto* region = process.address_space().find_region_containing({ VirtualAddress(symbol.address), sizeof(FlatPtr) })) {
                 size_t offset = symbol.address - region->vaddr().get();
                 if (auto region_name = region->name(); !region_name.is_null() && !region_name.is_empty())
                     builder.appendff("{:p}  {} + {:#x}\n", (void*)symbol.address, region_name, offset);
@@ -1219,11 +1219,11 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     if (!process().m_master_tls_region)
         return KSuccess;
 
-    auto range = process().space().allocate_range({}, thread_specific_region_size());
+    auto range = process().address_space().allocate_range({}, thread_specific_region_size());
     if (!range.has_value())
         return ENOMEM;
 
-    auto region_or_error = process().space().allocate_region(range.value(), "Thread-specific", PROT_READ | PROT_WRITE);
+    auto region_or_error = process().address_space().allocate_region(range.value(), "Thread-specific", PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
         return region_or_error.error();
 

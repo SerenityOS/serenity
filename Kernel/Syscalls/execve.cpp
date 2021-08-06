@@ -672,7 +672,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     regs.rip = load_result.entry_eip;
     regs.rsp = new_userspace_sp;
 #endif
-    regs.cr3 = space().page_directory().cr3();
+    regs.cr3 = address_space().page_directory().cr3();
 
     {
         TemporaryChange profiling_disabler(m_profiling, was_profiling);
