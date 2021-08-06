@@ -285,6 +285,9 @@ Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
     if (value.value()->is_identifier() && value.value()->to_identifier() == CSS::ValueID::Content)
         return { { CSS::FlexBasis::Content, {} } };
 
+    if (value.value()->is_auto())
+        return { { CSS::FlexBasis::Auto, {} } };
+
     if (value.value()->is_length())
         return { { CSS::FlexBasis::Length, value.value()->to_length() } };
 
