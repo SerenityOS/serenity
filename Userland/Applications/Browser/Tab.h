@@ -58,6 +58,7 @@ public:
     Function<void(const String&)> on_title_change;
     Function<void(const URL&)> on_tab_open_request;
     Function<void(Tab&)> on_tab_close_request;
+    Function<void(Tab&)> on_tab_close_other_request;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;
     Function<String(const URL&, Web::Cookie::Source source)> on_get_cookie;
     Function<void(const URL&, const Web::Cookie::ParsedCookie& cookie, Web::Cookie::Source source)> on_set_cookie;

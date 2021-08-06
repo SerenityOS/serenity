@@ -337,6 +337,12 @@ Tab::Tab(BrowserWindow& window, Type type)
     m_tab_context_menu->add_action(GUI::Action::create("&Close Tab", [this](auto&) {
         on_tab_close_request(*this);
     }));
+    m_tab_context_menu->add_action(GUI::Action::create("&Duplicate Tab", [this](auto&) {
+        on_tab_open_request(url());
+    }));
+    m_tab_context_menu->add_action(GUI::Action::create("Close &Other Tabs", [this](auto&) {
+        on_tab_close_other_request(*this);
+    }));
 
     m_page_context_menu = GUI::Menu::construct();
     m_page_context_menu->add_action(window.go_back_action());
