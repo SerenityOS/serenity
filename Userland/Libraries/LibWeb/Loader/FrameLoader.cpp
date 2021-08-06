@@ -22,9 +22,15 @@
 
 namespace Web {
 
+static RefPtr<Gfx::Bitmap> s_default_favicon_bitmap;
+
 FrameLoader::FrameLoader(BrowsingContext& browsing_context)
     : m_browsing_context(browsing_context)
 {
+    if (!s_default_favicon_bitmap) {
+        s_default_favicon_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-html.png");
+        VERIFY(s_default_favicon_bitmap);
+    }
 }
 
 FrameLoader::~FrameLoader()
@@ -166,21 +172,24 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
             favicon_url,
             [this, favicon_url](auto data, auto&, auto) {
                 dbgln("Favicon downloaded, {} bytes from {}", data.size(), favicon_url);
+                RefPtr<Gfx::Bitmap> favicon_bitmap;
                 auto decoder = Gfx::ImageDecoder::try_create(data);
                 if (!decoder) {
                     dbgln("No image decoder plugin for favicon {}", favicon_url);
-                    return;
+                } else {
+                    favicon_bitmap = decoder->frame(0).image;
+                    if (!favicon_bitmap)
+                        dbgln("Could not decode favicon {}", favicon_url);
+                    else
+                        dbgln("Decoded favicon, {}", favicon_bitmap->size());
                 }
-                auto frame = decoder->frame(0);
-                auto bitmap = frame.image;
-                if (!bitmap) {
-                    dbgln("Could not decode favicon {}", favicon_url);
-                    return;
-                }
-                dbgln("Decoded favicon, {}", bitmap->size());
-                if (auto* page = browsing_context().page())
-                    page->client().page_did_change_favicon(*bitmap);
+                load_favicon(favicon_bitmap);
+            },
+            [this](auto&, auto) {
+                load_favicon();
             });
+    } else {
+        load_favicon();
     }
 
     return true;
@@ -230,6 +239,16 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
             dbgln("Failed to load error page: {}", error);
             VERIFY_NOT_REACHED();
         });
+}
+
+void FrameLoader::load_favicon(RefPtr<Gfx::Bitmap> bitmap)
+{
+    if (auto* page = browsing_context().page()) {
+        if (bitmap)
+            page->client().page_did_change_favicon(*bitmap);
+        else
+            page->client().page_did_change_favicon(*s_default_favicon_bitmap);
+    }
 }
 
 void FrameLoader::resource_did_load()
