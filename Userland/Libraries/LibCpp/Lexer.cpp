@@ -12,8 +12,10 @@
 
 namespace Cpp {
 
-Lexer::Lexer(StringView const& input)
+Lexer::Lexer(StringView const& input, size_t start_line)
     : m_input(input)
+    , m_previous_position { start_line, 0 }
+    , m_position { start_line, 0 }
 {
 }
 
