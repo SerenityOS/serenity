@@ -27,7 +27,7 @@ KResultOr<FlatPtr> Process::sys$dbgputch(u8 ch)
 
 KResultOr<FlatPtr> Process::sys$dbgputstr(Userspace<const u8*> characters, size_t size)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     if (size == 0)
         return 0;
 
