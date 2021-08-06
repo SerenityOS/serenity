@@ -30,10 +30,10 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     {
         ProtectedDataMutationScope scope { *child };
-        child->m_promises = m_promises;
-        child->m_execpromises = m_execpromises;
-        child->m_has_promises = m_has_promises;
-        child->m_has_execpromises = m_has_execpromises;
+        child->m_promises = m_promises.load();
+        child->m_execpromises = m_execpromises.load();
+        child->m_has_promises = m_has_promises.load();
+        child->m_has_execpromises = m_has_execpromises.load();
         child->m_sid = m_sid;
         child->m_extra_gids = m_extra_gids;
         child->m_umask = m_umask;

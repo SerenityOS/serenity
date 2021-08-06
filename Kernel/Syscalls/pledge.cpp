@@ -74,13 +74,13 @@ KResultOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params
     // leave the caller in an unexpected state.
 
     if (promises) {
-        m_has_promises = true;
         m_promises = new_promises;
+        m_has_promises = true;
     }
 
     if (execpromises) {
-        m_has_execpromises = true;
         m_execpromises = new_execpromises;
+        m_has_execpromises = true;
     }
 
     return 0;
