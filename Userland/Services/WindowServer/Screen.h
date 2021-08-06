@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "Event.h"
 #include "ScreenLayout.h"
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
@@ -48,7 +49,10 @@ public:
     void on_receive_keyboard_data(::KeyEvent);
 
     Gfx::IntPoint cursor_location() const { return m_cursor_location; }
-    void set_cursor_location(const Gfx::IntPoint point) { m_cursor_location = point; }
+    void set_cursor_location(Gfx::IntPoint);
+    void set_initial_cursor_location(const Gfx::IntPoint& point) { m_cursor_location = point; };
+    void set_mouse_button_state(MouseButton);
+    void mouse_wheel_turned(int);
 
 private:
     Gfx::IntPoint m_cursor_location;

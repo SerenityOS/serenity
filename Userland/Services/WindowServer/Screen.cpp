@@ -167,7 +167,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
     rollback.disarm();
 
     if (place_cursor_on_main_screen) {
-        ScreenInput::the().set_cursor_location(Screen::main().rect().center());
+        ScreenInput::the().set_initial_cursor_location(Screen::main().rect().center());
     } else {
         auto cursor_location = ScreenInput::the().cursor_location();
         if (!find_by_location(cursor_location)) {
@@ -182,7 +182,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
                     closest_point = closest_point_on_screen_rect;
                 }
             }
-            ScreenInput::the().set_cursor_location(closest_point.value()); // We should always have one
+            ScreenInput::the().set_initial_cursor_location(closest_point.value()); // We should always have one
         }
     }
 
@@ -421,32 +421,41 @@ void ScreenInput::set_scroll_step_size(unsigned step_size)
     m_scroll_step_size = step_size;
 }
 
-void ScreenInput::on_receive_mouse_data(const MousePacket& packet)
+void ScreenInput::set_cursor_location(Gfx::IntPoint point)
 {
-    auto& current_screen = cursor_location_screen();
-    auto prev_location = m_cursor_location;
-    if (packet.is_relative) {
-        m_cursor_location.translate_by(packet.x * m_acceleration_factor, packet.y * m_acceleration_factor);
-        dbgln_if(WSSCREEN_DEBUG, "Screen: New Relative mouse point @ {}", m_cursor_location);
-    } else {
-        m_cursor_location = { packet.x * current_screen.width() / 0xffff, packet.y * current_screen.height() / 0xffff };
-        dbgln_if(WSSCREEN_DEBUG, "Screen: New Absolute mouse point @ {}", m_cursor_location);
-    }
+    if (m_cursor_location == point)
+        return;
 
-    auto* moved_to_screen = Screen::find_by_location(m_cursor_location);
+    auto* moved_to_screen = Screen::find_by_location(point);
     if (!moved_to_screen) {
-        m_cursor_location = m_cursor_location.constrained(current_screen.rect());
+        auto& current_screen = cursor_location_screen();
+        point.constrain(current_screen.rect());
         moved_to_screen = &current_screen;
     }
 
-    unsigned buttons = packet.buttons;
+    m_cursor_location = point;
+
+    auto message = make<MouseEvent>(Event::MouseMove, m_cursor_location, m_mouse_button_state, MouseButton::None, m_modifiers);
+    if (WindowManager::the().dnd_client())
+        message->set_mime_data(WindowManager::the().dnd_mime_data());
+    Core::EventLoop::current().post_event(WindowManager::the(), move(message));
+
+    Compositor::the().invalidate_cursor();
+}
+
+void ScreenInput::set_mouse_button_state(MouseButton button_state)
+{
+    if (m_mouse_button_state == (unsigned)button_state)
+        return;
+
     unsigned prev_buttons = m_mouse_button_state;
-    m_mouse_button_state = buttons;
-    unsigned changed_buttons = prev_buttons ^ buttons;
+    m_mouse_button_state = (unsigned)button_state;
+
+    unsigned changed_buttons = prev_buttons ^ m_mouse_button_state;
     auto post_mousedown_or_mouseup_if_needed = [&](MouseButton button) {
         if (!(changed_buttons & (unsigned)button))
             return;
-        auto message = make<MouseEvent>(buttons & (unsigned)button ? Event::MouseDown : Event::MouseUp, m_cursor_location, buttons, button, m_modifiers);
+        auto message = make<MouseEvent>(m_mouse_button_state & (unsigned)button ? Event::MouseDown : Event::MouseUp, m_cursor_location, m_mouse_button_state, button, m_modifiers);
         Core::EventLoop::current().post_event(WindowManager::the(), move(message));
     };
     post_mousedown_or_mouseup_if_needed(MouseButton::Primary);
@@ -454,20 +463,32 @@ void ScreenInput::on_receive_mouse_data(const MousePacket& packet)
     post_mousedown_or_mouseup_if_needed(MouseButton::Middle);
     post_mousedown_or_mouseup_if_needed(MouseButton::Backward);
     post_mousedown_or_mouseup_if_needed(MouseButton::Forward);
-    if (m_cursor_location != prev_location) {
-        auto message = make<MouseEvent>(Event::MouseMove, m_cursor_location, buttons, MouseButton::None, m_modifiers);
-        if (WindowManager::the().dnd_client())
-            message->set_mime_data(WindowManager::the().dnd_mime_data());
-        Core::EventLoop::current().post_event(WindowManager::the(), move(message));
+}
+
+void ScreenInput::mouse_wheel_turned(int z)
+{
+    VERIFY(z != 0);
+    auto message = make<MouseEvent>(Event::MouseWheel, m_cursor_location, m_mouse_button_state, MouseButton::None, m_modifiers, z * m_scroll_step_size);
+    Core::EventLoop::current().post_event(WindowManager::the(), move(message));
+}
+
+void ScreenInput::on_receive_mouse_data(const MousePacket& packet)
+{
+    auto& current_screen = cursor_location_screen();
+    auto new_location = m_cursor_location;
+    if (packet.is_relative) {
+        new_location.translate_by(packet.x * m_acceleration_factor, packet.y * m_acceleration_factor);
+        dbgln_if(WSSCREEN_DEBUG, "Screen: New Relative mouse point @ {}", m_cursor_location);
+    } else {
+        new_location = { packet.x * current_screen.width() / 0xffff, packet.y * current_screen.height() / 0xffff };
+        dbgln_if(WSSCREEN_DEBUG, "Screen: New Absolute mouse point @ {}", m_cursor_location);
     }
 
-    if (packet.z) {
-        auto message = make<MouseEvent>(Event::MouseWheel, m_cursor_location, buttons, MouseButton::None, m_modifiers, packet.z * m_scroll_step_size);
-        Core::EventLoop::current().post_event(WindowManager::the(), move(message));
-    }
+    set_mouse_button_state((MouseButton)packet.buttons);
+    set_cursor_location(new_location);
 
-    if (m_cursor_location != prev_location)
-        Compositor::the().invalidate_cursor();
+    if (packet.z)
+        mouse_wheel_turned(packet.z);
 }
 
 void ScreenInput::on_receive_keyboard_data(::KeyEvent kernel_event)
