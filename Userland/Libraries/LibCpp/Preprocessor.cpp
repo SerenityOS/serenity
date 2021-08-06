@@ -108,7 +108,12 @@ void Preprocessor::handle_preprocessor_keyword(const StringView& keyword, Generi
 {
     if (keyword == "include") {
         consume_whitespace(line_lexer);
-        m_included_paths.append(line_lexer.consume_all());
+        auto include_path = line_lexer.consume_all();
+        m_included_paths.append(include_path);
+        if (definitions_in_header_callback) {
+            for (auto& def : definitions_in_header_callback(include_path))
+                m_definitions.set(def.key, def.value);
+        }
         return;
     }
 

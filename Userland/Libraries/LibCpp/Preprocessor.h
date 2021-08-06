@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
@@ -35,6 +36,8 @@ public:
 
     void set_ignore_unsupported_keywords(bool ignore) { m_options.ignore_unsupported_keywords = ignore; }
     void set_keep_include_statements(bool keep) { m_options.keep_include_statements = keep; }
+
+    Function<Definitions(StringView)> definitions_in_header_callback { nullptr };
 
 private:
     using PreprocessorKeyword = StringView;
