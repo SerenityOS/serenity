@@ -157,7 +157,7 @@ enum class NeedsBigProcessLock {
     S(getrandom, NeedsBigProcessLock::No)                   \
     S(getkeymap, NeedsBigProcessLock::No)                   \
     S(setkeymap, NeedsBigProcessLock::Yes)                  \
-    S(clock_gettime, NeedsBigProcessLock::Yes)              \
+    S(clock_gettime, NeedsBigProcessLock::No)               \
     S(clock_settime, NeedsBigProcessLock::Yes)              \
     S(clock_nanosleep, NeedsBigProcessLock::Yes)            \
     S(join_thread, NeedsBigProcessLock::Yes)                \
