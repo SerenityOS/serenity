@@ -227,6 +227,7 @@ public:
         CustomProperty,
         Numeric,
         ValueList,
+        ComponentValueList,
         Calculated,
         BoxShadow,
     };
@@ -243,8 +244,9 @@ public:
     bool is_custom_property() const { return type() == Type::CustomProperty; }
     bool is_numeric() const { return type() == Type::Numeric; }
     bool is_value_list() const { return type() == Type::ValueList; }
-    bool is_box_shadow() const { return type() == Type::BoxShadow; }
+    bool is_component_value_list() const { return type() == Type::ComponentValueList; }
     bool is_calculated() const { return type() == Type::Calculated; }
+    bool is_box_shadow() const { return type() == Type::BoxShadow; }
 
     bool is_builtin() const { return is_inherit() || is_initial(); }
 
@@ -619,6 +621,35 @@ private:
     URL m_url;
     WeakPtr<DOM::Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
+};
+
+class StyleValueList final : public StyleValue {
+public:
+    static NonnullRefPtr<StyleValueList> create(NonnullRefPtrVector<StyleValue>&& values) { return adopt_ref(*new StyleValueList(move(values))); }
+
+    NonnullRefPtrVector<StyleValue> const& values() const { return m_values; }
+
+    virtual String to_string() const
+    {
+        StringBuilder builder;
+        builder.appendff("List[{}](", m_values.size());
+        for (size_t i = 0; i < m_values.size(); ++i) {
+            if (i)
+                builder.append(',');
+            builder.append(m_values[i].to_string());
+        }
+        builder.append(')');
+        return builder.to_string();
+    }
+
+private:
+    StyleValueList(NonnullRefPtrVector<StyleValue>&& values)
+        : StyleValue(Type::ValueList)
+        , m_values(move(values))
+    {
+    }
+
+    NonnullRefPtrVector<StyleValue> m_values;
 };
 
 class ValueListStyleValue final : public StyleValue {

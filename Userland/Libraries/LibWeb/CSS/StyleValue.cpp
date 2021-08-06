@@ -173,7 +173,7 @@ void ImageStyleValue::resource_did_load()
 }
 
 ValueListStyleValue::ValueListStyleValue(Vector<StyleComponentValueRule>&& values)
-    : StyleValue(Type::ValueList)
+    : StyleValue(Type::ComponentValueList)
     , m_values(move(values))
 {
 }
