@@ -231,4 +231,11 @@ void __ubsan_handle_pointer_overflow(const PointerOverflowData& data, ValueHandl
     }
     print_location(data.location);
 }
+
+void __ubsan_handle_float_cast_overflow(const FloatCastOverflowData&, ValueHandle) __attribute__((used));
+void __ubsan_handle_float_cast_overflow(const FloatCastOverflowData& data, ValueHandle)
+{
+    WARNLN_AND_DBGLN("UBSAN: overflow when casting from {} to {}", data.from_type.name(), data.to_type.name());
+    print_location(data.location);
+}
 }
