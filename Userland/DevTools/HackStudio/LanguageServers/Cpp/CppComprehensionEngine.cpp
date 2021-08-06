@@ -569,7 +569,7 @@ OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_docu
     document_data->m_preprocessor = make<Preprocessor>(document_data->m_filename, document_data->text());
     document_data->preprocessor().set_ignore_unsupported_keywords(true);
     document_data->preprocessor().set_keep_include_statements(true);
-    document_data->preprocessor().process();
+    auto tokens = document_data->preprocessor().process_and_lex();
 
     Preprocessor::Definitions preprocessor_definitions;
     for (auto item : document_data->preprocessor().definitions())
@@ -590,7 +590,7 @@ OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_docu
             preprocessor_definitions.set(move(item.key), move(item.value));
     }
 
-    document_data->m_parser = make<Parser>(document_data->preprocessor().processed_text(), filename, move(preprocessor_definitions));
+    document_data->m_parser = make<Parser>(move(tokens), filename, move(preprocessor_definitions));
 
     auto root = document_data->parser().parse();
 

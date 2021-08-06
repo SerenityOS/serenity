@@ -8,6 +8,7 @@
 #include <AK/Assertions.h>
 #include <AK/GenericLexer.h>
 #include <AK/StringBuilder.h>
+#include <LibCpp/Lexer.h>
 #include <ctype.h>
 
 namespace Cpp {
@@ -36,8 +37,9 @@ Preprocessor::Preprocessor(const String& filename, const StringView& program)
     }
 }
 
-const String& Preprocessor::process()
+Vector<Token> Preprocessor::process_and_lex()
 {
+    Vector<Token> all_tokens;
     for (; m_line_index < m_lines.size(); ++m_line_index) {
         auto& line = m_lines[m_line_index];
 
@@ -51,14 +53,14 @@ const String& Preprocessor::process()
         }
 
         if (include_in_processed_text) {
-            m_builder.append(line);
+            for (auto& token : process_line(line)) {
+                if (token.type() != Token::Type::Whitespace)
+                    all_tokens.append(token);
+            }
         }
-
-        m_builder.append("\n");
     }
 
-    m_processed_text = m_builder.to_string();
-    return m_processed_text;
+    return all_tokens;
 }
 
 static void consume_whitespace(GenericLexer& lexer)
@@ -224,10 +226,14 @@ void Preprocessor::handle_preprocessor_keyword(const StringView& keyword, Generi
     }
 }
 
-const String& Preprocessor::processed_text()
+Vector<Token> Preprocessor::process_line(const StringView& line)
 {
-    VERIFY(!m_processed_text.is_null());
-    return m_processed_text;
+    Lexer line_lexer { line, m_line_index };
+    auto tokens = line_lexer.lex();
+
+    // TODO: Go over tokens of line, do token substitution
+
+    return tokens;
 }
 
 };
