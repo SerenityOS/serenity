@@ -160,6 +160,35 @@ i32 compare_epoch_nanoseconds(BigInt const& epoch_nanoseconds_one, BigInt const&
     return 0;
 }
 
+// 8.5.6 AddInstant ( epochNanoseconds, hours, minutes, seconds, milliseconds, microseconds, nanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-addinstant
+BigInt* add_instant(GlobalObject& global_object, BigInt const& epoch_nanoseconds, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: hours, minutes, seconds, milliseconds, microseconds, and nanoseconds are integer Number values.
+    VERIFY(hours == trunc(hours) && minutes == trunc(minutes) && seconds == trunc(seconds) && milliseconds == trunc(milliseconds) && microseconds == trunc(microseconds) && nanoseconds == trunc(nanoseconds));
+
+    // 2. Let result be epochNanoseconds + ℤ(nanoseconds) + ℤ(microseconds) × 1000ℤ + ℤ(milliseconds) × 10^6ℤ + ℤ(seconds) × 10^9ℤ + ℤ(minutes) × 60ℤ × 10^9ℤ + ℤ(hours) × 3600ℤ × 10^9ℤ.
+    // FIXME: Pretty sure i64's are not sufficient for the extreme cases.
+    auto* result = js_bigint(vm,
+        epoch_nanoseconds.big_integer()
+            .plus(Crypto::SignedBigInteger::create_from((i64)nanoseconds))
+            .plus(Crypto::SignedBigInteger::create_from((i64)microseconds).multiplied_by(Crypto::SignedBigInteger { 1'000 }))
+            .plus(Crypto::SignedBigInteger::create_from((i64)milliseconds).multiplied_by(Crypto::SignedBigInteger { 1'000'000 }))
+            .plus(Crypto::SignedBigInteger::create_from((i64)seconds).multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 }))
+            .plus(Crypto::SignedBigInteger::create_from((i64)minutes).multiplied_by(Crypto::SignedBigInteger { 60 }).multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 }))
+            .plus(Crypto::SignedBigInteger::create_from((i64)hours).multiplied_by(Crypto::SignedBigInteger { 3600 }).multiplied_by(Crypto::SignedBigInteger { 1'000'000'000 })));
+
+    // If ! IsValidEpochNanoseconds(result) is false, throw a RangeError exception.
+    if (!is_valid_epoch_nanoseconds(*result)) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::TemporalInvalidEpochNanoseconds);
+        return {};
+    }
+
+    // 4. Return result.
+    return result;
+}
+
 // 8.5.8 RoundTemporalInstant ( ns, increment, unit, roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-roundtemporalinstant
 BigInt* round_temporal_instant(GlobalObject& global_object, BigInt const& nanoseconds, u64 increment, String const& unit, String const& rounding_mode)
 {
