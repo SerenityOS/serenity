@@ -229,7 +229,7 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
     dbgln_if(APIC_DEBUG, "Initializing APIC, base: {}", apic_base);
     set_base(apic_base);
 
-    m_apic_base = MM.allocate_kernel_region(apic_base.page_base(), PAGE_SIZE, {}, Memory::Region::Access::Read | Memory::Region::Access::Write);
+    m_apic_base = MM.allocate_kernel_region(apic_base.page_base(), PAGE_SIZE, {}, Memory::Region::Access::ReadWrite);
     if (!m_apic_base) {
         dbgln("APIC: Failed to allocate memory for APIC base");
         return false;
@@ -283,7 +283,7 @@ UNMAP_AFTER_INIT static NonnullOwnPtr<Memory::Region> create_identity_mapped_reg
         Memory::VirtualRange { VirtualAddress { static_cast<FlatPtr>(paddr.get()) }, size },
         vmobject.release_nonnull(),
         {},
-        Memory::Region::Access::Read | Memory::Region::Access::Write | Memory::Region::Access::Execute);
+        Memory::Region::Access::ReadWriteExecute);
     VERIFY(region);
     return region.release_nonnull();
 }
@@ -303,7 +303,7 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
     // Allocate enough stacks for all APs
     Vector<OwnPtr<Memory::Region>> apic_ap_stacks;
     for (u32 i = 0; i < aps_to_enable; i++) {
-        auto stack_region = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Memory::Region::Access::Read | Memory::Region::Access::Write, AllocationStrategy::AllocateNow);
+        auto stack_region = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
         if (!stack_region) {
             dbgln("APIC: Failed to allocate stack for AP #{}", i);
             return;

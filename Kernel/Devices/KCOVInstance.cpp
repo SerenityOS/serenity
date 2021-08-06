@@ -35,7 +35,7 @@ KResult KCOVInstance::buffer_allocate(size_t buffer_size_in_entries)
 
     this->m_kernel_region = MM.allocate_kernel_region_with_vmobject(
         *this->vmobject, this->m_buffer_size_in_bytes, String::formatted("kcov_{}", this->m_pid),
-        Memory::Region::Access::Read | Memory::Region::Access::Write);
+        Memory::Region::Access::ReadWrite);
     if (!this->m_kernel_region)
         return ENOMEM;
 

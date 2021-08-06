@@ -41,7 +41,7 @@ OwnPtr<KBuffer> KBufferBuilder::build()
 }
 
 KBufferBuilder::KBufferBuilder()
-    : m_buffer(KBufferImpl::try_create_with_size(4 * MiB, Memory::Region::Access::Read | Memory::Region::Access::Write))
+    : m_buffer(KBufferImpl::try_create_with_size(4 * MiB, Memory::Region::Access::ReadWrite))
 {
 }
 

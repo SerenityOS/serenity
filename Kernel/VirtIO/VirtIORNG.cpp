@@ -21,7 +21,7 @@ UNMAP_AFTER_INIT VirtIORNG::VirtIORNG(PCI::Address address)
     }
     if (success) {
         finish_init();
-        m_entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIORNG", Memory::Region::Access::Read | Memory::Region::Access::Write);
+        m_entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIORNG", Memory::Region::Access::ReadWrite);
         if (m_entropy_buffer) {
             memset(m_entropy_buffer->vaddr().as_ptr(), 0, m_entropy_buffer->size());
             request_entropy_from_host();

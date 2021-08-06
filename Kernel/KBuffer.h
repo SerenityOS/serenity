@@ -104,7 +104,7 @@ public:
     {
     }
 
-    [[nodiscard]] static OwnPtr<KBuffer> try_create_with_size(size_t size, Memory::Region::Access access = Memory::Region::Access::Read | Memory::Region::Access::Write, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
+    [[nodiscard]] static OwnPtr<KBuffer> try_create_with_size(size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto impl = KBufferImpl::try_create_with_size(size, access, name, strategy);
         if (!impl)
@@ -112,7 +112,7 @@ public:
         return adopt_own_if_nonnull(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
-    [[nodiscard]] static OwnPtr<KBuffer> try_create_with_bytes(ReadonlyBytes bytes, Memory::Region::Access access = Memory::Region::Access::Read | Memory::Region::Access::Write, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
+    [[nodiscard]] static OwnPtr<KBuffer> try_create_with_bytes(ReadonlyBytes bytes, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
     {
         auto impl = KBufferImpl::try_create_with_bytes(bytes, access, name, strategy);
         if (!impl)
@@ -120,7 +120,7 @@ public:
         return adopt_own_if_nonnull(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
-    [[nodiscard]] static KBuffer copy(const void* data, size_t size, Memory::Region::Access access = Memory::Region::Access::Read | Memory::Region::Access::Write, StringView name = "KBuffer")
+    [[nodiscard]] static KBuffer copy(const void* data, size_t size, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer")
     {
         return KBuffer(KBufferImpl::copy(data, size, access, name));
     }
@@ -141,7 +141,7 @@ public:
     [[nodiscard]] const KBufferImpl& impl() const { return *m_impl; }
     [[nodiscard]] RefPtr<KBufferImpl> take_impl() { return move(m_impl); }
 
-    KBuffer(const ByteBuffer& buffer, Memory::Region::Access access = Memory::Region::Access::Read | Memory::Region::Access::Write, StringView name = "KBuffer")
+    KBuffer(const ByteBuffer& buffer, Memory::Region::Access access = Memory::Region::Access::ReadWrite, StringView name = "KBuffer")
         : m_impl(KBufferImpl::copy(buffer.data(), buffer.size(), access, name))
     {
     }

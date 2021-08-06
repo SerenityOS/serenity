@@ -17,7 +17,7 @@ namespace Kernel::Graphics::VirtIOGPU {
 
 GPU::GPU(PCI::Address address)
     : VirtIODevice(address, "GPU")
-    , m_scratch_space(MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::Read | Memory::Region::Access::Write))
+    , m_scratch_space(MM.allocate_contiguous_kernel_region(32 * PAGE_SIZE, "VirtGPU Scratch Space", Memory::Region::Access::ReadWrite))
 {
     VERIFY(!!m_scratch_space);
     if (auto cfg = get_config(ConfigurationType::Device)) {

@@ -19,7 +19,7 @@ inline void DoubleBuffer::compute_lockfree_metadata()
 
 OwnPtr<DoubleBuffer> DoubleBuffer::try_create(size_t capacity)
 {
-    auto storage = KBuffer::try_create_with_size(capacity * 2, Memory::Region::Access::Read | Memory::Region::Access::Write, "DoubleBuffer");
+    auto storage = KBuffer::try_create_with_size(capacity * 2, Memory::Region::Access::ReadWrite, "DoubleBuffer");
     if (!storage)
         return {};
 

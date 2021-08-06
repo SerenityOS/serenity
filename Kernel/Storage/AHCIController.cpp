@@ -126,7 +126,7 @@ AHCI::HBADefinedCapabilities AHCIController::capabilities() const
 
 NonnullOwnPtr<Memory::Region> AHCIController::default_hba_region() const
 {
-    auto region = MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR5(pci_address())).page_base(), Memory::page_round_up(sizeof(AHCI::HBA)), "AHCI HBA", Memory::Region::Access::Read | Memory::Region::Access::Write);
+    auto region = MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR5(pci_address())).page_base(), Memory::page_round_up(sizeof(AHCI::HBA)), "AHCI HBA", Memory::Region::Access::ReadWrite);
     return region.release_nonnull();
 }
 

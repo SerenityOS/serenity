@@ -32,7 +32,7 @@ void FrameBufferDevice::create_framebuffer()
     // Allocate frame buffer for both front and back
     auto& info = display_info();
     m_buffer_size = calculate_framebuffer_size(info.rect.width, info.rect.height);
-    m_framebuffer = MM.allocate_kernel_region(m_buffer_size * 2, String::formatted("VirtGPU FrameBuffer #{}", m_scanout.value()), Memory::Region::Access::Read | Memory::Region::Access::Write, AllocationStrategy::AllocateNow);
+    m_framebuffer = MM.allocate_kernel_region(m_buffer_size * 2, String::formatted("VirtGPU FrameBuffer #{}", m_scanout.value()), Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
     auto write_sink_page = MM.allocate_user_physical_page(Memory::MemoryManager::ShouldZeroFill::No).release_nonnull();
     auto num_needed_pages = m_framebuffer->vmobject().page_count();
 
