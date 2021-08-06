@@ -273,7 +273,13 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         if (command.size() == 0)
             return;
 
-        Core::Process::spawn(command[0]);
+        pid_t child_pid;
+        if ((errno = posix_spawn(&child_pid, command[0], nullptr, nullptr, const_cast<char**>(command.data()), environ))) {
+            perror("posix_spawn");
+        } else {
+            if (disown(child_pid) < 0)
+                perror("disown");
+        }
     }));
 
     return system_menu;
