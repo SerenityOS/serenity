@@ -684,6 +684,8 @@ u16 Value::to_u16(GlobalObject& global_object) const
     if (signbit(value))
         int_val = -int_val;
     auto int16bit = fmod(int_val, NumericLimits<u16>::max() + 1.0);
+    if (int16bit < 0)
+        int16bit += NumericLimits<u16>::max() + 1.0;
     return static_cast<u16>(int16bit);
 }
 
@@ -720,6 +722,8 @@ u8 Value::to_u8(GlobalObject& global_object) const
     if (signbit(value))
         int_val = -int_val;
     auto int8bit = fmod(int_val, NumericLimits<u8>::max() + 1.0);
+    if (int8bit < 0)
+        int8bit += NumericLimits<u8>::max() + 1.0;
     return static_cast<u8>(int8bit);
 }
 
