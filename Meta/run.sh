@@ -215,7 +215,8 @@ $SERENITY_EXTRA_QEMU_ARGS
 -machine q35
 -d guest_errors
 -smp 2
--device secondary-vga
+-vga none
+-device bochs-display
 -device ich9-usb-ehci1,bus=pcie.0,multifunction=on,addr=0x5.0x0
 -device ich9-usb-ehci2,bus=pcie.0,addr=0x5.0x2
 -device ich9-usb-uhci1,bus=pcie.0,multifunction=on,addr=0x7.0x0
@@ -238,8 +239,6 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device pci-bridge,chassis_nr=1,id=bridge1,bus=pcie.4,addr=0x3.0x0
 -device sdhci-pci,bus=bridge1,addr=0x1.0x0
 -display $SERENITY_QEMU_DISPLAY_BACKEND
--device $SERENITY_QEMU_DISPLAY_DEVICE
--device piix3-ide
 -drive file=${SERENITY_DISK_IMAGE},format=raw,id=disk,if=none
 -device ahci,id=ahci
 -device ide-hd,bus=ahci.0,drive=disk,unit=0
@@ -250,7 +249,6 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device virtio-rng-pci
 $SERENITY_AUDIO_BACKEND
 $SERENITY_AUDIO_HW
--device sb16
 "
 
 export SDL_VIDEO_X11_DGAMOUSE=0
