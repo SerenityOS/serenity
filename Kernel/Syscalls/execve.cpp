@@ -154,12 +154,12 @@ static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]
     return new_sp;
 }
 
-struct RequiredLoadVirtualRange {
+struct RequiredLoadRange {
     FlatPtr start { 0 };
     FlatPtr end { 0 };
 };
 
-static KResultOr<RequiredLoadVirtualRange> get_required_load_range(FileDescription& program_description)
+static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& program_description)
 {
     auto& inode = *(program_description.inode());
     auto vmobject = Memory::SharedInodeVMObject::try_create_with_inode(inode);
@@ -181,7 +181,7 @@ static KResultOr<RequiredLoadVirtualRange> get_required_load_range(FileDescripti
         return EINVAL;
     }
 
-    RequiredLoadVirtualRange range {};
+    RequiredLoadRange range {};
     elf_image.for_each_program_header([&range](const auto& pheader) {
         if (pheader.type() != PT_LOAD)
             return;
@@ -221,7 +221,7 @@ static KResultOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header
 
     auto main_program_load_range = main_program_load_range_result.value();
 
-    RequiredLoadVirtualRange selected_range {};
+    RequiredLoadRange selected_range {};
 
     if (interpreter_description) {
         auto interpreter_load_range_result = get_required_load_range(*interpreter_description);
@@ -235,8 +235,8 @@ static KResultOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header
         if (main_program_load_range.end < load_range_start || main_program_load_range.start > interpreter_load_range_end)
             return random_load_offset_in_range(load_range_start, load_range_size);
 
-        RequiredLoadVirtualRange first_available_part = { load_range_start, main_program_load_range.start };
-        RequiredLoadVirtualRange second_available_part = { main_program_load_range.end, interpreter_load_range_end };
+        RequiredLoadRange first_available_part = { load_range_start, main_program_load_range.start };
+        RequiredLoadRange second_available_part = { main_program_load_range.end, interpreter_load_range_end };
 
         // Select larger part
         if (first_available_part.end - first_available_part.start > second_available_part.end - second_available_part.start)
