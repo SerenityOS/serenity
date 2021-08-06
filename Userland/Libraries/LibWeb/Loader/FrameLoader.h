@@ -40,6 +40,7 @@ private:
     virtual void resource_did_fail() override;
 
     void load_error_page(const URL& failed_url, const String& error_message);
+    void load_favicon(RefPtr<Gfx::Bitmap> bitmap = nullptr);
     bool parse_document(DOM::Document&, const ByteBuffer& data);
 
     BrowsingContext& m_browsing_context;
