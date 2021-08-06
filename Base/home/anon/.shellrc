@@ -5,3 +5,4 @@
 IFS="\x0a"
 
 export HISTCONTROL="ignoreboth"
+export DISPLAY=":0"
