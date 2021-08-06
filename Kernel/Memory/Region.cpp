@@ -45,7 +45,7 @@ Region::~Region()
     // find the address<->region mappings in an invalid state there.
     ScopedSpinLock lock(s_mm_lock);
     if (m_page_directory) {
-        unmap(ShouldDeallocateVirtualMemoryVirtualRange::Yes);
+        unmap(ShouldDeallocateVirtualRange::Yes);
         VERIFY(!m_page_directory);
     }
 
@@ -234,7 +234,7 @@ bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
     return success;
 }
 
-void Region::unmap(ShouldDeallocateVirtualMemoryVirtualRange deallocate_range)
+void Region::unmap(ShouldDeallocateVirtualRange deallocate_range)
 {
     ScopedSpinLock lock(s_mm_lock);
     if (!m_page_directory)
@@ -246,7 +246,7 @@ void Region::unmap(ShouldDeallocateVirtualMemoryVirtualRange deallocate_range)
         MM.release_pte(*m_page_directory, vaddr, i == count - 1);
     }
     MM.flush_tlb(m_page_directory, vaddr(), page_count());
-    if (deallocate_range == ShouldDeallocateVirtualMemoryVirtualRange::Yes) {
+    if (deallocate_range == ShouldDeallocateVirtualRange::Yes) {
         m_page_directory->range_allocator().deallocate(range());
     }
     m_page_directory = nullptr;

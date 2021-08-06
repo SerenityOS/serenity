@@ -379,7 +379,7 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
 
     // NOTE: Since this region is identity-mapped, we have to unmap it manually to prevent the virtual
     //       address range from leaking into the general virtual range allocator.
-    apic_startup_region->unmap(Memory::Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
+    apic_startup_region->unmap(Memory::Region::ShouldDeallocateVirtualRange::No);
 }
 
 UNMAP_AFTER_INIT void APIC::boot_aps()

@@ -69,7 +69,7 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         auto region = take_region(*old_region);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
+        region->unmap(Region::ShouldDeallocateVirtualRange::No);
 
         auto new_regions_or_error = try_split_region_around_range(*region, range_to_unmap);
         if (new_regions_or_error.is_error())
@@ -115,7 +115,7 @@ KResult AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         auto region = take_region(*old_region);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
-        region->unmap(Region::ShouldDeallocateVirtualMemoryVirtualRange::No);
+        region->unmap(Region::ShouldDeallocateVirtualRange::No);
 
         // Otherwise, split the regions and collect them for future mapping.
         auto split_regions_or_error = try_split_region_around_range(*region, range_to_unmap);
