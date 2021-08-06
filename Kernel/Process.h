@@ -92,10 +92,10 @@ protected:
     gid_t m_sgid { 0 };
     Vector<gid_t> m_extra_gids;
     bool m_dumpable { false };
-    bool m_has_promises { false };
-    u32 m_promises { 0 };
-    bool m_has_execpromises { false };
-    u32 m_execpromises { 0 };
+    Atomic<bool> m_has_promises { false };
+    Atomic<u32> m_promises { 0 };
+    Atomic<bool> m_has_execpromises { false };
+    Atomic<u32> m_execpromises { 0 };
     mode_t m_umask { 022 };
     VirtualAddress m_signal_trampoline;
     Atomic<u32> m_thread_count { 0 };
