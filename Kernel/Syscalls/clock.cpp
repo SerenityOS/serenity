@@ -49,7 +49,7 @@ KResultOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<cons
 
 KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(stdio);
 
     Syscall::SC_clock_nanosleep_params params;
