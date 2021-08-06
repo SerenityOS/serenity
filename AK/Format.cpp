@@ -19,6 +19,7 @@
 #    include <Kernel/Process.h>
 #    include <Kernel/Thread.h>
 #else
+#    include <math.h>
 #    include <stdio.h>
 #    include <string.h>
 #endif
@@ -344,6 +345,22 @@ void FormatBuilder::put_f64(
     StringBuilder string_builder;
     FormatBuilder format_builder { string_builder };
 
+    if (isnan(value) || isinf(value)) [[unlikely]] {
+        if (value < 0.0)
+            string_builder.append('-');
+        else if (sign_mode == SignMode::Always)
+            string_builder.append('+');
+        else
+            string_builder.append(' ');
+
+        if (isnan(value))
+            string_builder.append(upper_case ? "NAN"sv : "nan"sv);
+        else
+            string_builder.append(upper_case ? "INF"sv : "inf"sv);
+        format_builder.put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill);
+        return;
+    }
+
     bool is_negative = value < 0.0;
     if (is_negative)
         value = -value;
@@ -393,6 +410,22 @@ void FormatBuilder::put_f80(
 {
     StringBuilder string_builder;
     FormatBuilder format_builder { string_builder };
+
+    if (isnan(value) || isinf(value)) [[unlikely]] {
+        if (value < 0.0l)
+            string_builder.append('-');
+        else if (sign_mode == SignMode::Always)
+            string_builder.append('+');
+        else
+            string_builder.append(' ');
+
+        if (isnan(value))
+            string_builder.append(upper_case ? "NAN"sv : "nan"sv);
+        else
+            string_builder.append(upper_case ? "INF"sv : "inf"sv);
+        format_builder.put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill);
+        return;
+    }
 
     bool is_negative = value < 0.0l;
     if (is_negative)
