@@ -140,7 +140,7 @@ KResultOr<Memory::Region*> KCOVDevice::mmap(Process& process, FileDescription&, 
         return ENOBUFS; // Mmaped, before KCOV_SETBUFSIZE
     }
 
-    return process.space().allocate_region_with_vmobject(
+    return process.address_space().allocate_region_with_vmobject(
         range, *kcov_instance->vmobject, offset, {}, prot, shared);
 }
 

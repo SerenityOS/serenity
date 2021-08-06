@@ -14,7 +14,7 @@ KResultOr<FlatPtr> Process::sys$get_stack_bounds(Userspace<FlatPtr*> user_stack_
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     auto& regs = Thread::current()->get_register_dump_from_stack();
     FlatPtr stack_pointer = regs.userspace_sp();
-    auto* stack_region = space().find_region_containing(Memory::VirtualRange { VirtualAddress(stack_pointer), 1 });
+    auto* stack_region = address_space().find_region_containing(Memory::VirtualRange { VirtualAddress(stack_pointer), 1 });
 
     // The syscall handler should have killed us if we had an invalid stack pointer.
     VERIFY(stack_region);

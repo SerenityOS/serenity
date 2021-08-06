@@ -31,7 +31,7 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
     if (user_sp.has_overflow())
         return EOVERFLOW;
 
-    if (!MM.validate_user_stack(this->space(), VirtualAddress(user_sp.value() - 4)))
+    if (!MM.validate_user_stack(this->address_space(), VirtualAddress(user_sp.value() - 4)))
         return EFAULT;
 
     // FIXME: return EAGAIN if Thread::all_threads().size() is greater than PTHREAD_THREADS_MAX
@@ -73,7 +73,7 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
     regs.rdx = params.rdx;
     regs.rcx = params.rcx;
 #endif
-    regs.cr3 = space().page_directory().cr3();
+    regs.cr3 = address_space().page_directory().cr3();
 
     auto tsr_result = thread->make_thread_specific_region({});
     if (tsr_result.is_error())
@@ -102,7 +102,7 @@ void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stac
     PerformanceManager::add_thread_exit_event(*current_thread);
 
     if (stack_location) {
-        auto unmap_result = space().unmap_mmap_range(VirtualAddress { stack_location }, stack_size);
+        auto unmap_result = address_space().unmap_mmap_range(VirtualAddress { stack_location }, stack_size);
         if (unmap_result.is_error())
             dbgln("Failed to unmap thread stack, terminating thread anyway. Error code: {}", unmap_result.error());
     }

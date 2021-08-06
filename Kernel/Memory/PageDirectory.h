@@ -41,8 +41,8 @@ public:
 
     VirtualRangeAllocator& identity_range_allocator() { return m_identity_range_allocator; }
 
-    AddressSpace* space() { return m_space; }
-    const AddressSpace* space() const { return m_space; }
+    AddressSpace* address_space() { return m_space; }
+    const AddressSpace* address_space() const { return m_space; }
 
     void set_space(Badge<AddressSpace>, AddressSpace& space) { m_space = &space; }
 

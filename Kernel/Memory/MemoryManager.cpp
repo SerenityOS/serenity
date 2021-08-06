@@ -671,8 +671,8 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
     auto page_directory = PageDirectory::find_by_cr3(read_cr3());
     if (!page_directory)
         return nullptr;
-    VERIFY(page_directory->space());
-    return find_user_region_from_vaddr(*page_directory->space(), vaddr);
+    VERIFY(page_directory->address_space());
+    return find_user_region_from_vaddr(*page_directory->address_space(), vaddr);
 }
 
 PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
@@ -930,7 +930,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 
 void MemoryManager::enter_process_paging_scope(Process& process)
 {
-    enter_space(process.space());
+    enter_space(process.address_space());
 }
 
 void MemoryManager::enter_space(AddressSpace& space)

@@ -129,7 +129,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
     // acquiring the queue lock
     RefPtr<Memory::VMObject> vmobject, vmobject2;
     if (!is_private) {
-        auto region = space().find_region_containing(Memory::VirtualRange { VirtualAddress { user_address_or_offset }, sizeof(u32) });
+        auto region = address_space().find_region_containing(Memory::VirtualRange { VirtualAddress { user_address_or_offset }, sizeof(u32) });
         if (!region)
             return EFAULT;
         vmobject = region->vmobject();
@@ -139,7 +139,7 @@ KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*>
         case FUTEX_REQUEUE:
         case FUTEX_CMP_REQUEUE:
         case FUTEX_WAKE_OP: {
-            auto region2 = space().find_region_containing(Memory::VirtualRange { VirtualAddress { user_address_or_offset2 }, sizeof(u32) });
+            auto region2 = address_space().find_region_containing(Memory::VirtualRange { VirtualAddress { user_address_or_offset2 }, sizeof(u32) });
             if (!region2)
                 return EFAULT;
             vmobject2 = region2->vmobject();
