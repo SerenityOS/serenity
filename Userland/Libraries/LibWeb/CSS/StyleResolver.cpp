@@ -1377,9 +1377,44 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Flex) {
+
+        if (value.is_auto()) {
+            style.set_property(CSS::PropertyID::FlexGrow, CSS::NumericStyleValue::create(1.0));
+            style.set_property(CSS::PropertyID::FlexShrink, CSS::NumericStyleValue::create(1.0));
+            // FIXME: Support auto
+            style.set_property(CSS::PropertyID::FlexBasis, CSS::IdentifierStyleValue::create(CSS::ValueID::Content));
+            return;
+        }
+
         if (value.is_length() || (value.is_identifier() && value.to_identifier() == CSS::ValueID::Content)) {
             style.set_property(CSS::PropertyID::FlexBasis, value);
             return;
+        }
+
+        if (value.is_identifier() && value.to_identifier() == CSS::ValueID::None) {
+            style.set_property(CSS::PropertyID::FlexGrow, CSS::NumericStyleValue::create(0.0));
+            style.set_property(CSS::PropertyID::FlexShrink, CSS::NumericStyleValue::create(0.0));
+            // FIXME: Support auto
+            style.set_property(CSS::PropertyID::FlexBasis, CSS::IdentifierStyleValue::create(CSS::ValueID::Content));
+            return;
+        }
+
+        if (value.is_initial()) {
+            style.set_property(CSS::PropertyID::FlexGrow, CSS::NumericStyleValue::create(0.0));
+            style.set_property(CSS::PropertyID::FlexShrink, CSS::NumericStyleValue::create(1.0));
+            // FIXME: Support auto
+            style.set_property(CSS::PropertyID::FlexBasis, CSS::IdentifierStyleValue::create(CSS::ValueID::Content));
+            return;
+        }
+
+        if (value.is_numeric()) {
+            auto number = verify_cast<NumericStyleValue>(value).value();
+            if (number >= 0) {
+                style.set_property(CSS::PropertyID::FlexGrow, value);
+                style.set_property(CSS::PropertyID::FlexShrink, CSS::NumericStyleValue::create(1.0));
+                style.set_property(CSS::PropertyID::FlexBasis, CSS::NumericStyleValue::create(0.0));
+                return;
+            }
         }
 
         if (value.is_value_list()) {
