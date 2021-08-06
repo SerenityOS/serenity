@@ -283,6 +283,15 @@ TEST_CASE(find_with_empty_needle)
     EXPECT_EQ(string.find_all(""sv), (Vector<size_t> { 0u, 1u, 2u, 3u }));
 }
 
+TEST_CASE(bijective_base)
+{
+    EXPECT_EQ(String::bijective_base_from(0), "A");
+    EXPECT_EQ(String::bijective_base_from(25), "Z");
+    EXPECT_EQ(String::bijective_base_from(26), "AA");
+    EXPECT_EQ(String::bijective_base_from(52), "BA");
+    EXPECT_EQ(String::bijective_base_from(704), "ABC");
+}
+
 TEST_CASE(roman_numerals)
 {
     auto zero = String::roman_number_from(0);
