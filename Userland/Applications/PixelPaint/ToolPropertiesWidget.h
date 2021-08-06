@@ -8,6 +8,7 @@
 
 #include <AK/RefPtr.h>
 #include <LibGUI/Forward.h>
+#include <LibGUI/StackWidget.h>
 #include <LibGUI/Widget.h>
 
 namespace PixelPaint {
@@ -28,6 +29,8 @@ private:
     RefPtr<GUI::GroupBox> m_group_box;
 
     Tool* m_active_tool { nullptr };
+    RefPtr<GUI::StackWidget> m_tool_widget_stack;
+    RefPtr<GUI::Widget> m_blank_widget;
     GUI::Widget* m_active_tool_widget { nullptr };
 };
 

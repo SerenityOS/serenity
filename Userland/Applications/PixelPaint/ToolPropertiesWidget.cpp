@@ -20,6 +20,8 @@ ToolPropertiesWidget::ToolPropertiesWidget()
     m_group_box = add<GUI::GroupBox>("Tool properties");
     auto& layout = m_group_box->set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins({ 10, 20, 10, 10 });
+    m_tool_widget_stack = m_group_box->add<GUI::StackWidget>();
+    m_blank_widget = m_tool_widget_stack->add<GUI::Widget>();
 }
 
 void ToolPropertiesWidget::set_active_tool(Tool* tool)
@@ -27,13 +29,18 @@ void ToolPropertiesWidget::set_active_tool(Tool* tool)
     if (tool == m_active_tool)
         return;
 
-    if (m_active_tool_widget != nullptr)
-        m_group_box->remove_child(*m_active_tool_widget);
-
     m_active_tool = tool;
     m_active_tool_widget = tool->get_properties_widget();
-    if (m_active_tool_widget != nullptr)
-        m_group_box->add_child(*m_active_tool_widget);
+
+    if (m_active_tool_widget == nullptr) {
+        m_tool_widget_stack->set_active_widget(m_blank_widget);
+        return;
+    }
+
+    if (!m_tool_widget_stack->is_ancestor_of(*m_active_tool_widget))
+        m_tool_widget_stack->add_child(*m_active_tool_widget);
+
+    m_tool_widget_stack->set_active_widget(m_active_tool_widget);
 }
 
 ToolPropertiesWidget::~ToolPropertiesWidget()
