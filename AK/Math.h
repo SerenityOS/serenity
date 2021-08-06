@@ -65,23 +65,29 @@ template<FloatingPoint T>
 constexpr T fmod(T x, T y)
 {
     CONSTEXPR_STATE(fmod, x, y);
-    T res;
-    asm(
-        "fprem"
-        : "=t"(res)
-        : "0"(x), "u"(y));
-    return res;
+    u16 fpu_status;
+    do {
+        asm(
+            "fprem\n"
+            "fnstsw %%ax\n"
+            : "+t"(x), "=a"(fpu_status)
+            : "u"(y));
+    } while (fpu_status & 0x400);
+    return x;
 }
 template<FloatingPoint T>
 constexpr T remainder(T x, T y)
 {
     CONSTEXPR_STATE(remainder, x, y);
-    T res;
-    asm(
-        "fprem1"
-        : "=t"(res)
-        : "0"(x), "u"(y));
-    return res;
+    u16 fpu_status;
+    do {
+        asm(
+            "fprem1\n"
+            "fnstsw %%ax\n"
+            : "+t"(x), "=a"(fpu_status)
+            : "u"(y));
+    } while (fpu_status & 0x400);
+    return x;
 }
 }
 
