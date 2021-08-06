@@ -341,12 +341,12 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sign)
 // 21.3.2.11 Math.clz32 ( x ), https://tc39.es/ecma262/#sec-math.clz32
 JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
 {
-    auto number = vm.argument(0).to_number(global_object);
+    auto number = vm.argument(0).to_u32(global_object);
     if (vm.exception())
         return {};
-    if (!number.is_finite_number() || (unsigned)number.as_double() == 0)
+    if (number == 0)
         return Value(32);
-    return Value(__builtin_clz((unsigned)number.as_double()));
+    return Value(__builtin_clz(number));
 }
 
 // 21.3.2.2 Math.acos ( x ), https://tc39.es/ecma262/#sec-math.acos
