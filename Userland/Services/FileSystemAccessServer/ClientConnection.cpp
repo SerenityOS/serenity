@@ -107,14 +107,14 @@ void ClientConnection::request_file(i32 window_server_client_id, i32 parent_wind
     }
 }
 
-void ClientConnection::prompt_open_file(i32 window_server_client_id, i32 parent_window_id, String const& path_to_view, Core::OpenMode const& requested_access)
+void ClientConnection::prompt_open_file(i32 window_server_client_id, i32 parent_window_id, String const& window_title, String const& path_to_view, Core::OpenMode const& requested_access)
 {
     auto relevant_permissions = requested_access & (Core::OpenMode::ReadOnly | Core::OpenMode::WriteOnly);
     VERIFY(relevant_permissions != Core::OpenMode::NotOpen);
 
     auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
 
-    auto user_picked_file = GUI::FilePicker::get_open_filepath(main_window, "Select file", path_to_view);
+    auto user_picked_file = GUI::FilePicker::get_open_filepath(main_window, window_title, path_to_view);
 
     prompt_helper(user_picked_file, requested_access);
 }

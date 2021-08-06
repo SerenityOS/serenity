@@ -27,7 +27,7 @@ public:
 
 private:
     virtual void request_file(i32, i32, String const&, Core::OpenMode const&) override;
-    virtual void prompt_open_file(i32, i32, String const&, Core::OpenMode const&) override;
+    virtual void prompt_open_file(i32, i32, String const&, String const&, Core::OpenMode const&) override;
     virtual void prompt_save_file(i32, i32, String const&, String const&, String const&, Core::OpenMode const&) override;
 
     void prompt_helper(Optional<String> const&, Core::OpenMode const&);

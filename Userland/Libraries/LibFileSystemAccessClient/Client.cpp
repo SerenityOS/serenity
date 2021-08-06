@@ -8,7 +8,6 @@
 // clang-format off
 #include <LibGUI/WindowServerConnection.h>
 // clang-format on
-#include <LibCore/StandardPaths.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Window.h>
 
@@ -40,7 +39,7 @@ Result Client::request_file(i32 parent_window_id, String const& path, Core::Open
     return m_promise->await();
 }
 
-Result Client::open_file(i32 parent_window_id)
+Result Client::open_file(i32 parent_window_id, String const& window_title, StringView const& path)
 {
     m_promise = Core::Promise<Result>::construct();
     auto parent_window_server_client_id = GUI::WindowServerConnection::the().expose_client_id();
@@ -52,7 +51,7 @@ Result Client::open_file(i32 parent_window_id)
         GUI::WindowServerConnection::the().async_remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
-    async_prompt_open_file(parent_window_server_client_id, parent_window_id, Core::StandardPaths::home_directory(), Core::OpenMode::ReadOnly);
+    async_prompt_open_file(parent_window_server_client_id, parent_window_id, window_title, path, Core::OpenMode::ReadOnly);
 
     return m_promise->await();
 }
