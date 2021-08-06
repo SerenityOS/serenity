@@ -226,7 +226,7 @@ void Game::keydown_event(GUI::KeyEvent& event)
         start_game_over_animation();
     } else if (event.key() == KeyCode::Key_Tab) {
         auto_move_eligible_cards_to_foundations();
-    } else if (event.key() == KeyCode::Key_Space) {
+    } else if (event.key() == KeyCode::Key_Space && m_mouse_down != true) {
         draw_cards();
     } else if (event.shift() && event.key() == KeyCode::Key_F11) {
         dump_layout();
