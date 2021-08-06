@@ -163,7 +163,7 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_na
     }
 
     if (reference_scope.is_empty()) {
-        for (auto& preprocessor_name : document.parser().preprocessor_definitions().keys()) {
+        for (auto& preprocessor_name : document.preprocessor().definitions().keys()) {
             if (preprocessor_name.starts_with(partial_text)) {
                 suggestions.append({ preprocessor_name.to_string(), partial_text.length(), GUI::AutocompleteProvider::CompletionKind::PreprocessorDefinition });
             }
@@ -412,13 +412,13 @@ Optional<GUI::AutocompleteProvider::ProjectLocation> CppComprehensionEngine::fin
     Position cpp_position { text_position.line(), text_position.column() };
 
     // Search for a replaced preprocessor token that intersects with text_position
-    for (auto& replaced_token : document.parser().replaced_preprocessor_tokens()) {
-        if (replaced_token.token.start() > cpp_position)
+    for (auto& substitution : document.preprocessor().substitutions()) {
+        if (substitution.original_token.start() > cpp_position)
             continue;
-        if (replaced_token.token.end() < cpp_position)
+        if (substitution.original_token.end() < cpp_position)
             continue;
 
-        return GUI::AutocompleteProvider::ProjectLocation { replaced_token.preprocessor_value.filename, replaced_token.preprocessor_value.line, replaced_token.preprocessor_value.column };
+        return GUI::AutocompleteProvider::ProjectLocation { substitution.defined_value.filename, substitution.defined_value.line, substitution.defined_value.column };
     }
     return {};
 }
@@ -592,7 +592,7 @@ OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_docu
             document_data->m_available_headers.set(header);
     }
 
-    document_data->m_parser = make<Parser>(move(tokens), filename, document_data->preprocessor().definitions());
+    document_data->m_parser = make<Parser>(move(tokens), filename);
 
     auto root = document_data->parser().parse();
 

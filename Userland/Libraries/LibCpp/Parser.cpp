@@ -15,32 +15,15 @@
 
 namespace Cpp {
 
-Parser::Parser(Vector<Token> const& tokens, const String& filename, Preprocessor::Definitions const& definitions)
-    : m_preprocessor_definitions(move(definitions))
-    , m_filename(filename)
+Parser::Parser(Vector<Token> tokens, String const& filename)
+    : m_filename(filename)
+    , m_tokens(move(tokens))
 {
-    initialize_program_tokens(tokens);
     if constexpr (CPP_DEBUG) {
         dbgln("Tokens:");
         for (size_t i = 0; i < m_tokens.size(); ++i) {
             dbgln("{}- {}", i, m_tokens[i].to_string());
         }
-    }
-}
-
-void Parser::initialize_program_tokens(Vector<Token> const& tokens)
-{
-    for (auto& token : tokens) {
-        if (token.type() == Token::Type::Whitespace)
-            continue;
-        if (token.type() == Token::Type::Identifier) {
-            if (auto defined_value = m_preprocessor_definitions.find(text_of_token(token)); defined_value != m_preprocessor_definitions.end()) {
-                add_tokens_for_preprocessor(token, defined_value->value);
-                m_replaced_preprocessor_tokens.append({ token, defined_value->value });
-                continue;
-            }
-        }
-        m_tokens.append(move(token));
     }
 }
 
@@ -1395,19 +1378,6 @@ bool Parser::match_ellipsis()
     if (m_state.token_index > m_tokens.size() - 3)
         return false;
     return peek().type() == Token::Type::Dot && peek(1).type() == Token::Type::Dot && peek(2).type() == Token::Type::Dot;
-}
-void Parser::add_tokens_for_preprocessor(Token const& replaced_token, Preprocessor::DefinedValue& definition)
-{
-    if (!definition.value.has_value())
-        return;
-    Lexer lexer(definition.value.value());
-    for (auto token : lexer.lex()) {
-        if (token.type() == Token::Type::Whitespace)
-            continue;
-        token.set_start(replaced_token.start());
-        token.set_end(replaced_token.end());
-        m_tokens.append(move(token));
-    }
 }
 
 NonnullRefPtr<NamespaceDeclaration> Parser::parse_namespace_declaration(ASTNode& parent, bool is_nested_namespace)
