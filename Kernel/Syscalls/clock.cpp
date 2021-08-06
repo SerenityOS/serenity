@@ -118,7 +118,7 @@ KResultOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, Us
 
 KResultOr<FlatPtr> Process::sys$gettimeofday(Userspace<timeval*> user_tv)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(stdio);
     auto tv = kgettimeofday().to_timeval();
     if (!copy_to_user(user_tv, &tv))
