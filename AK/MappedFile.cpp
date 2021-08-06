@@ -21,6 +21,15 @@ Result<NonnullRefPtr<MappedFile>, OSError> MappedFile::map(const String& path)
     if (fd < 0)
         return OSError(errno);
 
+    return map_from_fd_and_close(fd, path);
+}
+
+Result<NonnullRefPtr<MappedFile>, OSError> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] String const& path)
+{
+    if (fcntl(fd, F_SETFD, FD_CLOEXEC) == -1) {
+        return OSError(errno);
+    }
+
     ScopeGuard fd_close_guard = [fd] {
         close(fd);
     };
