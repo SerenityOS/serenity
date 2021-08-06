@@ -233,6 +233,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         m_background_image = static_ptr_cast<CSS::ImageStyleValue>(bgimage.value());
     }
 
+    // FIXME: BorderXRadius properties are now BorderRadiusStyleValues, so make use of that.
     auto border_bottom_left_radius = specified_style.property(CSS::PropertyID::BorderBottomLeftRadius);
     if (border_bottom_left_radius.has_value())
         computed_values.set_border_bottom_left_radius(border_bottom_left_radius.value()->to_length());

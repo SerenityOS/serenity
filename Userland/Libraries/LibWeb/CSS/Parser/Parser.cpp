@@ -1926,6 +1926,109 @@ RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, Pro
     return BorderStyleValue::create(border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull());
 }
 
+RefPtr<StyleValue> Parser::parse_border_radius_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    if (component_values.size() == 2) {
+        auto horizontal = parse_length(context, component_values[0]);
+        auto vertical = parse_length(context, component_values[1]);
+        if (horizontal.has_value() && vertical.has_value())
+            return BorderRadiusStyleValue::create(horizontal.value(), vertical.value());
+
+        return nullptr;
+    }
+
+    if (component_values.size() == 1) {
+        auto radius = parse_length(context, component_values[0]);
+        if (radius.has_value())
+            return BorderRadiusStyleValue::create(radius.value(), radius.value());
+        return nullptr;
+    }
+
+    return nullptr;
+}
+
+RefPtr<StyleValue> Parser::parse_border_radius_shorthand_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto top_left = [&](Vector<Length>& radii) { return radii[0]; };
+    auto top_right = [&](Vector<Length>& radii) {
+        switch (radii.size()) {
+        case 4:
+        case 3:
+        case 2:
+            return radii[1];
+        case 1:
+            return radii[0];
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+    auto bottom_right = [&](Vector<Length>& radii) {
+        switch (radii.size()) {
+        case 4:
+        case 3:
+            return radii[2];
+        case 2:
+        case 1:
+            return radii[0];
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+    auto bottom_left = [&](Vector<Length>& radii) {
+        switch (radii.size()) {
+        case 4:
+            return radii[3];
+        case 3:
+        case 2:
+            return radii[1];
+        case 1:
+            return radii[0];
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    };
+
+    Vector<Length> horizontal_radii;
+    Vector<Length> vertical_radii;
+    bool reading_vertical = false;
+
+    for (auto& value : component_values) {
+        if (value.is(Token::Type::Delim) && value.token().delim() == "/"sv) {
+            if (reading_vertical || horizontal_radii.is_empty())
+                return nullptr;
+
+            reading_vertical = true;
+            continue;
+        }
+
+        auto maybe_length = parse_length(context, value);
+        if (!maybe_length.has_value())
+            return nullptr;
+        if (reading_vertical) {
+            vertical_radii.append(maybe_length.value());
+        } else {
+            horizontal_radii.append(maybe_length.value());
+        }
+    }
+
+    if (horizontal_radii.size() > 4 || vertical_radii.size() > 4
+        || horizontal_radii.is_empty()
+        || (reading_vertical && vertical_radii.is_empty()))
+        return nullptr;
+
+    NonnullRefPtrVector<StyleValue> border_radii;
+    border_radii.append(BorderRadiusStyleValue::create(top_left(horizontal_radii),
+        vertical_radii.is_empty() ? top_left(horizontal_radii) : top_left(vertical_radii)));
+    border_radii.append(BorderRadiusStyleValue::create(top_right(horizontal_radii),
+        vertical_radii.is_empty() ? top_right(horizontal_radii) : top_right(vertical_radii)));
+    border_radii.append(BorderRadiusStyleValue::create(bottom_right(horizontal_radii),
+        vertical_radii.is_empty() ? bottom_right(horizontal_radii) : bottom_right(vertical_radii)));
+    border_radii.append(BorderRadiusStyleValue::create(bottom_left(horizontal_radii),
+        vertical_radii.is_empty() ? bottom_left(horizontal_radii) : bottom_left(vertical_radii)));
+
+    return StyleValueList::create(move(border_radii));
+}
+
 RefPtr<StyleValue> Parser::parse_box_shadow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
     // FIXME: Also support inset, spread-radius and multiple comma-seperated box-shadows
@@ -2514,6 +2617,17 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     case PropertyID::BorderRight:
     case PropertyID::BorderTop:
         if (auto parsed_value = parse_border_value(m_context, property_id, component_values))
+            return parsed_value;
+        break;
+    case PropertyID::BorderTopLeftRadius:
+    case PropertyID::BorderTopRightRadius:
+    case PropertyID::BorderBottomRightRadius:
+    case PropertyID::BorderBottomLeftRadius:
+        if (auto parsed_value = parse_border_radius_value(m_context, component_values))
+            return parsed_value;
+        break;
+    case PropertyID::BorderRadius:
+        if (auto parsed_value = parse_border_radius_shorthand_value(m_context, component_values))
             return parsed_value;
         break;
     case PropertyID::BoxShadow:

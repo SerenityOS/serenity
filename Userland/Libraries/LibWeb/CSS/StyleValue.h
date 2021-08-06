@@ -231,6 +231,7 @@ public:
         Calculated,
         Background,
         Border,
+        BorderRadius,
         BoxShadow,
         Flex,
         FlexFlow,
@@ -255,6 +256,7 @@ public:
     bool is_calculated() const { return type() == Type::Calculated; }
     bool is_background() const { return type() == Type::Background; }
     bool is_border() const { return type() == Type::Border; }
+    bool is_border_radius() const { return type() == Type::BorderRadius; }
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
     bool is_flex() const { return type() == Type::Flex; }
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
@@ -718,6 +720,40 @@ private:
     NonnullRefPtr<StyleValue> m_border_width;
     NonnullRefPtr<StyleValue> m_border_style;
     NonnullRefPtr<StyleValue> m_border_color;
+};
+
+class BorderRadiusStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<BorderRadiusStyleValue> create(Length const& horizontal_radius, Length const& vertical_radius)
+    {
+        return adopt_ref(*new BorderRadiusStyleValue(horizontal_radius, vertical_radius));
+    }
+    virtual ~BorderRadiusStyleValue() override { }
+
+    Length const& horizontal_radius() const { return m_horizontal_radius; }
+    Length const& vertical_radius() const { return m_vertical_radius; }
+    bool is_elliptical() const { return m_is_elliptical; }
+
+    // FIXME: Remove this once we support elliptical border-radius in Layout/Node.
+    virtual Length to_length() const override { return horizontal_radius(); }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("{} / {}", m_horizontal_radius.to_string(), m_vertical_radius.to_string());
+    }
+
+private:
+    BorderRadiusStyleValue(Length const& horizontal_radius, Length const& vertical_radius)
+        : StyleValue(Type::BorderRadius)
+        , m_horizontal_radius(horizontal_radius)
+        , m_vertical_radius(vertical_radius)
+    {
+        m_is_elliptical = (m_horizontal_radius != m_vertical_radius);
+    }
+
+    bool m_is_elliptical;
+    Length m_horizontal_radius;
+    Length m_vertical_radius;
 };
 
 class FlexStyleValue final : public StyleValue {
