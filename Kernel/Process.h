@@ -18,6 +18,7 @@
 #include <Kernel/AtomicEdgeAction.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
+#include <Kernel/FileSystem/UnveilNode.h>
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
 #include <Kernel/Memory/AddressSpace.h>
@@ -27,7 +28,6 @@
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
-#include <Kernel/UnveilNode.h>
 #include <LibC/elf.h>
 #include <LibC/signal_numbers.h>
 
