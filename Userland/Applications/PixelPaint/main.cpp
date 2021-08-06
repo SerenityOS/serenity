@@ -21,10 +21,10 @@
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
@@ -49,6 +49,45 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(image_file, "Image file to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
+
+    String file_to_edit_full_path;
+
+    if (image_file) {
+        file_to_edit_full_path = Core::File::absolute_path(image_file);
+        VERIFY(!file_to_edit_full_path.is_empty());
+        if (Core::File::exists(file_to_edit_full_path)) {
+            dbgln("unveil for: {}", file_to_edit_full_path);
+            if (unveil(file_to_edit_full_path.characters(), "r") < 0) {
+                perror("unveil");
+                return 1;
+            }
+        }
+    }
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/clipboard", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/filesystemaccess", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp/portal/image", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
 
     auto app_icon = GUI::Icon::default_icon("app-pixel-paint");
 
@@ -111,7 +150,7 @@ int main(int argc, char** argv)
         window);
 
     auto open_image_file = [&](auto& path) {
-        auto image_or_error = PixelPaint::Image::try_create_from_file(path);
+        auto image_or_error = PixelPaint::Image::try_create_from_path(path);
         if (image_or_error.is_error()) {
             GUI::MessageBox::show_error(window, String::formatted("Unable to open file: {}", path));
             return;
@@ -121,26 +160,38 @@ int main(int argc, char** argv)
         layer_list_widget.set_image(&image);
     };
 
-    auto open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
-        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
-        if (!open_path.has_value())
+    auto open_image_fd = [&](int fd, auto& path) {
+        auto image_or_error = PixelPaint::Image::try_create_from_fd_and_close(fd, path);
+        if (image_or_error.is_error()) {
+            GUI::MessageBox::show_error(window, String::formatted("Unable to open file: {}, {}", path, image_or_error.error()));
             return;
-        open_image_file(open_path.value());
+        }
+        auto& image = *image_or_error.value();
+        create_new_editor(image);
+        layer_list_widget.set_image(&image);
+    };
+
+    auto open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
+        auto result = FileSystemAccessClient::Client::the().open_file(window->window_id());
+        if (result.error != 0)
+            return;
+
+        open_image_fd(*result.fd, *result.chosen_file);
     });
 
     auto save_image_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         auto* editor = current_image_editor();
         if (!editor)
             return;
-        auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "pp");
-        if (!save_path.has_value())
+        auto save_result = FileSystemAccessClient::Client::the().save_file(window->window_id(), "untitled", "pp");
+        if (save_result.error != 0)
             return;
-        auto result = editor->image().write_to_file(save_path.value());
+        auto result = editor->image().write_to_fd_and_close(*save_result.fd);
         if (result.is_error()) {
-            GUI::MessageBox::show_error(window, String::formatted("Could not save {}: {}", save_path.value(), result.error()));
+            GUI::MessageBox::show_error(window, String::formatted("Could not save {}: {}", *save_result.chosen_file, result.error()));
             return;
         }
-        editor->image().set_path(save_path.value());
+        editor->image().set_path(*save_result.chosen_file);
     });
 
     auto& file_menu = window->add_menu("&File");
@@ -155,11 +206,11 @@ int main(int argc, char** argv)
                 auto* editor = current_image_editor();
                 if (!editor)
                     return;
-                auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
-                if (!save_path.has_value())
+                auto save_result = FileSystemAccessClient::Client::the().save_file(window->window_id(), "untitled", "bmp");
+                if (save_result.error != 0)
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-                auto result = editor->image().export_bmp_to_file(save_path.value(), preserve_alpha_channel == GUI::MessageBox::ExecYes);
+                auto result = editor->image().export_bmp_to_fd_and_close(*save_result.fd, preserve_alpha_channel == GUI::MessageBox::ExecYes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(window, String::formatted("Export to BMP failed: {}", result.error()));
             },
@@ -168,11 +219,11 @@ int main(int argc, char** argv)
         GUI::Action::create(
             "As &PNG", [&](auto&) {
                 auto* editor = current_image_editor();
-                auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
-                if (!save_path.has_value())
+                auto save_result = FileSystemAccessClient::Client::the().save_file(window->window_id(), "untitled", "png");
+                if (save_result.error != 0)
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(window, "Do you wish to preserve transparency?", "Preserve transparency?", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-                auto result = editor->image().export_png_to_file(save_path.value(), preserve_alpha_channel == GUI::MessageBox::ExecYes);
+                auto result = editor->image().export_png_to_fd_and_close(*save_result.fd, preserve_alpha_channel == GUI::MessageBox::ExecYes);
                 if (result.is_error())
                     GUI::MessageBox::show_error(window, String::formatted("Export to PNG failed: {}", result.error()));
             },
@@ -270,11 +321,11 @@ int main(int argc, char** argv)
         window));
     edit_menu.add_action(GUI::Action::create(
         "&Load Color Palette", [&](auto&) {
-            auto open_path = GUI::FilePicker::get_open_filepath(window, "Load Color Palette");
-            if (!open_path.has_value())
+            auto open_result = FileSystemAccessClient::Client::the().open_file(window->window_id(), "Load Color Palette");
+            if (open_result.error != 0)
                 return;
 
-            auto result = PixelPaint::PaletteWidget::load_palette_file(open_path.value());
+            auto result = PixelPaint::PaletteWidget::load_palette_fd_and_close(*open_result.fd);
             if (result.is_error()) {
                 GUI::MessageBox::show_error(window, String::formatted("Loading color palette failed: {}", result.error()));
                 return;
@@ -285,11 +336,11 @@ int main(int argc, char** argv)
         window));
     edit_menu.add_action(GUI::Action::create(
         "Sa&ve Color Palette", [&](auto&) {
-            auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "palette");
-            if (!save_path.has_value())
+            auto save_result = FileSystemAccessClient::Client::the().save_file(window->window_id(), "untitled", "palette");
+            if (save_result.error != 0)
                 return;
 
-            auto result = PixelPaint::PaletteWidget::save_palette_file(palette_widget.colors(), save_path.value());
+            auto result = PixelPaint::PaletteWidget::save_palette_fd_and_close(palette_widget.colors(), *save_result.fd);
             if (result.is_error())
                 GUI::MessageBox::show_error(window, String::formatted("Writing color palette failed: {}", result.error()));
         },
@@ -693,9 +744,8 @@ int main(int argc, char** argv)
         });
     };
 
-    auto image_file_real_path = Core::File::real_path_for(image_file);
-    if (Core::File::exists(image_file_real_path)) {
-        open_image_file(image_file_real_path);
+    if (Core::File::exists(file_to_edit_full_path)) {
+        open_image_file(file_to_edit_full_path);
     } else {
         auto image = PixelPaint::Image::try_create_with_size({ 480, 360 });
 
