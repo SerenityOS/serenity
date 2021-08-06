@@ -146,7 +146,7 @@ enum class NeedsBigProcessLock {
     S(umount, NeedsBigProcessLock::Yes)                     \
     S(dump_backtrace, NeedsBigProcessLock::No)              \
     S(dbgputch, NeedsBigProcessLock::Yes)                   \
-    S(dbgputstr, NeedsBigProcessLock::Yes)                  \
+    S(dbgputstr, NeedsBigProcessLock::No)                   \
     S(create_inode_watcher, NeedsBigProcessLock::Yes)       \
     S(inode_watcher_add_watch, NeedsBigProcessLock::Yes)    \
     S(inode_watcher_remove_watch, NeedsBigProcessLock::Yes) \
