@@ -83,9 +83,9 @@ static void chown_wrapper(const char* path, uid_t uid, gid_t gid)
     }
 }
 
-static void chown_all_framebuffer_devices(group* phys_group)
+static void chown_all_matching_device_nodes(group* group, unsigned major_number)
 {
-    VERIFY(phys_group);
+    VERIFY(group);
     struct stat cur_file_stat;
 
     Core::DirIterator di("/dev/", Core::DirIterator::SkipParentAndBaseDir);
@@ -96,12 +96,9 @@ static void chown_all_framebuffer_devices(group* phys_group)
         auto rc = stat(entry_name.characters(), &cur_file_stat);
         if (rc < 0)
             continue;
-        if (!S_ISBLK(cur_file_stat.st_mode))
+        if (major(cur_file_stat.st_rdev) != major_number)
             continue;
-        // FIXME: Try to find a way to not hardcode the major number of framebuffer device nodes.
-        if (major(cur_file_stat.st_rdev) != 29)
-            continue;
-        chown_wrapper(entry_name.characters(), 0, phys_group->gr_gid);
+        chown_wrapper(entry_name.characters(), 0, group->gr_gid);
     }
 }
 
@@ -136,7 +133,8 @@ static void prepare_devfs()
 
     auto phys_group = getgrnam("phys");
     VERIFY(phys_group);
-    chown_all_framebuffer_devices(phys_group);
+    // FIXME: Try to find a way to not hardcode the major number of framebuffer device nodes.
+    chown_all_matching_device_nodes(phys_group, 29);
 
     chown_wrapper("/dev/keyboard0", 0, phys_group->gr_gid);
 
@@ -144,15 +142,8 @@ static void prepare_devfs()
 
     auto tty_group = getgrnam("tty");
     VERIFY(tty_group);
-    // FIXME: Count TTYs instead of using a hardcoded amount
-    for (size_t index = 0; index < 6; index++) {
-        chown_wrapper(String::formatted("/dev/tty{}", index).characters(), 0, tty_group->gr_gid);
-    }
-
-    // FIXME: Count serial TTYs instead of using a hardcoded amount
-    for (size_t index = 0; index < 4; index++) {
-        chown_wrapper(String::formatted("/dev/ttyS{}", index).characters(), 0, tty_group->gr_gid);
-    }
+    // FIXME: Try to find a way to not hardcode the major number of tty nodes.
+    chown_all_matching_device_nodes(tty_group, 4);
 
     auto audio_group = getgrnam("audio");
     VERIFY(audio_group);
