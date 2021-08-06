@@ -612,19 +612,19 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
     return nullptr;
 }
 
-Region* MemoryManager::find_user_region_from_vaddr_no_lock(Space& space, VirtualAddress vaddr)
+Region* MemoryManager::find_user_region_from_vaddr_no_lock(AddressSpace& space, VirtualAddress vaddr)
 {
     VERIFY(space.get_lock().own_lock());
     return space.find_region_containing({ vaddr, 1 });
 }
 
-Region* MemoryManager::find_user_region_from_vaddr(Space& space, VirtualAddress vaddr)
+Region* MemoryManager::find_user_region_from_vaddr(AddressSpace& space, VirtualAddress vaddr)
 {
     ScopedSpinLock lock(space.get_lock());
     return find_user_region_from_vaddr_no_lock(space, vaddr);
 }
 
-void MemoryManager::validate_syscall_preconditions(Space& space, RegisterState const& regs)
+void MemoryManager::validate_syscall_preconditions(AddressSpace& space, RegisterState const& regs)
 {
     // We take the space lock once here and then use the no_lock variants
     // to avoid excessive spinlock recursion in this extemely common path.
@@ -933,7 +933,7 @@ void MemoryManager::enter_process_paging_scope(Process& process)
     enter_space(process.space());
 }
 
-void MemoryManager::enter_space(Space& space)
+void MemoryManager::enter_space(AddressSpace& space)
 {
     auto current_thread = Thread::current();
     VERIFY(current_thread != nullptr);
@@ -1039,7 +1039,7 @@ void MemoryManager::unquickmap_page()
     mm_data.m_quickmap_in_use.unlock(mm_data.m_quickmap_prev_flags);
 }
 
-bool MemoryManager::validate_user_stack_no_lock(Space& space, VirtualAddress vaddr) const
+bool MemoryManager::validate_user_stack_no_lock(AddressSpace& space, VirtualAddress vaddr) const
 {
     VERIFY(space.get_lock().own_lock());
 
@@ -1050,7 +1050,7 @@ bool MemoryManager::validate_user_stack_no_lock(Space& space, VirtualAddress vad
     return region && region->is_user() && region->is_stack();
 }
 
-bool MemoryManager::validate_user_stack(Space& space, VirtualAddress vaddr) const
+bool MemoryManager::validate_user_stack(AddressSpace& space, VirtualAddress vaddr) const
 {
     ScopedSpinLock lock(space.get_lock());
     return validate_user_stack_no_lock(space, vaddr);

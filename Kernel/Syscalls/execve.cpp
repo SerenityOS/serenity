@@ -30,7 +30,7 @@ namespace Kernel {
 extern Memory::Region* g_signal_trampoline_region;
 
 struct LoadResult {
-    OwnPtr<Memory::Space> space;
+    OwnPtr<Memory::AddressSpace> space;
     FlatPtr load_base { 0 };
     FlatPtr entry_eip { 0 };
     size_t size { 0 };
@@ -263,7 +263,7 @@ enum class ShouldAllowSyscalls {
     Yes,
 };
 
-static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::Space> new_space, FileDescription& object_description,
+static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> new_space, FileDescription& object_description,
     FlatPtr load_offset, ShouldAllocateTls should_allocate_tls, ShouldAllowSyscalls should_allow_syscalls)
 {
     auto& inode = *(object_description.inode());
@@ -453,7 +453,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::Space> new_sp
 KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description,
     RefPtr<FileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
 {
-    auto new_space = Memory::Space::try_create(*this, nullptr);
+    auto new_space = Memory::AddressSpace::try_create(*this, nullptr);
     if (!new_space)
         return ENOMEM;
 
