@@ -129,8 +129,10 @@ JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_safe_integer)
 {
     if (!vm.argument(0).is_number())
         return Value(false);
+    if (!vm.argument(0).is_integral_number())
+        return Value(false);
     auto value = vm.argument(0).as_double();
-    return Value((int64_t)value == value && value >= MIN_SAFE_INTEGER_VALUE && value <= MAX_SAFE_INTEGER_VALUE);
+    return Value(value >= MIN_SAFE_INTEGER_VALUE && value <= MAX_SAFE_INTEGER_VALUE);
 }
 
 }
