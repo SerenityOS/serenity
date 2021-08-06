@@ -55,6 +55,12 @@ describe("normal behaviour", () => {
             expect(typedArray.findIndex((value, index) => index === 1)).toBe(1);
             expect(typedArray.findIndex(value => value == "1")).toBe(0);
             expect(typedArray.findIndex(value => value === 10)).toBe(-1);
+
+            const typedArrayDuplicates = new T([1, 2, 3, 1]);
+
+            expect(typedArrayDuplicates.findIndex(value => value === 1)).toBe(0);
+            expect(typedArrayDuplicates.findIndex(value => value === 2)).toBe(1);
+            expect(typedArrayDuplicates.findIndex(value => value === 3)).toBe(2);
         });
 
         BIGINT_TYPED_ARRAYS.forEach(T => {
@@ -67,6 +73,12 @@ describe("normal behaviour", () => {
             expect(typedArray.findIndex(value => value == 1)).toBe(0);
             expect(typedArray.findIndex(value => value == "1")).toBe(0);
             expect(typedArray.findIndex(value => value === 1)).toBe(-1);
+
+            const typedArrayDuplicates = new T([1n, 2n, 3n, 1n]);
+
+            expect(typedArrayDuplicates.findIndex(value => value === 1n)).toBe(0);
+            expect(typedArrayDuplicates.findIndex(value => value === 2n)).toBe(1);
+            expect(typedArrayDuplicates.findIndex(value => value === 3n)).toBe(2);
         });
     });
 
