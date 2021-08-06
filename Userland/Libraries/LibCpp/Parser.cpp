@@ -15,7 +15,7 @@
 
 namespace Cpp {
 
-Parser::Parser(Vector<Token> const& tokens, const String& filename, Preprocessor::Definitions&& definitions)
+Parser::Parser(Vector<Token> const& tokens, const String& filename, Preprocessor::Definitions const& definitions)
     : m_preprocessor_definitions(move(definitions))
     , m_filename(filename)
 {
