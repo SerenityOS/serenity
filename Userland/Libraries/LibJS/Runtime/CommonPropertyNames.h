@@ -369,6 +369,7 @@ namespace JS {
     P(subarray)                              \
     P(substr)                                \
     P(substring)                             \
+    P(subtract)                              \
     P(sup)                                   \
     P(tan)                                   \
     P(tanh)                                  \
