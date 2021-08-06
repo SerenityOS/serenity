@@ -1,4 +1,4 @@
-test("errors", () => {
+describe("errors", () => {
     test("throws TypeError", () => {
         const timeZone = new Temporal.TimeZone("UTC");
         expect(() => {

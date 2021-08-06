@@ -44,7 +44,7 @@ describe("correct behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("this value must be a Temporal.Duration object", () => {
         expect(() => {
             Temporal.Duration.prototype.abs.call("foo");

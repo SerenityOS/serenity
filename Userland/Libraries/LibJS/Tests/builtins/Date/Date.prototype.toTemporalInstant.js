@@ -6,7 +6,7 @@ describe("correct behavior", () => {
     });
 });
 
-test("errors", () => {
+describe("errors", () => {
     test("this value must be a Date object", () => {
         expect(() => {
             Date.prototype.toTemporalInstant.call(123);
