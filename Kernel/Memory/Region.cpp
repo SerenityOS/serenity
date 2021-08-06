@@ -247,10 +247,7 @@ void Region::unmap(ShouldDeallocateVirtualMemoryVirtualRange deallocate_range)
     }
     MM.flush_tlb(m_page_directory, vaddr(), page_count());
     if (deallocate_range == ShouldDeallocateVirtualMemoryVirtualRange::Yes) {
-        if (m_page_directory->range_allocator().contains(range()))
-            m_page_directory->range_allocator().deallocate(range());
-        else
-            m_page_directory->identity_range_allocator().deallocate(range());
+        m_page_directory->range_allocator().deallocate(range());
     }
     m_page_directory = nullptr;
 }
