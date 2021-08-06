@@ -16,8 +16,8 @@
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
+#include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
-#include <Kernel/VM/TypedMapping.h>
 
 #define PCAT_COMPAT_FLAG 0x1
 

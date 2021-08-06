@@ -37,6 +37,7 @@
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
@@ -55,7 +56,6 @@
 #include <Kernel/Tasks/FinalizerTask.h>
 #include <Kernel/Tasks/SyncTask.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VirtIO/VirtIO.h>
 #include <Kernel/WorkQueue.h>
 #include <Kernel/kstdio.h>

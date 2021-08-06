@@ -28,10 +28,10 @@
 #include <Kernel/KResult.h>
 #include <Kernel/KString.h>
 #include <Kernel/LockMode.h>
+#include <Kernel/Memory/Range.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/TimerQueue.h>
 #include <Kernel/UnixTypes.h>
-#include <Kernel/VM/Range.h>
 #include <LibC/fd_set.h>
 #include <LibC/signal_numbers.h>
 

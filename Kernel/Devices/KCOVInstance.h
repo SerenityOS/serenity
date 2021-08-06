@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/SpinLock.h>
-#include <Kernel/VM/AnonymousVMObject.h>
 
 namespace Kernel {
 

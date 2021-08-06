@@ -8,8 +8,8 @@
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Devices/MemoryDevice.h>
+#include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Sections.h>
-#include <Kernel/VM/AnonymousVMObject.h>
 
 namespace Kernel {
 

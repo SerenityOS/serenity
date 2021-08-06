@@ -10,8 +10,8 @@
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/FileSystem/SysFSComponent.h>
+#include <Kernel/Memory/Region.h>
 #include <Kernel/PhysicalAddress.h>
-#include <Kernel/VM/Region.h>
 #include <Kernel/VirtualAddress.h>
 
 namespace Kernel::ACPI {

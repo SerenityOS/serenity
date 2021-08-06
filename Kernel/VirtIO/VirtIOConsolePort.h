@@ -9,7 +9,7 @@
 
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
-#include <Kernel/VM/RingBuffer.h>
+#include <Kernel/Memory/RingBuffer.h>
 #include <Kernel/VirtIO/VirtIO.h>
 
 namespace Kernel {

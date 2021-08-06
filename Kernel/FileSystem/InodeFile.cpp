@@ -9,9 +9,9 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeFile.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Memory/PrivateInodeVMObject.h>
+#include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Process.h>
-#include <Kernel/VM/PrivateInodeVMObject.h>
-#include <Kernel/VM/SharedInodeVMObject.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
 

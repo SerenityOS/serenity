@@ -5,8 +5,8 @@
  */
 
 #include <Kernel/FileSystem/AnonymousFile.h>
+#include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Process.h>
-#include <Kernel/VM/AnonymousVMObject.h>
 
 namespace Kernel {
 

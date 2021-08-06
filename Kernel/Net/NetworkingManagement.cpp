@@ -7,6 +7,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/IO.h>
+#include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/E1000ENetworkAdapter.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
@@ -16,7 +17,6 @@
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/Net/RTL8168NetworkAdapter.h>
 #include <Kernel/Sections.h>
-#include <Kernel/VM/AnonymousVMObject.h>
 
 namespace Kernel {
 

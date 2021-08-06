@@ -13,8 +13,8 @@
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
+#include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
-#include <Kernel/VM/TypedMapping.h>
 
 #define VBE_DISPI_IOPORT_INDEX 0x01CE
 #define VBE_DISPI_IOPORT_DATA 0x01CF

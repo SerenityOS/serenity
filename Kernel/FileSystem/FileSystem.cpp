@@ -10,8 +10,8 @@
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Net/LocalSocket.h>
-#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 

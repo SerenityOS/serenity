@@ -13,9 +13,9 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
+#include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/VM/TypedMapping.h>
 
 namespace Kernel::ACPI {
 

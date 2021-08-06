@@ -9,7 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/USB/USBDescriptors.h>
-#include <Kernel/VM/Region.h>
+#include <Kernel/Memory/Region.h>
 
 namespace Kernel::USB {
 

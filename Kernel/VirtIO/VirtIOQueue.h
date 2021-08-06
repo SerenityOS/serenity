@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <Kernel/Memory/MemoryManager.h>
+#include <Kernel/Memory/ScatterGatherList.h>
 #include <Kernel/SpinLock.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/ScatterGatherList.h>
 
 namespace Kernel {
 

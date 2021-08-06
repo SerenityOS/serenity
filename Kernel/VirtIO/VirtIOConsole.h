@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <Kernel/VM/RingBuffer.h>
+#include <Kernel/Memory/RingBuffer.h>
 #include <Kernel/VirtIO/VirtIO.h>
 #include <Kernel/VirtIO/VirtIOConsolePort.h>
 

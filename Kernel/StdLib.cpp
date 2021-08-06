@@ -10,8 +10,8 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/VM/MemoryManager.h>
 
 String copy_string_from_user(const char* user_str, size_t user_str_size)
 {

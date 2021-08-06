@@ -8,13 +8,13 @@
 // please look at Documentation/Kernel/AHCILocking.md
 
 #include <AK/Atomic.h>
+#include <Kernel/Memory/MemoryManager.h>
+#include <Kernel/Memory/ScatterGatherList.h>
+#include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/Storage/AHCIPort.h>
 #include <Kernel/Storage/ATA.h>
 #include <Kernel/Storage/SATADiskDevice.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/ScatterGatherList.h>
-#include <Kernel/VM/TypedMapping.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {

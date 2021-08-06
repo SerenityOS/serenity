@@ -13,6 +13,9 @@
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Memory/MemoryManager.h>
+#include <Kernel/Memory/PageDirectory.h>
+#include <Kernel/Memory/ProcessPagingScope.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
@@ -22,9 +25,6 @@
 #include <Kernel/Thread.h>
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/TimerQueue.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/VM/PageDirectory.h>
-#include <Kernel/VM/ProcessPagingScope.h>
 #include <LibC/signal_numbers.h>
 
 namespace Kernel {

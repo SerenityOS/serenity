@@ -10,11 +10,11 @@
 #include <AK/Types.h>
 
 #include <Kernel/Interrupts/APIC.h>
+#include <Kernel/Memory/ProcessPagingScope.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
-#include <Kernel/VM/ProcessPagingScope.h>
 
 #include <Kernel/Arch/x86/CPUID.h>
 #include <Kernel/Arch/x86/Interrupts.h>

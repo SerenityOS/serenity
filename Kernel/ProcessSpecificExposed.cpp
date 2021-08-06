@@ -10,9 +10,9 @@
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/KBufferBuilder.h>
+#include <Kernel/Memory/AnonymousVMObject.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/ProcessExposed.h>
-#include <Kernel/VM/AnonymousVMObject.h>
-#include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel {
 

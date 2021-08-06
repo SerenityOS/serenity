@@ -8,13 +8,13 @@
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <Kernel/IO.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA.h>
 #include <Kernel/Storage/IDEChannel.h>
 #include <Kernel/Storage/IDEController.h>
 #include <Kernel/Storage/PATADiskDevice.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel {
