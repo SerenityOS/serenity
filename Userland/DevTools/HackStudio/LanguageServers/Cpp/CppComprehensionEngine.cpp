@@ -569,11 +569,16 @@ OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_docu
     document_data->m_preprocessor = make<Preprocessor>(document_data->m_filename, document_data->text());
     document_data->preprocessor().set_ignore_unsupported_keywords(true);
     document_data->preprocessor().set_keep_include_statements(true);
-    auto tokens = document_data->preprocessor().process_and_lex();
 
-    Preprocessor::Definitions preprocessor_definitions;
-    for (auto item : document_data->preprocessor().definitions())
-        preprocessor_definitions.set(move(item.key), move(item.value));
+    document_data->preprocessor().definitions_in_header_callback = [this](StringView include_path) -> Preprocessor::Definitions {
+        auto included_document = get_or_create_document_data(document_path_from_include_path(include_path));
+        if (!included_document)
+            return {};
+
+        return included_document->preprocessor().definitions();
+    };
+
+    auto tokens = document_data->preprocessor().process_and_lex();
 
     for (auto include_path : document_data->preprocessor().included_paths()) {
         auto include_fullpath = document_path_from_include_path(include_path);
@@ -585,12 +590,9 @@ OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_docu
 
         for (auto& header : included_document->m_available_headers)
             document_data->m_available_headers.set(header);
-
-        for (auto item : included_document->parser().preprocessor_definitions())
-            preprocessor_definitions.set(move(item.key), move(item.value));
     }
 
-    document_data->m_parser = make<Parser>(move(tokens), filename, move(preprocessor_definitions));
+    document_data->m_parser = make<Parser>(move(tokens), filename, document_data->preprocessor().definitions());
 
     auto root = document_data->parser().parse();
 

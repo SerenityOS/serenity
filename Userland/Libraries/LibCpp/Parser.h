@@ -18,7 +18,7 @@ class Parser final {
     AK_MAKE_NONCOPYABLE(Parser);
 
 public:
-    explicit Parser(Vector<Token> const& tokens, const String& filename, Preprocessor::Definitions&& = {});
+    explicit Parser(Vector<Token> const& tokens, const String& filename, Preprocessor::Definitions const& = {});
     ~Parser() = default;
 
     NonnullRefPtr<TranslationUnit> parse();
