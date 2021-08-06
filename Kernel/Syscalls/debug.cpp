@@ -13,7 +13,7 @@ namespace Kernel {
 
 KResultOr<FlatPtr> Process::sys$dump_backtrace()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     dump_backtrace();
     return 0;
 }
