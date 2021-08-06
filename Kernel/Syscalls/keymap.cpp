@@ -48,6 +48,7 @@ KResultOr<FlatPtr> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_
 
 KResultOr<FlatPtr> Process::sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*> user_params)
 {
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     REQUIRE_PROMISE(getkeymap);
 
     Syscall::SC_getkeymap_params params;
