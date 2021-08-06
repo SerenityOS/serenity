@@ -15,11 +15,11 @@
 
 namespace Cpp {
 
-Parser::Parser(const StringView& program, const String& filename, Preprocessor::Definitions&& definitions)
+Parser::Parser(Vector<Token> const& tokens, const String& filename, Preprocessor::Definitions&& definitions)
     : m_preprocessor_definitions(move(definitions))
     , m_filename(filename)
 {
-    initialize_program_tokens(program);
+    initialize_program_tokens(tokens);
     if constexpr (CPP_DEBUG) {
         dbgln("Tokens:");
         for (size_t i = 0; i < m_tokens.size(); ++i) {
@@ -28,10 +28,9 @@ Parser::Parser(const StringView& program, const String& filename, Preprocessor::
     }
 }
 
-void Parser::initialize_program_tokens(const StringView& program)
+void Parser::initialize_program_tokens(Vector<Token> const& tokens)
 {
-    Lexer lexer(program);
-    for (auto& token : lexer.lex()) {
+    for (auto& token : tokens) {
         if (token.type() == Token::Type::Whitespace)
             continue;
         if (token.type() == Token::Type::Identifier) {
@@ -1397,7 +1396,7 @@ bool Parser::match_ellipsis()
         return false;
     return peek().type() == Token::Type::Dot && peek(1).type() == Token::Type::Dot && peek(2).type() == Token::Type::Dot;
 }
-void Parser::add_tokens_for_preprocessor(Token& replaced_token, Preprocessor::DefinedValue& definition)
+void Parser::add_tokens_for_preprocessor(Token const& replaced_token, Preprocessor::DefinedValue& definition)
 {
     if (!definition.value.has_value())
         return;

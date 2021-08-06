@@ -43,7 +43,8 @@ TEST_CASE(test_regression)
         auto target_ast = read_all(ast_file_path);
 
         StringView source_view(source);
-        ::Cpp::Parser parser(source_view, file_path);
+        Cpp::Preprocessor preprocessor(file_path, source_view);
+        Cpp::Parser parser(preprocessor.process_and_lex(), file_path);
         auto root = parser.parse();
 
         EXPECT(parser.errors().is_empty());

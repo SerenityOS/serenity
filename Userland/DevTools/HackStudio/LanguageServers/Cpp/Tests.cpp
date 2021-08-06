@@ -134,14 +134,14 @@ void test_complete_includes()
     add_file(filedb, "sample_header.h");
     CppComprehensionEngine autocomplete(filedb);
 
-    auto suggestions = autocomplete.get_suggestions("complete_includes.cpp", { 0, 23 });
+    auto suggestions = autocomplete.get_suggestions("complete_includes.cpp", { 0, 22 });
     if (suggestions.size() != 1)
         FAIL(project include - bad size);
 
     if (suggestions[0].completion != "sample_header.h")
         FAIL("project include - wrong results");
 
-    suggestions = autocomplete.get_suggestions("complete_includes.cpp", { 1, 19 });
+    suggestions = autocomplete.get_suggestions("complete_includes.cpp", { 1, 18 });
     if (suggestions.size() != 1)
         FAIL(global include - bad size);
 

@@ -12,6 +12,7 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibCpp/Token.h>
 
 namespace Cpp {
 
@@ -19,8 +20,7 @@ class Preprocessor {
 
 public:
     explicit Preprocessor(const String& filename, const StringView& program);
-    const String& process();
-    const String& processed_text();
+    Vector<Token> process_and_lex();
     Vector<StringView> included_paths() const { return m_included_paths; }
 
     struct DefinedValue {
@@ -38,13 +38,13 @@ public:
 
 private:
     using PreprocessorKeyword = StringView;
-    PreprocessorKeyword handle_preprocessor_line(const StringView&);
-    void handle_preprocessor_keyword(const StringView& keyword, GenericLexer& line_lexer);
+    PreprocessorKeyword handle_preprocessor_line(StringView const&);
+    void handle_preprocessor_keyword(StringView const& keyword, GenericLexer& line_lexer);
+    Vector<Token> process_line(StringView const& line);
 
+    String m_filename;
+    String m_program;
     Definitions m_definitions;
-    const String m_filename;
-    const StringView m_program;
-    StringBuilder m_builder;
     Vector<StringView> m_lines;
     size_t m_line_index { 0 };
     size_t m_current_depth { 0 };

@@ -18,7 +18,7 @@ class Parser final {
     AK_MAKE_NONCOPYABLE(Parser);
 
 public:
-    explicit Parser(const StringView& program, const String& filename, Preprocessor::Definitions&& = {});
+    explicit Parser(Vector<Token> const& tokens, const String& filename, Preprocessor::Definitions&& = {});
     ~Parser() = default;
 
     NonnullRefPtr<TranslationUnit> parse();
@@ -185,8 +185,8 @@ private:
     void consume_attribute_specification();
     void consume_access_specifier();
     bool match_ellipsis();
-    void initialize_program_tokens(const StringView& program);
-    void add_tokens_for_preprocessor(Token& replaced_token, Preprocessor::DefinedValue&);
+    void initialize_program_tokens(Vector<Token> const& tokens);
+    void add_tokens_for_preprocessor(Token const& replaced_token, Preprocessor::DefinedValue&);
     Vector<StringView> parse_type_qualifiers();
     Vector<StringView> parse_function_qualifiers();
 
