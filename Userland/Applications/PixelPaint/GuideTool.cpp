@@ -6,6 +6,7 @@
 
 #include "GuideTool.h"
 #include "ImageEditor.h"
+#include <LibGUI/Application.h>
 #include <LibGUI/Menu.h>
 
 namespace PixelPaint {
@@ -70,14 +71,17 @@ void GuideTool::on_mousedown(Layer&, GUI::MouseEvent& mouse_event, GUI::MouseEve
 
     m_selected_guide = closest_guide(image_event.position());
 
-    if (m_selected_guide)
+    if (m_selected_guide) {
         m_guide_origin = m_selected_guide->offset();
+        GUI::Application::the()->show_tooltip_immediately(String::formatted("{}", m_guide_origin), GUI::Application::the()->tooltip_source_widget());
+    }
 }
 
 void GuideTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&)
 {
     m_guide_origin = 0;
     m_event_origin = { 0, 0 };
+    GUI::Application::the()->hide_tooltip();
 
     if (!m_selected_guide)
         return;
@@ -107,6 +111,8 @@ void GuideTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& image_ev
 
     auto new_offset = (float)relevant_offset + m_guide_origin;
     m_selected_guide->set_offset(new_offset);
+
+    GUI::Application::the()->show_tooltip_immediately(String::formatted("{}", new_offset), GUI::Application::the()->tooltip_source_widget());
 
     editor()->layers_did_change();
 }
