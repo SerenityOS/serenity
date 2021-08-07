@@ -11,6 +11,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/IntrusiveListRelaxedConst.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/Userspace.h>
 #include <AK/WeakPtr.h>
@@ -82,45 +83,36 @@ typedef HashMap<FlatPtr, RefPtr<FutexQueue>> FutexQueues;
 
 struct LoadResult;
 
-class ProtectedProcessBase {
-protected:
-    ProcessID m_pid { 0 };
-    ProcessID m_ppid { 0 };
-    SessionID m_sid { 0 };
-    uid_t m_euid { 0 };
-    gid_t m_egid { 0 };
-    uid_t m_uid { 0 };
-    gid_t m_gid { 0 };
-    uid_t m_suid { 0 };
-    gid_t m_sgid { 0 };
-    Vector<gid_t> m_extra_gids;
-    bool m_dumpable { false };
-    Atomic<bool> m_has_promises { false };
-    Atomic<u32> m_promises { 0 };
-    Atomic<bool> m_has_execpromises { false };
-    Atomic<u32> m_execpromises { 0 };
-    mode_t m_umask { 022 };
-    VirtualAddress m_signal_trampoline;
-    Atomic<u32> m_thread_count { 0 };
-    u8 m_termination_status { 0 };
-    u8 m_termination_signal { 0 };
-};
-
-class ProcessBase : public ProtectedProcessBase {
-protected:
-    // Without the alignas specifier here the compiler places this class into
-    // the parent class' padding which then causes the members for the RefCounted
-    // class to be placed within the first page of the Process class.
-    alignas(ProtectedProcessBase) u8 m_process_base_padding[PAGE_SIZE - sizeof(ProtectedProcessBase)];
-};
-
-static_assert(sizeof(ProcessBase) == PAGE_SIZE);
-
 class Process
-    : public ProcessBase
-    , public RefCounted<Process>
+    : public RefCounted<Process>
     , public Weakable<Process> {
 
+private:
+    class ProtectedValues {
+    public:
+        ProcessID pid { 0 };
+        ProcessID ppid { 0 };
+        SessionID sid { 0 };
+        uid_t euid { 0 };
+        gid_t egid { 0 };
+        uid_t uid { 0 };
+        gid_t gid { 0 };
+        uid_t suid { 0 };
+        gid_t sgid { 0 };
+        Vector<gid_t> extra_gids;
+        bool dumpable { false };
+        Atomic<bool> has_promises { false };
+        Atomic<u32> promises { 0 };
+        Atomic<bool> has_execpromises { false };
+        Atomic<u32> execpromises { 0 };
+        mode_t umask { 022 };
+        VirtualAddress signal_trampoline;
+        Atomic<u32> thread_count { 0 };
+        u8 termination_status { 0 };
+        u8 termination_signal { 0 };
+    };
+
+public:
     AK_MAKE_NONCOPYABLE(Process);
     AK_MAKE_NONMOVABLE(Process);
 
@@ -205,24 +197,24 @@ public:
     static SessionID get_sid_from_pgid(ProcessGroupID pgid);
 
     const String& name() const { return m_name; }
-    ProcessID pid() const { return m_pid; }
-    SessionID sid() const { return m_sid; }
-    bool is_session_leader() const { return m_sid.value() == m_pid.value(); }
+    ProcessID pid() const { return m_protected_values.pid; }
+    SessionID sid() const { return m_protected_values.sid; }
+    bool is_session_leader() const { return sid().value() == pid().value(); }
     ProcessGroupID pgid() const { return m_pg ? m_pg->pgid() : 0; }
-    bool is_group_leader() const { return pgid().value() == m_pid.value(); }
-    const Vector<gid_t>& extra_gids() const { return m_extra_gids; }
-    uid_t euid() const { return m_euid; }
-    gid_t egid() const { return m_egid; }
-    uid_t uid() const { return m_uid; }
-    gid_t gid() const { return m_gid; }
-    uid_t suid() const { return m_suid; }
-    gid_t sgid() const { return m_sgid; }
-    ProcessID ppid() const { return m_ppid; }
+    bool is_group_leader() const { return pgid().value() == pid().value(); }
+    const Vector<gid_t>& extra_gids() const { return m_protected_values.extra_gids; }
+    uid_t euid() const { return m_protected_values.euid; }
+    gid_t egid() const { return m_protected_values.egid; }
+    uid_t uid() const { return m_protected_values.uid; }
+    gid_t gid() const { return m_protected_values.gid; }
+    uid_t suid() const { return m_protected_values.suid; }
+    gid_t sgid() const { return m_protected_values.sgid; }
+    ProcessID ppid() const { return m_protected_values.ppid; }
 
-    bool is_dumpable() const { return m_dumpable; }
+    bool is_dumpable() const { return m_protected_values.dumpable; }
     void set_dumpable(bool);
 
-    mode_t umask() const { return m_umask; }
+    mode_t umask() const { return m_protected_values.umask; }
 
     bool in_group(gid_t) const;
 
@@ -447,11 +439,11 @@ public:
     void terminate_due_to_signal(u8 signal);
     KResult send_signal(u8 signal, Process* sender);
 
-    u8 termination_signal() const { return m_termination_signal; }
+    u8 termination_signal() const { return m_protected_values.termination_signal; }
 
     u16 thread_count() const
     {
-        return m_thread_count.load(AK::MemoryOrder::memory_order_relaxed);
+        return m_protected_values.thread_count.load(AK::MemoryOrder::memory_order_relaxed);
     }
 
     Mutex& big_lock() { return m_big_lock; }
@@ -461,8 +453,8 @@ public:
     Custody& root_directory_relative_to_global_root();
     void set_root_directory(const Custody&);
 
-    bool has_promises() const { return m_has_promises; }
-    bool has_promised(Pledge pledge) const { return m_promises & (1u << (u32)pledge); }
+    bool has_promises() const { return m_protected_values.has_promises; }
+    bool has_promised(Pledge pledge) const { return m_protected_values.promises & (1u << (u32)pledge); }
 
     VeilState veil_state() const
     {
@@ -508,7 +500,7 @@ public:
     Memory::AddressSpace& address_space() { return *m_space; }
     Memory::AddressSpace const& address_space() const { return *m_space; }
 
-    VirtualAddress signal_trampoline() const { return m_signal_trampoline; }
+    VirtualAddress signal_trampoline() const { return m_protected_values.signal_trampoline; }
 
 private:
     friend class MemoryManager;
@@ -762,9 +754,19 @@ private:
 
     NonnullRefPtrVector<Thread> m_threads_for_coredump;
 
+    static_assert(sizeof(ProtectedValues) < (PAGE_SIZE));
+    alignas(4096) ProtectedValues m_protected_values;
+    u8 m_protected_values_padding[PAGE_SIZE - sizeof(ProtectedValues)];
+
 public:
     using List = IntrusiveListRelaxedConst<Process, RawPtr<Process>, &Process::m_list_node>;
 };
+
+// Note: Process object should be 2 pages of 4096 bytes each.
+// It's not expected that the Process object will expand further because the first
+// page is used for all unprotected values (which should be plenty of space for them).
+// The second page is being used exclusively for write-protected values.
+static_assert(sizeof(Process) == (PAGE_SIZE * 2));
 
 extern RecursiveSpinLock g_profiling_lock;
 
