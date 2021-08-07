@@ -7,7 +7,11 @@
 #include "GuideTool.h"
 #include "ImageEditor.h"
 #include <LibGUI/Application.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/ValueSlider.h>
+#include <LibGUI/Widget.h>
 
 namespace PixelPaint {
 
@@ -110,6 +114,12 @@ void GuideTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& image_ev
         relevant_offset = delta.x();
 
     auto new_offset = (float)relevant_offset + m_guide_origin;
+
+    if (image_event.shift() && m_snap_size > 0) {
+        float snap_size_half = m_snap_size / 2.0;
+        new_offset -= fmodf(new_offset + snap_size_half, m_snap_size) - snap_size_half;
+    }
+
     m_selected_guide->set_offset(new_offset);
 
     GUI::Application::the()->show_tooltip_immediately(String::formatted("{}", new_offset), GUI::Application::the()->tooltip_source_widget());
@@ -136,6 +146,33 @@ void GuideTool::on_context_menu(Layer&, GUI::ContextMenuEvent& event)
     auto image_position = editor()->editor_position_to_image_position(event.position());
     m_context_menu_guide = closest_guide({ (int)image_position.x(), (int)image_position.y() });
     m_context_menu->popup(event.screen_position());
+}
+
+GUI::Widget* GuideTool::get_properties_widget()
+{
+    if (!m_properties_widget) {
+        m_properties_widget = GUI::Widget::construct();
+        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+
+        auto& snapping_container = m_properties_widget->add<GUI::Widget>();
+        snapping_container.set_fixed_height(20);
+        snapping_container.set_layout<GUI::HorizontalBoxLayout>();
+
+        auto& snapping_label = snapping_container.add<GUI::Label>("Snap offset:");
+        snapping_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        snapping_label.set_fixed_size(80, 20);
+        snapping_label.set_tooltip("Press Shift to snap");
+
+        auto& snapping_slider = snapping_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        snapping_slider.set_range(0, 50);
+        snapping_slider.set_value(m_snap_size);
+
+        snapping_slider.on_change = [&](int value) {
+            m_snap_size = value;
+        };
+    }
+
+    return m_properties_widget.ptr();
 }
 
 }
