@@ -131,6 +131,11 @@ void Service::activate()
 
 void Service::spawn(int socket_fd)
 {
+    if (!Core::File::exists(m_executable_path)) {
+        dbgln("{}: binary \"{}\" does not exist, skipping service.", name(), m_executable_path);
+        return;
+    }
+
     dbgln_if(SERVICE_DEBUG, "Spawning {}", name());
 
     m_run_timer.start();
