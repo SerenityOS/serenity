@@ -76,7 +76,6 @@ UNMAP_AFTER_INIT void Process::initialize()
     g_modules = new HashMap<String, OwnPtr<Module>>;
 
     next_pid.store(0, AK::MemoryOrder::memory_order_release);
-    g_process_groups = new ProcessGroup::List();
 
     hostname().with_exclusive([&](auto& name) {
         name = "courage";
