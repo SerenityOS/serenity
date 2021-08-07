@@ -309,10 +309,12 @@ void TreeView::paint_event(PaintEvent& event)
                 }
             } else {
                 // It's the tree column!
+                int indent_width = indent_width_in_pixels() * indent_level;
+
                 Gfx::IntRect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
                 Gfx::IntRect text_rect = {
                     icon_rect.right() + 1 + icon_spacing(), rect.y(),
-                    rect.width() - icon_size() - icon_spacing(), rect.height()
+                    column_width - indent_width - icon_size() - 1 - icon_spacing() + horizontal_padding(), rect.height()
                 };
 
                 painter.fill_rect(text_rect, background_color);
@@ -328,11 +330,15 @@ void TreeView::paint_event(PaintEvent& event)
                         }
                     }
                 }
-                draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::Center, Gfx::TextElision::None);
+                draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::CenterLeft, Gfx::TextElision::Right);
 
                 if (is_focused() && index == cursor_index()) {
-                    painter.draw_rect(text_rect, palette().color(background_role()));
-                    painter.draw_focus_rect(text_rect, palette().focus_outline());
+                    auto focus_rect = text_rect;
+                    focus_rect.set_left(focus_rect.left() - 2);
+                    focus_rect.set_width(focus_rect.width() + 2);
+
+                    painter.draw_rect(focus_rect, palette().color(background_role()));
+                    painter.draw_focus_rect(focus_rect, palette().focus_outline());
                 }
 
                 auto index_at_indent = index;
