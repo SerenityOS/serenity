@@ -229,10 +229,13 @@ void Process::unprotect_data()
 
 RefPtr<Process> Process::create(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
+    auto space = Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr);
+    if (!space)
+        return {};
     auto process = adopt_ref_if_nonnull(new (nothrow) Process(name, uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty));
     if (!process)
         return {};
-    auto result = process->attach_resources(first_thread, fork_parent);
+    auto result = process->attach_resources(space.release_nonnull(), first_thread, fork_parent);
     if (result.is_error())
         return {};
     return process;
@@ -261,12 +264,9 @@ Process::Process(const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool 
     dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, this->pid().value());
 }
 
-KResult Process::attach_resources(RefPtr<Thread>& first_thread, Process* fork_parent)
+KResult Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& preallocated_space, RefPtr<Thread>& first_thread, Process* fork_parent)
 {
-    m_space = Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr);
-    if (!m_space)
-        return ENOMEM;
-
+    m_space = move(preallocated_space);
     if (fork_parent) {
         // NOTE: fork() doesn't clone all threads; the thread that called fork() becomes the only thread in the new process.
         first_thread = Thread::current()->clone(*this);
