@@ -31,6 +31,7 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.year, year_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.month, month_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.daysInYear, days_in_year_getter, {}, Attribute::Configurable);
 }
 
 static PlainYearMonth* typed_this(GlobalObject& global_object)
@@ -105,6 +106,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::month_code_getter)
 
     // 4. Return ? CalendarMonthCode(calendar, yearMonth).
     return js_string(vm, calendar_month_code(global_object, calendar, *year_month));
+}
+
+// 9.3.7 get Temporal.PlainYearMonth.prototype.daysInYear, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.daysinyear
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::days_in_year_getter)
+{
+    // 1. Let yearMonth be the this value.
+    // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    auto* year_month = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be yearMonth.[[Calendar]].
+    auto& calendar = year_month->calendar();
+
+    // 4. Return ? CalendarDaysInYear(calendar, yearMonth).
+    return Value(calendar_days_in_year(global_object, calendar, *year_month));
 }
 
 }
