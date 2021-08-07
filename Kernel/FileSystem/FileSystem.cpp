@@ -16,7 +16,7 @@
 namespace Kernel {
 
 static u32 s_lastFileSystemID;
-static AK::Singleton<HashMap<u32, FileSystem*>> s_file_system_map;
+static Singleton<HashMap<u32, FileSystem*>> s_file_system_map;
 
 static HashMap<u32, FileSystem*>& all_file_systems()
 {

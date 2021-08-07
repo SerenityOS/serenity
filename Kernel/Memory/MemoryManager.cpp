@@ -42,9 +42,9 @@ __attribute__((section(".super_pages"))) static u8 super_pages[1 * MiB];
 
 namespace Kernel::Memory {
 
-// NOTE: We can NOT use AK::Singleton for this class, because
+// NOTE: We can NOT use Singleton for this class, because
 // MemoryManager::initialize is called *before* global constructors are
-// run. If we do, then AK::Singleton would get re-initialized, causing
+// run. If we do, then Singleton would get re-initialized, causing
 // the memory manager to be initialized twice!
 static MemoryManager* s_the;
 RecursiveSpinLock s_mm_lock;

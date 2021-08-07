@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<NullDevice> s_the;
+static Singleton<NullDevice> s_the;
 
 UNMAP_AFTER_INIT void NullDevice::initialize()
 {

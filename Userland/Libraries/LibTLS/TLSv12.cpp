@@ -344,7 +344,7 @@ bool TLSv12::add_client_key(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes 
     return add_client_key(certificate);
 }
 
-AK::Singleton<DefaultRootCACertificates> DefaultRootCACertificates::s_the;
+Singleton<DefaultRootCACertificates> DefaultRootCACertificates::s_the;
 DefaultRootCACertificates::DefaultRootCACertificates()
 {
     // FIXME: This might not be the best format, find a better way to represent CA certificates.

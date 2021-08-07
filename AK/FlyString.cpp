@@ -24,7 +24,7 @@ struct FlyStringImplTraits : public Traits<StringImpl*> {
     }
 };
 
-static AK::Singleton<HashTable<StringImpl*, FlyStringImplTraits>> s_table;
+static Singleton<HashTable<StringImpl*, FlyStringImplTraits>> s_table;
 
 static HashTable<StringImpl*, FlyStringImplTraits>& fly_impls()
 {

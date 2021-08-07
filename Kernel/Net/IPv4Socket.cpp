@@ -26,7 +26,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<ProtectedValue<HashTable<IPv4Socket*>>> s_table;
+static Singleton<ProtectedValue<HashTable<IPv4Socket*>>> s_table;
 
 using BlockFlags = Thread::FileDescriptionBlocker::BlockFlags;
 

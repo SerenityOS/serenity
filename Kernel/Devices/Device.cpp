@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<HashMap<u32, Device*>> s_all_devices;
+static Singleton<HashMap<u32, Device*>> s_all_devices;
 
 HashMap<u32, Device*>& Device::all_devices()
 {

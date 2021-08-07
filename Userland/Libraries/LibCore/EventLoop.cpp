@@ -109,7 +109,7 @@ struct SignalHandlersInfo {
     int next_signal_id { 0 };
 };
 
-static AK::Singleton<SignalHandlersInfo> s_signals;
+static Singleton<SignalHandlersInfo> s_signals;
 template<bool create_if_null = true>
 inline SignalHandlersInfo* signals_info()
 {

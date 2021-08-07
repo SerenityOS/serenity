@@ -23,7 +23,7 @@
 namespace Kernel {
 
 static SpinLock s_all_inodes_lock;
-static AK::Singleton<Inode::List> s_list;
+static Singleton<Inode::List> s_list;
 
 static Inode::List& all_with_lock()
 {

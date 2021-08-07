@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<SysFSComponentRegistry> s_the;
+static Singleton<SysFSComponentRegistry> s_the;
 
 SysFSComponentRegistry& SysFSComponentRegistry::the()
 {

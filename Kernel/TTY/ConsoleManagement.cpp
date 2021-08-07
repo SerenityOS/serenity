@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<ConsoleManagement> s_the;
+static Singleton<ConsoleManagement> s_the;
 
 void ConsoleManagement::resolution_was_changed()
 {

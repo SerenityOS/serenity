@@ -19,7 +19,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<GraphicsManagement> s_the;
+static Singleton<GraphicsManagement> s_the;
 
 GraphicsManagement& GraphicsManagement::the()
 {

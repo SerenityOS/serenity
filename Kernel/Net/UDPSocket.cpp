@@ -22,7 +22,7 @@ void UDPSocket::for_each(Function<void(const UDPSocket&)> callback)
     });
 }
 
-static AK::Singleton<ProtectedValue<HashMap<u16, UDPSocket*>>> s_map;
+static Singleton<ProtectedValue<HashMap<u16, UDPSocket*>>> s_map;
 
 ProtectedValue<HashMap<u16, UDPSocket*>>& UDPSocket::sockets_by_port()
 {

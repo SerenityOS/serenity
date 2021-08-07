@@ -18,7 +18,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<ProcFSComponentRegistry> s_the;
+static Singleton<ProcFSComponentRegistry> s_the;
 
 ProcFSComponentRegistry& ProcFSComponentRegistry::the()
 {

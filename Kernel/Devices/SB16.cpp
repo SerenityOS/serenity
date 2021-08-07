@@ -58,7 +58,7 @@ void SB16::set_sample_rate(uint16_t hz)
     dsp_write((u8)hz);
 }
 
-static AK::Singleton<SB16> s_the;
+static Singleton<SB16> s_the;
 
 UNMAP_AFTER_INIT SB16::SB16()
     : IRQHandler(SB16_DEFAULT_IRQ)

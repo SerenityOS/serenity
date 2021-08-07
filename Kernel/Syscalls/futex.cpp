@@ -12,7 +12,7 @@
 namespace Kernel {
 
 static SpinLock<u8> g_global_futex_lock;
-static AK::Singleton<HashMap<Memory::VMObject*, FutexQueues>> g_global_futex_queues;
+static Singleton<HashMap<Memory::VMObject*, FutexQueues>> g_global_futex_queues;
 
 FutexQueue::FutexQueue(FlatPtr user_address_or_offset, Memory::VMObject* vmobject)
     : m_user_address_or_offset(user_address_or_offset)

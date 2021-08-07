@@ -86,7 +86,7 @@ private:
     OwnPtr<VMWareBackdoor> m_backdoor;
 };
 
-static AK::Singleton<VMWareBackdoorDetector> s_vmware_backdoor;
+static Singleton<VMWareBackdoorDetector> s_vmware_backdoor;
 
 VMWareBackdoor* VMWareBackdoor::the()
 {

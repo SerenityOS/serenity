@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<TimerQueue> s_the;
+static Singleton<TimerQueue> s_the;
 static SpinLock<u8> g_timerqueue_lock;
 
 Time Timer::remaining() const

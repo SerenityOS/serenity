@@ -54,14 +54,14 @@ void TCPSocket::set_state(State new_state)
         evaluate_block_conditions();
 }
 
-static AK::Singleton<ProtectedValue<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>> s_socket_closing;
+static Singleton<ProtectedValue<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>> s_socket_closing;
 
 ProtectedValue<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& TCPSocket::closing_sockets()
 {
     return *s_socket_closing;
 }
 
-static AK::Singleton<ProtectedValue<HashMap<IPv4SocketTuple, TCPSocket*>>> s_socket_tuples;
+static Singleton<ProtectedValue<HashMap<IPv4SocketTuple, TCPSocket*>>> s_socket_tuples;
 
 ProtectedValue<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 {
@@ -512,7 +512,7 @@ KResult TCPSocket::close()
     return result;
 }
 
-static AK::Singleton<ProtectedValue<HashTable<TCPSocket*>>> s_sockets_for_retransmit;
+static Singleton<ProtectedValue<HashTable<TCPSocket*>>> s_sockets_for_retransmit;
 
 ProtectedValue<HashTable<TCPSocket*>>& TCPSocket::sockets_for_retransmit()
 {

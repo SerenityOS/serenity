@@ -45,11 +45,11 @@ static void create_signal_trampoline();
 
 RecursiveSpinLock g_profiling_lock;
 static Atomic<pid_t> next_pid;
-static AK::Singleton<ProtectedValue<Process::List>> s_processes;
+static Singleton<ProtectedValue<Process::List>> s_processes;
 READONLY_AFTER_INIT HashMap<String, OwnPtr<Module>>* g_modules;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
-static AK::Singleton<ProtectedValue<String>> s_hostname;
+static Singleton<ProtectedValue<String>> s_hostname;
 
 ProtectedValue<String>& hostname()
 {
