@@ -44,8 +44,8 @@ void LayerListWidget::rebuild_gadgets()
 {
     m_gadgets.clear();
     if (m_image) {
-        for (size_t layer_index = 0; layer_index < m_image->layer_count(); ++layer_index) {
-            m_gadgets.append({ layer_index, {}, false, {} });
+        for (size_t layer_index = m_image->layer_count(); layer_index != 0; --layer_index) {
+            m_gadgets.append({ layer_index - 1, {}, false, {} });
         }
     }
     relayout_gadgets();
@@ -124,9 +124,10 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
 
 Optional<size_t> LayerListWidget::gadget_at(Gfx::IntPoint const& position)
 {
-    for (size_t i = 0; i < m_gadgets.size(); ++i) {
-        if (m_gadgets[i].rect.contains(position))
-            return i;
+    for (size_t i = m_gadgets.size(); i != 0; --i) {
+        auto gadget_index = i - 1;
+        if (m_gadgets[gadget_index].rect.contains(position))
+            return gadget_index;
     }
     return {};
 }
@@ -144,11 +145,14 @@ void LayerListWidget::mousedown_event(GUI::MouseEvent& event)
     if (!gadget_index.has_value())
         return;
 
+    // We need to compute a different layer index because the gadget list is in the reverse order
+    auto layer_index = gadget_index.value() - m_gadgets.size() - 1;
+
     m_moving_gadget_index = gadget_index;
     m_selected_layer_index = gadget_index.value();
     m_moving_event_origin = translated_event_point;
     auto& gadget = m_gadgets[m_moving_gadget_index.value()];
-    auto& layer = m_image->layer(gadget_index.value());
+    auto& layer = m_image->layer(layer_index);
     set_selected_layer(&layer);
     gadget.is_moving = true;
     gadget.movement_delta = {};
