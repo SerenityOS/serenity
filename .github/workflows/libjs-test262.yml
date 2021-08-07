@@ -62,9 +62,20 @@ jobs:
       - name: Check versions
         run: set +e; g++ --version; g++-10 --version; python --version; python3 --version; ninja --version
 
-      - name: Build test-js
+      - name: Create build directory
         run: |
           mkdir -p Build/lagom
+          mkdir -p Build/lagom/UCD
+
+      - name: UnicodeData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/lagom/UCD
+          key: UnicodeData-${{ hashFiles('Userland/Libraries/LibUnicode/unicode_data.cmake') }}
+
+      - name: Build test-js
+        run: |
           cd Build/lagom
           cmake -GNinja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 -DBUILD_LAGOM=ON ../../Meta/Lagom
           ninja test-js
