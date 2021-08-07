@@ -30,15 +30,15 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     {
         ProtectedDataMutationScope scope { *child };
-        child->m_promises = m_promises.load();
-        child->m_execpromises = m_execpromises.load();
-        child->m_has_promises = m_has_promises.load();
-        child->m_has_execpromises = m_has_execpromises.load();
-        child->m_sid = m_sid;
-        child->m_extra_gids = m_extra_gids;
-        child->m_umask = m_umask;
-        child->m_signal_trampoline = m_signal_trampoline;
-        child->m_dumpable = m_dumpable;
+        child->m_protected_values.promises = m_protected_values.promises.load();
+        child->m_protected_values.execpromises = m_protected_values.execpromises.load();
+        child->m_protected_values.has_promises = m_protected_values.has_promises.load();
+        child->m_protected_values.has_execpromises = m_protected_values.has_execpromises.load();
+        child->m_protected_values.sid = m_protected_values.sid;
+        child->m_protected_values.extra_gids = m_protected_values.extra_gids;
+        child->m_protected_values.umask = m_protected_values.umask;
+        child->m_protected_values.signal_trampoline = m_protected_values.signal_trampoline;
+        child->m_protected_values.dumpable = m_protected_values.dumpable;
     }
 
     dbgln_if(FORK_DEBUG, "fork: child={}", child);

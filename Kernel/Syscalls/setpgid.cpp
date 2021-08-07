@@ -40,7 +40,7 @@ KResultOr<FlatPtr> Process::sys$setsid()
     m_pg = ProcessGroup::create(ProcessGroupID(pid().value()));
     m_tty = nullptr;
     ProtectedDataMutationScope scope { *this };
-    m_sid = pid().value();
+    m_protected_values.sid = pid().value();
     return sid().value();
 }
 

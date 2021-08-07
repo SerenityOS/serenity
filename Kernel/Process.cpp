@@ -216,14 +216,14 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
 void Process::protect_data()
 {
     m_protected_data_refs.unref([&]() {
-        MM.set_page_writable_direct(VirtualAddress { this }, false);
+        MM.set_page_writable_direct(VirtualAddress { &this->m_protected_values }, false);
     });
 }
 
 void Process::unprotect_data()
 {
     m_protected_data_refs.ref([&]() {
-        MM.set_page_writable_direct(VirtualAddress { this }, true);
+        MM.set_page_writable_direct(VirtualAddress { &this->m_protected_values }, true);
     });
 }
 
@@ -249,14 +249,14 @@ Process::Process(const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool 
     // Ensure that we protect the process data when exiting the constructor.
     ProtectedDataMutationScope scope { *this };
 
-    m_pid = allocate_pid();
-    m_ppid = ppid;
-    m_uid = uid;
-    m_gid = gid;
-    m_euid = uid;
-    m_egid = gid;
-    m_suid = uid;
-    m_sgid = gid;
+    m_protected_values.pid = allocate_pid();
+    m_protected_values.ppid = ppid;
+    m_protected_values.uid = uid;
+    m_protected_values.gid = gid;
+    m_protected_values.euid = uid;
+    m_protected_values.egid = gid;
+    m_protected_values.suid = uid;
+    m_protected_values.sgid = gid;
 
     dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, this->pid().value());
 }
@@ -386,7 +386,7 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
     }
     {
         ProtectedDataMutationScope scope { *this };
-        m_termination_signal = signal;
+        m_protected_values.termination_signal = signal;
     }
     set_dump_core(!out_of_memory);
     address_space().dump_regions();
@@ -482,11 +482,11 @@ siginfo_t Process::wait_info()
     siginfo.si_pid = pid().value();
     siginfo.si_uid = uid();
 
-    if (m_termination_signal) {
-        siginfo.si_status = m_termination_signal;
+    if (m_protected_values.termination_signal) {
+        siginfo.si_status = m_protected_values.termination_signal;
         siginfo.si_code = CLD_KILLED;
     } else {
-        siginfo.si_status = m_termination_status;
+        siginfo.si_status = m_protected_values.termination_status;
         siginfo.si_code = CLD_EXITED;
     }
     return siginfo;
@@ -690,8 +690,8 @@ void Process::terminate_due_to_signal(u8 signal)
     dbgln("Terminating {} due to signal {}", *this, signal);
     {
         ProtectedDataMutationScope scope { *this };
-        m_termination_status = 0;
-        m_termination_signal = signal;
+        m_protected_values.termination_status = 0;
+        m_protected_values.termination_signal = signal;
     }
     die();
 }
@@ -832,7 +832,7 @@ void Process::delete_perf_events_buffer()
 bool Process::remove_thread(Thread& thread)
 {
     ProtectedDataMutationScope scope { *this };
-    auto thread_cnt_before = m_thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
+    auto thread_cnt_before = m_protected_values.thread_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
     VERIFY(thread_cnt_before != 0);
     thread_list().with([&](auto& thread_list) {
         thread_list.remove(thread);
@@ -843,7 +843,7 @@ bool Process::remove_thread(Thread& thread)
 bool Process::add_thread(Thread& thread)
 {
     ProtectedDataMutationScope scope { *this };
-    bool is_first = m_thread_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed) == 0;
+    bool is_first = m_protected_values.thread_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed) == 0;
     thread_list().with([&](auto& thread_list) {
         thread_list.append(thread);
     });
@@ -852,10 +852,10 @@ bool Process::add_thread(Thread& thread)
 
 void Process::set_dumpable(bool dumpable)
 {
-    if (dumpable == m_dumpable)
+    if (dumpable == m_protected_values.dumpable)
         return;
     ProtectedDataMutationScope scope { *this };
-    m_dumpable = dumpable;
+    m_protected_values.dumpable = dumpable;
 }
 
 KResult Process::set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value)

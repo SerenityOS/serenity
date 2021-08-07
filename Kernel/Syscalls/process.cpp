@@ -20,7 +20,7 @@ KResultOr<FlatPtr> Process::sys$getppid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(stdio);
-    return m_ppid.value();
+    return m_protected_values.ppid.value();
 }
 
 KResultOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t buffer_size)

@@ -56,7 +56,7 @@ KResultOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params
     if (promises) {
         if (!parse_pledge(promises->view(), new_promises))
             return EINVAL;
-        if (m_has_promises && (new_promises & ~m_promises))
+        if (m_protected_values.has_promises && (new_promises & ~m_protected_values.promises))
             return EPERM;
     }
 
@@ -64,7 +64,7 @@ KResultOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params
     if (execpromises) {
         if (!parse_pledge(execpromises->view(), new_execpromises))
             return EINVAL;
-        if (m_has_execpromises && (new_execpromises & ~m_execpromises))
+        if (m_protected_values.has_execpromises && (new_execpromises & ~m_protected_values.execpromises))
             return EPERM;
     }
 
@@ -74,13 +74,13 @@ KResultOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params
     // leave the caller in an unexpected state.
 
     if (promises) {
-        m_promises = new_promises;
-        m_has_promises = true;
+        m_protected_values.has_promises = true;
+        m_protected_values.promises = new_promises;
     }
 
     if (execpromises) {
-        m_execpromises = new_execpromises;
-        m_has_execpromises = true;
+        m_protected_values.has_execpromises = true;
+        m_protected_values.execpromises = new_execpromises;
     }
 
     return 0;
