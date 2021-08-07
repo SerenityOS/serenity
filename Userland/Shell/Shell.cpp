@@ -1821,7 +1821,7 @@ Shell::Shell()
         path.append(getenv("PATH"));
         if (path.length())
             path.append(":");
-        path.append("/bin:/usr/bin:/usr/local/bin");
+        path.append("/usr/local/bin:/usr/bin:/bin");
         setenv("PATH", path.to_string().characters(), true);
     }
 

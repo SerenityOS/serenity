@@ -103,7 +103,7 @@ The system server entry looks as below:
 [TestRunner@ttyS0]
 Executable=/home/anon/tests/run-tests-and-shutdown.sh
 StdIO=/dev/ttyS0
-Environment=DO_SHUTDOWN_AFTER_TESTS=1 TERM=xterm PATH=/bin:/usr/bin:/usr/local/bin
+Environment=DO_SHUTDOWN_AFTER_TESTS=1 TERM=xterm PATH=/usr/local/bin:/usr/bin:/bin
 User=anon
 WorkingDirectory=/home/anon
 BootModes=self-test

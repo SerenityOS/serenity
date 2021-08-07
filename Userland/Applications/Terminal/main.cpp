@@ -96,7 +96,7 @@ static void run_command(String command, bool keep_open)
         args[arg_index++] = "-c";
         args[arg_index++] = command.characters();
     }
-    const char* envs[] = { "TERM=xterm", "PAGER=more", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
+    const char* envs[] = { "TERM=xterm", "PAGER=more", "PATH=/usr/local/bin:/usr/bin:/bin", nullptr };
     int rc = execve(shell.characters(), const_cast<char**>(args), const_cast<char**>(envs));
     if (rc < 0) {
         perror("execve");
