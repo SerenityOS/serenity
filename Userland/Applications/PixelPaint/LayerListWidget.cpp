@@ -146,7 +146,7 @@ void LayerListWidget::mousedown_event(GUI::MouseEvent& event)
         return;
 
     // We need to compute a different layer index because the gadget list is in the reverse order
-    auto layer_index = gadget_index.value() - m_gadgets.size() - 1;
+    auto layer_index = (m_gadgets.size() - 1) - gadget_index.value();
 
     m_moving_gadget_index = gadget_index;
     m_selected_layer_index = gadget_index.value();
