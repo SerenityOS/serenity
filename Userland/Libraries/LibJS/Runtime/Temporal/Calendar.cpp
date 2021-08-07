@@ -718,11 +718,13 @@ i32 iso_year(Object& temporal_object)
     // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
 
     // 2. Return 𝔽(temporalObject.[[ISOYear]]).
-    // TODO: add the rest of the builtins with a [[ISOYear]] slot (PlainYearMonth, PlainMonthDay)
     if (is<PlainDate>(temporal_object))
         return static_cast<PlainDate&>(temporal_object).iso_year();
     if (is<PlainDateTime>(temporal_object))
         return static_cast<PlainDateTime&>(temporal_object).iso_year();
+    if (is<PlainYearMonth>(temporal_object))
+        return static_cast<PlainYearMonth&>(temporal_object).iso_year();
+    // TODO: PlainMonthDay
     VERIFY_NOT_REACHED();
 }
 
@@ -733,11 +735,13 @@ u8 iso_month(Object& temporal_object)
     // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
 
     // 2. Return 𝔽(temporalObject.[[ISOMonth]]).
-    // TODO: add the rest of the builtins with a [[ISOMonth]] slot (PlainYearMonth, PlainMonthDay)
     if (is<PlainDate>(temporal_object))
         return static_cast<PlainDate&>(temporal_object).iso_month();
     if (is<PlainDateTime>(temporal_object))
         return static_cast<PlainDateTime&>(temporal_object).iso_month();
+    if (is<PlainYearMonth>(temporal_object))
+        return static_cast<PlainYearMonth&>(temporal_object).iso_month();
+    // TODO: PlainMonthDay
     VERIFY_NOT_REACHED();
 }
 
@@ -748,11 +752,13 @@ String iso_month_code(Object& temporal_object)
     // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
 
     // 2. Return ! BuildISOMonthCode(temporalObject.[[ISOMonth]]).
-    // TODO: add the rest of the builtins with a [[ISOMonth]] slot (PlainYearMonth, PlainMonthDay)
     if (is<PlainDate>(temporal_object))
         return build_iso_month_code(static_cast<PlainDate&>(temporal_object).iso_month());
     if (is<PlainDateTime>(temporal_object))
         return build_iso_month_code(static_cast<PlainDateTime&>(temporal_object).iso_month());
+    if (is<PlainYearMonth>(temporal_object))
+        return build_iso_month_code(static_cast<PlainYearMonth&>(temporal_object).iso_month());
+    // TODO: PlainMonthDay
     VERIFY_NOT_REACHED();
 }
 
@@ -763,11 +769,13 @@ u8 iso_day(Object& temporal_object)
     // NOTE: Asserted by the VERIFY_NOT_REACHED at the end
 
     // 2. Return 𝔽(temporalObject.[[ISODay]]).
-    // TODO: add the rest of the builtins with a [[ISODay]] slot (PlainYearMonth, PlainMonthDay)
     if (is<PlainDate>(temporal_object))
         return static_cast<PlainDate&>(temporal_object).iso_day();
     if (is<PlainDateTime>(temporal_object))
         return static_cast<PlainDateTime&>(temporal_object).iso_day();
+    if (is<PlainYearMonth>(temporal_object))
+        return static_cast<PlainYearMonth&>(temporal_object).iso_day();
+    // TODO: PlainMonthDay
     VERIFY_NOT_REACHED();
 }
 
