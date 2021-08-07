@@ -331,7 +331,10 @@ void LayerListWidget::set_selected_layer(Layer* layer)
     for (size_t i = 0; i < m_image->layer_count(); ++i) {
         if (layer == &m_image->layer(i)) {
             m_image->layer(i).set_selected(true);
-            scroll_into_view(m_gadgets[i].rect, false, true);
+            // The index of the gadget corresponding to the layer isn't the same as the layer itself,
+            // we have to reverse it.
+            auto gadget_index = (m_image->layer_count() - 1) - i;
+            scroll_into_view(m_gadgets[gadget_index].rect, false, true);
             m_selected_layer_index = i;
         } else {
             m_image->layer(i).set_selected(false);
