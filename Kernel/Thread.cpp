@@ -514,7 +514,7 @@ void Thread::finalize()
         dbgln("Thread {} leaking {} Locks!", *this, lock_count());
         ScopedSpinLock list_lock(m_holding_locks_lock);
         for (auto& info : m_holding_locks_list) {
-            const auto& location = info.source_location;
+            const auto& location = info.lock_location;
             dbgln(" - Mutex: \"{}\" @ {} locked in function \"{}\" at \"{}:{}\" with a count of: {}", info.lock->name(), info.lock, location.function_name(), location.filename(), location.line_number(), info.count);
         }
         VERIFY_NOT_REACHED();
