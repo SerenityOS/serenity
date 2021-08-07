@@ -764,13 +764,15 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_time)
     // 4. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
     auto* instant = create_temporal_instant(global_object, zoned_date_time->nanoseconds());
 
-    // TODO: Request spec change for consistency with toPlainDate (step 5 and 6)?
-    // 5. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, zonedDateTime.[[Calendar]]).
-    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, zoned_date_time->calendar());
+    // 5. Let calendar be zonedDateTime.[[Calendar]].
+    auto& calendar = zoned_date_time->calendar();
+
+    // 6. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, zonedDateTime.[[Calendar]]).
+    auto* temporal_date_time = builtin_time_zone_get_plain_date_time_for(global_object, &time_zone, *instant, calendar);
     if (vm.exception())
         return {};
 
-    // 6. Return ? CreateTemporalTime(temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]]).
+    // 7. Return ? CreateTemporalTime(temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]]).
     return create_temporal_time(global_object, temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond());
 }
 
