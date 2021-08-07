@@ -1372,6 +1372,9 @@ private:
     void yield_and_release_relock_big_lock();
     void yield_assuming_not_holding_big_lock();
     void drop_thread_count(bool);
+
+public:
+    using ListInProcess = IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_process_thread_list_node>;
 };
 
 AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);
