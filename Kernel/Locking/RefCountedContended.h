@@ -8,6 +8,7 @@
 
 #include <AK/RefCounted.h>
 #include <Kernel/Locking/ContendedResource.h>
+#include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/Mutex.h>
 
 namespace Kernel {
@@ -22,8 +23,8 @@ protected:
     using LockedShared = LockedResource<T const, LockMode::Shared>;
     using LockedExclusive = LockedResource<T, LockMode::Exclusive>;
 
-    LockedShared lock_shared() const { return LockedShared(static_cast<T const*>(this), this->ContendedResource::m_mutex); }
-    LockedExclusive lock_exclusive() { return LockedExclusive(static_cast<T*>(this), this->ContendedResource::m_mutex); }
+    LockedShared lock_shared(LockLocation const& location) const { return LockedShared(static_cast<T const*>(this), this->ContendedResource::m_mutex, location); }
+    LockedExclusive lock_exclusive(LockLocation const& location) { return LockedExclusive(static_cast<T*>(this), this->ContendedResource::m_mutex, location); }
 
 public:
     RefCountedContended() = default;
@@ -42,35 +43,37 @@ public:
     }
 
     template<typename Callback>
-    decltype(auto) with_shared(Callback callback) const
+    decltype(auto) with_shared(Callback callback, LockLocation const& location = LockLocation::current()) const
     {
-        auto lock = lock_shared();
+        auto lock = lock_shared(location);
         return callback(*lock);
     }
 
     template<typename Callback>
-    decltype(auto) with_exclusive(Callback callback)
+    decltype(auto) with_exclusive(Callback callback, LockLocation const& location = LockLocation::current())
     {
-        auto lock = lock_exclusive();
+        auto lock = lock_exclusive(location);
         return callback(*lock);
     }
 
     template<typename Callback>
-    void for_each_shared(Callback callback) const
+    void for_each_shared(Callback callback, LockLocation const& location = LockLocation::current()) const
     {
         with_shared([&](const auto& value) {
             for (auto& item : value)
                 callback(item);
-        });
+        },
+            location);
     }
 
     template<typename Callback>
-    void for_each_exclusive(Callback callback)
+    void for_each_exclusive(Callback callback, LockLocation const& location = LockLocation::current())
     {
         with_exclusive([&](auto& value) {
             for (auto& item : value)
                 callback(item);
-        });
+        },
+            location);
     }
 };
 

@@ -16,9 +16,9 @@ class LockedResource {
     AK_MAKE_NONCOPYABLE(LockedResource);
 
 public:
-    LockedResource(T* value, Mutex& mutex)
+    LockedResource(T* value, Mutex& mutex, LockLocation const& location)
         : m_value(value)
-        , m_mutex_locker(mutex, LockingMode)
+        , m_mutex_locker(mutex, LockingMode, location)
     {
     }
 
