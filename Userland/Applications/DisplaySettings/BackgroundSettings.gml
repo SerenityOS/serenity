@@ -39,7 +39,7 @@
 
             @GUI::Button {
                 name: "wallpaper_open_button"
-                tooltip: "Select wallpaper from file system."
+                tooltip: "Select wallpaper from file system"
                 text: "Browse..."
                 shrink_to_fit: true
             }
