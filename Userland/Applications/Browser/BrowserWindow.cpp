@@ -560,7 +560,7 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
 
     new_tab.load(url);
 
-    dbgln("Added new tab {:p}, loading {}", &new_tab, url);
+    dbgln_if(SPAM_DEBUG, "Added new tab {:p}, loading {}", &new_tab, url);
 
     if (activate)
         m_tab_widget->set_active_widget(&new_tab);

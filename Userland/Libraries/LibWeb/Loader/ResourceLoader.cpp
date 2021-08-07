@@ -105,7 +105,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
     }
 
     if (url.protocol() == "about") {
-        dbgln("Loading about: URL {}", url);
+        dbgln_if(SPAM_DEBUG, "Loading about: URL {}", url);
         deferred_invoke([success_callback = move(success_callback)](auto&) {
             success_callback(String::empty().to_byte_buffer(), {}, {});
         });
@@ -113,7 +113,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
     }
 
     if (url.protocol() == "data") {
-        dbgln("ResourceLoader loading a data URL with mime-type: '{}', base64={}, payload='{}'",
+        dbgln_if(SPAM_DEBUG, "ResourceLoader loading a data URL with mime-type: '{}', base64={}, payload='{}'",
             url.data_mime_type(),
             url.data_payload_is_base64(),
             url.data_payload());
@@ -213,7 +213,7 @@ bool ResourceLoader::is_port_blocked(int port)
 
 void ResourceLoader::clear_cache()
 {
-    dbgln("Clearing {} items from ResourceLoader cache", s_resource_cache.size());
+    dbgln_if(CACHE_DEBUG, "Clearing {} items from ResourceLoader cache", s_resource_cache.size());
     s_resource_cache.clear();
 }
 
