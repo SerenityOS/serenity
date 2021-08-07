@@ -110,4 +110,7 @@ public:
 private:
     mutable Atomic<T*> m_obj { nullptr };
 };
+
 }
+
+using AK::Singleton;
