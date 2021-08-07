@@ -52,7 +52,6 @@ private:
 
     bool is_slave() const;
 
-    Mutex m_lock { "IDEDiskDevice" };
     u16 m_capabilities { 0 };
     NonnullRefPtr<IDEChannel> m_channel;
     DriveType m_drive_type { DriveType::Master };
