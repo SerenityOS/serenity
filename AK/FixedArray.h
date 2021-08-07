@@ -20,7 +20,7 @@ public:
         : m_size(size)
     {
         if (m_size != 0) {
-            m_elements = (T*)kmalloc(sizeof(T) * m_size);
+            m_elements = static_cast<T*>(kmalloc_array(m_size, sizeof(T)));
             for (size_t i = 0; i < m_size; ++i)
                 new (&m_elements[i]) T();
         }
@@ -34,7 +34,7 @@ public:
         : m_size(other.m_size)
     {
         if (m_size != 0) {
-            m_elements = (T*)kmalloc(sizeof(T) * m_size);
+            m_elements = static_cast<T*>(kmalloc_array(m_size, sizeof(T)));
             for (size_t i = 0; i < m_size; ++i)
                 new (&m_elements[i]) T(other[i]);
         }
