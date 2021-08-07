@@ -86,6 +86,8 @@ String ProfileModel::column_name(int column) const
         return "Object";
     case Column::StackFrame:
         return "Stack Frame";
+    case Column::SymbolAddress:
+        return "Symbol Address";
     default:
         VERIFY_NOT_REACHED();
         return {};
@@ -129,6 +131,14 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
                 return String::formatted("{} ({})", node->process().basename, node->process().pid);
             }
             return node->symbol();
+        }
+        if (index.column() == Column::SymbolAddress) {
+            if (node->is_root())
+                return "";
+            auto library = node->process().library_metadata.library_containing(node->address());
+            if (!library)
+                return "";
+            return String::formatted("{:p} (offset {:p})", node->address(), node->address() - library->base);
         }
         return {};
     }

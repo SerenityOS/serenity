@@ -24,6 +24,7 @@ public:
         SelfCount,
         ObjectName,
         StackFrame,
+        SymbolAddress,
         __Count
     };
 
