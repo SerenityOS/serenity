@@ -29,6 +29,7 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
 
     define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.year, year_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.month, month_getter, {}, Attribute::Configurable);
 }
 
 static PlainYearMonth* typed_this(GlobalObject& global_object)
@@ -71,6 +72,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::year_getter)
 
     // 4. Return 𝔽(? CalendarYear(calendar, yearMonth)).
     return Value(calendar_year(global_object, calendar, *year_month));
+}
+
+// 9.3.5 get Temporal.PlainYearMonth.prototype.month, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.month
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::month_getter)
+{
+    // 1. Let yearMonth be the this value.
+    // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    auto* year_month = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be yearMonth.[[Calendar]].
+    auto& calendar = year_month->calendar();
+
+    // 4. Return 𝔽(? CalendarMonth(calendar, yearMonth)).
+    return Value(calendar_month(global_object, calendar, *year_month));
 }
 
 }
