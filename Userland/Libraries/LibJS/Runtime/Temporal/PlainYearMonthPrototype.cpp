@@ -38,6 +38,7 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.valueOf, value_of, 0, attr);
+    define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
 }
 
 static PlainYearMonth* typed_this(GlobalObject& global_object)
@@ -184,6 +185,34 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::value_of)
     // 1. Throw a TypeError exception.
     vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainYearMonth", "a primitive value");
     return {};
+}
+
+// 9.3.22 Temporal.PlainYearMonth.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.getisofields
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::get_iso_fields)
+{
+    // 1. Let yearMonth be the this value.
+    // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    auto* year_month = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let fields be ! OrdinaryObjectCreate(%Object.prototype%).
+    auto* fields = Object::create(global_object, global_object.object_prototype());
+
+    // 4. Perform ! CreateDataPropertyOrThrow(fields, "calendar", yearMonth.[[Calendar]]).
+    fields->create_data_property_or_throw(vm.names.calendar, Value(&year_month->calendar()));
+
+    // 5. Perform ! CreateDataPropertyOrThrow(fields, "isoDay", 𝔽(yearMonth.[[ISODay]])).
+    fields->create_data_property_or_throw(vm.names.isoDay, Value(year_month->iso_day()));
+
+    // 6. Perform ! CreateDataPropertyOrThrow(fields, "isoMonth", 𝔽(yearMonth.[[ISOMonth]])).
+    fields->create_data_property_or_throw(vm.names.isoMonth, Value(year_month->iso_month()));
+
+    // 7. Perform ! CreateDataPropertyOrThrow(fields, "isoYear", 𝔽(yearMonth.[[ISOYear]])).
+    fields->create_data_property_or_throw(vm.names.isoYear, Value(year_month->iso_year()));
+
+    // 8. Return fields.
+    return fields;
 }
 
 }
