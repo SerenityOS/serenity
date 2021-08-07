@@ -355,6 +355,7 @@ void init_stage2(void*)
 
     if (boot_profiling) {
         dbgln("Starting full system boot profiling");
+        MutexLocker mutex_locker(Process::current()->big_lock());
         auto result = Process::current()->sys$profiling_enable(-1, ~0ull);
         VERIFY(!result.is_error());
     }
