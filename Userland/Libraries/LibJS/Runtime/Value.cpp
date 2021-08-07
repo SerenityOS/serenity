@@ -760,7 +760,9 @@ size_t Value::to_length(GlobalObject& global_object) const
         return INVALID;
     if (len <= 0)
         return 0;
-    return min(len, MAX_ARRAY_LIKE_INDEX);
+    // FIXME: The spec says that this function's output range is 0 - 2^53-1. But we don't want to overflow the size_t.
+    constexpr double length_limit = sizeof(void*) == 4 ? NumericLimits<size_t>::max() : MAX_ARRAY_LIKE_INDEX;
+    return min(len, length_limit);
 }
 
 // 7.1.22 ToIndex ( argument ), https://tc39.es/ecma262/#sec-toindex
