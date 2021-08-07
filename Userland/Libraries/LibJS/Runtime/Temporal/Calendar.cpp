@@ -97,7 +97,7 @@ Vector<String> calendar_fields(GlobalObject& global_object, Object& calendar, Ve
         return {};
 
     // 2. Let fieldsArray be ! CreateArrayFromList(fieldNames).
-    Vector<Value> field_names_values;
+    auto field_names_values = MarkedValueList { vm.heap() };
     for (auto& field_name : field_names)
         field_names_values.append(js_string(vm, field_name));
     Value fields_array = Array::create_from(global_object, field_names_values);
