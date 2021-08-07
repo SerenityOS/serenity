@@ -8,6 +8,12 @@ die() {
     exit 1
 }
 
+SCRIPT_DIR="$(dirname "${0}")"
+
+# https://www.shellcheck.net/wiki/SC1090 No need to shellcheck private config.
+# shellcheck source=/dev/null
+[ -x "$SCRIPT_DIR/../run-local.sh" ] && . "$SCRIPT_DIR/../run-local.sh"
+
 #SERENITY_PACKET_LOGGING_ARG="-object filter-dump,id=hue,netdev=breh,file=e1000.pcap"
 
 KVM_SUPPORT="0"
@@ -25,8 +31,6 @@ if [ "$(uname)" = "Darwin" ] && [ "$(uname -m)" = "x86_64" ]; then
         SERENITY_VIRT_TECH_ARG="--accel hvf"
     fi
 fi
-
-SCRIPT_DIR="$(dirname "${0}")"
 
 # Prepend the toolchain qemu directory so we pick up QEMU from there
 PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
