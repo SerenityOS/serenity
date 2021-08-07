@@ -18,16 +18,16 @@ public:
     Duration(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Object& prototype);
     virtual ~Duration() override = default;
 
-    double years() const { return m_years; }
-    double months() const { return m_months; }
-    double weeks() const { return m_weeks; }
-    double days() const { return m_days; }
-    double hours() const { return m_hours; }
-    double minutes() const { return m_minutes; }
-    double seconds() const { return m_seconds; }
-    double milliseconds() const { return m_milliseconds; }
-    double microseconds() const { return m_microseconds; }
-    double nanoseconds() const { return m_nanoseconds; }
+    [[nodiscard]] double years() const { return m_years; }
+    [[nodiscard]] double months() const { return m_months; }
+    [[nodiscard]] double weeks() const { return m_weeks; }
+    [[nodiscard]] double days() const { return m_days; }
+    [[nodiscard]] double hours() const { return m_hours; }
+    [[nodiscard]] double minutes() const { return m_minutes; }
+    [[nodiscard]] double seconds() const { return m_seconds; }
+    [[nodiscard]] double milliseconds() const { return m_milliseconds; }
+    [[nodiscard]] double microseconds() const { return m_microseconds; }
+    [[nodiscard]] double nanoseconds() const { return m_nanoseconds; }
 
 private:
     // 7.4 Properties of Temporal.Duration Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-duration-instances

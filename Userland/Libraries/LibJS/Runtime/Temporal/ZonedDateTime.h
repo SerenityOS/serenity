@@ -18,12 +18,12 @@ public:
     ZonedDateTime(BigInt& nanoseconds, Object& time_zone, Object& calendar, Object& prototype);
     virtual ~ZonedDateTime() override = default;
 
-    BigInt const& nanoseconds() const { return m_nanoseconds; }
-    BigInt& nanoseconds() { return m_nanoseconds; }
-    Object const& time_zone() const { return m_time_zone; }
-    Object& time_zone() { return m_time_zone; }
-    Object const& calendar() const { return m_calendar; }
-    Object& calendar() { return m_calendar; }
+    [[nodiscard]] BigInt const& nanoseconds() const { return m_nanoseconds; }
+    [[nodiscard]] BigInt& nanoseconds() { return m_nanoseconds; }
+    [[nodiscard]] Object const& time_zone() const { return m_time_zone; }
+    [[nodiscard]] Object& time_zone() { return m_time_zone; }
+    [[nodiscard]] Object const& calendar() const { return m_calendar; }
+    [[nodiscard]] Object& calendar() { return m_calendar; }
 
 private:
     virtual void visit_edges(Visitor&) override;
