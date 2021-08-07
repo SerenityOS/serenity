@@ -44,7 +44,9 @@ private:
     virtual StringView class_name() const override { return "PTYMultiplexer"; }
 
     Mutex m_lock { "PTYMultiplexer" };
-    Vector<unsigned> m_freelist;
+
+    static constexpr size_t max_pty_pairs = 64;
+    Vector<unsigned, max_pty_pairs> m_freelist;
 };
 
 }
