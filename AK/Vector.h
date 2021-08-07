@@ -623,7 +623,7 @@ public:
         if (m_capacity >= needed_capacity)
             return true;
         size_t new_capacity = kmalloc_good_size(needed_capacity * sizeof(StorageType)) / sizeof(StorageType);
-        auto* new_buffer = (StorageType*)kmalloc(new_capacity * sizeof(StorageType));
+        auto* new_buffer = static_cast<StorageType*>(kmalloc_array(new_capacity, sizeof(StorageType)));
         if (new_buffer == nullptr)
             return false;
 
