@@ -12,9 +12,6 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
-#ifdef LOCK_DEBUG
-#    include <AK/SourceLocation.h>
-#endif
 #include <AK/String.h>
 #include <AK/Time.h>
 #include <AK/Vector.h>
@@ -27,6 +24,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/KString.h>
+#include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/LockMode.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Scheduler.h>
@@ -1152,7 +1150,7 @@ public:
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
 #if LOCK_DEBUG
-    void holding_lock(Mutex& lock, int refs_delta, const SourceLocation& location)
+    void holding_lock(Mutex& lock, int refs_delta, const LockLocation& location)
     {
         VERIFY(refs_delta != 0);
         m_holding_locks.fetch_add(refs_delta, AK::MemoryOrder::memory_order_relaxed);
@@ -1317,7 +1315,7 @@ private:
 #if LOCK_DEBUG
     struct HoldingLockInfo {
         Mutex* lock;
-        SourceLocation source_location;
+        LockLocation lock_location;
         unsigned count;
     };
     Atomic<u32> m_holding_locks { 0 };
