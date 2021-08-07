@@ -203,9 +203,12 @@ private:
         int tx_counter { 0 };
     };
 
-    mutable Mutex m_not_acked_lock { "TCPSocket unacked packets" };
-    SinglyLinkedList<OutgoingPacket> m_not_acked;
-    size_t m_not_acked_size { 0 };
+    struct UnackedPackets {
+        SinglyLinkedList<OutgoingPacket> packets;
+        size_t size { 0 };
+    };
+
+    ProtectedValue<UnackedPackets> m_unacked_packets;
 
     u32 m_duplicate_acks { 0 };
 
