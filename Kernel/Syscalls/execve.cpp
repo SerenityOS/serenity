@@ -540,14 +540,14 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
         if (main_program_metadata.is_setuid()) {
             executable_is_setid = true;
             ProtectedDataMutationScope scope { *this };
-            m_euid = main_program_metadata.uid;
-            m_suid = main_program_metadata.uid;
+            m_protected_values.euid = main_program_metadata.uid;
+            m_protected_values.suid = main_program_metadata.uid;
         }
         if (main_program_metadata.is_setgid()) {
             executable_is_setid = true;
             ProtectedDataMutationScope scope { *this };
-            m_egid = main_program_metadata.gid;
-            m_sgid = main_program_metadata.gid;
+            m_protected_values.egid = main_program_metadata.gid;
+            m_protected_values.sgid = main_program_metadata.gid;
         }
     }
 
@@ -641,16 +641,16 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
     {
         ProtectedDataMutationScope scope { *this };
-        m_promises = m_execpromises.load();
-        m_has_promises = m_has_execpromises.load();
+        m_protected_values.promises = m_protected_values.execpromises.load();
+        m_protected_values.has_promises = m_protected_values.has_execpromises.load();
 
-        m_execpromises = 0;
-        m_has_execpromises = false;
+        m_protected_values.execpromises = 0;
+        m_protected_values.has_execpromises = false;
 
-        m_signal_trampoline = signal_trampoline_region.value()->vaddr();
+        m_protected_values.signal_trampoline = signal_trampoline_region.value()->vaddr();
 
         // FIXME: PID/TID ISSUE
-        m_pid = new_main_thread->tid().value();
+        m_protected_values.pid = new_main_thread->tid().value();
     }
 
     auto tsr_result = new_main_thread->make_thread_specific_region({});

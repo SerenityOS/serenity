@@ -20,8 +20,8 @@ void Process::sys$exit(int status)
 
     {
         ProtectedDataMutationScope scope { *this };
-        m_termination_status = status;
-        m_termination_signal = 0;
+        m_protected_values.termination_status = status;
+        m_protected_values.termination_signal = 0;
     }
 
     auto* current_thread = Thread::current();
