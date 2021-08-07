@@ -433,7 +433,7 @@ bool Parser::setup_past_independence()
     m_segmentation_abs_or_delta_update = false;
     if (m_prev_segment_ids)
         free(m_prev_segment_ids);
-    m_prev_segment_ids = static_cast<u8*>(malloc(m_mi_rows * m_mi_cols));
+    m_prev_segment_ids = static_cast<u8*>(kmalloc_array(m_mi_rows, m_mi_cols));
     m_loop_filter_delta_enabled = true;
     m_loop_filter_ref_deltas[IntraFrame] = 1;
     m_loop_filter_ref_deltas[LastFrame] = 0;
@@ -745,16 +745,16 @@ void Parser::allocate_tile_data()
     if (dimensions == m_allocated_dimensions)
         return;
     cleanup_tile_allocations();
-    m_skips = static_cast<bool*>(malloc(sizeof(bool) * dimensions));
-    m_tx_sizes = static_cast<TXSize*>(malloc(sizeof(TXSize) * dimensions));
-    m_mi_sizes = static_cast<u32*>(malloc(sizeof(u32) * dimensions));
-    m_y_modes = static_cast<u8*>(malloc(sizeof(u8) * dimensions));
-    m_segment_ids = static_cast<u8*>(malloc(sizeof(u8) * dimensions));
-    m_ref_frames = static_cast<ReferenceFrame*>(malloc(sizeof(ReferenceFrame) * dimensions * 2));
-    m_interp_filters = static_cast<InterpolationFilter*>(malloc(sizeof(InterpolationFilter) * dimensions));
-    m_mvs = static_cast<MV*>(malloc(sizeof(MV) * dimensions * 2));
-    m_sub_mvs = static_cast<MV*>(malloc(sizeof(MV) * dimensions * 2 * 4));
-    m_sub_modes = static_cast<IntraMode*>(malloc(sizeof(IntraMode) * dimensions * 4));
+    m_skips = static_cast<bool*>(kmalloc_array(dimensions, sizeof(bool)));
+    m_tx_sizes = static_cast<TXSize*>(kmalloc_array(dimensions, sizeof(TXSize)));
+    m_mi_sizes = static_cast<u32*>(kmalloc_array(dimensions, sizeof(u32)));
+    m_y_modes = static_cast<u8*>(kmalloc_array(dimensions, sizeof(u8)));
+    m_segment_ids = static_cast<u8*>(kmalloc_array(dimensions, sizeof(u8)));
+    m_ref_frames = static_cast<ReferenceFrame*>(kmalloc_array(dimensions, 2, sizeof(ReferenceFrame)));
+    m_interp_filters = static_cast<InterpolationFilter*>(kmalloc_array(dimensions, sizeof(InterpolationFilter)));
+    m_mvs = static_cast<MV*>(kmalloc_array(dimensions, 2, sizeof(MV)));
+    m_sub_mvs = static_cast<MV*>(kmalloc_array(dimensions, 8, sizeof(MV)));
+    m_sub_modes = static_cast<IntraMode*>(kmalloc_array(dimensions, 4, sizeof(IntraMode)));
     m_allocated_dimensions = dimensions;
 }
 

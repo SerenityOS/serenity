@@ -350,7 +350,7 @@ int putenv(char* new_var)
 
     // At this point, we need to append the new var.
     // 2 here: one for the new var, one for the sentinel value.
-    char** new_environ = (char**)malloc((environ_size + 2) * sizeof(char*));
+    auto** new_environ = static_cast<char**>(kmalloc_array(environ_size + 2, sizeof(char*)));
     if (new_environ == nullptr) {
         errno = ENOMEM;
         return -1;
