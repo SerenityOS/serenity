@@ -26,6 +26,7 @@ set(LIBC_SOURCES
     pty.cpp
     pwd.cpp
     qsort.cpp
+    regex.cpp
     scanf.cpp
     sched.cpp
     serenity.cpp
