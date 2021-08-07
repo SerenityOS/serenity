@@ -18,6 +18,11 @@ PlainYearMonthPrototype::PlainYearMonthPrototype(GlobalObject& global_object)
 void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
 {
     Object::initialize(global_object);
+
+    auto& vm = this->vm();
+
+    // 9.3.2 Temporal.PlainYearMonth.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype-@@tostringtag
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.PlainYearMonth"), Attribute::Configurable);
 }
 
 }
