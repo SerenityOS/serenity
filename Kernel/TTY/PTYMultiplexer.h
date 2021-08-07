@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,10 +43,8 @@ private:
     // ^CharacterDevice
     virtual StringView class_name() const override { return "PTYMultiplexer"; }
 
-    Mutex m_lock { "PTYMultiplexer" };
-
     static constexpr size_t max_pty_pairs = 64;
-    Vector<unsigned, max_pty_pairs> m_freelist;
+    ProtectedValue<Vector<unsigned, max_pty_pairs>> m_freelist;
 };
 
 }
