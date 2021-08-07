@@ -30,6 +30,7 @@
 
 extern bool g_dump_profile;
 extern Optional<OutputFileStream> g_profile_stream;
+extern bool g_in_region_of_interest;
 
 namespace UserspaceEmulator {
 
@@ -1118,7 +1119,7 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
 int Emulator::virt$emuctl(FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
 {
     auto* tracer = malloc_tracer();
-    if (!tracer)
+    if (arg1 <= 4 && !tracer)
         return 0;
     switch (arg1) {
     case 1:
@@ -1132,6 +1133,14 @@ int Emulator::virt$emuctl(FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
         return 0;
     case 4:
         tracer->target_did_change_chunk_size({}, arg3, arg2);
+        return 0;
+    case 5: // mark ROI start
+        if (g_in_region_of_interest)
+            return -EINVAL;
+        g_in_region_of_interest = true;
+        return 0;
+    case 6: // mark ROI end
+        g_in_region_of_interest = false;
         return 0;
     default:
         return -EINVAL;

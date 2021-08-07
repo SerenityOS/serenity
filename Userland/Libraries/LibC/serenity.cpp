@@ -151,4 +151,9 @@ u16 internet_checksum(const void* ptr, size_t count)
         checksum = (checksum & 0xffff) + (checksum >> 16);
     return htons(~checksum);
 }
+
+int emuctl(uintptr_t command, uintptr_t arg0, uintptr_t arg1)
+{
+    return syscall(SC_emuctl, command, arg0, arg1);
+}
 }

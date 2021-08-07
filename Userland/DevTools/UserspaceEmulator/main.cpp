@@ -18,6 +18,7 @@
 #include <string.h>
 
 bool g_report_to_debug = false;
+bool g_in_region_of_interest = true;
 bool g_dump_profile = false;
 unsigned g_profile_instruction_interval = 0;
 Optional<OutputFileStream> g_profile_stream;
@@ -28,6 +29,7 @@ int main(int argc, char** argv, char** env)
     bool pause_on_startup { false };
     String profile_dump_path;
     FILE* profile_output_file { nullptr };
+    bool enable_roi_mode { false };
 
     Core::ArgsParser parser;
     parser.set_stop_on_first_non_option(true);
@@ -36,6 +38,7 @@ int main(int argc, char** argv, char** env)
     parser.add_option(g_dump_profile, "Generate a ProfileViewer-compatible profile", "profile", 0);
     parser.add_option(g_profile_instruction_interval, "Set the profile instruction capture interval, 128 by default", "profile-interval", 'i', "#instructions");
     parser.add_option(profile_dump_path, "File path for profile dump", "profile-file", 0, "path");
+    parser.add_option(enable_roi_mode, "Enable Region-of-Interest mode for profiling", "roi", 0);
 
     parser.add_positional_argument(arguments, "Command to emulate", "command");
 
@@ -43,6 +46,9 @@ int main(int argc, char** argv, char** env)
 
     if (g_dump_profile && g_profile_instruction_interval == 0)
         g_profile_instruction_interval = 128;
+
+    if (enable_roi_mode)
+        g_in_region_of_interest = false;
 
     String executable_path;
     if (arguments[0].contains("/"sv))
