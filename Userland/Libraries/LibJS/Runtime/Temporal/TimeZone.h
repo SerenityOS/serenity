@@ -22,8 +22,8 @@ public:
     TimeZone(String identifier, Object& prototype);
     virtual ~TimeZone() override = default;
 
-    String const& identifier() const { return m_identifier; }
-    Optional<OffsetType> const& offset_nanoseconds() const { return m_offset_nanoseconds; }
+    [[nodiscard]] String const& identifier() const { return m_identifier; }
+    [[nodiscard]] Optional<OffsetType> const& offset_nanoseconds() const { return m_offset_nanoseconds; }
     void set_offset_nanoseconds(OffsetType offset_nanoseconds) { m_offset_nanoseconds = offset_nanoseconds; };
 
 private:

@@ -20,7 +20,7 @@ public:
     Calendar(String identifier, Object& prototype);
     virtual ~Calendar() override = default;
 
-    String const& identifier() const { return m_identifier; }
+    [[nodiscard]] String const& identifier() const { return m_identifier; }
 
 private:
     // 12.5 Properties of Temporal.Calendar Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-calendar-instances

@@ -20,7 +20,7 @@ public:
     Instant(BigInt& nanoseconds, Object& prototype);
     virtual ~Instant() override = default;
 
-    BigInt const& nanoseconds() const { return m_nanoseconds; }
+    [[nodiscard]] BigInt const& nanoseconds() const { return m_nanoseconds; }
 
 private:
     virtual void visit_edges(Visitor&) override;
