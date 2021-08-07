@@ -18,13 +18,20 @@ else
     kernel_base=0xc0200000
 fi
 
+# FIXME: This doesn't work when running QEMU inside the WSL2 VM
+if command -v wslpath >/dev/null; then
+    gdb_host=$(powershell.exe "(Test-Connection -ComputerName (hostname) -Count 1).IPV4Address.IPAddressToString" | tr -d '\r\n')
+else
+    gdb_host=localhost
+fi
+
 exec $SERENITY_KERNEL_DEBUGGER \
     -ex "file $(dirname "$0")/../Build/${SERENITY_ARCH:-i686}/Kernel/Prekernel/$prekernel_image" \
     -ex "set confirm off" \
     -ex "add-symbol-file $(dirname "$0")/../Build/${SERENITY_ARCH:-i686}/Kernel/Kernel -o $kernel_base" \
     -ex "set confirm on" \
     -ex "set arch $gdb_arch" \
-    -ex 'target remote localhost:1234' \
+    -ex "target remote ${gdb_host}:1234" \
     -ex "source $(dirname "$0")/serenity_gdb.py" \
     -ex "layout asm" \
     -ex "fs next" \
