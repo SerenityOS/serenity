@@ -29,7 +29,7 @@ bool ConsoleManagement::is_initialized()
         return false;
     if (s_the->m_consoles.is_empty())
         return false;
-    if (s_the->m_active_console.is_null())
+    if (s_the->m_active_console)
         return false;
     return true;
 }
@@ -58,7 +58,7 @@ UNMAP_AFTER_INIT void ConsoleManagement::initialize()
     if (tty_number > m_consoles.size()) {
         PANIC("Switch to tty value is invalid: {} ", tty_number);
     }
-    m_active_console = m_consoles[tty_number];
+    m_active_console = &m_consoles[tty_number];
     ScopedSpinLock lock(m_lock);
     m_active_console->set_active(true);
     if (!m_active_console->is_graphical())
@@ -75,7 +75,7 @@ void ConsoleManagement::switch_to(unsigned index)
 
     bool was_graphical = m_active_console->is_graphical();
     m_active_console->set_active(false);
-    m_active_console = m_consoles[index];
+    m_active_console = &m_consoles[index];
     dbgln_if(VIRTUAL_CONSOLE_DEBUG, "Console: Switch to {}", index);
 
     // Before setting current console to be "active", switch between graphical mode to "textual" mode

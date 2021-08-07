@@ -20,7 +20,7 @@ class ConsoleManagement {
 public:
     ConsoleManagement();
 
-    static constexpr unsigned s_max_virtual_consoles = 6;
+    static constexpr size_t s_max_virtual_consoles = 6;
 
     static bool is_initialized();
     static ConsoleManagement& the();
@@ -38,8 +38,8 @@ public:
     RecursiveSpinLock& tty_write_lock() { return m_tty_write_lock; }
 
 private:
-    NonnullRefPtrVector<VirtualConsole> m_consoles;
-    RefPtr<VirtualConsole> m_active_console;
+    NonnullRefPtrVector<VirtualConsole, s_max_virtual_consoles> m_consoles;
+    VirtualConsole* m_active_console { nullptr };
     SpinLock<u8> m_lock;
     RecursiveSpinLock m_tty_write_lock;
 };
