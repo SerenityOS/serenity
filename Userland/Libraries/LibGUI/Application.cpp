@@ -93,7 +93,7 @@ Application::Application(int argc, char** argv, Core::EventLoop::MakeInspectable
     }
 
     m_tooltip_show_timer = Core::Timer::create_single_shot(700, [this] {
-        tooltip_show_timer_did_fire();
+        request_tooltip_show();
     });
 
     m_tooltip_hide_timer = Core::Timer::create_single_shot(50, [this] {
@@ -146,13 +146,27 @@ void Application::show_tooltip(String tooltip, const Widget* tooltip_source_widg
     m_tooltip_window->set_tooltip(move(tooltip));
 
     if (m_tooltip_window->is_visible()) {
-        tooltip_show_timer_did_fire();
+        request_tooltip_show();
         m_tooltip_show_timer->stop();
         m_tooltip_hide_timer->stop();
     } else {
         m_tooltip_show_timer->restart();
         m_tooltip_hide_timer->stop();
     }
+}
+
+void Application::show_tooltip_immediately(String tooltip, const Widget* tooltip_source_widget)
+{
+    m_tooltip_source_widget = tooltip_source_widget;
+    if (!m_tooltip_window) {
+        m_tooltip_window = TooltipWindow::construct();
+        m_tooltip_window->set_double_buffering_enabled(false);
+    }
+    m_tooltip_window->set_tooltip(move(tooltip));
+
+    request_tooltip_show();
+    m_tooltip_show_timer->stop();
+    m_tooltip_hide_timer->stop();
 }
 
 void Application::hide_tooltip()
@@ -194,7 +208,7 @@ Gfx::Palette Application::palette() const
     return Palette(*m_palette);
 }
 
-void Application::tooltip_show_timer_did_fire()
+void Application::request_tooltip_show()
 {
     VERIFY(m_tooltip_window);
     Gfx::IntRect desktop_rect = Desktop::the().rect();

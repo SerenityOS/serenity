@@ -36,6 +36,7 @@ public:
     void unregister_global_shortcut_action(Badge<Action>, Action&);
 
     void show_tooltip(String, const Widget* tooltip_source_widget);
+    void show_tooltip_immediately(String, const Widget* tooltip_source_widget);
     void hide_tooltip();
     Widget* tooltip_source_widget() { return m_tooltip_source_widget; };
 
@@ -85,7 +86,7 @@ private:
 
     virtual void event(Core::Event&) override;
 
-    void tooltip_show_timer_did_fire();
+    void request_tooltip_show();
     void tooltip_hide_timer_did_fire();
 
     void set_drag_hovered_widget_impl(Widget*, const Gfx::IntPoint& = {}, Vector<String> = {});
