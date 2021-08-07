@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -118,7 +118,6 @@ private:
     bool m_graphical { false };
 
     String m_tty_name;
-    RecursiveSpinLock m_lock;
 
 private:
     void initialize();
