@@ -1,4 +1,8 @@
 describe("correct behavior", () => {
+    test("length is 1", () => {
+        expect(Temporal.Instant.prototype.equals).toHaveLength(1);
+    });
+
     test("basic functionality", () => {
         const instant1 = new Temporal.Instant(111n);
         expect(instant1.equals(instant1));
