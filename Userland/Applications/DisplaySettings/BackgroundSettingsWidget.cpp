@@ -61,7 +61,7 @@ void BackgroundSettingsWidget::create_frame()
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("wallpaper_open_button");
     button.on_click = [this](auto) {
-        auto path = GUI::FilePicker::get_open_filepath(nullptr, "Select wallpaper from file system", "/res/wallpapers");
+        auto path = GUI::FilePicker::get_open_filepath(window(), "Select wallpaper from file system", "/res/wallpapers");
         if (!path.has_value())
             return;
         m_wallpaper_view->selection().clear();
