@@ -129,4 +129,6 @@ int setkeymap(const char* name, const uint32_t* map, uint32_t* const shift_map, 
 
 uint16_t internet_checksum(const void* ptr, size_t count);
 
+int emuctl(uintptr_t command, uintptr_t arg0, uintptr_t arg1);
+
 __END_DECLS

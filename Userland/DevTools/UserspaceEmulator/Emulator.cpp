@@ -30,6 +30,7 @@
 extern bool g_dump_profile;
 extern unsigned g_profile_instruction_interval;
 extern Optional<OutputFileStream> g_profile_stream;
+extern bool g_in_region_of_interest;
 
 namespace UserspaceEmulator {
 
@@ -473,6 +474,8 @@ void Emulator::dump_backtrace()
 
 void Emulator::emit_profile_sample(AK::OutputStream& output)
 {
+    if (!g_in_region_of_interest)
+        return;
     StringBuilder builder;
     timeval tv {};
     gettimeofday(&tv, nullptr);
