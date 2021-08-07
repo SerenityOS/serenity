@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/Temporal/PlainDateConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainDateTimeConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainTimeConstructor.h>
+#include <LibJS/Runtime/Temporal/PlainYearMonthConstructor.h>
 #include <LibJS/Runtime/Temporal/Temporal.h>
 #include <LibJS/Runtime/Temporal/TimeZoneConstructor.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTimeConstructor.h>
@@ -41,6 +42,7 @@ void Temporal::initialize(GlobalObject& global_object)
     define_direct_property(vm.names.PlainDate, global_object.temporal_plain_date_constructor(), attr);
     define_direct_property(vm.names.PlainDateTime, global_object.temporal_plain_date_time_constructor(), attr);
     define_direct_property(vm.names.PlainTime, global_object.temporal_plain_time_constructor(), attr);
+    define_direct_property(vm.names.PlainYearMonth, global_object.temporal_plain_year_month_constructor(), attr);
     define_direct_property(vm.names.TimeZone, global_object.temporal_time_zone_constructor(), attr);
     define_direct_property(vm.names.ZonedDateTime, global_object.temporal_zoned_date_time_constructor(), attr);
 }

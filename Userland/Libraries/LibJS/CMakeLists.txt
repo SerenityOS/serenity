@@ -144,6 +144,8 @@ set(SOURCES
     Runtime/Temporal/PlainTimeConstructor.cpp
     Runtime/Temporal/PlainTimePrototype.cpp
     Runtime/Temporal/PlainYearMonth.cpp
+    Runtime/Temporal/PlainYearMonthConstructor.cpp
+    Runtime/Temporal/PlainYearMonthPrototype.cpp
     Runtime/Temporal/Temporal.cpp
     Runtime/Temporal/TimeZone.cpp
     Runtime/Temporal/TimeZoneConstructor.cpp
