@@ -106,7 +106,7 @@ enum class NeedsBigProcessLock {
     S(mkdir, NeedsBigProcessLock::Yes)                      \
     S(times, NeedsBigProcessLock::Yes)                      \
     S(utime, NeedsBigProcessLock::Yes)                      \
-    S(sync, NeedsBigProcessLock::Yes)                       \
+    S(sync, NeedsBigProcessLock::No)                        \
     S(ptsname, NeedsBigProcessLock::Yes)                    \
     S(select, NeedsBigProcessLock::Yes)                     \
     S(unlink, NeedsBigProcessLock::Yes)                     \
