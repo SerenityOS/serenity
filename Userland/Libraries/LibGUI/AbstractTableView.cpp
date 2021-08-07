@@ -106,7 +106,8 @@ void AbstractTableView::update_column_sizes()
             auto cell_data = model.index(row, column).data();
             int cell_width = 0;
             if (cell_data.is_icon()) {
-                cell_width = cell_data.as_icon().bitmap_for_size(16)->width();
+                if (auto bitmap = cell_data.as_icon().bitmap_for_size(16))
+                    cell_width = bitmap->width();
             } else if (cell_data.is_bitmap()) {
                 cell_width = cell_data.as_bitmap().width();
             } else if (cell_data.is_valid()) {
