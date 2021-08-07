@@ -324,6 +324,7 @@ protected:
     virtual void did_end_inspection() override;
 
     void show_or_hide_tooltip();
+    bool try_trigger_action(KeyEvent& event);
 
 private:
     void handle_paint_event(PaintEvent&);
@@ -336,6 +337,8 @@ private:
     void handle_leave_event(Core::Event&);
     void focus_previous_widget(FocusSource, bool siblings_only);
     void focus_next_widget(FocusSource, bool siblings_only);
+
+    Action* look_for_action(KeyEvent const& event);
 
     virtual bool load_from_json(const JsonObject&, RefPtr<Core::Object> (*unregistered_child_handler)(const String&)) override;
 

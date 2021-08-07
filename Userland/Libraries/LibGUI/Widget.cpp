@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -310,6 +311,52 @@ void Widget::event(Core::Event& event)
     }
 }
 
+Action* Widget::look_for_action(KeyEvent const& event)
+{
+    if (event.key() == KeyCode::Key_Invalid)
+        return nullptr;
+
+    dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", event.to_string());
+
+    for (auto* widget = window()->focused_widget(); widget; widget = widget->parent_widget()) {
+        if (auto* action = widget->action_for_key_event(event)) {
+            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Focused widget {} gave action: {}", *widget, action);
+            return action;
+        }
+    }
+
+    if (auto* action = window()->action_for_key_event(event)) {
+        dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked window {}, got action: {}", window(), action);
+        return action;
+    }
+
+    // NOTE: Application-global shortcuts are ignored while a modal window is up.
+    if (!window()->is_modal()) {
+        if (auto* action = Application::the()->action_for_key_event(event)) {
+            dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "  > Asked application, got action: {}", action);
+            return action;
+        }
+    }
+
+    return nullptr;
+}
+
+bool Widget::try_trigger_action(KeyEvent& event)
+{
+    if (auto* action = look_for_action(event)) {
+        if (action->is_enabled()) {
+            action->activate();
+            event.accept();
+            return true;
+        }
+        if (action->swallow_key_event_when_disabled()) {
+            event.accept();
+            return true;
+        }
+    }
+    return false;
+}
+
 void Widget::handle_keydown_event(KeyEvent& event)
 {
     keydown_event(event);
@@ -317,6 +364,9 @@ void Widget::handle_keydown_event(KeyEvent& event)
         ContextMenuEvent c_event(window_relative_rect().bottom_right(), screen_relative_rect().bottom_right());
         dispatch_event(c_event);
     }
+
+    if (parent() == window() && !event.is_accepted())
+        try_trigger_action(event);
 }
 
 void Widget::handle_paint_event(PaintEvent& event)
