@@ -1150,7 +1150,7 @@ public:
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
 #if LOCK_DEBUG
-    void holding_lock(Mutex& lock, int refs_delta, const LockLocation& location)
+    void holding_lock(Mutex& lock, int refs_delta, LockLocation const& location)
     {
         VERIFY(refs_delta != 0);
         m_holding_locks.fetch_add(refs_delta, AK::MemoryOrder::memory_order_relaxed);

@@ -32,8 +32,8 @@ public:
     }
     ~Mutex() = default;
 
-    void lock(Mode mode = Mode::Exclusive, const LockLocation& location = LockLocation::current());
-    void restore_lock(Mode, u32, const LockLocation& location = LockLocation::current());
+    void lock(Mode mode = Mode::Exclusive, LockLocation const& location = LockLocation::current());
+    void restore_lock(Mode, u32, LockLocation const& location = LockLocation::current());
 
     void unlock();
     [[nodiscard]] Mode force_unlock_if_locked(u32&);
@@ -111,7 +111,7 @@ public:
     {
     }
 
-    ALWAYS_INLINE explicit MutexLocker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive, const LockLocation& location = LockLocation::current())
+    ALWAYS_INLINE explicit MutexLocker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive, LockLocation const& location = LockLocation::current())
         : m_lock(&l)
     {
         m_lock->lock(mode, location);
@@ -131,7 +131,7 @@ public:
         m_lock->unlock();
     }
 
-    ALWAYS_INLINE void attach_and_lock(Mutex& lock, Mutex::Mode mode = Mutex::Mode::Exclusive, const LockLocation& location = LockLocation::current())
+    ALWAYS_INLINE void attach_and_lock(Mutex& lock, Mutex::Mode mode = Mutex::Mode::Exclusive, LockLocation const& location = LockLocation::current())
     {
         VERIFY(!m_locked);
         m_lock = &lock;
@@ -140,7 +140,7 @@ public:
         m_lock->lock(mode, location);
     }
 
-    ALWAYS_INLINE void lock(Mutex::Mode mode = Mutex::Mode::Exclusive, const LockLocation& location = LockLocation::current())
+    ALWAYS_INLINE void lock(Mutex::Mode mode = Mutex::Mode::Exclusive, LockLocation const& location = LockLocation::current())
     {
         VERIFY(m_lock);
         VERIFY(!m_locked);

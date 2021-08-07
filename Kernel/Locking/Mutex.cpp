@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-void Mutex::lock(Mode mode, [[maybe_unused]] const LockLocation& location)
+void Mutex::lock(Mode mode, [[maybe_unused]] LockLocation const& location)
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
@@ -312,7 +312,7 @@ auto Mutex::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
     return current_mode;
 }
 
-void Mutex::restore_lock(Mode mode, u32 lock_count, [[maybe_unused]] const LockLocation& location)
+void Mutex::restore_lock(Mode mode, u32 lock_count, [[maybe_unused]] LockLocation const& location)
 {
     VERIFY(mode != Mode::Unlocked);
     VERIFY(lock_count > 0);
