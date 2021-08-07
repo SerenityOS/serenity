@@ -255,7 +255,7 @@ int scandir(const char* dir_name,
     }
 
     const int size = tmp_names.size();
-    auto names = (struct dirent**)malloc(size * sizeof(struct dirent*));
+    auto** names = static_cast<struct dirent**>(kmalloc_array(size, sizeof(struct dirent*)));
     for (auto i = 0; i < size; i++) {
         names[i] = tmp_names[i];
     }

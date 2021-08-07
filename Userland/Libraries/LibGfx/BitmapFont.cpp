@@ -34,7 +34,7 @@ static_assert(sizeof(FontFileHeader) == 80);
 NonnullRefPtr<Font> BitmapFont::clone() const
 {
     size_t bytes_per_glyph = sizeof(u32) * glyph_height();
-    auto* new_rows = static_cast<unsigned*>(malloc(bytes_per_glyph * m_glyph_count));
+    auto* new_rows = static_cast<unsigned*>(kmalloc_array(m_glyph_count, bytes_per_glyph));
     memcpy(new_rows, m_rows, bytes_per_glyph * m_glyph_count);
     auto* new_widths = static_cast<u8*>(malloc(m_glyph_count));
     memcpy(new_widths, m_glyph_widths, m_glyph_count);
