@@ -24,6 +24,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(month_getter);
     JS_DECLARE_NATIVE_FUNCTION(month_code_getter);
     JS_DECLARE_NATIVE_FUNCTION(days_in_year_getter);
+    JS_DECLARE_NATIVE_FUNCTION(days_in_month_getter);
 };
 
 }
