@@ -80,7 +80,6 @@ KResultOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgi
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this)
     REQUIRE_PROMISE(proc);
-    // FIXME: Use a ProcessHandle
     ProcessID pid = specified_pid ? ProcessID(specified_pid) : this->pid();
     if (specified_pgid < 0) {
         // The value of the pgid argument is less than 0, or is not a value supported by the implementation.
