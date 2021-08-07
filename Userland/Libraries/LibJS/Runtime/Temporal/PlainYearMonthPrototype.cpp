@@ -35,6 +35,9 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
     define_native_accessor(vm.names.daysInMonth, days_in_month_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.monthsInYear, months_in_year_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.inLeapYear, in_leap_year_getter, {}, Attribute::Configurable);
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
 static PlainYearMonth* typed_this(GlobalObject& global_object)
@@ -173,6 +176,14 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::in_leap_year_getter)
 
     // 4. Return ? CalendarInLeapYear(calendar, yearMonth).
     return Value(calendar_in_leap_year(global_object, calendar, *year_month));
+}
+
+// 9.3.20 Temporal.PlainYearMonth.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth.prototype.valueof
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::value_of)
+{
+    // 1. Throw a TypeError exception.
+    vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "Temporal.PlainYearMonth", "a primitive value");
+    return {};
 }
 
 }
