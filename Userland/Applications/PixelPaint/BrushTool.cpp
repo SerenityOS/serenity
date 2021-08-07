@@ -35,7 +35,7 @@ void BrushTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
     for (int i = 0; i < first_draw_opacity; ++i)
         draw_point(layer.bitmap(), m_editor->color_for(event), event.position());
 
-    layer.did_modify_bitmap();
+    layer.did_modify_bitmap(Gfx::IntRect::centered_on(event.position(), Gfx::IntSize { m_size * 2, m_size * 2 }));
     m_last_position = event.position();
 }
 
