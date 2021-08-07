@@ -18,7 +18,7 @@ class IntrusiveListRelaxedConst : public IntrusiveList<T, Container, member> {
 public:
     using IntrusiveList<T, Container, member>::IntrusiveList;
 
-    using Iterator = IntrusiveList<T, Container, member>::Iterator;
+    using Iterator = typename IntrusiveList<T, Container, member>::Iterator;
 
     Iterator begin() const { return const_cast<IntrusiveListRelaxedConst*>(this)->IntrusiveList<T, Container, member>::begin(); }
     Iterator end() const { return Iterator {}; }
