@@ -1,0 +1,18 @@
+diff a/bootstrap/bootstrap b/bootstrap/bootstrap
+--- a/bootstrap/bootstrap
++++ b/bootstrap/bootstrap
+@@ -805,6 +805,13 @@
+ SCO_SV)
+ 	# /bin/sh under OpenServer 5.0.7/3.2 breaks bmake tests.
+ 	#bmakexargs="$bmakexargs --with-defshell=/bin/ksh"
+ 	;;
++SerenityOS)
++	root_group=root
++	machine_arch=`uname -m`
++	case "$machine_arch" in
++	i?86) machine_arch="i386" ;;
++	esac
++	;;
+ SunOS)
+ 	root_group=root
+ 	need_bsd_install=yes

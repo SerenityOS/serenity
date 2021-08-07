@@ -1,0 +1,44 @@
+diff a/mk/platform/SerenityOS.mk b/mk/platform/SerenityOS.mk
+--- a/mk/platform/SerenityOS.mk
++++ b/mk/platform/SerenityOS.mk
+@@ -0,0 +1,40 @@
++# Variable definitions for the SerenityOS operating system.
++
++ECHO_N?=	${ECHO} -n
++PKGLOCALEDIR?=	share
++PS?=		/bin/ps
++SU?=		/bin/su
++
++CPP_PRECOMP_FLAGS?=	# unset
++DEF_UMASK?=		022
++DEFAULT_SERIAL_DEVICE?=	/dev/null
++EXPORT_SYMBOLS_LDFLAGS?=	# Don't add symbols to the dynamic symbol table
++GROUPADD?=		/bin/groupadd
++NOLOGIN?=		/bin/false
++ROOT_CMD?=		${SU}
++ROOT_GROUP?= 		root
++ROOT_USER?=		root
++SERIAL_DEVICES?=	/dev/null
++USERADD?=		/bin/useradd
++
++_OPSYS_SYSTEM_RPATH?=	/usr/lib
++_OPSYS_LIB_DIRS?=	/usr/lib
++_OPSYS_INCLUDE_DIRS?=	/usr/include
++
++_OPSYS_HAS_INET6=	yes	# IPv6 is standard
++_OPSYS_HAS_JAVA=	no	# Java is not standard
++_OPSYS_HAS_MANZ=	no	# no MANZ for gzipping of man pages
++_OPSYS_HAS_OSSAUDIO=	no	# libossaudio is available
++_OPSYS_PERL_REQD=		# no base version of perl required
++_OPSYS_PTHREAD_AUTO=	no	# -lpthread needed for pthreads
++_OPSYS_SHLIB_TYPE=	ELF	# ELF shared libraries on Minix
++_PATCH_CAN_BACKUP=	no	# native patch(1) can't make backups
++_USE_RPATH=		yes	# add rpath to LDFLAGS
++
++_STRIPFLAG_CC?=		${_INSTALL_UNSTRIPPED:D:U-s}	# cc(1) option to strip
++_STRIPFLAG_INSTALL?=	${_INSTALL_UNSTRIPPED:D:U-s}	# install(1) option to strip
++
++_OPSYS_CAN_CHECK_SHLIBS=	yes
++
++# XXX: Something's very wrong here, defaults.mk seems to get included before bsd-check-vars.mk and USE_TOOLS isn't fully initialized...
++USE_TOOLS+=	awk cat cmp diff echo find id grep rm sed test touch true

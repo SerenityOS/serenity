@@ -1,0 +1,51 @@
+diff a/mk/tools/tools.SerenityOS.mk b/mk/tools/tools.SerenityOS.mk
+--- a/mk/tools/tools.SerenityOS.mk
++++ b/mk/tools/tools.SerenityOS.mk
+@@ -0,0 +1,47 @@
++# System-supplied tools for the SerenityOS operating system.
++
++TOOLS_PLATFORM.[?=		[			# shell builtin
++TOOLS_PLATFORM.basename?=		/bin/basename
++TOOLS_PLATFORM.cat?=		/bin/cat
++TOOLS_PLATFORM.chgrp?=		/bin/chgrp
++TOOLS_PLATFORM.chmod?=		/bin/chmod
++TOOLS_PLATFORM.chown?=		/bin/chown
++TOOLS_PLATFORM.cp?=		/bin/cp
++TOOLS_PLATFORM.cut?=		/bin/cut
++TOOLS_PLATFORM.date?=		/bin/date
++TOOLS_PLATFORM.diff?=		/bin/diff
++TOOLS_PLATFORM.dirname?=		/bin/dirname
++TOOLS_PLATFORM.echo?=		/bin/echo
++TOOLS_PLATFORM.env?=		/usr/bin/env
++TOOLS_PLATFORM.expr?=		/bin/expr
++TOOLS_PLATFORM.false?=		/bin/false
++TOOLS_PLATFORM.file?=		/bin/file
++TOOLS_PLATFORM.find?=		/bin/find
++TOOLS_PLATFORM.gunzip?=		/bin/gunzip
++TOOLS_PLATFORM.gzip?=		/bin/gzip
++TOOLS_PLATFORM.head?=		/bin/head
++TOOLS_PLATFORM.hostname?=		/bin/hostname
++TOOLS_PLATFORM.id?=		/bin/id
++TOOLS_PLATFORM.ln?=		/bin/ln
++TOOLS_PLATFORM.ls?=		/bin/ls
++TOOLS_PLATFORM.mkdir?=		/bin/mkdir
++TOOLS_PLATFORM.mktemp?=		/bin/mktemp
++TOOLS_PLATFORM.mv?=		/bin/mv
++TOOLS_PLATFORM.printf?=		/bin/printf
++TOOLS_PLATFORM.pwd?=		/bin/pwd
++TOOLS_PLATFORM.rm?=		/bin/rm
++TOOLS_PLATFORM.rmdir?=		/bin/rmdir
++TOOLS_PLATFORM.sh?=		/bin/sh
++TOOLS_PLATFORM.sleep?=		/bin/sleep
++TOOLS_PLATFORM.sort?=		/bin/sort
++TOOLS_PLATFORM.tail?=		/bin/tail
++TOOLS_PLATFORM.tar?=		/bin/tar
++TOOLS_PLATFORM.tee?=		/bin/tee
++TOOLS_PLATFORM.test?=		/bin/test
++TOOLS_PLATFORM.touch?=		/bin/touch
++TOOLS_PLATFORM.tr?=		/bin/tr
++TOOLS_PLATFORM.true?=		/bin/true
++TOOLS_PLATFORM.uniq?=		/bin/uniq
++TOOLS_PLATFORM.unzip?=		/bin/unzip
++TOOLS_PLATFORM.wc?=		/bin/wc
++TOOLS_PLATFORM.xargs?=		/bin/xargs

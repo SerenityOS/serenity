@@ -1,0 +1,13 @@
+diff a/config.guess b/config.guess
+--- a/config.guess
++++ b/config.guess
+@@ -1534,6 +1534,9 @@
+     *:Unleashed:*:*)
+ 	GUESS=$UNAME_MACHINE-unknown-unleashed$UNAME_RELEASE
+ 	;;
++    *:SerenityOS:*:*)
++	GUESS=$UNAME_MACHINE-pc-serenity
++	;;
+ esac
+ 
+ # Do we have a guess based on uname results?
