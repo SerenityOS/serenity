@@ -1521,7 +1521,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last)
 
     // 4. Let k be len - 1.
     // 5. Repeat, while k ≥ 0,
-    for (i64 k = length - 1; k >= 0; --k) {
+    for (i64 k = static_cast<i64>(length) - 1; k >= 0; --k) {
         // a. Let Pk be ! ToString(𝔽(k)).
         auto property_name = PropertyName { k };
 
@@ -1570,7 +1570,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::find_last_index)
 
     // 4. Let k be len - 1.
     // 5. Repeat, while k ≥ 0,
-    for (i64 k = length - 1; k >= 0; --k) {
+    for (i64 k = static_cast<i64>(length) - 1; k >= 0; --k) {
         // a. Let Pk be ! ToString(𝔽(k)).
         auto property_name = PropertyName { k };
 
