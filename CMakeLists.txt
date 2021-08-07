@@ -101,6 +101,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_compile_options(-Wno-literal-suffix)
+add_compile_options(-fsized-deallocation)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_compile_options(-Wno-literal-suffix)
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang$")
