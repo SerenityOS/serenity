@@ -6,6 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonthPrototype.h>
 
@@ -27,6 +28,7 @@ void PlainYearMonthPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.PlainYearMonth"), Attribute::Configurable);
 
     define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.year, year_getter, {}, Attribute::Configurable);
 }
 
 static PlainYearMonth* typed_this(GlobalObject& global_object)
@@ -53,6 +55,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::calendar_getter)
 
     // 3. Return plainYearMonth.[[Calendar]].
     return Value(&plain_year_month->calendar());
+}
+
+// 9.3.4 get Temporal.PlainYearMonth.prototype.year, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.year
+JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::year_getter)
+{
+    // 1. Let yearMonth be the this value.
+    // 2. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    auto* year_month = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be yearMonth.[[Calendar]].
+    auto& calendar = year_month->calendar();
+
+    // 4. Return 𝔽(? CalendarYear(calendar, yearMonth)).
+    return Value(calendar_year(global_object, calendar, *year_month));
 }
 
 }
