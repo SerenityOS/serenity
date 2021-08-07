@@ -102,7 +102,6 @@ protected:
     mode_t m_umask { 022 };
     VirtualAddress m_signal_trampoline;
     Atomic<u32> m_thread_count { 0 };
-    IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_process_thread_list_node> m_thread_list;
     u8 m_termination_status { 0 };
     u8 m_termination_signal { 0 };
 };
@@ -724,9 +723,12 @@ public:
     const FileDescriptions& fds() const { return m_fds; }
 
 private:
-    FileDescriptions m_fds;
+    SpinLockProtectedValue<Thread::ListInProcess>& thread_list() { return m_thread_list; }
+    SpinLockProtectedValue<Thread::ListInProcess> const& thread_list() const { return m_thread_list; }
 
-    mutable RecursiveSpinLock m_thread_list_lock;
+    SpinLockProtectedValue<Thread::ListInProcess> m_thread_list;
+
+    FileDescriptions m_fds;
 
     const bool m_is_kernel_process;
     Atomic<State> m_state { State::Running };
@@ -818,25 +820,27 @@ inline void Process::for_each_child(Callback callback)
 template<IteratorFunction<Thread&> Callback>
 inline IterationDecision Process::for_each_thread(Callback callback) const
 {
-    ScopedSpinLock thread_list_lock(m_thread_list_lock);
-    for (auto& thread : m_thread_list) {
-        IterationDecision decision = callback(thread);
-        if (decision != IterationDecision::Continue)
-            return decision;
-    }
-    return IterationDecision::Continue;
+    return thread_list().with([&](auto& thread_list) -> IterationDecision {
+        for (auto& thread : thread_list) {
+            IterationDecision decision = callback(thread);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
+        return IterationDecision::Continue;
+    });
 }
 
 template<IteratorFunction<Thread&> Callback>
 inline IterationDecision Process::for_each_thread(Callback callback)
 {
-    ScopedSpinLock thread_list_lock(m_thread_list_lock);
-    for (auto& thread : m_thread_list) {
-        IterationDecision decision = callback(thread);
-        if (decision != IterationDecision::Continue)
-            return decision;
-    }
-    return IterationDecision::Continue;
+    return thread_list().with([&](auto& thread_list) -> IterationDecision {
+        for (auto& thread : thread_list) {
+            IterationDecision decision = callback(thread);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
+        return IterationDecision::Continue;
+    });
 }
 
 template<IteratorFunction<Process&> Callback>
@@ -875,18 +879,20 @@ inline void Process::for_each_child(Callback callback)
 template<VoidFunction<Thread&> Callback>
 inline IterationDecision Process::for_each_thread(Callback callback) const
 {
-    ScopedSpinLock thread_list_lock(m_thread_list_lock);
-    for (auto& thread : m_thread_list)
-        callback(thread);
+    thread_list().with([&](auto& thread_list) {
+        for (auto& thread : thread_list)
+            callback(thread);
+    });
     return IterationDecision::Continue;
 }
 
 template<VoidFunction<Thread&> Callback>
 inline IterationDecision Process::for_each_thread(Callback callback)
 {
-    ScopedSpinLock thread_list_lock(m_thread_list_lock);
-    for (auto& thread : m_thread_list)
-        callback(thread);
+    thread_list().with([&](auto& thread_list) {
+        for (auto& thread : thread_list)
+            callback(thread);
+    });
     return IterationDecision::Continue;
 }
 
