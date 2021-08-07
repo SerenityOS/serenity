@@ -33,16 +33,28 @@ PATH="$SCRIPT_DIR/../Toolchain/Local/i686/bin:$PATH"
 disk_usage() {
     # shellcheck disable=SC2003
 if [ "$(uname -s)" = "Darwin" ]; then
-    expr "$(du -sk "$1" | cut -f1)" / 1024
+    expr "$(du -sk "$1" | cut -f1)"
 else
-    expr "$(du -sk --apparent-size "$1" | cut -f1)" / 1024
+    expr "$(du -sk --apparent-size "$1" | cut -f1)"
 fi
 }
 
-DISK_SIZE=$(($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + 500))
-DISK_SIZE=${DISK_SIZE:-600}
-DISK_SIZE_BYTES=$((DISK_SIZE * 1024 * 1024))
-unset DISK_SIZE
+inode_usage() {
+    find "$1" | wc -l
+}
+
+INODE_SIZE=128
+INODE_COUNT=$(($(inode_usage "$SERENITY_SOURCE_DIR/Base") + $(inode_usage Root)))
+DISK_SIZE_BYTES=$((($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + INODE_COUNT) * 1024))
+
+# Try to use heuristics to guess a good disk size and inode count.
+# The disk must notably fit:
+#   * Data blocks (for both files and directories),
+#   * Indirect/doubly indirect/triply indirect blocks,
+#   * Inodes and block bitmaps for each block group,
+#   * Plenty of extra free space and free inodes.
+DISK_SIZE_BYTES=$(((DISK_SIZE_BYTES + (INODE_COUNT * INODE_SIZE * 2)) * 3))
+INODE_COUNT=$((INODE_COUNT * 7))
 
 USE_EXISTING=0
 
@@ -85,15 +97,15 @@ if [ $USE_EXISTING -ne 1 ]; then
     if [ "$(uname -s)" = "OpenBSD" ]; then
         VND=$(vnconfig _disk_image)
         (echo "e 0"; echo 83; echo n; echo 0; echo "*"; echo "quit") | fdisk -e "$VND"
-        newfs_ext2fs -D 128 "/dev/r${VND}i" || die "could not create filesystem"
+        newfs_ext2fs -D $INODE_SIZE -n $INODE_COUNT "/dev/r${VND}i" || die "could not create filesystem"
     elif [ "$(uname -s)" = "FreeBSD" ]; then
         MD=$(mdconfig _disk_image)
-        mke2fs -q -I 128 _disk_image || die "could not create filesystem"
+        mke2fs -q -I $INODE_SIZE -N $INODE_COUNT _disk_image || die "could not create filesystem"
     else
         if [ -x /sbin/mke2fs ]; then
-            /sbin/mke2fs -q -I 128 _disk_image || die "could not create filesystem"
+            /sbin/mke2fs -q -I $INODE_SIZE -N $INODE_COUNT _disk_image || die "could not create filesystem"
         else
-            mke2fs -q -I 128 _disk_image || die "could not create filesystem"
+            mke2fs -q -I $INODE_SIZE -N $INODE_COUNT _disk_image || die "could not create filesystem"
         fi
     fi
     echo "done"
@@ -149,7 +161,7 @@ if [ $use_genext2fs = 1 ]; then
     # regenerate new image, since genext2fs is unable to reuse the previously written image.
     # genext2fs is very slow in generating big images, so I use a smaller image here. size can be updated
     # if it's not enough.
-    # not using "-i 128" since it hangs. Serenity handles whatever default this uses instead.
+    # not using "-I $INODE_SIZE" since it hangs. Serenity handles whatever default this uses instead.
     genext2fs -B 4096 -b $((DISK_SIZE_BYTES / 4096)) -d mnt _disk_image || die "try increasing image size (genext2fs -b)"
     # if using docker with shared mount, file is created as root, so make it writable for users
     chmod 0666 _disk_image
