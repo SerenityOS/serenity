@@ -15,21 +15,20 @@
 
 namespace Kernel::Memory {
 
-OwnPtr<AddressSpace> AddressSpace::try_create(Process& process, AddressSpace const* parent)
+OwnPtr<AddressSpace> AddressSpace::try_create(AddressSpace const* parent)
 {
     auto page_directory = PageDirectory::try_create_for_userspace(parent ? &parent->page_directory().range_allocator() : nullptr);
     if (!page_directory)
         return {};
-    auto space = adopt_own_if_nonnull(new (nothrow) AddressSpace(process, page_directory.release_nonnull()));
+    auto space = adopt_own_if_nonnull(new (nothrow) AddressSpace(page_directory.release_nonnull()));
     if (!space)
         return {};
     space->page_directory().set_space({}, *space);
     return space;
 }
 
-AddressSpace::AddressSpace(Process& process, NonnullRefPtr<PageDirectory> page_directory)
-    : m_process(&process)
-    , m_page_directory(move(page_directory))
+AddressSpace::AddressSpace(NonnullRefPtr<PageDirectory> page_directory)
+    : m_page_directory(move(page_directory))
 {
 }
 
