@@ -20,7 +20,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<NetworkingManagement> s_the;
+static Singleton<NetworkingManagement> s_the;
 
 NetworkingManagement& NetworkingManagement::the()
 {

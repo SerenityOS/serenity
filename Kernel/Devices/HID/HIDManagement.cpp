@@ -14,7 +14,7 @@
 namespace Kernel {
 
 Atomic<bool> g_caps_lock_remapped_to_ctrl;
-static AK::Singleton<HIDManagement> s_the;
+static Singleton<HIDManagement> s_the;
 
 // clang-format off
 static constexpr Keyboard::CharacterMapData DEFAULT_CHARACTER_MAP =

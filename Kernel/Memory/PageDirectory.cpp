@@ -17,7 +17,7 @@ extern u8 end_of_kernel_image[];
 
 namespace Kernel::Memory {
 
-static AK::Singleton<HashMap<FlatPtr, PageDirectory*>> s_cr3_map;
+static Singleton<HashMap<FlatPtr, PageDirectory*>> s_cr3_map;
 
 static HashMap<FlatPtr, PageDirectory*>& cr3_map()
 {

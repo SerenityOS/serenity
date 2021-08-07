@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<KernelRng> s_the;
+static Singleton<KernelRng> s_the;
 static Atomic<u32, AK::MemoryOrder::memory_order_relaxed> s_next_random_value = 1;
 
 KernelRng& KernelRng::the()

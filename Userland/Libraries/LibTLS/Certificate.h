@@ -67,7 +67,7 @@ public:
     static DefaultRootCACertificates& the() { return s_the; }
 
 private:
-    static AK::Singleton<DefaultRootCACertificates> s_the;
+    static Singleton<DefaultRootCACertificates> s_the;
 
     Vector<Certificate> m_ca_certificates;
 };

@@ -25,7 +25,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<TimeManagement> s_the;
+static Singleton<TimeManagement> s_the;
 
 TimeManagement& TimeManagement::the()
 {

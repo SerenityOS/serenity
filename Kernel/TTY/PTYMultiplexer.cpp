@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<PTYMultiplexer> s_the;
+static Singleton<PTYMultiplexer> s_the;
 
 PTYMultiplexer& PTYMultiplexer::the()
 {

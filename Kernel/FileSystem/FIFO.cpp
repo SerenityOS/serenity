@@ -17,7 +17,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<ProtectedValue<HashTable<FIFO*>>> s_table;
+static Singleton<ProtectedValue<HashTable<FIFO*>>> s_table;
 
 static ProtectedValue<HashTable<FIFO*>>& all_fifos()
 {

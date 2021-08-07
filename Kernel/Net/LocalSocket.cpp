@@ -19,7 +19,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<ProtectedValue<LocalSocket::List>> s_list;
+static Singleton<ProtectedValue<LocalSocket::List>> s_list;
 
 static ProtectedValue<LocalSocket::List>& all_sockets()
 {

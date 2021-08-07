@@ -54,7 +54,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<APIC> s_apic;
+static Singleton<APIC> s_apic;
 
 class APICIPIInterruptHandler final : public GenericInterruptHandler {
 public:

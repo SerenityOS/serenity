@@ -25,7 +25,7 @@ DevPtsFS::~DevPtsFS()
 {
 }
 
-static AK::Singleton<HashTable<unsigned>> s_ptys;
+static Singleton<HashTable<unsigned>> s_ptys;
 
 bool DevPtsFS::initialize()
 {

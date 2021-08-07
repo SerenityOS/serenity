@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-static AK::Singleton<ProtectedValue<HashMap<IPv4Address, MACAddress>>> s_arp_table;
+static Singleton<ProtectedValue<HashMap<IPv4Address, MACAddress>>> s_arp_table;
 
 class ARPTableBlocker : public Thread::Blocker {
 public:
@@ -80,7 +80,7 @@ protected:
     }
 };
 
-static AK::Singleton<ARPTableBlockCondition> s_arp_table_block_condition;
+static Singleton<ARPTableBlockCondition> s_arp_table_block_condition;
 
 ARPTableBlocker::ARPTableBlocker(IPv4Address ip_addr, Optional<MACAddress>& addr)
     : m_ip_addr(ip_addr)
