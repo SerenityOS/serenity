@@ -11,6 +11,7 @@
 #include <AK/HashMap.h>
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/LockMode.h>
 #include <Kernel/WaitQueue.h>
 
@@ -31,13 +32,8 @@ public:
     }
     ~Mutex() = default;
 
-#if LOCK_DEBUG
-    void lock(Mode mode = Mode::Exclusive, const SourceLocation& location = SourceLocation::current());
-    void restore_lock(Mode, u32, const SourceLocation& location = SourceLocation::current());
-#else
-    void lock(Mode = Mode::Exclusive);
-    void restore_lock(Mode, u32);
-#endif
+    void lock(Mode mode = Mode::Exclusive, const LockLocation& location = LockLocation::current());
+    void restore_lock(Mode, u32, const LockLocation& location = LockLocation::current());
 
     void unlock();
     [[nodiscard]] Mode force_unlock_if_locked(u32&);
@@ -115,18 +111,10 @@ public:
     {
     }
 
-#if LOCK_DEBUG
-    ALWAYS_INLINE explicit MutexLocker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
-#else
-    ALWAYS_INLINE explicit MutexLocker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive)
-#endif
+    ALWAYS_INLINE explicit MutexLocker(Mutex& l, Mutex::Mode mode = Mutex::Mode::Exclusive, const LockLocation& location = LockLocation::current())
         : m_lock(&l)
     {
-#if LOCK_DEBUG
         m_lock->lock(mode, location);
-#else
-        m_lock->lock(mode);
-#endif
     }
 
     ALWAYS_INLINE ~MutexLocker()
@@ -143,38 +131,22 @@ public:
         m_lock->unlock();
     }
 
-#if LOCK_DEBUG
-    ALWAYS_INLINE void attach_and_lock(Mutex& lock, Mutex::Mode mode = Mutex::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
-#else
-    ALWAYS_INLINE void attach_and_lock(Mutex& lock, Mutex::Mode mode = Mutex::Mode::Exclusive)
-#endif
+    ALWAYS_INLINE void attach_and_lock(Mutex& lock, Mutex::Mode mode = Mutex::Mode::Exclusive, const LockLocation& location = LockLocation::current())
     {
         VERIFY(!m_locked);
         m_lock = &lock;
         m_locked = true;
 
-#if LOCK_DEBUG
         m_lock->lock(mode, location);
-#else
-        m_lock->lock(mode);
-#endif
     }
 
-#if LOCK_DEBUG
-    ALWAYS_INLINE void lock(Mutex::Mode mode = Mutex::Mode::Exclusive, const SourceLocation& location = SourceLocation::current())
-#else
-    ALWAYS_INLINE void lock(Mutex::Mode mode = Mutex::Mode::Exclusive)
-#endif
+    ALWAYS_INLINE void lock(Mutex::Mode mode = Mutex::Mode::Exclusive, const LockLocation& location = LockLocation::current())
     {
         VERIFY(m_lock);
         VERIFY(!m_locked);
         m_locked = true;
 
-#if LOCK_DEBUG
         m_lock->lock(mode, location);
-#else
-        m_lock->lock(mode);
-#endif
     }
 
 private:

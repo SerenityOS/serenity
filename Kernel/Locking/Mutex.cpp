@@ -4,22 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#ifdef LOCK_DEBUG
-#    include <AK/SourceLocation.h>
-#endif
 #include <Kernel/Debug.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/SpinLock.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {
 
-#if LOCK_DEBUG
-void Mutex::lock(Mode mode, const SourceLocation& location)
-#else
-void Mutex::lock(Mode mode)
-#endif
+void Mutex::lock(Mode mode, [[maybe_unused]] const LockLocation& location)
 {
     // NOTE: This may be called from an interrupt handler (not an IRQ handler)
     // and also from within critical sections!
@@ -318,11 +312,7 @@ auto Mutex::force_unlock_if_locked(u32& lock_count_to_restore) -> Mode
     return current_mode;
 }
 
-#if LOCK_DEBUG
-void Mutex::restore_lock(Mode mode, u32 lock_count, const SourceLocation& location)
-#else
-void Mutex::restore_lock(Mode mode, u32 lock_count)
-#endif
+void Mutex::restore_lock(Mode mode, u32 lock_count, [[maybe_unused]] const LockLocation& location)
 {
     VERIFY(mode != Mode::Unlocked);
     VERIFY(lock_count > 0);
