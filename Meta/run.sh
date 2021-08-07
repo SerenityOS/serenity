@@ -55,12 +55,9 @@ if [ -z "$SERENITY_QEMU_BIN" ]; then
             QEMU_BINARY_SUFFIX=".exe"
         fi
     fi
-    if command -v "${QEMU_BINARY_PREFIX}qemu-system-x86_64${QEMU_BINARY_SUFFIX}" >/dev/null; then
+    if [ "$SERENITY_ARCH" = "x86_64" ]; then
         SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-x86_64${QEMU_BINARY_SUFFIX}"
     else
-        if [ "$SERENITY_ARCH" = "x86_64" ]; then
-            die "Please install the 64-bit QEMU system emulator (qemu-system-x86_64)."
-        fi
         SERENITY_QEMU_BIN="${QEMU_BINARY_PREFIX}qemu-system-i386${QEMU_BINARY_SUFFIX}"
     fi
 fi
