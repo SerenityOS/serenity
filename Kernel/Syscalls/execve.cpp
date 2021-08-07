@@ -453,7 +453,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
 KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description,
     RefPtr<FileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
 {
-    auto new_space = Memory::AddressSpace::try_create(*this, nullptr);
+    auto new_space = Memory::AddressSpace::try_create(nullptr);
     if (!new_space)
         return ENOMEM;
 

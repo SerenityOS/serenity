@@ -275,7 +275,7 @@ Process::Process(const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool 
 
 KResult Process::attach_resources(RefPtr<Thread>& first_thread, Process* fork_parent)
 {
-    m_space = Memory::AddressSpace::try_create(*this, fork_parent ? &fork_parent->address_space() : nullptr);
+    m_space = Memory::AddressSpace::try_create(fork_parent ? &fork_parent->address_space() : nullptr);
     if (!m_space)
         return ENOMEM;
 
