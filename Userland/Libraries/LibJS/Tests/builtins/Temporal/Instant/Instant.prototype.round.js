@@ -1,4 +1,8 @@
 describe("correct behavior", () => {
+    test("length is 1", () => {
+        expect(Temporal.Instant.prototype.round).toHaveLength(1);
+    });
+
     test("basic functionality", () => {
         const instant = new Temporal.Instant(1111111111111n);
         expect(instant.round({ smallestUnit: "second" }).epochNanoseconds).toBe(1111000000000n);
