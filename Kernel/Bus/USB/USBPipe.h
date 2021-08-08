@@ -13,6 +13,8 @@
 
 namespace Kernel::USB {
 
+class USBController;
+
 //
 // A pipe is the logical connection between a memory buffer on the PC (host) and
 // an endpoint on the device. In this implementation, the data buffer the pipe connects
@@ -39,7 +41,7 @@ public:
     };
 
 public:
-    static KResultOr<NonnullOwnPtr<Pipe>> try_create_pipe(Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, u8 poll_interval = 0);
+    static KResultOr<NonnullOwnPtr<Pipe>> try_create_pipe(USBController const& controller, Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, u8 poll_interval = 0);
 
     Type type() const { return m_type; }
     Direction direction() const { return m_direction; }
@@ -57,12 +59,14 @@ public:
 
     KResultOr<size_t> control_transfer(u8 request_type, u8 request, u16 value, u16 index, u16 length, void* data);
 
-    Pipe(Type type, Direction direction, u16 max_packet_size);
-    Pipe(Type type, Direction direction, USBEndpointDescriptor& endpoint);
-    Pipe(Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, u8 poll_interval, i8 device_address);
+    Pipe(USBController const& controller, Type type, Direction direction, u16 max_packet_size);
+    Pipe(USBController const& controller, Type type, Direction direction, USBEndpointDescriptor& endpoint);
+    Pipe(USBController const& controller, Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, u8 poll_interval, i8 device_address);
 
 private:
     friend class Device;
+
+    NonnullRefPtr<USBController> m_controller;
 
     Type m_type;
     Direction m_direction;
