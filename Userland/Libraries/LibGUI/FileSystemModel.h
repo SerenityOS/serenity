@@ -81,9 +81,9 @@ public:
 
         FileSystemModel& m_model;
 
-        Node* parent { nullptr };
-        NonnullOwnPtrVector<Node> children;
-        bool has_traversed { false };
+        Node* m_parent { nullptr };
+        NonnullOwnPtrVector<Node> m_children;
+        bool m_has_traversed { false };
 
         bool m_selected { false };
 
