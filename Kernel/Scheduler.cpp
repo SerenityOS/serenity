@@ -5,6 +5,7 @@
  */
 
 #include <AK/ScopeGuard.h>
+#include <AK/Singleton.h>
 #include <AK/Time.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Debug.h>
@@ -45,10 +46,14 @@ READONLY_AFTER_INIT static Process* s_colonel_process;
 struct ThreadReadyQueue {
     IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_ready_queue_node> thread_list;
 };
-static SpinLock<u8> g_ready_queues_lock;
-static u32 g_ready_queues_mask;
-static constexpr u32 g_ready_queue_buckets = sizeof(g_ready_queues_mask) * 8;
-READONLY_AFTER_INIT static ThreadReadyQueue* g_ready_queues; // g_ready_queue_buckets entries
+
+struct ThreadReadyQueues {
+    u32 mask {};
+    static constexpr size_t count = sizeof(mask) * 8;
+    Array<ThreadReadyQueue, count> queues;
+};
+
+static Singleton<SpinLockProtectedValue<ThreadReadyQueues>> g_ready_queues;
 
 static TotalTimeScheduled g_total_time_scheduled;
 static SpinLock<u8> g_total_time_scheduled_lock;
@@ -66,8 +71,8 @@ static inline u32 thread_priority_to_priority_index(u32 thread_priority)
     VERIFY(thread_priority >= THREAD_PRIORITY_MIN && thread_priority <= THREAD_PRIORITY_MAX);
     constexpr u32 thread_priority_count = THREAD_PRIORITY_MAX - THREAD_PRIORITY_MIN + 1;
     static_assert(thread_priority_count > 0);
-    auto priority_bucket = ((thread_priority_count - (thread_priority - THREAD_PRIORITY_MIN)) / thread_priority_count) * (g_ready_queue_buckets - 1);
-    VERIFY(priority_bucket < g_ready_queue_buckets);
+    auto priority_bucket = ((thread_priority_count - (thread_priority - THREAD_PRIORITY_MIN)) / thread_priority_count) * (ThreadReadyQueues::count - 1);
+    VERIFY(priority_bucket < ThreadReadyQueues::count);
     return priority_bucket;
 }
 
@@ -75,88 +80,92 @@ Thread& Scheduler::pull_next_runnable_thread()
 {
     auto affinity_mask = 1u << Processor::id();
 
-    ScopedSpinLock lock(g_ready_queues_lock);
-    auto priority_mask = g_ready_queues_mask;
-    while (priority_mask != 0) {
-        auto priority = __builtin_ffsl(priority_mask);
-        VERIFY(priority > 0);
-        auto& ready_queue = g_ready_queues[--priority];
-        for (auto& thread : ready_queue.thread_list) {
-            VERIFY(thread.m_runnable_priority == (int)priority);
-            if (thread.is_active())
-                continue;
-            if (!(thread.affinity() & affinity_mask))
-                continue;
-            thread.m_runnable_priority = -1;
-            ready_queue.thread_list.remove(thread);
-            if (ready_queue.thread_list.is_empty())
-                g_ready_queues_mask &= ~(1u << priority);
-            // Mark it as active because we are using this thread. This is similar
-            // to comparing it with Processor::current_thread, but when there are
-            // multiple processors there's no easy way to check whether the thread
-            // is actually still needed. This prevents accidental finalization when
-            // a thread is no longer in Running state, but running on another core.
+    return g_ready_queues->with([&](auto& ready_queues) -> Thread& {
+        auto priority_mask = ready_queues.mask;
+        while (priority_mask != 0) {
+            auto priority = __builtin_ffsl(priority_mask);
+            VERIFY(priority > 0);
+            auto& ready_queue = ready_queues.queues[--priority];
+            for (auto& thread : ready_queue.thread_list) {
+                VERIFY(thread.m_runnable_priority == (int)priority);
+                if (thread.is_active())
+                    continue;
+                if (!(thread.affinity() & affinity_mask))
+                    continue;
+                thread.m_runnable_priority = -1;
+                ready_queue.thread_list.remove(thread);
+                if (ready_queue.thread_list.is_empty())
+                    ready_queues.mask &= ~(1u << priority);
+                // Mark it as active because we are using this thread. This is similar
+                // to comparing it with Processor::current_thread, but when there are
+                // multiple processors there's no easy way to check whether the thread
+                // is actually still needed. This prevents accidental finalization when
+                // a thread is no longer in Running state, but running on another core.
 
-            // We need to mark it active here so that this thread won't be
-            // scheduled on another core if it were to be queued before actually
-            // switching to it.
-            // FIXME: Figure out a better way maybe?
-            thread.set_active(true);
-            return thread;
+                // We need to mark it active here so that this thread won't be
+                // scheduled on another core if it were to be queued before actually
+                // switching to it.
+                // FIXME: Figure out a better way maybe?
+                thread.set_active(true);
+                return thread;
+            }
+            priority_mask &= ~(1u << priority);
         }
-        priority_mask &= ~(1u << priority);
-    }
-    return *Processor::idle_thread();
+        return *Processor::idle_thread();
+    });
 }
 
 Thread* Scheduler::peek_next_runnable_thread()
 {
     auto affinity_mask = 1u << Processor::id();
 
-    ScopedSpinLock lock(g_ready_queues_lock);
-    auto priority_mask = g_ready_queues_mask;
-    while (priority_mask != 0) {
-        auto priority = __builtin_ffsl(priority_mask);
-        VERIFY(priority > 0);
-        auto& ready_queue = g_ready_queues[--priority];
-        for (auto& thread : ready_queue.thread_list) {
-            VERIFY(thread.m_runnable_priority == (int)priority);
-            if (thread.is_active())
-                continue;
-            if (!(thread.affinity() & affinity_mask))
-                continue;
-            return &thread;
+    return g_ready_queues->with([&](auto& ready_queues) -> Thread* {
+        auto priority_mask = ready_queues.mask;
+        while (priority_mask != 0) {
+            auto priority = __builtin_ffsl(priority_mask);
+            VERIFY(priority > 0);
+            auto& ready_queue = ready_queues.queues[--priority];
+            for (auto& thread : ready_queue.thread_list) {
+                VERIFY(thread.m_runnable_priority == (int)priority);
+                if (thread.is_active())
+                    continue;
+                if (!(thread.affinity() & affinity_mask))
+                    continue;
+                return &thread;
+            }
+            priority_mask &= ~(1u << priority);
         }
-        priority_mask &= ~(1u << priority);
-    }
 
-    // Unlike in pull_next_runnable_thread() we don't want to fall back to
-    // the idle thread. We just want to see if we have any other thread ready
-    // to be scheduled.
-    return nullptr;
+        // Unlike in pull_next_runnable_thread() we don't want to fall back to
+        // the idle thread. We just want to see if we have any other thread ready
+        // to be scheduled.
+        return nullptr;
+    });
 }
 
 bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
 {
     if (thread.is_idle_thread())
         return true;
-    ScopedSpinLock lock(g_ready_queues_lock);
-    auto priority = thread.m_runnable_priority;
-    if (priority < 0) {
-        VERIFY(!thread.m_ready_queue_node.is_in_list());
-        return false;
-    }
 
-    if (check_affinity && !(thread.affinity() & (1 << Processor::id())))
-        return false;
+    return g_ready_queues->with([&](auto& ready_queues) {
+        auto priority = thread.m_runnable_priority;
+        if (priority < 0) {
+            VERIFY(!thread.m_ready_queue_node.is_in_list());
+            return false;
+        }
 
-    VERIFY(g_ready_queues_mask & (1u << priority));
-    auto& ready_queue = g_ready_queues[priority];
-    thread.m_runnable_priority = -1;
-    ready_queue.thread_list.remove(thread);
-    if (ready_queue.thread_list.is_empty())
-        g_ready_queues_mask &= ~(1u << priority);
-    return true;
+        if (check_affinity && !(thread.affinity() & (1 << Processor::id())))
+            return false;
+
+        VERIFY(ready_queues.mask & (1u << priority));
+        auto& ready_queue = ready_queues.queues[priority];
+        thread.m_runnable_priority = -1;
+        ready_queue.thread_list.remove(thread);
+        if (ready_queue.thread_list.is_empty())
+            ready_queues.mask &= ~(1u << priority);
+        return true;
+    });
 }
 
 void Scheduler::queue_runnable_thread(Thread& thread)
@@ -166,15 +175,16 @@ void Scheduler::queue_runnable_thread(Thread& thread)
         return;
     auto priority = thread_priority_to_priority_index(thread.priority());
 
-    ScopedSpinLock lock(g_ready_queues_lock);
-    VERIFY(thread.m_runnable_priority < 0);
-    thread.m_runnable_priority = (int)priority;
-    VERIFY(!thread.m_ready_queue_node.is_in_list());
-    auto& ready_queue = g_ready_queues[priority];
-    bool was_empty = ready_queue.thread_list.is_empty();
-    ready_queue.thread_list.append(thread);
-    if (was_empty)
-        g_ready_queues_mask |= (1u << priority);
+    g_ready_queues->with([&](auto& ready_queues) {
+        VERIFY(thread.m_runnable_priority < 0);
+        thread.m_runnable_priority = (int)priority;
+        VERIFY(!thread.m_ready_queue_node.is_in_list());
+        auto& ready_queue = ready_queues.queues[priority];
+        bool was_empty = ready_queue.thread_list.is_empty();
+        ready_queue.thread_list.append(thread);
+        if (was_empty)
+            ready_queues.mask |= (1u << priority);
+    });
 }
 
 UNMAP_AFTER_INIT void Scheduler::start()
@@ -411,7 +421,6 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
 
     RefPtr<Thread> idle_thread;
     g_finalizer_wait_queue = new WaitQueue;
-    g_ready_queues = new ThreadReadyQueue[g_ready_queue_buckets];
 
     g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
     s_colonel_process = Process::create_kernel_process(idle_thread, "colonel", idle_loop, nullptr, 1, Process::RegisterProcess::No).leak_ref();
