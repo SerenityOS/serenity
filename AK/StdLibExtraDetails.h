@@ -532,6 +532,13 @@ inline constexpr bool IsMoveAssignable = IsAssignable<AddLvalueReference<T>, Add
 
 template<typename T>
 inline constexpr bool IsTriviallyMoveAssignable = IsTriviallyAssignable<AddLvalueReference<T>, AddRvalueReference<T>>;
+
+template<typename T, template<typename...> typename U>
+inline constexpr bool IsSpecializationOf = false;
+
+template<template<typename...> typename U, typename... Us>
+inline constexpr bool IsSpecializationOf<U<Us...>, U> = true;
+
 }
 using AK::Detail::AddConst;
 using AK::Detail::AddLvalueReference;
@@ -570,6 +577,7 @@ using AK::Detail::IsPointer;
 using AK::Detail::IsRvalueReference;
 using AK::Detail::IsSame;
 using AK::Detail::IsSigned;
+using AK::Detail::IsSpecializationOf;
 using AK::Detail::IsTrivial;
 using AK::Detail::IsTriviallyAssignable;
 using AK::Detail::IsTriviallyConstructible;
