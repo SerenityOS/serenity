@@ -40,7 +40,7 @@ void ReflectObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.setPrototypeOf, set_prototype_of, 2, attr);
 
     // 28.1.14 Reflect [ @@toStringTag ], https://tc39.es/ecma262/#sec-reflect-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), vm.names.Reflect.as_string()), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, vm.names.Reflect.as_string()), Attribute::Configurable);
 }
 
 ReflectObject::~ReflectObject()

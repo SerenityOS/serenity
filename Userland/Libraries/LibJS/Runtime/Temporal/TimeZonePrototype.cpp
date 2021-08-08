@@ -35,7 +35,7 @@ void TimeZonePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 
     // 11.4.2 Temporal.TimeZone.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.TimeZone"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.TimeZone"), Attribute::Configurable);
 }
 
 static TimeZone* typed_this(GlobalObject& global_object)
