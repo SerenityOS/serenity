@@ -33,6 +33,7 @@ private:
     RefPtr<Core::Notifier> m_mouse_notifier;
     RefPtr<Core::LocalServer> m_window_server;
     RefPtr<Core::LocalServer> m_wm_server;
+    RefPtr<Core::LocalServer> m_remote_compositor_server;
 };
 
 }

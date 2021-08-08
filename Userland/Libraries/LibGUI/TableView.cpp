@@ -115,7 +115,7 @@ void TableView::paint_event(PaintEvent& event)
                         cell_rect.set_y(cell_rect.y() + (row_height() - bitmap->height()) / 2);
                         if (is_selected_row) {
                             auto tint = selection_color.with_alpha(100);
-                            painter.blit_filtered(cell_rect.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
+                            painter.blit_blended(cell_rect.location(), *bitmap, bitmap->rect(), tint);
                         } else if (m_hovered_index.is_valid() && cell_index.row() == m_hovered_index.row()) {
                             painter.blit_brightened(cell_rect.location(), *bitmap, bitmap->rect());
                         } else {

@@ -25,6 +25,18 @@ public:
         m_rects.append(rect);
     }
 
+    template<typename Container>
+    DisjointRectSet(const Container& rects)
+    {
+        bool added = false;
+        for (const auto& rect : rects) {
+            if (add_no_shatter(rect))
+                added = true;
+        }
+        if (added && m_rects.size() > 1)
+            shatter();
+    }
+
     DisjointRectSet(DisjointRectSet&&) = default;
     DisjointRectSet& operator=(DisjointRectSet&&) = default;
 
@@ -54,6 +66,33 @@ public:
         for (const auto& rect : rects) {
             if (add_no_shatter(rect))
                 added = true;
+        }
+        if (added && m_rects.size() > 1)
+            shatter();
+    }
+
+    template<typename Container>
+    void add_many_translated(Container const& rects, Gfx::IntPoint const& translate_by)
+    {
+        bool added = false;
+        for (const auto& rect : rects) {
+            if (add_no_shatter(rect.translated(translate_by)))
+                added = true;
+        }
+        if (added && m_rects.size() > 1)
+            shatter();
+    }
+
+    template<typename Container, typename TransformFunction>
+    void add_many_transformed(Container const& rects, TransformFunction f)
+    {
+        bool added = false;
+        for (auto const& rect : rects) {
+            IntRect transformed_rect = f(rect);
+            if (!transformed_rect.is_empty()) {
+                if (add_no_shatter(transformed_rect))
+                    added = true;
+            }
         }
         if (added && m_rects.size() > 1)
             shatter();
@@ -138,6 +177,23 @@ public:
     {
         for (auto& rect : m_rects)
             rect.translate_by(delta);
+    }
+
+    bool operator==(DisjointRectSet const& other) const
+    {
+        if (this == &other)
+            return true;
+        if (size() != other.size())
+            return false;
+        for (size_t i = 0; i < size(); i++) {
+            if (m_rects[i] != other.m_rects[i])
+                return false;
+        }
+        return true;
+    }
+    bool operator!=(DisjointRectSet const& other) const
+    {
+        return !(*this == other);
     }
 
 private:

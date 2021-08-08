@@ -9,10 +9,16 @@
 
 #include <AK/Forward.h>
 #include <AK/Noncopyable.h>
+#include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/WeakPtr.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/SystemTheme.h>
+
+namespace RemoteGfx {
+class RemoteGfxSession;
+}
 
 namespace Gfx {
 
@@ -42,6 +48,8 @@ public:
     const SystemTheme& theme() const { return *m_theme_buffer.data<SystemTheme>(); }
 
     void replace_internal_buffer(Badge<GUI::Application>, Core::AnonymousBuffer buffer);
+    auto& internal_buffer() { return m_theme_buffer; }
+    auto& internal_buffer() const { return m_theme_buffer; }
 
 private:
     explicit PaletteImpl(Core::AnonymousBuffer);
@@ -50,10 +58,21 @@ private:
 };
 
 class Palette {
-
 public:
     explicit Palette(const PaletteImpl&);
     ~Palette();
+
+    Palette(Palette const& other)
+        : m_impl(other.m_impl)
+    {
+        // Intentionally do not copy m_remote_data
+    }
+    Palette& operator=(Palette const& other)
+    {
+        if (this != &other)
+            m_impl = other.m_impl;
+        return *this;
+    }
 
     Color accent() const { return color(ColorRole::Accent); }
     Color window() const { return color(ColorRole::Window); }
@@ -153,8 +172,19 @@ public:
     PaletteImpl& impl() { return *m_impl; }
     const PaletteImpl& impl() const { return *m_impl; }
 
+    RemoteGfx::RemoteGfxSession* remote_session() { return m_remote_data ? m_remote_data->session.ptr() : nullptr; }
+    int remote_palette_id() const { return m_remote_data ? m_remote_data->palette_id : 0; }
+    int enable_remote_painting(bool);
+
 private:
+    void destroy_remote_data();
+
     NonnullRefPtr<PaletteImpl> m_impl;
+    struct RemoteData {
+        WeakPtr<RemoteGfx::RemoteGfxSession> session;
+        int palette_id { 0 };
+    };
+    OwnPtr<RemoteData> m_remote_data;
 };
 
 }

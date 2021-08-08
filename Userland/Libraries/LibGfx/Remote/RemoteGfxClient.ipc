@@ -1,0 +1,6 @@
+endpoint RemoteGfxClient {
+    enable_remote_gfx(u64 cookie) =|
+    disable_remote_gfx() =|
+
+    notify_remote_fonts(Vector<ByteBuffer> available_remote_fonts) =|
+}

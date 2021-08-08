@@ -6,9 +6,14 @@
 
 #include <AK/Debug.h>
 #include <Kernel/API/MousePacket.h>
+
+// Must be included before LibIPC/Decoder.h and LibIPC/Encoder.h!
+#include <LibRemoteDesktop/RemoteCompositor.h>
+
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/EventLoop.h>
+#include <WindowServer/RemoteCompositorClientConnection.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WMClientConnection.h>
 #include <WindowServer/WindowManager.h>
@@ -21,6 +26,7 @@ namespace WindowServer {
 EventLoop::EventLoop()
     : m_window_server(Core::LocalServer::construct())
     , m_wm_server(Core::LocalServer::construct())
+    , m_remote_compositor_server(Core::LocalServer::construct())
 {
     m_keyboard_fd = open("/dev/keyboard0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     m_mouse_fd = open("/dev/mouse0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
@@ -28,6 +34,8 @@ EventLoop::EventLoop()
     bool ok = m_window_server->take_over_from_system_server("/tmp/portal/window");
     VERIFY(ok);
     ok = m_wm_server->take_over_from_system_server("/tmp/portal/wm");
+    VERIFY(ok);
+    ok = m_remote_compositor_server->take_over_from_system_server("/tmp/portal/remotecompositor");
     VERIFY(ok);
 
     m_window_server->on_accept = [&](auto client_socket) {
@@ -40,6 +48,12 @@ EventLoop::EventLoop()
         static int s_next_wm_id = 0;
         int wm_id = ++s_next_wm_id;
         IPC::new_client_connection<WMClientConnection>(move(client_socket), wm_id);
+    };
+
+    m_remote_compositor_server->on_accept = [&](auto client_socket) {
+        static int s_next_compositor_id = 0;
+        int compositor_id = ++s_next_compositor_id;
+        IPC::new_client_connection<RemoteCompositorClientConnection>(move(client_socket), compositor_id);
     };
 
     if (m_keyboard_fd >= 0) {

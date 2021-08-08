@@ -48,9 +48,17 @@ public:
 
     i32 serial() const { return m_serial; }
 
+    u32 increment_update_count()
+    {
+        return ++m_update_count;
+    }
+
+    u32 current_update_count() const { return m_update_count; }
+
 private:
     NonnullRefPtr<Gfx::Bitmap> m_bitmap;
     const i32 m_serial;
+    u32 m_update_count { 0 };
 };
 
 static NeverDestroyed<HashTable<Window*>> all_windows;
@@ -402,6 +410,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         // effort on painting into an undersized bitmap that will be thrown away anyway.
         m_back_store = nullptr;
     }
+
     bool created_new_backing_store = !m_back_store;
     if (!m_back_store) {
         m_back_store = create_backing_store(event.window_size());
@@ -437,13 +446,25 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         m_main_widget->dispatch_event(paint_event, this);
     }
 
+    int remote_bitmap_id = 0;
+    u32 remote_bitmap_sync_tag = 0;
     if (m_double_buffering_enabled)
-        flip(rects);
+        flip(rects, remote_bitmap_id, remote_bitmap_sync_tag);
     else if (created_new_backing_store)
-        set_current_backing_store(*m_back_store, true);
+        set_current_backing_store(*m_back_store, remote_bitmap_id, remote_bitmap_sync_tag, true);
+    else {
+        auto& back_bitmap = m_back_store->bitmap();
+        remote_bitmap_id = back_bitmap.remote_bitmap_id();
+        if (remote_bitmap_id > 0) {
+            // Don't increment the sync tag here as we are not
+            // updating the sync tag with the compositor!
+            remote_bitmap_sync_tag = m_back_store->current_update_count();
+            back_bitmap.remote_bitmap_sync(remote_bitmap_sync_tag);
+        }
+    }
 
     if (is_visible())
-        WindowServerConnection::the().async_did_finish_painting(m_window_id, rects);
+        WindowServerConnection::the().async_did_finish_painting(m_window_id, rects, remote_bitmap_id, remote_bitmap_sync_tag);
 }
 
 void Window::handle_key_event(KeyEvent& event)
@@ -826,22 +847,31 @@ void Window::set_hovered_widget(Widget* widget)
         update();
 }
 
-void Window::set_current_backing_store(WindowBackingStore& backing_store, bool flush_immediately)
+void Window::set_current_backing_store(WindowBackingStore& backing_store, int& remote_bitmap_id, u32& remote_bitmap_sync_tag, bool flush_immediately)
 {
     auto& bitmap = backing_store.bitmap();
-    WindowServerConnection::the().set_window_backing_store(m_window_id, 32, bitmap.pitch(), bitmap.anonymous_buffer().fd(), backing_store.serial(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
+    auto& ws = WindowServerConnection::the();
+    remote_bitmap_id = bitmap.remote_bitmap_id();
+    if (remote_bitmap_id > 0) {
+        remote_bitmap_sync_tag = backing_store.increment_update_count();
+        bitmap.remote_bitmap_sync(remote_bitmap_sync_tag);
+    }
+    ws.set_window_backing_store(m_window_id, 32, bitmap.pitch(), bitmap.anonymous_buffer().fd(), backing_store.serial(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately, remote_bitmap_id, remote_bitmap_sync_tag);
 }
 
-void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects)
+void Window::flip(const Vector<Gfx::IntRect, 32>& dirty_rects, int& remote_bitmap_id, u32& remote_bitmap_sync_tag)
 {
     swap(m_front_store, m_back_store);
 
-    set_current_backing_store(*m_front_store);
+    set_current_backing_store(*m_front_store, remote_bitmap_id, remote_bitmap_sync_tag);
 
     if (!m_back_store || m_back_store->size() != m_front_store->size()) {
         m_back_store = create_backing_store(m_front_store->size());
         VERIFY(m_back_store);
-        memcpy(m_back_store->bitmap().scanline(0), m_front_store->bitmap().scanline(0), m_front_store->bitmap().size_in_bytes());
+        auto& back_bitmap = m_back_store->bitmap();
+        Gfx::Painter back_painter(back_bitmap);
+        back_painter.blit({}, m_front_store->bitmap(), back_bitmap.rect(), 1.0f, false);
+        //memcpy(m_back_store->bitmap().scanline(0), m_front_store->bitmap().scanline(0), m_front_store->bitmap().size_in_bytes());
         m_back_store->bitmap().set_volatile();
         return;
     }
@@ -875,6 +905,9 @@ OwnPtr<WindowBackingStore> Window::create_backing_store(const Gfx::IntSize& size
         VERIFY(size.height() <= INT16_MAX);
         return {};
     }
+
+    if (WindowServerConnection::the().remote_session_active())
+        bitmap_or_error.value()->enable_remote_painting(true, false);
     return make<WindowBackingStore>(bitmap_or_error.release_value());
 }
 
@@ -1226,6 +1259,17 @@ void Window::flush_pending_paints_immediately()
         return;
     MultiPaintEvent paint_event(move(m_pending_paint_event_rects), size());
     handle_multi_paint_event(paint_event);
+}
+
+void Window::remote_session_changed(Badge<WindowServerConnection>, bool is_remote_session_active)
+{
+    if (!m_window_id)
+        return;
+    dbgln("remote_session_changed for window {}: {}", title(), is_remote_session_active);
+    m_back_store = nullptr;
+    m_front_store = nullptr;
+    if (is_remote_session_active)
+        force_update();
 }
 
 }

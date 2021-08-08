@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc sigaction"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp", "cw"));
+    TRY(Core::System::unveil("/tmp", "crw"));
     TRY(Core::System::unveil("/etc/WindowServer.ini", "rwc"));
     TRY(Core::System::unveil("/dev", "rw"));
 
@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     WindowServer::EventLoop loop;
 
-    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath proc"));
+    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath proc unix"));
 
     // First check which screens are explicitly configured
     {
@@ -114,7 +114,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto am = WindowServer::AppletManager::construct();
     auto mm = WindowServer::MenuManager::construct();
 
-    TRY(Core::System::unveil("/tmp", ""));
+    // TODO: Because we need to connect to RemoteDesktopServer (for RemoteGfx)
+    // at a later point we can't unveil all of /tmp!
+    TRY(Core::System::unveil("/tmp", "rw"));
 
     // NOTE: Because we dynamically need to be able to open new /dev/fb*
     // devices we can't really unveil all of /dev unless we have some

@@ -1,0 +1,8 @@
+endpoint RemoteDesktopClient
+{
+    compositor_message(ByteBuffer bytes) =|
+    gfx_message(int client_id, ByteBuffer bytes) =|
+
+    associate_gfx_client(int gfx_client_id, u64 cookie) =|
+    disassociate_gfx_client(int gfx_client_id) =|
+}

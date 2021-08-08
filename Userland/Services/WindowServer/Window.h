@@ -225,6 +225,19 @@ public:
     const Gfx::Bitmap* backing_store() const { return m_backing_store.ptr(); }
     Gfx::Bitmap* backing_store() { return m_backing_store.ptr(); }
 
+    void sync_backing_store()
+    {
+        // This method is mainly for WindowServer managed windows where we need
+        // to manually sync the backing store after painting. Normal windows
+        // will sync it in LibGUI before updating the backing store.
+        VERIFY(m_type == WindowType::Menu);
+        if (!m_backing_store)
+            return;
+        m_backing_store_remote_bitmap_id = m_backing_store->remote_bitmap_id();
+        if (m_backing_store_remote_bitmap_id)
+            m_backing_store->remote_bitmap_sync(++m_backing_store_remote_bitmap_sync_tag);
+    }
+
     void set_backing_store(RefPtr<Gfx::Bitmap> backing_store, i32 serial)
     {
         m_last_backing_store = move(m_backing_store);
@@ -232,6 +245,12 @@ public:
 
         m_last_backing_store_serial = m_backing_store_serial;
         m_backing_store_serial = serial;
+    }
+
+    void set_remote_backing_store(i32 remote_bitmap_id, u32 remote_bitmap_sync_tag)
+    {
+        m_backing_store_remote_bitmap_id = remote_bitmap_id;
+        m_backing_store_remote_bitmap_sync_tag = remote_bitmap_sync_tag;
     }
 
     void swap_backing_stores()
@@ -375,6 +394,9 @@ public:
     void remove_all_stealing() { m_stealable_by_client_ids.clear(); }
     bool is_stealable_by_client(i32 client_id) const { return m_stealable_by_client_ids.contains_slow(client_id); }
 
+    i32 backing_store_remote_bitmap_id() const { return m_backing_store_remote_bitmap_id; }
+    u32 backing_store_remote_bitmap_sync_tag() const { return m_backing_store_remote_bitmap_sync_tag; }
+
 private:
     Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
@@ -438,6 +460,8 @@ private:
     bool m_occluded { false };
     RefPtr<Gfx::Bitmap> m_backing_store;
     RefPtr<Gfx::Bitmap> m_last_backing_store;
+    i32 m_backing_store_remote_bitmap_id { 0 };
+    u32 m_backing_store_remote_bitmap_sync_tag { 0 };
     i32 m_backing_store_serial { -1 };
     i32 m_last_backing_store_serial { -1 };
     int m_window_id { -1 };

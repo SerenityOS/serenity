@@ -42,6 +42,7 @@ public:
     Menu* next_menu(Menu* current);
 
     void did_change_theme();
+    void enable_remote_gfx(bool);
 
     void set_hovered_menu(Menu*);
     Menu* hovered_menu() { return m_hovered_menu; }

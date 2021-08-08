@@ -550,7 +550,7 @@ void IconView::paint_event(PaintEvent& event)
 
                 if (item_data.selected) {
                     auto tint = selection_color.with_alpha(100);
-                    painter.blit_filtered(destination.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
+                    painter.blit_blended(destination.location(), *bitmap, bitmap->rect(), tint);
                 } else if (m_hovered_index.is_valid() && m_hovered_index == item_data.index) {
                     painter.blit_brightened(destination.location(), *bitmap, bitmap->rect());
                 } else {

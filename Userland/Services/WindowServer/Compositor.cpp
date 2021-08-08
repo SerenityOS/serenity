@@ -4,12 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Compositor.h"
+// Must be included before LibIPC/Decoder.h and LibIPC/Encoder.h!
+#include <LibRemoteDesktop/RemoteCompositor.h>
+
 #include "Animation.h"
 #include "ClientConnection.h"
+#include "Compositor.h"
 #include "Event.h"
 #include "EventLoop.h"
 #include "MultiScaleBitmaps.h"
+#include "RemoteCompositorClientConnection.h"
 #include "Screen.h"
 #include "Window.h"
 #include "WindowManager.h"
@@ -19,6 +23,7 @@
 #include <LibCore/Timer.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
+#include <LibGfx/Remote/RemoteGfxServerConnection.h>
 #include <LibGfx/StylePainter.h>
 #include <LibThreading/BackgroundAction.h>
 
@@ -157,6 +162,14 @@ Gfx::IntPoint Compositor::window_transition_offset(Window& window)
     return window.window_stack().transition_offset();
 }
 
+Color Compositor::background_color() const
+{
+    Color background_color = WindowManager::the().palette().desktop_background();
+    if (m_custom_background_color.has_value())
+        background_color = m_custom_background_color.value();
+    return background_color;
+}
+
 void Compositor::compose()
 {
     auto& wm = WindowManager::the();
@@ -174,9 +187,28 @@ void Compositor::compose()
         return;
     }
 
+    auto* remote_client = m_remote_client.ptr();
+    if (remote_client && remote_client->is_ready())
+        remote_client->begin_compose();
+
     if (m_occlusions_dirty) {
         m_occlusions_dirty = false;
         recompute_occlusions();
+
+        if (remote_client)
+            remote_client->occlusions_did_update();
+    }
+
+    if (remote_client && !remote_client->is_ready())
+        remote_client = nullptr;
+
+    if (remote_client && remote_client->need_occlusions()) {
+        remote_client->begin_update_occlusions();
+        wm.for_each_visible_window_from_back_to_front([&](Window& window) {
+            remote_client->update_window_occlusions(window);
+            return IterationDecision::Continue;
+        });
+        remote_client->end_update_occlusions();
     }
 
     // We should have recomputed occlusions if any overlay rects were changed
@@ -201,10 +233,15 @@ void Compositor::compose()
             }
         }
         window.prepare_dirty_rects();
+        if (remote_client)
+            remote_client->update_window_dirty_rects(window);
         if (window_stack_transition_in_progress)
             window.dirty_rects().translate_by(transition_offset);
         return IterationDecision::Continue;
     });
+
+    if (remote_client)
+        remote_client->flush_dirty();
 
     // Any dirty rects in transparency areas may require windows above or below
     // to also be marked dirty in these areas
@@ -229,9 +266,7 @@ void Compositor::compose()
         return IterationDecision::Continue;
     });
 
-    Color background_color = wm.palette().desktop_background();
-    if (m_custom_background_color.has_value())
-        background_color = m_custom_background_color.value();
+    Color background_color = this->background_color();
 
     if constexpr (COMPOSE_DEBUG) {
         dbgln("COMPOSE: invalidated: window: {} cursor: {}, any: {}", m_invalidated_window, m_invalidated_cursor, m_invalidated_any);
@@ -1667,6 +1702,104 @@ void Compositor::switch_to_window_stack(WindowStack& new_window_stack, bool show
         finish_window_stack_switch();
     };
     m_window_stack_transition_animation->start();
+}
+
+bool Compositor::initialize_remote_gfx()
+{
+    if (m_remote_gfx_cookie.has_value())
+        return true;
+    auto& remote_gfx = RemoteGfx::RemoteGfxServerConnection::the();
+    if (remote_gfx.is_enabled()) {
+        m_remote_gfx_cookie = remote_gfx.cookie();
+        return true;
+    }
+    remote_gfx.on_new_session = [this](auto&) {
+        // This will be triggered when a remote session starts. We then will need
+        // to inform RemoteDesktopServer with our cookie so that it can associate
+        // our client_id of 0 with that cookie (which is used for all window server
+        // managed bitmaps).
+        m_remote_gfx_cookie = RemoteGfx::RemoteGfxServerConnection::the().cookie();
+        dbgln("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! windowserver cookie: {}", RemoteGfx::RemoteGfxServerConnection::the().cookie());
+
+        remote_gfx_session_status_changed(true);
+    };
+    remote_gfx.on_session_end = [this](auto&) {
+        remote_gfx_session_status_changed(false);
+    };
+
+    return false;
+}
+
+bool Compositor::set_remote_client(RemoteCompositorClientConnection* remote_client)
+{
+    if (remote_client && m_remote_client)
+        return false;
+    auto* previous_remote_client = m_remote_client.ptr();
+    m_remote_client = remote_client;
+    if (remote_client) {
+        if (m_remote_gfx_cookie.has_value()) {
+            remote_gfx_session_status_changed(true);
+        } else {
+            // RemoteDesktopServer is connecting to us and we're connecting to it, so
+            // we can't connect right now or we would dead-lock...
+            deferred_invoke([&]() {
+                initialize_remote_gfx();
+            });
+        }
+
+        invalidate_occlusions();
+        ClientConnection::for_each_client([&](auto& client) {
+            client.async_remote_session_changed(true);
+            auto& remote_cookie = client.remote_gfx_cookie();
+            if (remote_cookie.has_value())
+                remote_client->async_associate_window_client(client.client_id(), remote_cookie.value());
+        });
+    } else {
+        previous_remote_client->async_disassociate_window_client(-1);
+
+        ClientConnection::for_each_client([&](auto& client) {
+            client.async_remote_session_changed(false);
+        });
+    }
+    return true;
+}
+
+void Compositor::remote_client_is_ready(RemoteCompositorClientConnection& remote_client)
+{
+    if (m_remote_client != &remote_client)
+        return;
+    start_compose_async_timer();
+}
+
+void Compositor::client_received_remote_gfx_cookie(ClientConnection& connection)
+{
+    RemoteCompositorClientConnection::for_each([&](auto& remote_compositor_connection) {
+        if (remote_compositor_connection.is_active())
+            remote_compositor_connection.async_associate_window_client(connection.client_id(), connection.remote_gfx_cookie().value());
+    });
+}
+
+void Compositor::client_removed(ClientConnection& connection)
+{
+    RemoteCompositorClientConnection::for_each([&](auto& remote_compositor_connection) {
+        if (remote_compositor_connection.is_active())
+            remote_compositor_connection.async_disassociate_window_client(connection.client_id());
+    });
+}
+
+void Compositor::remote_gfx_session_status_changed(bool session_enabled)
+{
+    if (auto* remote_client = m_remote_client.ptr()) {
+        if (session_enabled)
+            remote_client->async_associate_window_client(-1, m_remote_gfx_cookie.value());
+        else
+            remote_client->async_disassociate_window_client(-1);
+    }
+    WindowManager::the().for_each_visible_window_from_back_to_front([&](auto& window) {
+        window.frame().enable_remote_gfx(session_enabled);
+        return IterationDecision::Continue;
+    });
+    MenuManager::the().enable_remote_gfx(session_enabled);
 }
 
 }

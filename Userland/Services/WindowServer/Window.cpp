@@ -149,6 +149,10 @@ void Window::set_rect(const Gfx::IntRect& rect)
     } else if (!m_client && (!m_backing_store || old_rect.size() != rect.size())) {
         auto format = has_alpha_channel() ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
         m_backing_store = Gfx::Bitmap::try_create(format, m_rect.size()).release_value_but_fixme_should_propagate_errors();
+        if (m_backing_store && Compositor::the().is_remote_session_active()) {
+            m_backing_store->enable_remote_painting(true, false);
+            dbgln("Enable remote painting for window {} backing store {:p} remote bitmap {}", title(), m_backing_store.ptr(), m_backing_store->remote_bitmap_id());
+        }
     }
 
     invalidate(true, old_rect.size() != rect.size());

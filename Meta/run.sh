@@ -193,6 +193,18 @@ if [ -z "$SERENITY_ETHERNET_DEVICE_TYPE" ]; then
   SERENITY_ETHERNET_DEVICE_TYPE="e1000"
 fi
 
+if [ "$SERENITY_REMOTE_DESKTOP" != "no" ]; then
+    SERENITY_REMOTE_DESKTOP=",hostfwd=tcp:127.0.0.1:3388-10.0.2.15:3388"
+else
+    SERENITY_REMOTE_DESKTOP=""
+fi
+
+if [ "$SERENITY_FORWARD_PORTS" != "no" ]; then
+    SERENITY_FORWARD_PORTS=",hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23,hostfwd=tcp:127.0.0.1:8000-10.0.2.15:8000,hostfwd=tcp:127.0.0.1:2222-10.0.2.15:22"
+else
+    SERENITY_FORWARD_PORTS=""
+fi
+
 if [ -z "$SERENITY_MACHINE" ]; then
     if [ "$SERENITY_ARCH" = "aarch64" ]; then
         SERENITY_MACHINE="-M raspi3 -serial stdio"
@@ -218,8 +230,6 @@ if [ -z "$SERENITY_MACHINE" ]; then
         "
     fi
 fi
-
-
 
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
@@ -323,7 +333,7 @@ elif [ "$SERENITY_RUN" = "qgrub" ] || [ "$SERENITY_RUN" = "qextlinux" ]; then
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
-        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
+        -netdev user,id=breh$SERENITY_FORWARD_PORTS$SERENITY_REMOTE_DESKTOP \
         -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh
 elif [ "$SERENITY_RUN" = "q35" ]; then
     # Meta/run.sh q35: qemu (q35 chipset) with SerenityOS
@@ -331,7 +341,7 @@ elif [ "$SERENITY_RUN" = "q35" ]; then
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_Q35_ARGS \
         $SERENITY_VIRT_TECH_ARG \
-        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
+        -netdev user,id=breh$SERENITY_FORWARD_PORTS$SERENITY_REMOTE_DESKTOP \
         -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh \
         -kernel Kernel/Prekernel/Prekernel \
         -initrd Kernel/Kernel \
@@ -341,7 +351,7 @@ elif [ "$SERENITY_RUN" = "q35grub" ]; then
     "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_Q35_ARGS \
         $SERENITY_VIRT_TECH_ARG \
-        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
+        -netdev user,id=breh$SERENITY_FORWARD_PORTS$SERENITY_REMOTE_DESKTOP \
         -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh
 elif [ "$SERENITY_RUN" = "ci" ]; then
     # Meta/run.sh ci: qemu in text mode
@@ -368,7 +378,7 @@ else
         SERENITY_NETFLAGS=
     else
         SERENITY_NETFLAGS="
-        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23,hostfwd=tcp:127.0.0.1:8000-10.0.2.15:8000,hostfwd=tcp:127.0.0.1:2222-10.0.2.15:22 \
+        -netdev user,id=breh$SERENITY_FORWARD_PORTS$SERENITY_REMOTE_DESKTOP \
         -device $SERENITY_ETHERNET_DEVICE_TYPE,netdev=breh \
         "
     fi

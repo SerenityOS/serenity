@@ -16,6 +16,7 @@
 #include <LibCore/System.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
+#include <LibGfx/Remote/RemoteGfxServerConnection.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -477,6 +478,9 @@ Bitmap::~Bitmap()
     }
     m_data = nullptr;
     delete[] m_palette;
+
+    if (m_remote_data)
+        destroy_remote_data();
 }
 
 void Bitmap::set_mmap_name([[maybe_unused]] String const& name)
@@ -582,4 +586,181 @@ Vector<RGBA32> Bitmap::palette_to_vector() const
         vector.unchecked_append(palette_color(i).value());
     return vector;
 }
+
+bool Bitmap::is_rect_equal(Gfx::IntRect const& rect, Gfx::Bitmap const& other_bitmap, Gfx::IntPoint const& other_location) const
+{
+    if (this == &other_bitmap)
+        return true;
+    auto intersected_rect = rect.intersected(this->rect());
+    if (intersected_rect.is_empty())
+        return false;
+    if (!other_bitmap.rect().contains({ other_location, intersected_rect.size() }))
+        return false;
+
+    auto physical_rect = intersected_rect * scale();
+    auto other_physical_location = other_location * other_bitmap.scale();
+    if (bpp() < 8 || other_bitmap.bpp() != bpp() || other_bitmap.scale() != scale() || other_bitmap.format() != format()) {
+        if (other_bitmap.scale() == scale()) {
+            // Slow path, compare pixel by pixel
+            for (int y = physical_rect.top(), other_y = other_physical_location.y(); y <= physical_rect.bottom(); y++, other_y++) {
+                for (int x = physical_rect.left(), other_x = other_physical_location.x(); x <= physical_rect.right(); x++, other_x++) {
+                    if (get_pixel(x, y) != other_bitmap.get_pixel(other_x, other_y))
+                        return false;
+                }
+            }
+        } else {
+            dbgln("Bitmap::is_rect_equal with different scales is not yet implemented!");
+            VERIFY_NOT_REACHED();
+        }
+        return true;
+    }
+
+    // Fast path, try to memcmp the data
+    VERIFY(bpp() == other_bitmap.bpp());
+    size_t x_offset = (physical_rect.left() * bpp()) / 8;
+    size_t other_x_offset = (other_location.x() * bpp()) / 8;
+    size_t line_size = (physical_rect.width() * bpp()) / 8;
+    for (int y = physical_rect.top(), other_y = other_physical_location.y(); y <= physical_rect.bottom(); y++, other_y++) {
+        auto* this_line = scanline_u8(y) + x_offset;
+        auto* other_line = other_bitmap.scanline_u8(other_y) + other_x_offset;
+        if (__builtin_memcmp(this_line, other_line, line_size) != 0)
+            return false;
+    }
+    return true;
+}
+
+Bitmap::RemoteData::RemoteData([[maybe_unused]] RemoteGfx::RemoteGfxSession& session)
+#ifdef __serenity__
+    : session(session.make_weak_ptr<RemoteGfx::RemoteGfxSession>())
+#endif
+{
+}
+
+int Bitmap::enable_remote_painting(bool enable, [[maybe_unused]] bool allow_sending_content)
+{
+    if (enable) {
+#ifdef __serenity__
+        if (m_remote_data) {
+            VERIFY(m_remote_data->bitmap_id > 0);
+            return 0;
+        }
+        if (m_local_only)
+            return 0;
+        auto remote_gfx_session = RemoteGfx::RemoteGfxServerConnection::the().session();
+        if (!remote_gfx_session)
+            return 0;
+        if (!m_remote_data)
+            m_remote_data = adopt_own(*new RemoteData(*remote_gfx_session));
+        auto& remote_data = *m_remote_data;
+        VERIFY(remote_data.bitmap_id == 0);
+        static RemoteGfx::BitmapId s_bitmap_id = 0;
+        remote_data.bitmap_id = ++s_bitmap_id;
+        VERIFY(remote_data.bitmap_id > 0);
+        if (allow_sending_content)
+            remote_data.needs_tiles = IntRect { 0, 0, ceil_div(width(), RemoteData::tile_size), ceil_div(height(), RemoteData::tile_size) };
+        else
+            remote_data.never_send_content = true;
+        remote_gfx_session->connection().async_create_bitmap(remote_data.bitmap_id, format(), size(), scale());
+        return remote_data.bitmap_id;
+#endif
+    }
+
+    m_remote_data = nullptr;
+    return 0;
+}
+
+void Bitmap::send_to_remote(IntRect const& send_rect)
+{
+    VERIFY(rect().contains(send_rect));
+#ifdef __serenity__
+    if (!m_remote_data)
+        return;
+    auto& remote_data = *m_remote_data;
+    VERIFY(remote_data.bitmap_id > 0);
+    if (auto* remote_gfx = remote_data.session.ptr()) {
+        if (remote_data.never_send_content)
+            return;
+        if (!remote_data.bitmap_sent) {
+            remote_data.bitmap_sent = Bitmap::try_create(format(), size(), scale()).value();
+            if (remote_data.bitmap_sent)
+                remote_data.bitmap_sent->disable_remote_painting();
+        }
+        IntRect send_tiles { send_rect.left() / RemoteData::tile_size, send_rect.top() / RemoteData::tile_size, ceil_div(send_rect.width(), RemoteData::tile_size), ceil_div(send_rect.height(), RemoteData::tile_size) };
+        if (remote_data.bitmap_sent) {
+            // Create a diff for the bitmap and apply the diff to bitmap_sent to keep it in sync with the remote client
+            Gfx::DisjointRectSet rects_to_send;
+            rects_to_send.add_many_transformed(remote_data.needs_tiles.rects(), [&](auto& rect) {
+                auto transformed_rect = rect.intersected(send_tiles);
+                if (!transformed_rect.is_empty())
+                    transformed_rect *= RemoteData::tile_size;
+                return transformed_rect;
+            });
+            auto bitmap_diff = RemoteGfx::BitmapDiff::create(remote_data.bitmap_id, *remote_data.bitmap_sent, *this, rects_to_send);
+            if (!bitmap_diff.is_empty()) {
+                remote_gfx->connection().async_apply_bitmap_diff(remote_data.bitmap_id, bitmap_diff);
+                // Now apply the diff to bitmap_sent just like the remote client would do
+                bitmap_diff.apply_to_bitmap(*remote_data.bitmap_sent);
+            }
+        } else {
+            // We don't have the memory to track the remote bitmap, we'll have to update it entirely
+            remote_data.needs_tiles.for_each_intersected(send_tiles, [&](auto& tiles_to_send) {
+                auto rect_to_send = tiles_to_send * RemoteData::tile_size;
+                rect_to_send.intersect(rect());
+                remote_gfx->connection().async_set_bitmap_data(remote_data.bitmap_id, { *this, rect_to_send });
+                return AK::IterationDecision::Continue;
+            });
+        }
+        remote_data.needs_tiles = remote_data.needs_tiles.shatter(send_tiles);
+        return;
+    } else {
+        m_remote_data = nullptr;
+    }
+#endif
+}
+
+void Bitmap::invalidate_remote_rect(IntRect const& invalidate_rect)
+{
+    VERIFY(rect().contains(invalidate_rect));
+#ifdef __serenity__
+    if (!m_remote_data)
+        return;
+    auto& remote_data = *m_remote_data;
+    VERIFY(remote_data.bitmap_id > 0);
+    if (remote_data.session.ptr()) {
+        IntRect invalidate_tiles { invalidate_rect.left() / RemoteData::tile_size, invalidate_rect.top() / RemoteData::tile_size, ceil_div(invalidate_rect.width(), RemoteData::tile_size), ceil_div(invalidate_rect.height(), RemoteData::tile_size) };
+        if (!invalidate_tiles.is_empty())
+            remote_data.needs_tiles.add(invalidate_tiles);
+    } else {
+        m_remote_data = nullptr;
+    }
+#endif
+}
+
+void Bitmap::remote_bitmap_sync([[maybe_unused]] u32 sync_tag)
+{
+#ifdef __serenity__
+    if (!m_remote_data)
+        return;
+    auto& remote_data = *m_remote_data;
+    VERIFY(remote_data.bitmap_id > 0);
+    if (auto* remote_gfx = remote_data.session.ptr())
+        remote_gfx->connection().async_sync_bitmap(remote_data.bitmap_id, sync_tag);
+    else
+        m_remote_data = nullptr;
+#endif
+}
+
+void Bitmap::destroy_remote_data()
+{
+#ifdef __serenity__
+    if (!m_remote_data)
+        return;
+    auto& remote_data = *m_remote_data;
+    VERIFY(remote_data.bitmap_id > 0);
+    if (auto* remote_gfx = remote_data.session.ptr())
+        remote_gfx->connection().async_destroy_bitmap(remote_data.bitmap_id);
+#endif
+    m_remote_data = nullptr;
+}
+
 }

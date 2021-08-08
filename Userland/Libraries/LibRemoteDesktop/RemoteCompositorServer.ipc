@@ -1,0 +1,8 @@
+endpoint RemoteCompositorServer
+{
+    start_session() => (bool error, String error_msg)
+    ready_for_more() =|
+    set_cursor_position(Gfx::IntPoint position) =|
+    set_mouse_buttons(Gfx::IntPoint position, u32 buttons) =|
+    mouse_wheel_turned(Gfx::IntPoint position, i32 delta) =|
+}

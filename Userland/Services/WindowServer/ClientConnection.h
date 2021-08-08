@@ -80,6 +80,8 @@ public:
 
     void notify_display_link(Badge<Compositor>);
 
+    auto& remote_gfx_cookie() const { return m_remote_gfx_cookie; }
+
 private:
     explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
 
@@ -112,10 +114,10 @@ private:
     virtual Messages::WindowServer::GetWindowMinimumSizeResponse get_window_minimum_size(i32) override;
     virtual Messages::WindowServer::GetAppletRectOnScreenResponse get_applet_rect_on_screen(i32) override;
     virtual void invalidate_rect(i32, Vector<Gfx::IntRect> const&, bool) override;
-    virtual void did_finish_painting(i32, Vector<Gfx::IntRect> const&) override;
+    virtual void did_finish_painting(i32, Vector<Gfx::IntRect> const&, int, u32) override;
     virtual void set_global_mouse_tracking(bool) override;
     virtual void set_window_opacity(i32, float) override;
-    virtual void set_window_backing_store(i32, i32, i32, IPC::File const&, i32, bool, Gfx::IntSize const&, bool) override;
+    virtual void set_window_backing_store(i32, i32, i32, IPC::File const&, i32, bool, Gfx::IntSize const&, bool, i32, u32) override;
     virtual void set_window_has_alpha_channel(i32, bool) override;
     virtual void set_window_alpha_hit_threshold(i32, float) override;
     virtual void move_window_to_front(i32) override;
@@ -172,6 +174,7 @@ private:
     virtual void remove_window_stealing_for_client(i32, i32) override;
     virtual void remove_window_stealing(i32) override;
     virtual Messages::WindowServer::GetColorUnderCursorResponse get_color_under_cursor() override;
+    virtual void set_remote_gfx_cookie(u64) override;
 
     Window* window_from_id(i32 window_id);
 
@@ -179,6 +182,8 @@ private:
     HashMap<int, NonnullRefPtr<Menu>> m_menus;
 
     RefPtr<Core::Timer> m_ping_timer;
+
+    Optional<u64> m_remote_gfx_cookie;
 
     bool m_has_display_link { false };
     bool m_show_screen_number { false };

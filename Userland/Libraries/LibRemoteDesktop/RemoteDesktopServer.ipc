@@ -1,0 +1,6 @@
+endpoint RemoteDesktopServer
+{
+    start_session(Vector<ByteBuffer> available_remote_fonts) => (bool error, String error_msg)
+
+    send_compositor_message(Vector<u8> bytes) =|
+}

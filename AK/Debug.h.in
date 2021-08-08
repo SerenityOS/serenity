@@ -338,6 +338,26 @@
 #cmakedefine01 REGEX_DEBUG
 #endif
 
+#ifndef REMOTE_GFX_DEBUG
+#cmakedefine01 REMOTE_GFX_DEBUG
+#endif
+
+#ifndef REMOTE_GFX_RENDERER_DEBUG
+#cmakedefine01 REMOTE_GFX_RENDERER_DEBUG
+#endif
+
+#ifndef REMOTE_GFX_SERVER_DEBUG
+#cmakedefine01 REMOTE_GFX_SERVER_DEBUG
+#endif
+
+#ifndef REMOTE_COMPOSITOR_SERVER_DEBUG
+#cmakedefine01 REMOTE_COMPOSITOR_SERVER_DEBUG
+#endif
+
+#ifndef REMOTE_DESKTOP_SERVER_DEBUG
+#cmakedefine01 REMOTE_DESKTOP_SERVER_DEBUG
+#endif
+
 #ifndef RESIZE_DEBUG
 #cmakedefine01 RESIZE_DEBUG
 #endif

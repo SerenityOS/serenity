@@ -27,9 +27,12 @@ public:
     NonnullRefPtr<BitmapFont> unmasked_character_set() const;
 
     static RefPtr<BitmapFont> load_from_file(String const& path);
+    static RefPtr<BitmapFont> load_from_memory(ReadonlyBytes const&);
     bool write_to_file(String const& path);
 
     ~BitmapFont();
+
+    Type font_type() const override { return Type::Bitmap; }
 
     u8 presentation_size() const override { return m_presentation_size; }
     void set_presentation_size(u8 size) { m_presentation_size = size; }
@@ -105,6 +108,8 @@ public:
     String variant() const override;
 
     String qualified_name() const override;
+
+    ReadonlyBytes bytes() const override { return m_mapped_file ? m_mapped_file->bytes() : ReadonlyBytes {}; }
 
 private:
     BitmapFont(String name, String family, u8* rows, u8* widths, bool is_fixed_width,

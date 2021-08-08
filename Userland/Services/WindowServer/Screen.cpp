@@ -4,10 +4,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Screen.h"
+// Must be included before LibIPC/Decoder.h and LibIPC/Encoder.h!
+#include <LibRemoteDesktop/RemoteCompositor.h>
+
+#include "ClientConnection.h"
 #include "Compositor.h"
 #include "Event.h"
 #include "EventLoop.h"
+#include "RemoteCompositorClientConnection.h"
+#include "Screen.h"
 #include "WindowManager.h"
 #include <AK/Debug.h>
 #include <Kernel/API/FB.h>

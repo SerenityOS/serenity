@@ -225,6 +225,8 @@ void Menu::draw()
     int visible_item_count = this->visible_item_count();
     for (int i = 0; i < visible_item_count; ++i)
         draw(m_items.at(m_scroll_offset + i), true);
+
+    menu_window()->sync_backing_store();
 }
 
 void Menu::draw(MenuItem const& item, bool is_drawing_all)
@@ -308,6 +310,9 @@ void Menu::draw(MenuItem const& item, bool is_drawing_all)
         painter.draw_line(p1, p2, palette.threed_shadow1());
         painter.draw_line(p1.translated(0, 1), p2.translated(0, 1), palette.threed_highlight());
     }
+
+    if (!is_drawing_all)
+        menu_window()->sync_backing_store();
 }
 
 MenuItem* Menu::hovered_item() const

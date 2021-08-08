@@ -378,6 +378,8 @@ auto WindowFrame::render_to_cache(Screen& screen) -> PerScaleRenderedCache*
     return rendered_cache;
 }
 
+static HashMap<int, RefPtr<Gfx::Bitmap>> s_tmp_bitmap_cache;
+
 void WindowFrame::PerScaleRenderedCache::render(WindowFrame& frame, Screen& screen)
 {
     if (!m_dirty)
@@ -402,7 +404,6 @@ void WindowFrame::PerScaleRenderedCache::render(WindowFrame& frame, Screen& scre
     auto window_rect = frame.window().rect();
 
     // TODO: if we stop using a scaling factor we should clear cached bitmaps from this map
-    static HashMap<int, RefPtr<Gfx::Bitmap>> s_tmp_bitmap_cache;
     Gfx::Bitmap* tmp_bitmap;
     {
         auto tmp_it = s_tmp_bitmap_cache.find(scale);
@@ -418,6 +419,8 @@ void WindowFrame::PerScaleRenderedCache::render(WindowFrame& frame, Screen& scre
                 return;
             }
             auto bitmap = bitmap_or_error.release_value();
+            if (Compositor::the().is_remote_session_active())
+                bitmap->enable_remote_painting(true, false);
             tmp_bitmap = bitmap.ptr();
             if (tmp_it != s_tmp_bitmap_cache.end())
                 tmp_it->value = move(bitmap);
@@ -433,11 +436,15 @@ void WindowFrame::PerScaleRenderedCache::render(WindowFrame& frame, Screen& scre
     auto top_bottom_height = frame_rect_including_shadow.height() - window_rect.height();
     auto left_right_width = frame_rect_including_shadow.width() - window_rect.width();
 
+    bool enable_remote_gfx = Compositor::the().is_remote_session_active();
+
     if (!m_top_bottom || m_top_bottom->width() != frame_rect_including_shadow.width() || m_top_bottom->height() != top_bottom_height || m_top_bottom->scale() != scale) {
         if (top_bottom_height > 0)
             m_top_bottom = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { frame_rect_including_shadow.width(), top_bottom_height }, scale).release_value_but_fixme_should_propagate_errors();
         else
             m_top_bottom = nullptr;
+        if (enable_remote_gfx && m_top_bottom)
+            m_top_bottom->enable_remote_painting(true, false);
         m_shadow_dirty = true;
     }
     if (!m_left_right || m_left_right->height() != frame_rect_including_shadow.height() || m_left_right->width() != left_right_width || m_left_right->scale() != scale) {
@@ -445,6 +452,8 @@ void WindowFrame::PerScaleRenderedCache::render(WindowFrame& frame, Screen& scre
             m_left_right = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { left_right_width, frame_rect_including_shadow.height() }, scale).release_value_but_fixme_should_propagate_errors();
         else
             m_left_right = nullptr;
+        if (enable_remote_gfx && m_left_right)
+            m_left_right->enable_remote_painting(true, false);
         m_shadow_dirty = true;
     }
 
@@ -492,6 +501,15 @@ void WindowFrame::PerScaleRenderedCache::render(WindowFrame& frame, Screen& scre
             left_right_painter.blit({ m_right_x, 0 }, *tmp_bitmap, { (window_rect.right() - frame_rect_including_shadow.x()) + 1, m_bottom_y, frame_rect_including_shadow.width() - (frame_rect_including_shadow.right() - window_rect.right()), window_rect.height() }, 1.0, false);
     } else {
         m_right_x = 0;
+    }
+
+    if (m_top_bottom) {
+        if (auto remote_bitmap_id = m_top_bottom->remote_bitmap_id(); remote_bitmap_id > 0)
+            m_top_bottom->remote_bitmap_sync(0);
+    }
+    if (m_left_right) {
+        if (auto remote_bitmap_id = m_left_right->remote_bitmap_id(); remote_bitmap_id > 0)
+            m_left_right->remote_bitmap_sync(0);
     }
 
     m_shadow_dirty = false;
@@ -881,6 +899,26 @@ void WindowFrame::start_flash_animation()
     }
     m_flash_counter = 8;
     m_flash_timer->start();
+}
+
+void WindowFrame::enable_remote_gfx(bool)
+{
+    m_rendered_cache = {};
+    s_tmp_bitmap_cache = {};
+}
+
+i32 WindowFrame::remote_top_bottom_bitmap_id()
+{
+    if (auto* top_bottom_bitmap = render_to_cache(Screen::main())->top_bottom_bitmap())
+        return top_bottom_bitmap->remote_bitmap_id();
+    return 0;
+}
+
+i32 WindowFrame::remote_left_right_bitmap_id()
+{
+    if (auto* left_right_bitmap = render_to_cache(Screen::main())->left_right_bitmap())
+        return left_right_bitmap->remote_bitmap_id();
+    return 0;
 }
 
 int WindowFrame::menu_row_count() const

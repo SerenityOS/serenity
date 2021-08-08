@@ -14,29 +14,36 @@
 #include <AK/Types.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/OneBitBitmap.h>
 #include <LibGfx/Size.h>
+
+namespace RemoteGfx {
+class RemoteGfxSession;
+}
 
 namespace Gfx {
 
 // FIXME: Make a MutableGlyphBitmap buddy class for FontEditor instead?
-class GlyphBitmap {
+class GlyphBitmap : public OneBitBitmap {
 public:
     GlyphBitmap() = default;
     GlyphBitmap(const u8* rows, size_t start_index, IntSize size)
-        : m_rows(rows)
+        : OneBitBitmap(OneBitBitmap::Type::GlyphBitmap, size)
+        , m_rows(rows)
         , m_start_index(start_index)
         , m_size(size)
     {
     }
+    GlyphBitmap(IntSize const&, BitmapView const&);
+    ~GlyphBitmap();
 
     unsigned row(unsigned index) const { return ByteReader::load32(bitmap(index).data()); }
 
-    bool bit_at(int x, int y) const { return bitmap(y).get(x); }
-    void set_bit_at(int x, int y, bool b) { bitmap(y).set(x, b); }
+    bool bit_at(int x, int y) const override { return bitmap(y).get(x); }
+    void set_bit_at(int x, int y, bool b) override { bitmap(y).set(x, b); }
 
-    IntSize size() const { return m_size; }
-    int width() const { return m_size.width(); }
-    int height() const { return m_size.height(); }
+    int width() const { return size().width(); }
+    int height() const { return size().height(); }
 
     static constexpr size_t bytes_per_row() { return sizeof(u32); }
     static constexpr int max_width() { return bytes_per_row() * 8; }
@@ -51,12 +58,13 @@ private:
     const u8* m_rows { nullptr };
     size_t m_start_index { 0 };
     IntSize m_size { 0, 0 };
+    bool m_own_rows { false };
 };
 
 class Glyph {
 public:
-    Glyph(const GlyphBitmap& glyph_bitmap, int left_bearing, int advance, int ascent)
-        : m_glyph_bitmap(glyph_bitmap)
+    Glyph(GlyphBitmap&& glyph_bitmap, int left_bearing, int advance, int ascent)
+        : m_glyph_bitmap(move(glyph_bitmap))
         , m_left_bearing(left_bearing)
         , m_advance(advance)
         , m_ascent(ascent)
@@ -94,11 +102,27 @@ struct FontMetrics {
 };
 
 class Font : public RefCounted<Font> {
+private:
+    struct RemoteData {
+        WeakPtr<RemoteGfx::RemoteGfxSession> session;
+        int font_id { 0 };
+
+        RemoteData(RemoteGfx::RemoteGfxSession&);
+        ~RemoteData();
+    };
+
 public:
+    enum class Type {
+        Bitmap,
+        Scaled
+    };
+
     virtual NonnullRefPtr<Font> clone() const = 0;
     virtual ~Font() {};
 
     FontMetrics metrics(u32 code_point) const;
+
+    virtual Type font_type() const = 0;
 
     virtual u8 presentation_size() const = 0;
 
@@ -137,8 +161,15 @@ public:
 
     Font const& bold_variant() const;
 
+    virtual ReadonlyBytes bytes() const = 0;
+
+    RemoteGfx::RemoteGfxSession* remote_session() { return m_remote_data ? m_remote_data->session.ptr() : nullptr; }
+    int remote_font_id() const { return (m_remote_data && m_remote_data->session.ptr()) ? m_remote_data->font_id : 0; }
+    int enable_remote_painting(bool);
+
 private:
     mutable RefPtr<Gfx::Font> m_bold_variant;
+    OwnPtr<RemoteData> m_remote_data;
 };
 
 }

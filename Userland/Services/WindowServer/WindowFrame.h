@@ -33,6 +33,9 @@ public:
         void render(WindowFrame&, Screen&);
         Optional<HitTestResult> hit_test(WindowFrame&, Gfx::IntPoint const&, Gfx::IntPoint const&);
 
+        auto* top_bottom_bitmap() { return m_top_bottom.ptr(); }
+        auto* left_right_bitmap() { return m_left_right.ptr(); }
+
     private:
         RefPtr<Gfx::Bitmap> m_top_bottom;
         RefPtr<Gfx::Bitmap> m_left_right;
@@ -118,6 +121,10 @@ public:
     Optional<HitTestResult> hit_test(Gfx::IntPoint const&);
 
     void open_menubar_menu(Menu&);
+
+    void enable_remote_gfx(bool);
+    i32 remote_top_bottom_bitmap_id();
+    i32 remote_left_right_bitmap_id();
 
 private:
     void paint_notification_frame(Gfx::Painter&);

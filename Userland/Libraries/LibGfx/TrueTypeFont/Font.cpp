@@ -509,6 +509,7 @@ RefPtr<Gfx::Bitmap> ScaledFont::rasterize_glyph(u32 glyph_id) const
         return glyph_iterator->value;
 
     auto glyph_bitmap = m_font->rasterize_glyph(glyph_id, m_x_scale, m_y_scale);
+    glyph_bitmap->disable_remote_painting();
     m_cached_glyph_bitmaps.set(glyph_id, glyph_bitmap);
     return glyph_bitmap;
 }

@@ -73,14 +73,14 @@ endpoint WindowServer
     set_maximized(i32 window_id, bool maximized) =|
 
     invalidate_rect(i32 window_id, Vector<Gfx::IntRect> rects, bool ignore_occlusion) =|
-    did_finish_painting(i32 window_id, Vector<Gfx::IntRect> rects) =|
+    did_finish_painting(i32 window_id, Vector<Gfx::IntRect> rects, int remote_bitmap_id, u32 remote_bitmap_sync_tag) =|
 
     set_global_mouse_tracking(bool enabled) =|
     set_window_opacity(i32 window_id, float opacity) =|
 
     set_window_alpha_hit_threshold(i32 window_id, float threshold) =|
 
-    set_window_backing_store(i32 window_id, i32 bpp, i32 pitch, IPC::File anon_file, i32 serial, bool has_alpha_channel, Gfx::IntSize size, bool flush_immediately) => ()
+    set_window_backing_store(i32 window_id, i32 bpp, i32 pitch, IPC::File anon_file, i32 serial, bool has_alpha_channel, Gfx::IntSize size, bool flush_immediately, i32 remote_bitmap_id, u32 remote_bitmap_sync_tag) => ()
 
     set_window_has_alpha_channel(i32 window_id, bool has_alpha_channel) =|
     move_window_to_front(i32 window_id) =|
@@ -156,4 +156,6 @@ endpoint WindowServer
     add_window_stealing_for_client(i32 client_id, i32 window_id) =|
     remove_window_stealing_for_client(i32 client_id, i32 window_id) =|
     remove_window_stealing(i32 window_id) =|
+
+    set_remote_gfx_cookie(u64 cookie) =|
 }

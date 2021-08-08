@@ -1,0 +1,8 @@
+endpoint RemoteCompositorClient
+{
+    fast_greet(Vector<Gfx::IntRect> screen_rects, Gfx::Color wallpaper_color, Gfx::IntPoint cursor_position) =|
+    associate_window_client(int window_client_id, u64 cookie) =|
+    disassociate_window_client(int window_client_id) =|
+    update_display(Vector<::RemoteDesktop::Compositor::WindowId> window_order, Vector<::RemoteDesktop::Compositor::Window> windows, Vector<::RemoteDesktop::Compositor::WindowId> delete_windows, Vector<::RemoteDesktop::Compositor::WindowDirtyRects> dirty_rects) =|
+    cursor_position_changed(Gfx::IntPoint position) =|
+}

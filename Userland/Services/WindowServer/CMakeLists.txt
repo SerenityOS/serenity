@@ -24,6 +24,7 @@ set(SOURCES
     MenuManager.cpp
     MultiScaleBitmaps.cpp
     Overlays.cpp
+    RemoteCompositorClientConnection.cpp
     Screen.cpp
     ScreenLayout.cpp
     Window.cpp
@@ -38,6 +39,11 @@ set(SOURCES
     WMClientConnection.cpp
 )
 
+set(GENERATED_SOURCES
+    ../../Libraries/LibRemoteDesktop/RemoteCompositorClientEndpoint.h
+    ../../Libraries/LibRemoteDesktop/RemoteCompositorServerEndpoint.h
+)
+
 serenity_bin(WindowServer)
-target_link_libraries(WindowServer LibCore LibGfx LibThreading LibIPC LibMain)
+target_link_libraries(WindowServer LibCore LibGfx LibThreading LibRemoteDesktop LibIPC LibMain)
 serenity_install_headers(Services/WindowServer)

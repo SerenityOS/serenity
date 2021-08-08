@@ -28,6 +28,7 @@
 #include <LibGfx/FillPathImplementation.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
+#include <LibGfx/Remote/RemoteGfxServerConnection.h>
 #include <LibGfx/TextDirection.h>
 #include <LibGfx/TextLayout.h>
 #include <stdio.h>
@@ -74,6 +75,42 @@ Painter::~Painter()
 {
 }
 
+template<typename F>
+void Painter::maybe_do_remote_gfx([[maybe_unused]] F f)
+{
+#ifdef __serenity__
+    if (auto remote_bitmap_id = m_target->remote_bitmap_id(); remote_bitmap_id > 0) {
+        auto* remote_session = m_target->remote_session();
+        VERIFY(remote_session);
+
+        auto& current_state = state();
+        if (m_remote_painting.last_clip_rect != current_state.clip_rect || m_remote_painting.last_translation != current_state.translation || m_remote_painting.last_draw_op != current_state.draw_op) {
+            remote_session->connection().async_set_painter_state(remote_bitmap_id, current_state.clip_rect, current_state.translation, current_state.draw_op);
+            m_remote_painting.last_clip_rect = current_state.clip_rect;
+            m_remote_painting.last_translation = current_state.translation;
+            m_remote_painting.last_draw_op = current_state.draw_op;
+        }
+
+        IntRect invalidate_rect = f(remote_session->connection(), remote_bitmap_id);
+        if (!invalidate_rect.is_empty())
+            m_target->invalidate_remote_rect(invalidate_rect);
+    }
+#endif
+}
+
+void Painter::set_state(Gfx::IntRect const& clip_rect, Gfx::IntPoint const& translation, DrawOp draw_op)
+{
+    auto& current_state = state();
+    current_state.clip_rect = clip_rect;
+    current_state.translation = translation;
+    current_state.draw_op = draw_op;
+}
+
+IntRect Painter::clipped_and_translated(IntRect const& rect) const
+{
+    return rect.translated(translation()).intersected(clip_rect());
+}
+
 void Painter::fill_rect_with_draw_op(IntRect const& a_rect, Color color)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
@@ -97,6 +134,11 @@ void Painter::clear_rect(IntRect const& a_rect, Color color)
     auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
         return;
+
+    maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+        remote_gfx.async_clear_rect(remote_bitmap_id, a_rect, color);
+        return rect;
+    });
 
     VERIFY(m_target->rect().contains(rect));
     rect *= scale();
@@ -143,6 +185,11 @@ void Painter::fill_rect(IntRect const& a_rect, Color color)
         return;
     VERIFY(m_target->rect().contains(rect));
 
+    maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+        remote_gfx.async_fill_rect(remote_bitmap_id, a_rect, color);
+        return rect;
+    });
+
     fill_physical_rect(rect * scale(), color);
 }
 
@@ -153,6 +200,11 @@ void Painter::fill_rect_with_dither_pattern(IntRect const& a_rect, Color color_a
     auto rect = a_rect.translated(translation()).intersected(clip_rect());
     if (rect.is_empty())
         return;
+
+    maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+        remote_gfx.async_fill_rect_with_dither_pattern(remote_bitmap_id, a_rect, color_a, color_b);
+        return rect;
+    });
 
     RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
     size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
@@ -235,6 +287,11 @@ void Painter::fill_rect_with_gradient(Orientation orientation, IntRect const& a_
     auto clipped_rect = IntRect::intersection(rect, clip_rect() * scale());
     if (clipped_rect.is_empty())
         return;
+
+    maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+        remote_gfx.async_fill_rect_with_gradient(remote_bitmap_id, orientation, a_rect, gradient_start, gradient_end);
+        return from_physical(clipped_rect);
+    });
 
     int offset = clipped_rect.primary_offset_for_orientation(orientation) - rect.primary_offset_for_orientation(orientation);
 
@@ -547,6 +604,11 @@ void Painter::draw_rect(IntRect const& a_rect, Color color, bool rough)
     if (clipped_rect.is_empty())
         return;
 
+    maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+        remote_gfx.async_draw_rect(remote_bitmap_id, a_rect, color, rough);
+        return clipped_rect;
+    });
+
     int min_y = clipped_rect.top();
     int max_y = clipped_rect.bottom();
     int scale = this->scale();
@@ -611,16 +673,38 @@ void Painter::draw_rect_with_thickness(IntRect const& rect, Color color, int thi
 
 void Painter::draw_bitmap(IntPoint const& p, CharacterBitmap const& bitmap, Color color)
 {
+    do_draw_bitmap(p, bitmap, color, [&](auto& clipped_rect) {
+        maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+            auto onebit_bitmap_id = bitmap.remote_onebit_bitmap_id();
+            if (!onebit_bitmap_id) {
+                onebit_bitmap_id = const_cast<CharacterBitmap&>(bitmap).enable_remote_painting(true);
+                if (!onebit_bitmap_id)
+                    return IntRect {};
+            }
+            const_cast<CharacterBitmap&>(bitmap).send_to_remote();
+            remote_gfx.async_draw_bitmap(remote_bitmap_id, p, onebit_bitmap_id, color);
+            return clipped_rect;
+        });
+    });
+}
+
+template<typename RemoteHandler>
+void Painter::do_draw_bitmap(const IntPoint& p, const CharacterBitmap& bitmap, Color color, RemoteHandler remote_handler)
+{
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
     auto rect = IntRect(p, bitmap.size()).translated(translation());
     auto clipped_rect = rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
+
+    remote_handler(clipped_rect);
+
     int const first_row = clipped_rect.top() - rect.top();
     int const last_row = clipped_rect.bottom() - rect.top();
     int const first_column = clipped_rect.left() - rect.left();
     int const last_column = clipped_rect.right() - rect.left();
+
     RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
     size_t const dst_skip = m_target->pitch() / sizeof(RGBA32);
     char const* bitmap_row = &bitmap.bits()[first_row * bitmap.width() + first_column];
@@ -639,10 +723,31 @@ void Painter::draw_bitmap(IntPoint const& p, CharacterBitmap const& bitmap, Colo
 
 void Painter::draw_bitmap(IntPoint const& p, GlyphBitmap const& bitmap, Color color)
 {
+    do_draw_bitmap(p, bitmap, color, [&](auto& clipped_rect) {
+        maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+            auto onebit_bitmap_id = bitmap.remote_onebit_bitmap_id();
+            if (!onebit_bitmap_id) {
+                onebit_bitmap_id = const_cast<GlyphBitmap&>(bitmap).enable_remote_painting(true);
+                if (!onebit_bitmap_id)
+                    return IntRect {};
+            }
+            const_cast<GlyphBitmap&>(bitmap).send_to_remote();
+            remote_gfx.async_draw_bitmap(remote_bitmap_id, p, onebit_bitmap_id, color);
+            return clipped_rect;
+        });
+    });
+}
+
+template<typename RemoteHandler>
+void Painter::do_draw_bitmap(const IntPoint& p, const GlyphBitmap& bitmap, Color color, RemoteHandler remote_handler)
+{
     auto dst_rect = IntRect(p, bitmap.size()).translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
+
+    remote_handler(clipped_rect);
+
     int const first_row = clipped_rect.top() - dst_rect.top();
     int const last_row = clipped_rect.bottom() - dst_rect.top();
     int const first_column = clipped_rect.left() - dst_rect.left();
@@ -807,6 +912,18 @@ void Painter::blit_with_opacity(IntPoint const& position, Gfx::Bitmap const& sou
     if (clipped_rect.is_empty())
         return;
 
+    maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+        auto src_bitmap_id = source.remote_bitmap_id();
+        if (!src_bitmap_id) {
+            src_bitmap_id = const_cast<Gfx::Bitmap&>(source).enable_remote_painting(true);
+            if (!src_bitmap_id)
+                return IntRect {};
+        }
+        const_cast<Gfx::Bitmap&>(source).send_to_remote(safe_src_rect);
+        remote_gfx.async_blit_with_opacity(remote_bitmap_id, position, src_bitmap_id, safe_src_rect, opacity, apply_alpha);
+        return clipped_rect;
+    });
+
     int scale = this->scale();
     auto src_rect = a_src_rect * scale;
     clipped_rect *= scale;
@@ -840,7 +957,65 @@ void Painter::blit_with_opacity(IntPoint const& position, Gfx::Bitmap const& sou
     }
 }
 
+void Painter::blit_blended(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& src_rect, Color color)
+{
+    auto remote_handler = [&](auto& clipped_rect, auto& safe_src_rect) {
+        maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+            auto src_bitmap_id = source.remote_bitmap_id();
+            if (!src_bitmap_id) {
+                src_bitmap_id = const_cast<Gfx::Bitmap&>(source).enable_remote_painting(true);
+                if (!src_bitmap_id)
+                    return IntRect {};
+            }
+            const_cast<Gfx::Bitmap&>(source).send_to_remote(safe_src_rect);
+            remote_gfx.async_blit_blended(remote_bitmap_id, position, src_bitmap_id, safe_src_rect, color);
+            return clipped_rect;
+        });
+    };
+    do_blit_filtered(
+        position, source, src_rect, [&](auto src) { return src.blend(color); }, remote_handler);
+}
+
+void Painter::blit_multiplied(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& src_rect, Color color)
+{
+    auto remote_handler = [&](auto& clipped_rect, auto& safe_src_rect) {
+        maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+            auto src_bitmap_id = source.remote_bitmap_id();
+            if (!src_bitmap_id) {
+                src_bitmap_id = const_cast<Gfx::Bitmap&>(source).enable_remote_painting(true);
+                if (!src_bitmap_id)
+                    return IntRect {};
+            }
+            const_cast<Gfx::Bitmap&>(source).send_to_remote(safe_src_rect);
+            remote_gfx.async_blit_multiplied(remote_bitmap_id, position, src_bitmap_id, safe_src_rect, color);
+            return clipped_rect;
+        });
+    };
+    do_blit_filtered(
+        position, source, src_rect, [&](auto src) { return src.multiply(color); }, remote_handler);
+}
+
 void Painter::blit_filtered(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& src_rect, Function<Color(Color)> filter)
+{
+    do_blit_filtered(position, source, src_rect, move(filter), [&](auto& clipped_rect, auto& safe_src_rect) {
+        maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+            auto src_bitmap_id = source.remote_bitmap_id();
+            if (!src_bitmap_id) {
+                src_bitmap_id = const_cast<Gfx::Bitmap&>(source).enable_remote_painting(true);
+                if (!src_bitmap_id)
+                    return IntRect {};
+            }
+            const_cast<Gfx::Bitmap&>(source).send_to_remote(safe_src_rect);
+            // TODO
+            (void)remote_gfx;
+            (void)remote_bitmap_id;
+            return clipped_rect;
+        });
+    });
+}
+
+template<typename FilterFunction, typename RemoteHandler>
+void Painter::do_blit_filtered(const IntPoint& position, const Gfx::Bitmap& source, const IntRect& src_rect, FilterFunction filter, RemoteHandler remote_handler)
 {
     VERIFY((source.scale() == 1 || source.scale() == scale()) && "blit_filtered only supports integer upsampling");
 
@@ -849,6 +1024,8 @@ void Painter::blit_filtered(IntPoint const& position, Gfx::Bitmap const& source,
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
+
+    remote_handler(clipped_rect, safe_src_rect);
 
     int scale = this->scale();
     clipped_rect *= scale;
@@ -907,16 +1084,40 @@ void Painter::blit_filtered(IntPoint const& position, Gfx::Bitmap const& source,
 
 void Painter::blit_brightened(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& src_rect)
 {
-    return blit_filtered(position, source, src_rect, [](Color src) {
-        return src.lightened();
-    });
+    auto remote_handler = [&](auto& clipped_rect, auto& safe_src_rect) {
+        maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+            auto src_bitmap_id = source.remote_bitmap_id();
+            if (!src_bitmap_id) {
+                src_bitmap_id = const_cast<Gfx::Bitmap&>(source).enable_remote_painting(true);
+                if (!src_bitmap_id)
+                    return IntRect {};
+            }
+            const_cast<Gfx::Bitmap&>(source).send_to_remote(safe_src_rect);
+            remote_gfx.async_blit_brightened(remote_bitmap_id, position, src_bitmap_id, safe_src_rect);
+            return clipped_rect;
+        });
+    };
+    return do_blit_filtered(
+        position, source, src_rect, [](Color src) { return src.lightened(); }, remote_handler);
 }
 
 void Painter::blit_dimmed(IntPoint const& position, Gfx::Bitmap const& source, IntRect const& src_rect)
 {
-    return blit_filtered(position, source, src_rect, [](Color src) {
-        return src.to_grayscale().lightened();
-    });
+    auto remote_handler = [&](auto& clipped_rect, auto& safe_src_rect) {
+        maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+            auto src_bitmap_id = source.remote_bitmap_id();
+            if (!src_bitmap_id) {
+                src_bitmap_id = const_cast<Gfx::Bitmap&>(source).enable_remote_painting(true);
+                if (!src_bitmap_id)
+                    return IntRect {};
+            }
+            const_cast<Gfx::Bitmap&>(source).send_to_remote(safe_src_rect);
+            remote_gfx.async_blit_dimmed(remote_bitmap_id, position, src_bitmap_id, safe_src_rect);
+            return clipped_rect;
+        });
+    };
+    return do_blit_filtered(
+        position, source, src_rect, [](Color src) { return src.to_grayscale().lightened(); }, remote_handler);
 }
 
 void Painter::draw_tiled_bitmap(IntRect const& a_dst_rect, Gfx::Bitmap const& source)
@@ -998,6 +1199,17 @@ void Painter::blit(IntPoint const& position, Gfx::Bitmap const& source, IntRect 
     if (clipped_rect.is_empty())
         return;
 
+    maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+        auto src_bitmap_id = source.remote_bitmap_id();
+        if (!src_bitmap_id) {
+            src_bitmap_id = const_cast<Gfx::Bitmap&>(source).enable_remote_painting(true);
+            if (!src_bitmap_id)
+                return IntRect {};
+        }
+        const_cast<Gfx::Bitmap&>(source).send_to_remote(safe_src_rect);
+        remote_gfx.async_blit_opaque(remote_bitmap_id, position, src_bitmap_id, safe_src_rect, apply_alpha);
+        return clipped_rect;
+    });
     // All computations below are in physical coordinates.
     int scale = this->scale();
     auto src_rect = a_src_rect * scale;
@@ -1215,14 +1427,36 @@ FLATTEN void Painter::draw_glyph(IntPoint const& point, u32 code_point, Color co
 FLATTEN void Painter::draw_glyph(IntPoint const& point, u32 code_point, Font const& font, Color color)
 {
     auto glyph = font.glyph(code_point);
-    auto top_left = point + IntPoint(glyph.left_bearing(), 0);
+    auto glyph_size = glyph.is_glyph_bitmap() ? glyph.glyph_bitmap().size() : glyph.bitmap()->size();
+    maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+        auto font_id = font.remote_font_id();
+        if (!font_id)
+            font_id = const_cast<Gfx::Font&>(font).enable_remote_painting(true);
+        IntRect rect { point, glyph_size };
+        remote_gfx.async_draw_glyph(remote_bitmap_id, rect, code_point, font_id, color);
+        return rect.intersected(m_target->rect()); // Bound it to the bitmap as we haven't applied clipping
+    });
+    do_draw_glyph<false>(point, glyph, color);
+}
 
+template<bool do_remote>
+FLATTEN void Painter::do_draw_glyph(IntPoint const& point, Glyph const& glyph, Color color)
+{
+    auto top_left = point + IntPoint(glyph.left_bearing(), 0);
     if (glyph.is_glyph_bitmap()) {
-        draw_bitmap(top_left, glyph.glyph_bitmap(), color);
+        if constexpr (do_remote) {
+            draw_bitmap(top_left, glyph.glyph_bitmap(), color);
+        } else {
+            do_draw_bitmap(top_left, glyph.glyph_bitmap(), color, [&](auto&) { return IntRect {}; });
+        }
     } else {
-        blit_filtered(top_left, *glyph.bitmap(), glyph.bitmap()->rect(), [color](Color pixel) -> Color {
-            return pixel.multiply(color);
-        });
+        auto& source = *glyph.bitmap();
+        if constexpr (do_remote) {
+            blit_multiplied(point, source, source.rect(), color);
+        } else {
+            do_blit_filtered(
+                point, source, source.rect(), [&](auto src) { return src.multiply(color); }, [&](auto&, auto&) { return IntRect {}; });
+        }
     }
 }
 
@@ -1243,8 +1477,15 @@ void Painter::draw_emoji(IntPoint const& point, Gfx::Bitmap const& emoji, Font c
 
 void Painter::draw_glyph_or_emoji(IntPoint const& point, u32 code_point, Font const& font, Color color)
 {
+    do_draw_glyph_or_emoji<true>(point, code_point, font, color);
+}
+
+template<bool do_remote>
+void Painter::do_draw_glyph_or_emoji(const IntPoint& point, u32 code_point, const Font& font, Color color)
+{
     if (font.contains_glyph(code_point)) {
-        draw_glyph(point, code_point, font, color);
+        auto glyph = font.glyph(code_point);
+        do_draw_glyph<do_remote>(point, glyph, color);
         return;
     }
 
@@ -1252,7 +1493,8 @@ void Painter::draw_glyph_or_emoji(IntPoint const& point, u32 code_point, Font co
     auto* emoji = Emoji::emoji_for_code_point(code_point);
     if (emoji == nullptr) {
         dbgln_if(EMOJI_DEBUG, "Failed to find an emoji for code_point {}", code_point);
-        draw_glyph(point, 0xFFFD, font, color);
+        auto glyph = font.glyph('?');
+        do_draw_glyph<do_remote>(point, glyph, color);
         return;
     }
 
@@ -1560,9 +1802,16 @@ void Painter::draw_text(IntRect const& rect, Utf32View const& text, TextAlignmen
 
 void Painter::draw_text(IntRect const& rect, StringView raw_text, Font const& font, TextAlignment alignment, Color color, TextElision elision, TextWrapping wrapping)
 {
+    maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+        auto font_id = font.remote_font_id();
+        if (!font_id)
+            font_id = const_cast<Gfx::Font&>(font).enable_remote_painting(true);
+        remote_gfx.async_draw_text(remote_bitmap_id, rect, raw_text, font_id, alignment, color, elision, wrapping);
+        return rect.intersected(m_target->rect()); // Bound it to the bitmap as we haven't applied clipping
+    });
     Utf8View text { raw_text };
     do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, u32 code_point) {
-        draw_glyph_or_emoji(r.location(), code_point, font, color);
+        do_draw_glyph_or_emoji<false>(r.location(), code_point, font, color);
     });
 }
 
@@ -1574,7 +1823,8 @@ void Painter::draw_text(IntRect const& rect, Utf32View const& raw_text, Font con
     builder.append(raw_text);
     auto text = Utf8View { builder.string_view() };
     do_draw_text(rect, text, font, alignment, elision, wrapping, [&](IntRect const& r, u32 code_point) {
-        draw_glyph_or_emoji(r.location(), code_point, font, color);
+        // TODO: call async_draw_text and call do_draw_glyph_or_emoji here
+        draw_glyph_or_emoji(r.location(), code_point, font, color); // TODO: call do_draw_glyph_or_emoji
     });
 }
 
@@ -1709,6 +1959,10 @@ void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color,
 
     auto alternate_color_is_transparent = alternate_color == Color::Transparent;
 
+    auto from_physical_no_translate = [this](const IntRect& r) {
+        return IntRect { r.left() / scale(), r.top() / scale(), r.width() / scale(), r.height() / scale() };
+    };
+
     // Special case: vertical line.
     if (point1.x() == point2.x()) {
         int const x = point1.x();
@@ -1741,6 +1995,10 @@ void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color,
                 draw_physical_pixel({ x, y }, color, thickness);
             draw_physical_pixel({ x, max_y }, color, thickness);
         }
+        maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+            remote_gfx.async_draw_line(remote_bitmap_id, a_p1, a_p2, color, thickness, style, !alternate_color_is_transparent ? alternate_color : Optional<Gfx::Color> {});
+            return from_physical_no_translate(IntRect::from_two_points(point1, point2).inflated(2, 2).intersected(clip_rect)); // TODO: only invalidate the tiles along the line
+        });
         return;
     }
 
@@ -1776,6 +2034,10 @@ void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color,
                 draw_physical_pixel({ x, y }, color, thickness);
             draw_physical_pixel({ max_x, y }, color, thickness);
         }
+        maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+            remote_gfx.async_draw_line(remote_bitmap_id, a_p1, a_p2, color, thickness, style, !alternate_color_is_transparent ? alternate_color : Optional<Gfx::Color> {});
+            return from_physical_no_translate(IntRect::from_two_points(point1, point2).inflated(2, 2).intersected(clip_rect)); // TODO: only invalidate the tiles along the line
+        });
         return;
     }
 
@@ -1825,6 +2087,11 @@ void Painter::draw_line(IntPoint const& a_p1, IntPoint const& a_p2, Color color,
             }
         }
     }
+
+    maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+        remote_gfx.async_draw_line(remote_bitmap_id, a_p1, a_p2, color, thickness, style, !alternate_color_is_transparent ? alternate_color : Optional<Gfx::Color> {});
+        return from_physical_no_translate(IntRect::from_two_points(point1, point2).inflated(2, 2).intersected(clip_rect)); // TODO: only invalidate the tiles along the line
+    });
 }
 
 static bool can_approximate_bezier_curve(FloatPoint const& p1, FloatPoint const& p2, FloatPoint const& control)
@@ -2110,14 +2377,29 @@ void Painter::blit_disabled(IntPoint const& location, Gfx::Bitmap const& bitmap,
 {
     auto bright_color = palette.threed_highlight();
     auto dark_color = palette.threed_shadow1();
-    blit_filtered(location.translated(1, 1), bitmap, rect, [&](auto) {
-        return bright_color;
-    });
-    blit_filtered(location, bitmap, rect, [&](Color src) {
+    IntRect united_clip_rect;
+    do_blit_filtered(
+        location.translated(1, 1), bitmap, rect, [&](auto) { return bright_color; }, [&](auto& clip_rect, auto&) { united_clip_rect = clip_rect; });
+    do_blit_filtered(
+        location, bitmap, rect, [&](Color src) {
         int gray = src.to_grayscale().red();
         if (gray > 160)
             return bright_color;
-        return dark_color;
+        return dark_color; }, [&](auto& clip_rect, auto&) { united_clip_rect = united_clip_rect.united(clip_rect); });
+
+    maybe_do_remote_gfx([&](auto& remote_gfx, auto& remote_bitmap_id) {
+        auto src_bitmap_id = bitmap.remote_bitmap_id();
+        if (!src_bitmap_id) {
+            src_bitmap_id = const_cast<Gfx::Bitmap&>(bitmap).enable_remote_painting(true);
+            if (!src_bitmap_id)
+                return IntRect {};
+        }
+        const_cast<Gfx::Bitmap&>(bitmap).send_to_remote(rect);
+        auto palette_id = palette.remote_palette_id();
+        if (!palette_id)
+            palette_id = const_cast<Gfx::Palette&>(palette).enable_remote_painting(true);
+        remote_gfx.async_blit_disabled(remote_bitmap_id, location, src_bitmap_id, rect, palette_id);
+        return united_clip_rect;
     });
 }
 

@@ -659,6 +659,20 @@ public:
 
     [[nodiscard]] Rect<T> united(Rect<T> const&) const;
 
+    template<typename Container>
+    [[nodiscard]] static Rect<T> united(Container const& rects)
+    {
+        size_t i = 0;
+        Rect<T> united_rect;
+        for (auto& rect : rects) {
+            if (i++ == 0)
+                united_rect = rect;
+            else
+                united_rect = united_rect.united(rect);
+        }
+        return united_rect;
+    }
+
     [[nodiscard]] Point<T> top_left() const { return { left(), top() }; }
     [[nodiscard]] Point<T> top_right() const { return { right(), top() }; }
     [[nodiscard]] Point<T> bottom_left() const { return { left(), bottom() }; }

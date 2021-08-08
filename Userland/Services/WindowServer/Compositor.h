@@ -24,6 +24,7 @@ class MultiScaleBitmaps;
 class Window;
 class WindowManager;
 class WindowStack;
+class RemoteCompositorClientConnection;
 
 enum class WallpaperMode {
     Tile,
@@ -188,6 +189,17 @@ public:
         return adopt_own(*new CompositorScreenData());
     }
 
+    bool initialize_remote_gfx();
+    bool set_remote_client(RemoteCompositorClientConnection*);
+    void remote_client_is_ready(RemoteCompositorClientConnection&);
+    bool is_remote_session_active() const { return m_remote_client; }
+    auto* active_remote_client() { return m_remote_client.ptr(); }
+    void client_received_remote_gfx_cookie(ClientConnection&);
+    void client_removed(ClientConnection&);
+    void remote_gfx_session_status_changed(bool);
+
+    Color background_color() const;
+
 private:
     Compositor();
     void init_bitmaps();
@@ -248,6 +260,9 @@ private:
     Optional<Gfx::Color> m_custom_background_color;
 
     HashTable<Animation*> m_animations;
+
+    WeakPtr<RemoteCompositorClientConnection> m_remote_client;
+    Optional<u64> m_remote_gfx_cookie;
 };
 
 }

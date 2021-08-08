@@ -58,6 +58,7 @@ public:
     String variant() const;
     u16 weight() const;
     bool is_fixed_width() const;
+    ReadonlyBytes bytes() const { return m_mapped_file ? m_mapped_file->bytes() : m_buffer; }
 
 private:
     enum class Offsets {
@@ -120,6 +121,8 @@ public:
     RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id) const;
 
     // Gfx::Font implementation
+    virtual Type font_type() const override { return Type::Scaled; }
+    TTF::Font& ttf_font() { return *m_font; }
     virtual NonnullRefPtr<Font> clone() const override { return *this; } // FIXME: clone() should not need to be implemented
     virtual u8 presentation_size() const override { return m_point_height; }
     virtual u16 weight() const override { return m_font->weight(); }
@@ -144,6 +147,7 @@ public:
     virtual String family() const override { return m_font->family(); }
     virtual String variant() const override { return m_font->variant(); }
     virtual String qualified_name() const override { return String::formatted("{} {} {}", family(), presentation_size(), weight()); }
+    virtual ReadonlyBytes bytes() const override { return m_font->bytes(); }
 
 private:
     NonnullRefPtr<TTF::Font> m_font;

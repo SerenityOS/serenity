@@ -214,6 +214,11 @@ RefPtr<BitmapFont> BitmapFont::load_from_file(String const& path)
     return font;
 }
 
+RefPtr<BitmapFont> BitmapFont::load_from_memory(ReadonlyBytes const& bytes)
+{
+    return load_from_memory(bytes.data());
+}
+
 bool BitmapFont::write_to_file(String const& path)
 {
     FontFileHeader header;

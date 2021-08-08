@@ -53,7 +53,7 @@ ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socke
     s_connections->set(client_id, *this);
 
     auto& wm = WindowManager::the();
-    async_fast_greet(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), client_id);
+    async_fast_greet(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Compositor::the().is_remote_session_active(), client_id);
 }
 
 ClientConnection::~ClientConnection()
@@ -75,6 +75,8 @@ ClientConnection::~ClientConnection()
 
     if (m_show_screen_number)
         Compositor::the().decrement_show_screen_number({});
+
+    Compositor::the().client_removed(*this);
 }
 
 void ClientConnection::die()
@@ -605,7 +607,7 @@ void ClientConnection::invalidate_rect(i32 window_id, Vector<Gfx::IntRect> const
         window.request_update(rects[i].intersected({ {}, window.size() }), ignore_occlusion);
 }
 
-void ClientConnection::did_finish_painting(i32 window_id, Vector<Gfx::IntRect> const& rects)
+void ClientConnection::did_finish_painting(i32 window_id, Vector<Gfx::IntRect> const& rects, int remote_bitmap_id, u32 remote_bitmap_sync_tag)
 {
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
@@ -618,12 +620,14 @@ void ClientConnection::did_finish_painting(i32 window_id, Vector<Gfx::IntRect> c
     if (window.has_alpha_channel() && window.alpha_hit_threshold() > 0.0f)
         WindowManager::the().reevaluate_hover_state_for_window(&window);
 
+    window.set_remote_backing_store(remote_bitmap_id, remote_bitmap_sync_tag);
+
     WindowSwitcher::the().refresh_if_needed();
 }
 
 void ClientConnection::set_window_backing_store(i32 window_id, [[maybe_unused]] i32 bpp,
     [[maybe_unused]] i32 pitch, IPC::File const& anon_file, i32 serial, bool has_alpha_channel,
-    Gfx::IntSize const& size, bool flush_immediately)
+    Gfx::IntSize const& size, bool flush_immediately, i32 remote_bitmap_id, u32 remote_bitmap_sync_tag)
 {
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
@@ -651,6 +655,8 @@ void ClientConnection::set_window_backing_store(i32 window_id, [[maybe_unused]] 
         }
         window.set_backing_store(backing_store_or_error.release_value(), serial);
     }
+
+    window.set_remote_backing_store(remote_bitmap_id, remote_bitmap_sync_tag);
 
     if (flush_immediately)
         window.invalidate(false);
@@ -1183,6 +1189,20 @@ void ClientConnection::remove_window_stealing(i32 window_id)
         did_misbehave("RemoveWindowStealing: Bad window ID");
 
     window->remove_all_stealing();
+}
+
+void ClientConnection::set_remote_gfx_cookie(u64 cookie)
+{
+    if (m_remote_gfx_cookie.has_value()) {
+        if (m_remote_gfx_cookie.value() != cookie) {
+            did_misbehave("SetRemoteGfxCookie: Cookie should not be changing!");
+            return;
+        }
+    } else {
+        m_remote_gfx_cookie = cookie;
+    }
+
+    Compositor::the().client_received_remote_gfx_cookie(*this);
 }
 
 }

@@ -21,10 +21,13 @@ public:
     static WindowServerConnection& the();
     i32 expose_client_id() { return m_client_id; }
 
+    bool remote_session_active() const { return m_remote_session_active; }
+
 private:
     WindowServerConnection();
 
-    virtual void fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, String const&, String const&, i32) override;
+    virtual void fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, String const&, String const&, bool, i32) override;
+    virtual void remote_session_changed(bool) override;
     virtual void paint(i32, Gfx::IntSize const&, Vector<Gfx::IntRect> const&) override;
     virtual void mouse_move(i32, Gfx::IntPoint const&, u32, u32, u32, i32, bool, Vector<String> const&) override;
     virtual void mouse_down(i32, Gfx::IntPoint const&, u32, u32, u32, i32) override;
@@ -59,6 +62,7 @@ private:
     virtual void ping() override;
 
     bool m_display_link_notification_pending { false };
+    bool m_remote_session_active { false };
     i32 m_client_id;
 };
 

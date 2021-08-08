@@ -7,9 +7,12 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/WeakPtr.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 
@@ -24,6 +27,10 @@
     __ENUMERATE_IMAGE_FORMAT(jpg, ".jpg")  \
     __ENUMERATE_IMAGE_FORMAT(jpg, ".jpeg") \
     __ENUMERATE_IMAGE_FORMAT(dds, ".dds")
+
+namespace RemoteGfx {
+class RemoteGfxSession;
+}
 
 namespace Gfx {
 
@@ -88,6 +95,17 @@ enum RotationDirection {
 };
 
 class Bitmap : public RefCounted<Bitmap> {
+    struct RemoteData {
+        WeakPtr<RemoteGfx::RemoteGfxSession> session;
+        int bitmap_id { 0 };
+        static constexpr int tile_size = 4;
+        DisjointRectSet needs_tiles;
+        RefPtr<Bitmap> bitmap_sent;
+        bool never_send_content { false };
+
+        RemoteData(RemoteGfx::RemoteGfxSession&);
+    };
+
 public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create(BitmapFormat, IntSize const&, int intrinsic_scale = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> try_create_shareable(BitmapFormat, IntSize const&, int intrinsic_scale = 1);
@@ -235,6 +253,19 @@ public:
     [[nodiscard]] Core::AnonymousBuffer& anonymous_buffer() { return m_buffer; }
     [[nodiscard]] Core::AnonymousBuffer const& anonymous_buffer() const { return m_buffer; }
 
+    [[nodiscard]] bool is_rect_equal(Gfx::IntRect const&, Gfx::Bitmap const&, Gfx::IntPoint const&) const;
+
+    void wrapper_set_data(void* data) { m_data = data; }
+
+    RemoteGfx::RemoteGfxSession* remote_session() { return (!m_local_only && m_remote_data) ? m_remote_data->session.ptr() : nullptr; }
+    [[nodiscard]] int remote_bitmap_id() const { return (!m_local_only && m_remote_data && m_remote_data->session.ptr()) ? m_remote_data->bitmap_id : 0; }
+    int enable_remote_painting(bool, bool = true);
+    void disable_remote_painting() { m_local_only = true; }
+    [[nodiscard]] bool is_remote_painting_disabled() const { return m_local_only; }
+    void send_to_remote(IntRect const&);
+    void invalidate_remote_rect(IntRect const&);
+    void remote_bitmap_sync(u32);
+
 private:
     Bitmap(BitmapFormat, IntSize const&, int, BackingStore const&);
     Bitmap(BitmapFormat, IntSize const&, int, size_t pitch, void*);
@@ -244,6 +275,8 @@ private:
 
     void allocate_palette_from_format(BitmapFormat, Vector<RGBA32> const& source_palette);
 
+    void destroy_remote_data();
+
     IntSize m_size;
     int m_scale;
     void* m_data { nullptr };
@@ -252,7 +285,9 @@ private:
     BitmapFormat m_format { BitmapFormat::Invalid };
     bool m_needs_munmap { false };
     bool m_volatile { false };
+    bool m_local_only { false };
     Core::AnonymousBuffer m_buffer;
+    OwnPtr<RemoteData> m_remote_data;
 };
 
 inline u8* Bitmap::scanline_u8(int y)

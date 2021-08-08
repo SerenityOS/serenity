@@ -116,7 +116,7 @@ void ColumnsView::paint_event(PaintEvent& event)
                 if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size())) {
                     if (is_selected_row) {
                         auto tint = selection_color.with_alpha(100);
-                        painter.blit_filtered(icon_rect.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
+                        painter.blit_blended(icon_rect.location(), *bitmap, bitmap->rect(), tint);
                     } else if (m_hovered_index.is_valid() && m_hovered_index.parent() == index.parent() && m_hovered_index.row() == index.row()) {
                         painter.blit_brightened(icon_rect.location(), *bitmap, bitmap->rect());
                     } else {

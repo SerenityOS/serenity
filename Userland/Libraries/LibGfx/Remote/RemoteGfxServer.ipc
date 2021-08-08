@@ -1,0 +1,41 @@
+#include <LibGfx/OneBitBitmap.h>
+#include <LibGfx/Remote/RemoteGfx.h>
+
+endpoint RemoteGfxServer {
+    create_bitmap(i32 id, Gfx::BitmapFormat format, Gfx::IntSize size, int scale) =|
+    destroy_bitmap(i32 id) =|
+    sync_bitmap(i32 id, u32 tag) =|
+    set_bitmap_data(i32 id, ::RemoteGfx::BitmapData bitmap_data) =|
+    apply_bitmap_diff(i32 id, ::RemoteGfx::BitmapDiff bitmap_diff) =|
+
+    create_bitmap_font_from_data(i32 id, ByteBuffer font_data) =|
+    create_scalable_font_from_data(i32 id, ByteBuffer font_data, u32 size) =|
+    create_bitmap_font_from_digest(i32 id, ByteBuffer font_digest) =|
+    create_scalable_font_from_digest(i32 id, ByteBuffer font_digest, u32 size) =|
+
+    create_onebit_bitmap(i32 id, Gfx::IntSize size, Gfx::OneBitBitmap::Type type, ByteBuffer bitmap_data) =|
+    destroy_onebit_bitmap(i32 id) =|
+    set_onebit_bitmap_data(i32 id, ByteBuffer bitmap_data) =|
+
+    create_palette(i32 id, ::RemoteGfx::PaletteData palette) =|
+    destroy_palette(i32 id) =|
+
+    set_painter_state(i32 bitmap_id, Gfx::IntRect clip_rect, Gfx::IntPoint translation, Gfx::Painter::DrawOp draw_op) =|
+    clear_rect(i32 bitmap_id, Gfx::IntRect rect, Gfx::Color color) =|
+    fill_rect(i32 bitmap_id, Gfx::IntRect rect, Gfx::Color color) =|
+    draw_line(i32 bitmap_id, Gfx::IntPoint point1, Gfx::IntPoint point2, Gfx::Color color, int thickness, Gfx::Painter::LineStyle line_style, Optional<Gfx::Color> alternate_color) =|
+    fill_rect_with_dither_pattern(i32 bitmap_id, Gfx::IntRect rect, Gfx::Color color1, Gfx::Color color2) =|
+    fill_rect_with_checkerboard(i32 bitmap_id, Gfx::IntRect rect, Gfx::IntSize cell_size, Gfx::Color color_dark, Gfx::Color color_light) =|
+    fill_rect_with_gradient(i32 bitmap_id, Gfx::Orientation orientation, Gfx::IntRect rect, Gfx::Color gradient_start, Gfx::Color gradient_end) =|
+    draw_rect(i32 bitmap_id, Gfx::IntRect rect, Gfx::Color color, bool rough) =|
+    blit_opaque(i32 bitmap_id, Gfx::IntPoint position, i32 from_bitmap_id, Gfx::IntRect src_rect, bool apply_alpha) =|
+    blit_with_opacity(i32 bitmap_id, Gfx::IntPoint position, i32 from_bitmap_id, Gfx::IntRect src_rect, float opacity, bool apply_alpha) =|
+    blit_dimmed(i32 bitmap_id, Gfx::IntPoint position, i32 from_bitmap_id, Gfx::IntRect src_rect) =|
+    blit_brightened(i32 bitmap_id, Gfx::IntPoint position, i32 from_bitmap_id, Gfx::IntRect src_rect) =|
+    blit_blended(i32 bitmap_id, Gfx::IntPoint position, i32 from_bitmap_id, Gfx::IntRect src_rect, Gfx::Color color) =|
+    blit_multiplied(i32 bitmap_id, Gfx::IntPoint position, i32 from_bitmap_id, Gfx::IntRect src_rect, Gfx::Color color) =|
+    blit_disabled(i32 bitmap_id, Gfx::IntPoint position, i32 from_bitmap_id, Gfx::IntRect rect, i32 palette_id) =|
+    draw_text(i32 bitmap_id, Gfx::IntRect rect, String raw_text, i32 font_id, Gfx::TextAlignment alignment, Gfx::Color color, Gfx::TextElision elision, Gfx::TextWrapping wrapping) =|
+    draw_glyph(i32 bitmap_id, Gfx::IntRect rect, u32 code_point, i32 font_id, Gfx::Color color) =|
+    draw_bitmap(i32 bitmap_id, Gfx::IntPoint position, i32 onebit_bitmap_id, Gfx::Color color) =|
+}

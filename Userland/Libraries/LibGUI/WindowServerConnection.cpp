@@ -18,11 +18,14 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MouseTracker.h>
 #include <LibGUI/Window.h>
-#include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/Remote/RemoteGfx.h>
 #include <LibGfx/SystemTheme.h>
+
+#include <LibGUI/WindowServerConnection.h>
+#include <LibGfx/Remote/RemoteGfxServerConnection.h>
 
 namespace GUI {
 
@@ -51,11 +54,36 @@ WindowServerConnection::WindowServerConnection()
     Gfx::FontDatabase::set_default_font_query(message->default_font_query());
     Gfx::FontDatabase::set_fixed_width_font_query(message->fixed_width_font_query());
     m_client_id = message->client_id();
+    m_remote_session_active = message->remote_session_active();
+
+    // Ensure we have a connection to RemoteGfx so we don't cause crashes later one when an application
+    // doesn't have access to it anymore...
+    auto& remote_gfx = RemoteGfx::RemoteGfxServerConnection::the();
+    remote_gfx.on_new_session = [this](auto&) {
+        dbgln("************** New Remote desktop session ***************");
+        async_set_remote_gfx_cookie(RemoteGfx::RemoteGfxServerConnection::the().cookie());
+        remote_session_changed(true);
+    };
+    remote_gfx.on_session_end = [this](auto&) {
+        dbgln("************** Remote desktop session ended ***************");
+        remote_session_changed(false);
+    };
 }
 
-void WindowServerConnection::fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, String const&, String const&, i32)
+void WindowServerConnection::fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, String const&, String const&, bool, i32)
 {
     // NOTE: This message is handled in the constructor.
+}
+
+void WindowServerConnection::remote_session_changed(bool remote_session_is_active)
+{
+    if (m_remote_session_active == remote_session_is_active)
+        return;
+    m_remote_session_active = remote_session_is_active;
+    dbgln("************** remote_session_changed {} ***************", remote_session_is_active);
+    Window::for_each_window({}, [&](auto& window) {
+        window.remote_session_changed({}, remote_session_is_active);
+    });
 }
 
 void WindowServerConnection::update_system_theme(Core::AnonymousBuffer const& theme_buffer)
