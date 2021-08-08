@@ -13,7 +13,7 @@
 #include <Kernel/BootInfo.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
-#include <Kernel/Bus/USB/UHCIController.h>
+#include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/FullDevice.h>
@@ -300,7 +300,7 @@ void init_stage2(void*)
 
     auto boot_profiling = kernel_command_line().is_boot_profiling_enabled();
 
-    USB::UHCIController::detect();
+    USB::USBManagement::initialize();
 
     BIOSSysFSDirectory::initialize();
     ACPI::ACPISysFSDirectory::initialize();

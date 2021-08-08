@@ -27,8 +27,6 @@ static constexpr u8 RETRY_COUNTER_RELOAD = 3;
 
 namespace Kernel::USB {
 
-static UHCIController* s_the;
-
 static constexpr u16 UHCI_USBCMD_RUN = 0x0001;
 static constexpr u16 UHCI_USBCMD_HOST_CONTROLLER_RESET = 0x0002;
 static constexpr u16 UHCI_USBCMD_GLOBAL_RESET = 0x0004;
@@ -211,43 +209,44 @@ NonnullRefPtr<SysFSUSBDeviceInformation> SysFSUSBDeviceInformation::create(USB::
     return adopt_ref(*new SysFSUSBDeviceInformation(device));
 }
 
-UHCIController& UHCIController::the()
+KResultOr<NonnullRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::Address address)
 {
-    return *s_the;
+    // NOTE: This assumes that address is pointing to a valid UHCI controller.
+    auto controller = adopt_ref_if_nonnull(new (nothrow) UHCIController(address));
+    if (!controller)
+        return ENOMEM;
+
+    auto init_result = controller->initialize();
+    if (init_result.is_error())
+        return init_result;
+
+    return controller.release_nonnull();
 }
 
-UNMAP_AFTER_INIT void UHCIController::detect()
+KResult UHCIController::initialize()
 {
-    if (kernel_command_line().disable_uhci_controller())
-        return;
-
     // FIXME: We create the /proc/bus/usb representation here, but it should really be handled
     // in a more broad singleton than this once we refactor things in USB subsystem.
     SysFSUSBBusDirectory::initialize();
 
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
-        if (address.is_null())
-            return;
-
-        if (PCI::get_class(address) == 0xc && PCI::get_subclass(address) == 0x03 && PCI::get_programming_interface(address) == 0) {
-            if (!s_the) {
-                s_the = new UHCIController(address, id);
-                s_the->spawn_port_proc();
-            }
-        }
-    });
-}
-
-UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::Address address, PCI::ID id)
-    : PCI::Device(address)
-    , m_io_base(PCI::get_BAR4(pci_address()) & ~1)
-{
-    dmesgln("UHCI: Controller found {} @ {}", id, address);
+    dmesgln("UHCI: Controller found {} @ {}", PCI::get_id(pci_address()), pci_address());
     dmesgln("UHCI: I/O base {}", m_io_base);
     dmesgln("UHCI: Interrupt line: {}", PCI::get_interrupt_line(pci_address()));
 
-    reset();
-    start();
+    spawn_port_proc();
+
+    auto reset_result = reset();
+    if (reset_result.is_error())
+        return reset_result;
+
+    auto start_result = start();
+    return start_result;
+}
+
+UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::Address address)
+    : PCI::Device(address)
+    , m_io_base(PCI::get_BAR4(pci_address()) & ~1)
+{
 }
 
 UNMAP_AFTER_INIT UHCIController::~UHCIController()
@@ -275,9 +274,10 @@ RefPtr<USB::Device> const UHCIController::get_device_from_address(u8 device_addr
     return nullptr;
 }
 
-void UHCIController::reset()
+KResult UHCIController::reset()
 {
-    stop();
+    if (auto stop_result = stop(); stop_result.is_error())
+        return stop_result;
 
     write_usbcmd(UHCI_USBCMD_HOST_CONTROLLER_RESET);
 
@@ -305,6 +305,8 @@ void UHCIController::reset()
     // Disable UHCI Controller from raising an IRQ
     write_usbintr(0);
     dbgln("UHCI: Reset completed");
+
+    return KSuccess;
 }
 
 UNMAP_AFTER_INIT void UHCIController::create_structures()
@@ -464,7 +466,7 @@ TransferDescriptor* UHCIController::allocate_transfer_descriptor() const
     return nullptr; // Huh?! We're outta TDs!!
 }
 
-void UHCIController::stop()
+KResult UHCIController::stop()
 {
     write_usbcmd(read_usbcmd() & ~UHCI_USBCMD_RUN);
     // FIXME: Timeout
@@ -472,9 +474,10 @@ void UHCIController::stop()
         if (read_usbsts() & UHCI_USBSTS_HOST_CONTROLLER_HALTED)
             break;
     }
+    return KSuccess;
 }
 
-void UHCIController::start()
+KResult UHCIController::start()
 {
     write_usbcmd(read_usbcmd() | UHCI_USBCMD_RUN);
     // FIXME: Timeout
@@ -483,6 +486,7 @@ void UHCIController::start()
             break;
     }
     dbgln("UHCI: Started");
+    return KSuccess;
 }
 
 TransferDescriptor* UHCIController::create_transfer_descriptor(Pipe& pipe, PacketID direction, size_t data_len)
@@ -713,7 +717,7 @@ void UHCIController::spawn_port_proc()
                             dbgln("port should be enabled now: {:#04x}\n", read_portsc1());
 
                             USB::Device::DeviceSpeed speed = (port_data & UHCI_PORTSC_LOW_SPEED_DEVICE) ? USB::Device::DeviceSpeed::LowSpeed : USB::Device::DeviceSpeed::FullSpeed;
-                            auto device = USB::Device::try_create(USB::Device::PortNumber::Port1, speed);
+                            auto device = USB::Device::try_create(*this, USB::Device::PortNumber::Port1, speed);
 
                             if (device.is_error())
                                 dmesgln("UHCI: Device creation failed on port 1 ({})", device.error());
@@ -730,7 +734,7 @@ void UHCIController::spawn_port_proc()
                         }
                     }
                 } else {
-                    port_data = UHCIController::the().read_portsc2();
+                    port_data = read_portsc2();
                     if (port_data & UHCI_PORTSC_CONNECT_STATUS_CHANGED) {
                         if (port_data & UHCI_PORTSC_CURRRENT_CONNECT_STATUS) {
                             dmesgln("UHCI: Device attach detected on Root Port 2");
@@ -751,7 +755,7 @@ void UHCIController::spawn_port_proc()
                             write_portsc2(port_data | UHCI_PORTSC_PORT_ENABLED);
                             dbgln("port should be enabled now: {:#04x}\n", read_portsc2());
                             USB::Device::DeviceSpeed speed = (port_data & UHCI_PORTSC_LOW_SPEED_DEVICE) ? USB::Device::DeviceSpeed::LowSpeed : USB::Device::DeviceSpeed::FullSpeed;
-                            auto device = USB::Device::try_create(USB::Device::PortNumber::Port2, speed);
+                            auto device = USB::Device::try_create(*this, USB::Device::PortNumber::Port2, speed);
 
                             if (device.is_error())
                                 dmesgln("UHCI: Device creation failed on port 2 ({})", device.error());

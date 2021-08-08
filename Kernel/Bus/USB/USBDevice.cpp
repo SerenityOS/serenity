@@ -5,24 +5,24 @@
  */
 
 #include <AK/OwnPtr.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <Kernel/Bus/USB/UHCIController.h>
+#include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBDescriptors.h>
 #include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/Bus/USB/USBRequest.h>
-
-static u32 s_next_usb_address = 1; // Next address we hand out to a device once it's plugged into the machine
+#include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
 
-KResultOr<NonnullRefPtr<Device>> Device::try_create(PortNumber port, DeviceSpeed speed)
+KResultOr<NonnullRefPtr<Device>> Device::try_create(USBController const& controller, PortNumber port, DeviceSpeed speed)
 {
-    auto pipe_or_error = Pipe::try_create_pipe(Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0);
+    auto pipe_or_error = Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0);
     if (pipe_or_error.is_error())
         return pipe_or_error.error();
 
-    auto device = AK::try_create<Device>(port, speed, pipe_or_error.release_value());
+    auto device = AK::try_create<Device>(controller, port, speed, pipe_or_error.release_value());
     if (!device)
         return ENOMEM;
 
@@ -33,10 +33,11 @@ KResultOr<NonnullRefPtr<Device>> Device::try_create(PortNumber port, DeviceSpeed
     return device.release_nonnull();
 }
 
-Device::Device(PortNumber port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe)
+Device::Device(USBController const& controller, PortNumber port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe)
     : m_device_port(port)
     , m_device_speed(speed)
     , m_address(0)
+    , m_controller(controller)
     , m_default_pipe(move(default_pipe))
 {
 }
@@ -83,8 +84,10 @@ KResult Device::enumerate()
         dbgln("Number of configurations: {:02x}", dev_descriptor.num_configurations);
     }
 
+    m_address = m_controller->allocate_address();
+
     // Attempt to set devices address on the bus
-    transfer_length_or_error = m_default_pipe->control_transfer(USB_DEVICE_REQUEST_HOST_TO_DEVICE, USB_REQUEST_SET_ADDRESS, s_next_usb_address, 0, 0, nullptr);
+    transfer_length_or_error = m_default_pipe->control_transfer(USB_DEVICE_REQUEST_HOST_TO_DEVICE, USB_REQUEST_SET_ADDRESS, m_address, 0, 0, nullptr);
 
     if (transfer_length_or_error.is_error())
         return transfer_length_or_error.error();
@@ -92,7 +95,6 @@ KResult Device::enumerate()
     transfer_length = transfer_length_or_error.release_value();
 
     VERIFY(transfer_length > 0);
-    m_address = s_next_usb_address++;
 
     memcpy(&m_device_descriptor, &dev_descriptor, sizeof(USBDeviceDescriptor));
     return KSuccess;
