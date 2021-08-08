@@ -238,6 +238,16 @@ def genarg(spec):
 
     def gen():
         x = spec['value']
+        if spec['type'] in ('i32', 'i64'):
+            if x.startswith('0x'):
+                if spec['type'] == 'i32':
+                    # cast back to i32 to get the correct sign
+                    return str(struct.unpack('>i', struct.pack('>Q', int(x, 16))[4:])[0])
+
+                # cast back to i64 to get the correct sign
+                return str(struct.unpack('>q', struct.pack('>Q', int(x, 16)))[0])
+            return x
+
         if x == 'nan':
             return 'NaN'
         if x == '-nan':
@@ -274,9 +284,6 @@ def genarg(spec):
         if x.startswith('-nan'):
             return '-NaN'
         return x
-    if spec['type'] == 'i32':
-        # cast back to i32 to get the correct sign
-        return str(struct.unpack('>i', struct.pack('>q', int(x))[4:])[0])
     return str(x)
 
 
