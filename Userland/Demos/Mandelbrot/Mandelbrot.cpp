@@ -51,6 +51,19 @@ public:
         calculate();
     }
 
+    void pan_by(Gfx::IntPoint const& delta)
+    {
+        auto relative_width_pixel = (m_x_end - m_x_start) / m_bitmap->width();
+        auto relative_height_pixel = (m_y_end - m_y_start) / m_bitmap->height();
+
+        set_view(
+            m_x_start - delta.x() * relative_width_pixel,
+            m_x_end - delta.x() * relative_width_pixel,
+            m_y_start - delta.y() * relative_height_pixel,
+            m_y_end - delta.y() * relative_height_pixel);
+        calculate();
+    }
+
     double mandelbrot(double px, double py, i32 max_iterations)
     {
         // Based on https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set
@@ -154,6 +167,9 @@ private:
     Gfx::IntPoint m_selection_start;
     Gfx::IntPoint m_selection_end;
 
+    bool m_panning { false };
+    Gfx::IntPoint m_last_pan_position;
+
     MandelbrotSet m_set;
 };
 
@@ -179,6 +195,12 @@ void Mandelbrot::mousedown_event(GUI::MouseEvent& event)
             m_dragging = true;
             update();
         }
+    } else if (event.button() == GUI::MouseButton::Middle) {
+        if (!m_panning) {
+            m_last_pan_position = event.position();
+            m_panning = true;
+            update();
+        }
     }
 
     return GUI::Widget::mousedown_event(event);
@@ -199,6 +221,13 @@ void Mandelbrot::mousemove_event(GUI::MouseEvent& event)
         update();
     }
 
+    if (m_panning) {
+        m_set.pan_by(event.position() - m_last_pan_position);
+        m_last_pan_position = event.position();
+
+        update();
+    }
+
     return GUI::Widget::mousemove_event(event);
 }
 
@@ -209,6 +238,9 @@ void Mandelbrot::mouseup_event(GUI::MouseEvent& event)
         if (selection.width() > 0 && selection.height() > 0)
             m_set.zoom(selection);
         m_dragging = false;
+        update();
+    } else if (event.button() == GUI::MouseButton::Middle) {
+        m_panning = false;
         update();
     } else if (event.button() == GUI::MouseButton::Right) {
         m_set.reset();
