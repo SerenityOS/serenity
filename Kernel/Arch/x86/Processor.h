@@ -197,10 +197,15 @@ public:
         return *g_total_processors.ptr();
     }
 
+    ALWAYS_INLINE static void pause()
+    {
+        asm volatile("pause");
+    }
+
     ALWAYS_INLINE static void wait_check()
     {
+        Processor::pause();
         Processor::current().smp_process_pending_messages();
-        // TODO: pause
     }
 
     [[noreturn]] static void halt();

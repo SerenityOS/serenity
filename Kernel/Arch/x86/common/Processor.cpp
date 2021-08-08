@@ -682,7 +682,7 @@ ProcessorMessage& Processor::smp_get_from_pool()
         msg = s_message_pool.load(AK::MemoryOrder::memory_order_consume);
         if (!msg) {
             if (!Processor::current().smp_process_pending_messages()) {
-                // TODO: pause for a bit?
+                Processor::pause();
             }
             continue;
         }
@@ -898,7 +898,7 @@ void Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
     // If synchronous then we must cleanup and return the message back
     // to the pool. Otherwise, the last processor to complete it will return it
     while (msg.refs.load(AK::MemoryOrder::memory_order_consume) != 0) {
-        // TODO: pause for a bit?
+        Processor::pause();
 
         // We need to process any messages that may have been sent to
         // us while we're waiting. This also checks if another processor
@@ -928,7 +928,7 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
         // If synchronous then we must cleanup and return the message back
         // to the pool. Otherwise, the last processor to complete it will return it
         while (msg.refs.load(AK::MemoryOrder::memory_order_consume) != 0) {
-            // TODO: pause for a bit?
+            Processor::pause();
 
             // We need to process any messages that may have been sent to
             // us while we're waiting. This also checks if another processor
