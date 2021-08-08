@@ -357,6 +357,23 @@ int main(int argc, char** argv)
                 settings_window = create_settings_window(terminal);
             settings_window->show();
             settings_window->move_to_front();
+            settings_window->on_close = [&]() {
+                config->write_num_entry("Window", "Opacity", terminal.opacity());
+                config->write_num_entry("Terminal", "MaxHistorySize", terminal.max_history_size());
+
+                auto bell = terminal.bell_mode();
+                auto bell_setting = String::empty();
+                if (bell == VT::TerminalWidget::BellMode::AudibleBeep) {
+                    bell_setting = "AudibleBeep";
+                } else if (bell == VT::TerminalWidget::BellMode::Disabled) {
+                    bell_setting = "Disabled";
+                } else {
+                    bell_setting = "Visible";
+                }
+                config->write_entry("Window", "Bell", bell_setting);
+
+                config->sync();
+            };
         });
 
     terminal.context_menu().add_separator();
