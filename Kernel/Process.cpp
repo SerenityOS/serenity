@@ -84,17 +84,6 @@ UNMAP_AFTER_INIT void Process::initialize()
     create_signal_trampoline();
 }
 
-Vector<ProcessID> Process::all_pids()
-{
-    Vector<ProcessID> pids;
-    processes().with_shared([&](const auto& list) {
-        pids.ensure_capacity(list.size_slow());
-        for (const auto& process : list)
-            pids.append(process.pid());
-    });
-    return pids;
-}
-
 NonnullRefPtrVector<Process> Process::all_processes()
 {
     NonnullRefPtrVector<Process> output;
