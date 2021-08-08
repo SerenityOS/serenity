@@ -668,9 +668,12 @@ void Processor::flush_tlb(Memory::PageDirectory const* page_directory, VirtualAd
 void Processor::smp_return_to_pool(ProcessorMessage& msg)
 {
     ProcessorMessage* next = nullptr;
-    do {
+    for (;;) {
         msg.next = next;
-    } while (s_message_pool.compare_exchange_strong(next, &msg, AK::MemoryOrder::memory_order_acq_rel));
+        if (s_message_pool.compare_exchange_strong(next, &msg, AK::MemoryOrder::memory_order_acq_rel))
+            break;
+        Processor::pause();
+    }
 }
 
 ProcessorMessage& Processor::smp_get_from_pool()
