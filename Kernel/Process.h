@@ -663,7 +663,6 @@ public:
 
         // FIXME: Consider to remove this somehow
         RefPtr<FileDescription> file_description(int fd) const;
-        int fd_flags(int fd) const;
 
     private:
         FileDescriptions() = default;

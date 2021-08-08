@@ -433,16 +433,6 @@ RefPtr<FileDescription> Process::FileDescriptions::file_description(int fd) cons
     return nullptr;
 }
 
-int Process::FileDescriptions::fd_flags(int fd) const
-{
-    ScopedSpinLock lock(m_fds_lock);
-    if (fd < 0)
-        return -1;
-    if (static_cast<size_t>(fd) < m_fds_metadatas.size())
-        return m_fds_metadatas[fd].flags();
-    return -1;
-}
-
 void Process::FileDescriptions::enumerate(Function<void(const FileDescriptionAndFlags&)> callback) const
 {
     ScopedSpinLock lock(m_fds_lock);
