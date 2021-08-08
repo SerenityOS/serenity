@@ -34,6 +34,7 @@ public:
         }
         VERIFY_NOT_REACHED();
     }
+
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
         auto& cursor = m_cursors[index.row()];
@@ -51,7 +52,8 @@ public:
         }
         return {};
     }
-    virtual void update()
+
+    virtual void invalidate() override
     {
         m_cursors.clear();
 
@@ -69,7 +71,7 @@ public:
             m_cursors.append(move(cursor));
         }
 
-        did_update();
+        Model::invalidate();
     }
 
 private:
@@ -110,6 +112,7 @@ public:
         }
         VERIFY_NOT_REACHED();
     }
+
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
     {
         auto& icon_set = m_icon_sets[index.row()];
@@ -131,7 +134,8 @@ public:
         }
         return {};
     }
-    virtual void update()
+
+    virtual void invalidate() override
     {
         m_icon_sets.clear();
 
@@ -171,7 +175,7 @@ public:
             continue;
         }
 
-        did_update();
+        Model::invalidate();
     }
 
 private:
