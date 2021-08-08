@@ -279,7 +279,7 @@ static size_t print_name(const struct stat& st, const String& name, const char* 
 static bool print_filesystem_object(const String& path, const String& name, const struct stat& st)
 {
     if (flag_show_inode)
-        printf("%08u ", st.st_ino);
+        printf("%s ", String::formatted("{}", st.st_ino).characters());
 
     if (S_ISDIR(st.st_mode))
         printf("d");
@@ -445,7 +445,7 @@ static bool print_filesystem_object_short(const char* path, const char* name, si
     }
 
     if (flag_show_inode)
-        printf("%08u ", st.st_ino);
+        printf("%s ", String::formatted("{}", st.st_ino).characters());
 
     *nprinted = print_name(st, name, nullptr, path);
     return true;

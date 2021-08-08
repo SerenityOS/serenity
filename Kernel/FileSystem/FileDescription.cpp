@@ -261,7 +261,7 @@ KResultOr<size_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_bu
                 return false;
             }
         }
-        stream << (u32)entry.inode.index().value();
+        stream << (u64)entry.inode.index().value();
         stream << m_inode->fs().internal_file_type_to_directory_entry_type(entry);
         stream << (u32)entry.name.length();
         stream << entry.name.bytes();
