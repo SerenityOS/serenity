@@ -27,11 +27,6 @@
 #    pragma GCC optimize("O3")
 #endif
 
-extern bool g_dump_profile;
-extern unsigned g_profile_instruction_interval;
-extern Optional<OutputFileStream> g_profile_stream;
-extern bool g_in_region_of_interest;
-
 namespace UserspaceEmulator {
 
 static constexpr u32 stack_location = 0x10000000;
@@ -224,9 +219,9 @@ int Emulator::exec()
 
     constexpr bool trace = false;
 
-    size_t instructions_until_next_profile_dump = g_profile_instruction_interval;
-    if (g_dump_profile && m_loader_text_size.has_value())
-        emit_profile_event(*g_profile_stream, "mmap", String::formatted(R"("ptr": {}, "size": {}, "name": "/usr/lib/Loader.so")", *m_loader_text_base, *m_loader_text_size));
+    size_t instructions_until_next_profile_dump = profile_instruction_interval();
+    if (is_profiling() && m_loader_text_size.has_value())
+        emit_profile_event(profile_stream(), "mmap", String::formatted(R"("ptr": {}, "size": {}, "name": "/usr/lib/Loader.so")", *m_loader_text_base, *m_loader_text_size));
 
     while (!m_shutdown) {
         if (m_steps_til_pause) [[likely]] {
@@ -239,10 +234,10 @@ int Emulator::exec()
 
             (m_cpu.*insn.handler())(insn);
 
-            if (g_dump_profile) {
+            if (is_profiling()) {
                 if (instructions_until_next_profile_dump == 0) {
-                    instructions_until_next_profile_dump = g_profile_instruction_interval;
-                    emit_profile_sample(*g_profile_stream);
+                    instructions_until_next_profile_dump = profile_instruction_interval();
+                    emit_profile_sample(profile_stream());
                 } else {
                     --instructions_until_next_profile_dump;
                 }
@@ -474,7 +469,7 @@ void Emulator::dump_backtrace()
 
 void Emulator::emit_profile_sample(AK::OutputStream& output)
 {
-    if (!g_in_region_of_interest)
+    if (!is_in_region_of_interest())
         return;
     StringBuilder builder;
     timeval tv {};
