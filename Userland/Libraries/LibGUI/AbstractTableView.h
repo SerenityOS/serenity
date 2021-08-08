@@ -39,6 +39,8 @@ public:
     int column_width(int column) const;
     void set_column_width(int column, int width);
     void set_default_column_width(int column, int width);
+    virtual int minimum_column_width(int column);
+    virtual int minimum_row_height(int row);
 
     Gfx::TextAlignment column_header_alignment(int column) const;
     void set_column_header_alignment(int column, Gfx::TextAlignment);
