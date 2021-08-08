@@ -220,6 +220,12 @@ if (NOT APPLE)
     target_link_libraries(LagomCore crypt) # Core::Account uses crypt() but it's not in libcrypt on macOS
 endif()
 
+# Code Generators and other host tools
+# We need to make sure not to build code generators for Fuzzer builds, as they already have their own main.cpp
+if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
+    add_subdirectory(Tools)
+endif()
+
 if (BUILD_LAGOM)
     # Lagom Libraries
 
@@ -364,13 +370,8 @@ if (BUILD_LAGOM)
     )
 
     # Unicode
-    # We need to make sure not to build code generators for Fuzzer builds, as they already have their own main.cpp
+    # Don't include UnicodeData for Fuzzer builds, we didn't build the CodeGenerators
     if (NOT ENABLE_OSS_FUZZ AND NOT ENABLE_FUZZER_SANITIZER)
-        # FIXME: Make this logic smarter in 4594
-        if (NOT CMAKE_SOURCE_DIR STREQUAL SERENITY_PROJECT_ROOT)
-            set(write_if_different ${CMAKE_CURRENT_SOURCE_DIR}/../write-only-on-difference.sh)
-            add_subdirectory(../../Userland/Libraries/LibUnicode/CodeGenerators ${CMAKE_CURRENT_BINARY_DIR}/LibUnicode/CodeGenerators)
-        endif()
         include(${SERENITY_PROJECT_ROOT}/Meta/CMake/unicode_data.cmake)
     else()
         set(ENABLE_UNICODE_DATABASE_DOWNLOAD OFF)
