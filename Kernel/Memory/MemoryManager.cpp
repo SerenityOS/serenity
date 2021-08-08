@@ -105,8 +105,8 @@ UNMAP_AFTER_INIT void MemoryManager::protect_kernel_image()
 
 UNMAP_AFTER_INIT void MemoryManager::protect_readonly_after_init_memory()
 {
-    ScopedSpinLock mm_lock(s_mm_lock);
     ScopedSpinLock page_lock(kernel_page_directory().get_lock());
+    ScopedSpinLock mm_lock(s_mm_lock);
     // Disable writing to the .ro_after_init section
     for (auto i = (FlatPtr)&start_of_ro_after_init; i < (FlatPtr)&end_of_ro_after_init; i += PAGE_SIZE) {
         auto& pte = *ensure_pte(kernel_page_directory(), VirtualAddress(i));
@@ -117,8 +117,8 @@ UNMAP_AFTER_INIT void MemoryManager::protect_readonly_after_init_memory()
 
 void MemoryManager::unmap_text_after_init()
 {
-    ScopedSpinLock mm_lock(s_mm_lock);
     ScopedSpinLock page_lock(kernel_page_directory().get_lock());
+    ScopedSpinLock mm_lock(s_mm_lock);
 
     auto start = page_round_down((FlatPtr)&start_of_unmap_after_init);
     auto end = page_round_up((FlatPtr)&end_of_unmap_after_init);
@@ -703,7 +703,7 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
 OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
-    ScopedSpinLock lock(s_mm_lock);
+    ScopedSpinLock lock(kernel_page_directory().get_lock());
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
         return {};
@@ -721,7 +721,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, StringView nam
     auto vm_object = AnonymousVMObject::try_create_with_size(size, strategy);
     if (!vm_object)
         return {};
-    ScopedSpinLock lock(s_mm_lock);
+    ScopedSpinLock lock(kernel_page_directory().get_lock());
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
         return {};
@@ -734,7 +734,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
     if (!vm_object)
         return {};
     VERIFY(!(size % PAGE_SIZE));
-    ScopedSpinLock lock(s_mm_lock);
+    ScopedSpinLock lock(kernel_page_directory().get_lock());
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
         return {};
@@ -743,7 +743,6 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
-    ScopedSpinLock lock(s_mm_lock);
     auto region = Region::try_create_kernel_only(range, vmobject, 0, KString::try_create(name), access, cacheable);
     if (region)
         region->map(kernel_page_directory());
@@ -753,7 +752,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
-    ScopedSpinLock lock(s_mm_lock);
+    ScopedSpinLock lock(kernel_page_directory().get_lock());
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
         return {};
@@ -1109,8 +1108,8 @@ void MemoryManager::dump_kernel_regions()
 
 void MemoryManager::set_page_writable_direct(VirtualAddress vaddr, bool writable)
 {
-    ScopedSpinLock lock(s_mm_lock);
     ScopedSpinLock page_lock(kernel_page_directory().get_lock());
+    ScopedSpinLock lock(s_mm_lock);
     auto* pte = ensure_pte(kernel_page_directory(), vaddr);
     VERIFY(pte);
     if (pte->is_writable() == writable)
