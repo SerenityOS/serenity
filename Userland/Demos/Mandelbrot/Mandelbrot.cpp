@@ -61,7 +61,23 @@ public:
             m_x_end - delta.x() * relative_width_pixel,
             m_y_start - delta.y() * relative_height_pixel,
             m_y_end - delta.y() * relative_height_pixel);
-        calculate();
+
+        Gfx::IntRect horizontal_missing, vertical_missing;
+        if (delta.y() >= 0) {
+            horizontal_missing = { 0, 0, m_bitmap->width(), delta.y() };
+        } else {
+            horizontal_missing = { 0, m_bitmap->height() + delta.y(), m_bitmap->width(), -delta.y() };
+        }
+
+        if (delta.x() >= 0) {
+            vertical_missing = { 0, 0, delta.x(), m_bitmap->height() };
+        } else {
+            vertical_missing = { m_bitmap->width() + delta.x(), 0, -delta.x(), m_bitmap->height() };
+        }
+
+        move_contents_by(delta);
+        calculate_rect(horizontal_missing);
+        calculate_rect(vertical_missing);
     }
 
     double mandelbrot(double px, double py, i32 max_iterations)
@@ -116,8 +132,18 @@ public:
     {
         VERIFY(m_bitmap);
 
-        for (int py = 0; py < m_bitmap->height(); py++)
-            for (int px = 0; px < m_bitmap->width(); px++)
+        calculate_rect(m_bitmap->rect(), max_iterations);
+    }
+
+    void calculate_rect(Gfx::IntRect const& rect, int max_iterations = 100)
+    {
+        VERIFY(m_bitmap);
+
+        if (rect.is_empty())
+            return;
+
+        for (int py = rect.top(); py <= rect.bottom(); py++)
+            for (int px = rect.left(); px <= rect.right(); px++)
                 calculate_pixel(px, py, max_iterations);
     }
 
@@ -147,6 +173,34 @@ private:
         auto aspect_corrected_y_length = (m_x_end - m_x_start) * m_bitmap->height() / m_bitmap->width();
         m_y_start = y_mid - aspect_corrected_y_length / 2;
         m_y_end = y_mid + aspect_corrected_y_length / 2;
+    }
+
+    void move_contents_by(Gfx::IntPoint const& delta)
+    {
+        // If we're moving down we paint upwards, else we paint downwards, to
+        // avoid overwriting.
+        if (delta.y() >= 0) {
+            for (int row = m_bitmap->physical_height() - 1; row >= delta.y(); row--)
+                move_row(row - delta.y(), row, delta.x());
+        } else {
+            for (int row = 0; row < m_bitmap->physical_height() + delta.y(); row++)
+                move_row(row - delta.y(), row, delta.x());
+        }
+    }
+
+    void move_row(int from, int to, int x_delta)
+    {
+        // If we're moving right we paint RTL, else we paint LTR, to avoid
+        // overwriting.
+        if (x_delta >= 0) {
+            for (int column = m_bitmap->physical_width() - 1; column >= x_delta; column--) {
+                m_bitmap->set_pixel(column, to, m_bitmap->get_pixel(column - x_delta, from));
+            }
+        } else {
+            for (int column = 0; column < m_bitmap->physical_width() + x_delta; column++) {
+                m_bitmap->set_pixel(column, to, m_bitmap->get_pixel(column - x_delta, from));
+            }
+        }
     }
 };
 
