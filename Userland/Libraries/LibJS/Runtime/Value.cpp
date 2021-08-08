@@ -1110,7 +1110,7 @@ Value add(GlobalObject& global_object, Value lhs, Value rhs)
         StringBuilder builder(lhs_string.length() + rhs_string.length());
         builder.append(lhs_string);
         builder.append(rhs_string);
-        return js_string(vm.heap(), builder.to_string());
+        return js_string(vm, builder.to_string());
     }
 
     auto lhs_numeric = lhs_primitive.to_numeric(global_object);

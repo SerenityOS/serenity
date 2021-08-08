@@ -30,7 +30,7 @@ void ZonedDateTimePrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
 
     // 6.3.2 Temporal.ZonedDateTime.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.ZonedDateTime"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.ZonedDateTime"), Attribute::Configurable);
 
     define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.timeZone, time_zone_getter, {}, Attribute::Configurable);

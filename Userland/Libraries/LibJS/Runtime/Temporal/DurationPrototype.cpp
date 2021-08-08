@@ -25,7 +25,7 @@ void DurationPrototype::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
 
     // 7.3.2 Temporal.Duration.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Temporal.Duration"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.Duration"), Attribute::Configurable);
 
     define_native_accessor(vm.names.years, years_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.months, months_getter, {}, Attribute::Configurable);

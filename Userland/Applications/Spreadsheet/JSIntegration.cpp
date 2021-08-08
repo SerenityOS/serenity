@@ -192,9 +192,9 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
         return JS::js_undefined();
 
     if (cell->kind() == Spreadsheet::Cell::Kind::Formula)
-        return JS::js_string(vm.heap(), String::formatted("={}", cell->data()));
+        return JS::js_string(vm, String::formatted("={}", cell->data()));
 
-    return JS::js_string(vm.heap(), cell->data());
+    return JS::js_string(vm, cell->data());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
