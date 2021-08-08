@@ -154,7 +154,7 @@ class Processor {
     static void smp_return_to_pool(ProcessorMessage& msg);
     static ProcessorMessage& smp_get_from_pool();
     static void smp_cleanup_message(ProcessorMessage& msg);
-    bool smp_queue_message(ProcessorMessage& msg);
+    bool smp_enqueue_message(ProcessorMessage&);
     static void smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async);
     static void smp_broadcast_message(ProcessorMessage& msg);
     static void smp_broadcast_wait_sync(ProcessorMessage& msg);
