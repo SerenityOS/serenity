@@ -29,7 +29,7 @@ bool ConsoleManagement::is_initialized()
         return false;
     if (s_the->m_consoles.is_empty())
         return false;
-    if (s_the->m_active_console)
+    if (!s_the->m_active_console)
         return false;
     return true;
 }
