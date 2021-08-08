@@ -183,7 +183,6 @@ public:
     static void register_new(Process&);
     ~Process();
 
-    static Vector<ProcessID> all_pids();
     static NonnullRefPtrVector<Process> all_processes();
 
     template<typename EntryFunction>
