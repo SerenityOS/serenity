@@ -247,7 +247,6 @@ public:
         requires(!(IsTriviallyMoveConstructible<Ts> && ...))
 #endif
         : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
-        , m_data {}
         , m_index(old.m_index)
     {
         Helper::move_(old.m_index, old.m_data, m_data);
