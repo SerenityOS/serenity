@@ -26,7 +26,7 @@ static int stat(const char* file, bool should_follow_links)
         return 1;
     }
     printf("    File: %s\n", file);
-    printf("   Inode: %u\n", st.st_ino);
+    printf("   Inode: %s\n", String::formatted("{}", st.st_ino).characters());
     if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
         printf("  Device: %u,%u\n", major(st.st_rdev), minor(st.st_rdev));
     else
