@@ -175,6 +175,9 @@ void SortingProxyModel::sort_mapping(Mapping& mapping, int column, SortOrder sor
     auto old_source_rows = mapping.source_rows;
 
     int row_count = source().row_count(mapping.source_parent);
+    mapping.source_rows.resize(row_count);
+    mapping.proxy_rows.resize(row_count);
+
     for (int i = 0; i < row_count; ++i)
         mapping.source_rows[i] = i;
 
