@@ -50,7 +50,7 @@ public:
     static Thread& pull_next_runnable_thread();
     static Thread* peek_next_runnable_thread();
     static bool dequeue_runnable_thread(Thread&, bool = false);
-    static void queue_runnable_thread(Thread&);
+    static void enqueue_runnable_thread(Thread&);
     static void dump_scheduler_state(bool = false);
     static bool is_initialized();
     static TotalTimeScheduled get_total_time_scheduled();
