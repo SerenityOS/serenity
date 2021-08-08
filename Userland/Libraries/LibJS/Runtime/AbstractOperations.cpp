@@ -308,7 +308,7 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyName const& 
     return true;
 }
 
-// 10.1.14 GetPrototypeFromConstructor ( constructor, intrinsicDefaultProto )
+// 10.1.14 GetPrototypeFromConstructor ( constructor, intrinsicDefaultProto ), https://tc39.es/ecma262/#sec-getprototypefromconstructor
 Object* get_prototype_from_constructor(GlobalObject& global_object, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)())
 {
     auto& vm = global_object.vm();
@@ -357,7 +357,7 @@ Object* get_super_constructor(VM& vm)
     return super_constructor;
 }
 
-// 13.3.7.3 MakeSuperPropertyReference ( actualThis, propertyKey, strict )
+// 13.3.7.3 MakeSuperPropertyReference ( actualThis, propertyKey, strict ), https://tc39.es/ecma262/#sec-makesuperpropertyreference
 Reference make_super_property_reference(GlobalObject& global_object, Value actual_this, StringOrSymbol const& property_key, bool strict)
 {
     auto& vm = global_object.vm();

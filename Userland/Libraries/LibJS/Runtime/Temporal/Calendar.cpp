@@ -59,7 +59,7 @@ bool is_builtin_calendar(String const& identifier)
     return true;
 }
 
-// 12.1.3 GetBuiltinCalendar ( id )
+// 12.1.3 GetBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-getbuiltincalendar
 Calendar* get_builtin_calendar(GlobalObject& global_object, String const& identifier)
 {
     auto& vm = global_object.vm();

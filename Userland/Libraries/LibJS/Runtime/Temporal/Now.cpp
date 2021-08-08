@@ -226,7 +226,7 @@ PlainDateTime* system_date_time(GlobalObject& global_object, Value temporal_time
     return builtin_time_zone_get_plain_date_time_for(global_object, time_zone, *instant, *calendar);
 }
 
-// 2.3.5 SystemZonedDateTime ( temporalTimeZoneLike, calendarLike )
+// 2.3.5 SystemZonedDateTime ( temporalTimeZoneLike, calendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-systemzoneddatetime
 ZonedDateTime* system_zoned_date_time(GlobalObject& global_object, Value temporal_time_zone_like, Value calendar_like)
 {
     auto& vm = global_object.vm();
