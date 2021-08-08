@@ -584,11 +584,7 @@ private:
 
 public:
     class FileDescriptionAndFlags {
-        friend class FileDescriptionRegistrar;
-
     public:
-        operator bool() const { return !!m_description; }
-
         bool is_valid() const { return !m_description.is_null(); }
         bool is_allocated() const { return m_is_allocated; }
         void allocate()
