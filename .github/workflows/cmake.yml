@@ -126,13 +126,13 @@ jobs:
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
           path: ${{ github.workspace }}/Build/UCD
-          key: UnicodeData-${{ hashFiles('Userland/Libraries/LibUnicode/unicode_data.cmake') }}
+          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
       - name: UnicodeLocale Cache
         # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
           path: ${{ github.workspace }}/Build/CLDR
-          key: UnicodeLocale-${{ hashFiles('Userland/Libraries/LibUnicode/unicode_data.cmake') }}
+          key: UnicodeLocale-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
       - name: Create build environment with extra debug options
         working-directory: ${{ github.workspace }}/Build
         # Build the entire project with all available debug options turned on, to prevent code rot.

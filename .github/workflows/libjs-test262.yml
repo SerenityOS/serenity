@@ -71,7 +71,7 @@ jobs:
         uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
         with:
           path: ${{ github.workspace }}/libjs-test262/Build/UCD
-          key: UnicodeData-${{ hashFiles('Userland/Libraries/LibUnicode/unicode_data.cmake') }}
+          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
 
       - name: Build libjs-test262-runner and test-js
         working-directory: libjs-test262
