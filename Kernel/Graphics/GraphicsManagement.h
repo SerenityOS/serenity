@@ -49,7 +49,6 @@ public:
 private:
     bool determine_and_initialize_graphics_device(const PCI::Address& address, PCI::ID id);
     NonnullRefPtrVector<GraphicsDevice> m_graphics_devices;
-    NonnullOwnPtr<Memory::Region> m_vga_font_region;
     RefPtr<Graphics::Console> m_console;
 
     // Note: there could be multiple VGA adapters, but only one can operate in VGA mode
