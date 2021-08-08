@@ -1120,7 +1120,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
     }
 
     if (m_state == Runnable) {
-        Scheduler::queue_runnable_thread(*this);
+        Scheduler::enqueue_runnable_thread(*this);
         Processor::smp_wake_n_idle_processors(1);
     } else if (m_state == Stopped) {
         // We don't want to restore to Running state, only Runnable!

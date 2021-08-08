@@ -167,7 +167,7 @@ bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
     });
 }
 
-void Scheduler::queue_runnable_thread(Thread& thread)
+void Scheduler::enqueue_runnable_thread(Thread& thread)
 {
     VERIFY(g_scheduler_lock.own_lock());
     if (thread.is_idle_thread())
