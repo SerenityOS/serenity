@@ -21,173 +21,169 @@ jobs:
         debug-options: ['ALL_DEBUG', 'NORMAL_DEBUG']
         os: [ubuntu-20.04]
         arch: ['i686', 'x86_64']
-        compiler: ['GCC', 'Clang']
         # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
         ccache-mark: [0]
         exclude:
           # We currently manually disable the ALL_DEBUG build on x86_64 for sake of saving CI time, as it is not our main target right now
           - debug-options: 'ALL_DEBUG'
             arch: 'x86_64'
-          - debug-options: 'ALL_DEBUG'
-            compiler: 'Clang'
 
     steps:
-    - uses: actions/checkout@v2
-    # Set default Python to python 3.x, and set Python path such that pip install works properly
-    - uses: actions/setup-python@v2
+      - uses: actions/checkout@v2
+      # Set default Python to python 3.x, and set Python path such that pip install works properly
+      - uses: actions/setup-python@v2
 
-    # === OS SETUP ===
+      # === OS SETUP ===
 
-    # Do we need to update the package cache first?
-    # sudo apt-get update -qq
-    - name: "Install Ubuntu dependencies"
-      # These packages are already part of the ubuntu-20.04 image:
-      # cmake clang-format-11 gcc-10 g++-10 libstdc++-10-dev libgmp-dev npm shellcheck
-      # Packages below aren't.
-      #
-      # We add the canonical-server/server-backports PPA to get updated QEMU releases without having to manage
-      #    yet another cache in github actions
-      run: |
-        sudo add-apt-repository ppa:canonical-server/server-backports
-        sudo apt-get update
-        sudo apt-get install libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 ccache
-    - name: Install JS dependencies
-      run: sudo npm install -g prettier@2.2.1
-    - name: Install Python dependencies
-      # The setup-python action set default python to python3.x. Note that we are not using system python here.
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 requests
-    - name: Check versions
-      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version
+      # Do we need to update the package cache first?
+      # sudo apt-get update -qq
+      - name: "Install Ubuntu dependencies"
+        # These packages are already part of the ubuntu-20.04 image:
+        # cmake clang-format-11 gcc-10 g++-10 libstdc++-10-dev libgmp-dev npm shellcheck
+        # Packages below aren't.
+        #
+        # We add the canonical-server/server-backports PPA to get updated QEMU releases without having to manage
+        #    yet another cache in github actions
+        run: |
+          sudo add-apt-repository ppa:canonical-server/server-backports
+          sudo apt-get update
+          sudo apt-get install libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 ccache
+      - name: Install JS dependencies
+        run: sudo npm install -g prettier@2.2.1
+      - name: Install Python dependencies
+        # The setup-python action set default python to python3.x. Note that we are not using system python here.
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 requests
+      - name: Check versions
+        run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version
 
-    # === PREPARE FOR BUILDING ===
+      # === PREPARE FOR BUILDING ===
 
-    - name: Lint (Phase 1/2)
-      run: ${{ github.workspace }}/Meta/lint-ci.sh
-    - name: Prepare useful stamps
-      id: stamps
-      shell: cmake -P {0}
-      run: |
-        string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
-        # Output everything twice to make it visible both in the logs
-        # *and* as actual output variable, in this order.
-        message("  set-output name=time::${current_date}")
-        message("::set-output name=time::${current_date}")
-        message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
-        message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
-    - name: Toolchain cache
-      # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-      uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
-      env:
-        CACHE_SKIP_SAVE: ${{ github.event_name == 'pull_request' }}
-      with:
-        path: ${{ github.workspace }}/Toolchain/Cache/
-        # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
-        # This is wrong, and causes more Toolchain rebuilds than necessary.
-        # However, we want to avoid false cache hits at all costs.
-        key: ${{ runner.os }}-toolchain-${{ matrix.arch }}-${{ matrix.compiler }}-${{ steps.stamps.outputs.libc_headers }}
-    - name: Restore or regenerate GCC Toolchain
-      run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
-      if: ${{ matrix.compiler == 'GCC' }}
-    - name: Restore or regenerate Clang Toolchain
-      run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildClang.sh
-      if: ${{ matrix.compiler == 'Clang' }}
-    - name: ccache(1) cache
-      # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
-      # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-      uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
-      env:
-        CACHE_SKIP_SAVE: ${{ github.event_name == 'pull_request' }}
-      with:
-        path: /home/runner/.ccache
-        # If you're here because ccache broke (it never should), increment matrix.ccache-mark.
-        # We want to always reuse the last cache, but upload a new one.
-        # This is achieved by using the "prefix-timestamp" format,
-        # and permitting the restore-key "prefix-" without specifying a timestamp.
-        # For this trick to work, the timestamp *must* come last, and it *must* be missing in 'restore-keys'.
-        key: ${{ runner.os }}-ccache-${{ matrix.arch }}-${{ matrix.compiler }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-time${{ steps.stamps.outputs.time }}
-        # IMPORTANT: Keep these two in sync!
-        restore-keys: |
-          ${{ runner.os }}-ccache-${{ matrix.arch }}-${{ matrix.compiler }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-
-    - name: Show ccache stats before build and configure
-      run: |
-        # We only have 5 GiB of cache available *in total*. Beyond that, GitHub deletes caches.
-        # Currently, we use about 130 MB for the two toolchains (i686 & x86_64), and four ccache caches:
-        # Two with ALL_DEBUG (i686 & x86_64) and two with NORMAL_DEBUG (i686 & x86_64).
-        # Therefore, using 1.25 GB or more per cache causes disaster.
-        # Building from scratch fills the ccache cache from 0 to about 0.7 GB, and after compression it comes out to
-        # about 0.25 GB, so 1.5 GB (0.5GB after compression) should be plenty, all while comfortly fitting in the cache.
-        ccache -M 1500M
-        ccache -s
-    - name: Create build directory
-      run: |
-        mkdir -p ${{ github.workspace }}/Build
-        mkdir -p ${{ github.workspace }}/Build/UCD
-    - name: UnicodeData cache
-      # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-      uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
-      with:
-        path: ${{ github.workspace }}/Build/UCD
-        key: UnicodeData-${{ hashFiles('Userland/Libraries/LibUnicode/unicode_data.cmake') }}
-    - name: Create build environment with extra debug options
-      working-directory: ${{ github.workspace }}/Build
-      # Build the entire project with all available debug options turned on, to prevent code rot.
-      # However, it is unweildy and slow to run tests with them enabled, so we will build twice.
-      run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DUSE_CLANG_TOOLCHAIN=${{ matrix.compiler == 'Clang' }} -DBUILD_LAGOM=ON -DENABLE_ALL_DEBUG_FACILITIES=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
-      if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
-    - name: Create build environment
-      working-directory: ${{ github.workspace }}/Build
-      # Note that we do not set BUILD_LAGOM for the normal debug build
-      # We build and run the Lagom tests in a separate job, and sanitizer builds take a good while longer than non-sanitized.
-      run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DUSE_CLANG_TOOLCHAIN=${{ matrix.compiler == 'Clang' }} -DENABLE_UNDEFINED_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
-      if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
+      - name: Lint (Phase 1/2)
+        run: ${{ github.workspace }}/Meta/lint-ci.sh
+      - name: Prepare useful stamps
+        id: stamps
+        shell: cmake -P {0}
+        run: |
+          string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
+          # Output everything twice to make it visible both in the logs
+          # *and* as actual output variable, in this order.
+          message("  set-output name=time::${current_date}")
+          message("::set-output name=time::${current_date}")
+          message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
+          message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
 
-    # === ACTUALLY BUILD ===
+      - name: Toolchain cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        env:
+          CACHE_SKIP_SAVE: ${{ github.event_name == 'pull_request' }}
+        with:
+          path: ${{ github.workspace }}/Toolchain/Cache/
+          # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
+          # This is wrong, and causes more Toolchain rebuilds than necessary.
+          # However, we want to avoid false cache hits at all costs.
+          key: ${{ runner.os }}-toolchain-${{ matrix.arch }}-${{ steps.stamps.outputs.libc_headers }}
 
-    - name: Build Serenity and Tests
-      working-directory: ${{ github.workspace }}/Build
-      run: cmake --build .
-    - name: Show ccache stats after build
-      run: ccache -s
-    - name: Lint (Phase 2/2)
-      working-directory: ${{ github.workspace }}/Meta
-      run: ./check-symbols.sh
+      - name: Restore or regenerate Toolchain
+        run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
 
-    - name: Create Serenity Rootfs
-      if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
-      working-directory: ${{ github.workspace }}/Build
-      run: ninja install && ninja image
+      - name: ccache(1) cache
+        # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        env:
+          CACHE_SKIP_SAVE: ${{ github.event_name == 'pull_request' }}
+        with:
+          path: /home/runner/.ccache
+          # If you're here because ccache broke (it never should), increment matrix.ccache-mark.
+          # We want to always reuse the last cache, but upload a new one.
+          # This is achieved by using the "prefix-timestamp" format,
+          # and permitting the restore-key "prefix-" without specifying a timestamp.
+          # For this trick to work, the timestamp *must* come last, and it *must* be missing in 'restore-keys'.
+          key: ${{ runner.os }}-ccache-${{ matrix.arch }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-time${{ steps.stamps.outputs.time }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ matrix.arch }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-
 
-    - name: Run On-Target Tests
-      if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
-      working-directory: ${{ github.workspace }}/Build
-      env:
-        SERENITY_QEMU_CPU: "max,vmx=off"
-        SERENITY_KERNEL_CMDLINE: "boot_mode=self-test"
-        SERENITY_RUN: "ci"
-      run: |
-        echo "::group::ninja run # Qemu output"
-        ninja run
-        echo "::endgroup::"
-        echo "::group::Verify Output File"
-        mkdir fsmount
-        sudo mount -t ext2 -o loop,rw _disk_image fsmount
-        echo "Results: "
-        sudo cat fsmount/home/anon/test-results.log
-        if ! sudo grep -q "Failed: 0" fsmount/home/anon/test-results.log
-        then
-          echo "::error :^( Tests failed, failing job"
-          exit 1
-        fi
-        echo "::endgroup::"
-      timeout-minutes: 60
+      - name: Show ccache stats before build and configure
+        run: |
+          # We only have 5 GiB of cache available *in total*. Beyond that, GitHub deletes caches.
+          # Currently, we use about 130 MB for the two toolchains (i686 & x86_64), and four ccache caches:
+          # Two with ALL_DEBUG (i686 & x86_64) and two with NORMAL_DEBUG (i686 & x86_64).
+          # Therefore, using 1.25 GB or more per cache causes disaster.
+          # Building from scratch fills the ccache cache from 0 to about 0.7 GB, and after compression it comes out to
+          # about 0.25 GB, so 1.5 GB (0.5GB after compression) should be plenty, all while comfortly fitting in the cache.
+          ccache -M 1500M
+          ccache -s
+      - name: Create build directory
+        run: |
+          mkdir -p ${{ github.workspace }}/Build
+          mkdir -p ${{ github.workspace }}/Build/UCD
+      - name: UnicodeData cache
+        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/UCD
+          key: UnicodeData-${{ hashFiles('Userland/Libraries/LibUnicode/unicode_data.cmake') }}
+      - name: Create build environment with extra debug options
+        working-directory: ${{ github.workspace }}/Build
+        # Build the entire project with all available debug options turned on, to prevent code rot.
+        # However, it is unweildy and slow to run tests with them enabled, so we will build twice.
+        run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DBUILD_LAGOM=ON -DENABLE_ALL_DEBUG_FACILITIES=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+        if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
+      - name: Create build environment
+        working-directory: ${{ github.workspace }}/Build
+        # Note that we do not set BUILD_LAGOM for the normal debug build
+        # We build and run the Lagom tests in a separate job, and sanitizer builds take a good while longer than non-sanitized.
+        run: cmake .. -GNinja -DSERENITY_ARCH=${{ matrix.arch }} -DENABLE_UNDEFINED_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DENABLE_USB_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+        if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
 
-    - name: Print Target Logs
-      # Extremely useful if Serenity hangs trying to run one of the tests
-      if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
-      working-directory: ${{ github.workspace }}/Build
-      run: '[ ! -e debug.log ] || cat debug.log'
+      # === ACTUALLY BUILD ===
+
+      - name: Build Serenity and Tests
+        working-directory: ${{ github.workspace }}/Build
+        run: cmake --build .
+      - name: Show ccache stats after build
+        run: ccache -s
+      - name: Lint (Phase 2/2)
+        working-directory: ${{ github.workspace }}/Meta
+        run: ./check-symbols.sh
+
+      - name: Create Serenity Rootfs
+        if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
+        working-directory: ${{ github.workspace }}/Build
+        run: ninja install && ninja image
+
+      - name: Run On-Target Tests
+        if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
+        working-directory: ${{ github.workspace }}/Build
+        env:
+          SERENITY_QEMU_CPU: "max,vmx=off"
+          SERENITY_KERNEL_CMDLINE: "boot_mode=self-test"
+          SERENITY_RUN: "ci"
+        run: |
+          echo "::group::ninja run # Qemu output"
+          ninja run
+          echo "::endgroup::"
+          echo "::group::Verify Output File"
+          mkdir fsmount
+          sudo mount -t ext2 -o loop,rw _disk_image fsmount
+          echo "Results: "
+          sudo cat fsmount/home/anon/test-results.log
+          if ! sudo grep -q "Failed: 0" fsmount/home/anon/test-results.log
+          then
+            echo "::error :^( Tests failed, failing job"
+            exit 1
+          fi
+          echo "::endgroup::"
+        timeout-minutes: 60
+
+      - name: Print Target Logs
+        # Extremely useful if Serenity hangs trying to run one of the tests
+        if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
+        working-directory: ${{ github.workspace }}/Build
+        run: '[ ! -e debug.log ] || cat debug.log'
 
   build_and_test_lagom:
     runs-on: ${{ matrix.os }}
