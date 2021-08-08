@@ -738,4 +738,20 @@ Gfx::IntRect TreeView::content_rect(ModelIndex const& index) const
     return found_rect;
 }
 
+int TreeView::minimum_column_width(int column)
+{
+    if (column != model()->tree_column()) {
+        return 2;
+    }
+
+    int maximum_indent_level = 1;
+
+    traverse_in_paint_order([&](ModelIndex const&, Gfx::IntRect const&, Gfx::IntRect const&, int indent_level) {
+        maximum_indent_level = max(maximum_indent_level, indent_level);
+        return IterationDecision::Continue;
+    });
+
+    return indent_width_in_pixels() * maximum_indent_level + icon_size() + icon_spacing() + 2;
+}
+
 }
