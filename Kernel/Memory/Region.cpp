@@ -401,7 +401,16 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
 
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
     auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[page_index_in_vmobject];
-    VERIFY(vmobject_physical_page_entry.is_null());
+
+    {
+        ScopedSpinLock locker(inode_vmobject.m_lock);
+        if (!vmobject_physical_page_entry.is_null()) {
+            dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_fault: Page faulted in by someone else before reading, remapping.");
+            if (!remap_vmobject_page(page_index_in_vmobject))
+                return PageFaultResponse::OutOfMemory;
+            return PageFaultResponse::Continue;
+        }
+    }
 
     dbgln_if(PAGE_FAULT_DEBUG, "Inode fault in {} page index: {}", name(), page_index_in_region);
 
