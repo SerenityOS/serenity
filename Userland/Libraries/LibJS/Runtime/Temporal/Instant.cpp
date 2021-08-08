@@ -145,7 +145,7 @@ BigInt* parse_temporal_instant(GlobalObject& global_object, String const& iso_st
     return js_bigint(vm, utc->big_integer().minus(Crypto::SignedBigInteger::create_from(offset_nanoseconds)));
 }
 
-// 8.5.5 CompareEpochNanoseconds ( epochNanosecondsOne, epochNanosecondsTwo )
+// 8.5.5 CompareEpochNanoseconds ( epochNanosecondsOne, epochNanosecondsTwo ), https://tc39.es/proposal-temporal/#sec-temporal-compareepochnanoseconds
 i32 compare_epoch_nanoseconds(BigInt const& epoch_nanoseconds_one, BigInt const& epoch_nanoseconds_two)
 {
     // 1. If epochNanosecondsOne > epochNanosecondsTwo, return 1.
