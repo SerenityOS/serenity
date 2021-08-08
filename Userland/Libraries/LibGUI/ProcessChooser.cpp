@@ -35,10 +35,13 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     widget.set_layout<GUI::VerticalBoxLayout>();
 
     m_table_view = widget.add<GUI::TableView>();
-    auto sorting_model = GUI::SortingProxyModel::create(RunningProcessesModel::create());
+    auto process_model = RunningProcessesModel::create();
+    auto sorting_model = GUI::SortingProxyModel::create(process_model);
     sorting_model->set_sort_role(GUI::ModelRole::Display);
     m_table_view->set_model(sorting_model);
     m_table_view->set_key_column_and_sort_order(RunningProcessesModel::Column::PID, GUI::SortOrder::Descending);
+
+    m_process_model = process_model;
 
     m_table_view->on_activation = [this](const ModelIndex& index) { set_pid_from_index_and_close(index); };
 
@@ -65,7 +68,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
         done(ExecCancel);
     };
 
-    m_table_view->model()->invalidate();
+    m_process_model->update();
 
     m_refresh_timer = add<Core::Timer>();
 
@@ -77,7 +80,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
             previous_selected_pid = pid_as_variant.as_i32();
         }
 
-        m_table_view->model()->invalidate();
+        m_process_model->update();
 
         if (previous_selected_pid == -1) {
             return;

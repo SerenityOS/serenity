@@ -8,6 +8,7 @@
 
 #include <LibCore/Timer.h>
 #include <LibGUI/Dialog.h>
+#include <LibGUI/RunningProcessesModel.h>
 
 namespace GUI {
 
@@ -30,6 +31,7 @@ private:
     String m_button_label;
     RefPtr<Gfx::Bitmap> m_window_icon;
     RefPtr<TableView> m_table_view;
+    RefPtr<RunningProcessesModel> m_process_model;
 
     bool m_refresh_enabled { true };
     unsigned m_refresh_interval { 1000 };
