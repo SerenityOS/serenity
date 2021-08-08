@@ -316,8 +316,8 @@ bool Scheduler::context_switch(Thread* thread)
     enter_current(*from_thread, false);
     VERIFY(thread == Thread::current());
 
-    if (thread->process().is_user_process()) {
-        auto& regs = Thread::current()->get_register_dump_from_stack();
+    if (thread->process().is_user_process() && thread->previous_mode() != Thread::PreviousMode::KernelMode && thread->current_trap()) {
+        auto& regs = thread->get_register_dump_from_stack();
         auto iopl = get_iopl_from_eflags(regs.flags());
         if (iopl != 0) {
             PANIC("Switched to thread {} with non-zero IOPL={}", Thread::current()->tid().value(), iopl);
@@ -346,7 +346,7 @@ void Scheduler::enter_current(Thread& prev_thread, bool is_first)
     } else if (!is_first) {
         // Check if we have any signals we should deliver (even if we don't
         // end up switching to another thread).
-        if (!current_thread->is_in_block() && current_thread->previous_mode() != Thread::PreviousMode::KernelMode) {
+        if (!current_thread->is_in_block() && current_thread->previous_mode() != Thread::PreviousMode::KernelMode && current_thread->current_trap()) {
             ScopedSpinLock lock(current_thread->get_lock());
             if (current_thread->state() == Thread::Running && current_thread->pending_signals_for_state()) {
                 current_thread->dispatch_one_pending_signal();
