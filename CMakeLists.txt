@@ -45,8 +45,6 @@ option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/
 option(ENABLE_KERNEL_LTO "Build the kernel with link-time optimization" OFF)
 option(USE_CLANG_TOOLCHAIN "Build the kernel with the experimental Clang toolchain" OFF)
 
-include(Meta/CMake/wasm_spec_tests.cmake)
-
 add_custom_target(run
     COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_ARCH=${SERENITY_ARCH}" "${SerenityOS_SOURCE_DIR}/Meta/run.sh"
     USES_TERMINAL
@@ -150,16 +148,6 @@ include_directories(${CMAKE_BINARY_DIR})
 set(write_if_different ${CMAKE_SOURCE_DIR}/Meta/write-only-on-difference.sh)
 
 add_subdirectory(Meta/Lagom)
-
-if (ENABLE_UNDEFINED_SANITIZER)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
-endif()
-
-add_subdirectory(Userland/DevTools/IPCCompiler)
-add_subdirectory(Userland/DevTools/StateMachineGenerator)
-add_subdirectory(Userland/Libraries/LibUnicode/CodeGenerators)
-add_subdirectory(Userland/Libraries/LibWeb/CodeGenerators)
-add_subdirectory(Meta/CMake/ConfigureComponents)
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
@@ -318,6 +306,8 @@ endif()
 add_link_options(--sysroot ${CMAKE_BINARY_DIR}/Root)
 add_link_options(-Wno-unused-command-line-argument)
 
+include_directories(.)
+include_directories(Userland/Libraries)
 include_directories(Userland/Libraries/LibC)
 include_directories(Userland/Libraries/LibCrypt)
 include_directories(Userland/Libraries/LibM)
@@ -332,12 +322,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland)
 
 # FIXME: vptr sanitizing requires.. intense ABI wrangling of std::type_info
 #     And would be better served by porting ubsan_type_hash_itanium.cpp from compiler-rt
-# We don't set this along with the original fsanitize=undefined because for host tools, we can rely on
-# the host's libubsan to provide the ABI-specific vptr type cache.
-# This is not a problem for the Kernel, because it does not have RTTI enabled :^)
 if (ENABLE_UNDEFINED_SANITIZER)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=vptr")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
 endif()
+
+include(Meta/CMake/wasm_spec_tests.cmake)
 
 add_custom_target(components ALL)
 option(BUILD_EVERYTHING "Build all optional components" ON)
