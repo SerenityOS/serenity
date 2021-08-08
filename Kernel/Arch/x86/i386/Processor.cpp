@@ -185,6 +185,8 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     VERIFY(is_kernel_mode());
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
+
+    // m_in_critical is restored in enter_thread_context
     from_thread->save_critical(m_in_critical);
 
     // clang-format off
@@ -230,8 +232,6 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     // clang-format on
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
-
-    Processor::current().restore_in_critical(to_thread->saved_critical());
 }
 
 UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_thread)
