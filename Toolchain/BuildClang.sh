@@ -392,6 +392,9 @@ pushd "$DIR/Build/clang/$ARCH"
     popd
 popd
 
+# === REMOVE UNNECESSARY BUILD ARTIFACTS ===
+rm -r "$PREFIX"/lib/libclang*.a "$PREFIX"/lib/libLLVM*.a "$PREFIX"/lib/liblld*.a
+
 # === SAVE TO CACHE ===
 pushd "$DIR"
     if [ "$TRY_USE_LOCAL_TOOLCHAIN" = "y" ]; then
