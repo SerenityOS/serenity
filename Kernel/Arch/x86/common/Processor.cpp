@@ -863,12 +863,18 @@ bool Processor::smp_enqueue_message(ProcessorMessage& msg)
     // Note that it's quite possible that the other processor may pop
     // the queue at any given time. We rely on the fact that the messages
     // are pooled and never get freed!
-    auto& msg_entry = msg.per_proc_entries[id()];
+    auto& msg_entry = msg.per_proc_entries[get_id()];
     VERIFY(msg_entry.msg == &msg);
     ProcessorMessageEntry* next = nullptr;
-    do {
+    for (;;) {
         msg_entry.next = next;
-    } while (m_message_queue.compare_exchange_strong(next, &msg_entry, AK::MemoryOrder::memory_order_acq_rel));
+        if (m_message_queue.compare_exchange_strong(next, &msg_entry, AK::MemoryOrder::memory_order_acq_rel))
+            break;
+        Processor::pause();
+    }
+
+    // If the enqueued message was the only message in the queue when posted,
+    // we return true. This is used by callers when deciding whether to generate an IPI.
     return next == nullptr;
 }
 
