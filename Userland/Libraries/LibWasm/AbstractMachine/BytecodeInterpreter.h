@@ -40,6 +40,12 @@ protected:
     void store_to_memory(Configuration&, Instruction const&, ReadonlyBytes data);
     void call_address(Configuration&, FunctionAddress);
 
+    template<typename PopType, typename PushType, typename Operator>
+    void binary_numeric_operation(Configuration&);
+
+    template<typename PopType, typename PushType, typename Operator>
+    void unary_operation(Configuration&);
+
     template<typename V, typename T>
     MakeUnsigned<T> checked_unsigned_truncate(V);
 
