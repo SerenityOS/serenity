@@ -4,31 +4,41 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCpp/Preprocessor.h>
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
-    auto file = Core::File::construct("/home/anon/Source/little/other.h");
+    Core::ArgsParser args_parser;
+    const char* path = nullptr;
+    bool print_definitions = false;
+    args_parser.add_positional_argument(path, "File", "file", Core::ArgsParser::Required::Yes);
+    args_parser.add_option(print_definitions, "Print preprocessor definitions", "definitions", 'D');
+    args_parser.parse(argc, argv);
+    auto file = Core::File::construct(path);
     if (!file->open(Core::OpenMode::ReadOnly)) {
         perror("open");
         exit(1);
     }
     auto content = file->read_all();
-    Cpp::Preprocessor cpp("other.h", StringView { content });
+    String name = LexicalPath::basename(path);
+    Cpp::Preprocessor cpp(name, StringView { content });
     auto tokens = cpp.process_and_lex();
 
-    outln("Definitions:");
-    for (auto& definition : cpp.definitions()) {
-        if (definition.value.parameters.is_empty())
-            outln("{}: {}", definition.key, definition.value.value);
-        else
-            outln("{}({}): {}", definition.key, String::join(",", definition.value.parameters), definition.value.value);
+    if (print_definitions) {
+        outln("Definitions:");
+        for (auto& definition : cpp.definitions()) {
+            if (definition.value.parameters.is_empty())
+                outln("{}: {}", definition.key, definition.value.value);
+            else
+                outln("{}({}): {}", definition.key, String::join(",", definition.value.parameters), definition.value.value);
+        }
+        outln("");
     }
 
-    outln("");
-
     for (auto& token : tokens) {
-        dbgln("{}", token.to_string());
+        outln("{}", token.to_string());
     }
 }
