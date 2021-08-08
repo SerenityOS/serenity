@@ -55,8 +55,7 @@ struct ThreadReadyQueues {
 
 static Singleton<SpinLockProtectedValue<ThreadReadyQueues>> g_ready_queues;
 
-static TotalTimeScheduled g_total_time_scheduled;
-static SpinLock<u8> g_total_time_scheduled_lock;
+static SpinLockProtectedValue<TotalTimeScheduled> g_total_time_scheduled;
 
 // The Scheduler::current_time function provides a current time for scheduling purposes,
 // which may not necessarily relate to wall time
@@ -453,10 +452,11 @@ UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
 
 void Scheduler::add_time_scheduled(u64 time_to_add, bool is_kernel)
 {
-    ScopedSpinLock lock(g_total_time_scheduled_lock);
-    g_total_time_scheduled.total += time_to_add;
-    if (is_kernel)
-        g_total_time_scheduled.total_kernel += time_to_add;
+    g_total_time_scheduled.with([&](auto& total_time_scheduled) {
+        total_time_scheduled.total += time_to_add;
+        if (is_kernel)
+            total_time_scheduled.total_kernel += time_to_add;
+    });
 }
 
 void Scheduler::timer_tick(const RegisterState& regs)
@@ -563,8 +563,7 @@ bool Scheduler::is_initialized()
 
 TotalTimeScheduled Scheduler::get_total_time_scheduled()
 {
-    ScopedSpinLock lock(g_total_time_scheduled_lock);
-    return g_total_time_scheduled;
+    return g_total_time_scheduled.with([&](auto& total_time_scheduled) { return total_time_scheduled; });
 }
 
 void dump_thread_list(bool with_stack_traces)
