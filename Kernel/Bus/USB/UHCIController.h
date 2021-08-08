@@ -12,8 +12,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/UHCIDescriptorTypes.h>
-#include <Kernel/Bus/USB/USBDevice.h>
-#include <Kernel/Bus/USB/USBTransfer.h>
+#include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/IO.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Process.h>
@@ -21,30 +20,31 @@
 
 namespace Kernel::USB {
 
-class UHCIController final : public PCI::Device {
+class UHCIController final
+    : public USBController
+    , public PCI::Device {
 
 public:
-    static void detect();
-    static UHCIController& the();
-
+    static KResultOr<NonnullRefPtr<UHCIController>> try_to_initialize(PCI::Address address);
     virtual ~UHCIController() override;
 
     virtual StringView purpose() const override { return "UHCI"; }
 
-    void reset();
-    void stop();
-    void start();
+    virtual KResult initialize() override;
+    virtual KResult reset() override;
+    virtual KResult stop() override;
+    virtual KResult start() override;
     void spawn_port_proc();
 
     void do_debug_transfer();
 
-    KResultOr<size_t> submit_control_transfer(Transfer& transfer);
+    virtual KResultOr<size_t> submit_control_transfer(Transfer& transfer) override;
 
-    RefPtr<USB::Device> const get_device_at_port(USB::Device::PortNumber);
-    RefPtr<USB::Device> const get_device_from_address(u8 device_address);
+    virtual RefPtr<USB::Device> const get_device_at_port(USB::Device::PortNumber) override;
+    virtual RefPtr<USB::Device> const get_device_from_address(u8 device_address) override;
 
 private:
-    UHCIController(PCI::Address, PCI::ID);
+    explicit UHCIController(PCI::Address);
 
     u16 read_usbcmd() { return m_io_base.offset(0).in<u16>(); }
     u16 read_usbsts() { return m_io_base.offset(0x2).in<u16>(); }

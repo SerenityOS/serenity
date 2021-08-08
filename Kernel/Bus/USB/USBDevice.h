@@ -12,6 +12,8 @@
 
 namespace Kernel::USB {
 
+class USBController;
+
 //
 // Some nice info from FTDI on device enumeration and how some of this
 // glues together:
@@ -30,9 +32,9 @@ public:
     };
 
 public:
-    static KResultOr<NonnullRefPtr<Device>> try_create(PortNumber, DeviceSpeed);
+    static KResultOr<NonnullRefPtr<Device>> try_create(USBController const&, PortNumber, DeviceSpeed);
 
-    Device(PortNumber, DeviceSpeed, NonnullOwnPtr<Pipe> default_pipe);
+    Device(USBController const&, PortNumber, DeviceSpeed, NonnullOwnPtr<Pipe> default_pipe);
     ~Device();
 
     KResult enumerate();
@@ -54,6 +56,7 @@ private:
     u16 m_product_id { 0 };                  // This device's product ID assigned by the USB group
     USBDeviceDescriptor m_device_descriptor; // Device Descriptor obtained from USB Device
 
+    NonnullRefPtr<USBController> m_controller;
     NonnullOwnPtr<Pipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration
 };
 }

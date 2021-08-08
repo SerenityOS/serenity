@@ -11,17 +11,18 @@
 
 namespace Kernel::USB {
 
-KResultOr<NonnullOwnPtr<Pipe>> Pipe::try_create_pipe(Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, u8 poll_interval)
+KResultOr<NonnullOwnPtr<Pipe>> Pipe::try_create_pipe(USBController const& controller, Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, u8 poll_interval)
 {
-    auto pipe = adopt_own_if_nonnull(new (nothrow) Pipe(type, direction, endpoint_address, max_packet_size, device_address, poll_interval));
+    auto pipe = adopt_own_if_nonnull(new (nothrow) Pipe(controller, type, direction, endpoint_address, max_packet_size, device_address, poll_interval));
     if (!pipe)
         return ENOMEM;
 
     return pipe.release_nonnull();
 }
 
-Pipe::Pipe(Type type, Pipe::Direction direction, u16 max_packet_size)
-    : m_type(type)
+Pipe::Pipe(USBController const& controller, Type type, Pipe::Direction direction, u16 max_packet_size)
+    : m_controller(controller)
+    , m_type(type)
     , m_direction(direction)
     , m_endpoint_address(0)
     , m_max_packet_size(max_packet_size)
@@ -30,15 +31,17 @@ Pipe::Pipe(Type type, Pipe::Direction direction, u16 max_packet_size)
 {
 }
 
-Pipe::Pipe(Type type, Direction direction, USBEndpointDescriptor& endpoint [[maybe_unused]])
-    : m_type(type)
+Pipe::Pipe(USBController const& controller, Type type, Direction direction, USBEndpointDescriptor& endpoint [[maybe_unused]])
+    : m_controller(controller)
+    , m_type(type)
     , m_direction(direction)
 {
     // TODO: decode endpoint structure
 }
 
-Pipe::Pipe(Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, u8 poll_interval, i8 device_address)
-    : m_type(type)
+Pipe::Pipe(USBController const& controller, Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, u8 poll_interval, i8 device_address)
+    : m_controller(controller)
+    , m_type(type)
     , m_direction(direction)
     , m_device_address(device_address)
     , m_endpoint_address(endpoint_address)
@@ -66,7 +69,7 @@ KResultOr<size_t> Pipe::control_transfer(u8 request_type, u8 request, u16 value,
     transfer->set_setup_packet(usb_request);
 
     dbgln_if(USB_DEBUG, "Pipe: Transfer allocated @ {}", transfer->buffer_physical());
-    auto transfer_len_or_error = UHCIController::the().submit_control_transfer(*transfer);
+    auto transfer_len_or_error = m_controller->submit_control_transfer(*transfer);
 
     if (transfer_len_or_error.is_error())
         return transfer_len_or_error.error();
