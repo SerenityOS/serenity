@@ -602,6 +602,14 @@ void Processor::exit_trap(TrapFrame& trap)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
+
+    // Temporarily enter a critical section. This is to prevent critical
+    // sections entered and left within e.g. smp_process_pending_messages
+    // to trigger a context switch while we're executing this function
+    // See the comment at the end of the function why we don't use
+    // ScopedCritical here.
+    m_in_critical++;
+
     VERIFY(m_in_irq >= trap.prev_irq_level);
     m_in_irq = trap.prev_irq_level;
 
@@ -628,7 +636,11 @@ void Processor::exit_trap(TrapFrame& trap)
             current_thread->update_time_scheduled(Scheduler::current_time(), true, false);
     }
 
-    if (!m_in_irq && !m_in_critical)
+    // Leave the critical section without actually enabling interrupts.
+    // We don't want context switches to happen until we're explicitly
+    // triggering a switch in check_invoke_scheduler.
+    auto new_critical = m_in_critical.fetch_sub(1) - 1;
+    if (!m_in_irq && !new_critical)
         check_invoke_scheduler();
 }
 
@@ -636,6 +648,8 @@ void Processor::check_invoke_scheduler()
 {
     VERIFY(!m_in_irq);
     VERIFY(!m_in_critical);
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(&Processor::current() == this);
     if (m_invoke_scheduler_async && m_scheduler_initialized) {
         m_invoke_scheduler_async = false;
         Scheduler::invoke_async();
@@ -1191,6 +1205,10 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 
     Scheduler::enter_current(*from_thread, true);
 
+    auto in_critical = to_thread->saved_critical();
+    VERIFY(in_critical > 0);
+    Processor::current().restore_in_critical(in_critical);
+
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
     // context), we need to notify the scheduler so that it can release
@@ -1249,7 +1267,10 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
         write_cr3(to_regs.cr3);
 
     to_thread->set_cpu(processor.get_id());
-    processor.restore_in_critical(to_thread->saved_critical());
+
+    auto in_critical = to_thread->saved_critical();
+    VERIFY(in_critical > 0);
+    processor.restore_in_critical(in_critical);
 
     if (has_fxsr)
         asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
