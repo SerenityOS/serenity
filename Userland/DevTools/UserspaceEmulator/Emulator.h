@@ -12,6 +12,7 @@
 #include "Report.h"
 #include "SoftCPU.h"
 #include "SoftMMU.h"
+#include <AK/FileStream.h>
 #include <AK/MappedFile.h>
 #include <AK/Types.h>
 #include <LibDebug/DebugInfo.h>
@@ -31,6 +32,23 @@ public:
     static Emulator& the();
 
     Emulator(String const& executable_path, Vector<String> const& arguments, Vector<String> const& environment);
+
+    void set_profiling_details(bool should_dump_profile, size_t instruction_interval, OutputFileStream* profile_stream)
+    {
+        m_is_profiling = should_dump_profile;
+        m_profile_instruction_interval = instruction_interval;
+        m_profile_stream = profile_stream;
+    }
+
+    void set_in_region_of_interest(bool value)
+    {
+        m_is_in_region_of_interest = value;
+    }
+
+    OutputFileStream& profile_stream() { return *m_profile_stream; }
+    bool is_profiling() const { return m_is_profiling; }
+    bool is_in_region_of_interest() const { return m_is_in_region_of_interest; }
+    size_t profile_instruction_interval() const { return m_profile_instruction_interval; }
 
     bool load_elf();
     void dump_backtrace();
@@ -271,6 +289,11 @@ private:
     HashMap<String, CachedELF> m_dynamic_library_cache;
 
     RangeAllocator m_range_allocator;
+
+    OutputFileStream* m_profile_stream { nullptr };
+    bool m_is_profiling { false };
+    size_t m_profile_instruction_interval { 0 };
+    bool m_is_in_region_of_interest { false };
 };
 
 ALWAYS_INLINE bool Emulator::is_in_libc() const
