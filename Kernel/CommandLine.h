@@ -16,7 +16,8 @@ namespace Kernel {
 enum class BootMode {
     NoFramebufferDevices,
     SelfTest,
-    Graphical
+    Graphical,
+    Unknown,
 };
 
 enum class HPETMode {
@@ -48,6 +49,11 @@ public:
     static void early_initialize(const char* cmd_line);
     static void initialize();
 
+    enum class Validate {
+        Yes,
+        No,
+    };
+
     [[nodiscard]] const String& string() const { return m_string; }
     Optional<String> lookup(const StringView& key) const;
     [[nodiscard]] bool contains(const StringView& key) const;
@@ -62,7 +68,7 @@ public:
     [[nodiscard]] bool is_no_framebuffer_devices_mode() const;
     [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;
-    [[nodiscard]] BootMode boot_mode() const;
+    [[nodiscard]] BootMode boot_mode(Validate should_validate = Validate::No) const;
     [[nodiscard]] HPETMode hpet_mode() const;
     [[nodiscard]] bool disable_physical_storage() const;
     [[nodiscard]] bool disable_ps2_controller() const;
