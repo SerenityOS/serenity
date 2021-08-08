@@ -17,8 +17,6 @@
 
 namespace GUI {
 
-static constexpr int minimum_column_size = 2;
-
 HeaderView::HeaderView(AbstractTableView& table_view, Gfx::Orientation orientation)
     : m_table_view(table_view)
     , m_orientation(orientation)
@@ -179,8 +177,13 @@ void HeaderView::mousemove_event(MouseEvent& event)
     if (m_in_section_resize) {
         auto delta = event.position() - m_section_resize_origin;
         int new_size = m_section_resize_original_width + delta.primary_offset_for_orientation(m_orientation);
-        if (new_size <= minimum_column_size)
-            new_size = minimum_column_size;
+
+        auto minimum_size = orientation() == Orientation::Horizontal
+            ? m_table_view.minimum_column_width(m_resizing_section)
+            : m_table_view.minimum_row_height(m_resizing_section);
+
+        if (new_size <= minimum_size)
+            new_size = minimum_size;
         VERIFY(m_resizing_section >= 0 && m_resizing_section < model()->column_count());
         set_section_size(m_resizing_section, new_size);
         return;
@@ -393,8 +396,10 @@ void HeaderView::set_section_alignment(int section, Gfx::TextAlignment alignment
 
 void HeaderView::set_default_section_size(int section, int size)
 {
-    if (orientation() == Gfx::Orientation::Horizontal && size < minimum_column_size)
-        size = minimum_column_size;
+    auto minimum_column_width = m_table_view.minimum_column_width(section);
+
+    if (orientation() == Gfx::Orientation::Horizontal && size < minimum_column_width)
+        size = minimum_column_width;
 
     auto& data = section_data(section);
     if (data.default_size == size)

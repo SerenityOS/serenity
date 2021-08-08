@@ -179,6 +179,16 @@ void AbstractTableView::set_column_width(int column, int width)
     column_header().set_section_size(column, width);
 }
 
+int AbstractTableView::minimum_column_width(int)
+{
+    return 2;
+}
+
+int AbstractTableView::minimum_row_height(int)
+{
+    return 2;
+}
+
 Gfx::TextAlignment AbstractTableView::column_header_alignment(int column_index) const
 {
     if (!model())
