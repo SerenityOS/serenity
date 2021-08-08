@@ -81,7 +81,7 @@ function(serenity_bin target_name)
 endfunction()
 
 function(serenity_test test_src sub_dir)
-    cmake_parse_arguments(SERENITY_TEST "MAIN_ALREADY_DEFINED" "CUSTOM_MAIN" "LIBS" ${ARGN})
+    cmake_parse_arguments(PARSE_ARGV 2 SERENITY_TEST "MAIN_ALREADY_DEFINED" "CUSTOM_MAIN" "LIBS")
     set(TEST_SOURCES ${test_src})
     if ("${SERENITY_TEST_CUSTOM_MAIN}" STREQUAL "")
         set(SERENITY_TEST_CUSTOM_MAIN "$<TARGET_OBJECTS:LibTestMain>")
@@ -102,7 +102,7 @@ endfunction()
 
 
 function(serenity_testjs_test test_src sub_dir)
-    cmake_parse_arguments(SERENITY_TEST "" "CUSTOM_MAIN" "LIBS" ${ARGN})
+    cmake_parse_arguments(PARSE_ARGV 2 SERENITY_TEST "" "CUSTOM_MAIN" "LIBS")
     if ("${SERENITY_TEST_CUSTOM_MAIN}" STREQUAL "")
         set(SERENITY_TEST_CUSTOM_MAIN "$<TARGET_OBJECTS:JavaScriptTestRunnerMain>")
     endif()
@@ -113,11 +113,11 @@ function(serenity_testjs_test test_src sub_dir)
 endfunction()
 
 function(serenity_app target_name)
-    cmake_parse_arguments(SERENITY_APP "" "ICON" "" ${ARGN})
+    cmake_parse_arguments(PARSE_ARGV 1 SERENITY_APP "" "ICON" "")
 
     serenity_bin("${target_name}")
-    set(small_icon "${CMAKE_SOURCE_DIR}/Base/res/icons/16x16/${SERENITY_APP_ICON}.png")
-    set(medium_icon "${CMAKE_SOURCE_DIR}/Base/res/icons/32x32/${SERENITY_APP_ICON}.png")
+    set(small_icon "${SerenityOS_SOURCE_DIR}/Base/res/icons/16x16/${SERENITY_APP_ICON}.png")
+    set(medium_icon "${SerenityOS_SOURCE_DIR}/Base/res/icons/32x32/${SERENITY_APP_ICON}.png")
 
     if (EXISTS "${small_icon}")
         embed_resource("${target_name}" serenity_icon_s "${small_icon}")
@@ -145,8 +145,8 @@ function(embed_resource target section file)
     file(SIZE "${input_file}" file_size)
     add_custom_command(
         OUTPUT "${asm_file}"
-        COMMAND "${CMAKE_SOURCE_DIR}/Meta/generate-embedded-resource-assembly.sh" "${asm_file}" "${section}" "${input_file}" "${file_size}"
-        DEPENDS "${input_file}" "${CMAKE_SOURCE_DIR}/Meta/generate-embedded-resource-assembly.sh"
+        COMMAND "${SerenityOS_SOURCE_DIR}/Meta/generate-embedded-resource-assembly.sh" "${asm_file}" "${section}" "${input_file}" "${file_size}"
+        DEPENDS "${input_file}" "${SerenityOS_SOURCE_DIR}/Meta/generate-embedded-resource-assembly.sh"
         COMMENT "Generating ${asm_file}"
     )
     target_sources("${target}" PRIVATE "${asm_file}")

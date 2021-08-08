@@ -48,7 +48,7 @@ option(USE_CLANG_TOOLCHAIN "Build the kernel with the experimental Clang toolcha
 include(Meta/CMake/wasm_spec_tests.cmake)
 
 add_custom_target(run
-    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ARCH=${SERENITY_ARCH}" ${CMAKE_SOURCE_DIR}/Meta/run.sh
+    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_ARCH=${SERENITY_ARCH}" "${SerenityOS_SOURCE_DIR}/Meta/run.sh"
     USES_TERMINAL
 )
 
@@ -72,40 +72,40 @@ set(GCC_VERSION 11.2.0)
 set(LLVM_VERSION 12.0.1)
 
 add_custom_target(qemu-image
-    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_SOURCE_DIR=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "USE_CLANG_TOOLCHAIN=$<BOOL:${USE_CLANG_TOOLCHAIN}>" "LLVM_VERSION=${LLVM_VERSION}" ${CMAKE_SOURCE_DIR}/Meta/build-image-qemu.sh
-    BYPRODUCTS ${CMAKE_BINARY_DIR}/_disk_image
+    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "USE_CLANG_TOOLCHAIN=$<BOOL:${USE_CLANG_TOOLCHAIN}>" "LLVM_VERSION=${LLVM_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-qemu.sh"
+    BYPRODUCTS "${CMAKE_BINARY_DIR}/_disk_image"
     USES_TERMINAL
 )
 add_custom_target(grub-image
-    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_SOURCE_DIR=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "USE_CLANG_TOOLCHAIN=$<BOOL:${USE_CLANG_TOOLCHAIN}>" "LLVM_VERSION=${LLVM_VERSION}" ${CMAKE_SOURCE_DIR}/Meta/build-image-grub.sh
+    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "USE_CLANG_TOOLCHAIN=$<BOOL:${USE_CLANG_TOOLCHAIN}>" "LLVM_VERSION=${LLVM_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-grub.sh"
     BYPRODUCTS ${CMAKE_BINARY_DIR}/grub_disk_image
     USES_TERMINAL
 )
 add_custom_target(extlinux-image
-    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_SOURCE_DIR=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "USE_CLANG_TOOLCHAIN=$<BOOL:${USE_CLANG_TOOLCHAIN}>" "LLVM_VERSION=${LLVM_VERSION}" ${CMAKE_SOURCE_DIR}/Meta/build-image-extlinux.sh
-    BYPRODUCTS ${CMAKE_BINARY_DIR}/extlinux_disk_image
+    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "USE_CLANG_TOOLCHAIN=$<BOOL:${USE_CLANG_TOOLCHAIN}>" "LLVM_VERSION=${LLVM_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-extlinux.sh"
+    BYPRODUCTS "${CMAKE_BINARY_DIR}/extlinux_disk_image"
     USES_TERMINAL
 )
 
 add_custom_target(lint-shell-scripts
-    COMMAND ${CMAKE_SOURCE_DIR}/Meta/lint-shell-scripts.sh
+    COMMAND "${SerenityOS_SOURCE_DIR}/Meta/lint-shell-scripts.sh"
     USES_TERMINAL
 )
 add_custom_target(check-style
-    COMMAND ${CMAKE_SOURCE_DIR}/Meta/check-style.sh
+    COMMAND "${SerenityOS_SOURCE_DIR}/Meta/check-style.sh"
     USES_TERMINAL
 )
 
 add_custom_target(install-ports
-    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_SOURCE_DIR=${CMAKE_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" ${CMAKE_SOURCE_DIR}/Meta/install-ports-tree.sh
+    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "${SerenityOS_SOURCE_DIR}/Meta/install-ports-tree.sh"
     USES_TERMINAL
 )
 
 add_custom_target(configure-components
-    COMMAND ConfigureComponents
-    DEPENDS ConfigureComponents
+    COMMAND "$<TARGET_FILE:ConfigureComponents>"
     USES_TERMINAL
 )
+add_dependencies(configure-components ConfigureComponents)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -137,7 +137,7 @@ if (ENABLE_ALL_DEBUG_FACILITIES)
 endif()
 
 if (ENABLE_ALL_THE_DEBUG_MACROS)
-    include(${CMAKE_SOURCE_DIR}/Meta/CMake/all_the_debug_macros.cmake)
+    include("${SerenityOS_SOURCE_DIR}/Meta/CMake/all_the_debug_macros.cmake")
 endif(ENABLE_ALL_THE_DEBUG_MACROS)
 
 configure_file(AK/Debug.h.in AK/Debug.h @ONLY)
@@ -189,7 +189,7 @@ elseif(USE_CLANG_TOOLCHAIN)
     # FIXME: Persuade LLVM maintainers to add `--update-section` to llvm-objcopy, as it's required for the kernel symbol map.
     set(CMAKE_OBJCOPY ${TOOLCHAIN_ROOT}/binutils/bin/${SERENITY_ARCH}-pc-serenity-objcopy)
 else()
-    set(TOOLCHAIN_ROOT ${CMAKE_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/)
+    set(TOOLCHAIN_ROOT ${SerenityOS_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/)
     set(TOOLCHAIN_PATH ${TOOLCHAIN_ROOT}/bin)
     set(TOOLCHAIN_PREFIX ${TOOLCHAIN_PATH}/${SERENITY_ARCH}-pc-serenity-)
 
@@ -263,7 +263,7 @@ add_compile_options(-Wno-unused-command-line-argument)
 add_compile_options(-Wwrite-strings)
 add_compile_options(-Wno-maybe-uninitialized)
 
-add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
+add_compile_options(-ffile-prefix-map=${SerenityOS_SOURCE_DIR}=.)
 add_compile_options(-fno-exceptions)
 add_compile_options(-ftls-model=initial-exec)
 add_compile_options(-fno-semantic-interposition)
@@ -342,7 +342,7 @@ endif()
 add_custom_target(components ALL)
 option(BUILD_EVERYTHING "Build all optional components" ON)
 
-include(${CMAKE_SOURCE_DIR}/Meta/CMake/utils.cmake)
+include(Meta/CMake/utils.cmake)
 
 serenity_component(
     Tests

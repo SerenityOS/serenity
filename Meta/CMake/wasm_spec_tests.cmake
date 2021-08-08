@@ -1,9 +1,10 @@
 option(INCLUDE_WASM_SPEC_TESTS "Download and include the WebAssembly spec testsuite" OFF)
 
 if(INCLUDE_WASM_SPEC_TESTS)
-    set(SOURCE_DIR ${CMAKE_SOURCE_DIR})
-    if (CMAKE_SOURCE_DIR MATCHES ".*/Lagom")
-        set(SOURCE_DIR ${SOURCE_DIR}/../..)
+    if (CMAKE_PROJECT_NAME STREQUAL "SerenityOS")
+        set(SOURCE_DIR "${SerenityOS_SOURCE_DIR}")
+    else()
+        set(SOURCE_DIR "${SERENITY_PROJECT_ROOT}")
     endif()
     set(WASM_SPEC_TEST_GZ_URL https://github.com/WebAssembly/testsuite/archive/refs/heads/master.tar.gz)
     set(WASM_SPEC_TEST_GZ_PATH ${CMAKE_BINARY_DIR}/wasm-spec-testsuite.tar.gz)
