@@ -17,7 +17,14 @@ public:
     {
     }
 
-    Optional<Label> nth_label(size_t);
+    Optional<Label> nth_label(size_t label)
+    {
+        auto index = nth_label_index(label);
+        if (index.has_value())
+            return m_stack.entries()[index.value()].get<Label>();
+        return {};
+    }
+    Optional<size_t> nth_label_index(size_t);
     void set_frame(Frame&& frame)
     {
         m_current_frame_index = m_stack.size();

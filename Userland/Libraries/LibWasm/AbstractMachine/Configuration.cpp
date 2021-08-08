@@ -10,13 +10,13 @@
 
 namespace Wasm {
 
-Optional<Label> Configuration::nth_label(size_t i)
+Optional<size_t> Configuration::nth_label_index(size_t i)
 {
     for (size_t index = m_stack.size(); index > 0; --index) {
         auto& entry = m_stack.entries()[index - 1];
-        if (auto ptr = entry.get_pointer<Label>()) {
+        if (entry.has<Label>()) {
             if (i == 0)
-                return *ptr;
+                return index - 1;
             --i;
         }
     }

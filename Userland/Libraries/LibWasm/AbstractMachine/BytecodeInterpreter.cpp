@@ -8,10 +8,9 @@
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/AbstractMachine/Configuration.h>
+#include <LibWasm/AbstractMachine/Operators.h>
 #include <LibWasm/Opcode.h>
 #include <LibWasm/Printer/Printer.h>
-#include <limits.h>
-#include <math.h>
 
 namespace Wasm {
 
@@ -168,79 +167,58 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
         configuration.stack().entries().unchecked_append(move(entry));
 }
 
-#define BINARY_NUMERIC_OPERATION(type, operator, cast, ...)                                       \
-    do {                                                                                          \
-        TRAP_IF_NOT(!configuration.stack().is_empty());                                           \
-        auto rhs_entry = configuration.stack().pop();                                             \
-        auto& lhs_entry = configuration.stack().peek();                                           \
-        TRAP_IF_NOT(rhs_entry.has<Value>());                                                      \
-        TRAP_IF_NOT(lhs_entry.has<Value>());                                                      \
-        auto rhs = rhs_entry.get<Value>().to<type>();                                             \
-        auto lhs = lhs_entry.get<Value>().to<type>();                                             \
-        TRAP_IF_NOT(lhs.has_value());                                                             \
-        TRAP_IF_NOT(rhs.has_value());                                                             \
-        __VA_ARGS__;                                                                              \
-        auto result = lhs.value() operator rhs.value();                                           \
-        dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = {}", lhs.value(), #operator, rhs.value(), result); \
-        configuration.stack().peek() = Value(cast(result));                                       \
-        return;                                                                                   \
-    } while (false)
+template<typename PopType, typename PushType, typename Operator>
+void BytecodeInterpreter::binary_numeric_operation(Configuration& configuration)
+{
+    TRAP_IF_NOT(!configuration.stack().is_empty());
+    auto rhs_entry = configuration.stack().pop();
+    auto& lhs_entry = configuration.stack().peek();
+    auto rhs_ptr = rhs_entry.get_pointer<Value>();
+    auto lhs_ptr = lhs_entry.get_pointer<Value>();
+    TRAP_IF_NOT(rhs_ptr);
+    TRAP_IF_NOT(lhs_ptr);
+    auto rhs = rhs_ptr->to<PopType>();
+    auto lhs = lhs_ptr->to<PopType>();
+    TRAP_IF_NOT(lhs.has_value());
+    TRAP_IF_NOT(rhs.has_value());
+    PushType result;
+    auto call_result = Operator {}(lhs.value(), rhs.value());
+    if constexpr (IsSpecializationOf<decltype(call_result), AK::Result>) {
+        if (call_result.is_error()) {
+            trap_if_not(false, call_result.error());
+            return;
+        }
+        result = call_result.release_value();
+    } else {
+        result = call_result;
+    }
+    dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = {}", lhs.value(), Operator::name(), rhs.value(), result);
+    configuration.stack().peek() = Value(result);
+}
 
-#define OVF_CHECKED_BINARY_NUMERIC_OPERATION(type, operator, cast, ...)                            \
-    do {                                                                                           \
-        TRAP_IF_NOT(!configuration.stack().is_empty());                                            \
-        auto rhs_entry = configuration.stack().pop();                                              \
-        auto& lhs_entry = configuration.stack().peek();                                            \
-        TRAP_IF_NOT(rhs_entry.has<Value>());                                                       \
-        TRAP_IF_NOT(lhs_entry.has<Value>());                                                       \
-        auto rhs = rhs_entry.get<Value>().to<type>();                                              \
-        auto ulhs = lhs_entry.get<Value>().to<type>();                                             \
-        TRAP_IF_NOT(ulhs.has_value());                                                             \
-        TRAP_IF_NOT(rhs.has_value());                                                              \
-        dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = ??", ulhs.value(), #operator, rhs.value());         \
-        __VA_ARGS__;                                                                               \
-        Checked<type> lhs = ulhs.value();                                                          \
-        lhs operator##= rhs.value();                                                               \
-        TRAP_IF_NOT(!lhs.has_overflow());                                                          \
-        auto result = lhs.value();                                                                 \
-        dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = {}", ulhs.value(), #operator, rhs.value(), result); \
-        configuration.stack().peek() = Value(cast(result));                                        \
-        return;                                                                                    \
-    } while (false)
-
-#define BINARY_PREFIX_NUMERIC_OPERATION(type, operation, cast, ...)                                 \
-    do {                                                                                            \
-        TRAP_IF_NOT(!configuration.stack().is_empty());                                             \
-        auto rhs_entry = configuration.stack().pop();                                               \
-        auto& lhs_entry = configuration.stack().peek();                                             \
-        TRAP_IF_NOT(rhs_entry.has<Value>());                                                        \
-        TRAP_IF_NOT(lhs_entry.has<Value>());                                                        \
-        auto rhs = rhs_entry.get<Value>().to<type>();                                               \
-        auto lhs = lhs_entry.get<Value>().to<type>();                                               \
-        TRAP_IF_NOT(lhs.has_value());                                                               \
-        TRAP_IF_NOT(rhs.has_value());                                                               \
-        __VA_ARGS__;                                                                                \
-        auto result = operation(lhs.value(), rhs.value());                                          \
-        dbgln_if(WASM_TRACE_DEBUG, "{}({} {}) = {}", #operation, lhs.value(), rhs.value(), result); \
-        configuration.stack().peek() = Value(cast(result));                                         \
-        return;                                                                                     \
-    } while (false)
-
-#define UNARY_MAP(pop_type, operation, ...)                                               \
-    do {                                                                                  \
-        TRAP_IF_NOT(!configuration.stack().is_empty());                                   \
-        auto& entry = configuration.stack().peek();                                       \
-        TRAP_IF_NOT(entry.has<Value>());                                                  \
-        auto value = entry.get<Value>().to<pop_type>();                                   \
-        TRAP_IF_NOT(value.has_value());                                                   \
-        auto result = operation(value.value());                                           \
-        dbgln_if(WASM_TRACE_DEBUG, "map({}) {} = {}", #operation, value.value(), result); \
-        configuration.stack().peek() = Value(__VA_ARGS__(result));                        \
-        return;                                                                           \
-    } while (false)
-
-#define UNARY_NUMERIC_OPERATION(type, operation) \
-    UNARY_MAP(type, operation, type)
+template<typename PopType, typename PushType, typename Operator>
+void BytecodeInterpreter::unary_operation(Configuration& configuration)
+{
+    TRAP_IF_NOT(!configuration.stack().is_empty());
+    auto& entry = configuration.stack().peek();
+    auto entry_ptr = entry.get_pointer<Value>();
+    TRAP_IF_NOT(entry_ptr);
+    auto value = entry_ptr->to<PopType>();
+    TRAP_IF_NOT(value.has_value());
+    auto call_result = Operator {}(*value);
+    PushType result;
+    if constexpr (IsSpecializationOf<decltype(call_result), AK::Result>) {
+        if (call_result.is_error()) {
+            trap_if_not(false, call_result.error());
+            return;
+        }
+        result = call_result.release_value();
+    } else {
+        result = call_result;
+    }
+    dbgln_if(WASM_TRACE_DEBUG, "map({}) {} = {}", Operator::name(), *value, result);
+    configuration.stack().peek() = Value(result);
+}
 
 #define LOAD_AND_PUSH(read_type, push_type)                                     \
     do {                                                                        \
@@ -387,115 +365,6 @@ Vector<Value> BytecodeInterpreter::pop_values(Configuration& configuration, size
     return results;
 }
 
-template<typename T, typename R>
-ALWAYS_INLINE static T rotl(T value, R shift)
-{
-    // generates a single 'rol' instruction if shift is positive
-    // otherwise generate a `ror`
-    auto const mask = CHAR_BIT * sizeof(T) - 1;
-    shift &= mask;
-    return (value << shift) | (value >> ((-shift) & mask));
-}
-
-template<typename T, typename R>
-ALWAYS_INLINE static T rotr(T value, R shift)
-{
-    // generates a single 'ror' instruction if shift is positive
-    // otherwise generate a `rol`
-    auto const mask = CHAR_BIT * sizeof(T) - 1;
-    shift &= mask;
-    return (value >> shift) | (value << ((-shift) & mask));
-}
-
-template<typename T>
-ALWAYS_INLINE static i32 clz(T value)
-{
-    if (value == 0)
-        return sizeof(T) * CHAR_BIT;
-
-    if constexpr (sizeof(T) == 4)
-        return __builtin_clz(value);
-    else if constexpr (sizeof(T) == 8)
-        return __builtin_clzll(value);
-    else
-        VERIFY_NOT_REACHED();
-}
-
-template<typename T>
-ALWAYS_INLINE static i32 ctz(T value)
-{
-    if (value == 0)
-        return sizeof(T) * CHAR_BIT;
-
-    if constexpr (sizeof(T) == 4)
-        return __builtin_ctz(value);
-    else if constexpr (sizeof(T) == 8)
-        return __builtin_ctzll(value);
-    else
-        VERIFY_NOT_REACHED();
-}
-
-template<typename InputT, typename OutputT>
-ALWAYS_INLINE static OutputT extend_signed(InputT value)
-{
-    // Note: C++ will take care of sign extension.
-    return value;
-}
-
-template<typename TruncT, typename T>
-ALWAYS_INLINE static TruncT saturating_truncate(T value)
-{
-    if (isnan(value))
-        return 0;
-
-    if (isinf(value)) {
-        if (value < 0)
-            return NumericLimits<TruncT>::min();
-        return NumericLimits<TruncT>::max();
-    }
-
-    constexpr auto convert = [](auto truncated_value) {
-        if (truncated_value < NumericLimits<TruncT>::min())
-            return NumericLimits<TruncT>::min();
-        if (static_cast<double>(truncated_value) > static_cast<double>(NumericLimits<TruncT>::max()))
-            return NumericLimits<TruncT>::max();
-        return static_cast<TruncT>(truncated_value);
-    };
-
-    if constexpr (IsSame<T, float>)
-        return convert(truncf(value));
-    else
-        return convert(trunc(value));
-}
-
-template<typename T>
-ALWAYS_INLINE static T float_max(T lhs, T rhs)
-{
-    if (isnan(lhs))
-        return lhs;
-    if (isnan(rhs))
-        return rhs;
-    if (isinf(lhs))
-        return lhs > 0 ? lhs : rhs;
-    if (isinf(rhs))
-        return rhs > 0 ? rhs : lhs;
-    return max(lhs, rhs);
-}
-
-template<typename T>
-ALWAYS_INLINE static T float_min(T lhs, T rhs)
-{
-    if (isnan(lhs))
-        return lhs;
-    if (isnan(rhs))
-        return rhs;
-    if (isinf(lhs))
-        return lhs > 0 ? rhs : lhs;
-    if (isinf(rhs))
-        return rhs > 0 ? lhs : rhs;
-    return min(lhs, rhs);
-}
-
 void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, Instruction const& instruction)
 {
     dbgln_if(WASM_TRACE_DEBUG, "Executing instruction {} at ip {}", instruction_name(instruction.opcode()), ip.value());
@@ -570,20 +439,16 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     case Instructions::structured_end.value():
     case Instructions::structured_else.value(): {
-        auto label = configuration.nth_label(0);
-        TRAP_IF_NOT(label.has_value());
-        size_t end = configuration.stack().size() - label->arity() - 1;
-        size_t start = end;
-        while (start > 0 && start < configuration.stack().size() && !configuration.stack().entries()[start].has<Label>())
-            --start;
-
-        configuration.stack().entries().remove(start, end - start + 1);
+        auto index = configuration.nth_label_index(0);
+        TRAP_IF_NOT(index.has_value());
+        auto label = configuration.stack().entries()[*index].get<Label>();
+        configuration.stack().entries().remove(*index, 1);
 
         if (instruction.opcode() == Instructions::structured_end)
             return;
 
         // Jump to the end label
-        configuration.ip() = label->continuation();
+        configuration.ip() = label.continuation();
         return;
     }
     case Instructions::return_.value(): {
@@ -811,293 +676,277 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     }
     case Instructions::i32_eqz.value():
-        UNARY_NUMERIC_OPERATION(i32, 0 ==);
+        return unary_operation<i32, i32, Operators::EqualsZero>(configuration);
     case Instructions::i32_eq.value():
-        BINARY_NUMERIC_OPERATION(i32, ==, i32);
+        return binary_numeric_operation<i32, i32, Operators::Equals>(configuration);
     case Instructions::i32_ne.value():
-        BINARY_NUMERIC_OPERATION(i32, !=, i32);
+        return binary_numeric_operation<i32, i32, Operators::NotEquals>(configuration);
     case Instructions::i32_lts.value():
-        BINARY_NUMERIC_OPERATION(i32, <, i32);
+        return binary_numeric_operation<i32, i32, Operators::LessThan>(configuration);
     case Instructions::i32_ltu.value():
-        BINARY_NUMERIC_OPERATION(u32, <, i32);
+        return binary_numeric_operation<u32, i32, Operators::LessThan>(configuration);
     case Instructions::i32_gts.value():
-        BINARY_NUMERIC_OPERATION(i32, >, i32);
+        return binary_numeric_operation<i32, i32, Operators::GreaterThan>(configuration);
     case Instructions::i32_gtu.value():
-        BINARY_NUMERIC_OPERATION(u32, >, i32);
+        return binary_numeric_operation<u32, i32, Operators::GreaterThan>(configuration);
     case Instructions::i32_les.value():
-        BINARY_NUMERIC_OPERATION(i32, <=, i32);
+        return binary_numeric_operation<i32, i32, Operators::LessThanOrEquals>(configuration);
     case Instructions::i32_leu.value():
-        BINARY_NUMERIC_OPERATION(u32, <=, i32);
+        return binary_numeric_operation<u32, i32, Operators::LessThanOrEquals>(configuration);
     case Instructions::i32_ges.value():
-        BINARY_NUMERIC_OPERATION(i32, >=, i32);
+        return binary_numeric_operation<i32, i32, Operators::GreaterThanOrEquals>(configuration);
     case Instructions::i32_geu.value():
-        BINARY_NUMERIC_OPERATION(u32, >=, i32);
+        return binary_numeric_operation<u32, i32, Operators::GreaterThanOrEquals>(configuration);
     case Instructions::i64_eqz.value():
-        UNARY_NUMERIC_OPERATION(i64, 0ull ==);
+        return unary_operation<i64, i32, Operators::EqualsZero>(configuration);
     case Instructions::i64_eq.value():
-        BINARY_NUMERIC_OPERATION(i64, ==, i32);
+        return binary_numeric_operation<i64, i32, Operators::Equals>(configuration);
     case Instructions::i64_ne.value():
-        BINARY_NUMERIC_OPERATION(i64, !=, i32);
+        return binary_numeric_operation<i64, i32, Operators::NotEquals>(configuration);
     case Instructions::i64_lts.value():
-        BINARY_NUMERIC_OPERATION(i64, <, i32);
+        return binary_numeric_operation<i64, i32, Operators::LessThan>(configuration);
     case Instructions::i64_ltu.value():
-        BINARY_NUMERIC_OPERATION(u64, <, i32);
+        return binary_numeric_operation<u64, i32, Operators::LessThan>(configuration);
     case Instructions::i64_gts.value():
-        BINARY_NUMERIC_OPERATION(i64, >, i32);
+        return binary_numeric_operation<i64, i32, Operators::GreaterThan>(configuration);
     case Instructions::i64_gtu.value():
-        BINARY_NUMERIC_OPERATION(u64, >, i32);
+        return binary_numeric_operation<u64, i32, Operators::GreaterThan>(configuration);
     case Instructions::i64_les.value():
-        BINARY_NUMERIC_OPERATION(i64, <=, i32);
+        return binary_numeric_operation<i64, i32, Operators::LessThanOrEquals>(configuration);
     case Instructions::i64_leu.value():
-        BINARY_NUMERIC_OPERATION(u64, <=, i32);
+        return binary_numeric_operation<u64, i32, Operators::LessThanOrEquals>(configuration);
     case Instructions::i64_ges.value():
-        BINARY_NUMERIC_OPERATION(i64, >=, i32);
+        return binary_numeric_operation<i64, i32, Operators::GreaterThanOrEquals>(configuration);
     case Instructions::i64_geu.value():
-        BINARY_NUMERIC_OPERATION(u64, >=, i32);
+        return binary_numeric_operation<u64, i32, Operators::GreaterThanOrEquals>(configuration);
     case Instructions::f32_eq.value():
-        BINARY_NUMERIC_OPERATION(float, ==, i32);
+        return binary_numeric_operation<float, i32, Operators::Equals>(configuration);
     case Instructions::f32_ne.value():
-        BINARY_NUMERIC_OPERATION(float, !=, i32);
+        return binary_numeric_operation<float, i32, Operators::NotEquals>(configuration);
     case Instructions::f32_lt.value():
-        BINARY_NUMERIC_OPERATION(float, <, i32);
+        return binary_numeric_operation<float, i32, Operators::LessThan>(configuration);
     case Instructions::f32_gt.value():
-        BINARY_NUMERIC_OPERATION(float, >, i32);
+        return binary_numeric_operation<float, i32, Operators::GreaterThan>(configuration);
     case Instructions::f32_le.value():
-        BINARY_NUMERIC_OPERATION(float, <=, i32);
+        return binary_numeric_operation<float, i32, Operators::LessThanOrEquals>(configuration);
     case Instructions::f32_ge.value():
-        BINARY_NUMERIC_OPERATION(float, >=, i32);
+        return binary_numeric_operation<float, i32, Operators::GreaterThanOrEquals>(configuration);
     case Instructions::f64_eq.value():
-        BINARY_NUMERIC_OPERATION(double, ==, i32);
+        return binary_numeric_operation<double, i32, Operators::Equals>(configuration);
     case Instructions::f64_ne.value():
-        BINARY_NUMERIC_OPERATION(double, !=, i32);
+        return binary_numeric_operation<double, i32, Operators::NotEquals>(configuration);
     case Instructions::f64_lt.value():
-        BINARY_NUMERIC_OPERATION(double, <, i32);
+        return binary_numeric_operation<double, i32, Operators::LessThan>(configuration);
     case Instructions::f64_gt.value():
-        BINARY_NUMERIC_OPERATION(double, >, i32);
+        return binary_numeric_operation<double, i32, Operators::GreaterThan>(configuration);
     case Instructions::f64_le.value():
-        BINARY_NUMERIC_OPERATION(double, <=, i32);
+        return binary_numeric_operation<double, i32, Operators::LessThanOrEquals>(configuration);
     case Instructions::f64_ge.value():
-        BINARY_NUMERIC_OPERATION(double, >, i32);
+        return binary_numeric_operation<double, i32, Operators::GreaterThanOrEquals>(configuration);
     case Instructions::i32_clz.value():
-        UNARY_NUMERIC_OPERATION(i32, clz);
+        return unary_operation<i32, i32, Operators::CountLeadingZeros>(configuration);
     case Instructions::i32_ctz.value():
-        UNARY_NUMERIC_OPERATION(i32, ctz);
+        return unary_operation<i32, i32, Operators::CountTrailingZeros>(configuration);
     case Instructions::i32_popcnt.value():
-        UNARY_NUMERIC_OPERATION(i32, __builtin_popcount);
+        return unary_operation<i32, i32, Operators::PopCount>(configuration);
     case Instructions::i32_add.value():
-        BINARY_NUMERIC_OPERATION(u32, +, i32);
+        return binary_numeric_operation<u32, i32, Operators::Add>(configuration);
     case Instructions::i32_sub.value():
-        BINARY_NUMERIC_OPERATION(u32, -, i32);
+        return binary_numeric_operation<u32, i32, Operators::Subtract>(configuration);
     case Instructions::i32_mul.value():
-        BINARY_NUMERIC_OPERATION(u32, *, i32);
+        return binary_numeric_operation<u32, i32, Operators::Multiply>(configuration);
     case Instructions::i32_divs.value():
-        BINARY_NUMERIC_OPERATION(i32, /, i32, TRAP_IF_NOT(!(Checked<i32>(lhs.value()) /= rhs.value()).has_overflow()));
+        return binary_numeric_operation<i32, i32, Operators::Divide>(configuration);
     case Instructions::i32_divu.value():
-        BINARY_NUMERIC_OPERATION(u32, /, i32, TRAP_IF_NOT(rhs.value() != 0));
+        return binary_numeric_operation<u32, i32, Operators::Divide>(configuration);
     case Instructions::i32_rems.value():
-        BINARY_NUMERIC_OPERATION(i32, %, i32, TRAP_IF_NOT(!(Checked<i32>(lhs.value()) /= rhs.value()).has_overflow()));
+        return binary_numeric_operation<i32, i32, Operators::Modulo>(configuration);
     case Instructions::i32_remu.value():
-        BINARY_NUMERIC_OPERATION(u32, %, i32, TRAP_IF_NOT(rhs.value() != 0));
+        return binary_numeric_operation<u32, i32, Operators::Modulo>(configuration);
     case Instructions::i32_and.value():
-        BINARY_NUMERIC_OPERATION(i32, &, i32);
+        return binary_numeric_operation<i32, i32, Operators::BitAnd>(configuration);
     case Instructions::i32_or.value():
-        BINARY_NUMERIC_OPERATION(i32, |, i32);
+        return binary_numeric_operation<i32, i32, Operators::BitOr>(configuration);
     case Instructions::i32_xor.value():
-        BINARY_NUMERIC_OPERATION(i32, ^, i32);
+        return binary_numeric_operation<i32, i32, Operators::BitXor>(configuration);
     case Instructions::i32_shl.value():
-        BINARY_NUMERIC_OPERATION(u32, <<, i32, (rhs = rhs.value() % 32));
+        return binary_numeric_operation<u32, i32, Operators::BitShiftLeft>(configuration);
     case Instructions::i32_shrs.value():
-        BINARY_NUMERIC_OPERATION(u32, >>, i32, (rhs = rhs.value() % 32)); // FIXME: eh, shouldn't we keep lhs as signed?
+        return binary_numeric_operation<i32, i32, Operators::BitShiftRight>(configuration);
     case Instructions::i32_shru.value():
-        BINARY_NUMERIC_OPERATION(u32, >>, i32, (rhs = rhs.value() % 32));
+        return binary_numeric_operation<u32, i32, Operators::BitShiftRight>(configuration);
     case Instructions::i32_rotl.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(u32, rotl, i32, (rhs = rhs.value() % 32));
+        return binary_numeric_operation<u32, i32, Operators::BitRotateLeft>(configuration);
     case Instructions::i32_rotr.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(u32, rotr, i32, (rhs = rhs.value() % 32));
+        return binary_numeric_operation<u32, i32, Operators::BitRotateRight>(configuration);
     case Instructions::i64_clz.value():
-        UNARY_NUMERIC_OPERATION(i64, clz);
+        return unary_operation<i64, i64, Operators::CountLeadingZeros>(configuration);
     case Instructions::i64_ctz.value():
-        UNARY_NUMERIC_OPERATION(i64, ctz);
+        return unary_operation<i64, i64, Operators::CountTrailingZeros>(configuration);
     case Instructions::i64_popcnt.value():
-        UNARY_NUMERIC_OPERATION(i64, __builtin_popcountll);
+        return unary_operation<i64, i64, Operators::PopCount>(configuration);
     case Instructions::i64_add.value():
-        BINARY_NUMERIC_OPERATION(u64, +, i64);
+        return binary_numeric_operation<u64, i64, Operators::Add>(configuration);
     case Instructions::i64_sub.value():
-        BINARY_NUMERIC_OPERATION(u64, -, i64);
+        return binary_numeric_operation<u64, i64, Operators::Subtract>(configuration);
     case Instructions::i64_mul.value():
-        BINARY_NUMERIC_OPERATION(u64, *, i64);
+        return binary_numeric_operation<u64, i64, Operators::Multiply>(configuration);
     case Instructions::i64_divs.value():
-        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i64, /, i64, TRAP_IF_NOT(rhs.value() != 0));
+        return binary_numeric_operation<i64, i64, Operators::Divide>(configuration);
     case Instructions::i64_divu.value():
-        OVF_CHECKED_BINARY_NUMERIC_OPERATION(u64, /, i64, TRAP_IF_NOT(rhs.value() != 0));
+        return binary_numeric_operation<u64, i64, Operators::Divide>(configuration);
     case Instructions::i64_rems.value():
-        BINARY_NUMERIC_OPERATION(i64, %, i64, TRAP_IF_NOT(!(Checked<i32>(lhs.value()) /= rhs.value()).has_overflow()));
+        return binary_numeric_operation<i64, i64, Operators::Modulo>(configuration);
     case Instructions::i64_remu.value():
-        BINARY_NUMERIC_OPERATION(u64, %, i64, TRAP_IF_NOT(rhs.value() != 0));
+        return binary_numeric_operation<u64, i64, Operators::Modulo>(configuration);
     case Instructions::i64_and.value():
-        BINARY_NUMERIC_OPERATION(i64, &, i64);
+        return binary_numeric_operation<i64, i64, Operators::BitAnd>(configuration);
     case Instructions::i64_or.value():
-        BINARY_NUMERIC_OPERATION(i64, |, i64);
+        return binary_numeric_operation<i64, i64, Operators::BitOr>(configuration);
     case Instructions::i64_xor.value():
-        BINARY_NUMERIC_OPERATION(i64, ^, i64);
+        return binary_numeric_operation<i64, i64, Operators::BitXor>(configuration);
     case Instructions::i64_shl.value():
-        BINARY_NUMERIC_OPERATION(u64, <<, i64, (rhs = rhs.value() % 64));
+        return binary_numeric_operation<u64, i64, Operators::BitShiftLeft>(configuration);
     case Instructions::i64_shrs.value():
-        BINARY_NUMERIC_OPERATION(u64, >>, i64, (rhs = rhs.value() % 64)); // FIXME: eh, shouldn't we keep lhs as signed?
+        return binary_numeric_operation<i64, i64, Operators::BitShiftRight>(configuration);
     case Instructions::i64_shru.value():
-        BINARY_NUMERIC_OPERATION(u64, >>, i64, (rhs = rhs.value() % 64));
+        return binary_numeric_operation<u64, i64, Operators::BitShiftLeft>(configuration);
     case Instructions::i64_rotl.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(u64, rotl, i64, (rhs = rhs.value() % 64));
+        return binary_numeric_operation<u64, i64, Operators::BitRotateLeft>(configuration);
     case Instructions::i64_rotr.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(u64, rotr, i64, (rhs = rhs.value() % 64));
+        return binary_numeric_operation<u64, i64, Operators::BitRotateRight>(configuration);
     case Instructions::f32_abs.value():
-        UNARY_NUMERIC_OPERATION(float, fabsf);
+        return unary_operation<float, float, Operators::Absolute>(configuration);
     case Instructions::f32_neg.value():
-        UNARY_NUMERIC_OPERATION(float, -);
+        return unary_operation<float, float, Operators::Negate>(configuration);
     case Instructions::f32_ceil.value():
-        UNARY_NUMERIC_OPERATION(float, ceilf);
+        return unary_operation<float, float, Operators::Ceil>(configuration);
     case Instructions::f32_floor.value():
-        UNARY_NUMERIC_OPERATION(float, floorf);
+        return unary_operation<float, float, Operators::Floor>(configuration);
     case Instructions::f32_trunc.value():
-        UNARY_NUMERIC_OPERATION(float, truncf);
+        return unary_operation<float, float, Operators::Truncate>(configuration);
     case Instructions::f32_nearest.value():
-        UNARY_NUMERIC_OPERATION(float, roundf);
+        return unary_operation<float, float, Operators::Round>(configuration);
     case Instructions::f32_sqrt.value():
-        UNARY_NUMERIC_OPERATION(float, sqrtf);
+        return unary_operation<float, float, Operators::SquareRoot>(configuration);
     case Instructions::f32_add.value():
-        BINARY_NUMERIC_OPERATION(float, +, float);
+        return binary_numeric_operation<float, float, Operators::Add>(configuration);
     case Instructions::f32_sub.value():
-        BINARY_NUMERIC_OPERATION(float, -, float);
+        return binary_numeric_operation<float, float, Operators::Subtract>(configuration);
     case Instructions::f32_mul.value():
-        BINARY_NUMERIC_OPERATION(float, *, float);
+        return binary_numeric_operation<float, float, Operators::Multiply>(configuration);
     case Instructions::f32_div.value():
-        BINARY_NUMERIC_OPERATION(float, /, float);
+        return binary_numeric_operation<float, float, Operators::Divide>(configuration);
     case Instructions::f32_min.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(float, float_min, float);
+        return binary_numeric_operation<float, float, Operators::Minimum>(configuration);
     case Instructions::f32_max.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(float, float_max, float);
+        return binary_numeric_operation<float, float, Operators::Maximum>(configuration);
     case Instructions::f32_copysign.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(float, copysignf, float);
+        return binary_numeric_operation<float, float, Operators::CopySign>(configuration);
     case Instructions::f64_abs.value():
-        UNARY_NUMERIC_OPERATION(double, fabs);
+        return unary_operation<double, double, Operators::Absolute>(configuration);
     case Instructions::f64_neg.value():
-        UNARY_NUMERIC_OPERATION(double, -);
+        return unary_operation<double, double, Operators::Negate>(configuration);
     case Instructions::f64_ceil.value():
-        UNARY_NUMERIC_OPERATION(double, ceil);
+        return unary_operation<double, double, Operators::Ceil>(configuration);
     case Instructions::f64_floor.value():
-        UNARY_NUMERIC_OPERATION(double, floor);
+        return unary_operation<double, double, Operators::Floor>(configuration);
     case Instructions::f64_trunc.value():
-        UNARY_NUMERIC_OPERATION(double, trunc);
+        return unary_operation<double, double, Operators::Truncate>(configuration);
     case Instructions::f64_nearest.value():
-        UNARY_NUMERIC_OPERATION(double, round);
+        return unary_operation<double, double, Operators::Round>(configuration);
     case Instructions::f64_sqrt.value():
-        UNARY_NUMERIC_OPERATION(double, sqrt);
+        return unary_operation<double, double, Operators::SquareRoot>(configuration);
     case Instructions::f64_add.value():
-        BINARY_NUMERIC_OPERATION(double, +, double);
+        return binary_numeric_operation<double, double, Operators::Add>(configuration);
     case Instructions::f64_sub.value():
-        BINARY_NUMERIC_OPERATION(double, -, double);
+        return binary_numeric_operation<double, double, Operators::Subtract>(configuration);
     case Instructions::f64_mul.value():
-        BINARY_NUMERIC_OPERATION(double, *, double);
+        return binary_numeric_operation<double, double, Operators::Multiply>(configuration);
     case Instructions::f64_div.value():
-        BINARY_NUMERIC_OPERATION(double, /, double);
+        return binary_numeric_operation<double, double, Operators::Divide>(configuration);
     case Instructions::f64_min.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(double, float_min, double);
+        return binary_numeric_operation<double, double, Operators::Minimum>(configuration);
     case Instructions::f64_max.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(double, float_max, double);
+        return binary_numeric_operation<double, double, Operators::Maximum>(configuration);
     case Instructions::f64_copysign.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(double, copysign, double);
+        return binary_numeric_operation<double, double, Operators::CopySign>(configuration);
     case Instructions::i32_wrap_i64.value():
-        UNARY_MAP(i64, i32, i32);
-    case Instructions::i32_trunc_sf32.value(): {
-        auto fn = [this](auto& v) { return checked_signed_truncate<float, i32>(v); };
-        UNARY_MAP(float, fn, i32);
-    }
-    case Instructions::i32_trunc_uf32.value(): {
-        auto fn = [this](auto& value) { return checked_unsigned_truncate<float, i32>(value); };
-        UNARY_MAP(float, fn, i32);
-    }
-    case Instructions::i32_trunc_sf64.value(): {
-        auto fn = [this](auto& value) { return checked_signed_truncate<double, i32>(value); };
-        UNARY_MAP(double, fn, i32);
-    }
-    case Instructions::i32_trunc_uf64.value(): {
-        auto fn = [this](auto& value) { return checked_unsigned_truncate<double, i32>(value); };
-        UNARY_MAP(double, fn, i32);
-    }
-    case Instructions::i64_trunc_sf32.value(): {
-        auto fn = [this](auto& value) { return checked_signed_truncate<float, i64>(value); };
-        UNARY_MAP(float, fn, i64);
-    }
-    case Instructions::i64_trunc_uf32.value(): {
-        auto fn = [this](auto& value) { return checked_unsigned_truncate<float, i64>(value); };
-        UNARY_MAP(float, fn, i64);
-    }
-    case Instructions::i64_trunc_sf64.value(): {
-        auto fn = [this](auto& value) { return checked_signed_truncate<double, i64>(value); };
-        UNARY_MAP(double, fn, i64);
-    }
-    case Instructions::i64_trunc_uf64.value(): {
-        auto fn = [this](auto& value) { return checked_unsigned_truncate<double, i64>(value); };
-        UNARY_MAP(double, fn, i64);
-    }
+        return unary_operation<i64, i32, Operators::Wrap<i32>>(configuration);
+    case Instructions::i32_trunc_sf32.value():
+        return unary_operation<float, i32, Operators::CheckedTruncate<i32>>(configuration);
+    case Instructions::i32_trunc_uf32.value():
+        return unary_operation<float, i32, Operators::CheckedTruncate<u32>>(configuration);
+    case Instructions::i32_trunc_sf64.value():
+        return unary_operation<double, i32, Operators::CheckedTruncate<i32>>(configuration);
+    case Instructions::i32_trunc_uf64.value():
+        return unary_operation<double, i32, Operators::CheckedTruncate<u32>>(configuration);
+    case Instructions::i64_trunc_sf32.value():
+        return unary_operation<float, i64, Operators::CheckedTruncate<i64>>(configuration);
+    case Instructions::i64_trunc_uf32.value():
+        return unary_operation<float, i64, Operators::CheckedTruncate<u64>>(configuration);
+    case Instructions::i64_trunc_sf64.value():
+        return unary_operation<double, i64, Operators::CheckedTruncate<i64>>(configuration);
+    case Instructions::i64_trunc_uf64.value():
+        return unary_operation<double, i64, Operators::CheckedTruncate<u64>>(configuration);
     case Instructions::i64_extend_si32.value():
-        UNARY_MAP(i32, i64, i64);
+        return unary_operation<i32, i64, Operators::Extend<i64>>(configuration);
     case Instructions::i64_extend_ui32.value():
-        UNARY_MAP(u32, i64, i64);
+        return unary_operation<u32, i64, Operators::Extend<i64>>(configuration);
     case Instructions::f32_convert_si32.value():
-        UNARY_MAP(i32, float, float);
+        return unary_operation<i32, float, Operators::Convert<float>>(configuration);
     case Instructions::f32_convert_ui32.value():
-        UNARY_MAP(u32, float, float);
+        return unary_operation<u32, float, Operators::Convert<float>>(configuration);
     case Instructions::f32_convert_si64.value():
-        UNARY_MAP(i64, float, float);
+        return unary_operation<i64, float, Operators::Convert<float>>(configuration);
     case Instructions::f32_convert_ui64.value():
-        UNARY_MAP(u32, float, float);
+        return unary_operation<u64, float, Operators::Convert<float>>(configuration);
     case Instructions::f32_demote_f64.value():
-        UNARY_MAP(double, float, float);
+        return unary_operation<double, float, Operators::Demote>(configuration);
     case Instructions::f64_convert_si32.value():
-        UNARY_MAP(i32, double, double);
+        return unary_operation<i32, double, Operators::Convert<double>>(configuration);
     case Instructions::f64_convert_ui32.value():
-        UNARY_MAP(u32, double, double);
+        return unary_operation<u32, double, Operators::Convert<double>>(configuration);
     case Instructions::f64_convert_si64.value():
-        UNARY_MAP(i64, double, double);
+        return unary_operation<i64, double, Operators::Convert<double>>(configuration);
     case Instructions::f64_convert_ui64.value():
-        UNARY_MAP(u64, double, double);
+        return unary_operation<u64, double, Operators::Convert<double>>(configuration);
     case Instructions::f64_promote_f32.value():
-        UNARY_MAP(float, double, double);
+        return unary_operation<float, double, Operators::Promote>(configuration);
     case Instructions::i32_reinterpret_f32.value():
-        UNARY_MAP(float, bit_cast<i32>, i32);
+        return unary_operation<float, i32, Operators::Reinterpret<i32>>(configuration);
     case Instructions::i64_reinterpret_f64.value():
-        UNARY_MAP(double, bit_cast<i64>, i64);
+        return unary_operation<double, i64, Operators::Reinterpret<i64>>(configuration);
     case Instructions::f32_reinterpret_i32.value():
-        UNARY_MAP(i32, bit_cast<float>, float);
+        return unary_operation<i32, float, Operators::Reinterpret<float>>(configuration);
     case Instructions::f64_reinterpret_i64.value():
-        UNARY_MAP(i64, bit_cast<double>, double);
+        return unary_operation<i64, double, Operators::Reinterpret<double>>(configuration);
     case Instructions::i32_extend8_s.value():
-        UNARY_MAP(i32, (extend_signed<i8, i32>), i32);
+        return unary_operation<i32, i32, Operators::SignExtend<i8>>(configuration);
     case Instructions::i32_extend16_s.value():
-        UNARY_MAP(i32, (extend_signed<i16, i32>), i32);
+        return unary_operation<i32, i32, Operators::SignExtend<i16>>(configuration);
     case Instructions::i64_extend8_s.value():
-        UNARY_MAP(i64, (extend_signed<i8, i64>), i64);
+        return unary_operation<i64, i64, Operators::SignExtend<i8>>(configuration);
     case Instructions::i64_extend16_s.value():
-        UNARY_MAP(i64, (extend_signed<i16, i64>), i64);
+        return unary_operation<i64, i64, Operators::SignExtend<i16>>(configuration);
     case Instructions::i64_extend32_s.value():
-        UNARY_MAP(i64, (extend_signed<i32, i64>), i64);
+        return unary_operation<i64, i64, Operators::SignExtend<i32>>(configuration);
     case Instructions::i32_trunc_sat_f32_s.value():
-        UNARY_MAP(float, saturating_truncate<i32>, i32);
+        return unary_operation<float, i32, Operators::SaturatingTruncate<i32>>(configuration);
     case Instructions::i32_trunc_sat_f32_u.value():
-        UNARY_MAP(float, saturating_truncate<u32>, i32);
+        return unary_operation<float, i32, Operators::SaturatingTruncate<u32>>(configuration);
     case Instructions::i32_trunc_sat_f64_s.value():
-        UNARY_MAP(double, saturating_truncate<i32>, i32);
+        return unary_operation<double, i32, Operators::SaturatingTruncate<i32>>(configuration);
     case Instructions::i32_trunc_sat_f64_u.value():
-        UNARY_MAP(double, saturating_truncate<u32>, i32);
+        return unary_operation<double, i32, Operators::SaturatingTruncate<u32>>(configuration);
     case Instructions::i64_trunc_sat_f32_s.value():
-        UNARY_MAP(float, saturating_truncate<i64>, i64);
+        return unary_operation<float, i64, Operators::SaturatingTruncate<i64>>(configuration);
     case Instructions::i64_trunc_sat_f32_u.value():
-        UNARY_MAP(float, saturating_truncate<u64>, i64);
+        return unary_operation<float, i64, Operators::SaturatingTruncate<u64>>(configuration);
     case Instructions::i64_trunc_sat_f64_s.value():
-        UNARY_MAP(double, saturating_truncate<i64>, i64);
+        return unary_operation<double, i64, Operators::SaturatingTruncate<i64>>(configuration);
     case Instructions::i64_trunc_sat_f64_u.value():
-        UNARY_MAP(double, saturating_truncate<u64>, i64);
+        return unary_operation<double, i64, Operators::SaturatingTruncate<u64>>(configuration);
     case Instructions::memory_init.value():
     case Instructions::data_drop.value():
     case Instructions::memory_copy.value():
@@ -1136,5 +985,4 @@ void DebuggerBytecodeInterpreter::interpret(Configuration& configuration, Instru
         }
     }
 }
-
 }
