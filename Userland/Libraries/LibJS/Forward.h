@@ -76,6 +76,8 @@
     __JS_ENUMERATE(Float32Array, float32_array, Float32ArrayPrototype, Float32ArrayConstructor, float)                          \
     __JS_ENUMERATE(Float64Array, float64_array, Float64ArrayPrototype, Float64ArrayConstructor, double)
 
+#define JS_ENUMERATE_INTL_OBJECTS
+
 #define JS_ENUMERATE_TEMPORAL_OBJECTS                                                                    \
     __JS_ENUMERATE(Calendar, calendar, CalendarPrototype, CalendarConstructor)                           \
     __JS_ENUMERATE(Duration, duration, DurationPrototype, DurationConstructor)                           \
@@ -196,6 +198,15 @@ JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES
 JS_ENUMERATE_NATIVE_ERRORS
 JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
+
+namespace Intl {
+#define __JS_ENUMERATE(ClassName, snake_name, ConstructorName, PrototypeName) \
+    class ClassName;                                                          \
+    class ConstructorName;                                                    \
+    class PrototypeName;
+JS_ENUMERATE_INTL_OBJECTS
+#undef __JS_ENUMERATE
+};
 
 namespace Temporal {
 #define __JS_ENUMERATE(ClassName, snake_name, ConstructorName, PrototypeName) \

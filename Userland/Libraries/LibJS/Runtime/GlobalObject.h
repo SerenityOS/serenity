@@ -47,6 +47,12 @@ public:
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                              \
+    Intl::ConstructorName* intl_##snake_name##_constructor() { return m_intl_##snake_name##_constructor; } \
+    Object* intl_##snake_name##_prototype() { return m_intl_##snake_name##_prototype; }
+    JS_ENUMERATE_INTL_OBJECTS
+#undef __JS_ENUMERATE
+
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)                                          \
     Temporal::ConstructorName* temporal_##snake_name##_constructor() { return m_temporal_##snake_name##_constructor; } \
     Object* temporal_##snake_name##_prototype() { return m_temporal_##snake_name##_prototype; }
@@ -105,6 +111,12 @@ private:
     ConstructorName* m_##snake_name##_constructor { nullptr };                           \
     Object* m_##snake_name##_prototype { nullptr };
     JS_ENUMERATE_BUILTIN_TYPES
+#undef __JS_ENUMERATE
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    Intl::ConstructorName* m_intl_##snake_name##_constructor { nullptr };     \
+    Object* m_intl_##snake_name##_prototype { nullptr };
+    JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)     \

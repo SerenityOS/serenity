@@ -155,6 +155,18 @@ void GlobalObject::initialize_global_object()
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    if (!m_intl_##snake_name##_prototype)                                     \
+        m_intl_##snake_name##_prototype = heap().allocate<Intl::PrototypeName>(*this, *this);
+    JS_ENUMERATE_INTL_OBJECTS
+#undef __JS_ENUMERATE
+
+    // Must be allocated before `Intl::Intl` below.
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    initialize_constructor(vm.names.ClassName, m_intl_##snake_name##_constructor, m_intl_##snake_name##_prototype);
+    JS_ENUMERATE_INTL_OBJECTS
+#undef __JS_ENUMERATE
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
     if (!m_temporal_##snake_name##_prototype)                                 \
         m_temporal_##snake_name##_prototype = heap().allocate<Temporal::PrototypeName>(*this, *this);
     JS_ENUMERATE_TEMPORAL_OBJECTS
@@ -274,6 +286,12 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_##snake_name##_constructor);                                         \
     visitor.visit(m_##snake_name##_prototype);
     JS_ENUMERATE_BUILTIN_TYPES
+#undef __JS_ENUMERATE
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    visitor.visit(m_intl_##snake_name##_constructor);                         \
+    visitor.visit(m_intl_##snake_name##_prototype);
+    JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
