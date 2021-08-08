@@ -48,7 +48,6 @@ class Process;
 class ProcessGroup;
 class RecursiveSpinLock;
 class Scheduler;
-class SchedulerData;
 class Socket;
 class SysFS;
 class SysFSDirectory;
