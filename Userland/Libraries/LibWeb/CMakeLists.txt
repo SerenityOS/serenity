@@ -242,70 +242,50 @@ set(GENERATED_SOURCES
     ../../Services/WebContent/WebContentServerEndpoint.h
 )
 
-set_property(GLOBAL PROPERTY wrapper_sources)
-function(add_wrapper_sources)
-    get_property(tmp GLOBAL PROPERTY wrapper_sources)
-    foreach(arg ${ARGV})
-        set(tmp ${tmp}
-            ${arg}
-        )
-    endforeach()
-    set_property(GLOBAL PROPERTY wrapper_sources "${tmp}")
-endfunction(add_wrapper_sources)
+serenity_lib(LibWeb web)
+target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibImageDecoderClient LibWasm)
 
 function(libweb_js_wrapper class)
-    get_filename_component(basename ${class} NAME)
-    add_wrapper_sources(Bindings/${basename}Wrapper.cpp Bindings/${basename}Wrapper.h)
-    add_wrapper_sources(Bindings/${basename}Constructor.cpp Bindings/${basename}Constructor.h)
-    add_wrapper_sources(Bindings/${basename}Prototype.cpp Bindings/${basename}Prototype.h)
-    add_custom_command(
-        OUTPUT Bindings/${basename}Wrapper.h
-        COMMAND ${write_if_different} Bindings/${basename}Wrapper.h CodeGenerators/WrapperGenerator --header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
+    get_filename_component(basename "${class}" NAME)
+    set(BINDINGS_SOURCES
+        "Bindings/${basename}Wrapper.h"
+        "Bindings/${basename}Wrapper.cpp"
+        "Bindings/${basename}Constructor.h"
+        "Bindings/${basename}Constructor.cpp"
+        "Bindings/${basename}Prototype.h"
+        "Bindings/${basename}Prototype.cpp"
     )
-    add_custom_command(
-        OUTPUT Bindings/${basename}Wrapper.cpp
-        COMMAND ${write_if_different} Bindings/${basename}Wrapper.cpp CodeGenerators/WrapperGenerator --implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
+    set(BINDINGS_TYPES
+        header
+        implementation
+        constructor-header
+        constructor-implementation
+        prototype-header
+        prototype-implementation
     )
-    add_custom_command(
-        OUTPUT Bindings/${basename}Constructor.h
-        COMMAND ${write_if_different} Bindings/${basename}Constructor.h CodeGenerators/WrapperGenerator --constructor-header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
-    )
-    add_custom_command(
-        OUTPUT Bindings/${basename}Constructor.cpp
-        COMMAND ${write_if_different} Bindings/${basename}Constructor.cpp CodeGenerators/WrapperGenerator --constructor-implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
-    )
-    add_custom_command(
-        OUTPUT Bindings/${basename}Prototype.h
-        COMMAND ${write_if_different} Bindings/${basename}Prototype.h CodeGenerators/WrapperGenerator --prototype-header ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
-    )
-    add_custom_command(
-        OUTPUT Bindings/${basename}Prototype.cpp
-        COMMAND ${write_if_different} Bindings/${basename}Prototype.cpp CodeGenerators/WrapperGenerator --prototype-implementation ${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl
-        VERBATIM
-        DEPENDS WrapperGenerator
-        MAIN_DEPENDENCY ${class}.idl
-    )
-    add_custom_target(generate_${basename}Wrapper.h DEPENDS Bindings/${class}Wrapper.h)
-    add_custom_target(generate_${basename}Wrapper.cpp DEPENDS Bindings/${class}Wrapper.cpp)
-    add_custom_target(generate_${basename}Constructor.h DEPENDS Bindings/${class}Constructor.h)
-    add_custom_target(generate_${basename}Constructor.cpp DEPENDS Bindings/${class}Constructor.cpp)
-    add_custom_target(generate_${basename}Prototype.h DEPENDS Bindings/${class}Prototype.h)
-    add_custom_target(generate_${basename}Prototype.cpp DEPENDS Bindings/${class}Prototype.cpp)
+    target_sources(LibWeb PRIVATE ${BINDINGS_SOURCES})
+    # FIXME: cmake_minimum_required(3.17) for ZIP_LISTS
+    list(LENGTH BINDINGS_SOURCES num_bindings)
+    math(EXPR bindings_end "${num_bindings} - 1")
+    foreach(iter RANGE "${bindings_end}")
+        list(GET BINDINGS_SOURCES ${iter} bindings_src)
+        list(GET BINDINGS_TYPES ${iter} bindings_type)
+        add_custom_command(
+            OUTPUT "${bindings_src}"
+            COMMAND "$<TARGET_FILE:WrapperGenerator>" "--${bindings_type}" "${CMAKE_CURRENT_SOURCE_DIR}/${class}.idl" > "${bindings_src}.tmp"
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${bindings_src}.tmp" "${bindings_src}"
+            COMMAND "${CMAKE_COMMAND}" -E remove "${bindings_src}.tmp"
+            VERBATIM
+            DEPENDS WrapperGenerator
+            MAIN_DEPENDENCY ${class}.idl
+        )
+    endforeach()
+    add_custom_target(generate_${basename}Wrapper.h DEPENDS Bindings/${basename}Wrapper.h)
+    add_custom_target(generate_${basename}Wrapper.cpp DEPENDS Bindings/${basename}Wrapper.cpp)
+    add_custom_target(generate_${basename}Constructor.h DEPENDS Bindings/${basename}Constructor.h)
+    add_custom_target(generate_${basename}Constructor.cpp DEPENDS Bindings/${basename}Constructor.cpp)
+    add_custom_target(generate_${basename}Prototype.h DEPENDS Bindings/${basename}Prototype.h)
+    add_custom_target(generate_${basename}Prototype.cpp DEPENDS Bindings/${basename}Prototype.cpp)
 endfunction()
 
 libweb_js_wrapper(CSS/CSSStyleDeclaration)
@@ -420,12 +400,12 @@ libweb_js_wrapper(XHR/ProgressEvent)
 libweb_js_wrapper(XHR/XMLHttpRequest)
 libweb_js_wrapper(XHR/XMLHttpRequestEventTarget)
 
-get_property(WRAPPER_SOURCES GLOBAL PROPERTY wrapper_sources)
-set(SOURCES ${SOURCES} ${WRAPPER_SOURCES})
-
 add_custom_command(
     OUTPUT CSS/PropertyID.h
-    COMMAND ${write_if_different} CSS/PropertyID.h CodeGenerators/Generate_CSS_PropertyID_h ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json
+    COMMAND ${CMAKE_COMMAND} -E make_directory CSS
+    COMMAND "$<TARGET_FILE:Generate_CSS_PropertyID_h>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json" > CSS/PropertyID.h.tmp
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/PropertyID.h.tmp CSS/PropertyID.h
+    COMMAND "${CMAKE_COMMAND}" -E remove CSS/PropertyID.h.tmp
     VERBATIM
     DEPENDS Generate_CSS_PropertyID_h
     MAIN_DEPENDENCY CSS/Properties.json
@@ -435,15 +415,21 @@ add_custom_target(generate_PropertyID.h DEPENDS CSS/PropertyID.h)
 add_custom_command(
     OUTPUT CSS/PropertyID.cpp
     COMMAND ${CMAKE_COMMAND} -E make_directory CSS
-    COMMAND ${write_if_different} CSS/PropertyID.cpp CodeGenerators/Generate_CSS_PropertyID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json
+    COMMAND "$<TARGET_FILE:Generate_CSS_PropertyID_cpp>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Properties.json" > CSS/PropertyID.cpp.tmp
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/PropertyID.cpp.tmp CSS/PropertyID.cpp
+    COMMAND "${CMAKE_COMMAND}" -E remove CSS/PropertyID.cpp.tmp
     VERBATIM
     DEPENDS Generate_CSS_PropertyID_cpp
     MAIN_DEPENDENCY CSS/Properties.json
 )
+add_custom_target(generate_PropertyID.cpp DEPENDS CSS/PropertyID.cpp)
 
 add_custom_command(
     OUTPUT CSS/ValueID.h
-    COMMAND ${write_if_different} CSS/ValueID.h CodeGenerators/Generate_CSS_ValueID_h ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json
+    COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
+    COMMAND "$<TARGET_FILE:Generate_CSS_ValueID_h>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json" > CSS/ValueID.h.tmp
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/ValueID.h.tmp CSS/ValueID.h
+    COMMAND "${CMAKE_COMMAND}" -E remove CSS/ValueID.h.tmp
     VERBATIM
     DEPENDS Generate_CSS_ValueID_h
     MAIN_DEPENDENCY CSS/Identifiers.json
@@ -452,30 +438,38 @@ add_custom_target(generate_ValueID.h DEPENDS CSS/ValueID.h)
 
 add_custom_command(
     OUTPUT CSS/ValueID.cpp
-    COMMAND ${CMAKE_COMMAND} -E make_directory CSS
-    COMMAND ${write_if_different} CSS/ValueID.cpp CodeGenerators/Generate_CSS_ValueID_cpp ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json
+    COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
+    COMMAND "$<TARGET_FILE:Generate_CSS_ValueID_cpp>" "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Identifiers.json" > CSS/ValueID.cpp.tmp
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/ValueID.cpp.tmp CSS/ValueID.cpp
+    COMMAND "${CMAKE_COMMAND}" -E remove CSS/ValueID.cpp.tmp
     VERBATIM
     DEPENDS Generate_CSS_ValueID_cpp
     MAIN_DEPENDENCY CSS/Identifiers.json
 )
+add_custom_target(generate_ValueID.cpp DEPENDS CSS/ValueID.cpp)
 
 add_custom_command(
     OUTPUT CSS/DefaultStyleSheetSource.cpp
-    COMMAND ${write_if_different} CSS/DefaultStyleSheetSource.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh default_stylesheet_source ${CMAKE_CURRENT_SOURCE_DIR}/CSS/Default.css
+    COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
+    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh" default_stylesheet_source "${CMAKE_CURRENT_SOURCE_DIR}/CSS/Default.css" > CSS/DefaultStyleSheetSource.cpp.tmp
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/DefaultStyleSheetSource.cpp.tmp CSS/DefaultStyleSheetSource.cpp
+    COMMAND "${CMAKE_COMMAND}" -E remove CSS/DefaultStyleSheetSource.cpp.tmp
     VERBATIM
-    DEPENDS Scripts/GenerateStyleSheetSource.sh
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh"
     MAIN_DEPENDENCY CSS/Default.css
 )
+add_custom_target(generate_DefaultStyleSheetSource.cpp DEPENDS CSS/DefaultStyleSheetSource.cpp)
 
 add_custom_command(
     OUTPUT CSS/QuirksModeStyleSheetSource.cpp
-    COMMAND ${write_if_different} CSS/QuirksModeStyleSheetSource.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh quirks_mode_stylesheet_source ${CMAKE_CURRENT_SOURCE_DIR}/CSS/QuirksMode.css
+    COMMAND "${CMAKE_COMMAND}" -E make_directory CSS
+    COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh" quirks_mode_stylesheet_source "${CMAKE_CURRENT_SOURCE_DIR}/CSS/QuirksMode.css" > CSS/QuirksModeStyleSheetSource.cpp.tmp
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different CSS/QuirksModeStyleSheetSource.cpp.tmp CSS/QuirksModeStyleSheetSource.cpp
+    COMMAND "${CMAKE_COMMAND}" -E remove CSS/QuirksModeStyleSheetSource.cpp.tmp
     VERBATIM
-    DEPENDS Scripts/GenerateStyleSheetSource.sh
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/Scripts/GenerateStyleSheetSource.sh"
     MAIN_DEPENDENCY CSS/Default.css
 )
-
-serenity_lib(LibWeb web)
-target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibImageDecoderClient LibWasm)
+add_custom_target(generate_QuirksModeStyleSheetSource.cpp DEPENDS CSS/QuirksModeStyleSheetSource.cpp)
 
 add_subdirectory(DumpLayoutTree)
