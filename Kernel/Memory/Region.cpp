@@ -236,10 +236,10 @@ bool Region::remap_vmobject_page(size_t page_index, bool with_flush)
 
 void Region::unmap(ShouldDeallocateVirtualRange deallocate_range)
 {
-    ScopedSpinLock lock(s_mm_lock);
     if (!m_page_directory)
         return;
     ScopedSpinLock page_lock(m_page_directory->get_lock());
+    ScopedSpinLock lock(s_mm_lock);
     size_t count = page_count();
     for (size_t i = 0; i < count; ++i) {
         auto vaddr = vaddr_from_page_index(i);
@@ -261,8 +261,8 @@ void Region::set_page_directory(PageDirectory& page_directory)
 
 bool Region::map(PageDirectory& page_directory, ShouldFlushTLB should_flush_tlb)
 {
-    ScopedSpinLock lock(s_mm_lock);
     ScopedSpinLock page_lock(page_directory.get_lock());
+    ScopedSpinLock lock(s_mm_lock);
 
     // FIXME: Find a better place for this sanity check(?)
     if (is_user() && !is_shared()) {
