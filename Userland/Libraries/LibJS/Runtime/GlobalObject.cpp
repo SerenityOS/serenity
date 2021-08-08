@@ -41,6 +41,7 @@
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Intl/Intl.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MapConstructor.h>
@@ -203,6 +204,7 @@ void GlobalObject::initialize_global_object()
     define_direct_property(vm.names.Math, heap().allocate<MathObject>(*this, *this), attr);
     define_direct_property(vm.names.JSON, heap().allocate<JSONObject>(*this, *this), attr);
     define_direct_property(vm.names.Reflect, heap().allocate<ReflectObject>(*this, *this), attr);
+    define_direct_property(vm.names.Intl, heap().allocate<Intl::Intl>(*this, *this), attr);
     define_direct_property(vm.names.Temporal, heap().allocate<Temporal::Temporal>(*this, *this), attr);
 
     // This must be initialized before allocating AggregateErrorConstructor, which uses ErrorConstructor as its prototype.

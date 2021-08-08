@@ -25,6 +25,7 @@ namespace JS {
     P(EPSILON)                               \
     P(Function)                              \
     P(Infinity)                              \
+    P(Intl)                                  \
     P(JSON)                                  \
     P(LN10)                                  \
     P(LN2)                                   \
