@@ -371,12 +371,15 @@ if (BUILD_LAGOM)
             set(write_if_different ${CMAKE_CURRENT_SOURCE_DIR}/../write-only-on-difference.sh)
             add_subdirectory(../../Userland/Libraries/LibUnicode/CodeGenerators ${CMAKE_CURRENT_BINARY_DIR}/LibUnicode/CodeGenerators)
         endif()
-        include(../../Userland/Libraries/LibUnicode/unicode_data.cmake)
+        include(${SERENITY_PROJECT_ROOT}/Meta/CMake/unicode_data.cmake)
+    else()
+        set(ENABLE_UNICODE_DATABASE_DOWNLOAD OFF)
     endif()
     file(GLOB LIBUNICODE_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibUnicode/*.cpp")
     lagom_lib(Unicode unicode
         SOURCES ${LIBUNICODE_SOURCES} ${UNICODE_DATA_SOURCES}
     )
+    target_compile_definitions(LagomUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
 
     # WASM
     file(GLOB LIBWASM_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWasm/*/*.cpp")
