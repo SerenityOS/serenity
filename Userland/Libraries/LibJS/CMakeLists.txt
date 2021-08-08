@@ -72,6 +72,7 @@ set(SOURCES
     Runtime/GlobalEnvironment.cpp
     Runtime/GlobalObject.cpp
     Runtime/IndexedProperties.cpp
+    Runtime/Intl/Intl.cpp
     Runtime/IteratorOperations.cpp
     Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp
