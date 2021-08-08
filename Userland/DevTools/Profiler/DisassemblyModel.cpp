@@ -64,26 +64,42 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
 
     VERIFY(elf != nullptr);
 
-    auto symbol = elf->find_symbol(node.address() - base_address);
+    FlatPtr function_address = node.address() - base_address;
+    Debug::DebugInfo debug_info { *elf, {}, base_address };
+    auto function = debug_info.get_containing_function(function_address);
+    if (function.has_value())
+        function_address = function->address_low;
+    else
+        dbgln("DisassemblyModel: Function containing {:p} ({}) not found", node.address() - base_address, node.symbol());
+
+    auto symbol = elf->find_symbol(function_address);
     if (!symbol.has_value()) {
         dbgln("DisassemblyModel: symbol not found");
         return;
     }
     VERIFY(symbol.has_value());
 
-    auto view = symbol.value().raw_data();
+    auto symbol_offset_from_function_start = node.address() - base_address - symbol->value();
+    auto view = symbol.value().raw_data().substring_view(symbol_offset_from_function_start);
 
     X86::ELFSymbolProvider symbol_provider(*elf);
     X86::SimpleInstructionStream stream((const u8*)view.characters_without_null_termination(), view.length());
     X86::Disassembler disassembler(stream);
-    Debug::DebugInfo debug_info { *elf, {}, base_address };
 
     size_t offset_into_symbol = 0;
+    FlatPtr last_instruction_address = 0;
+    for (auto& event : node.events_per_address())
+        last_instruction_address = max(event.key, last_instruction_address);
+
+    auto last_instruction_offset = last_instruction_address - node.address();
     for (;;) {
+        if (offset_into_symbol > last_instruction_offset)
+            break;
+
         auto insn = disassembler.next();
         if (!insn.has_value())
             break;
-        FlatPtr address_in_profiled_program = base_address + symbol.value().value() + offset_into_symbol;
+        FlatPtr address_in_profiled_program = node.address() + offset_into_symbol;
 
         auto disassembly = insn.value().to_string(address_in_profiled_program, &symbol_provider);
 
