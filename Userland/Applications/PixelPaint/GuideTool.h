@@ -24,6 +24,7 @@ public:
     virtual void on_context_menu(Layer&, GUI::ContextMenuEvent&) override;
 
     virtual GUI::Widget* get_properties_widget() override;
+    virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Crosshair; }
 
 private:
     RefPtr<Guide> closest_guide(Gfx::IntPoint const&);

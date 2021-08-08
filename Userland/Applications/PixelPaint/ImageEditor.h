@@ -100,6 +100,7 @@ private:
     virtual void keyup_event(GUI::KeyEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
+    virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
 
     virtual void image_did_change(Gfx::IntRect const&) override;
@@ -129,6 +130,8 @@ private:
     Gfx::FloatPoint m_pan_origin;
     Gfx::FloatPoint m_saved_pan_origin;
     Gfx::IntPoint m_click_position;
+
+    Gfx::StandardCursor m_active_cursor { Gfx::StandardCursor::None };
 
     Selection m_selection;
 };

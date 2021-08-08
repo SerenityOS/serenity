@@ -181,6 +181,7 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
     if (event.button() == GUI::MouseButton::Middle) {
         m_click_position = event.position();
         m_saved_pan_origin = m_pan_origin;
+        set_override_cursor(Gfx::StandardCursor::Drag);
         return;
     }
 
@@ -227,6 +228,8 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
 
 void ImageEditor::mouseup_event(GUI::MouseEvent& event)
 {
+    set_override_cursor(m_active_cursor);
+
     if (!m_active_layer || !m_active_tool)
         return;
     auto layer_event = event_adjusted_for_layer(event, *m_active_layer);
@@ -265,8 +268,15 @@ void ImageEditor::keyup_event(GUI::KeyEvent& event)
         m_active_tool->on_keyup(event);
 }
 
+void ImageEditor::enter_event(Core::Event&)
+{
+    set_override_cursor(m_active_cursor);
+}
+
 void ImageEditor::leave_event(Core::Event&)
 {
+    set_override_cursor(Gfx::StandardCursor::None);
+
     if (on_leave)
         on_leave();
 }
@@ -304,8 +314,10 @@ void ImageEditor::set_active_tool(Tool* tool)
 
     m_active_tool = tool;
 
-    if (m_active_tool)
+    if (m_active_tool) {
         m_active_tool->setup(*this);
+        m_active_cursor = m_active_tool->cursor();
+    }
 }
 
 void ImageEditor::layers_did_change()
