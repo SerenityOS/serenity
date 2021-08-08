@@ -76,7 +76,7 @@ static void report_warning(String message)
 static bool collect_copy_work_items(String const& source, String const& destination, Vector<WorkItem>& items)
 {
     struct stat st = {};
-    if (stat(source.characters(), &st) < 0) {
+    if (lstat(source.characters(), &st) < 0) {
         auto original_errno = errno;
         report_error(String::formatted("stat: {}", strerror(original_errno)));
         return false;
@@ -130,7 +130,7 @@ int perform_copy(Vector<String> const& sources, String const& destination)
 static bool collect_move_work_items(String const& source, String const& destination, Vector<WorkItem>& items)
 {
     struct stat st = {};
-    if (stat(source.characters(), &st) < 0) {
+    if (lstat(source.characters(), &st) < 0) {
         auto original_errno = errno;
         report_error(String::formatted("stat: {}", strerror(original_errno)));
         return false;
@@ -191,7 +191,7 @@ int perform_move(Vector<String> const& sources, String const& destination)
 static bool collect_delete_work_items(String const& source, Vector<WorkItem>& items)
 {
     struct stat st = {};
-    if (stat(source.characters(), &st) < 0) {
+    if (lstat(source.characters(), &st) < 0) {
         auto original_errno = errno;
         report_error(String::formatted("stat: {}", strerror(original_errno)));
         return false;
