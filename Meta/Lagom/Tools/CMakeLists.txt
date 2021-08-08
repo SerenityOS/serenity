@@ -1,0 +1,2 @@
+add_subdirectory(ConfigureComponents)
+add_subdirectory(CodeGenerators)
