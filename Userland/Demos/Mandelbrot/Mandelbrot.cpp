@@ -137,7 +137,7 @@ private:
     }
 };
 
-class Mandelbrot : public GUI::Widget {
+class Mandelbrot : public GUI::Frame {
     C_OBJECT(Mandelbrot)
 
     void export_image(String const& export_path);
@@ -158,7 +158,10 @@ private:
 
 void Mandelbrot::paint_event(GUI::PaintEvent& event)
 {
+    Frame::paint_event(event);
+
     GUI::Painter painter(*this);
+    painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
     painter.draw_scaled_bitmap(rect(), m_set.bitmap(), m_set.bitmap().rect());
 
