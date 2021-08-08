@@ -357,7 +357,7 @@ enum {
 #define TCSAFLUSH 2
 
 typedef u32 dev_t;
-typedef u32 ino_t;
+typedef u64 ino_t;
 typedef u16 mode_t;
 typedef u32 nlink_t;
 typedef u32 uid_t;
