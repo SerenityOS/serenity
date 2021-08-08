@@ -855,7 +855,7 @@ bool Processor::smp_process_pending_messages()
     return did_process;
 }
 
-bool Processor::smp_queue_message(ProcessorMessage& msg)
+bool Processor::smp_enqueue_message(ProcessorMessage& msg)
 {
     // Note that it's quite possible that the other processor may pop
     // the queue at any given time. We rely on the fact that the messages
@@ -881,7 +881,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
     for_each(
         [&](Processor& proc) {
             if (&proc != &cur_proc) {
-                if (proc.smp_queue_message(msg))
+                if (proc.smp_enqueue_message(msg))
                     need_broadcast = true;
             }
         });
@@ -920,7 +920,7 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
     dbgln_if(SMP_DEBUG, "SMP[{}]: Send message {} to cpu #{} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_proc));
 
     msg.refs.store(1u, AK::MemoryOrder::memory_order_release);
-    if (target_proc->smp_queue_message(msg)) {
+    if (target_proc->smp_enqueue_message(msg)) {
         APIC::the().send_ipi(cpu);
     }
 
