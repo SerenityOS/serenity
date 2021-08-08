@@ -189,13 +189,13 @@ void LayerListWidget::mouseup_event(GUI::MouseEvent& event)
     if (!m_moving_gadget_index.has_value())
         return;
 
-    size_t old_index = m_moving_gadget_index.value();
-    size_t new_index = hole_index_during_move();
-    if (new_index >= m_image->layer_count())
-        new_index = m_image->layer_count() - 1;
+    size_t old_layer_index = (m_image->layer_count() - 1) - m_moving_gadget_index.value();
+    size_t new_layer_index = (m_image->layer_count() - 1) - hole_index_during_move();
+    if (new_layer_index >= m_image->layer_count())
+        new_layer_index = m_image->layer_count() - 1;
 
     m_moving_gadget_index = {};
-    m_image->change_layer_index(old_index, new_index);
+    m_image->change_layer_index(old_layer_index, new_layer_index);
 }
 
 void LayerListWidget::context_menu_event(GUI::ContextMenuEvent& event)
@@ -204,8 +204,9 @@ void LayerListWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
     auto gadget_index = gadget_at(translated_event_point);
     if (gadget_index.has_value()) {
-        auto& layer = m_image->layer(gadget_index.value());
-        m_selected_layer_index = gadget_index.value();
+        auto layer_index = (m_gadgets.size() - 1) - gadget_index.value();
+        auto& layer = m_image->layer(layer_index);
+        m_selected_layer_index = layer_index;
         set_selected_layer(&layer);
     }
 
@@ -219,8 +220,9 @@ void LayerListWidget::image_did_add_layer(size_t layer_index)
         m_gadgets[m_moving_gadget_index.value()].is_moving = false;
         m_moving_gadget_index = {};
     }
-    Gadget gadget { layer_index, {}, false, {} };
-    m_gadgets.insert(layer_index, gadget);
+    auto gadget_index = m_image->layer_count() - 1 - layer_index;
+    Gadget gadget { gadget_index, {}, false, {} };
+    m_gadgets.insert(gadget_index, gadget);
     relayout_gadgets();
 }
 
@@ -230,7 +232,8 @@ void LayerListWidget::image_did_remove_layer(size_t layer_index)
         m_gadgets[m_moving_gadget_index.value()].is_moving = false;
         m_moving_gadget_index = {};
     }
-    m_gadgets.remove(layer_index);
+    auto gadget_index = m_image->layer_count() - layer_index;
+    m_gadgets.remove(gadget_index);
     m_selected_layer_index = 0;
     relayout_gadgets();
 }
@@ -245,7 +248,8 @@ void LayerListWidget::image_did_modify_layer_bitmap(size_t layer_index)
     Gfx::IntRect adjusted_rect;
     Gfx::IntRect thumbnail_rect;
     Gfx::IntRect text_rect;
-    get_gadget_rects(m_gadgets[layer_index], adjusted_rect, thumbnail_rect, text_rect);
+    auto gadget_index = (m_image->layer_count() - 1) - layer_index;
+    get_gadget_rects(m_gadgets[gadget_index], adjusted_rect, thumbnail_rect, text_rect);
     update(thumbnail_rect);
 }
 
