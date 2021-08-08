@@ -21,6 +21,7 @@ public:
     virtual void on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
     virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
     virtual GUI::Widget* get_properties_widget() override;
+    virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Crosshair; }
 
 private:
     Gfx::IntPoint m_last_drawing_event_position { -1, -1 };

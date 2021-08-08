@@ -32,7 +32,6 @@ void MoveTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEven
     m_layer_being_moved = layer;
     m_event_origin = image_event.position();
     m_layer_origin = layer.location();
-    m_editor->window()->set_cursor(Gfx::StandardCursor::Move);
 }
 
 void MoveTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& image_event)
@@ -49,7 +48,6 @@ void MoveTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
     if (event.button() != GUI::MouseButton::Left)
         return;
     m_layer_being_moved = nullptr;
-    m_editor->window()->set_cursor(Gfx::StandardCursor::None);
     m_editor->did_complete_action();
 }
 
