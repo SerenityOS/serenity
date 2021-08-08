@@ -28,10 +28,10 @@ namespace GUI {
 
 ModelIndex FileSystemModel::Node::index(int column) const
 {
-    if (!parent)
+    if (!m_parent)
         return {};
-    for (size_t row = 0; row < parent->children.size(); ++row) {
-        if (&parent->children[row] == this)
+    for (size_t row = 0; row < m_parent->m_children.size(); ++row) {
+        if (&m_parent->m_children[row] == this)
             return m_model.create_index(row, column, const_cast<Node*>(this));
     }
     VERIFY_NOT_REACHED();
@@ -73,17 +73,17 @@ bool FileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
 
 void FileSystemModel::Node::traverse_if_needed()
 {
-    if (!is_directory() || has_traversed)
+    if (!is_directory() || m_has_traversed)
         return;
 
-    has_traversed = true;
+    m_has_traversed = true;
 
     if (m_parent_of_root) {
         auto root = adopt_own(*new Node(m_model));
         root->fetch_data("/", true);
         root->name = "/";
-        root->parent = this;
-        children.append(move(root));
+        root->m_parent = this;
+        m_children.append(move(root));
         return;
     }
 
@@ -115,7 +115,7 @@ void FileSystemModel::Node::traverse_if_needed()
         if (m_model.m_mode == DirectoriesOnly && !S_ISDIR(child->mode))
             continue;
         child->name = child_name;
-        child->parent = this;
+        child->m_parent = this;
         total_size += child->size;
         if (S_ISDIR(child->mode))
             directory_children.append(move(child));
@@ -123,8 +123,8 @@ void FileSystemModel::Node::traverse_if_needed()
             file_children.append(move(child));
     }
 
-    children.extend(move(directory_children));
-    children.extend(move(file_children));
+    m_children.extend(move(directory_children));
+    m_children.extend(move(file_children));
 
     if (!m_model.m_file_watcher->is_watching(full_path)) {
         // We are not already watching this file, watch it
@@ -147,7 +147,7 @@ void FileSystemModel::Node::reify_if_needed()
     traverse_if_needed();
     if (mode != 0)
         return;
-    fetch_data(full_path(), parent == nullptr || parent->m_parent_of_root);
+    fetch_data(full_path(), m_parent == nullptr || m_parent->m_parent_of_root);
 }
 
 bool FileSystemModel::Node::is_symlink_to_directory() const
@@ -163,7 +163,7 @@ bool FileSystemModel::Node::is_symlink_to_directory() const
 String FileSystemModel::Node::full_path() const
 {
     Vector<String, 32> lineage;
-    for (auto* ancestor = parent; ancestor; ancestor = ancestor->parent) {
+    for (auto* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
         lineage.append(ancestor->name);
     }
     StringBuilder builder;
@@ -198,7 +198,7 @@ FileSystemModel::Node const* FileSystemModel::node_for_path(String const& path) 
         resolved_path = path;
     LexicalPath lexical_path(resolved_path);
 
-    const Node* node = m_root->m_parent_of_root ? &m_root->children.first() : m_root;
+    const Node* node = m_root->m_parent_of_root ? &m_root->m_children.first() : m_root;
     if (lexical_path.string() == "/")
         return node;
 
@@ -206,7 +206,7 @@ FileSystemModel::Node const* FileSystemModel::node_for_path(String const& path) 
     for (size_t i = 0; i < parts.size(); ++i) {
         auto& part = parts[i];
         bool found = false;
-        for (auto& child : node->children) {
+        for (auto& child : node->m_children) {
             if (child.name == part) {
                 const_cast<Node&>(child).reify_if_needed();
                 node = &child;
@@ -262,9 +262,9 @@ FileSystemModel::FileSystemModel(String root_path, Mode mode)
 
         // FIXME: Your time is coming, un-granular updates.
         auto refresh_node = [](Node& node) {
-            node.has_traversed = false;
+            node.m_has_traversed = false;
             node.mode = 0;
-            node.children.clear();
+            node.m_children.clear();
             node.reify_if_needed();
         };
 
@@ -277,8 +277,8 @@ FileSystemModel::FileSystemModel(String root_path, Mode mode)
                     new_path = new_path.parent();
 
                 set_root_path(new_path.string());
-            } else if (node.parent) {
-                refresh_node(*node.parent);
+            } else if (node.m_parent) {
+                refresh_node(*node.m_parent);
             }
         } else {
             refresh_node(node);
@@ -391,7 +391,7 @@ int FileSystemModel::row_count(const ModelIndex& index) const
     Node& node = const_cast<Node&>(this->node(index));
     node.reify_if_needed();
     if (node.is_directory())
-        return node.children.size();
+        return node.m_children.size();
     return 0;
 }
 
@@ -409,9 +409,9 @@ ModelIndex FileSystemModel::index(int row, int column, const ModelIndex& parent)
         return {};
     auto& node = this->node(parent);
     const_cast<Node&>(node).reify_if_needed();
-    if (static_cast<size_t>(row) >= node.children.size())
+    if (static_cast<size_t>(row) >= node.m_children.size())
         return {};
-    return create_index(row, column, &node.children[row]);
+    return create_index(row, column, &node.m_children[row]);
 }
 
 ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
@@ -419,11 +419,11 @@ ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
     if (!index.is_valid())
         return {};
     auto& node = this->node(index);
-    if (!node.parent) {
+    if (!node.m_parent) {
         VERIFY(&node == m_root);
         return {};
     }
-    return node.parent->index(index.column());
+    return node.m_parent->index(index.column());
 }
 
 Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
@@ -695,7 +695,7 @@ Vector<ModelIndex, 1> FileSystemModel::matches(const StringView& searching, unsi
     Node& node = const_cast<Node&>(this->node(index));
     node.reify_if_needed();
     Vector<ModelIndex, 1> found_indices;
-    for (auto& child : node.children) {
+    for (auto& child : node.m_children) {
         if (string_matches(child.name, searching, flags)) {
             const_cast<Node&>(child).reify_if_needed();
             found_indices.append(child.index(Column::Name));
