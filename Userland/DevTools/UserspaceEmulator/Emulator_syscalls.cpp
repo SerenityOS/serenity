@@ -28,10 +28,6 @@
 #    pragma GCC optimize("O3")
 #endif
 
-extern bool g_dump_profile;
-extern Optional<OutputFileStream> g_profile_stream;
-extern bool g_in_region_of_interest;
-
 namespace UserspaceEmulator {
 
 u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
@@ -817,8 +813,8 @@ static void round_to_page_size(FlatPtr& address, size_t& size)
 
 u32 Emulator::virt$munmap(FlatPtr address, size_t size)
 {
-    if (g_dump_profile)
-        emit_profile_event(*g_profile_stream, "munmap", String::formatted("\"ptr\": {}, \"size\": {}", address, size));
+    if (is_profiling())
+        emit_profile_event(profile_stream(), "munmap", String::formatted("\"ptr\": {}, \"size\": {}", address, size));
     round_to_page_size(address, size);
     Vector<Region*, 4> marked_for_deletion;
     bool has_non_mmap_region = false;
@@ -877,8 +873,8 @@ u32 Emulator::virt$mmap(u32 params_addr)
         name_str = { name.data(), name.size() };
     }
 
-    if (g_dump_profile)
-        emit_profile_event(*g_profile_stream, "mmap", String::formatted(R"("ptr": {}, "size": {}, "name": "{}")", final_address, final_size, name_str));
+    if (is_profiling())
+        emit_profile_event(profile_stream(), "mmap", String::formatted(R"("ptr": {}, "size": {}, "name": "{}")", final_address, final_size, name_str));
 
     if (params.flags & MAP_ANONYMOUS) {
         mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot, move(name_str)));
@@ -1135,12 +1131,12 @@ int Emulator::virt$emuctl(FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
         tracer->target_did_change_chunk_size({}, arg3, arg2);
         return 0;
     case 5: // mark ROI start
-        if (g_in_region_of_interest)
+        if (is_in_region_of_interest())
             return -EINVAL;
-        g_in_region_of_interest = true;
+        m_is_in_region_of_interest = true;
         return 0;
     case 6: // mark ROI end
-        g_in_region_of_interest = false;
+        m_is_in_region_of_interest = false;
         return 0;
     default:
         return -EINVAL;
