@@ -22,7 +22,7 @@ public:
     virtual ~RegExpStringIterator() override = default;
 
     Object& regexp_object() { return m_regexp_object; }
-    Utf16View string() const { return m_string.view(); }
+    Utf16String string() const { return m_string; }
     bool global() const { return m_global; }
     bool unicode() const { return m_unicode; }
 

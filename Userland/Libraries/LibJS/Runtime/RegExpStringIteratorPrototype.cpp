@@ -76,7 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
         if (vm.exception())
             return {};
 
-        last_index = advance_string_index(iterator.string(), last_index, iterator.unicode());
+        last_index = advance_string_index(iterator.string().view(), last_index, iterator.unicode());
 
         iterator.regexp_object().set(vm.names.lastIndex, Value(last_index), Object::ShouldThrowExceptions::Yes);
         if (vm.exception())
