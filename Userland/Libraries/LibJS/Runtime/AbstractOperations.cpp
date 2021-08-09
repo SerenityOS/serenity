@@ -29,6 +29,7 @@
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Reference.h>
+#include <LibJS/Runtime/Utf16String.h>
 
 namespace JS {
 
@@ -576,7 +577,7 @@ String get_substitution(GlobalObject& global_object, Utf16View const& matched, U
     auto replace_string = replacement.to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    Utf16View replace_view { replace_string };
+    auto replace_view = replace_string.view();
 
     StringBuilder result;
 

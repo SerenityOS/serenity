@@ -18,6 +18,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Utf16String.h>
 #include <math.h>
 
 // 2 ** 53 - 1
@@ -246,7 +247,7 @@ public:
     u64 encoded() const { return m_value.encoded; }
 
     String to_string(GlobalObject&, bool legacy_null_to_empty_string = false) const;
-    Vector<u16> to_utf16_string(GlobalObject&) const;
+    Utf16String to_utf16_string(GlobalObject&) const;
     PrimitiveString* to_primitive_string(GlobalObject&);
     Value to_primitive(GlobalObject&, PreferredType preferred_type = PreferredType::Default) const;
     Object* to_object(GlobalObject&) const;

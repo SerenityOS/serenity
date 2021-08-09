@@ -7,15 +7,15 @@
 #pragma once
 
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Runtime/Utf16String.h>
 
 namespace JS {
 
 class PrimitiveString final : public Cell {
 public:
     explicit PrimitiveString(String);
-    explicit PrimitiveString(Vector<u16>);
+    explicit PrimitiveString(Utf16String);
     virtual ~PrimitiveString();
 
     PrimitiveString(PrimitiveString const&) = delete;
@@ -23,7 +23,7 @@ public:
 
     String const& string() const;
 
-    Vector<u16> const& utf16_string() const;
+    Utf16String const& utf16_string() const;
     Utf16View utf16_string_view() const;
 
 private:
@@ -32,15 +32,15 @@ private:
     mutable String m_utf8_string;
     mutable bool m_has_utf8_string { false };
 
-    mutable Vector<u16> m_utf16_string;
+    mutable Utf16String m_utf16_string;
     mutable bool m_has_utf16_string { false };
 };
 
 PrimitiveString* js_string(Heap&, Utf16View const&);
 PrimitiveString* js_string(VM&, Utf16View const&);
 
-PrimitiveString* js_string(Heap&, Vector<u16>);
-PrimitiveString* js_string(VM&, Vector<u16>);
+PrimitiveString* js_string(Heap&, Utf16String);
+PrimitiveString* js_string(VM&, Utf16String);
 
 PrimitiveString* js_string(Heap&, String);
 PrimitiveString* js_string(VM&, String);
