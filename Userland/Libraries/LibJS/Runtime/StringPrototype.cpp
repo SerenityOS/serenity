@@ -878,7 +878,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
     auto rx = regexp_create(global_object, regexp, js_undefined());
     if (!rx)
         return {};
-    return rx->invoke(*vm.well_known_symbol_match(), js_string(vm, utf16_string_view));
+    return Value(rx).invoke(global_object, *vm.well_known_symbol_match(), js_string(vm, utf16_string_view));
 }
 
 // 22.1.3.12 String.prototype.matchAll ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.matchall
@@ -921,7 +921,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
     auto rx = regexp_create(global_object, regexp, js_string(vm, "g"));
     if (!rx)
         return {};
-    return rx->invoke(*vm.well_known_symbol_match_all(), js_string(vm, utf16_string_view));
+    return Value(rx).invoke(global_object, *vm.well_known_symbol_match_all(), js_string(vm, utf16_string_view));
 }
 
 // 22.1.3.17 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace
@@ -1119,7 +1119,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
     auto rx = regexp_create(global_object, regexp, js_undefined());
     if (!rx)
         return {};
-    return rx->invoke(*vm.well_known_symbol_search(), js_string(vm, utf16_string_view));
+    return Value(rx).invoke(global_object, *vm.well_known_symbol_search(), js_string(vm, utf16_string_view));
 }
 
 // B.2.3.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml

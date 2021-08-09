@@ -29,6 +29,7 @@
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/SymbolObject.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 #include <math.h>
 
@@ -1579,6 +1580,21 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         return TriState::True;
     else
         return TriState::False;
+}
+
+// 7.3.20 Invoke ( V, P [ , argumentsList ] ), https://tc39.es/ecma262/#sec-invoke
+Value Value::invoke_internal(GlobalObject& global_object, JS::PropertyName const& property_name, Optional<MarkedValueList> arguments)
+{
+    auto& vm = global_object.vm();
+    auto property = get(global_object, property_name);
+    if (vm.exception())
+        return {};
+    if (!property.is_function()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, property.to_string_without_side_effects());
+        return {};
+    }
+
+    return vm.call(property.as_function(), *this, move(arguments));
 }
 
 }
