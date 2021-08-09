@@ -169,6 +169,7 @@ class Statement;
 class StringOrSymbol;
 class Symbol;
 class Token;
+class Utf16String;
 class VM;
 class Value;
 class WeakContainer;
