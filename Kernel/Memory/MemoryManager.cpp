@@ -673,7 +673,6 @@ void MemoryManager::validate_syscall_preconditions(AddressSpace& space, Register
 
 Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
 {
-    ScopedSpinLock lock(s_mm_lock);
     if (auto* region = kernel_region_from_vaddr(vaddr))
         return region;
     auto page_directory = PageDirectory::find_by_cr3(read_cr3());
