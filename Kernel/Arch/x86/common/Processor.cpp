@@ -613,7 +613,7 @@ void Processor::exit_trap(TrapFrame& trap)
     // to trigger a context switch while we're executing this function
     // See the comment at the end of the function why we don't use
     // ScopedCritical here.
-    m_in_critical++;
+    m_in_critical = m_in_critical + 1;
 
     VERIFY(m_in_irq >= trap.prev_irq_level);
     m_in_irq = trap.prev_irq_level;
@@ -646,11 +646,13 @@ void Processor::exit_trap(TrapFrame& trap)
             current_thread->update_time_scheduled(Scheduler::current_time(), true, false);
     }
 
+    VERIFY_INTERRUPTS_DISABLED();
+
     // Leave the critical section without actually enabling interrupts.
     // We don't want context switches to happen until we're explicitly
     // triggering a switch in check_invoke_scheduler.
-    auto new_critical = m_in_critical.fetch_sub(1) - 1;
-    if (!m_in_irq && !new_critical)
+    m_in_critical = m_in_critical - 1;
+    if (!m_in_irq && !m_in_critical)
         check_invoke_scheduler();
 }
 
@@ -730,7 +732,7 @@ ProcessorMessage& Processor::smp_get_from_pool()
 
 u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
 {
-    VERIFY(Processor::current().in_critical());
+    VERIFY(Processor::in_critical());
     VERIFY(wake_count > 0);
     if (!s_smp_enabled)
         return 0;
@@ -1311,7 +1313,7 @@ void Processor::assume_context(Thread& thread, FlatPtr flags)
     Scheduler::prepare_after_exec();
     // in_critical() should be 2 here. The critical section in Process::exec
     // and then the scheduler lock
-    VERIFY(Processor::current().in_critical() == 2);
+    VERIFY(Processor::in_critical() == 2);
 
     do_assume_context(&thread, flags);
 

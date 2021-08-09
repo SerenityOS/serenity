@@ -66,8 +66,8 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     if (leave_crit) {
         // Leave the critical section we set up in in Process::exec,
         // but because we still have the scheduler lock we should end up with 1
-        m_in_critical--; // leave it without triggering anything or restoring flags
-        VERIFY(in_critical() == 1);
+        VERIFY(in_critical() == 2);
+        m_in_critical = 1; // leave it without triggering anything or restoring flags
     }
 
     u64 kernel_stack_top = thread.kernel_stack_top();

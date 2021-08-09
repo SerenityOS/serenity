@@ -212,7 +212,7 @@ static inline void kmalloc_verify_nospinlock_held()
 {
     // Catch bad callers allocating under spinlock.
     if constexpr (KMALLOC_VERIFY_NO_SPINLOCK_HELD) {
-        VERIFY(!Processor::current().in_critical());
+        VERIFY(!Processor::in_critical());
     }
 }
 

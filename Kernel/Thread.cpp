@@ -214,7 +214,7 @@ void Thread::block(Kernel::Mutex& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock,
     for (;;) {
         // Yield to the scheduler, and wait for us to resume unblocked.
         VERIFY(!g_scheduler_lock.own_lock());
-        VERIFY(Processor::current().in_critical());
+        VERIFY(Processor::in_critical());
         if (&lock != &big_lock && big_lock.own_lock()) {
             // We're locking another lock and already hold the big lock...
             // We need to release the big lock
@@ -222,7 +222,7 @@ void Thread::block(Kernel::Mutex& lock, ScopedSpinLock<SpinLock<u8>>& lock_lock,
         } else {
             yield_assuming_not_holding_big_lock();
         }
-        VERIFY(Processor::current().in_critical());
+        VERIFY(Processor::in_critical());
 
         ScopedSpinLock block_lock2(m_block_lock);
         if (should_be_stopped() || state() == Stopped) {
@@ -389,7 +389,7 @@ void Thread::die_if_needed()
     // Now leave the critical section so that we can also trigger the
     // actual context switch
     u32 prev_flags;
-    Processor::current().clear_critical(prev_flags, false);
+    Processor::clear_critical(prev_flags, false);
     dbgln("die_if_needed returned from clear_critical!!! in irq: {}", Processor::current().in_irq());
     // We should never get here, but the scoped scheduler lock
     // will be released by Scheduler::context_switch again
@@ -421,9 +421,9 @@ void Thread::yield_assuming_not_holding_big_lock()
     InterruptDisabler disable;
     Scheduler::yield(); // flag a switch
     u32 prev_flags;
-    u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
+    u32 prev_crit = Processor::clear_critical(prev_flags, true);
     // NOTE: We may be on a different CPU now!
-    Processor::current().restore_critical(prev_crit, prev_flags);
+    Processor::restore_critical(prev_crit, prev_flags);
 }
 
 void Thread::yield_and_release_relock_big_lock()
@@ -452,12 +452,12 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
     // We have to do it this way because we intentionally
     // leave the critical section here to be able to switch contexts.
     u32 prev_flags;
-    u32 prev_crit = Processor::current().clear_critical(prev_flags, true);
+    u32 prev_crit = Processor::clear_critical(prev_flags, true);
 
     // CONTEXT SWITCH HAPPENS HERE!
 
     // NOTE: We may be on a different CPU now!
-    Processor::current().restore_critical(prev_crit, prev_flags);
+    Processor::restore_critical(prev_crit, prev_flags);
 
     if (previous_locked != LockMode::Unlocked) {
         // We've unblocked, relock the process if needed and carry on.

@@ -257,7 +257,7 @@ bool Scheduler::yield()
     auto current_thread = Thread::current();
     dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: yielding thread {} in_irq={}", proc.get_id(), *current_thread, proc.in_irq());
     VERIFY(current_thread != nullptr);
-    if (proc.in_irq() || proc.in_critical()) {
+    if (proc.in_irq() || Processor::in_critical()) {
         // If we're handling an IRQ we can't switch context, or we're in
         // a critical section where we don't want to switch contexts, then
         // delay until exiting the trap or critical section

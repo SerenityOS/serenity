@@ -46,14 +46,14 @@ public:
     {
         VERIFY(m_valid);
         m_valid = false;
-        Processor::current().leave_critical(m_prev_flags);
+        Processor::leave_critical(m_prev_flags);
     }
 
     void enter()
     {
         VERIFY(!m_valid);
         m_valid = true;
-        Processor::current().enter_critical(m_prev_flags);
+        Processor::enter_critical(m_prev_flags);
     }
 
 private:
