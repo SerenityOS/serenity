@@ -163,4 +163,16 @@ inline GlobalObject* Shape::global_object() const
 template<>
 inline bool Object::fast_is<GlobalObject>() const { return is_global_object(); }
 
+template<typename... Args>
+[[nodiscard]] ALWAYS_INLINE Value Value::invoke(GlobalObject& global_object, PropertyName const& property_name, Args... args)
+{
+    if constexpr (sizeof...(Args) > 0) {
+        MarkedValueList arglist { global_object.vm().heap() };
+        (..., arglist.append(move(args)));
+        return invoke_internal(global_object, property_name, move(arglist));
+    }
+
+    return invoke_internal(global_object, property_name, Optional<MarkedValueList> {});
+}
+
 }
