@@ -658,9 +658,9 @@ void Processor::exit_trap(TrapFrame& trap)
 
 void Processor::check_invoke_scheduler()
 {
+    InterruptDisabler disabler;
     VERIFY(!m_in_irq);
     VERIFY(!m_in_critical);
-    VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
     if (m_invoke_scheduler_async && m_scheduler_initialized) {
         m_invoke_scheduler_async = false;
@@ -732,7 +732,7 @@ ProcessorMessage& Processor::smp_get_from_pool()
 
 u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
 {
-    VERIFY(Processor::in_critical());
+    VERIFY_INTERRUPTS_DISABLED();
     VERIFY(wake_count > 0);
     if (!s_smp_enabled)
         return 0;
@@ -817,8 +817,7 @@ bool Processor::smp_process_pending_messages()
     VERIFY(s_smp_enabled);
 
     bool did_process = false;
-    u32 prev_flags;
-    enter_critical(prev_flags);
+    enter_critical();
 
     if (auto pending_msgs = m_message_queue.exchange(nullptr, AK::MemoryOrder::memory_order_acq_rel)) {
         // We pulled the stack of pending messages in LIFO order, so we need to reverse the list first
@@ -882,7 +881,7 @@ bool Processor::smp_process_pending_messages()
         halt_this();
     }
 
-    leave_critical(prev_flags);
+    leave_critical();
     return did_process;
 }
 

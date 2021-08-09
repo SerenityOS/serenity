@@ -339,17 +339,13 @@ public:
         write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), critical);
     }
 
-    ALWAYS_INLINE static void enter_critical(u32& prev_flags)
+    ALWAYS_INLINE static void enter_critical()
     {
-        prev_flags = cpu_flags();
-        cli();
-        // NOTE: Up until this point we *could* have been preempted.
-        //       Now interrupts are disabled, so calling current() is safe.
-        AK::atomic_fetch_add(&current().m_in_critical, 1u, AK::MemoryOrder::memory_order_relaxed);
+        write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), in_critical() + 1);
     }
 
 private:
-    ALWAYS_INLINE void do_leave_critical(u32 prev_flags)
+    ALWAYS_INLINE void do_leave_critical()
     {
         VERIFY(m_in_critical > 0);
         if (m_in_critical == 1) {
@@ -363,52 +359,31 @@ private:
         } else {
             m_in_critical = m_in_critical - 1;
         }
-        if (prev_flags & 0x200)
-            sti();
-        else
-            cli();
     }
 
 public:
-    ALWAYS_INLINE static void leave_critical(u32 prev_flags)
+    ALWAYS_INLINE static void leave_critical()
     {
-        cli(); // Need to prevent IRQs from interrupting us here!
-        // NOTE: Up until this point we *could* have been preempted!
-        // Now interrupts are disabled, so calling current() is safe
-        current().do_leave_critical(prev_flags);
+        current().do_leave_critical();
     }
 
-    ALWAYS_INLINE static u32 clear_critical(u32& prev_flags, bool enable_interrupts)
+    ALWAYS_INLINE static u32 clear_critical()
     {
-        cli();
-        // NOTE: Up until this point we *could* have been preempted!
-        // Now interrupts are disabled, so calling current() is safe
-        // This doesn't have to be atomic, and it's also fine if we
-        // were to be preempted in between these steps (which should
-        // not happen due to the cli call), but if we moved to another
-        // processors m_in_critical would move along with us
-        auto prev_critical = read_gs_ptr(__builtin_offsetof(Processor, m_in_critical));
+        auto prev_critical = in_critical();
         write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), 0);
         auto& proc = current();
         if (!proc.m_in_irq)
             proc.check_invoke_scheduler();
-        if (enable_interrupts || (prev_flags & 0x200))
-            sti();
         return prev_critical;
     }
 
-    ALWAYS_INLINE static void restore_critical(u32 prev_critical, u32 prev_flags)
+    ALWAYS_INLINE static void restore_critical(u32 prev_critical)
     {
         // NOTE: This doesn't have to be atomic, and it's also fine if we
         // get preempted in between these steps. If we move to another
         // processors m_in_critical will move along with us. And if we
         // are preempted, we would resume with the same flags.
         write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), prev_critical);
-        VERIFY(!prev_critical || !(prev_flags & 0x200));
-        if (prev_flags & 0x200)
-            sti();
-        else
-            cli();
     }
 
     ALWAYS_INLINE static u32 in_critical()

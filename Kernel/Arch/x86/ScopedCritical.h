@@ -28,15 +28,13 @@ public:
     }
 
     ScopedCritical(ScopedCritical&& from)
-        : m_prev_flags(exchange(from.m_prev_flags, 0))
-        , m_valid(exchange(from.m_valid, false))
+        : m_valid(exchange(from.m_valid, false))
     {
     }
 
     ScopedCritical& operator=(ScopedCritical&& from)
     {
         if (&from != this) {
-            m_prev_flags = exchange(from.m_prev_flags, 0);
             m_valid = exchange(from.m_valid, false);
         }
         return *this;
@@ -46,18 +44,17 @@ public:
     {
         VERIFY(m_valid);
         m_valid = false;
-        Processor::leave_critical(m_prev_flags);
+        Processor::leave_critical();
     }
 
     void enter()
     {
         VERIFY(!m_valid);
         m_valid = true;
-        Processor::enter_critical(m_prev_flags);
+        Processor::enter_critical();
     }
 
 private:
-    u32 m_prev_flags { 0 };
     bool m_valid { false };
 };
 

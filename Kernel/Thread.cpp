@@ -388,8 +388,7 @@ void Thread::die_if_needed()
 
     // Now leave the critical section so that we can also trigger the
     // actual context switch
-    u32 prev_flags;
-    Processor::clear_critical(prev_flags, false);
+    Processor::clear_critical();
     dbgln("die_if_needed returned from clear_critical!!! in irq: {}", Processor::current().in_irq());
     // We should never get here, but the scoped scheduler lock
     // will be released by Scheduler::context_switch again
@@ -420,10 +419,9 @@ void Thread::yield_assuming_not_holding_big_lock()
     // Disable interrupts here. This ensures we don't accidentally switch contexts twice
     InterruptDisabler disable;
     Scheduler::yield(); // flag a switch
-    u32 prev_flags;
-    u32 prev_crit = Processor::clear_critical(prev_flags, true);
+    u32 prev_critical = Processor::clear_critical();
     // NOTE: We may be on a different CPU now!
-    Processor::restore_critical(prev_crit, prev_flags);
+    Processor::restore_critical(prev_critical);
 }
 
 void Thread::yield_and_release_relock_big_lock()
@@ -451,13 +449,12 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
     // flagged by calling Scheduler::yield above.
     // We have to do it this way because we intentionally
     // leave the critical section here to be able to switch contexts.
-    u32 prev_flags;
-    u32 prev_crit = Processor::clear_critical(prev_flags, true);
+    u32 prev_critical = Processor::clear_critical();
 
     // CONTEXT SWITCH HAPPENS HERE!
 
     // NOTE: We may be on a different CPU now!
-    Processor::restore_critical(prev_crit, prev_flags);
+    Processor::restore_critical(prev_critical);
 
     if (previous_locked != LockMode::Unlocked) {
         // We've unblocked, relock the process if needed and carry on.
