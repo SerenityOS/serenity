@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tobias Christiansen <tobi@tobyase.de>
+ * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
