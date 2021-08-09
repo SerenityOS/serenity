@@ -132,6 +132,7 @@ FunctionEnvironment* OrdinaryFunctionObject::create_environment(FunctionObject& 
     auto* environment = heap().allocate<FunctionEnvironment>(global_object(), m_environment, variables);
     environment->set_function_object(function_being_invoked);
     if (m_is_arrow_function) {
+        environment->set_this_binding_status(FunctionEnvironment::ThisBindingStatus::Lexical);
         if (is<FunctionEnvironment>(m_environment))
             environment->set_new_target(static_cast<FunctionEnvironment*>(m_environment)->new_target());
     }

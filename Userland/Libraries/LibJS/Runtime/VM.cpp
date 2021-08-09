@@ -11,6 +11,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/FunctionEnvironment.h>
@@ -471,7 +472,7 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
     if (auto* environment = callee_context.lexical_environment) {
         auto& function_environment = verify_cast<FunctionEnvironment>(*environment);
         function_environment.set_new_target(&new_target);
-        if (!this_argument.is_empty()) {
+        if (!this_argument.is_empty() && function_environment.this_binding_status() != FunctionEnvironment::ThisBindingStatus::Lexical) {
             function_environment.bind_this_value(global_object, this_argument);
             if (exception())
                 return {};
@@ -603,10 +604,9 @@ void VM::ordinary_call_bind_this(FunctionObject& function, ExecutionContext& cal
     auto* local_environment = callee_context.lexical_environment;
     auto& function_environment = verify_cast<FunctionEnvironment>(*local_environment);
 
-    // This is not completely as the spec describes it however without this stuff breaks
-    // (Could be related to the note at https://tc39.es/ecma262/#sec-runtime-semantics-instantiatearrowfunctionexpression )
+    // This almost as the spec describes it however we sometimes don't have callee_realm when dealing
+    // with proxies and arrow functions however this does seemingly achieve spec like behavior.
     if (!callee_realm || this_mode == FunctionObject::ThisMode::Lexical) {
-        function_environment.bind_this_value(function.global_object(), callee_context.this_value);
         return;
     }
 
@@ -628,6 +628,20 @@ Value VM::call_internal(FunctionObject& function, Value this_value, Optional<Mar
 {
     VERIFY(!exception());
     VERIFY(!this_value.is_empty());
+
+    if (is<BoundFunction>(function)) {
+        auto& bound_function = static_cast<BoundFunction&>(function);
+        auto bound_arguments = bound_function.bound_arguments();
+        if (arguments.has_value())
+            bound_arguments.extend(*arguments);
+
+        MarkedValueList with_bound_arguments { heap() };
+        with_bound_arguments.extend(bound_function.bound_arguments());
+        if (arguments.has_value())
+            with_bound_arguments.extend(*arguments);
+
+        return call_internal(bound_function.target_function(), bound_function.bound_this(), move(with_bound_arguments));
+    }
 
     ExecutionContext callee_context;
     prepare_for_ordinary_call(function, callee_context, js_undefined());
