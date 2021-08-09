@@ -299,28 +299,29 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             auto& simple_selector = relative_selector.simple_selectors[i];
             char const* type_description = "Unknown";
             switch (simple_selector.type) {
-            case CSS::Selector::SimpleSelector::Type::Invalid:
+                using enum CSS::Selector::SimpleSelector::Type;
+            case Invalid:
                 type_description = "Invalid";
                 break;
-            case CSS::Selector::SimpleSelector::Type::Universal:
+            case Universal:
                 type_description = "Universal";
                 break;
-            case CSS::Selector::SimpleSelector::Type::Id:
+            case Id:
                 type_description = "Id";
                 break;
-            case CSS::Selector::SimpleSelector::Type::Class:
+            case Class:
                 type_description = "Class";
                 break;
-            case CSS::Selector::SimpleSelector::Type::TagName:
+            case TagName:
                 type_description = "TagName";
                 break;
-            case CSS::Selector::SimpleSelector::Type::Attribute:
+            case Attribute:
                 type_description = "Attribute";
                 break;
-            case CSS::Selector::SimpleSelector::Type::PseudoClass:
+            case PseudoClass:
                 type_description = "PseudoClass";
                 break;
-            case CSS::Selector::SimpleSelector::Type::PseudoElement:
+            case PseudoElement:
                 type_description = "PseudoElement";
                 break;
             }
@@ -332,61 +333,62 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
 
                 char const* pseudo_class_description = "";
                 switch (pseudo_class.type) {
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Link:
+                    using enum CSS::Selector::SimpleSelector::PseudoClass::Type;
+                case Link:
                     pseudo_class_description = "Link";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Visited:
+                case Visited:
                     pseudo_class_description = "Visited";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Active:
+                case Active:
                     pseudo_class_description = "Active";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::None:
+                case None:
                     pseudo_class_description = "None";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
+                case Root:
                     pseudo_class_description = "Root";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
+                case FirstOfType:
                     pseudo_class_description = "FirstOfType";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::LastOfType:
+                case LastOfType:
                     pseudo_class_description = "LastOfType";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::NthChild:
+                case NthChild:
                     pseudo_class_description = "NthChild";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
+                case NthLastChild:
                     pseudo_class_description = "NthLastChild";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Focus:
+                case Focus:
                     pseudo_class_description = "Focus";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Empty:
+                case Empty:
                     pseudo_class_description = "Empty";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Hover:
+                case Hover:
                     pseudo_class_description = "Hover";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::LastChild:
+                case LastChild:
                     pseudo_class_description = "LastChild";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstChild:
+                case FirstChild:
                     pseudo_class_description = "FirstChild";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::OnlyChild:
+                case OnlyChild:
                     pseudo_class_description = "OnlyChild";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Disabled:
+                case Disabled:
                     pseudo_class_description = "Disabled";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Enabled:
+                case Enabled:
                     pseudo_class_description = "Enabled";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
+                case Checked:
                     pseudo_class_description = "Checked";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoClass::Type::Not:
+                case Not:
                     pseudo_class_description = "Not";
                     break;
                 }
@@ -406,19 +408,20 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
             if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoElement) {
                 char const* pseudo_element_description = "";
                 switch (simple_selector.pseudo_element) {
-                case CSS::Selector::SimpleSelector::PseudoElement::None:
+                    using enum CSS::Selector::SimpleSelector::PseudoElement;
+                case None:
                     pseudo_element_description = "NONE";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoElement::Before:
+                case Before:
                     pseudo_element_description = "before";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoElement::After:
+                case After:
                     pseudo_element_description = "after";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoElement::FirstLine:
+                case FirstLine:
                     pseudo_element_description = "first-line";
                     break;
-                case CSS::Selector::SimpleSelector::PseudoElement::FirstLetter:
+                case FirstLetter:
                     pseudo_element_description = "first-letter";
                     break;
                 }
@@ -430,28 +433,29 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 char const* attribute_match_type_description = "";
 
                 switch (simple_selector.attribute.match_type) {
-                case CSS::Selector::SimpleSelector::Attribute::MatchType::None:
+                    using enum CSS::Selector::SimpleSelector::Attribute::MatchType;
+                case None:
                     attribute_match_type_description = "NONE";
                     break;
-                case CSS::Selector::SimpleSelector::Attribute::MatchType::HasAttribute:
+                case HasAttribute:
                     attribute_match_type_description = "HasAttribute";
                     break;
-                case CSS::Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
+                case ExactValueMatch:
                     attribute_match_type_description = "ExactValueMatch";
                     break;
-                case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsWord:
+                case ContainsWord:
                     attribute_match_type_description = "ContainsWord";
                     break;
-                case CSS::Selector::SimpleSelector::Attribute::MatchType::ContainsString:
+                case ContainsString:
                     attribute_match_type_description = "ContainsString";
                     break;
-                case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment:
+                case StartsWithSegment:
                     attribute_match_type_description = "StartsWithSegment";
                     break;
-                case CSS::Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
+                case StartsWithString:
                     attribute_match_type_description = "StartsWithString";
                     break;
-                case CSS::Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
+                case EndsWithString:
                     attribute_match_type_description = "EndsWithString";
                     break;
                 }
