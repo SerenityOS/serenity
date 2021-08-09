@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Spreadsheet.h"
+#include "SpreadsheetModel.h"
 #include <LibGUI/AbstractTableView.h>
 #include <LibGUI/ModelEditingDelegate.h>
 #include <LibGUI/TableView.h>
@@ -155,6 +156,7 @@ private:
     };
 
     NonnullRefPtr<Sheet> m_sheet;
+    NonnullRefPtr<SheetModel> m_sheet_model;
     RefPtr<InfinitelyScrollableTableView> m_table_view;
     RefPtr<GUI::Menu> m_cell_range_context_menu;
 };

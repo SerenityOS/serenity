@@ -6,7 +6,6 @@
 
 #include "SpreadsheetView.h"
 #include "CellTypeDialog.h"
-#include "SpreadsheetModel.h"
 #include <AK/ScopeGuard.h>
 #include <AK/URL.h>
 #include <LibCore/MimeData.h>
@@ -144,12 +143,13 @@ void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
 
 void SpreadsheetView::update_with_model()
 {
-    m_table_view->model()->invalidate();
+    m_sheet_model->update();
     m_table_view->update();
 }
 
 SpreadsheetView::SpreadsheetView(Sheet& sheet)
     : m_sheet(sheet)
+    , m_sheet_model(SheetModel::create(*m_sheet))
 {
     set_layout<GUI::VerticalBoxLayout>().set_margins({ 2, 2, 2, 2 });
     m_table_view = add<InfinitelyScrollableTableView>();
@@ -158,7 +158,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
     m_table_view->set_edit_triggers(GUI::AbstractView::EditTrigger::EditKeyPressed | GUI::AbstractView::AnyKeyPressed | GUI::AbstractView::DoubleClicked);
     m_table_view->set_tab_key_navigation_enabled(true);
     m_table_view->row_header().set_visible(true);
-    m_table_view->set_model(SheetModel::create(*m_sheet));
+    m_table_view->set_model(m_sheet_model);
     m_table_view->on_reaching_vertical_end = [&]() {
         for (size_t i = 0; i < 100; ++i) {
             auto index = m_sheet->add_row();
