@@ -45,8 +45,6 @@ jobs:
       - name: Build Serenity and Tests
         working-directory: ${{ github.workspace }}/Build
         run: cmake --build .
-      - name: Show ccache stats after build
-        run: ccache -s
 
       - name: Create Serenity Rootfs
         working-directory: ${{ github.workspace }}/Build
@@ -95,5 +93,5 @@ jobs:
           DISCORD_AVATAR: https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png
         uses: IdanHo/action-discord@754598254f288e6d8e9fca637832e3c163515ba8
         with:
-          args: "The clang build ${{ env.WORKFLOW_CONCLUSION == 'success' && 'passed :white_check_mark:' || 'failed :x:' }} :( https://github.com/SerenityOS/serenity/runs/${{github.run_id}}"
+          args: "The clang build ${{ env.WORKFLOW_CONCLUSION == 'success' && 'passed :white_check_mark:' || 'failed :x:' }} https://github.com/SerenityOS/serenity/actions/runs/${{github.run_id}}"
 
