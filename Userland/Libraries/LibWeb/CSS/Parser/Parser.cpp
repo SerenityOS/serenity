@@ -2503,6 +2503,47 @@ RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context,
     return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
 }
 
+RefPtr<StyleValue> Parser::parse_overflow_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto is_overflow = [](StyleValue const& value) -> bool {
+        switch (value.to_identifier()) {
+        case ValueID::Auto:
+        case ValueID::Clip:
+        case ValueID::Hidden:
+        case ValueID::Scroll:
+        case ValueID::Visible:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    if (component_values.size() == 1) {
+        auto maybe_value = parse_css_value(context, PropertyID::Overflow, component_values.first());
+        if (!maybe_value)
+            return nullptr;
+        auto value = maybe_value.release_nonnull();
+        if (is_overflow(*value))
+            return OverflowStyleValue::create(value, value);
+        return nullptr;
+    }
+
+    if (component_values.size() == 2) {
+        auto maybe_x_value = parse_css_value(context, PropertyID::OverflowX, component_values[0]);
+        auto maybe_y_value = parse_css_value(context, PropertyID::OverflowY, component_values[1]);
+
+        if (!maybe_x_value || !maybe_y_value)
+            return nullptr;
+        auto x_value = maybe_x_value.release_nonnull();
+        auto y_value = maybe_y_value.release_nonnull();
+        if (!is_overflow(x_value) || !is_overflow(y_value))
+            return nullptr;
+        return OverflowStyleValue::create(x_value, y_value);
+    }
+
+    return nullptr;
+}
+
 RefPtr<StyleValue> Parser::parse_text_decoration_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
     auto is_text_decoration_line = [](StyleValue const& value) -> bool {
@@ -2648,6 +2689,10 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         break;
     case PropertyID::ListStyle:
         if (auto parsed_value = parse_list_style_value(m_context, component_values))
+            return parsed_value;
+        break;
+    case PropertyID::Overflow:
+        if (auto parsed_value = parse_overflow_value(m_context, component_values))
             return parsed_value;
         break;
     case PropertyID::TextDecoration:
