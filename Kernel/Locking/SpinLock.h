@@ -24,7 +24,7 @@ public:
     ALWAYS_INLINE u32 lock()
     {
         u32 prev_flags;
-        Processor::current().enter_critical(prev_flags);
+        Processor::enter_critical(prev_flags);
         while (m_lock.exchange(1, AK::memory_order_acquire) != 0) {
             Processor::wait_check();
         }
@@ -35,7 +35,7 @@ public:
     {
         VERIFY(is_locked());
         m_lock.store(0, AK::memory_order_release);
-        Processor::current().leave_critical(prev_flags);
+        Processor::leave_critical(prev_flags);
     }
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const
@@ -64,7 +64,7 @@ public:
         auto& proc = Processor::current();
         FlatPtr cpu = FlatPtr(&proc);
         u32 prev_flags;
-        proc.enter_critical(prev_flags);
+        Processor::enter_critical(prev_flags);
         FlatPtr expected = 0;
         while (!m_lock.compare_exchange_strong(expected, cpu, AK::memory_order_acq_rel)) {
             if (expected == cpu)
@@ -82,7 +82,7 @@ public:
         VERIFY(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
         if (--m_recursions == 0)
             m_lock.store(0, AK::memory_order_release);
-        Processor::current().leave_critical(prev_flags);
+        Processor::leave_critical(prev_flags);
     }
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const

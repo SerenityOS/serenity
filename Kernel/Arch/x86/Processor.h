@@ -121,7 +121,7 @@ class Processor {
 
     u32 m_cpu;
     u32 m_in_irq;
-    Atomic<u32, AK::MemoryOrder::memory_order_relaxed> m_in_critical;
+    volatile u32 m_in_critical {};
     static Atomic<u32> s_idle_cpu_mask;
 
     TSS m_tss;
@@ -334,32 +334,34 @@ public:
         return m_in_irq;
     }
 
-    ALWAYS_INLINE void restore_in_critical(u32 critical)
+    ALWAYS_INLINE static void restore_in_critical(u32 critical)
     {
-        m_in_critical = critical;
+        write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), critical);
     }
 
-    ALWAYS_INLINE void enter_critical(u32& prev_flags)
+    ALWAYS_INLINE static void enter_critical(u32& prev_flags)
     {
         prev_flags = cpu_flags();
         cli();
-        m_in_critical++;
+        // NOTE: Up until this point we *could* have been preempted.
+        //       Now interrupts are disabled, so calling current() is safe.
+        AK::atomic_fetch_add(&current().m_in_critical, 1u, AK::MemoryOrder::memory_order_relaxed);
     }
 
-    ALWAYS_INLINE void leave_critical(u32 prev_flags)
+private:
+    ALWAYS_INLINE void do_leave_critical(u32 prev_flags)
     {
-        cli(); // Need to prevent IRQs from interrupting us here!
         VERIFY(m_in_critical > 0);
         if (m_in_critical == 1) {
             if (!m_in_irq) {
                 deferred_call_execute_pending();
                 VERIFY(m_in_critical == 1);
             }
-            m_in_critical--;
+            m_in_critical = 0;
             if (!m_in_irq)
                 check_invoke_scheduler();
         } else {
-            m_in_critical--;
+            m_in_critical = m_in_critical - 1;
         }
         if (prev_flags & 0x200)
             sti();
@@ -367,28 +369,53 @@ public:
             cli();
     }
 
-    ALWAYS_INLINE u32 clear_critical(u32& prev_flags, bool enable_interrupts)
+public:
+    ALWAYS_INLINE static void leave_critical(u32 prev_flags)
     {
-        prev_flags = cpu_flags();
-        u32 prev_crit = m_in_critical.exchange(0, AK::MemoryOrder::memory_order_acquire);
-        if (!m_in_irq)
-            check_invoke_scheduler();
-        if (enable_interrupts)
-            sti();
-        return prev_crit;
+        cli(); // Need to prevent IRQs from interrupting us here!
+        // NOTE: Up until this point we *could* have been preempted!
+        // Now interrupts are disabled, so calling current() is safe
+        current().do_leave_critical(prev_flags);
     }
 
-    ALWAYS_INLINE void restore_critical(u32 prev_crit, u32 prev_flags)
+    ALWAYS_INLINE static u32 clear_critical(u32& prev_flags, bool enable_interrupts)
     {
-        m_in_critical.store(prev_crit, AK::MemoryOrder::memory_order_release);
-        VERIFY(!prev_crit || !(prev_flags & 0x200));
+        cli();
+        // NOTE: Up until this point we *could* have been preempted!
+        // Now interrupts are disabled, so calling current() is safe
+        // This doesn't have to be atomic, and it's also fine if we
+        // were to be preempted in between these steps (which should
+        // not happen due to the cli call), but if we moved to another
+        // processors m_in_critical would move along with us
+        auto prev_critical = read_gs_ptr(__builtin_offsetof(Processor, m_in_critical));
+        write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), 0);
+        auto& proc = current();
+        if (!proc.m_in_irq)
+            proc.check_invoke_scheduler();
+        if (enable_interrupts || (prev_flags & 0x200))
+            sti();
+        return prev_critical;
+    }
+
+    ALWAYS_INLINE static void restore_critical(u32 prev_critical, u32 prev_flags)
+    {
+        // NOTE: This doesn't have to be atomic, and it's also fine if we
+        // get preempted in between these steps. If we move to another
+        // processors m_in_critical will move along with us. And if we
+        // are preempted, we would resume with the same flags.
+        write_gs_ptr(__builtin_offsetof(Processor, m_in_critical), prev_critical);
+        VERIFY(!prev_critical || !(prev_flags & 0x200));
         if (prev_flags & 0x200)
             sti();
         else
             cli();
     }
 
-    ALWAYS_INLINE u32 in_critical() { return m_in_critical.load(); }
+    ALWAYS_INLINE static u32 in_critical()
+    {
+        // See comment in Processor::current_thread
+        return read_gs_ptr(__builtin_offsetof(Processor, m_in_critical));
+    }
 
     ALWAYS_INLINE const FPUState& clean_fpu_state() const
     {

@@ -297,7 +297,7 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace>
     FlatPtr load_base_address = 0;
 
     String elf_name = object_description.absolute_path();
-    VERIFY(!Processor::current().in_critical());
+    VERIFY(!Processor::in_critical());
 
     Memory::MemoryManager::enter_space(*new_space);
 
@@ -495,7 +495,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header)
 {
     VERIFY(is_user_process());
-    VERIFY(!Processor::current().in_critical());
+    VERIFY(!Processor::in_critical());
     auto path = main_program_description->absolute_path();
 
     dbgln_if(EXEC_DEBUG, "do_exec: {}", path);
@@ -686,7 +686,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     u32 lock_count_to_restore;
     [[maybe_unused]] auto rc = big_lock().force_unlock_if_locked(lock_count_to_restore);
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(Processor::current().in_critical());
+    VERIFY(Processor::in_critical());
     return KSuccess;
 }
 
@@ -912,7 +912,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
         return result;
 
     VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(Processor::current().in_critical());
+    VERIFY(Processor::in_critical());
 
     auto current_thread = Thread::current();
     if (current_thread == new_main_thread) {
@@ -920,14 +920,14 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
         // and it will be released after the context switch into that
         // thread. We should also still be in our critical section
         VERIFY(!g_scheduler_lock.own_lock());
-        VERIFY(Processor::current().in_critical() == 1);
+        VERIFY(Processor::in_critical() == 1);
         g_scheduler_lock.lock();
         current_thread->set_state(Thread::State::Running);
         Processor::assume_context(*current_thread, prev_flags);
         VERIFY_NOT_REACHED();
     }
 
-    Processor::current().leave_critical(prev_flags);
+    Processor::leave_critical(prev_flags);
     return KSuccess;
 }
 
