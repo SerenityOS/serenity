@@ -22,6 +22,7 @@ public:
     ~StringBuilder() = default;
 
     void append(StringView const&);
+    void append(Utf16View const&);
     void append(Utf32View const&);
     void append(char);
     void append_code_point(u32);

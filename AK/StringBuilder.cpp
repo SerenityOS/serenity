@@ -12,6 +12,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <AK/Utf16View.h>
 #include <AK/Utf32View.h>
 
 namespace AK {
@@ -109,6 +110,16 @@ void StringBuilder::append_code_point(u32 code_point)
         append(0xef);
         append(0xbf);
         append(0xbd);
+    }
+}
+
+void StringBuilder::append(Utf16View const& utf16_view)
+{
+    for (size_t i = 0; i < utf16_view.length_in_code_units();) {
+        auto code_point = utf16_view.code_point_at(i);
+        append_code_point(code_point);
+
+        i += (code_point > 0xffff ? 2 : 1);
     }
 }
 
