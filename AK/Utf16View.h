@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
@@ -119,5 +120,13 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<AK::Utf16View> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, AK::Utf16View const& value)
+    {
+        return builder.builder().append(value);
+    }
+};
 
 using AK::Utf16View;
