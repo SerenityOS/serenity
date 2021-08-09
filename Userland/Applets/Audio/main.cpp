@@ -5,6 +5,7 @@
  */
 
 #include <LibAudio/ClientConnection.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
@@ -20,9 +21,12 @@
 class AudioWidget final : public GUI::Widget {
     C_OBJECT(AudioWidget)
 public:
-    AudioWidget()
+    AudioWidget(RefPtr<Core::ConfigFile> config)
         : m_audio_client(Audio::ClientConnection::construct())
+        , m_config(config)
     {
+        m_show_percent = m_config->read_bool_entry("Layout", "ShowPercent");
+
         m_audio_client->on_muted_state_change = [this](bool muted) {
             if (m_audio_muted == muted)
                 return;
@@ -64,8 +68,8 @@ public:
 
         m_percent_box = m_root_container->add<GUI::CheckBox>("\xE2\x84\xB9");
         m_percent_box->set_fixed_size(27, 16);
-        m_percent_box->set_checked(false);
-        m_percent_box->set_tooltip("Show percent");
+        m_percent_box->set_checked(m_show_percent);
+        m_percent_box->set_tooltip(m_show_percent ? "Hide percent" : "Show percent");
         m_percent_box->on_checked = [&](bool show_percent) {
             m_show_percent = show_percent;
             if (!m_show_percent) {
@@ -77,6 +81,9 @@ public:
             }
             reposition_slider_window();
             GUI::Application::the()->hide_tooltip();
+
+            m_config->write_bool_entry("Layout", "ShowPercent", m_show_percent);
+            m_config->sync();
         };
 
         m_slider = m_root_container->add<GUI::VerticalSlider>();
@@ -102,6 +109,11 @@ public:
     }
 
     virtual ~AudioWidget() override { }
+
+    bool shows_percent() const
+    {
+        return m_show_percent;
+    }
 
 private:
     virtual void mousedown_event(GUI::MouseEvent& event) override
@@ -178,8 +190,9 @@ private:
     };
 
     NonnullRefPtr<Audio::ClientConnection> m_audio_client;
+    RefPtr<Core::ConfigFile> m_config;
     Vector<VolumeBitmapPair, 5> m_volume_level_bitmaps;
-    bool m_show_percent { false };
+    bool m_show_percent;
     bool m_audio_muted { false };
     int m_audio_volume { 100 };
 
@@ -192,20 +205,22 @@ private:
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath wpath cpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
+    auto config = Core::ConfigFile::get_for_app("AudioApplet");
 
     auto window = GUI::Window::construct();
     window->set_has_alpha_channel(true);
     window->set_title("Audio");
     window->set_window_type(GUI::WindowType::Applet);
-    window->resize(16, 16);
 
-    window->set_main_widget<AudioWidget>();
+    auto& widget = window->set_main_widget<AudioWidget>(config);
+    window->resize(widget.shows_percent() ? 44 : 16, 16);
+
     window->show();
 
     if (unveil("/res", "r") < 0) {
@@ -213,9 +228,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil(config->filename().characters(), "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     unveil(nullptr, nullptr);
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
