@@ -12,6 +12,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/File.h>
 #include <LibDesktop/AppFile.h>
 #include <errno.h>
 #include <serenity.h>
@@ -252,8 +253,8 @@ void Launcher::for_each_handler(const String& key, HashMap<String, String>& user
 void Launcher::for_each_handler_for_path(const String& path, Function<bool(const Handler&)> f)
 {
     struct stat st;
-    if (stat(path.characters(), &st) < 0) {
-        perror("stat");
+    if (lstat(path.characters(), &st) < 0) {
+        perror("lstat");
         return;
     }
 
@@ -268,6 +269,13 @@ void Launcher::for_each_handler_for_path(const String& path, Function<bool(const
 
     if (!S_ISREG(st.st_mode) && !S_ISLNK(st.st_mode))
         return;
+
+    if (S_ISLNK(st.st_mode)) {
+        auto real_path = Core::File::real_path_for(String::formatted("{}/{}", LexicalPath::dirname(path), Core::File::read_link(path)));
+        return for_each_handler_for_path(real_path, [&](const auto& handler) -> bool {
+            return f(handler);
+        });
+    }
 
     if ((st.st_mode & S_IFMT) == S_IFREG && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
         f(get_handler_for_executable(Handler::Type::Application, path));
