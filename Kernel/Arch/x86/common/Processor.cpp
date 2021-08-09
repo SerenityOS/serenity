@@ -616,6 +616,10 @@ void Processor::exit_trap(TrapFrame& trap)
     if (s_smp_enabled)
         smp_process_pending_messages();
 
+    // Process the deferred call queue. Among other things, this ensures
+    // that any pending thread unblocks happen before we enter the scheduler.
+    deferred_call_execute_pending();
+
     auto* current_thread = Processor::current_thread();
     if (current_thread) {
         auto& current_trap = current_thread->current_trap();
