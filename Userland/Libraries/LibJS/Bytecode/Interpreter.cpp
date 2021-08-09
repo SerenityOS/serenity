@@ -44,7 +44,7 @@ Value Interpreter::run(Executable const& executable, BasicBlock const* entry_poi
 
     vm().set_last_value(Badge<Interpreter> {}, {});
 
-    ExecutionContext execution_context;
+    ExecutionContext execution_context(vm().heap());
     if (vm().execution_context_stack().is_empty()) {
         execution_context.this_value = &global_object();
         static FlyString global_execution_context_name = "(*BC* global execution context)";

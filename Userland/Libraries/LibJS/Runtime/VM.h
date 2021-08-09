@@ -43,11 +43,16 @@ struct ScopeFrame {
 };
 
 struct ExecutionContext {
+    explicit ExecutionContext(Heap& heap)
+        : arguments(heap)
+    {
+    }
+
     const ASTNode* current_node { nullptr };
     FlyString function_name;
     FunctionObject* function { nullptr };
     Value this_value;
-    Vector<Value> arguments;
+    MarkedValueList arguments;
     Object* arguments_object { nullptr };
     Environment* lexical_environment { nullptr };
     Environment* variable_environment { nullptr };

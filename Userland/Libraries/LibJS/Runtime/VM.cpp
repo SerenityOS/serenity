@@ -442,6 +442,18 @@ Reference VM::resolve_binding(FlyString const& name, Environment* environment)
     return get_identifier_reference(environment, name, strict);
 }
 
+static void append_bound_and_passed_arguments(MarkedValueList& arguments, Vector<Value> bound_arguments, Optional<MarkedValueList> passed_arguments)
+{
+    arguments.ensure_capacity(bound_arguments.size());
+    arguments.extend(move(bound_arguments));
+
+    if (passed_arguments.has_value()) {
+        auto arguments_list = move(passed_arguments.release_value().values());
+        arguments.grow_capacity(arguments_list.size());
+        arguments.extend(move(arguments_list));
+    }
+}
+
 Value VM::construct(FunctionObject& function, FunctionObject& new_target, Optional<MarkedValueList> arguments)
 {
     auto& global_object = function.global_object();
@@ -453,7 +465,7 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
             return {};
     }
 
-    ExecutionContext callee_context;
+    ExecutionContext callee_context(heap());
     prepare_for_ordinary_call(function, callee_context, &new_target);
     if (exception())
         return {};
@@ -465,9 +477,7 @@ Value VM::construct(FunctionObject& function, FunctionObject& new_target, Option
     if (auto* interpreter = interpreter_if_exists())
         callee_context.current_node = interpreter->current_node();
 
-    callee_context.arguments = function.bound_arguments();
-    if (arguments.has_value())
-        callee_context.arguments.extend(arguments.value().values());
+    append_bound_and_passed_arguments(callee_context.arguments, function.bound_arguments(), move(arguments));
 
     if (auto* environment = callee_context.lexical_environment) {
         auto& function_environment = verify_cast<FunctionEnvironment>(*environment);
@@ -631,19 +641,14 @@ Value VM::call_internal(FunctionObject& function, Value this_value, Optional<Mar
 
     if (is<BoundFunction>(function)) {
         auto& bound_function = static_cast<BoundFunction&>(function);
-        auto bound_arguments = bound_function.bound_arguments();
-        if (arguments.has_value())
-            bound_arguments.extend(*arguments);
 
         MarkedValueList with_bound_arguments { heap() };
-        with_bound_arguments.extend(bound_function.bound_arguments());
-        if (arguments.has_value())
-            with_bound_arguments.extend(*arguments);
+        append_bound_and_passed_arguments(with_bound_arguments, bound_function.bound_arguments(), move(arguments));
 
         return call_internal(bound_function.target_function(), bound_function.bound_this(), move(with_bound_arguments));
     }
 
-    ExecutionContext callee_context;
+    ExecutionContext callee_context(heap());
     prepare_for_ordinary_call(function, callee_context, js_undefined());
     if (exception())
         return {};
@@ -656,9 +661,7 @@ Value VM::call_internal(FunctionObject& function, Value this_value, Optional<Mar
         callee_context.current_node = interpreter->current_node();
 
     callee_context.this_value = function.bound_this().value_or(this_value);
-    callee_context.arguments = function.bound_arguments();
-    if (arguments.has_value())
-        callee_context.arguments.extend(arguments.value().values());
+    append_bound_and_passed_arguments(callee_context.arguments, function.bound_arguments(), move(arguments));
 
     if (callee_context.lexical_environment)
         ordinary_call_bind_this(function, callee_context, this_value);
