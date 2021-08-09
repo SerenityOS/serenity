@@ -21,18 +21,18 @@ public:
     explicit StringBuilder(size_t initial_capacity = inline_capacity);
     ~StringBuilder() = default;
 
-    void append(const StringView&);
-    void append(const Utf32View&);
+    void append(StringView const&);
+    void append(Utf32View const&);
     void append(char);
     void append_code_point(u32);
-    void append(const char*, size_t);
-    void appendvf(const char*, va_list);
+    void append(char const*, size_t);
+    void appendvf(char const*, va_list);
 
     void append_as_lowercase(char);
-    void append_escaped_for_json(const StringView&);
+    void append_escaped_for_json(StringView const&);
 
     template<typename... Parameters>
-    void appendff(CheckedFormatString<Parameters...>&& fmtstr, const Parameters&... parameters)
+    void appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
         vformat(*this, fmtstr.view(), VariadicFormatParams { parameters... });
     }
@@ -49,7 +49,7 @@ public:
     void trim(size_t count) { m_buffer.resize(m_buffer.size() - count); }
 
     template<class SeparatorType, class CollectionType>
-    void join(const SeparatorType& separator, const CollectionType& collection)
+    void join(SeparatorType const& separator, CollectionType const& collection)
     {
         bool first = true;
         for (auto& item : collection) {
@@ -64,7 +64,7 @@ public:
 private:
     void will_append(size_t);
     u8* data() { return m_buffer.data(); }
-    const u8* data() const { return m_buffer.data(); }
+    u8 const* data() const { return m_buffer.data(); }
 
     static constexpr size_t inline_capacity = 128;
     AK::Detail::ByteBuffer<inline_capacity> m_buffer;
