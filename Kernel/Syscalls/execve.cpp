@@ -630,7 +630,9 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     // We enter a critical section here because we don't want to get interrupted between do_exec()
     // and Processor::assume_context() or the next context switch.
     // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
-    Processor::current().enter_critical(prev_flags);
+    Processor::enter_critical();
+    prev_flags = cpu_flags();
+    cli();
 
     // NOTE: Be careful to not trigger any page faults below!
 
@@ -927,7 +929,9 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
         VERIFY_NOT_REACHED();
     }
 
-    Processor::leave_critical(prev_flags);
+    if (prev_flags & 0x200)
+        sti();
+    Processor::leave_critical();
     return KSuccess;
 }
 
