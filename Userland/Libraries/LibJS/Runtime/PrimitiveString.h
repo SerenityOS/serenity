@@ -22,9 +22,11 @@ public:
     PrimitiveString& operator=(PrimitiveString const&) = delete;
 
     String const& string() const;
+    bool has_utf8_string() const { return m_has_utf8_string; }
 
     Utf16String const& utf16_string() const;
     Utf16View utf16_string_view() const;
+    bool has_utf16_string() const { return m_has_utf16_string; }
 
 private:
     virtual const char* class_name() const override { return "PrimitiveString"; }

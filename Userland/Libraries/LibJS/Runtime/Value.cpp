@@ -1100,6 +1100,21 @@ Value add(GlobalObject& global_object, Value lhs, Value rhs)
     if (vm.exception())
         return {};
 
+    if (lhs_primitive.is_string() && rhs_primitive.is_string()) {
+        auto const& lhs_string = lhs_primitive.as_string();
+        auto const& rhs_string = rhs_primitive.as_string();
+
+        if (lhs_string.has_utf16_string() && rhs_string.has_utf16_string()) {
+            auto const& lhs_utf16_string = lhs_string.utf16_string();
+            auto const& rhs_utf16_string = rhs_string.utf16_string();
+
+            Vector<u16> combined;
+            combined.ensure_capacity(lhs_utf16_string.length_in_code_units() + rhs_utf16_string.length_in_code_units());
+            combined.extend(lhs_utf16_string.string());
+            combined.extend(rhs_utf16_string.string());
+            return js_string(vm.heap(), Utf16String(move(combined)));
+        }
+    }
     if (lhs_primitive.is_string() || rhs_primitive.is_string()) {
         auto lhs_string = lhs_primitive.to_string(global_object);
         if (vm.exception())
