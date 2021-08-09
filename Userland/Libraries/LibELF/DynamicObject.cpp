@@ -67,19 +67,19 @@ void DynamicObject::parse()
     for_each_dynamic_entry([&](const DynamicEntry& entry) {
         switch (entry.tag()) {
         case DT_INIT:
-            m_init_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
+            m_init_offset = entry.ptr() - m_elf_base_address.get();
             break;
         case DT_FINI:
-            m_fini_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
+            m_fini_offset = entry.ptr() - m_elf_base_address.get();
             break;
         case DT_INIT_ARRAY:
-            m_init_array_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
+            m_init_array_offset = entry.ptr() - m_elf_base_address.get();
             break;
         case DT_INIT_ARRAYSZ:
             m_init_array_size = entry.val();
             break;
         case DT_FINI_ARRAY:
-            m_fini_array_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
+            m_fini_array_offset = entry.ptr() - m_elf_base_address.get();
             break;
         case DT_FINI_ARRAYSZ:
             m_fini_array_size = entry.val();
@@ -87,18 +87,18 @@ void DynamicObject::parse()
         case DT_HASH:
             // Use SYSV hash only if GNU hash is not available
             if (m_hash_type == HashType::SYSV) {
-                m_hash_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
+                m_hash_table_offset = entry.ptr() - m_elf_base_address.get();
             }
             break;
         case DT_GNU_HASH:
             m_hash_type = HashType::GNU;
-            m_hash_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
+            m_hash_table_offset = entry.ptr() - m_elf_base_address.get();
             break;
         case DT_SYMTAB:
-            m_symbol_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
+            m_symbol_table_offset = entry.ptr() - m_elf_base_address.get();
             break;
         case DT_STRTAB:
-            m_string_table_offset = entry.ptr() - (FlatPtr)m_elf_base_address.as_ptr();
+            m_string_table_offset = entry.ptr() - m_elf_base_address.get();
             break;
         case DT_STRSZ:
             m_size_of_string_table = entry.val();
@@ -457,7 +457,7 @@ VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
     VERIFY(relocation.type() == R_X86_64_JUMP_SLOT);
 #endif
     auto symbol = relocation.symbol();
-    u8* relocation_address = relocation.address().as_ptr();
+    auto relocation_address = (FlatPtr*)relocation.address().as_ptr();
 
     VirtualAddress symbol_location;
     auto result = DynamicLoader::lookup_symbol(symbol);
@@ -470,7 +470,7 @@ VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "DynamicLoader: Jump slot relocation: putting {} ({}) into PLT at {}", symbol.name(), symbol_location, (void*)relocation_address);
 
-    *(FlatPtr*)relocation_address = symbol_location.get();
+    *relocation_address = symbol_location.get();
 
     return symbol_location;
 }

@@ -468,9 +468,9 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         //     We could explicitly do them first using m_number_of_relocations from DT_RELCOUNT
         //     However, our compiler is nice enough to put them at the front of the relocations for us :)
         if (relocation.addend_used())
-            *patch_ptr = (FlatPtr)m_dynamic_object->base_address().as_ptr() + relocation.addend();
+            *patch_ptr = m_dynamic_object->base_address().offset(relocation.addend()).get();
         else
-            *patch_ptr += (FlatPtr)m_dynamic_object->base_address().as_ptr();
+            *patch_ptr += m_dynamic_object->base_address().get();
         break;
     }
 #if ARCH(I386)
@@ -508,10 +508,10 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             // The patch method returns the address for the LAZY fixup path, but we don't need it here
             m_dynamic_object->patch_plt_entry(relocation.offset_in_section());
         } else {
-            u8* relocation_address = relocation.address().as_ptr();
+            auto relocation_address = (FlatPtr*)relocation.address().as_ptr();
 
             if (m_elf_image.is_dynamic())
-                *(FlatPtr*)relocation_address += (FlatPtr)m_dynamic_object->base_address().as_ptr();
+                *relocation_address += m_dynamic_object->base_address().get();
         }
         break;
     }
