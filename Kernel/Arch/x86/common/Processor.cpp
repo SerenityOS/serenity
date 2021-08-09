@@ -613,7 +613,8 @@ void Processor::exit_trap(TrapFrame& trap)
     VERIFY(m_in_irq >= trap.prev_irq_level);
     m_in_irq = trap.prev_irq_level;
 
-    smp_process_pending_messages();
+    if (s_smp_enabled)
+        smp_process_pending_messages();
 
     auto* current_thread = Processor::current_thread();
     if (current_thread) {
