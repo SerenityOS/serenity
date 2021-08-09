@@ -242,7 +242,9 @@ ByteBuffer CoreDump::create_notes_threads_data() const
         ELF::Core::ThreadInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::ThreadInfo;
         info.tid = thread.tid().value();
-        copy_kernel_registers_into_ptrace_registers(info.regs, thread.get_register_dump_from_stack());
+
+        if (thread.current_trap())
+            copy_kernel_registers_into_ptrace_registers(info.regs, thread.get_register_dump_from_stack());
 
         entry_buff.append((void*)&info, sizeof(info));
 

@@ -1147,6 +1147,7 @@ public:
     }
 
     TrapFrame*& current_trap() { return m_current_trap; }
+    TrapFrame const* const& current_trap() const { return m_current_trap; }
 
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
