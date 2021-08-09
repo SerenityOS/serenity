@@ -60,16 +60,17 @@ String read_next_piece()
 
         for (SQL::AST::Token token = lexer.next(); token.type() != SQL::AST::TokenType::Eof; token = lexer.next()) {
             switch (token.type()) {
-            case SQL::AST::TokenType::ParenOpen:
+                using enum SQL::AST::TokenType;
+            case ParenOpen:
                 ++s_repl_line_level;
                 break;
-            case SQL::AST::TokenType::ParenClose:
+            case ParenClose:
                 --s_repl_line_level;
                 break;
-            case SQL::AST::TokenType::SemiColon:
+            case SemiColon:
                 last_token_ended_statement = true;
                 break;
-            case SQL::AST::TokenType::Period:
+            case Period:
                 if (is_first_token)
                     is_command = true;
                 break;
@@ -124,22 +125,23 @@ int main()
             }
 
             switch (token.category()) {
-            case SQL::AST::TokenCategory::Invalid:
+                using enum SQL::AST::TokenCategory;
+            case Invalid:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Red), Line::Style::Underline });
                 break;
-            case SQL::AST::TokenCategory::Number:
+            case Number:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Magenta) });
                 break;
-            case SQL::AST::TokenCategory::String:
+            case String:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Green), Line::Style::Bold });
                 break;
-            case SQL::AST::TokenCategory::Blob:
+            case Blob:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Magenta), Line::Style::Bold });
                 break;
-            case SQL::AST::TokenCategory::Keyword:
+            case Keyword:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Blue), Line::Style::Bold });
                 break;
-            case SQL::AST::TokenCategory::Identifier:
+            case Identifier:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::White), Line::Style::Bold });
                 break;
             default:
