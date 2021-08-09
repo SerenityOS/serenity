@@ -312,6 +312,8 @@ set(AK_SOURCES
     ../AK/Time.cpp
     ../AK/Format.cpp
     ../AK/UUID.cpp
+    ../AK/Utf8View.cpp
+    ../AK/Utf16View.cpp
 )
 
 set(ELF_SOURCES
