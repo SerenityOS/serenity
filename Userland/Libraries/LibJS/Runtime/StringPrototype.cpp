@@ -19,6 +19,7 @@
 #include <LibJS/Runtime/StringIterator.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <string.h>
@@ -33,7 +34,7 @@ static Optional<String> ak_string_from(VM& vm, GlobalObject& global_object)
     return this_value.to_string(global_object);
 }
 
-static Vector<u16> utf16_string_from(VM& vm, GlobalObject& global_object)
+static Utf16String utf16_string_from(VM& vm, GlobalObject& global_object)
 {
     auto this_value = require_object_coercible(global_object, vm.this_value(global_object));
     if (vm.exception())
@@ -186,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     if (position < 0 || position >= utf16_string_view.length_in_code_units())
         return js_string(vm, String::empty());
 
@@ -203,7 +204,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_code_at)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     if (position < 0 || position >= utf16_string_view.length_in_code_units())
         return js_nan();
 
@@ -220,7 +221,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::code_point_at)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     if (position < 0 || position >= utf16_string_view.length_in_code_units())
         return js_undefined();
 
@@ -283,10 +284,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     auto string_length = utf16_string_view.length_in_code_units();
 
-    Utf16View utf16_search_view { search_string };
+    auto utf16_search_view = search_string.view();
     auto search_length = utf16_search_view.length_in_code_units();
 
     size_t start = 0;
@@ -329,10 +330,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::ends_with)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     auto string_length = utf16_string_view.length_in_code_units();
 
-    Utf16View utf16_search_view { search_string };
+    auto utf16_search_view = search_string.view();
     auto search_length = utf16_search_view.length_in_code_units();
 
     size_t end = string_length;
@@ -365,8 +366,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
-    Utf16View utf16_search_view { search_string };
+    auto utf16_string_view = string.view();
+    auto utf16_search_view = search_string.view();
 
     size_t start = 0;
     if (vm.argument_count() > 1) {
@@ -448,15 +449,14 @@ static Value pad_string(GlobalObject& global_object, String const& string, PadPl
 {
     auto& vm = global_object.vm();
 
-    auto utf16_string = AK::utf8_to_utf16(string);
-    Utf16View utf16_string_view { utf16_string };
-    auto string_length = utf16_string_view.length_in_code_units();
+    Utf16String utf16_string(string);
+    auto string_length = utf16_string.length_in_code_units();
 
     auto max_length = vm.argument(0).to_length(global_object);
     if (vm.exception())
         return {};
     if (max_length <= string_length)
-        return js_string(vm, utf16_string_view);
+        return js_string(vm, move(utf16_string));
 
     String fill_string = " ";
     if (!vm.argument(1).is_undefined()) {
@@ -464,11 +464,11 @@ static Value pad_string(GlobalObject& global_object, String const& string, PadPl
         if (vm.exception())
             return {};
         if (fill_string.is_empty())
-            return js_string(vm, utf16_string_view);
+            return js_string(vm, move(utf16_string));
     }
 
-    auto utf16_fill_string = AK::utf8_to_utf16(fill_string);
-    Utf16View utf16_fill_view { utf16_fill_string };
+    Utf16String utf16_fill_string(fill_string);
+    auto utf16_fill_view = utf16_fill_string.view();
     auto fill_code_units = utf16_fill_view.length_in_code_units();
     auto fill_length = max_length - string_length;
 
@@ -558,7 +558,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     auto string_length = static_cast<double>(utf16_string_view.length_in_code_units());
 
     auto start = vm.argument(0).to_integer_or_infinity(global_object);
@@ -588,7 +588,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     auto size = utf16_string_view.length_in_code_units();
 
     auto int_start = vm.argument(0).to_integer_or_infinity(global_object);
@@ -637,8 +637,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
-    Utf16View utf16_search_view { search_string };
+    auto utf16_string_view = string.view();
+    auto utf16_search_view = search_string.view();
 
     size_t start = 0;
     if (!vm.argument(1).is_undefined()) {
@@ -659,7 +659,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     auto string_length = static_cast<double>(utf16_string_view.length_in_code_units());
 
     auto int_start = vm.argument(0).to_integer_or_infinity(global_object);
@@ -730,10 +730,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     if (limit == 0)
         return array;
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     auto string_length = utf16_string_view.length_in_code_units();
 
-    Utf16View utf16_separator_view { separator };
+    auto utf16_separator_view = separator.view();
     auto separator_length = utf16_separator_view.length_in_code_units();
 
     if (separator_argument.is_undefined()) {
@@ -782,10 +782,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     auto string_length = utf16_string_view.length_in_code_units();
 
-    Utf16View utf16_search_view { search_string };
+    auto utf16_search_view = search_string.view();
     auto search_length = utf16_search_view.length_in_code_units();
 
     auto position = vm.argument(1).to_number(global_object);
@@ -822,7 +822,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
     if (vm.exception())
         return {};
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     auto length = utf16_string_view.length_in_code_units();
 
     auto relative_index = vm.argument(0).to_integer_or_infinity(global_object);
@@ -873,7 +873,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
     auto string = this_object.to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
 
     auto rx = regexp_create(global_object, regexp, js_undefined());
     if (!rx)
@@ -916,7 +916,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
     auto string = this_object.to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
 
     auto rx = regexp_create(global_object, regexp, js_string(vm, "g"));
     if (!rx)
@@ -951,13 +951,13 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
         auto replace_string = replace_value.to_utf16_string(global_object);
         if (vm.exception())
             return {};
-        replace_value = js_string(vm, Utf16View { replace_string });
+        replace_value = js_string(vm, move(replace_string));
         if (vm.exception())
             return {};
     }
 
-    Utf16View utf16_string_view { string };
-    Utf16View utf16_search_view { search_string };
+    auto utf16_string_view = string.view();
+    auto utf16_search_view = search_string.view();
 
     Optional<size_t> position = string_index_of(utf16_string_view, utf16_search_view, 0);
     if (!position.has_value())
@@ -1042,15 +1042,15 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
         auto replace_string = replace_value.to_utf16_string(global_object);
         if (vm.exception())
             return {};
-        replace_value = js_string(vm, Utf16View { replace_string });
+        replace_value = js_string(vm, move(replace_string));
         if (vm.exception())
             return {};
     }
 
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
     auto string_length = utf16_string_view.length_in_code_units();
 
-    Utf16View utf16_search_view { search_string };
+    auto utf16_search_view = search_string.view();
     auto search_length = utf16_search_view.length_in_code_units();
 
     Vector<size_t> match_positions;
@@ -1114,7 +1114,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
     auto string = this_object.to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    Utf16View utf16_string_view { string };
+    auto utf16_string_view = string.view();
 
     auto rx = regexp_create(global_object, regexp, js_undefined());
     if (!rx)

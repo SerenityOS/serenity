@@ -8,7 +8,6 @@
 #include <AK/AllOf.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
@@ -363,7 +362,7 @@ String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_s
     }
 }
 
-Vector<u16> Value::to_utf16_string(GlobalObject& global_object) const
+Utf16String Value::to_utf16_string(GlobalObject& global_object) const
 {
     if (m_type == Type::String)
         return m_value.as_string->utf16_string();
@@ -372,7 +371,7 @@ Vector<u16> Value::to_utf16_string(GlobalObject& global_object) const
     if (global_object.vm().exception())
         return {};
 
-    return AK::utf8_to_utf16(utf8_string);
+    return Utf16String(utf8_string);
 }
 
 // 7.1.2 ToBoolean ( argument ), https://tc39.es/ecma262/#sec-toboolean

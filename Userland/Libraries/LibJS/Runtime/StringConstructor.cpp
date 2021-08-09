@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/Utf16String.h>
 
 namespace JS {
 
@@ -135,7 +136,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
         string.append(code_unit);
     }
 
-    return js_string(vm, move(string));
+    return js_string(vm, Utf16String(move(string)));
 }
 
 // 22.1.2.2 String.fromCodePoint ( ...codePoints ), https://tc39.es/ecma262/#sec-string.fromcodepoint
@@ -161,7 +162,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
         AK::code_point_to_utf16(string, static_cast<u32>(code_point));
     }
 
-    return js_string(vm, move(string));
+    return js_string(vm, Utf16String(move(string)));
 }
 
 }
