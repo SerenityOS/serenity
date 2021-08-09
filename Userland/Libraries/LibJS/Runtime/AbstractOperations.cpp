@@ -595,17 +595,17 @@ String get_substitution(GlobalObject& global_object, Utf16View const& matched, U
             result.append('$');
             ++i;
         } else if (next == '&') {
-            result.append(matched.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
+            result.append(matched);
             ++i;
         } else if (next == '`') {
             auto substring = str.substring_view(0, position);
-            result.append(substring.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
+            result.append(substring);
             ++i;
         } else if (next == '\'') {
             auto tail_pos = position + matched.length_in_code_units();
             if (tail_pos < str.length_in_code_units()) {
                 auto substring = str.substring_view(tail_pos);
-                result.append(substring.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
+                result.append(substring);
             }
             ++i;
         } else if (is_ascii_digit(next)) {
