@@ -220,8 +220,17 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::Overflow) {
-        style.set_property(CSS::PropertyID::OverflowX, value);
-        style.set_property(CSS::PropertyID::OverflowY, value);
+        if (value.is_overflow()) {
+            auto& overflow = static_cast<OverflowStyleValue const&>(value);
+            style.set_property(CSS::PropertyID::OverflowX, overflow.overflow_x());
+            style.set_property(CSS::PropertyID::OverflowY, overflow.overflow_y());
+            return;
+        }
+        if (value.is_builtin()) {
+            style.set_property(CSS::PropertyID::OverflowX, value);
+            style.set_property(CSS::PropertyID::OverflowY, value);
+            return;
+        }
         return;
     }
 
