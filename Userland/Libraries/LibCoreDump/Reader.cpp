@@ -59,11 +59,12 @@ Reader::NotesEntryIterator::NotesEntryIterator(const u8* notes_data)
 
 ELF::Core::NotesEntryHeader::Type Reader::NotesEntryIterator::type() const
 {
-    VERIFY(m_current->header.type == ELF::Core::NotesEntryHeader::Type::ProcessInfo
-        || m_current->header.type == ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo
-        || m_current->header.type == ELF::Core::NotesEntryHeader::Type::ThreadInfo
-        || m_current->header.type == ELF::Core::NotesEntryHeader::Type::Metadata
-        || m_current->header.type == ELF::Core::NotesEntryHeader::Type::Null);
+    using enum ELF::Core::NotesEntryHeader::Type;
+    VERIFY(m_current->header.type == ProcessInfo
+        || m_current->header.type == MemoryRegionInfo
+        || m_current->header.type == ThreadInfo
+        || m_current->header.type == Metadata
+        || m_current->header.type == Null);
     return m_current->header.type;
 }
 
@@ -76,22 +77,23 @@ void Reader::NotesEntryIterator::next()
 {
     VERIFY(!at_end());
     switch (type()) {
-    case ELF::Core::NotesEntryHeader::Type::ProcessInfo: {
+        using enum ELF::Core::NotesEntryHeader::Type;
+    case ProcessInfo: {
         const auto* current = reinterpret_cast<const ELF::Core::ProcessInfo*>(m_current);
         m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->json_data + strlen(current->json_data) + 1);
         break;
     }
-    case ELF::Core::NotesEntryHeader::Type::ThreadInfo: {
+    case ThreadInfo: {
         const auto* current = reinterpret_cast<const ELF::Core::ThreadInfo*>(m_current);
         m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current + 1);
         break;
     }
-    case ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo: {
+    case MemoryRegionInfo: {
         const auto* current = reinterpret_cast<const ELF::Core::MemoryRegionInfo*>(m_current);
         m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->region_name + strlen(current->region_name) + 1);
         break;
     }
-    case ELF::Core::NotesEntryHeader::Type::Metadata: {
+    case Metadata: {
         const auto* current = reinterpret_cast<const ELF::Core::Metadata*>(m_current);
         m_current = reinterpret_cast<const ELF::Core::NotesEntry*>(current->json_data + strlen(current->json_data) + 1);
         break;
