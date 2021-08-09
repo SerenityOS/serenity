@@ -41,7 +41,6 @@ struct SpecialCasing {
 
 // PropList source: https://www.unicode.org/Public/13.0.0/ucd/PropList.txt
 // Property descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#PropList.txt
-//                        https://www.unicode.org/reports/tr44/tr44-13.html#WordBreakProperty.txt
 using PropList = HashMap<String, Vector<CodePointRange>>;
 
 // PropertyAliases source: https://www.unicode.org/Public/13.0.0/ucd/PropertyAliases.txt
@@ -73,7 +72,6 @@ struct CodePointData {
     Vector<StringView> prop_list;
     StringView script;
     Vector<StringView> script_extensions;
-    StringView word_break_property;
 };
 
 struct UnicodeData {
@@ -119,8 +117,6 @@ struct UnicodeData {
     Vector<Alias> script_aliases;
     PropList script_extensions;
     u32 largest_script_extensions_size { 0 };
-
-    PropList word_break_prop_list;
 };
 
 static constexpr auto s_desired_fields = Array {
@@ -403,7 +399,6 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
         assign_code_point_property(data.code_point, unicode_data.prop_list, data.prop_list, "Assigned"sv);
         assign_code_point_property(data.code_point, unicode_data.script_list, data.script, "Unknown"sv);
         assign_code_point_property(data.code_point, unicode_data.script_extensions, data.script_extensions, {});
-        assign_code_point_property(data.code_point, unicode_data.word_break_prop_list, data.word_break_property, "Other"sv);
 
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
         unicode_data.largest_script_extensions_size = max(unicode_data.largest_script_extensions_size, data.script_extensions.size());
@@ -509,7 +504,6 @@ namespace Unicode {
     generate_enum("GeneralCategory"sv, "None"sv, unicode_data.general_categories, unicode_data.general_category_unions, unicode_data.general_category_aliases, true);
     generate_enum("Property"sv, "Assigned"sv, unicode_data.prop_list.keys(), {}, unicode_data.prop_aliases, true);
     generate_enum("Script"sv, {}, unicode_data.script_list.keys(), {}, unicode_data.script_aliases);
-    generate_enum("WordBreakProperty"sv, "Other"sv, unicode_data.word_break_prop_list.keys());
 
     generator.append(R"~~~(
 struct SpecialCasing {
@@ -567,8 +561,6 @@ struct UnicodeData {
     Script script { Script::Unknown };
     Script script_extensions[@script_extensions_size@];
     u32 script_extensions_size { 0 };
-
-    WordBreakProperty word_break_property { WordBreakProperty::Other };
 };
 
 namespace Detail {
@@ -685,7 +677,6 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
 
         generator.append(String::formatted(", Script::{}", data.script));
         append_list_and_size(data.script_extensions, "Script::{}"sv);
-        generator.append(String::formatted(", WordBreakProperty::{}", data.word_break_property));
         generator.append(" },");
     }
 
@@ -828,7 +819,6 @@ int main(int argc, char** argv)
     char const* prop_value_alias_path = nullptr;
     char const* scripts_path = nullptr;
     char const* script_extensions_path = nullptr;
-    char const* word_break_path = nullptr;
     char const* emoji_data_path = nullptr;
 
     Core::ArgsParser args_parser;
@@ -843,7 +833,6 @@ int main(int argc, char** argv)
     args_parser.add_option(prop_value_alias_path, "Path to PropertyValueAliases.txt file", "prop-value-alias-path", 'v', "prop-value-alias-path");
     args_parser.add_option(scripts_path, "Path to Scripts.txt file", "scripts-path", 'r', "scripts-path");
     args_parser.add_option(script_extensions_path, "Path to ScriptExtensions.txt file", "script-extensions-path", 'x', "script-extensions-path");
-    args_parser.add_option(word_break_path, "Path to WordBreakProperty.txt file", "word-break-path", 'w', "word-break-path");
     args_parser.add_option(emoji_data_path, "Path to emoji-data.txt file", "emoji-data-path", 'e', "emoji-data-path");
     args_parser.parse(argc, argv);
 
@@ -874,7 +863,6 @@ int main(int argc, char** argv)
     auto prop_value_alias_file = open_file(prop_value_alias_path, "-v/--prop-value-alias-path");
     auto scripts_file = open_file(scripts_path, "-r/--scripts-path");
     auto script_extensions_file = open_file(script_extensions_path, "-x/--script-extensions-path");
-    auto word_break_file = open_file(word_break_path, "-w/--word-break-path");
     auto emoji_data_file = open_file(emoji_data_path, "-e/--emoji-data-path");
 
     UnicodeData unicode_data {};
@@ -886,7 +874,6 @@ int main(int argc, char** argv)
     parse_alias_list(prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases);
     parse_prop_list(scripts_file, unicode_data.script_list);
     parse_prop_list(script_extensions_file, unicode_data.script_extensions, true);
-    parse_prop_list(word_break_file, unicode_data.word_break_prop_list);
 
     parse_unicode_data(unicode_data_file, unicode_data);
     parse_value_alias_list(prop_value_alias_file, "gc"sv, unicode_data.general_categories, unicode_data.general_category_unions, unicode_data.general_category_aliases);
