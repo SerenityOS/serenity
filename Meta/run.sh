@@ -118,6 +118,7 @@ if command -v wslpath >/dev/null; then
 fi
 
 [ -z "$SERENITY_QEMU_CPU" ] && SERENITY_QEMU_CPU="max"
+[ -z "$SERENITY_CPUS" ] && SERENITY_CPUS="2"
 
 if [ -z "$SERENITY_SPICE" ] && "${SERENITY_QEMU_BIN}" -chardev help | grep -iq qemu-vdagent; then
     SERENITY_SPICE_SERVER_CHARDEV="-chardev qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent"
@@ -182,7 +183,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -m $SERENITY_RAM_SIZE
 -cpu $SERENITY_QEMU_CPU
 -d guest_errors
--smp 2
+-smp $SERENITY_CPUS
 -display $SERENITY_QEMU_DISPLAY_BACKEND
 -device $SERENITY_QEMU_DISPLAY_DEVICE
 -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
@@ -215,7 +216,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -cpu $SERENITY_QEMU_CPU
 -machine q35
 -d guest_errors
--smp 2
+-smp $SERENITY_CPUS
 -vga none
 -device bochs-display
 -device ich9-usb-ehci1,bus=pcie.0,multifunction=on,addr=0x5.0x0
@@ -316,7 +317,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
         -cpu $SERENITY_QEMU_CPU \
         -d guest_errors \
         -no-reboot \
-        -smp 2 \
+        -smp ${SERENITY_CPUS} \
         -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk \
         -device ich9-ahci \
         -nographic \
