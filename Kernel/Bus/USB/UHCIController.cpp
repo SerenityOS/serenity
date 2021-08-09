@@ -748,8 +748,8 @@ void UHCIController::spawn_port_proc()
                             write_portsc2(port_data & (~UHCI_PORTSC_PORT_ENABLE_CHANGED | ~UHCI_PORTSC_CONNECT_STATUS_CHANGED));
 
                             port_data = read_portsc2();
-                            write_portsc1(port_data | UHCI_PORTSC_PORT_ENABLED);
-                            dbgln("port should be enabled now: {:#04x}\n", read_portsc1());
+                            write_portsc2(port_data | UHCI_PORTSC_PORT_ENABLED);
+                            dbgln("port should be enabled now: {:#04x}\n", read_portsc2());
                             USB::Device::DeviceSpeed speed = (port_data & UHCI_PORTSC_LOW_SPEED_DEVICE) ? USB::Device::DeviceSpeed::LowSpeed : USB::Device::DeviceSpeed::FullSpeed;
                             auto device = USB::Device::try_create(USB::Device::PortNumber::Port2, speed);
 
