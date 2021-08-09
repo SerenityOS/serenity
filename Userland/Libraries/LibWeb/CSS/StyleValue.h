@@ -236,7 +236,7 @@ public:
     bool is_inherit() const { return type() == Type::Inherit; }
     bool is_initial() const { return type() == Type::Initial; }
     bool is_color() const { return type() == Type::Color; }
-    bool is_identifier() const { return type() == Type::Identifier; }
+    bool is_identifier() const { return type() == Type::Identifier || is_auto(); }
     bool is_image() const { return type() == Type::Image; }
     bool is_string() const { return type() == Type::String; }
     virtual bool is_length() const { return type() == Type::Length; }
@@ -638,6 +638,8 @@ inline CSS::ValueID StyleValue::to_identifier() const
 {
     if (is_identifier())
         return static_cast<const IdentifierStyleValue&>(*this).id();
+    if (is_auto())
+        return CSS::ValueID::Auto;
     return CSS::ValueID::Invalid;
 }
 }

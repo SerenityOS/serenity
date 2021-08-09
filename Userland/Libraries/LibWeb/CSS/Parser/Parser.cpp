@@ -1407,8 +1407,6 @@ RefPtr<StyleValue> Parser::parse_builtin_or_dynamic_value(ParsingContext const& 
             return InheritStyleValue::create();
         if (ident.equals_ignoring_case("initial"))
             return InitialStyleValue::create();
-        if (ident.equals_ignoring_case("auto"))
-            return LengthStyleValue::create(Length::make_auto());
         // FIXME: Implement `unset` keyword
     }
 
@@ -1493,6 +1491,8 @@ Optional<Length> Parser::parse_length(ParsingContext const& context, StyleCompon
         type = Length::Type::Percentage;
         auto value_string = component_value.token().m_value.string_view();
         numeric_value = try_parse_float(value_string);
+    } else if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto")) {
+        return Length::make_auto();
     }
 
     if (!numeric_value.has_value())
@@ -1507,7 +1507,12 @@ RefPtr<StyleValue> Parser::parse_length_value(ParsingContext const& context, Sty
     // 1) We're in quirks mode, and it's an integer.
     // 2) It's a 0.
     // We handle case 1 here. Case 2 is handled by NumericStyleValue pretending to be a LengthStyleValue if it is 0.
+
+    // FIXME: "auto" is also treated as a Length, and most of the time that is how it is used, but not always.
+    // Possibly it should always be an Identifier, and then quietly converted to a Length when needed, like 0 above.
+    // Right now, it instead is quietly converted to an Identifier when needed.
     if (component_value.is(Token::Type::Dimension) || component_value.is(Token::Type::Percentage)
+        || (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv))
         || (context.in_quirks_mode() && component_value.is(Token::Type::Number) && component_value.token().m_value.string_view() != "0"sv)) {
         auto length = parse_length(context, component_value);
         if (length.has_value())
