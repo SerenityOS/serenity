@@ -205,7 +205,8 @@ public:
     ALWAYS_INLINE static void wait_check()
     {
         Processor::pause();
-        Processor::current().smp_process_pending_messages();
+        if (Processor::is_smp_enabled())
+            Processor::current().smp_process_pending_messages();
     }
 
     [[noreturn]] static void halt();
@@ -251,6 +252,8 @@ public:
     ALWAYS_INLINE u8 physical_address_bit_width() const { return m_physical_address_bit_width; }
 
     ALWAYS_INLINE ProcessorInfo& info() { return *m_info; }
+
+    static bool is_smp_enabled();
 
     ALWAYS_INLINE static Processor& current()
     {
