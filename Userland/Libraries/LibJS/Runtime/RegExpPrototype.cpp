@@ -18,7 +18,6 @@
 #include <LibJS/Runtime/RegExpPrototype.h>
 #include <LibJS/Runtime/RegExpStringIterator.h>
 #include <LibJS/Runtime/StringPrototype.h>
-#include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Token.h>
 
 namespace JS {
@@ -194,7 +193,7 @@ static Value make_indices_array(GlobalObject& global_object, Utf16View const& st
 }
 
 // 22.2.5.2.2 RegExpBuiltinExec ( R, S ), https://tc39.es/ecma262/#sec-regexpbuiltinexec
-static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, Utf16View const& string)
+static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& regexp_object, Utf16String string)
 {
     // FIXME: This should try using internal slots [[RegExpMatcher]], [[OriginalFlags]], etc.
     auto& vm = global_object.vm();
@@ -215,6 +214,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     if (!global && !sticky)
         last_index = 0;
 
+    auto string_view = string.view();
     RegexResult result;
 
     while (true) {
@@ -228,8 +228,8 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
             return js_null();
         }
 
-        regex.start_offset = unicode ? string.code_point_offset_of(last_index) : last_index;
-        result = regex.match(string);
+        regex.start_offset = unicode ? string_view.code_point_offset_of(last_index) : last_index;
+        result = regex.match(string_view);
 
         if (result.success)
             break;
@@ -242,7 +242,7 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
             return js_null();
         }
 
-        last_index = advance_string_index(string, last_index, unicode);
+        last_index = advance_string_index(string_view, last_index, unicode);
     }
 
     auto& match = result.matches[0];
@@ -253,8 +253,8 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     auto end_index = match_index + match.view.length();
 
     if (unicode) {
-        match_index = string.code_unit_offset_of(match.global_offset);
-        end_index = string.code_unit_offset_of(end_index);
+        match_index = string_view.code_unit_offset_of(match.global_offset);
+        end_index = string_view.code_unit_offset_of(end_index);
     }
 
     if (global || sticky) {
@@ -266,10 +266,6 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     auto* array = Array::create(global_object, result.n_capture_groups + 1);
     if (vm.exception())
         return {};
-
-    array->create_data_property_or_throw(vm.names.index, Value(match_index));
-    array->create_data_property_or_throw(vm.names.input, js_string(vm, string));
-    array->create_data_property_or_throw(0, js_string(vm, match.view.u16_view()));
 
     Vector<Optional<Match>> indices { Match::create(match) };
     HashMap<String, Match> group_names;
@@ -303,17 +299,21 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
     array->create_data_property_or_throw(vm.names.groups, groups);
 
     if (has_indices) {
-        auto indices_array = make_indices_array(global_object, string, indices, group_names, has_groups);
+        auto indices_array = make_indices_array(global_object, string_view, indices, group_names, has_groups);
         array->create_data_property(vm.names.indices, indices_array);
         if (vm.exception())
             return {};
     }
 
+    array->create_data_property_or_throw(vm.names.index, Value(match_index));
+    array->create_data_property_or_throw(vm.names.input, js_string(vm, move(string)));
+    array->create_data_property_or_throw(0, js_string(vm, match.view.u16_view()));
+
     return array;
 }
 
 // 22.2.5.2.1 RegExpExec ( R, S ), https://tc39.es/ecma262/#sec-regexpexec
-Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16View const& string)
+Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16String string)
 {
     auto& vm = global_object.vm();
 
@@ -322,7 +322,7 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16View 
         return {};
 
     if (exec.is_function()) {
-        auto result = vm.call(exec.as_function(), &regexp_object, js_string(vm, string));
+        auto result = vm.call(exec.as_function(), &regexp_object, js_string(vm, move(string)));
         if (vm.exception())
             return {};
 
@@ -337,7 +337,7 @@ Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16View 
         return {};
     }
 
-    return regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), string);
+    return regexp_builtin_exec(global_object, static_cast<RegExpObject&>(regexp_object), move(string));
 }
 
 // 1.1.4.3 get RegExp.prototype.hasIndices, https://tc39.es/proposal-regexp-match-indices/#sec-get-regexp.prototype.hasIndices
@@ -415,9 +415,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
     auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    auto string_view = string.view();
 
-    return regexp_builtin_exec(global_object, *regexp_object, string_view);
+    return regexp_builtin_exec(global_object, *regexp_object, move(string));
 }
 
 // 22.2.5.15 RegExp.prototype.test ( S ), https://tc39.es/ecma262/#sec-regexp.prototype.test
@@ -430,9 +429,8 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
     auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    auto string_view = string.view();
 
-    auto match = regexp_exec(global_object, *regexp_object, string_view);
+    auto match = regexp_exec(global_object, *regexp_object, move(string));
     if (vm.exception())
         return {};
 
@@ -473,7 +471,6 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    auto string_view = string.view();
 
     auto global_value = regexp_object->get(vm.names.global);
     if (vm.exception())
@@ -481,7 +478,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     bool global = global_value.to_boolean();
 
     if (!global) {
-        auto result = regexp_exec(global_object, *regexp_object, string_view);
+        auto result = regexp_exec(global_object, *regexp_object, move(string));
         if (vm.exception())
             return {};
         return result;
@@ -503,7 +500,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     size_t n = 0;
 
     while (true) {
-        auto result = regexp_exec(global_object, *regexp_object, string_view);
+        auto result = regexp_exec(global_object, *regexp_object, string);
         if (vm.exception())
             return {};
 
@@ -528,7 +525,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
             return {};
 
         if (match_str.is_empty()) {
-            increment_last_index(global_object, *regexp_object, string_view, unicode);
+            increment_last_index(global_object, *regexp_object, string.view(), unicode);
             if (vm.exception())
                 return {};
         }
@@ -631,7 +628,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     MarkedValueList results(vm.heap());
 
     while (true) {
-        auto result = regexp_exec(global_object, *regexp_object, string_view);
+        auto result = regexp_exec(global_object, *regexp_object, string);
         if (vm.exception())
             return {};
         if (result.is_null())
@@ -659,7 +656,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         }
     }
 
-    String accumulated_result;
+    StringBuilder accumulated_result;
     size_t next_source_position = 0;
 
     for (auto& result_value : results) {
@@ -683,7 +680,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         if (vm.exception())
             return {};
 
-        position = clamp(position, static_cast<double>(0), static_cast<double>(string_view.length_in_code_units()));
+        position = clamp(position, static_cast<double>(0), static_cast<double>(string.length_in_code_units()));
 
         MarkedValueList captures(vm.heap());
         for (size_t n = 1; n <= n_captures; ++n) {
@@ -715,7 +712,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             replacer_args.append(js_string(vm, move(matched)));
             replacer_args.extend(move(captures));
             replacer_args.append(Value(position));
-            replacer_args.append(js_string(vm, string_view));
+            replacer_args.append(js_string(vm, string));
             if (!named_captures.is_undefined()) {
                 replacer_args.append(move(named_captures));
             }
@@ -742,27 +739,20 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
         if (position >= next_source_position) {
             auto substring = string_view.substring_view(next_source_position, position - next_source_position);
+            accumulated_result.append(substring);
+            accumulated_result.append(replacement);
 
-            StringBuilder builder;
-            builder.append(accumulated_result);
-            builder.append(substring.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
-            builder.append(replacement);
-
-            accumulated_result = builder.build();
             next_source_position = position + matched_length;
         }
     }
 
-    if (next_source_position >= string_view.length_in_code_units())
-        return js_string(vm, accumulated_result);
+    if (next_source_position >= string.length_in_code_units())
+        return js_string(vm, accumulated_result.build());
 
     auto substring = string_view.substring_view(next_source_position);
+    accumulated_result.append(substring);
 
-    StringBuilder builder;
-    builder.append(accumulated_result);
-    builder.append(substring.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes));
-
-    return js_string(vm, builder.build());
+    return js_string(vm, accumulated_result.build());
 }
 
 // 22.2.5.11 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
@@ -775,7 +765,6 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    auto string_view = string.view();
 
     auto previous_last_index = regexp_object->get(vm.names.lastIndex);
     if (vm.exception())
@@ -786,7 +775,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
             return {};
     }
 
-    auto result = regexp_exec(global_object, *regexp_object, string_view);
+    auto result = regexp_exec(global_object, *regexp_object, move(string));
     if (vm.exception())
         return {};
 
@@ -862,12 +851,12 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     if (limit == 0)
         return array;
 
-    if (string_view.is_empty()) {
-        auto result = regexp_exec(global_object, *splitter, string_view);
+    if (string.is_empty()) {
+        auto result = regexp_exec(global_object, *splitter, string);
         if (!result.is_null())
             return array;
 
-        array->create_data_property_or_throw(0, js_string(vm, string_view));
+        array->create_data_property_or_throw(0, js_string(vm, move(string)));
         return array;
     }
 
@@ -879,7 +868,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         if (vm.exception())
             return {};
 
-        auto result = regexp_exec(global_object, *splitter, string_view);
+        auto result = regexp_exec(global_object, *splitter, string);
         if (vm.exception())
             return {};
         if (result.is_null()) {

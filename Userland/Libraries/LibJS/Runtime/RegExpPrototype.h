@@ -7,10 +7,11 @@
 #pragma once
 
 #include <LibJS/Runtime/RegExpObject.h>
+#include <LibJS/Runtime/Utf16String.h>
 
 namespace JS {
 
-Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16View const& string);
+Value regexp_exec(GlobalObject& global_object, Object& regexp_object, Utf16String string);
 size_t advance_string_index(Utf16View const& string, size_t index, bool unicode);
 
 class RegExpPrototype final : public Object {
