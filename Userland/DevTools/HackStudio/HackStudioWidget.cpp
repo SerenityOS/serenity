@@ -210,8 +210,6 @@ void HackStudioWidget::open_project(const String& root_path)
         debugger.reset_breakpoints();
         debugger.set_source_root(m_project->root_path());
     }
-    for (auto& editor_wrapper : m_all_editor_wrappers)
-        editor_wrapper.set_project_root(LexicalPath(m_project->root_path()));
 }
 
 Vector<String> HackStudioWidget::selected_file_paths() const
