@@ -54,8 +54,6 @@ OwnPtr<Region> Region::clone()
 {
     VERIFY(Process::current());
 
-    ScopedSpinLock lock(s_mm_lock);
-
     if (m_shared) {
         VERIFY(!m_stack);
         if (vmobject().is_inode())
