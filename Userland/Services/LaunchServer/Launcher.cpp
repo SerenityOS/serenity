@@ -266,6 +266,9 @@ void Launcher::for_each_handler_for_path(const String& path, Function<bool(const
         return;
     }
 
+    if (!S_ISREG(st.st_mode) && !S_ISLNK(st.st_mode))
+        return;
+
     if ((st.st_mode & S_IFMT) == S_IFREG && (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH)))
         f(get_handler_for_executable(Handler::Type::Application, path));
 
