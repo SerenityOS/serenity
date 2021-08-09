@@ -846,18 +846,16 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
 // 21.4.4.37 Date.prototype.toJSON ( key ), https://tc39.es/ecma262/#sec-date.prototype.tojson
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto this_value = vm.this_value(global_object);
 
-    auto time_value = Value(this_object).to_primitive(global_object, Value::PreferredType::Number);
+    auto time_value = this_value.to_primitive(global_object, Value::PreferredType::Number);
     if (vm.exception())
         return {};
 
     if (time_value.is_number() && !time_value.is_finite_number())
         return js_null();
 
-    return this_object->invoke(vm.names.toISOString);
+    return this_value.invoke(global_object, vm.names.toISOString);
 }
 
 // 14.1.1 Date.prototype.toTemporalInstant ( ), https://tc39.es/proposal-temporal/#sec-date.prototype.totemporalinstant

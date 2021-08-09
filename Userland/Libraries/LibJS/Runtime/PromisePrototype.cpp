@@ -67,11 +67,9 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
 // 27.2.5.1 Promise.prototype.catch ( onRejected ), https://tc39.es/ecma262/#sec-promise.prototype.catch
 JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::catch_)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
+    auto this_value = vm.this_value(global_object);
     auto on_rejected = vm.argument(0);
-    return this_object->invoke(vm.names.then, js_undefined(), on_rejected);
+    return this_value.invoke(global_object, vm.names.then, js_undefined(), on_rejected);
 }
 
 // 27.2.5.3 Promise.prototype.finally ( onFinally ), https://tc39.es/ecma262/#sec-promise.prototype.finally
@@ -104,7 +102,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto* value_thunk = NativeFunction::create(global_object, "", [value](auto&, auto&) -> Value {
                 return value;
             });
-            return promise->invoke(vm.names.then, value_thunk);
+            return Value(promise).invoke(global_object, vm.names.then, value_thunk);
         });
         then_finally_function->define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
@@ -123,14 +121,14 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
                 vm.throw_exception(global_object, reason);
                 return {};
             });
-            return promise->invoke(vm.names.then, thrower);
+            return Value(promise).invoke(global_object, vm.names.then, thrower);
         });
         catch_finally_function->define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
         then_finally = Value(then_finally_function);
         catch_finally = Value(catch_finally_function);
     }
-    return promise->invoke(vm.names.then, then_finally, catch_finally);
+    return Value(promise).invoke(global_object, vm.names.then, then_finally, catch_finally);
 }
 
 }

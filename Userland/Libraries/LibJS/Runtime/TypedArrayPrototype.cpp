@@ -1521,10 +1521,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
             return {};
         if (value.is_nullish())
             continue;
-        auto* value_object = value.to_object(global_object);
-        if (!value_object)
-            return {};
-        auto locale_string_result = value_object->invoke(vm.names.toLocaleString);
+        auto locale_string_result = value.invoke(global_object, vm.names.toLocaleString);
         if (vm.exception())
             return {};
         auto string = locale_string_result.to_string(global_object);

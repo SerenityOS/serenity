@@ -1199,17 +1199,4 @@ Value Object::ordinary_to_primitive(Value::PreferredType preferred_type) const
     return {};
 }
 
-Value Object::invoke_internal(PropertyName const& property_name, Optional<MarkedValueList> arguments)
-{
-    auto& vm = this->vm();
-    auto property = get(property_name);
-    if (vm.exception())
-        return {};
-    if (!property.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, property.to_string_without_side_effects());
-        return {};
-    }
-    return vm.call(property.as_function(), this, move(arguments));
-}
-
 }

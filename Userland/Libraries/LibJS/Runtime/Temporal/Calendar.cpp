@@ -129,7 +129,7 @@ double calendar_year(GlobalObject& global_object, Object& calendar, Object& date
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "year", « dateLike »).
-    auto result = calendar.invoke(vm.names.year, &date_like);
+    auto result = Value(&calendar).invoke(global_object, vm.names.year, &date_like);
     if (vm.exception())
         return {};
 
@@ -150,7 +150,7 @@ double calendar_month(GlobalObject& global_object, Object& calendar, Object& dat
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "month", « dateLike »).
-    auto result = calendar.invoke(vm.names.month, &date_like);
+    auto result = Value(&calendar).invoke(global_object, vm.names.month, &date_like);
     if (vm.exception())
         return {};
 
@@ -171,7 +171,7 @@ String calendar_month_code(GlobalObject& global_object, Object& calendar, Object
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "monthCode", « dateLike »).
-    auto result = calendar.invoke(vm.names.monthCode, &date_like);
+    auto result = Value(&calendar).invoke(global_object, vm.names.monthCode, &date_like);
     if (vm.exception())
         return {};
 
@@ -192,7 +192,7 @@ double calendar_day(GlobalObject& global_object, Object& calendar, Object& date_
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Let result be ? Invoke(calendar, "day", « dateLike »).
-    auto result = calendar.invoke(vm.names.day, &date_like);
+    auto result = Value(&calendar).invoke(global_object, vm.names.day, &date_like);
     if (vm.exception())
         return {};
 
@@ -213,7 +213,7 @@ Value calendar_day_of_week(GlobalObject& global_object, Object& calendar, Object
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "dayOfWeek", « dateLike »).
-    return calendar.invoke(vm.names.dayOfWeek, &date_like);
+    return Value(&calendar).invoke(global_object, vm.names.dayOfWeek, &date_like);
 }
 
 // 12.1.14 CalendarDayOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardayofyear
@@ -223,7 +223,7 @@ Value calendar_day_of_year(GlobalObject& global_object, Object& calendar, Object
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "dayOfYear", « dateLike »).
-    return calendar.invoke(vm.names.dayOfYear, &date_like);
+    return Value(&calendar).invoke(global_object, vm.names.dayOfYear, &date_like);
 }
 
 // 12.1.15 CalendarWeekOfYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarweekofyear
@@ -233,7 +233,7 @@ Value calendar_week_of_year(GlobalObject& global_object, Object& calendar, Objec
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "weekOfYear", « dateLike »).
-    return calendar.invoke(vm.names.weekOfYear, &date_like);
+    return Value(&calendar).invoke(global_object, vm.names.weekOfYear, &date_like);
 }
 
 // 12.1.16 CalendarDaysInWeek ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinweek
@@ -243,7 +243,7 @@ Value calendar_days_in_week(GlobalObject& global_object, Object& calendar, Objec
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "daysInWeek", « dateLike »).
-    return calendar.invoke(vm.names.daysInWeek, &date_like);
+    return Value(&calendar).invoke(global_object, vm.names.daysInWeek, &date_like);
 }
 
 // 12.1.17 CalendarDaysInMonth ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinmonth
@@ -253,7 +253,7 @@ Value calendar_days_in_month(GlobalObject& global_object, Object& calendar, Obje
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "daysInMonth", « dateLike »).
-    return calendar.invoke(vm.names.daysInMonth, &date_like);
+    return Value(&calendar).invoke(global_object, vm.names.daysInMonth, &date_like);
 }
 
 // 12.1.18 CalendarDaysInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendardaysinyear
@@ -263,7 +263,7 @@ Value calendar_days_in_year(GlobalObject& global_object, Object& calendar, Objec
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "daysInYear", « dateLike »).
-    return calendar.invoke(vm.names.daysInYear, &date_like);
+    return Value(&calendar).invoke(global_object, vm.names.daysInYear, &date_like);
 }
 
 // 12.1.19 CalendarMonthsInYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthsinyear
@@ -273,7 +273,7 @@ Value calendar_months_in_year(GlobalObject& global_object, Object& calendar, Obj
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "monthsInYear", « dateLike »).
-    return calendar.invoke(vm.names.monthsInYear, &date_like);
+    return Value(&calendar).invoke(global_object, vm.names.monthsInYear, &date_like);
 }
 
 // 12.1.20 CalendarInLeapYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarinleapyear
@@ -283,7 +283,7 @@ Value calendar_in_leap_year(GlobalObject& global_object, Object& calendar, Objec
     // 1. Assert: Type(calendar) is Object.
 
     // 2. Return ? Invoke(calendar, "inLeapYear", « dateLike »).
-    return calendar.invoke(vm.names.inLeapYear, &date_like);
+    return Value(&calendar).invoke(global_object, vm.names.inLeapYear, &date_like);
 }
 
 // 12.1.21 ToTemporalCalendar ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendar
@@ -396,7 +396,7 @@ PlainDate* date_from_fields(GlobalObject& global_object, Object& calendar, Objec
     // 2. Assert: Type(fields) is Object.
 
     // 3. Let date be ? Invoke(calendar, "dateFromFields", « fields, options »).
-    auto date = calendar.invoke(vm.names.dateFromFields, &fields, &options);
+    auto date = Value(&calendar).invoke(global_object, vm.names.dateFromFields, &fields, &options);
     if (vm.exception())
         return {};
 

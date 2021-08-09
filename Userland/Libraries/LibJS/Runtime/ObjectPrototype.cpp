@@ -145,10 +145,8 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
 // 20.1.3.5 Object.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-object.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    return this_object->invoke(vm.names.toString);
+    auto this_value = vm.this_value(global_object);
+    return this_value.invoke(global_object, vm.names.toString);
 }
 
 // 20.1.3.7 Object.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-object.prototype.valueof
