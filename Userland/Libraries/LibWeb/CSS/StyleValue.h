@@ -237,6 +237,7 @@ public:
         FlexFlow,
         Font,
         ListStyle,
+        Overflow,
         TextDecoration,
     };
 
@@ -262,6 +263,7 @@ public:
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
     bool is_list_style() const { return type() == Type::ListStyle; }
+    bool is_overflow() const { return type() == Type::Overflow; }
     bool is_text_decoration() const { return type() == Type::TextDecoration; }
 
     bool is_builtin() const { return is_inherit() || is_initial(); }
@@ -900,6 +902,34 @@ private:
     NonnullRefPtr<StyleValue> m_position;
     NonnullRefPtr<StyleValue> m_image;
     NonnullRefPtr<StyleValue> m_style_type;
+};
+
+class OverflowStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<OverflowStyleValue> create(NonnullRefPtr<StyleValue> overflow_x, NonnullRefPtr<StyleValue> overflow_y)
+    {
+        return adopt_ref(*new OverflowStyleValue(overflow_x, overflow_y));
+    }
+    virtual ~OverflowStyleValue() override { }
+
+    NonnullRefPtr<StyleValue> overflow_x() const { return m_overflow_x; }
+    NonnullRefPtr<StyleValue> overflow_y() const { return m_overflow_y; }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("{} {}", m_overflow_x->to_string(), m_overflow_y->to_string());
+    }
+
+private:
+    OverflowStyleValue(NonnullRefPtr<StyleValue> overflow_x, NonnullRefPtr<StyleValue> overflow_y)
+        : StyleValue(Type::Overflow)
+        , m_overflow_x(overflow_x)
+        , m_overflow_y(overflow_y)
+    {
+    }
+
+    NonnullRefPtr<StyleValue> m_overflow_x;
+    NonnullRefPtr<StyleValue> m_overflow_y;
 };
 
 class TextDecorationStyleValue final : public StyleValue {
