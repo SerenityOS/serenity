@@ -42,6 +42,11 @@ extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapF
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
 extern "C" FlatPtr do_init_context(Thread* thread, u32 flags) __attribute__((used));
 
+bool Processor::is_smp_enabled()
+{
+    return s_smp_enabled;
+}
+
 UNMAP_AFTER_INIT static void sse_init()
 {
     write_cr0((read_cr0() & 0xfffffffbu) | 0x2);
@@ -807,6 +812,8 @@ void Processor::smp_cleanup_message(ProcessorMessage& msg)
 
 bool Processor::smp_process_pending_messages()
 {
+    VERIFY(s_smp_enabled);
+
     bool did_process = false;
     u32 prev_flags;
     enter_critical(prev_flags);
