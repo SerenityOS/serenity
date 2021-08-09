@@ -1067,8 +1067,6 @@ void MemoryManager::register_region(Region& region)
     ScopedSpinLock lock(s_mm_lock);
     if (region.is_kernel())
         m_kernel_regions.append(region);
-    else
-        m_user_regions.append(region);
 }
 
 void MemoryManager::unregister_region(Region& region)
@@ -1076,8 +1074,6 @@ void MemoryManager::unregister_region(Region& region)
     ScopedSpinLock lock(s_mm_lock);
     if (region.is_kernel())
         m_kernel_regions.remove(region);
-    else
-        m_user_regions.remove(region);
 }
 
 void MemoryManager::dump_kernel_regions()
