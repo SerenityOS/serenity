@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/RegExpPrototype.h>
 #include <LibJS/Runtime/RegExpStringIterator.h>
 #include <LibJS/Runtime/RegExpStringIteratorPrototype.h>
+#include <LibJS/Runtime/Utf16String.h>
 
 namespace JS {
 

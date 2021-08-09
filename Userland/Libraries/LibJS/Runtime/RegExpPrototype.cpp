@@ -18,6 +18,7 @@
 #include <LibJS/Runtime/RegExpPrototype.h>
 #include <LibJS/Runtime/RegExpStringIterator.h>
 #include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/Utf16String.h>
 #include <LibJS/Token.h>
 
 namespace JS {
@@ -414,7 +415,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
     auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    Utf16View string_view { string };
+    auto string_view = string.view();
 
     return regexp_builtin_exec(global_object, *regexp_object, string_view);
 }
@@ -429,7 +430,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
     auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    Utf16View string_view { string };
+    auto string_view = string.view();
 
     auto match = regexp_exec(global_object, *regexp_object, string_view);
     if (vm.exception())
@@ -472,7 +473,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    Utf16View string_view { string };
+    auto string_view = string.view();
 
     auto global_value = regexp_object->get(vm.names.global);
     if (vm.exception())
@@ -597,7 +598,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     auto string = string_value.to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    Utf16View string_view { string };
+    auto string_view = string.view();
 
     if (!replace_value.is_function()) {
         auto replace_string = replace_value.to_string(global_object);
@@ -672,7 +673,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         auto matched = matched_value.to_utf16_string(global_object);
         if (vm.exception())
             return {};
-        Utf16View matched_view { matched };
+        auto matched_length = matched.length_in_code_units();
 
         auto position_value = result.get(vm.names.index);
         if (vm.exception())
@@ -711,7 +712,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
         if (replace_value.is_function()) {
             MarkedValueList replacer_args(vm.heap());
-            replacer_args.append(js_string(vm, matched_view));
+            replacer_args.append(js_string(vm, move(matched)));
             replacer_args.extend(move(captures));
             replacer_args.append(Value(position));
             replacer_args.append(js_string(vm, string_view));
@@ -734,7 +735,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
                     return {};
             }
 
-            replacement = get_substitution(global_object, matched_view, string_view, position, captures, named_captures_object, replace_value);
+            replacement = get_substitution(global_object, matched.view(), string_view, position, captures, named_captures_object, replace_value);
             if (vm.exception())
                 return {};
         }
@@ -748,7 +749,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             builder.append(replacement);
 
             accumulated_result = builder.build();
-            next_source_position = position + matched_view.length_in_code_units();
+            next_source_position = position + matched_length;
         }
     }
 
@@ -774,7 +775,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    Utf16View string_view { string };
+    auto string_view = string.view();
 
     auto previous_last_index = regexp_object->get(vm.names.lastIndex);
     if (vm.exception())
@@ -822,7 +823,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto string = vm.argument(0).to_utf16_string(global_object);
     if (vm.exception())
         return {};
-    Utf16View string_view { string };
+    auto string_view = string.view();
 
     auto* constructor = species_constructor(global_object, *regexp_object, *global_object.regexp_constructor());
     if (vm.exception())
