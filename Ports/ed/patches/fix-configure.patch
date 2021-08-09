@@ -1,0 +1,21 @@
+--- ed-1.15/configure.old	2021-08-10 00:18:06.612959086 +0800
++++ ed-1.15/configure	2021-08-10 00:18:31.035115395 +0800
+@@ -19,14 +19,14 @@
+ bindir='$(exec_prefix)/bin'
+ datarootdir='$(prefix)/share'
+ infodir='$(datarootdir)/info'
+ mandir='$(datarootdir)/man'
+ program_prefix=
+-CC=gcc
+-CPPFLAGS=
+-CFLAGS='-Wall -W -O2'
+-LDFLAGS=
++CC=${CC-gcc}
++CPPFLAGS=${CPPFLAGS-}
++CFLAGS=${CFLAGS-"-Wall -W -O2"}
++LDFLAGS=${LDFLAGS-}
+ 
+ # checking whether we are using GNU C.
+ /bin/sh -c "${CC} --version" > /dev/null 2>&1 ||
+ 	{
+ 	CC=cc
