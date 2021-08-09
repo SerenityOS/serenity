@@ -40,16 +40,14 @@ Region::~Region()
 {
     m_vmobject->remove_region(*this);
 
-    // Make sure we disable interrupts so we don't get interrupted between unmapping and unregistering.
-    // Unmapping the region will give the VM back to the VirtualRangeAllocator, so an interrupt handler would
-    // find the address<->region mappings in an invalid state there.
-    ScopedSpinLock lock(s_mm_lock);
+    MM.unregister_region(*this);
+
     if (m_page_directory) {
+        ScopedSpinLock page_lock(m_page_directory->get_lock());
+        ScopedSpinLock lock(s_mm_lock);
         unmap(ShouldDeallocateVirtualRange::Yes);
         VERIFY(!m_page_directory);
     }
-
-    MM.unregister_region(*this);
 }
 
 OwnPtr<Region> Region::clone()
