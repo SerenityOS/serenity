@@ -94,11 +94,25 @@ struct [[gnu::packed]] USBEndpointDescriptor {
     u8 poll_interval_in_frames;
 };
 
+//
+//  USB 1.1/2.0 Hub Descriptor
+//  ==============
+//
+struct [[gnu::packed]] USBHubDescriptor {
+    USBDescriptorCommon descriptor_header;
+    u8 number_of_downstream_ports;
+    u16 hub_characteristics;
+    u8 power_on_to_power_good_time;
+    u8 hub_controller_current;
+    // NOTE: This does not contain DeviceRemovable or PortPwrCtrlMask because a struct cannot have two VLAs in a row.
+};
+
 static constexpr u8 DESCRIPTOR_TYPE_DEVICE = 0x01;
 static constexpr u8 DESCRIPTOR_TYPE_CONFIGURATION = 0x02;
 static constexpr u8 DESCRIPTOR_TYPE_STRING = 0x03;
 static constexpr u8 DESCRIPTOR_TYPE_INTERFACE = 0x04;
 static constexpr u8 DESCRIPTOR_TYPE_ENDPOINT = 0x05;
 static constexpr u8 DESCRIPTOR_TYPE_DEVICE_QUALIFIER = 0x06;
+static constexpr u8 DESCRIPTOR_TYPE_HUB = 0x29;
 
 }
