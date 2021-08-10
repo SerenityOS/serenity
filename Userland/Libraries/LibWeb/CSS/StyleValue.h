@@ -230,6 +230,7 @@ public:
         ComponentValueList,
         Calculated,
         Background,
+        BackgroundRepeat,
         Border,
         BorderRadius,
         BoxShadow,
@@ -256,6 +257,7 @@ public:
     bool is_component_value_list() const { return type() == Type::ComponentValueList; }
     bool is_calculated() const { return type() == Type::Calculated; }
     bool is_background() const { return type() == Type::Background; }
+    bool is_background_repeat() const { return type() == Type::BackgroundRepeat; }
     bool is_border() const { return type() == Type::Border; }
     bool is_border_radius() const { return type() == Type::BorderRadius; }
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
@@ -685,6 +687,34 @@ private:
     // FIXME: background-attachment
     // FIXME: background-clip
     // FIXME: background-origin
+};
+
+class BackgroundRepeatStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<BackgroundRepeatStyleValue> create(NonnullRefPtr<StyleValue> repeat_x, NonnullRefPtr<StyleValue> repeat_y)
+    {
+        return adopt_ref(*new BackgroundRepeatStyleValue(repeat_x, repeat_y));
+    }
+    virtual ~BackgroundRepeatStyleValue() override { }
+
+    NonnullRefPtr<StyleValue> repeat_x() const { return m_repeat_x; }
+    NonnullRefPtr<StyleValue> repeat_y() const { return m_repeat_y; }
+
+    virtual String to_string() const override
+    {
+        return String::formatted("{} {}", m_repeat_x->to_string(), m_repeat_y->to_string());
+    }
+
+private:
+    BackgroundRepeatStyleValue(NonnullRefPtr<StyleValue> repeat_x, NonnullRefPtr<StyleValue> repeat_y)
+        : StyleValue(Type::BackgroundRepeat)
+        , m_repeat_x(repeat_x)
+        , m_repeat_y(repeat_y)
+    {
+    }
+
+    NonnullRefPtr<StyleValue> m_repeat_x;
+    NonnullRefPtr<StyleValue> m_repeat_y;
 };
 
 class BorderStyleValue final : public StyleValue {

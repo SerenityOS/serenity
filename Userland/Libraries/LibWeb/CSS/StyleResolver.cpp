@@ -427,41 +427,30 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::BackgroundRepeat) {
-        auto assign_background_repeat_from_single_value = [&](StyleValue const& value) {
-            auto value_id = value.to_identifier();
-            if (value_id == ValueID::RepeatX || value_id == ValueID::RepeatY) {
-                auto repeat_x = IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::Repeat : ValueID::NoRepeat);
-                auto repeat_y = IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::NoRepeat : ValueID::Repeat);
-                set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, repeat_x, document, true);
-                set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, repeat_y, document, true);
-            } else {
-                set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, value, document, true);
-                set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, value, document, true);
-            }
-        };
-
-        if (value.is_component_value_list()) {
-            auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
-            NonnullRefPtrVector<StyleValue> repeat_values;
-            for (auto& part : parts) {
-                if (part.is(Token::Type::Comma)) {
-                    // FIXME: Handle multiple backgrounds.
-                    break;
+        if (value.is_value_list()) {
+            auto& background_repeat_list = static_cast<CSS::StyleValueList const&>(value).values();
+            // FIXME: Handle multiple backgrounds.
+            if (!background_repeat_list.is_empty()) {
+                auto& maybe_background_repeat = background_repeat_list.first();
+                if (maybe_background_repeat.is_background_repeat()) {
+                    auto& background_repeat = static_cast<BackgroundRepeatStyleValue const&>(maybe_background_repeat);
+                    set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, background_repeat.repeat_x(), document, true);
+                    set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, background_repeat.repeat_y(), document, true);
                 }
-                auto parsed_value = Parser::parse_css_value(context, property_id, part);
-                if (parsed_value)
-                    repeat_values.append(parsed_value.release_nonnull());
-            }
-            if (repeat_values.size() == 1) {
-                assign_background_repeat_from_single_value(repeat_values[0]);
-            } else if (repeat_values.size() == 2) {
-                set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, repeat_values[0], document, true);
-                set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, repeat_values[1], document, true);
             }
             return;
         }
-
-        assign_background_repeat_from_single_value(value);
+        if (value.is_background_repeat()) {
+            auto& background_repeat = static_cast<BackgroundRepeatStyleValue const&>(value);
+            set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, background_repeat.repeat_x(), document, true);
+            set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, background_repeat.repeat_y(), document, true);
+            return;
+        }
+        if (value.is_builtin()) {
+            set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatX, value, document, true);
+            set_property_expanding_shorthands(style, PropertyID::BackgroundRepeatY, value, document, true);
+            return;
+        }
         return;
     }
 
