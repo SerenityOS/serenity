@@ -147,32 +147,8 @@ static bool contains(Edge a, Edge b)
     return a == b || b == Edge::All;
 }
 
-static inline bool is_font_family(StyleValue const& value)
-{
-    if (value.is_builtin_or_dynamic())
-        return true;
-    if (value.is_string())
-        return true;
-    switch (value.to_identifier()) {
-    case ValueID::Cursive:
-    case ValueID::Fantasy:
-    case ValueID::Monospace:
-    case ValueID::Serif:
-    case ValueID::SansSerif:
-    case ValueID::UiMonospace:
-    case ValueID::UiRounded:
-    case ValueID::UiSerif:
-    case ValueID::UiSansSerif:
-        return true;
-    default:
-        return false;
-    }
-}
-
 static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, StyleValue const& value, DOM::Document& document, bool is_internally_generated_pseudo_property = false)
 {
-    CSS::ParsingContext context(document);
-
     if (is_pseudo_property(property_id) && !is_internally_generated_pseudo_property) {
         dbgln("Ignoring non-internally-generated pseudo property: {}", string_from_property_id(property_id));
         return;
@@ -498,8 +474,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         if (value.is_font()) {
             auto& font_shorthand = static_cast<CSS::FontStyleValue const&>(value);
             style.set_property(CSS::PropertyID::FontSize, font_shorthand.font_size());
-            // FIXME: Support multiple font-families
-            style.set_property(CSS::PropertyID::FontFamily, font_shorthand.font_families().first());
+            set_property_expanding_shorthands(style, CSS::PropertyID::FontFamily, *font_shorthand.font_families(), document);
             style.set_property(CSS::PropertyID::FontStyle, font_shorthand.font_style());
             style.set_property(CSS::PropertyID::FontWeight, font_shorthand.font_weight());
             style.set_property(CSS::PropertyID::LineHeight, font_shorthand.line_height());
@@ -520,21 +495,18 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::FontFamily) {
-        if (value.is_component_value_list()) {
-            auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
-            // FIXME: Handle multiple font-families separated by commas, for fallback purposes.
-            for (auto& part : parts) {
-                auto value = Parser::parse_css_value(context, property_id, part);
-                if (!value)
-                    return;
-                if (is_font_family(*value))
-                    style.set_property(CSS::PropertyID::FontFamily, *value);
-                break;
+        if (value.is_value_list()) {
+            auto& values_list = static_cast<StyleValueList const&>(value).values();
+            // FIXME: Support multiple font-families
+            if (!values_list.is_empty()) {
+                style.set_property(CSS::PropertyID::FontFamily, values_list.first());
             }
             return;
         }
-
-        style.set_property(CSS::PropertyID::FontFamily, value);
+        if (value.is_builtin() || value.is_string() || value.is_identifier()) {
+            style.set_property(CSS::PropertyID::FontFamily, value);
+            return;
+        }
         return;
     }
 
