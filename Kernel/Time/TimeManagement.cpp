@@ -363,9 +363,9 @@ void TimeManagement::increment_time_since_boot_hpet()
     // TODO: Apply m_remaining_epoch_time_adjustment
     timespec_add(m_epoch_time, { (time_t)(delta_ns / 1000000000), (long)(delta_ns % 1000000000) }, m_epoch_time);
 
-    update_time_page();
-
     m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+
+    update_time_page();
 }
 
 void TimeManagement::increment_time_since_boot()
@@ -396,8 +396,9 @@ void TimeManagement::increment_time_since_boot()
         m_ticks_this_second = 0;
     }
 
-    update_time_page();
     m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+
+    update_time_page();
 }
 
 void TimeManagement::system_timer_tick(const RegisterState& regs)
@@ -432,6 +433,7 @@ void TimeManagement::update_time_page()
     auto* page = time_page();
     u32 update_iteration = AK::atomic_fetch_add(&page->update2, 1u, AK::MemoryOrder::memory_order_acquire);
     page->clocks[CLOCK_REALTIME_COARSE] = m_epoch_time;
+    page->clocks[CLOCK_MONOTONIC_COARSE] = monotonic_time(TimePrecision::Coarse).to_timespec();
     AK::atomic_store(&page->update1, update_iteration + 1u, AK::MemoryOrder::memory_order_release);
 }
 
