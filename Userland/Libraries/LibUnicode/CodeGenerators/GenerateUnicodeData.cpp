@@ -7,6 +7,7 @@
 #include <AK/AllOf.h>
 #include <AK/Array.h>
 #include <AK/CharacterTypes.h>
+#include <AK/Find.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/QuickSort.h>
@@ -68,8 +69,6 @@ struct CodePointData {
     Optional<u32> simple_lowercase_mapping;
     Optional<u32> simple_titlecase_mapping;
     Vector<u32> special_casing_indices;
-    StringView script;
-    Vector<StringView> script_extensions;
 };
 
 struct UnicodeData {
@@ -100,7 +99,6 @@ struct UnicodeData {
     };
     Vector<Alias> script_aliases;
     PropList script_extensions;
-    u32 largest_script_extensions_size { 0 };
 };
 
 static constexpr auto s_desired_fields = Array {
@@ -311,34 +309,6 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
     Optional<u32> assigned_code_point_range_start = 0;
     u32 previous_code_point = 0;
 
-    auto assign_code_point_property = [&](u32 code_point, auto const& list, auto& property, StringView default_) {
-        using PropertyType = RemoveCVReference<decltype(property)>;
-        constexpr bool is_single_item = IsSame<PropertyType, StringView>;
-
-        auto assign_property = [&](auto const& item) {
-            if constexpr (is_single_item)
-                property = item;
-            else
-                property.append(item);
-        };
-
-        for (auto const& item : list) {
-            for (auto const& range : item.value) {
-                if ((range.first <= code_point) && (code_point <= range.last)) {
-                    assign_property(item.key);
-                    break;
-                }
-            }
-            if constexpr (is_single_item) {
-                if (!property.is_empty())
-                    break;
-            }
-        }
-
-        if (property.is_empty() && !default_.is_empty())
-            assign_property(default_);
-    };
-
     while (file.can_read_line()) {
         auto line = file.read_line();
         if (line.is_empty())
@@ -395,13 +365,9 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
                 data.special_casing_indices.append(casing.index);
         }
 
-        assign_code_point_property(data.code_point, unicode_data.script_list, data.script, "Unknown"sv);
-        assign_code_point_property(data.code_point, unicode_data.script_extensions, data.script_extensions, {});
-
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
-        unicode_data.largest_script_extensions_size = max(unicode_data.largest_script_extensions_size, data.script_extensions.size());
-
         previous_code_point = data.code_point;
+
         unicode_data.code_point_data.append(move(data));
     }
 }
@@ -412,7 +378,6 @@ static void generate_unicode_data_header(Core::File& file, UnicodeData& unicode_
     SourceGenerator generator { builder };
     generator.set("casing_transform_size", String::number(unicode_data.largest_casing_transform_size));
     generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
-    generator.set("script_extensions_size", String::number(unicode_data.largest_script_extensions_size));
 
     auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> aliases = {}) {
         quick_sort(values);
@@ -515,10 +480,6 @@ struct UnicodeData {
 
     SpecialCasing const* special_casing[@special_casing_size@] {};
     u32 special_casing_size { 0 };
-
-    Script script { Script::Unknown };
-    Script script_extensions[@script_extensions_size@];
-    u32 script_extensions_size { 0 };
 };
 
 namespace Detail {
@@ -531,6 +492,8 @@ Optional<GeneralCategory> general_category_from_string(StringView const& general
 bool code_point_has_property(u32 code_point, Property property);
 Optional<Property> property_from_string(StringView const& property);
 
+bool code_point_has_script(u32 code_point, Script script);
+bool code_point_has_script_extension(u32 code_point, Script script);
 Optional<Script> script_from_string(StringView const& script);
 
 }
@@ -631,8 +594,6 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
         append_field("simple_lowercase_mapping", String::formatted("{:#x}", data.simple_lowercase_mapping.value_or(data.code_point)));
         append_field("simple_titlecase_mapping", String::formatted("{:#x}", data.simple_titlecase_mapping.value_or(data.code_point)));
         append_list_and_size(data.special_casing_indices, "&s_special_casing[{}]"sv);
-        generator.append(String::formatted(", Script::{}", data.script));
-        append_list_and_size(data.script_extensions, "Script::{}"sv);
         generator.append(" },");
     }
 
@@ -709,6 +670,8 @@ static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
 
     append_prop_list("s_general_categories"sv, "s_general_category_{}"sv, unicode_data.general_categories);
     append_prop_list("s_properties"sv, "s_property_{}"sv, unicode_data.prop_list);
+    append_prop_list("s_scripts"sv, "s_script_{}"sv, unicode_data.script_list);
+    append_prop_list("s_script_extensions"sv, "s_script_extension_{}"sv, unicode_data.script_extensions);
 
     generator.append(R"~~~(
 static HashMap<u32, UnicodeData const*> const& ensure_code_point_map()
@@ -811,16 +774,72 @@ Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
     append_prop_search("Property"sv, "property"sv, "s_properties"sv);
     append_from_string("Property"sv, "property"sv, unicode_data.prop_list, unicode_data.prop_aliases);
 
+    append_prop_search("Script"sv, "script"sv, "s_scripts"sv);
+    append_prop_search("Script"sv, "script_extension"sv, "s_script_extensions"sv);
     append_from_string("Script"sv, "script"sv, unicode_data.script_list, unicode_data.script_aliases);
 
     generator.append(R"~~~(
-
 }
 
 }
 )~~~");
 
     write_to_file_if_different(file, generator.as_string_view());
+}
+
+static Vector<u32> flatten_code_point_ranges(Vector<CodePointRange> const& code_points)
+{
+    Vector<u32> flattened;
+
+    for (auto const& range : code_points) {
+        flattened.grow_capacity(range.last - range.first);
+        for (u32 code_point = range.first; code_point <= range.last; ++code_point)
+            flattened.append(code_point);
+    }
+
+    return flattened;
+}
+
+static Vector<CodePointRange> form_code_point_ranges(Vector<u32> code_points)
+{
+    Vector<CodePointRange> ranges;
+
+    u32 range_start = code_points[0];
+    u32 range_end = range_start;
+
+    for (size_t i = 1; i < code_points.size(); ++i) {
+        u32 code_point = code_points[i];
+
+        if ((code_point - range_end) == 1) {
+            range_end = code_point;
+        } else {
+            ranges.append({ range_start, range_end });
+            range_start = code_point;
+            range_end = code_point;
+        }
+    }
+
+    ranges.append({ range_start, range_end });
+    return ranges;
+}
+
+static void sort_and_merge_code_point_ranges(Vector<CodePointRange>& code_points)
+{
+    quick_sort(code_points, [](auto const& range1, auto const& range2) {
+        return range1.first < range2.first;
+    });
+
+    for (size_t i = 0; i < code_points.size() - 1;) {
+        if (code_points[i].last >= code_points[i + 1].first) {
+            code_points[i].last = max(code_points[i].last, code_points[i + 1].last);
+            code_points.remove(i + 1);
+        } else {
+            ++i;
+        }
+    }
+
+    auto all_code_points = flatten_code_point_ranges(code_points);
+    code_points = form_code_point_ranges(all_code_points);
 }
 
 static void populate_general_category_unions(PropList& general_categories)
@@ -833,14 +852,7 @@ static void populate_general_category_unions(PropList& general_categories)
         for (auto const& category : categories)
             code_points.extend(general_categories.find(category)->value);
 
-        quick_sort(code_points, [](auto const& range1, auto const& range2) {
-            return range1.first < range2.first;
-        });
-
-        // Verify that no code point range overlaps. If this changes some day, we will have to
-        // combine the overlapping regions for binary seaches through this list to work.
-        for (size_t i = 0; i < code_points.size() - 1; ++i)
-            VERIFY(code_points[i].last < code_points[i + 1].first);
+        sort_and_merge_code_point_ranges(code_points);
     };
 
     populate_union("LC"sv, Array { "Ll"sv, "Lu"sv, "Lt"sv });
@@ -851,6 +863,26 @@ static void populate_general_category_unions(PropList& general_categories)
     populate_union("S"sv, Array { "Sm"sv, "Sc"sv, "Sk"sv, "So"sv });
     populate_union("Z"sv, Array { "Zs"sv, "Zl"sv, "Zp"sv });
     populate_union("C"sv, Array { "Cc"sv, "Cf"sv, "Cs"sv, "Co"sv, "Cn"sv });
+}
+
+static void normalize_script_extensions(PropList& script_extensions, PropList const& script_list, Vector<Alias> const& script_aliases)
+{
+    // The ScriptExtensions UCD file lays out its code point ranges rather uniquely compared to
+    // other files. The Script listed on each line may either be a full Script string or an aliased
+    // abbreviation. Further, the extensions may or may not include the base Script list. Normalize
+    // the extensions here to be keyed by the full Script name and always include the base list.
+    auto extensions = move(script_extensions);
+    script_extensions = script_list;
+
+    for (auto const& extension : extensions) {
+        auto it = find_if(script_aliases.begin(), script_aliases.end(), [&](auto const& alias) { return extension.key == alias.alias; });
+        auto const& key = (it == script_aliases.end()) ? extension.key : it->property;
+
+        auto& code_points = script_extensions.find(key)->value;
+        code_points.extend(extension.value);
+
+        sort_and_merge_code_point_ranges(code_points);
+    }
 }
 
 int main(int argc, char** argv)
@@ -930,6 +962,7 @@ int main(int argc, char** argv)
     parse_unicode_data(unicode_data_file, unicode_data);
     parse_value_alias_list(prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
     parse_value_alias_list(prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false);
+    normalize_script_extensions(unicode_data.script_extensions, unicode_data.script_list, unicode_data.script_aliases);
 
     generate_unicode_data_header(generated_header_file, unicode_data);
     generate_unicode_data_implementation(generated_implementation_file, unicode_data);

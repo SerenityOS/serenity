@@ -375,3 +375,93 @@ TEST_CASE(property)
         EXPECT(!Unicode::code_point_has_property(code_point, property_white_space));
     }
 }
+
+TEST_CASE(script)
+{
+    auto script = [](StringView name) {
+        auto script = Unicode::script_from_string(name);
+        VERIFY(script.has_value());
+        return *script;
+    };
+
+    auto script_latin = script("Latin"sv);
+    auto script_latn = script("Latn"sv);
+    EXPECT_EQ(script_latin, script_latn);
+
+    auto script_cyrillic = script("Cyrillic"sv);
+    auto script_cyrl = script("Cyrl"sv);
+    EXPECT_EQ(script_cyrillic, script_cyrl);
+
+    auto script_greek = script("Greek"sv);
+    auto script_grek = script("Grek"sv);
+    EXPECT_EQ(script_greek, script_grek);
+
+    for (u32 code_point = 0x41; code_point <= 0x5a; ++code_point) {
+        EXPECT(Unicode::code_point_has_script(code_point, script_latin));
+        EXPECT(Unicode::code_point_has_script_extension(code_point, script_latin));
+
+        EXPECT(!Unicode::code_point_has_script(code_point, script_cyrillic));
+        EXPECT(!Unicode::code_point_has_script(code_point, script_greek));
+    }
+
+    for (u32 code_point = 0x61; code_point <= 0x7a; ++code_point) {
+        EXPECT(Unicode::code_point_has_script(code_point, script_latin));
+        EXPECT(Unicode::code_point_has_script_extension(code_point, script_latin));
+
+        EXPECT(!Unicode::code_point_has_script(code_point, script_cyrillic));
+        EXPECT(!Unicode::code_point_has_script(code_point, script_greek));
+    }
+
+    for (u32 code_point = 0x400; code_point <= 0x481; ++code_point) {
+        EXPECT(Unicode::code_point_has_script(code_point, script_cyrillic));
+        EXPECT(Unicode::code_point_has_script_extension(code_point, script_cyrillic));
+
+        EXPECT(!Unicode::code_point_has_script(code_point, script_latin));
+        EXPECT(!Unicode::code_point_has_script(code_point, script_greek));
+    }
+
+    for (u32 code_point = 0x400; code_point <= 0x481; ++code_point) {
+        EXPECT(Unicode::code_point_has_script(code_point, script_cyrillic));
+        EXPECT(Unicode::code_point_has_script_extension(code_point, script_cyrillic));
+
+        EXPECT(!Unicode::code_point_has_script(code_point, script_latin));
+        EXPECT(!Unicode::code_point_has_script(code_point, script_greek));
+    }
+
+    for (u32 code_point = 0x1f80; code_point <= 0x1fb4; ++code_point) {
+        EXPECT(Unicode::code_point_has_script(code_point, script_greek));
+        EXPECT(Unicode::code_point_has_script_extension(code_point, script_greek));
+
+        EXPECT(!Unicode::code_point_has_script(code_point, script_latin));
+        EXPECT(!Unicode::code_point_has_script(code_point, script_cyrillic));
+    }
+}
+
+TEST_CASE(script_extension)
+{
+    auto script = [](StringView name) {
+        auto script = Unicode::script_from_string(name);
+        VERIFY(script.has_value());
+        return *script;
+    };
+
+    auto script_latin = script("Latin"sv);
+    auto script_greek = script("Greek"sv);
+
+    for (u32 code_point = 0x363; code_point <= 0x36f; ++code_point) {
+        EXPECT(!Unicode::code_point_has_script(code_point, script_latin));
+        EXPECT(Unicode::code_point_has_script_extension(code_point, script_latin));
+    }
+
+    EXPECT(!Unicode::code_point_has_script(0x342, script_greek));
+    EXPECT(Unicode::code_point_has_script_extension(0x342, script_greek));
+
+    EXPECT(!Unicode::code_point_has_script(0x345, script_greek));
+    EXPECT(Unicode::code_point_has_script_extension(0x345, script_greek));
+
+    EXPECT(!Unicode::code_point_has_script(0x1dc0, script_greek));
+    EXPECT(Unicode::code_point_has_script_extension(0x1dc0, script_greek));
+
+    EXPECT(!Unicode::code_point_has_script(0x1dc1, script_greek));
+    EXPECT(Unicode::code_point_has_script_extension(0x1dc1, script_greek));
+}
