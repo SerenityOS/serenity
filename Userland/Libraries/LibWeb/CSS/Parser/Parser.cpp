@@ -2342,30 +2342,11 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
         return false;
     };
 
-    auto is_font_family = [](StyleValue const& value) -> bool {
-        if (value.is_string())
-            return true;
-        switch (value.to_identifier()) {
-        case ValueID::Cursive:
-        case ValueID::Fantasy:
-        case ValueID::Monospace:
-        case ValueID::Serif:
-        case ValueID::SansSerif:
-        case ValueID::UiMonospace:
-        case ValueID::UiRounded:
-        case ValueID::UiSerif:
-        case ValueID::UiSansSerif:
-            return true;
-        default:
-            return false;
-        }
-    };
-
     RefPtr<StyleValue> font_style;
     RefPtr<StyleValue> font_weight;
     RefPtr<StyleValue> font_size;
     RefPtr<StyleValue> line_height;
-    NonnullRefPtrVector<StyleValue> font_families;
+    RefPtr<StyleValue> font_families;
     // FIXME: Implement font-stretch and font-variant.
 
     // FIXME: Handle system fonts. (caption, icon, menu, message-box, small-caption, status-bar)
@@ -2412,24 +2393,11 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
                 }
             }
 
-            // Consume font-family
-            // FIXME: Handle multiple font-families separated by commas, for fallback purposes.
-            if (i + 1 < component_values.size()) {
-                auto& font_family_part = component_values[i + 1];
-                auto maybe_font_family = parse_css_value(context, PropertyID::Font, font_family_part);
-                if (!maybe_font_family) {
-                    // Single-word font-families may not be quoted. We convert it to a String for convenience.
-                    if (font_family_part.is(Token::Type::Ident))
-                        maybe_font_family = StringStyleValue::create(font_family_part.token().ident());
-                    else
-                        return nullptr;
-                } else if (!is_font_family(*maybe_font_family)) {
-                    dbgln("Unable to parse '{}' as a font-family.", font_family_part.to_debug_string());
-                    return nullptr;
-                }
-
-                font_families.append(maybe_font_family.release_nonnull());
-            }
+            // Consume font-families
+            auto maybe_font_families = parse_font_family_value(context, component_values, i + 1);
+            if (!maybe_font_families)
+                return nullptr;
+            font_families = maybe_font_families.release_nonnull();
             break;
         }
 
@@ -2443,7 +2411,7 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
     if (unset_value_count < normal_count)
         return nullptr;
 
-    if (!font_size || font_families.is_empty())
+    if (!font_size || !font_families)
         return nullptr;
 
     if (!font_style)
@@ -2453,7 +2421,97 @@ RefPtr<StyleValue> Parser::parse_font_value(ParsingContext const& context, Vecto
     if (!line_height)
         line_height = IdentifierStyleValue::create(ValueID::Normal);
 
-    return FontStyleValue::create(font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), move(font_families));
+    return FontStyleValue::create(font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
+}
+
+RefPtr<StyleValue> Parser::parse_font_family_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values, size_t start_index)
+{
+    auto is_generic_font_family = [](ValueID identifier) -> bool {
+        switch (identifier) {
+        case ValueID::Cursive:
+        case ValueID::Fantasy:
+        case ValueID::Monospace:
+        case ValueID::Serif:
+        case ValueID::SansSerif:
+        case ValueID::UiMonospace:
+        case ValueID::UiRounded:
+        case ValueID::UiSerif:
+        case ValueID::UiSansSerif:
+            return true;
+        default:
+            return false;
+        }
+    };
+
+    auto is_comma_or_eof = [&](size_t i) -> bool {
+        if (i < component_values.size()) {
+            auto& maybe_comma = component_values[i];
+            if (!maybe_comma.is(Token::Type::Comma))
+                return false;
+        }
+        return true;
+    };
+
+    // Note: Font-family names can either be a quoted string, or a keyword, or a series of custom-idents.
+    // eg, these are equivalent:
+    //     font-family: my cool     font\!, serif;
+    //     font-family: "my cool font!", serif;
+    NonnullRefPtrVector<StyleValue> font_families;
+    Vector<String> current_name_parts;
+    for (size_t i = start_index; i < component_values.size(); ++i) {
+        auto& part = component_values[i];
+
+        if (part.is(Token::Type::String)) {
+            // `font-family: my cool "font";` is invalid.
+            if (!current_name_parts.is_empty())
+                return nullptr;
+            if (!is_comma_or_eof(i + 1))
+                return nullptr;
+            font_families.append(StringStyleValue::create(part.token().string()));
+            i++;
+            continue;
+        }
+        if (part.is(Token::Type::Ident)) {
+            // If this is a valid identifier, it's NOT a custom-ident and can't be part of a larger name.
+            auto maybe_ident = parse_css_value(context, PropertyID::FontFamily, part);
+            if (maybe_ident) {
+                // CSS-wide keywords are not allowed
+                if (maybe_ident->is_builtin())
+                    return nullptr;
+                if (is_generic_font_family(maybe_ident->to_identifier())) {
+                    // Can't have a generic-font-name as a token in an unquoted font name.
+                    if (!current_name_parts.is_empty())
+                        return nullptr;
+                    if (!is_comma_or_eof(i + 1))
+                        return nullptr;
+                    font_families.append(maybe_ident.release_nonnull());
+                    i++;
+                    continue;
+                }
+            }
+            current_name_parts.append(part.token().ident());
+            continue;
+        }
+        if (part.is(Token::Type::Comma)) {
+            if (current_name_parts.is_empty())
+                return nullptr;
+            font_families.append(StringStyleValue::create(String::join(' ', current_name_parts)));
+            current_name_parts.clear();
+            // Can't have a trailing comma
+            if (i + 1 == component_values.size())
+                return nullptr;
+            continue;
+        }
+    }
+
+    if (!current_name_parts.is_empty()) {
+        font_families.append(StringStyleValue::create(String::join(' ', current_name_parts)));
+        current_name_parts.clear();
+    }
+
+    if (font_families.is_empty())
+        return nullptr;
+    return StyleValueList::create(move(font_families));
 }
 
 RefPtr<StyleValue> Parser::parse_list_style_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
@@ -2756,6 +2814,10 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
         break;
     case PropertyID::Font:
         if (auto parsed_value = parse_font_value(m_context, component_values))
+            return parsed_value;
+        break;
+    case PropertyID::FontFamily:
+        if (auto parsed_value = parse_font_family_value(m_context, component_values))
             return parsed_value;
         break;
     case PropertyID::ListStyle:
