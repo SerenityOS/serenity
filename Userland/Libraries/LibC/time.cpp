@@ -38,8 +38,17 @@ int adjtime(const struct timeval* delta, struct timeval* old_delta)
 
 int gettimeofday(struct timeval* __restrict__ tv, void* __restrict__)
 {
-    int rc = syscall(SC_gettimeofday, tv);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    if (!tv) {
+        errno = EFAULT;
+        return -1;
+    }
+
+    struct timespec ts = {};
+    if (clock_gettime(CLOCK_REALTIME, &ts) < 0)
+        return -1;
+
+    TIMESPEC_TO_TIMEVAL(tv, &ts);
+    return 0;
 }
 
 int settimeofday(struct timeval* __restrict__ tv, void* __restrict__)
