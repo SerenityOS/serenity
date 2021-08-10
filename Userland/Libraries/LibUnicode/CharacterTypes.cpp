@@ -22,11 +22,6 @@ namespace Unicode {
 
 #if ENABLE_UNICODE_DATA
 
-static bool has_general_category(UnicodeData const& unicode_data, GeneralCategory general_category)
-{
-    return (unicode_data.general_category & general_category) != GeneralCategory::None;
-}
-
 static bool has_property(UnicodeData const& unicode_data, Property property)
 {
     return (unicode_data.properties & property) == property;
@@ -214,11 +209,7 @@ Optional<GeneralCategory> general_category_from_string([[maybe_unused]] StringVi
 bool code_point_has_general_category([[maybe_unused]] u32 code_point, [[maybe_unused]] GeneralCategory general_category)
 {
 #if ENABLE_UNICODE_DATA
-    auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-    if (!unicode_data.has_value())
-        return false;
-
-    return has_general_category(*unicode_data, general_category);
+    return Detail::code_point_has_general_category(code_point, general_category);
 #else
     return {};
 #endif
