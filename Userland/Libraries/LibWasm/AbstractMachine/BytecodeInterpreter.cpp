@@ -220,11 +220,6 @@ void BytecodeInterpreter::unary_operation(Configuration& configuration)
     configuration.stack().peek() = Value(result);
 }
 
-#define LOAD_AND_PUSH(read_type, push_type)                                     \
-    do {                                                                        \
-        return load_and_push<read_type, push_type>(configuration, instruction); \
-    } while (false)
-
 #define POP_AND_STORE(pop_type, store_type)                                                   \
     do {                                                                                      \
         TRAP_IF_NOT(!configuration.stack().is_empty());                                       \
@@ -523,33 +518,33 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     }
     case Instructions::i32_load.value():
-        LOAD_AND_PUSH(i32, i32);
+        return load_and_push<i32, i32>(configuration, instruction);
     case Instructions::i64_load.value():
-        LOAD_AND_PUSH(i64, i64);
+        return load_and_push<i64, i64>(configuration, instruction);
     case Instructions::f32_load.value():
-        LOAD_AND_PUSH(float, float);
+        return load_and_push<float, float>(configuration, instruction);
     case Instructions::f64_load.value():
-        LOAD_AND_PUSH(double, double);
+        return load_and_push<double, double>(configuration, instruction);
     case Instructions::i32_load8_s.value():
-        LOAD_AND_PUSH(i8, i32);
+        return load_and_push<i8, i32>(configuration, instruction);
     case Instructions::i32_load8_u.value():
-        LOAD_AND_PUSH(u8, i32);
+        return load_and_push<u8, i32>(configuration, instruction);
     case Instructions::i32_load16_s.value():
-        LOAD_AND_PUSH(i16, i32);
+        return load_and_push<i16, i32>(configuration, instruction);
     case Instructions::i32_load16_u.value():
-        LOAD_AND_PUSH(u16, i32);
+        return load_and_push<u16, i32>(configuration, instruction);
     case Instructions::i64_load8_s.value():
-        LOAD_AND_PUSH(i8, i64);
+        return load_and_push<i8, i64>(configuration, instruction);
     case Instructions::i64_load8_u.value():
-        LOAD_AND_PUSH(u8, i64);
+        return load_and_push<u8, i64>(configuration, instruction);
     case Instructions::i64_load16_s.value():
-        LOAD_AND_PUSH(i16, i64);
+        return load_and_push<i16, i64>(configuration, instruction);
     case Instructions::i64_load16_u.value():
-        LOAD_AND_PUSH(u16, i64);
+        return load_and_push<u16, i64>(configuration, instruction);
     case Instructions::i64_load32_s.value():
-        LOAD_AND_PUSH(i32, i64);
+        return load_and_push<i32, i64>(configuration, instruction);
     case Instructions::i64_load32_u.value():
-        LOAD_AND_PUSH(u32, i64);
+        return load_and_push<u32, i64>(configuration, instruction);
     case Instructions::i32_store.value():
         POP_AND_STORE(i32, i32);
     case Instructions::i64_store.value():
