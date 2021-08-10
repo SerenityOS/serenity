@@ -45,7 +45,7 @@ int gettimeofday(struct timeval* __restrict__ tv, void* __restrict__)
     }
 
     struct timespec ts = {};
-    if (clock_gettime(CLOCK_REALTIME, &ts) < 0)
+    if (clock_gettime(CLOCK_REALTIME_COARSE, &ts) < 0)
         return -1;
 
     TIMESPEC_TO_TIMEVAL(tv, &ts);
