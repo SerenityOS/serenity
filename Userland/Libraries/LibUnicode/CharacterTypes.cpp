@@ -224,8 +224,6 @@ bool is_ecma262_property([[maybe_unused]] Property property)
 {
 #if ENABLE_UNICODE_DATA
     // EMCA-262 only allows a subset of Unicode properties: https://tc39.es/ecma262/#table-binary-unicode-properties
-    // Note: Some of the properties in the above link are not yet parsed by the LibUnicode generator. They are left
-    //       commented out here until they are parsed and can be used.
     switch (property) {
     case Unicode::Property::ASCII:
     case Unicode::Property::ASCII_Hex_Digit:
@@ -239,7 +237,7 @@ bool is_ecma262_property([[maybe_unused]] Property property)
     case Unicode::Property::Changes_When_Casefolded:
     case Unicode::Property::Changes_When_Casemapped:
     case Unicode::Property::Changes_When_Lowercased:
-    // case Unicode::Property::Changes_When_NFKC_Casefolded:
+    case Unicode::Property::Changes_When_NFKC_Casefolded:
     case Unicode::Property::Changes_When_Titlecased:
     case Unicode::Property::Changes_When_Uppercased:
     case Unicode::Property::Dash:
