@@ -313,12 +313,13 @@ void TreeView::paint_event(PaintEvent& event)
                 int indent_width = indent_width_in_pixels() * indent_level;
 
                 Gfx::IntRect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
-                Gfx::IntRect text_rect = {
+                Gfx::IntRect background_rect = {
                     icon_rect.right() + 1 + icon_spacing(), rect.y(),
-                    column_width - indent_width - icon_size() - 1 - icon_spacing() + horizontal_padding(), rect.height()
+                    min(rect.width(), column_width - indent_width) - icon_size() - icon_spacing(), rect.height()
                 };
+                Gfx::IntRect text_rect = background_rect.shrunken(text_padding() * 2, 0);
 
-                painter.fill_rect(text_rect, background_color);
+                painter.fill_rect(background_rect, background_color);
 
                 auto icon = index.data(ModelRole::Icon);
                 if (icon.is_icon()) {
@@ -333,13 +334,9 @@ void TreeView::paint_event(PaintEvent& event)
                 }
                 draw_item_text(painter, index, is_selected_row, text_rect, index.data().to_string(), font_for_index(index), Gfx::TextAlignment::CenterLeft, Gfx::TextElision::Right);
 
-                if (is_focused() && index == cursor_index()) {
-                    auto focus_rect = text_rect;
-                    focus_rect.set_left(focus_rect.left() - 2);
-                    focus_rect.set_width(focus_rect.width() + 2);
-
-                    painter.draw_rect(focus_rect, palette().color(background_role()));
-                    painter.draw_focus_rect(focus_rect, palette().focus_outline());
+                if (selection_behavior() == SelectionBehavior::SelectItems && is_focused() && index == cursor_index()) {
+                    painter.draw_rect(background_rect, palette().color(background_role()));
+                    painter.draw_focus_rect(background_rect, palette().focus_outline());
                 }
 
                 auto index_at_indent = index;
@@ -701,7 +698,7 @@ void TreeView::update_column_sizes()
         int cell_width = 0;
         if (cell_data.is_valid()) {
             cell_width = font().width(cell_data.to_string());
-            cell_width += horizontal_padding() * 2 + indent_level * indent_width_in_pixels() + icon_size() / 2;
+            cell_width += horizontal_padding() * 2 + indent_level * indent_width_in_pixels() + icon_size() / 2 + text_padding() * 2;
         }
         tree_column_width = max(tree_column_width, cell_width);
         return IterationDecision::Continue;
