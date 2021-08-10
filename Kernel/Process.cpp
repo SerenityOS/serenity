@@ -30,7 +30,6 @@
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessExposed.h>
-#include <Kernel/RTC.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/TTY.h>
@@ -522,7 +521,7 @@ bool Process::dump_core()
     VERIFY(is_dumpable());
     VERIFY(should_core_dump());
     dbgln("Generating coredump for pid: {}", pid().value());
-    auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), pid().value(), RTC::now());
+    auto coredump_path = String::formatted("/tmp/coredump/{}_{}_{}", name(), pid().value(), kgettimeofday().to_truncated_seconds());
     auto coredump = CoreDump::create(*this, coredump_path);
     if (!coredump)
         return false;
