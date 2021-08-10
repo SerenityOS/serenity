@@ -246,6 +246,8 @@ public:
     bool is_box_shadow() const { return type() == Type::BoxShadow; }
     bool is_calculated() const { return type() == Type::Calculated; }
 
+    bool is_builtin() const { return is_inherit() || is_initial(); }
+
     bool is_builtin_or_dynamic() const
     {
         return is_inherit() || is_initial() || is_custom_property() || is_calculated();
