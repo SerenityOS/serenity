@@ -1746,22 +1746,23 @@ RefPtr<StyleValue> Parser::parse_image_value(ParsingContext const& context, Styl
     return {};
 }
 
+static inline bool is_background_repeat(StyleValue const& value)
+{
+    switch (value.to_identifier()) {
+    case ValueID::NoRepeat:
+    case ValueID::Repeat:
+    case ValueID::RepeatX:
+    case ValueID::RepeatY:
+    case ValueID::Round:
+    case ValueID::Space:
+        return true;
+    default:
+        return false;
+    }
+}
+
 RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
-    auto is_background_repeat = [](StyleValue const& value) -> bool {
-        switch (value.to_identifier()) {
-        case CSS::ValueID::NoRepeat:
-        case CSS::ValueID::Repeat:
-        case CSS::ValueID::RepeatX:
-        case CSS::ValueID::RepeatY:
-        case CSS::ValueID::Round:
-        case CSS::ValueID::Space:
-            return true;
-        default:
-            return false;
-        }
-    };
-
     auto is_background_image = [](StyleValue const& value) -> bool {
         if (value.is_image())
             return true;
@@ -1846,6 +1847,50 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
         repeat_y = IdentifierStyleValue::create(ValueID::Repeat);
 
     return BackgroundStyleValue::create(background_color.release_nonnull(), background_image.release_nonnull(), repeat_x.release_nonnull(), repeat_y.release_nonnull());
+}
+
+RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    auto is_directional_repeat = [](StyleValue const& value) -> bool {
+        auto value_id = value.to_identifier();
+        return value_id == ValueID::RepeatX || value_id == ValueID::RepeatY;
+    };
+
+    if (component_values.size() == 1) {
+        auto maybe_value = parse_css_value(context, PropertyID::BackgroundRepeat, component_values.first());
+        if (!maybe_value)
+            return nullptr;
+        auto value = maybe_value.release_nonnull();
+        if (!is_background_repeat(*value))
+            return nullptr;
+
+        if (is_directional_repeat(value)) {
+            auto value_id = value->to_identifier();
+            return BackgroundRepeatStyleValue::create(
+                IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::Repeat : ValueID::NoRepeat),
+                IdentifierStyleValue::create(value_id == ValueID::RepeatX ? ValueID::NoRepeat : ValueID::Repeat));
+        }
+        return BackgroundRepeatStyleValue::create(value, value);
+    }
+
+    if (component_values.size() == 2) {
+        auto maybe_x_value = parse_css_value(context, PropertyID::BackgroundRepeatX, component_values[0]);
+        auto maybe_y_value = parse_css_value(context, PropertyID::BackgroundRepeatY, component_values[1]);
+        if (!maybe_x_value || !maybe_y_value)
+            return nullptr;
+
+        auto x_value = maybe_x_value.release_nonnull();
+        auto y_value = maybe_y_value.release_nonnull();
+        if (!is_background_repeat(x_value) || !is_background_repeat(y_value))
+            return nullptr;
+        if (is_directional_repeat(x_value) || is_directional_repeat(y_value))
+            return nullptr;
+        return BackgroundRepeatStyleValue::create(x_value, y_value);
+    }
+
+    // FIXME: Handle multiple sets of comma-separated values.
+    dbgln("CSS Parser does not yet support multiple comma-separated values for background-repeat.");
+    return nullptr;
 }
 
 RefPtr<StyleValue> Parser::parse_border_value(ParsingContext const& context, PropertyID property_id, Vector<StyleComponentValueRule> const& component_values)
@@ -2650,6 +2695,10 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     switch (property_id) {
     case PropertyID::Background:
         if (auto parsed_value = parse_background_value(m_context, component_values))
+            return parsed_value;
+        break;
+    case PropertyID::BackgroundRepeat:
+        if (auto parsed_value = parse_background_repeat_value(m_context, component_values))
             return parsed_value;
         break;
     case PropertyID::Border:
