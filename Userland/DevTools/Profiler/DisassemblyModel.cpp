@@ -65,12 +65,16 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     VERIFY(elf != nullptr);
 
     FlatPtr function_address = node.address() - base_address;
+    auto is_function_address = false;
     Debug::DebugInfo debug_info { *elf, {}, base_address };
     auto function = debug_info.get_containing_function(function_address);
-    if (function.has_value())
+    if (function.has_value()) {
+        if (function_address == function->address_low)
+            is_function_address = true;
         function_address = function->address_low;
-    else
+    } else {
         dbgln("DisassemblyModel: Function containing {:p} ({}) not found", node.address() - base_address, node.symbol());
+    }
 
     auto symbol = elf->find_symbol(function_address);
     if (!symbol.has_value()) {
@@ -87,13 +91,15 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     X86::Disassembler disassembler(stream);
 
     size_t offset_into_symbol = 0;
-    FlatPtr last_instruction_address = 0;
-    for (auto& event : node.events_per_address())
-        last_instruction_address = max(event.key, last_instruction_address);
-
-    auto last_instruction_offset = last_instruction_address - node.address();
+    FlatPtr last_instruction_offset = 0;
+    if (!is_function_address) {
+        FlatPtr last_instruction_address = 0;
+        for (auto& event : node.events_per_address())
+            last_instruction_address = max(event.key, last_instruction_address);
+        last_instruction_offset = last_instruction_address - node.address();
+    }
     for (;;) {
-        if (offset_into_symbol > last_instruction_offset)
+        if (!is_function_address && offset_into_symbol > last_instruction_offset)
             break;
 
         auto insn = disassembler.next();
