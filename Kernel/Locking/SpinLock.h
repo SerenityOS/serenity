@@ -66,11 +66,11 @@ public:
 
     ALWAYS_INLINE u32 lock()
     {
+        u32 prev_flags = cpu_flags();
+        cli();
+        Processor::enter_critical();
         auto& proc = Processor::current();
         FlatPtr cpu = FlatPtr(&proc);
-        u32 prev_flags = cpu_flags();
-        Processor::enter_critical();
-        cli();
         FlatPtr expected = 0;
         while (!m_lock.compare_exchange_strong(expected, cpu, AK::memory_order_acq_rel)) {
             if (expected == cpu)
