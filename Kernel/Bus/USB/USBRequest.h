@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,18 +10,21 @@
 #include <AK/Types.h>
 
 //
-// USB Request directions
+// bmRequestType fields
 //
-// As per Section 9.4 of the USB Specification, it is noted that Requeset Types that
-// Device to Host have bit 7 of `bmRequestType` set. These are here as a convenience,
-// as we construct the request at the call-site to make reading transfers easier.
+// As per Section 9.3 of the USB 2.0 Specification.
+// Note that while some of these values are zero, there are here for convenience.
+// This is because it makes reading the request type easier to read when constructing a USB request.
 //
-static constexpr u8 USB_DEVICE_REQUEST_DEVICE_TO_HOST = 0x80;
-static constexpr u8 USB_DEVICE_REQUEST_HOST_TO_DEVICE = 0x00;
-static constexpr u8 USB_INTERFACE_REQUEST_DEVICE_TO_HOST = 0x81;
-static constexpr u8 USB_INTERFACE_REQUEST_HOST_TO_DEVICE = 0x01;
-static constexpr u8 USB_ENDPOINT_REQUEST_DEVICE_TO_HOST = 0x82;
-static constexpr u8 USB_ENDPOINT_REQUEST_HOST_TO_DEVICE = 0x02;
+static constexpr u8 USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST = 0x80;
+static constexpr u8 USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE = 0x00;
+static constexpr u8 USB_REQUEST_TYPE_STANDARD = 0x00;
+static constexpr u8 USB_REQUEST_TYPE_CLASS = 0x20;
+static constexpr u8 USB_REQUEST_TYPE_VENDOR = 0x40;
+static constexpr u8 USB_REQUEST_RECIPIENT_DEVICE = 0x00;
+static constexpr u8 USB_REQUEST_RECIPIENT_INTERFACE = 0x01;
+static constexpr u8 USB_REQUEST_RECIPIENT_ENDPOINT = 0x02;
+static constexpr u8 USB_REQUEST_RECIPIENT_OTHER = 0x03;
 
 //
 // Standard USB request types

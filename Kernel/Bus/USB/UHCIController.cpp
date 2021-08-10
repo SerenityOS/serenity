@@ -579,7 +579,7 @@ void UHCIController::free_descriptor_chain(TransferDescriptor* first_descriptor)
 KResultOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
 {
     Pipe& pipe = transfer.pipe(); // Short circuit the pipe related to this transfer
-    bool direction_in = (transfer.request().request_type & USB_DEVICE_REQUEST_DEVICE_TO_HOST) == USB_DEVICE_REQUEST_DEVICE_TO_HOST;
+    bool direction_in = (transfer.request().request_type & USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST) == USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST;
 
     TransferDescriptor* setup_td = create_transfer_descriptor(pipe, PacketID::SETUP, sizeof(USBRequestData));
     if (!setup_td)

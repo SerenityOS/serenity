@@ -46,9 +46,8 @@ KResult Device::enumerate()
 {
     USBDeviceDescriptor dev_descriptor {};
 
-    // FIXME: 0x100 is a magic number for now, as I'm not quite sure how these are constructed....
     // Send 8-bytes to get at least the `max_packet_size` from the device
-    auto transfer_length_or_error = m_default_pipe->control_transfer(USB_DEVICE_REQUEST_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, 0x100, 0, 8, &dev_descriptor);
+    auto transfer_length_or_error = m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, 8, &dev_descriptor);
 
     if (transfer_length_or_error.is_error())
         return transfer_length_or_error.error();
@@ -62,7 +61,7 @@ KResult Device::enumerate()
     VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
     m_default_pipe->set_max_packet_size(dev_descriptor.max_packet_size);
 
-    transfer_length_or_error = m_default_pipe->control_transfer(USB_DEVICE_REQUEST_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, 0x100, 0, sizeof(USBDeviceDescriptor), &dev_descriptor);
+    transfer_length_or_error = m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, sizeof(USBDeviceDescriptor), &dev_descriptor);
 
     if (transfer_length_or_error.is_error())
         return transfer_length_or_error.error();
@@ -87,7 +86,7 @@ KResult Device::enumerate()
     m_address = m_controller->allocate_address();
 
     // Attempt to set devices address on the bus
-    transfer_length_or_error = m_default_pipe->control_transfer(USB_DEVICE_REQUEST_HOST_TO_DEVICE, USB_REQUEST_SET_ADDRESS, m_address, 0, 0, nullptr);
+    transfer_length_or_error = m_default_pipe->control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE, USB_REQUEST_SET_ADDRESS, m_address, 0, 0, nullptr);
 
     if (transfer_length_or_error.is_error())
         return transfer_length_or_error.error();
