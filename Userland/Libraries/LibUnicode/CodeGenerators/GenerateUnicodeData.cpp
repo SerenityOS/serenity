@@ -50,6 +50,22 @@ struct Alias {
     String alias;
 };
 
+// Normalization source: https://www.unicode.org/Public/13.0.0/ucd/DerivedNormalizationProps.txt
+// Normalization descriptions: https://www.unicode.org/reports/tr44/#DerivedNormalizationProps.txt
+enum class QuickCheck {
+    Yes,
+    No,
+    Maybe,
+};
+
+struct Normalization {
+    CodePointRange code_point_range;
+    Vector<u32> value;
+    QuickCheck quick_check { QuickCheck::Yes };
+};
+
+using NormalizationProps = HashMap<String, Vector<Normalization>>;
+
 // UnicodeData source: https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
 // Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#UnicodeData.txt
 //                     https://www.unicode.org/reports/tr44/#General_Category_Values
@@ -99,6 +115,9 @@ struct UnicodeData {
     };
     Vector<Alias> script_aliases;
     PropList script_extensions;
+
+    // FIXME: We are not yet doing anything with this data. It will be needed for String.prototype.normalize.
+    NormalizationProps normalization_props;
 };
 
 static constexpr auto s_desired_fields = Array {
@@ -118,18 +137,38 @@ static void write_to_file_if_different(Core::File& file, StringView contents)
     VERIFY(file.write(contents));
 }
 
+static Vector<u32> parse_code_point_list(StringView const& list)
+{
+    Vector<u32> code_points;
+
+    auto segments = list.split_view(' ');
+    for (auto const& code_point : segments)
+        code_points.append(AK::StringUtils::convert_to_uint_from_hex<u32>(code_point).value());
+
+    return code_points;
+}
+
+static CodePointRange parse_code_point_range(StringView const& list)
+{
+    CodePointRange code_point_range {};
+
+    if (list.contains(".."sv)) {
+        auto segments = list.split_view(".."sv);
+        VERIFY(segments.size() == 2);
+
+        auto begin = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
+        auto end = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[1]).value();
+        code_point_range = { begin, end };
+    } else {
+        auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(list).value();
+        code_point_range = { code_point, code_point };
+    }
+
+    return code_point_range;
+}
+
 static void parse_special_casing(Core::File& file, UnicodeData& unicode_data)
 {
-    auto parse_code_point_list = [&](auto const& line) {
-        Vector<u32> code_points;
-
-        auto segments = line.split(' ');
-        for (auto const& code_point : segments)
-            code_points.append(AK::StringUtils::convert_to_uint_from_hex<u32>(code_point).value());
-
-        return code_points;
-    };
-
     while (file.can_read_line()) {
         auto line = file.read_line();
         if (line.is_empty() || line.starts_with('#'))
@@ -191,7 +230,7 @@ static void parse_prop_list(Core::File& file, PropList& prop_list, bool multi_va
         auto segments = line.split_view(';', true);
         VERIFY(segments.size() == 2);
 
-        auto code_point_range = segments[0].trim_whitespace();
+        auto code_point_range = parse_code_point_range(segments[0].trim_whitespace());
         Vector<StringView> properties;
 
         if (multi_value_property)
@@ -201,18 +240,7 @@ static void parse_prop_list(Core::File& file, PropList& prop_list, bool multi_va
 
         for (auto const& property : properties) {
             auto& code_points = prop_list.ensure(property.trim_whitespace());
-
-            if (code_point_range.contains(".."sv)) {
-                segments = code_point_range.split_view(".."sv);
-                VERIFY(segments.size() == 2);
-
-                auto begin = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
-                auto end = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[1]).value();
-                code_points.append({ begin, end });
-            } else {
-                auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(code_point_range).value();
-                code_points.append({ code_point, code_point });
-            }
+            code_points.append(code_point_range);
         }
     }
 }
@@ -298,6 +326,44 @@ static void parse_value_alias_list(Core::File& file, StringView desired_category
             alias = segments[3].trim_whitespace();
             append_alias(alias, value);
         }
+    }
+}
+
+static void parse_normalization_props(Core::File& file, UnicodeData& unicode_data)
+{
+    while (file.can_read_line()) {
+        auto line = file.read_line();
+        if (line.is_empty() || line.starts_with('#'))
+            continue;
+
+        if (auto index = line.find('#'); index.has_value())
+            line = line.substring(0, *index);
+
+        auto segments = line.split_view(';', true);
+        VERIFY((segments.size() == 2) || (segments.size() == 3));
+
+        auto code_point_range = parse_code_point_range(segments[0].trim_whitespace());
+        auto property = segments[1].trim_whitespace().to_string();
+
+        Vector<u32> value;
+        QuickCheck quick_check = QuickCheck::Yes;
+
+        if (segments.size() == 3) {
+            auto value_or_quick_check = segments[2].trim_whitespace();
+
+            if ((value_or_quick_check == "N"sv))
+                quick_check = QuickCheck::No;
+            else if ((value_or_quick_check == "M"sv))
+                quick_check = QuickCheck::Maybe;
+            else
+                value = parse_code_point_list(value_or_quick_check);
+        }
+
+        auto& normalizations = unicode_data.normalization_props.ensure(property);
+        normalizations.append({ code_point_range, move(value), quick_check });
+
+        auto& prop_list = unicode_data.prop_list.ensure(property);
+        prop_list.append(move(code_point_range));
     }
 }
 
@@ -927,6 +993,7 @@ int main(int argc, char** argv)
     char const* scripts_path = nullptr;
     char const* script_extensions_path = nullptr;
     char const* emoji_data_path = nullptr;
+    char const* normalization_path = nullptr;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(generated_header_path, "Path to the Unicode Data header file to generate", "generated-header-path", 'h', "generated-header-path");
@@ -942,6 +1009,7 @@ int main(int argc, char** argv)
     args_parser.add_option(scripts_path, "Path to Scripts.txt file", "scripts-path", 'r', "scripts-path");
     args_parser.add_option(script_extensions_path, "Path to ScriptExtensions.txt file", "script-extensions-path", 'x', "script-extensions-path");
     args_parser.add_option(emoji_data_path, "Path to emoji-data.txt file", "emoji-data-path", 'e', "emoji-data-path");
+    args_parser.add_option(normalization_path, "Path to DerivedNormalizationProps.txt file", "normalization-path", 'n', "normalization-path");
     args_parser.parse(argc, argv);
 
     auto open_file = [&](StringView path, StringView flags, Core::OpenMode mode = Core::OpenMode::ReadOnly) {
@@ -973,6 +1041,7 @@ int main(int argc, char** argv)
     auto scripts_file = open_file(scripts_path, "-r/--scripts-path");
     auto script_extensions_file = open_file(script_extensions_path, "-x/--script-extensions-path");
     auto emoji_data_file = open_file(emoji_data_path, "-e/--emoji-data-path");
+    auto normalization_file = open_file(normalization_path, "-n/--normalization-path");
 
     UnicodeData unicode_data {};
     parse_special_casing(special_casing_file, unicode_data);
@@ -981,6 +1050,7 @@ int main(int argc, char** argv)
     parse_prop_list(derived_core_prop_file, unicode_data.prop_list);
     parse_prop_list(derived_binary_prop_file, unicode_data.prop_list);
     parse_prop_list(emoji_data_file, unicode_data.prop_list);
+    parse_normalization_props(normalization_file, unicode_data);
     parse_alias_list(prop_alias_file, unicode_data.prop_list, unicode_data.prop_aliases);
     parse_prop_list(scripts_file, unicode_data.script_list);
     parse_prop_list(script_extensions_file, unicode_data.script_extensions, true);
