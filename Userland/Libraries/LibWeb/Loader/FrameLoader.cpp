@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/JsonArray.h>
 #include <AK/LexicalPath.h>
 #include <AK/SourceGenerator.h>
 #include <LibGemini/Document.h>
@@ -292,10 +293,15 @@ void FrameLoader::resource_did_load()
         return;
     }
 
-    // FIXME: Support multiple instances of the Set-Cookie response header.
     auto set_cookie = resource()->response_headers().get("Set-Cookie");
-    if (set_cookie.has_value())
-        document->set_cookie(set_cookie.value(), Cookie::Source::Http);
+    if (set_cookie.has_value()) {
+        auto set_cookie_json_value = JsonValue::from_string(set_cookie.value());
+        VERIFY(set_cookie_json_value.has_value() && set_cookie_json_value.value().type() == JsonValue::Type::Array);
+        for (const auto& set_cookie_entry : set_cookie_json_value.value().as_array().values()) {
+            VERIFY(set_cookie_entry.type() == JsonValue::Type::String);
+            document->set_cookie(set_cookie_entry.as_string(), Cookie::Source::Http);
+        }
+    }
 
     if (!url.fragment().is_empty())
         browsing_context().scroll_to_anchor(url.fragment());

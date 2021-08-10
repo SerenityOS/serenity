@@ -56,6 +56,7 @@ protected:
     State m_state { State::InStatus };
     int m_code { -1 };
     HashMap<String, String, CaseInsensitiveStringTraits> m_headers;
+    Vector<String> m_set_cookie_headers;
     Vector<ByteBuffer, 2> m_received_buffers;
     size_t m_buffered_size { 0 };
     size_t m_received_size { 0 };
