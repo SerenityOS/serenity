@@ -27,6 +27,7 @@
 #include <Kernel/Locking/ProtectedValue.h>
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/ProcessExposed.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
@@ -84,7 +85,7 @@ typedef HashMap<FlatPtr, RefPtr<FutexQueue>> FutexQueues;
 struct LoadResult;
 
 class Process
-    : public RefCounted<Process>
+    : public ProcFSExposedComponent
     , public Weakable<Process> {
 
 private:
@@ -551,6 +552,31 @@ private:
 
     void setup_socket_fd(int fd, NonnullRefPtr<FileDescription> description, int type);
 
+public:
+    // ^ProcFSExposedComponent stats
+    virtual InodeIndex component_index() const override;
+    virtual NonnullRefPtr<Inode> to_inode(const ProcFS& procfs_instance) const override;
+    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual mode_t required_mode() const override { return 0555; }
+    virtual uid_t owner_user() const override { return uid(); }
+    virtual gid_t owner_group() const override { return gid(); }
+    KResult procfs_get_fds_stats(KBufferBuilder& builder) const;
+    KResult procfs_get_perf_events(KBufferBuilder& builder) const;
+    KResult procfs_get_unveil_stats(KBufferBuilder& builder) const;
+    KResult procfs_get_pledge_stats(KBufferBuilder& builder) const;
+    KResult procfs_get_virtual_memory_stats(KBufferBuilder& builder) const;
+    KResult procfs_get_binary_link(KBufferBuilder& builder) const;
+    KResult procfs_get_root_link(KBufferBuilder& builder) const;
+    KResult procfs_get_current_work_directory_link(KBufferBuilder& builder) const;
+    mode_t binary_link_required_mode() const;
+    KResultOr<size_t> procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const;
+    KResult traverse_stacks_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const;
+    RefPtr<Inode> lookup_stacks_directory(const ProcFS&, StringView name) const;
+    KResultOr<size_t> procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const;
+    KResult traverse_file_descriptions_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const;
+    RefPtr<Inode> lookup_file_descriptions_directory(const ProcFS&, StringView name) const;
+
+private:
     inline PerformanceEventBuffer* current_perf_events_buffer()
     {
         if (g_profiling_all_threads)
@@ -595,22 +621,16 @@ public:
 
         FileDescription* description() { return m_description; }
         const FileDescription* description() const { return m_description; }
-        InodeIndex global_procfs_inode_index() const { return m_global_procfs_inode_index; }
         u32 flags() const { return m_flags; }
         void set_flags(u32 flags) { m_flags = flags; }
 
         void clear();
         void set(NonnullRefPtr<FileDescription>&&, u32 flags = 0);
-        void refresh_inode_index();
 
     private:
         RefPtr<FileDescription> m_description;
         bool m_is_allocated { false };
         u32 m_flags { 0 };
-
-        // Note: This is needed so when we generate inodes for ProcFS, we know that
-        // we assigned a global Inode index to it so we can use it later
-        InodeIndex m_global_procfs_inode_index;
     };
 
     class ScopedDescriptionAllocation;
@@ -626,9 +646,6 @@ public:
             ScopedSpinLock lock(m_fds_lock);
             ScopedSpinLock lock_other(other.m_fds_lock);
             m_fds_metadatas = other.m_fds_metadatas;
-            for (auto& file_description_metadata : m_fds_metadatas) {
-                file_description_metadata.refresh_inode_index();
-            }
             return *this;
         }
 

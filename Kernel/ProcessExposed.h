@@ -13,26 +13,48 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KResult.h>
-#include <Kernel/Process.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
+
+namespace SegmentedProcFSIndex {
+enum class MainProcessProperty {
+    Reserved = 0,
+    Unveil = 1,
+    Pledge = 2,
+    FileDescriptions = 3,
+    BinaryLink = 4,
+    CurrentWorkDirectoryLink = 5,
+    PerformanceEvents = 6,
+    VirtualMemoryStats = 7,
+    RootLink = 8,
+};
+
+enum class ProcessSubDirectory {
+    Reserved = 0,
+    FileDescriptions = 1,
+    Stacks = 2,
+};
+
+void read_segments(u32& primary, ProcessSubDirectory& sub_directory, MainProcessProperty& property);
+InodeIndex build_segmented_index_for_pid_directory(ProcessID);
+InodeIndex build_segmented_index_for_sub_directory(ProcessID, ProcessSubDirectory sub_directory);
+InodeIndex build_segmented_index_for_main_property(ProcessID, ProcessSubDirectory sub_directory, MainProcessProperty property);
+InodeIndex build_segmented_index_for_main_property_in_pid_directory(ProcessID, MainProcessProperty property);
+InodeIndex build_segmented_index_for_thread_stack(ProcessID, ThreadID);
+InodeIndex build_segmented_index_for_file_description(ProcessID, unsigned);
+}
 
 class ProcFSComponentRegistry {
 public:
     static ProcFSComponentRegistry& the();
 
     static void initialize();
-
-    InodeIndex allocate_inode_index() const;
-
     ProcFSComponentRegistry();
-
-    void register_new_process(Process&);
-    void unregister_process(Process&);
 
     ProcFSRootDirectory& root_directory() { return *m_root_directory; }
     Mutex& get_lock() { return m_lock; }
@@ -64,13 +86,13 @@ public:
 
     virtual NonnullRefPtr<Inode> to_inode(const ProcFS& procfs_instance) const;
 
-    InodeIndex component_index() const { return m_component_index; };
+    virtual InodeIndex component_index() const { return m_component_index; }
 
     virtual ~ProcFSExposedComponent() = default;
 
 protected:
+    ProcFSExposedComponent();
     explicit ProcFSExposedComponent(StringView name);
-    ProcFSExposedComponent(StringView name, InodeIndex preallocated_index);
 
 private:
     OwnPtr<KString> m_name;
@@ -80,7 +102,6 @@ private:
 class ProcFSExposedDirectory
     : public ProcFSExposedComponent
     , public Weakable<ProcFSExposedDirectory> {
-    friend class ProcFSProcessDirectory;
     friend class ProcFSComponentRegistry;
 
 public:
@@ -114,45 +135,7 @@ public:
 protected:
     virtual bool acquire_link(KBufferBuilder& builder) = 0;
     explicit ProcFSExposedLink(StringView name);
-    ProcFSExposedLink(StringView name, InodeIndex preallocated_index);
     mutable Mutex m_lock { "ProcFSLink" };
-};
-
-class ProcFSProcessDirectory final
-    : public ProcFSExposedDirectory {
-    friend class ProcFSComponentRegistry;
-    friend class ProcFSRootDirectory;
-    friend class ProcFSProcessInformation;
-    friend class ProcFSProcessPledge;
-    friend class ProcFSProcessUnveil;
-    friend class ProcFSProcessPerformanceEvents;
-    friend class ProcFSProcessFileDescription;
-    friend class ProcFSProcessFileDescriptions;
-    friend class ProcFSProcessOverallFileDescriptions;
-    friend class ProcFSProcessRoot;
-    friend class ProcFSProcessVirtualMemory;
-    friend class ProcFSProcessCurrentWorkDirectory;
-    friend class ProcFSProcessBinary;
-    friend class ProcFSProcessStacks;
-
-public:
-    static NonnullRefPtr<ProcFSProcessDirectory> create(const Process&);
-    RefPtr<Process> associated_process() { return m_associated_process; }
-
-    virtual uid_t owner_user() const override { return m_associated_process ? m_associated_process->uid() : 0; }
-    virtual gid_t owner_group() const override { return m_associated_process ? m_associated_process->gid() : 0; }
-    virtual KResult refresh_data(FileDescription&) const override;
-    virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
-    virtual mode_t required_mode() const override { return 0500; }
-
-    virtual void prepare_for_deletion() override;
-
-private:
-    void on_attach();
-    IntrusiveListNode<ProcFSProcessDirectory, RefPtr<ProcFSProcessDirectory>> m_list_node;
-
-    explicit ProcFSProcessDirectory(const Process&);
-    RefPtr<Process> m_associated_process;
 };
 
 class ProcFSRootDirectory final : public ProcFSExposedDirectory {
@@ -160,16 +143,16 @@ class ProcFSRootDirectory final : public ProcFSExposedDirectory {
 
 public:
     virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
-
-    RefPtr<ProcFSProcessDirectory> process_directory_for(Process&);
     static NonnullRefPtr<ProcFSRootDirectory> must_create();
     virtual ~ProcFSRootDirectory();
 
 private:
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     ProcFSRootDirectory();
+};
 
-    IntrusiveList<ProcFSProcessDirectory, RefPtr<ProcFSProcessDirectory>, &ProcFSProcessDirectory::m_list_node> m_process_directories;
+struct ProcFSInodeData : public FileDescriptionData {
+    OwnPtr<KBuffer> buffer;
 };
 
 class ProcFSGlobalInformation : public ProcFSExposedComponent {
@@ -206,49 +189,6 @@ protected:
         builder.appendff("{}\n", value());
         return true;
     }
-};
-
-class ProcFSProcessInformation : public ProcFSExposedComponent {
-public:
-    virtual ~ProcFSProcessInformation() override {};
-
-    virtual KResultOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const override;
-
-    virtual uid_t owner_user() const override
-    {
-        auto parent_directory = m_parent_directory.strong_ref();
-        if (!parent_directory)
-            return false;
-        auto process = parent_directory->associated_process();
-        if (!process)
-            return false;
-        return process->uid();
-    }
-    virtual gid_t owner_group() const override
-    {
-        auto parent_directory = m_parent_directory.strong_ref();
-        if (!parent_directory)
-            return false;
-        auto process = parent_directory->associated_process();
-        if (!process)
-            return false;
-        return process->gid();
-    }
-
-    virtual mode_t required_mode() const override { return 0400; }
-
-protected:
-    ProcFSProcessInformation(StringView name, const ProcFSProcessDirectory& process_directory)
-        : ProcFSExposedComponent(name)
-        , m_parent_directory(process_directory)
-    {
-    }
-
-    virtual KResult refresh_data(FileDescription&) const override;
-    virtual bool output(KBufferBuilder& builder) = 0;
-
-    WeakPtr<ProcFSProcessDirectory> m_parent_directory;
-    mutable Mutex m_refresh_lock;
 };
 
 }
