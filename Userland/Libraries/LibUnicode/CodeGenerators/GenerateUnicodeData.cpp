@@ -55,7 +55,6 @@ struct Alias {
 struct CodePointData {
     u32 code_point { 0 };
     String name;
-    String general_category;
     u8 canonical_combining_class { 0 };
     String bidi_class;
     String decomposition_type;
@@ -84,20 +83,7 @@ struct UnicodeData {
     Vector<CodePointData> code_point_data;
     Vector<CodePointRange> code_point_ranges;
 
-    // The Unicode standard defines General Category values which are not in any UCD file. These
-    // values are simply unions of other values.
-    // https://www.unicode.org/reports/tr44/#GC_Values_Table
-    Vector<String> general_categories;
-    Vector<Alias> general_category_unions {
-        { "Ll | Lu | Lt"sv, "LC"sv },
-        { "Lu | Ll | Lt | Lm | Lo"sv, "L"sv },
-        { "Mn | Mc | Me"sv, "M"sv },
-        { "Nd | Nl | No"sv, "N"sv },
-        { "Pc | Pd | Ps | Pe | Pi | Pf | Po"sv, "P"sv },
-        { "Sm | Sc | Sk | So"sv, "S"sv },
-        { "Zs | Zl | Zp"sv, "Z"sv },
-        { "Cc | Cf | Cs | Co"sv, "C"sv }, // FIXME: This union should also contain "Cn" (Unassigned), which we don't parse yet.
-    };
+    PropList general_categories;
     Vector<Alias> general_category_aliases;
 
     // The Unicode standard defines additional properties (Any, Assigned, ASCII) which are not in
@@ -120,7 +106,6 @@ struct UnicodeData {
 };
 
 static constexpr auto s_desired_fields = Array {
-    "general_category"sv,
     "simple_uppercase_mapping"sv,
     "simple_lowercase_mapping"sv,
 };
@@ -278,7 +263,7 @@ static void parse_alias_list(Core::File& file, PropList const& prop_list, Vector
     }
 }
 
-static void parse_value_alias_list(Core::File& file, StringView desired_category, Vector<String> const& value_list, Vector<Alias> const& prop_unions, Vector<Alias>& prop_aliases, bool primary_value_is_first = true)
+static void parse_value_alias_list(Core::File& file, StringView desired_category, Vector<String> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true)
 {
     VERIFY(file.seek(0));
 
@@ -288,7 +273,7 @@ static void parse_value_alias_list(Core::File& file, StringView desired_category
             return;
 
         // FIXME: We will, eventually, need to find where missing properties are located and parse them.
-        if (!value_list.contains_slow(value) && !any_of(prop_unions, [&](auto const& u) { return value == u.alias; }))
+        if (!value_list.contains_slow(value))
             return;
 
         prop_aliases.append({ value, alias });
@@ -363,7 +348,6 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
         CodePointData data {};
         data.code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
         data.name = move(segments[1]);
-        data.general_category = move(segments[2]);
         data.canonical_combining_class = AK::StringUtils::convert_to_uint<u8>(segments[3]).value();
         data.bidi_class = move(segments[4]);
         data.decomposition_type = move(segments[5]);
@@ -402,10 +386,6 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
 
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
         unicode_data.largest_script_extensions_size = max(unicode_data.largest_script_extensions_size, data.script_extensions.size());
-
-        if (!unicode_data.general_categories.contains_slow(data.general_category))
-            unicode_data.general_categories.append(data.general_category);
-
         unicode_data.code_point_data.append(move(data));
     }
 }
@@ -418,24 +398,19 @@ static void generate_unicode_data_header(Core::File& file, UnicodeData& unicode_
     generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
     generator.set("script_extensions_size", String::number(unicode_data.largest_script_extensions_size));
 
-    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> unions = {}, Vector<Alias> aliases = {}, bool as_bitmask = false) {
+    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> aliases = {}, bool as_bitmask = false) {
         VERIFY(!as_bitmask || (values.size() <= 64));
         quick_sort(values);
-        quick_sort(unions, [](auto& union1, auto& union2) { return union1.alias < union2.alias; });
         quick_sort(aliases, [](auto& alias1, auto& alias2) { return alias1.alias < alias2.alias; });
 
         generator.set("name", name);
         generator.set("underlying", String::formatted("{}UnderlyingType", name));
+        generator.set("underlying_type", as_bitmask ? "u64"sv : "u8"sv);
 
-        if (as_bitmask) {
-            generator.append(R"~~~(
-using @underlying@ = u64;
+        generator.append(R"~~~(
+using @underlying@ = @underlying_type@;
 
 enum class @name@ : @underlying@ {)~~~");
-        } else {
-            generator.append(R"~~~(
-enum class @name@ {)~~~");
-        }
 
         if (!default_.is_empty()) {
             generator.set("default", default_);
@@ -457,12 +432,6 @@ enum class @name@ {)~~~");
             }
         }
 
-        for (auto const& union_ : unions) {
-            generator.set("union", union_.alias);
-            generator.set("value", union_.property);
-            generator.append(R"~~~(
-    @union@ = @value@,)~~~");
-        }
         for (auto const& alias : aliases) {
             generator.set("alias", alias.alias);
             generator.set("value", alias.property);
@@ -501,9 +470,9 @@ namespace Unicode {
 
     generate_enum("Locale"sv, "None"sv, move(unicode_data.locales));
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
-    generate_enum("GeneralCategory"sv, "None"sv, unicode_data.general_categories, unicode_data.general_category_unions, unicode_data.general_category_aliases, true);
-    generate_enum("Property"sv, "Assigned"sv, unicode_data.prop_list.keys(), {}, unicode_data.prop_aliases, true);
-    generate_enum("Script"sv, {}, unicode_data.script_list.keys(), {}, unicode_data.script_aliases);
+    generate_enum("GeneralCategory"sv, {}, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
+    generate_enum("Property"sv, "Assigned"sv, unicode_data.prop_list.keys(), unicode_data.prop_aliases, true);
+    generate_enum("Script"sv, {}, unicode_data.script_list.keys(), unicode_data.script_aliases);
 
     generator.append(R"~~~(
 struct SpecialCasing {
@@ -537,7 +506,6 @@ struct UnicodeData {
 
     // Note: For compile-time performance, only primitive types are used.
     append_field("char const*"sv, "name"sv);
-    append_field("GeneralCategory"sv, "general_category"sv);
     append_field("u8"sv, "canonical_combining_class"sv);
     append_field("char const*"sv, "bidi_class"sv);
     append_field("char const*"sv, "decomposition_type"sv);
@@ -566,8 +534,12 @@ struct UnicodeData {
 namespace Detail {
 
 Optional<UnicodeData> unicode_data_for_code_point(u32 code_point);
-Optional<Property> property_from_string(StringView const& property);
+
+bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);
 Optional<GeneralCategory> general_category_from_string(StringView const& general_category);
+
+Optional<Property> property_from_string(StringView const& property);
+
 Optional<Script> script_from_string(StringView const& script);
 
 }
@@ -588,6 +560,7 @@ static void generate_unicode_data_implementation(Core::File& file, UnicodeData c
 
     generator.append(R"~~~(
 #include <AK/Array.h>
+#include <AK/BinarySearch.h>
 #include <AK/CharacterTypes.h>
 #include <AK/HashMap.h>
 #include <AK/StringView.h>
@@ -653,7 +626,6 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
     { @code_point@)~~~");
 
         append_field("name", String::formatted("\"{}\"", data.name));
-        append_field("general_category", String::formatted("GeneralCategory::{}", data.general_category));
         append_field("canonical_combining_class", String::number(data.canonical_combining_class));
         append_field("bidi_class", String::formatted("\"{}\"", data.bidi_class));
         append_field("decomposition_type", String::formatted("\"{}\"", data.decomposition_type));
@@ -683,6 +655,77 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
     generator.append(R"~~~(
 } };
 
+struct CodePointRange {
+    u32 first { 0 };
+    u32 last { 0 };
+};
+
+struct CodePointRangeComparator {
+    constexpr int operator()(u32 code_point, CodePointRange const& range)
+    {
+        return (code_point > range.last) - (code_point < range.first);
+    }
+};
+
+)~~~");
+
+    auto append_code_point_range_list = [&](String name, Vector<CodePointRange> const& ranges) {
+        generator.set("name", name);
+        generator.set("size", String::number(ranges.size()));
+        generator.append(R"~~~(
+static constexpr Array<CodePointRange, @size@> @name@ { {
+    )~~~");
+
+        constexpr size_t max_ranges_per_row = 20;
+        size_t ranges_in_current_row = 0;
+
+        for (auto const& range : ranges) {
+            if (ranges_in_current_row++ > 0)
+                generator.append(" ");
+
+            generator.set("first", String::formatted("{:#x}", range.first));
+            generator.set("last", String::formatted("{:#x}", range.last));
+            generator.append("{ @first@, @last@ },");
+
+            if (ranges_in_current_row == max_ranges_per_row) {
+                ranges_in_current_row = 0;
+                generator.append("\n    ");
+            }
+        }
+
+        generator.append(R"~~~(
+} };
+)~~~");
+    };
+
+    auto append_prop_list = [&](StringView collection_name, StringView property_format, PropList const& property_list) {
+        for (auto const& property : property_list) {
+            auto name = String::formatted(property_format, property.key);
+            append_code_point_range_list(move(name), property.value);
+        }
+
+        auto property_names = property_list.keys();
+        quick_sort(property_names);
+
+        generator.set("name", collection_name);
+        generator.set("size", String::number(property_names.size()));
+        generator.append(R"~~~(
+static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
+
+        for (auto const& property_name : property_names) {
+            generator.set("name", String::formatted(property_format, property_name));
+            generator.append(R"~~~(
+    @name@.span(),)~~~");
+        }
+
+        generator.append(R"~~~(
+} };
+)~~~");
+    };
+
+    append_prop_list("s_general_categories"sv, "s_general_category_{}"sv, unicode_data.general_categories);
+
+    generator.append(R"~~~(
 static HashMap<u32, UnicodeData const*> const& ensure_code_point_map()
 {
     static HashMap<u32, UnicodeData const*> code_point_to_data_map;
@@ -729,6 +772,46 @@ Optional<UnicodeData> unicode_data_for_code_point(u32 code_point)
 
     return {};
 }
+)~~~");
+
+    auto append_prop_search = [&](StringView enum_title, StringView enum_snake, StringView collection_name) {
+        generator.set("enum_title", enum_title);
+        generator.set("enum_snake", enum_snake);
+        generator.set("collection_name", collection_name);
+        generator.append(R"~~~(
+bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
+{
+    auto index = static_cast<@enum_title@UnderlyingType>(@enum_snake@);
+    auto const& ranges = @collection_name@.at(index);
+
+    auto const* range = binary_search(ranges, code_point, nullptr, CodePointRangeComparator {});
+    return range != nullptr;
+}
+)~~~");
+    };
+
+    append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv);
+
+    generator.append(R"~~~(
+Optional<GeneralCategory> general_category_from_string(StringView const& general_category)
+{)~~~");
+
+    for (auto const& general_category : unicode_data.general_categories) {
+        generator.set("general_category", general_category.key);
+        generator.append(R"~~~(
+    if (general_category == "@general_category@"sv)
+        return GeneralCategory::@general_category@;)~~~");
+    }
+    for (auto const& alias : unicode_data.general_category_aliases) {
+        generator.set("general_category", alias.alias);
+        generator.append(R"~~~(
+    if (general_category == "@general_category@"sv)
+        return GeneralCategory::@general_category@;)~~~");
+    }
+
+    generator.append(R"~~~(
+    return {};
+}
 
 Optional<Property> property_from_string(StringView const& property)
 {
@@ -746,32 +829,6 @@ Optional<Property> property_from_string(StringView const& property)
         generator.append(R"~~~(
     if (property == "@property@"sv)
         return Property::@property@;)~~~");
-    }
-
-    generator.append(R"~~~(
-    return {};
-}
-
-Optional<GeneralCategory> general_category_from_string(StringView const& general_category)
-{)~~~");
-
-    for (auto const& general_category : unicode_data.general_categories) {
-        generator.set("general_category", general_category);
-        generator.append(R"~~~(
-    if (general_category == "@general_category@"sv)
-        return GeneralCategory::@general_category@;)~~~");
-    }
-    for (auto const& union_ : unicode_data.general_category_unions) {
-        generator.set("general_category", union_.alias);
-        generator.append(R"~~~(
-    if (general_category == "@general_category@"sv)
-        return GeneralCategory::@general_category@;)~~~");
-    }
-    for (auto const& alias : unicode_data.general_category_aliases) {
-        generator.set("general_category", alias.alias);
-        generator.append(R"~~~(
-    if (general_category == "@general_category@"sv)
-        return GeneralCategory::@general_category@;)~~~");
     }
 
     generator.append(R"~~~(
@@ -806,12 +863,45 @@ Optional<Script> script_from_string(StringView const& script)
     write_to_file_if_different(file, generator.as_string_view());
 }
 
+static void populate_general_category_unions(PropList& general_categories)
+{
+    // The Unicode standard defines General Category values which are not in any UCD file. These
+    // values are simply unions of other values.
+    // https://www.unicode.org/reports/tr44/#GC_Values_Table
+    auto populate_union = [&](auto alias, auto categories) {
+        auto& code_points = general_categories.ensure(alias);
+        for (auto const& category : categories)
+            code_points.extend(general_categories.find(category)->value);
+
+        quick_sort(code_points, [](auto const& range1, auto const& range2) {
+            return range1.first < range2.first;
+        });
+
+        // Verify that no code point range overlaps. If this changes some day, we will have to
+        // combine the overlapping regions for binary seaches through this list to work.
+        for (size_t i = 0; i < code_points.size() - 1; ++i)
+            VERIFY(code_points[i].last < code_points[i + 1].first);
+    };
+
+    populate_union("LC"sv, Array { "Ll"sv, "Lu"sv, "Lt"sv });
+    populate_union("L"sv, Array { "Lu"sv, "Ll"sv, "Lt"sv, "Lm"sv, "Lo"sv });
+    populate_union("M"sv, Array { "Mn"sv, "Mc"sv, "Me"sv });
+    populate_union("N"sv, Array { "Nd"sv, "Nl"sv, "No"sv });
+    populate_union("P"sv, Array { "Pc"sv, "Pd"sv, "Ps"sv, "Pe"sv, "Pi"sv, "Pf"sv, "Po"sv });
+    populate_union("S"sv, Array { "Sm"sv, "Sc"sv, "Sk"sv, "So"sv });
+    populate_union("Z"sv, Array { "Zs"sv, "Zl"sv, "Zp"sv });
+
+    // FIXME: This union should also contain "Cn" (Unassigned), which we don't parse yet.
+    populate_union("C"sv, Array { "Cc"sv, "Cf"sv, "Cs"sv, "Co"sv });
+}
+
 int main(int argc, char** argv)
 {
     char const* generated_header_path = nullptr;
     char const* generated_implementation_path = nullptr;
     char const* unicode_data_path = nullptr;
     char const* special_casing_path = nullptr;
+    char const* derived_general_category_path = nullptr;
     char const* prop_list_path = nullptr;
     char const* derived_core_prop_path = nullptr;
     char const* derived_binary_prop_path = nullptr;
@@ -826,6 +916,7 @@ int main(int argc, char** argv)
     args_parser.add_option(generated_implementation_path, "Path to the Unicode Data implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
     args_parser.add_option(unicode_data_path, "Path to UnicodeData.txt file", "unicode-data-path", 'u', "unicode-data-path");
     args_parser.add_option(special_casing_path, "Path to SpecialCasing.txt file", "special-casing-path", 's', "special-casing-path");
+    args_parser.add_option(derived_general_category_path, "Path to DerivedGeneralCategory.txt file", "derived-general-category-path", 'g', "derived-general-category-path");
     args_parser.add_option(prop_list_path, "Path to PropList.txt file", "prop-list-path", 'p', "prop-list-path");
     args_parser.add_option(derived_core_prop_path, "Path to DerivedCoreProperties.txt file", "derived-core-prop-path", 'd', "derived-core-prop-path");
     args_parser.add_option(derived_binary_prop_path, "Path to DerivedBinaryProperties.txt file", "derived-binary-prop-path", 'b', "derived-binary-prop-path");
@@ -855,6 +946,7 @@ int main(int argc, char** argv)
     auto generated_header_file = open_file(generated_header_path, "-h/--generated-header-path", Core::OpenMode::ReadWrite);
     auto generated_implementation_file = open_file(generated_implementation_path, "-c/--generated-implementation-path", Core::OpenMode::ReadWrite);
     auto unicode_data_file = open_file(unicode_data_path, "-u/--unicode-data-path");
+    auto derived_general_category_file = open_file(derived_general_category_path, "-g/--derived-general-category-path");
     auto special_casing_file = open_file(special_casing_path, "-s/--special-casing-path");
     auto prop_list_file = open_file(prop_list_path, "-p/--prop-list-path");
     auto derived_core_prop_file = open_file(derived_core_prop_path, "-d/--derived-core-prop-path");
@@ -867,6 +959,7 @@ int main(int argc, char** argv)
 
     UnicodeData unicode_data {};
     parse_special_casing(special_casing_file, unicode_data);
+    parse_prop_list(derived_general_category_file, unicode_data.general_categories);
     parse_prop_list(prop_list_file, unicode_data.prop_list);
     parse_prop_list(derived_core_prop_file, unicode_data.prop_list);
     parse_prop_list(derived_binary_prop_file, unicode_data.prop_list);
@@ -875,9 +968,10 @@ int main(int argc, char** argv)
     parse_prop_list(scripts_file, unicode_data.script_list);
     parse_prop_list(script_extensions_file, unicode_data.script_extensions, true);
 
+    populate_general_category_unions(unicode_data.general_categories);
     parse_unicode_data(unicode_data_file, unicode_data);
-    parse_value_alias_list(prop_value_alias_file, "gc"sv, unicode_data.general_categories, unicode_data.general_category_unions, unicode_data.general_category_aliases);
-    parse_value_alias_list(prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), {}, unicode_data.script_aliases, false);
+    parse_value_alias_list(prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
+    parse_value_alias_list(prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false);
 
     generate_unicode_data_header(generated_header_file, unicode_data);
     generate_unicode_data_implementation(generated_implementation_file, unicode_data);
