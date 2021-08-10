@@ -1761,16 +1761,17 @@ static inline bool is_background_repeat(StyleValue const& value)
     }
 }
 
+static inline bool is_background_image(StyleValue const& value)
+{
+    if (value.is_image())
+        return true;
+    if (value.to_identifier() == ValueID::None)
+        return true;
+    return false;
+}
+
 RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
 {
-    auto is_background_image = [](StyleValue const& value) -> bool {
-        if (value.is_image())
-            return true;
-        if (value.to_identifier() == ValueID::None)
-            return true;
-        return false;
-    };
-
     RefPtr<StyleValue> background_color;
     RefPtr<StyleValue> background_image;
     RefPtr<StyleValue> repeat_x;
@@ -1847,6 +1848,23 @@ RefPtr<StyleValue> Parser::parse_background_value(ParsingContext const& context,
         repeat_y = IdentifierStyleValue::create(ValueID::Repeat);
 
     return BackgroundStyleValue::create(background_color.release_nonnull(), background_image.release_nonnull(), repeat_x.release_nonnull(), repeat_y.release_nonnull());
+}
+
+RefPtr<StyleValue> Parser::parse_background_image_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
+{
+    if (component_values.size() == 1) {
+        auto maybe_value = parse_css_value(context, PropertyID::BackgroundImage, component_values.first());
+        if (!maybe_value)
+            return nullptr;
+        auto value = maybe_value.release_nonnull();
+        if (is_background_image(*value))
+            return value;
+        return nullptr;
+    }
+
+    // FIXME: Handle multiple sets of comma-separated values.
+    dbgln("CSS Parser does not yet support multiple comma-separated values for background-image.");
+    return nullptr;
 }
 
 RefPtr<StyleValue> Parser::parse_background_repeat_value(ParsingContext const& context, Vector<StyleComponentValueRule> const& component_values)
@@ -2695,6 +2713,10 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     switch (property_id) {
     case PropertyID::Background:
         if (auto parsed_value = parse_background_value(m_context, component_values))
+            return parsed_value;
+        break;
+    case PropertyID::BackgroundImage:
+        if (auto parsed_value = parse_background_image_value(m_context, component_values))
             return parsed_value;
         break;
     case PropertyID::BackgroundRepeat:

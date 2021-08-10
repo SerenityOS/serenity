@@ -392,37 +392,19 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     }
 
     if (property_id == CSS::PropertyID::BackgroundImage) {
-        // FIXME: Remove string parsing once DeprecatedCSSParser is gone.
-        if (value.is_string()) {
-            return;
-            auto string = value.to_string();
-            if (!string.starts_with("url("))
-                return;
-            if (!string.ends_with(')'))
-                return;
-            auto url = string.substring_view(4, string.length() - 5);
-            if (url.length() >= 2 && url.starts_with('"') && url.ends_with('"'))
-                url = url.substring_view(1, url.length() - 2);
-            else if (url.length() >= 2 && url.starts_with('\'') && url.ends_with('\''))
-                url = url.substring_view(1, url.length() - 2);
-
-            auto background_image_value = ImageStyleValue::create(document.complete_url(url), document);
-            style.set_property(CSS::PropertyID::BackgroundImage, move(background_image_value));
-            return;
-        }
-
-        if (value.is_component_value_list()) {
-            auto parts = static_cast<CSS::ValueListStyleValue const&>(value).values();
+        if (value.is_value_list()) {
+            auto& background_image_list = static_cast<CSS::StyleValueList const&>(value).values();
             // FIXME: Handle multiple backgrounds.
-            if (!parts.is_empty()) {
-                auto first_value = Parser::parse_css_value(context, property_id, parts[0]);
-                if (first_value)
-                    style.set_property(CSS::PropertyID::BackgroundImage, *first_value);
+            if (!background_image_list.is_empty()) {
+                auto& background_image = background_image_list.first();
+                style.set_property(CSS::PropertyID::BackgroundImage, background_image);
             }
             return;
         }
-
-        style.set_property(CSS::PropertyID::BackgroundImage, value);
+        if (value.is_builtin() || value.is_image() || value.to_identifier() == ValueID::None) {
+            style.set_property(CSS::PropertyID::BackgroundImage, value);
+            return;
+        }
         return;
     }
 
