@@ -68,7 +68,6 @@ struct CodePointData {
     Optional<u32> simple_lowercase_mapping;
     Optional<u32> simple_titlecase_mapping;
     Vector<u32> special_casing_indices;
-    Vector<StringView> prop_list;
     StringView script;
     Vector<StringView> script_extensions;
 };
@@ -87,12 +86,11 @@ struct UnicodeData {
     Vector<Alias> general_category_aliases;
 
     // The Unicode standard defines additional properties (Any, Assigned, ASCII) which are not in
-    // any UCD file. Assigned is set as the default enum value 0 so "property & Assigned == Assigned"
-    // is always true. Any is not assigned code points here because this file only parses assigned
-    // code points, whereas Any will include unassigned code points.
+    // any UCD file. Assigned code point ranges are derived as this generator is executed.
     // https://unicode.org/reports/tr18/#General_Category_Property
     PropList prop_list {
-        { "Any"sv, {} },
+        { "Any"sv, { { 0, 0x10ffff } } },
+        { "Assigned"sv, {} },
         { "ASCII"sv, { { 0, 0x7f } } },
     };
     Vector<Alias> prop_aliases;
@@ -309,6 +307,10 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
 {
     Optional<u32> code_point_range_start;
 
+    auto& assigned_code_points = unicode_data.prop_list.find("Assigned"sv)->value;
+    Optional<u32> assigned_code_point_range_start = 0;
+    u32 previous_code_point = 0;
+
     auto assign_code_point_property = [&](u32 code_point, auto const& list, auto& property, StringView default_) {
         using PropertyType = RemoveCVReference<decltype(property)>;
         constexpr bool is_single_item = IsSame<PropertyType, StringView>;
@@ -361,18 +363,31 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
         data.simple_lowercase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[13]);
         data.simple_titlecase_mapping = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[14]);
 
+        if (!assigned_code_point_range_start.has_value())
+            assigned_code_point_range_start = data.code_point;
+
         if (data.name.starts_with("<"sv) && data.name.ends_with(", First>")) {
-            VERIFY(!code_point_range_start.has_value());
+            VERIFY(!code_point_range_start.has_value() && assigned_code_point_range_start.has_value());
             code_point_range_start = data.code_point;
 
             data.name = data.name.substring(1, data.name.length() - 9);
+
+            assigned_code_points.append({ *assigned_code_point_range_start, previous_code_point });
+            assigned_code_point_range_start.clear();
         } else if (data.name.starts_with("<"sv) && data.name.ends_with(", Last>")) {
             VERIFY(code_point_range_start.has_value());
 
-            unicode_data.code_point_ranges.append({ *code_point_range_start, data.code_point });
-            data.name = data.name.substring(1, data.name.length() - 8);
+            CodePointRange code_point_range { *code_point_range_start, data.code_point };
+            unicode_data.code_point_ranges.append(code_point_range);
+            assigned_code_points.append(code_point_range);
 
+            data.name = data.name.substring(1, data.name.length() - 8);
             code_point_range_start.clear();
+        } else if ((data.code_point > 0) && (data.code_point - previous_code_point) != 1) {
+            VERIFY(assigned_code_point_range_start.has_value());
+
+            assigned_code_points.append({ *assigned_code_point_range_start, previous_code_point });
+            assigned_code_point_range_start = data.code_point;
         }
 
         for (auto const& casing : unicode_data.special_casing) {
@@ -380,12 +395,13 @@ static void parse_unicode_data(Core::File& file, UnicodeData& unicode_data)
                 data.special_casing_indices.append(casing.index);
         }
 
-        assign_code_point_property(data.code_point, unicode_data.prop_list, data.prop_list, "Assigned"sv);
         assign_code_point_property(data.code_point, unicode_data.script_list, data.script, "Unknown"sv);
         assign_code_point_property(data.code_point, unicode_data.script_extensions, data.script_extensions, {});
 
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
         unicode_data.largest_script_extensions_size = max(unicode_data.largest_script_extensions_size, data.script_extensions.size());
+
+        previous_code_point = data.code_point;
         unicode_data.code_point_data.append(move(data));
     }
 }
@@ -398,17 +414,15 @@ static void generate_unicode_data_header(Core::File& file, UnicodeData& unicode_
     generator.set("special_casing_size", String::number(unicode_data.largest_special_casing_size));
     generator.set("script_extensions_size", String::number(unicode_data.largest_script_extensions_size));
 
-    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> aliases = {}, bool as_bitmask = false) {
-        VERIFY(!as_bitmask || (values.size() <= 64));
+    auto generate_enum = [&](StringView name, StringView default_, Vector<String> values, Vector<Alias> aliases = {}) {
         quick_sort(values);
         quick_sort(aliases, [](auto& alias1, auto& alias2) { return alias1.alias < alias2.alias; });
 
         generator.set("name", name);
         generator.set("underlying", String::formatted("{}UnderlyingType", name));
-        generator.set("underlying_type", as_bitmask ? "u64"sv : "u8"sv);
 
         generator.append(R"~~~(
-using @underlying@ = @underlying_type@;
+using @underlying@ = u8;
 
 enum class @name@ : @underlying@ {)~~~");
 
@@ -418,18 +432,10 @@ enum class @name@ : @underlying@ {)~~~");
     @default@,)~~~");
         }
 
-        u8 index = 0;
         for (auto const& value : values) {
             generator.set("value", value);
-
-            if (as_bitmask) {
-                generator.set("index", String::number(index++));
-                generator.append(R"~~~(
-    @value@ = static_cast<@underlying@>(1) << @index@,)~~~");
-            } else {
-                generator.append(R"~~~(
+            generator.append(R"~~~(
     @value@,)~~~");
-            }
         }
 
         for (auto const& alias : aliases) {
@@ -442,20 +448,6 @@ enum class @name@ : @underlying@ {)~~~");
         generator.append(R"~~~(
 };
 )~~~");
-
-        if (as_bitmask) {
-            generator.append(R"~~~(
-constexpr @name@ operator&(@name@ value1, @name@ value2)
-{
-    return static_cast<@name@>(static_cast<@underlying@>(value1) & static_cast<@underlying@>(value2));
-}
-
-constexpr @name@ operator|(@name@ value1, @name@ value2)
-{
-    return static_cast<@name@>(static_cast<@underlying@>(value1) | static_cast<@underlying@>(value2));
-}
-)~~~");
-        }
     };
 
     generator.append(R"~~~(
@@ -471,7 +463,7 @@ namespace Unicode {
     generate_enum("Locale"sv, "None"sv, move(unicode_data.locales));
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
     generate_enum("GeneralCategory"sv, {}, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
-    generate_enum("Property"sv, "Assigned"sv, unicode_data.prop_list.keys(), unicode_data.prop_aliases, true);
+    generate_enum("Property"sv, {}, unicode_data.prop_list.keys(), unicode_data.prop_aliases);
     generate_enum("Script"sv, {}, unicode_data.script_list.keys(), unicode_data.script_aliases);
 
     generator.append(R"~~~(
@@ -524,8 +516,6 @@ struct UnicodeData {
     SpecialCasing const* special_casing[@special_casing_size@] {};
     u32 special_casing_size { 0 };
 
-    Property properties { Property::Assigned };
-
     Script script { Script::Unknown };
     Script script_extensions[@script_extensions_size@];
     u32 script_extensions_size { 0 };
@@ -538,6 +528,7 @@ Optional<UnicodeData> unicode_data_for_code_point(u32 code_point);
 bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);
 Optional<GeneralCategory> general_category_from_string(StringView const& general_category);
 
+bool code_point_has_property(u32 code_point, Property property);
 Optional<Property> property_from_string(StringView const& property);
 
 Optional<Script> script_from_string(StringView const& script);
@@ -639,14 +630,6 @@ static constexpr Array<UnicodeData, @code_point_data_size@> s_unicode_data { {)~
         append_field("simple_lowercase_mapping", String::formatted("{:#x}", data.simple_lowercase_mapping.value_or(data.code_point)));
         append_field("simple_titlecase_mapping", String::formatted("{:#x}", data.simple_titlecase_mapping.value_or(data.code_point)));
         append_list_and_size(data.special_casing_indices, "&s_special_casing[{}]"sv);
-
-        bool first = true;
-        for (auto const& property : data.prop_list) {
-            generator.append(first ? ", " : " | ");
-            generator.append(String::formatted("Property::{}", property));
-            first = false;
-        }
-
         generator.append(String::formatted(", Script::{}", data.script));
         append_list_and_size(data.script_extensions, "Script::{}"sv);
         generator.append(" },");
@@ -724,6 +707,7 @@ static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
     };
 
     append_prop_list("s_general_categories"sv, "s_general_category_{}"sv, unicode_data.general_categories);
+    append_prop_list("s_properties"sv, "s_property_{}"sv, unicode_data.prop_list);
 
     generator.append(R"~~~(
 static HashMap<u32, UnicodeData const*> const& ensure_code_point_map()
@@ -812,7 +796,11 @@ Optional<GeneralCategory> general_category_from_string(StringView const& general
     generator.append(R"~~~(
     return {};
 }
+)~~~");
 
+    append_prop_search("Property"sv, "property"sv, "s_properties"sv);
+
+    generator.append(R"~~~(
 Optional<Property> property_from_string(StringView const& property)
 {
     if (property == "Assigned"sv)

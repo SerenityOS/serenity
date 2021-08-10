@@ -305,3 +305,73 @@ TEST_CASE(general_category)
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_ll));
     }
 }
+
+TEST_CASE(property)
+{
+    auto property = [](StringView name) {
+        auto property = Unicode::property_from_string(name);
+        VERIFY(property.has_value());
+        return *property;
+    };
+
+    auto property_any = property("Any"sv);
+    auto property_assigned = property("Assigned"sv);
+    auto property_ascii = property("ASCII"sv);
+
+    auto property_white_space = property("White_Space"sv);
+    auto property_wspace = property("WSpace"sv);
+    auto property_space = property("space"sv);
+    EXPECT_EQ(property_white_space, property_wspace);
+    EXPECT_EQ(property_white_space, property_space);
+
+    auto property_emoji_presentation = property("Emoji_Presentation"sv);
+    auto property_epres = property("EPres"sv);
+    EXPECT_EQ(property_emoji_presentation, property_epres);
+
+    for (u32 code_point = 0; code_point <= 0x10ffff; code_point += 1000)
+        EXPECT(Unicode::code_point_has_property(code_point, property_any));
+
+    for (u32 code_point = 0x101d0; code_point <= 0x101fd; ++code_point) {
+        EXPECT(Unicode::code_point_has_property(code_point, property_any));
+        EXPECT(Unicode::code_point_has_property(code_point, property_assigned));
+
+        EXPECT(!Unicode::code_point_has_property(code_point, property_ascii));
+        EXPECT(!Unicode::code_point_has_property(code_point, property_white_space));
+        EXPECT(!Unicode::code_point_has_property(code_point, property_emoji_presentation));
+    }
+
+    for (u32 code_point = 0x101fe; code_point <= 0x1027f; ++code_point) {
+        EXPECT(Unicode::code_point_has_property(code_point, property_any));
+
+        EXPECT(!Unicode::code_point_has_property(code_point, property_assigned));
+        EXPECT(!Unicode::code_point_has_property(code_point, property_ascii));
+        EXPECT(!Unicode::code_point_has_property(code_point, property_white_space));
+        EXPECT(!Unicode::code_point_has_property(code_point, property_emoji_presentation));
+    }
+
+    for (u32 code_point = 0; code_point <= 0x7f; ++code_point) {
+        EXPECT(Unicode::code_point_has_property(code_point, property_any));
+        EXPECT(Unicode::code_point_has_property(code_point, property_assigned));
+        EXPECT(Unicode::code_point_has_property(code_point, property_ascii));
+
+        EXPECT(!Unicode::code_point_has_property(code_point, property_emoji_presentation));
+    }
+
+    for (u32 code_point = 0x9; code_point <= 0xd; ++code_point) {
+        EXPECT(Unicode::code_point_has_property(code_point, property_any));
+        EXPECT(Unicode::code_point_has_property(code_point, property_assigned));
+        EXPECT(Unicode::code_point_has_property(code_point, property_ascii));
+        EXPECT(Unicode::code_point_has_property(code_point, property_white_space));
+
+        EXPECT(!Unicode::code_point_has_property(code_point, property_emoji_presentation));
+    }
+
+    for (u32 code_point = 0x1f3e5; code_point <= 0x1f3f0; ++code_point) {
+        EXPECT(Unicode::code_point_has_property(code_point, property_any));
+        EXPECT(Unicode::code_point_has_property(code_point, property_assigned));
+        EXPECT(Unicode::code_point_has_property(code_point, property_emoji_presentation));
+
+        EXPECT(!Unicode::code_point_has_property(code_point, property_ascii));
+        EXPECT(!Unicode::code_point_has_property(code_point, property_white_space));
+    }
+}
