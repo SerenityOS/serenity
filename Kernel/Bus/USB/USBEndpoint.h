@@ -56,7 +56,7 @@ private:
     USBEndpoint(/* TODO */);
     USBEndpointDescriptor m_descriptor;
 
-    USBPipe m_pipe;
+    Pipe m_pipe;
 };
 
 }
