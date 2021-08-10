@@ -836,7 +836,7 @@ public:
         while (state() == Thread::Stopped) {
             lock.unlock();
             // We shouldn't be holding the big lock here
-            yield_assuming_not_holding_big_lock();
+            yield_without_releasing_big_lock();
             lock.lock();
         }
     }
@@ -922,7 +922,7 @@ public:
             // Yield to the scheduler, and wait for us to resume unblocked.
             VERIFY(!g_scheduler_lock.own_lock());
             VERIFY(Processor::in_critical());
-            yield_assuming_not_holding_big_lock();
+            yield_without_releasing_big_lock();
             VERIFY(Processor::in_critical());
 
             ScopedSpinLock block_lock2(m_block_lock);
@@ -1371,7 +1371,13 @@ private:
     bool m_is_profiling_suppressed { false };
 
     void yield_and_release_relock_big_lock();
-    void yield_assuming_not_holding_big_lock();
+
+    enum class VerifyLockNotHeld {
+        Yes,
+        No
+    };
+
+    void yield_without_releasing_big_lock(VerifyLockNotHeld verify_lock_not_held = VerifyLockNotHeld::Yes);
     void drop_thread_count(bool);
 
 public:
