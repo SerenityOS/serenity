@@ -890,9 +890,7 @@ static void populate_general_category_unions(PropList& general_categories)
     populate_union("P"sv, Array { "Pc"sv, "Pd"sv, "Ps"sv, "Pe"sv, "Pi"sv, "Pf"sv, "Po"sv });
     populate_union("S"sv, Array { "Sm"sv, "Sc"sv, "Sk"sv, "So"sv });
     populate_union("Z"sv, Array { "Zs"sv, "Zl"sv, "Zp"sv });
-
-    // FIXME: This union should also contain "Cn" (Unassigned), which we don't parse yet.
-    populate_union("C"sv, Array { "Cc"sv, "Cf"sv, "Cs"sv, "Co"sv });
+    populate_union("C"sv, Array { "Cc"sv, "Cf"sv, "Cs"sv, "Co"sv, "Cn"sv });
 }
 
 int main(int argc, char** argv)
