@@ -357,7 +357,7 @@ void TimeManagement::increment_time_since_boot_hpet()
     auto delta_ns = HPET::the().update_time(seconds_since_boot, ticks_this_second, false);
 
     // Now that we have a precise time, go update it as quickly as we can
-    u32 update_iteration = m_update1.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
+    u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
     m_seconds_since_boot = seconds_since_boot;
     m_ticks_this_second = ticks_this_second;
     // TODO: Apply m_remaining_epoch_time_adjustment
@@ -365,7 +365,7 @@ void TimeManagement::increment_time_since_boot_hpet()
 
     update_time_page();
 
-    m_update2.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+    m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
 }
 
 void TimeManagement::increment_time_since_boot()
@@ -378,7 +378,7 @@ void TimeManagement::increment_time_since_boot()
     long NanosPerTick = 1'000'000'000 / m_time_keeper_timer->frequency();
     time_t MaxSlewNanos = NanosPerTick / 100;
 
-    u32 update_iteration = m_update1.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
+    u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
 
     // Clamp twice, to make sure intermediate fits into a long.
     long slew_nanos = clamp(clamp(m_remaining_epoch_time_adjustment.tv_sec, (time_t)-1, (time_t)1) * 1'000'000'000 + m_remaining_epoch_time_adjustment.tv_nsec, -MaxSlewNanos, MaxSlewNanos);
@@ -397,7 +397,7 @@ void TimeManagement::increment_time_since_boot()
     }
 
     update_time_page();
-    m_update2.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
+    m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
 }
 
 void TimeManagement::system_timer_tick(const RegisterState& regs)
@@ -430,9 +430,9 @@ bool TimeManagement::disable_profile_timer()
 void TimeManagement::update_time_page()
 {
     auto* page = time_page();
-    u32 update_iteration = AK::atomic_fetch_add(&page->update1, 1u, AK::MemoryOrder::memory_order_acquire);
+    u32 update_iteration = AK::atomic_fetch_add(&page->update2, 1u, AK::MemoryOrder::memory_order_acquire);
     page->clocks[CLOCK_REALTIME] = m_epoch_time;
-    AK::atomic_store(&page->update2, update_iteration + 1u, AK::MemoryOrder::memory_order_release);
+    AK::atomic_store(&page->update1, update_iteration + 1u, AK::MemoryOrder::memory_order_release);
 }
 
 TimePage* TimeManagement::time_page()
