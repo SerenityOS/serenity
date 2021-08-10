@@ -7,9 +7,11 @@
 #pragma once
 
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
+#include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
@@ -71,7 +73,12 @@ public:
 
     bool can_query_precise_time() const { return m_can_query_precise_time; }
 
+    Memory::VMObject& time_page_vmobject();
+
 private:
+    TimePage* time_page();
+    void update_time_page();
+
     bool probe_and_set_legacy_hardware_timers();
     bool probe_and_set_non_legacy_hardware_timers();
     Vector<HardwareTimerBase*> scan_and_initialize_periodic_timers();
@@ -100,6 +107,8 @@ private:
 
     Atomic<u32> m_profile_enable_count { 0 };
     RefPtr<HardwareTimerBase> m_profile_timer;
+
+    OwnPtr<Memory::Region> m_time_page_region;
 };
 
 }

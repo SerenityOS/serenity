@@ -412,6 +412,7 @@ public:
     KResultOr<FlatPtr> sys$anon_create(size_t, int options);
     KResultOr<FlatPtr> sys$statvfs(Userspace<const Syscall::SC_statvfs_params*> user_params);
     KResultOr<FlatPtr> sys$fstatvfs(int fd, statvfs* buf);
+    KResultOr<FlatPtr> sys$map_time_page();
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);
