@@ -431,7 +431,7 @@ void TimeManagement::update_time_page()
 {
     auto* page = time_page();
     u32 update_iteration = AK::atomic_fetch_add(&page->update2, 1u, AK::MemoryOrder::memory_order_acquire);
-    page->clocks[CLOCK_REALTIME] = m_epoch_time;
+    page->clocks[CLOCK_REALTIME_COARSE] = m_epoch_time;
     AK::atomic_store(&page->update1, update_iteration + 1u, AK::MemoryOrder::memory_order_release);
 }
 

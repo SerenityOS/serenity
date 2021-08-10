@@ -18,7 +18,7 @@ namespace Kernel {
 
 inline bool time_page_supports(clockid_t clock_id)
 {
-    return clock_id == CLOCK_REALTIME;
+    return clock_id == CLOCK_REALTIME_COARSE;
 }
 
 struct TimePage {
