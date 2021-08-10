@@ -185,6 +185,7 @@ private:
     static RefPtr<StyleValue> parse_flex_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_flex_flow_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_font_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
+    static RefPtr<StyleValue> parse_font_family_value(ParsingContext const&, Vector<StyleComponentValueRule> const&, size_t start_index = 0);
     static RefPtr<StyleValue> parse_list_style_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_overflow_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);
     static RefPtr<StyleValue> parse_text_decoration_value(ParsingContext const&, Vector<StyleComponentValueRule> const&);

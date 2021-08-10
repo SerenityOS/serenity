@@ -855,37 +855,29 @@ private:
 
 class FontStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<FontStyleValue> create(NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtrVector<StyleValue>&& font_families) { return adopt_ref(*new FontStyleValue(font_style, font_weight, font_size, line_height, move(font_families))); }
+    static NonnullRefPtr<FontStyleValue> create(NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families) { return adopt_ref(*new FontStyleValue(font_style, font_weight, font_size, line_height, font_families)); }
     virtual ~FontStyleValue() override { }
 
     NonnullRefPtr<StyleValue> font_style() const { return m_font_style; }
     NonnullRefPtr<StyleValue> font_weight() const { return m_font_weight; }
     NonnullRefPtr<StyleValue> font_size() const { return m_font_size; }
     NonnullRefPtr<StyleValue> line_height() const { return m_line_height; }
-    NonnullRefPtrVector<StyleValue> const& font_families() const { return m_font_families; }
+    NonnullRefPtr<StyleValue> font_families() const { return m_font_families; }
 
     virtual String to_string() const override
     {
-        StringBuilder string_builder;
-        string_builder.appendff("Font style: {}, weight: {}, size: {}, line_height: {}, families: [",
-            m_font_style->to_string(), m_font_weight->to_string(), m_font_size->to_string(), m_line_height->to_string());
-        for (auto& family : m_font_families) {
-            string_builder.append(family.to_string());
-            string_builder.append(",");
-        }
-        string_builder.append("]");
-
-        return string_builder.to_string();
+        return String::formatted("Font style: {}, weight: {}, size: {}, line_height: {}, families: {}",
+            m_font_style->to_string(), m_font_weight->to_string(), m_font_size->to_string(), m_line_height->to_string(), m_font_families->to_string());
     }
 
 private:
-    FontStyleValue(NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtrVector<StyleValue>&& font_families)
+    FontStyleValue(NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families)
         : StyleValue(Type::Font)
         , m_font_style(font_style)
         , m_font_weight(font_weight)
         , m_font_size(font_size)
         , m_line_height(line_height)
-        , m_font_families(move(font_families))
+        , m_font_families(font_families)
     {
     }
 
@@ -893,7 +885,7 @@ private:
     NonnullRefPtr<StyleValue> m_font_weight;
     NonnullRefPtr<StyleValue> m_font_size;
     NonnullRefPtr<StyleValue> m_line_height;
-    NonnullRefPtrVector<StyleValue> m_font_families;
+    NonnullRefPtr<StyleValue> m_font_families;
     // FIXME: Implement font-stretch and font-variant.
 };
 
