@@ -883,6 +883,33 @@ static void normalize_script_extensions(PropList& script_extensions, PropList co
 
         sort_and_merge_code_point_ranges(code_points);
     }
+
+    // Lastly, the Common and Inherited script extensions are special. They must not contain any
+    // code points which appear in other script extensions. The ScriptExtensions UCD file does not
+    // list these extensions, therefore this peculiarity must be handled programatically.
+    // https://www.unicode.org/reports/tr24/#Assignment_ScriptX_Values
+    auto code_point_has_other_extension = [&](StringView key, u32 code_point) {
+        for (auto const& extension : extensions) {
+            if (extension.key == key)
+                continue;
+            if (any_of(extension.value, [&](auto const& r) { return (r.first <= code_point) && (code_point <= r.last); }))
+                return true;
+        }
+
+        return false;
+    };
+
+    auto get_code_points_without_other_extensions = [&](StringView key) {
+        auto code_points = flatten_code_point_ranges(script_list.find(key)->value);
+        code_points.remove_all_matching([&](u32 c) { return code_point_has_other_extension(key, c); });
+        return code_points;
+    };
+
+    auto common_code_points = get_code_points_without_other_extensions("Common"sv);
+    script_extensions.set("Common"sv, form_code_point_ranges(common_code_points));
+
+    auto inherited_code_points = get_code_points_without_other_extensions("Inherited"sv);
+    script_extensions.set("Inherited"sv, form_code_point_ranges(inherited_code_points));
 }
 
 int main(int argc, char** argv)

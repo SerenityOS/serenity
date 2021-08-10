@@ -464,4 +464,26 @@ TEST_CASE(script_extension)
 
     EXPECT(!Unicode::code_point_has_script(0x1dc1, script_greek));
     EXPECT(Unicode::code_point_has_script_extension(0x1dc1, script_greek));
+
+    auto script_common = script("Common"sv);
+    auto script_zyyy = script("Zyyy"sv);
+    EXPECT_EQ(script_common, script_zyyy);
+
+    EXPECT(Unicode::code_point_has_script(0x202f, script_common));
+    EXPECT(!Unicode::code_point_has_script_extension(0x202f, script_common));
+
+    EXPECT(Unicode::code_point_has_script(0x3000, script_common));
+    EXPECT(Unicode::code_point_has_script_extension(0x3000, script_common));
+
+    auto script_inherited = script("Inherited"sv);
+    auto script_qaai = script("Qaai"sv);
+    auto script_zinh = script("Zinh"sv);
+    EXPECT_EQ(script_inherited, script_qaai);
+    EXPECT_EQ(script_inherited, script_zinh);
+
+    EXPECT(Unicode::code_point_has_script(0x1ced, script_inherited));
+    EXPECT(!Unicode::code_point_has_script_extension(0x1ced, script_inherited));
+
+    EXPECT(Unicode::code_point_has_script(0x101fd, script_inherited));
+    EXPECT(Unicode::code_point_has_script_extension(0x101fd, script_inherited));
 }
