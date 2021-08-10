@@ -34,6 +34,7 @@ TreeView::MetadataForIndex& TreeView::ensure_metadata_for_index(const ModelIndex
 
 TreeView::TreeView()
 {
+    set_selection_behavior(SelectionBehavior::SelectItems);
     set_fill_with_background_color(true);
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
