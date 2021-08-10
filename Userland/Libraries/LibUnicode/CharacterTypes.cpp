@@ -22,11 +22,6 @@ namespace Unicode {
 
 #if ENABLE_UNICODE_DATA
 
-static bool has_property(UnicodeData const& unicode_data, Property property)
-{
-    return (unicode_data.properties & property) == property;
-}
-
 static bool is_final_code_point(Utf8View const& string, size_t index, size_t byte_length)
 {
     // C is preceded by a sequence consisting of a cased letter and then zero or more case-ignorable
@@ -40,12 +35,8 @@ static bool is_final_code_point(Utf8View const& string, size_t index, size_t byt
     size_t cased_letter_count = 0;
 
     for (auto code_point : preceding_view) {
-        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-        if (!unicode_data.has_value())
-            return false;
-
-        bool is_cased = has_property(*unicode_data, Property::Cased);
-        bool is_case_ignorable = has_property(*unicode_data, Property::Case_Ignorable);
+        bool is_cased = code_point_has_property(code_point, Property::Cased);
+        bool is_case_ignorable = code_point_has_property(code_point, Property::Case_Ignorable);
 
         if (is_cased && !is_case_ignorable)
             ++cased_letter_count;
@@ -57,12 +48,8 @@ static bool is_final_code_point(Utf8View const& string, size_t index, size_t byt
         return false;
 
     for (auto code_point : following_view) {
-        auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-        if (!unicode_data.has_value())
-            return false;
-
-        bool is_cased = has_property(*unicode_data, Property::Cased);
-        bool is_case_ignorable = has_property(*unicode_data, Property::Case_Ignorable);
+        bool is_cased = code_point_has_property(code_point, Property::Cased);
+        bool is_case_ignorable = code_point_has_property(code_point, Property::Case_Ignorable);
 
         if (is_case_ignorable)
             continue;
@@ -227,14 +214,7 @@ Optional<Property> property_from_string([[maybe_unused]] StringView const& prope
 bool code_point_has_property([[maybe_unused]] u32 code_point, [[maybe_unused]] Property property)
 {
 #if ENABLE_UNICODE_DATA
-    if (property == Property::Any)
-        return is_unicode(code_point);
-
-    auto unicode_data = Detail::unicode_data_for_code_point(code_point);
-    if (!unicode_data.has_value())
-        return false;
-
-    return has_property(*unicode_data, property);
+    return Detail::code_point_has_property(code_point, property);
 #else
     return false;
 #endif
