@@ -522,6 +522,9 @@ TEST_CASE(ECMA262_parse)
         { "\\p{hello friends}", regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
         { "\\p{Prepended_Concatenation_Mark}", regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
         { "\\p{ASCII}", regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "\\\\p{1}", regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "\\\\p{AsCiI}", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\\\p{ASCII}", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {

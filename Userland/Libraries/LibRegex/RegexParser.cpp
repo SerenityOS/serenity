@@ -1121,7 +1121,7 @@ Optional<unsigned> ECMA262Parser::read_digits(ECMA262Parser::ReadDigitsInitialZe
     return str.to_uint();
 }
 
-bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minimum, bool, bool)
+bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minimum, bool unicode, bool)
 {
     enum class Repetition {
         OneOrMore,
@@ -1144,52 +1144,13 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         consume();
         repetition_mark = Repetition::Optional;
     } else if (match(TokenType::LeftCurly)) {
-        consume();
-        auto chars_consumed = 1;
         repetition_mark = Repetition::Explicit;
-
-        auto low_bound_string = read_digits_as_string();
-        chars_consumed += low_bound_string.length();
-
-        auto low_bound = low_bound_string.to_uint();
-
-        if (!low_bound.has_value()) {
-            if (!m_should_use_browser_extended_grammar && done())
-                return set_error(Error::MismatchingBrace);
-
-            back(chars_consumed + !done());
-            return true;
-        }
-
-        repeat_min = low_bound.value();
-
-        if (match(TokenType::Comma)) {
-            consume();
-            ++chars_consumed;
-            auto high_bound_string = read_digits_as_string();
-            auto high_bound = high_bound_string.to_uint();
-            if (high_bound.has_value()) {
-                repeat_max = high_bound.value();
-                chars_consumed += high_bound_string.length();
+        if (!parse_interval_quantifier(repeat_min, repeat_max)) {
+            if (unicode) {
+                // Invalid interval quantifiers are disallowed in Unicode mod - they must be esacped with '\{'.
+                set_error(Error::InvalidPattern);
             }
-        } else {
-            repeat_max = repeat_min;
-        }
-
-        if (!match(TokenType::RightCurly)) {
-            if (!m_should_use_browser_extended_grammar && done())
-                return set_error(Error::MismatchingBrace);
-
-            back(chars_consumed + !done());
-            return true;
-        }
-
-        consume();
-        ++chars_consumed;
-
-        if (repeat_max.has_value()) {
-            if (repeat_min.value() > repeat_max.value())
-                set_error(Error::InvalidBraceContent);
+            return !has_error();
         }
     } else {
         return true;
@@ -1218,6 +1179,59 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         break;
     case Repetition::None:
         VERIFY_NOT_REACHED();
+    }
+
+    return true;
+}
+
+bool ECMA262Parser::parse_interval_quantifier(Optional<size_t>& repeat_min, Optional<size_t>& repeat_max)
+{
+    VERIFY(match(TokenType::LeftCurly));
+    consume();
+    auto chars_consumed = 1;
+
+    auto low_bound_string = read_digits_as_string();
+    chars_consumed += low_bound_string.length();
+
+    auto low_bound = low_bound_string.to_uint();
+
+    if (!low_bound.has_value()) {
+        if (!m_should_use_browser_extended_grammar && done())
+            return set_error(Error::MismatchingBrace);
+
+        back(chars_consumed + !done());
+        return false;
+    }
+
+    repeat_min = low_bound.value();
+
+    if (match(TokenType::Comma)) {
+        consume();
+        ++chars_consumed;
+        auto high_bound_string = read_digits_as_string();
+        auto high_bound = high_bound_string.to_uint();
+        if (high_bound.has_value()) {
+            repeat_max = high_bound.value();
+            chars_consumed += high_bound_string.length();
+        }
+    } else {
+        repeat_max = repeat_min;
+    }
+
+    if (!match(TokenType::RightCurly)) {
+        if (!m_should_use_browser_extended_grammar && done())
+            return set_error(Error::MismatchingBrace);
+
+        back(chars_consumed + !done());
+        return false;
+    }
+
+    consume();
+    ++chars_consumed;
+
+    if (repeat_max.has_value()) {
+        if (repeat_min.value() > repeat_max.value())
+            set_error(Error::InvalidBraceContent);
     }
 
     return true;
