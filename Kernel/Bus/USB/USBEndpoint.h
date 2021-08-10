@@ -27,8 +27,11 @@ namespace Kernel::USB {
 // while the keyboard part would only generate data once we push a key (hence an interrupt transfer).
 // Each of these data sources would be a _different_ endpoint on the device that we read from.
 class USBEndpoint {
+public:
     static constexpr u8 ENDPOINT_ADDRESS_NUMBER_MASK = 0x0f;
     static constexpr u8 ENDPOINT_ADDRESS_DIRECTION_MASK = 0x80;
+    static constexpr u8 ENDPOINT_ADDRESS_DIRECTION_OUT = 0x00;
+    static constexpr u8 ENDPOINT_ADDRESS_DIRECTION_IN = 0x80;
 
     static constexpr u8 ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_MASK = 0x03;
     static constexpr u8 ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_CONTROL = 0x00;
@@ -39,7 +42,6 @@ class USBEndpoint {
     static constexpr u8 ENDPOINT_ATTRIBUTES_ISO_MODE_SYNC_TYPE = 0x0c;
     static constexpr u8 ENDPOINT_ATTRIBUTES_ISO_MODE_USAGE_TYPE = 0x30;
 
-public:
     const USBEndpointDescriptor& descriptor() const { return m_descriptor; }
 
     bool is_control() const { return (m_descriptor.endpoint_attributes_bitmap & ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_MASK) == ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_CONTROL; }
