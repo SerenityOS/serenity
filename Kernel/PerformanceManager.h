@@ -119,6 +119,17 @@ public:
         }
     }
 
+    inline static void add_syscall_event(Thread& thread, const RegisterState& regs)
+    {
+        if (thread.is_profiling_suppressed())
+            return;
+        if (auto* event_buffer = thread.process().current_perf_events_buffer()) {
+            [[maybe_unused]] auto rc = event_buffer->append_with_ip_and_bp(
+                thread.pid(), thread.tid(),
+                regs.ip(), regs.bp(), PERF_EVENT_SYSCALL, 0, 0, 0, nullptr);
+        }
+    }
+
     inline static void timer_tick(RegisterState const& regs)
     {
         static Time last_wakeup;
