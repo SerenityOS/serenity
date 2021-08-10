@@ -69,7 +69,7 @@ def generate_module_source_for_compilation(entries):
         if type(entry) == tuple and len(entry) == 1 and type(entry[0]) == str:
             s += entry[0] + ' '
         elif type(entry) == str:
-            s += json.dumps(entry) + ' '
+            s += json.dumps(entry).replace('\\\\', '\\') + ' '
         elif type(entry) == list:
             s += generate_module_source_for_compilation(entry)
         else:
