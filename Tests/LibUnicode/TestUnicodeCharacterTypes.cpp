@@ -234,6 +234,10 @@ TEST_CASE(general_category)
     auto general_category_private_use = general_category("Private_Use"sv);
     EXPECT_EQ(general_category_co, general_category_private_use);
 
+    auto general_category_cn = general_category("Cn"sv);
+    auto general_category_unassigned = general_category("Unassigned"sv);
+    EXPECT_EQ(general_category_cn, general_category_unassigned);
+
     auto general_category_lc = general_category("LC"sv);
     auto general_category_cased_letter = general_category("Cased_Letter"sv);
     EXPECT_EQ(general_category_lc, general_category_cased_letter);
@@ -251,6 +255,7 @@ TEST_CASE(general_category)
         EXPECT(Unicode::code_point_has_general_category(code_point, general_category_cc));
 
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_co));
+        EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_cn));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_lc));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_ll));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_lu));
@@ -261,6 +266,18 @@ TEST_CASE(general_category)
         EXPECT(Unicode::code_point_has_general_category(code_point, general_category_co));
 
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_cc));
+        EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_cn));
+        EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_lc));
+        EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_ll));
+        EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_lu));
+    }
+
+    for (u32 code_point = 0x101fe; code_point <= 0x1027f; ++code_point) {
+        EXPECT(Unicode::code_point_has_general_category(code_point, general_category_c));
+        EXPECT(Unicode::code_point_has_general_category(code_point, general_category_cn));
+
+        EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_cc));
+        EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_co));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_lc));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_ll));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_lu));
@@ -273,6 +290,7 @@ TEST_CASE(general_category)
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_c));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_cc));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_co));
+        EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_cn));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_lu));
     }
 
@@ -283,6 +301,7 @@ TEST_CASE(general_category)
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_c));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_cc));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_co));
+        EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_cn));
         EXPECT(!Unicode::code_point_has_general_category(code_point, general_category_ll));
     }
 }
