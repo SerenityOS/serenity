@@ -317,7 +317,6 @@ public:
     KResultOr<FlatPtr> sys$chdir(Userspace<const char*>, size_t);
     KResultOr<FlatPtr> sys$fchdir(int fd);
     KResultOr<FlatPtr> sys$adjtime(Userspace<const timeval*>, Userspace<timeval*>);
-    KResultOr<FlatPtr> sys$gettimeofday(Userspace<timeval*>);
     KResultOr<FlatPtr> sys$clock_gettime(clockid_t, Userspace<timespec*>);
     KResultOr<FlatPtr> sys$clock_settime(clockid_t, Userspace<const timespec*>);
     KResultOr<FlatPtr> sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*>);

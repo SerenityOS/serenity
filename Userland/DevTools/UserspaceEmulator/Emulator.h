@@ -170,7 +170,6 @@ private:
     int virt$get_process_name(FlatPtr buffer, int size);
     int virt$set_process_name(FlatPtr buffer, int size);
     int virt$set_mmap_name(FlatPtr);
-    int virt$gettimeofday(FlatPtr);
     int virt$clock_gettime(int, FlatPtr);
     int virt$clock_nanosleep(FlatPtr);
     int virt$dbgputstr(FlatPtr characters, int length);
