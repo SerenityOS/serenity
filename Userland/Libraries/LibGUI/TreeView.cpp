@@ -373,6 +373,11 @@ void TreeView::paint_event(PaintEvent& event)
             x_offset += column_width + horizontal_padding() * 2;
         }
 
+        if (selection_behavior() == SelectionBehavior::SelectRows && is_focused() && index == cursor_index()) {
+            painter.draw_rect(row_rect, palette().color(background_role()));
+            painter.draw_focus_rect(row_rect, palette().focus_outline());
+        }
+
         return IterationDecision::Continue;
     });
 }
