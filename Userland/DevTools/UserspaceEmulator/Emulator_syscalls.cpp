@@ -203,8 +203,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_exit:
         virt$exit((int)arg1);
         return 0;
-    case SC_gettimeofday:
-        return virt$gettimeofday(arg1);
     case SC_clock_gettime:
         return virt$clock_gettime(arg1, arg2);
     case SC_clock_settime:
@@ -505,16 +503,6 @@ int Emulator::virt$kill(pid_t pid, int signal)
 int Emulator::virt$killpg(int pgrp, int sig)
 {
     return syscall(SC_killpg, pgrp, sig);
-}
-
-int Emulator::virt$gettimeofday(FlatPtr timeval)
-{
-    struct timeval host_timeval;
-    int rc = syscall(SC_gettimeofday, &host_timeval);
-    if (rc < 0)
-        return rc;
-    mmu().copy_to_vm(timeval, &host_timeval, sizeof(host_timeval));
-    return rc;
 }
 
 int Emulator::virt$clock_gettime(int clockid, FlatPtr timespec)
