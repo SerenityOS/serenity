@@ -1213,8 +1213,6 @@ public:
     bool is_profiling_suppressed() const { return m_is_profiling_suppressed; }
     void set_profiling_suppressed() { m_is_profiling_suppressed = true; }
 
-    InodeIndex global_procfs_inode_index() const { return m_global_procfs_inode_index; }
-
     String backtrace();
 
 private:
@@ -1363,10 +1361,6 @@ private:
     Atomic<u32> m_nested_profiler_calls { 0 };
 
     RefPtr<Timer> m_block_timer;
-
-    // Note: This is needed so when we generate thread stack inodes for ProcFS, we know that
-    // we assigned a global Inode index to it so we can use it later
-    InodeIndex m_global_procfs_inode_index;
 
     bool m_is_profiling_suppressed { false };
 

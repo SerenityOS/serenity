@@ -27,6 +27,7 @@
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDPSocket.h>
+#include <Kernel/Process.h>
 #include <Kernel/ProcessExposed.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/TTY.h>
@@ -905,10 +906,13 @@ KResult ProcFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(
         InodeIdentifier identifier = { fsid, component.component_index() };
         callback({ component.name(), identifier, 0 });
     }
-    for (auto& component : m_process_directories) {
-        InodeIdentifier identifier = { fsid, component.component_index() };
-        callback({ component.name(), identifier, 0 });
-    }
+    processes().for_each_shared([&](Process& process) {
+        VERIFY(!(process.pid() < 0));
+        u64 process_id = (u64)process.pid().value();
+        InodeIdentifier identifier = { fsid, static_cast<InodeIndex>(process_id << 36) };
+        callback({ String::formatted("{:d}", process.pid().value()), identifier, 0 });
+        return IterationDecision::Continue;
+    });
     return KSuccess;
 }
 
@@ -917,12 +921,12 @@ RefPtr<ProcFSExposedComponent> ProcFSRootDirectory::lookup(StringView name)
     if (auto candidate = ProcFSExposedDirectory::lookup(name); !candidate.is_null())
         return candidate;
 
-    for (auto& component : m_process_directories) {
-        if (component.name() == name) {
-            return component;
-        }
-    }
-    return {};
+    String process_directory_name = name;
+    auto pid = process_directory_name.to_uint<unsigned>();
+    if (!pid.has_value())
+        return {};
+    auto actual_pid = pid.value();
+    return Process::from_pid(actual_pid);
 }
 
 UNMAP_AFTER_INIT ProcFSRootDirectory::ProcFSRootDirectory()
@@ -932,16 +936,6 @@ UNMAP_AFTER_INIT ProcFSRootDirectory::ProcFSRootDirectory()
 
 UNMAP_AFTER_INIT ProcFSRootDirectory::~ProcFSRootDirectory()
 {
-}
-
-RefPtr<ProcFSProcessDirectory> ProcFSRootDirectory::process_directory_for(Process& process)
-{
-    RefPtr<Process> checked_process = process;
-    for (auto& directory : m_process_directories) {
-        if (directory.associated_process().ptr() == checked_process.ptr())
-            return directory;
-    }
-    return {};
 }
 
 }
