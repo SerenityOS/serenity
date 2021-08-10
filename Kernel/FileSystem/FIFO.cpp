@@ -131,19 +131,25 @@ bool FIFO::can_write(const FileDescription&, size_t) const
     return m_buffer->space_for_writing() || !m_readers;
 }
 
-KResultOr<size_t> FIFO::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> FIFO::read(FileDescription& fd, u64, UserOrKernelBuffer& buffer, size_t size)
 {
-    if (!m_writers && m_buffer->is_empty())
-        return 0;
+    if (m_buffer->is_empty()) {
+        if (!m_writers)
+            return 0;
+        if (m_writers && !fd.is_blocking())
+            return EAGAIN;
+    }
     return m_buffer->read(buffer, size);
 }
 
-KResultOr<size_t> FIFO::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> FIFO::write(FileDescription& fd, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (!m_readers) {
         Thread::current()->send_signal(SIGPIPE, Process::current());
         return EPIPE;
     }
+    if (!fd.is_blocking() && m_buffer->space_for_writing() == 0)
+        return EAGAIN;
 
     return m_buffer->write(buffer, size);
 }
