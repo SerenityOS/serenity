@@ -137,6 +137,7 @@ int main(int argc, char** argv)
     auto& tree_view = bottom_splitter.add<GUI::TreeView>();
     tree_view.set_should_fill_selected_rows(true);
     tree_view.set_column_headers_visible(true);
+    tree_view.set_selection_behavior(GUI::TreeView::SelectionBehavior::SelectRows);
     tree_view.set_model(profile->model());
 
     auto& disassembly_view = bottom_splitter.add<GUI::TableView>();
