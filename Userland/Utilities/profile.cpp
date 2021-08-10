@@ -45,6 +45,8 @@ int main(int argc, char** argv)
                 event_mask |= PERF_EVENT_KFREE;
             else if (event_type == "page_fault")
                 event_mask |= PERF_EVENT_PAGE_FAULT;
+            else if (event_type == "syscall")
+                event_mask |= PERF_EVENT_SYSCALL;
             else {
                 warnln("Unknown event type '{}' specified.", event_type);
                 exit(1);
@@ -54,7 +56,7 @@ int main(int argc, char** argv)
 
     auto print_types = [] {
         outln();
-        outln("Event type can be one of: sample, context_switch, page_fault, kmalloc and kfree.");
+        outln("Event type can be one of: sample, context_switch, page_fault, syscall, kmalloc and kfree.");
     };
 
     if (!args_parser.parse(argc, argv, Core::ArgsParser::FailureBehavior::PrintUsage)) {

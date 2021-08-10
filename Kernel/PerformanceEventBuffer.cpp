@@ -135,6 +135,8 @@ KResult PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID ti
         break;
     case PERF_EVENT_PAGE_FAULT:
         break;
+    case PERF_EVENT_SYSCALL:
+        break;
     default:
         return EINVAL;
     }
@@ -225,6 +227,9 @@ bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
             break;
         case PERF_EVENT_PAGE_FAULT:
             event_object.add("type", "page_fault");
+            break;
+        case PERF_EVENT_SYSCALL:
+            event_object.add("type", "syscall");
             break;
         }
         event_object.add("pid", event.pid);

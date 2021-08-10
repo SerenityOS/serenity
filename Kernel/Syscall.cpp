@@ -9,6 +9,7 @@
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/ThreadTracer.h>
@@ -107,6 +108,8 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
     auto current_thread = Thread::current();
     auto& process = current_thread->process();
     current_thread->did_syscall();
+
+    PerformanceManager::add_syscall_event(*current_thread, regs);
 
     if (function >= Function::__Count) {
         dbgln("Unknown syscall {} requested ({:p}, {:p}, {:p}, {:p})", function, arg1, arg2, arg3, arg4);
