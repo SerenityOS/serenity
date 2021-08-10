@@ -145,6 +145,9 @@ UNMAP_AFTER_INIT void TimeManagement::initialize(u32 cpu)
             dmesgln("Time: Using APIC timer as system timer");
             s_the->set_system_timer(*apic_timer);
         }
+
+        s_the->m_time_page_region = MM.allocate_kernel_region(PAGE_SIZE, "Time page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
+        VERIFY(s_the->m_time_page_region);
     } else {
         VERIFY(s_the.is_initialized());
         if (auto* apic_timer = APIC::the().get_timer()) {
@@ -359,6 +362,9 @@ void TimeManagement::increment_time_since_boot_hpet()
     m_ticks_this_second = ticks_this_second;
     // TODO: Apply m_remaining_epoch_time_adjustment
     timespec_add(m_epoch_time, { (time_t)(delta_ns / 1000000000), (long)(delta_ns % 1000000000) }, m_epoch_time);
+
+    update_time_page();
+
     m_update2.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
 }
 
@@ -389,6 +395,8 @@ void TimeManagement::increment_time_since_boot()
         ++m_seconds_since_boot;
         m_ticks_this_second = 0;
     }
+
+    update_time_page();
     m_update2.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
 }
 
@@ -417,6 +425,24 @@ bool TimeManagement::disable_profile_timer()
     if (m_profile_enable_count.fetch_sub(1) == 1)
         return m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1));
     return true;
+}
+
+void TimeManagement::update_time_page()
+{
+    auto* page = time_page();
+    u32 update_iteration = AK::atomic_fetch_add(&page->update1, 1u, AK::MemoryOrder::memory_order_acquire);
+    page->clocks[CLOCK_REALTIME] = m_epoch_time;
+    AK::atomic_store(&page->update2, update_iteration + 1u, AK::MemoryOrder::memory_order_release);
+}
+
+TimePage* TimeManagement::time_page()
+{
+    return static_cast<TimePage*>((void*)m_time_page_region->vaddr().as_ptr());
+}
+
+Memory::VMObject& TimeManagement::time_page_vmobject()
+{
+    return m_time_page_region->vmobject();
 }
 
 }

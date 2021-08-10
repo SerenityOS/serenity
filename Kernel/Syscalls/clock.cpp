@@ -10,6 +10,24 @@
 
 namespace Kernel {
 
+KResultOr<FlatPtr> Process::sys$map_time_page()
+{
+    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    REQUIRE_PROMISE(stdio);
+
+    auto& vmobject = TimeManagement::the().time_page_vmobject();
+
+    auto range = address_space().page_directory().range_allocator().allocate_randomized(PAGE_SIZE, PAGE_SIZE);
+    if (!range.has_value())
+        return ENOMEM;
+
+    auto region_or_error = address_space().allocate_region_with_vmobject(range.value(), vmobject, 0, "Kernel time page"sv, PROT_READ, true);
+    if (region_or_error.is_error())
+        return region_or_error.error();
+
+    return region_or_error.value()->vaddr().get();
+}
+
 KResultOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
