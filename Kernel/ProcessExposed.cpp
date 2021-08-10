@@ -18,32 +18,74 @@ namespace Kernel {
 static SpinLock<u8> s_index_lock;
 static InodeIndex s_next_inode_index = 0;
 
-static size_t s_allocate_inode_index()
+namespace SegmentedProcFSIndex {
+static InodeIndex __build_raw_segmented_index(u32 primary, u16 sub_directory, u32 property)
+{
+    VERIFY(primary < 0x10000000);
+    VERIFY(property < 0x100000);
+    // Note: The sub-directory part is already limited to 0xFFFF, so no need to VERIFY it.
+    return static_cast<u64>((static_cast<u64>(primary) << 36) | (static_cast<u64>(sub_directory) << 20) | property);
+}
+
+static InodeIndex build_segmented_index_with_known_pid(ProcessID pid, u16 sub_directory, u32 property)
+{
+    return __build_raw_segmented_index(pid.value() + 1, sub_directory, property);
+}
+
+static InodeIndex build_segmented_index_with_unknown_property(ProcessID pid, ProcessSubDirectory sub_directory, unsigned property)
+{
+    return build_segmented_index_with_known_pid(pid, to_underlying(sub_directory), static_cast<u32>(property));
+}
+
+InodeIndex build_segmented_index_for_pid_directory(ProcessID pid)
+{
+    return build_segmented_index_with_unknown_property(pid, ProcessSubDirectory::Reserved, to_underlying(MainProcessProperty::Reserved));
+}
+
+InodeIndex build_segmented_index_for_sub_directory(ProcessID pid, ProcessSubDirectory sub_directory)
+{
+    return build_segmented_index_with_unknown_property(pid, sub_directory, to_underlying(MainProcessProperty::Reserved));
+}
+
+InodeIndex build_segmented_index_for_main_property(ProcessID pid, ProcessSubDirectory sub_directory, MainProcessProperty property)
+{
+    return build_segmented_index_with_known_pid(pid, to_underlying(sub_directory), to_underlying(property));
+}
+
+InodeIndex build_segmented_index_for_main_property_in_pid_directory(ProcessID pid, MainProcessProperty property)
+{
+    return build_segmented_index_with_known_pid(pid, to_underlying(ProcessSubDirectory::Reserved), to_underlying(property));
+}
+
+InodeIndex build_segmented_index_for_thread_stack(ProcessID pid, ThreadID thread_id)
+{
+    return build_segmented_index_with_unknown_property(pid, ProcessSubDirectory::Stacks, thread_id.value());
+}
+
+InodeIndex build_segmented_index_for_file_description(ProcessID pid, unsigned fd)
+{
+    return build_segmented_index_with_unknown_property(pid, ProcessSubDirectory::FileDescriptions, fd);
+}
+
+}
+
+static size_t s_allocate_global_inode_index()
 {
     ScopedSpinLock lock(s_index_lock);
     s_next_inode_index = s_next_inode_index.value() + 1;
+    // Note: Global ProcFS indices must be above 0 and up to maximum of what 36 bit (2 ^ 36 - 1) can represent.
     VERIFY(s_next_inode_index > 0);
+    VERIFY(s_next_inode_index < 0x100000000);
     return s_next_inode_index.value();
 }
 
-InodeIndex ProcFSComponentRegistry::allocate_inode_index() const
+ProcFSExposedComponent::ProcFSExposedComponent()
 {
-    return s_allocate_inode_index();
 }
 
 ProcFSExposedComponent::ProcFSExposedComponent(StringView name)
-    : m_component_index(s_allocate_inode_index())
+    : m_component_index(s_allocate_global_inode_index())
 {
-    m_name = KString::try_create(name);
-}
-
-// Note: This constructor is intended to be used in /proc/pid/fd/* symlinks
-// so we preallocated inode index for them so we just need to set it here.
-ProcFSExposedComponent::ProcFSExposedComponent(StringView name, InodeIndex preallocated_index)
-    : m_component_index(preallocated_index.value())
-{
-    VERIFY(preallocated_index.value() != 0);
-    VERIFY(preallocated_index <= s_next_inode_index);
     m_name = KString::try_create(name);
 }
 
@@ -62,16 +104,6 @@ ProcFSExposedLink::ProcFSExposedLink(StringView name)
     : ProcFSExposedComponent(name)
 {
 }
-
-ProcFSExposedLink::ProcFSExposedLink(StringView name, InodeIndex preallocated_index)
-    : ProcFSExposedComponent(name, preallocated_index)
-{
-}
-
-struct ProcFSInodeData : public FileDescriptionData {
-    OwnPtr<KBuffer> buffer;
-};
-
 KResultOr<size_t> ProcFSGlobalInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
     dbgln_if(PROCFS_DEBUG, "ProcFSGlobalInformation @ {}: read_bytes offset: {} count: {}", name(), offset, count);
@@ -121,71 +153,6 @@ KResult ProcFSGlobalInformation::refresh_data(FileDescription& description) cons
     return KSuccess;
 }
 
-KResultOr<size_t> ProcFSProcessInformation::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
-{
-    dbgln_if(PROCFS_DEBUG, "ProcFSProcessInformation @ {}: read_bytes offset: {} count: {}", name(), offset, count);
-
-    VERIFY(offset >= 0);
-    VERIFY(buffer.user_or_kernel_ptr());
-
-    if (!description)
-        return KResult(EIO);
-    if (!description->data()) {
-        dbgln("ProcFSGlobalInformation: Do not have cached data!");
-        return KResult(EIO);
-    }
-
-    MutexLocker locker(m_refresh_lock);
-
-    auto& typed_cached_data = static_cast<ProcFSInodeData&>(*description->data());
-    auto& data_buffer = typed_cached_data.buffer;
-
-    if (!data_buffer || (size_t)offset >= data_buffer->size())
-        return 0;
-
-    ssize_t nread = min(static_cast<off_t>(data_buffer->size() - offset), static_cast<off_t>(count));
-    if (!buffer.write(data_buffer->data() + offset, nread))
-        return KResult(EFAULT);
-
-    return nread;
-}
-
-KResult ProcFSProcessInformation::refresh_data(FileDescription& description) const
-{
-    // For process-specific inodes, hold the process's ptrace lock across refresh
-    // and refuse to load data if the process is not dumpable.
-    // Without this, files opened before a process went non-dumpable could still be used for dumping.
-    auto parent_directory = const_cast<ProcFSProcessInformation&>(*this).m_parent_directory.strong_ref();
-    if (parent_directory.is_null())
-        return KResult(EINVAL);
-    auto process = parent_directory->associated_process();
-    if (!process)
-        return KResult(ESRCH);
-    process->ptrace_lock().lock();
-    if (!process->is_dumpable()) {
-        process->ptrace_lock().unlock();
-        return EPERM;
-    }
-    ScopeGuard guard = [&] {
-        process->ptrace_lock().unlock();
-    };
-    MutexLocker locker(m_refresh_lock);
-    auto& cached_data = description.data();
-    if (!cached_data) {
-        cached_data = adopt_own_if_nonnull(new (nothrow) ProcFSInodeData);
-        if (!cached_data)
-            return ENOMEM;
-    }
-    KBufferBuilder builder;
-    if (!const_cast<ProcFSProcessInformation&>(*this).output(builder))
-        return ENOENT;
-    auto& typed_cached_data = static_cast<ProcFSInodeData&>(*cached_data);
-    typed_cached_data.buffer = builder.build();
-    if (!typed_cached_data.buffer)
-        return ENOMEM;
-    return KSuccess;
-}
-
 KResultOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     VERIFY(offset == 0);
@@ -210,7 +177,7 @@ NonnullRefPtr<Inode> ProcFSExposedLink::to_inode(const ProcFS& procfs_instance) 
 
 NonnullRefPtr<Inode> ProcFSExposedComponent::to_inode(const ProcFS& procfs_instance) const
 {
-    return ProcFSInode::create(procfs_instance, *this);
+    return ProcFSGlobalInode::create(procfs_instance, *this);
 }
 
 NonnullRefPtr<Inode> ProcFSExposedDirectory::to_inode(const ProcFS& procfs_instance) const

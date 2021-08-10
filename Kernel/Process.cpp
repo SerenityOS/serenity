@@ -141,7 +141,6 @@ void Process::register_new(Process& process)
     processes().with_exclusive([&](auto& list) {
         list.prepend(process);
     });
-    ProcFSComponentRegistry::the().register_new_process(process);
 }
 
 RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const String& path, uid_t uid, gid_t gid, ProcessID parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
@@ -594,12 +593,6 @@ void Process::finalize()
     m_arguments.clear();
     m_environment.clear();
 
-    // Note: We need to remove the references from the ProcFS registrar
-    // If we don't do it here, we can't drop the object later, and we can't
-    // do this from the destructor because the state of the object doesn't
-    // allow us to take references anymore.
-    ProcFSComponentRegistry::the().unregister_process(*this);
-
     m_state.store(State::Dead, AK::MemoryOrder::memory_order_release);
 
     {
@@ -752,13 +745,6 @@ void Process::FileDescriptionAndFlags::clear()
     // FIXME: Verify Process::m_fds_lock is locked!
     m_description = nullptr;
     m_flags = 0;
-    m_global_procfs_inode_index = 0;
-}
-
-void Process::FileDescriptionAndFlags::refresh_inode_index()
-{
-    // FIXME: Verify Process::m_fds_lock is locked!
-    m_global_procfs_inode_index = ProcFSComponentRegistry::the().allocate_inode_index();
 }
 
 void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& description, u32 flags)
@@ -766,7 +752,6 @@ void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& desc
     // FIXME: Verify Process::m_fds_lock is locked!
     m_description = move(description);
     m_flags = flags;
-    m_global_procfs_inode_index = ProcFSComponentRegistry::the().allocate_inode_index();
 }
 
 Custody& Process::root_directory()
