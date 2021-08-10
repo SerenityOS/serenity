@@ -98,10 +98,12 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, Instructio
         m_trap = Trap { "Memory access out of bounds" };
         return;
     }
-    auto instance_address = base.value() + static_cast<i64>(arg.offset);
-    if (instance_address < 0 || static_cast<u64>(instance_address + sizeof(ReadType)) > memory->size()) {
+    u64 instance_address = static_cast<u64>(bit_cast<u32>(base.value())) + arg.offset;
+    Checked addition { instance_address };
+    addition += sizeof(ReadType);
+    if (addition.has_overflow() || addition.value() > memory->size()) {
         m_trap = Trap { "Memory access out of bounds" };
-        dbgln("LibWasm: Memory access out of bounds (expected 0 <= {} and {} <= {})", instance_address, instance_address + sizeof(ReadType), memory->size());
+        dbgln("LibWasm: Memory access out of bounds (expected {} to be less than or equal to {})", instance_address + sizeof(ReadType), memory->size());
         return;
     }
     dbgln_if(WASM_TRACE_DEBUG, "load({} : {}) -> stack", instance_address, sizeof(ReadType));
@@ -120,8 +122,10 @@ void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruct
     TRAP_IF_NOT(entry.has<Value>());
     auto base = entry.get<Value>().to<i32>();
     TRAP_IF_NOT(base.has_value());
-    auto instance_address = base.value() + static_cast<i64>(arg.offset);
-    if (instance_address < 0 || static_cast<u64>(instance_address + data.size()) > memory->size()) {
+    u64 instance_address = static_cast<u64>(bit_cast<u32>(base.value())) + arg.offset;
+    Checked addition { instance_address };
+    addition += data.size();
+    if (addition.has_overflow() || addition.value() > memory->size()) {
         m_trap = Trap { "Memory access out of bounds" };
         dbgln("LibWasm: Memory access out of bounds (expected 0 <= {} and {} <= {})", instance_address, instance_address + data.size(), memory->size());
         return;
