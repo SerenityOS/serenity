@@ -554,6 +554,7 @@ static void generate_unicode_data_implementation(Core::File& file, UnicodeData c
 #include <AK/BinarySearch.h>
 #include <AK/CharacterTypes.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibUnicode/UnicodeData.h>
 
@@ -774,74 +775,45 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 )~~~");
     };
 
-    append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv);
+    auto append_from_string = [&](StringView enum_title, StringView enum_snake, PropList const& prop_list, Vector<Alias> const& aliases) {
+        generator.set("enum_title", enum_title);
+        generator.set("enum_snake", enum_snake);
 
-    generator.append(R"~~~(
-Optional<GeneralCategory> general_category_from_string(StringView const& general_category)
-{)~~~");
+        auto properties = prop_list.keys();
+        for (auto const& alias : aliases)
+            properties.append(alias.alias);
+        quick_sort(properties);
 
-    for (auto const& general_category : unicode_data.general_categories) {
-        generator.set("general_category", general_category.key);
         generator.append(R"~~~(
-    if (general_category == "@general_category@"sv)
-        return GeneralCategory::@general_category@;)~~~");
-    }
-    for (auto const& alias : unicode_data.general_category_aliases) {
-        generator.set("general_category", alias.alias);
-        generator.append(R"~~~(
-    if (general_category == "@general_category@"sv)
-        return GeneralCategory::@general_category@;)~~~");
-    }
+Optional<@enum_title@> @enum_snake@_from_string(StringView const& @enum_snake@)
+{
+    static HashMap<String, @enum_title@> @enum_snake@_values { {)~~~");
 
-    generator.append(R"~~~(
+        for (auto const& property : properties) {
+            generator.set("property", property);
+            generator.append(R"~~~(
+        { "@property@"sv, @enum_title@::@property@ },)~~~");
+        }
+
+        generator.append(R"~~~(
+    } };
+
+    if (auto value = @enum_snake@_values.get(@enum_snake@); value.has_value())
+        return value.value();
     return {};
 }
 )~~~");
+    };
+
+    append_prop_search("GeneralCategory"sv, "general_category"sv, "s_general_categories"sv);
+    append_from_string("GeneralCategory"sv, "general_category"sv, unicode_data.general_categories, unicode_data.general_category_aliases);
 
     append_prop_search("Property"sv, "property"sv, "s_properties"sv);
+    append_from_string("Property"sv, "property"sv, unicode_data.prop_list, unicode_data.prop_aliases);
+
+    append_from_string("Script"sv, "script"sv, unicode_data.script_list, unicode_data.script_aliases);
 
     generator.append(R"~~~(
-Optional<Property> property_from_string(StringView const& property)
-{
-    if (property == "Assigned"sv)
-        return Property::Assigned;)~~~");
-
-    for (auto const& property : unicode_data.prop_list) {
-        generator.set("property", property.key);
-        generator.append(R"~~~(
-    if (property == "@property@"sv)
-        return Property::@property@;)~~~");
-    }
-    for (auto const& alias : unicode_data.prop_aliases) {
-        generator.set("property", alias.alias);
-        generator.append(R"~~~(
-    if (property == "@property@"sv)
-        return Property::@property@;)~~~");
-    }
-
-    generator.append(R"~~~(
-    return {};
-}
-
-Optional<Script> script_from_string(StringView const& script)
-{)~~~");
-
-    for (auto const& script : unicode_data.script_list) {
-        generator.set("script", script.key);
-        generator.append(R"~~~(
-    if (script == "@script@"sv)
-        return Script::@script@;)~~~");
-    }
-    for (auto const& alias : unicode_data.script_aliases) {
-        generator.set("script", alias.alias);
-        generator.append(R"~~~(
-    if (script == "@script@"sv)
-        return Script::@script@;)~~~");
-    }
-
-    generator.append(R"~~~(
-    return {};
-}
 
 }
 
