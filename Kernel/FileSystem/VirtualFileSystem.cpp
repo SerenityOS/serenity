@@ -549,6 +549,9 @@ KResult VirtualFileSystem::rename(StringView old_path, StringView new_path, Cust
     if (new_basename.is_empty() || new_basename == "."sv || new_basename == ".."sv)
         return EINVAL;
 
+    if (old_basename == new_basename && old_parent_inode.index() == new_parent_inode.index())
+        return KSuccess;
+
     if (!new_custody_or_error.is_error()) {
         auto& new_custody = *new_custody_or_error.value();
         auto& new_inode = new_custody.inode();
