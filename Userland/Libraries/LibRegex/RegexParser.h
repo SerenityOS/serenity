@@ -228,6 +228,7 @@ private:
     bool parse_assertion(ByteCode&, size_t&, bool unicode, bool named);
     bool parse_atom(ByteCode&, size_t&, bool unicode, bool named);
     bool parse_quantifier(ByteCode&, size_t&, bool unicode, bool named);
+    bool parse_interval_quantifier(Optional<size_t>& repeat_min, Optional<size_t>& repeat_max);
     bool parse_atom_escape(ByteCode&, size_t&, bool unicode, bool named);
     bool parse_character_class(ByteCode&, size_t&, bool unicode, bool named);
     bool parse_capture_group(ByteCode&, size_t&, bool unicode, bool named);
