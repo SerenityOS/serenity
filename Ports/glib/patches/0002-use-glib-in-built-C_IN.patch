@@ -1,0 +1,27 @@
+From a88e13c5461e50ddcad4b8ebeae8d15cee64368b Mon Sep 17 00:00:00 2001
+From: Kenneth Myhra <kennethmyhra@gmail.com>
+Date: Thu, 12 Aug 2021 20:22:35 +0200
+Subject: [PATCH 02/12] gio/meson.build: Use glib's in-built C_IN
+
+Since we do not have C_IN and glib has functionality for providing it,
+let glib provide it.
+---
+ gio/meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gio/meson.build b/gio/meson.build
+index 49a37a7..b4ba866 100644
+--- a/gio/meson.build
++++ b/gio/meson.build
+@@ -13,7 +13,7 @@ gnetworking_h_conf = configuration_data()
+ 
+ gnetworking_h_nameser_compat_include = ''
+ 
+-if host_system not in ['windows', 'android']
++if host_system not in ['windows', 'android', 'serenity']
+   # Don't check for C_IN on Android since it does not define it in public
+   # headers, we define it ourselves wherever necessary
+   if not cc.compiles('''#include <sys/types.h>
+-- 
+2.25.1
+

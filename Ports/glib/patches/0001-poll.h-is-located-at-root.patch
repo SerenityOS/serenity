@@ -1,0 +1,49 @@
+From d39946bd24a98fbcee4740f14ccd85ed75f312c6 Mon Sep 17 00:00:00 2001
+From: Kenneth Myhra <kennethmyhra@gmail.com>
+Date: Thu, 12 Aug 2021 20:29:32 +0200
+Subject: [PATCH 01/12] meson.build: 'poll.h' is located at root, not
+ 'sys/poll.h'
+
+---
+ meson.build | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 1b54fdc..6b22e98 100644
+--- a/meson.build
++++ b/meson.build
+@@ -1717,7 +1717,11 @@ g_have_gnuc_varargs = cc.compiles('''
+ if cc.has_header('alloca.h')
+   glibconfig_conf.set('GLIB_HAVE_ALLOCA_H', true)
+ endif
+-has_syspoll = cc.has_header('sys/poll.h')
++if host_system == 'serenity'
++  has_syspoll = cc.has_header('poll.h')
++else
++  has_syspoll = cc.has_header('sys/poll.h')
++endif
+ has_systypes = cc.has_header('sys/types.h')
+ if has_syspoll
+   glibconfig_conf.set('GLIB_HAVE_SYS_POLL_H', true)
+@@ -1725,9 +1729,15 @@ endif
+ has_winsock2 = cc.has_header('winsock2.h')
+ 
+ if has_syspoll and has_systypes
+-  poll_includes = '''
+-      #include<sys/poll.h>
+-      #include<sys/types.h>'''
++  if host_system == 'serenity'
++    poll_includes = '''
++        #include<poll.h>
++        #include<sys/types.h>'''
++  else
++    poll_includes = '''
++          #include<sys/poll.h>
++          #include<sys/types.h>'''
++  endif
+ elif has_winsock2
+   poll_includes = '''
+       #define _WIN32_WINNT @0@
+-- 
+2.25.1
+
