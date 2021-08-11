@@ -21,6 +21,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/select.h>
 #include <sys/types.h>
 #include <syscall.h>
 #include <termios.h>
@@ -812,5 +813,10 @@ long sysconf(int name)
 int getpagesize()
 {
     return PAGE_SIZE;
+}
+
+int pause()
+{
+    return select(0, nullptr, nullptr, nullptr, nullptr);
 }
 }
