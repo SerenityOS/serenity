@@ -4,17 +4,20 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
 {
+    bool complement_flag = false;
     bool delete_flag = false;
     const char* from_chars = nullptr;
     const char* to_chars = nullptr;
 
     Core::ArgsParser args_parser;
+    args_parser.add_option(complement_flag, "Take the complement of the first set", "complement", 'c');
     args_parser.add_option(delete_flag, "Delete characters instead of replacing", nullptr, 'd');
     args_parser.add_positional_argument(from_chars, "Set of characters to translate from", "from");
     args_parser.add_positional_argument(to_chars, "Set of characters to translate to", "to", Core::ArgsParser::Required::No);
@@ -25,7 +28,20 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto from_str = AK::StringView(from_chars);
+    String from_complement;
+    StringView from_str;
+    if (complement_flag) {
+        auto original_set = StringView(from_chars);
+        StringBuilder complement_set;
+        for (int i = 0; i < 256; i++) {
+            if (!original_set.contains(i))
+                complement_set.append(static_cast<int>(i));
+        }
+        from_complement = complement_set.to_string();
+        from_str = from_complement;
+    } else {
+        from_str = from_chars;
+    }
 
     if (delete_flag) {
         for (;;) {
