@@ -24,17 +24,20 @@ public:
     Vector<Token> process_and_lex();
     Vector<StringView> included_paths() const { return m_included_paths; }
 
-    struct DefinedValue {
+    struct Definition {
+        String key;
+        Vector<String> parameters;
         String value;
         FlyString filename;
         size_t line { 0 };
         size_t column { 0 };
     };
-    using Definitions = HashMap<StringView, DefinedValue>;
+    using Definitions = HashMap<String, Definition>;
 
     struct Substitution {
-        Token original_token;
-        DefinedValue defined_value;
+        Vector<Token> original_tokens;
+        Definition defined_value;
+        String processed_value;
     };
 
     Definitions const& definitions() const { return m_definitions; }
@@ -50,7 +53,18 @@ private:
     PreprocessorKeyword handle_preprocessor_line(StringView const&);
     void handle_preprocessor_keyword(StringView const& keyword, GenericLexer& line_lexer);
     void process_line(StringView const& line);
-    void do_substitution(Token const& replaced_token, DefinedValue const&);
+    size_t do_substitution(Vector<Token> const& tokens, size_t token_index, Definition const&);
+    Optional<Definition> create_definition(StringView line);
+
+    struct MacroCall {
+        Token name;
+        struct Argument {
+            Vector<Token> tokens;
+        };
+        Vector<Argument> arguments;
+        size_t end_token_index { 0 };
+    };
+    Optional<MacroCall> parse_macro_call(Vector<Token> const& tokens, size_t token_index);
 
     String m_filename;
     String m_program;
