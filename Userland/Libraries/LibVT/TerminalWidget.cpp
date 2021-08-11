@@ -205,6 +205,9 @@ void TerminalWidget::event(Core::Event& event)
 
 void TerminalWidget::keydown_event(GUI::KeyEvent& event)
 {
+    if (try_trigger_action(event))
+        return;
+
     if (m_ptm_fd == -1) {
         event.ignore();
         return GUI::Frame::keydown_event(event);
