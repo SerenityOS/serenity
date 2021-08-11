@@ -503,6 +503,8 @@ TEST_CASE(ECMA262_parse)
         { "(?", regex::Error::InvalidCaptureGroup },
         { "\\u1234", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
         { "[\\u1234]", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
+        { "\\u1", regex::Error::InvalidPattern, regex::ECMAScriptFlags::Unicode },
+        { "[\\u1]", regex::Error::InvalidPattern, regex::ECMAScriptFlags::Unicode },
         { ",(?", regex::Error::InvalidCaptureGroup }, // #4583
         { "{1}", regex::Error::InvalidPattern },
         { "{1,2}", regex::Error::InvalidPattern },
