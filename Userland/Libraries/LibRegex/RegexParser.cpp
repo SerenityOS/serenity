@@ -1290,6 +1290,9 @@ bool ECMA262Parser::parse_atom(ByteCode& stack, size_t& match_length_minimum, bo
     }
 
     if (match(TokenType::RightBracket) || match(TokenType::RightCurly) || match(TokenType::LeftCurly)) {
+        if (unicode)
+            return set_error(Error::InvalidPattern);
+
         if (m_should_use_browser_extended_grammar) {
             auto token = consume();
             match_length_minimum += 1;

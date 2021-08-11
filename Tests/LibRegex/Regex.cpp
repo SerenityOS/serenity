@@ -559,6 +559,12 @@ TEST_CASE(ECMA262_parse)
         { "[\\00]"sv, regex::Error::InvalidPattern, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::BrowserExtended) },
         { "\\^\\$\\\\\\.\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\/"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
         { "[\\^\\$\\\\\\.\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\/]"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "]"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "]"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\]"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "}"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "}"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\}"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
