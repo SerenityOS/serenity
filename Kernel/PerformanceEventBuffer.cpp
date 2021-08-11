@@ -166,6 +166,13 @@ PerformanceEvent& PerformanceEventBuffer::at(size_t index)
 template<typename Serializer>
 bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
 {
+    {
+        auto strings = object.add_object("strings");
+        for (auto& it : m_strings) {
+            strings.add(String::number(it.key), it.value->view());
+        }
+    }
+
     auto array = object.add_array("events");
     bool seen_first_sample = false;
     for (size_t i = 0; i < m_count; ++i) {
@@ -296,6 +303,15 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
         [[maybe_unused]] auto rc = append_with_ip_and_bp(process.pid(), 0,
             0, 0, PERF_EVENT_MMAP, 0, region->range().base().get(), region->range().size(), region->name());
     }
+}
+
+KResult PerformanceEventBuffer::register_string(FlatPtr string_id, NonnullOwnPtr<KString> string)
+{
+    m_strings.set(string_id, move(string));
+
+    // FIXME: Switch m_strings to something that can signal allocation failure,
+    //        and then propagate such failures here.
+    return KSuccess;
 }
 
 }

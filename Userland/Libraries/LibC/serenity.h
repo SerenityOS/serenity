@@ -119,6 +119,7 @@ enum {
 #define PERF_EVENT_MASK_ALL (~0ull)
 
 int perf_event(int type, uintptr_t arg1, uintptr_t arg2);
+int perf_register_string(uintptr_t string_id, char const* string, size_t string_length);
 
 int get_stack_bounds(uintptr_t* user_stack_base, size_t* user_stack_size);
 

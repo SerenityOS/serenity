@@ -131,6 +131,7 @@ enum class NeedsBigProcessLock {
     S(munmap, NeedsBigProcessLock::Yes)                     \
     S(open, NeedsBigProcessLock::Yes)                       \
     S(perf_event, NeedsBigProcessLock::Yes)                 \
+    S(perf_register_string, NeedsBigProcessLock::Yes)       \
     S(pipe, NeedsBigProcessLock::Yes)                       \
     S(pledge, NeedsBigProcessLock::Yes)                     \
     S(poll, NeedsBigProcessLock::Yes)                       \
