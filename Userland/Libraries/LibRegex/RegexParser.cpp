@@ -18,6 +18,7 @@ namespace regex {
 
 static constexpr size_t s_maximum_repetition_count = 1024 * 1024;
 static constexpr auto s_alphabetic_characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"sv;
+static constexpr auto s_decimal_characters = "0123456789"sv;
 
 ALWAYS_INLINE bool Parser::set_error(Error error)
 {
@@ -1430,6 +1431,17 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
         return true;
     }
 
+    // '\0'
+    if (try_skip("0")) {
+        if (!lookahead_any(s_decimal_characters)) {
+            match_length_minimum += 1;
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)0 } });
+            return true;
+        }
+
+        back();
+    }
+
     // LegacyOctalEscapeSequence
     if (m_should_use_browser_extended_grammar) {
         if (!unicode) {
@@ -1439,13 +1451,6 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
                 return true;
             }
         }
-    }
-
-    // '\0'
-    if (try_skip("0")) {
-        match_length_minimum += 1;
-        stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)0 } });
-        return true;
     }
 
     // HexEscape
@@ -1797,8 +1802,17 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             }
 
             // '\0'
-            if (try_skip("0"))
-                return { CharClassRangeElement { .code_point = 0, .is_character_class = false } };
+            if (try_skip("0")) {
+                if (!lookahead_any(s_decimal_characters))
+                    return { CharClassRangeElement { .code_point = 0, .is_character_class = false } };
+                back();
+            }
+
+            // LegacyOctalEscapeSequence
+            if (m_should_use_browser_extended_grammar && !unicode) {
+                if (auto escape = parse_legacy_octal_escape(); escape.has_value())
+                    return { CharClassRangeElement { .code_point = escape.value(), .is_character_class = false } };
+            }
 
             // HexEscape
             if (try_skip("x")) {
