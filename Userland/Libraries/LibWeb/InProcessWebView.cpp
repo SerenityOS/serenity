@@ -236,6 +236,9 @@ void InProcessWebView::mousewheel_event(GUI::MouseEvent& event)
 
 void InProcessWebView::keydown_event(GUI::KeyEvent& event)
 {
+    if (try_trigger_action(event))
+        return;
+
     bool page_accepted_event = page().handle_keydown(event.key(), event.modifiers(), event.code_point());
 
     if (event.modifiers() == 0) {
@@ -272,8 +275,6 @@ void InProcessWebView::keydown_event(GUI::KeyEvent& event)
             break;
         }
     }
-
-    event.accept();
 }
 
 URL InProcessWebView::url() const

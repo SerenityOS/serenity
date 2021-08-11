@@ -162,6 +162,9 @@ void OutOfProcessWebView::handle_resize()
 
 void OutOfProcessWebView::keydown_event(GUI::KeyEvent& event)
 {
+    if (try_trigger_action(event))
+        return;
+
     client().async_key_down(event.key(), event.modifiers(), event.code_point());
 }
 
