@@ -1257,7 +1257,7 @@ RefPtr<AST::Node> Parser::parse_string()
 
     if (peek() == '"') {
         consume();
-        auto inner = parse_doublequoted_string_inner();
+        auto inner = parse_string_inner(StringEndCondition::DoubleQuote);
         if (!inner)
             inner = create<AST::SyntaxError>("Unexpected EOF in string", true);
         if (!expect('"')) {
@@ -1283,14 +1283,18 @@ RefPtr<AST::Node> Parser::parse_string()
     return nullptr;
 }
 
-RefPtr<AST::Node> Parser::parse_doublequoted_string_inner()
+RefPtr<AST::Node> Parser::parse_string_inner(StringEndCondition condition)
 {
     auto rule_start = push_start();
     if (at_end())
         return nullptr;
 
     StringBuilder builder;
-    while (!at_end() && peek() != '"') {
+    while (!at_end()) {
+        if (condition == StringEndCondition::DoubleQuote && peek() == '"') {
+            break;
+        }
+
         if (peek() == '\\') {
             consume();
             if (at_end()) {
@@ -1358,7 +1362,7 @@ RefPtr<AST::Node> Parser::parse_doublequoted_string_inner()
                     move(string_literal),
                     move(node)); // Compose String Node
 
-                if (auto string = parse_doublequoted_string_inner()) {
+                if (auto string = parse_string_inner(condition)) {
                     return create<AST::StringPartCompose>(move(inner), string.release_nonnull()); // Compose Composition Composition
                 }
 
@@ -2083,7 +2087,7 @@ bool Parser::parse_heredoc_entries()
                 return false;
             }));
 
-            auto expr = parse_doublequoted_string_inner();
+            auto expr = parse_string_inner(StringEndCondition::Heredoc);
             set_end_condition(move(end_condition));
 
             if (found_key) {
