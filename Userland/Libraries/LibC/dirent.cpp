@@ -26,6 +26,13 @@ DIR* opendir(const char* name)
     int fd = open(name, O_RDONLY | O_DIRECTORY);
     if (fd == -1)
         return nullptr;
+    return fdopendir(fd);
+}
+
+DIR* fdopendir(int fd)
+{
+    if (fd == -1)
+        return nullptr;
     DIR* dirp = (DIR*)malloc(sizeof(DIR));
     dirp->fd = fd;
     dirp->buffer = nullptr;
