@@ -341,6 +341,11 @@ bool String::contains(const StringView& needle, CaseSensitivity case_sensitivity
     return StringUtils::contains(*this, needle, case_sensitivity);
 }
 
+bool String::contains(char needle, CaseSensitivity case_sensitivity) const
+{
+    return StringUtils::contains(*this, StringView(&needle, 1), case_sensitivity);
+}
+
 bool String::equals_ignoring_case(const StringView& other) const
 {
     return StringUtils::equals_ignoring_case(view(), other);
