@@ -137,7 +137,7 @@ Gfx::FloatRect LineBoxFragment::selection_rect(const Gfx::Font& font) const
             return {};
 
         auto selection_start_in_this_fragment = 0;
-        auto selection_end_in_this_fragment = min(selection.end().index_in_node, m_length);
+        auto selection_end_in_this_fragment = min(selection.end().index_in_node - m_start, m_length);
         auto pixel_distance_to_first_selected_character = font.width(text.substring_view(0, selection_start_in_this_fragment));
         auto pixel_width_of_selection = font.width(text.substring_view(selection_start_in_this_fragment, selection_end_in_this_fragment - selection_start_in_this_fragment)) + 1;
 
