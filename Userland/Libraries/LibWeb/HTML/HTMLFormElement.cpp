@@ -97,8 +97,7 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
 
     Vector<URLQueryParam> parameters;
 
-    for_each_in_inclusive_subtree_of_type<HTMLInputElement>([&](auto& node) {
-        auto& input = verify_cast<HTMLInputElement>(node);
+    for_each_in_inclusive_subtree_of_type<HTMLInputElement>([&](auto& input) {
         if (!input.name().is_null() && (input.type() != "submit" || &input == submitter))
             parameters.append({ input.name(), input.value() });
         return IterationDecision::Continue;
