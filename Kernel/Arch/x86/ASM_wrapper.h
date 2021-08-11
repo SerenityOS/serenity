@@ -75,7 +75,7 @@ ALWAYS_INLINE FlatPtr read_gs_ptr(FlatPtr offset)
 ALWAYS_INLINE void write_gs_ptr(u32 offset, FlatPtr val)
 {
     asm volatile(
-        "mov %[val], %%gs:%a[off]" ::[off] "ir"(offset), [val] "ir"(val)
+        "mov %[val], %%gs:%a[off]" ::[off] "ir"(offset), [val] "r"(val)
         : "memory");
 }
 
