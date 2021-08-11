@@ -198,7 +198,14 @@ extern "C" {
 // Texture Environment and Parameters
 #define GL_NEAREST 0x2600
 #define GL_LINEAR 0x2601
-#define GL_NEAREST_MIPMAP_LINEAR 0x2602
+#define GL_NEAREST_MIPMAP_NEAREST 0x2700
+#define GL_LINEAR_MIPMAP_NEAREST 0x2701
+#define GL_NEAREST_MIPMAP_LINEAR 0x2702
+#define GL_LINEAR_MIPMAP_LINEAR 0x2703
+#define GL_TEXTURE_MAG_FILTER 0x2800
+#define GL_TEXTURE_MIN_FILTER 0x2801
+#define GL_TEXTURE_WRAP_S 0x2802
+#define GL_TEXTURE_WRAP_T 0x2803
 #define GL_CLAMP 0x2900
 #define GL_REPEAT 0x2901
 #define GL_MIRRORED_REPEAT 0x8370
@@ -299,6 +306,8 @@ GLAPI void glReadBuffer(GLenum mode);
 GLAPI void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels);
 GLAPI void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data);
 GLAPI void glTexCoord2f(GLfloat s, GLfloat t);
+GLAPI void glTexParameteri(GLenum target, GLenum pname, GLint param);
+GLAPI void glTexParameterf(GLenum target, GLenum pname, GLfloat param);
 GLAPI void glBindTexture(GLenum target, GLuint texture);
 GLAPI void glActiveTexture(GLenum texture);
 GLAPI void glGetFloatv(GLenum pname, GLfloat* params);
