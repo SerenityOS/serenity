@@ -1,0 +1,32 @@
+From 821b33fbb3e93dfd3d43c98146a3399fd8ff1f41 Mon Sep 17 00:00:00 2001
+From: Kenneth Myhra <kennethmyhra@gmail.com>
+Date: Thu, 12 Aug 2021 20:59:25 +0200
+Subject: [PATCH 11/12] gio/xdgmime/xdgmimecache.c: ntohl/ntohs is located in
+ 'arpa/inet.h'
+
+In Serenity ntohl/ntohs is located in arpa/inet.h, other stuff glib
+needs is included in 'netinet/in.h'.
+---
+ gio/xdgmime/xdgmimecache.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/gio/xdgmime/xdgmimecache.c b/gio/xdgmime/xdgmimecache.c
+index 769b578..625d8cc 100644
+--- a/gio/xdgmime/xdgmimecache.c
++++ b/gio/xdgmime/xdgmimecache.c
+@@ -34,7 +34,12 @@
+ #include <fnmatch.h>
+ #include <assert.h>
+ 
++#ifdef __serenity__
++#include <arpa/inet.h>  /* for ntohl/ntohs */
++#include <netinet/in.h>
++#else
+ #include <netinet/in.h> /* for ntohl/ntohs */
++#endif
+ 
+ #ifdef HAVE_MMAP
+ #include <sys/mman.h>
+-- 
+2.25.1
+

@@ -1,0 +1,41 @@
+From 5029cb921ae1420ef10d5ecb97d07ef9a9b5070a Mon Sep 17 00:00:00 2001
+From: Kenneth Myhra <kennethmyhra@gmail.com>
+Date: Thu, 12 Aug 2021 21:03:13 +0200
+Subject: [PATCH 12/12] Include 'strings.h' for strcasecmp
+
+---
+ glib/glib-init.c | 3 +++
+ glib/gstrfuncs.c | 3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/glib/glib-init.c b/glib/glib-init.c
+index 2958fb5..ef49806 100644
+--- a/glib/glib-init.c
++++ b/glib/glib-init.c
+@@ -26,6 +26,9 @@
+ #include "gconstructor.h"
+ #include "gmem.h"       /* for g_mem_gc_friendly */
+ 
++#ifdef __serenity__
++#include <strings.h>
++#endif
+ #include <string.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+diff --git a/glib/gstrfuncs.c b/glib/gstrfuncs.c
+index b6ff60f..670d1aa 100644
+--- a/glib/gstrfuncs.c
++++ b/glib/gstrfuncs.c
+@@ -32,6 +32,9 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <locale.h>
++#ifdef __serenity__
++#include <strings.h>
++#endif
+ #include <string.h>
+ #include <locale.h>
+ #include <errno.h>
+-- 
+2.25.1
+
