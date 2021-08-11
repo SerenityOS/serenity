@@ -40,6 +40,12 @@ private:
         Yes,
         No,
     };
+
+    enum class StringEndCondition {
+        DoubleQuote,
+        Heredoc,
+    };
+
     struct SequenceParseResult {
         NonnullRefPtrVector<AST::Node> entries;
         Vector<AST::Position, 1> separator_positions;
@@ -76,7 +82,7 @@ private:
     RefPtr<AST::Node> parse_expression();
     RefPtr<AST::Node> parse_string_composite();
     RefPtr<AST::Node> parse_string();
-    RefPtr<AST::Node> parse_doublequoted_string_inner();
+    RefPtr<AST::Node> parse_string_inner(StringEndCondition);
     RefPtr<AST::Node> parse_variable();
     RefPtr<AST::Node> parse_variable_ref();
     RefPtr<AST::Node> parse_slice();
