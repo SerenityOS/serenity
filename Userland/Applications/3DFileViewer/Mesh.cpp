@@ -29,7 +29,7 @@ Mesh::Mesh(Vector<Vertex> vertices, Vector<TexCoord> tex_coords, Vector<Triangle
 {
 }
 
-void Mesh::draw()
+void Mesh::draw(float uv_scale)
 {
     // Light direction
     const FloatVector3 light_direction(1.f, 1.f, 1.f);
@@ -76,7 +76,7 @@ void Mesh::draw()
             m_vertex_list.at(m_triangle_list[i].a).z);
 
         if (is_textured())
-            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index0).u, 1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index0).v);
+            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index0).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index0).v) * uv_scale);
 
         // Vertex 2
         glVertex3f(
@@ -85,7 +85,7 @@ void Mesh::draw()
             m_vertex_list.at(m_triangle_list[i].b).z);
 
         if (is_textured())
-            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index1).u, 1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index1).v);
+            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index1).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index1).v) * uv_scale);
 
         // Vertex 3
         glVertex3f(
@@ -94,7 +94,7 @@ void Mesh::draw()
             m_vertex_list.at(m_triangle_list[i].c).z);
 
         if (is_textured())
-            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index2).u, 1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index2).v);
+            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index2).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index2).v) * uv_scale);
 
         glEnd();
     }

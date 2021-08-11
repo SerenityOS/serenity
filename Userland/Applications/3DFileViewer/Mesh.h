@@ -22,7 +22,7 @@ public:
 
     size_t triangle_count() const { return m_triangle_list.size(); }
 
-    void draw();
+    void draw(float uv_scale);
 
     bool is_textured() const { return m_tex_coords.size() > 0; }
 
