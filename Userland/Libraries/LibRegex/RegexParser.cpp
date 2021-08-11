@@ -1450,7 +1450,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
 
     // HexEscape
     if (try_skip("x")) {
-        if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, true, 2); hex_escape.has_value()) {
+        if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, true, 2, 2); hex_escape.has_value()) {
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)hex_escape.value() } });
             return true;
@@ -1802,7 +1802,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
 
             // HexEscape
             if (try_skip("x")) {
-                if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, true, 2); hex_escape.has_value()) {
+                if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, true, 2, 2); hex_escape.has_value()) {
                     return { CharClassRangeElement { .code_point = hex_escape.value(), .is_character_class = false } };
                 } else if (!unicode) {
                     // '\x' is allowed in non-unicode mode, just matches 'x'.

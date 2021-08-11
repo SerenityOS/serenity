@@ -499,6 +499,10 @@ TEST_CASE(ECMA262_parse)
         { "\\/" },                                         // #4189
         { ",/=-:" },                                       // #4243
         { "\\x" },                                         // Even invalid escapes are allowed if ~unicode.
+        { "\\x1" },                                        // Even invalid escapes are allowed if ~unicode.
+        { "\\x1", regex::Error::InvalidPattern, regex::ECMAScriptFlags::Unicode },
+        { "\\x11" },
+        { "\\x11", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
         { "\\", regex::Error::InvalidTrailingEscape },
         { "(?", regex::Error::InvalidCaptureGroup },
         { "\\u1234", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
