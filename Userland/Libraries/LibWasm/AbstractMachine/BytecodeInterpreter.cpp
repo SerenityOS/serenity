@@ -111,29 +111,6 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, Instructio
     configuration.stack().peek() = Value(static_cast<PushType>(read_value<ReadType>(slice)));
 }
 
-void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruction const& instruction, ReadonlyBytes data)
-{
-    auto& address = configuration.frame().module().memories().first();
-    auto memory = configuration.store().get(address);
-    TRAP_IF_NOT(memory);
-    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
-    TRAP_IF_NOT(!configuration.stack().is_empty());
-    auto entry = configuration.stack().pop();
-    TRAP_IF_NOT(entry.has<Value>());
-    auto base = entry.get<Value>().to<i32>();
-    TRAP_IF_NOT(base.has_value());
-    u64 instance_address = static_cast<u64>(bit_cast<u32>(base.value())) + arg.offset;
-    Checked addition { instance_address };
-    addition += data.size();
-    if (addition.has_overflow() || addition.value() > memory->size()) {
-        m_trap = Trap { "Memory access out of bounds" };
-        dbgln("LibWasm: Memory access out of bounds (expected 0 <= {} and {} <= {})", instance_address, instance_address + data.size(), memory->size());
-        return;
-    }
-    dbgln_if(WASM_TRACE_DEBUG, "tempoaray({}b) -> store({})", data.size(), instance_address);
-    data.copy_to(memory->data().bytes().slice(instance_address, data.size()));
-}
-
 void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAddress address)
 {
     TRAP_IF_NOT(m_stack_info.size_free() >= Constants::minimum_stack_space_to_keep_free);
@@ -224,16 +201,73 @@ void BytecodeInterpreter::unary_operation(Configuration& configuration)
     configuration.stack().peek() = Value(result);
 }
 
-#define POP_AND_STORE(pop_type, store_type)                                                   \
-    do {                                                                                      \
-        TRAP_IF_NOT(!configuration.stack().is_empty());                                       \
-        auto entry = configuration.stack().pop();                                             \
-        TRAP_IF_NOT(entry.has<Value>());                                                      \
-        auto value = ConvertToRaw<store_type> {}(*entry.get<Value>().to<pop_type>());         \
-        dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(store_type)); \
-        store_to_memory(configuration, instruction, { &value, sizeof(store_type) });          \
-        return;                                                                               \
-    } while (false)
+template<typename T>
+struct ConvertToRaw {
+    T operator()(T value)
+    {
+        return LittleEndian<T>(value);
+    }
+};
+
+template<>
+struct ConvertToRaw<float> {
+    u32 operator()(float value)
+    {
+        LittleEndian<u32> res;
+        ReadonlyBytes bytes { &value, sizeof(float) };
+        InputMemoryStream stream { bytes };
+        stream >> res;
+        VERIFY(!stream.has_any_error());
+        return static_cast<u32>(res);
+    }
+};
+
+template<>
+struct ConvertToRaw<double> {
+    u64 operator()(double value)
+    {
+        LittleEndian<u64> res;
+        ReadonlyBytes bytes { &value, sizeof(double) };
+        InputMemoryStream stream { bytes };
+        stream >> res;
+        VERIFY(!stream.has_any_error());
+        return static_cast<u64>(res);
+    }
+};
+
+template<typename PopT, typename StoreT>
+void BytecodeInterpreter::pop_and_store(Configuration& configuration, Instruction const& instruction)
+{
+    TRAP_IF_NOT(!configuration.stack().is_empty());
+    auto entry = configuration.stack().pop();
+    TRAP_IF_NOT(entry.has<Value>());
+    auto value = ConvertToRaw<StoreT> {}(*entry.get<Value>().to<PopT>());
+    dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(StoreT));
+    store_to_memory(configuration, instruction, { &value, sizeof(StoreT) });
+}
+
+void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruction const& instruction, ReadonlyBytes data)
+{
+    auto& address = configuration.frame().module().memories().first();
+    auto memory = configuration.store().get(address);
+    TRAP_IF_NOT(memory);
+    auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
+    TRAP_IF_NOT(!configuration.stack().is_empty());
+    auto entry = configuration.stack().pop();
+    TRAP_IF_NOT(entry.has<Value>());
+    auto base = entry.get<Value>().to<i32>();
+    TRAP_IF_NOT(base.has_value());
+    u64 instance_address = static_cast<u64>(bit_cast<u32>(base.value())) + arg.offset;
+    Checked addition { instance_address };
+    addition += data.size();
+    if (addition.has_overflow() || addition.value() > memory->size()) {
+        m_trap = Trap { "Memory access out of bounds" };
+        dbgln("LibWasm: Memory access out of bounds (expected 0 <= {} and {} <= {})", instance_address, instance_address + data.size(), memory->size());
+        return;
+    }
+    dbgln_if(WASM_TRACE_DEBUG, "tempoaray({}b) -> store({})", data.size(), instance_address);
+    data.copy_to(memory->data().bytes().slice(instance_address, data.size()));
+}
 
 template<typename T>
 T BytecodeInterpreter::read_value(ReadonlyBytes data)
@@ -269,40 +303,6 @@ double BytecodeInterpreter::read_value<double>(ReadonlyBytes data)
         m_trap = Trap { "Read from memory failed" };
     return bit_cast<double>(static_cast<u64>(raw_value));
 }
-
-template<typename T>
-struct ConvertToRaw {
-    T operator()(T value)
-    {
-        return LittleEndian<T>(value);
-    }
-};
-
-template<>
-struct ConvertToRaw<float> {
-    u32 operator()(float value)
-    {
-        LittleEndian<u32> res;
-        ReadonlyBytes bytes { &value, sizeof(float) };
-        InputMemoryStream stream { bytes };
-        stream >> res;
-        VERIFY(!stream.has_any_error());
-        return static_cast<u32>(res);
-    }
-};
-
-template<>
-struct ConvertToRaw<double> {
-    u64 operator()(double value)
-    {
-        LittleEndian<u64> res;
-        ReadonlyBytes bytes { &value, sizeof(double) };
-        InputMemoryStream stream { bytes };
-        stream >> res;
-        VERIFY(!stream.has_any_error());
-        return static_cast<u64>(res);
-    }
-};
 
 template<typename V, typename T>
 MakeSigned<T> BytecodeInterpreter::checked_signed_truncate(V value)
@@ -550,23 +550,23 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i64_load32_u.value():
         return load_and_push<u32, i64>(configuration, instruction);
     case Instructions::i32_store.value():
-        POP_AND_STORE(i32, i32);
+        return pop_and_store<i32, i32>(configuration, instruction);
     case Instructions::i64_store.value():
-        POP_AND_STORE(i64, i64);
+        return pop_and_store<i64, i64>(configuration, instruction);
     case Instructions::f32_store.value():
-        POP_AND_STORE(float, float);
+        return pop_and_store<float, float>(configuration, instruction);
     case Instructions::f64_store.value():
-        POP_AND_STORE(double, double);
+        return pop_and_store<double, double>(configuration, instruction);
     case Instructions::i32_store8.value():
-        POP_AND_STORE(i32, i8);
+        return pop_and_store<i32, i8>(configuration, instruction);
     case Instructions::i32_store16.value():
-        POP_AND_STORE(i32, i16);
+        return pop_and_store<i32, i16>(configuration, instruction);
     case Instructions::i64_store8.value():
-        POP_AND_STORE(i64, i8);
+        return pop_and_store<i64, i8>(configuration, instruction);
     case Instructions::i64_store16.value():
-        POP_AND_STORE(i64, i16);
+        return pop_and_store<i64, i16>(configuration, instruction);
     case Instructions::i64_store32.value():
-        POP_AND_STORE(i64, i32);
+        return pop_and_store<i64, i32>(configuration, instruction);
     case Instructions::local_tee.value(): {
         TRAP_IF_NOT(!configuration.stack().is_empty());
         auto& entry = configuration.stack().peek();
