@@ -22,6 +22,12 @@ static PosixOptions match_test_api_options(const PosixOptions options)
     return options;
 }
 
+template<typename... Flags>
+static constexpr ECMAScriptFlags combine_flags(Flags&&... flags) requires((IsSame<Flags, ECMAScriptFlags> && ...))
+{
+    return static_cast<ECMAScriptFlags>((static_cast<regex::FlagsUnderlyingType>(flags) | ...));
+}
+
 TEST_CASE(regex_options_ecmascript)
 {
     ECMAScriptOptions eo;
@@ -543,6 +549,14 @@ TEST_CASE(ECMA262_parse)
         { "\\A"sv, regex::Error::InvalidCharacterClass, ECMAScriptFlags::Unicode },
         { "[\\A]"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
         { "[\\A]"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\0"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "\\0"sv, regex::Error::NoError, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::BrowserExtended) },
+        { "\\00"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "\\00"sv, regex::Error::InvalidCharacterClass, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::BrowserExtended) },
+        { "[\\0]"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "[\\0]"sv, regex::Error::NoError, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::BrowserExtended) },
+        { "[\\00]"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "[\\00]"sv, regex::Error::InvalidPattern, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::BrowserExtended) },
     };
 
     for (auto& test : tests) {
@@ -606,6 +620,12 @@ TEST_CASE(ECMA262_match)
                  "return /xx/"sv, true, ECMAScriptFlags::BrowserExtended
         }, // #5517, appears to be matching JS expressions that involve regular expressions...
         { "a{2,}"sv, "aaaa"sv }, // #5518
+        { "\\0"sv, "\0"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "\\0"sv, "\0"sv, true, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::BrowserExtended) },
+        { "\\01"sv, "\1"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "[\\0]"sv, "\0"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "[\\0]"sv, "\0"sv, true, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::BrowserExtended) },
+        { "[\\01]"sv, "\1"sv, true, ECMAScriptFlags::BrowserExtended },
     };
     // clang-format on
 
