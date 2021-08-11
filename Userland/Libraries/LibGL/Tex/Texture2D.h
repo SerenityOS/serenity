@@ -42,6 +42,7 @@ public:
 
     GLenum internal_format() const { return m_internal_format; }
     Sampler2D const& sampler() const { return m_sampler; }
+    Sampler2D& sampler() { return m_sampler; }
 
 private:
     template<typename TCallback>
