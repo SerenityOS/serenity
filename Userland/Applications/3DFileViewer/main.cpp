@@ -39,6 +39,9 @@ public:
     void toggle_rotate_z() { m_rotate_z = !m_rotate_z; }
     void set_rotation_speed(float speed) { m_rotation_speed = speed; }
     void set_stat_label(RefPtr<GUI::Label> l) { m_stats = l; };
+    void set_wrap_s_mode(GLint mode) { m_wrap_s_mode = mode; }
+    void set_wrap_t_mode(GLint mode) { m_wrap_t_mode = mode; }
+    void set_texture_scale(float scale) { m_texture_scale = scale; }
 
     void toggle_show_frame_rate()
     {
@@ -97,6 +100,9 @@ private:
     int m_cycles = 0;
     int m_accumulated_time = 0;
     RefPtr<GUI::Label> m_stats;
+    GLint m_wrap_s_mode = GL_REPEAT;
+    GLint m_wrap_t_mode = GL_REPEAT;
+    float m_texture_scale = 1.0f;
 };
 
 void GLContextWidget::paint_event(GUI::PaintEvent& event)
@@ -141,8 +147,11 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     glRotatef(m_angle_y, 0, 1, 0);
     glRotatef(m_angle_z, 0, 0, 1);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_wrap_s_mode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_wrap_t_mode);
+
     if (!m_mesh.is_null())
-        m_mesh->draw();
+        m_mesh->draw(m_texture_scale);
 
     m_context->present();
 
@@ -318,6 +327,94 @@ int main(int argc, char** argv)
     });
 
     view_menu.add_action(*show_frame_rate_action);
+
+    auto& texture_menu = window->add_menu("&Texture");
+
+    auto& wrap_u_menu = texture_menu.add_submenu("Wrap &S");
+    GUI::ActionGroup wrap_s_actions;
+    wrap_s_actions.set_exclusive(true);
+
+    auto wrap_u_repeat_action = GUI::Action::create_checkable("&Repeat", [&widget](auto&) {
+        widget.set_wrap_s_mode(GL_REPEAT);
+    });
+    auto wrap_u_mirrored_repeat_action = GUI::Action::create_checkable("&Mirrored Repeat", [&widget](auto&) {
+        widget.set_wrap_s_mode(GL_MIRRORED_REPEAT);
+    });
+    auto wrap_u_clamp_action = GUI::Action::create_checkable("&Clamp", [&widget](auto&) {
+        widget.set_wrap_s_mode(GL_CLAMP);
+    });
+
+    wrap_s_actions.add_action(*wrap_u_repeat_action);
+    wrap_s_actions.add_action(*wrap_u_mirrored_repeat_action);
+    wrap_s_actions.add_action(*wrap_u_clamp_action);
+
+    wrap_u_menu.add_action(*wrap_u_repeat_action);
+    wrap_u_menu.add_action(*wrap_u_mirrored_repeat_action);
+    wrap_u_menu.add_action(*wrap_u_clamp_action);
+
+    wrap_u_repeat_action->set_checked(true);
+
+    auto& wrap_t_menu = texture_menu.add_submenu("Wrap &T");
+    GUI::ActionGroup wrap_t_actions;
+    wrap_t_actions.set_exclusive(true);
+
+    auto wrap_t_repeat_action = GUI::Action::create_checkable("&Repeat", [&widget](auto&) {
+        widget.set_wrap_t_mode(GL_REPEAT);
+    });
+    auto wrap_t_mirrored_repeat_action = GUI::Action::create_checkable("&Mirrored Repeat", [&widget](auto&) {
+        widget.set_wrap_t_mode(GL_MIRRORED_REPEAT);
+    });
+    auto wrap_t_clamp_action = GUI::Action::create_checkable("&Clamp", [&widget](auto&) {
+        widget.set_wrap_t_mode(GL_CLAMP);
+    });
+
+    wrap_t_actions.add_action(*wrap_t_repeat_action);
+    wrap_t_actions.add_action(*wrap_t_mirrored_repeat_action);
+    wrap_t_actions.add_action(*wrap_t_clamp_action);
+
+    wrap_t_menu.add_action(*wrap_t_repeat_action);
+    wrap_t_menu.add_action(*wrap_t_mirrored_repeat_action);
+    wrap_t_menu.add_action(*wrap_t_clamp_action);
+
+    wrap_t_repeat_action->set_checked(true);
+
+    auto& texture_scale_menu = texture_menu.add_submenu("S&cale");
+    GUI::ActionGroup texture_scale_actions;
+    texture_scale_actions.set_exclusive(true);
+
+    auto texture_scale_025_action = GUI::Action::create_checkable("0.25x", [&widget](auto&) {
+        widget.set_texture_scale(0.25f);
+    });
+
+    auto texture_scale_05_action = GUI::Action::create_checkable("0.5x", [&widget](auto&) {
+        widget.set_texture_scale(0.5f);
+    });
+
+    auto texture_scale_1_action = GUI::Action::create_checkable("1x", [&widget](auto&) {
+        widget.set_texture_scale(1);
+    });
+
+    auto texture_scale_2_action = GUI::Action::create_checkable("2x", [&widget](auto&) {
+        widget.set_texture_scale(2);
+    });
+
+    auto texture_scale_4_action = GUI::Action::create_checkable("4x", [&widget](auto&) {
+        widget.set_texture_scale(4);
+    });
+
+    texture_scale_actions.add_action(*texture_scale_025_action);
+    texture_scale_actions.add_action(*texture_scale_05_action);
+    texture_scale_actions.add_action(*texture_scale_1_action);
+    texture_scale_actions.add_action(*texture_scale_2_action);
+    texture_scale_actions.add_action(*texture_scale_4_action);
+
+    texture_scale_menu.add_action(*texture_scale_025_action);
+    texture_scale_menu.add_action(*texture_scale_05_action);
+    texture_scale_menu.add_action(*texture_scale_1_action);
+    texture_scale_menu.add_action(*texture_scale_2_action);
+    texture_scale_menu.add_action(*texture_scale_4_action);
+
+    texture_scale_1_action->set_checked(true);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("3D File Viewer", app_icon, window));
