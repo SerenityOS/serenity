@@ -91,8 +91,9 @@ void EllipseTool::on_keydown(GUI::KeyEvent& event)
     if (event.key() == Key_Escape && m_drawing_button != GUI::MouseButton::None) {
         m_drawing_button = GUI::MouseButton::None;
         m_editor->update();
-        event.accept();
+        return;
     }
+    event.ignore();
 }
 
 GUI::Widget* EllipseTool::get_properties_widget()

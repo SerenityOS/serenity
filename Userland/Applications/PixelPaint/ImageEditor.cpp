@@ -260,6 +260,8 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
 {
     if (m_active_tool)
         m_active_tool->on_keydown(event);
+    else
+        event.ignore();
 }
 
 void ImageEditor::keyup_event(GUI::KeyEvent& event)

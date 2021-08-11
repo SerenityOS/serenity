@@ -107,10 +107,16 @@ void RectangleSelectTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent& 
 
 void RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
 {
-    if (key_event.key() == KeyCode::Key_Space)
+    if (key_event.key() == KeyCode::Key_Space) {
         m_moving_mode = MovingMode::MovingOrigin;
-    else if (key_event.key() == KeyCode::Key_Control)
+        return;
+    }
+    if (key_event.key() == KeyCode::Key_Control) {
         m_moving_mode = MovingMode::AroundCenter;
+        return;
+    }
+
+    key_event.ignore();
 }
 
 void RectangleSelectTool::on_keyup(GUI::KeyEvent& key_event)

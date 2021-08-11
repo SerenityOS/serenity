@@ -183,6 +183,7 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
             operation = Calculator::Operation::Percent;
             break;
         default:
+            event.ignore();
             return;
         }
 

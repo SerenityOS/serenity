@@ -219,8 +219,10 @@ void Game::update_score(int to_add)
 
 void Game::keydown_event(GUI::KeyEvent& event)
 {
-    if (m_new_game_animation || m_game_over_animation)
+    if (m_new_game_animation || m_game_over_animation) {
+        event.ignore();
         return;
+    }
 
     if (event.shift() && event.key() == KeyCode::Key_F12) {
         start_game_over_animation();
@@ -230,6 +232,8 @@ void Game::keydown_event(GUI::KeyEvent& event)
         draw_cards();
     } else if (event.shift() && event.key() == KeyCode::Key_F11) {
         dump_layout();
+    } else {
+        event.ignore();
     }
 }
 

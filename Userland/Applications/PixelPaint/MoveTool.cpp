@@ -53,12 +53,16 @@ void MoveTool::on_mouseup(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
 
 void MoveTool::on_keydown(GUI::KeyEvent& event)
 {
-    if (event.modifiers() != 0)
+    if (event.modifiers() != 0) {
+        event.ignore();
         return;
+    }
 
     auto* layer = m_editor->active_layer();
-    if (!layer)
+    if (!layer) {
+        event.ignore();
         return;
+    }
 
     auto new_location = layer->location();
 
@@ -76,6 +80,7 @@ void MoveTool::on_keydown(GUI::KeyEvent& event)
         new_location.translate_by(1, 0);
         break;
     default:
+        event.ignore();
         return;
     }
 
