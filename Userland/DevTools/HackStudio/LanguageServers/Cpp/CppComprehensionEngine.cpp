@@ -165,7 +165,7 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_na
     if (reference_scope.is_empty()) {
         for (auto& preprocessor_name : document.preprocessor().definitions().keys()) {
             if (preprocessor_name.starts_with(partial_text)) {
-                suggestions.append({ preprocessor_name.to_string(), partial_text.length(), GUI::AutocompleteProvider::CompletionKind::PreprocessorDefinition });
+                suggestions.append({ preprocessor_name, partial_text.length(), GUI::AutocompleteProvider::CompletionKind::PreprocessorDefinition });
             }
         }
     }
@@ -413,9 +413,9 @@ Optional<GUI::AutocompleteProvider::ProjectLocation> CppComprehensionEngine::fin
 
     // Search for a replaced preprocessor token that intersects with text_position
     for (auto& substitution : document.preprocessor().substitutions()) {
-        if (substitution.original_token.start() > cpp_position)
+        if (substitution.original_tokens.first().start() > cpp_position)
             continue;
-        if (substitution.original_token.end() < cpp_position)
+        if (substitution.original_tokens.first().end() < cpp_position)
             continue;
 
         return GUI::AutocompleteProvider::ProjectLocation { substitution.defined_value.filename, substitution.defined_value.line, substitution.defined_value.column };

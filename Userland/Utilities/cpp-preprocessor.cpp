@@ -17,6 +17,17 @@ int main(int, char**)
     auto content = file->read_all();
     Cpp::Preprocessor cpp("other.h", StringView { content });
     auto tokens = cpp.process_and_lex();
+
+    outln("Definitions:");
+    for (auto& definition : cpp.definitions()) {
+        if (definition.value.parameters.is_empty())
+            outln("{}: {}", definition.key, definition.value.value);
+        else
+            outln("{}({}): {}", definition.key, String::join(",", definition.value.parameters), definition.value.value);
+    }
+
+    outln("");
+
     for (auto& token : tokens) {
         dbgln("{}", token.to_string());
     }
