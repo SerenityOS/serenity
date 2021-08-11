@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(complement_flag, "Take the complement of the first set", "complement", 'c');
-    args_parser.add_option(delete_flag, "Delete characters instead of replacing", nullptr, 'd');
+    args_parser.add_option(delete_flag, "Delete characters instead of replacing", "delete", 'd');
     args_parser.add_positional_argument(from_chars, "Set of characters to translate from", "from");
     args_parser.add_positional_argument(to_chars, "Set of characters to translate to", "to", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
