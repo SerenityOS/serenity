@@ -1083,7 +1083,7 @@ bool ECMA262Parser::parse_quantifiable_assertion(ByteCode& stack, size_t&, bool 
     return false;
 }
 
-StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initial_zero, bool hex, int max_count)
+StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initial_zero, bool hex, int max_count, int min_count)
 {
     if (!match(TokenType::Char))
         return {};
@@ -1109,12 +1109,15 @@ StringView ECMA262Parser::read_digits_as_string(ReadDigitsInitialZeroState initi
         ++count;
     }
 
+    if (count < min_count)
+        return {};
+
     return StringView { start_token.value().characters_without_null_termination(), offset };
 }
 
-Optional<unsigned> ECMA262Parser::read_digits(ECMA262Parser::ReadDigitsInitialZeroState initial_zero, bool hex, int max_count)
+Optional<unsigned> ECMA262Parser::read_digits(ECMA262Parser::ReadDigitsInitialZeroState initial_zero, bool hex, int max_count, int min_count)
 {
-    auto str = read_digits_as_string(initial_zero, hex, max_count);
+    auto str = read_digits_as_string(initial_zero, hex, max_count, min_count);
     if (str.is_empty())
         return {};
     if (hex)
@@ -1483,7 +1486,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
             return false;
         }
 
-        if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4); code_point.has_value()) {
+        if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4, 4); code_point.has_value()) {
             // In Unicode mode, we need to combine surrogate pairs into a single code point. But we also need to be
             // rather forgiving if the surrogate pairs are invalid. So if a second code unit follows this code unit,
             // but doesn't form a valid surrogate pair, insert bytecode for both code units individually.
@@ -1811,7 +1814,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             }
 
             if (try_skip("u")) {
-                if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4); code_point.has_value()) {
+                if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4, 4); code_point.has_value()) {
                     // FIXME: While code point ranges are supported, code point matches as "Char" are not!
                     return { CharClassRangeElement { .code_point = code_point.value(), .is_character_class = false } };
                 } else if (!unicode) {
