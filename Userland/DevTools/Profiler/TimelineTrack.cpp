@@ -7,6 +7,7 @@
 #include "TimelineTrack.h"
 #include "Profile.h"
 #include "TimelineView.h"
+#include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 
@@ -61,7 +62,7 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
         return min(end_of_trace, max(timestamp, start_of_trace));
     };
 
-    float column_width = (float)frame_inner_rect().width() / (float)m_profile.length_in_ms();
+    float column_width = this->column_width();
     size_t columns = frame_inner_rect().width() / column_width;
 
     recompute_histograms_if_needed({ start_of_trace, end_of_trace, columns });
@@ -97,6 +98,52 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
     int select_hover_x = (int)((float)(normalized_hover_time - start_of_trace) * column_width);
     painter.fill_rect({ select_start_x, frame_thickness(), select_end_x - select_start_x, height() - frame_thickness() * 2 }, Color(0, 0, 0, 60));
     painter.fill_rect({ select_hover_x, frame_thickness(), 1, height() - frame_thickness() * 2 }, Color::NamedColor::Black);
+
+    for_each_signpost([&](auto& signpost) {
+        int x = (int)((float)(signpost.timestamp - start_of_trace) * column_width);
+        int y1 = frame_thickness();
+        int y2 = height() - frame_thickness() * 2;
+
+        painter.draw_line({ x, y1 }, { x, y2 }, Color::Magenta);
+
+        return IterationDecision::Continue;
+    });
+}
+
+template<typename Callback>
+void TimelineTrack::for_each_signpost(Callback callback)
+{
+    for (auto& signpost : m_profile.signposts()) {
+        if (signpost.pid != m_process.pid)
+            continue;
+
+        if (!m_process.valid_at(signpost.serial))
+            continue;
+
+        if (callback(signpost) == IterationDecision::Break)
+            break;
+    }
+}
+
+void TimelineTrack::mousemove_event(GUI::MouseEvent& event)
+{
+    auto column_width = this->column_width();
+    bool hovering_a_signpost = false;
+
+    for_each_signpost([&](auto& signpost) {
+        int x = (int)((float)(signpost.timestamp - m_profile.first_timestamp()) * column_width);
+        constexpr int hoverable_padding = 2;
+        Gfx::IntRect hoverable_rect { x - hoverable_padding, frame_thickness(), hoverable_padding * 2, height() - frame_thickness() * 2 };
+        if (hoverable_rect.contains_horizontally(event.x())) {
+            GUI::Application::the()->show_tooltip_immediately(String::formatted("Signpost {}, {}", signpost.arg1, signpost.arg2), this);
+            hovering_a_signpost = true;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    if (!hovering_a_signpost)
+        GUI::Application::the()->hide_tooltip();
 }
 
 void TimelineTrack::recompute_histograms_if_needed(HistogramInputs const& inputs)
@@ -127,6 +174,11 @@ void TimelineTrack::recompute_histograms_if_needed(HistogramInputs const& inputs
         if (value > m_max_value)
             m_max_value = value;
     }
+}
+
+float TimelineTrack::column_width() const
+{
+    return (float)frame_inner_rect().width() / (float)m_profile.length_in_ms();
 }
 
 }
