@@ -1,19 +1,22 @@
 #!/bin/sh
 
-echo "PROGRAM = $1" >> $2/Makefile
-echo "OBJS = main.o" >> $2/Makefile
-echo "CXXFLAGS = -lgui -g -std=c++2a" >> $2/Makefile
-echo "" >> $2/Makefile
-echo "all: \$(PROGRAM)" >> $2/Makefile
-echo "" >> $2/Makefile
-echo "\$(PROGRAM): \$(OBJS)" >> $2/Makefile
-echo "	\$(CXX) \$(CXXFLAGS) -o \$@ \$(OBJS)" >> $2/Makefile
-echo "" >> $2/Makefile
-echo "%.o: %.cpp" >> $2/Makefile
-echo "	\$(CXX) \$(CXXFLAGS) -o \$@ -c \$< " >> $2/Makefile
-echo "" >> $2/Makefile
-echo "clean:" >> $2/Makefile
-echo "	rm \$(OBJS) \$(PROGRAM)" >> $2/Makefile
-echo "" >> $2/Makefile
-echo "run:" >> $2/Makefile
-echo "	./\$(PROGRAM)" >> $2/Makefile
+echo > $2/Makefile <<-EOF
+PROGRAM = $1
+OBJS = main.o
+CXXFLAGS = -g -std=c++2a
+LDFLAGS = -lgui
+
+all: \$(PROGRAM)
+
+\$(PROGRAM): \$(OBJS)
+	\$(CXX) \$(LDFLAGS) -o \$@ \$(OBJS)
+
+%.o: %.cpp
+	\$(CXX) \$(CXXFLAGS) -o \$@ -c \$<
+
+clean:
+	rm \$(OBJS) \$(PROGRAM)
+
+run:
+	./\$(PROGRAM)
+EOF
