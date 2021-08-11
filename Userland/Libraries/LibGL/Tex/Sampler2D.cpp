@@ -16,6 +16,14 @@ static constexpr float wrap_repeat(float value)
     return value - floorf(value);
 }
 
+static constexpr float wrap_mirrored_repeat(float value)
+{
+    float integer = floorf(value);
+    float frac = value - integer;
+    bool iseven = fmodf(integer, 2.0f) == 0.0f;
+    return iseven ? frac : 1 - frac;
+}
+
 static constexpr float wrap_clamp(float value)
 {
     return clamp(value, 0.0f, 1.0f);
@@ -43,6 +51,10 @@ FloatVector4 Sampler2D::sample(FloatVector2 const& uv) const
         x = wrap_clamp(x);
         break;
 
+    case GL_MIRRORED_REPEAT:
+        x = wrap_mirrored_repeat(x);
+        break;
+
     default:
         VERIFY_NOT_REACHED();
     }
@@ -57,6 +69,10 @@ FloatVector4 Sampler2D::sample(FloatVector2 const& uv) const
     case GL_CLAMP_TO_BORDER:
     case GL_CLAMP_TO_EDGE:
         y = wrap_clamp(y);
+        break;
+
+    case GL_MIRRORED_REPEAT:
+        y = wrap_mirrored_repeat(y);
         break;
 
     default:
