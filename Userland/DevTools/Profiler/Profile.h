@@ -176,10 +176,16 @@ public:
         int tid { 0 };
         u32 lost_samples { 0 };
         bool in_kernel { false };
+
+        // FIXME: Put event type-specific arguments in a union to save memory.
+        FlatPtr arg1 {};
+        FlatPtr arg2 {};
+
         Vector<Frame> frames;
     };
 
     const Vector<Event>& events() const { return m_events; }
+    Vector<Event> const& signposts() const { return m_signposts; }
     const Vector<size_t>& filtered_event_indices() const { return m_filtered_event_indices; }
 
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
@@ -220,7 +226,7 @@ public:
     }
 
 private:
-    Profile(Vector<Process>, Vector<Event>);
+    Profile(Vector<Process>, Vector<Event> events, Vector<Event> signposts);
 
     void rebuild_tree();
 
@@ -237,6 +243,7 @@ private:
 
     Vector<Process> m_processes;
     Vector<Event> m_events;
+    Vector<Event> m_signposts;
 
     bool m_has_timestamp_filter_range { false };
     u64 m_timestamp_filter_range_start { 0 };

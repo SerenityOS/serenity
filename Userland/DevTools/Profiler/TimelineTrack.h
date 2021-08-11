@@ -24,8 +24,14 @@ public:
     void set_scale(float);
 
 private:
+    float column_width() const;
+
+    template<typename Callback>
+    void for_each_signpost(Callback);
+
     virtual void event(Core::Event&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
 
     struct HistogramInputs {
         bool operator==(HistogramInputs const&) const = default;
