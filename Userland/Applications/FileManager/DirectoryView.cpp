@@ -94,7 +94,7 @@ void DirectoryView::handle_activation(GUI::ModelIndex const& index)
 {
     if (!index.is_valid())
         return;
-    dbgln("on activation: {},{}, this={:p}, m_model={:p}", index.row(), index.column(), this, m_model.ptr());
+
     auto& node = this->node(index);
     auto path = node.full_path();
 
