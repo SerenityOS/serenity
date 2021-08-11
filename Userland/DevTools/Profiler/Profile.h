@@ -178,7 +178,7 @@ public:
         bool in_kernel { false };
 
         // FIXME: Put event type-specific arguments in a union to save memory.
-        FlatPtr arg1 {};
+        String signpost_string;
         FlatPtr arg2 {};
 
         Vector<Frame> frames;

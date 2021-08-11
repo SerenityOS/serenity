@@ -208,6 +208,17 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     if (!file_or_error.is_error())
         kernel_elf = make<ELF::Image>(file_or_error.value()->bytes());
 
+    auto strings_value = object.get_ptr("strings"sv);
+    if (!strings_value || !strings_value->is_object())
+        return String { "Malformed profile (strings is not an object)" };
+
+    HashMap<FlatPtr, String> profile_strings;
+    strings_value->as_object().for_each_member([&](String const& key, JsonValue const& value) {
+        auto string_id = key.to_uint();
+        VERIFY(string_id.has_value());
+        profile_strings.set(string_id.value(), value.to_string());
+    });
+
     auto events_value = object.get_ptr("events");
     if (!events_value || !events_value->is_array())
         return String { "Malformed profile (events is not an array)" };
@@ -242,7 +253,8 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
         } else if (event.type == "signpost"sv) {
             is_signpost = true;
-            event.arg1 = perf_event.get("arg1").to_number<FlatPtr>();
+            auto string_id = perf_event.get("arg1").to_number<FlatPtr>();
+            event.signpost_string = profile_strings.get(string_id).value_or(String::formatted("Signpost #{}", string_id));
             event.arg2 = perf_event.get("arg2").to_number<FlatPtr>();
         } else if (event.type == "mmap"sv) {
             event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
