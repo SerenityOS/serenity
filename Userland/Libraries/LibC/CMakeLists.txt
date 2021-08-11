@@ -115,6 +115,9 @@ if (NOT USE_CLANG_TOOLCHAIN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
 endif()
 
+# Prevent GCC from removing null checks by marking the `FILE*` argument non-null
+set_source_files_properties(stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs -fno-builtin-fwrite")
+
 add_library(LibCStaticWithoutDeps STATIC ${SOURCES})
 target_link_libraries(LibCStaticWithoutDeps ssp)
 add_dependencies(LibCStaticWithoutDeps LibM LibSystem LibUBSanitizer)
