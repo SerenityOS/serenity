@@ -495,7 +495,8 @@ int run_in_windowed_mode(String initial_location, String entry_focused_on_init)
     progressbar.set_frame_thickness(1);
 
     location_textbox.on_return_pressed = [&] {
-        directory_view.open(location_textbox.text());
+        if (directory_view.open(location_textbox.text()))
+            location_textbox.set_focus(false);
     };
 
     auto refresh_tree_view = [&] {
