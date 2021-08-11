@@ -355,17 +355,20 @@ void DirectoryView::add_path_to_history(String path)
     m_path_history_position = m_path_history.size() - 1;
 }
 
-void DirectoryView::open(String const& path)
+bool DirectoryView::open(String const& path)
 {
     auto real_path = Core::File::real_path_for(path);
+    if (real_path.is_null() || !Core::File::is_directory(path))
+        return false;
 
+    chdir(real_path.characters());
     if (model().root_path() == real_path) {
-        model().invalidate();
-        return;
+        refresh();
+    } else {
+        set_active_widget(&current_view());
+        model().set_root_path(real_path);
     }
-
-    set_active_widget(&current_view());
-    model().set_root_path(real_path);
+    return true;
 }
 
 void DirectoryView::set_status_message(StringView const& message)
@@ -376,8 +379,7 @@ void DirectoryView::set_status_message(StringView const& message)
 
 void DirectoryView::open_parent_directory()
 {
-    auto path = String::formatted("{}/..", model().root_path());
-    model().set_root_path(path);
+    open("..");
 }
 
 void DirectoryView::refresh()
@@ -387,19 +389,13 @@ void DirectoryView::refresh()
 
 void DirectoryView::open_previous_directory()
 {
-    if (m_path_history_position > 0) {
-        set_active_widget(&current_view());
-        m_path_history_position--;
-        model().set_root_path(m_path_history[m_path_history_position]);
-    }
+    if (m_path_history_position > 0)
+        open(m_path_history[--m_path_history_position]);
 }
 void DirectoryView::open_next_directory()
 {
-    if (m_path_history_position < m_path_history.size() - 1) {
-        set_active_widget(&current_view());
-        m_path_history_position++;
-        model().set_root_path(m_path_history[m_path_history_position]);
-    }
+    if (m_path_history_position < m_path_history.size() - 1)
+        open(m_path_history[++m_path_history_position]);
 }
 
 void DirectoryView::update_statusbar()
