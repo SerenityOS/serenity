@@ -102,6 +102,8 @@ private:
     USBHubDescriptor m_hub_descriptor;
 
     Device::List m_children;
+
+    void remove_children_from_sysfs();
 };
 
 }

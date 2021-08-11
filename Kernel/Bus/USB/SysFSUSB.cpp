@@ -107,6 +107,12 @@ void SysFSUSBBusDirectory::unplug(USB::Device& deleted_device)
     device_node->m_list_node.remove();
 }
 
+SysFSUSBBusDirectory& SysFSUSBBusDirectory::the()
+{
+    VERIFY(s_procfs_usb_bus_directory);
+    return *s_procfs_usb_bus_directory;
+}
+
 UNMAP_AFTER_INIT SysFSUSBBusDirectory::SysFSUSBBusDirectory(SysFSBusDirectory& buses_directory)
     : SysFSDirectory("usb"sv, buses_directory)
 {

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Bus/USB/SysFSUSB.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/USBHub.h>
@@ -152,6 +153,12 @@ KResult Hub::set_port_feature(u8 port, HubFeatureSelector feature_selector)
     return KSuccess;
 }
 
+void Hub::remove_children_from_sysfs()
+{
+    for (auto& child : m_children)
+        SysFSUSBBusDirectory::the().unplug(child);
+}
+
 void Hub::check_for_port_updates()
 {
     for (u8 port_number = 1; port_number < m_hub_descriptor.number_of_downstream_ports + 1; ++port_number) {
@@ -279,9 +286,12 @@ void Hub::check_for_port_updates()
 
                     dbgln_if(USB_DEBUG, "USB Hub: Upgraded device at address {} to hub!", device->address());
 
-                    m_children.append(hub_or_error.release_value());
+                    auto hub = hub_or_error.release_value();
+                    m_children.append(hub);
+                    SysFSUSBBusDirectory::the().plug(hub);
                 } else {
                     m_children.append(device);
+                    SysFSUSBBusDirectory::the().plug(device);
                 }
 
             } else {
@@ -295,10 +305,17 @@ void Hub::check_for_port_updates()
                     }
                 }
 
-                if (device_to_remove)
+                if (device_to_remove) {
                     m_children.remove(*device_to_remove);
-                else
+                    SysFSUSBBusDirectory::the().unplug(*device_to_remove);
+
+                    if (device_to_remove->device_descriptor().device_class == USB_CLASS_HUB) {
+                        auto* hub_child = static_cast<Hub*>(device_to_remove);
+                        hub_child->remove_children_from_sysfs();
+                    }
+                } else {
                     dbgln_if(USB_DEBUG, "USB Hub: No child set up on port {}, ignoring detachment.", port_number);
+                }
             }
         }
     }
