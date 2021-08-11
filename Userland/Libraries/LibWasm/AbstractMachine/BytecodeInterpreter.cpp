@@ -126,7 +126,7 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
     for (auto& entry : span) {
         auto* ptr = entry.get_pointer<Value>();
         TRAP_IF_NOT(ptr != nullptr);
-        args.unchecked_append(*ptr);
+        args.unchecked_append(move(*ptr));
     }
 
     configuration.stack().entries().remove(configuration.stack().size() - span.size(), span.size());
@@ -173,7 +173,7 @@ void BytecodeInterpreter::binary_numeric_operation(Configuration& configuration)
         result = call_result;
     }
     dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = {}", lhs.value(), Operator::name(), rhs.value(), result);
-    configuration.stack().peek() = Value(result);
+    lhs_entry = Value(result);
 }
 
 template<typename PopType, typename PushType, typename Operator>
@@ -197,7 +197,7 @@ void BytecodeInterpreter::unary_operation(Configuration& configuration)
         result = call_result;
     }
     dbgln_if(WASM_TRACE_DEBUG, "map({}) {} = {}", Operator::name(), *value, result);
-    configuration.stack().peek() = Value(result);
+    entry = Value(result);
 }
 
 template<typename T>
