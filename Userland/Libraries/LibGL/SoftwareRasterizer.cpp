@@ -435,7 +435,7 @@ void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Array
                 continue;
 
             // FIXME: Don't assume Texture2D, _and_ work out how we blend/do multitexturing properly.....
-            texel = texel * static_ptr_cast<Texture2D>(texture_unit.bound_texture())->sample_texel(uv);
+            texel = texel * static_ptr_cast<Texture2D>(texture_unit.bound_texture())->sampler().sample(uv);
         }
 
         return texel;
