@@ -400,7 +400,7 @@ public:
     KResultOr<FlatPtr> sys$pledge(Userspace<const Syscall::SC_pledge_params*>);
     KResultOr<FlatPtr> sys$unveil(Userspace<const Syscall::SC_unveil_params*>);
     KResultOr<FlatPtr> sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
-    KResultOr<FlatPtr> sys$perf_register_string(FlatPtr string_id, Userspace<char const*>, size_t);
+    KResultOr<FlatPtr> sys$perf_register_string(Userspace<char const*>, size_t);
     KResultOr<FlatPtr> sys$get_stack_bounds(Userspace<FlatPtr*> stack_base, Userspace<size_t*> stack_size);
     KResultOr<FlatPtr> sys$ptrace(Userspace<const Syscall::SC_ptrace_params*>);
     KResultOr<FlatPtr> sys$sendfd(int sockfd, int fd);
