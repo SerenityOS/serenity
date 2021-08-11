@@ -138,6 +138,7 @@ public:
     [[nodiscard]] bool equals_ignoring_case(const StringView&) const;
 
     [[nodiscard]] bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    [[nodiscard]] bool contains(char, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
 
     [[nodiscard]] Vector<String> split_limit(char separator, size_t limit, bool keep_empty = false) const;
     [[nodiscard]] Vector<String> split(char separator, bool keep_empty = false) const;
