@@ -34,6 +34,8 @@ protected:
 class SysFSUSBBusDirectory final : public SysFSDirectory {
 public:
     static void initialize();
+    static SysFSUSBBusDirectory& the();
+
     void plug(USB::Device&);
     void unplug(USB::Device&);
 
