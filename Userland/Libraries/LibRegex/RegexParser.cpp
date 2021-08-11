@@ -17,6 +17,7 @@
 namespace regex {
 
 static constexpr size_t s_maximum_repetition_count = 1024 * 1024;
+static constexpr auto s_alphabetic_characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"sv;
 
 ALWAYS_INLINE bool Parser::set_error(Error error)
 {
@@ -1400,7 +1401,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
 
     // CharacterEscape > ControlLetter
     if (try_skip("c")) {
-        for (auto c = 'A'; c <= 'z'; ++c) {
+        for (auto c : s_alphabetic_characters) {
             if (try_skip({ &c, 1 })) {
                 match_length_minimum += 1;
                 stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)(c % 32) } });
@@ -1408,16 +1409,16 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
             }
         }
 
-        if (m_should_use_browser_extended_grammar) {
-            back(2);
-            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\\' } });
-            match_length_minimum += 1;
-            return true;
-        }
-
         if (unicode) {
             set_error(Error::InvalidPattern);
             return false;
+        }
+
+        if (m_should_use_browser_extended_grammar) {
+            back(1 + !done());
+            stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'\\' } });
+            match_length_minimum += 1;
+            return true;
         }
 
         // Allow '\c' in non-unicode mode, just matches 'c'.
@@ -1768,10 +1769,17 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
 
             // CharacterEscape > ControlLetter
             if (try_skip("c")) {
-                for (auto c = 'A'; c <= 'z'; ++c) {
-                    if (try_skip({ &c, 1 }))
+                for (auto c : s_alphabetic_characters) {
+                    if (try_skip({ &c, 1 })) {
                         return { CharClassRangeElement { .code_point = (u32)(c % 32), .is_character_class = false } };
+                    }
                 }
+
+                if (unicode) {
+                    set_error(Error::InvalidPattern);
+                    return {};
+                }
+
                 if (m_should_use_browser_extended_grammar) {
                     for (auto c = '0'; c <= '9'; ++c) {
                         if (try_skip({ &c, 1 }))
@@ -1780,7 +1788,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                     if (try_skip("_"))
                         return { CharClassRangeElement { .code_point = (u32)('_' % 32), .is_character_class = false } };
 
-                    back(2);
+                    back(1 + !done());
                     return { CharClassRangeElement { .code_point = '\\', .is_character_class = false } };
                 }
             }
@@ -1856,6 +1864,9 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                 // Any unrecognised escape is allowed in non-unicode mode.
                 return { CharClassRangeElement { .code_point = (u32)skip(), .is_character_class = false } };
             }
+
+            set_error(Error::InvalidPattern);
+            return {};
         }
 
         if (match(TokenType::RightBracket) || match(TokenType::HyphenMinus))
