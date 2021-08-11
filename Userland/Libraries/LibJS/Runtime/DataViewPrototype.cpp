@@ -136,13 +136,19 @@ static Value set_view_value(GlobalObject& global_object, Value request_index, Va
     auto view_size = view->byte_length();
 
     auto element_size = sizeof(T);
-    if (get_index + element_size > view_size) {
+
+    Checked<size_t> buffer_index = get_index;
+    buffer_index += view_offset;
+
+    Checked<size_t> end_index = get_index;
+    end_index += element_size;
+
+    if (buffer_index.has_overflow() || end_index.has_overflow() || end_index.value() > view_size) {
         vm.throw_exception<RangeError>(global_object, ErrorType::DataViewOutOfRangeByteOffset, get_index, view_size);
         return {};
     }
 
-    auto buffer_index = get_index + view_offset;
-    return buffer->set_value<T>(buffer_index, number_value, false, ArrayBuffer::Order::Unordered, little_endian);
+    return buffer->set_value<T>(buffer_index.value(), number_value, false, ArrayBuffer::Order::Unordered, little_endian);
 }
 
 // 25.3.4.5 DataView.prototype.getBigInt64 ( byteOffset [ , littleEndian ] ), https://tc39.es/ecma262/#sec-dataview.prototype.getbigint64
