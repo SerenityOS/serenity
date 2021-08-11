@@ -20,6 +20,15 @@ static constexpr size_t s_maximum_repetition_count = 1024 * 1024;
 static constexpr auto s_alphabetic_characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"sv;
 static constexpr auto s_decimal_characters = "0123456789"sv;
 
+static constexpr StringView identity_escape_characters(bool unicode, bool browser_extended)
+{
+    if (unicode)
+        return "^$\\.*+?()[]{}|/"sv;
+    if (browser_extended)
+        return "^$\\.*+?()[|"sv;
+    return "^$\\.*+?()[]{}|"sv;
+}
+
 ALWAYS_INLINE bool Parser::set_error(Error error)
 {
     if (m_parser_state.error == Error::NoError) {
@@ -1530,8 +1539,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     // IdentityEscape
-    auto source_characters = m_should_use_browser_extended_grammar ? "^$\\.*+?()[|"sv : "^$\\.*+?()[]{}|"sv;
-    for (auto ch : source_characters) {
+    for (auto ch : identity_escape_characters(unicode, m_should_use_browser_extended_grammar)) {
         if (try_skip({ &ch, 1 })) {
             match_length_minimum += 1;
             stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)ch } });
@@ -1838,6 +1846,12 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                     set_error(Error::InvalidPattern);
                     return {};
                 }
+            }
+
+            // IdentityEscape
+            for (auto ch : identity_escape_characters(unicode, m_should_use_browser_extended_grammar)) {
+                if (try_skip({ &ch, 1 }))
+                    return { CharClassRangeElement { .code_point = (u32)ch, .is_character_class = false } };
             }
 
             if (unicode) {
