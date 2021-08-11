@@ -16,8 +16,8 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(delete_flag, "Delete characters instead of replacing", nullptr, 'd');
-    args_parser.add_positional_argument(from_chars, "Character to translate from", "from");
-    args_parser.add_positional_argument(to_chars, "Character to translate to", "to", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(from_chars, "Set of characters to translate from", "from");
+    args_parser.add_positional_argument(to_chars, "Set of characters to translate to", "to", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     if (!to_chars && !delete_flag) {
@@ -25,9 +25,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (delete_flag) {
-        auto from_str = AK::StringView(from_chars);
+    auto from_str = AK::StringView(from_chars);
 
+    if (delete_flag) {
         for (;;) {
             char ch = fgetc(stdin);
             if (feof(stdin))
@@ -36,16 +36,15 @@ int main(int argc, char** argv)
                 putchar(ch);
         }
     } else {
-        // TODO: Support multiple characters to translate from and to
-        auto from = from_chars[0];
-        auto to = to_chars[0];
+        auto to_str = AK::StringView(to_chars);
 
         for (;;) {
             char ch = fgetc(stdin);
             if (feof(stdin))
                 break;
-            if (ch == from)
-                putchar(to);
+            auto match = from_str.find_last(ch);
+            if (match.has_value())
+                putchar(to_str[min(match.value(), to_str.length() - 1)]);
             else
                 putchar(ch);
         }
