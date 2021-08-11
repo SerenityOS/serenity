@@ -62,6 +62,11 @@ struct [[gnu::packed]] KFreePerformanceEvent {
     FlatPtr ptr;
 };
 
+struct [[gnu::packed]] SignpostPerformanceEvent {
+    FlatPtr arg1;
+    FlatPtr arg2;
+};
+
 struct [[gnu::packed]] PerformanceEvent {
     u16 type { 0 };
     u8 stack_size { 0 };
@@ -80,6 +85,7 @@ struct [[gnu::packed]] PerformanceEvent {
         ContextSwitchPerformanceEvent context_switch;
         KMallocPerformanceEvent kmalloc;
         KFreePerformanceEvent kfree;
+        SignpostPerformanceEvent signpost;
     } data;
     static constexpr size_t max_stack_frame_count = 64;
     FlatPtr stack[max_stack_frame_count];

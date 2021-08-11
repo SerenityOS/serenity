@@ -137,6 +137,10 @@ KResult PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID ti
         break;
     case PERF_EVENT_SYSCALL:
         break;
+    case PERF_EVENT_SIGNPOST:
+        event.data.signpost.arg1 = arg1;
+        event.data.signpost.arg2 = arg2;
+        break;
     default:
         return EINVAL;
     }
@@ -230,6 +234,11 @@ bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
             break;
         case PERF_EVENT_SYSCALL:
             event_object.add("type", "syscall");
+            break;
+        case PERF_EVENT_SIGNPOST:
+            event_object.add("type"sv, "signpost"sv);
+            event_object.add("arg1"sv, event.data.signpost.arg1);
+            event_object.add("arg2"sv, event.data.signpost.arg2);
             break;
         }
         event_object.add("pid", event.pid);
