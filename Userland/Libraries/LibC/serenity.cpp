@@ -95,9 +95,9 @@ int perf_event(int type, uintptr_t arg1, FlatPtr arg2)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int perf_register_string(uintptr_t string_id, char const* string, size_t string_length)
+int perf_register_string(char const* string, size_t string_length)
 {
-    int rc = syscall(SC_perf_register_string, string_id, string, string_length);
+    int rc = syscall(SC_perf_register_string, string, string_length);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

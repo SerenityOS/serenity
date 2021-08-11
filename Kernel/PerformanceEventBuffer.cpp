@@ -167,9 +167,9 @@ template<typename Serializer>
 bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
 {
     {
-        auto strings = object.add_object("strings");
+        auto strings = object.add_array("strings");
         for (auto& it : m_strings) {
-            strings.add(String::number(it.key), it.value->view());
+            strings.add(it.view());
         }
     }
 
@@ -305,13 +305,14 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
     }
 }
 
-KResult PerformanceEventBuffer::register_string(FlatPtr string_id, NonnullOwnPtr<KString> string)
+KResultOr<FlatPtr> PerformanceEventBuffer::register_string(NonnullOwnPtr<KString> string)
 {
-    m_strings.set(string_id, move(string));
+    FlatPtr string_id = m_strings.size();
 
-    // FIXME: Switch m_strings to something that can signal allocation failure,
-    //        and then propagate such failures here.
-    return KSuccess;
+    if (!m_strings.try_append(move(string)))
+        return ENOBUFS;
+
+    return string_id;
 }
 
 }

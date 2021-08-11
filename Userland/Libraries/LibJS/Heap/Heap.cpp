@@ -26,7 +26,7 @@
 namespace JS {
 
 #ifdef __serenity__
-static constexpr FlatPtr gc_perf_string_id = 0x13378086;
+static int gc_perf_string_id;
 #endif
 
 Heap::Heap(VM& vm)
@@ -34,7 +34,7 @@ Heap::Heap(VM& vm)
 {
 #ifdef __serenity__
     auto gc_signpost_string = "Garbage collection"sv;
-    perf_register_string(gc_perf_string_id, gc_signpost_string.characters_without_null_termination(), gc_signpost_string.length());
+    gc_perf_string_id = perf_register_string(gc_signpost_string.characters_without_null_termination(), gc_signpost_string.length());
 #endif
 
     if constexpr (HeapBlock::min_possible_cell_size <= 16) {

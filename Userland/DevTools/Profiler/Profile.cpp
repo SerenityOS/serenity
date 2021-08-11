@@ -209,15 +209,14 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         kernel_elf = make<ELF::Image>(file_or_error.value()->bytes());
 
     auto strings_value = object.get_ptr("strings"sv);
-    if (!strings_value || !strings_value->is_object())
-        return String { "Malformed profile (strings is not an object)" };
+    if (!strings_value || !strings_value->is_array())
+        return String { "Malformed profile (strings is not an array)" };
 
     HashMap<FlatPtr, String> profile_strings;
-    strings_value->as_object().for_each_member([&](String const& key, JsonValue const& value) {
-        auto string_id = key.to_uint();
-        VERIFY(string_id.has_value());
-        profile_strings.set(string_id.value(), value.to_string());
-    });
+    for (FlatPtr string_id = 0; string_id < strings_value->as_array().size(); ++string_id) {
+        auto& value = strings_value->as_array().at(string_id);
+        profile_strings.set(string_id, value.to_string());
+    }
 
     auto events_value = object.get_ptr("events");
     if (!events_value || !events_value->is_array())
