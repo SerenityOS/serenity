@@ -714,6 +714,76 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     m_active_texture_unit->bound_texture_2d()->upload_texture_data(target, level, internal_format, width, height, border, format, type, data);
 }
 
+void SoftwareGLContext::gl_tex_parameter(GLenum target, GLenum pname, GLfloat param)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_parameter, target, pname, param);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: We currently only support GL_TETXURE_2D targets. 1D, 3D and CUBE should also be supported (https://docs.gl/gl2/glTexParameter)
+    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
+
+    // FIXME: implement the remaining parameters. (https://docs.gl/gl2/glTexParameter)
+    RETURN_WITH_ERROR_IF(!(pname == GL_TEXTURE_MIN_FILTER
+                             || pname == GL_TEXTURE_MAG_FILTER
+                             || pname == GL_TEXTURE_WRAP_S
+                             || pname == GL_TEXTURE_WRAP_T),
+        GL_INVALID_ENUM);
+
+    if (target == GL_TEXTURE_2D) {
+        auto texture2d = m_active_texture_unit->bound_texture_2d();
+        if (texture2d.is_null())
+            return;
+
+        switch (pname) {
+        case GL_TEXTURE_MIN_FILTER:
+            RETURN_WITH_ERROR_IF(!(param == GL_NEAREST
+                                     || param == GL_LINEAR
+                                     || param == GL_NEAREST_MIPMAP_NEAREST
+                                     || param == GL_LINEAR_MIPMAP_NEAREST
+                                     || param == GL_NEAREST_MIPMAP_LINEAR
+                                     || param == GL_LINEAR_MIPMAP_LINEAR),
+                GL_INVALID_ENUM);
+
+            texture2d->sampler().set_min_filter(param);
+            break;
+
+        case GL_TEXTURE_MAG_FILTER:
+            RETURN_WITH_ERROR_IF(!(param == GL_NEAREST
+                                     || param == GL_LINEAR),
+                GL_INVALID_ENUM);
+
+            texture2d->sampler().set_mag_filter(param);
+            break;
+
+        case GL_TEXTURE_WRAP_S:
+            RETURN_WITH_ERROR_IF(!(param == GL_CLAMP
+                                     || param == GL_CLAMP_TO_BORDER
+                                     || param == GL_CLAMP_TO_EDGE
+                                     || param == GL_MIRRORED_REPEAT
+                                     || param == GL_REPEAT),
+                GL_INVALID_ENUM);
+
+            texture2d->sampler().set_wrap_s_mode(param);
+            break;
+
+        case GL_TEXTURE_WRAP_T:
+            RETURN_WITH_ERROR_IF(!(param == GL_CLAMP
+                                     || param == GL_CLAMP_TO_BORDER
+                                     || param == GL_CLAMP_TO_EDGE
+                                     || param == GL_MIRRORED_REPEAT
+                                     || param == GL_REPEAT),
+                GL_INVALID_ENUM);
+
+            texture2d->sampler().set_wrap_t_mode(param);
+            break;
+
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+}
+
 void SoftwareGLContext::gl_front_face(GLenum face)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_front_face, face);

@@ -36,3 +36,13 @@ void glActiveTexture(GLenum texture)
 {
     g_gl_context->gl_active_texture(texture);
 }
+
+void glTexParameteri(GLenum target, GLenum pname, GLint param)
+{
+    g_gl_context->gl_tex_parameter(target, pname, param);
+}
+
+void glTexParameterf(GLenum target, GLenum pname, GLfloat param)
+{
+    g_gl_context->gl_tex_parameter(target, pname, param);
+}
