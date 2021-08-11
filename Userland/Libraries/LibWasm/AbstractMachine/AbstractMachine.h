@@ -66,37 +66,18 @@ class Value {
 public:
     Value()
         : m_value(0)
-        , m_type(ValueType::I32)
     {
     }
 
     using AnyValueType = Variant<i32, i64, float, double, Reference>;
     explicit Value(AnyValueType value)
         : m_value(move(value))
-        , m_type(ValueType::I32)
     {
-        if (m_value.has<i32>())
-            m_type = ValueType { ValueType::I32 };
-        else if (m_value.has<i64>())
-            m_type = ValueType { ValueType::I64 };
-        else if (m_value.has<float>())
-            m_type = ValueType { ValueType::F32 };
-        else if (m_value.has<double>())
-            m_type = ValueType { ValueType::F64 };
-        else if (m_value.has<Reference>() && m_value.get<Reference>().ref().has<Reference::Func>())
-            m_type = ValueType { ValueType::FunctionReference };
-        else if (m_value.has<Reference>() && m_value.get<Reference>().ref().has<Reference::Extern>())
-            m_type = ValueType { ValueType::ExternReference };
-        else if (m_value.has<Reference>())
-            m_type = m_value.get<Reference>().ref().get<Reference::Null>().type;
-        else
-            VERIFY_NOT_REACHED();
     }
 
     template<typename T>
     requires(sizeof(T) == sizeof(u64)) explicit Value(ValueType type, T raw_value)
         : m_value(0)
-        , m_type(type)
     {
         switch (type.kind()) {
         case ValueType::Kind::ExternReference:
@@ -130,31 +111,10 @@ public:
         }
     }
 
-    ALWAYS_INLINE Value(Value const& value)
-        : m_value(AnyValueType { value.m_value })
-        , m_type(value.m_type)
-    {
-    }
-
-    ALWAYS_INLINE Value(Value&& value)
-        : m_value(move(value.m_value))
-        , m_type(move(value.m_type))
-    {
-    }
-
-    ALWAYS_INLINE Value& operator=(Value&& value)
-    {
-        m_value = move(value.m_value);
-        m_type = move(value.m_type);
-        return *this;
-    }
-
-    ALWAYS_INLINE Value& operator=(Value const& value)
-    {
-        m_value = value.m_value;
-        m_type = value.m_type;
-        return *this;
-    }
+    ALWAYS_INLINE Value(Value const& value) = default;
+    ALWAYS_INLINE Value(Value&& value) = default;
+    ALWAYS_INLINE Value& operator=(Value&& value) = default;
+    ALWAYS_INLINE Value& operator=(Value const& value) = default;
 
     template<typename T>
     ALWAYS_INLINE Optional<T> to()
@@ -184,12 +144,26 @@ public:
         return result;
     }
 
-    auto& type() const { return m_type; }
+    ValueType type() const
+    {
+        return ValueType(m_value.visit(
+            [](i32) { return ValueType::Kind::I32; },
+            [](i64) { return ValueType::Kind::I64; },
+            [](float) { return ValueType::Kind::F32; },
+            [](double) { return ValueType::Kind::F64; },
+            [&](Reference const& type) {
+                return type.ref().visit(
+                    [](Reference::Func const&) { return ValueType::Kind::FunctionReference; },
+                    [](Reference::Null const& null_type) {
+                        return null_type.type.kind() == ValueType::ExternReference ? ValueType::Kind::NullExternReference : ValueType::Kind::NullFunctionReference;
+                    },
+                    [](Reference::Extern const&) { return ValueType::Kind::ExternReference; });
+            }));
+    }
     auto& value() const { return m_value; }
 
 private:
     AnyValueType m_value;
-    ValueType m_type;
 };
 
 struct Trap {
