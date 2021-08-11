@@ -120,6 +120,8 @@ public:
 
     void add_process(const Process&, ProcessEventType event_type);
 
+    KResult register_string(FlatPtr string_id, NonnullOwnPtr<KString>);
+
 private:
     explicit PerformanceEventBuffer(NonnullOwnPtr<KBuffer>);
 
@@ -130,6 +132,8 @@ private:
 
     size_t m_count { 0 };
     NonnullOwnPtr<KBuffer> m_buffer;
+
+    HashMap<FlatPtr, NonnullOwnPtr<KString>> m_strings;
 };
 
 extern bool g_profiling_all_threads;
