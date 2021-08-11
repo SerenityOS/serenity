@@ -557,6 +557,8 @@ TEST_CASE(ECMA262_parse)
         { "[\\0]"sv, regex::Error::NoError, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::BrowserExtended) },
         { "[\\00]"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
         { "[\\00]"sv, regex::Error::InvalidPattern, combine_flags(ECMAScriptFlags::Unicode, ECMAScriptFlags::BrowserExtended) },
+        { "\\^\\$\\\\\\.\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\/"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "[\\^\\$\\\\\\.\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\/]"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
@@ -605,6 +607,8 @@ TEST_CASE(ECMA262_match)
         { "((...)X)+"sv, "fooXbarXbazX"sv, true },
         { "(?:)"sv, ""sv, true },
         { "\\^"sv, "^"sv },
+        { "\\^\\$\\\\\\.\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\/"sv, "^$\\.*+?()[]{}|/"sv, true, ECMAScriptFlags::Unicode },
+        { "[\\^\\$\\\\\\.\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\/]{15}"sv, "^$\\.*+?()[]{}|/"sv, true, ECMAScriptFlags::Unicode },
         // ECMA262, B.1.4. Regular Expression Pattern extensions for browsers
         { "{"sv, "{"sv, true, ECMAScriptFlags::BrowserExtended },
         { "\\5"sv, "\5"sv, true, ECMAScriptFlags::BrowserExtended },
