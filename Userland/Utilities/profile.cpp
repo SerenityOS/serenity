@@ -21,7 +21,8 @@ int main(int argc, char** argv)
     bool disable = false;
     bool all_processes = false;
     u64 event_mask = PERF_EVENT_MMAP | PERF_EVENT_MUNMAP | PERF_EVENT_PROCESS_CREATE
-        | PERF_EVENT_PROCESS_EXEC | PERF_EVENT_PROCESS_EXIT | PERF_EVENT_THREAD_CREATE | PERF_EVENT_THREAD_EXIT;
+        | PERF_EVENT_PROCESS_EXEC | PERF_EVENT_PROCESS_EXIT | PERF_EVENT_THREAD_CREATE | PERF_EVENT_THREAD_EXIT
+        | PERF_EVENT_SIGNPOST;
     bool seen_event_type_arg = false;
 
     args_parser.add_option(pid_argument, "Target PID", nullptr, 'p', "PID");
