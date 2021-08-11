@@ -199,7 +199,10 @@ extern "C" {
 #define GL_NEAREST 0x2600
 #define GL_LINEAR 0x2601
 #define GL_NEAREST_MIPMAP_LINEAR 0x2602
-#define GL_REPEAT 0x2603
+#define GL_CLAMP 0x2900
+#define GL_REPEAT 0x2901
+#define GL_CLAMP_TO_BORDER 0x812D
+#define GL_CLAMP_TO_EDGE 0x812F
 
 // OpenGL State & GLGet
 #define GL_MODELVIEW_MATRIX 0x0BA6

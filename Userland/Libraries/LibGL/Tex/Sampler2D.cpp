@@ -16,6 +16,11 @@ static constexpr float wrap_repeat(float value)
     return value - floorf(value);
 }
 
+static constexpr float wrap_clamp(float value)
+{
+    return clamp(value, 0.0f, 1.0f);
+}
+
 FloatVector4 Sampler2D::sample(FloatVector2 const& uv) const
 {
     // FIXME: Calculate the correct mipmap level here, need to receive uv derivatives for that
@@ -31,6 +36,13 @@ FloatVector4 Sampler2D::sample(FloatVector2 const& uv) const
         x = wrap_repeat(x);
         break;
 
+    // FIXME: These clamp modes actually have slightly different behaviour
+    case GL_CLAMP:
+    case GL_CLAMP_TO_BORDER:
+    case GL_CLAMP_TO_EDGE:
+        x = wrap_clamp(x);
+        break;
+
     default:
         VERIFY_NOT_REACHED();
     }
@@ -38,6 +50,13 @@ FloatVector4 Sampler2D::sample(FloatVector2 const& uv) const
     switch (m_wrap_t_mode) {
     case GL_REPEAT:
         y = wrap_repeat(y);
+        break;
+
+    // FIXME: These clamp modes actually have slightly different behaviour
+    case GL_CLAMP:
+    case GL_CLAMP_TO_BORDER:
+    case GL_CLAMP_TO_EDGE:
+        y = wrap_clamp(y);
         break;
 
     default:
