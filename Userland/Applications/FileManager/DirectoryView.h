@@ -49,7 +49,7 @@ public:
 
     virtual ~DirectoryView() override;
 
-    void open(String const& path);
+    bool open(String const& path);
     String path() const { return model().root_path(); }
     void open_parent_directory();
     void open_previous_directory();
