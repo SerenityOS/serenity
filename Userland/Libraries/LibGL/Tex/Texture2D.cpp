@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -112,24 +113,12 @@ void Texture2D::upload_texture_data(GLenum, GLint lod, GLint internal_format, GL
     mip.set_height(height);
 }
 
-FloatVector4 Texture2D::sample_texel(const FloatVector2& uv) const
+MipMap const& Texture2D::mipmap(unsigned lod) const
 {
-    auto& mip = m_mipmaps.at(0);
+    if (lod >= m_mipmaps.size())
+        return m_mipmaps.at(m_mipmaps.size() - 1);
 
-    // FIXME: Remove this to prevent a crash when we have proper texture binding
-    if (mip.width() == 0 || mip.height() == 0)
-        return { 1.0f, 1.0f, 1.0f, 1.0f };
-
-    u32 u = static_cast<u32>(uv.x() * mip.width());
-    u32 v = static_cast<u32>(uv.y() * mip.height());
-
-    u32 pixel = mip.pixel_data().at(v * mip.width() + u);
-
-    float b0 = ((pixel)&0xff) / 255.0f;
-    float b1 = ((pixel >> 8) & 0xff) / 255.0f;
-    float b2 = ((pixel >> 16) & 0xff) / 255.0f;
-
-    return { b0, b1, b2, 1.0f };
+    return m_mipmaps.at(lod);
 }
 
 }

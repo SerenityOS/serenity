@@ -1,5 +1,6 @@
 set(SOURCES
     Tex/NameAllocator.cpp
+    Tex/Sampler2D.cpp
     Tex/Texture2D.cpp
     Tex/TextureUnit.cpp
     Clipper.cpp
