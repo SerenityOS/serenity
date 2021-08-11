@@ -525,6 +525,18 @@ TEST_CASE(ECMA262_parse)
         { "\\\\p{1}", regex::Error::NoError, ECMAScriptFlags::Unicode },
         { "\\\\p{AsCiI}", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
         { "\\\\p{ASCII}", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\c", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "\\c", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "[\\c]", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "[\\c]", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\c`", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "\\c`", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "[\\c`]", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "[\\c`]", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\A", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "\\A", regex::Error::InvalidCharacterClass, ECMAScriptFlags::Unicode },
+        { "[\\A]", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "[\\A]", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
@@ -579,6 +591,7 @@ TEST_CASE(ECMA262_match)
         { "\\05", "\5", true, ECMAScriptFlags::BrowserExtended },
         { "\\455", "\45""5", true, ECMAScriptFlags::BrowserExtended },
         { "\\314", "\314", true, ECMAScriptFlags::BrowserExtended },
+        { "\\c", "\\c", true, ECMAScriptFlags::BrowserExtended },
         { "\\cf", "\06", true, ECMAScriptFlags::BrowserExtended },
         { "\\c1", "\\c1", true, ECMAScriptFlags::BrowserExtended },
         { "[\\c1]", "\x11", true, ECMAScriptFlags::BrowserExtended },
