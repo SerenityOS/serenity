@@ -28,6 +28,7 @@ set(LIBC_SOURCES
     pwd.cpp
     qsort.cpp
     regex.cpp
+    resolv.cpp
     scanf.cpp
     sched.cpp
     serenity.cpp
