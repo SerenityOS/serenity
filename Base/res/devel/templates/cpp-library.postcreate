@@ -5,45 +5,51 @@
 # $3: Project name, namespace safe
 
 # Generate Makefile
-echo "LIBRARY = $1.so" >> $2/Makefile
-echo "OBJS = Class1.o" >> $2/Makefile
-echo "CXXFLAGS = -g -std=c++2a" >> $2/Makefile
-echo "" >> $2/Makefile
-echo "all: \$(LIBRARY)" >> $2/Makefile
-echo "" >> $2/Makefile
-echo "\$(LIBRARY): \$(OBJS)" >> $2/Makefile
-echo "	\$(CXX) -shared -o \$@ \$(OBJS)" >> $2/Makefile
-echo "" >> $2/Makefile
-echo "%.o: %.cpp" >> $2/Makefile
-echo "	\$(CXX) \$(CXXFLAGS) -fPIC -o \$@ -c \$< " >> $2/Makefile
-echo "" >> $2/Makefile
-echo "clean:" >> $2/Makefile
-echo "	rm \$(OBJS) \$(LIBRARY)" >> $2/Makefile
-echo "" >> $2/Makefile
+echo > $2/Makefile <<-EOF
+LIBRARY = $1.so
+OBJS = Class1.o
+CXXFLAGS = -g -std=c++2a
+
+all: \$(LIBRARY)
+
+\$(LIBRARY): \$(OBJS)
+	\$(CXX) -shared -o \$@ \$(OBJS)
+
+%.o: %.cpp
+	\$(CXX) \$(CXXFLAGS) -fPIC -o \$@ -c \$<
+
+clean:
+	rm \$(OBJS) \$(LIBRARY)
+
+EOF
 
 # Generate 'Class1' header file
-echo "#pragma once" >> $2/Class1.h
-echo "" >> $2/Class1.h
-echo "namespace $3 {" >> $2/Class1.h
-echo "" >> $2/Class1.h
-echo "class Class1 {" >> $2/Class1.h
-echo "public:" >> $2/Class1.h
-echo "    void hello();" >> $2/Class1.h
-echo "};" >> $2/Class1.h
-echo "" >> $2/Class1.h
-echo "}" >> $2/Class1.h
-echo "" >> $2/Class1.h
+echo > $2/Class1.h <<-EOF
+#pragma once
+
+namespace $3 {
+
+class Class1 {
+public:
+    void hello();
+};
+
+}
+
+EOF
 
 # Generate 'Class1' source file
-echo "#include \"Class1.h\"" >> $2/Class1.cpp
-echo "#include <stdio.h>" >> $2/Class1.cpp
-echo "" >> $2/Class1.cpp
-echo "namespace $3 {" >> $2/Class1.cpp
-echo "" >> $2/Class1.cpp
-echo "void Class1::hello()" >> $2/Class1.cpp
-echo "{" >> $2/Class1.cpp
-echo "    printf(\"Hello friends! :^)\\n\");" >> $2/Class1.cpp
-echo "}" >> $2/Class1.cpp
-echo "" >> $2/Class1.cpp
-echo "}" >> $2/Class1.cpp
-echo "" >> $2/Class1.cpp
+echo > $2/Class1.cpp <<-EOF
+#include "Class1.h"
+#include <stdio.h>
+
+namespace $3 {
+
+void Class1::hello()
+{
+    printf("Hello friends! :^)\\n");
+}
+
+}
+
+EOF
