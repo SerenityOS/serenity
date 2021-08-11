@@ -10,6 +10,7 @@
 #include <setjmp.h>
 #include <signal.h>
 #include <string.h>
+#include <sys/select.h>
 #include <syscall.h>
 #include <unistd.h>
 
@@ -162,10 +163,9 @@ void siglongjmp(jmp_buf env, int val)
     longjmp(env, val);
 }
 
-int sigsuspend(const sigset_t*)
+int sigsuspend(const sigset_t* set)
 {
-    dbgln("FIXME: Implement sigsuspend()");
-    return -1;
+    return pselect(0, nullptr, nullptr, nullptr, nullptr, set);
 }
 
 static const char* signal_names[] = {
