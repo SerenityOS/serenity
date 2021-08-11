@@ -44,6 +44,7 @@ option(ENABLE_USB_IDS_DOWNLOAD "Enable download of the usb.ids database at build
 option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/testing" OFF)
 option(ENABLE_KERNEL_LTO "Build the kernel with link-time optimization" OFF)
 option(USE_CLANG_TOOLCHAIN "Build the kernel with the experimental Clang toolchain" OFF)
+option(LINT_IWYU "Use include-what-you-use to analyze #includes (requires the Clang toolchain)" OFF)
 
 include(Meta/CMake/wasm_spec_tests.cmake)
 
@@ -202,6 +203,10 @@ else()
     set(CMAKE_AR ${TOOLCHAIN_PREFIX}gcc-ar)
     set(CMAKE_OBJCOPY ${TOOLCHAIN_PREFIX}objcopy)
     set(CMAKE_CXXFILT ${TOOLCHAIN_PREFIX}c++filt)
+endif()
+
+if(LINT_IWYU)
+    set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${CMAKE_SOURCE_DIR}/Toolchain/Local/iwyu/${SERENITY_ARCH}/bin/include-what-you-use;-Xiwyu;--no_default_mappings)
 endif()
 
 foreach(lang ASM C CXX OBJC OBJCXX)
