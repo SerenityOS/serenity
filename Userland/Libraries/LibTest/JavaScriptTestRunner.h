@@ -35,6 +35,10 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#if __serenity__
+#    include <serenity.h>
+#endif
+
 #define STRCAT(x, y) __STRCAT(x, y)
 #define STRSTRCAT(x, y) __STRSTRCAT(x, y)
 #define __STRCAT(x, y) x #y
@@ -249,6 +253,11 @@ inline Vector<String> TestRunner::get_test_paths() const
 inline JSFileResult TestRunner::run_file_test(const String& test_path)
 {
     g_currently_running_test = test_path;
+
+#ifdef __serenity__
+    auto string_id = perf_register_string(test_path.characters(), test_path.length());
+    perf_event(PERF_EVENT_SIGNPOST, string_id, 0);
+#endif
 
     double start_time = get_time_in_ms();
     auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>(*g_vm);
