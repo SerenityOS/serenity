@@ -42,10 +42,8 @@ Result Configuration::call(Interpreter& interpreter, FunctionAddress address, Ve
     if (!function)
         return Trap {};
     if (auto* wasm_function = function->get_pointer<WasmFunction>()) {
-        Vector<Value> locals;
-        locals.ensure_capacity(arguments.size() + wasm_function->code().locals().size());
-        for (auto& value : arguments)
-            locals.append(Value { value });
+        Vector<Value> locals = move(arguments);
+        locals.ensure_capacity(locals.size() + wasm_function->code().locals().size());
         for (auto& type : wasm_function->code().locals())
             locals.empend(type, 0ull);
 
