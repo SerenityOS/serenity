@@ -11,6 +11,8 @@
 
 __BEGIN_DECLS
 
+#define FIONREAD 0x541B
+
 int ioctl(int fd, unsigned request, ...);
 
 __END_DECLS
