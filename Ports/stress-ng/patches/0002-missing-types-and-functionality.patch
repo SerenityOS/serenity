@@ -26,17 +26,8 @@ diff -ur stress-ng-master/core-helper.c stress-ng-master-2/core-helper.c
  	return max - opened;
 +#endif
  }
- 
+
  /*
-@@ -2026,3 +2030,8 @@
- 	return 0;
- #endif
- }
-+
-+int pause(void)
-+{
-+	asm ("pause");
-+}
 diff -ur stress-ng-master/core-job.c stress-ng-master-2/core-job.c
 --- stress-ng-master/core-job.c	2020-11-07 10:52:22.000000000 -0800
 +++ stress-ng-master-2/core-job.c	2020-11-08 22:32:06.607668500 -0800
