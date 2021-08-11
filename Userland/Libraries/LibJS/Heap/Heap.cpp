@@ -19,11 +19,24 @@
 #include <LibJS/Runtime/WeakContainer.h>
 #include <setjmp.h>
 
+#ifdef __serenity__
+#    include <serenity.h>
+#endif
+
 namespace JS {
+
+#ifdef __serenity__
+static constexpr FlatPtr gc_perf_string_id = 0x13378086;
+#endif
 
 Heap::Heap(VM& vm)
     : m_vm(vm)
 {
+#ifdef __serenity__
+    auto gc_signpost_string = "Garbage collection"sv;
+    perf_register_string(gc_perf_string_id, gc_signpost_string.characters_without_null_termination(), gc_signpost_string.length());
+#endif
+
     if constexpr (HeapBlock::min_possible_cell_size <= 16) {
         m_allocators.append(make<CellAllocator>(16));
     }
@@ -71,6 +84,11 @@ void Heap::collect_garbage(CollectionType collection_type, bool print_report)
 {
     VERIFY(!m_collecting_garbage);
     TemporaryChange change(m_collecting_garbage, true);
+
+#ifdef __serenity__
+    static size_t global_gc_counter = 0;
+    perf_event(PERF_EVENT_SIGNPOST, gc_perf_string_id, global_gc_counter++);
+#endif
 
     Core::ElapsedTimer collection_measurement_timer;
     collection_measurement_timer.start();
