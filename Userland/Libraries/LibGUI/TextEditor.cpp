@@ -836,6 +836,7 @@ void TextEditor::keydown_event(KeyEvent& event)
     }
 
     if (event.key() == KeyCode::Key_Delete) {
+        do_delete();
         if (m_autocomplete_box)
             m_autocomplete_box->close();
         return;
