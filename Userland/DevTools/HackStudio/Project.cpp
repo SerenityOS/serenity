@@ -48,13 +48,7 @@ void Project::for_each_text_file(Function<void(const ProjectFile&)> callback) co
 NonnullRefPtr<ProjectFile> Project::get_file(const String& path) const
 {
     auto full_path = to_absolute_path(path);
-    for (auto& file : m_files) {
-        if (file.name() == full_path)
-            return file;
-    }
-    auto file = ProjectFile::construct_with_name(full_path);
-    m_files.append(file);
-    return file;
+    return ProjectFile::construct_with_name(full_path);
 }
 
 String Project::to_absolute_path(const String& path) const
