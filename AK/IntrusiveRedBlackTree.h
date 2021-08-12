@@ -143,7 +143,7 @@ private:
 
     static V* node_to_value(TreeNode& node)
     {
-        return (V*)((u8*)&node - ((u8*)&(((V*)nullptr)->*member) - (u8*)nullptr));
+        return bit_cast<V*>(bit_cast<u8*>(&node) - bit_cast<u8*>(member));
     }
 };
 
