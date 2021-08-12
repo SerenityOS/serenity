@@ -284,6 +284,20 @@ void ConnectionBase<SocketType>::disable_send_buffer()
         dbgln("Disabling send buffer failed: {}", result.error());
 }
 
+template<typename SocketType>
+void ConnectionBase<SocketType>::deferred_flush_send_buffer()
+{
+    if (m_deferred_send_flush_pending || m_send_buffer.is_empty())
+        return;
+
+    m_deferred_send_flush_pending = true;
+    deferred_invoke([this]() {
+        m_deferred_send_flush_pending = false;
+        if (auto result = flush_send_buffer(); result.is_error())
+            dbgln("Flushing send buffer failed: {}", result.error());
+    });
+}
+
 template class ConnectionBase<Core::LocalSocket>;
 template class ConnectionBase<Core::TCPSocket>;
 

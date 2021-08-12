@@ -128,6 +128,8 @@ public:
     void shutdown();
     virtual void die() { }
 
+    void deferred_flush_send_buffer();
+
 protected:
     explicit ConnectionBase(IPC::Stub&, NonnullRefPtr<SocketType>, u32 local_endpoint_magic);
 
@@ -164,6 +166,7 @@ protected:
 
     Vector<u8> m_send_buffer;
     bool m_buffer_outgoing { false };
+    bool m_deferred_send_flush_pending { false };
 };
 
 template<typename SocketType>
