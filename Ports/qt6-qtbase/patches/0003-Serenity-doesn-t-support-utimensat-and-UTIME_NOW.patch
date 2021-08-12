@@ -1,0 +1,25 @@
+From a5935c4f1e954caa33a913cf999a468a02732d21 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Wed, 15 Dec 2021 19:49:43 +0100
+Subject: [PATCH 4/5] Serenity doesn't support utimensat and UTIME_NOW
+
+---
+ qmake/library/ioutils.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/qmake/library/ioutils.cpp b/qmake/library/ioutils.cpp
+index 719d3b51..5490e823 100644
+--- a/qmake/library/ioutils.cpp
++++ b/qmake/library/ioutils.cpp
+@@ -262,7 +262,7 @@ bool IoUtils::touchFile(const QString &targetFileName, const QString &referenceF
+         *errorString = fL1S("Cannot stat() reference file %1: %2.").arg(referenceFileName, fL1S(strerror(errno)));
+         return false;
+     }
+-#    if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200809L
++#    if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200809L && !defined(Q_OS_SERENITY)
+     const struct timespec times[2] = { { 0, UTIME_NOW }, st.st_mtim };
+     const bool utimeError = utimensat(AT_FDCWD, targetFileName.toLocal8Bit().constData(), times, 0) < 0;
+ #    else
+-- 
+2.33.1
+
