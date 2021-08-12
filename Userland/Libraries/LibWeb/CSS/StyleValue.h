@@ -227,7 +227,6 @@ public:
         CustomProperty,
         Numeric,
         ValueList,
-        ComponentValueList,
         Calculated,
         Background,
         BackgroundRepeat,
@@ -254,7 +253,6 @@ public:
     bool is_custom_property() const { return type() == Type::CustomProperty; }
     bool is_numeric() const { return type() == Type::Numeric; }
     bool is_value_list() const { return type() == Type::ValueList; }
-    bool is_component_value_list() const { return type() == Type::ComponentValueList; }
     bool is_calculated() const { return type() == Type::Calculated; }
     bool is_background() const { return type() == Type::Background; }
     bool is_background_repeat() const { return type() == Type::BackgroundRepeat; }
@@ -1018,21 +1016,6 @@ private:
     }
 
     NonnullRefPtrVector<StyleValue> m_values;
-};
-
-class ValueListStyleValue final : public StyleValue {
-public:
-    static NonnullRefPtr<ValueListStyleValue> create(Vector<StyleComponentValueRule>&& values) { return adopt_ref(*new ValueListStyleValue(move(values))); }
-    virtual ~ValueListStyleValue() override { }
-
-    virtual String to_string() const override;
-
-    Vector<StyleComponentValueRule> const& values() const { return m_values; }
-
-private:
-    ValueListStyleValue(Vector<StyleComponentValueRule>&&);
-
-    Vector<StyleComponentValueRule> m_values;
 };
 
 inline CSS::ValueID StyleValue::to_identifier() const

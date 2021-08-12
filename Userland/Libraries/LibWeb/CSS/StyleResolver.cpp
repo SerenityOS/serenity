@@ -542,11 +542,6 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
-    if (value.is_component_value_list()) {
-        dbgln("Values list for CSS property '{}' went unhandled. List: '{}'", string_from_property_id(property_id), value.to_string());
-        return;
-    }
-
     style.set_property(property_id, value);
 }
 

@@ -172,23 +172,4 @@ void ImageStyleValue::resource_did_load()
         m_document->browsing_context()->set_needs_display({});
 }
 
-ValueListStyleValue::ValueListStyleValue(Vector<StyleComponentValueRule>&& values)
-    : StyleValue(Type::ComponentValueList)
-    , m_values(move(values))
-{
-}
-
-String ValueListStyleValue::to_string() const
-{
-    StringBuilder builder;
-    builder.appendff("List[{}](", m_values.size());
-    for (auto& value : m_values) {
-        builder.append(value.to_debug_string());
-        builder.append(",");
-    }
-
-    builder.append(")");
-    return builder.to_string();
-}
-
 }
