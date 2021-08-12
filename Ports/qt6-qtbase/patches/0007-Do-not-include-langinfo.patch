@@ -1,0 +1,27 @@
+From 2672f339054f04deee8f873547f42fb153b22de2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Thu, 12 Aug 2021 19:18:41 +0200
+Subject: [PATCH 7/8] Do not include langinfo
+
+---
+ src/corelib/kernel/qcoreapplication.cpp | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/corelib/kernel/qcoreapplication.cpp b/src/corelib/kernel/qcoreapplication.cpp
+index 23a39916..e04875b4 100644
+--- a/src/corelib/kernel/qcoreapplication.cpp
++++ b/src/corelib/kernel/qcoreapplication.cpp
+@@ -103,7 +103,9 @@
+ 
+ #ifdef Q_OS_UNIX
+ #  include <locale.h>
+-#  include <langinfo.h>
++# ifndef Q_OS_SERENITY
++#   include <langinfo.h>
++# endif
+ #  include <unistd.h>
+ #  include <sys/types.h>
+ #endif
+-- 
+2.31.1
+

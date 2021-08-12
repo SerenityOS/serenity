@@ -1,0 +1,24 @@
+From c76fa8abca6468daacfe597d60f755a030416a56 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Thu, 12 Aug 2021 19:21:45 +0200
+Subject: [PATCH 2/8] HACK: add CODESET definition
+
+---
+ mkspecs/serenity-g++/qplatformdefs.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/mkspecs/serenity-g++/qplatformdefs.h b/mkspecs/serenity-g++/qplatformdefs.h
+index 1a2f0cc2..a7a01665 100644
+--- a/mkspecs/serenity-g++/qplatformdefs.h
++++ b/mkspecs/serenity-g++/qplatformdefs.h
+@@ -80,4 +80,7 @@
+ #undef QT_LARGEFILE_SUPPORT
+ #endif
+ 
++// used in nl_langinfo in qcoreapplication.cpp
++#define CODESET 0
++
+ #endif // QPLATFORMDEFS_H
+-- 
+2.31.1
+

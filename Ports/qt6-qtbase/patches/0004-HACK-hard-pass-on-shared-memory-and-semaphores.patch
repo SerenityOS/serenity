@@ -1,0 +1,110 @@
+From 7d6de8fce218809be7cc1531a2cca8d29a27083a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Thu, 12 Aug 2021 19:16:44 +0200
+Subject: [PATCH 4/8] HACK: hard pass on shared memory and semaphores
+
+---
+ src/corelib/configure.cmake             | 4 ++--
+ src/corelib/configure.json              | 5 ++---
+ src/corelib/kernel/qcore_unix_p.h       | 2 +-
+ src/corelib/kernel/qsharedmemory_p.h    | 4 +++-
+ src/corelib/kernel/qsystemsemaphore_p.h | 3 +++
+ 5 files changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/src/corelib/configure.cmake b/src/corelib/configure.cmake
+index 1c585f5b..a96d8206 100644
+--- a/src/corelib/configure.cmake
++++ b/src/corelib/configure.cmake
+@@ -719,7 +719,7 @@ qt_feature("sharedmemory" PUBLIC
+     SECTION "Kernel"
+     LABEL "QSharedMemory"
+     PURPOSE "Provides access to a shared memory segment."
+-    CONDITION ( ANDROID OR WIN32 OR ( NOT VXWORKS AND ( TEST_ipc_sysv OR TEST_ipc_posix ) ) )
++    CONDITION ( QT_FEATURE_sharedmemory )
+ )
+ qt_feature_definition("sharedmemory" "QT_NO_SHAREDMEMORY" NEGATE VALUE "1")
+ qt_feature("shortcut" PUBLIC
+@@ -732,7 +732,7 @@ qt_feature("systemsemaphore" PUBLIC
+     SECTION "Kernel"
+     LABEL "QSystemSemaphore"
+     PURPOSE "Provides a general counting system semaphore."
+-    CONDITION ( NOT INTEGRITY AND NOT VXWORKS AND NOT rtems ) AND ( ANDROID OR WIN32 OR TEST_ipc_sysv OR TEST_ipc_posix )
++    CONDITION ( QT_FEATURE_systemsemaphore )
+ )
+ qt_feature_definition("systemsemaphore" "QT_NO_SYSTEMSEMAPHORE" NEGATE VALUE "1")
+ qt_feature("xmlstream" PUBLIC
+diff --git a/src/corelib/configure.json b/src/corelib/configure.json
+index 9c8615cf..5b7e68c0 100644
+--- a/src/corelib/configure.json
++++ b/src/corelib/configure.json
+@@ -783,7 +783,7 @@
+             "purpose": "Provides access to a shared memory segment.",
+             "section": "Kernel",
+             "condition": [
+-                "config.android || config.win32 || (!config.vxworks && (tests.ipc_sysv || tests.ipc_posix))"
++                "false"
+             ],
+             "output": [ "publicFeature", "feature" ]
+         },
+@@ -798,8 +798,7 @@
+             "purpose": "Provides a general counting system semaphore.",
+             "section": "Kernel",
+             "condition": [
+-                "!config.integrity && !config.vxworks && !config.rtems",
+-                "config.android || config.win32 || tests.ipc_sysv || tests.ipc_posix"
++                "false"
+             ],
+             "output": [ "publicFeature", "feature" ]
+         },
+diff --git a/src/corelib/kernel/qcore_unix_p.h b/src/corelib/kernel/qcore_unix_p.h
+index abe9bb37..c43e6d06 100644
+--- a/src/corelib/kernel/qcore_unix_p.h
++++ b/src/corelib/kernel/qcore_unix_p.h
+@@ -79,7 +79,7 @@
+ #include <errno.h>
+ #include <fcntl.h>
+ 
+-#if !defined(QT_POSIX_IPC) && !defined(QT_NO_SHAREDMEMORY) && !defined(Q_OS_ANDROID)
++#if !defined(QT_POSIX_IPC) && !defined(QT_NO_SHAREDMEMORY) && !defined(Q_OS_ANDROID) && !defined(Q_OS_SERENITY)
+ #  include <sys/ipc.h>
+ #endif
+ 
+diff --git a/src/corelib/kernel/qsharedmemory_p.h b/src/corelib/kernel/qsharedmemory_p.h
+index e06e7e86..95a36b23 100644
+--- a/src/corelib/kernel/qsharedmemory_p.h
++++ b/src/corelib/kernel/qsharedmemory_p.h
+@@ -51,6 +51,8 @@
+ // We mean it.
+ //
+ 
++#define QT_NO_SHAREDMEMORY
++#define QT_NO_SYSTEMSEMAPHORE
+ #include "qsharedmemory.h"
+ 
+ #include <QtCore/qstring.h>
+@@ -78,7 +80,7 @@ QT_END_NAMESPACE
+ # include "private/qobject_p.h"
+ #endif
+ 
+-#if !defined(Q_OS_WIN) && !defined(Q_OS_ANDROID) && !defined(Q_OS_INTEGRITY) && !defined(Q_OS_RTEMS)
++#if !defined(Q_OS_WIN) && !defined(Q_OS_ANDROID) && !defined(Q_OS_INTEGRITY) && !defined(Q_OS_RTEMS) && !defined(Q_OS_SERENITY)
+ #  include <sys/sem.h>
+ #endif
+ 
+diff --git a/src/corelib/kernel/qsystemsemaphore_p.h b/src/corelib/kernel/qsystemsemaphore_p.h
+index 56619d73..ab1c7b4d 100644
+--- a/src/corelib/kernel/qsystemsemaphore_p.h
++++ b/src/corelib/kernel/qsystemsemaphore_p.h
+@@ -51,6 +51,9 @@
+ // We mean it.
+ //
+ 
++#define QT_NO_SHAREDMEMORY
++#define QT_NO_SYSTEMSEMAPHORE
++
+ #include "qsystemsemaphore.h"
+ 
+ #ifndef QT_NO_SYSTEMSEMAPHORE
+-- 
+2.31.1
+

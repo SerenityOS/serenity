@@ -1,0 +1,25 @@
+From d7e2cf2d0adaef782bf2083b62db151a180675bb Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Thu, 12 Aug 2021 19:18:03 +0200
+Subject: [PATCH 6/8] HACK: work around the need to use UTIME_NOW
+
+---
+ qmake/library/ioutils.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/qmake/library/ioutils.cpp b/qmake/library/ioutils.cpp
+index 3a93298f..c310a502 100644
+--- a/qmake/library/ioutils.cpp
++++ b/qmake/library/ioutils.cpp
+@@ -228,7 +228,7 @@ bool IoUtils::touchFile(const QString &targetFileName, const QString &referenceF
+         *errorString = fL1S("Cannot stat() reference file %1: %2.").arg(referenceFileName, fL1S(strerror(errno)));
+         return false;
+     }
+-#    if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200809L
++#    if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200809L && !defined(Q_OS_SERENITY)
+     const struct timespec times[2] = { { 0, UTIME_NOW }, st.st_mtim };
+     const bool utimeError = utimensat(AT_FDCWD, targetFileName.toLocal8Bit().constData(), times, 0) < 0;
+ #    else
+-- 
+2.31.1
+

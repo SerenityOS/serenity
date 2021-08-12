@@ -1,0 +1,25 @@
+From 764067a4d9e9d9e0943c7ea0e1074b464c41754d Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Thu, 12 Aug 2021 19:18:55 +0200
+Subject: [PATCH 8/8] HACK: avoid using SYMLOOP_MAX
+
+---
+ src/corelib/time/qtimezoneprivate_tz.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/corelib/time/qtimezoneprivate_tz.cpp b/src/corelib/time/qtimezoneprivate_tz.cpp
+index fb6baf6e..9668415b 100644
+--- a/src/corelib/time/qtimezoneprivate_tz.cpp
++++ b/src/corelib/time/qtimezoneprivate_tz.cpp
+@@ -1264,6 +1264,8 @@ private:
+ #ifdef SYMLOOP_MAX
+         // If defined, at runtime it can only be greater than this, so this is a safe bet:
+         return SYMLOOP_MAX;
++#elif defined(Q_OS_SERENITY)
++        return 120;
+ #else
+         errno = 0;
+         long result = sysconf(_SC_SYMLOOP_MAX);
+-- 
+2.31.1
+

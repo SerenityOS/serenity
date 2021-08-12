@@ -1,0 +1,24 @@
+From 22116a0c0a4c327bee0dbf2ddf997813c2b7fd3e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Thu, 12 Aug 2021 19:21:58 +0200
+Subject: [PATCH 3/8] HACK: add FIONREAD definition
+
+---
+ mkspecs/serenity-g++/qplatformdefs.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/mkspecs/serenity-g++/qplatformdefs.h b/mkspecs/serenity-g++/qplatformdefs.h
+index a7a01665..082d8a0c 100644
+--- a/mkspecs/serenity-g++/qplatformdefs.h
++++ b/mkspecs/serenity-g++/qplatformdefs.h
+@@ -83,4 +83,7 @@
+ // used in nl_langinfo in qcoreapplication.cpp
+ #define CODESET 0
+ 
++// TODO used in qprocess_unix.cpp
++#define FIONREAD      0x541B
++
+ #endif // QPLATFORMDEFS_H
+-- 
+2.31.1
+

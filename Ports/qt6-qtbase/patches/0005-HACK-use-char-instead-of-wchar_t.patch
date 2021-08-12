@@ -1,0 +1,175 @@
+From af7aefc71ad88989df76f086037b0802e226ede2 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Thu, 12 Aug 2021 19:17:31 +0200
+Subject: [PATCH 5/8] HACK: use char instead of wchar_t
+
+---
+ src/corelib/text/qcollator_p.h       |  2 +-
+ src/corelib/text/qcollator_posix.cpp | 19 +++++++++++--------
+ src/corelib/text/qstring.h           | 18 +++++++++++-------
+ src/corelib/text/qstringview.h       |  4 ++--
+ 4 files changed, 25 insertions(+), 18 deletions(-)
+
+diff --git a/src/corelib/text/qcollator_p.h b/src/corelib/text/qcollator_p.h
+index b1a483c4..24b77c75 100644
+--- a/src/corelib/text/qcollator_p.h
++++ b/src/corelib/text/qcollator_p.h
+@@ -81,7 +81,7 @@ typedef int CollatorType;
+ const CollatorType NoCollator = 0;
+ 
+ #else // posix - ignores CollatorType collator, only handles system locale
+-typedef QList<wchar_t> CollatorKeyType;
++typedef QList<char> CollatorKeyType;
+ typedef bool CollatorType;
+ const CollatorType NoCollator = false;
+ #endif
+diff --git a/src/corelib/text/qcollator_posix.cpp b/src/corelib/text/qcollator_posix.cpp
+index 92148fa3..215737c7 100644
+--- a/src/corelib/text/qcollator_posix.cpp
++++ b/src/corelib/text/qcollator_posix.cpp
+@@ -42,7 +42,6 @@
+ #include "qstring.h"
+ 
+ #include <cstring>
+-#include <cwchar>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+@@ -65,7 +64,7 @@ void QCollatorPrivate::cleanup()
+ {
+ }
+ 
+-static void stringToWCharArray(QVarLengthArray<wchar_t> &ret, QStringView string)
++static void stringToWCharArray(QVarLengthArray<char> &ret, QStringView string)
+ {
+     ret.resize(string.length());
+     int len = string.toWCharArray(ret.data());
+@@ -85,10 +84,10 @@ int QCollator::compare(QStringView s1, QStringView s2) const
+     if (d->dirty)
+         d->init();
+ 
+-    QVarLengthArray<wchar_t> array1, array2;
++    QVarLengthArray<char> array1, array2;
+     stringToWCharArray(array1, s1);
+     stringToWCharArray(array2, s2);
+-    return std::wcscoll(array1.constData(), array2.constData());
++    return strcoll(array1.constData(), array2.constData());
+ }
+ 
+ QCollatorSortKey QCollator::sortKey(const QString &string) const
+@@ -96,13 +95,16 @@ QCollatorSortKey QCollator::sortKey(const QString &string) const
+     if (d->dirty)
+         d->init();
+ 
+-    QVarLengthArray<wchar_t> original;
++    QVarLengthArray<char> original;
+     stringToWCharArray(original, string);
+-    QList<wchar_t> result(original.size());
++    QList<char> result(original.size());
++    std::copy(original.cbegin(), original.cend(), result.begin());
++#if 0
+     if (d->isC()) {
+         std::copy(original.cbegin(), original.cend(), result.begin());
+     } else {
+-        size_t size = std::wcsxfrm(result.data(), original.constData(), string.size());
++        size_t size = strlen(original);//std::wcsxfrm(result.data(), original.constData(), string.size());
++        strncpy(result, original, size);
+         if (size > uint(result.size())) {
+             result.resize(size+1);
+             size = std::wcsxfrm(result.data(), original.constData(), string.size());
+@@ -110,12 +112,13 @@ QCollatorSortKey QCollator::sortKey(const QString &string) const
+         result.resize(size+1);
+         result[size] = 0;
+     }
++#endif
+     return QCollatorSortKey(new QCollatorSortKeyPrivate(std::move(result)));
+ }
+ 
+ int QCollatorSortKey::compare(const QCollatorSortKey &otherKey) const
+ {
+-    return std::wcscmp(d->m_key.constData(), otherKey.d->m_key.constData());
++    return strcmp(d->m_key.constData(), otherKey.d->m_key.constData());
+ }
+ 
+ QT_END_NAMESPACE
+diff --git a/src/corelib/text/qstring.h b/src/corelib/text/qstring.h
+index 153a9e04..e2eb58e2 100644
+--- a/src/corelib/text/qstring.h
++++ b/src/corelib/text/qstring.h
+@@ -57,6 +57,10 @@
+ #include <QtCore/qstringtokenizer.h>
+ 
+ #include <string>
++namespace std {
++    typedef string wstring;
++}
++
+ #include <iterator>
+ 
+ #include <stdarg.h>
+@@ -779,8 +783,8 @@ public:
+     { return fromUcs4(reinterpret_cast<const char32_t *>(str), size); }
+ #endif
+ 
+-    inline qsizetype toWCharArray(wchar_t *array) const;
+-    [[nodiscard]] static inline QString fromWCharArray(const wchar_t *string, qsizetype size = -1);
++    inline qsizetype toWCharArray(char *array) const;
++    [[nodiscard]] static inline QString fromWCharArray(const char *string, qsizetype size = -1);
+ 
+     QString &setRawData(const QChar *unicode, qsizetype size);
+     QString &setUnicode(const QChar *unicode, qsizetype size);
+@@ -1253,14 +1257,14 @@ QT_WARNING_PUSH
+ QT_WARNING_DISABLE_MSVC(4127)   // "conditional expression is constant"
+ QT_WARNING_DISABLE_INTEL(111)   // "statement is unreachable"
+ 
+-inline qsizetype QString::toWCharArray(wchar_t *array) const
++inline qsizetype QString::toWCharArray(char *array) const
+ {
+     return qToStringViewIgnoringNull(*this).toWCharArray(array);
+ }
+ 
+-qsizetype QStringView::toWCharArray(wchar_t *array) const
++qsizetype QStringView::toWCharArray(char *array) const
+ {
+-    if (sizeof(wchar_t) == sizeof(QChar)) {
++    if (sizeof(char) == sizeof(QChar)) {
+         if (auto src = data())
+             memcpy(array, src, sizeof(QChar) * size());
+         return size();
+@@ -1272,9 +1276,9 @@ qsizetype QStringView::toWCharArray(wchar_t *array) const
+ 
+ QT_WARNING_POP
+ 
+-inline QString QString::fromWCharArray(const wchar_t *string, qsizetype size)
++inline QString QString::fromWCharArray(const char *string, qsizetype size)
+ {
+-    return sizeof(wchar_t) == sizeof(QChar) ? fromUtf16(reinterpret_cast<const char16_t *>(string), size)
++    return sizeof(char) == sizeof(QChar) ? fromUtf16(reinterpret_cast<const char16_t *>(string), size)
+                                             : fromUcs4(reinterpret_cast<const char32_t *>(string), size);
+ }
+ 
+diff --git a/src/corelib/text/qstringview.h b/src/corelib/text/qstringview.h
+index c0082b70..59bf96e8 100644
+--- a/src/corelib/text/qstringview.h
++++ b/src/corelib/text/qstringview.h
+@@ -80,7 +80,7 @@ struct IsCompatibleCharTypeHelper
+                              std::is_same<Char, QChar>::value ||
+                              std::is_same<Char, ushort>::value ||
+                              std::is_same<Char, char16_t>::value ||
+-                             (std::is_same<Char, wchar_t>::value && sizeof(wchar_t) == sizeof(QChar))> {};
++                             (std::is_same<Char, char>::value && sizeof(char) == sizeof(QChar))> {};
+ template <typename Char>
+ struct IsCompatibleCharType
+     : IsCompatibleCharTypeHelper<typename std::remove_cv<typename std::remove_reference<Char>::type>::type> {};
+@@ -383,7 +383,7 @@ public:
+     [[nodiscard]] Q_CORE_EXPORT float toFloat(bool *ok = nullptr) const;
+     [[nodiscard]] Q_CORE_EXPORT double toDouble(bool *ok = nullptr) const;
+ 
+-    [[nodiscard]] inline qsizetype toWCharArray(wchar_t *array) const; // defined in qstring.h
++    [[nodiscard]] inline qsizetype toWCharArray(char *array) const; // defined in qstring.h
+ 
+ 
+     [[nodiscard]] Q_CORE_EXPORT
+-- 
+2.31.1
+
