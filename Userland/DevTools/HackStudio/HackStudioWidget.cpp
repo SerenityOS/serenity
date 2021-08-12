@@ -701,7 +701,10 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
 
         auto new_project_file = m_project->create_file(relative_file_path);
         m_open_files.set(relative_file_path, *new_project_file);
+        m_open_files.remove(old_filename);
+
         m_open_files_vector.append(relative_file_path);
+        m_open_files_vector.remove_all_matching([&old_filename](auto const& element) { return element == old_filename; });
 
         update_window_title();
 
