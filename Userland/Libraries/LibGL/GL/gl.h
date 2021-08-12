@@ -15,6 +15,13 @@ extern "C" {
 #    define GLAPI extern
 #endif
 
+#define GL_VERSION_1_0
+#define GL_VERSION_1_1
+#define GL_VERSION_1_2
+#define GL_VERSION_1_3
+#define GL_VERSION_1_4
+#define GL_VERSION_1_5
+
 // OpenGL related `defines`
 #define GL_TRUE 1
 #define GL_FALSE 0
@@ -46,7 +53,9 @@ extern "C" {
 
 // Enable capabilities
 #define GL_CULL_FACE 0x0B44
+#define GL_FOG 0x0B60
 #define GL_DEPTH_TEST 0x0B71
+#define GL_POLYGON_OFFSET_FILL 0x8037
 
 // Alpha testing
 #define GL_ALPHA_TEST 0x0BC0
@@ -60,6 +69,11 @@ extern "C" {
 #define GL_VENDOR 0x1F00
 #define GL_RENDERER 0x1F01
 #define GL_VERSION 0x1F02
+#define GL_EXTENSIONS 0x1F03
+
+// Get parameters
+#define GL_MAX_TEXTURE_SIZE 0x0D33
+#define GL_MAX_TEXTURE_UNITS 0x84E2
 
 // Blend factors
 #define GL_ZERO 0
@@ -112,6 +126,9 @@ extern "C" {
 #define GL_GENERATE_MIPMAP_HINT 0x8192
 #define GL_TEXTURE_COMPRESSION_HINT 0x84EF
 
+// Read pixels
+#define GL_UNPACK_ROW_LENGTH 0x0CF2
+
 // Listing enums
 #define GL_COMPILE 0x1300
 #define GL_COMPILE_AND_EXECUTE 0x1301
@@ -149,6 +166,9 @@ extern "C" {
 #define GL_CONSTANT_ALPHA 0x8003
 #define GL_ONE_MINUS_CONSTANT_ALPHA 0x8004
 
+// Polygon modes
+#define GL_FILL 0x1B02
+
 // Pixel formats
 #define GL_RGB 0x1907
 #define GL_RGBA 0x1908
@@ -157,6 +177,9 @@ extern "C" {
 
 // Source pixel data format
 #define GL_UNSIGNED_BYTE 0x1401
+
+// Stencil buffer operations
+#define GL_REPLACE 0x1E01
 
 // Texture targets
 #define GL_TEXTURE_2D 0x0DE1
@@ -196,6 +219,10 @@ extern "C" {
 #define GL_TEXTURE31 0x84DF
 
 // Texture Environment and Parameters
+#define GL_MODULATE 0x2100
+#define GL_TEXTURE_ENV_MODE 0x2200
+#define GL_DECAL 0x2102
+#define GL_TEXTURE_ENV 0x2300
 #define GL_NEAREST 0x2600
 #define GL_LINEAR 0x2601
 #define GL_NEAREST_MIPMAP_NEAREST 0x2700
@@ -212,6 +239,18 @@ extern "C" {
 #define GL_CLAMP_TO_BORDER 0x812D
 #define GL_CLAMP_TO_EDGE 0x812F
 
+// Client state capabilities
+#define GL_VERTEX_ARRAY 0x8074
+#define GL_COLOR_ARRAY 0x8076
+#define GL_TEXTURE_COORD_ARRAY 0x8078
+
+// Fog parameters
+#define GL_EXP 0x0800
+#define GL_EXP2 0x0801
+#define GL_FOG_MODE 0x0B65
+#define GL_FOG_COLOR 0x0B66
+#define GL_FOG_DENSITY 0x0B62
+
 // OpenGL State & GLGet
 #define GL_MODELVIEW_MATRIX 0x0BA6
 
@@ -221,6 +260,7 @@ extern "C" {
 // Defines types used by all OpenGL applications
 // https://www.khronos.org/opengl/wiki/OpenGL_Type
 typedef char GLchar;
+typedef char GLbyte;
 typedef unsigned char GLuchar;
 typedef unsigned char GLubyte;
 typedef short GLshort;
