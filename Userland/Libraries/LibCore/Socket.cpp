@@ -118,16 +118,33 @@ bool Socket::connect(const SocketAddress& address)
 bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
 {
     auto connected = [this] {
-        dbgln_if(CSOCKET_DEBUG, "{} connected!", *this);
-        if (!m_connected) {
+        int so_error;
+        socklen_t so_error_len = sizeof(so_error);
+
+        int rc = getsockopt(fd(), SOL_SOCKET, SO_ERROR, &so_error, &so_error_len);
+        if (rc < 0) {
+            dbgln_if(CSOCKET_DEBUG, "Failed to check the status of SO_ERROR");
+            m_connected = false;
+            if (on_error)
+                on_error();
+        }
+
+        if (so_error == 0) {
+            dbgln_if(CSOCKET_DEBUG, "{} connected!", *this);
             m_connected = true;
             ensure_read_notifier();
-            if (m_notifier) {
-                m_notifier->remove_from_parent();
-                m_notifier = nullptr;
-            }
             if (on_connected)
                 on_connected();
+        } else {
+            dbgln_if(CSOCKET_DEBUG, "Failed to connect to {}", *this);
+            m_connected = false;
+            if (on_error)
+                on_error();
+        }
+
+        if (m_notifier) {
+            m_notifier->remove_from_parent();
+            m_notifier = nullptr;
         }
     };
     int rc = ::connect(fd(), addr, addrlen);

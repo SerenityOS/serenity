@@ -43,6 +43,7 @@ public:
     int destination_port() const { return m_destination_port; }
 
     Function<void()> on_connected;
+    Function<void()> on_error;
     Function<void()> on_ready_to_read;
 
 protected:
