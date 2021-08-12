@@ -163,9 +163,22 @@ public:
     };
 
     struct Event {
+        enum class Type {
+            Free,
+            Malloc,
+            Mmap,
+            Munmap,
+            ProcessCreate,
+            ProcessExec,
+            ProcessExit,
+            Sample,
+            Signpost,
+            ThreadCreate,
+            ThreadExit,
+        };
+        Type type {};
         EventSerialNumber serial;
         u64 timestamp { 0 };
-        String type;
         FlatPtr ptr { 0 };
         size_t size { 0 };
         String name;

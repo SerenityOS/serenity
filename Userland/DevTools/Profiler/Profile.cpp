@@ -77,9 +77,9 @@ void Profile::rebuild_tree()
     HashTable<FlatPtr> live_allocations;
 
     for_each_event_in_filter_range([&](auto& event) {
-        if (event.type == "malloc"sv)
+        if (event.type == Event::Type::Malloc)
             live_allocations.set(event.ptr);
-        else if (event.type == "free"sv)
+        else if (event.type == Event::Type::Free)
             live_allocations.remove(event.ptr);
     });
 
@@ -99,10 +99,10 @@ void Profile::rebuild_tree()
 
         m_filtered_event_indices.append(event_index);
 
-        if (event.type == "malloc"sv && !live_allocations.contains(event.ptr))
+        if (event.type == Event::Type::Malloc && !live_allocations.contains(event.ptr))
             continue;
 
-        if (event.type == "free"sv)
+        if (event.type == Event::Type::Free)
             continue;
 
         auto for_each_frame = [&]<typename Callback>(Callback callback) {
@@ -239,23 +239,27 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         next_serial.increment();
         event.timestamp = perf_event.get("timestamp").to_number<u64>();
         event.lost_samples = perf_event.get("lost_samples").to_number<u32>();
-        event.type = perf_event.get("type").to_string();
         event.pid = perf_event.get("pid").to_i32();
         event.tid = perf_event.get("tid").to_i32();
 
-        bool is_signpost = false;
+        auto type_string = perf_event.get("type").to_string();
 
-        if (event.type == "malloc"sv) {
+        if (type_string == "sample"sv) {
+            event.type = Event::Type::Sample;
+        } else if (type_string == "malloc"sv) {
+            event.type = Event::Type::Malloc;
             event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
             event.size = perf_event.get("size").to_number<size_t>();
-        } else if (event.type == "free"sv) {
+        } else if (type_string == "free"sv) {
+            event.type = Event::Type::Free;
             event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
-        } else if (event.type == "signpost"sv) {
-            is_signpost = true;
+        } else if (type_string == "signpost"sv) {
+            event.type = Event::Type::Signpost;
             auto string_id = perf_event.get("arg1").to_number<FlatPtr>();
             event.signpost_string = profile_strings.get(string_id).value_or(String::formatted("Signpost #{}", string_id));
             event.arg2 = perf_event.get("arg2").to_number<FlatPtr>();
-        } else if (event.type == "mmap"sv) {
+        } else if (type_string == "mmap"sv) {
+            event.type = Event::Type::Mmap;
             event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
             event.size = perf_event.get("size").to_number<size_t>();
             event.name = perf_event.get("name").to_string();
@@ -264,11 +268,13 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             if (it != current_processes.end())
                 it->value->library_metadata.handle_mmap(event.ptr, event.size, event.name);
             continue;
-        } else if (event.type == "munmap"sv) {
+        } else if (type_string == "munmap"sv) {
+            event.type = Event::Type::Munmap;
             event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
             event.size = perf_event.get("size").to_number<size_t>();
             continue;
-        } else if (event.type == "process_create"sv) {
+        } else if (type_string == "process_create"sv) {
+            event.type = Event::Type::ProcessCreate;
             event.parent_pid = perf_event.get("parent_pid").to_number<FlatPtr>();
             event.executable = perf_event.get("executable").to_string();
 
@@ -283,7 +289,8 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             current_processes.set(sampled_process->pid, sampled_process);
             all_processes.append(move(sampled_process));
             continue;
-        } else if (event.type == "process_exec"sv) {
+        } else if (type_string == "process_exec"sv) {
+            event.type = Event::Type::ProcessExec;
             event.executable = perf_event.get("executable").to_string();
 
             auto old_process = current_processes.get(event.pid).value();
@@ -302,23 +309,29 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             current_processes.set(sampled_process->pid, sampled_process);
             all_processes.append(move(sampled_process));
             continue;
-        } else if (event.type == "process_exit"sv) {
+        } else if (type_string == "process_exit"sv) {
+            event.type = Event::Type::ProcessExit;
             auto old_process = current_processes.get(event.pid).value();
             old_process->end_valid = event.serial;
 
             current_processes.remove(event.pid);
             continue;
-        } else if (event.type == "thread_create"sv) {
+        } else if (type_string == "thread_create"sv) {
+            event.type = Event::Type::ThreadCreate;
             event.parent_tid = perf_event.get("parent_tid").to_i32();
             auto it = current_processes.find(event.pid);
             if (it != current_processes.end())
                 it->value->handle_thread_create(event.tid, event.serial);
             continue;
-        } else if (event.type == "thread_exit"sv) {
+        } else if (type_string == "thread_exit"sv) {
+            event.type = Event::Type::ThreadExit;
             auto it = current_processes.find(event.pid);
             if (it != current_processes.end())
                 it->value->handle_thread_exit(event.tid, event.serial);
             continue;
+        } else {
+            dbgln("Unknown event type '{}'", type_string);
+            VERIFY_NOT_REACHED();
         }
 
         auto maybe_kernel_base = Symbolication::kernel_base();
@@ -362,7 +375,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         FlatPtr innermost_frame_address = event.frames.at(1).address;
         event.in_kernel = maybe_kernel_base.has_value() && innermost_frame_address >= maybe_kernel_base.value();
 
-        if (is_signpost)
+        if (event.type == Event::Type::Signpost)
             signposts.append(move(event));
         else
             events.append(move(event));
