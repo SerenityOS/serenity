@@ -35,7 +35,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#if __serenity__
+#ifdef __serenity__
 #    include <serenity.h>
 #endif
 
