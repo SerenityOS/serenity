@@ -569,6 +569,14 @@ TEST_CASE(ECMA262_parse)
         { "}"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
         { "}"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
         { "\\}"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "a{9007199254740991}"sv }, // 2^53 - 1
+        { "a{9007199254740991,}"sv },
+        { "a{9007199254740991,9007199254740991}"sv },
+        { "a{9007199254740992}"sv, regex::Error::InvalidBraceContent },
+        { "a{9007199254740992,}"sv, regex::Error::InvalidBraceContent },
+        { "a{9007199254740991,9007199254740992}"sv, regex::Error::InvalidBraceContent },
+        { "a{9007199254740992,9007199254740991}"sv, regex::Error::InvalidBraceContent },
+        { "a{9007199254740992,9007199254740992}"sv, regex::Error::InvalidBraceContent },
     };
 
     for (auto& test : tests) {
@@ -619,6 +627,14 @@ TEST_CASE(ECMA262_match)
         { "\\^"sv, "^"sv },
         { "\\^\\$\\\\\\.\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\/"sv, "^$\\.*+?()[]{}|/"sv, true, ECMAScriptFlags::Unicode },
         { "[\\^\\$\\\\\\.\\*\\+\\?\\(\\)\\[\\]\\{\\}\\|\\/]{15}"sv, "^$\\.*+?()[]{}|/"sv, true, ECMAScriptFlags::Unicode },
+        { "(a{2}){3}"sv, "aaaaaa"sv },
+        { "(a{2}){3}"sv, "aaaabaa"sv, false },
+        { "(a{2}){4}"sv, "aaaaaaaa"sv },
+        { "(a{2}){4}"sv, "aaaaaabaa"sv, false },
+        { "(a{3}){2}"sv, "aaaaaa"sv },
+        { "(a{3}){2}"sv, "aaaabaa"sv, false },
+        { "(a{4}){2}"sv, "aaaaaaaa"sv },
+        { "(a{4}){2}"sv, "aaaaaabaa"sv, false },
         // ECMA262, B.1.4. Regular Expression Pattern extensions for browsers
         { "{"sv, "{"sv, true, ECMAScriptFlags::BrowserExtended },
         { "\\5"sv, "\5"sv, true, ECMAScriptFlags::BrowserExtended },

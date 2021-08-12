@@ -505,6 +505,7 @@ struct MatchState {
     size_t fork_at_position { 0 };
     Vector<Match> matches;
     Vector<Vector<Match>> capture_group_matches;
+    Vector<u64> repetition_marks;
 };
 
 }

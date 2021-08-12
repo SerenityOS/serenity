@@ -102,6 +102,7 @@ protected:
         size_t capture_groups_count { 0 };
         size_t named_capture_groups_count { 0 };
         size_t match_length_minimum { 0 };
+        size_t repetition_mark_count { 0 };
         AllOptions regex_options;
         HashMap<int, size_t> capture_group_minimum_lengths;
         HashMap<FlyString, NamedCaptureGroup> named_capture_groups;
@@ -232,7 +233,7 @@ private:
     bool parse_assertion(ByteCode&, size_t&, bool unicode, bool named);
     bool parse_atom(ByteCode&, size_t&, bool unicode, bool named);
     bool parse_quantifier(ByteCode&, size_t&, bool unicode, bool named);
-    bool parse_interval_quantifier(Optional<size_t>& repeat_min, Optional<size_t>& repeat_max);
+    bool parse_interval_quantifier(Optional<u64>& repeat_min, Optional<u64>& repeat_max);
     bool parse_atom_escape(ByteCode&, size_t&, bool unicode, bool named);
     bool parse_character_class(ByteCode&, size_t&, bool unicode, bool named);
     bool parse_capture_group(ByteCode&, size_t&, bool unicode, bool named);
