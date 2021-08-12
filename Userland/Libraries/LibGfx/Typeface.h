@@ -35,7 +35,7 @@ public:
     void add_bitmap_font(RefPtr<BitmapFont>);
     void set_ttf_font(RefPtr<TTF::Font>);
 
-    RefPtr<Font> get_font(unsigned size);
+    RefPtr<Font> get_font(unsigned size) const;
 
 private:
     String m_family;
