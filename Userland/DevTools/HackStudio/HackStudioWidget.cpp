@@ -652,12 +652,13 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
             return;
         }
 
-        current_editor_wrapper().set_filename(save_path.value());
+        String const relative_file_path = LexicalPath::relative_path(save_path.value(), m_project->root_path());
+        current_editor_wrapper().set_filename(relative_file_path);
         current_editor_wrapper().save();
 
-        auto new_project_file = m_project->get_file(save_path.value());
-        m_open_files.set(save_path.value(), *new_project_file);
-        m_open_files_vector.append(save_path.value());
+        auto new_project_file = m_project->get_file(relative_file_path);
+        m_open_files.set(relative_file_path, *new_project_file);
+        m_open_files_vector.append(relative_file_path);
 
         update_window_title();
     });
