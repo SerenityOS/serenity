@@ -29,6 +29,27 @@ static constexpr float wrap_clamp(float value)
     return clamp(value, 0.0f, 1.0f);
 }
 
+static constexpr float wrap(float value, GLint mode)
+{
+    switch (mode) {
+    case GL_REPEAT:
+        return wrap_repeat(value);
+
+    // FIXME: These clamp modes actually have slightly different behaviour
+    case GL_CLAMP:
+    case GL_CLAMP_TO_BORDER:
+    case GL_CLAMP_TO_EDGE:
+        return wrap_clamp(value);
+
+    case GL_MIRRORED_REPEAT:
+        return wrap_mirrored_repeat(value);
+        break;
+
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 FloatVector4 Sampler2D::sample(FloatVector2 const& uv) const
 {
     // FIXME: Calculate the correct mipmap level here, need to receive uv derivatives for that
@@ -36,53 +57,39 @@ FloatVector4 Sampler2D::sample(FloatVector2 const& uv) const
 
     MipMap const& mip = m_texture.mipmap(lod);
 
-    float x = uv.x();
-    float y = uv.y();
-
-    switch (m_wrap_s_mode) {
-    case GL_REPEAT:
-        x = wrap_repeat(x);
-        break;
-
-    // FIXME: These clamp modes actually have slightly different behaviour
-    case GL_CLAMP:
-    case GL_CLAMP_TO_BORDER:
-    case GL_CLAMP_TO_EDGE:
-        x = wrap_clamp(x);
-        break;
-
-    case GL_MIRRORED_REPEAT:
-        x = wrap_mirrored_repeat(x);
-        break;
-
-    default:
-        VERIFY_NOT_REACHED();
-    }
-
-    switch (m_wrap_t_mode) {
-    case GL_REPEAT:
-        y = wrap_repeat(y);
-        break;
-
-    // FIXME: These clamp modes actually have slightly different behaviour
-    case GL_CLAMP:
-    case GL_CLAMP_TO_BORDER:
-    case GL_CLAMP_TO_EDGE:
-        y = wrap_clamp(y);
-        break;
-
-    case GL_MIRRORED_REPEAT:
-        y = wrap_mirrored_repeat(y);
-        break;
-
-    default:
-        VERIFY_NOT_REACHED();
-    }
+    float x = wrap(uv.x(), m_wrap_t_mode);
+    float y = wrap(uv.y(), m_wrap_s_mode);
 
     x *= mip.width() - 1;
     y *= mip.height() - 1;
 
-    return mip.texel(static_cast<unsigned>(x), static_cast<unsigned>(y));
+    // Sampling implemented according to https://www.khronos.org/registry/OpenGL/specs/gl/glspec121.pdf Chapter 3.8
+    if (m_mag_filter == GL_NEAREST) {
+        return mip.texel(static_cast<unsigned>(x) % mip.width(), static_cast<unsigned>(y) % mip.height());
+    } else if (m_mag_filter == GL_LINEAR) {
+        // FIXME: Implement different sampling points for wrap modes other than GL_REPEAT
+
+        x -= 0.5f;
+        y -= 0.5f;
+
+        unsigned i0 = static_cast<unsigned>(x) % mip.width();
+        unsigned j0 = static_cast<unsigned>(y) % mip.height();
+
+        unsigned i1 = (i0 + 1) % mip.width();
+        unsigned j1 = (j0 + 1) % mip.height();
+
+        auto t0 = mip.texel(i0, j0);
+        auto t1 = mip.texel(i1, j0);
+        auto t2 = mip.texel(i0, j1);
+        auto t3 = mip.texel(i1, j1);
+
+        float frac_x = x - floorf(x);
+        float frac_y = y - floorf(y);
+
+        return t0 * (1 - frac_x) * (1 - frac_y) + t1 * frac_x * (1 - frac_y) + t2 * (1 - frac_x) * frac_y + t3 * frac_x * frac_y;
+    } else {
+        VERIFY_NOT_REACHED();
+    }
 }
 
 }
