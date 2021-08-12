@@ -64,10 +64,10 @@ public:
     Optional<CSS::Repeat> background_repeat_y() const;
     Optional<CSS::BoxShadowData> box_shadow() const;
 
-    const Gfx::Font& font() const
+    const Gfx::Font& font(Layout::Node const& node) const
     {
         if (!m_font)
-            load_font();
+            load_font(node);
         return *m_font;
     }
 
@@ -83,7 +83,7 @@ private:
     HashMap<unsigned, NonnullRefPtr<StyleValue>> m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
 
-    void load_font() const;
+    void load_font(Layout::Node const&) const;
     RefPtr<Gfx::Font> font_fallback(bool monospace, bool bold) const;
 
     mutable RefPtr<Gfx::Font> m_font;

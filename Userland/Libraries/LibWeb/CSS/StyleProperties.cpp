@@ -9,6 +9,8 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/FontCache.h>
+#include <LibWeb/Layout/BlockBox.h>
+#include <LibWeb/Layout/Node.h>
 
 namespace Web::CSS {
 
@@ -90,7 +92,7 @@ Color StyleProperties::color_or_fallback(CSS::PropertyID id, const DOM::Document
     return value.value()->to_color(document);
 }
 
-void StyleProperties::load_font() const
+void StyleProperties::load_font(Layout::Node const& node) const
 {
     auto family_value = string_or_fallback(CSS::PropertyID::FontFamily, "Katica");
     auto font_size = property(CSS::PropertyID::FontSize).value_or(IdentifierStyleValue::create(CSS::ValueID::Medium));
@@ -142,6 +144,9 @@ void StyleProperties::load_font() const
     bold = weight > 400;
 
     int size = 10;
+    auto parent_font_size = node.parent() == nullptr ? size : node.parent()->font_size();
+    constexpr float font_size_ratio = 1.2f;
+
     if (font_size->is_identifier()) {
         switch (static_cast<const IdentifierStyleValue&>(*font_size).id()) {
         case CSS::ValueID::XxSmall:
@@ -159,21 +164,30 @@ void StyleProperties::load_font() const
             size = 12;
             break;
         case CSS::ValueID::Smaller:
-            // FIXME: This should be relative to the parent.
-            size = 10;
+            size = roundf(parent_font_size / font_size_ratio);
             break;
         case CSS::ValueID::Larger:
-            // FIXME: This should be relative to the parent.
-            size = 12;
+            size = roundf(parent_font_size * font_size_ratio);
             break;
 
         default:
             break;
         }
-    } else if (font_size->is_length()) {
-        // FIXME: This isn't really a length, it's a numeric value..
-        int font_size_integer = font_size->to_length().raw_value();
-        size = font_size_integer;
+    } else {
+        Optional<Length> maybe_length;
+        if (font_size->is_length()) {
+            maybe_length = font_size->to_length();
+        } else if (font_size->is_calculated()) {
+            Length length = Length(0, Length::Type::Calculated);
+            length.set_calculated_style(verify_cast<CalculatedStyleValue>(font_size.ptr()));
+            maybe_length = length;
+        }
+        if (maybe_length.has_value()) {
+            // FIXME: em sizes return 0 here, for some reason
+            auto calculated_size = maybe_length.value().resolved_or_zero(node, parent_font_size).to_px(node);
+            if (calculated_size != 0)
+                size = calculated_size;
+        }
     }
 
     FontSelector font_selector { family, size, weight };
@@ -217,7 +231,7 @@ float StyleProperties::line_height(const Layout::Node& layout_node) const
     auto line_height_length = length_or_fallback(CSS::PropertyID::LineHeight, Length::make_auto());
     if (line_height_length.is_absolute())
         return (float)line_height_length.to_px(layout_node);
-    return (float)font().glyph_height() * 1.4f;
+    return (float)font(layout_node).glyph_height() * 1.4f;
 }
 
 Optional<int> StyleProperties::z_index() const
