@@ -2839,7 +2839,8 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     if (component_values.size() == 1)
         return parse_css_value(m_context, property_id, component_values.first());
 
-    return ValueListStyleValue::create(move(component_values));
+    dbgln("Unable to parse value for CSS '{}' property.", string_from_property_id(property_id));
+    return {};
 }
 
 RefPtr<StyleValue> Parser::parse_css_value(ParsingContext const& context, PropertyID property_id, StyleComponentValueRule const& component_value)
