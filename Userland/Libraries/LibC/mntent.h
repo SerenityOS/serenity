@@ -24,5 +24,9 @@ struct mntent {
 };
 
 struct mntent* getmntent(FILE* stream);
+FILE *setmntent(const char *filename, const char *type);
+int endmntent(FILE *streamp);
+struct mntent *getmntent_r(FILE *streamp, struct mntent *mntbuf, char *buf, int buflen);
+
 
 __END_DECLS
