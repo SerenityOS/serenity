@@ -164,13 +164,15 @@ enum ClientVerificationStaus {
 // 4 bytes of fixed IV, 8 random (nonce) bytes, 4 bytes for counter
 // GCM specifically asks us to transmit only the nonce, the counter is zero
 // and the fixed IV is derived from the premaster key.
-#define ENUMERATE_CIPHERS(C)                                                                                                                    \
-    C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA1, 16, false)      \
-    C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA1, 16, false)      \
-    C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA256, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA256, 16, false) \
-    C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA256, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA256, 16, false) \
-    C(true, CipherSuite::RSA_WITH_AES_128_GCM_SHA256, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)   \
-    C(true, CipherSuite::RSA_WITH_AES_256_GCM_SHA384, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)
+#define ENUMERATE_CIPHERS(C)                                                                                                                          \
+    C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA1, 16, false)            \
+    C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA1, 16, false)            \
+    C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA256, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA256, 16, false)       \
+    C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA256, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA256, 16, false)       \
+    C(true, CipherSuite::RSA_WITH_AES_128_GCM_SHA256, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)         \
+    C(true, CipherSuite::RSA_WITH_AES_256_GCM_SHA384, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)         \
+    C(true, CipherSuite::DHE_RSA_WITH_AES_128_GCM_SHA256, KeyExchangeAlgorithm::DHE_RSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true) \
+    C(true, CipherSuite::DHE_RSA_WITH_AES_256_GCM_SHA384, KeyExchangeAlgorithm::DHE_RSA, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)
 
 constexpr KeyExchangeAlgorithm get_key_exchange_algorithm(CipherSuite suite)
 {
