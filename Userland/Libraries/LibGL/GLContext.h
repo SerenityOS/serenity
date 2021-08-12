@@ -63,6 +63,7 @@ public:
     virtual void gl_bind_texture(GLenum target, GLuint texture) = 0;
     virtual void gl_active_texture(GLenum texture) = 0;
     virtual void gl_get_floatv(GLenum pname, GLfloat* params) = 0;
+    virtual void gl_depth_mask(GLboolean flag) = 0;
 
     virtual void present() = 0;
 };

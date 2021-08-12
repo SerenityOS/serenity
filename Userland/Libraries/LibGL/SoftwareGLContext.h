@@ -73,6 +73,7 @@ public:
     virtual void gl_bind_texture(GLenum target, GLuint texture) override;
     virtual void gl_active_texture(GLenum texture) override;
     virtual void gl_get_floatv(GLenum pname, GLfloat* params) override;
+    virtual void gl_depth_mask(GLboolean flag) override;
 
     virtual void present() override;
 
@@ -196,7 +197,8 @@ private:
             decltype(&SoftwareGLContext::gl_alpha_func),
             decltype(&SoftwareGLContext::gl_hint),
             decltype(&SoftwareGLContext::gl_read_buffer),
-            decltype(&SoftwareGLContext::gl_tex_parameter)>;
+            decltype(&SoftwareGLContext::gl_tex_parameter),
+            decltype(&SoftwareGLContext::gl_depth_mask)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
