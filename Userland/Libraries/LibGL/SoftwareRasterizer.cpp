@@ -265,7 +265,9 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                             continue;
                         }
 
-                        *depth = z;
+                        if (options.enable_depth_write)
+                            *depth = z;
+
                         z_pass_count++;
                     }
                 }

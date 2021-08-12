@@ -1392,6 +1392,17 @@ void SoftwareGLContext::gl_get_floatv(GLenum pname, GLfloat* params)
     }
 }
 
+void SoftwareGLContext::gl_depth_mask(GLboolean flag)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_depth_mask, flag);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    auto options = m_rasterizer.options();
+    options.enable_depth_write = (flag != GL_FALSE);
+    m_rasterizer.set_options(options);
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
