@@ -17,6 +17,7 @@
 namespace regex {
 
 static constexpr size_t s_maximum_repetition_count = 1024 * 1024;
+static constexpr u64 s_ecma262_maximum_repetition_count = (1ull << 53) - 1;
 static constexpr auto s_alphabetic_characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"sv;
 static constexpr auto s_decimal_characters = "0123456789"sv;
 
@@ -419,7 +420,8 @@ bool PosixBasicParser::parse_simple_re(ByteCode& bytecode, size_t& match_length_
         if (min_limit > s_maximum_repetition_count || (max_limit.has_value() && *max_limit > s_maximum_repetition_count))
             return set_error(Error::InvalidBraceContent);
 
-        ByteCode::transform_bytecode_repetition_min_max(simple_re_bytecode, min_limit, max_limit, true);
+        auto repetition_mark_id = m_parser_state.repetition_mark_count++;
+        ByteCode::transform_bytecode_repetition_min_max(simple_re_bytecode, min_limit, max_limit, repetition_mark_id, true);
         match_length_minimum += re_match_length_minimum * min_limit;
     } else {
         match_length_minimum += re_match_length_minimum;
@@ -564,15 +566,17 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
         if (match(TokenType::Comma)) {
             consume();
         } else {
+            auto repetition_mark_id = m_parser_state.repetition_mark_count++;
+
             ByteCode bytecode;
-            bytecode.insert_bytecode_repetition_n(bytecode_to_repeat, minimum);
+            bytecode.insert_bytecode_repetition_n(bytecode_to_repeat, minimum, repetition_mark_id);
             bytecode_to_repeat = move(bytecode);
 
             consume(TokenType::RightCurly, Error::MismatchingBrace);
             return !has_error();
         }
 
-        Optional<size_t> maybe_maximum {};
+        Optional<u32> maybe_maximum {};
         number_builder.clear();
         while (match(TokenType::Char)) {
             number_builder.append(consume().value());
@@ -585,7 +589,8 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
             maybe_maximum = value.value();
         }
 
-        ByteCode::transform_bytecode_repetition_min_max(bytecode_to_repeat, minimum, maybe_maximum);
+        auto repetition_mark_id = m_parser_state.repetition_mark_count++;
+        ByteCode::transform_bytecode_repetition_min_max(bytecode_to_repeat, minimum, maybe_maximum, repetition_mark_id);
 
         consume(TokenType::RightCurly, Error::MismatchingBrace);
         return !has_error();
@@ -1141,7 +1146,7 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
     } repetition_mark { Repetition::None };
 
     bool ungreedy = false;
-    Optional<size_t> repeat_min, repeat_max;
+    Optional<u64> repeat_min, repeat_max;
 
     if (match(TokenType::Asterisk)) {
         consume();
@@ -1182,10 +1187,12 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
         ByteCode::transform_bytecode_repetition_zero_or_one(stack, !ungreedy);
         match_length_minimum = 0;
         break;
-    case Repetition::Explicit:
-        ByteCode::transform_bytecode_repetition_min_max(stack, repeat_min.value(), repeat_max, !ungreedy);
+    case Repetition::Explicit: {
+        auto repetition_mark_id = m_parser_state.repetition_mark_count++;
+        ByteCode::transform_bytecode_repetition_min_max(stack, repeat_min.value(), repeat_max, repetition_mark_id, !ungreedy);
         match_length_minimum *= repeat_min.value();
         break;
+    }
     case Repetition::None:
         VERIFY_NOT_REACHED();
     }
@@ -1193,7 +1200,7 @@ bool ECMA262Parser::parse_quantifier(ByteCode& stack, size_t& match_length_minim
     return true;
 }
 
-bool ECMA262Parser::parse_interval_quantifier(Optional<size_t>& repeat_min, Optional<size_t>& repeat_max)
+bool ECMA262Parser::parse_interval_quantifier(Optional<u64>& repeat_min, Optional<u64>& repeat_max)
 {
     VERIFY(match(TokenType::LeftCurly));
     consume();
@@ -1202,7 +1209,7 @@ bool ECMA262Parser::parse_interval_quantifier(Optional<size_t>& repeat_min, Opti
     auto low_bound_string = read_digits_as_string();
     chars_consumed += low_bound_string.length();
 
-    auto low_bound = low_bound_string.to_uint();
+    auto low_bound = low_bound_string.to_uint<u64>();
 
     if (!low_bound.has_value()) {
         if (!m_should_use_browser_extended_grammar && done())
@@ -1218,7 +1225,7 @@ bool ECMA262Parser::parse_interval_quantifier(Optional<size_t>& repeat_min, Opti
         consume();
         ++chars_consumed;
         auto high_bound_string = read_digits_as_string();
-        auto high_bound = high_bound_string.to_uint();
+        auto high_bound = high_bound_string.to_uint<u64>();
         if (high_bound.has_value()) {
             repeat_max = high_bound.value();
             chars_consumed += high_bound_string.length();
@@ -1242,6 +1249,9 @@ bool ECMA262Parser::parse_interval_quantifier(Optional<size_t>& repeat_min, Opti
         if (repeat_min.value() > repeat_max.value())
             set_error(Error::InvalidBraceContent);
     }
+
+    if ((*repeat_min > s_ecma262_maximum_repetition_count) || (repeat_max.has_value() && (*repeat_max > s_ecma262_maximum_repetition_count)))
+        return set_error(Error::InvalidBraceContent);
 
     return true;
 }

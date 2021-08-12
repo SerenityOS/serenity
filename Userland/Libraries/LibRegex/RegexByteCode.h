@@ -40,6 +40,7 @@ using ByteCodeValueType = u64;
     __ENUMERATE_OPCODE(Restore)                    \
     __ENUMERATE_OPCODE(GoBack)                     \
     __ENUMERATE_OPCODE(ClearCaptureGroup)          \
+    __ENUMERATE_OPCODE(Repeat)                     \
     __ENUMERATE_OPCODE(Exit)
 
 // clang-format off
@@ -331,10 +332,11 @@ public:
         // LABEL _END = alterantive_bytecode.size
     }
 
-    static void transform_bytecode_repetition_min_max(ByteCode& bytecode_to_repeat, size_t minimum, Optional<size_t> maximum, bool greedy = true)
+    template<typename T>
+    static void transform_bytecode_repetition_min_max(ByteCode& bytecode_to_repeat, T minimum, Optional<T> maximum, size_t repetition_mark_id, bool greedy = true) requires(IsIntegral<T>)
     {
         ByteCode new_bytecode;
-        new_bytecode.insert_bytecode_repetition_n(bytecode_to_repeat, minimum);
+        new_bytecode.insert_bytecode_repetition_n(bytecode_to_repeat, minimum, repetition_mark_id);
 
         if (maximum.has_value()) {
             auto jump_kind = static_cast<ByteCodeValueType>(greedy ? OpCodeId::ForkStay : OpCodeId::ForkJump);
@@ -343,7 +345,7 @@ public:
                 new_bytecode.empend(jump_kind);
                 new_bytecode.empend(diff * (bytecode_to_repeat.size() + 2)); // Jump to the _END label
 
-                for (size_t i = 0; i < diff; ++i) {
+                for (T i = 0; i < diff; ++i) {
                     new_bytecode.extend(bytecode_to_repeat);
                     new_bytecode.empend(jump_kind);
                     new_bytecode.empend((diff - i - 1) * (bytecode_to_repeat.size() + 2)); // Jump to the _END label
@@ -359,10 +361,28 @@ public:
         bytecode_to_repeat = move(new_bytecode);
     }
 
-    void insert_bytecode_repetition_n(ByteCode& bytecode_to_repeat, size_t n)
+    template<typename T>
+    void insert_bytecode_repetition_n(ByteCode& bytecode_to_repeat, T n, size_t repetition_mark_id) requires(IsIntegral<T>)
     {
-        for (size_t i = 0; i < n; ++i)
+        // LABEL _LOOP
+        // REGEXP
+        // REPEAT _LOOP N-1
+        // REGEXP
+        if (n == 0)
+            return;
+
+        // Note: this bytecode layout allows callers to repeat the last REGEXP instruction without the
+        // REPEAT instruction forcing another loop.
+        extend(bytecode_to_repeat);
+
+        if (n > 1) {
+            empend(static_cast<ByteCodeValueType>(OpCodeId::Repeat));
+            empend(bytecode_to_repeat.size());
+            empend(static_cast<ByteCodeValueType>(n - 1));
+            empend(repetition_mark_id);
+
             extend(bytecode_to_repeat);
+        }
     }
 
     static void transform_bytecode_repetition_min_one(ByteCode& bytecode_to_repeat, bool greedy)
@@ -670,6 +690,21 @@ private:
     ALWAYS_INLINE static void compare_general_category(MatchInput const& input, MatchState& state, Unicode::GeneralCategory general_category, bool inverse, bool& inverse_matched);
     ALWAYS_INLINE static void compare_script(MatchInput const& input, MatchState& state, Unicode::Script script, bool inverse, bool& inverse_matched);
     ALWAYS_INLINE static void compare_script_extension(MatchInput const& input, MatchState& state, Unicode::Script script, bool inverse, bool& inverse_matched);
+};
+
+class OpCode_Repeat : public OpCode {
+public:
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
+    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Repeat; }
+    ALWAYS_INLINE size_t size() const override { return 4; }
+    ALWAYS_INLINE size_t offset() const { return argument(0); }
+    ALWAYS_INLINE u64 count() const { return argument(1); }
+    ALWAYS_INLINE size_t id() const { return argument(2); }
+    String const arguments_string() const override
+    {
+        auto reps = id() < state().repetition_marks.size() ? state().repetition_marks.at(id()) : 0;
+        return String::formatted("offset={} count={} id={} rep={}, sp: {}", offset(), count() + 1, id(), reps + 1, state().string_position);
+    }
 };
 
 template<typename T>

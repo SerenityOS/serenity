@@ -175,6 +175,9 @@ void ByteCode::ensure_opcodes_initialized()
         case OpCodeId::SaveRightNamedCaptureGroup:
             s_opcodes[i] = make<OpCode_SaveRightNamedCaptureGroup>();
             break;
+        case OpCodeId::Repeat:
+            s_opcodes[i] = make<OpCode_Repeat>();
+            break;
         }
     }
     s_opcodes_initialized = true;
@@ -850,4 +853,23 @@ Vector<String> const OpCode_Compare::variable_arguments_to_string(Optional<Match
     }
     return result;
 }
+
+ALWAYS_INLINE ExecutionResult OpCode_Repeat::execute(MatchInput const&, MatchState& state) const
+{
+    VERIFY(count() > 0);
+
+    if (id() >= state.repetition_marks.size())
+        state.repetition_marks.resize(id() + 1);
+    auto& repetition_mark = state.repetition_marks.at(id());
+
+    if (repetition_mark == count() - 1) {
+        repetition_mark = 0;
+    } else {
+        state.instruction_position -= offset() + size();
+        ++repetition_mark;
+    }
+
+    return ExecutionResult::Continue;
+}
+
 }
