@@ -89,3 +89,8 @@ void glGetFloatv(GLenum pname, GLfloat* params)
 {
     g_gl_context->gl_get_floatv(pname, params);
 }
+
+void glDepthMask(GLboolean flag)
+{
+    g_gl_context->gl_depth_mask(flag);
+}

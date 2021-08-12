@@ -263,6 +263,7 @@ typedef char GLchar;
 typedef char GLbyte;
 typedef unsigned char GLuchar;
 typedef unsigned char GLubyte;
+typedef unsigned char GLboolean;
 typedef short GLshort;
 typedef unsigned short GLushort;
 typedef int GLint;
@@ -352,6 +353,7 @@ GLAPI void glTexParameterf(GLenum target, GLenum pname, GLfloat param);
 GLAPI void glBindTexture(GLenum target, GLuint texture);
 GLAPI void glActiveTexture(GLenum texture);
 GLAPI void glGetFloatv(GLenum pname, GLfloat* params);
+GLAPI void glDepthMask(GLboolean flag);
 
 #ifdef __cplusplus
 }
