@@ -74,6 +74,8 @@ public:
     virtual void gl_active_texture(GLenum texture) override;
     virtual void gl_get_floatv(GLenum pname, GLfloat* params) override;
     virtual void gl_depth_mask(GLboolean flag) override;
+    virtual void gl_enable_client_state(GLenum cap) override;
+    virtual void gl_disable_client_state(GLenum cap) override;
 
     virtual void present() override;
 
@@ -133,6 +135,11 @@ private:
     GLclampf m_alpha_test_ref_value = 0;
 
     GLenum m_current_read_buffer = GL_BACK;
+
+    // Client side arrays
+    bool m_client_side_vertex_array_enabled = false;
+    bool m_client_side_color_array_enabled = false;
+    bool m_client_side_texture_coord_array_enabled = false;
 
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 
