@@ -102,7 +102,6 @@ void StyleProperties::load_font(Layout::Node const& node) const
     auto family = family_parts[0];
 
     auto monospace = false;
-    auto bold = false;
 
     if (family.is_one_of("monospace", "ui-monospace")) {
         monospace = true;
@@ -111,37 +110,38 @@ void StyleProperties::load_font(Layout::Node const& node) const
         family = "Katica";
     }
 
-    int weight = 400;
+    int weight = Gfx::FontWeight::Regular;
     if (font_weight->is_identifier()) {
         switch (static_cast<const IdentifierStyleValue&>(*font_weight).id()) {
         case CSS::ValueID::Normal:
-            weight = 400;
+            weight = Gfx::FontWeight::Regular;
             break;
         case CSS::ValueID::Bold:
-            weight = 700;
+            weight = Gfx::FontWeight::Bold;
             break;
         case CSS::ValueID::Lighter:
             // FIXME: This should be relative to the parent.
-            weight = 400;
+            weight = Gfx::FontWeight::Regular;
             break;
         case CSS::ValueID::Bolder:
             // FIXME: This should be relative to the parent.
-            weight = 700;
+            weight = Gfx::FontWeight::Bold;
             break;
         default:
             break;
         }
-    } else if (font_weight->is_length()) {
-        // FIXME: This isn't really a length, it's a numeric value..
-        int font_weight_integer = font_weight->to_length().raw_value();
-        if (font_weight_integer <= 400)
-            weight = 400;
-        if (font_weight_integer <= 700)
-            weight = 700;
-        weight = 900;
+    } else if (font_weight->is_numeric()) {
+        int font_weight_integer = roundf(static_cast<NumericStyleValue const&>(*font_weight).value());
+        if (font_weight_integer <= Gfx::FontWeight::Regular)
+            weight = Gfx::FontWeight::Regular;
+        else if (font_weight_integer <= Gfx::FontWeight::Bold)
+            weight = Gfx::FontWeight::Bold;
+        else
+            weight = Gfx::FontWeight::Black;
     }
+    // FIXME: calc() for font-weight
 
-    bold = weight > 400;
+    bool bold = weight > Gfx::FontWeight::Regular;
 
     int size = 10;
     auto parent_font_size = node.parent() == nullptr ? size : node.parent()->font_size();
