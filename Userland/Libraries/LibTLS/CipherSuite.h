@@ -12,6 +12,7 @@ enum class CipherSuite {
     Invalid = 0,
 
     // Weak cipher suites, but we support them
+
     // RFC 5246 - Original TLS v1.2 ciphers
     RSA_WITH_AES_128_CBC_SHA = 0x002F,
     RSA_WITH_AES_256_CBC_SHA = 0x0035,
@@ -22,7 +23,14 @@ enum class CipherSuite {
     RSA_WITH_AES_128_GCM_SHA256 = 0x009C,
     RSA_WITH_AES_256_GCM_SHA384 = 0x009D,
 
+    // Secure cipher suites, but not recommended
+
+    // RFC 5288 - DH, DHE and RSA for AES-GCM
+    DHE_RSA_WITH_AES_128_GCM_SHA256 = 0x009E,
+    DHE_RSA_WITH_AES_256_GCM_SHA384 = 0x009F,
+
     // All recommended cipher suites (according to https://ciphersuite.info/cs/)
+
     // RFC 5288 - DH, DHE and RSA for AES-GCM
     DHE_DSS_WITH_AES_128_GCM_SHA256 = 0x00A2,
     DHE_DSS_WITH_AES_256_GCM_SHA384 = 0x00A3,
