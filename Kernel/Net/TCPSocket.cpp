@@ -38,8 +38,10 @@ void TCPSocket::set_state(State new_state)
 
     m_state = new_state;
 
-    if (new_state == State::Established && m_direction == Direction::Outgoing)
+    if (new_state == State::Established && m_direction == Direction::Outgoing) {
         m_role = Role::Connected;
+        [[maybe_unused]] auto rc = set_so_error(KSuccess);
+    }
 
     if (new_state == State::Closed) {
         closing_sockets().with_exclusive([&](auto& table) {
