@@ -38,7 +38,7 @@ void Typeface::set_ttf_font(RefPtr<TTF::Font> font)
     m_ttf_font = font;
 }
 
-RefPtr<Font> Typeface::get_font(unsigned size)
+RefPtr<Font> Typeface::get_font(unsigned size) const
 {
     for (auto font : m_bitmap_fonts) {
         if (font->presentation_size() == size)
