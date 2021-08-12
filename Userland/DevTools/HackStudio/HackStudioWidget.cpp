@@ -515,6 +515,7 @@ void HackStudioWidget::add_new_editor(GUI::Widget& parent)
     wrapper->set_project_root(LexicalPath(m_project->root_path()));
     wrapper->editor().on_cursor_change = [this] { update_statusbar(); };
     wrapper->editor().on_change = [this] { update_gml_preview(); };
+    set_edit_mode(EditMode::Text);
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_action()
