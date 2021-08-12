@@ -82,6 +82,7 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void mousewheel_event(GUI::MouseEvent&) override;
 
 private:
     RefPtr<Mesh> m_mesh;
@@ -105,6 +106,7 @@ private:
     GLint m_wrap_t_mode = GL_REPEAT;
     float m_texture_scale = 1.0f;
     GLint m_mag_filter = GL_NEAREST;
+    float m_zoom = 1;
 };
 
 void GLContextWidget::paint_event(GUI::PaintEvent& event)
@@ -127,6 +129,14 @@ void GLContextWidget::mousemove_event(GUI::MouseEvent& event)
     }
 
     m_last_mouse = event.position();
+}
+
+void GLContextWidget::mousewheel_event(GUI::MouseEvent& event)
+{
+    if (event.wheel_delta() > 0)
+        m_zoom /= 1.1f;
+    else
+        m_zoom *= 1.1f;
 }
 
 void GLContextWidget::timer_event(Core::TimerEvent&)
@@ -152,6 +162,7 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_wrap_s_mode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_wrap_t_mode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_mag_filter);
+    glScalef(m_zoom, m_zoom, m_zoom);
 
     if (!m_mesh.is_null())
         m_mesh->draw(m_texture_scale);
