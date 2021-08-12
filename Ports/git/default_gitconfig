@@ -1,3 +1,7 @@
+[core]
+    editor = TextEditor
+    pager = less
+
 [user]
     email = anon
     name = anon
