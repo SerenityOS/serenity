@@ -1403,6 +1403,50 @@ void SoftwareGLContext::gl_depth_mask(GLboolean flag)
     m_rasterizer.set_options(options);
 }
 
+void SoftwareGLContext::gl_enable_client_state(GLenum cap)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    switch (cap) {
+    case GL_VERTEX_ARRAY:
+        m_client_side_vertex_array_enabled = true;
+        break;
+
+    case GL_COLOR_ARRAY:
+        m_client_side_color_array_enabled = true;
+        break;
+
+    case GL_TEXTURE_COORD_ARRAY:
+        m_client_side_texture_coord_array_enabled = true;
+        break;
+
+    default:
+        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+    }
+}
+
+void SoftwareGLContext::gl_disable_client_state(GLenum cap)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    switch (cap) {
+    case GL_VERTEX_ARRAY:
+        m_client_side_vertex_array_enabled = false;
+        break;
+
+    case GL_COLOR_ARRAY:
+        m_client_side_color_array_enabled = false;
+        break;
+
+    case GL_TEXTURE_COORD_ARRAY:
+        m_client_side_texture_coord_array_enabled = false;
+        break;
+
+    default:
+        RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
+    }
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);

@@ -94,3 +94,13 @@ void glDepthMask(GLboolean flag)
 {
     g_gl_context->gl_depth_mask(flag);
 }
+
+void glEnableClientState(GLenum cap)
+{
+    g_gl_context->gl_enable_client_state(cap);
+}
+
+void glDisableClientState(GLenum cap)
+{
+    g_gl_context->gl_disable_client_state(cap);
+}
