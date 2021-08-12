@@ -7,6 +7,8 @@
 #include <AK/Debug.h>
 #include <AK/Random.h>
 #include <LibCrypto/ASN1/DER.h>
+#include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
 
@@ -224,6 +226,43 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
     builder.append(outbuf);
 }
 
+void TLSv12::build_dhe_rsa_pre_master_secret(PacketBuilder& builder)
+{
+    auto& dh = m_context.server_diffie_hellman_params;
+    auto dh_p = Crypto::UnsignedBigInteger::import_data(dh.p.data(), dh.p.size());
+    auto dh_g = Crypto::UnsignedBigInteger::import_data(dh.g.data(), dh.g.size());
+    auto dh_Ys = Crypto::UnsignedBigInteger::import_data(dh.Ys.data(), dh.Ys.size());
+    auto dh_key_size = dh.p.size();
+
+    auto dh_random = Crypto::NumberTheory::random_number(0, dh_p);
+    auto dh_Yc = Crypto::NumberTheory::ModularPower(dh_g, dh_random, dh_p);
+    auto dh_Yc_bytes = ByteBuffer::create_uninitialized(dh_key_size);
+    dh_Yc.export_data(dh_Yc_bytes);
+
+    auto premaster_key = Crypto::NumberTheory::ModularPower(dh_Ys, dh_random, dh_p);
+    m_context.premaster_key = ByteBuffer::create_uninitialized(dh_key_size);
+    premaster_key.export_data(m_context.premaster_key, true);
+
+    dh.p.clear();
+    dh.g.clear();
+    dh.Ys.clear();
+
+    if constexpr (TLS_DEBUG) {
+        dbgln("dh_random: {}", dh_random.to_base(16));
+        dbgln("dh_Yc: {:hex-dump}", (ReadonlyBytes)dh_Yc_bytes);
+        dbgln("premaster key: {:hex-dump}", (ReadonlyBytes)m_context.premaster_key);
+    }
+
+    if (!compute_master_secret_from_pre_master_secret(48)) {
+        dbgln("oh noes we could not derive a master key :(");
+        return;
+    }
+
+    builder.append_u24(dh_key_size + 2);
+    builder.append((u16)dh_key_size);
+    builder.append(dh_Yc_bytes);
+}
+
 ByteBuffer TLSv12::build_certificate()
 {
     PacketBuilder builder { MessageType::Handshake, m_context.options.version };
@@ -296,8 +335,7 @@ ByteBuffer TLSv12::build_client_key_exchange()
         TODO();
         break;
     case KeyExchangeAlgorithm::DHE_RSA:
-        dbgln("Client key exchange for DHE_RSA is not implemented");
-        TODO();
+        build_dhe_rsa_pre_master_secret(builder);
         break;
     case KeyExchangeAlgorithm::DH_anon:
         dbgln("Client key exchange for DH_anon is not implemented");

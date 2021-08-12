@@ -199,7 +199,7 @@ ByteBuffer TLSv12::build_server_key_exchange()
     return {};
 }
 
-ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes)
+ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes buffer)
 {
     switch (get_key_exchange_algorithm(m_context.cipher)) {
     case KeyExchangeAlgorithm::RSA:
@@ -214,8 +214,7 @@ ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes)
         TODO();
         break;
     case KeyExchangeAlgorithm::DHE_RSA:
-        dbgln("Server key exchange for DHE_RSA is not implemented");
-        TODO();
+        handle_dhe_rsa_server_key_exchange(buffer);
         break;
     case KeyExchangeAlgorithm::DH_anon:
         dbgln("Server key exchange for DH_anon is not implemented");
@@ -234,6 +233,31 @@ ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes)
         VERIFY_NOT_REACHED();
         break;
     }
+    return 0;
+}
+
+ssize_t TLSv12::handle_dhe_rsa_server_key_exchange(ReadonlyBytes buffer)
+{
+    auto dh_p_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(3)));
+    auto dh_p = buffer.slice(5, dh_p_length);
+    m_context.server_diffie_hellman_params.p = ByteBuffer::copy(dh_p.data(), dh_p.size());
+
+    auto dh_g_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(5 + dh_p_length)));
+    auto dh_g = buffer.slice(7 + dh_p_length, dh_g_length);
+    m_context.server_diffie_hellman_params.g = ByteBuffer::copy(dh_g.data(), dh_g.size());
+
+    auto dh_Ys_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(7 + dh_p_length + dh_g_length)));
+    auto dh_Ys = buffer.slice(9 + dh_p_length + dh_g_length, dh_Ys_length);
+    m_context.server_diffie_hellman_params.Ys = ByteBuffer::copy(dh_Ys.data(), dh_Ys.size());
+
+    if constexpr (TLS_DEBUG) {
+        dbgln("dh_p: {:hex-dump}", dh_p);
+        dbgln("dh_g: {:hex-dump}", dh_g);
+        dbgln("dh_Ys: {:hex-dump}", dh_Ys);
+    }
+
+    // FIXME: Validate signature of Diffie-Hellman parameters as defined in RFC 5246 section 7.4.3.
+
     return 0;
 }
 

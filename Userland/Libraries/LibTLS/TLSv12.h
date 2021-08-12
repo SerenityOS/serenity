@@ -300,6 +300,12 @@ struct Context {
     size_t send_retries { 0 };
 
     time_t handshake_initiation_timestamp { 0 };
+
+    struct {
+        ByteBuffer p;
+        ByteBuffer g;
+        ByteBuffer Ys;
+    } server_diffie_hellman_params;
 };
 
 class TLSv12 : public Core::Socket {
@@ -397,6 +403,7 @@ private:
     ByteBuffer build_change_cipher_spec();
     ByteBuffer build_verify_request();
     void build_rsa_pre_master_secret(PacketBuilder&);
+    void build_dhe_rsa_pre_master_secret(PacketBuilder&);
 
     bool flush();
     void write_into_socket();
@@ -408,6 +415,7 @@ private:
     ssize_t handle_handshake_finished(ReadonlyBytes, WritePacketStage&);
     ssize_t handle_certificate(ReadonlyBytes);
     ssize_t handle_server_key_exchange(ReadonlyBytes);
+    ssize_t handle_dhe_rsa_server_key_exchange(ReadonlyBytes);
     ssize_t handle_server_hello_done(ReadonlyBytes);
     ssize_t handle_certificate_verify(ReadonlyBytes);
     ssize_t handle_handshake_payload(ReadonlyBytes);
