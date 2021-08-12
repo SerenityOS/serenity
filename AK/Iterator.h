@@ -58,7 +58,7 @@ public:
     constexpr auto operator->() const { return &m_container[m_index]; }
     constexpr auto operator->() { return &m_container[m_index]; }
 
-    SimpleIterator& operator=(const SimpleIterator& other)
+    constexpr SimpleIterator& operator=(const SimpleIterator& other)
     {
         m_index = other.m_index;
         return *this;

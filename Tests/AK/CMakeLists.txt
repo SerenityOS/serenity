@@ -36,6 +36,7 @@ set(AK_TEST_SOURCES
     TestLEB128.cpp
     TestLexicalPath.cpp
     TestMACAddress.cpp
+    TestMaxElement.cpp
     TestMemMem.cpp
     TestMemoryStream.cpp
     TestNeverDestroyed.cpp

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Iterator.h>
+#include <AK/MaxElement.h>
 #include <AK/Span.h>
 
 namespace AK {
@@ -64,16 +65,6 @@ struct Array {
             __data[idx] = value;
 
         return Size;
-    }
-
-    [[nodiscard]] constexpr T max() requires(requires(T x, T y) { x < y; })
-    {
-        static_assert(Size > 0, "No values to max() over");
-
-        T value = __data[0];
-        for (size_t i = 1; i < Size; ++i)
-            value = AK::max(__data[i], value);
-        return value;
     }
 
     [[nodiscard]] constexpr T min() requires(requires(T x, T y) { x > y; })
