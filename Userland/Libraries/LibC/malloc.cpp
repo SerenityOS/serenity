@@ -20,6 +20,12 @@
 #include <sys/mman.h>
 #include <syscall.h>
 
+extern "C"{
+    // BAD
+    __attribute__((malloc)) __attribute__((alloc_size(2))) __attribute__((alloc_align(1))) void* memalign(size_t alignment, size_t size);
+}
+
+
 class PthreadMutexLocker {
 public:
     ALWAYS_INLINE explicit PthreadMutexLocker(pthread_mutex_t& mutex)
@@ -448,6 +454,12 @@ void* calloc(size_t count, size_t size)
     return ptr;
 }
 
+// BAD BAD
+[[gnu::flatten]] void* memalign(size_t, size_t size) {
+    // VERY VERY BAD
+    return malloc(size);
+}
+
 size_t malloc_size(void* ptr)
 {
     MemoryAuditingSuppressor suppressor;
@@ -546,3 +558,4 @@ void serenity_dump_malloc_stats()
     dbgln("number of frees: {}", g_malloc_stats.number_of_frees);
 }
 }
+
