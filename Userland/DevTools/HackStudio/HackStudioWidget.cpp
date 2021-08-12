@@ -653,7 +653,14 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
         }
 
         String const relative_file_path = LexicalPath::relative_path(save_path.value(), m_project->root_path());
-        current_editor_wrapper().set_filename(relative_file_path);
+        if (current_editor_wrapper().filename().is_null()) {
+            current_editor_wrapper().set_filename(relative_file_path);
+        } else {
+            for (auto& editor_wrapper : m_all_editor_wrappers) {
+                if (editor_wrapper.filename() == old_filename)
+                    editor_wrapper.set_filename(relative_file_path);
+            }
+        }
         current_editor_wrapper().save();
 
         auto new_project_file = m_project->get_file(relative_file_path);
