@@ -219,7 +219,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
 {
     auto& computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
 
-    m_font = specified_style.font();
+    m_font = specified_style.font(*this);
     m_line_height = specified_style.line_height(*this);
 
     {
