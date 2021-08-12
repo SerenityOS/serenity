@@ -36,7 +36,6 @@ private:
     String to_absolute_path(const String&) const;
 
     RefPtr<GUI::FileSystemModel> m_model;
-    mutable NonnullRefPtrVector<ProjectFile> m_files;
 
     String m_root_path;
 };
