@@ -116,6 +116,7 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     m_remove_current_editor_action = create_remove_current_editor_action();
     m_open_action = create_open_action();
     m_save_action = create_save_action();
+    m_save_as_action = create_save_as_action();
     m_new_project_action = create_new_project_action();
 
     create_action_tab(*m_right_hand_splitter);
@@ -609,6 +610,29 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_action()
     });
 }
 
+NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
+{
+    return GUI::CommonActions::make_save_as_action([&](auto&) {
+        auto const old_filename = current_editor_wrapper().filename();
+        LexicalPath const old_path(old_filename);
+
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(),
+            old_filename.is_null() ? "Untitled" : old_path.title(),
+            old_filename.is_null() ? "txt" : old_path.extension(),
+            Core::File::absolute_path(old_path.dirname()));
+        if (!save_path.has_value()) {
+            return;
+        }
+
+        current_editor_wrapper().set_filename(save_path.value());
+        current_editor_wrapper().save();
+
+        auto new_project_file = m_project->get_file(save_path.value());
+        m_open_files.set(save_path.value(), *new_project_file);
+        m_open_files_vector.append(save_path.value());
+    });
+}
+
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_remove_current_terminal_action()
 {
     return GUI::Action::create("Remove &Current Terminal", { Mod_Alt | Mod_Shift, Key_T }, [this](auto&) {
@@ -956,6 +980,7 @@ void HackStudioWidget::create_file_menu(GUI::Window& window)
     file_menu.add_action(*m_new_project_action);
     file_menu.add_action(*m_open_action);
     file_menu.add_action(*m_save_action);
+    file_menu.add_action(*m_save_as_action);
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
