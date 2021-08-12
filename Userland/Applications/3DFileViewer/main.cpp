@@ -42,6 +42,7 @@ public:
     void set_wrap_s_mode(GLint mode) { m_wrap_s_mode = mode; }
     void set_wrap_t_mode(GLint mode) { m_wrap_t_mode = mode; }
     void set_texture_scale(float scale) { m_texture_scale = scale; }
+    void set_mag_filter(GLint filter) { m_mag_filter = filter; }
 
     void toggle_show_frame_rate()
     {
@@ -103,6 +104,7 @@ private:
     GLint m_wrap_s_mode = GL_REPEAT;
     GLint m_wrap_t_mode = GL_REPEAT;
     float m_texture_scale = 1.0f;
+    GLint m_mag_filter = GL_NEAREST;
 };
 
 void GLContextWidget::paint_event(GUI::PaintEvent& event)
@@ -149,6 +151,7 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_wrap_s_mode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_wrap_t_mode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, m_mag_filter);
 
     if (!m_mesh.is_null())
         m_mesh->draw(m_texture_scale);
@@ -415,6 +418,26 @@ int main(int argc, char** argv)
     texture_scale_menu.add_action(*texture_scale_4_action);
 
     texture_scale_1_action->set_checked(true);
+
+    auto& texture_mag_filter_menu = texture_menu.add_submenu("Mag Filter");
+    GUI::ActionGroup texture_mag_filter_actions;
+    texture_mag_filter_actions.set_exclusive(true);
+
+    auto texture_mag_filter_nearest_action = GUI::Action::create_checkable("&Nearest", [&widget](auto&) {
+        widget.set_mag_filter(GL_NEAREST);
+    });
+
+    auto texture_mag_filter_linear_action = GUI::Action::create_checkable("&Linear", [&widget](auto&) {
+        widget.set_mag_filter(GL_LINEAR);
+    });
+
+    texture_mag_filter_actions.add_action(*texture_mag_filter_nearest_action);
+    texture_mag_filter_actions.add_action(*texture_mag_filter_linear_action);
+
+    texture_mag_filter_menu.add_action(*texture_mag_filter_nearest_action);
+    texture_mag_filter_menu.add_action(*texture_mag_filter_linear_action);
+
+    texture_mag_filter_nearest_action->set_checked(true);
 
     auto& help_menu = window->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("3D File Viewer", app_icon, window));
