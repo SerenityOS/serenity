@@ -47,6 +47,7 @@ int main(int argc, char** argv)
     BinaryFileMode binary_mode { BinaryFileMode::Binary };
     bool case_insensitive = false;
     bool invert_match = false;
+    bool colored_output = isatty(STDOUT_FILENO);
 
     Core::ArgsParser args_parser;
     args_parser.add_option(recursive, "Recursively scan files starting in working directory", "recursive", 'r');
@@ -90,6 +91,22 @@ int main(int argc, char** argv)
             return true;
         },
     });
+    args_parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "When to use colored output for the matching text ([auto], never, always)",
+        .long_name = "color",
+        .short_name = 0,
+        .value_name = "WHEN",
+        .accept_value = [&](auto* str) {
+            if ("never"sv == str)
+                colored_output = false;
+            else if ("always"sv == str)
+                colored_output = true;
+            else if ("auto"sv != str)
+                return false;
+            return true;
+        },
+    });
     args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
@@ -114,15 +131,13 @@ int main(int argc, char** argv)
             auto result = re.match(str, PosixFlags::Global);
             if (result.success ^ invert_match) {
                 if (is_binary && binary_mode == BinaryFileMode::Binary) {
-                    outln("binary file \x1B[34m{}\x1B[0m matches", filename);
+                    outln(colored_output ? "binary file \x1B[34m{}\x1B[0m matches" : "binary file {} matches", filename);
                 } else {
-                    if ((result.matches.size() || invert_match) && print_filename) {
-                        out("\x1B[34m{}:\x1B[0m", filename);
-                    }
+                    if ((result.matches.size() || invert_match) && print_filename)
+                        out(colored_output ? "\x1B[34m{}:\x1B[0m" : "{}:", filename);
 
                     for (auto& match : result.matches) {
-
-                        out("{}\x1B[32m{}\x1B[0m",
+                        out(colored_output ? "{}\x1B[32m{}\x1B[0m" : "{}{}",
                             StringView(&str[last_printed_char_pos], match.global_offset - last_printed_char_pos),
                             match.view.to_string());
                         last_printed_char_pos = match.global_offset + match.view.length();
