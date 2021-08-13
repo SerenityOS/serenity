@@ -105,6 +105,9 @@ void Profile::rebuild_tree()
         if (!process_filter_contains(event.pid, event.serial))
             continue;
 
+        if (event.data.has<Event::SignpostData>())
+            continue;
+
         m_filtered_event_indices.append(event_index);
 
         if (auto* malloc_data = event.data.get_pointer<Event::MallocData>(); malloc_data && !live_allocations.contains(malloc_data->ptr))
