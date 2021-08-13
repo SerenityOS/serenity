@@ -11,6 +11,7 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/Bus/USB/UHCI/UHCIDescriptorPool.h>
 #include <Kernel/Bus/USB/UHCI/UHCIDescriptorTypes.h>
 #include <Kernel/Bus/USB/UHCI/UHCIRootHub.h>
 #include <Kernel/Bus/USB/USBController.h>
@@ -24,6 +25,9 @@ namespace Kernel::USB {
 class UHCIController final
     : public USBController
     , public PCI::Device {
+
+    static constexpr u8 MAXIMUM_NUMBER_OF_TDS = 128; // Upper pool limit. This consumes the second page we have allocated
+    static constexpr u8 MAXIMUM_NUMBER_OF_QHS = 64;
 
 public:
     static constexpr u8 NUMBER_OF_ROOT_PORTS = 2;
@@ -77,8 +81,8 @@ private:
     KResult create_chain(Pipe& pipe, PacketID direction, Ptr32<u8>& buffer_address, size_t max_size, size_t transfer_size, TransferDescriptor** td_chain, TransferDescriptor** last_td);
     void free_descriptor_chain(TransferDescriptor* first_descriptor);
 
-    QueueHead* allocate_queue_head() const;
-    TransferDescriptor* allocate_transfer_descriptor() const;
+    QueueHead* allocate_queue_head();
+    TransferDescriptor* allocate_transfer_descriptor();
 
     void reset_port(u8);
 
@@ -86,9 +90,8 @@ private:
     IOAddress m_io_base;
 
     OwnPtr<UHCIRootHub> m_root_hub;
-
-    Vector<QueueHead*> m_free_qh_pool;
-    Vector<TransferDescriptor*> m_free_td_pool;
+    OwnPtr<UHCIDescriptorPool<QueueHead>> m_queue_head_pool;
+    OwnPtr<UHCIDescriptorPool<TransferDescriptor>> m_transfer_descriptor_pool;
     Vector<TransferDescriptor*> m_iso_td_list;
 
     QueueHead* m_interrupt_transfer_queue;
@@ -98,8 +101,7 @@ private:
     QueueHead* m_dummy_qh; // Needed for PIIX4 hack
 
     OwnPtr<Memory::Region> m_framelist;
-    OwnPtr<Memory::Region> m_qh_pool;
-    OwnPtr<Memory::Region> m_td_pool;
+    OwnPtr<Memory::Region> m_isochronous_transfer_pool;
 
     // Bitfield containing whether a given port should signal a change in reset or not.
     u8 m_port_reset_change_statuses { 0 };

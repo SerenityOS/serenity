@@ -16,8 +16,6 @@
 #include <Kernel/StdLib.h>
 #include <Kernel/Time/TimeManagement.h>
 
-static constexpr u8 MAXIMUM_NUMBER_OF_TDS = 128; // Upper pool limit. This consumes the second page we have allocated
-static constexpr u8 MAXIMUM_NUMBER_OF_QHS = 64;
 static constexpr u8 RETRY_COUNTER_RELOAD = 3;
 
 namespace Kernel::USB {
@@ -129,6 +127,7 @@ KResult UHCIController::reset()
 
     if (auto result = create_structures(); result.is_error())
         return result;
+
     setup_schedule();
 
     write_flbaseadd(m_framelist->physical_page(0)->paddr().get()); // Frame list (physical) address
@@ -144,21 +143,10 @@ KResult UHCIController::reset()
 
 UNMAP_AFTER_INIT KResult UHCIController::create_structures()
 {
-    // Let's allocate memory for both the QH and TD pools
-    // First the QH pool and all of the Interrupt QH's
-    auto maybe_qh_pool_vmobject = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(2 * PAGE_SIZE);
-    if (maybe_qh_pool_vmobject.is_error())
-        return maybe_qh_pool_vmobject.error();
-
-    m_qh_pool = MM.allocate_kernel_region_with_vmobject(maybe_qh_pool_vmobject.release_value(), 2 * PAGE_SIZE, "UHCI Queue Head Pool", Memory::Region::Access::Write);
-    memset(m_qh_pool->vaddr().as_ptr(), 0, 2 * PAGE_SIZE); // Zero out both pages
-
-    // Let's populate our free qh list (so we have some we can allocate later on)
-    m_free_qh_pool.resize(MAXIMUM_NUMBER_OF_TDS);
-    for (size_t i = 0; i < m_free_qh_pool.size(); i++) {
-        auto placement_addr = reinterpret_cast<void*>(m_qh_pool->vaddr().get() + (i * sizeof(QueueHead)));
-        auto paddr = static_cast<u32>(m_qh_pool->physical_page(0)->paddr().get() + (i * sizeof(QueueHead)));
-        m_free_qh_pool.at(i) = new (placement_addr) QueueHead(paddr);
+    m_queue_head_pool = UHCIDescriptorPool<QueueHead>::try_create("Queue Head Pool");
+    if (!m_queue_head_pool) {
+        dmesgln("UHCI: Failed to create Queue Head Pool!");
+        return ENOMEM;
     }
 
     // Create the Full Speed, Low Speed Control and Bulk Queue Heads
@@ -169,17 +157,27 @@ UNMAP_AFTER_INIT KResult UHCIController::create_structures()
     m_dummy_qh = allocate_queue_head();
 
     // Now the Transfer Descriptor pool
-    auto maybe_td_pool_vmobject = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(2 * PAGE_SIZE);
+    auto maybe_td_pool_vmobject = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE);
     if (maybe_td_pool_vmobject.is_error())
         return maybe_td_pool_vmobject.error();
-    m_td_pool = MM.allocate_kernel_region_with_vmobject(maybe_td_pool_vmobject.release_value(), 2 * PAGE_SIZE, "UHCI Transfer Descriptor Pool", Memory::Region::Access::Write);
-    memset(m_td_pool->vaddr().as_ptr(), 0, 2 * PAGE_SIZE);
+
+    m_transfer_descriptor_pool = UHCIDescriptorPool<TransferDescriptor>::try_create("Transfer Descriptor Pool");
+    if (!m_transfer_descriptor_pool) {
+        dmesgln("UHCI: Failed to create Transfer Descriptor Pool!");
+        return ENOMEM;
+    }
+
+    m_isochronous_transfer_pool = MM.allocate_kernel_region_with_vmobject(*maybe_td_pool_vmobject.release_value(), PAGE_SIZE, "UHCI Isochronous Descriptor Pool", Memory::Region::Access::ReadWrite);
+    if (!m_isochronous_transfer_pool) {
+        dmesgln("UHCI: Failed to allocated Isochronous Descriptor Pool!");
+        return ENOMEM;
+    }
 
     // Set up the Isochronous Transfer Descriptor list
     m_iso_td_list.resize(UHCI_NUMBER_OF_ISOCHRONOUS_TDS);
     for (size_t i = 0; i < m_iso_td_list.size(); i++) {
-        auto placement_addr = reinterpret_cast<void*>(m_td_pool->vaddr().get() + (i * sizeof(Kernel::USB::TransferDescriptor)));
-        auto paddr = static_cast<u32>(m_td_pool->physical_page(0)->paddr().get() + (i * sizeof(Kernel::USB::TransferDescriptor)));
+        auto placement_addr = reinterpret_cast<void*>(m_isochronous_transfer_pool->vaddr().get() + (i * sizeof(Kernel::USB::TransferDescriptor)));
+        auto paddr = static_cast<u32>(m_isochronous_transfer_pool->physical_page(0)->paddr().get() + (i * sizeof(Kernel::USB::TransferDescriptor)));
 
         // Place a new Transfer Descriptor with a 1:1 in our region
         // The pointer returned by `new()` lines up exactly with the value
@@ -195,27 +193,10 @@ UNMAP_AFTER_INIT KResult UHCIController::create_structures()
             transfer_descriptor->print();
     }
 
-    m_free_td_pool.resize(MAXIMUM_NUMBER_OF_TDS);
-    for (size_t i = 0; i < m_free_td_pool.size(); i++) {
-        auto placement_addr = reinterpret_cast<void*>(m_td_pool->vaddr().offset(PAGE_SIZE).get() + (i * sizeof(Kernel::USB::TransferDescriptor)));
-        auto paddr = static_cast<u32>(m_td_pool->physical_page(1)->paddr().get() + (i * sizeof(Kernel::USB::TransferDescriptor)));
-
-        // Place a new Transfer Descriptor with a 1:1 in our region
-        // The pointer returned by `new()` lines up exactly with the value
-        // that we store in `paddr`, meaning our member functions directly
-        // access the raw descriptor (that we later send to the controller)
-        m_free_td_pool.at(i) = new (placement_addr) Kernel::USB::TransferDescriptor(paddr);
-
-        if constexpr (UHCI_VERBOSE_DEBUG) {
-            auto transfer_descriptor = m_free_td_pool.at(i);
-            transfer_descriptor->print();
-        }
-    }
-
     if constexpr (UHCI_DEBUG) {
         dbgln("UHCI: Pool information:");
-        dbgln("    qh_pool: {}, length: {}", PhysicalAddress(m_qh_pool->physical_page(0)->paddr()), m_qh_pool->range().size());
-        dbgln("    td_pool: {}, length: {}", PhysicalAddress(m_td_pool->physical_page(0)->paddr()), m_td_pool->range().size());
+        m_queue_head_pool->print_pool_information();
+        m_transfer_descriptor_pool->print_pool_information();
     }
 
     return KSuccess;
@@ -280,30 +261,14 @@ UNMAP_AFTER_INIT void UHCIController::setup_schedule()
     m_dummy_qh->print();
 }
 
-QueueHead* UHCIController::allocate_queue_head() const
+QueueHead* UHCIController::allocate_queue_head()
 {
-    for (QueueHead* queue_head : m_free_qh_pool) {
-        if (!queue_head->in_use()) {
-            queue_head->set_in_use(true);
-            dbgln_if(UHCI_DEBUG, "UHCI: Allocated a new Queue Head! Located @ {} ({})", VirtualAddress(queue_head), PhysicalAddress(queue_head->paddr()));
-            return queue_head;
-        }
-    }
-
-    return nullptr; // Huh!? We're outta queue heads!
+    return m_queue_head_pool->try_take_free_descriptor();
 }
 
-TransferDescriptor* UHCIController::allocate_transfer_descriptor() const
+TransferDescriptor* UHCIController::allocate_transfer_descriptor()
 {
-    for (TransferDescriptor* transfer_descriptor : m_free_td_pool) {
-        if (!transfer_descriptor->in_use()) {
-            transfer_descriptor->set_in_use(true);
-            dbgln_if(UHCI_DEBUG, "UHCI: Allocated a new Transfer Descriptor! Located @ {} ({})", VirtualAddress(transfer_descriptor), PhysicalAddress(transfer_descriptor->paddr()));
-            return transfer_descriptor;
-        }
-    }
-
-    return nullptr; // Huh?! We're outta TDs!!
+    return m_transfer_descriptor_pool->try_take_free_descriptor();
 }
 
 KResult UHCIController::stop()
@@ -421,8 +386,11 @@ void UHCIController::free_descriptor_chain(TransferDescriptor* first_descriptor)
     TransferDescriptor* descriptor = first_descriptor;
 
     while (descriptor) {
+        TransferDescriptor* next = descriptor->next_td();
+
         descriptor->free();
-        descriptor = descriptor->next_td();
+        m_transfer_descriptor_pool->release_to_pool(descriptor);
+        descriptor = next;
     }
 }
 
@@ -497,6 +465,7 @@ KResultOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
 
     free_descriptor_chain(transfer_queue->get_first_td());
     transfer_queue->free();
+    m_queue_head_pool->release_to_pool(transfer_queue);
 
     return transfer_size;
 }
