@@ -42,9 +42,6 @@ public:
 
     virtual KResultOr<size_t> submit_control_transfer(Transfer& transfer) override;
 
-    virtual RefPtr<USB::Device> const get_device_at_port(USB::Device::PortNumber) override;
-    virtual RefPtr<USB::Device> const get_device_from_address(u8 device_address) override;
-
     void get_port_status(Badge<UHCIRootHub>, u8, HubStatus&);
     KResult set_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
     KResult clear_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
@@ -109,8 +106,6 @@ private:
 
     // Bitfield containing whether a given port should signal a change in suspend or not.
     u8 m_port_suspend_change_statuses { 0 };
-
-    Array<RefPtr<USB::Device>, NUMBER_OF_ROOT_PORTS> m_devices; // Devices connected to the root ports (of which there are two)
 };
 
 }

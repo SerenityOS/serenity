@@ -254,27 +254,6 @@ UNMAP_AFTER_INIT UHCIController::~UHCIController()
 {
 }
 
-RefPtr<USB::Device> const UHCIController::get_device_at_port(USB::Device::PortNumber port)
-{
-    if (!m_devices.at(to_underlying(port)))
-        return nullptr;
-
-    return m_devices.at(to_underlying(port));
-}
-
-RefPtr<USB::Device> const UHCIController::get_device_from_address(u8 device_address)
-{
-    for (auto const& device : m_devices) {
-        if (!device)
-            continue;
-
-        if (device->address() == device_address)
-            return device;
-    }
-
-    return nullptr;
-}
-
 KResult UHCIController::reset()
 {
     if (auto stop_result = stop(); stop_result.is_error())
