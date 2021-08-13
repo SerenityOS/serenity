@@ -139,7 +139,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/usr/local/bin", "r") < 0) {
+    // This directory only exists if ports are installed
+    if (unveil("/usr/local/bin", "r") < 0 && errno != ENOENT) {
         perror("unveil");
         return 1;
     }
