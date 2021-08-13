@@ -76,11 +76,15 @@ void Profile::rebuild_tree()
 
     HashTable<FlatPtr> live_allocations;
 
-    for_each_event_in_filter_range([&](auto& event) {
-        if (event.type == Event::Type::Malloc)
-            live_allocations.set(event.ptr);
-        else if (event.type == Event::Type::Free)
-            live_allocations.remove(event.ptr);
+    for_each_event_in_filter_range([&](Event const& event) {
+        event.data.visit(
+            [&](Event::MallocData const& data) {
+                live_allocations.set(data.ptr);
+            },
+            [&](Event::FreeData const& data) {
+                live_allocations.remove(data.ptr);
+            },
+            [&](auto&) {});
     });
 
     m_filtered_event_indices.clear();
@@ -99,10 +103,10 @@ void Profile::rebuild_tree()
 
         m_filtered_event_indices.append(event_index);
 
-        if (event.type == Event::Type::Malloc && !live_allocations.contains(event.ptr))
+        if (auto* malloc_data = event.data.get_pointer<Event::MallocData>(); malloc_data && !live_allocations.contains(malloc_data->ptr))
             continue;
 
-        if (event.type == Event::Type::Free)
+        if (event.data.has<Event::FreeData>())
             continue;
 
         auto for_each_frame = [&]<typename Callback>(Callback callback) {
@@ -245,43 +249,55 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         auto type_string = perf_event.get("type").to_string();
 
         if (type_string == "sample"sv) {
-            event.type = Event::Type::Sample;
+            event.data = Event::SampleData {};
         } else if (type_string == "malloc"sv) {
-            event.type = Event::Type::Malloc;
-            event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
-            event.size = perf_event.get("size").to_number<size_t>();
+            event.data = Event::MallocData {
+                .ptr = perf_event.get("ptr"sv).to_number<FlatPtr>(),
+                .size = perf_event.get("size"sv).to_number<size_t>(),
+            };
         } else if (type_string == "free"sv) {
-            event.type = Event::Type::Free;
-            event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
+            event.data = Event::FreeData {
+                .ptr = perf_event.get("ptr"sv).to_number<FlatPtr>(),
+            };
         } else if (type_string == "signpost"sv) {
-            event.type = Event::Type::Signpost;
-            auto string_id = perf_event.get("arg1").to_number<FlatPtr>();
-            event.signpost_string = profile_strings.get(string_id).value_or(String::formatted("Signpost #{}", string_id));
-            event.arg2 = perf_event.get("arg2").to_number<FlatPtr>();
+            auto string_id = perf_event.get("arg1"sv).to_number<FlatPtr>();
+            event.data = Event::SignpostData {
+                .string = profile_strings.get(string_id).value_or(String::formatted("Signpost #{}", string_id)),
+                .arg = perf_event.get("arg2"sv).to_number<FlatPtr>(),
+            };
         } else if (type_string == "mmap"sv) {
-            event.type = Event::Type::Mmap;
-            event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
-            event.size = perf_event.get("size").to_number<size_t>();
-            event.name = perf_event.get("name").to_string();
+            auto ptr = perf_event.get("ptr"sv).to_number<FlatPtr>();
+            auto size = perf_event.get("size"sv).to_number<size_t>();
+            auto name = perf_event.get("name"sv).to_string();
+
+            event.data = Event::MmapData {
+                .ptr = ptr,
+                .size = size,
+                .name = name,
+            };
 
             auto it = current_processes.find(event.pid);
             if (it != current_processes.end())
-                it->value->library_metadata.handle_mmap(event.ptr, event.size, event.name);
+                it->value->library_metadata.handle_mmap(ptr, size, name);
             continue;
         } else if (type_string == "munmap"sv) {
-            event.type = Event::Type::Munmap;
-            event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
-            event.size = perf_event.get("size").to_number<size_t>();
+            event.data = Event::MunmapData {
+                .ptr = perf_event.get("ptr"sv).to_number<FlatPtr>(),
+                .size = perf_event.get("size"sv).to_number<size_t>(),
+            };
             continue;
         } else if (type_string == "process_create"sv) {
-            event.type = Event::Type::ProcessCreate;
-            event.parent_pid = perf_event.get("parent_pid").to_number<FlatPtr>();
-            event.executable = perf_event.get("executable").to_string();
+            auto parent_pid = perf_event.get("parent_pid"sv).to_number<pid_t>();
+            auto executable = perf_event.get("executable"sv).to_string();
+            event.data = Event::ProcessCreateData {
+                .parent_pid = parent_pid,
+                .executable = executable,
+            };
 
             auto sampled_process = adopt_own(*new Process {
                 .pid = event.pid,
-                .executable = event.executable,
-                .basename = LexicalPath::basename(event.executable),
+                .executable = executable,
+                .basename = LexicalPath::basename(executable),
                 .start_valid = event.serial,
                 .end_valid = {},
             });
@@ -290,8 +306,10 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             all_processes.append(move(sampled_process));
             continue;
         } else if (type_string == "process_exec"sv) {
-            event.type = Event::Type::ProcessExec;
-            event.executable = perf_event.get("executable").to_string();
+            auto executable = perf_event.get("executable"sv).to_string();
+            event.data = Event::ProcessExecData {
+                .executable = executable,
+            };
 
             auto old_process = current_processes.get(event.pid).value();
             old_process->end_valid = event.serial;
@@ -300,8 +318,8 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
 
             auto sampled_process = adopt_own(*new Process {
                 .pid = event.pid,
-                .executable = event.executable,
-                .basename = LexicalPath::basename(event.executable),
+                .executable = executable,
+                .basename = LexicalPath::basename(executable),
                 .start_valid = event.serial,
                 .end_valid = {},
             });
@@ -310,21 +328,21 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             all_processes.append(move(sampled_process));
             continue;
         } else if (type_string == "process_exit"sv) {
-            event.type = Event::Type::ProcessExit;
             auto old_process = current_processes.get(event.pid).value();
             old_process->end_valid = event.serial;
 
             current_processes.remove(event.pid);
             continue;
         } else if (type_string == "thread_create"sv) {
-            event.type = Event::Type::ThreadCreate;
-            event.parent_tid = perf_event.get("parent_tid").to_i32();
+            auto parent_tid = perf_event.get("parent_tid"sv).to_number<pid_t>();
+            event.data = Event::ThreadCreateData {
+                .parent_tid = parent_tid,
+            };
             auto it = current_processes.find(event.pid);
             if (it != current_processes.end())
                 it->value->handle_thread_create(event.tid, event.serial);
             continue;
         } else if (type_string == "thread_exit"sv) {
-            event.type = Event::Type::ThreadExit;
             auto it = current_processes.find(event.pid);
             if (it != current_processes.end())
                 it->value->handle_thread_exit(event.tid, event.serial);
@@ -375,7 +393,9 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         FlatPtr innermost_frame_address = event.frames.at(1).address;
         event.in_kernel = maybe_kernel_base.has_value() && innermost_frame_address >= maybe_kernel_base.value();
 
-        if (event.type == Event::Type::Signpost)
+        dbgln("size: {}", sizeof(Event));
+
+        if (event.data.has<Event::SignpostData>())
             signposts.append(move(event));
         else
             events.append(move(event));

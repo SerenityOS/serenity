@@ -20,6 +20,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Result.h>
+#include <AK/Variant.h>
 #include <LibELF/Image.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/ModelIndex.h>
@@ -163,38 +164,57 @@ public:
     };
 
     struct Event {
-        enum class Type {
-            Free,
-            Malloc,
-            Mmap,
-            Munmap,
-            ProcessCreate,
-            ProcessExec,
-            ProcessExit,
-            Sample,
-            Signpost,
-            ThreadCreate,
-            ThreadExit,
-        };
-        Type type {};
-        EventSerialNumber serial;
         u64 timestamp { 0 };
-        FlatPtr ptr { 0 };
-        size_t size { 0 };
-        String name;
-        int parent_pid { 0 };
-        int parent_tid { 0 };
-        String executable;
-        int pid { 0 };
-        int tid { 0 };
+        EventSerialNumber serial;
+        pid_t pid { 0 };
+        pid_t tid { 0 };
         u32 lost_samples { 0 };
         bool in_kernel { false };
 
-        // FIXME: Put event type-specific arguments in a union to save memory.
-        String signpost_string;
-        FlatPtr arg2 {};
-
         Vector<Frame> frames;
+
+        struct SampleData {
+        };
+
+        struct MallocData {
+            FlatPtr ptr {};
+            size_t size {};
+        };
+
+        struct FreeData {
+            FlatPtr ptr {};
+        };
+
+        struct SignpostData {
+            String string;
+            FlatPtr arg {};
+        };
+
+        struct MmapData {
+            FlatPtr ptr {};
+            size_t size {};
+            String name;
+        };
+
+        struct MunmapData {
+            FlatPtr ptr {};
+            size_t size {};
+        };
+
+        struct ProcessCreateData {
+            pid_t parent_pid { 0 };
+            String executable;
+        };
+
+        struct ProcessExecData {
+            String executable;
+        };
+
+        struct ThreadCreateData {
+            pid_t parent_tid {};
+        };
+
+        Variant<std::nullptr_t, SampleData, MallocData, FreeData, SignpostData, MmapData, MunmapData, ProcessCreateData, ProcessExecData, ThreadCreateData> data { nullptr };
     };
 
     const Vector<Event>& events() const { return m_events; }
