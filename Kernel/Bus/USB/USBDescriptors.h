@@ -39,6 +39,7 @@ struct [[gnu::packed]] USBDeviceDescriptor {
     u8 serial_number_descriptor_index;
     u8 num_configurations;
 };
+static_assert(sizeof(USBDeviceDescriptor) == 18);
 
 //
 //  Configuration Descriptor
