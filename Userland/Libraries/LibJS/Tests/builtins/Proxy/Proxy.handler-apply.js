@@ -14,7 +14,7 @@ describe("[[Call]] trap normal behavior", () => {
             apply(target, this_, arguments_) {
                 expect(target).toBe(f);
                 // FIXME: `this_` is currently `handler`
-                // expect(this_).toBeUndefined();
+                expect(this_).toBeUndefined();
                 if (arguments_[2]) {
                     return arguments_[0] * arguments_[1];
                 }
