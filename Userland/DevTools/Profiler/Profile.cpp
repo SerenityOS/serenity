@@ -45,6 +45,7 @@ Profile::Profile(Vector<Process> processes, Vector<Event> events)
 
     m_model = ProfileModel::create(*this);
     m_samples_model = SamplesModel::create(*this);
+    m_signposts_model = SignpostsModel::create(*this);
 
     rebuild_tree();
 }
@@ -57,6 +58,11 @@ GUI::Model& Profile::model()
 GUI::Model& Profile::samples_model()
 {
     return *m_samples_model;
+}
+
+GUI::Model& Profile::signposts_model()
+{
+    return *m_signposts_model;
 }
 
 void Profile::rebuild_tree()
@@ -92,6 +98,7 @@ void Profile::rebuild_tree()
     });
 
     m_filtered_event_indices.clear();
+    m_filtered_signpost_indices.clear();
 
     for (size_t event_index = 0; event_index < m_events.size(); ++event_index) {
         auto& event = m_events.at(event_index);
@@ -105,8 +112,10 @@ void Profile::rebuild_tree()
         if (!process_filter_contains(event.pid, event.serial))
             continue;
 
-        if (event.data.has<Event::SignpostData>())
+        if (event.data.has<Event::SignpostData>()) {
+            m_filtered_signpost_indices.append(event_index);
             continue;
+        }
 
         m_filtered_event_indices.append(event_index);
 
@@ -435,6 +444,7 @@ void Profile::set_timestamp_filter_range(u64 start, u64 end)
 
     rebuild_tree();
     m_samples_model->invalidate();
+    m_signposts_model->invalidate();
 }
 
 void Profile::clear_timestamp_filter_range()
@@ -444,6 +454,7 @@ void Profile::clear_timestamp_filter_range()
     m_has_timestamp_filter_range = false;
     rebuild_tree();
     m_samples_model->invalidate();
+    m_signposts_model->invalidate();
 }
 
 void Profile::add_process_filter(pid_t pid, EventSerialNumber start_valid, EventSerialNumber end_valid)
@@ -457,6 +468,7 @@ void Profile::add_process_filter(pid_t pid, EventSerialNumber start_valid, Event
     if (m_disassembly_model)
         m_disassembly_model->invalidate();
     m_samples_model->invalidate();
+    m_signposts_model->invalidate();
 }
 
 void Profile::remove_process_filter(pid_t pid, EventSerialNumber start_valid, EventSerialNumber end_valid)
@@ -472,6 +484,7 @@ void Profile::remove_process_filter(pid_t pid, EventSerialNumber start_valid, Ev
     if (m_disassembly_model)
         m_disassembly_model->invalidate();
     m_samples_model->invalidate();
+    m_signposts_model->invalidate();
 }
 
 void Profile::clear_process_filter()
@@ -483,6 +496,7 @@ void Profile::clear_process_filter()
     if (m_disassembly_model)
         m_disassembly_model->invalidate();
     m_samples_model->invalidate();
+    m_signposts_model->invalidate();
 }
 
 bool Profile::process_filter_contains(pid_t pid, EventSerialNumber serial)
