@@ -122,6 +122,7 @@ private:
     bool any_document_is_dirty() const;
 
     void update_gml_preview();
+    void update_window_title();
 
     NonnullRefPtrVector<EditorWrapper> m_all_editor_wrappers;
     RefPtr<EditorWrapper> m_current_editor_wrapper;
