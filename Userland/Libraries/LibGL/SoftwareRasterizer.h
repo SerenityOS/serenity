@@ -28,6 +28,7 @@ struct RasterizerOptions {
     bool enable_blending { false };
     GLenum blend_source_factor { GL_ONE };
     GLenum blend_destination_factor { GL_ONE };
+    u32 color_mask { 0xffffffff };
 };
 
 class SoftwareRasterizer final {

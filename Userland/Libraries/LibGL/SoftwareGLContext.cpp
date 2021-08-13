@@ -1694,6 +1694,35 @@ void SoftwareGLContext::read_from_vertex_attribute_pointer(VertexAttribPointer c
     }
 }
 
+void SoftwareGLContext::gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
+{
+    auto options = m_rasterizer.options();
+    auto mask = options.color_mask;
+
+    if (!red)
+        mask &= ~0x000000ff;
+    else
+        mask |= 0x000000ff;
+
+    if (!green)
+        mask &= ~0x0000ff00;
+    else
+        mask |= 0x0000ff00;
+
+    if (!blue)
+        mask &= ~0x00ff0000;
+    else
+        mask |= 0x00ff0000;
+
+    if (!alpha)
+        mask &= ~0xff000000;
+    else
+        mask |= 0xff000000;
+
+    options.color_mask = mask;
+    m_rasterizer.set_options(options);
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);

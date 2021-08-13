@@ -383,7 +383,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                             + float_dst * dst_factor_dst_color
                             + FloatVector4(float_dst.w(), float_dst.w(), float_dst.w(), float_dst.w()) * dst_factor_dst_alpha;
 
-                        *dst = to_rgba32(*src * src_factor + float_dst * dst_factor);
+                        *dst = (*dst & ~options.color_mask) | (to_rgba32(*src * src_factor + float_dst * dst_factor) & options.color_mask);
                     }
                 }
             } else {
@@ -395,7 +395,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                         if (~pixel_mask[y] & (1 << x))
                             continue;
 
-                        *dst = to_rgba32(*src);
+                        *dst = (*dst & ~options.color_mask) | (to_rgba32(*src) & options.color_mask);
                     }
                 }
             }
