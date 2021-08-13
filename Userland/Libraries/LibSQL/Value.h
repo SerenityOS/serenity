@@ -102,7 +102,7 @@ private:
     SQLType m_type { SQLType::Text };
     bool m_is_null { true };
 
-    Variant<String, int, double> m_impl {};
+    Variant<String, int, double> m_impl;
 };
 
 }

@@ -2197,7 +2197,10 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(ParsingContex
 
 OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_product_part_with_operator(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
 {
-    auto product_with_operator = make<CalculatedStyleValue::CalcProductPartWithOperator>();
+    // Note: The default value is not used or passed around.
+    auto product_with_operator = make<CalculatedStyleValue::CalcProductPartWithOperator>(
+        CalculatedStyleValue::CalcProductPartWithOperator::Multiply,
+        CalculatedStyleValue::CalcNumberValue(0));
 
     tokens.skip_whitespace();
 
@@ -2232,7 +2235,10 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
 
 OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_calc_number_product_part_with_operator(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
 {
-    auto number_product_with_operator = make<CalculatedStyleValue::CalcNumberProductPartWithOperator>();
+    // Note: The default value is not used or passed around.
+    auto number_product_with_operator = make<CalculatedStyleValue::CalcNumberProductPartWithOperator>(
+        CalculatedStyleValue::CalcNumberProductPartWithOperator::Multiply,
+        CalculatedStyleValue::CalcNumberValue(0));
 
     tokens.skip_whitespace();
 
@@ -2263,7 +2269,9 @@ OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_ca
 
 OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_product(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
 {
-    auto calc_number_product = make<CalculatedStyleValue::CalcNumberProduct>();
+    auto calc_number_product = make<CalculatedStyleValue::CalcNumberProduct>(
+        CalculatedStyleValue::CalcNumberValue(0),
+        NonnullOwnPtrVector<CalculatedStyleValue::CalcNumberProductPartWithOperator> {});
 
     auto first_calc_number_value_or_error = parse_calc_number_value(context, tokens);
     if (!first_calc_number_value_or_error.has_value())
@@ -2348,7 +2356,9 @@ Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(
 
 OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(ParsingContext const& context, TokenStream<StyleComponentValueRule>& tokens)
 {
-    auto calc_product = make<CalculatedStyleValue::CalcProduct>();
+    auto calc_product = make<CalculatedStyleValue::CalcProduct>(
+        CalculatedStyleValue::CalcValue(0),
+        NonnullOwnPtrVector<CalculatedStyleValue::CalcProductPartWithOperator> {});
 
     auto first_calc_value_or_error = parse_calc_value(context, tokens);
     if (!first_calc_value_or_error.has_value())
