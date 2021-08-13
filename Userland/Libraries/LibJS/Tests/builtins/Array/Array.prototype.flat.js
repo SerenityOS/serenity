@@ -2,6 +2,16 @@ test("length is 0", () => {
     expect(Array.prototype.flat).toHaveLength(0);
 });
 
+describe("error", () => {
+    test("Issue #9317, stack overflow in flatten_into_array from flat call", () => {
+        var a = [];
+        a[0] = a;
+        expect(() => {
+            a.flat(3893232121);
+        }).toThrowWithMessage(Error, "Call stack size limit exceeded");
+    });
+});
+
 describe("normal behavior", () => {
     test("basic functionality", () => {
         var array1 = [1, 2, [3, 4]];
