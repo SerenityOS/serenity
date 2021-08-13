@@ -13,3 +13,8 @@ void glVertexPointer(GLint size, GLenum type, GLsizei stride, const void* pointe
 {
     g_gl_context->gl_vertex_pointer(size, type, stride, pointer);
 }
+
+void glColorPointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
+{
+    g_gl_context->gl_color_pointer(size, type, stride, pointer);
+}
