@@ -361,6 +361,7 @@ GLAPI void glDisableClientState(GLenum cap);
 GLAPI void glVertexPointer(GLint size, GLenum type, GLsizei stride, const void* pointer);
 GLAPI void glColorPointer(GLint size, GLenum type, GLsizei stride, const void* pointer);
 GLAPI void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const void* pointer);
+GLAPI void glDrawArrays(GLenum mode, GLint first, GLsizei count);
 
 #ifdef __cplusplus
 }
