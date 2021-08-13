@@ -13,6 +13,7 @@ set(SOURCES
     GLTexture.cpp
     GLUtils.cpp
     GLVert.cpp
+    GLVertexArrays.cpp
     SoftwareGLContext.cpp
     SoftwareRasterizer.cpp
     DepthBuffer.cpp

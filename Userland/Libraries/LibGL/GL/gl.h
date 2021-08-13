@@ -141,6 +141,7 @@ extern "C" {
 #define GL_INT 0x1404
 #define GL_UNSIGNED_INT 0x1405
 #define GL_FLOAT 0x1406
+#define GL_DOUBLE 0x140A
 
 // Format enums
 #define GL_COLOR_INDEX 0x1900
@@ -356,6 +357,7 @@ GLAPI void glGetFloatv(GLenum pname, GLfloat* params);
 GLAPI void glDepthMask(GLboolean flag);
 GLAPI void glEnableClientState(GLenum cap);
 GLAPI void glDisableClientState(GLenum cap);
+GLAPI void glVertexPointer(GLint size, GLenum type, GLsizei stride, const void* pointer);
 
 #ifdef __cplusplus
 }
