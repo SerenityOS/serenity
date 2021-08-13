@@ -629,6 +629,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
         auto new_project_file = m_project->get_file(save_path.value());
         m_open_files.set(save_path.value(), *new_project_file);
         m_open_files_vector.append(save_path.value());
+
+        update_window_title();
     });
 }
 
