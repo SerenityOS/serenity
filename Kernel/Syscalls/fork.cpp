@@ -25,7 +25,10 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child->m_root_directory_relative_to_global_root = m_root_directory_relative_to_global_root;
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths.deep_copy();
-    child->m_fds = m_fds;
+
+    if (auto result = child->m_fds.try_clone(m_fds); result.is_error())
+        return result.error();
+
     child->m_pg = m_pg;
 
     {
