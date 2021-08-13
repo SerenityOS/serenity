@@ -141,6 +141,7 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 * **Jelle Raaijmakers** - [GMTA](https://github.com/GMTA)
 * **Sam Atkins** - [AtkinsSJ](http://github.com/AtkinsSJ)
 * **Tobias Christiansen** - [TobyAsE](https://github.com/TobyAsE)
+* **Lenny Maiorani** - [ldm5180](https://github.com/ldm5180)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
