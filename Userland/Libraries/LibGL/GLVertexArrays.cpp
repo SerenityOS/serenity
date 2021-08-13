@@ -18,3 +18,8 @@ void glColorPointer(GLint size, GLenum type, GLsizei stride, const void* pointer
 {
     g_gl_context->gl_color_pointer(size, type, stride, pointer);
 }
+
+void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
+{
+    g_gl_context->gl_tex_coord_pointer(size, type, stride, pointer);
+}

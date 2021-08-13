@@ -68,6 +68,7 @@ public:
     virtual void gl_disable_client_state(GLenum cap) = 0;
     virtual void gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) = 0;
     virtual void gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) = 0;
+    virtual void gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) = 0;
 
     virtual void present() = 0;
 };
