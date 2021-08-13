@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Bus/USB/UHCIController.h>
-#include <Kernel/Bus/USB/UHCIRootHub.h>
+#include <Kernel/Bus/USB/UHCI/UHCIController.h>
+#include <Kernel/Bus/USB/UHCI/UHCIRootHub.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBConstants.h>
 #include <Kernel/Bus/USB/USBEndpoint.h>
