@@ -113,16 +113,15 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
 template<typename Callback>
 void TimelineTrack::for_each_signpost(Callback callback)
 {
-    for (auto& signpost : m_profile.signposts()) {
+    m_profile.for_each_signpost([&](auto& signpost) {
         if (signpost.pid != m_process.pid)
-            continue;
+            return IterationDecision::Continue;
 
         if (!m_process.valid_at(signpost.serial))
-            continue;
+            return IterationDecision::Continue;
 
-        if (callback(signpost) == IterationDecision::Break)
-            break;
-    }
+        return callback(signpost);
+    });
 }
 
 void TimelineTrack::mousemove_event(GUI::MouseEvent& event)

@@ -31,11 +31,15 @@ static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
         child->sort_children();
 }
 
-Profile::Profile(Vector<Process> processes, Vector<Event> events, Vector<Event> signposts)
+Profile::Profile(Vector<Process> processes, Vector<Event> events)
     : m_processes(move(processes))
     , m_events(move(events))
-    , m_signposts(move(signposts))
 {
+    for (size_t i = 0; i < m_events.size(); ++i) {
+        if (m_events[i].data.has<Event::SignpostData>())
+            m_signpost_indices.append(i);
+    }
+
     m_first_timestamp = m_events.first().timestamp;
     m_last_timestamp = m_events.last().timestamp;
 
@@ -231,7 +235,6 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     NonnullOwnPtrVector<Process> all_processes;
     HashMap<pid_t, Process*> current_processes;
     Vector<Event> events;
-    Vector<Event> signposts;
     EventSerialNumber next_serial;
 
     for (auto& perf_event_value : perf_events.values()) {
@@ -393,12 +396,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         FlatPtr innermost_frame_address = event.frames.at(1).address;
         event.in_kernel = maybe_kernel_base.has_value() && innermost_frame_address >= maybe_kernel_base.value();
 
-        dbgln("size: {}", sizeof(Event));
-
-        if (event.data.has<Event::SignpostData>())
-            signposts.append(move(event));
-        else
-            events.append(move(event));
+        events.append(move(event));
     }
 
     if (events.is_empty())
@@ -415,7 +413,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     for (auto& it : all_processes)
         processes.append(move(it));
 
-    return adopt_own(*new Profile(move(processes), move(events), move(signposts)));
+    return adopt_own(*new Profile(move(processes), move(events)));
 }
 
 void ProfileNode::sort_children()
