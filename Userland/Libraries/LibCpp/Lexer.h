@@ -18,6 +18,8 @@ public:
 
     Vector<Token> lex();
 
+    void set_ignore_whitespace(bool value) { m_options.ignore_whitespace = value; }
+
 private:
     char peek(size_t offset = 0) const;
     char consume();
@@ -26,6 +28,10 @@ private:
     size_t m_index { 0 };
     Position m_previous_position { 0, 0 };
     Position m_position { 0, 0 };
+
+    struct Options {
+        bool ignore_whitespace { false };
+    } m_options;
 };
 
 }
