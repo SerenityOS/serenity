@@ -316,8 +316,22 @@ void ImageEditor::set_active_tool(Tool* tool)
 
     if (m_active_tool) {
         m_active_tool->setup(*this);
+        m_active_tool->on_tool_activation();
         m_active_cursor = m_active_tool->cursor();
     }
+}
+
+void ImageEditor::set_guide_visibility(bool show_guides)
+{
+    if (m_show_guides == show_guides)
+        return;
+
+    m_show_guides = show_guides;
+
+    if (on_set_guide_visibility)
+        on_set_guide_visibility(m_show_guides);
+
+    update();
 }
 
 void ImageEditor::layers_did_change()
