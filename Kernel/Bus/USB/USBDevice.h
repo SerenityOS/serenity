@@ -21,26 +21,21 @@ class USBController;
 // https://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_113_Simplified%20Description%20of%20USB%20Device%20Enumeration.pdf
 class Device : public RefCounted<Device> {
 public:
-    enum class PortNumber : u8 {
-        Port1 = 0,
-        Port2
-    };
-
     enum class DeviceSpeed : u8 {
         FullSpeed = 0,
         LowSpeed
     };
 
 public:
-    static KResultOr<NonnullRefPtr<Device>> try_create(USBController const&, PortNumber, DeviceSpeed);
+    static KResultOr<NonnullRefPtr<Device>> try_create(USBController const&, u8, DeviceSpeed);
 
-    Device(USBController const&, PortNumber, DeviceSpeed, NonnullOwnPtr<Pipe> default_pipe);
+    Device(USBController const&, u8, DeviceSpeed, NonnullOwnPtr<Pipe> default_pipe);
     Device(Device const& device, NonnullOwnPtr<Pipe> default_pipe);
     virtual ~Device();
 
     KResult enumerate_device();
 
-    PortNumber port() const { return m_device_port; }
+    u8 port() const { return m_device_port; }
     DeviceSpeed speed() const { return m_device_speed; }
 
     u8 address() const { return m_address; }
@@ -51,9 +46,9 @@ public:
     USBController const& controller() const { return *m_controller; }
 
 protected:
-    Device(NonnullRefPtr<USBController> controller, u8 address, PortNumber port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe);
+    Device(NonnullRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe);
 
-    PortNumber m_device_port;   // What port is this device attached to
+    u8 m_device_port { 0 };     // What port is this device attached to. NOTE: This is 1-based.
     DeviceSpeed m_device_speed; // What speed is this device running at
     u8 m_address { 0 };         // USB address assigned to this device
 
