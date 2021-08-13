@@ -23,8 +23,8 @@ TimelineContainer::TimelineContainer(GUI::Widget& header_container, TimelineView
     update_widget_positions();
 
     m_timeline_view->on_scale_change = [this] {
-        update_widget_positions();
         update_widget_sizes();
+        update_widget_positions();
     };
 }
 
@@ -64,8 +64,8 @@ void TimelineContainer::update_widget_sizes()
 void TimelineContainer::resize_event(GUI::ResizeEvent& event)
 {
     AbstractScrollableWidget::resize_event(event);
-    update_widget_positions();
     update_widget_sizes();
+    update_widget_positions();
 }
 
 }
