@@ -7,9 +7,9 @@
 
 #pragma once
 
+#include <Kernel/Bus/VirtIO/VirtIO.h>
+#include <Kernel/Bus/VirtIO/VirtIOConsolePort.h>
 #include <Kernel/Memory/RingBuffer.h>
-#include <Kernel/VirtIO/VirtIO.h>
-#include <Kernel/VirtIO/VirtIOConsolePort.h>
 
 namespace Kernel {
 class VirtIOConsole
