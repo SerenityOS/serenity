@@ -227,6 +227,8 @@ struct alignas(16) TransferDescriptor final {
         m_control_status = 0;
         m_token = 0;
         m_in_use = false;
+        m_next_td = nullptr;
+        m_prev_td = nullptr;
     }
 
 private:
@@ -346,6 +348,8 @@ struct alignas(16) QueueHead {
         m_element_link_ptr = 0;
         m_first_td = nullptr;
         m_transfer = nullptr;
+        m_next_qh = nullptr;
+        m_prev_qh = nullptr;
         m_in_use = false;
     }
 
