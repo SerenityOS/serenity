@@ -75,14 +75,16 @@ void operator delete(void* ptr, size_t, std::align_val_t) noexcept;
 void operator delete[](void* ptrs) noexcept DISALLOW("All deletes in the kernel should have a known size.");
 void operator delete[](void* ptr, size_t) noexcept;
 
-[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc(size_t);
+[[gnu::malloc, gnu::alloc_size(1)]] void* kmalloc(size_t);
 
 template<size_t ALIGNMENT>
-[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] inline void* kmalloc_aligned(size_t size)
+[[gnu::malloc, gnu::alloc_size(1)]] inline void* kmalloc_aligned(size_t size)
 {
     static_assert(ALIGNMENT > sizeof(ptrdiff_t));
     static_assert(ALIGNMENT <= 4096);
     void* ptr = kmalloc(size + ALIGNMENT + sizeof(ptrdiff_t));
+    if (ptr == nullptr)
+        return ptr;
     size_t max_addr = (size_t)ptr + ALIGNMENT;
     void* aligned_ptr = (void*)(max_addr - (max_addr % ALIGNMENT));
     ((ptrdiff_t*)aligned_ptr)[-1] = (ptrdiff_t)((u8*)aligned_ptr - (u8*)ptr);
