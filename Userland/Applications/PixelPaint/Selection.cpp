@@ -24,7 +24,7 @@ Selection::Selection(ImageEditor& editor)
         ++m_marching_ants_offset;
         m_marching_ants_offset %= (marching_ant_length * 2);
         if (!is_empty() || m_in_interactive_selection)
-            m_editor.update(m_editor.image_rect_to_editor_rect(bounding_rect().inflated(10, 10)).to_type<int>());
+            m_editor.update();
     });
     m_marching_ants_timer->start();
 }
