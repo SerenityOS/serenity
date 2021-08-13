@@ -284,7 +284,7 @@ public:
     }
 
     int replace(const String& needle, const String& replacement, bool all_occurrences = false);
-    size_t count(const String& needle) const;
+    [[nodiscard]] size_t count(const String& needle) const;
     [[nodiscard]] String reverse() const;
 
     template<typename... Ts>
