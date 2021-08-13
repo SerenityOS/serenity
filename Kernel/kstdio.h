@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <AK/Types.h>
 
 extern "C" {
@@ -17,3 +18,5 @@ int snprintf(char* buf, size_t, const char* fmt, ...) __attribute__((format(prin
 void set_serial_debug(bool on_or_off);
 int get_serial_debug();
 }
+
+void dbgputstr(StringView view);
