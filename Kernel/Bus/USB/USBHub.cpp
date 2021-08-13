@@ -45,7 +45,7 @@ KResultOr<NonnullRefPtr<Hub>> Hub::try_create_from_device(Device const& device)
 }
 
 Hub::Hub(NonnullRefPtr<USBController> controller, DeviceSpeed device_speed, NonnullOwnPtr<Pipe> default_pipe)
-    : Device(move(controller), PortNumber::Port1, device_speed, move(default_pipe))
+    : Device(move(controller), 1 /* Port 1 */, device_speed, move(default_pipe))
 {
 }
 
@@ -260,8 +260,7 @@ void Hub::check_for_port_updates()
                 // FIXME: Check for high speed.
                 auto speed = port_status.status & PORT_STATUS_LOW_SPEED_DEVICE_ATTACHED ? USB::Device::DeviceSpeed::LowSpeed : USB::Device::DeviceSpeed::FullSpeed;
 
-                // FIXME: This only assumes two ports.
-                auto device_or_error = USB::Device::try_create(m_controller, port_number == 1 ? PortNumber::Port1 : PortNumber::Port2, speed);
+                auto device_or_error = USB::Device::try_create(m_controller, port_number, speed);
                 if (device_or_error.is_error()) {
                     dbgln("USB Hub: Failed to create device for port {}: {}", port_number, device_or_error.error());
                     return;
@@ -290,8 +289,7 @@ void Hub::check_for_port_updates()
 
                 Device* device_to_remove = nullptr;
                 for (auto& child : m_children) {
-                    // FIXME: This kinda sucks.
-                    if (port_number - 1 == (u8)child.port()) {
+                    if (port_number == child.port()) {
                         device_to_remove = &child;
                         break;
                     }
