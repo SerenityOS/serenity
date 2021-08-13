@@ -12,6 +12,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/UHCIDescriptorTypes.h>
+#include <Kernel/Bus/USB/UHCIRootHub.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/IO.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -25,6 +26,7 @@ class UHCIController final
     , public PCI::Device {
 
 public:
+    static constexpr u8 NUMBER_OF_ROOT_PORTS = 2;
     static KResultOr<NonnullRefPtr<UHCIController>> try_to_initialize(PCI::Address address);
     virtual ~UHCIController() override;
 
@@ -42,6 +44,10 @@ public:
 
     virtual RefPtr<USB::Device> const get_device_at_port(USB::Device::PortNumber) override;
     virtual RefPtr<USB::Device> const get_device_from_address(u8 device_address) override;
+
+    void get_port_status(Badge<UHCIRootHub>, u8, HubStatus&);
+    KResult set_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
+    KResult clear_port_feature(Badge<UHCIRootHub>, u8, HubFeatureSelector);
 
 private:
     explicit UHCIController(PCI::Address);
@@ -77,8 +83,12 @@ private:
     QueueHead* allocate_queue_head() const;
     TransferDescriptor* allocate_transfer_descriptor() const;
 
+    void reset_port(u8);
+
 private:
     IOAddress m_io_base;
+
+    OwnPtr<UHCIRootHub> m_root_hub;
 
     Vector<QueueHead*> m_free_qh_pool;
     Vector<TransferDescriptor*> m_free_td_pool;
@@ -94,7 +104,13 @@ private:
     OwnPtr<Memory::Region> m_qh_pool;
     OwnPtr<Memory::Region> m_td_pool;
 
-    Array<RefPtr<USB::Device>, 2> m_devices; // Devices connected to the root ports (of which there are two)
+    // Bitfield containing whether a given port should signal a change in reset or not.
+    u8 m_port_reset_change_statuses { 0 };
+
+    // Bitfield containing whether a given port should signal a change in suspend or not.
+    u8 m_port_suspend_change_statuses { 0 };
+
+    Array<RefPtr<USB::Device>, NUMBER_OF_ROOT_PORTS> m_devices; // Devices connected to the root ports (of which there are two)
 };
 
 }
