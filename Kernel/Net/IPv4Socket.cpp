@@ -592,7 +592,8 @@ KResult IPv4Socket::ioctl(FileDescription&, unsigned request, Userspace<void*> a
         if (!copy_from_user(&route, user_route))
             return EFAULT;
 
-        auto ifname_or_error = try_copy_kstring_from_user(route.rt_dev, IFNAMSIZ);
+        Userspace<const char*> user_rt_dev((FlatPtr)route.rt_dev);
+        auto ifname_or_error = try_copy_kstring_from_user(user_rt_dev, IFNAMSIZ);
         if (ifname_or_error.is_error())
             return ifname_or_error.error();
 

@@ -498,7 +498,7 @@ Custody& Process::current_directory()
     return *m_cwd;
 }
 
-KResultOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(char const* user_path, size_t path_length) const
+KResultOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Userspace<char const*> user_path, size_t path_length) const
 {
     if (path_length == 0)
         return EINVAL;
@@ -512,7 +512,8 @@ KResultOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(char const*
 
 KResultOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Syscall::StringArgument const& path) const
 {
-    return get_syscall_path_argument(path.characters, path.length);
+    Userspace<char const*> path_characters((FlatPtr)path.characters);
+    return get_syscall_path_argument(path_characters, path.length);
 }
 
 bool Process::dump_core()
