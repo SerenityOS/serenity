@@ -93,6 +93,8 @@ template<size_t ALIGNMENT>
 
 inline void kfree_aligned(void* ptr)
 {
+    if (ptr == nullptr)
+        return;
     kfree((u8*)ptr - ((const ptrdiff_t*)ptr)[-1]);
 }
 
