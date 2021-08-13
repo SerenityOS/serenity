@@ -70,6 +70,7 @@ public:
     virtual void gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) = 0;
     virtual void gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) = 0;
     virtual void gl_draw_arrays(GLenum mode, GLint first, GLsizei count) = 0;
+    virtual void gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices) = 0;
 
     virtual void present() = 0;
 };

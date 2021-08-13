@@ -80,6 +80,7 @@ public:
     virtual void gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
     virtual void gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
     virtual void gl_draw_arrays(GLenum mode, GLint first, GLsizei count) override;
+    virtual void gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices) override;
 
     virtual void present() override;
 
@@ -210,7 +211,8 @@ private:
             decltype(&SoftwareGLContext::gl_read_buffer),
             decltype(&SoftwareGLContext::gl_tex_parameter),
             decltype(&SoftwareGLContext::gl_depth_mask),
-            decltype(&SoftwareGLContext::gl_draw_arrays)>;
+            decltype(&SoftwareGLContext::gl_draw_arrays),
+            decltype(&SoftwareGLContext::gl_draw_elements)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;

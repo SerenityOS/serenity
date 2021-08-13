@@ -1542,6 +1542,64 @@ void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
     glEnd();
 }
 
+void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type, const void* indices)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_elements, mode, count, type, indices);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: Some modes are still missing (GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES,GL_QUAD_STRIP)
+    RETURN_WITH_ERROR_IF(!(mode == GL_TRIANGLE_STRIP
+                             || mode == GL_TRIANGLE_FAN
+                             || mode == GL_TRIANGLES
+                             || mode == GL_QUADS
+                             || mode == GL_POLYGON),
+        GL_INVALID_ENUM);
+
+    RETURN_WITH_ERROR_IF(!(type == GL_UNSIGNED_BYTE
+                             || type == GL_UNSIGNED_SHORT
+                             || type == GL_UNSIGNED_INT),
+        GL_INVALID_ENUM);
+
+    RETURN_WITH_ERROR_IF(count < 0, GL_INVALID_VALUE);
+
+    // At least the vertex array needs to be enabled
+    if (!m_client_side_vertex_array_enabled)
+        return;
+
+    glBegin(mode);
+    for (int index = 0; index < count; index++) {
+        int i = 0;
+        switch (type) {
+        case GL_UNSIGNED_BYTE:
+            i = reinterpret_cast<const GLubyte*>(indices)[index];
+            break;
+        case GL_UNSIGNED_SHORT:
+            i = reinterpret_cast<const GLushort*>(indices)[index];
+            break;
+        case GL_UNSIGNED_INT:
+            i = reinterpret_cast<const GLuint*>(indices)[index];
+            break;
+        }
+
+        if (m_client_side_texture_coord_array_enabled) {
+            float tex_coords[4] { 0, 0, 0, 0 };
+            read_from_vertex_attribute_pointer(m_client_tex_coord_pointer, i, tex_coords, false);
+            glTexCoord4fv(tex_coords);
+        }
+
+        if (m_client_side_color_array_enabled) {
+            float color[4] { 0, 0, 0, 1 };
+            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
+            glColor4fv(color);
+        }
+
+        float vertex[4] { 0, 0, 0, 1 };
+        read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex, false);
+        glVertex4fv(vertex);
+    }
+    glEnd();
+}
+
 // General helper function to read arbitrary vertex attribute data into a float array
 void SoftwareGLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& attrib, int index, float* elements, bool normalize)
 {
