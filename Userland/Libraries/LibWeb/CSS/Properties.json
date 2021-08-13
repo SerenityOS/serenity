@@ -216,7 +216,7 @@
   },
   "flex-basis": {
     "inherited": false,
-    "initial": "content"
+    "initial": "auto"
   },
   "flex-direction": {
     "inherited": false,
@@ -234,7 +234,7 @@
   },
   "flex-shrink": {
     "inherited": false,
-    "initial": 0
+    "initial": 1
   },
   "flex-wrap": {
     "inherited": false,
