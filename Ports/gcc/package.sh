@@ -20,5 +20,5 @@ build() {
 
 install() {
     run make $installopts
-    run ln -s gcc "${SERENITY_INSTALL_ROOT}/usr/local/bin/cc"
+    run ln -sf gcc "${SERENITY_INSTALL_ROOT}/usr/local/bin/cc"
 }
