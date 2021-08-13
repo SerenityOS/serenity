@@ -62,6 +62,7 @@ static constexpr u16 UHCI_PORTSC_RESUME_DETECT = 0x40;
 static constexpr u16 UHCI_PORTSC_LOW_SPEED_DEVICE = 0x0100;
 static constexpr u16 UHCI_PORTSC_PORT_RESET = 0x0200;
 static constexpr u16 UHCI_PORTSC_SUSPEND = 0x1000;
+static constexpr u16 UCHI_PORTSC_NON_WRITE_CLEAR_BIT_MASK = 0x1FF5; // This is used to mask out the Write Clear bits making sure we don't accidentally clear them.
 
 // *BSD and a few other drivers seem to use this number
 static constexpr u8 UHCI_NUMBER_OF_ISOCHRONOUS_TDS = 128;
@@ -486,6 +487,16 @@ KResult UHCIController::start()
             break;
     }
     dbgln("UHCI: Started");
+
+    auto root_hub_or_error = UHCIRootHub::try_create(*this);
+    if (root_hub_or_error.is_error())
+        return root_hub_or_error.error();
+
+    m_root_hub = root_hub_or_error.release_value();
+    auto result = m_root_hub->setup({});
+    if (result.is_error())
+        return result;
+
     return KSuccess;
 }
 
@@ -580,6 +591,12 @@ KResultOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
 {
     Pipe& pipe = transfer.pipe(); // Short circuit the pipe related to this transfer
     bool direction_in = (transfer.request().request_type & USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST) == USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST;
+
+    dbgln_if(UHCI_DEBUG, "UHCI: Received control transfer for address {}. Root Hub is at address {}.", pipe.device_address(), m_root_hub->device_address());
+
+    // Short-circuit the root hub.
+    if (pipe.device_address() == m_root_hub->device_address())
+        return m_root_hub->handle_control_transfer(transfer);
 
     TransferDescriptor* setup_td = create_transfer_descriptor(pipe, PacketID::SETUP, sizeof(USBRequestData));
     if (!setup_td)
@@ -683,88 +700,9 @@ void UHCIController::spawn_port_proc()
 
     Process::create_kernel_process(usb_hotplug_thread, "UHCIHotplug", [&] {
         for (;;) {
-            for (int port = 0; port < UHCI_ROOT_PORT_COUNT; port++) {
-                u16 port_data = 0;
+            if (m_root_hub)
+                m_root_hub->check_for_port_updates();
 
-                if (port == 1) {
-                    // Let's see what's happening on port 1
-                    // Current status
-                    port_data = read_portsc1();
-                    if (port_data & UHCI_PORTSC_CONNECT_STATUS_CHANGED) {
-                        if (port_data & UHCI_PORTSC_CURRRENT_CONNECT_STATUS) {
-                            dmesgln("UHCI: Device attach detected on Root Port 1!");
-
-                            // Reset the port
-                            port_data = read_portsc1();
-                            write_portsc1(port_data | UHCI_PORTSC_PORT_RESET);
-                            IO::delay(500);
-
-                            write_portsc1(port_data & ~UHCI_PORTSC_PORT_RESET);
-                            IO::delay(500);
-
-                            write_portsc1(port_data & (~UHCI_PORTSC_PORT_ENABLE_CHANGED | ~UHCI_PORTSC_CONNECT_STATUS_CHANGED));
-
-                            port_data = read_portsc1();
-                            write_portsc1(port_data | UHCI_PORTSC_PORT_ENABLED);
-                            dbgln("port should be enabled now: {:#04x}\n", read_portsc1());
-
-                            USB::Device::DeviceSpeed speed = (port_data & UHCI_PORTSC_LOW_SPEED_DEVICE) ? USB::Device::DeviceSpeed::LowSpeed : USB::Device::DeviceSpeed::FullSpeed;
-                            auto device = USB::Device::try_create(*this, USB::Device::PortNumber::Port1, speed);
-
-                            if (device.is_error())
-                                dmesgln("UHCI: Device creation failed on port 1 ({})", device.error());
-
-                            m_devices.at(0) = device.value();
-                            VERIFY(s_procfs_usb_bus_directory);
-                            s_procfs_usb_bus_directory->plug(device.value());
-                        } else {
-                            // FIXME: Clean up (and properly) the RefPtr to the device in m_devices
-                            VERIFY(s_procfs_usb_bus_directory);
-                            VERIFY(m_devices.at(0));
-                            dmesgln("UHCI: Device detach detected on Root Port 1");
-                            s_procfs_usb_bus_directory->unplug(*m_devices.at(0));
-                        }
-                    }
-                } else {
-                    port_data = read_portsc2();
-                    if (port_data & UHCI_PORTSC_CONNECT_STATUS_CHANGED) {
-                        if (port_data & UHCI_PORTSC_CURRRENT_CONNECT_STATUS) {
-                            dmesgln("UHCI: Device attach detected on Root Port 2");
-
-                            // Reset the port
-                            port_data = read_portsc2();
-                            write_portsc2(port_data | UHCI_PORTSC_PORT_RESET);
-                            for (size_t i = 0; i < 50000; ++i)
-                                IO::in8(0x80);
-
-                            write_portsc2(port_data & ~UHCI_PORTSC_PORT_RESET);
-                            for (size_t i = 0; i < 100000; ++i)
-                                IO::in8(0x80);
-
-                            write_portsc2(port_data & (~UHCI_PORTSC_PORT_ENABLE_CHANGED | ~UHCI_PORTSC_CONNECT_STATUS_CHANGED));
-
-                            port_data = read_portsc2();
-                            write_portsc2(port_data | UHCI_PORTSC_PORT_ENABLED);
-                            dbgln("port should be enabled now: {:#04x}\n", read_portsc2());
-                            USB::Device::DeviceSpeed speed = (port_data & UHCI_PORTSC_LOW_SPEED_DEVICE) ? USB::Device::DeviceSpeed::LowSpeed : USB::Device::DeviceSpeed::FullSpeed;
-                            auto device = USB::Device::try_create(*this, USB::Device::PortNumber::Port2, speed);
-
-                            if (device.is_error())
-                                dmesgln("UHCI: Device creation failed on port 2 ({})", device.error());
-
-                            m_devices.at(1) = device.value();
-                            VERIFY(s_procfs_usb_bus_directory);
-                            s_procfs_usb_bus_directory->plug(device.value());
-                        } else {
-                            // FIXME: Clean up (and properly) the RefPtr to the device in m_devices
-                            VERIFY(s_procfs_usb_bus_directory);
-                            VERIFY(m_devices.at(1));
-                            dmesgln("UHCI: Device detach detected on Root Port 2");
-                            s_procfs_usb_bus_directory->unplug(*m_devices.at(1));
-                        }
-                    }
-                }
-            }
             (void)Thread::current()->sleep(Time::from_seconds(1));
         }
     });
@@ -786,6 +724,175 @@ bool UHCIController::handle_irq(const RegisterState&)
     // Write back USBSTS to clear bits
     write_usbsts(status);
     return true;
+}
+
+void UHCIController::get_port_status(Badge<UHCIRootHub>, u8 port, HubStatus& hub_port_status)
+{
+    // The check is done by UHCIRootHub.
+    VERIFY(port < NUMBER_OF_ROOT_PORTS);
+
+    u16 status = port == 0 ? read_portsc1() : read_portsc2();
+
+    if (status & UHCI_PORTSC_CURRRENT_CONNECT_STATUS)
+        hub_port_status.status |= PORT_STATUS_CURRENT_CONNECT_STATUS;
+
+    if (status & UHCI_PORTSC_CONNECT_STATUS_CHANGED)
+        hub_port_status.change |= PORT_STATUS_CONNECT_STATUS_CHANGED;
+
+    if (status & UHCI_PORTSC_PORT_ENABLED)
+        hub_port_status.status |= PORT_STATUS_PORT_ENABLED;
+
+    if (status & UHCI_PORTSC_PORT_ENABLE_CHANGED)
+        hub_port_status.change |= PORT_STATUS_PORT_ENABLED_CHANGED;
+
+    if (status & UHCI_PORTSC_LOW_SPEED_DEVICE)
+        hub_port_status.status |= PORT_STATUS_LOW_SPEED_DEVICE_ATTACHED;
+
+    if (status & UHCI_PORTSC_PORT_RESET)
+        hub_port_status.status |= PORT_STATUS_RESET;
+
+    if (m_port_reset_change_statuses & (1 << port))
+        hub_port_status.change |= PORT_STATUS_RESET_CHANGED;
+
+    if (status & UHCI_PORTSC_SUSPEND)
+        hub_port_status.status |= PORT_STATUS_SUSPEND;
+
+    if (m_port_suspend_change_statuses & (1 << port))
+        hub_port_status.change |= PORT_STATUS_SUSPEND_CHANGED;
+
+    // UHCI ports are always powered.
+    hub_port_status.status |= PORT_STATUS_PORT_POWER;
+
+    dbgln_if(UHCI_DEBUG, "UHCI: get_port_status status=0x{:04x} change=0x{:04x}", hub_port_status.status, hub_port_status.change);
+}
+
+void UHCIController::reset_port(u8 port)
+{
+    // We still have to reset the port manually because UHCI does not automatically enable the port after reset.
+    // Additionally, the USB 2.0 specification says the SetPortFeature(PORT_ENABLE) request is not specified and that the _ideal_ behaviour is to return a Request Error.
+    // Source: USB 2.0 Specification Section 11.24.2.7.1.2
+    // This means the hub code cannot rely on using it.
+
+    // The check is done by UHCIRootHub and set_port_feature.
+    VERIFY(port < NUMBER_OF_ROOT_PORTS);
+
+    u16 port_data = port == 0 ? read_portsc1() : read_portsc2();
+    port_data &= UCHI_PORTSC_NON_WRITE_CLEAR_BIT_MASK;
+    port_data |= UHCI_PORTSC_PORT_RESET;
+    if (port == 0)
+        write_portsc1(port_data);
+    else
+        write_portsc2(port_data);
+
+    // Wait at least 50 ms for the port to reset.
+    // This is T DRSTR in the USB 2.0 Specification Page 186 Table 7-13.
+    constexpr u16 reset_delay = 50 * 1000;
+    IO::delay(reset_delay);
+
+    port_data &= ~UHCI_PORTSC_PORT_RESET;
+    if (port == 0)
+        write_portsc1(port_data);
+    else
+        write_portsc2(port_data);
+
+    // Wait 10 ms for the port to recover.
+    // This is T RSTRCY in the USB 2.0 Specification Page 188 Table 7-14.
+    constexpr u16 reset_recovery_delay = 10 * 1000;
+    IO::delay(reset_recovery_delay);
+
+    port_data = port == 0 ? read_portsc1() : read_portsc2();
+    port_data |= UHCI_PORTSC_PORT_ENABLED;
+    if (port == 0)
+        write_portsc1(port_data);
+    else
+        write_portsc2(port_data);
+
+    dbgln_if(UHCI_DEBUG, "UHCI: Port should be enabled now: {:#04x}", port == 0 ? read_portsc1() : read_portsc2());
+    m_port_reset_change_statuses |= (1 << port);
+}
+
+KResult UHCIController::set_port_feature(Badge<UHCIRootHub>, u8 port, HubFeatureSelector feature_selector)
+{
+    // The check is done by UHCIRootHub.
+    VERIFY(port < NUMBER_OF_ROOT_PORTS);
+
+    dbgln_if(UHCI_DEBUG, "UHCI: set_port_feature: port={} feature_selector={}", port, (u8)feature_selector);
+
+    switch (feature_selector) {
+    case HubFeatureSelector::PORT_POWER:
+        // Ignore the request. UHCI ports are always powered.
+        break;
+    case HubFeatureSelector::PORT_RESET:
+        reset_port(port);
+        break;
+    case HubFeatureSelector::PORT_SUSPEND: {
+        u16 port_data = port == 0 ? read_portsc1() : read_portsc2();
+        port_data &= UCHI_PORTSC_NON_WRITE_CLEAR_BIT_MASK;
+        port_data |= UHCI_PORTSC_SUSPEND;
+
+        if (port == 0)
+            write_portsc1(port_data);
+        else
+            write_portsc2(port_data);
+
+        m_port_suspend_change_statuses |= (1 << port);
+        break;
+    }
+    default:
+        dbgln("UHCI: Unknown feature selector in set_port_feature: {}", (u8)feature_selector);
+        return EINVAL;
+    }
+
+    return KSuccess;
+}
+
+KResult UHCIController::clear_port_feature(Badge<UHCIRootHub>, u8 port, HubFeatureSelector feature_selector)
+{
+    // The check is done by UHCIRootHub.
+    VERIFY(port < NUMBER_OF_ROOT_PORTS);
+
+    dbgln_if(UHCI_DEBUG, "UHCI: clear_port_feature: port={} feature_selector={}", port, (u8)feature_selector);
+
+    u16 port_data = port == 0 ? read_portsc1() : read_portsc2();
+    port_data &= UCHI_PORTSC_NON_WRITE_CLEAR_BIT_MASK;
+
+    switch (feature_selector) {
+    case HubFeatureSelector::PORT_ENABLE:
+        port_data &= ~UHCI_PORTSC_PORT_ENABLED;
+        break;
+    case HubFeatureSelector::PORT_SUSPEND:
+        port_data &= ~UHCI_PORTSC_SUSPEND;
+        break;
+    case HubFeatureSelector::PORT_POWER:
+        // Ignore the request. UHCI ports are always powered.
+        break;
+    case HubFeatureSelector::C_PORT_CONNECTION:
+        // This field is Write Clear.
+        port_data |= UHCI_PORTSC_CONNECT_STATUS_CHANGED;
+        break;
+    case HubFeatureSelector::C_PORT_RESET:
+        m_port_reset_change_statuses &= ~(1 << port);
+        break;
+    case HubFeatureSelector::C_PORT_ENABLE:
+        // This field is Write Clear.
+        port_data |= UHCI_PORTSC_PORT_ENABLE_CHANGED;
+        break;
+    case HubFeatureSelector::C_PORT_SUSPEND:
+        m_port_suspend_change_statuses &= ~(1 << port);
+        break;
+    default:
+        dbgln("UHCI: Unknown feature selector in clear_port_feature: {}", (u8)feature_selector);
+        return EINVAL;
+    }
+
+    dbgln_if(UHCI_DEBUG, "UHCI: clear_port_feature: writing 0x{:04x} to portsc{}.", port_data, port + 1);
+
+    if (port == 0)
+        write_portsc1(port_data);
+    else
+        write_portsc2(port_data);
+
+    return KSuccess;
 }
 
 }
