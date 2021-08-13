@@ -79,6 +79,7 @@ public:
     virtual void gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
     virtual void gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
     virtual void gl_tex_coord_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
+    virtual void gl_draw_arrays(GLenum mode, GLint first, GLsizei count) override;
 
     virtual void present() override;
 
@@ -208,7 +209,8 @@ private:
             decltype(&SoftwareGLContext::gl_hint),
             decltype(&SoftwareGLContext::gl_read_buffer),
             decltype(&SoftwareGLContext::gl_tex_parameter),
-            decltype(&SoftwareGLContext::gl_depth_mask)>;
+            decltype(&SoftwareGLContext::gl_depth_mask),
+            decltype(&SoftwareGLContext::gl_draw_arrays)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
@@ -233,6 +235,8 @@ private:
         GLsizei stride { 0 };
         const void* pointer { 0 };
     };
+
+    static void read_from_vertex_attribute_pointer(VertexAttribPointer const&, int index, float* elements, bool normalize);
 
     VertexAttribPointer m_client_vertex_pointer;
     VertexAttribPointer m_client_color_pointer;
