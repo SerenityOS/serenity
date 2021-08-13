@@ -391,7 +391,7 @@ private:
         Node* previous { nullptr };
     };
 
-    UniformBumpAllocator<Node, true, 8 * MiB> m_allocator;
+    UniformBumpAllocator<Node, true, 2 * MiB> m_allocator;
     Node* m_first { nullptr };
     Node* m_last { nullptr };
 };
