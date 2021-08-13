@@ -8,6 +8,7 @@
 
 #include <AK/Iterator.h>
 #include <AK/MaxElement.h>
+#include <AK/MinElement.h>
 #include <AK/Span.h>
 
 namespace AK {

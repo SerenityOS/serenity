@@ -39,6 +39,7 @@ set(AK_TEST_SOURCES
     TestMaxElement.cpp
     TestMemMem.cpp
     TestMemoryStream.cpp
+    TestMinElement.cpp
     TestNeverDestroyed.cpp
     TestNonnullRefPtr.cpp
     TestNumberFormat.cpp
