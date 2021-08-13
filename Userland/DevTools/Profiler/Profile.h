@@ -217,8 +217,7 @@ public:
         Variant<std::nullptr_t, SampleData, MallocData, FreeData, SignpostData, MmapData, MunmapData, ProcessCreateData, ProcessExecData, ThreadCreateData> data { nullptr };
     };
 
-    const Vector<Event>& events() const { return m_events; }
-    Vector<Event> const& signposts() const { return m_signposts; }
+    Vector<Event> const& events() const { return m_events; }
     const Vector<size_t>& filtered_event_indices() const { return m_filtered_event_indices; }
 
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
@@ -258,8 +257,18 @@ public:
         }
     }
 
+    template<typename Callback>
+    void for_each_signpost(Callback callback) const
+    {
+        for (auto index : m_signpost_indices) {
+            auto& event = m_events[index];
+            if (callback(event) == IterationDecision::Break)
+                break;
+        }
+    }
+
 private:
-    Profile(Vector<Process>, Vector<Event> events, Vector<Event> signposts);
+    Profile(Vector<Process>, Vector<Event>);
 
     void rebuild_tree();
 
@@ -276,7 +285,7 @@ private:
 
     Vector<Process> m_processes;
     Vector<Event> m_events;
-    Vector<Event> m_signposts;
+    Vector<size_t> m_signpost_indices;
 
     bool m_has_timestamp_filter_range { false };
     u64 m_timestamp_filter_range_start { 0 };
