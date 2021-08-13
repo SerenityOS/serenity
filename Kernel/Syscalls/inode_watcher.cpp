@@ -58,7 +58,7 @@ KResultOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall:
         return EBADF;
     auto inode_watcher = description->inode_watcher();
 
-    auto path = get_syscall_path_argument(params.user_path.characters, params.user_path.length);
+    auto path = get_syscall_path_argument(params.user_path);
     if (path.is_error())
         return path.error();
 

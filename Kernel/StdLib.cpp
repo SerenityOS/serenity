@@ -42,16 +42,16 @@ String copy_string_from_user(Userspace<const char*> user_str, size_t user_str_si
     return copy_string_from_user(user_str.unsafe_userspace_ptr(), user_str_size);
 }
 
-Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(const char* user_str, size_t user_str_size)
+Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<const char*> user_str, size_t user_str_size)
 {
     bool is_user = Kernel::Memory::is_user_range(VirtualAddress(user_str), user_str_size);
     if (!is_user)
         return EFAULT;
     Kernel::SmapDisabler disabler;
     void* fault_at;
-    ssize_t length = Kernel::safe_strnlen(user_str, user_str_size, fault_at);
+    ssize_t length = Kernel::safe_strnlen(user_str.unsafe_userspace_ptr(), user_str_size, fault_at);
     if (length < 0) {
-        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (strnlen)", static_cast<const void*>(user_str), user_str_size, VirtualAddress { fault_at });
+        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (strnlen)", static_cast<const void*>(user_str.unsafe_userspace_ptr()), user_str_size, VirtualAddress { fault_at });
         return EFAULT;
     }
     char* buffer;
@@ -64,16 +64,11 @@ Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(con
     if (length == 0)
         return new_string.release_nonnull();
 
-    if (!Kernel::safe_memcpy(buffer, user_str, (size_t)length, fault_at)) {
-        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (memcpy)", static_cast<const void*>(user_str), user_str_size, VirtualAddress { fault_at });
+    if (!Kernel::safe_memcpy(buffer, user_str.unsafe_userspace_ptr(), (size_t)length, fault_at)) {
+        dbgln("copy_kstring_from_user({:p}, {}) failed at {} (memcpy)", static_cast<const void*>(user_str.unsafe_userspace_ptr()), user_str_size, VirtualAddress { fault_at });
         return EFAULT;
     }
     return new_string.release_nonnull();
-}
-
-Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<const char*> user_str, size_t user_str_size)
-{
-    return try_copy_kstring_from_user(user_str.unsafe_userspace_ptr(), user_str_size);
 }
 
 [[nodiscard]] Optional<Time> copy_time_from_user(const timespec* ts_user)

@@ -539,11 +539,7 @@ private:
 
     KResultOr<siginfo_t> do_waitid(idtype_t idtype, int id, int options);
 
-    KResultOr<NonnullOwnPtr<KString>> get_syscall_path_argument(const char* user_path, size_t path_length) const;
-    KResultOr<NonnullOwnPtr<KString>> get_syscall_path_argument(Userspace<const char*> user_path, size_t path_length) const
-    {
-        return get_syscall_path_argument(user_path.unsafe_userspace_ptr(), path_length);
-    }
+    KResultOr<NonnullOwnPtr<KString>> get_syscall_path_argument(Userspace<const char*> user_path, size_t path_length) const;
     KResultOr<NonnullOwnPtr<KString>> get_syscall_path_argument(const Syscall::StringArgument&) const;
 
     bool has_tracee_thread(ProcessID tracer_pid);
@@ -963,7 +959,8 @@ inline static String copy_string_from_user(const Kernel::Syscall::StringArgument
 
 inline static KResultOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(const Kernel::Syscall::StringArgument& string)
 {
-    return try_copy_kstring_from_user(string.characters, string.length);
+    Userspace<char const*> characters((FlatPtr)string.characters);
+    return try_copy_kstring_from_user(characters, string.length);
 }
 
 template<>
