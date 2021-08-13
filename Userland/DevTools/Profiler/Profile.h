@@ -11,6 +11,7 @@
 #include "Profile.h"
 #include "ProfileModel.h"
 #include "SamplesModel.h"
+#include "SignpostsModel.h"
 #include <AK/Bitmap.h>
 #include <AK/FlyString.h>
 #include <AK/JsonArray.h>
@@ -142,6 +143,7 @@ public:
 
     GUI::Model& model();
     GUI::Model& samples_model();
+    GUI::Model& signposts_model();
     GUI::Model* disassembly_model();
 
     const Process* find_process(pid_t pid, EventSerialNumber serial) const
@@ -219,6 +221,7 @@ public:
 
     Vector<Event> const& events() const { return m_events; }
     const Vector<size_t>& filtered_event_indices() const { return m_filtered_event_indices; }
+    const Vector<size_t>& filtered_signpost_indices() const { return m_filtered_signpost_indices; }
 
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
     u64 first_timestamp() const { return m_first_timestamp; }
@@ -274,6 +277,7 @@ private:
 
     RefPtr<ProfileModel> m_model;
     RefPtr<SamplesModel> m_samples_model;
+    RefPtr<SignpostsModel> m_signposts_model;
     RefPtr<DisassemblyModel> m_disassembly_model;
 
     GUI::ModelIndex m_disassembly_index;
@@ -286,6 +290,7 @@ private:
     Vector<Process> m_processes;
     Vector<Event> m_events;
     Vector<size_t> m_signpost_indices;
+    Vector<size_t> m_filtered_signpost_indices;
 
     bool m_has_timestamp_filter_range { false };
     u64 m_timestamp_filter_range_start { 0 };

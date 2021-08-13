@@ -176,6 +176,21 @@ int main(int argc, char** argv)
         individual_sample_view.set_model(move(model));
     };
 
+    auto& signposts_tab = tab_widget.add_tab<GUI::Widget>("Signposts");
+    signposts_tab.set_layout<GUI::VerticalBoxLayout>();
+    signposts_tab.layout()->set_margins({ 4, 4, 4, 4 });
+
+    auto& signposts_splitter = signposts_tab.add<GUI::HorizontalSplitter>();
+    auto& signposts_table_view = signposts_splitter.add<GUI::TableView>();
+    signposts_table_view.set_model(profile->signposts_model());
+
+    auto& individual_signpost_view = signposts_splitter.add<GUI::TableView>();
+    signposts_table_view.on_selection_change = [&] {
+        const auto& index = signposts_table_view.selection().first();
+        auto model = IndividualSampleModel::create(*profile, index.data(GUI::ModelRole::Custom).to_integer<size_t>());
+        individual_signpost_view.set_model(move(model));
+    };
+
     const u64 start_of_trace = profile->first_timestamp();
     const u64 end_of_trace = start_of_trace + profile->length_in_ms();
     const auto clamp_timestamp = [start_of_trace, end_of_trace](u64 timestamp) -> u64 {
