@@ -163,7 +163,7 @@ public:
     {
         this->for_each_chunk([&](auto chunk) {
             auto base_ptr = align_up_to(chunk + sizeof(typename Allocator::ChunkHeader), alignof(T));
-            FlatPtr end_offset = this->m_chunk_size;
+            FlatPtr end_offset = this->m_chunk_size - sizeof(typename Allocator::ChunkHeader);
             if (chunk == this->m_current_chunk)
                 end_offset = this->m_byte_offset_into_current_chunk;
             for (; base_ptr - chunk < end_offset; base_ptr += sizeof(T))
