@@ -635,18 +635,23 @@ public:
 
     class ScopedDescriptionAllocation;
     class FileDescriptions {
+        AK_MAKE_NONCOPYABLE(FileDescriptions);
         friend class Process;
 
     public:
         ALWAYS_INLINE const FileDescriptionAndFlags& operator[](size_t i) const { return at(i); }
         ALWAYS_INLINE FileDescriptionAndFlags& operator[](size_t i) { return at(i); }
 
-        FileDescriptions& operator=(const Kernel::Process::FileDescriptions& other)
+        KResult try_clone(const Kernel::Process::FileDescriptions& other)
         {
-            ScopedSpinLock lock(m_fds_lock);
             ScopedSpinLock lock_other(other.m_fds_lock);
-            m_fds_metadatas = other.m_fds_metadatas;
-            return *this;
+            if (!try_resize(other.m_fds_metadatas.size()))
+                return ENOMEM;
+
+            for (size_t i = 0; i < other.m_fds_metadatas.size(); ++i) {
+                m_fds_metadatas[i] = other.m_fds_metadatas[i];
+            }
+            return KSuccess;
         }
 
         const FileDescriptionAndFlags& at(size_t i) const;
