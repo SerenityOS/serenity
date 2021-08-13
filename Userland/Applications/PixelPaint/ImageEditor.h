@@ -85,7 +85,9 @@ public:
     Gfx::FloatPoint editor_position_to_image_position(Gfx::IntPoint const&) const;
 
     NonnullRefPtrVector<Guide> const& guides() const { return m_guides; }
-    void toggle_guide_visibility() { m_show_guides = !m_show_guides; }
+    bool guide_visibility() { return m_show_guides; }
+    void set_guide_visibility(bool show_guides);
+    Function<void(bool)> on_set_guide_visibility;
 
 private:
     explicit ImageEditor(NonnullRefPtr<Image>);

@@ -399,9 +399,9 @@ int main(int argc, char** argv)
         window);
 
     auto show_guides_action = GUI::Action::create_checkable(
-        "Show Guides", [&](auto&) {
+        "Show Guides", [&](auto& action) {
             if (auto* editor = current_image_editor()) {
-                editor->toggle_guide_visibility();
+                editor->set_guide_visibility(action.is_checked());
             }
         },
         window);
@@ -706,6 +706,10 @@ int main(int argc, char** argv)
             statusbar.set_override_text({});
         };
 
+        image_editor.on_set_guide_visibility = [&](bool show_guides) {
+            show_guides_action->set_checked(show_guides);
+        };
+
         // NOTE: We invoke the above hook directly here to make sure the tab title is set up.
         image_editor.on_image_title_change(image->title());
 
@@ -742,6 +746,7 @@ int main(int argc, char** argv)
                 image_editor.set_active_tool(&tool);
             }
         });
+        show_guides_action->set_checked(image_editor.guide_visibility());
     };
 
     if (Core::File::exists(file_to_edit_full_path)) {

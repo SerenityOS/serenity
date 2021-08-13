@@ -23,6 +23,8 @@ public:
     virtual void on_mouseup(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEvent& image_event) override;
     virtual void on_context_menu(Layer&, GUI::ContextMenuEvent&) override;
 
+    virtual void on_tool_activation() override;
+
     virtual GUI::Widget* get_properties_widget() override;
     virtual Gfx::StandardCursor cursor() override { return Gfx::StandardCursor::Crosshair; }
 

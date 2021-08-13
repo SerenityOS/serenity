@@ -57,6 +57,8 @@ void GuideTool::on_mousedown(Layer&, GUI::MouseEvent& mouse_event, GUI::MouseEve
     if (mouse_event.button() != GUI::MouseButton::Left)
         return;
 
+    m_editor->set_guide_visibility(true);
+
     RefPtr<Guide> new_guide;
     if (image_event.position().x() < 0 || image_event.position().x() > editor()->image().size().width()) {
         new_guide = Guide::construct(Guide::Orientation::Vertical, image_event.position().x());
@@ -129,6 +131,11 @@ void GuideTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent& image_ev
 
 void GuideTool::on_context_menu(Layer&, GUI::ContextMenuEvent& event)
 {
+    if (!m_editor)
+        return;
+
+    m_editor->set_guide_visibility(true);
+
     if (!m_context_menu) {
         m_context_menu = GUI::Menu::construct();
         m_context_menu->add_action(GUI::Action::create(
@@ -146,6 +153,12 @@ void GuideTool::on_context_menu(Layer&, GUI::ContextMenuEvent& event)
     auto image_position = editor()->editor_position_to_image_position(event.position());
     m_context_menu_guide = closest_guide({ (int)image_position.x(), (int)image_position.y() });
     m_context_menu->popup(event.screen_position());
+}
+
+void GuideTool::on_tool_activation()
+{
+    if (m_editor)
+        m_editor->set_guide_visibility(true);
 }
 
 GUI::Widget* GuideTool::get_properties_widget()
