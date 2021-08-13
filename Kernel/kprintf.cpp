@@ -5,6 +5,7 @@
  */
 
 #include <AK/PrintfImplementation.h>
+#include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/ConsoleDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
@@ -163,6 +164,11 @@ extern "C" void dbgputstr(const char* characters, size_t length)
     ScopedSpinLock lock(s_log_lock);
     for (size_t i = 0; i < length; ++i)
         internal_dbgputch(characters[i]);
+}
+
+void dbgputstr(StringView view)
+{
+    ::dbgputstr(view.characters_without_null_termination(), view.length());
 }
 
 extern "C" void kernelputstr(const char* characters, size_t length)
