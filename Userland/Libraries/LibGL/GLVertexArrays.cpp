@@ -23,3 +23,8 @@ void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const void* poin
 {
     g_gl_context->gl_tex_coord_pointer(size, type, stride, pointer);
 }
+
+void glDrawArrays(GLenum mode, GLint first, GLsizei count)
+{
+    g_gl_context->gl_draw_arrays(mode, first, count);
+}

@@ -1501,6 +1501,141 @@ void SoftwareGLContext::gl_tex_coord_pointer(GLint size, GLenum type, GLsizei st
     m_client_tex_coord_pointer.pointer = pointer;
 }
 
+void SoftwareGLContext::gl_draw_arrays(GLenum mode, GLint first, GLsizei count)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_draw_arrays, mode, first, count);
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    // FIXME: Some modes are still missing (GL_POINTS, GL_LINE_STRIP, GL_LINE_LOOP, GL_LINES,GL_QUAD_STRIP)
+    RETURN_WITH_ERROR_IF(!(mode == GL_TRIANGLE_STRIP
+                             || mode == GL_TRIANGLE_FAN
+                             || mode == GL_TRIANGLES
+                             || mode == GL_QUADS
+                             || mode == GL_POLYGON),
+        GL_INVALID_ENUM);
+
+    RETURN_WITH_ERROR_IF(count < 0, GL_INVALID_VALUE);
+
+    // At least the vertex array needs to be enabled
+    if (!m_client_side_vertex_array_enabled)
+        return;
+
+    auto last = first + count;
+    glBegin(mode);
+    for (int i = first; i < last; i++) {
+        if (m_client_side_texture_coord_array_enabled) {
+            float tex_coords[4] { 0, 0, 0, 0 };
+            read_from_vertex_attribute_pointer(m_client_tex_coord_pointer, i, tex_coords, false);
+            glTexCoord4fv(tex_coords);
+        }
+
+        if (m_client_side_color_array_enabled) {
+            float color[4] { 0, 0, 0, 1 };
+            read_from_vertex_attribute_pointer(m_client_color_pointer, i, color, true);
+            glColor4fv(color);
+        }
+
+        float vertex[4] { 0, 0, 0, 1 };
+        read_from_vertex_attribute_pointer(m_client_vertex_pointer, i, vertex, false);
+        glVertex4fv(vertex);
+    }
+    glEnd();
+}
+
+// General helper function to read arbitrary vertex attribute data into a float array
+void SoftwareGLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& attrib, int index, float* elements, bool normalize)
+{
+    auto byte_ptr = reinterpret_cast<const char*>(attrib.pointer);
+    size_t stride = attrib.stride;
+
+    switch (attrib.type) {
+    case GL_BYTE: {
+        if (stride == 0)
+            stride = sizeof(GLbyte) * attrib.size;
+
+        for (int i = 0; i < attrib.size; i++) {
+            elements[i] = *(reinterpret_cast<const GLbyte*>(byte_ptr + stride * index) + i);
+            if (normalize)
+                elements[i] /= 0x80;
+        }
+        break;
+    }
+    case GL_UNSIGNED_BYTE: {
+        if (stride == 0)
+            stride = sizeof(GLubyte) * attrib.size;
+
+        for (int i = 0; i < attrib.size; i++) {
+            elements[i] = *(reinterpret_cast<const GLubyte*>(byte_ptr + stride * index) + i);
+            if (normalize)
+                elements[i] /= 0xff;
+        }
+        break;
+    }
+    case GL_SHORT: {
+        if (stride == 0)
+            stride = sizeof(GLshort) * attrib.size;
+
+        for (int i = 0; i < attrib.size; i++) {
+            elements[i] = *(reinterpret_cast<const GLshort*>(byte_ptr + stride * index) + i);
+            if (normalize)
+                elements[i] /= 0x8000;
+        }
+        break;
+    }
+    case GL_UNSIGNED_SHORT: {
+        if (stride == 0)
+            stride = sizeof(GLushort) * attrib.size;
+
+        for (int i = 0; i < attrib.size; i++) {
+            elements[i] = *(reinterpret_cast<const GLushort*>(byte_ptr + stride * index) + i);
+            if (normalize)
+                elements[i] /= 0xffff;
+        }
+        break;
+    }
+    case GL_INT: {
+        if (stride == 0)
+            stride = sizeof(GLint) * attrib.size;
+
+        for (int i = 0; i < attrib.size; i++) {
+            elements[i] = *(reinterpret_cast<const GLint*>(byte_ptr + stride * index) + i);
+            if (normalize)
+                elements[i] /= 0x80000000;
+        }
+        break;
+    }
+    case GL_UNSIGNED_INT: {
+        if (stride == 0)
+            stride = sizeof(GLuint) * attrib.size;
+
+        for (int i = 0; i < attrib.size; i++) {
+            elements[i] = *(reinterpret_cast<const GLuint*>(byte_ptr + stride * index) + i);
+            if (normalize)
+                elements[i] /= 0xffffffff;
+        }
+        break;
+    }
+    case GL_FLOAT: {
+        if (stride == 0)
+            stride = sizeof(GLfloat) * attrib.size;
+
+        for (int i = 0; i < attrib.size; i++) {
+            elements[i] = *(reinterpret_cast<const GLfloat*>(byte_ptr + stride * index) + i);
+        }
+        break;
+    }
+    case GL_DOUBLE: {
+        if (stride == 0)
+            stride = sizeof(GLdouble) * attrib.size;
+
+        for (int i = 0; i < attrib.size; i++) {
+            elements[i] = static_cast<float>(*(reinterpret_cast<const GLdouble*>(byte_ptr + stride * index) + i));
+        }
+        break;
+    }
+    }
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
