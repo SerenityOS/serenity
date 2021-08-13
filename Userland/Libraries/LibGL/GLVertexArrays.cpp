@@ -28,3 +28,8 @@ void glDrawArrays(GLenum mode, GLint first, GLsizei count)
 {
     g_gl_context->gl_draw_arrays(mode, first, count);
 }
+
+void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices)
+{
+    g_gl_context->gl_draw_elements(mode, count, type, indices);
+}
