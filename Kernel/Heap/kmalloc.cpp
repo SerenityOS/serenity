@@ -255,9 +255,6 @@ void* kmalloc(size_t size)
     }
 
     void* ptr = g_kmalloc_global->m_heap.allocate(size);
-    if (!ptr) {
-        PANIC("kmalloc: Out of memory (requested size: {})", size);
-    }
 
     Thread* current_thread = Thread::current();
     if (!current_thread)
