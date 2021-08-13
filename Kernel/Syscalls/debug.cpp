@@ -25,7 +25,7 @@ KResultOr<FlatPtr> Process::sys$dbgputch(u8 ch)
     return 0;
 }
 
-KResultOr<FlatPtr> Process::sys$dbgputstr(Userspace<const u8*> characters, size_t size)
+KResultOr<FlatPtr> Process::sys$dbgputstr(Userspace<const char*> characters, size_t size)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     if (size == 0)
@@ -39,7 +39,7 @@ KResultOr<FlatPtr> Process::sys$dbgputstr(Userspace<const u8*> characters, size_
         return size;
     }
 
-    auto result = try_copy_kstring_from_user(reinterpret_cast<char const*>(characters.unsafe_userspace_ptr()), size);
+    auto result = try_copy_kstring_from_user(characters, size);
     if (result.is_error())
         return result.error();
     dbgputstr(result.value()->characters(), size);
