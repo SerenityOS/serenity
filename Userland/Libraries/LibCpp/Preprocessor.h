@@ -65,6 +65,7 @@ private:
         size_t end_token_index { 0 };
     };
     Optional<MacroCall> parse_macro_call(Vector<Token> const& tokens, size_t token_index);
+    String evaluate_macro_call(MacroCall const&, Definition const&);
 
     String m_filename;
     String m_program;

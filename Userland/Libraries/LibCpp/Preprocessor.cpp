@@ -250,14 +250,13 @@ size_t Preprocessor::do_substitution(Vector<Token> const& tokens, size_t token_i
     if (!macro_call.has_value())
         return token_index;
 
-    // TODO: Evaluate macro call
-    auto processed_value = defined_value.value;
     Vector<Token> original_tokens;
     for (size_t i = token_index; i <= macro_call->end_token_index; ++i) {
         original_tokens.append(tokens[i]);
     }
     VERIFY(!original_tokens.is_empty());
 
+    auto processed_value = evaluate_macro_call(*macro_call, defined_value);
     m_substitutions.append({ original_tokens, defined_value, processed_value });
 
     Lexer lexer(processed_value);
@@ -356,9 +355,41 @@ Optional<Preprocessor::Definition> Preprocessor::create_definition(StringView li
         ++token_index;
     }
 
-    definition.value = line.substring_view(tokens[token_index].start().column);
+    if (token_index < tokens.size())
+        definition.value = line.substring_view(tokens[token_index].start().column);
 
     return definition;
+}
+
+String Preprocessor::evaluate_macro_call(MacroCall const& macro_call, Definition const& definition)
+{
+    if (macro_call.arguments.size() != definition.parameters.size()) {
+        dbgln("mismatch in # of arguments for macro call: {}", macro_call.name.text());
+        return {};
+    }
+
+    Lexer lexer { definition.value };
+    auto tokens = lexer.lex();
+
+    StringBuilder processed_value;
+    for (auto& token : tokens) {
+        if (token.type() != Token::Type::Identifier) {
+            processed_value.append(token.text());
+            continue;
+        }
+
+        auto param_index = definition.parameters.find_first_index(token.text());
+        if (!param_index.has_value()) {
+            processed_value.append(token.text());
+            continue;
+        }
+
+        auto& argument = macro_call.arguments[*param_index];
+        for (auto& arg_token : argument.tokens) {
+            processed_value.append(arg_token.text());
+        }
+    }
+    return processed_value.to_string();
 }
 
 };
