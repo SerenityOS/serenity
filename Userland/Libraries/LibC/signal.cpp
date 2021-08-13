@@ -143,17 +143,6 @@ const char* sys_siglist[NSIG] = {
     "Bad system call",
 };
 
-int sigsetjmp(jmp_buf env, int savesigs)
-{
-    if (savesigs) {
-        int rc = sigprocmask(0, nullptr, &env->saved_signal_mask);
-        assert(rc == 0);
-        env->did_save_signal_mask = true;
-    } else {
-        env->did_save_signal_mask = false;
-    }
-    return setjmp(env);
-}
 void siglongjmp(jmp_buf env, int val)
 {
     if (env->did_save_signal_mask) {
