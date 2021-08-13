@@ -45,6 +45,11 @@ void glClearDepth(GLdouble depth)
     g_gl_context->gl_clear_depth(depth);
 }
 
+void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
+{
+    g_gl_context->gl_color_mask(red, green, blue, alpha);
+}
+
 GLubyte* glGetString(GLenum name)
 {
     return g_gl_context->gl_get_string(name);
