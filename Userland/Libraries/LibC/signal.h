@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/API/POSIX/signal.h>
+#include <bits/sighow.h>
 #include <signal_numbers.h>
 #include <sys/types.h>
 
