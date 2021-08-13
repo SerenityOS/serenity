@@ -1447,6 +1447,20 @@ void SoftwareGLContext::gl_disable_client_state(GLenum cap)
     }
 }
 
+void SoftwareGLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    RETURN_WITH_ERROR_IF(!(size == 1 || size == 2 || size == 4), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(!(type == GL_SHORT || type == GL_INT || type == GL_FLOAT || type == GL_DOUBLE), GL_INVALID_ENUM);
+    RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
+
+    m_client_vertex_pointer.size = size;
+    m_client_vertex_pointer.type = type;
+    m_client_vertex_pointer.stride = stride;
+    m_client_vertex_pointer.pointer = pointer;
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
