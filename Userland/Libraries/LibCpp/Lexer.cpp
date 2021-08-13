@@ -222,6 +222,8 @@ Vector<Token> Lexer::lex()
         token_start_position = m_position;
     };
     auto commit_token = [&](auto type) {
+        if (m_options.ignore_whitespace && type == Token::Type::Whitespace)
+            return;
         tokens.empend(type, token_start_position, m_previous_position, m_input.substring_view(token_start_index, m_index - token_start_index));
     };
 
