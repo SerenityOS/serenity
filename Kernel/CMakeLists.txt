@@ -400,9 +400,14 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     endif()
     link_directories(${TOOLCHAIN_ROOT}/${SERENITY_ARCH}-pc-serenity/lib)
     link_directories(${TOOLCHAIN_ROOT}/lib/gcc/${SERENITY_ARCH}-pc-serenity/${GCC_VERSION}/)
+
+    set(TARGET_STRING "")
 else() # Assume Clang
     add_compile_options(-Waddress-of-packed-member)
     add_compile_options(-faligned-allocation)
+
+    # We need this in order to pick up the #define __serenity__, otherwise we end up including unistd.h into the linker script
+    set(TARGET_STRING "--target=${CMAKE_CXX_COMPILER_TARGET}")
     
     add_link_options(LINKER:--build-id=none)
 endif()
@@ -476,7 +481,7 @@ add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
 
 add_custom_command(
     OUTPUT linker.ld
-    COMMAND "${CMAKE_CXX_COMPILER}" -E -P -x c -I${CMAKE_CURRENT_SOURCE_DIR}/.. "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld" -o "${CMAKE_CURRENT_BINARY_DIR}/linker.ld"
+    COMMAND "${CMAKE_CXX_COMPILER}" ${TARGET_STRING} -E -P -x c -I${CMAKE_CURRENT_SOURCE_DIR}/.. "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld" -o "${CMAKE_CURRENT_BINARY_DIR}/linker.ld"
     MAIN_DEPENDENCY "${CMAKE_CURRENT_SOURCE_DIR}/linker.ld"
     COMMENT "Preprocessing linker.ld"
     VERBATIM
@@ -497,7 +502,7 @@ if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         target_link_libraries(Kernel PRIVATE kernel_heap gcc)
     elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
-        target_link_libraries(Kernel PRIVATE kernel_heap "clang_rt.builtins-${SERENITY_CLANG_ARCH}")
+        target_link_libraries(Kernel PRIVATE kernel_heap clang_rt.builtins)
     endif()
 endif()
 

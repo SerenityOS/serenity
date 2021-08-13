@@ -180,7 +180,11 @@ cmd_with_target() {
     BUILD_DIR="$SERENITY_SOURCE_DIR/Build/$TARGET$TARGET_TOOLCHAIN"
     if [ "$TARGET" != "lagom" ]; then
         export SERENITY_ARCH="$TARGET"
-        TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Local/$TARGET_TOOLCHAIN/$TARGET"
+        if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
+            TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Local/clang"
+        else
+            TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Local/$TARGET_TOOLCHAIN/$TARGET"
+        fi
         SUPER_BUILD_DIR="$SERENITY_SOURCE_DIR/Build/superbuild-$TARGET$TARGET_TOOLCHAIN"
     else
         SUPER_BUILD_DIR="$BUILD_DIR"
@@ -225,7 +229,7 @@ delete_target() {
 build_toolchain() {
     echo "build_toolchain: $TOOLCHAIN_DIR"
     if [ "$TOOLCHAIN_TYPE" = "Clang" ]; then
-        ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildClang.sh )
+        ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ./BuildClang.sh )
     else
         ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildIt.sh )
     fi

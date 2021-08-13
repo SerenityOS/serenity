@@ -1,8 +1,8 @@
 diff --git a/clang/lib/Basic/Targets.cpp b/clang/lib/Basic/Targets.cpp
-index 90a67d03b..ad21af415 100644
+index ba91d0439..42265d547 100644
 --- a/clang/lib/Basic/Targets.cpp
 +++ b/clang/lib/Basic/Targets.cpp
-@@ -148,6 +148,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+@@ -149,6 +149,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
        return new NetBSDTargetInfo<AArch64leTargetInfo>(Triple, Opts);
      case llvm::Triple::OpenBSD:
        return new OpenBSDTargetInfo<AArch64leTargetInfo>(Triple, Opts);
@@ -11,7 +11,7 @@ index 90a67d03b..ad21af415 100644
      case llvm::Triple::Win32:
        switch (Triple.getEnvironment()) {
        case llvm::Triple::GNU:
-@@ -527,6 +527,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+@@ -538,6 +540,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
        return new MCUX86_32TargetInfo(Triple, Opts);
      case llvm::Triple::Hurd:
        return new HurdTargetInfo<X86_32TargetInfo>(Triple, Opts);
@@ -20,7 +20,7 @@ index 90a67d03b..ad21af415 100644
      default:
        return new X86_32TargetInfo(Triple, Opts);
      }
-@@ -579,6 +581,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+@@ -590,6 +594,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
        return new NaClTargetInfo<X86_64TargetInfo>(Triple, Opts);
      case llvm::Triple::PS4:
        return new PS4OSTargetInfo<X86_64TargetInfo>(Triple, Opts);
@@ -30,21 +30,21 @@ index 90a67d03b..ad21af415 100644
        return new X86_64TargetInfo(Triple, Opts);
      }
 diff --git a/clang/lib/Basic/Targets/OSTargets.h b/clang/lib/Basic/Targets/OSTargets.h
-index 67fa1a537..9dd9039bb 100644
+index 3fe39ed64..51e7a6cca 100644
 --- a/clang/lib/Basic/Targets/OSTargets.h
 +++ b/clang/lib/Basic/Targets/OSTargets.h
-@@ -947,6 +947,22 @@ public:
-       : WebAssemblyOSTargetInfo<Target>(Triple, Opts) {}
+@@ -966,6 +966,22 @@ public:
+   }
  };
  
-+// SerenityOS Target
++// SerenityOS target
 +template <typename Target>
 +class LLVM_LIBRARY_VISIBILITY SerenityTargetInfo : public OSTargetInfo<Target> {
 +protected:
 +  void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
 +                    MacroBuilder &Builder) const override {
 +    Builder.defineMacro("__serenity__");
-+    Builder.defineMacro("__unix__");
++    DefineStd(Builder, "unix", Opts);
 +    Builder.defineMacro("__ELF__");
 +  }
 +
@@ -57,10 +57,10 @@ index 67fa1a537..9dd9039bb 100644
  } // namespace clang
  #endif // LLVM_CLANG_LIB_BASIC_TARGETS_OSTARGETS_H
 diff --git a/clang/lib/Driver/CMakeLists.txt b/clang/lib/Driver/CMakeLists.txt
-index aeffcf0bb..43bec8fd7 100644
+index 08be9f011..69038ff00 100644
 --- a/clang/lib/Driver/CMakeLists.txt
 +++ b/clang/lib/Driver/CMakeLists.txt
-@@ -66,6 +66,7 @@ add_clang_library(clangDriver
+@@ -67,6 +67,7 @@ add_clang_library(clangDriver
    ToolChains/OpenBSD.cpp
    ToolChains/PS4CPU.cpp
    ToolChains/RISCVToolchain.cpp
@@ -69,7 +69,7 @@ index aeffcf0bb..43bec8fd7 100644
    ToolChains/TCE.cpp
    ToolChains/VEToolchain.cpp
 diff --git a/clang/lib/Driver/Driver.cpp b/clang/lib/Driver/Driver.cpp
-index 418e1d3e8..672aadc4d 100644
+index 94a7553e2..c6b3210f6 100644
 --- a/clang/lib/Driver/Driver.cpp
 +++ b/clang/lib/Driver/Driver.cpp
 @@ -41,6 +41,7 @@
@@ -80,7 +80,7 @@ index 418e1d3e8..672aadc4d 100644
  #include "ToolChains/Solaris.h"
  #include "ToolChains/TCE.h"
  #include "ToolChains/VEToolchain.h"
-@@ -5128,6 +5129,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
+@@ -5299,6 +5300,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
      case llvm::Triple::Fuchsia:
        TC = std::make_unique<toolchains::Fuchsia>(*this, Target, Args);
        break;
@@ -91,10 +91,10 @@ index 418e1d3e8..672aadc4d 100644
        TC = std::make_unique<toolchains::Solaris>(*this, Target, Args);
        break;
 diff --git a/clang/lib/Driver/ToolChain.cpp b/clang/lib/Driver/ToolChain.cpp
-index b2ddef141..48880a612 100644
+index 6c1b88141..c77ff78be 100644
 --- a/clang/lib/Driver/ToolChain.cpp
 +++ b/clang/lib/Driver/ToolChain.cpp
-@@ -398,6 +398,8 @@ StringRef ToolChain::getOSLibName() const {
+@@ -404,6 +404,8 @@ StringRef ToolChain::getOSLibName() const {
      return "sunos";
    case llvm::Triple::AIX:
      return "aix";
@@ -103,13 +103,44 @@ index b2ddef141..48880a612 100644
    default:
      return getOS();
    }
+diff --git a/clang/lib/Driver/ToolChains/Arch/X86.cpp b/clang/lib/Driver/ToolChains/Arch/X86.cpp
+index 12749c7ec..91f744a26 100644
+--- a/clang/lib/Driver/ToolChains/Arch/X86.cpp
++++ b/clang/lib/Driver/ToolChains/Arch/X86.cpp
+@@ -100,6 +100,7 @@ std::string x86::getX86TargetCPU(const ArgList &Args,
+   case llvm::Triple::OpenBSD:
+     return "i586";
+   case llvm::Triple::FreeBSD:
++  case llvm::Triple::Serenity:
+     return "i686";
+   default:
+     // Fallback to p4.
+diff --git a/clang/lib/Driver/ToolChains/Clang.cpp b/clang/lib/Driver/ToolChains/Clang.cpp
+index 58ae08a38..8e9a3fee6 100644
+--- a/clang/lib/Driver/ToolChains/Clang.cpp
++++ b/clang/lib/Driver/ToolChains/Clang.cpp
+@@ -5695,7 +5695,13 @@ void Clang::ConstructJob(Compilation &C, const JobAction &JA,
+                            options::OPT_fno_visibility_inlines_hidden_static_local_var);
+   Args.AddLastArg(CmdArgs, options::OPT_fvisibility_global_new_delete_hidden);
+ 
+-  Args.AddLastArg(CmdArgs, options::OPT_ftlsmodel_EQ);
++  if (Triple.isOSSerenity()) {
++    StringRef tls_model =
++        Args.getLastArgValue(options::OPT_ftlsmodel_EQ, "initial-exec");
++    CmdArgs.push_back(Args.MakeArgString("-ftls-model=" + tls_model));
++  } else {
++    Args.AddLastArg(CmdArgs, options::OPT_ftlsmodel_EQ);
++  }
+ 
+   if (Args.hasFlag(options::OPT_fno_operator_names,
+                    options::OPT_foperator_names, false))
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
-index 000000000..8840188eb
+index 000000000..8f3e125dd
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,220 @@
-+//===--- Serenity.cpp - SerenityOS ToolChain Implementations ----*- C++ -*-===//
+@@ -0,0 +1,275 @@
++//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 +// See https://llvm.org/LICENSE.txt for license information.
@@ -119,9 +150,9 @@ index 000000000..8840188eb
 +
 +#include "Serenity.h"
 +#include "CommonArgs.h"
-+#include "InputInfo.h"
 +#include "clang/Driver/Compilation.h"
 +#include "clang/Driver/Driver.h"
++#include "clang/Driver/DriverDiagnostic.h"
 +#include "clang/Driver/Options.h"
 +#include "clang/Driver/SanitizerArgs.h"
 +#include "llvm/Option/ArgList.h"
@@ -283,10 +314,11 @@ index 000000000..8840188eb
 +
 +Serenity::Serenity(const Driver &D, const llvm::Triple &Triple,
 +                   const ArgList &Args)
-+    : Generic_ELF(D, Triple, Args) {
-+  getFilePaths().push_back(getDriver().Dir + "/../lib");
-+  if (!getDriver().SysRoot.empty())
-+    getFilePaths().push_back(getDriver().SysRoot + "/usr/lib");
++    : ToolChain(D, Triple, Args) {
++  getProgramPaths().push_back(getDriver().getInstalledDir());
++  if (getDriver().getInstalledDir() != getDriver().Dir)
++    getProgramPaths().push_back(getDriver().Dir);
++  getFilePaths().push_back(getDriver().SysRoot + "/usr/lib");
 +}
 +
 +Tool *Serenity::buildLinker() const {
@@ -308,34 +340,89 @@ index 000000000..8840188eb
 +    return;
 +
 +  if (!D.SysRoot.empty()) {
++    addSystemInclude(DriverArgs, CC1Args, D.SysRoot + "/usr/local/include");
 +    addExternCSystemInclude(DriverArgs, CC1Args, D.SysRoot + "/usr/include");
 +  }
 +}
 +
 +void Serenity::AddClangCXXStdlibIncludeArgs(const ArgList &DriverArgs,
 +                                            ArgStringList &CC1Args) const {
-+  if (DriverArgs.hasArg(options::OPT_nostdlibinc, options::OPT_nostdincxx))
++  if (DriverArgs.hasArg(options::OPT_nostdinc, options::OPT_nostdincxx,
++                        +options::OPT_nostdlibinc))
 +    return;
 +
-+  switch (GetCXXStdlibType(DriverArgs)) {
-+  case ToolChain::CST_Libcxx: {
-+    addSystemInclude(DriverArgs, CC1Args,
-+                     getDriver().SysRoot + "/usr/include/c++/v1");
-+    addSystemInclude(DriverArgs, CC1Args,
-+                     getDriver().Dir + "/../include/c++/v1");
-+    break;
-+  }
-+  default:
-+    llvm_unreachable("invalid stdlib name");
-+  }
++  if (GetCXXStdlibType(DriverArgs) != ToolChain::CST_Libcxx)
++    llvm_unreachable("Only libc++ is supported on the Serenity target");
++
++  const Driver &D = getDriver();
++  std::string SysRoot = computeSysRoot();
++  std::string Target = getTripleString();
++
++  auto AddIncludePath = [&](std::string Path) {
++    std::string Version = detectLibcxxVersion(Path);
++    if (Version.empty())
++      return false;
++
++    std::string TargetDir = Path + "/" + Target + "/c++/" + Version;
++    if (D.getVFS().exists(TargetDir))
++      addSystemInclude(DriverArgs, CC1Args, TargetDir);
++
++    addSystemInclude(DriverArgs, CC1Args, Path + "/c++/" + Version);
++    return true;
++  };
++
++  if (AddIncludePath(getDriver().Dir + "/../include"))
++    return;
++  if (AddIncludePath(SysRoot + "/usr/local/include"))
++    return;
++  if (AddIncludePath(SysRoot + "/usr/include"))
++    return;
 +}
++
++void Serenity::addClangTargetOptions(
++    const llvm::opt::ArgList &DriverArgs, llvm::opt::ArgStringList &CC1Args,
++    Action::OffloadKind DeviceOffloadKind) const {
++  if (!DriverArgs.hasFlag(options::OPT_fuse_init_array,
++                          options::OPT_fno_use_init_array, true))
++    CC1Args.push_back("-fno-use-init-array");
++}
++
++ToolChain::UnwindLibType
++Serenity::GetUnwindLibType(const llvm::opt::ArgList &Args) const {
++
++  const Arg *A = Args.getLastArg(options::OPT_unwindlib_EQ);
++  StringRef LibName = A ? A->getValue() : "";
++
++  if (LibName == "none") {
++    return ToolChain::UNW_None;
++  } else if (LibName == "platform" || LibName == "") {
++    ToolChain::RuntimeLibType RtLibType = GetRuntimeLibType(Args);
++    if (RtLibType == ToolChain::RLT_CompilerRT) {
++      return ToolChain::UNW_CompilerRT;
++    } else if (RtLibType == ToolChain::RLT_Libgcc)
++      return ToolChain::UNW_Libgcc;
++  } else if (LibName == "libunwind") {
++    if (GetRuntimeLibType(Args) == RLT_Libgcc)
++      getDriver().Diag(diag::err_drv_incompatible_unwindlib);
++    return ToolChain::UNW_CompilerRT;
++  } else if (LibName == "libgcc") {
++    return ToolChain::UNW_Libgcc;
++  }
++
++  if (A)
++    getDriver().Diag(diag::err_drv_invalid_unwindlib_name)
++        << A->getAsString(Args);
++
++  return ToolChain::UNW_None;
++}
+\ No newline at end of file
 diff --git a/clang/lib/Driver/ToolChains/Serenity.h b/clang/lib/Driver/ToolChains/Serenity.h
 new file mode 100644
-index 000000000..a45a0c853
+index 000000000..50b0dbe62
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.h
-@@ -0,0 +1,78 @@
-+//===--- Serenity.h - SerenityOS ToolChain Implementations ------*- C++ -*-===//
+@@ -0,0 +1,99 @@
++//===---- Serenity.h - SerenityOS ToolChain Implementation ------*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 +// See https://llvm.org/LICENSE.txt for license information.
@@ -346,14 +433,13 @@ index 000000000..a45a0c853
 +#ifndef LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SERENITY_H
 +#define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SERENITY_H
 +
-+#include "Gnu.h"
++#include "clang/Basic/LangOptions.h"
 +#include "clang/Driver/Tool.h"
 +#include "clang/Driver/ToolChain.h"
 +
 +namespace clang {
 +namespace driver {
 +namespace tools {
-+/// Serenity -- Directly call GNU Binutils assembler and linker
 +namespace serenity {
 +
 +class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
@@ -373,7 +459,7 @@ index 000000000..a45a0c853
 +
 +namespace toolchains {
 +
-+class LLVM_LIBRARY_VISIBILITY Serenity : public Generic_ELF {
++class LLVM_LIBRARY_VISIBILITY Serenity : public ToolChain {
 +public:
 +  Serenity(const Driver &D, const llvm::Triple &Triple,
 +           const llvm::opt::ArgList &Args);
@@ -390,17 +476,39 @@ index 000000000..a45a0c853
 +    return ToolChain::RLT_CompilerRT;
 +  }
 +
-+  UnwindLibType GetDefaultUnwindLibType() const override {
-+    return ToolChain::UNW_CompilerRT;
-+  }
-+
 +  CXXStdlibType GetDefaultCXXStdlibType() const override {
 +    return ToolChain::CST_Libcxx;
 +  }
++
++  UnwindLibType GetUnwindLibType(const llvm::opt::ArgList &Args) const override;
++
++  void
++  addClangTargetOptions(const llvm::opt::ArgList &DriverArgs,
++                        llvm::opt::ArgStringList &CC1Args,
++                        Action::OffloadKind DeviceOffloadKind) const override;
++
 +  const char *getDefaultLinker() const override { return "ld.lld"; }
 +
 +  bool HasNativeLLVMSupport() const override { return true; }
++
 +  bool IsIntegratedAssemblerDefault() const override { return true; }
++
++  bool isPICDefault() const override { return true; }
++  bool isPIEDefault() const override { return true; }
++  bool isPICDefaultForced() const override { return false; }
++
++  bool IsMathErrnoDefault() const override { return false; }
++
++  bool IsUnwindTablesDefault(const llvm::opt::ArgList &Args) const override {
++    return true;
++  }
++
++  bool useRelaxRelocations() const override { return true; }
++
++  LangOptions::StackProtectorMode
++  GetDefaultStackProtectorLevel(bool KernelOrKext) const override {
++    return LangOptions::SSPStrong;
++  }
 +
 +  unsigned GetDefaultDwarfVersion() const override { return 5; }
 +
@@ -414,10 +522,10 @@ index 000000000..a45a0c853
 +
 +#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SERENITY_H
 diff --git a/clang/lib/Frontend/InitHeaderSearch.cpp b/clang/lib/Frontend/InitHeaderSearch.cpp
-index bc31445d6..a4a3fbc89 100644
+index ba9f96384..4aecfeee2 100644
 --- a/clang/lib/Frontend/InitHeaderSearch.cpp
 +++ b/clang/lib/Frontend/InitHeaderSearch.cpp
-@@ -229,6 +229,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
+@@ -233,6 +233,7 @@ void InitHeaderSearch::AddDefaultCIncludePaths(const llvm::Triple &triple,
      case llvm::Triple::PS4:
      case llvm::Triple::ELFIAMCU:
      case llvm::Triple::Fuchsia:
@@ -425,7 +533,7 @@ index bc31445d6..a4a3fbc89 100644
        break;
      case llvm::Triple::Win32:
        if (triple.getEnvironment() != llvm::Triple::Cygnus)
-@@ -428,6 +429,7 @@ void InitHeaderSearch::AddDefaultIncludePaths(const LangOptions &Lang,
+@@ -432,6 +433,7 @@ void InitHeaderSearch::AddDefaultIncludePaths(const LangOptions &Lang,
    case llvm::Triple::Solaris:
    case llvm::Triple::WASI:
    case llvm::Triple::AIX:
@@ -433,447 +541,162 @@ index bc31445d6..a4a3fbc89 100644
      return;
  
    case llvm::Triple::Win32:
+diff --git a/libcxx/cmake/Modules/HandleOutOfTreeLLVM.cmake b/libcxx/cmake/Modules/HandleOutOfTreeLLVM.cmake
+index ad2820b32..deaa2c380 100644
+--- a/libcxx/cmake/Modules/HandleOutOfTreeLLVM.cmake
++++ b/libcxx/cmake/Modules/HandleOutOfTreeLLVM.cmake
+@@ -14,6 +14,8 @@ set(LLVM_INCLUDE_DIR ${LLVM_PATH}/include CACHE PATH "Path to llvm/include")
+ set(LLVM_PATH ${LLVM_PATH} CACHE PATH "Path to LLVM source tree")
+ set(LLVM_MAIN_SRC_DIR ${LLVM_PATH})
+ set(LLVM_CMAKE_PATH "${LLVM_PATH}/cmake/modules")
++set(LLVM_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
++set(LLVM_LIBRARY_OUTPUT_INTDIR "${CMAKE_CURRENT_BINARY_DIR}/lib")
+ 
+ if (EXISTS "${LLVM_CMAKE_PATH}")
+   list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_PATH}")
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index a3838c89e..8a20731ef 100644
+index 97e33f315..bfb221230 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
-@@ -1132,6 +1132,7 @@ extern "C" _LIBCPP_FUNC_VIS void __sanitizer_annotate_contiguous_container(
-       defined(__CloudABI__) || \
+@@ -958,6 +958,8 @@ typedef unsigned int   char32_t;
+ #  define _LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION
+ #elif defined(__MVS__)
+ #  define _LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION
++#elif defined(__serenity__) && !defined(KERNEL)
++#  define _LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION
+ #endif
+ 
+ #if defined(__APPLE__)
+@@ -1148,6 +1150,7 @@ extern "C" _LIBCPP_FUNC_VIS void __sanitizer_annotate_contiguous_container(
        defined(__sun__) || \
        defined(__MVS__) || \
+       defined(_AIX) || \
 +      defined(__serenity__) || \
        (defined(__MINGW32__) && __has_include(<pthread.h>))
  #    define _LIBCPP_HAS_THREAD_API_PTHREAD
  #  elif defined(__Fuchsia__)
-diff --git a/libcxx/include/__string b/libcxx/include/__string
-index d8b672e4c..638cf1698 100644
---- a/libcxx/include/__string
-+++ b/libcxx/include/__string
-@@ -451,6 +451,7 @@ char_traits<char>::find(const char_type* __s, size_t __n, const char_type& __a)
- }
+diff --git a/libcxx/include/__locale b/libcxx/include/__locale
+index ad742997d..c75dcb458 100644
+--- a/libcxx/include/__locale
++++ b/libcxx/include/__locale
+@@ -31,7 +31,7 @@
+ #elif defined(__sun__)
+ # include <xlocale.h>
+ # include <__support/solaris/xlocale.h>
+-#elif defined(_NEWLIB_VERSION)
++#elif defined(_NEWLIB_VERSION) || defined(__serenity__)
+ # include <__support/newlib/xlocale.h>
+ #elif defined(__OpenBSD__)
+ # include <__support/openbsd/xlocale.h>
+@@ -490,7 +490,7 @@ public:
+     static const mask xdigit = _ISXDIGIT;
+     static const mask blank  = _ISBLANK;
+     static const mask __regex_word = 0x80;
+-#elif defined(_NEWLIB_VERSION)
++#elif defined(_NEWLIB_VERSION) || defined(__serenity__)
+     // Same type as Newlib's _ctype_ array in newlib/libc/include/ctype.h.
+     typedef char mask;
+     static const mask space  = _S;
+diff --git a/libcxx/include/__support/newlib/xlocale.h b/libcxx/include/__support/newlib/xlocale.h
+index b75f9263a..f5ffb9003 100644
+--- a/libcxx/include/__support/newlib/xlocale.h
++++ b/libcxx/include/__support/newlib/xlocale.h
+@@ -9,7 +9,7 @@
+ #ifndef _LIBCPP_SUPPORT_NEWLIB_XLOCALE_H
+ #define _LIBCPP_SUPPORT_NEWLIB_XLOCALE_H
  
+-#if defined(_NEWLIB_VERSION)
++#if defined(_NEWLIB_VERSION) || defined(__serenity__)
  
-+#ifndef __serenity__
- // char_traits<wchar_t>
- 
- template <>
-@@ -531,6 +532,7 @@ char_traits<wchar_t>::compare(const char_type* __s1, const char_type* __s2, size
+ #include <cstdlib>
+ #include <clocale>
+@@ -22,6 +22,6 @@
+ #include <__support/xlocale/__strtonum_fallback.h>
  #endif
- }
  
-+#endif
+-#endif // _NEWLIB_VERSION
++#endif // _NEWLIB_VERSION || __serenity__
  
- template <class _Traits>
- _LIBCPP_INLINE_VISIBILITY
-@@ -543,6 +545,7 @@ inline size_t __char_traits_length_checked(const typename _Traits::char_type* __
  #endif
- }
- 
-+#ifndef __serenity__
- inline _LIBCPP_CONSTEXPR_AFTER_CXX14
- size_t
- char_traits<wchar_t>::length(const char_type* __s) _NOEXCEPT
-@@ -579,6 +582,7 @@ char_traits<wchar_t>::find(const char_type* __s, size_t __n, const char_type& __
-     return nullptr;
- #endif
- }
-+#endif
- 
- 
- #ifndef _LIBCPP_NO_HAS_CHAR8_T
-diff --git a/libcxx/include/cwchar b/libcxx/include/cwchar
-index 451c621f9..1e83b8e60 100644
---- a/libcxx/include/cwchar
-+++ b/libcxx/include/cwchar
-@@ -112,11 +112,13 @@ size_t wcsrtombs(char* restrict dst, const wchar_t** restrict src, size_t len,
- 
- _LIBCPP_BEGIN_NAMESPACE_STD
- 
--using ::mbstate_t;
- using ::size_t;
-+using ::FILE;
-+
-+#ifndef __serenity__
-+using ::mbstate_t;
- using ::tm;
- using ::wint_t;
--using ::FILE;
- using ::fwprintf;
- using ::fwscanf;
- using ::swprintf;
-@@ -186,6 +188,7 @@ using ::putwchar;
- using ::vwprintf;
- using ::wprintf;
- #endif
-+#endif
- 
- _LIBCPP_END_NAMESPACE_STD
- 
-diff --git a/libcxx/include/cwctype b/libcxx/include/cwctype
-index 575fd5661..c401b6cf0 100644
---- a/libcxx/include/cwctype
-+++ b/libcxx/include/cwctype
-@@ -59,6 +59,7 @@ wctrans_t wctrans(const char* property);
- 
- _LIBCPP_BEGIN_NAMESPACE_STD
- 
-+#ifndef __serenity__
- using ::wint_t;
- using ::wctrans_t;
- using ::wctype_t;
-@@ -80,6 +81,7 @@ using ::towlower;
- using ::towupper;
- using ::towctrans;
- using ::wctrans;
-+#endif
- 
- _LIBCPP_END_NAMESPACE_STD
- 
 diff --git a/libcxx/include/initializer_list b/libcxx/include/initializer_list
-index 893736f57..70a0d1ccf 100644
+index ea1f23467..45631ac2f 100644
 --- a/libcxx/include/initializer_list
 +++ b/libcxx/include/initializer_list
 @@ -43,7 +43,9 @@ template<class E> const E* end(initializer_list<E> il) noexcept; // constexpr in
  */
  
  #include <__config>
-+#ifndef KERNEL
++#if !defined(__serenity__) || !defined(KERNEL)
  #include <cstddef>
 +#endif
  
  #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
  #pragma GCC system_header
-diff --git a/libcxx/include/iosfwd b/libcxx/include/iosfwd
-index 0a0de99ff..790dc4023 100644
---- a/libcxx/include/iosfwd
-+++ b/libcxx/include/iosfwd
-@@ -109,7 +113,9 @@ template<> struct char_traits<char8_t>;
- #endif
- template<> struct char_traits<char16_t>;
- template<> struct char_traits<char32_t>;
-+#if 0
- template<> struct char_traits<wchar_t>;
-+#endif
+diff --git a/libcxx/include/locale b/libcxx/include/locale
+index 8e584005d..f29f3453e 100644
+--- a/libcxx/include/locale
++++ b/libcxx/include/locale
+@@ -206,7 +206,7 @@ template <class charT> class messages_byname;
  
- template<class _Tp>     class _LIBCPP_TEMPLATE_VIS allocator;
+ #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+ // Most unix variants have catopen.  These are the specific ones that don't.
+-#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION)
++#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__serenity__)
+ #    define _LIBCPP_HAS_CATOPEN 1
+ #    include <nl_types.h>
+ #  endif
+diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
+index 7880c733f..87b25cf42 100644
+--- a/libcxx/src/include/config_elast.h
++++ b/libcxx/src/include/config_elast.h
+@@ -33,6 +33,8 @@
+ #define _LIBCPP_ELAST 4095
+ #elif defined(__APPLE__)
+ // No _LIBCPP_ELAST needed on Apple
++#elif defined(__serenity__)
++// No _LIBCPP_ELAST needed on SerenityOS
+ #elif defined(__sun__)
+ #define _LIBCPP_ELAST ESTALE
+ #elif defined(__MVS__)
+diff --git a/libcxx/src/locale.cpp b/libcxx/src/locale.cpp
+index d5ab8fb3b..5039c1987 100644
+--- a/libcxx/src/locale.cpp
++++ b/libcxx/src/locale.cpp
+@@ -1145,6 +1145,8 @@ ctype<char>::classic_table() noexcept
+     return __pctype_func();
+ #elif defined(__EMSCRIPTEN__)
+     return *__ctype_b_loc();
++#elif defined(__serenity__)
++    return _ctype_;
+ #elif defined(_NEWLIB_VERSION)
+     // Newlib has a 257-entry table in ctype_.c, where (char)0 starts at [1].
+     return _ctype_ + 1;
+diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
+index 0c3419390..75f8b552b 100644
+--- a/llvm/cmake/modules/HandleLLVMOptions.cmake
++++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
+@@ -228,11 +228,11 @@ endif()
  
-diff --git a/libcxx/include/new b/libcxx/include/new
-index 0562cef45..82f4ca8be 100644
---- a/libcxx/include/new
-+++ b/libcxx/include/new
-@@ -301,6 +301,8 @@ inline _LIBCPP_INLINE_VISIBILITY void __libcpp_deallocate_unsized(void* __ptr, s
- #endif
- }
+ # Pass -Wl,-z,defs. This makes sure all symbols are defined. Otherwise a DSO
+ # build might work on ELF but fail on MachO/COFF.
+-if(NOT (CMAKE_SYSTEM_NAME MATCHES "Darwin|FreeBSD|OpenBSD|DragonFly|AIX|SunOS|OS390" OR
+-        WIN32 OR CYGWIN) AND
+-   NOT LLVM_USE_SANITIZER)
+-  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,defs")
+-endif()
++#if(NOT (CMAKE_SYSTEM_NAME MATCHES "Darwin|FreeBSD|OpenBSD|DragonFly|AIX|SunOS|OS390" OR
++#        WIN32 OR CYGWIN) AND
++#   NOT LLVM_USE_SANITIZER)
++#  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,defs")
++#endif()
  
-+#define _LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION
-+
- #if !defined(_LIBCPP_HAS_NO_LIBRARY_ALIGNED_ALLOCATION)
- // Low-level helpers to call the aligned allocation and deallocation functions
- // on the target platform. This is used to implement libc++'s own memory
-diff --git a/libcxx/include/string b/libcxx/include/string
-index 687795c79..f3a216647 100644
---- a/libcxx/include/string
-+++ b/libcxx/include/string
-@@ -1728,8 +1728,10 @@ _LIBCPP_STRING_UNSTABLE_EXTERN_TEMPLATE_LIST(_LIBCPP_EXTERN_TEMPLATE, char)
- _LIBCPP_STRING_UNSTABLE_EXTERN_TEMPLATE_LIST(_LIBCPP_EXTERN_TEMPLATE, wchar_t)
- #else
- _LIBCPP_STRING_V1_EXTERN_TEMPLATE_LIST(_LIBCPP_EXTERN_TEMPLATE, char)
-+#ifndef __serenity__
- _LIBCPP_STRING_V1_EXTERN_TEMPLATE_LIST(_LIBCPP_EXTERN_TEMPLATE, wchar_t)
- #endif
-+#endif
- 
- 
- #ifndef _LIBCPP_HAS_NO_DEDUCTION_GUIDES
-@@ -4527,11 +4529,13 @@ inline namespace literals
-         return basic_string<char> (__str, __len);
-     }
- 
-+#ifndef __serenity__
-     inline _LIBCPP_INLINE_VISIBILITY
-     basic_string<wchar_t> operator "" s( const wchar_t *__str, size_t __len )
-     {
-         return basic_string<wchar_t> (__str, __len);
-     }
-+#endif
- 
- #ifndef _LIBCPP_NO_HAS_CHAR8_T
-     inline _LIBCPP_INLINE_VISIBILITY
-diff --git a/libcxx/include/string_view b/libcxx/include/string_view
-index bc0245cf2..55f9b62c4 100644
---- a/libcxx/include/string_view
-+++ b/libcxx/include/string_view
-@@ -204,7 +204,9 @@ typedef basic_string_view<char8_t>  u8string_view;
- #endif
- typedef basic_string_view<char16_t> u16string_view;
- typedef basic_string_view<char32_t> u32string_view;
-+#ifndef __serenity__
- typedef basic_string_view<wchar_t>  wstring_view;
-+#endif
- 
- template<class _CharT, class _Traits>
- class
-@@ -214,7 +216,9 @@ class
- #endif
-     _LIBCPP_PREFERRED_NAME(u16string_view)
-     _LIBCPP_PREFERRED_NAME(u32string_view)
-+#ifndef __serenity__
-     _LIBCPP_PREFERRED_NAME(wstring_view)
-+#endif
-     basic_string_view {
- public:
-     // types
-@@ -836,11 +840,13 @@ inline namespace literals
-         return basic_string_view<char> (__str, __len);
-     }
- 
-+#ifndef __serenity__
-     inline _LIBCPP_INLINE_VISIBILITY _LIBCPP_CONSTEXPR
-     basic_string_view<wchar_t> operator "" sv(const wchar_t *__str, size_t __len) _NOEXCEPT
-     {
-         return basic_string_view<wchar_t> (__str, __len);
-     }
-+#endif
- 
- #ifndef _LIBCPP_NO_HAS_CHAR8_T
-     inline _LIBCPP_INLINE_VISIBILITY _LIBCPP_CONSTEXPR
-diff --git a/libcxx/include/wchar.h b/libcxx/include/wchar.h
-index b21a78968..ae20183ed 100644
---- a/libcxx/include/wchar.h
-+++ b/libcxx/include/wchar.h
-@@ -132,6 +132,7 @@ size_t wcsrtombs(char* restrict dst, const wchar_t** restrict src, size_t len,
- #endif
- 
- #if defined(__cplusplus) && !defined(_LIBCPP_WCHAR_H_HAS_CONST_OVERLOADS) && defined(_LIBCPP_PREFERRED_OVERLOAD)
-+#ifndef __serenity__
- extern "C++" {
- inline _LIBCPP_INLINE_VISIBILITY
- wchar_t* __libcpp_wcschr(const wchar_t* __s, wchar_t __c) {return (wchar_t*)wcschr(__s, __c);}
-@@ -178,5 +179,6 @@ size_t wcsnrtombs(char *__restrict dst, const wchar_t **__restrict src,
-                   size_t nwc, size_t len, mbstate_t *__restrict ps);
- }  // extern "C++"
- #endif  // __cplusplus && _LIBCPP_MSVCRT
-+#endif
- 
- #endif  // _LIBCPP_WCHAR_H
-diff --git a/libcxx/src/string.cpp b/libcxx/src/string.cpp
-index 5105594cf..ca85269db 100644
---- a/libcxx/src/string.cpp
-+++ b/libcxx/src/string.cpp
-@@ -131,6 +131,7 @@ as_integer( const string& func, const string& s, size_t* idx, int base )
-     return as_integer_helper<unsigned long long>( func, s, idx, base, strtoull );
- }
- 
-+#ifndef __serenity__
- // wstring
- template<>
- inline
-@@ -175,6 +176,7 @@ as_integer( const string& func, const wstring& s, size_t* idx, int base )
- {
-     return as_integer_helper<unsigned long long>( func, s, idx, base, wcstoull );
- }
-+#endif
- 
- // as_float
- 
-@@ -226,6 +228,8 @@ as_float( const string& func, const string& s, size_t* idx )
-     return as_float_helper<long double>( func, s, idx, strtold );
- }
- 
-+
-+#ifndef __serenity__
- template<>
- inline
- float
-@@ -249,6 +253,7 @@ as_float( const string& func, const wstring& s, size_t* idx )
- {
-     return as_float_helper<long double>( func, s, idx, wcstold );
- }
-+#endif
- 
- }  // unnamed namespace
- 
-@@ -258,11 +263,13 @@ stoi(const string& str, size_t* idx, int base)
-     return as_integer<int>( "stoi", str, idx, base );
- }
- 
-+#ifndef __serenity__
- int
- stoi(const wstring& str, size_t* idx, int base)
- {
-     return as_integer<int>( "stoi", str, idx, base );
- }
-+#endif
- 
- long
- stol(const string& str, size_t* idx, int base)
-@@ -270,11 +277,13 @@ stol(const string& str, size_t* idx, int base)
-     return as_integer<long>( "stol", str, idx, base );
- }
- 
-+#ifndef __serenity__
- long
- stol(const wstring& str, size_t* idx, int base)
- {
-     return as_integer<long>( "stol", str, idx, base );
- }
-+#endif
- 
- unsigned long
- stoul(const string& str, size_t* idx, int base)
-@@ -282,11 +291,13 @@ stoul(const string& str, size_t* idx, int base)
-     return as_integer<unsigned long>( "stoul", str, idx, base );
- }
- 
-+#ifndef __serenity__
- unsigned long
- stoul(const wstring& str, size_t* idx, int base)
- {
-     return as_integer<unsigned long>( "stoul", str, idx, base );
- }
-+#endif
- 
- long long
- stoll(const string& str, size_t* idx, int base)
-@@ -294,11 +305,13 @@ stoll(const string& str, size_t* idx, int base)
-     return as_integer<long long>( "stoll", str, idx, base );
- }
- 
-+#ifndef __serenity__
- long long
- stoll(const wstring& str, size_t* idx, int base)
- {
-     return as_integer<long long>( "stoll", str, idx, base );
- }
-+#endif
- 
- unsigned long long
- stoull(const string& str, size_t* idx, int base)
-@@ -306,11 +319,13 @@ stoull(const string& str, size_t* idx, int base)
-     return as_integer<unsigned long long>( "stoull", str, idx, base );
- }
- 
-+#ifndef __serenity__
- unsigned long long
- stoull(const wstring& str, size_t* idx, int base)
- {
-     return as_integer<unsigned long long>( "stoull", str, idx, base );
- }
-+#endif
- 
- float
- stof(const string& str, size_t* idx)
-@@ -318,11 +333,13 @@ stof(const string& str, size_t* idx)
-     return as_float<float>( "stof", str, idx );
- }
- 
-+#ifndef __serenity__
- float
- stof(const wstring& str, size_t* idx)
- {
-     return as_float<float>( "stof", str, idx );
- }
-+#endif
- 
- double
- stod(const string& str, size_t* idx)
-@@ -330,11 +347,13 @@ stod(const string& str, size_t* idx)
-     return as_float<double>( "stod", str, idx );
- }
- 
-+#ifndef __serenity__
- double
- stod(const wstring& str, size_t* idx)
- {
-     return as_float<double>( "stod", str, idx );
- }
-+#endif
- 
- long double
- stold(const string& str, size_t* idx)
-@@ -342,11 +361,13 @@ stold(const string& str, size_t* idx)
-     return as_float<long double>( "stold", str, idx );
- }
- 
-+#ifndef __serenity__
- long double
- stold(const wstring& str, size_t* idx)
- {
-     return as_float<long double>( "stold", str, idx );
- }
-+#endif
- 
- // to_string
- 
-@@ -397,6 +418,7 @@ struct initial_string<string>
-     }
- };
- 
-+#ifndef __serenity__
- template <>
- struct initial_string<wstring>
- {
-@@ -408,7 +430,9 @@ struct initial_string<wstring>
-         return s;
-     }
- };
-+#endif
- 
-+#ifndef __serenity__
- typedef int (*wide_printf)(wchar_t* __restrict, size_t, const wchar_t*__restrict, ...);
- 
- inline
-@@ -421,6 +445,7 @@ get_swprintf()
-     return static_cast<int (__cdecl*)(wchar_t* __restrict, size_t, const wchar_t*__restrict, ...)>(_snwprintf);
- #endif
- }
-+#endif
- 
- template <typename S, typename V>
- S i_to_string(const V v)
-@@ -444,20 +469,24 @@ string  to_string (unsigned val)           { return i_to_string< string>(val); }
- string  to_string (unsigned long val)      { return i_to_string< string>(val); }
- string  to_string (unsigned long long val) { return i_to_string< string>(val); }
- 
-+#ifndef __serenity__
- wstring to_wstring(int val)                { return i_to_string<wstring>(val); }
- wstring to_wstring(long val)               { return i_to_string<wstring>(val); }
- wstring to_wstring(long long val)          { return i_to_string<wstring>(val); }
- wstring to_wstring(unsigned val)           { return i_to_string<wstring>(val); }
- wstring to_wstring(unsigned long val)      { return i_to_string<wstring>(val); }
- wstring to_wstring(unsigned long long val) { return i_to_string<wstring>(val); }
-+#endif
- 
- 
- string  to_string (float val)       { return as_string(snprintf,       initial_string< string>()(),   "%f", val); }
- string  to_string (double val)      { return as_string(snprintf,       initial_string< string>()(),   "%f", val); }
- string  to_string (long double val) { return as_string(snprintf,       initial_string< string>()(),  "%Lf", val); }
- 
-+#ifndef __serenity__
- wstring to_wstring(float val)       { return as_string(get_swprintf(), initial_string<wstring>()(),  L"%f", val); }
- wstring to_wstring(double val)      { return as_string(get_swprintf(), initial_string<wstring>()(),  L"%f", val); }
- wstring to_wstring(long double val) { return as_string(get_swprintf(), initial_string<wstring>()(), L"%Lf", val); }
-+#endif
- 
- _LIBCPP_END_NAMESPACE_STD
-diff --git a/libunwind/src/AddressSpace.hpp b/libunwind/src/AddressSpace.hpp
-index 171318ff6..aa7345a19 100644
---- a/libunwind/src/AddressSpace.hpp
-+++ b/libunwind/src/AddressSpace.hpp
-@@ -24,7 +24,7 @@
- #include "Registers.hpp"
- 
- #ifndef _LIBUNWIND_USE_DLADDR
--  #if !defined(_LIBUNWIND_IS_BAREMETAL) && !defined(_WIN32)
-+  #if !defined(_LIBUNWIND_IS_BAREMETAL) && !defined(_WIN32) && !defined(__serenity__)
-     #define _LIBUNWIND_USE_DLADDR 1
-   #else
-     #define _LIBUNWIND_USE_DLADDR 0
+ # Pass -Wl,-z,nodelete. This makes sure our shared libraries are not unloaded
+ # by dlclose(). We need that since the CLI API relies on cross-references
 diff --git a/llvm/include/llvm/ADT/Triple.h b/llvm/include/llvm/ADT/Triple.h
-index eed315c92..11e53b8ac 100644
+index 76f351405..b81556c55 100644
 --- a/llvm/include/llvm/ADT/Triple.h
 +++ b/llvm/include/llvm/ADT/Triple.h
-@@ -198,7 +198,8 @@ public:
+@@ -199,7 +199,8 @@ public:
      Hurd,       // GNU/Hurd
      WASI,       // Experimental WebAssembly OS
      Emscripten,
@@ -883,7 +706,7 @@ index eed315c92..11e53b8ac 100644
    };
    enum EnvironmentType {
      UnknownEnvironment,
-@@ -626,6 +627,11 @@ public:
+@@ -628,6 +629,11 @@ public:
      return getOS() == Triple::AIX;
    }
  
@@ -895,24 +718,11 @@ index eed315c92..11e53b8ac 100644
    /// Tests whether the OS uses the ELF binary format.
    bool isOSBinFormatELF() const {
      return getObjectFormat() == Triple::ELF;
-diff --git a/llvm/include/llvm/Support/SwapByteOrder.h b/llvm/include/llvm/Support/SwapByteOrder.h
-index e8612ba66..f0109f4b3 100644
---- a/llvm/include/llvm/Support/SwapByteOrder.h
-+++ b/llvm/include/llvm/Support/SwapByteOrder.h
-@@ -22,7 +22,7 @@
- #endif
- 
- #if defined(__linux__) || defined(__GNU__) || defined(__HAIKU__) ||            \
--    defined(__Fuchsia__) || defined(__EMSCRIPTEN__)
-+    defined(__Fuchsia__) || defined(__EMSCRIPTEN__) || defined(__serenity__)
- #include <endian.h>
- #elif defined(_AIX)
- #include <sys/machine.h>
 diff --git a/llvm/lib/Support/Triple.cpp b/llvm/lib/Support/Triple.cpp
-index 4f483c965..bdbda22c9 100644
+index 883115463..22b39d8f5 100644
 --- a/llvm/lib/Support/Triple.cpp
 +++ b/llvm/lib/Support/Triple.cpp
-@@ -215,6 +215,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
+@@ -218,6 +218,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
    case PS4: return "ps4";
    case RTEMS: return "rtems";
    case Solaris: return "solaris";
@@ -920,7 +730,7 @@ index 4f483c965..bdbda22c9 100644
    case TvOS: return "tvos";
    case WASI: return "wasi";
    case WatchOS: return "watchos";
-@@ -531,6 +532,7 @@ static Triple::OSType parseOS(StringRef OSName) {
+@@ -538,6 +539,7 @@ static Triple::OSType parseOS(StringRef OSName) {
      .StartsWith("hurd", Triple::Hurd)
      .StartsWith("wasi", Triple::WASI)
      .StartsWith("emscripten", Triple::Emscripten)
@@ -928,3 +738,38 @@ index 4f483c965..bdbda22c9 100644
      .Default(Triple::UnknownOS);
  }
  
+diff --git a/runtimes/CMakeLists.txt b/runtimes/CMakeLists.txt
+index 1ffce323d..552521192 100644
+--- a/runtimes/CMakeLists.txt
++++ b/runtimes/CMakeLists.txt
+@@ -58,17 +58,28 @@ if(compiler_rt_path)
+   endif()
+ endif()
+ 
++# If building standalone by pointing CMake at this runtimes directory,
++# LLVM_BINARY_DIR isn't set, find_package(LLVM) will fail and these
++# intermediate paths are unset.
++if (LLVM_BINARY_DIR STREQUAL "")
++  set(LLVM_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
++endif()
++if (NOT LLVM_FOUND)
++  set(LLVM_TOOLS_BINARY_DIR ${LLVM_BINARY_DIR}/bin)
++  set(LLVM_LIBRARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/lib)
++endif()
++
+ # Setting these variables will allow the sub-build to put their outputs into
+ # the library and bin directories of the top-level build.
+ set(LLVM_LIBRARY_OUTPUT_INTDIR ${LLVM_LIBRARY_DIR})
+ set(LLVM_RUNTIME_OUTPUT_INTDIR ${LLVM_TOOLS_BINARY_DIR})
+ 
+ # This variable makes sure that e.g. llvm-lit is found.
+-set(LLVM_MAIN_SRC_DIR ${LLVM_BUILD_MAIN_SRC_DIR})
++set(LLVM_MAIN_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../llvm)
+ set(LLVM_CMAKE_PATH ${LLVM_MAIN_SRC_DIR}/cmake/modules)
+ 
+ # This variable is used by individual runtimes to locate LLVM files.
+-set(LLVM_PATH ${LLVM_BUILD_MAIN_SRC_DIR})
++set(LLVM_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../llvm)
+ 
+ if(APPLE)
+   set(LLVM_ENABLE_LIBCXX ON CACHE BOOL "")

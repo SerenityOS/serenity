@@ -51,7 +51,7 @@ set_target_properties(${PREKERNEL_TARGET} PROPERTIES LINK_DEPENDS ${PREKERNEL_LI
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_link_libraries(${PREKERNEL_TARGET} PRIVATE gcc)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
-    target_link_libraries(${PREKERNEL_TARGET} PRIVATE "clang_rt.builtins-${SERENITY_CLANG_ARCH}" c++abi)
+    target_link_libraries(${PREKERNEL_TARGET} PRIVATE clang_rt.builtins)
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
