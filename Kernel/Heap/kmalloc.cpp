@@ -302,6 +302,8 @@ size_t kmalloc_good_size(size_t size)
 {
     VERIFY(alignment <= 4096);
     void* ptr = kmalloc(size + alignment + sizeof(ptrdiff_t));
+    if (ptr == nullptr)
+        return nullptr;
     size_t max_addr = (size_t)ptr + alignment;
     void* aligned_ptr = (void*)(max_addr - (max_addr % alignment));
     ((ptrdiff_t*)aligned_ptr)[-1] = (ptrdiff_t)((u8*)aligned_ptr - (u8*)ptr);
