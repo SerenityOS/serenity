@@ -296,12 +296,6 @@ struct alignas(16) QueueHead {
         m_element_link_ptr = m_element_link_ptr | static_cast<u32>(LinkPointerBits::QHSelect);
     }
 
-    // FIXME: Find out best way to walk queue and free everything
-    void free_transfer_queue([[maybe_unused]] QueueHead* qh)
-    {
-        TODO();
-    }
-
     void terminate_with_stray_descriptor(TransferDescriptor* td)
     {
         m_link_ptr = td->paddr();
