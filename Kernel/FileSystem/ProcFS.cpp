@@ -486,7 +486,7 @@ KResultOr<size_t> ProcFSProcessPropertyInode::read_bytes(off_t offset, size_t co
         if (!process)
             return KResult(ESRCH);
         if (auto result = try_to_acquire_data(*process, builder); result.is_error())
-            return result.error();
+            return result;
         auto data_buffer = builder.build();
         if (!data_buffer)
             return KResult(EFAULT);
