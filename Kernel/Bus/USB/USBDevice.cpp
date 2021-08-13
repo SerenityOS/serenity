@@ -16,7 +16,7 @@
 
 namespace Kernel::USB {
 
-KResultOr<NonnullRefPtr<Device>> Device::try_create(USBController const& controller, PortNumber port, DeviceSpeed speed)
+KResultOr<NonnullRefPtr<Device>> Device::try_create(USBController const& controller, u8 port, DeviceSpeed speed)
 {
     auto pipe_or_error = Pipe::try_create_pipe(controller, Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0);
     if (pipe_or_error.is_error())
@@ -33,7 +33,7 @@ KResultOr<NonnullRefPtr<Device>> Device::try_create(USBController const& control
     return device.release_nonnull();
 }
 
-Device::Device(USBController const& controller, PortNumber port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe)
+Device::Device(USBController const& controller, u8 port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe)
     : m_device_port(port)
     , m_device_speed(speed)
     , m_address(0)
@@ -42,7 +42,7 @@ Device::Device(USBController const& controller, PortNumber port, DeviceSpeed spe
 {
 }
 
-Device::Device(NonnullRefPtr<USBController> controller, u8 address, PortNumber port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe)
+Device::Device(NonnullRefPtr<USBController> controller, u8 address, u8 port, DeviceSpeed speed, NonnullOwnPtr<Pipe> default_pipe)
     : m_device_port(port)
     , m_device_speed(speed)
     , m_address(address)
