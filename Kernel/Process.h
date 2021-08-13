@@ -264,7 +264,7 @@ public:
     KResultOr<FlatPtr> sys$inode_watcher_add_watch(Userspace<const Syscall::SC_inode_watcher_add_watch_params*> user_params);
     KResultOr<FlatPtr> sys$inode_watcher_remove_watch(int fd, int wd);
     KResultOr<FlatPtr> sys$dbgputch(u8);
-    KResultOr<FlatPtr> sys$dbgputstr(Userspace<const u8*>, size_t);
+    KResultOr<FlatPtr> sys$dbgputstr(Userspace<const char*>, size_t);
     KResultOr<FlatPtr> sys$dump_backtrace();
     KResultOr<FlatPtr> sys$gettid();
     KResultOr<FlatPtr> sys$setsid();
