@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <Kernel/Bus/VirtIO/VirtIO.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Random.h>
-#include <Kernel/VirtIO/VirtIO.h>
 
 namespace Kernel {
 

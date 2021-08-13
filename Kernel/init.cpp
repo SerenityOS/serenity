@@ -14,6 +14,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Bus/USB/USBManagement.h>
+#include <Kernel/Bus/VirtIO/VirtIO.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/FullDevice.h>
@@ -56,7 +57,6 @@
 #include <Kernel/Tasks/FinalizerTask.h>
 #include <Kernel/Tasks/SyncTask.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <Kernel/VirtIO/VirtIO.h>
 #include <Kernel/WorkQueue.h>
 #include <Kernel/kstdio.h>
 

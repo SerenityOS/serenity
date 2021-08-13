@@ -7,10 +7,10 @@
 
 #pragma once
 
+#include <Kernel/Bus/VirtIO/VirtIO.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Memory/RingBuffer.h>
-#include <Kernel/VirtIO/VirtIO.h>
 
 namespace Kernel {
 

@@ -8,10 +8,10 @@
 
 #include <AK/BinaryBufferWriter.h>
 #include <AK/DistinctNumeric.h>
+#include <Kernel/Bus/VirtIO/VirtIO.h>
+#include <Kernel/Bus/VirtIO/VirtIOQueue.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
-#include <Kernel/VirtIO/VirtIO.h>
-#include <Kernel/VirtIO/VirtIOQueue.h>
 
 #define VIRTIO_GPU_F_VIRGL (1 << 0)
 #define VIRTIO_GPU_F_EDID (1 << 1)

@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <Kernel/Bus/VirtIO/VirtIO.h>
+#include <Kernel/Bus/VirtIO/VirtIOQueue.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/GPU.h>
-#include <Kernel/VirtIO/VirtIO.h>
-#include <Kernel/VirtIO/VirtIOQueue.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
 
