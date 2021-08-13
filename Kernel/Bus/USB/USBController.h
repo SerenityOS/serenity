@@ -25,9 +25,6 @@ public:
 
     virtual KResultOr<size_t> submit_control_transfer(Transfer&) = 0;
 
-    virtual RefPtr<USB::Device> const get_device_at_port(USB::Device::PortNumber) = 0;
-    virtual RefPtr<USB::Device> const get_device_from_address(u8) = 0;
-
     u8 allocate_address();
 
 private:
