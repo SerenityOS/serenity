@@ -4,34 +4,67 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <bits/sighow.h>
+
+//
+// /!\ Read setjmp.h before modifying this file!
+//
+
 .global setjmp
 setjmp:
-    mov 4(%esp), %eax
-    mov %ebx, 0(%eax)
-    mov %esi, 4(%eax)
-    mov %edi, 8(%eax)
-    mov %ebp, 12(%eax)
-    lea 4(%esp), %ecx
-    mov %ecx, 16(%eax)
-    mov (%esp), %ecx
-    mov %ecx, 20(%eax)
+    mov 4(%esp), %ecx       // Grab jmp_buf argument
+    xor %eax, %eax          // Grab val argument (hardcoded to zero)
+    jmp .Lsigset_common
+
+.global sigsetjmp
+sigsetjmp:
+    mov 4(%esp), %ecx       // Grab jmp_buf argument
+    mov 8(%esp), %eax       // Grab val argument
+
+.Lsigset_common:
+    mov %eax, 24(%ecx)      // Store val into did_save_signal_mask
+    movl $0, 28(%ecx)       // Clear saved_signal_mask
+    test %eax, %eax
+    jz .Lsaveregs
+
+    lea 28(%ecx), %eax      // Set argument oldset
+    push %eax
+    push $0                 // Set argument set
+    push $0                 // Set argument how
+    call sigprocmask
+    add $12, %esp
+
+.Lsaveregs:
+    mov (%esp), %edx        // Grab return address
+    mov %ebx, (0 * 4)(%ecx) // Save registers
+    mov %esi, (1 * 4)(%ecx)
+    mov %edi, (2 * 4)(%ecx)
+    mov %ebp, (3 * 4)(%ecx)
+    mov %esp, (4 * 4)(%ecx)
+    mov %edx, (5 * 4)(%ecx)
     xor %eax, %eax
     ret
 
 .global longjmp
 longjmp:
-    mov 4(%esp), %edx
-    mov 8(%esp), %eax
-    mov 0(%edx), %ebx
-    mov 4(%edx), %esi
-    mov 8(%edx), %edi
-    mov 12(%edx), %ebp
-    mov 16(%edx), %ecx
-    mov %ecx, %esp
-    mov 20(%edx), %ecx
+    mov 4(%esp), %ecx       // Grab jmp_buf argument
+    mov 8(%esp), %eax       // Grab val argument
     test %eax, %eax
-    jnz  .nonzero
-    mov 1, %eax
-.nonzero:
-    jmp *%ecx
+    jnz  .Lnonzero
+    mov $1, %eax
 
+.Lnonzero:
+    mov (0 * 4)(%ecx), %ebx // Restore registers
+    mov (1 * 4)(%ecx), %esi
+    mov (2 * 4)(%ecx), %edi
+    mov (3 * 4)(%ecx), %ebp
+    //
+    // Until this point, the stack is still from the caller.
+    //
+    mov (4 * 4)(%ecx), %esp
+    mov (5 * 4)(%ecx), %edx
+    mov %edx, (%esp)        // Patch return address
+    //
+    // From this point on, the former stack has been restored.
+    //
+    ret
