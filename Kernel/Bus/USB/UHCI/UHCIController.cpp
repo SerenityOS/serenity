@@ -8,7 +8,6 @@
 #include <AK/Platform.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBRequest.h>
-#include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
