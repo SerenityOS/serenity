@@ -4,14 +4,16 @@ set -eu
 SCRIPT="$(dirname "${0}")"
 export SERENITY_ARCH="${SERENITY_ARCH:-i686}"
 
-HOST_CC="${CC:=cc}"
-HOST_CXX="${CXX:=c++}"
-HOST_AR="${AR:=ar}"
-HOST_RANLIB="${RANLIB:=ranlib}"
-HOST_PATH="${PATH:=}"
-HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
-HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
-HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
+if [ -z "${HOST_CC:=}" ]; then
+    export HOST_CC="${CC:=cc}"
+    export HOST_CXX="${CXX:=c++}"
+    export HOST_AR="${AR:=ar}"
+    export HOST_RANLIB="${RANLIB:=ranlib}"
+    export HOST_PATH="${PATH:=}"
+    export HOST_PKG_CONFIG_DIR="${PKG_CONFIG_DIR:=}"
+    export HOST_PKG_CONFIG_SYSROOT_DIR="${PKG_CONFIG_SYSROOT_DIR:=}"
+    export HOST_PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR:=}"
+fi
 
 DESTDIR="/"
 
