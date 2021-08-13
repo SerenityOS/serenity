@@ -77,6 +77,7 @@ public:
     virtual void gl_enable_client_state(GLenum cap) override;
     virtual void gl_disable_client_state(GLenum cap) override;
     virtual void gl_vertex_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
+    virtual void gl_color_pointer(GLint size, GLenum type, GLsizei stride, const void* pointer) override;
 
     virtual void present() override;
 
@@ -233,6 +234,7 @@ private:
     };
 
     VertexAttribPointer m_client_vertex_pointer;
+    VertexAttribPointer m_client_color_pointer;
 };
 
 }
