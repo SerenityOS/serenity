@@ -32,8 +32,8 @@ set(KERNEL_SOURCES
     Bus/PCI/Initializer.cpp
     Bus/PCI/WindowedMMIOAccess.cpp
     Bus/USB/SysFSUSB.cpp
-    Bus/USB/UHCIController.cpp
-    Bus/USB/UHCIRootHub.cpp
+    Bus/USB/UHCI/UHCIController.cpp
+    Bus/USB/UHCI/UHCIRootHub.cpp
     Bus/USB/USBController.cpp
     Bus/USB/USBDevice.cpp
     Bus/USB/USBHub.cpp

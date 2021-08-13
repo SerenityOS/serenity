@@ -11,8 +11,8 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/Bus/PCI/Device.h>
-#include <Kernel/Bus/USB/UHCIDescriptorTypes.h>
-#include <Kernel/Bus/USB/UHCIRootHub.h>
+#include <Kernel/Bus/USB/UHCI/UHCIDescriptorTypes.h>
+#include <Kernel/Bus/USB/UHCI/UHCIRootHub.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/IO.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
