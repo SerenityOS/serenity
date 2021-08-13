@@ -37,6 +37,11 @@ set(KERNEL_SOURCES
     Bus/USB/USBManagement.cpp
     Bus/USB/USBPipe.cpp
     Bus/USB/USBTransfer.cpp
+    Bus/VirtIO/VirtIO.cpp
+    Bus/VirtIO/VirtIOConsole.cpp
+    Bus/VirtIO/VirtIOConsolePort.cpp
+    Bus/VirtIO/VirtIOQueue.cpp
+    Bus/VirtIO/VirtIORNG.cpp
     CMOS.cpp
     CommandLine.cpp
     ConsoleDevice.cpp
@@ -270,11 +275,6 @@ set(KERNEL_SOURCES
     TimerQueue.cpp
     UBSanitizer.cpp
     UserOrKernelBuffer.cpp
-    VirtIO/VirtIO.cpp
-    VirtIO/VirtIOConsole.cpp
-    VirtIO/VirtIOConsolePort.cpp
-    VirtIO/VirtIOQueue.cpp
-    VirtIO/VirtIORNG.cpp
     WaitQueue.cpp
     WorkQueue.cpp
     init.cpp
