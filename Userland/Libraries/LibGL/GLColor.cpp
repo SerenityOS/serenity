@@ -14,6 +14,10 @@ void glColor3f(GLfloat r, GLfloat g, GLfloat b)
 {
     g_gl_context->gl_color(r, g, b, 1.0);
 }
+void glColor3fv(const GLfloat* v)
+{
+    g_gl_context->gl_color(v[0], v[1], v[2], 1.0);
+}
 
 void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a)
 {

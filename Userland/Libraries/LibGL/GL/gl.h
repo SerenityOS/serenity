@@ -243,6 +243,7 @@ GLAPI void glClear(GLbitfield mask);
 GLAPI void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
 GLAPI void glClearDepth(GLdouble depth);
 GLAPI void glColor3f(GLfloat r, GLfloat g, GLfloat b);
+GLAPI void glColor3fv(const GLfloat* v);
 GLAPI void glColor4f(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
 GLAPI void glColor4fv(const GLfloat* v);
 GLAPI void glColor4ub(GLubyte r, GLubyte g, GLubyte b, GLubyte a);
