@@ -218,7 +218,7 @@ private:
         Unicode::Script script {};
         bool is_extension { false };
     };
-    using PropertyEscape = Variant<Unicode::Property, Unicode::GeneralCategory, Script>;
+    using PropertyEscape = Variant<Unicode::Property, Unicode::GeneralCategory, Script, Empty>;
     Optional<PropertyEscape> read_unicode_property_escape();
 
     bool parse_pattern(ByteCode&, size_t&, bool unicode, bool named);

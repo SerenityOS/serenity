@@ -10,11 +10,13 @@
 namespace SQL {
 
 Value::Value(SQLType sql_type)
+    : m_impl(0)
 {
     setup(sql_type);
 }
 
 Value::Value(SQLType sql_type, ByteBuffer& buffer, size_t& offset)
+    : m_impl(0)
 {
     setup(sql_type);
     m_deserialize(buffer, offset);
@@ -22,6 +24,7 @@ Value::Value(SQLType sql_type, ByteBuffer& buffer, size_t& offset)
 }
 
 Value::Value(Value const& other)
+    : m_impl(0)
 {
     setup(other.type());
     m_is_null = other.is_null();

@@ -210,6 +210,8 @@ public:
     template<typename... NewTs>
     friend struct Variant;
 
+    Variant() = delete;
+
 #ifdef AK_HAS_CONDITIONALLY_TRIVIAL
     Variant(const Variant&) requires(!(IsCopyConstructible<Ts> && ...)) = delete;
     Variant(const Variant&) = default;

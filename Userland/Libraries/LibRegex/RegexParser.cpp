@@ -1556,7 +1556,7 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
     }
 
     if (unicode) {
-        PropertyEscape property {};
+        PropertyEscape property { Empty {} };
         bool negated = false;
 
         if (parse_unicode_property_escape(property, negated)) {
@@ -1575,7 +1575,8 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
                         compares.empend(CompareTypeAndValuePair { CharacterCompareType::ScriptExtension, (ByteCodeValueType)script.script });
                     else
                         compares.empend(CompareTypeAndValuePair { CharacterCompareType::Script, (ByteCodeValueType)script.script });
-                });
+                },
+                [](Empty&) { VERIFY_NOT_REACHED(); });
             stack.insert_bytecode_compare_values(move(compares));
             match_length_minimum += 1;
             return true;
@@ -1818,7 +1819,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                 if (try_skip("-"))
                     return { CharClassRangeElement { .code_point = '-', .is_character_class = false } };
 
-                PropertyEscape property {};
+                PropertyEscape property { Empty {} };
                 bool negated = false;
                 if (parse_unicode_property_escape(property, negated)) {
                     return property.visit(
@@ -1833,7 +1834,8 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
                                 return CharClassRangeElement { .script = script.script, .is_negated = negated, .is_character_class = true, .is_script_extension = true };
                             else
                                 return CharClassRangeElement { .script = script.script, .is_negated = negated, .is_character_class = true, .is_script = true };
-                        });
+                        },
+                        [](Empty&) -> CharClassRangeElement { VERIFY_NOT_REACHED(); });
                 }
             }
 
@@ -1983,7 +1985,8 @@ bool ECMA262Parser::parse_unicode_property_escape(PropertyEscape& property, bool
             return true;
         },
         [](Unicode::GeneralCategory) { return true; },
-        [](Script) { return true; });
+        [](Script) { return true; },
+        [](Empty&) -> bool { VERIFY_NOT_REACHED(); });
 }
 
 StringView ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_bracket)
