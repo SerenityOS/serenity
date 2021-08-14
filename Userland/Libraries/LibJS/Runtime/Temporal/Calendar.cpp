@@ -372,7 +372,8 @@ Object* get_temporal_calendar_with_iso_default(GlobalObject& global_object, Obje
         return &static_cast<PlainDate&>(item).calendar();
     if (is<PlainDateTime>(item))
         return &static_cast<PlainDateTime&>(item).calendar();
-    // TODO: PlainMonthDay
+    if (is<PlainMonthDay>(item))
+        return &static_cast<PlainMonthDay&>(item).calendar();
     if (is<PlainTime>(item))
         return &static_cast<PlainTime&>(item).calendar();
     if (is<PlainYearMonth>(item))
