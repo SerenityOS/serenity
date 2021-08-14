@@ -84,9 +84,9 @@ KResultOr<FlatPtr> Process::sys$close(int fd)
     dbgln_if(IO_DEBUG, "sys$close({}) {}", fd, description.ptr());
     if (!description)
         return EBADF;
-    int rc = description->close();
+    auto result = description->close();
     m_fds[fd] = {};
-    return rc;
+    return result;
 }
 
 }

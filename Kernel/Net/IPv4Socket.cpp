@@ -137,7 +137,7 @@ KResult IPv4Socket::listen(size_t backlog)
 {
     MutexLocker locker(lock());
     auto result = allocate_local_port_if_needed();
-    if (result.error_or_port.is_error() && result.error_or_port.error() != -ENOPROTOOPT)
+    if (result.error_or_port.is_error() && result.error_or_port.error() != ENOPROTOOPT)
         return result.error_or_port.error();
 
     set_backlog(backlog);
@@ -231,7 +231,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     if (m_local_address.to_u32() == 0)
         m_local_address = routing_decision.adapter->ipv4_address();
 
-    if (auto result = allocate_local_port_if_needed(); result.error_or_port.is_error() && result.error_or_port.error() != -ENOPROTOOPT)
+    if (auto result = allocate_local_port_if_needed(); result.error_or_port.is_error() && result.error_or_port.error() != ENOPROTOOPT)
         return result.error_or_port.error();
 
     dbgln_if(IPV4_SOCKET_DEBUG, "sendto: destination={}:{}", m_peer_address, m_peer_port);

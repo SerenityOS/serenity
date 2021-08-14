@@ -184,9 +184,8 @@ KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_
         return set_so_error(EHOSTUNREACH);
     size_t mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
     data_length = min(data_length, mss);
-    int err = send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, &data, data_length, &routing_decision);
-    if (err < 0)
-        return KResult((ErrnoCode)-err);
+    if (auto result = send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, &data, data_length, &routing_decision); result.is_error())
+        return result;
     return data_length;
 }
 
@@ -414,9 +413,8 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     m_ack_number = 0;
 
     set_setup_state(SetupState::InProgress);
-    int err = send_tcp_packet(TCPFlags::SYN);
-    if (err < 0)
-        return KResult((ErrnoCode)-err);
+    if (auto result = send_tcp_packet(TCPFlags::SYN); result.is_error())
+        return result;
     m_state = State::SynSent;
     m_role = Role::Connecting;
     m_direction = Direction::Outgoing;

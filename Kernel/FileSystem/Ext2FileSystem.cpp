@@ -1295,7 +1295,11 @@ bool Ext2FS::write_ext2_inode(InodeIndex inode, const ext2_inode& e2inode)
     if (!find_block_containing_inode(inode, block_index, offset))
         return false;
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((const u8*)&e2inode));
-    return write_block(block_index, buffer, inode_size(), offset) >= 0;
+    if (auto result = write_block(block_index, buffer, inode_size(), offset); result.is_error()) {
+        // FIXME: Propagate errors.
+        return false;
+    }
+    return true;
 }
 
 auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> KResultOr<Vector<BlockIndex>>

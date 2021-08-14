@@ -97,7 +97,7 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
         new_unveiled_path = custody_or_error.value()->try_create_absolute_path();
         if (!new_unveiled_path)
             return ENOMEM;
-    } else if (custody_or_error.error() == -ENOENT && parent_custody && (new_permissions & UnveilAccess::CreateOrRemove)) {
+    } else if (custody_or_error.error() == ENOENT && parent_custody && (new_permissions & UnveilAccess::CreateOrRemove)) {
         auto parent_custody_path = parent_custody->try_create_absolute_path();
         if (!parent_custody_path)
             return ENOMEM;

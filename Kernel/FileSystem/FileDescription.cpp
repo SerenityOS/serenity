@@ -237,7 +237,7 @@ KResultOr<size_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_bu
     OutputMemoryStream stream { temp_buffer };
 
     auto flush_stream_to_output_buffer = [&error, &stream, &remaining, &output_buffer]() -> bool {
-        if (error != 0)
+        if (error.is_error())
             return false;
         if (stream.size() == 0)
             return true;
@@ -273,13 +273,12 @@ KResultOr<size_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_bu
         // We should only return EFAULT when the userspace buffer is too small,
         // so that userspace can reliably use it as a signal to increase its
         // buffer size.
-        VERIFY(result != -EFAULT);
+        VERIFY(result != EFAULT);
         return result;
     }
 
-    if (error) {
+    if (error.is_error())
         return error;
-    }
     return size - remaining;
 }
 
