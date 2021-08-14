@@ -407,6 +407,31 @@ int main(int argc, char** argv)
         }));
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+
+    auto zoom_in_action = GUI::CommonActions::make_zoom_in_action(
+        [&](auto&) {
+            mandelbrot.zoom(Mandelbrot::Zoom::In, mandelbrot.relative_rect().center());
+        },
+        window);
+
+    auto reset_zoom_action = GUI::CommonActions::make_reset_zoom_action(
+        [&](auto&) {
+            // FIXME: Ideally, this would only reset zoom. Currently, it resets pan too.
+            mandelbrot.reset();
+        },
+        window);
+
+    auto zoom_out_action = GUI::CommonActions::make_zoom_out_action(
+        [&](auto&) {
+            mandelbrot.zoom(Mandelbrot::Zoom::Out, mandelbrot.relative_rect().center());
+        },
+        window);
+
+    auto& view_menu = window->add_menu("&View");
+    view_menu.add_action(zoom_in_action);
+    view_menu.add_action(reset_zoom_action);
+    view_menu.add_action(zoom_out_action);
+
     window->show();
 
     auto app_icon = GUI::Icon::default_icon("app-mandelbrot");
