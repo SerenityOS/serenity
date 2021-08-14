@@ -16,6 +16,7 @@
 #ifdef KERNEL
 #    include <Kernel/Arch/x86/Processor.h>
 #    include <Kernel/Arch/x86/ScopedCritical.h>
+#    include <Kernel/KResult.h>
 #endif
 
 namespace AK {
@@ -498,9 +499,24 @@ inline RefPtr<T> try_create(Args&&... args)
     return adopt_ref_if_nonnull(new (nothrow) T { forward<Args>(args)... });
 }
 
+#ifdef KERNEL
+template<typename T>
+inline Kernel::KResultOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object)
+{
+    auto result = adopt_ref_if_nonnull(object);
+    if (!result)
+        return ENOMEM;
+    return result.release_nonnull();
+}
+#endif
+
 }
 
 using AK::adopt_ref_if_nonnull;
 using AK::RefPtr;
 using AK::static_ptr_cast;
 using AK::try_create;
+
+#ifdef KERNEL
+using AK::adopt_nonnull_ref_or_enomem;
+#endif
