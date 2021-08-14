@@ -944,8 +944,9 @@ KResultOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSRootDirectory::lookup(Str
     auto actual_pid = pid.value();
 
     auto maybe_process = Process::from_pid(actual_pid);
-    if (maybe_process)
-        return maybe_process.release_nonnull();
+    if (maybe_process) {
+        return maybe_process->procfs_traits();
+    }
     return ENOENT;
 }
 

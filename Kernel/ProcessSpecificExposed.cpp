@@ -40,40 +40,10 @@ KResultOr<size_t> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBu
     return KSuccess;
 }
 
-InodeIndex Process::component_index() const
-{
-    return SegmentedProcFSIndex::build_segmented_index_for_pid_directory(pid());
-}
-
-KResultOr<NonnullRefPtr<Inode>> Process::to_inode(const ProcFS& procfs_instance) const
-{
-    auto maybe_inode = ProcFSProcessDirectoryInode::try_create(procfs_instance, m_protected_values.pid);
-    if (maybe_inode.is_error())
-        return maybe_inode.error();
-    return maybe_inode.release_value();
-}
-
-KResult Process::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
-{
-    callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_pid_directory(pid()) }, 0 });
-    callback({ "..", { fsid, ProcFSComponentRegistry::the().root_directory().component_index() }, 0 });
-    callback({ "fd", { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(pid(), SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions) }, 0 });
-    callback({ "stacks", { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks) }, 0 });
-    callback({ "unveil", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(pid(), SegmentedProcFSIndex::MainProcessProperty::Unveil) }, 0 });
-    callback({ "pledge", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(pid(), SegmentedProcFSIndex::MainProcessProperty::Pledge) }, 0 });
-    callback({ "fds", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(pid(), SegmentedProcFSIndex::MainProcessProperty::FileDescriptions) }, 0 });
-    callback({ "exe", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(pid(), SegmentedProcFSIndex::MainProcessProperty::BinaryLink) }, 0 });
-    callback({ "cwd", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(pid(), SegmentedProcFSIndex::MainProcessProperty::CurrentWorkDirectoryLink) }, 0 });
-    callback({ "perf_events", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(pid(), SegmentedProcFSIndex::MainProcessProperty::PerformanceEvents) }, 0 });
-    callback({ "vm", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(pid(), SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats) }, 0 });
-    callback({ "root", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property_in_pid_directory(pid(), SegmentedProcFSIndex::MainProcessProperty::RootLink) }, 0 });
-    return KSuccess;
-}
-
 KResult Process::traverse_stacks_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
     callback({ ".", { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, SegmentedProcFSIndex::MainProcessProperty::Reserved) }, 0 });
-    callback({ "..", { fsid, component_index() }, 0 });
+    callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 });
 
     for_each_thread([&](const Thread& thread) {
         int tid = thread.tid().value();
@@ -119,8 +89,8 @@ KResultOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBuffer
 
 KResult Process::traverse_file_descriptions_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, component_index() }, 0 });
+    callback({ ".", { fsid, m_procfs_traits->component_index() }, 0 });
+    callback({ "..", { fsid, m_procfs_traits->component_index() }, 0 });
     size_t count = 0;
     fds().enumerate([&](auto& file_description_metadata) {
         if (!file_description_metadata.is_valid()) {
@@ -309,7 +279,7 @@ mode_t Process::binary_link_required_mode() const
 {
     if (!executable())
         return 0;
-    return ProcFSExposedComponent::required_mode();
+    return m_procfs_traits->required_mode();
 }
 
 KResult Process::procfs_get_binary_link(KBufferBuilder& builder) const

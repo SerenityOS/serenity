@@ -85,10 +85,9 @@ typedef HashMap<FlatPtr, RefPtr<FutexQueue>> FutexQueues;
 struct LoadResult;
 
 class Process
-    : public ProcFSExposedComponent
+    : public RefCounted<Process>
     , public Weakable<Process> {
 
-private:
     class ProtectedValues {
     public:
         ProcessID pid { 0 };
@@ -145,6 +144,8 @@ public:
     };
 
 public:
+    class ProcessProcFSTraits;
+
     inline static Process* current()
     {
         auto current_thread = Processor::current_thread();
@@ -549,13 +550,7 @@ private:
     void setup_socket_fd(int fd, NonnullRefPtr<FileDescription> description, int type);
 
 public:
-    // ^ProcFSExposedComponent stats
-    virtual InodeIndex component_index() const override;
-    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override;
-    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual mode_t required_mode() const override { return 0555; }
-    virtual uid_t owner_user() const override { return uid(); }
-    virtual gid_t owner_group() const override { return gid(); }
+    NonnullRefPtr<ProcessProcFSTraits> procfs_traits() const { return *m_procfs_traits; }
     KResult procfs_get_fds_stats(KBufferBuilder& builder) const;
     KResult procfs_get_perf_events(KBufferBuilder& builder) const;
     KResult procfs_get_unveil_stats(KBufferBuilder& builder) const;
@@ -713,6 +708,37 @@ public:
         FileDescriptionAndFlags* m_description { nullptr };
     };
 
+    class ProcessProcFSTraits : public ProcFSExposedComponent {
+    public:
+        static KResultOr<NonnullRefPtr<ProcessProcFSTraits>> try_create(Badge<Process>, WeakPtr<Process> process)
+        {
+            auto result = adopt_ref_if_nonnull(new (nothrow) ProcessProcFSTraits(process));
+            if (!result)
+                return ENOMEM;
+
+            return result.release_nonnull();
+        }
+
+        virtual InodeIndex component_index() const override;
+        virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override;
+        virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+        virtual mode_t required_mode() const override { return 0555; }
+
+        virtual uid_t owner_user() const override;
+
+        virtual gid_t owner_group() const override;
+
+    private:
+        ProcessProcFSTraits(WeakPtr<Process> process)
+            : m_process(process)
+        {
+        }
+
+        // NOTE: We need to weakly hold on to the process, because otherwise
+        //       we would be creating a reference cycle.
+        WeakPtr<Process> m_process;
+    };
+
     FileDescriptions& fds() { return m_fds; }
     const FileDescriptions& fds() const { return m_fds; }
 
@@ -770,8 +796,9 @@ private:
     };
 
     Array<CoredumpProperty, 4> m_coredump_properties;
-
     NonnullRefPtrVector<Thread> m_threads_for_coredump;
+
+    mutable RefPtr<ProcessProcFSTraits> m_procfs_traits;
 
     static_assert(sizeof(ProtectedValues) < (PAGE_SIZE));
     alignas(4096) ProtectedValues m_protected_values;
