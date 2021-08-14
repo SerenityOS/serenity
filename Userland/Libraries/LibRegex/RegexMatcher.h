@@ -31,7 +31,6 @@ struct RegexResult final {
     size_t count { 0 };
     Vector<Match> matches;
     Vector<Vector<Match>> capture_group_matches;
-    Vector<HashMap<String, Match>> named_capture_group_matches;
     size_t n_operations { 0 };
     size_t n_capture_groups { 0 };
     size_t n_named_capture_groups { 0 };

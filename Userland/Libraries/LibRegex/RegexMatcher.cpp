@@ -149,10 +149,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
     if (c_match_preallocation_count) {
         state.matches.ensure_capacity(c_match_preallocation_count);
         state.capture_group_matches.ensure_capacity(c_match_preallocation_count);
-        state.named_capture_group_matches.ensure_capacity(c_match_preallocation_count);
-
         auto& capture_groups_count = m_pattern->parser_result.capture_groups_count;
-        auto& named_capture_groups_count = m_pattern->parser_result.named_capture_groups_count;
 
         for (size_t j = 0; j < c_match_preallocation_count; ++j) {
             state.matches.empend();
@@ -160,9 +157,6 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
             state.capture_group_matches.at(j).ensure_capacity(capture_groups_count);
             for (size_t k = 0; k < capture_groups_count; ++k)
                 state.capture_group_matches.at(j).unchecked_append({});
-
-            state.named_capture_group_matches.unchecked_append({});
-            state.named_capture_group_matches.at(j).ensure_capacity(named_capture_groups_count);
         }
     }
 
@@ -315,15 +309,9 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
                 matches.template remove_all_matching([](auto& match) { return match.view.is_null(); });
         }
 
-        output_copy.named_capture_group_matches = state.named_capture_group_matches;
-        // Make sure there are as many capture matches as there are actual matches.
-        if (output_copy.named_capture_group_matches.size() < match_count)
-            output_copy.named_capture_group_matches.resize(match_count);
-
         output_copy.matches = state.matches;
     } else {
         output_copy.capture_group_matches.clear_with_capacity();
-        output_copy.named_capture_group_matches.clear_with_capacity();
     }
 
     return {
@@ -331,7 +319,6 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
         match_count,
         move(output_copy.matches),
         move(output_copy.capture_group_matches),
-        move(output_copy.named_capture_group_matches),
         output.operations,
         m_pattern->parser_result.capture_groups_count,
         m_pattern->parser_result.named_capture_groups_count,
@@ -399,9 +386,8 @@ private:
 template<class Parser>
 Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& state, MatchOutput& output) const
 {
-    state.recursion_level = 0;
-
     BumpAllocatedLinkedList<MatchState> states_to_try_next;
+    size_t recursion_level = 0;
 
     auto& bytecode = m_pattern->parser_result.bytecode;
 
@@ -410,7 +396,7 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
         auto& opcode = bytecode.get_opcode(state);
 
 #if REGEX_DEBUG
-        s_regex_dbg.print_opcode("VM", opcode, state, state.recursion_level, false);
+        s_regex_dbg.print_opcode("VM", opcode, state, recursion_level, false);
 #endif
 
         ExecutionResult result;
@@ -435,7 +421,7 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
         case ExecutionResult::Fork_PrioHigh:
             states_to_try_next.append(state);
             state.instruction_position = state.fork_at_position;
-            ++state.recursion_level;
+            ++recursion_level;
             continue;
         case ExecutionResult::Continue:
             continue;
@@ -454,7 +440,7 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
                 return false;
             }
             state = states_to_try_next.take_last();
-            ++state.recursion_level;
+            ++recursion_level;
             continue;
         }
         }

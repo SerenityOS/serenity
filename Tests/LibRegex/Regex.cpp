@@ -422,9 +422,11 @@ TEST_CASE(named_capture_group)
     EXPECT_EQ(re.search(haystack, result, PosixFlags::Multiline), true);
     EXPECT_EQ(result.count, 2u);
     EXPECT_EQ(result.matches.at(0).view, "Opacity=255");
-    EXPECT_EQ(result.named_capture_group_matches.at(0).ensure("Test").view, "255");
+    EXPECT_EQ(result.capture_group_matches.at(0).at(0).view, "255");
+    EXPECT_EQ(result.capture_group_matches.at(0).at(0).capture_group_name, "Test");
     EXPECT_EQ(result.matches.at(1).view, "AudibleBeep=0");
-    EXPECT_EQ(result.named_capture_group_matches.at(1).ensure("Test").view, "0");
+    EXPECT_EQ(result.capture_group_matches.at(1).at(0).view, "0");
+    EXPECT_EQ(result.capture_group_matches.at(1).at(0).capture_group_name, "Test");
 }
 
 TEST_CASE(ecma262_named_capture_group_with_dollar_sign)
@@ -443,9 +445,11 @@ TEST_CASE(ecma262_named_capture_group_with_dollar_sign)
     EXPECT_EQ(re.search(haystack, result, ECMAScriptFlags::Multiline), true);
     EXPECT_EQ(result.count, 2u);
     EXPECT_EQ(result.matches.at(0).view, "Opacity=255");
-    EXPECT_EQ(result.named_capture_group_matches.at(0).ensure("$Test$").view, "255");
+    EXPECT_EQ(result.capture_group_matches.at(0).at(0).view, "255");
+    EXPECT_EQ(result.capture_group_matches.at(0).at(0).capture_group_name, "$Test$");
     EXPECT_EQ(result.matches.at(1).view, "AudibleBeep=0");
-    EXPECT_EQ(result.named_capture_group_matches.at(1).ensure("$Test$").view, "0");
+    EXPECT_EQ(result.capture_group_matches.at(1).at(0).view, "0");
+    EXPECT_EQ(result.capture_group_matches.at(1).at(0).capture_group_name, "$Test$");
 }
 
 TEST_CASE(a_star)

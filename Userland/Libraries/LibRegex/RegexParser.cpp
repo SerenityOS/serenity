@@ -150,7 +150,6 @@ ALWAYS_INLINE void Parser::reset()
     m_parser_state.capture_group_minimum_lengths.clear();
     m_parser_state.capture_groups_count = 0;
     m_parser_state.named_capture_groups_count = 0;
-    m_parser_state.named_capture_group_minimum_lengths.clear();
     m_parser_state.named_capture_groups.clear();
 }
 
@@ -780,12 +779,8 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
                 }
             }
 
-            if (!(m_parser_state.regex_options & AllFlags::SkipSubExprResults || prevent_capture_group)) {
-                if (capture_group_name.has_value())
-                    bytecode.insert_bytecode_group_capture_left(capture_group_name.value());
-                else
-                    bytecode.insert_bytecode_group_capture_left(m_parser_state.capture_groups_count);
-            }
+            if (!(m_parser_state.regex_options & AllFlags::SkipSubExprResults || prevent_capture_group))
+                bytecode.insert_bytecode_group_capture_left(m_parser_state.capture_groups_count);
 
             ByteCode capture_group_bytecode;
 
@@ -814,12 +809,12 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
 
             if (!(m_parser_state.regex_options & AllFlags::SkipSubExprResults || prevent_capture_group)) {
                 if (capture_group_name.has_value()) {
-                    bytecode.insert_bytecode_group_capture_right(capture_group_name.value());
+                    bytecode.insert_bytecode_group_capture_right(m_parser_state.capture_groups_count, capture_group_name.value());
                     ++m_parser_state.named_capture_groups_count;
                 } else {
                     bytecode.insert_bytecode_group_capture_right(m_parser_state.capture_groups_count);
-                    ++m_parser_state.capture_groups_count;
                 }
+                ++m_parser_state.capture_groups_count;
             }
             should_parse_repetition_symbol = true;
             break;
@@ -1564,14 +1559,14 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
             set_error(Error::InvalidNameForCaptureGroup);
             return false;
         }
-        auto maybe_length = m_parser_state.named_capture_group_minimum_lengths.get(name);
-        if (!maybe_length.has_value()) {
+        auto maybe_capture_group = m_parser_state.named_capture_groups.get(name);
+        if (!maybe_capture_group.has_value()) {
             set_error(Error::InvalidNameForCaptureGroup);
             return false;
         }
-        match_length_minimum += maybe_length.value();
+        match_length_minimum += maybe_capture_group->minimum_length;
 
-        stack.insert_bytecode_compare_named_reference(name);
+        stack.insert_bytecode_compare_values({ { CharacterCompareType::Reference, (ByteCodeValueType)maybe_capture_group->group_index } });
         return true;
     }
 
@@ -2121,15 +2116,8 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
         m_capture_groups_in_scope.last().empend(identifier);
     };
     auto clear_all_capture_groups_in_scope = [&] {
-        for (auto& entry : m_capture_groups_in_scope.last()) {
-            entry.visit(
-                [&](size_t index) {
-                    stack.insert_bytecode_clear_capture_group(index);
-                },
-                [&](String const& name) {
-                    stack.insert_bytecode_clear_named_capture_group(name);
-                });
-        }
+        for (auto& index : m_capture_groups_in_scope.last())
+            stack.insert_bytecode_clear_capture_group(index);
     };
 
     if (match(TokenType::Questionmark)) {
@@ -2172,21 +2160,18 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
             clear_all_capture_groups_in_scope();
             exit_capture_group_scope();
 
-            register_capture_group_in_current_scope(name);
             register_capture_group_in_current_scope(group_index);
 
             consume(TokenType::RightParen, Error::MismatchingParen);
 
-            stack.insert_bytecode_group_capture_left(name);
             stack.insert_bytecode_group_capture_left(group_index);
             stack.extend(move(capture_group_bytecode));
-            stack.insert_bytecode_group_capture_right(name);
-            stack.insert_bytecode_group_capture_right(group_index);
+            stack.insert_bytecode_group_capture_right(group_index, name);
 
             match_length_minimum += length;
 
-            m_parser_state.named_capture_group_minimum_lengths.set(name, length);
             m_parser_state.capture_group_minimum_lengths.set(group_index, length);
+            m_parser_state.named_capture_groups.set(name, { group_index, length });
             return true;
         }
 
