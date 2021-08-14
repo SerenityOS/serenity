@@ -22,6 +22,7 @@
 #include <Kernel/API/POSIX/sys/mman.h>
 #include <Kernel/API/POSIX/sys/socket.h>
 #include <Kernel/API/POSIX/sys/stat.h>
+#include <Kernel/API/POSIX/sys/times.h>
 #include <Kernel/API/POSIX/sys/un.h>
 #include <Kernel/API/POSIX/sys/utsname.h>
 #include <Kernel/API/POSIX/sys/wait.h>
@@ -37,13 +38,6 @@ TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ThreadID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, SessionID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessGroupID);
-
-struct tms {
-    clock_t tms_utime;
-    clock_t tms_stime;
-    clock_t tms_cutime;
-    clock_t tms_cstime;
-};
 
 typedef i64 off_t;
 typedef i64 time_t;
