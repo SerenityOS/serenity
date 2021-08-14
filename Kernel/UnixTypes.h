@@ -15,6 +15,7 @@
 #include <Kernel/API/POSIX/net/if_arp.h>
 #include <Kernel/API/POSIX/net/route.h>
 #include <Kernel/API/POSIX/netinet/in.h>
+#include <Kernel/API/POSIX/poll.h>
 #include <Kernel/API/POSIX/serenity.h>
 #include <Kernel/API/POSIX/signal.h>
 #include <Kernel/API/POSIX/sys/mman.h>
@@ -90,20 +91,6 @@ typedef i64 time_t;
 
 typedef u32 blksize_t;
 typedef u32 blkcnt_t;
-
-#define POLLIN (1u << 0)
-#define POLLPRI (1u << 1)
-#define POLLOUT (1u << 2)
-#define POLLERR (1u << 3)
-#define POLLHUP (1u << 4)
-#define POLLNVAL (1u << 5)
-#define POLLRDHUP (1u << 13)
-
-struct pollfd {
-    int fd;
-    short events;
-    short revents;
-};
 
 typedef u32 __u32;
 typedef u16 __u16;
