@@ -143,6 +143,13 @@ public:
     constexpr static Time zero() { return Time(0, 0); };
     constexpr static Time max() { return Time(0x7fff'ffff'ffff'ffffLL, 999'999'999); };
 
+#ifndef KERNEL
+    [[nodiscard]] static Time now_realtime();
+    [[nodiscard]] static Time now_realtime_coarse();
+    [[nodiscard]] static Time now_monotonic();
+    [[nodiscard]] static Time now_monotonic_coarse();
+#endif
+
     // Truncates towards zero (2.8s to 2s, -2.8s to -2s).
     i64 to_truncated_seconds() const;
     i64 to_truncated_milliseconds() const;
