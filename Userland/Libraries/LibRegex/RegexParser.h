@@ -88,6 +88,11 @@ protected:
     ALWAYS_INLINE bool done() const;
     ALWAYS_INLINE bool set_error(Error error);
 
+    struct NamedCaptureGroup {
+        size_t group_index { 0 };
+        size_t minimum_length { 0 };
+    };
+
     struct ParserState {
         Lexer& lexer;
         Token current_token;
@@ -99,8 +104,7 @@ protected:
         size_t match_length_minimum { 0 };
         AllOptions regex_options;
         HashMap<int, size_t> capture_group_minimum_lengths;
-        HashMap<FlyString, size_t> named_capture_group_minimum_lengths;
-        HashMap<size_t, FlyString> named_capture_groups;
+        HashMap<FlyString, NamedCaptureGroup> named_capture_groups;
 
         explicit ParserState(Lexer& lexer)
             : lexer(lexer)
@@ -258,8 +262,7 @@ private:
     // ECMA-262 basically requires that we clear the inner captures of a capture group before trying to match it,
     // by requiring that (...)+ only contain the matches for the last iteration.
     // To do that, we have to keep track of which capture groups are "in scope", so we can clear them as needed.
-    using CaptureGroup = Variant<size_t, String>;
-    Vector<Vector<CaptureGroup>> m_capture_groups_in_scope;
+    Vector<Vector<size_t>> m_capture_groups_in_scope;
 };
 
 using PosixExtended = PosixExtendedParser;

@@ -263,12 +263,15 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
             return {};
     }
 
-    auto* array = Array::create(global_object, result.n_capture_groups + 1);
+    auto* array = Array::create(global_object, result.n_named_capture_groups + 1);
     if (vm.exception())
         return {};
 
     Vector<Optional<Match>> indices { Match::create(match) };
     HashMap<String, Match> group_names;
+
+    bool has_groups = result.n_named_capture_groups != 0;
+    Object* groups_object = has_groups ? Object::create(global_object, nullptr) : nullptr;
 
     for (size_t i = 0; i < result.n_capture_groups; ++i) {
         auto capture_value = js_undefined();
@@ -280,22 +283,15 @@ static Value regexp_builtin_exec(GlobalObject& global_object, RegExpObject& rege
             indices.append(Match::create(capture));
         }
         array->create_data_property_or_throw(i + 1, capture_value);
-    }
 
-    bool has_groups = result.n_named_capture_groups > 0;
-    Value groups = js_undefined();
-
-    if (has_groups) {
-        auto groups_object = Object::create(global_object, nullptr);
-
-        for (auto& entry : result.named_capture_group_matches[0]) {
-            groups_object->create_data_property_or_throw(entry.key, js_string(vm, entry.value.view.u16_view()));
-            group_names.set(entry.key, Match::create(entry.value));
+        if (capture.capture_group_name.has_value()) {
+            auto group_name = capture.capture_group_name->to_string();
+            groups_object->create_data_property_or_throw(group_name, js_string(vm, capture.view.u16_view()));
+            group_names.set(move(group_name), Match::create(capture));
         }
-
-        groups = move(groups_object);
     }
 
+    Value groups = has_groups ? groups_object : js_undefined();
     array->create_data_property_or_throw(vm.names.groups, groups);
 
     if (has_indices) {
