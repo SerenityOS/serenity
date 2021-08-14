@@ -6,6 +6,7 @@
 
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/Sections.h>
 
@@ -35,6 +36,11 @@ UNMAP_AFTER_INIT void SysFSComponentRegistry::register_new_component(SysFSCompon
     m_root_directory->m_components.append(component);
 }
 
+SysFSComponentRegistry::DevicesList& SysFSComponentRegistry::devices_list()
+{
+    return m_devices_list;
+}
+
 NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
 {
     return adopt_ref(*new (nothrow) SysFSRootDirectory);
@@ -57,7 +63,9 @@ SysFSRootDirectory::SysFSRootDirectory()
     : SysFSDirectory(".")
 {
     auto buses_directory = SysFSBusDirectory::must_create(*this);
+    auto devices_directory = SysFSDevicesDirectory::must_create(*this);
     m_components.append(buses_directory);
+    m_components.append(devices_directory);
     m_buses_directory = buses_directory;
 }
 

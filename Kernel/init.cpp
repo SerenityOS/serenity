@@ -182,6 +182,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 
     load_kernel_symbol_table();
 
+    SysFSComponentRegistry::initialize();
     ConsoleDevice::initialize();
     s_bsp_processor.initialize(0);
 
@@ -275,7 +276,6 @@ void init_stage2(void*)
     }
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
-    SysFSComponentRegistry::initialize();
     PCI::initialize();
     PCISerialDevice::detect();
 
