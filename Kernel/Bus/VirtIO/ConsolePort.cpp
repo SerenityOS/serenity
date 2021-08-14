@@ -21,10 +21,9 @@ ConsolePort::ConsolePort(unsigned port, VirtIO::Console& console)
     m_transmit_buffer = make<Memory::RingBuffer>("VirtIO::ConsolePort Transmit", RINGBUFFER_SIZE);
     m_receive_queue = m_port == 0 ? 0 : m_port * 2 + 2;
     m_transmit_queue = m_port == 0 ? 1 : m_port * 2 + 3;
-    init_receive_buffer();
 }
 
-void ConsolePort::init_receive_buffer()
+void ConsolePort::init_receive_buffer(Badge<VirtIO::Console>)
 {
     auto& queue = m_console.get_queue(m_receive_queue);
     SpinlockLocker queue_lock(queue.lock());
