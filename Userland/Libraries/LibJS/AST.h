@@ -166,6 +166,73 @@ private:
     NonnullRefPtrVector<FunctionDeclaration> m_hoisted_functions;
 };
 
+class ImportStatement final : public Statement {
+public:
+    struct ImportEntry {
+        String import_name;
+        String local_name;
+    };
+
+    explicit ImportStatement(SourceRange source_range, StringView from_module, Vector<ImportEntry> entries = {})
+        : Statement(source_range)
+        , m_module_request(from_module)
+        , m_entries(move(entries))
+    {
+    }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+
+    virtual void dump(int indent) const override;
+
+    bool has_bound_name(StringView name) const;
+
+private:
+    String m_module_request;
+    Vector<ImportEntry> m_entries;
+};
+
+class ExportStatement final : public Statement {
+public:
+    struct ExportEntry {
+        enum Kind {
+            ModuleRequest,
+            LocalExport
+        } kind;
+        // Can always have
+        String export_name;
+
+        // Only if module request
+        String module_request;
+
+        // Has just one of ones below
+        String local_or_import_name;
+
+        ExportEntry(String export_name, String local_name)
+            : kind(LocalExport)
+            , export_name(export_name)
+            , local_or_import_name(local_name)
+        {
+        }
+    };
+
+    explicit ExportStatement(SourceRange source_range, RefPtr<ASTNode> statement, Vector<ExportEntry> entries)
+        : Statement(source_range)
+        , m_statement(move(statement))
+        , m_entries(move(entries))
+    {
+    }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+
+    virtual void dump(int indent) const override;
+
+    bool has_export(StringView export_name) const;
+
+private:
+    RefPtr<ASTNode> m_statement;
+    Vector<ExportEntry> m_entries;
+};
+
 class Program final : public ScopeNode {
 public:
     enum class Type {
@@ -186,11 +253,29 @@ public:
 
     Type type() const { return m_type; }
 
+    void append_import(NonnullRefPtr<ImportStatement> import_statement)
+    {
+        m_imports.append(import_statement);
+        append(import_statement);
+    }
+
+    void append_export(NonnullRefPtr<ExportStatement> export_statement)
+    {
+        m_exports.append(export_statement);
+        append(export_statement);
+    }
+
+    NonnullRefPtrVector<ImportStatement> const& imports() const { return m_imports; }
+    NonnullRefPtrVector<ExportStatement> const& exports() const { return m_exports; }
+
 private:
     virtual bool is_program() const override { return true; }
 
     bool m_is_strict_mode { false };
     Type m_type { Type::Script };
+
+    NonnullRefPtrVector<ImportStatement> m_imports;
+    NonnullRefPtrVector<ExportStatement> m_exports;
 };
 
 class BlockStatement final : public ScopeNode {

@@ -87,6 +87,8 @@ public:
     NonnullRefPtr<Expression> parse_property_key();
     NonnullRefPtr<AssignmentExpression> parse_assignment_expression(AssignmentOp, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity);
     NonnullRefPtr<Identifier> parse_identifier();
+    NonnullRefPtr<ImportStatement> parse_import_statement(Program& program);
+    NonnullRefPtr<ExportStatement> parse_export_statement(Program& program);
 
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
     RefPtr<Statement> try_parse_labelled_statement();
@@ -150,6 +152,7 @@ private:
     bool match_unary_prefixed_expression() const;
     bool match_secondary_expression(const Vector<TokenType>& forbidden = {}) const;
     bool match_statement() const;
+    bool match_export_or_import() const;
     bool match_declaration() const;
     bool match_variable_declaration() const;
     bool match_identifier() const;

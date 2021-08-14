@@ -317,6 +317,14 @@ NonnullRefPtr<Program> Parser::parse_program(bool starts_in_strict_mode)
                 parsing_directives = false;
             }
 
+        } else if (match_export_or_import()) {
+            VERIFY(m_state.current_token.type() == TokenType::Export || m_state.current_token.type() == TokenType::Import);
+            if (m_state.current_token.type() == TokenType::Export)
+                program->append_export(parse_export_statement(*program));
+            else
+                program->append_import(parse_import_statement(*program));
+
+            parsing_directives = false;
         } else {
             expected("statement or declaration");
             consume();
@@ -2596,6 +2604,13 @@ bool Parser::match_statement() const
         || type == TokenType::Semicolon;
 }
 
+bool Parser::match_export_or_import() const
+{
+    auto type = m_state.current_token.type();
+    return type == TokenType::Export
+        || type == TokenType::Import;
+}
+
 bool Parser::match_declaration() const
 {
     auto type = m_state.current_token.type();
@@ -2806,6 +2821,324 @@ void Parser::check_identifier_name_for_assignment_validity(StringView name, bool
         else if (is_strict_reserved_word(name))
             syntax_error("Binding pattern target may not be called 'yield' in strict mode");
     }
+}
+
+NonnullRefPtr<ImportStatement> Parser::parse_import_statement(Program& program)
+{
+    auto rule_start = push_start();
+    if (program.type() != Program::Type::Module)
+        syntax_error("Cannot use import statement outside a module");
+
+    consume(TokenType::Import);
+
+    if (match(TokenType::StringLiteral)) {
+        auto module_name = consume(TokenType::StringLiteral).value();
+        return create_ast_node<ImportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, module_name);
+    }
+
+    auto match_imported_binding = [&] {
+        return match_identifier() || match(TokenType::Yield) || match(TokenType::Await);
+    };
+
+    auto match_as = [&] {
+        return match(TokenType::Identifier) && m_state.current_token.value() == "as"sv;
+    };
+
+    bool continue_parsing = true;
+
+    struct ImportWithLocation {
+        ImportStatement::ImportEntry entry;
+        Position position;
+    };
+
+    Vector<ImportWithLocation> entries_with_location;
+
+    if (match_imported_binding()) {
+        auto id_position = position();
+        auto bound_name = consume().value();
+        entries_with_location.append({ { "default", bound_name }, id_position });
+
+        if (match(TokenType::Comma)) {
+            consume(TokenType::Comma);
+        } else {
+            continue_parsing = false;
+        }
+    }
+
+    if (!continue_parsing) {
+        // skip the rest
+    } else if (match(TokenType::Asterisk)) {
+        consume(TokenType::Asterisk);
+
+        if (!match_as())
+            syntax_error(String::formatted("Unexpected token: {}", m_state.current_token.name()));
+
+        consume(TokenType::Identifier);
+
+        if (match_imported_binding()) {
+            auto namespace_position = position();
+            auto namespace_name = consume().value();
+            entries_with_location.append({ { "*", namespace_name }, namespace_position });
+        } else {
+            syntax_error(String::formatted("Unexpected token: {}", m_state.current_token.name()));
+        }
+
+    } else if (match(TokenType::CurlyOpen)) {
+        consume(TokenType::CurlyOpen);
+
+        while (!done() && !match(TokenType::CurlyClose)) {
+            if (match_identifier_name()) {
+                auto require_as = !match_imported_binding();
+                auto name_position = position();
+                auto name = consume().value();
+
+                if (match_as()) {
+                    consume(TokenType::Identifier);
+
+                    auto alias_position = position();
+                    auto alias = consume_identifier().value();
+                    check_identifier_name_for_assignment_validity(alias);
+
+                    entries_with_location.append({ { name, alias }, alias_position });
+                } else if (require_as) {
+                    syntax_error(String::formatted("Unexpected reserved word '{}'", name));
+                } else {
+                    check_identifier_name_for_assignment_validity(name);
+
+                    entries_with_location.append({ { name, name }, name_position });
+                }
+            } else {
+                expected("identifier");
+                break;
+            }
+
+            if (!match(TokenType::Comma))
+                break;
+
+            consume(TokenType::Comma);
+        }
+
+        consume(TokenType::CurlyClose);
+    } else {
+        expected("import clauses");
+    }
+
+    auto from_statement = consume(TokenType::Identifier).value();
+    if (from_statement != "from"sv)
+        syntax_error(String::formatted("Expected 'from' got {}", from_statement));
+
+    auto module_name = consume(TokenType::StringLiteral).value();
+
+    Vector<ImportStatement::ImportEntry> entries;
+    entries.ensure_capacity(entries_with_location.size());
+
+    for (auto& entry : entries_with_location) {
+        for (auto& import_statement : program.imports()) {
+            if (import_statement.has_bound_name(entry.entry.local_name))
+                syntax_error(String::formatted("Identifier '{}' already declared", entry.entry.local_name), entry.position);
+        }
+
+        for (auto& new_entry : entries) {
+            if (new_entry.local_name == entry.entry.local_name)
+                syntax_error(String::formatted("Identifier '{}' already declared", entry.entry.local_name), entry.position);
+        }
+
+        entries.append(move(entry.entry));
+    }
+
+    return create_ast_node<ImportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, module_name, move(entries));
+}
+
+NonnullRefPtr<ExportStatement> Parser::parse_export_statement(Program& program)
+{
+    auto rule_start = push_start();
+    if (program.type() != Program::Type::Module)
+        syntax_error("Cannot use export statement outside a module");
+
+    auto match_as = [&] {
+        return match(TokenType::Identifier) && m_state.current_token.value() == "as"sv;
+    };
+
+    auto match_from = [&] {
+        return match(TokenType::Identifier) && m_state.current_token.value() == "from"sv;
+    };
+
+    consume(TokenType::Export);
+
+    struct EntryAndLocation {
+        ExportStatement::ExportEntry entry;
+        Position position;
+
+        void to_module_request(String from_module)
+        {
+            entry.kind = ExportStatement::ExportEntry::Kind::ModuleRequest;
+            entry.module_request = from_module;
+        }
+    };
+
+    Vector<EntryAndLocation> entries_with_location;
+
+    RefPtr<ASTNode> expression = {};
+
+    if (match(TokenType::Default)) {
+        auto default_position = position();
+        consume(TokenType::Default);
+
+        String local_name;
+
+        if (match(TokenType::Class)) {
+            auto class_expression = parse_class_expression(false);
+            local_name = class_expression->name();
+            expression = move(class_expression);
+        } else if (match(TokenType::Function)) {
+            auto func_expr = parse_function_node<FunctionExpression>();
+            local_name = func_expr->name();
+            expression = move(func_expr);
+            // TODO: Allow async function
+        } else if (match_expression()) {
+            expression = parse_expression(2);
+            consume_or_insert_semicolon();
+            local_name = "*default*";
+        } else {
+            expected("Declaration or assignment expression");
+        }
+
+        entries_with_location.append({ { "default", local_name }, default_position });
+    } else {
+        enum FromSpecifier {
+            NotAllowed,
+            Optional,
+            Required
+        } check_for_from { NotAllowed };
+
+        if (match(TokenType::Asterisk)) {
+            auto asterisk_position = position();
+            consume(TokenType::Asterisk);
+
+            if (match_as()) {
+                consume(TokenType::Identifier);
+                if (match_identifier_name()) {
+                    auto namespace_position = position();
+                    auto exported_name = consume().value();
+                    entries_with_location.append({ { exported_name, "*" }, namespace_position });
+                } else {
+                    expected("identifier");
+                }
+            } else {
+                entries_with_location.append({ { {}, "*" }, asterisk_position });
+            }
+            check_for_from = Required;
+        } else if (match_declaration()) {
+            auto decl_position = position();
+            auto declaration = parse_declaration();
+            if (is<FunctionDeclaration>(*declaration)) {
+                auto& func = static_cast<FunctionDeclaration&>(*declaration);
+                entries_with_location.append({ { func.name(), func.name() }, func.source_range().start });
+            } else if (is<ClassDeclaration>(*declaration)) {
+                auto& class_declaration = static_cast<ClassDeclaration&>(*declaration);
+                entries_with_location.append({ { class_declaration.class_name(), class_declaration.class_name() }, class_declaration.source_range().start });
+            } else {
+                VERIFY(is<VariableDeclaration>(*declaration));
+                auto& variables = static_cast<VariableDeclaration&>(*declaration);
+                for (auto& decl : variables.declarations()) {
+                    decl.target().visit(
+                        [&](NonnullRefPtr<Identifier> const& identifier) {
+                            entries_with_location.append({ { identifier->string(), identifier->string() }, identifier->source_range().start });
+                        },
+                        [&](NonnullRefPtr<BindingPattern> const& binding) {
+                            binding->for_each_bound_name([&](auto& name) {
+                                entries_with_location.append({ { name, name }, decl_position });
+                            });
+                        });
+                }
+            }
+            expression = declaration;
+        } else if (match(TokenType::Var)) {
+            auto variable_position = position();
+            auto variable_declaration = parse_variable_declaration();
+            for (auto& decl : variable_declaration->declarations()) {
+                decl.target().visit(
+                    [&](NonnullRefPtr<Identifier> const& identifier) {
+                        entries_with_location.append({ { identifier->string(), identifier->string() }, identifier->source_range().start });
+                    },
+                    [&](NonnullRefPtr<BindingPattern> const& binding) {
+                        binding->for_each_bound_name([&](auto& name) {
+                            entries_with_location.append({ { name, name }, variable_position });
+                        });
+                    });
+            }
+            expression = variable_declaration;
+        } else if (match(TokenType::CurlyOpen)) {
+            consume(TokenType::CurlyOpen);
+
+            while (!done() && !match(TokenType::CurlyClose)) {
+                if (match_identifier_name()) {
+                    auto identifier_position = position();
+                    auto identifier = consume().value();
+
+                    if (match_as()) {
+                        consume(TokenType::Identifier);
+                        if (match_identifier_name()) {
+                            auto export_name = consume().value();
+                            entries_with_location.append({ { export_name, identifier }, identifier_position });
+                        } else {
+                            expected("identifier name");
+                        }
+                    } else {
+                        entries_with_location.append({ { identifier, identifier }, identifier_position });
+                    }
+                } else {
+                    expected("identifier");
+                    break;
+                }
+
+                if (!match(TokenType::Comma))
+                    break;
+
+                consume(TokenType::Comma);
+            }
+
+            consume(TokenType::CurlyClose);
+            check_for_from = Optional;
+        } else {
+            syntax_error("Unexpected token 'export'", rule_start.position());
+        }
+
+        if (check_for_from != NotAllowed && match_from()) {
+            consume(TokenType::Identifier);
+            if (match(TokenType::StringLiteral)) {
+                auto from_specifier = consume().value();
+                for (auto& entry : entries_with_location)
+                    entry.to_module_request(from_specifier);
+            } else {
+                expected("ModuleSpecifier");
+            }
+        } else if (check_for_from == Required) {
+            expected("from");
+        }
+
+        if (check_for_from != NotAllowed)
+            consume_or_insert_semicolon();
+    }
+
+    Vector<ExportStatement::ExportEntry> entries;
+    entries.ensure_capacity(entries_with_location.size());
+
+    for (auto& entry : entries_with_location) {
+        for (auto& export_statement : program.exports()) {
+            if (export_statement.has_export(entry.entry.export_name))
+                syntax_error(String::formatted("Duplicate export with name: '{}'", entry.entry.export_name), entry.position);
+        }
+
+        for (auto& new_entry : entries) {
+            if (new_entry.export_name == entry.entry.export_name)
+                syntax_error(String::formatted("Duplicate export with name: '{}'", entry.entry.export_name), entry.position);
+        }
+
+        entries.append(move(entry.entry));
+    }
+
+    return create_ast_node<ExportStatement>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(entries));
 }
 
 }
