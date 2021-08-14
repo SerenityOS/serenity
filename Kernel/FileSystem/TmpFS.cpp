@@ -23,10 +23,12 @@ TmpFS::~TmpFS()
 {
 }
 
-bool TmpFS::initialize()
+KResult TmpFS::initialize()
 {
     m_root_inode = TmpFSInode::create_root(*this);
-    return !m_root_inode.is_null();
+    if (!m_root_inode)
+        return ENOMEM;
+    return KSuccess;
 }
 
 Inode& TmpFS::root_inode()

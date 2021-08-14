@@ -51,9 +51,9 @@ ProcFS::~ProcFS()
 {
 }
 
-bool ProcFS::initialize()
+KResult ProcFS::initialize()
 {
-    return true;
+    return KSuccess;
 }
 
 Inode& ProcFS::root_inode()

@@ -16,7 +16,7 @@ public:
     TYPEDEF_DISTINCT_ORDERED_ID(u64, BlockIndex);
 
     virtual ~BlockBasedFileSystem() override;
-    virtual bool initialize() override;
+    virtual KResult initialize() override;
 
     u64 logical_block_size() const { return m_logical_block_size; };
 

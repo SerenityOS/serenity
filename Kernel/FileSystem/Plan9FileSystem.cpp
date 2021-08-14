@@ -195,7 +195,7 @@ private:
     bool m_have_been_built { false };
 };
 
-bool Plan9FS::initialize()
+KResult Plan9FS::initialize()
 {
     ensure_thread();
 
@@ -204,7 +204,7 @@ bool Plan9FS::initialize()
 
     auto result = post_message_and_wait_for_a_reply(version_message);
     if (result.is_error())
-        return false;
+        return result;
 
     u32 msize;
     StringView remote_protocol_version;
@@ -227,11 +227,13 @@ bool Plan9FS::initialize()
     result = post_message_and_wait_for_a_reply(attach_message);
     if (result.is_error()) {
         dbgln("Attaching failed");
-        return false;
+        return result;
     }
 
     m_root_inode = Plan9FSInode::create(*this, root_fid);
-    return true;
+    if (!m_root_inode)
+        return ENOMEM;
+    return KSuccess;
 }
 
 Plan9FS::ProtocolVersion Plan9FS::parse_protocol_version(const StringView& s) const

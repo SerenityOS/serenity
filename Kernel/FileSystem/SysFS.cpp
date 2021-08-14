@@ -75,9 +75,9 @@ SysFS::~SysFS()
 {
 }
 
-bool SysFS::initialize()
+KResult SysFS::initialize()
 {
-    return true;
+    return KSuccess;
 }
 
 Inode& SysFS::root_inode()

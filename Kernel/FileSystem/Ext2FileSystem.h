@@ -92,7 +92,7 @@ public:
     static NonnullRefPtr<Ext2FS> create(FileDescription&);
 
     virtual ~Ext2FS() override;
-    virtual bool initialize() override;
+    virtual KResult initialize() override;
 
     virtual unsigned total_block_count() const override;
     virtual unsigned free_block_count() const override;

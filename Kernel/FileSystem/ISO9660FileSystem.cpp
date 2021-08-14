@@ -202,18 +202,15 @@ ISO9660FS::~ISO9660FS()
 {
 }
 
-bool ISO9660FS::initialize()
+KResult ISO9660FS::initialize()
 {
-    if (!BlockBasedFileSystem::initialize())
-        return false;
-
-    // FIXME: Fix the FileSystem::initialize contract to be able to return a
-    //        KResult.
-    if (parse_volume_set().is_error())
-        return false;
-    if (create_root_inode().is_error())
-        return false;
-    return true;
+    if (auto result = BlockBasedFileSystem::initialize(); result.is_error())
+        return result;
+    if (auto result = parse_volume_set(); result.is_error())
+        return result;
+    if (auto result = create_root_inode(); result.is_error())
+        return result;
+    return KSuccess;
 }
 
 Inode& ISO9660FS::root_inode()

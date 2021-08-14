@@ -22,7 +22,7 @@ public:
     virtual ~Plan9FS() override;
     static NonnullRefPtr<Plan9FS> create(FileDescription&);
 
-    virtual bool initialize() override;
+    virtual KResult initialize() override;
 
     virtual bool supports_watchers() const override { return false; }
 

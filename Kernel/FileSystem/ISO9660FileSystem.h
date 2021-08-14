@@ -312,7 +312,7 @@ public:
     static KResultOr<NonnullRefPtr<ISO9660FS>> try_create(FileDescription&);
 
     virtual ~ISO9660FS() override;
-    virtual bool initialize() override;
+    virtual KResult initialize() override;
     virtual StringView class_name() const override { return "ISO9660FS"; }
     virtual Inode& root_inode() override;
 
