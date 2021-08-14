@@ -62,7 +62,7 @@ void UndoStack::push(NonnullOwnPtr<Command> command)
     if (m_clean_index.has_value() && m_clean_index.value() > m_stack.size())
         m_clean_index = {};
 
-    if (!m_stack.is_empty()) {
+    if (!m_stack.is_empty() && is_current_modified()) {
         if (m_stack.last().merge_with(*command))
             return;
     }
