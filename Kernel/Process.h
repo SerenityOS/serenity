@@ -85,7 +85,7 @@ typedef HashMap<FlatPtr, RefPtr<FutexQueue>> FutexQueues;
 struct LoadResult;
 
 class Process
-    : public RefCounted<Process>
+    : public AK::RefCountedBase
     , public Weakable<Process> {
 
     class ProtectedValues {
@@ -175,6 +175,8 @@ public:
     static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
     static RefPtr<Process> create_user_process(RefPtr<Thread>& first_thread, const String& path, uid_t, gid_t, ProcessID ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     static void register_new(Process&);
+
+    bool unref() const;
     ~Process();
 
     static NonnullRefPtrVector<Process> all_processes();

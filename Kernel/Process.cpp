@@ -295,11 +295,23 @@ Process::~Process()
     VERIFY(!m_alarm_timer);
 
     PerformanceManager::add_process_exit_event(*this);
+}
 
-    if (m_list_node.is_in_list())
-        processes().with_exclusive([&](auto& list) {
-            list.remove(*this);
-        });
+bool Process::unref() const
+{
+    // NOTE: We need to obtain the process list lock before doing anything,
+    //       because otherwise someone might get in between us lowering the
+    //       refcount and acquiring the lock.
+    return processes().with_exclusive([&](auto& list) {
+        auto new_ref_count = deref_base();
+        if (new_ref_count > 0)
+            return false;
+
+        if (m_list_node.is_in_list())
+            list.remove(*const_cast<Process*>(this));
+        delete this;
+        return true;
+    });
 }
 
 // Make sure the compiler doesn't "optimize away" this function:
