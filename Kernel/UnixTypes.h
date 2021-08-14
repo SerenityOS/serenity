@@ -19,6 +19,7 @@
 #include <Kernel/API/POSIX/sys/socket.h>
 #include <Kernel/API/POSIX/sys/stat.h>
 #include <Kernel/API/POSIX/sys/un.h>
+#include <Kernel/API/POSIX/sys/wait.h>
 #include <Kernel/API/POSIX/termios.h>
 #include <Kernel/API/POSIX/time.h>
 
@@ -62,13 +63,6 @@ enum {
     PERF_EVENT_SYSCALL = 16384,
     PERF_EVENT_SIGNPOST = 32768,
 };
-
-#define WNOHANG 1
-#define WUNTRACED 2
-#define WSTOPPED WUNTRACED
-#define WEXITED 4
-#define WCONTINUED 8
-#define WNOWAIT 0x1000000
 
 #define R_OK 4
 #define W_OK 2
@@ -140,12 +134,6 @@ struct timeval {
     time_t tv_sec;
     suseconds_t tv_usec;
 };
-
-typedef enum {
-    P_ALL = 1,
-    P_PID,
-    P_PGID
-} idtype_t;
 
 #define UTSNAME_ENTRY_LEN 65
 
