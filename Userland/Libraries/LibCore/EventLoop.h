@@ -11,6 +11,7 @@
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/Time.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Forward.h>
@@ -75,7 +76,7 @@ public:
 
 private:
     void wait_for_event(WaitMode);
-    Optional<struct timeval> get_next_timer_expiration();
+    Optional<Time> get_next_timer_expiration();
     static void dispatch_signal(int);
     static void handle_signal(int);
 

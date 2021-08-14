@@ -40,14 +40,14 @@ class InspectorServerConnection;
 
 struct EventLoopTimer {
     int timer_id { 0 };
-    int interval { 0 };
-    timeval fire_time { 0, 0 };
+    Time interval;
+    Time fire_time;
     bool should_reload { false };
     TimerShouldFireWhenNotVisible fire_when_not_visible { TimerShouldFireWhenNotVisible::No };
     WeakPtr<Object> owner;
 
-    void reload(const timeval& now);
-    bool has_expired(const timeval& now) const;
+    void reload(const Time& now);
+    bool has_expired(const Time& now) const;
 };
 
 struct EventLoop::Private {
@@ -599,21 +599,17 @@ retry:
         queued_events_is_empty = m_queued_events.is_empty();
     }
 
-    timeval now;
+    Time now;
     struct timeval timeout = { 0, 0 };
     bool should_wait_forever = false;
     if (mode == WaitMode::WaitForEvents && queued_events_is_empty) {
         auto next_timer_expiration = get_next_timer_expiration();
         if (next_timer_expiration.has_value()) {
-            timespec now_spec;
-            clock_gettime(CLOCK_MONOTONIC_COARSE, &now_spec);
-            now.tv_sec = now_spec.tv_sec;
-            now.tv_usec = now_spec.tv_nsec / 1000;
-            timeval_sub(next_timer_expiration.value(), now, timeout);
-            if (timeout.tv_sec < 0 || (timeout.tv_sec == 0 && timeout.tv_usec < 0)) {
-                timeout.tv_sec = 0;
-                timeout.tv_usec = 0;
-            }
+            now = Time::now_monotonic_coarse();
+            auto computed_timeout = next_timer_expiration.value() - now;
+            if (computed_timeout.is_negative())
+                computed_timeout = Time::zero();
+            timeout = computed_timeout.to_timeval();
         } else {
             should_wait_forever = true;
         }
@@ -653,10 +649,7 @@ try_select_again:
     }
 
     if (!s_timers->is_empty()) {
-        timespec now_spec;
-        clock_gettime(CLOCK_MONOTONIC_COARSE, &now_spec);
-        now.tv_sec = now_spec.tv_sec;
-        now.tv_usec = now_spec.tv_nsec / 1000;
+        now = Time::now_monotonic_coarse();
     }
 
     for (auto& it : *s_timers) {
@@ -696,21 +689,19 @@ try_select_again:
     }
 }
 
-bool EventLoopTimer::has_expired(const timeval& now) const
+bool EventLoopTimer::has_expired(const Time& now) const
 {
-    return now.tv_sec > fire_time.tv_sec || (now.tv_sec == fire_time.tv_sec && now.tv_usec >= fire_time.tv_usec);
+    return now > fire_time;
 }
 
-void EventLoopTimer::reload(const timeval& now)
+void EventLoopTimer::reload(const Time& now)
 {
-    fire_time = now;
-    fire_time.tv_sec += interval / 1000;
-    fire_time.tv_usec += (interval % 1000) * 1000;
+    fire_time = now + interval;
 }
 
-Optional<struct timeval> EventLoop::get_next_timer_expiration()
+Optional<Time> EventLoop::get_next_timer_expiration()
 {
-    Optional<struct timeval> soonest {};
+    Optional<Time> soonest {};
     for (auto& it : *s_timers) {
         auto& fire_time = it.value->fire_time;
         auto owner = it.value->owner.strong_ref();
@@ -718,7 +709,7 @@ Optional<struct timeval> EventLoop::get_next_timer_expiration()
             && owner && !owner->is_visible_for_timer_purposes()) {
             continue;
         }
-        if (!soonest.has_value() || fire_time.tv_sec < soonest.value().tv_sec || (fire_time.tv_sec == soonest.value().tv_sec && fire_time.tv_usec < soonest.value().tv_usec))
+        if (!soonest.has_value() || fire_time < soonest.value())
             soonest = fire_time;
     }
     return soonest;
@@ -729,13 +720,8 @@ int EventLoop::register_timer(Object& object, int milliseconds, bool should_relo
     VERIFY(milliseconds >= 0);
     auto timer = make<EventLoopTimer>();
     timer->owner = object;
-    timer->interval = milliseconds;
-    timeval now;
-    timespec now_spec;
-    clock_gettime(CLOCK_MONOTONIC_COARSE, &now_spec);
-    now.tv_sec = now_spec.tv_sec;
-    now.tv_usec = now_spec.tv_nsec / 1000;
-    timer->reload(now);
+    timer->interval = Time::from_milliseconds(milliseconds);
+    timer->reload(Time::now_monotonic_coarse());
     timer->should_reload = should_reload;
     timer->fire_when_not_visible = fire_when_not_visible;
     int timer_id = s_id_allocator->allocate();
