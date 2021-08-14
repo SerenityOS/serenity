@@ -19,6 +19,7 @@
 #include <AK/HashMap.h>
 #include <Kernel/Devices/AsyncDeviceRequest.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/FileSystem/SysFSComponent.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/UnixTypes.h>
 
@@ -61,7 +62,7 @@ protected:
     void set_uid(UserID uid) { m_uid = uid; }
     void set_gid(GroupID gid) { m_gid = gid; }
 
-    static HashMap<u32, Device*>& all_devices();
+    static MutexProtected<HashMap<u32, Device*>>& all_devices();
 
 private:
     unsigned m_major { 0 };
