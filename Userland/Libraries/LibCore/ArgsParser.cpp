@@ -9,10 +9,9 @@
 #include <LibCore/ArgsParser.h>
 #include <getopt.h>
 #include <limits.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
-
-static constexpr bool isnan(double __x) { return __builtin_isnan(__x); }
 
 static Optional<double> convert_to_double(const char* s)
 {
