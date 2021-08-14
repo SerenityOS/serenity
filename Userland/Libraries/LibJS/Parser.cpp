@@ -1297,6 +1297,9 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
         }
     }
 
+    if (is<SuperExpression>(*expression))
+        syntax_error("'super' keyword unexpected here");
+
     check_for_invalid_object_property(expression);
 
     if (match(TokenType::Comma) && min_precedence <= 1) {
