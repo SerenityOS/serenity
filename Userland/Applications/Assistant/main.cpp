@@ -285,13 +285,7 @@ int main(int argc, char** argv)
             GUI::Application::the()->quit();
     };
 
-    db.on_new_results = [&](auto results) {
-        if (results.is_empty())
-            app_state.selected_index = {};
-        else
-            app_state.selected_index = 0;
-        app_state.results = results;
-        app_state.visible_result_count = min(results.size(), MAX_SEARCH_RESULTS);
+    auto update_ui_timer = Core::Timer::create_single_shot(10, [&] {
         results_container.remove_all_children();
 
         for (size_t i = 0; i < app_state.visible_result_count; ++i) {
@@ -310,6 +304,17 @@ int main(int argc, char** argv)
 
         auto window_height = app_state.visible_result_count * 40 + text_box.height() + 28;
         window->resize(GUI::Desktop::the().rect().width() / 3, window_height);
+    });
+
+    db.on_new_results = [&](auto results) {
+        if (results.is_empty())
+            app_state.selected_index = {};
+        else
+            app_state.selected_index = 0;
+        app_state.results = results;
+        app_state.visible_result_count = min(results.size(), MAX_SEARCH_RESULTS);
+
+        update_ui_timer->restart();
     };
 
     window->set_frameless(true);
