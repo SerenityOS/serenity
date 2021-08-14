@@ -551,7 +551,7 @@ private:
 public:
     // ^ProcFSExposedComponent stats
     virtual InodeIndex component_index() const override;
-    virtual NonnullRefPtr<Inode> to_inode(const ProcFS& procfs_instance) const override;
+    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override;
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual mode_t required_mode() const override { return 0555; }
     virtual uid_t owner_user() const override { return uid(); }
@@ -567,10 +567,10 @@ public:
     mode_t binary_link_required_mode() const;
     KResultOr<size_t> procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const;
     KResult traverse_stacks_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const;
-    RefPtr<Inode> lookup_stacks_directory(const ProcFS&, StringView name) const;
+    KResultOr<NonnullRefPtr<Inode>> lookup_stacks_directory(const ProcFS&, StringView name) const;
     KResultOr<size_t> procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const;
     KResult traverse_file_descriptions_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const;
-    RefPtr<Inode> lookup_file_descriptions_directory(const ProcFS&, StringView name) const;
+    KResultOr<NonnullRefPtr<Inode>> lookup_file_descriptions_directory(const ProcFS&, StringView name) const;
 
 private:
     inline PerformanceEventBuffer* current_perf_events_buffer()

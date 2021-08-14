@@ -926,17 +926,27 @@ KResult ProcFSRootDirectory::traverse_as_directory(unsigned fsid, Function<bool(
     return KSuccess;
 }
 
-RefPtr<ProcFSExposedComponent> ProcFSRootDirectory::lookup(StringView name)
+KResultOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSRootDirectory::lookup(StringView name)
 {
-    if (auto candidate = ProcFSExposedDirectory::lookup(name); !candidate.is_null())
-        return candidate;
+    auto maybe_candidate = ProcFSExposedDirectory::lookup(name);
+    if (maybe_candidate.is_error()) {
+        if (maybe_candidate.error() != ENOENT) {
+            return maybe_candidate.error();
+        }
+    } else {
+        return maybe_candidate.release_value();
+    }
 
     String process_directory_name = name;
     auto pid = process_directory_name.to_uint<unsigned>();
     if (!pid.has_value())
-        return {};
+        return ESRCH;
     auto actual_pid = pid.value();
-    return Process::from_pid(actual_pid);
+
+    auto maybe_process = Process::from_pid(actual_pid);
+    if (maybe_process)
+        return maybe_process.release_nonnull();
+    return ENOENT;
 }
 
 UNMAP_AFTER_INIT ProcFSRootDirectory::ProcFSRootDirectory()

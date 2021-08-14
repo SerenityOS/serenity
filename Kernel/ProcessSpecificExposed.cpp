@@ -45,9 +45,12 @@ InodeIndex Process::component_index() const
     return SegmentedProcFSIndex::build_segmented_index_for_pid_directory(pid());
 }
 
-NonnullRefPtr<Inode> Process::to_inode(const ProcFS& procfs_instance) const
+KResultOr<NonnullRefPtr<Inode>> Process::to_inode(const ProcFS& procfs_instance) const
 {
-    return ProcFSProcessDirectoryInode::create(procfs_instance, m_protected_values.pid);
+    auto maybe_inode = ProcFSProcessDirectoryInode::try_create(procfs_instance, m_protected_values.pid);
+    if (maybe_inode.is_error())
+        return maybe_inode.error();
+    return maybe_inode.release_value();
 }
 
 KResult Process::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
@@ -80,18 +83,28 @@ KResult Process::traverse_stacks_directory(unsigned fsid, Function<bool(FileSyst
     return KSuccess;
 }
 
-RefPtr<Inode> Process::lookup_stacks_directory(const ProcFS& procfs, StringView name) const
+KResultOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& procfs, StringView name) const
 {
-    RefPtr<ProcFSProcessPropertyInode> thread_stack_inode;
+    KResultOr<NonnullRefPtr<ProcFSProcessPropertyInode>> thread_stack_inode { ENOENT };
+
     // FIXME: Try to exit the loop earlier
     for_each_thread([&](const Thread& thread) {
         int tid = thread.tid().value();
         VERIFY(!(tid < 0));
         if (name == String::number(tid)) {
-            thread_stack_inode = ProcFSProcessPropertyInode::create_for_thread_stack(procfs, thread.tid(), pid());
+            auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_thread_stack(procfs, thread.tid(), pid());
+            if (maybe_inode.is_error()) {
+                thread_stack_inode = maybe_inode.error();
+                return;
+            }
+
+            thread_stack_inode = maybe_inode.release_value();
         }
     });
-    return thread_stack_inode;
+
+    if (thread_stack_inode.is_error())
+        return thread_stack_inode.error();
+    return thread_stack_inode.release_value();
 }
 
 KResultOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const
@@ -121,9 +134,9 @@ KResult Process::traverse_file_descriptions_directory(unsigned fsid, Function<bo
     return KSuccess;
 }
 
-RefPtr<Inode> Process::lookup_file_descriptions_directory(const ProcFS& procfs, StringView name) const
+KResultOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(const ProcFS& procfs, StringView name) const
 {
-    RefPtr<ProcFSProcessPropertyInode> file_description_link;
+    KResultOr<NonnullRefPtr<ProcFSProcessPropertyInode>> file_description_link { ENOENT };
     // FIXME: Try to exit the loop earlier
     size_t count = 0;
     fds().enumerate([&](auto& file_description_metadata) {
@@ -132,11 +145,20 @@ RefPtr<Inode> Process::lookup_file_descriptions_directory(const ProcFS& procfs, 
             return;
         }
         if (name == String::number(count)) {
-            file_description_link = ProcFSProcessPropertyInode::create_for_file_description_link(procfs, static_cast<unsigned>(count), pid());
+            auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_file_description_link(procfs, static_cast<unsigned>(count), pid());
+            if (maybe_inode.is_error()) {
+                file_description_link = maybe_inode.error();
+                return;
+            }
+
+            file_description_link = maybe_inode.release_value();
         }
         count++;
     });
-    return file_description_link;
+
+    if (file_description_link.is_error())
+        return file_description_link.error();
+    return file_description_link.release_value();
 }
 
 KResult Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
