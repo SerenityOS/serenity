@@ -7,6 +7,7 @@
 
 #include <Kernel/Bus/VirtIO/Console.h>
 #include <Kernel/Sections.h>
+#include <Kernel/WorkQueue.h>
 
 namespace Kernel::VirtIO {
 
@@ -51,8 +52,11 @@ UNMAP_AFTER_INIT void Console::initialize()
 
             if (is_feature_accepted(VIRTIO_CONSOLE_F_MULTIPORT))
                 setup_multiport();
-            else
-                m_ports.append(make_ref_counted<VirtIO::ConsolePort>(0u, *this));
+            else {
+                auto port = make_ref_counted<VirtIO::ConsolePort>(0u, *this);
+                port->init_receive_buffer({});
+                m_ports.append(port);
+            }
         }
     }
 }
@@ -146,23 +150,26 @@ void Console::process_control_message(ControlMessage message)
 {
     switch (message.event) {
     case (u16)ControlEvent::DeviceAdd: {
-        u32 id = message.id;
-        if (id >= m_ports.size()) {
-            dbgln("Device provided an invalid port number {}. max_nr_ports: {}", id, m_ports.size());
-            return;
-        } else if (!m_ports.at(id).is_null()) {
-            dbgln("Device tried to add port {} which was already added!", id);
-            return;
-        }
+        g_io_work->queue([message, this]() -> void {
+            u32 id = message.id;
+            if (id >= m_ports.size()) {
+                dbgln("Device provided an invalid port number {}. max_nr_ports: {}", id, m_ports.size());
+                return;
+            } else if (!m_ports.at(id).is_null()) {
+                dbgln("Device tried to add port {} which was already added!", id);
+                return;
+            }
 
-        m_ports.at(id) = make_ref_counted<VirtIO::ConsolePort>(id, *this);
-        ControlMessage ready_event {
-            .id = static_cast<u32>(id),
-            .event = (u16)ControlEvent::PortReady,
-            .value = (u16)ControlMessage::Status::Success
-        };
+            m_ports.at(id) = make_ref_counted<VirtIO::ConsolePort>(id, *this);
+            ControlMessage ready_event {
+                .id = static_cast<u32>(id),
+                .event = (u16)ControlEvent::PortReady,
+                .value = (u16)ControlMessage::Status::Success
+            };
 
-        write_control_message(ready_event);
+            write_control_message(ready_event);
+        });
+
         break;
     }
     case (u16)ControlEvent::ConsolePort:

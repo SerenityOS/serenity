@@ -7,28 +7,34 @@
 #include <AK/Singleton.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
+#include <Kernel/Locking/MutexProtected.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 
-static Singleton<HashMap<u32, Device*>> s_all_devices;
+static Singleton<MutexProtected<HashMap<u32, Device*>>> s_all_devices;
 
-HashMap<u32, Device*>& Device::all_devices()
+MutexProtected<HashMap<u32, Device*>>& Device::all_devices()
 {
     return *s_all_devices;
 }
 
 void Device::for_each(Function<void(Device&)> callback)
 {
-    for (auto& entry : all_devices())
-        callback(*entry.value);
+    all_devices().with_exclusive([&](auto& map) -> void {
+        for (auto& entry : map)
+            callback(*entry.value);
+    });
 }
 
 Device* Device::get_device(unsigned major, unsigned minor)
 {
-    auto it = all_devices().find(encoded_device(major, minor));
-    if (it == all_devices().end())
-        return nullptr;
-    return it->value;
+    return all_devices().with_exclusive([&](auto& map) -> Device* {
+        auto it = map.find(encoded_device(major, minor));
+        if (it == map.end())
+            return nullptr;
+        return it->value;
+    });
 }
 
 Device::Device(unsigned major, unsigned minor)
@@ -36,17 +42,23 @@ Device::Device(unsigned major, unsigned minor)
     , m_minor(minor)
 {
     u32 device_id = encoded_device(major, minor);
-    auto it = all_devices().find(device_id);
-    if (it != all_devices().end()) {
-        dbgln("Already registered {},{}: {}", major, minor, it->value->class_name());
-    }
-    VERIFY(!all_devices().contains(device_id));
-    all_devices().set(device_id, this);
+    all_devices().with_exclusive([&](auto& map) -> void {
+        auto it = map.find(device_id);
+        if (it != map.end()) {
+            dbgln("Already registered {},{}: {}", major, minor, it->value->class_name());
+        }
+        VERIFY(!map.contains(device_id));
+        map.set(device_id, this);
+    });
 }
 
 Device::~Device()
 {
-    all_devices().remove(encoded_device(m_major, m_minor));
+    u32 device_id = encoded_device(m_major, m_minor);
+    all_devices().with_exclusive([&](auto& map) -> void {
+        VERIFY(map.contains(device_id));
+        map.remove(encoded_device(m_major, m_minor));
+    });
 }
 
 String Device::absolute_path() const
