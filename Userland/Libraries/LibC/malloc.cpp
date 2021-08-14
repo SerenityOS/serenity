@@ -410,7 +410,7 @@ static void free_impl(void* ptr)
     }
 }
 
-[[gnu::flatten]] void* malloc(size_t size)
+void* malloc(size_t size)
 {
     MemoryAuditingSuppressor suppressor;
     void* ptr = malloc_impl(size, CallerWillInitializeMemory::No);
@@ -419,7 +419,7 @@ static void free_impl(void* ptr)
     return ptr;
 }
 
-[[gnu::flatten]] void free(void* ptr)
+void free(void* ptr)
 {
     MemoryAuditingSuppressor suppressor;
     if (s_profiling)
