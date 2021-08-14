@@ -2839,7 +2839,18 @@ RefPtr<StyleValue> Parser::parse_css_value(PropertyID property_id, TokenStream<S
     if (component_values.size() == 1)
         return parse_css_value(m_context, property_id, component_values.first());
 
-    dbgln("Unable to parse value for CSS '{}' property.", string_from_property_id(property_id));
+    // We have multiple values, so treat them as a StyleValueList.
+    // FIXME: Specify in Properties.json whether to permit this for each property.
+    NonnullRefPtrVector<StyleValue> parsed_values;
+    for (auto& component_value : component_values) {
+        auto parsed = parse_css_value(m_context, property_id, component_value);
+        if (!parsed)
+            return {};
+        parsed_values.append(parsed.release_nonnull());
+    }
+    if (!parsed_values.is_empty())
+        return StyleValueList::create(move(parsed_values));
+
     return {};
 }
 
