@@ -14,6 +14,7 @@
 #include <Kernel/API/POSIX/net/if_arp.h>
 #include <Kernel/API/POSIX/net/route.h>
 #include <Kernel/API/POSIX/netinet/in.h>
+#include <Kernel/API/POSIX/serenity.h>
 #include <Kernel/API/POSIX/signal.h>
 #include <Kernel/API/POSIX/sys/mman.h>
 #include <Kernel/API/POSIX/sys/socket.h>
@@ -43,25 +44,6 @@ enum {
     _SC_PAGESIZE,
     _SC_GETPW_R_SIZE_MAX,
     _SC_CLK_TCK,
-};
-
-enum {
-    PERF_EVENT_SAMPLE = 1,
-    PERF_EVENT_MALLOC = 2,
-    PERF_EVENT_FREE = 4,
-    PERF_EVENT_MMAP = 8,
-    PERF_EVENT_MUNMAP = 16,
-    PERF_EVENT_PROCESS_CREATE = 32,
-    PERF_EVENT_PROCESS_EXEC = 64,
-    PERF_EVENT_PROCESS_EXIT = 128,
-    PERF_EVENT_THREAD_CREATE = 256,
-    PERF_EVENT_THREAD_EXIT = 512,
-    PERF_EVENT_CONTEXT_SWITCH = 1024,
-    PERF_EVENT_KMALLOC = 2048,
-    PERF_EVENT_KFREE = 4096,
-    PERF_EVENT_PAGE_FAULT = 8192,
-    PERF_EVENT_SYSCALL = 16384,
-    PERF_EVENT_SIGNPOST = 32768,
 };
 
 #define R_OK 4
@@ -156,9 +138,6 @@ struct sched_param {
 
 #define AT_FDCWD -100
 #define AT_SYMLINK_NOFOLLOW 0x100
-
-#define PURGE_ALL_VOLATILE 0x1
-#define PURGE_ALL_CLEAN_INODE 0x2
 
 #define PT_TRACE_ME 1
 #define PT_ATTACH 2
