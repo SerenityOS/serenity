@@ -55,7 +55,6 @@ enum class NeedsBigProcessLock {
     S(chdir, NeedsBigProcessLock::Yes)                      \
     S(chmod, NeedsBigProcessLock::Yes)                      \
     S(chown, NeedsBigProcessLock::Yes)                      \
-    S(chroot, NeedsBigProcessLock::Yes)                     \
     S(clock_gettime, NeedsBigProcessLock::No)               \
     S(clock_nanosleep, NeedsBigProcessLock::No)             \
     S(clock_settime, NeedsBigProcessLock::Yes)              \

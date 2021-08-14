@@ -325,8 +325,6 @@ void init_stage2(void*)
         PANIC("VirtualFileSystem::mount_root failed");
     }
 
-    Process::current()->set_root_directory(VirtualFileSystem::the().root_custody());
-
     // Switch out of early boot mode.
     g_in_early_boot = false;
 
