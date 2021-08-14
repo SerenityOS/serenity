@@ -1290,7 +1290,7 @@ NonnullRefPtr<Expression> Parser::parse_expression(int min_precedence, Associati
 
             Associativity new_associativity = operator_associativity(m_state.current_token.type());
             expression = parse_secondary_expression(move(expression), new_precedence, new_associativity);
-            while (match(TokenType::TemplateLiteralStart)) {
+            while (match(TokenType::TemplateLiteralStart) && !is<UpdateExpression>(*expression)) {
                 auto template_literal = parse_template_literal(true);
                 expression = create_ast_node<TaggedTemplateLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, move(expression), move(template_literal));
             }
@@ -2694,8 +2694,8 @@ bool Parser::match_secondary_expression(const Vector<TokenType>& forbidden) cons
         || type == TokenType::ParenOpen
         || type == TokenType::Period
         || type == TokenType::BracketOpen
-        || type == TokenType::PlusPlus
-        || type == TokenType::MinusMinus
+        || (type == TokenType::PlusPlus && !m_state.current_token.trivia_contains_line_terminator())
+        || (type == TokenType::MinusMinus && !m_state.current_token.trivia_contains_line_terminator())
         || type == TokenType::In
         || type == TokenType::Instanceof
         || type == TokenType::QuestionMark
