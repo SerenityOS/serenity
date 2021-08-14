@@ -108,71 +108,235 @@ constexpr unsigned encoded_device(unsigned major, unsigned minor)
     return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
 }
 
+inline char offset_character_with_number(char base_char, u8 offset)
+{
+    char offseted_char = base_char;
+    VERIFY(static_cast<size_t>(offseted_char) + static_cast<size_t>(offset) < 256);
+    offseted_char += offset;
+    return offseted_char;
+}
+
+static void create_devfs_block_device(String name, mode_t mode, unsigned major, unsigned minor)
+{
+    if (auto rc = mknod(name.characters(), mode | S_IFBLK, encoded_device(major, minor)); rc < 0)
+        VERIFY_NOT_REACHED();
+}
+
+static void populate_devfs_block_devices()
+{
+    struct stat cur_file_stat;
+    Core::DirIterator di("/sys/dev/block/", Core::DirIterator::SkipParentAndBaseDir);
+    if (di.has_error()) {
+        warnln("Failed to open /sys/dev/block - {}", di.error());
+        VERIFY_NOT_REACHED();
+    }
+    while (di.has_next()) {
+        auto entry_name = di.next_path().split(':');
+        VERIFY(entry_name.size() == 2);
+        auto major_number = entry_name[0].to_uint<unsigned>().value();
+        auto minor_number = entry_name[1].to_uint<unsigned>().value();
+        switch (major_number) {
+        case 29: {
+            create_devfs_block_device(String::formatted("/dev/fb{}", minor_number), 0666, 29, minor_number);
+            break;
+        }
+        case 3: {
+            create_devfs_block_device(String::formatted("/dev/hd{}", offset_character_with_number('a', minor_number)), 0600, 3, minor_number);
+            break;
+        }
+        default:
+            warnln("Unknown block device {}:{}", major(cur_file_stat.st_rdev), minor(cur_file_stat.st_rdev));
+            break;
+        }
+    }
+}
+
+static void create_devfs_char_device(String name, mode_t mode, unsigned major, unsigned minor)
+{
+    if (auto rc = mknod(name.characters(), mode | S_IFCHR, encoded_device(major, minor)); rc < 0)
+        VERIFY_NOT_REACHED();
+}
+
+static void populate_devfs_char_devices()
+{
+    Core::DirIterator di("/sys/dev/char/", Core::DirIterator::SkipParentAndBaseDir);
+    if (di.has_error()) {
+        warnln("Failed to open /sys/dev/char - {}", di.error());
+        VERIFY_NOT_REACHED();
+    }
+    while (di.has_next()) {
+        auto entry_name = di.next_path().split(':');
+        VERIFY(entry_name.size() == 2);
+        auto major_number = entry_name[0].to_uint<unsigned>().value();
+        auto minor_number = entry_name[1].to_uint<unsigned>().value();
+        switch (major_number) {
+        case 42: {
+            switch (minor_number) {
+            case 42: {
+                create_devfs_char_device("/dev/audio", 0220, 42, 42);
+                break;
+            }
+            default:
+                warnln("Unknown character device {}:{}", major_number, minor_number);
+            }
+            break;
+        }
+        case 29: {
+            switch (minor_number) {
+            case 0: {
+                create_devfs_char_device("/dev/full", 0660, 29, 0);
+                break;
+            }
+            default:
+                warnln("Unknown character device {}:{}", major_number, minor_number);
+            }
+            break;
+        }
+        case 229: {
+            switch (minor_number) {
+            case 0: {
+                create_devfs_char_device("/dev/hvc0p0", 0666, 229, 0);
+                break;
+            }
+            default:
+                warnln("Unknown character device {}:{}", major_number, minor_number);
+            }
+            break;
+        }
+        case 10: {
+            switch (minor_number) {
+            case 0: {
+                create_devfs_char_device("/dev/mouse0", 0660, 10, 0);
+                break;
+            }
+            case 183: {
+                create_devfs_char_device("/dev/hwrng", 0660, 10, 183);
+                break;
+            }
+            default:
+                warnln("Unknown character device {}:{}", major_number, minor_number);
+            }
+            break;
+        }
+        case 85: {
+            switch (minor_number) {
+            case 0: {
+                create_devfs_char_device("/dev/keyboard0", 0660, 85, 0);
+                break;
+            }
+            default:
+                warnln("Unknown character device {}:{}", major_number, minor_number);
+            }
+            break;
+        }
+        case 1: {
+            switch (minor_number) {
+            case 5: {
+                create_devfs_char_device("/dev/zero", 0666, 1, 5);
+                break;
+            }
+            case 1: {
+                create_devfs_char_device("/dev/mem", 0660, 1, 1);
+                break;
+            }
+            case 3: {
+                create_devfs_char_device("/dev/null", 0666, 1, 3);
+                break;
+            }
+            case 8: {
+                create_devfs_char_device("/dev/random", 0666, 1, 8);
+                break;
+            }
+            default:
+                warnln("Unknown character device {}:{}", major_number, minor_number);
+                break;
+            }
+            break;
+        }
+        case 5: {
+            switch (minor_number) {
+            case 1: {
+                create_devfs_char_device("/dev/console", 0666, 5, 1);
+                break;
+            }
+            case 2: {
+                create_devfs_char_device("/dev/ptmx", 0666, 5, 2);
+                break;
+            }
+            default:
+                warnln("Unknown character device {}:{}", major_number, minor_number);
+            }
+            break;
+        }
+        case 4: {
+            switch (minor_number) {
+            case 0: {
+                create_devfs_char_device("/dev/tty0", 0620, 4, 0);
+                break;
+            }
+            case 1: {
+                create_devfs_char_device("/dev/tty1", 0620, 4, 1);
+                break;
+            }
+            case 2: {
+                create_devfs_char_device("/dev/tty2", 0620, 4, 2);
+                break;
+            }
+            case 3: {
+                create_devfs_char_device("/dev/tty3", 0620, 4, 3);
+                break;
+            }
+            case 64: {
+                create_devfs_char_device("/dev/ttyS0", 0620, 4, 64);
+                break;
+            }
+            case 65: {
+                create_devfs_char_device("/dev/ttyS1", 0620, 4, 65);
+                break;
+            }
+            case 66: {
+                create_devfs_char_device("/dev/ttyS2", 0620, 4, 66);
+                break;
+            }
+            case 67: {
+                create_devfs_char_device("/dev/ttyS3", 0666, 4, 67);
+                break;
+            }
+            default:
+                warnln("Unknown character device {}:{}", major_number, minor_number);
+            }
+            break;
+        }
+        default:
+            warnln("Unknown character device {}:{}", major_number, minor_number);
+            break;
+        }
+    }
+}
+
 static void populate_devfs()
 {
     mode_t old_mask = umask(0);
-    if (auto rc = mknod("/dev/audio", 0220 | S_IFCHR, encoded_device(42, 42)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/console", 0666 | S_IFCHR, encoded_device(5, 1)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/fb0", 0666 | S_IFBLK, encoded_device(29, 0)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/full", 0660 | S_IFCHR, encoded_device(29, 0)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/hda", 0600 | S_IFBLK, encoded_device(3, 0)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/hvc0p0", 0666 | S_IFCHR, encoded_device(229, 0)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/hwrng", 0666 | S_IFCHR, encoded_device(10, 183)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/keyboard0", 0660 | S_IFCHR, encoded_device(85, 0)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/mem", 0660 | S_IFCHR, encoded_device(1, 1)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/mouse0", 0660 | S_IFCHR, encoded_device(10, 0)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/null", 0666 | S_IFCHR, encoded_device(1, 3)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/ptmx", 0666 | S_IFCHR, encoded_device(5, 2)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/random", 0666 | S_IFCHR, encoded_device(1, 8)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/tty0", 0620 | S_IFCHR, encoded_device(4, 0)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/tty1", 0620 | S_IFCHR, encoded_device(4, 1)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/tty2", 0620 | S_IFCHR, encoded_device(4, 2)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/tty3", 0620 | S_IFCHR, encoded_device(4, 3)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/ttyS0", 0620 | S_IFCHR, encoded_device(4, 64)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/ttyS1", 0620 | S_IFCHR, encoded_device(4, 65)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/ttyS2", 0620 | S_IFCHR, encoded_device(4, 66)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/ttyS3", 0666 | S_IFCHR, encoded_device(4, 67)); rc < 0)
-        VERIFY_NOT_REACHED();
-    if (auto rc = mknod("/dev/zero", 0666 | S_IFCHR, encoded_device(1, 5)); rc < 0)
-        VERIFY_NOT_REACHED();
+    printf("Changing umask %#o\n", old_mask);
+    populate_devfs_char_devices();
+    populate_devfs_block_devices();
     umask(old_mask);
 }
 
 static void prepare_devfs()
 {
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
+    int rc = mount(-1, "/sys", "sys", 0);
+    if (rc != 0) {
+        VERIFY_NOT_REACHED();
+    }
 
-    int rc = mount(-1, "/dev", "dev", 0);
+    rc = mount(-1, "/dev", "dev", 0);
     if (rc != 0) {
         VERIFY_NOT_REACHED();
     }
 
     populate_devfs();
-
-    rc = mount(-1, "/sys", "sys", 0);
-    if (rc != 0) {
-        VERIFY_NOT_REACHED();
-    }
 
     rc = mkdir("/dev/pts", 0755);
     if (rc != 0) {
