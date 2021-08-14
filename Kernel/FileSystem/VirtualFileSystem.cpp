@@ -222,7 +222,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VirtualFileSystem::open(StringView pat
     if (custody_or_error.is_error()) {
         // NOTE: ENOENT with a non-null parent custody signals us that the immediate parent
         //       of the file exists, but the file itself does not.
-        if ((options & O_CREAT) && custody_or_error.error() == -ENOENT && parent_custody)
+        if ((options & O_CREAT) && custody_or_error.error() == ENOENT && parent_custody)
             return create(path, options, mode, *parent_custody, move(owner));
         return custody_or_error.error();
     }
@@ -326,7 +326,7 @@ KResult VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, Custod
         return EEXIST;
     if (!parent_custody)
         return ENOENT;
-    if (existing_file_or_error.error() != -ENOENT)
+    if (existing_file_or_error.error() != ENOENT)
         return existing_file_or_error.error();
     auto& parent_inode = parent_custody->inode();
     auto current_process = Process::current();
@@ -401,7 +401,7 @@ KResult VirtualFileSystem::mkdir(StringView path, mode_t mode, Custody& base)
     else if (!parent_custody)
         return result.error();
     // NOTE: If resolve_path fails with a non-null parent custody, the error should be ENOENT.
-    VERIFY(result.error() == -ENOENT);
+    VERIFY(result.error() == ENOENT);
 
     auto& parent_inode = parent_custody->inode();
     auto current_process = Process::current();
@@ -491,7 +491,7 @@ KResult VirtualFileSystem::rename(StringView old_path, StringView new_path, Cust
     RefPtr<Custody> new_parent_custody;
     auto new_custody_or_error = resolve_path(new_path, base, &new_parent_custody);
     if (new_custody_or_error.is_error()) {
-        if (new_custody_or_error.error() != -ENOENT || !new_parent_custody)
+        if (new_custody_or_error.error() != ENOENT || !new_parent_custody)
             return new_custody_or_error.error();
     }
 
@@ -720,7 +720,7 @@ KResult VirtualFileSystem::symlink(StringView target, StringView linkpath, Custo
         return EEXIST;
     if (!parent_custody)
         return ENOENT;
-    if (existing_custody_or_error.error() != -ENOENT)
+    if (existing_custody_or_error.is_error() && existing_custody_or_error.error() != ENOENT)
         return existing_custody_or_error.error();
     auto& parent_inode = parent_custody->inode();
     auto current_process = Process::current();

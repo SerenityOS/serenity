@@ -139,7 +139,7 @@ KResult LocalSocket::bind(Userspace<const sockaddr*> user_address, socklen_t add
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
     auto result = VirtualFileSystem::the().open(path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current()->current_directory(), owner);
     if (result.is_error()) {
-        if (result.error() == -EEXIST)
+        if (result.error() == EEXIST)
             return set_so_error(EADDRINUSE);
         return result.error();
     }

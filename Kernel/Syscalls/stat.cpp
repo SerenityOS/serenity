@@ -19,10 +19,10 @@ KResultOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
     if (!description)
         return EBADF;
     stat buffer = {};
-    int rc = description->stat(buffer);
+    auto result = description->stat(buffer);
     if (!copy_to_user(user_statbuf, &buffer))
         return EFAULT;
-    return rc;
+    return result;
 }
 
 KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> user_params)

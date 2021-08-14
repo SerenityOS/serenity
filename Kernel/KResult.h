@@ -28,11 +28,16 @@ public:
         : m_error(0)
     {
     }
-    operator int() const { return m_error; }
     [[nodiscard]] int error() const { return m_error; }
 
     [[nodiscard]] bool is_success() const { return m_error == 0; }
     [[nodiscard]] bool is_error() const { return !is_success(); }
+
+    bool operator==(ErrnoCode error) const { return is_error() && m_error == -error; }
+    bool operator!=(ErrnoCode error) const { return !is_error() || m_error != -error; }
+
+    bool operator!=(KSuccessTag) const { return is_error(); }
+    bool operator==(KSuccessTag) const { return !is_error(); }
 
 private:
     template<typename T>
@@ -167,9 +172,11 @@ private:
 }
 
 template<>
-struct AK::Formatter<Kernel::KResult> : Formatter<int> {
+struct AK::Formatter<Kernel::KResult> : Formatter<FormatString> {
     void format(FormatBuilder& builder, Kernel::KResult value)
     {
-        return Formatter<int>::format(builder, value);
+        if (value.is_error())
+            return AK::Formatter<FormatString>::format(builder, "KResult({})", value.error());
+        return AK::Formatter<FormatString>::format(builder, "KResult(success)");
     }
 };

@@ -591,16 +591,8 @@ KResultOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
     TransferDescriptor* last_data_descriptor;
     TransferDescriptor* data_descriptor_chain;
     auto buffer_address = Ptr32<u8>(transfer.buffer_physical().as_ptr() + sizeof(USBRequestData));
-    auto transfer_chain_create_result = create_chain(pipe,
-        direction_in ? PacketID::IN : PacketID::OUT,
-        buffer_address,
-        pipe.max_packet_size(),
-        transfer.transfer_data_size(),
-        &data_descriptor_chain,
-        &last_data_descriptor);
-
-    if (transfer_chain_create_result != KSuccess)
-        return transfer_chain_create_result;
+    if (auto result = create_chain(pipe, direction_in ? PacketID::IN : PacketID::OUT, buffer_address, pipe.max_packet_size(), transfer.transfer_data_size(), &data_descriptor_chain, &last_data_descriptor); result.is_error())
+        return result;
 
     // Status TD always has toggle set to 1
     pipe.set_toggle(true);

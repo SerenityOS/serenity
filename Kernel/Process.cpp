@@ -174,7 +174,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     setup_description(1);
     setup_description(2);
 
-    error = process->exec(path, move(arguments), move(environment));
+    error = process->exec(path, move(arguments), move(environment)).error();
     if (error != 0) {
         dbgln("Failed to exec {}: {}", path, error);
         first_thread = nullptr;

@@ -216,7 +216,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     auto result = Syscall::handle(regs, function, arg1, arg2, arg3, arg4);
 
     if (result.is_error()) {
-        regs.set_return_reg(result.error());
+        regs.set_return_reg(result.error().error());
     } else {
         regs.set_return_reg(result.value());
     }
