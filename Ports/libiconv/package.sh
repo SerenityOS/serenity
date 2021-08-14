@@ -9,4 +9,5 @@ auth_type="sha256"
 install() {
     run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
     run ${SERENITY_ARCH}-pc-serenity-gcc -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libiconv.so -Wl,-soname,libiconv.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libiconv.a -Wl,--no-whole-archive
+    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libiconv.la
 }
