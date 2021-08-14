@@ -74,6 +74,8 @@ struct ip_mreq_source {
 #define IP_ADD_SOURCE_MEMBERSHIP 7
 #define IP_DROP_SOURCE_MEMBERSHIP 8
 #define IPV6_V6ONLY 9
+#define IPV6_JOIN_GROUP 5
+#define IPV6_LEAVE_GROUP 6
 
 struct in6_addr {
     uint8_t s6_addr[16];
