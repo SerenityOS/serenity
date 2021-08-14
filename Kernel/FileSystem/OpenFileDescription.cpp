@@ -71,6 +71,11 @@ KResult OpenFileDescription::attach()
     return m_file->attach(*this);
 }
 
+void OpenFileDescription::set_original_custody(Badge<VirtualFileSystem>, Custody& custody)
+{
+    m_custody = custody;
+}
+
 Thread::FileBlocker::BlockFlags OpenFileDescription::should_unblock(Thread::FileBlocker::BlockFlags block_flags) const
 {
     using BlockFlags = Thread::FileBlocker::BlockFlags;

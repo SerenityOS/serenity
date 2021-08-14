@@ -19,26 +19,12 @@ DevFS::DevFS()
 {
 }
 
-void DevFS::notify_new_device(Device& device)
-{
-    // FIXME: Handle KString allocation failure.
-    auto name = KString::try_create(device.device_name()).release_value();
-    MutexLocker locker(m_lock);
-    auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device, move(name)));
-    m_root_inode->m_nodes.append(new_device_inode);
-}
-
 size_t DevFS::allocate_inode_index()
 {
     MutexLocker locker(m_lock);
     m_next_inode_index = m_next_inode_index.value() + 1;
     VERIFY(m_next_inode_index > 0);
     return 1 + m_next_inode_index.value();
-}
-
-void DevFS::notify_device_removal(Device&)
-{
-    TODO();
 }
 
 DevFS::~DevFS()
@@ -48,12 +34,6 @@ DevFS::~DevFS()
 KResult DevFS::initialize()
 {
     m_root_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevFSRootDirectoryInode(*this)));
-    Device::for_each([&](Device& device) {
-        // FIXME: Find a better way to not add MasterPTYs or SlavePTYs!
-        if (device.is_master_pty() || (device.is_character_device() && device.major() == 201))
-            return;
-        notify_new_device(device);
-    });
     return KSuccess;
 }
 
@@ -214,7 +194,7 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::lookup(StringView name)
     }
     return ENOENT;
 }
-KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView name, mode_t mode, dev_t, UserID, GroupID)
+KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView name, mode_t mode, dev_t device_mode, UserID, GroupID)
 {
     MutexLocker locker(fs().m_lock);
 
@@ -231,6 +211,15 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView
         auto new_directory_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevFSPtsDirectoryInode(fs())));
         m_nodes.append(*new_directory_inode);
         return new_directory_inode;
+    }
+    if (metadata.is_device()) {
+        auto name_kstring = TRY(KString::try_create(name));
+        unsigned major = major_from_encoded_device(device_mode);
+        unsigned minor = minor_from_encoded_device(device_mode);
+        auto new_device_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevFSDeviceInode(fs(), major, minor, is_block_device(mode), move(name_kstring))));
+        TRY(new_device_inode->chmod(mode));
+        m_nodes.append(*new_device_inode);
+        return new_device_inode;
     }
     if (metadata.is_symlink()) {
         auto name_kstring = TRY(KString::try_create(name));
@@ -256,10 +245,12 @@ InodeMetadata DevFSRootDirectoryInode::metadata() const
     return metadata;
 }
 
-DevFSDeviceInode::DevFSDeviceInode(DevFS& fs, Device const& device, NonnullOwnPtr<KString> name)
+DevFSDeviceInode::DevFSDeviceInode(DevFS& fs, unsigned major_number, unsigned minor_number, bool block_device, NonnullOwnPtr<KString> name)
     : DevFSInode(fs)
-    , m_attached_device(device)
     , m_name(move(name))
+    , m_major_number(major_number)
+    , m_minor_number(minor_number)
+    , m_block_device(block_device)
 {
 }
 
@@ -275,6 +266,16 @@ KResult DevFSDeviceInode::chown(UserID uid, GroupID gid)
     return KSuccess;
 }
 
+KResult DevFSDeviceInode::chmod(mode_t mode)
+{
+    MutexLocker locker(m_inode_lock);
+    mode &= 0777;
+    if (m_required_mode == mode)
+        return KSuccess;
+    m_required_mode = mode;
+    return KSuccess;
+}
+
 StringView DevFSDeviceInode::name() const
 {
     return m_name->view();
@@ -284,12 +285,15 @@ KResultOr<size_t> DevFSDeviceInode::read_bytes(off_t offset, size_t count, UserO
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
-    if (!m_attached_device->can_read(*description, offset))
-        return 0;
-    auto nread = const_cast<Device&>(*m_attached_device).read(*description, offset, buffer, count);
-    if (nread.is_error())
-        return EIO;
-    return nread.value();
+    RefPtr<Device> device = Device::get_device(m_major_number, m_minor_number);
+    if (!device)
+        return KResult(ENODEV);
+    if (!device->can_read(*description, offset))
+        return KResult(ENOTIMPL);
+    auto result = const_cast<Device&>(*device).read(*description, offset, buffer, count);
+    if (result.is_error())
+        return result;
+    return result.value();
 }
 
 InodeMetadata DevFSDeviceInode::metadata() const
@@ -297,25 +301,28 @@ InodeMetadata DevFSDeviceInode::metadata() const
     MutexLocker locker(m_inode_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), index() };
-    metadata.mode = (m_attached_device->is_block_device() ? S_IFBLK : S_IFCHR) | m_attached_device->required_mode();
+    metadata.mode = (m_block_device ? S_IFBLK : S_IFCHR) | m_required_mode;
     metadata.uid = m_uid;
     metadata.gid = m_gid;
     metadata.size = 0;
     metadata.mtime = mepoch;
-    metadata.major_device = m_attached_device->major();
-    metadata.minor_device = m_attached_device->minor();
+    metadata.major_device = m_major_number;
+    metadata.minor_device = m_minor_number;
     return metadata;
 }
 KResultOr<size_t> DevFSDeviceInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, OpenFileDescription* description)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!!description);
-    if (!m_attached_device->can_write(*description, offset))
-        return 0;
-    auto nread = const_cast<Device&>(*m_attached_device).write(*description, offset, buffer, count);
-    if (nread.is_error())
-        return EIO;
-    return nread.value();
+    RefPtr<Device> device = Device::get_device(m_major_number, m_minor_number);
+    if (!device)
+        return KResult(ENODEV);
+    if (!device->can_write(*description, offset))
+        return KResult(ENOTIMPL);
+    auto result = const_cast<Device&>(*device).write(*description, offset, buffer, count);
+    if (result.is_error())
+        return result;
+    return result.value();
 }
 
 DevFSPtsDirectoryInode::DevFSPtsDirectoryInode(DevFS& fs)
