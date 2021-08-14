@@ -17,6 +17,9 @@ public:
     explicit PlainMonthDayPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~PlainMonthDayPrototype() override = default;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
 };
 
 }
