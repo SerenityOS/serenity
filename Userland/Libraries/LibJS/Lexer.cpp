@@ -330,11 +330,11 @@ bool Lexer::is_identifier_middle() const
 bool Lexer::is_line_comment_start(bool line_has_token_yet) const
 {
     return match('/', '/')
-        || match('<', '!', '-', '-')
+        || (m_allow_html_comments && match('<', '!', '-', '-'))
         // "-->" is considered a line comment start if the current line is only whitespace and/or
         // other block comment(s); or in other words: the current line does not have a token or
         // ongoing line comment yet
-        || (match('-', '-', '>') && !line_has_token_yet)
+        || (m_allow_html_comments && !line_has_token_yet && match('-', '-', '>'))
         // https://tc39.es/proposal-hashbang/out.html#sec-updated-syntax
         || (match('#', '!') && m_position == 1);
 }
