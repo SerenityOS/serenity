@@ -32,10 +32,18 @@
 #include <time.h>
 #include <unistd.h>
 
+struct FileMetadata {
+    String name;
+    String path;
+    struct stat stat;
+};
+
 static int do_file_system_object_long(const char* path);
 static int do_file_system_object_short(const char* path);
 
-static bool print_names(const char* path, size_t longest_name, const Vector<String>& names);
+static bool print_names(const char* path, size_t longest_name, const Vector<FileMetadata>& files);
+
+static bool filemetadata_comparator(FileMetadata& a, FileMetadata& b);
 
 static bool flag_classify = false;
 static bool flag_colorize = false;
@@ -134,14 +142,24 @@ int main(int argc, char** argv)
     if (paths.is_empty())
         paths.append(".");
 
-    quick_sort(paths, [](const String& a, const String& b) {
-        return a < b;
-    });
+    Vector<FileMetadata> files;
+    for (auto& path : paths) {
+        FileMetadata metadata;
+        metadata.name = path;
+
+        int rc = lstat(path.characters(), &metadata.stat);
+        if (rc < 0) {
+            perror("lstat");
+            memset(&metadata.stat, 0, sizeof(metadata.stat));
+        }
+        files.append(metadata);
+    }
+    quick_sort(files, filemetadata_comparator);
 
     int status = 0;
 
-    for (size_t i = 0; i < paths.size(); i++) {
-        auto path = paths[i];
+    for (size_t i = 0; i < files.size(); i++) {
+        auto path = files[i].name;
 
         if (flag_recursive && Core::File::is_directory(path)) {
             size_t subdirs = 0;
@@ -156,19 +174,21 @@ int main(int argc, char** argv)
                 String directory = di.next_full_path();
                 if (Core::File::is_directory(directory) && !Core::File::is_link(directory)) {
                     ++subdirs;
-                    paths.insert(i + subdirs, move(directory));
+                    FileMetadata new_file;
+                    new_file.name = move(directory);
+                    files.insert(i + subdirs, move(new_file));
                 }
             }
         }
 
-        bool show_dir_separator = paths.size() > 1 && Core::File::is_directory(path) && !flag_list_directories_only;
+        bool show_dir_separator = files.size() > 1 && Core::File::is_directory(path) && !flag_list_directories_only;
         if (show_dir_separator) {
             printf("%s:\n", path.characters());
         }
         auto rc = do_file_system_object(path.characters());
         if (rc != 0)
             status = rc;
-        if (show_dir_separator && i != paths.size() - 1) {
+        if (show_dir_separator && i != files.size() - 1) {
             puts("");
         }
     }
@@ -387,12 +407,6 @@ static int do_file_system_object_long(const char* path)
         return 1;
     }
 
-    struct FileMetadata {
-        String name;
-        String path;
-        struct stat stat;
-    };
-
     Vector<FileMetadata> files;
     while (di.has_next()) {
         FileMetadata metadata;
@@ -416,17 +430,7 @@ static int do_file_system_object_long(const char* path)
         files.append(move(metadata));
     }
 
-    quick_sort(files, [](auto& a, auto& b) {
-        if (flag_sort_by_timestamp) {
-            if (flag_reverse_sort)
-                return a.stat.st_mtime < b.stat.st_mtime;
-            return a.stat.st_mtime > b.stat.st_mtime;
-        }
-        // Fine, sort by name then!
-        if (flag_reverse_sort)
-            return a.name > b.name;
-        return a.name < b.name;
-    });
+    quick_sort(files, filemetadata_comparator);
 
     for (auto& file : files) {
         if (!print_filesystem_object(file.path, file.name, file.stat))
@@ -451,12 +455,12 @@ static bool print_filesystem_object_short(const char* path, const char* name, si
     return true;
 }
 
-static bool print_names(const char* path, size_t longest_name, const Vector<String>& names)
+static bool print_names(const char* path, size_t longest_name, const Vector<FileMetadata>& files)
 {
     size_t printed_on_row = 0;
     size_t nprinted = 0;
-    for (size_t i = 0; i < names.size(); ++i) {
-        auto& name = names[i];
+    for (size_t i = 0; i < files.size(); ++i) {
+        auto& name = files[i].name;
         StringBuilder builder;
         builder.append(path);
         builder.append('/');
@@ -474,7 +478,7 @@ static bool print_names(const char* path, size_t longest_name, const Vector<Stri
         printed_on_row += column_width;
 
         if (is_a_tty) {
-            for (size_t j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
+            for (size_t j = nprinted; i != (files.size() - 1) && j < column_width; ++j)
                 printf(" ");
         }
         if ((printed_on_row + column_width) >= terminal_columns) {
@@ -516,21 +520,41 @@ int do_file_system_object_short(const char* path)
         return 1;
     }
 
-    Vector<String> names;
+    Vector<FileMetadata> files;
     size_t longest_name = 0;
     while (di.has_next()) {
-        String name = di.next_path();
+        FileMetadata metadata;
+        metadata.name = di.next_path();
 
-        if (name.ends_with('~') && flag_ignore_backups && name != path)
+        if (metadata.name.ends_with('~') && flag_ignore_backups && metadata.name != path)
             continue;
 
-        names.append(name);
-        if (names.last().length() > longest_name)
-            longest_name = name.length();
-    }
-    quick_sort(names);
+        StringBuilder builder;
+        builder.append(path);
+        builder.append('/');
+        builder.append(metadata.name);
+        metadata.path = builder.to_string();
+        VERIFY(!metadata.path.is_null());
+        int rc = lstat(metadata.path.characters(), &metadata.stat);
+        if (rc < 0) {
+            perror("lstat");
+            memset(&metadata.stat, 0, sizeof(metadata.stat));
+        }
 
-    if (print_names(path, longest_name, names))
+        files.append(metadata);
+        if (metadata.name.length() > longest_name)
+            longest_name = metadata.name.length();
+    }
+    quick_sort(files, filemetadata_comparator);
+
+    if (print_names(path, longest_name, files))
         printf("\n");
     return 0;
+}
+
+bool filemetadata_comparator(FileMetadata& a, FileMetadata& b)
+{
+    if (flag_sort_by_timestamp && (a.stat.st_mtime != b.stat.st_mtime))
+        return (a.stat.st_mtime > b.stat.st_mtime) ^ flag_reverse_sort;
+    return (a.name < b.name) ^ flag_reverse_sort;
 }
