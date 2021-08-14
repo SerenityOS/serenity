@@ -151,6 +151,7 @@ private:
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual InodeMetadata metadata() const override;
+    virtual KResult remove_child(const StringView& name) override;
 };
 
 }
