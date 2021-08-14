@@ -297,7 +297,7 @@ void Hub::check_for_port_updates()
             } else {
                 dbgln("USB Hub: Device detached on port {}!", port_number);
 
-                Device* device_to_remove = nullptr;
+                RefPtr<Device> device_to_remove = nullptr;
                 for (auto& child : m_children) {
                     if (port_number == child.port()) {
                         device_to_remove = &child;
@@ -310,7 +310,7 @@ void Hub::check_for_port_updates()
                     SysFSUSBBusDirectory::the().unplug(*device_to_remove);
 
                     if (device_to_remove->device_descriptor().device_class == USB_CLASS_HUB) {
-                        auto* hub_child = static_cast<Hub*>(device_to_remove);
+                        auto* hub_child = static_cast<Hub*>(device_to_remove.ptr());
                         hub_child->remove_children_from_sysfs();
                     }
                 } else {
