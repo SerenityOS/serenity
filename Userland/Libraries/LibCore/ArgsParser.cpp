@@ -28,6 +28,7 @@ namespace Core {
 ArgsParser::ArgsParser()
 {
     add_option(m_show_help, "Display this message", "help", 0);
+    add_option(m_show_version, "Print version", "version", 0);
 }
 
 bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_behavior)
@@ -153,7 +154,13 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
     }
 
     // We're done parsing! :)
-    // Now let's show help if requested.
+    // Now let's show version or help if requested.
+    if (m_show_version) {
+        outln(stdout, "git");
+        if (failure_behavior == FailureBehavior::Exit || failure_behavior == FailureBehavior::PrintUsageAndExit)
+            exit(0);
+        return false;
+    }
     if (m_show_help) {
         print_usage(stdout, argv[0]);
         if (failure_behavior == FailureBehavior::Exit || failure_behavior == FailureBehavior::PrintUsageAndExit)
