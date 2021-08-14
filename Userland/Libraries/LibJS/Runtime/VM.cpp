@@ -120,6 +120,9 @@ void VM::gather_roots(HashTable<Cell*>& roots)
 
     for (auto* job : m_promise_jobs)
         roots.set(job);
+
+    for (auto* finalization_registry : m_finalization_registry_cleanup_jobs)
+        roots.set(finalization_registry);
 }
 
 Symbol* VM::get_global_symbol(const String& description)
