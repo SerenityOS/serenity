@@ -65,7 +65,7 @@
          off) shell="${SHELL##*/} " ;;
      esac
  
-+    [[ "$os" == SerenityOS ]] && shell="SerenityOS Shell"
++    [[ "$os" == SerenityOS ]] && shell="SerenityOS Shell "
 +
      [[ $shell_version != on ]] && return
  
