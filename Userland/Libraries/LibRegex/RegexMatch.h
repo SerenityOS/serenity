@@ -507,13 +507,6 @@ struct MatchState {
     Vector<Vector<Match>> capture_group_matches;
 };
 
-struct MatchOutput {
-    size_t operations;
-    Vector<Match> matches;
-    Vector<Vector<Match>> capture_group_matches;
-    Vector<HashMap<String, Match>> named_capture_group_matches;
-};
-
 }
 
 using regex::RegexStringView;
