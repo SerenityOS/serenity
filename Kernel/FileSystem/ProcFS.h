@@ -30,7 +30,7 @@ public:
     virtual ~ProcFS() override;
     static RefPtr<ProcFS> create();
 
-    virtual bool initialize() override;
+    virtual KResult initialize() override;
     virtual StringView class_name() const override { return "ProcFS"sv; }
 
     virtual Inode& root_inode() override;

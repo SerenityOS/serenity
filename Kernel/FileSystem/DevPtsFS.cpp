@@ -27,17 +27,19 @@ DevPtsFS::~DevPtsFS()
 
 static Singleton<HashTable<unsigned>> s_ptys;
 
-bool DevPtsFS::initialize()
+KResult DevPtsFS::initialize()
 {
-    m_root_inode = adopt_ref(*new DevPtsFSInode(*this, 1, nullptr));
+    m_root_inode = adopt_ref_if_nonnull(new (nothrow) DevPtsFSInode(*this, 1, nullptr));
+    if (!m_root_inode)
+        return ENOMEM;
+
     m_root_inode->m_metadata.inode = { fsid(), 1 };
     m_root_inode->m_metadata.mode = 0040555;
     m_root_inode->m_metadata.uid = 0;
     m_root_inode->m_metadata.gid = 0;
     m_root_inode->m_metadata.size = 0;
     m_root_inode->m_metadata.mtime = mepoch;
-
-    return true;
+    return KSuccess;
 }
 
 static unsigned inode_index_to_pty_index(InodeIndex inode_index)

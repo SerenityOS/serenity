@@ -86,7 +86,7 @@ const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
     return block_group_descriptors()[group_index.value() - 1];
 }
 
-bool Ext2FS::initialize()
+KResult Ext2FS::initialize()
 {
     MutexLocker locker(m_lock);
 
@@ -99,8 +99,10 @@ bool Ext2FS::initialize()
     if constexpr (EXT2_DEBUG) {
         dmesgln("Ext2FS: super block magic: {:04x} (super block size: {})", super_block.s_magic, sizeof(ext2_super_block));
     }
-    if (super_block.s_magic != EXT2_SUPER_MAGIC)
-        return false;
+    if (super_block.s_magic != EXT2_SUPER_MAGIC) {
+        dmesgln("Ext2FS: Bad super block magic");
+        return EINVAL;
+    }
 
     if constexpr (EXT2_DEBUG) {
         dmesgln("Ext2FS: {} inodes, {} blocks", super_block.s_inodes_count, super_block.s_blocks_count);
@@ -117,9 +119,8 @@ bool Ext2FS::initialize()
     set_fragment_size(EXT2_FRAG_SIZE(&super_block));
 
     // Note: This depends on the block size being available.
-    auto baseclass_result = BlockBasedFileSystem::initialize();
-    if (!baseclass_result)
-        return baseclass_result;
+    if (auto result = BlockBasedFileSystem::initialize(); result.is_error())
+        return result;
 
     VERIFY(block_size() <= (int)max_block_size);
 
@@ -127,7 +128,7 @@ bool Ext2FS::initialize()
 
     if (m_block_group_count == 0) {
         dmesgln("Ext2FS: no block groups :(");
-        return false;
+        return EINVAL;
     }
 
     auto blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), block_size());
@@ -135,13 +136,12 @@ bool Ext2FS::initialize()
     m_cached_group_descriptor_table = KBuffer::try_create_with_size(block_size() * blocks_to_read, Memory::Region::Access::ReadWrite, "Ext2FS: Block group descriptors");
     if (!m_cached_group_descriptor_table) {
         dbgln("Ext2FS: Failed to allocate memory for group descriptor table");
-        return false;
+        return ENOMEM;
     }
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_group_descriptor_table->data());
     if (auto result = read_blocks(first_block_of_bgdt, blocks_to_read, buffer); result.is_error()) {
-        // FIXME: Propagate the error
         dbgln("Ext2FS: initialize had error: {}", result.error());
-        return false;
+        return result;
     }
 
     if constexpr (EXT2_DEBUG) {
@@ -154,10 +154,10 @@ bool Ext2FS::initialize()
     m_root_inode = static_ptr_cast<Ext2FSInode>(get_inode({ fsid(), EXT2_ROOT_INO }));
     if (!m_root_inode) {
         dbgln("Ext2FS: failed to acquire root inode");
-        return false;
+        return EINVAL;
     }
 
-    return true;
+    return KSuccess;
 }
 
 Ext2FSInode& Ext2FS::root_inode()

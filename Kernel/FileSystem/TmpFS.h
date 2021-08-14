@@ -20,7 +20,7 @@ class TmpFS final : public FileSystem {
 public:
     virtual ~TmpFS() override;
     static RefPtr<TmpFS> create();
-    virtual bool initialize() override;
+    virtual KResult initialize() override;
 
     virtual StringView class_name() const override { return "TmpFS"sv; }
 

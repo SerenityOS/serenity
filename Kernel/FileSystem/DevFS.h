@@ -22,7 +22,7 @@ public:
     virtual ~DevFS() override;
     static NonnullRefPtr<DevFS> create();
 
-    virtual bool initialize() override;
+    virtual KResult initialize() override;
     virtual StringView class_name() const override { return "DevFS"sv; }
 
     void notify_new_device(Device&);

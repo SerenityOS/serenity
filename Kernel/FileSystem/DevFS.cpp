@@ -56,9 +56,9 @@ DevFS::~DevFS()
 {
 }
 
-bool DevFS::initialize()
+KResult DevFS::initialize()
 {
-    return true;
+    return KSuccess;
 }
 
 Inode& DevFS::root_inode()

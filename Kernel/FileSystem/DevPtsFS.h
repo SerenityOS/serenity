@@ -22,7 +22,7 @@ public:
     virtual ~DevPtsFS() override;
     static NonnullRefPtr<DevPtsFS> create();
 
-    virtual bool initialize() override;
+    virtual KResult initialize() override;
     virtual StringView class_name() const override { return "DevPtsFS"sv; }
 
     virtual Inode& root_inode() override;

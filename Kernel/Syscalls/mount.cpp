@@ -121,9 +121,9 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
     if (!fs)
         return ENOMEM;
 
-    if (!fs->initialize()) {
+    if (auto result = fs->initialize(); result.is_error()) {
         dbgln("mount: failed to initialize {} filesystem, fd={}", fs_type, source_fd);
-        return ENODEV;
+        return result;
     }
 
     auto result = VirtualFileSystem::the().mount(fs.release_nonnull(), target_custody, params.flags);

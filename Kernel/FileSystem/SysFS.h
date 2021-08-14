@@ -62,7 +62,7 @@ public:
     virtual ~SysFS() override;
     static NonnullRefPtr<SysFS> create();
 
-    virtual bool initialize() override;
+    virtual KResult initialize() override;
     virtual StringView class_name() const override { return "SysFS"sv; }
 
     virtual Inode& root_inode() override;

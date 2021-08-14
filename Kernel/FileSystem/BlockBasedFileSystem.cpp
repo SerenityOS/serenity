@@ -114,26 +114,26 @@ BlockBasedFileSystem::~BlockBasedFileSystem()
 {
 }
 
-bool BlockBasedFileSystem::initialize()
+KResult BlockBasedFileSystem::initialize()
 {
     VERIFY(block_size() != 0);
     auto cached_block_data = KBuffer::try_create_with_size(DiskCache::EntryCount * block_size());
     if (!cached_block_data)
-        return false;
+        return ENOMEM;
 
     auto entries_data = KBuffer::try_create_with_size(DiskCache::EntryCount * sizeof(CacheEntry));
     if (!entries_data)
-        return false;
+        return ENOMEM;
 
     auto disk_cache = adopt_own_if_nonnull(new (nothrow) DiskCache(*this, cached_block_data.release_nonnull(), entries_data.release_nonnull()));
     if (!disk_cache)
-        return false;
+        return ENOMEM;
 
     m_cache.with_exclusive([&](auto& cache) {
         cache = move(disk_cache);
     });
 
-    return true;
+    return KSuccess;
 }
 
 KResult BlockBasedFileSystem::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
