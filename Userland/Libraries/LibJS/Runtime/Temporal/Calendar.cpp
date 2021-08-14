@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/Temporal/CalendarConstructor.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDateTime.h>
+#include <LibJS/Runtime/Temporal/PlainMonthDay.h>
 #include <LibJS/Runtime/Temporal/PlainTime.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 #include <LibJS/Runtime/Temporal/ZonedDateTime.h>
@@ -300,7 +301,8 @@ Object* to_temporal_calendar(GlobalObject& global_object, Value temporal_calenda
             return &static_cast<PlainDate&>(temporal_calendar_like_object).calendar();
         if (is<PlainDateTime>(temporal_calendar_like_object))
             return &static_cast<PlainDateTime&>(temporal_calendar_like_object).calendar();
-        // TODO: PlainMonthDay
+        if (is<PlainMonthDay>(temporal_calendar_like_object))
+            return &static_cast<PlainMonthDay&>(temporal_calendar_like_object).calendar();
         if (is<PlainTime>(temporal_calendar_like_object))
             return &static_cast<PlainTime&>(temporal_calendar_like_object).calendar();
         if (is<PlainYearMonth>(temporal_calendar_like_object))
