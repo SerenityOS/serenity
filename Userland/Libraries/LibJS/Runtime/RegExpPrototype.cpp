@@ -85,8 +85,8 @@ static String escape_regexp_pattern(const RegExpObject& regexp_object)
     // FIXME: Check u flag and escape accordingly
     pattern.replace("\n", "\\n", true);
     pattern.replace("\r", "\\r", true);
-    pattern.replace(LINE_SEPARATOR, "\\u2028", true);
-    pattern.replace(PARAGRAPH_SEPARATOR, "\\u2029", true);
+    pattern.replace(LINE_SEPARATOR_STRING, "\\u2028", true);
+    pattern.replace(PARAGRAPH_SEPARATOR_STRING, "\\u2029", true);
     pattern.replace("/", "\\/", true);
     return pattern;
 }
