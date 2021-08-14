@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +9,7 @@
 #include <AK/DistinctNumeric.h>
 #include <AK/Types.h>
 #include <Kernel/API/POSIX/fcntl.h>
+#include <Kernel/API/POSIX/sys/mman.h>
 #include <Kernel/API/POSIX/sys/stat.h>
 #include <Kernel/API/POSIX/time.h>
 
@@ -72,21 +73,6 @@ enum {
 #define SEEK_SET 0
 #define SEEK_CUR 1
 #define SEEK_END 2
-
-#define MAP_SHARED 0x01
-#define MAP_PRIVATE 0x02
-#define MAP_FIXED 0x10
-#define MAP_ANONYMOUS 0x20
-#define MAP_ANON MAP_ANONYMOUS
-#define MAP_STACK 0x40
-#define MAP_NORESERVE 0x80
-#define MAP_RANDOMIZED 0x100
-#define MAP_PURGEABLE 0x200
-
-#define PROT_READ 0x1
-#define PROT_WRITE 0x2
-#define PROT_EXEC 0x4
-#define PROT_NONE 0x0
 
 #define MADV_SET_VOLATILE 0x100
 #define MADV_SET_NONVOLATILE 0x200
