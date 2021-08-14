@@ -215,6 +215,8 @@ class Mandelbrot : public GUI::Frame {
     };
     void zoom(Zoom in_out, const Gfx::IntPoint& center);
 
+    void reset();
+
 private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
@@ -257,6 +259,12 @@ void Mandelbrot::zoom(Zoom in_out, const Gfx::IntPoint& center)
     zoomed_rect.set_y((zooming_in ? 1 : -1) * leftover_height * cursor_y_percentage);
 
     m_set.zoom(zoomed_rect);
+    update();
+}
+
+void Mandelbrot::reset()
+{
+    m_set.reset();
     update();
 }
 
@@ -330,8 +338,7 @@ void Mandelbrot::mouseup_event(GUI::MouseEvent& event)
         m_panning = false;
         update();
     } else if (event.button() == GUI::MouseButton::Right) {
-        m_set.reset();
-        update();
+        reset();
     }
 
     return GUI::Widget::mouseup_event(event);
