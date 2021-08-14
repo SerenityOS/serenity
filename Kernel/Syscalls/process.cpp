@@ -41,13 +41,14 @@ KResultOr<FlatPtr> Process::sys$set_process_name(Userspace<const char*> user_nam
     REQUIRE_PROMISE(proc);
     if (user_name_length > 256)
         return ENAMETOOLONG;
-    auto name = copy_string_from_user(user_name, user_name_length);
-    if (name.is_null())
-        return EFAULT;
+    auto name_or_error = try_copy_kstring_from_user(user_name, user_name_length);
+    if (name_or_error.is_error())
+        return name_or_error.error();
     // Empty and whitespace-only names only exist to confuse users.
-    if (name.is_whitespace())
+    if (name_or_error.value()->view().is_whitespace())
         return EINVAL;
-    m_name = move(name);
+    // FIXME: There's a String copy here. Process::m_name should be a KString.
+    m_name = name_or_error.value()->view();
     return 0;
 }
 

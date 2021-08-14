@@ -32,10 +32,11 @@ KResultOr<FlatPtr> Process::sys$sethostname(Userspace<const char*> buffer, size_
     if (length > 64)
         return ENAMETOOLONG;
     return hostname().with_exclusive([&](auto& name) -> KResultOr<FlatPtr> {
-        auto copied_hostname = copy_string_from_user(buffer, length);
-        if (copied_hostname.is_null())
-            return EFAULT;
-        name = move(copied_hostname);
+        auto name_or_error = try_copy_kstring_from_user(buffer, length);
+        if (name_or_error.is_error())
+            return name_or_error.error();
+        // FIXME: Use KString instead of String here.
+        name = name_or_error.value()->view();
         return 0;
     });
 }
