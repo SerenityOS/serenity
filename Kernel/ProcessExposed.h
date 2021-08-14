@@ -69,7 +69,7 @@ public:
     StringView name() const { return m_name->view(); }
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const { VERIFY_NOT_REACHED(); }
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const { VERIFY_NOT_REACHED(); }
-    virtual RefPtr<ProcFSExposedComponent> lookup(StringView) { VERIFY_NOT_REACHED(); };
+    virtual KResultOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView) { VERIFY_NOT_REACHED(); };
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*) { return KResult(EROFS); }
     virtual size_t size() const { return 0; }
 
@@ -84,7 +84,7 @@ public:
         return KSuccess;
     }
 
-    virtual NonnullRefPtr<Inode> to_inode(const ProcFS& procfs_instance) const;
+    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const;
 
     virtual InodeIndex component_index() const { return m_component_index; }
 
@@ -106,7 +106,7 @@ class ProcFSExposedDirectory
 
 public:
     virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
+    virtual KResultOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView name) override;
     void add_component(const ProcFSExposedComponent&);
 
     virtual void prepare_for_deletion() override
@@ -117,7 +117,7 @@ public:
     }
     virtual mode_t required_mode() const override { return 0555; }
 
-    virtual NonnullRefPtr<Inode> to_inode(const ProcFS& procfs_instance) const override final;
+    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override final;
 
 protected:
     explicit ProcFSExposedDirectory(StringView name);
@@ -128,7 +128,7 @@ protected:
 
 class ProcFSExposedLink : public ProcFSExposedComponent {
 public:
-    virtual NonnullRefPtr<Inode> to_inode(const ProcFS& procfs_instance) const override final;
+    virtual KResultOr<NonnullRefPtr<Inode>> to_inode(const ProcFS& procfs_instance) const override final;
 
     virtual KResultOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const override;
 
@@ -142,7 +142,7 @@ class ProcFSRootDirectory final : public ProcFSExposedDirectory {
     friend class ProcFSComponentRegistry;
 
 public:
-    virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
+    virtual KResultOr<NonnullRefPtr<ProcFSExposedComponent>> lookup(StringView name) override;
     static NonnullRefPtr<ProcFSRootDirectory> must_create();
     virtual ~ProcFSRootDirectory();
 

@@ -28,7 +28,7 @@ class ProcFS final : public FileSystem {
 
 public:
     virtual ~ProcFS() override;
-    static RefPtr<ProcFS> create();
+    static KResultOr<NonnullRefPtr<ProcFS>> try_create();
 
     virtual KResult initialize() override;
     virtual StringView class_name() const override { return "ProcFS"sv; }
@@ -38,7 +38,7 @@ public:
 private:
     ProcFS();
 
-    NonnullRefPtr<ProcFSDirectoryInode> m_root_inode;
+    RefPtr<ProcFSDirectoryInode> m_root_inode;
 };
 
 class ProcFSInode : public Inode {
@@ -69,7 +69,7 @@ class ProcFSGlobalInode : public ProcFSInode {
     friend class ProcFS;
 
 public:
-    static NonnullRefPtr<ProcFSGlobalInode> create(const ProcFS&, const ProcFSExposedComponent&);
+    static KResultOr<NonnullRefPtr<ProcFSGlobalInode>> try_create(const ProcFS&, const ProcFSExposedComponent&);
     virtual ~ProcFSGlobalInode() override {};
     StringView name() const;
 
@@ -92,7 +92,7 @@ class ProcFSLinkInode : public ProcFSGlobalInode {
     friend class ProcFS;
 
 public:
-    static NonnullRefPtr<ProcFSLinkInode> create(const ProcFS&, const ProcFSExposedComponent&);
+    static KResultOr<NonnullRefPtr<ProcFSLinkInode>> try_create(const ProcFS&, const ProcFSExposedComponent&);
 
 protected:
     ProcFSLinkInode(const ProcFS&, const ProcFSExposedComponent&);
@@ -103,7 +103,7 @@ class ProcFSDirectoryInode final : public ProcFSGlobalInode {
     friend class ProcFS;
 
 public:
-    static NonnullRefPtr<ProcFSDirectoryInode> create(const ProcFS&, const ProcFSExposedComponent&);
+    static KResultOr<NonnullRefPtr<ProcFSDirectoryInode>> try_create(const ProcFS&, const ProcFSExposedComponent&);
     virtual ~ProcFSDirectoryInode() override;
 
 protected:
@@ -132,7 +132,7 @@ class ProcFSProcessDirectoryInode final : public ProcFSProcessAssociatedInode {
     friend class ProcFS;
 
 public:
-    static NonnullRefPtr<ProcFSProcessDirectoryInode> create(const ProcFS&, ProcessID);
+    static KResultOr<NonnullRefPtr<ProcFSProcessDirectoryInode>> try_create(const ProcFS&, ProcessID);
 
 private:
     ProcFSProcessDirectoryInode(const ProcFS&, ProcessID);
@@ -149,7 +149,7 @@ class ProcFSProcessSubDirectoryInode final : public ProcFSProcessAssociatedInode
     friend class ProcFS;
 
 public:
-    static NonnullRefPtr<ProcFSProcessSubDirectoryInode> create(const ProcFS&, SegmentedProcFSIndex::ProcessSubDirectory, ProcessID);
+    static KResultOr<NonnullRefPtr<ProcFSProcessSubDirectoryInode>> try_create(const ProcFS&, SegmentedProcFSIndex::ProcessSubDirectory, ProcessID);
 
 private:
     ProcFSProcessSubDirectoryInode(const ProcFS&, SegmentedProcFSIndex::ProcessSubDirectory, ProcessID);
@@ -168,9 +168,9 @@ class ProcFSProcessPropertyInode final : public ProcFSProcessAssociatedInode {
     friend class ProcFS;
 
 public:
-    static NonnullRefPtr<ProcFSProcessPropertyInode> create_for_file_description_link(const ProcFS&, unsigned, ProcessID);
-    static NonnullRefPtr<ProcFSProcessPropertyInode> create_for_thread_stack(const ProcFS&, ThreadID, ProcessID);
-    static NonnullRefPtr<ProcFSProcessPropertyInode> create_for_pid_property(const ProcFS&, SegmentedProcFSIndex::MainProcessProperty, ProcessID);
+    static KResultOr<NonnullRefPtr<ProcFSProcessPropertyInode>> try_create_for_file_description_link(const ProcFS&, unsigned, ProcessID);
+    static KResultOr<NonnullRefPtr<ProcFSProcessPropertyInode>> try_create_for_thread_stack(const ProcFS&, ThreadID, ProcessID);
+    static KResultOr<NonnullRefPtr<ProcFSProcessPropertyInode>> try_create_for_pid_property(const ProcFS&, SegmentedProcFSIndex::MainProcessProperty, ProcessID);
 
 private:
     ProcFSProcessPropertyInode(const ProcFS&, SegmentedProcFSIndex::MainProcessProperty, ProcessID);
