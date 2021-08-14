@@ -53,7 +53,7 @@ public:
     virtual void did_seek(FileDescription&, off_t) { }
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const = 0;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const = 0;
-    virtual RefPtr<Inode> lookup(StringView name) = 0;
+    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) = 0;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) = 0;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) = 0;
     virtual KResult add_child(Inode&, const StringView& name, mode_t) = 0;

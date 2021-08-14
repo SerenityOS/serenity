@@ -193,19 +193,24 @@ KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserO
     return size;
 }
 
-RefPtr<Inode> TmpFSInode::lookup(StringView name)
+KResultOr<NonnullRefPtr<Inode>> TmpFSInode::lookup(StringView name)
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
     VERIFY(is_directory());
 
     if (name == ".")
-        return this;
-    if (name == "..")
-        return fs().get_inode(m_parent);
+        return *this;
+    if (name == "..") {
+        auto inode = fs().get_inode(m_parent);
+        // FIXME: If this cannot fail, we should probably VERIFY here instead.
+        if (!inode)
+            return ENOENT;
+        return inode.release_nonnull();
+    }
 
     auto* child = find_child_by_name(name);
     if (!child)
-        return {};
+        return ENOENT;
     return child->inode;
 }
 

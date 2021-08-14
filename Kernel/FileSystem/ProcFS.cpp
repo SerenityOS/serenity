@@ -146,7 +146,7 @@ KResult ProcFSGlobalInode::traverse_as_directory(Function<bool(FileSystem::Direc
     VERIFY_NOT_REACHED();
 }
 
-RefPtr<Inode> ProcFSGlobalInode::lookup(StringView)
+KResultOr<NonnullRefPtr<Inode>> ProcFSGlobalInode::lookup(StringView)
 {
     VERIFY_NOT_REACHED();
 }
@@ -200,12 +200,12 @@ KResult ProcFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::Di
     return m_associated_component->traverse_as_directory(procfs().fsid(), move(callback));
 }
 
-RefPtr<Inode> ProcFSDirectoryInode::lookup(StringView name)
+KResultOr<NonnullRefPtr<Inode>> ProcFSDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(procfs().m_lock);
     auto component = m_associated_component->lookup(name);
     if (!component)
-        return {};
+        return ENOMEM;
     return component->to_inode(procfs());
 }
 
@@ -288,12 +288,12 @@ KResult ProcFSProcessDirectoryInode::traverse_as_directory(Function<bool(FileSys
     return process->traverse_as_directory(procfs().fsid(), move(callback));
 }
 
-RefPtr<Inode> ProcFSProcessDirectoryInode::lookup(StringView name)
+KResultOr<NonnullRefPtr<Inode>> ProcFSProcessDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(procfs().m_lock);
     auto process = Process::from_pid(associated_pid());
     if (!process)
-        return nullptr;
+        return ESRCH;
     if (name == "fd")
         return ProcFSProcessSubDirectoryInode::create(procfs(), SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions, associated_pid());
     if (name == "stacks")
@@ -314,7 +314,7 @@ RefPtr<Inode> ProcFSProcessDirectoryInode::lookup(StringView name)
         return ProcFSProcessPropertyInode::create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats, associated_pid());
     if (name == "root")
         return ProcFSProcessPropertyInode::create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::RootLink, associated_pid());
-    return nullptr;
+    return ENOENT;
 }
 
 NonnullRefPtr<ProcFSProcessSubDirectoryInode> ProcFSProcessSubDirectoryInode::create(const ProcFS& procfs, SegmentedProcFSIndex::ProcessSubDirectory sub_directory_type, ProcessID pid)
@@ -376,21 +376,26 @@ KResult ProcFSProcessSubDirectoryInode::traverse_as_directory(Function<bool(File
     VERIFY_NOT_REACHED();
 }
 
-RefPtr<Inode> ProcFSProcessSubDirectoryInode::lookup(StringView name)
+KResultOr<NonnullRefPtr<Inode>> ProcFSProcessSubDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(procfs().m_lock);
     auto process = Process::from_pid(associated_pid());
     if (!process)
-        return {};
+        return ESRCH;
+    RefPtr<Inode> inode;
     switch (m_sub_directory_type) {
     case SegmentedProcFSIndex::ProcessSubDirectory::FileDescriptions:
-        return process->lookup_file_descriptions_directory(procfs(), name);
+        inode = process->lookup_file_descriptions_directory(procfs(), name);
+        break;
     case SegmentedProcFSIndex::ProcessSubDirectory::Stacks:
-        return process->lookup_stacks_directory(procfs(), name);
+        inode = process->lookup_stacks_directory(procfs(), name);
+        break;
     default:
         VERIFY_NOT_REACHED();
     }
-    VERIFY_NOT_REACHED();
+    if (!inode)
+        return ENOENT;
+    return inode.release_nonnull();
 }
 
 NonnullRefPtr<ProcFSProcessPropertyInode> ProcFSProcessPropertyInode::create_for_file_description_link(const ProcFS& procfs, unsigned file_description_index, ProcessID pid)
@@ -514,9 +519,9 @@ KResultOr<size_t> ProcFSProcessPropertyInode::read_bytes(off_t offset, size_t co
 
     return nread;
 }
-RefPtr<Inode> ProcFSProcessPropertyInode::lookup(StringView)
+KResultOr<NonnullRefPtr<Inode>> ProcFSProcessPropertyInode::lookup(StringView)
 {
-    VERIFY_NOT_REACHED();
+    return EINVAL;
 }
 
 static KResult build_from_cached_data(KBufferBuilder& builder, ProcFSInodeData& cached_data)

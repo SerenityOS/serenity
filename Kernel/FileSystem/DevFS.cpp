@@ -93,7 +93,7 @@ KResult DevFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEnt
     VERIFY_NOT_REACHED();
 }
 
-RefPtr<Inode> DevFSInode::lookup(StringView)
+KResultOr<NonnullRefPtr<Inode>> DevFSInode::lookup(StringView)
 {
     VERIFY_NOT_REACHED();
 }
@@ -206,15 +206,6 @@ InodeMetadata DevFSDirectoryInode::metadata() const
     metadata.mtime = mepoch;
     return metadata;
 }
-KResult DevFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const
-{
-    return EINVAL;
-}
-
-RefPtr<Inode> DevFSDirectoryInode::lookup(StringView)
-{
-    return nullptr;
-}
 
 DevFSRootDirectoryInode::DevFSRootDirectoryInode(DevFS& fs)
     : DevFSDirectoryInode(fs)
@@ -242,7 +233,8 @@ KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem:
     }
     return KSuccess;
 }
-RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
+
+KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(fs().m_lock);
     for (auto& subdirectory : m_subdirectories) {
@@ -259,7 +251,7 @@ RefPtr<Inode> DevFSRootDirectoryInode::lookup(StringView name)
             return device_node;
         }
     }
-    return nullptr;
+    return ENOENT;
 }
 KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView name, mode_t mode, dev_t, uid_t, gid_t)
 {
@@ -395,10 +387,12 @@ KResult DevFSPtsDirectoryInode::traverse_as_directory(Function<bool(FileSystem::
     callback({ "..", identifier(), 0 });
     return KSuccess;
 }
-RefPtr<Inode> DevFSPtsDirectoryInode::lookup(StringView)
+
+KResultOr<NonnullRefPtr<Inode>> DevFSPtsDirectoryInode::lookup(StringView)
 {
-    return nullptr;
+    return ENOENT;
 }
+
 DevFSPtsDirectoryInode::~DevFSPtsDirectoryInode()
 {
 }

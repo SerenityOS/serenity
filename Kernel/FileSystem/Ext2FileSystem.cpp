@@ -1630,12 +1630,12 @@ KResult Ext2FSInode::populate_lookup_cache() const
     return KSuccess;
 }
 
-RefPtr<Inode> Ext2FSInode::lookup(StringView name)
+KResultOr<NonnullRefPtr<Inode>> Ext2FSInode::lookup(StringView name)
 {
     VERIFY(is_directory());
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): Looking up '{}'", identifier(), name);
-    if (populate_lookup_cache().is_error())
-        return {};
+    if (auto result = populate_lookup_cache(); result.is_error())
+        return result;
 
     InodeIndex inode_index;
     {
@@ -1643,11 +1643,15 @@ RefPtr<Inode> Ext2FSInode::lookup(StringView name)
         auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key == name; });
         if (it == m_lookup_cache.end()) {
             dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): '{}' not found", identifier(), name);
-            return {};
+            return ENOENT;
         }
         inode_index = it->value;
     }
-    return fs().get_inode({ fsid(), inode_index });
+
+    auto inode = fs().get_inode({ fsid(), inode_index });
+    if (!inode)
+        return ENOENT;
+    return inode.release_nonnull();
 }
 
 void Ext2FSInode::one_ref_left()

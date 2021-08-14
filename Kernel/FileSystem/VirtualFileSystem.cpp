@@ -965,16 +965,17 @@ KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(S
         }
 
         // Okay, let's look up this part.
-        auto child_inode = parent.inode().lookup(part);
-        if (!child_inode) {
+        auto child_or_error = parent.inode().lookup(part);
+        if (child_or_error.is_error()) {
             if (out_parent) {
                 // ENOENT with a non-null parent custody signals to caller that
                 // we found the immediate parent of the file, but the file itself
                 // does not exist yet.
                 *out_parent = have_more_parts ? nullptr : &parent;
             }
-            return ENOENT;
+            return child_or_error.error();
         }
+        auto child_inode = child_or_error.release_value();
 
         int mount_flags_for_child = parent.mount_flags();
 

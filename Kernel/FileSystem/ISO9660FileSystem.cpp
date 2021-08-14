@@ -532,7 +532,7 @@ KResult ISO9660Inode::traverse_as_directory(Function<bool(FileSystem::DirectoryE
     return KSuccess;
 }
 
-RefPtr<Inode> ISO9660Inode::lookup(StringView name)
+KResultOr<NonnullRefPtr<Inode>> ISO9660Inode::lookup(StringView name)
 {
     auto& file_system = static_cast<ISO9660FS const&>(fs());
     RefPtr<Inode> inode;
@@ -558,11 +558,12 @@ RefPtr<Inode> ISO9660Inode::lookup(StringView name)
         return RecursionDecision::Continue;
     });
 
-    if (traversal_result.is_error()) {
-        return {};
-    }
+    if (traversal_result.is_error())
+        return traversal_result;
 
-    return inode;
+    if (!inode)
+        return ENOENT;
+    return inode.release_nonnull();
 }
 
 void ISO9660Inode::flush_metadata()
