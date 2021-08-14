@@ -13,17 +13,13 @@
 
 #pragma once
 
+#include <Kernel/API/POSIX/unistd.h>
 #include <fd_set.h>
 #include <limits.h>
-#include <sys/cdefs.h>
-#include <sys/types.h>
 
 __BEGIN_DECLS
 
 #define HZ 1000
-#define STDIN_FILENO 0
-#define STDOUT_FILENO 1
-#define STDERR_FILENO 2
 
 /* lseek whence values */
 #ifndef _STDIO_H       /* also defined in stdio.h */
@@ -130,18 +126,6 @@ enum {
     _PC_VDISABLE
 };
 
-#define R_OK 4
-#define W_OK 2
-#define X_OK 1
-#define F_OK 0
-
-#define MS_NODEV (1 << 0)
-#define MS_NOEXEC (1 << 1)
-#define MS_NOSUID (1 << 2)
-#define MS_BIND (1 << 3)
-#define MS_RDONLY (1 << 4)
-#define MS_REMOUNT (1 << 5)
-
 #define _POSIX_MONOTONIC_CLOCK 200112L
 #define _POSIX_SAVED_IDS
 #define _POSIX_TIMERS 200809L
@@ -152,26 +136,6 @@ enum {
  */
 #define _POSIX_PRIORITY_SCHEDULING
 #define _POSIX_VDISABLE '\0'
-
-enum {
-    _SC_MONOTONIC_CLOCK,
-    _SC_NPROCESSORS_CONF,
-    _SC_NPROCESSORS_ONLN,
-    _SC_OPEN_MAX,
-    _SC_TTY_NAME_MAX,
-    _SC_PAGESIZE,
-    _SC_GETPW_R_SIZE_MAX,
-    _SC_CLK_TCK,
-};
-
-#define _SC_MONOTONIC_CLOCK _SC_MONOTONIC_CLOCK
-#define _SC_NPROCESSORS_CONF _SC_NPROCESSORS_CONF
-#define _SC_NPROCESSORS_ONLN _SC_NPROCESSORS_ONLN
-#define _SC_OPEN_MAX _SC_OPEN_MAX
-#define _SC_PAGESIZE _SC_PAGESIZE
-#define _SC_TTY_NAME_MAX _SC_TTY_NAME_MAX
-#define _SC_GETPW_R_SIZE_MAX _SC_GETPW_R_SIZE_MAX
-#define _SC_CLK_TCK _SC_CLK_TCK
 
 long sysconf(int name);
 
