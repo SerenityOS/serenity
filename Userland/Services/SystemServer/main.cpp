@@ -14,6 +14,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <grp.h>
 #include <signal.h>
 #include <stdio.h>
@@ -102,6 +103,61 @@ static void chown_all_matching_device_nodes(group* group, unsigned major_number)
     }
 }
 
+constexpr unsigned encoded_device(unsigned major, unsigned minor)
+{
+    return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
+}
+
+static void populate_devfs()
+{
+    mode_t old_mask = umask(0);
+    if (auto rc = mknod("/dev/audio", 0220 | S_IFCHR, encoded_device(42, 42)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/console", 0666 | S_IFCHR, encoded_device(5, 1)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/fb0", 0666 | S_IFBLK, encoded_device(29, 0)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/full", 0660 | S_IFCHR, encoded_device(29, 0)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/hda", 0600 | S_IFBLK, encoded_device(3, 0)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/hvc0p0", 0666 | S_IFCHR, encoded_device(229, 0)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/hwrng", 0666 | S_IFCHR, encoded_device(10, 183)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/keyboard0", 0660 | S_IFCHR, encoded_device(85, 0)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/mem", 0660 | S_IFCHR, encoded_device(1, 1)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/mouse0", 0660 | S_IFCHR, encoded_device(10, 0)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/null", 0666 | S_IFCHR, encoded_device(1, 3)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/ptmx", 0666 | S_IFCHR, encoded_device(5, 2)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/random", 0666 | S_IFCHR, encoded_device(1, 8)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/tty0", 0620 | S_IFCHR, encoded_device(4, 0)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/tty1", 0620 | S_IFCHR, encoded_device(4, 1)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/tty2", 0620 | S_IFCHR, encoded_device(4, 2)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/tty3", 0620 | S_IFCHR, encoded_device(4, 3)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/ttyS0", 0620 | S_IFCHR, encoded_device(4, 64)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/ttyS1", 0620 | S_IFCHR, encoded_device(4, 65)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/ttyS2", 0620 | S_IFCHR, encoded_device(4, 66)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/ttyS3", 0666 | S_IFCHR, encoded_device(4, 67)); rc < 0)
+        VERIFY_NOT_REACHED();
+    if (auto rc = mknod("/dev/zero", 0666 | S_IFCHR, encoded_device(1, 5)); rc < 0)
+        VERIFY_NOT_REACHED();
+    umask(old_mask);
+}
+
 static void prepare_devfs()
 {
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
@@ -110,6 +166,8 @@ static void prepare_devfs()
     if (rc != 0) {
         VERIFY_NOT_REACHED();
     }
+
+    populate_devfs();
 
     rc = mount(-1, "/sys", "sys", 0);
     if (rc != 0) {
@@ -158,6 +216,32 @@ static void prepare_devfs()
         VERIFY_NOT_REACHED();
     }
     rc = symlink("/proc/self/fd/2", "/dev/stderr");
+    if (rc < 0) {
+        VERIFY_NOT_REACHED();
+    }
+
+    // Note: We open the /dev/null device and set file descriptors 0, 1, 2 to it
+    // because otherwise these file descriptors won't have a custody, making
+    // the ProcFS file descriptor links (at /proc/PID/fd/{0,1,2}) to have an
+    // absolute path of "device:1,3" instead of something like "/dev/null".
+    // This affects also every other process that inherits the file descriptors
+    // from SystemServer, so it is important for other things (also for ProcFS
+    // tests that are running in CI mode).
+
+    int stdin_new_fd = open("/dev/null", O_NONBLOCK);
+    if (stdin_new_fd < 0) {
+        VERIFY_NOT_REACHED();
+    }
+    rc = dup2(stdin_new_fd, 0);
+    if (rc < 0) {
+        VERIFY_NOT_REACHED();
+    }
+
+    rc = dup2(stdin_new_fd, 1);
+    if (rc < 0) {
+        VERIFY_NOT_REACHED();
+    }
+    rc = dup2(stdin_new_fd, 2);
     if (rc < 0) {
         VERIFY_NOT_REACHED();
     }

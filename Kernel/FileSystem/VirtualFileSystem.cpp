@@ -276,6 +276,7 @@ KResultOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(StringView
         }
         auto description = TRY(device->open(options));
         description->set_original_inode({}, inode);
+        description->set_original_custody({}, custody);
         return description;
     }
 

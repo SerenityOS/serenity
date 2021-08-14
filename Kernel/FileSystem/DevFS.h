@@ -24,10 +24,6 @@ public:
 
     virtual KResult initialize() override;
     virtual StringView class_name() const override { return "DevFS"sv; }
-
-    void notify_new_device(Device&);
-    void notify_device_removal(Device&);
-
     virtual Inode& root_inode() override;
 
 private:
@@ -76,16 +72,19 @@ public:
     virtual ~DevFSDeviceInode() override;
 
 private:
-    DevFSDeviceInode(DevFS&, Device const&, NonnullOwnPtr<KString> name);
+    DevFSDeviceInode(DevFS&, unsigned, unsigned, bool, NonnullOwnPtr<KString> name);
     // ^Inode
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, OpenFileDescription*) override;
     virtual KResult chown(UserID, GroupID) override;
+    virtual KResult chmod(mode_t) override;
 
-    NonnullRefPtr<Device> m_attached_device;
     NonnullOwnPtr<KString> m_name;
-
+    const unsigned m_major_number;
+    const unsigned m_minor_number;
+    const bool m_block_device;
+    mode_t m_required_mode;
     UserID m_uid { 0 };
     GroupID m_gid { 0 };
 };

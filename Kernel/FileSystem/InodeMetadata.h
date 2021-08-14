@@ -19,6 +19,8 @@ constexpr u32 encoded_device(unsigned major, unsigned minor)
 {
     return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
 }
+static inline unsigned int major_from_encoded_device(dev_t dev) { return (dev & 0xfff00u) >> 8u; }
+static inline unsigned int minor_from_encoded_device(dev_t dev) { return (dev & 0xffu) | ((dev >> 12u) & 0xfff00u); }
 
 inline bool is_directory(mode_t mode) { return (mode & S_IFMT) == S_IFDIR; }
 inline bool is_character_device(mode_t mode) { return (mode & S_IFMT) == S_IFCHR; }
