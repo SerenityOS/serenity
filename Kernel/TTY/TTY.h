@@ -49,9 +49,6 @@ public:
     void set_default_termios();
     void hang_up();
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0620; }
-
 protected:
     virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);

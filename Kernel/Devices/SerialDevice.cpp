@@ -104,11 +104,6 @@ void SerialDevice::put_char(char ch)
     m_last_put_char_was_carriage_return = (ch == '\r');
 }
 
-String SerialDevice::device_name() const
-{
-    return String::formatted("ttyS{}", minor() - 64);
-}
-
 UNMAP_AFTER_INIT void SerialDevice::initialize()
 {
     set_interrupts(false);

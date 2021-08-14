@@ -126,15 +126,12 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
 {
     VERIFY(!m_controllers.is_empty());
     if (m_boot_argument.starts_with("/dev/")) {
-        StringView device_name = m_boot_argument.substring_view(5);
-        Device::for_each([&](Device& device) {
-            if (device.is_block_device()) {
-                auto& block_device = static_cast<BlockDevice&>(device);
-                if (device.device_name() == device_name) {
-                    m_boot_block_device = block_device;
-                }
+        StringView storage_name = m_boot_argument.substring_view(5);
+        for (auto& storage_device : m_storage_devices) {
+            if (storage_device.storage_name() == storage_name) {
+                m_boot_block_device = storage_device;
             }
-        });
+        }
     }
 
     if (m_boot_block_device.is_null()) {

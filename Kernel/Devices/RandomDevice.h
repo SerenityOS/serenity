@@ -16,10 +16,6 @@ public:
     static NonnullRefPtr<RandomDevice> must_create();
     virtual ~RandomDevice() override;
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0666; }
-    virtual String device_name() const override { return "random"; }
-
 private:
     RandomDevice();
 

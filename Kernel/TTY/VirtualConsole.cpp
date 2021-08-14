@@ -359,11 +359,6 @@ void VirtualConsole::set_cursor_style(VT::CursorStyle)
     // Do nothing
 }
 
-String VirtualConsole::device_name() const
-{
-    return String::formatted("tty{}", minor());
-}
-
 void VirtualConsole::echo(u8 ch)
 {
     m_console_impl.on_input(ch);

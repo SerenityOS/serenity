@@ -68,9 +68,6 @@ private:
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return EINVAL; };
     virtual void start_request(AsyncBlockDeviceRequest& request) override { request.complete(AsyncDeviceRequest::Failure); }
 
-    virtual mode_t required_mode() const override { return 0666; }
-    virtual String device_name() const override { return String::formatted("fb{}", minor()); }
-
     static bool is_valid_buffer_index(int buffer_index)
     {
         return buffer_index == 0 || buffer_index == 1;
