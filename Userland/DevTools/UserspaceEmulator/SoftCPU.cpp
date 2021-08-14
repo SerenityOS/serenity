@@ -1176,8 +1176,8 @@ void SoftCPU::CALL_RM16(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::CALL_RM32(const X86::Instruction& insn)
 {
-    push32(shadow_wrap_as_initialized(eip()));
     auto address = insn.modrm().read32(*this, insn);
+    push32(shadow_wrap_as_initialized(eip()));
     warn_if_uninitialized(address, "call rm32");
     set_eip(address.value());
     // FIXME: this won't catch at the moment due to us not having a way to set
