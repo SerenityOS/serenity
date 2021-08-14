@@ -35,9 +35,6 @@
 #include <Kernel/API/POSIX/time.h>
 #include <Kernel/API/POSIX/unistd.h>
 
-// Kernel internal options.
-#define O_NOFOLLOW_NOERROR (1 << 29)
-#define O_UNLINK_INTERNAL (1 << 30)
 // Avoid interference with AK/Types.h and LibC/sys/types.h by defining *separate* names:
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ThreadID);
