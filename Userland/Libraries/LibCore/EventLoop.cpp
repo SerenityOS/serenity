@@ -703,9 +703,7 @@ bool EventLoopTimer::has_expired(const timeval& now) const
 
 void EventLoopTimer::reload(const timeval& now)
 {
-    fire_time = now;
-    fire_time.tv_sec += interval / 1000;
-    fire_time.tv_usec += (interval % 1000) * 1000;
+    timeval_add(now, { interval / 1000, (interval % 1000) * 1000 }, fire_time);
 }
 
 Optional<struct timeval> EventLoop::get_next_timer_expiration()
