@@ -18,6 +18,7 @@
 #include <Kernel/API/POSIX/poll.h>
 #include <Kernel/API/POSIX/serenity.h>
 #include <Kernel/API/POSIX/signal.h>
+#include <Kernel/API/POSIX/stdio.h>
 #include <Kernel/API/POSIX/sys/mman.h>
 #include <Kernel/API/POSIX/sys/socket.h>
 #include <Kernel/API/POSIX/sys/stat.h>

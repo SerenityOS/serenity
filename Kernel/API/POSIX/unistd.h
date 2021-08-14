@@ -48,10 +48,6 @@ enum {
 #define _SC_GETPW_R_SIZE_MAX _SC_GETPW_R_SIZE_MAX
 #define _SC_CLK_TCK _SC_CLK_TCK
 
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
-
 #ifdef __cplusplus
 }
 #endif
