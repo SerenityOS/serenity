@@ -14,6 +14,7 @@
 #    include <Kernel/UnixTypes.h>
 #else
 #    include <sys/time.h>
+#    include <time.h>
 #endif
 
 namespace AK {
@@ -287,5 +288,36 @@ Time Time::from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds)
 
     return Time { seconds + extra_seconds, nanoseconds };
 }
+
+#ifndef KERNEL
+namespace {
+static Time now_time_from_clock(clockid_t clock_id)
+{
+    timespec now_spec {};
+    ::clock_gettime(clock_id, &now_spec);
+    return Time::from_timespec(now_spec);
+}
+}
+Time Time::now_realtime()
+{
+    return now_time_from_clock(CLOCK_REALTIME);
+}
+
+Time Time::now_realtime_coarse()
+{
+    return now_time_from_clock(CLOCK_REALTIME_COARSE);
+}
+
+Time Time::now_monotonic()
+{
+    return now_time_from_clock(CLOCK_MONOTONIC);
+}
+
+Time Time::now_monotonic_coarse()
+{
+    return now_time_from_clock(CLOCK_MONOTONIC_COARSE);
+}
+
+#endif
 
 }
