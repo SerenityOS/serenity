@@ -40,12 +40,6 @@ TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ThreadID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, SessionID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessGroupID);
 
-typedef i64 off_t;
-typedef i64 time_t;
-
-typedef u32 blksize_t;
-typedef u32 blkcnt_t;
-
 typedef u32 __u32;
 typedef u16 __u16;
 typedef u8 __u8;
@@ -72,9 +66,6 @@ struct sched_param {
 #define PT_SETREGS 9
 #define PT_POKEDEBUG 10
 #define PT_PEEKDEBUG 11
-
-typedef uint64_t fsblkcnt_t;
-typedef uint64_t fsfilcnt_t;
 
 #define ST_RDONLY 0x1
 #define ST_NOSUID 0x2
