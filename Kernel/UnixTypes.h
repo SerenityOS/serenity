@@ -10,7 +10,9 @@
 #include <AK/Types.h>
 #include <Kernel/API/POSIX/fcntl.h>
 #include <Kernel/API/POSIX/sys/mman.h>
+#include <Kernel/API/POSIX/sys/socket.h>
 #include <Kernel/API/POSIX/sys/stat.h>
+#include <Kernel/API/POSIX/sys/un.h>
 #include <Kernel/API/POSIX/termios.h>
 #include <Kernel/API/POSIX/time.h>
 
@@ -241,53 +243,6 @@ struct pollfd {
     short revents;
 };
 
-#define AF_MASK 0xff
-#define AF_UNSPEC 0
-#define AF_LOCAL 1
-#define AF_INET 2
-#define AF_MAX 3
-#define PF_LOCAL AF_LOCAL
-#define PF_INET AF_INET
-
-#define SOCK_TYPE_MASK 0xff
-#define SOCK_STREAM 1
-#define SOCK_RAW 3
-#define SOCK_DGRAM 2
-#define SOCK_NONBLOCK 04000
-#define SOCK_CLOEXEC 02000000
-
-#define SHUT_RD 1
-#define SHUT_WR 2
-#define SHUT_RDWR 3
-
-#define MSG_TRUNC 0x1
-#define MSG_CTRUNC 0x2
-#define MSG_PEEK 0x4
-#define MSG_OOB 0x8
-#define MSG_DONTWAIT 0x40
-
-#define SOL_SOCKET 1
-
-enum {
-    SO_RCVTIMEO,
-    SO_SNDTIMEO,
-    SO_TYPE,
-    SO_ERROR,
-    SO_PEERCRED,
-    SO_RCVBUF,
-    SO_SNDBUF,
-    SO_REUSEADDR,
-    SO_BINDTODEVICE,
-    SO_KEEPALIVE,
-    SO_TIMESTAMP,
-    SO_BROADCAST,
-    SO_LINGER,
-};
-
-enum {
-    SCM_TIMESTAMP,
-};
-
 #define IPPROTO_IP 0
 #define IPPROTO_ICMP 1
 #define IPPROTO_TCP 6
@@ -298,24 +253,7 @@ enum {
 #define IP_ADD_MEMBERSHIP 4
 #define IP_DROP_MEMBERSHIP 5
 
-struct ucred {
-    pid_t pid;
-    uid_t uid;
-    gid_t gid;
-};
-
-struct sockaddr {
-    u16 sa_family;
-    char sa_data[14];
-};
-
 #define S_IFSOCK 0140000
-#define UNIX_PATH_MAX 108
-
-struct sockaddr_un {
-    u16 sun_family;
-    char sun_path[UNIX_PATH_MAX];
-};
 
 struct in_addr {
     uint32_t s_addr;
@@ -371,22 +309,6 @@ struct utsname {
 struct iovec {
     void* iov_base;
     size_t iov_len;
-};
-
-struct cmsghdr {
-    socklen_t cmsg_len;
-    int cmsg_level;
-    int cmsg_type;
-};
-
-struct msghdr {
-    void* msg_name;
-    socklen_t msg_namelen;
-    struct iovec* msg_iov;
-    int msg_iovlen;
-    void* msg_control;
-    socklen_t msg_controllen;
-    int msg_flags;
 };
 
 struct sched_param {
