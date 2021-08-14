@@ -179,6 +179,7 @@
     M(TemporalInvalidOffsetNanosecondsValue, "Invalid offset nanoseconds value, must be in range -86400 * 10^9 to 86400 * 10^9")        \
     M(TemporalInvalidPlainDate, "Invalid plain date")                                                                                   \
     M(TemporalInvalidPlainDateTime, "Invalid plain date time")                                                                          \
+    M(TemporalInvalidPlainMonthDay, "Invalid plain month day")                                                                          \
     M(TemporalInvalidPlainTime, "Invalid plain time")                                                                                   \
     M(TemporalInvalidPlainYearMonth, "Invalid plain year month")                                                                        \
     M(TemporalInvalidTime, "Invalid time")                                                                                              \
