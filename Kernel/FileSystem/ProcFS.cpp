@@ -274,13 +274,15 @@ InodeMetadata ProcFSProcessDirectoryInode::metadata() const
     auto process = Process::from_pid(associated_pid());
     if (!process)
         return {};
+
+    auto traits = process->procfs_traits();
     InodeMetadata metadata;
-    metadata.inode = { fsid(), process->component_index() };
-    metadata.mode = S_IFDIR | process->required_mode();
-    metadata.uid = process->owner_user();
-    metadata.gid = process->owner_group();
+    metadata.inode = { fsid(), traits->component_index() };
+    metadata.mode = S_IFDIR | traits->required_mode();
+    metadata.uid = traits->owner_user();
+    metadata.gid = traits->owner_group();
     metadata.size = 0;
-    metadata.mtime = process->modified_time();
+    metadata.mtime = traits->modified_time();
     return metadata;
 }
 
@@ -295,7 +297,7 @@ KResult ProcFSProcessDirectoryInode::traverse_as_directory(Function<bool(FileSys
     auto process = Process::from_pid(associated_pid());
     if (!process)
         return EINVAL;
-    return process->traverse_as_directory(procfs().fsid(), move(callback));
+    return process->procfs_traits()->traverse_as_directory(procfs().fsid(), move(callback));
 }
 
 KResultOr<NonnullRefPtr<Inode>> ProcFSProcessDirectoryInode::lookup(StringView name)
@@ -400,13 +402,15 @@ InodeMetadata ProcFSProcessSubDirectoryInode::metadata() const
     auto process = Process::from_pid(associated_pid());
     if (!process)
         return {};
+
+    auto traits = process->procfs_traits();
     InodeMetadata metadata;
-    metadata.inode = { fsid(), process->component_index() };
-    metadata.mode = S_IFDIR | process->required_mode();
-    metadata.uid = process->owner_user();
-    metadata.gid = process->owner_group();
+    metadata.inode = { fsid(), traits->component_index() };
+    metadata.mode = S_IFDIR | traits->required_mode();
+    metadata.uid = traits->owner_user();
+    metadata.gid = traits->owner_group();
     metadata.size = 0;
-    metadata.mtime = process->modified_time();
+    metadata.mtime = traits->modified_time();
     return metadata;
 }
 
@@ -522,13 +526,15 @@ InodeMetadata ProcFSProcessPropertyInode::metadata() const
     auto process = Process::from_pid(associated_pid());
     if (!process)
         return {};
+
+    auto traits = process->procfs_traits();
     InodeMetadata metadata;
-    metadata.inode = { fsid(), process->component_index() };
+    metadata.inode = { fsid(), traits->component_index() };
     metadata.mode = determine_procfs_process_inode_mode(m_parent_sub_directory_type, m_possible_data.property_type);
-    metadata.uid = process->owner_user();
-    metadata.gid = process->owner_group();
+    metadata.uid = traits->owner_user();
+    metadata.gid = traits->owner_group();
     metadata.size = 0;
-    metadata.mtime = process->modified_time();
+    metadata.mtime = traits->modified_time();
     return metadata;
 }
 KResult ProcFSProcessPropertyInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const

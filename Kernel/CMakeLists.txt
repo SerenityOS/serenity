@@ -182,6 +182,7 @@ set(KERNEL_SOURCES
     ProcessExposed.cpp
     ProcessSpecificExposed.cpp
     ProcessGroup.cpp
+    ProcessProcFSTraits.cpp
     RTC.cpp
     Random.cpp
     Scheduler.cpp
