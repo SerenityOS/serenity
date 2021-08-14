@@ -442,8 +442,17 @@ public:
     }
 
     Match(String const string_, size_t const line_, size_t const column_, size_t const global_offset_)
-        : string(string_)
+        : string(move(string_))
         , view(string.value().view())
+        , line(line_)
+        , column(column_)
+        , global_offset(global_offset_)
+    {
+    }
+
+    Match(RegexStringView const view_, StringView capture_group_name_, size_t const line_, size_t const column_, size_t const global_offset_)
+        : view(view_)
+        , capture_group_name(capture_group_name_)
         , line(line_)
         , column(column_)
         , global_offset(global_offset_)
@@ -454,6 +463,7 @@ public:
     void reset()
     {
         view = view.typed_null_view();
+        capture_group_name.clear();
         line = 0;
         column = 0;
         global_offset = 0;
@@ -461,6 +471,7 @@ public:
     }
 
     RegexStringView view { nullptr };
+    Optional<StringView> capture_group_name {};
     size_t line { 0 };
     size_t column { 0 };
     size_t global_offset { 0 };
@@ -494,8 +505,6 @@ struct MatchState {
     size_t fork_at_position { 0 };
     Vector<Match> matches;
     Vector<Vector<Match>> capture_group_matches;
-    Vector<HashMap<String, Match>> named_capture_group_matches;
-    size_t recursion_level { 0 };
 };
 
 struct MatchOutput {

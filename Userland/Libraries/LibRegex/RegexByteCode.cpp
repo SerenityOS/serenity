@@ -166,17 +166,11 @@ void ByteCode::ensure_opcodes_initialized()
         case OpCodeId::ClearCaptureGroup:
             s_opcodes[i] = make<OpCode_ClearCaptureGroup>();
             break;
-        case OpCodeId::ClearNamedCaptureGroup:
-            s_opcodes[i] = make<OpCode_ClearNamedCaptureGroup>();
-            break;
         case OpCodeId::SaveLeftCaptureGroup:
             s_opcodes[i] = make<OpCode_SaveLeftCaptureGroup>();
             break;
         case OpCodeId::SaveRightCaptureGroup:
             s_opcodes[i] = make<OpCode_SaveRightCaptureGroup>();
-            break;
-        case OpCodeId::SaveLeftNamedCaptureGroup:
-            s_opcodes[i] = make<OpCode_SaveLeftNamedCaptureGroup>();
             break;
         case OpCodeId::SaveRightNamedCaptureGroup:
             s_opcodes[i] = make<OpCode_SaveRightNamedCaptureGroup>();
@@ -378,52 +372,26 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightCaptureGroup::execute(MatchInput c
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_ClearNamedCaptureGroup::execute(MatchInput const& input, MatchState& state, MatchOutput&) const
-{
-    if (input.match_index < state.capture_group_matches.size()) {
-        auto& group = state.named_capture_group_matches[input.match_index];
-        if (auto it = group.find(name()); it != group.end())
-            it->value.reset();
-    }
-    return ExecutionResult::Continue;
-}
-
-ALWAYS_INLINE ExecutionResult OpCode_SaveLeftNamedCaptureGroup::execute(MatchInput const& input, MatchState& state, MatchOutput&) const
-{
-    if (input.match_index >= state.named_capture_group_matches.size()) {
-        state.named_capture_group_matches.ensure_capacity(input.match_index);
-        auto capacity = state.named_capture_group_matches.capacity();
-        for (size_t i = state.named_capture_group_matches.size(); i <= capacity; ++i)
-            state.named_capture_group_matches.empend();
-    }
-    state.named_capture_group_matches.at(input.match_index).ensure(name()).column = state.string_position;
-    return ExecutionResult::Continue;
-}
-
 ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(MatchInput const& input, MatchState& state, MatchOutput&) const
 {
-    StringView capture_group_name = name();
+    auto& match = state.capture_group_matches.at(input.match_index).at(id());
+    auto start_position = match.left_column;
+    if (state.string_position < start_position)
+        return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-    if (state.named_capture_group_matches.at(input.match_index).contains(capture_group_name)) {
-        auto start_position = state.named_capture_group_matches.at(input.match_index).ensure(capture_group_name).column;
-        auto length = state.string_position - start_position;
+    auto length = state.string_position - start_position;
 
-        auto& map = state.named_capture_group_matches.at(input.match_index);
+    if (start_position < match.column)
+        return ExecutionResult::Continue;
 
-        if constexpr (REGEX_DEBUG) {
-            VERIFY(start_position + length <= input.view.length());
-            dbgln("Save named capture group with name={} and content='{}'", capture_group_name, input.view.substring_view(start_position, length));
-        }
+    VERIFY(start_position + length <= input.view.length());
 
-        VERIFY(start_position + length <= input.view.length());
-        auto view = input.view.substring_view(start_position, length);
-        if (input.regex_options & AllFlags::StringCopyMatches) {
-            map.set(capture_group_name, { view.to_string(), input.line, start_position, input.global_offset + start_position }); // create a copy of the original string
-        } else {
-            map.set(capture_group_name, { view, input.line, start_position, input.global_offset + start_position }); // take view to original string
-        }
+    auto view = input.view.substring_view(start_position, length);
+
+    if (input.regex_options & AllFlags::StringCopyMatches) {
+        match = { view.to_string(), name(), input.line, start_position, input.global_offset + start_position }; // create a copy of the original string
     } else {
-        warnln("Didn't find corresponding capture group match for name={}, match_index={}", capture_group_name.to_string(), input.match_index);
+        match = { view, name(), input.line, start_position, input.global_offset + start_position }; // take view to original string
     }
 
     return ExecutionResult::Continue;
@@ -535,24 +503,6 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
             auto str = groups.at(reference_number).view;
-
-            // We want to compare a string that is definitely longer than the available string
-            if (input.view.length() < state.string_position + str.length())
-                return ExecutionResult::Failed_ExecuteLowPrioForks;
-
-            if (!compare_string(input, state, str, had_zero_length_match))
-                return ExecutionResult::Failed_ExecuteLowPrioForks;
-
-        } else if (compare_type == CharacterCompareType::NamedReference) {
-            auto ptr = (char const*)m_bytecode->at(offset++);
-            auto length = (size_t)m_bytecode->at(offset++);
-            StringView name { ptr, length };
-
-            auto group = state.named_capture_group_matches.at(input.match_index).get(name);
-            if (!group.has_value())
-                return ExecutionResult::Failed_ExecuteLowPrioForks;
-
-            auto str = group.value().view;
 
             // We want to compare a string that is definitely longer than the available string
             if (input.view.length() < state.string_position + str.length())
@@ -869,10 +819,6 @@ Vector<String> const OpCode_Compare::variable_arguments_to_string(Optional<Match
                         buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]));
                 }
             }
-        } else if (compare_type == CharacterCompareType::NamedReference) {
-            auto ptr = (char const*)m_bytecode->at(offset++);
-            auto length = m_bytecode->at(offset++);
-            result.empend(String::formatted("name='{}'", StringView { ptr, (size_t)length }));
         } else if (compare_type == CharacterCompareType::Reference) {
             auto ref = m_bytecode->at(offset++);
             result.empend(String::formatted("number={}", ref));

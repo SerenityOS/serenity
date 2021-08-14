@@ -32,7 +32,6 @@ using ByteCodeValueType = u64;
     __ENUMERATE_OPCODE(FailForks)                  \
     __ENUMERATE_OPCODE(SaveLeftCaptureGroup)       \
     __ENUMERATE_OPCODE(SaveRightCaptureGroup)      \
-    __ENUMERATE_OPCODE(SaveLeftNamedCaptureGroup)  \
     __ENUMERATE_OPCODE(SaveRightNamedCaptureGroup) \
     __ENUMERATE_OPCODE(CheckBegin)                 \
     __ENUMERATE_OPCODE(CheckEnd)                   \
@@ -41,7 +40,6 @@ using ByteCodeValueType = u64;
     __ENUMERATE_OPCODE(Restore)                    \
     __ENUMERATE_OPCODE(GoBack)                     \
     __ENUMERATE_OPCODE(ClearCaptureGroup)          \
-    __ENUMERATE_OPCODE(ClearNamedCaptureGroup)     \
     __ENUMERATE_OPCODE(Exit)
 
 // clang-format off
@@ -65,7 +63,6 @@ enum class OpCodeId : ByteCodeValueType {
     __ENUMERATE_CHARACTER_COMPARE_TYPE(CharClass)        \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(CharRange)        \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(Reference)        \
-    __ENUMERATE_CHARACTER_COMPARE_TYPE(NamedReference)   \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(Property)         \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(GeneralCategory)  \
     __ENUMERATE_CHARACTER_COMPARE_TYPE(Script)           \
@@ -159,7 +156,6 @@ public:
             VERIFY(value.type != CharacterCompareType::RangeExpressionDummy);
             VERIFY(value.type != CharacterCompareType::Undefined);
             VERIFY(value.type != CharacterCompareType::String);
-            VERIFY(value.type != CharacterCompareType::NamedReference);
 
             arguments.append((ByteCodeValueType)value.type);
             if (value.type != CharacterCompareType::Inverse && value.type != CharacterCompareType::AnyChar && value.type != CharacterCompareType::TemporaryInverse)
@@ -187,13 +183,6 @@ public:
         empend(index);
     }
 
-    void insert_bytecode_clear_named_capture_group(StringView name)
-    {
-        empend(static_cast<ByteCodeValueType>(OpCodeId::ClearNamedCaptureGroup));
-        empend(reinterpret_cast<ByteCodeValueType>(name.characters_without_null_termination()));
-        empend(name.length());
-    }
-
     void insert_bytecode_compare_string(StringView view)
     {
         ByteCode bytecode;
@@ -212,36 +201,10 @@ public:
         extend(move(bytecode));
     }
 
-    void insert_bytecode_compare_named_reference(StringView name)
-    {
-        ByteCode bytecode;
-
-        bytecode.empend(static_cast<ByteCodeValueType>(OpCodeId::Compare));
-        bytecode.empend(static_cast<u64>(1)); // number of arguments
-
-        ByteCode arguments;
-
-        arguments.empend(static_cast<ByteCodeValueType>(CharacterCompareType::NamedReference));
-        arguments.empend(reinterpret_cast<ByteCodeValueType>(name.characters_without_null_termination()));
-        arguments.empend(name.length());
-
-        bytecode.empend(arguments.size()); // size of arguments
-        bytecode.extend(move(arguments));
-
-        extend(move(bytecode));
-    }
-
     void insert_bytecode_group_capture_left(size_t capture_groups_count)
     {
         empend(static_cast<ByteCodeValueType>(OpCodeId::SaveLeftCaptureGroup));
         empend(capture_groups_count);
-    }
-
-    void insert_bytecode_group_capture_left(StringView const& name)
-    {
-        empend(static_cast<ByteCodeValueType>(OpCodeId::SaveLeftNamedCaptureGroup));
-        empend(reinterpret_cast<ByteCodeValueType>(name.characters_without_null_termination()));
-        empend(name.length());
     }
 
     void insert_bytecode_group_capture_right(size_t capture_groups_count)
@@ -250,11 +213,12 @@ public:
         empend(capture_groups_count);
     }
 
-    void insert_bytecode_group_capture_right(StringView const& name)
+    void insert_bytecode_group_capture_right(size_t capture_groups_count, StringView const& name)
     {
         empend(static_cast<ByteCodeValueType>(OpCodeId::SaveRightNamedCaptureGroup));
         empend(reinterpret_cast<ByteCodeValueType>(name.characters_without_null_termination()));
         empend(name.length());
+        empend(capture_groups_count);
     }
 
     enum class LookAroundType {
@@ -655,19 +619,6 @@ public:
     String const arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
-class OpCode_ClearNamedCaptureGroup final : public OpCode {
-public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
-    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ClearNamedCaptureGroup; }
-    ALWAYS_INLINE size_t size() const override { return 3; }
-    ALWAYS_INLINE StringView name() const { return { reinterpret_cast<char*>(argument(0)), length() }; }
-    ALWAYS_INLINE size_t length() const { return argument(1); }
-    String const arguments_string() const override
-    {
-        return String::formatted("name={}, length={}", name(), length());
-    }
-};
-
 class OpCode_SaveLeftCaptureGroup final : public OpCode {
 public:
     ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
@@ -686,26 +637,14 @@ public:
     String const arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
-class OpCode_SaveLeftNamedCaptureGroup final : public OpCode {
-public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
-    ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveLeftNamedCaptureGroup; }
-    ALWAYS_INLINE size_t size() const override { return 3; }
-    ALWAYS_INLINE StringView name() const { return { reinterpret_cast<char*>(argument(0)), length() }; }
-    ALWAYS_INLINE size_t length() const { return argument(1); }
-    String const arguments_string() const override
-    {
-        return String::formatted("name={}, length={}", name(), length());
-    }
-};
-
 class OpCode_SaveRightNamedCaptureGroup final : public OpCode {
 public:
     ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveRightNamedCaptureGroup; }
-    ALWAYS_INLINE size_t size() const override { return 3; }
+    ALWAYS_INLINE size_t size() const override { return 4; }
     ALWAYS_INLINE StringView name() const { return { reinterpret_cast<char*>(argument(0)), length() }; }
     ALWAYS_INLINE size_t length() const { return argument(1); }
+    ALWAYS_INLINE size_t id() const { return argument(2); }
     String const arguments_string() const override
     {
         return String::formatted("name={}, length={}", name(), length());
