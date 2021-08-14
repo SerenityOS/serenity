@@ -5,15 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/JsonArraySerializer.h>
-#include <AK/JsonObjectSerializer.h>
 #include <AK/Platform.h>
 #include <Kernel/Bus/USB/UHCIController.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
-#include <Kernel/FileSystem/SysFS.h>
-#include <Kernel/KBufferBuilder.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
@@ -68,148 +64,6 @@ static constexpr u16 UCHI_PORTSC_NON_WRITE_CLEAR_BIT_MASK = 0x1FF5; // This is u
 static constexpr u8 UHCI_NUMBER_OF_ISOCHRONOUS_TDS = 128;
 static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 
-class SysFSUSBBusDirectory;
-static SysFSUSBBusDirectory* s_procfs_usb_bus_directory;
-
-class SysFSUSBDeviceInformation : public SysFSComponent {
-    friend class SysFSUSBBusDirectory;
-
-public:
-    virtual ~SysFSUSBDeviceInformation() override {};
-
-    static NonnullRefPtr<SysFSUSBDeviceInformation> create(USB::Device&);
-
-    RefPtr<USB::Device> device() const { return m_device; }
-
-protected:
-    explicit SysFSUSBDeviceInformation(USB::Device& device)
-        : SysFSComponent(String::number(device.address()))
-        , m_device(device)
-    {
-    }
-
-    virtual KResultOr<size_t> read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const override
-    {
-        KBufferBuilder builder;
-        JsonArraySerializer array { builder };
-
-        auto obj = array.add_object();
-        obj.add("usb_spec_compliance_bcd", m_device->device_descriptor().usb_spec_compliance_bcd);
-        obj.add("device_class", m_device->device_descriptor().device_class);
-        obj.add("device_sub_class", m_device->device_descriptor().device_sub_class);
-        obj.add("device_protocol", m_device->device_descriptor().device_protocol);
-        obj.add("max_packet_size", m_device->device_descriptor().max_packet_size);
-        obj.add("vendor_id", m_device->device_descriptor().vendor_id);
-        obj.add("product_id", m_device->device_descriptor().product_id);
-        obj.add("device_release_bcd", m_device->device_descriptor().device_release_bcd);
-        obj.add("manufacturer_id_descriptor_index", m_device->device_descriptor().manufacturer_id_descriptor_index);
-        obj.add("product_string_descriptor_index", m_device->device_descriptor().product_string_descriptor_index);
-        obj.add("serial_number_descriptor_index", m_device->device_descriptor().serial_number_descriptor_index);
-        obj.add("num_configurations", m_device->device_descriptor().num_configurations);
-        obj.finish();
-        array.finish();
-
-        auto data = builder.build();
-        if (!data)
-            return ENOMEM;
-
-        ssize_t nread = min(static_cast<off_t>(data->size() - offset), static_cast<off_t>(count));
-        if (!buffer.write(data->data() + offset, nread))
-            return EFAULT;
-
-        return nread;
-    }
-    IntrusiveListNode<SysFSUSBDeviceInformation, RefPtr<SysFSUSBDeviceInformation>> m_list_node;
-
-    NonnullRefPtr<USB::Device> m_device;
-};
-
-class SysFSUSBBusDirectory final : public SysFSDirectory {
-public:
-    static void initialize();
-    void plug(USB::Device&);
-    void unplug(USB::Device&);
-
-    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<SysFSComponent> lookup(StringView name) override;
-
-private:
-    explicit SysFSUSBBusDirectory(SysFSBusDirectory&);
-
-    RefPtr<SysFSUSBDeviceInformation> device_node_for(USB::Device& device);
-
-    IntrusiveList<SysFSUSBDeviceInformation, RefPtr<SysFSUSBDeviceInformation>, &SysFSUSBDeviceInformation::m_list_node> m_device_nodes;
-    mutable SpinLock<u8> m_lock;
-};
-
-KResult SysFSUSBBusDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
-{
-    ScopedSpinLock lock(m_lock);
-    // Note: if the parent directory is null, it means something bad happened as this should not happen for the USB directory.
-    VERIFY(m_parent_directory);
-    callback({ ".", { fsid, component_index() }, 0 });
-    callback({ "..", { fsid, m_parent_directory->component_index() }, 0 });
-
-    for (auto& device_node : m_device_nodes) {
-        InodeIdentifier identifier = { fsid, device_node.component_index() };
-        callback({ device_node.name(), identifier, 0 });
-    }
-    return KSuccess;
-}
-RefPtr<SysFSComponent> SysFSUSBBusDirectory::lookup(StringView name)
-{
-    ScopedSpinLock lock(m_lock);
-    for (auto& device_node : m_device_nodes) {
-        if (device_node.name() == name) {
-            return device_node;
-        }
-    }
-    return {};
-}
-
-RefPtr<SysFSUSBDeviceInformation> SysFSUSBBusDirectory::device_node_for(USB::Device& device)
-{
-    RefPtr<USB::Device> checked_device = device;
-    for (auto& device_node : m_device_nodes) {
-        if (device_node.device().ptr() == checked_device.ptr())
-            return device_node;
-    }
-    return {};
-}
-
-void SysFSUSBBusDirectory::plug(USB::Device& new_device)
-{
-    ScopedSpinLock lock(m_lock);
-    auto device_node = device_node_for(new_device);
-    VERIFY(!device_node);
-    m_device_nodes.append(SysFSUSBDeviceInformation::create(new_device));
-}
-
-void SysFSUSBBusDirectory::unplug(USB::Device& deleted_device)
-{
-    ScopedSpinLock lock(m_lock);
-    auto device_node = device_node_for(deleted_device);
-    VERIFY(device_node);
-    device_node->m_list_node.remove();
-}
-
-UNMAP_AFTER_INIT SysFSUSBBusDirectory::SysFSUSBBusDirectory(SysFSBusDirectory& buses_directory)
-    : SysFSDirectory("usb"sv, buses_directory)
-{
-}
-
-UNMAP_AFTER_INIT void SysFSUSBBusDirectory::initialize()
-{
-    auto directory = adopt_ref(*new SysFSUSBBusDirectory(SysFSComponentRegistry::the().buses_directory()));
-    SysFSComponentRegistry::the().register_new_bus_directory(directory);
-    s_procfs_usb_bus_directory = directory;
-}
-
-NonnullRefPtr<SysFSUSBDeviceInformation> SysFSUSBDeviceInformation::create(USB::Device& device)
-{
-    return adopt_ref(*new SysFSUSBDeviceInformation(device));
-}
-
 KResultOr<NonnullRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::Address address)
 {
     // NOTE: This assumes that address is pointing to a valid UHCI controller.
@@ -226,10 +80,6 @@ KResultOr<NonnullRefPtr<UHCIController>> UHCIController::try_to_initialize(PCI::
 
 KResult UHCIController::initialize()
 {
-    // FIXME: We create the /proc/bus/usb representation here, but it should really be handled
-    // in a more broad singleton than this once we refactor things in USB subsystem.
-    SysFSUSBBusDirectory::initialize();
-
     dmesgln("UHCI: Controller found {} @ {}", PCI::get_id(pci_address()), pci_address());
     dmesgln("UHCI: I/O base {}", m_io_base);
     dmesgln("UHCI: Interrupt line: {}", PCI::get_interrupt_line(pci_address()));
