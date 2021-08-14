@@ -20,6 +20,7 @@
 #include <Kernel/API/POSIX/signal.h>
 #include <Kernel/API/POSIX/stdio.h>
 #include <Kernel/API/POSIX/sys/mman.h>
+#include <Kernel/API/POSIX/sys/ptrace.h>
 #include <Kernel/API/POSIX/sys/socket.h>
 #include <Kernel/API/POSIX/sys/stat.h>
 #include <Kernel/API/POSIX/sys/time.h>
@@ -54,18 +55,6 @@ struct iovec {
 struct sched_param {
     int sched_priority;
 };
-
-#define PT_TRACE_ME 1
-#define PT_ATTACH 2
-#define PT_CONTINUE 3
-#define PT_SYSCALL 4
-#define PT_GETREGS 5
-#define PT_DETACH 6
-#define PT_PEEK 7
-#define PT_POKE 8
-#define PT_SETREGS 9
-#define PT_POKEDEBUG 10
-#define PT_PEEKDEBUG 11
 
 #define ST_RDONLY 0x1
 #define ST_NOSUID 0x2
