@@ -94,21 +94,8 @@ Color StyleProperties::color_or_fallback(CSS::PropertyID id, const DOM::Document
 
 void StyleProperties::load_font(Layout::Node const& node) const
 {
-    auto family_value = string_or_fallback(CSS::PropertyID::FontFamily, "Katica");
     auto font_size = property(CSS::PropertyID::FontSize).value_or(IdentifierStyleValue::create(CSS::ValueID::Medium));
     auto font_weight = property(CSS::PropertyID::FontWeight).value_or(IdentifierStyleValue::create(CSS::ValueID::Normal));
-
-    auto family_parts = family_value.split(',');
-    auto family = family_parts[0];
-
-    auto monospace = false;
-
-    if (family.is_one_of("monospace", "ui-monospace")) {
-        monospace = true;
-        family = "Csilla";
-    } else if (family.is_one_of("serif", "sans-serif", "cursive", "fantasy", "ui-serif", "ui-sans-serif", "ui-rounded")) {
-        family = "Katica";
-    }
 
     int weight = Gfx::FontWeight::Regular;
     if (font_weight->is_identifier()) {
@@ -190,21 +177,68 @@ void StyleProperties::load_font(Layout::Node const& node) const
         }
     }
 
-    FontSelector font_selector { family, size, weight };
+    // FIXME: Implement the full font-matching algorithm: https://www.w3.org/TR/css-fonts-4/#font-matching-algorithm
 
-    auto found_font = FontCache::the().get(font_selector);
-    if (found_font) {
-        m_font = found_font;
-        return;
+    // Note: This is modified by the find_font() lambda
+    FontSelector font_selector;
+    bool monospace = false;
+
+    auto find_font = [&](String const& family) -> RefPtr<Gfx::Font> {
+        font_selector = { family, size, weight };
+
+        if (auto found_font = FontCache::the().get(font_selector))
+            return found_font;
+
+        if (auto found_font = Gfx::FontDatabase::the().get(family, size, weight))
+            return found_font;
+
+        return {};
+    };
+
+    // FIXME: Replace hard-coded font names with a relevant call to FontDatabase.
+    // Currently, we cannot request the default font's name, or request it at a specific size and weight.
+    // So, hard-coded font names it is.
+    auto find_generic_font = [&](ValueID font_id) -> RefPtr<Gfx::Font> {
+        switch (font_id) {
+        case ValueID::Monospace:
+        case ValueID::UiMonospace:
+            monospace = true;
+            return find_font("Csilla");
+        case ValueID::Serif:
+        case ValueID::SansSerif:
+        case ValueID::Cursive:
+        case ValueID::Fantasy:
+        case ValueID::UiSerif:
+        case ValueID::UiSansSerif:
+        case ValueID::UiRounded:
+            return find_font("Katica");
+        default:
+            return {};
+        }
+    };
+
+    RefPtr<Gfx::Font> found_font {};
+
+    auto family_value = property(PropertyID::FontFamily).value_or(StringStyleValue::create("Katica"));
+    if (family_value->is_value_list()) {
+        auto& family_list = static_cast<StyleValueList const&>(*family_value).values();
+        for (auto& family : family_list) {
+            if (family.is_identifier()) {
+                found_font = find_generic_font(family.to_identifier());
+            } else if (family.is_string()) {
+                found_font = find_font(family.to_string());
+            }
+            if (found_font)
+                break;
+        }
+    } else if (family_value->is_identifier()) {
+        found_font = find_generic_font(family_value->to_identifier());
+    } else if (family_value->is_string()) {
+        found_font = find_font(family_value->to_string());
     }
 
-    Gfx::FontDatabase::the().for_each_font([&](auto& font) {
-        if (font.family() == family && font.weight() == weight && font.presentation_size() == size)
-            found_font = font;
-    });
-
     if (!found_font) {
-        dbgln("Font not found: '{}' {} {}", family, size, weight);
+        dbgln("Font not found: '{}' {} {}", family_value->to_string(), size, weight);
         found_font = font_fallback(monospace, bold);
     }
 

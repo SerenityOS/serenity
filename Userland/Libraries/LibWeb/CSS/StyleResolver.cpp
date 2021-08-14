@@ -474,7 +474,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         if (value.is_font()) {
             auto& font_shorthand = static_cast<CSS::FontStyleValue const&>(value);
             style.set_property(CSS::PropertyID::FontSize, font_shorthand.font_size());
-            set_property_expanding_shorthands(style, CSS::PropertyID::FontFamily, *font_shorthand.font_families(), document);
+            style.set_property(CSS::PropertyID::FontFamily, font_shorthand.font_families());
             style.set_property(CSS::PropertyID::FontStyle, font_shorthand.font_style());
             style.set_property(CSS::PropertyID::FontWeight, font_shorthand.font_weight());
             style.set_property(CSS::PropertyID::LineHeight, font_shorthand.line_height());
@@ -483,28 +483,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         }
         if (value.is_builtin()) {
             style.set_property(CSS::PropertyID::FontSize, value);
-            // FIXME: Support multiple font-families
             style.set_property(CSS::PropertyID::FontFamily, value);
             style.set_property(CSS::PropertyID::FontStyle, value);
             style.set_property(CSS::PropertyID::FontWeight, value);
             style.set_property(CSS::PropertyID::LineHeight, value);
             // FIXME: Implement font-stretch and font-variant
-            return;
-        }
-        return;
-    }
-
-    if (property_id == CSS::PropertyID::FontFamily) {
-        if (value.is_value_list()) {
-            auto& values_list = static_cast<StyleValueList const&>(value).values();
-            // FIXME: Support multiple font-families
-            if (!values_list.is_empty()) {
-                style.set_property(CSS::PropertyID::FontFamily, values_list.first());
-            }
-            return;
-        }
-        if (value.is_builtin() || value.is_string() || value.is_identifier()) {
-            style.set_property(CSS::PropertyID::FontFamily, value);
             return;
         }
         return;
