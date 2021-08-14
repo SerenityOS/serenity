@@ -316,7 +316,7 @@ KResult VirtualFileSystem::mknod(StringView path, mode_t mode, dev_t dev, Custod
         return EROFS;
 
     auto basename = KLexicalPath::basename(path);
-    dbgln("VirtualFileSystem::mknod: '{}' mode={} dev={} in {}", basename, mode, dev, parent_inode.identifier());
+    dbgln_if(VFS_DEBUG, "VirtualFileSystem::mknod: '{}' mode={} dev={} in {}", basename, mode, dev, parent_inode.identifier());
     return parent_inode.create_child(basename, mode, dev, current_process.euid(), current_process.egid()).result();
 }
 
