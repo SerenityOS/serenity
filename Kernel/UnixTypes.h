@@ -26,53 +26,11 @@
 #include <Kernel/API/POSIX/sys/wait.h>
 #include <Kernel/API/POSIX/termios.h>
 #include <Kernel/API/POSIX/time.h>
+#include <Kernel/API/POSIX/unistd.h>
 
 // Kernel internal options.
 #define O_NOFOLLOW_NOERROR (1 << 29)
 #define O_UNLINK_INTERNAL (1 << 30)
-
-#define MS_NODEV (1 << 0)
-#define MS_NOEXEC (1 << 1)
-#define MS_NOSUID (1 << 2)
-#define MS_BIND (1 << 3)
-#define MS_RDONLY (1 << 4)
-#define MS_REMOUNT (1 << 5)
-
-enum {
-    _SC_MONOTONIC_CLOCK,
-    _SC_NPROCESSORS_CONF,
-    _SC_NPROCESSORS_ONLN,
-    _SC_OPEN_MAX,
-    _SC_TTY_NAME_MAX,
-    _SC_PAGESIZE,
-    _SC_GETPW_R_SIZE_MAX,
-    _SC_CLK_TCK,
-};
-
-#define R_OK 4
-#define W_OK 2
-#define X_OK 1
-#define F_OK 0
-
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
-
-#define MADV_SET_VOLATILE 0x100
-#define MADV_SET_NONVOLATILE 0x200
-
-#define F_DUPFD 0
-#define F_GETFD 1
-#define F_SETFD 2
-#define F_GETFL 3
-#define F_SETFL 4
-#define F_ISTTY 5
-#define F_GETLK 6
-#define F_SETLK 7
-#define F_SETLKW 8
-
-#define FD_CLOEXEC 1
-
 // Avoid interference with AK/Types.h and LibC/sys/types.h by defining *separate* names:
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ThreadID);
@@ -114,9 +72,6 @@ struct iovec {
 struct sched_param {
     int sched_priority;
 };
-
-#define AT_FDCWD -100
-#define AT_SYMLINK_NOFOLLOW 0x100
 
 #define PT_TRACE_ME 1
 #define PT_ATTACH 2

@@ -21,10 +21,6 @@ __BEGIN_DECLS
 #    define EOF (-1)
 #endif
 
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
-
 #define _IOFBF 0
 #define _IOLBF 1
 #define _IONBF 2
