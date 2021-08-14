@@ -106,7 +106,7 @@ KResult SysFSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryEnt
     VERIFY_NOT_REACHED();
 }
 
-RefPtr<Inode> SysFSInode::lookup(StringView)
+KResultOr<NonnullRefPtr<Inode>> SysFSInode::lookup(StringView)
 {
     VERIFY_NOT_REACHED();
 }
@@ -195,12 +195,12 @@ KResult SysFSDirectoryInode::traverse_as_directory(Function<bool(FileSystem::Dir
     return m_associated_component->traverse_as_directory(fs().fsid(), move(callback));
 }
 
-RefPtr<Inode> SysFSDirectoryInode::lookup(StringView name)
+KResultOr<NonnullRefPtr<Inode>> SysFSDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(fs().m_lock);
     auto component = m_associated_component->lookup(name);
     if (!component)
-        return {};
+        return ENOENT;
     return component->to_inode(fs());
 }
 

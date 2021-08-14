@@ -914,7 +914,7 @@ KResult Plan9FSInode::traverse_as_directory(Function<bool(FileSystem::DirectoryE
     }
 }
 
-RefPtr<Inode> Plan9FSInode::lookup(StringView name)
+KResultOr<NonnullRefPtr<Inode>> Plan9FSInode::lookup(StringView name)
 {
     u32 newfid = fs().allocate_fid();
     Plan9FS::Message message { fs(), Plan9FS::Message::Type::Twalk };
@@ -922,7 +922,7 @@ RefPtr<Inode> Plan9FSInode::lookup(StringView name)
     auto result = fs().post_message_and_wait_for_a_reply(message);
 
     if (result.is_error())
-        return nullptr;
+        return result;
 
     return Plan9FSInode::create(fs(), newfid);
 }

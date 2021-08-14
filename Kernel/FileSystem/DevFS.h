@@ -55,7 +55,7 @@ protected:
     DevFSInode(DevFS&);
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<Inode> lookup(StringView name) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& buffer, FileDescription*) override;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) override;
@@ -119,8 +119,6 @@ protected:
     DevFSDirectoryInode(DevFS&);
     // ^Inode
     virtual InodeMetadata metadata() const override;
-    virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<Inode> lookup(StringView name) override;
 
     NonnullRefPtrVector<DevFSDeviceInode> m_devices;
 };
@@ -136,7 +134,7 @@ public:
 private:
     explicit DevFSPtsDirectoryInode(DevFS&);
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<Inode> lookup(StringView name) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual InodeMetadata metadata() const override;
 };
 
@@ -151,7 +149,7 @@ private:
     explicit DevFSRootDirectoryInode(DevFS&);
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, uid_t, gid_t) override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<Inode> lookup(StringView name) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual InodeMetadata metadata() const override;
 
     NonnullRefPtrVector<DevFSDirectoryInode> m_subdirectories;

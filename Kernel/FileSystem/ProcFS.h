@@ -83,7 +83,7 @@ protected:
     virtual void did_seek(FileDescription&, off_t) override final;
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<Inode> lookup(StringView) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView) override;
 
     NonnullRefPtr<ProcFSExposedComponent> m_associated_component;
 };
@@ -111,7 +111,7 @@ protected:
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual RefPtr<Inode> lookup(StringView name) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
 };
 
 class ProcFSProcessAssociatedInode : public ProcFSInode {
@@ -142,7 +142,7 @@ private:
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override final;
-    virtual RefPtr<Inode> lookup(StringView name) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
 };
 
 class ProcFSProcessSubDirectoryInode final : public ProcFSProcessAssociatedInode {
@@ -159,7 +159,7 @@ private:
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override final;
-    virtual RefPtr<Inode> lookup(StringView name) override;
+    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
 
     const SegmentedProcFSIndex::ProcessSubDirectory m_sub_directory_type;
 };
@@ -182,7 +182,7 @@ private:
     virtual InodeMetadata metadata() const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override final;
-    virtual RefPtr<Inode> lookup(StringView name) override final;
+    virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override final;
 
     KResult refresh_data(FileDescription& description);
     KResult try_to_acquire_data(Process& process, KBufferBuilder& builder) const;
