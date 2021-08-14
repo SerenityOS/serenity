@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/DistinctNumeric.h>
+
 namespace Kernel {
 
 class BlockDevice;
@@ -90,5 +92,10 @@ class KResultOr;
 
 struct InodeMetadata;
 struct TrapFrame;
+
+TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessID);
+TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ThreadID);
+TYPEDEF_DISTINCT_ORDERED_ID(pid_t, SessionID);
+TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessGroupID);
 
 }

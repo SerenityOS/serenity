@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/DistinctNumeric.h>
-#include <AK/Types.h>
 #include <Kernel/API/POSIX/dirent.h>
 #include <Kernel/API/POSIX/fcntl.h>
 #include <Kernel/API/POSIX/futex.h>
@@ -34,9 +32,3 @@
 #include <Kernel/API/POSIX/termios.h>
 #include <Kernel/API/POSIX/time.h>
 #include <Kernel/API/POSIX/unistd.h>
-
-// Avoid interference with AK/Types.h and LibC/sys/types.h by defining *separate* names:
-TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessID);
-TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ThreadID);
-TYPEDEF_DISTINCT_ORDERED_ID(pid_t, SessionID);
-TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessGroupID);
