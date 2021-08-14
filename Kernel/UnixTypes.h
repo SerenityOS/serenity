@@ -43,9 +43,3 @@ TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ThreadID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, SessionID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessGroupID);
-
-typedef u32 __u32;
-typedef u16 __u16;
-typedef u8 __u8;
-typedef int __s32;
-typedef short __s16;
