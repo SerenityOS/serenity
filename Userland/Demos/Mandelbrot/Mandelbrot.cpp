@@ -209,6 +209,12 @@ class Mandelbrot : public GUI::Frame {
 
     void export_image(String const& export_path);
 
+    enum class Zoom {
+        In,
+        Out,
+    };
+    void zoom(Zoom in_out, const Gfx::IntPoint& center);
+
 private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
@@ -226,6 +232,33 @@ private:
 
     MandelbrotSet m_set;
 };
+
+void Mandelbrot::zoom(Zoom in_out, const Gfx::IntPoint& center)
+{
+    static constexpr double zoom_in_multiplier = 0.8;
+    static constexpr double zoom_out_multiplier = 1.25;
+
+    bool zooming_in = in_out == Zoom::In;
+    double multiplier = zooming_in ? zoom_in_multiplier : zoom_out_multiplier;
+
+    auto relative_rect = this->relative_rect();
+    Gfx::IntRect zoomed_rect = relative_rect;
+
+    zoomed_rect.set_width(zoomed_rect.width() * multiplier);
+    zoomed_rect.set_height(zoomed_rect.height() * multiplier);
+
+    auto leftover_width = abs(relative_rect.width() - zoomed_rect.width());
+    auto leftover_height = abs(relative_rect.height() - zoomed_rect.height());
+
+    double cursor_x_percentage = static_cast<double>(center.x()) / relative_rect.width();
+    double cursor_y_percentage = static_cast<double>(center.y()) / relative_rect.height();
+
+    zoomed_rect.set_x((zooming_in ? 1 : -1) * leftover_width * cursor_x_percentage);
+    zoomed_rect.set_y((zooming_in ? 1 : -1) * leftover_height * cursor_y_percentage);
+
+    m_set.zoom(zoomed_rect);
+    update();
+}
 
 void Mandelbrot::paint_event(GUI::PaintEvent& event)
 {
@@ -306,29 +339,7 @@ void Mandelbrot::mouseup_event(GUI::MouseEvent& event)
 
 void Mandelbrot::mousewheel_event(GUI::MouseEvent& event)
 {
-    static constexpr double zoom_in_multiplier = 0.8;
-    static constexpr double zoom_out_multiplier = 1.25;
-
-    bool zooming_in = event.wheel_delta() < 0;
-    double multiplier = zooming_in ? zoom_in_multiplier : zoom_out_multiplier;
-
-    auto relative_rect = this->relative_rect();
-    Gfx::IntRect zoomed_rect = relative_rect;
-
-    zoomed_rect.set_width(zoomed_rect.width() * multiplier);
-    zoomed_rect.set_height(zoomed_rect.height() * multiplier);
-
-    auto leftover_width = abs(relative_rect.width() - zoomed_rect.width());
-    auto leftover_height = abs(relative_rect.height() - zoomed_rect.height());
-
-    double cursor_x_percentage = static_cast<double>(event.position().x()) / relative_rect.width();
-    double cursor_y_percentage = static_cast<double>(event.position().y()) / relative_rect.height();
-
-    zoomed_rect.set_x((zooming_in ? 1 : -1) * leftover_width * cursor_x_percentage);
-    zoomed_rect.set_y((zooming_in ? 1 : -1) * leftover_height * cursor_y_percentage);
-
-    m_set.zoom(zoomed_rect);
-    update();
+    zoom(event.wheel_delta() < 0 ? Zoom::In : Zoom::Out, event.position());
 }
 
 void Mandelbrot::resize_event(GUI::ResizeEvent& event)
