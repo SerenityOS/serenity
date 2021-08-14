@@ -970,9 +970,13 @@ KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params
         if (!copy_from_user(strings.data(), list.strings, size.value()))
             return false;
         for (size_t i = 0; i < list.length; ++i) {
-            auto string = copy_string_from_user(strings[i]);
-            if (string.is_null())
+            auto string_or_error = try_copy_kstring_from_user(strings[i]);
+            if (string_or_error.is_error()) {
+                // FIXME: Propagate the error.
                 return false;
+            }
+            // FIXME: Don't convert to String here, use KString all the way.
+            auto string = String(string_or_error.value()->view());
             if (!output.try_append(move(string)))
                 return false;
         }

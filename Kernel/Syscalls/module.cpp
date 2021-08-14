@@ -155,11 +155,11 @@ KResultOr<FlatPtr> Process::sys$module_unload(Userspace<const char*> user_name, 
 
     REQUIRE_NO_PROMISES;
 
-    auto module_name = copy_string_from_user(user_name, name_length);
-    if (module_name.is_null())
-        return EFAULT;
+    auto module_name_or_error = try_copy_kstring_from_user(user_name, name_length);
+    if (module_name_or_error.is_error())
+        return module_name_or_error.error();
 
-    auto it = g_modules->find(module_name);
+    auto it = g_modules->find(module_name_or_error.value()->view());
     if (it == g_modules->end())
         return ENOENT;
 
