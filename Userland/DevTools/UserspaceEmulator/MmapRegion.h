@@ -61,7 +61,7 @@ public:
             return {};
         return m_name.substring(0, *maybe_separator);
     }
-    void set_name(String name) { m_name = move(name); }
+    void set_name(String name);
 
 private:
     MmapRegion(u32 base, u32 size, int prot, u8* data, u8* shadow_data);
