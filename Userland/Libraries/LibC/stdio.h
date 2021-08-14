@@ -16,6 +16,7 @@
 #include <sys/types.h>
 
 #define FILENAME_MAX 1024
+#define FOPEN_MAX 1024
 
 __BEGIN_DECLS
 #ifndef EOF
