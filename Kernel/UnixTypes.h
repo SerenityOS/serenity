@@ -22,6 +22,7 @@
 #include <Kernel/API/POSIX/sys/mman.h>
 #include <Kernel/API/POSIX/sys/socket.h>
 #include <Kernel/API/POSIX/sys/stat.h>
+#include <Kernel/API/POSIX/sys/time.h>
 #include <Kernel/API/POSIX/sys/times.h>
 #include <Kernel/API/POSIX/sys/un.h>
 #include <Kernel/API/POSIX/sys/utsname.h>
@@ -50,14 +51,6 @@ typedef u16 __u16;
 typedef u8 __u8;
 typedef int __s32;
 typedef short __s16;
-
-typedef u32 useconds_t;
-typedef i32 suseconds_t;
-
-struct timeval {
-    time_t tv_sec;
-    suseconds_t tv_usec;
-};
 
 struct iovec {
     void* iov_base;
