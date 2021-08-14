@@ -21,6 +21,7 @@
 #include <Kernel/API/POSIX/sys/socket.h>
 #include <Kernel/API/POSIX/sys/stat.h>
 #include <Kernel/API/POSIX/sys/un.h>
+#include <Kernel/API/POSIX/sys/utsname.h>
 #include <Kernel/API/POSIX/sys/wait.h>
 #include <Kernel/API/POSIX/termios.h>
 #include <Kernel/API/POSIX/time.h>
@@ -116,16 +117,6 @@ typedef i32 suseconds_t;
 struct timeval {
     time_t tv_sec;
     suseconds_t tv_usec;
-};
-
-#define UTSNAME_ENTRY_LEN 65
-
-struct utsname {
-    char sysname[UTSNAME_ENTRY_LEN];
-    char nodename[UTSNAME_ENTRY_LEN];
-    char release[UTSNAME_ENTRY_LEN];
-    char version[UTSNAME_ENTRY_LEN];
-    char machine[UTSNAME_ENTRY_LEN];
 };
 
 struct iovec {
