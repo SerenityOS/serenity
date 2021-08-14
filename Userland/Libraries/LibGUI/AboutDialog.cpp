@@ -95,19 +95,11 @@ String AboutDialog::version_string() const
     auto version_config = Core::ConfigFile::open("/res/version.ini");
     auto major_version = version_config->read_entry("Version", "Major", "0");
     auto minor_version = version_config->read_entry("Version", "Minor", "0");
-    auto git_version = version_config->read_entry("Version", "Git", "");
 
     StringBuilder builder;
-    builder.append("Version ");
-    builder.append(major_version);
-    builder.append('.');
-    builder.append(minor_version);
-
-    if (git_version != "") {
-        builder.append(".g");
-        builder.append(git_version);
-    }
-
+    builder.appendff("Version {}.{}", major_version, minor_version);
+    if (auto git_version = version_config->read_entry("Version", "Git", ""); git_version != "")
+        builder.appendff(".g{}", git_version);
     return builder.to_string();
 }
 
