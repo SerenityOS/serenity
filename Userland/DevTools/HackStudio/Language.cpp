@@ -26,13 +26,15 @@ Language language_from_file_extension(const String& extension)
         return Language::Shell;
     if (extension == "sql")
         return Language::SQL;
+    if (extension == "mk")
+        return Language::Makefile;
 
     return Language::Unknown;
 }
 
 Language language_from_file_name(const String& name)
 {
-    if (name == "Makefile")
+    if (name == "makefile" || name == "Makefile" || name == "GNUmakefile")
         return Language::Makefile;
     if (name == "CMakeLists.txt")
         return Language::CMake;
@@ -74,13 +76,15 @@ String language_name_from_file_extension(const String& extension)
         return "SQL";
     if (extension == "txt")
         return "Plaintext";
+    if (extension == "mk")
+        return "Makefile";
 
     return "Unknown";
 }
 
 String language_name_from_file_name(const String& name)
 {
-    if (name == "Makefile")
+    if (name == "makefile" || name == "Makefile" || name == "GNUmakefile")
         return "Makefile";
     if (name == "CMakeLists.txt")
         return "CMake";
