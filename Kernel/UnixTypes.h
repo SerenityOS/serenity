@@ -9,6 +9,8 @@
 #include <AK/DistinctNumeric.h>
 #include <AK/Types.h>
 #include <Kernel/API/POSIX/fcntl.h>
+#include <Kernel/API/POSIX/sys/stat.h>
+#include <Kernel/API/POSIX/time.h>
 
 // Kernel internal options.
 #define O_NOFOLLOW_NOERROR (1 << 29)
@@ -430,27 +432,6 @@ struct termios {
     speed_t c_ospeed;
 };
 
-struct timespec {
-    time_t tv_sec; /* Seconds */
-    long tv_nsec;  /* Nanoseconds */
-};
-
-struct stat {
-    dev_t st_dev;            /* ID of device containing file */
-    ino_t st_ino;            /* inode number */
-    mode_t st_mode;          /* protection */
-    nlink_t st_nlink;        /* number of hard links */
-    uid_t st_uid;            /* user ID of owner */
-    gid_t st_gid;            /* group ID of owner */
-    dev_t st_rdev;           /* device ID (if special file) */
-    off_t st_size;           /* total size, in bytes */
-    blksize_t st_blksize;    /* blocksize for file system I/O */
-    blkcnt_t st_blocks;      /* number of 512B blocks allocated */
-    struct timespec st_atim; /* time of last access */
-    struct timespec st_mtim; /* time of last modification */
-    struct timespec st_ctim; /* time of last status change */
-};
-
 #define POLLIN (1u << 0)
 #define POLLPRI (1u << 1)
 #define POLLOUT (1u << 2)
@@ -581,24 +562,6 @@ typedef enum {
     P_PID,
     P_PGID
 } idtype_t;
-
-typedef int clockid_t;
-
-enum {
-    CLOCK_REALTIME,
-#define CLOCK_REALTIME CLOCK_REALTIME
-    CLOCK_MONOTONIC,
-#define CLOCK_MONOTONIC CLOCK_MONOTONIC
-    CLOCK_MONOTONIC_RAW,
-#define CLOCK_MONOTONIC_RAW CLOCK_MONOTONIC_RAW
-    CLOCK_REALTIME_COARSE,
-#define CLOCK_REALTIME_COARSE CLOCK_REALTIME_COARSE
-    CLOCK_MONOTONIC_COARSE,
-#define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC_COARSE
-    CLOCK_ID_COUNT,
-};
-
-#define TIMER_ABSTIME 99
 
 #define UTSNAME_ENTRY_LEN 65
 

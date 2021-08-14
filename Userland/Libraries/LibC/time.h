@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include <sys/cdefs.h>
-#include <sys/types.h>
+#include <Kernel/API/POSIX/time.h>
 
 __BEGIN_DECLS
 
@@ -42,31 +41,7 @@ void tzset();
 char* asctime(const struct tm*);
 char* asctime_r(const struct tm*, char* buf);
 
-#define CLOCKS_PER_SEC 1000
 clock_t clock();
-
-struct timespec {
-    time_t tv_sec;
-    long tv_nsec;
-};
-
-typedef int clockid_t;
-
-enum {
-    CLOCK_REALTIME,
-#define CLOCK_REALTIME CLOCK_REALTIME
-    CLOCK_MONOTONIC,
-#define CLOCK_MONOTONIC CLOCK_MONOTONIC
-    CLOCK_MONOTONIC_RAW,
-#define CLOCK_MONOTONIC_RAW CLOCK_MONOTONIC_RAW
-    CLOCK_REALTIME_COARSE,
-#define CLOCK_REALTIME_COARSE CLOCK_REALTIME_COARSE
-    CLOCK_MONOTONIC_COARSE,
-#define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC_COARSE
-    CLOCK_ID_COUNT,
-};
-
-#define TIMER_ABSTIME 99
 
 int clock_gettime(clockid_t, struct timespec*);
 int clock_settime(clockid_t, struct timespec*);
