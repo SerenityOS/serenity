@@ -41,7 +41,6 @@ public:
     virtual String device_name() const = 0;
 
     virtual bool is_device() const override { return true; }
-    virtual bool is_disk_device() const { return false; }
 
     static void for_each(Function<void(Device&)>);
     static Device* get_device(unsigned major, unsigned minor);
