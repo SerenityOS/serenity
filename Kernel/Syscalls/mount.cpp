@@ -5,8 +5,8 @@
  */
 
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/DevFS.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
+#include <Kernel/FileSystem/DevTmpFS.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/ISO9660FileSystem.h>
 #include <Kernel/FileSystem/Plan9FileSystem.h>
@@ -82,8 +82,8 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
         fs = TRY(ProcFS::try_create());
     } else if (fs_type == "devpts"sv || fs_type == "DevPtsFS"sv) {
         fs = TRY(DevPtsFS::try_create());
-    } else if (fs_type == "dev"sv || fs_type == "DevFS"sv) {
-        fs = TRY(DevFS::try_create());
+    } else if (fs_type == "dev"sv || fs_type == "DevTmpFS"sv) {
+        fs = TRY(DevTmpFS::try_create());
     } else if (fs_type == "sys"sv || fs_type == "SysFS"sv) {
         fs = TRY(SysFS::try_create());
     } else if (fs_type == "tmp"sv || fs_type == "TmpFS"sv) {
