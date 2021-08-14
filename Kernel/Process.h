@@ -986,11 +986,6 @@ inline ProcessID Thread::pid() const
 #define VERIFY_NO_PROCESS_BIG_LOCK(process) \
     VERIFY(!process->big_lock().own_lock());
 
-inline static String copy_string_from_user(const Kernel::Syscall::StringArgument& string)
-{
-    return copy_string_from_user(string.characters, string.length);
-}
-
 inline static KResultOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(const Kernel::Syscall::StringArgument& string)
 {
     Userspace<char const*> characters((FlatPtr)string.characters);
