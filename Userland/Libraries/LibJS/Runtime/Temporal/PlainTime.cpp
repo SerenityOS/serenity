@@ -29,6 +29,7 @@ PlainTime::PlainTime(u8 iso_hour, u8 iso_minute, u8 iso_second, u16 iso_millisec
 
 void PlainTime::visit_edges(Visitor& visitor)
 {
+    Base::visit_edges(visitor);
     visitor.visit(&m_calendar);
 }
 

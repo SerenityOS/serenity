@@ -30,6 +30,7 @@ PlainDate::PlainDate(i32 year, u8 month, u8 day, Object& calendar, Object& proto
 
 void PlainDate::visit_edges(Visitor& visitor)
 {
+    Base::visit_edges(visitor);
     visitor.visit(&m_calendar);
 }
 
