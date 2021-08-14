@@ -16,7 +16,7 @@ describe("errors", () => {
             new Temporal.PlainYearMonth(0, Infinity);
         }).toThrowWithMessage(RangeError, "Invalid plain year month");
         expect(() => {
-            new Temporal.PlainYearMonth(0, 0, {}, Infinity);
+            new Temporal.PlainYearMonth(0, 1, {}, Infinity);
         }).toThrowWithMessage(RangeError, "Invalid plain year month");
         expect(() => {
             new Temporal.PlainYearMonth(-Infinity);
@@ -25,7 +25,7 @@ describe("errors", () => {
             new Temporal.PlainYearMonth(0, -Infinity);
         }).toThrowWithMessage(RangeError, "Invalid plain year month");
         expect(() => {
-            new Temporal.PlainYearMonth(0, 0, {}, -Infinity);
+            new Temporal.PlainYearMonth(0, 1, {}, -Infinity);
         }).toThrowWithMessage(RangeError, "Invalid plain year month");
     });
 
