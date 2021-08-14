@@ -56,23 +56,17 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    time_t now = time(nullptr);
-    auto date = Core::DateTime::from_timestamp(now);
-
+    auto date = Core::DateTime::now();
     if (print_unix_date) {
-        outln("{}", (long long)now);
-        return 0;
+        outln("{}", date.timestamp());
     } else if (print_iso_8601) {
         outln("{}", date.to_string("%Y-%m-%dT%H:%M:%S-00:00"));
-        return 0;
     } else if (print_rfc_5322) {
         outln("{}", date.to_string("%a, %d %b %Y %H:%M:%S -0000"));
-        return 0;
     } else if (print_rfc_3339) {
         outln("{}", date.to_string("%Y-%m-%d %H:%M:%S-00:00"));
-        return 0;
     } else {
         outln("{}", date.to_string());
-        return 0;
     }
+    return 0;
 }
