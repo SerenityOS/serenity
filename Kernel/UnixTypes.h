@@ -25,6 +25,7 @@
 #include <Kernel/API/POSIX/sys/stat.h>
 #include <Kernel/API/POSIX/sys/time.h>
 #include <Kernel/API/POSIX/sys/times.h>
+#include <Kernel/API/POSIX/sys/uio.h>
 #include <Kernel/API/POSIX/sys/un.h>
 #include <Kernel/API/POSIX/sys/utsname.h>
 #include <Kernel/API/POSIX/sys/wait.h>
@@ -46,11 +47,6 @@ typedef u16 __u16;
 typedef u8 __u8;
 typedef int __s32;
 typedef short __s16;
-
-struct iovec {
-    void* iov_base;
-    size_t iov_len;
-};
 
 struct sched_param {
     int sched_priority;
