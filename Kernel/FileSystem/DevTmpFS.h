@@ -14,39 +14,39 @@
 
 namespace Kernel {
 
-class DevFS final : public FileSystem {
-    friend class DevFSInode;
-    friend class DevFSRootDirectoryInode;
+class DevTmpFS final : public FileSystem {
+    friend class DevTmpFSInode;
+    friend class DevTmpFSRootDirectoryInode;
 
 public:
-    virtual ~DevFS() override;
-    static KResultOr<NonnullRefPtr<DevFS>> try_create();
+    virtual ~DevTmpFS() override;
+    static KResultOr<NonnullRefPtr<DevTmpFS>> try_create();
 
     virtual KResult initialize() override;
-    virtual StringView class_name() const override { return "DevFS"sv; }
+    virtual StringView class_name() const override { return "DevTmpFS"sv; }
     virtual Inode& root_inode() override;
 
 private:
-    DevFS();
+    DevTmpFS();
     size_t allocate_inode_index();
 
-    RefPtr<DevFSRootDirectoryInode> m_root_inode;
+    RefPtr<DevTmpFSRootDirectoryInode> m_root_inode;
     InodeIndex m_next_inode_index { 0 };
 };
 
-class DevFSInode : public Inode {
-    friend class DevFS;
-    friend class DevFSRootDirectoryInode;
-    friend class DevFSDirectoryInode;
+class DevTmpFSInode : public Inode {
+    friend class DevTmpFS;
+    friend class DevTmpFSRootDirectoryInode;
+    friend class DevTmpFSDirectoryInode;
 
 public:
     virtual StringView name() const = 0;
 
-    DevFS& fs() { return static_cast<DevFS&>(Inode::fs()); }
-    DevFS const& fs() const { return static_cast<DevFS const&>(Inode::fs()); }
+    DevTmpFS& fs() { return static_cast<DevTmpFS&>(Inode::fs()); }
+    DevTmpFS const& fs() const { return static_cast<DevTmpFS const&>(Inode::fs()); }
 
 protected:
-    DevFSInode(DevFS&);
+    DevTmpFSInode(DevTmpFS&);
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
@@ -60,19 +60,20 @@ protected:
     virtual KResult truncate(u64) override;
 
 private:
-    IntrusiveListNode<DevFSInode, RefPtr<DevFSInode>> m_list_node;
+    IntrusiveListNode<DevTmpFSInode, RefPtr<DevTmpFSInode>> m_list_node;
 };
 
-class DevFSDeviceInode : public DevFSInode {
-    friend class DevFS;
-    friend class DevFSRootDirectoryInode;
+class DevTmpFSDeviceInode : public DevTmpFSInode {
+    friend class DevTmpFS;
+    friend class DevTmpFSRootDirectoryInode;
+    friend class DevTmpFSDirectoryInode;
 
 public:
     virtual StringView name() const override;
-    virtual ~DevFSDeviceInode() override;
+    virtual ~DevTmpFSDeviceInode() override;
 
 private:
-    DevFSDeviceInode(DevFS&, unsigned, unsigned, bool, NonnullOwnPtr<KString> name);
+    DevTmpFSDeviceInode(DevTmpFS&, unsigned, unsigned, bool, NonnullOwnPtr<KString> name);
     // ^Inode
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual InodeMetadata metadata() const override;
@@ -89,16 +90,16 @@ private:
     GroupID m_gid { 0 };
 };
 
-class DevFSLinkInode : public DevFSInode {
-    friend class DevFS;
-    friend class DevFSRootDirectoryInode;
+class DevTmpFSLinkInode : public DevTmpFSInode {
+    friend class DevTmpFS;
+    friend class DevTmpFSRootDirectoryInode;
 
 public:
     virtual StringView name() const override;
-    virtual ~DevFSLinkInode() override;
+    virtual ~DevTmpFSLinkInode() override;
 
 protected:
-    DevFSLinkInode(DevFS&, NonnullOwnPtr<KString>);
+    DevTmpFSLinkInode(DevTmpFS&, NonnullOwnPtr<KString>);
     // ^Inode
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
     virtual InodeMetadata metadata() const override;
@@ -108,45 +109,45 @@ protected:
     OwnPtr<KString> m_link;
 };
 
-class DevFSDirectoryInode : public DevFSInode {
-    friend class DevFS;
-    friend class DevFSRootDirectoryInode;
+class DevTmpFSDirectoryInode : public DevTmpFSInode {
+    friend class DevTmpFS;
+    friend class DevTmpFSRootDirectoryInode;
 
 public:
-    virtual ~DevFSDirectoryInode() override;
+    virtual ~DevTmpFSDirectoryInode() override;
 
 protected:
-    DevFSDirectoryInode(DevFS&);
+    DevTmpFSDirectoryInode(DevTmpFS&);
     // ^Inode
     virtual InodeMetadata metadata() const override;
 
-    IntrusiveList<DevFSInode, NonnullRefPtr<DevFSInode>, &DevFSInode::m_list_node> m_nodes;
+    IntrusiveList<DevTmpFSInode, NonnullRefPtr<DevTmpFSInode>, &DevTmpFSInode::m_list_node> m_nodes;
 };
 
-class DevFSPtsDirectoryInode final : public DevFSDirectoryInode {
-    friend class DevFS;
-    friend class DevFSRootDirectoryInode;
+class DevTmpFSPtsDirectoryInode final : public DevTmpFSDirectoryInode {
+    friend class DevTmpFS;
+    friend class DevTmpFSRootDirectoryInode;
 
 public:
-    virtual ~DevFSPtsDirectoryInode() override;
+    virtual ~DevTmpFSPtsDirectoryInode() override;
     virtual StringView name() const override { return "pts"; };
 
 private:
-    explicit DevFSPtsDirectoryInode(DevFS&);
+    explicit DevTmpFSPtsDirectoryInode(DevTmpFS&);
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual InodeMetadata metadata() const override;
 };
 
-class DevFSRootDirectoryInode final : public DevFSDirectoryInode {
-    friend class DevFS;
+class DevTmpFSRootDirectoryInode final : public DevTmpFSDirectoryInode {
+    friend class DevTmpFS;
 
 public:
-    virtual ~DevFSRootDirectoryInode() override;
+    virtual ~DevTmpFSRootDirectoryInode() override;
     virtual StringView name() const override { return "."; }
 
 private:
-    explicit DevFSRootDirectoryInode(DevFS&);
+    explicit DevTmpFSRootDirectoryInode(DevTmpFS&);
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
