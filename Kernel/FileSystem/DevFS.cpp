@@ -194,6 +194,18 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::lookup(StringView name)
     }
     return ENOENT;
 }
+
+KResult DevFSRootDirectoryInode::remove_child(const StringView& name)
+{
+    MutexLocker locker(fs().m_lock);
+    for (auto& node : m_nodes) {
+        if (node.name() == name) {
+            m_nodes.remove(node);
+            return KSuccess;
+        }
+    }
+    return KResult(ENOENT);
+}
 KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView name, mode_t mode, dev_t device_mode, UserID, GroupID)
 {
     MutexLocker locker(fs().m_lock);
