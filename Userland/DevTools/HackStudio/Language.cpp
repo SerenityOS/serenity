@@ -30,6 +30,16 @@ Language language_from_file_extension(const String& extension)
     return Language::Unknown;
 }
 
+Language language_from_file_name(const String& name)
+{
+    if (name == "Makefile")
+        return Language::Makefile;
+    if (name == "CMakeLists.txt")
+        return Language::CMake;
+
+    return Language::Unknown;
+}
+
 Language language_from_name(const String& name)
 {
     if (name == "Cpp")
@@ -64,6 +74,16 @@ String language_name_from_file_extension(const String& extension)
         return "SQL";
     if (extension == "txt")
         return "Plaintext";
+
+    return "Unknown";
+}
+
+String language_name_from_file_name(const String& name)
+{
+    if (name == "Makefile")
+        return "Makefile";
+    if (name == "CMakeLists.txt")
+        return "CMake";
 
     return "Unknown";
 }
