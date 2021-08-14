@@ -261,3 +261,16 @@ TEST_CASE(truncation)
     EXPECT_EQ(TIME(9223372036854, 775'807'000).to_truncated_microseconds(), 0x7fff'ffff'ffff'ffff);
     EXPECT_EQ(TIME(9223372036854, 775'808'000).to_truncated_microseconds(), 0x7fff'ffff'ffff'ffff);
 }
+
+TEST_CASE(is_negative)
+{
+    auto small = Time::from_nanoseconds(10);
+    auto large = Time::from_nanoseconds(15);
+    auto result = small - large;
+    EXPECT_EQ(result.to_nanoseconds(), -5);
+    EXPECT(result.is_negative());
+
+    result = large - small;
+    EXPECT_EQ(result.to_nanoseconds(), 5);
+    EXPECT(!result.is_negative());
+}
