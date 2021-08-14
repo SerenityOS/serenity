@@ -7,9 +7,8 @@
 #pragma once
 
 #include <Kernel/API/POSIX/futex.h>
+#include <Kernel/API/POSIX/serenity.h>
 #include <stdio.h>
-#include <sys/cdefs.h>
-#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -23,12 +22,6 @@ int module_unload(const char* name, size_t name_length);
 int profiling_enable(pid_t, uint64_t);
 int profiling_disable(pid_t);
 int profiling_free_buffer(pid_t);
-
-#define THREAD_PRIORITY_MIN 1
-#define THREAD_PRIORITY_LOW 10
-#define THREAD_PRIORITY_NORMAL 30
-#define THREAD_PRIORITY_HIGH 50
-#define THREAD_PRIORITY_MAX 99
 
 int futex(uint32_t* userspace_address, int futex_op, uint32_t value, const struct timespec* timeout, uint32_t* userspace_address2, uint32_t value3);
 
@@ -52,31 +45,7 @@ static ALWAYS_INLINE int futex_wake(uint32_t* userspace_address, uint32_t count)
     return futex(userspace_address, FUTEX_WAKE | FUTEX_PRIVATE_FLAG, count, NULL, NULL, 0);
 }
 
-#define PURGE_ALL_VOLATILE 0x1
-#define PURGE_ALL_CLEAN_INODE 0x2
-
 int purge(int mode);
-
-enum {
-    PERF_EVENT_SAMPLE = 1,
-    PERF_EVENT_MALLOC = 2,
-    PERF_EVENT_FREE = 4,
-    PERF_EVENT_MMAP = 8,
-    PERF_EVENT_MUNMAP = 16,
-    PERF_EVENT_PROCESS_CREATE = 32,
-    PERF_EVENT_PROCESS_EXEC = 64,
-    PERF_EVENT_PROCESS_EXIT = 128,
-    PERF_EVENT_THREAD_CREATE = 256,
-    PERF_EVENT_THREAD_EXIT = 512,
-    PERF_EVENT_CONTEXT_SWITCH = 1024,
-    PERF_EVENT_KMALLOC = 2048,
-    PERF_EVENT_KFREE = 4096,
-    PERF_EVENT_PAGE_FAULT = 8192,
-    PERF_EVENT_SYSCALL = 16384,
-    PERF_EVENT_SIGNPOST = 32768,
-};
-
-#define PERF_EVENT_MASK_ALL (~0ull)
 
 int perf_event(int type, uintptr_t arg1, uintptr_t arg2);
 int perf_register_string(char const* string, size_t string_length);
