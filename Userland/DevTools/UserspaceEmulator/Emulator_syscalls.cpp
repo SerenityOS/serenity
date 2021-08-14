@@ -870,12 +870,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
         mmu().add_region(MmapRegion::create_anonymous(final_address, final_size, params.prot, move(name_str)));
     } else {
         auto region = MmapRegion::create_file_backed(final_address, final_size, params.prot, params.flags, params.fd, params.offset, move(name_str));
-        if (region->name() == "libc.so: .text" && !m_libc_start) {
-            m_libc_start = final_address;
-            m_libc_end = final_address + final_size;
-            bool rc = find_malloc_symbols(*region);
-            VERIFY(rc);
-        } else if (region->name() == "libsystem.so: .text" && !m_libsystem_start) {
+        if (region->name() == "libsystem.so: .text" && !m_libsystem_start) {
             m_libsystem_start = final_address;
             m_libsystem_end = final_address + final_size;
         }
@@ -1127,6 +1122,12 @@ int Emulator::virt$emuctl(FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
         return 0;
     case 6: // mark ROI end
         m_is_in_region_of_interest = false;
+        return 0;
+    case 7:
+        m_is_memory_auditing_suppressed = true;
+        return 0;
+    case 8:
+        m_is_memory_auditing_suppressed = false;
         return 0;
     default:
         return -EINVAL;

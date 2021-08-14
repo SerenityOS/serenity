@@ -73,6 +73,19 @@ ALWAYS_INLINE static void ue_notify_chunk_size_changed(const void* block, size_t
         syscall(SC_emuctl, 4, chunk_size, (FlatPtr)block);
 }
 
+struct MemoryAuditingSuppressor {
+    ALWAYS_INLINE MemoryAuditingSuppressor()
+    {
+        if (s_in_userspace_emulator)
+            syscall(SC_emuctl, 7);
+    }
+    ALWAYS_INLINE ~MemoryAuditingSuppressor()
+    {
+        if (s_in_userspace_emulator)
+            syscall(SC_emuctl, 8);
+    }
+};
+
 struct MallocStats {
     size_t number_of_malloc_calls;
 
@@ -399,6 +412,7 @@ static void free_impl(void* ptr)
 
 [[gnu::flatten]] void* malloc(size_t size)
 {
+    MemoryAuditingSuppressor suppressor;
     void* ptr = malloc_impl(size, CallerWillInitializeMemory::No);
     if (s_profiling)
         perf_event(PERF_EVENT_MALLOC, size, reinterpret_cast<FlatPtr>(ptr));
@@ -407,6 +421,7 @@ static void free_impl(void* ptr)
 
 [[gnu::flatten]] void free(void* ptr)
 {
+    MemoryAuditingSuppressor suppressor;
     if (s_profiling)
         perf_event(PERF_EVENT_FREE, reinterpret_cast<FlatPtr>(ptr), 0);
     ue_notify_free(ptr);
@@ -415,6 +430,7 @@ static void free_impl(void* ptr)
 
 void* calloc(size_t count, size_t size)
 {
+    MemoryAuditingSuppressor suppressor;
     if (Checked<size_t>::multiplication_would_overflow(count, size)) {
         errno = ENOMEM;
         return nullptr;
@@ -428,6 +444,7 @@ void* calloc(size_t count, size_t size)
 
 size_t malloc_size(void* ptr)
 {
+    MemoryAuditingSuppressor suppressor;
     if (!ptr)
         return 0;
     void* page_base = (void*)((FlatPtr)ptr & ChunkedBlock::block_mask);
@@ -449,6 +466,7 @@ size_t malloc_good_size(size_t size)
 
 void* realloc(void* ptr, size_t size)
 {
+    MemoryAuditingSuppressor suppressor;
     if (!ptr)
         return malloc(size);
     if (!size) {
