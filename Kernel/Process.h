@@ -84,7 +84,7 @@ typedef HashMap<FlatPtr, RefPtr<FutexQueue>> FutexQueues;
 
 struct LoadResult;
 
-class Process
+class Process final
     : public AK::RefCountedBase
     , public Weakable<Process> {
 
