@@ -83,6 +83,7 @@ private:
     Vector<Arg> m_positional_args;
 
     bool m_show_help { false };
+    bool m_show_version { false };
     const char* m_general_help { nullptr };
     bool m_stop_on_first_non_option { false };
 };
