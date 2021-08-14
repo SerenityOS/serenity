@@ -90,7 +90,10 @@ KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*>
 
         fs = Plan9FS::create(*description);
     } else if (fs_type == "proc"sv || fs_type == "ProcFS"sv) {
-        fs = ProcFS::create();
+        auto maybe_fs = ProcFS::try_create();
+        if (maybe_fs.is_error())
+            return maybe_fs.error();
+        fs = maybe_fs.release_value();
     } else if (fs_type == "devpts"sv || fs_type == "DevPtsFS"sv) {
         fs = DevPtsFS::create();
     } else if (fs_type == "dev"sv || fs_type == "DevFS"sv) {

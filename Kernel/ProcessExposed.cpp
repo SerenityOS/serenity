@@ -170,19 +170,31 @@ KResultOr<size_t> ProcFSExposedLink::read_bytes(off_t offset, size_t count, User
     return nread;
 }
 
-NonnullRefPtr<Inode> ProcFSExposedLink::to_inode(const ProcFS& procfs_instance) const
+KResultOr<NonnullRefPtr<Inode>> ProcFSExposedLink::to_inode(const ProcFS& procfs_instance) const
 {
-    return ProcFSLinkInode::create(procfs_instance, *this);
+    auto maybe_inode = ProcFSLinkInode::try_create(procfs_instance, *this);
+    if (maybe_inode.is_error())
+        return maybe_inode.error();
+
+    return maybe_inode.release_value();
 }
 
-NonnullRefPtr<Inode> ProcFSExposedComponent::to_inode(const ProcFS& procfs_instance) const
+KResultOr<NonnullRefPtr<Inode>> ProcFSExposedComponent::to_inode(const ProcFS& procfs_instance) const
 {
-    return ProcFSGlobalInode::create(procfs_instance, *this);
+    auto maybe_inode = ProcFSGlobalInode::try_create(procfs_instance, *this);
+    if (maybe_inode.is_error())
+        return maybe_inode.error();
+
+    return maybe_inode.release_value();
 }
 
-NonnullRefPtr<Inode> ProcFSExposedDirectory::to_inode(const ProcFS& procfs_instance) const
+KResultOr<NonnullRefPtr<Inode>> ProcFSExposedDirectory::to_inode(const ProcFS& procfs_instance) const
 {
-    return ProcFSDirectoryInode::create(procfs_instance, *this);
+    auto maybe_inode = ProcFSDirectoryInode::try_create(procfs_instance, *this);
+    if (maybe_inode.is_error())
+        return maybe_inode.error();
+
+    return maybe_inode.release_value();
 }
 
 void ProcFSExposedDirectory::add_component(const ProcFSExposedComponent&)
@@ -190,14 +202,14 @@ void ProcFSExposedDirectory::add_component(const ProcFSExposedComponent&)
     TODO();
 }
 
-RefPtr<ProcFSExposedComponent> ProcFSExposedDirectory::lookup(StringView name)
+KResultOr<NonnullRefPtr<ProcFSExposedComponent>> ProcFSExposedDirectory::lookup(StringView name)
 {
     for (auto& component : m_components) {
         if (component.name() == name) {
             return component;
         }
     }
-    return {};
+    return ENOENT;
 }
 
 KResult ProcFSExposedDirectory::traverse_as_directory(unsigned fsid, Function<bool(FileSystem::DirectoryEntryView const&)> callback) const
