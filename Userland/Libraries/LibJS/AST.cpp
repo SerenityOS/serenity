@@ -2434,4 +2434,72 @@ void ScopeNode::add_hoisted_function(NonnullRefPtr<FunctionDeclaration> hoisted_
 {
     m_hoisted_functions.append(hoisted_function);
 }
+
+Value ImportStatement::execute(Interpreter& interpreter, GlobalObject&) const
+{
+    InterpreterNodeScope node_scope { interpreter, *this };
+    dbgln("Modules are not fully supported yet!");
+    TODO();
+    return {};
+}
+
+Value ExportStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    InterpreterNodeScope node_scope { interpreter, *this };
+    if (m_statement)
+        return m_statement->execute(interpreter, global_object);
+
+    return {};
+}
+
+void ExportStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    print_indent(indent + 1);
+    outln("(ExportEntries)");
+
+    auto string_or_null = [](String const& string) -> String {
+        if (string.is_empty()) {
+            return "null";
+        }
+        return String::formatted("\"{}\"", string);
+    };
+
+    for (auto& entry : m_entries) {
+        print_indent(indent + 2);
+        outln("ModuleRequest: {}, ImportName: {}, LocalName: {}, ExportName: {}", string_or_null(entry.module_request), entry.kind == ExportEntry::ModuleRequest ? string_or_null(entry.local_or_import_name) : "null", entry.kind != ExportEntry::ModuleRequest ? string_or_null(entry.local_or_import_name) : "null", string_or_null(entry.export_name));
+    }
+}
+
+void ImportStatement::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    print_indent(indent + 1);
+    if (m_entries.is_empty()) {
+        // direct from "module" import
+        outln("Entire module '{}'", m_module_request);
+    } else {
+        outln("(ExportEntries) from {}", m_module_request);
+
+        for (auto& entry : m_entries) {
+            print_indent(indent + 2);
+            outln("ImportName: {}, LocalName: {}", entry.import_name, entry.local_name);
+        }
+    }
+}
+
+bool ExportStatement::has_export(StringView export_name) const
+{
+    return any_of(m_entries.begin(), m_entries.end(), [&](auto& entry) {
+        return entry.export_name == export_name;
+    });
+}
+
+bool ImportStatement::has_bound_name(StringView name) const
+{
+    return any_of(m_entries.begin(), m_entries.end(), [&](auto& entry) {
+        return entry.local_name == name;
+    });
+}
+
 }
