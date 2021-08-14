@@ -6,6 +6,7 @@
 
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDay.h>
 #include <LibJS/Runtime/Temporal/PlainMonthDayPrototype.h>
 
@@ -27,6 +28,7 @@ void PlainMonthDayPrototype::initialize(GlobalObject& global_object)
     define_direct_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "Temporal.PlainMonthDay"), Attribute::Configurable);
 
     define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);
 }
 
 static PlainMonthDay* typed_this(GlobalObject& global_object)
@@ -53,6 +55,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::calendar_getter)
 
     // 3. Return plainMonthDay.[[Calendar]].
     return Value(&plain_month_day->calendar());
+}
+
+// 10.3.4 get Temporal.PlainMonthDay.prototype.monthCode, https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.monthcode
+JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::month_code_getter)
+{
+    // 1. Let monthDay be the this value.
+    // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
+    auto* month_day = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be monthDay.[[Calendar]].
+    auto& calendar = month_day->calendar();
+
+    // 4. Return ? CalendarMonthCode(calendar, monthDay).
+    return js_string(vm, calendar_month_code(global_object, calendar, *month_day));
 }
 
 }
