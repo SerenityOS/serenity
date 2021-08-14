@@ -6,6 +6,7 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/USB/SysFSUSB.h>
 #include <Kernel/Bus/USB/UHCIController.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/CommandLine.h>
@@ -14,6 +15,7 @@
 namespace Kernel::USB {
 
 static Singleton<USBManagement> s_the;
+READONLY_AFTER_INIT bool s_initialized_sys_fs_directory = false;
 
 UNMAP_AFTER_INIT USBManagement::USBManagement()
 {
@@ -64,6 +66,11 @@ bool USBManagement::initialized()
 
 UNMAP_AFTER_INIT void USBManagement::initialize()
 {
+    if (!s_initialized_sys_fs_directory) {
+        USB::SysFSUSBBusDirectory::initialize();
+        s_initialized_sys_fs_directory = true;
+    }
+
     s_the.ensure_instance();
 }
 
