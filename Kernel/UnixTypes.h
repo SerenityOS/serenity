@@ -9,6 +9,7 @@
 #include <AK/DistinctNumeric.h>
 #include <AK/Types.h>
 #include <Kernel/API/POSIX/fcntl.h>
+#include <Kernel/API/POSIX/netinet/in.h>
 #include <Kernel/API/POSIX/sys/mman.h>
 #include <Kernel/API/POSIX/sys/socket.h>
 #include <Kernel/API/POSIX/sys/stat.h>
@@ -134,37 +135,6 @@ enum {
 
 #define FUTEX_BITSET_MATCH_ANY 0xffffffff
 
-#define S_IFMT 0170000
-#define S_IFDIR 0040000
-#define S_IFCHR 0020000
-#define S_IFBLK 0060000
-#define S_IFREG 0100000
-#define S_IFIFO 0010000
-#define S_IFLNK 0120000
-#define S_IFSOCK 0140000
-
-#define S_ISUID 04000
-#define S_ISGID 02000
-#define S_ISVTX 01000
-#define S_IRUSR 0400
-#define S_IWUSR 0200
-#define S_IXUSR 0100
-#define S_IRGRP 0040
-#define S_IWGRP 0020
-#define S_IXGRP 0010
-#define S_IROTH 0004
-#define S_IWOTH 0002
-#define S_IXOTH 0001
-
-typedef u32 dev_t;
-typedef u64 ino_t;
-typedef u16 mode_t;
-typedef u32 nlink_t;
-typedef u32 uid_t;
-typedef u32 gid_t;
-typedef u32 clock_t;
-typedef u32 socklen_t;
-typedef int pid_t;
 // Avoid interference with AK/Types.h and LibC/sys/types.h by defining *separate* names:
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ProcessID);
 TYPEDEF_DISTINCT_ORDERED_ID(pid_t, ThreadID);
@@ -242,39 +212,6 @@ struct pollfd {
     short events;
     short revents;
 };
-
-#define IPPROTO_IP 0
-#define IPPROTO_ICMP 1
-#define IPPROTO_TCP 6
-#define IPPROTO_UDP 17
-
-#define IP_TTL 2
-#define IP_MULTICAST_LOOP 3
-#define IP_ADD_MEMBERSHIP 4
-#define IP_DROP_MEMBERSHIP 5
-
-#define S_IFSOCK 0140000
-
-struct in_addr {
-    uint32_t s_addr;
-};
-typedef uint32_t in_addr_t;
-
-struct sockaddr_in {
-    int16_t sin_family;
-    uint16_t sin_port;
-    struct in_addr sin_addr;
-    char sin_zero[8];
-};
-
-struct ip_mreq {
-    struct in_addr imr_multiaddr;
-    struct in_addr imr_interface;
-};
-
-#define INADDR_ANY ((in_addr_t)0)
-#define INADDR_NONE ((in_addr_t)-1)
-#define INADDR_LOOPBACK 0x7f000001
 
 typedef u32 __u32;
 typedef u16 __u16;
