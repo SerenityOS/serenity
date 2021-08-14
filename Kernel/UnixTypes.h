@@ -16,6 +16,7 @@
 #include <Kernel/API/POSIX/net/route.h>
 #include <Kernel/API/POSIX/netinet/in.h>
 #include <Kernel/API/POSIX/poll.h>
+#include <Kernel/API/POSIX/sched.h>
 #include <Kernel/API/POSIX/serenity.h>
 #include <Kernel/API/POSIX/signal.h>
 #include <Kernel/API/POSIX/stdio.h>
@@ -47,10 +48,6 @@ typedef u16 __u16;
 typedef u8 __u8;
 typedef int __s32;
 typedef short __s16;
-
-struct sched_param {
-    int sched_priority;
-};
 
 #define ST_RDONLY 0x1
 #define ST_NOSUID 0x2
