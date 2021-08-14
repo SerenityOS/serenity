@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/POSIX/fcntl.h>
 #include <Kernel/API/POSIX/netinet/in.h>
+#include <Kernel/API/POSIX/signal.h>
 #include <Kernel/API/POSIX/sys/mman.h>
 #include <Kernel/API/POSIX/sys/socket.h>
 #include <Kernel/API/POSIX/sys/stat.h>
@@ -69,10 +70,6 @@ enum {
 #define W_OK 2
 #define X_OK 1
 #define F_OK 0
-
-#define SIG_DFL ((void*)0)
-#define SIG_ERR ((void*)-1)
-#define SIG_IGN ((void*)1)
 
 #define SEEK_SET 0
 #define SEEK_CUR 1
@@ -147,51 +144,6 @@ struct tms {
     clock_t tms_cutime;
     clock_t tms_cstime;
 };
-
-typedef void (*__sighandler_t)(int);
-typedef __sighandler_t sighandler_t;
-
-typedef u32 sigset_t;
-
-union sigval {
-    int sival_int;
-    void* sival_ptr;
-};
-
-typedef struct siginfo {
-    int si_signo;
-    int si_code;
-    pid_t si_pid;
-    uid_t si_uid;
-    void* si_addr;
-    int si_status;
-    union sigval si_value;
-} siginfo_t;
-
-struct sigaction {
-    union {
-        void (*sa_handler)(int);
-        void (*sa_sigaction)(int, siginfo_t*, void*);
-    };
-    sigset_t sa_mask;
-    int sa_flags;
-};
-
-#define SA_NOCLDSTOP 1
-#define SA_NOCLDWAIT 2
-#define SA_SIGINFO 4
-#define SA_NODEFER 0x40000000
-
-#define SIG_BLOCK 0
-#define SIG_UNBLOCK 1
-#define SIG_SETMASK 2
-
-#define CLD_EXITED 0
-#define CLD_KILLED 1
-#define CLD_DUMPED 2
-#define CLD_TRAPPED 3
-#define CLD_STOPPED 4
-#define CLD_CONTINUED 5
 
 typedef i64 off_t;
 typedef i64 time_t;
