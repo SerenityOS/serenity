@@ -727,7 +727,8 @@ i32 iso_year(Object& temporal_object)
         return static_cast<PlainDateTime&>(temporal_object).iso_year();
     if (is<PlainYearMonth>(temporal_object))
         return static_cast<PlainYearMonth&>(temporal_object).iso_year();
-    // TODO: PlainMonthDay
+    if (is<PlainMonthDay>(temporal_object))
+        return static_cast<PlainMonthDay&>(temporal_object).iso_year();
     VERIFY_NOT_REACHED();
 }
 
@@ -744,7 +745,8 @@ u8 iso_month(Object& temporal_object)
         return static_cast<PlainDateTime&>(temporal_object).iso_month();
     if (is<PlainYearMonth>(temporal_object))
         return static_cast<PlainYearMonth&>(temporal_object).iso_month();
-    // TODO: PlainMonthDay
+    if (is<PlainMonthDay>(temporal_object))
+        return static_cast<PlainMonthDay&>(temporal_object).iso_month();
     VERIFY_NOT_REACHED();
 }
 
@@ -761,7 +763,8 @@ String iso_month_code(Object& temporal_object)
         return build_iso_month_code(static_cast<PlainDateTime&>(temporal_object).iso_month());
     if (is<PlainYearMonth>(temporal_object))
         return build_iso_month_code(static_cast<PlainYearMonth&>(temporal_object).iso_month());
-    // TODO: PlainMonthDay
+    if (is<PlainMonthDay>(temporal_object))
+        return build_iso_month_code(static_cast<PlainMonthDay&>(temporal_object).iso_month());
     VERIFY_NOT_REACHED();
 }
 
@@ -778,7 +781,8 @@ u8 iso_day(Object& temporal_object)
         return static_cast<PlainDateTime&>(temporal_object).iso_day();
     if (is<PlainYearMonth>(temporal_object))
         return static_cast<PlainYearMonth&>(temporal_object).iso_day();
-    // TODO: PlainMonthDay
+    if (is<PlainMonthDay>(temporal_object))
+        return static_cast<PlainMonthDay&>(temporal_object).iso_day();
     VERIFY_NOT_REACHED();
 }
 
