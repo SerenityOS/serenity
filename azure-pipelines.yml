@@ -3,3 +3,5 @@ trigger:
 
 pool:
   vmImage: ubuntu-latest
+
+stages: []
