@@ -544,7 +544,7 @@ KResult ProcFSProcessPropertyInode::try_to_acquire_data(Process& process, KBuffe
     VERIFY(m_parent_sub_directory_type == SegmentedProcFSIndex::ProcessSubDirectory::Reserved);
     switch (m_possible_data.property_type) {
     case SegmentedProcFSIndex::MainProcessProperty::Unveil:
-        return process.procfs_get_fds_stats(builder);
+        return process.procfs_get_unveil_stats(builder);
     case SegmentedProcFSIndex::MainProcessProperty::Pledge:
         return process.procfs_get_pledge_stats(builder);
     case SegmentedProcFSIndex::MainProcessProperty::FileDescriptions:
