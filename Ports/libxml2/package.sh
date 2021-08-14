@@ -13,4 +13,5 @@ install() {
 
     # Link shared library
     run ${SERENITY_ARCH}-pc-serenity-gcc -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libxml2.so -Wl,-soname,libxml2.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libxml2.a -Wl,--no-whole-archive -llzma
+    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libxml2.la
 }
