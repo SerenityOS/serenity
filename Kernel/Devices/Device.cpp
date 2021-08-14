@@ -51,8 +51,11 @@ Device::~Device()
 
 String Device::absolute_path() const
 {
-    // FIXME: Don't assume mount point for DevFs
-    return String::formatted("/dev/{}", device_name());
+    // FIXME: I assume we can't really provide a well known path in the kernel
+    // because this is a violation of abstraction layers between userland and the
+    // kernel, but maybe the whole name of "absolute_path" is just wrong as this
+    // is really not an "absolute_path".
+    return String::formatted("device:{},{}", major(), minor());
 }
 
 String Device::absolute_path(const OpenFileDescription&) const

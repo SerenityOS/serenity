@@ -107,11 +107,6 @@ KResult SlavePTY::close()
     return KSuccess;
 }
 
-String SlavePTY::device_name() const
-{
-    return String::formatted("{}", minor());
-}
-
 FileBlockerSet& SlavePTY::blocker_set()
 {
     return m_master->blocker_set();

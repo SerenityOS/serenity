@@ -38,9 +38,6 @@ private:
     virtual StringView class_name() const override { return "SlavePTY"; }
     virtual KResult close() override;
 
-    // ^Device
-    virtual String device_name() const override;
-
     friend class MasterPTY;
     SlavePTY(MasterPTY&, unsigned index);
 

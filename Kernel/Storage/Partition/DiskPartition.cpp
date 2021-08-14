@@ -68,13 +68,6 @@ bool DiskPartition::can_write(const OpenFileDescription& fd, size_t offset) cons
     return m_device->can_write(fd, offset + adjust);
 }
 
-String DiskPartition::device_name() const
-{
-    // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
-    size_t partition_index = minor() % 16;
-    return String::formatted("{}{}", m_device->device_name(), partition_index + 1);
-}
-
 StringView DiskPartition::class_name() const
 {
     return "DiskPartition";

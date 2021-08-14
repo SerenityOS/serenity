@@ -34,10 +34,6 @@ public:
 
     virtual StringView purpose() const override { return class_name(); }
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0220; }
-    virtual String device_name() const override { return "audio"; }
-
     virtual KResult ioctl(OpenFileDescription&, unsigned, Userspace<void*>) override;
 
 private:
