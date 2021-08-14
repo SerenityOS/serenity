@@ -130,7 +130,7 @@ String Token::string_value(StringValueStatus& status) const
             continue;
         }
         // Line continuation
-        if (lexer.next_is(LINE_SEPARATOR) || lexer.next_is(PARAGRAPH_SEPARATOR)) {
+        if (lexer.next_is(LINE_SEPARATOR_STRING) || lexer.next_is(PARAGRAPH_SEPARATOR_STRING)) {
             lexer.ignore(3);
             continue;
         }
@@ -281,7 +281,7 @@ bool Token::is_identifier_name() const
 
 bool Token::trivia_contains_line_terminator() const
 {
-    return m_trivia.contains('\n') || m_trivia.contains('\r') || m_trivia.contains(LINE_SEPARATOR) || m_trivia.contains(PARAGRAPH_SEPARATOR);
+    return m_trivia.contains('\n') || m_trivia.contains('\r') || m_trivia.contains(LINE_SEPARATOR_STRING) || m_trivia.contains(PARAGRAPH_SEPARATOR_STRING);
 }
 
 }

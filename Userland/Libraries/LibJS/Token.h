@@ -13,11 +13,22 @@ namespace JS {
 
 // U+2028 LINE SEPARATOR
 constexpr const char line_separator_chars[] { (char)0xe2, (char)0x80, (char)0xa8, 0 };
-constexpr const StringView LINE_SEPARATOR { line_separator_chars };
+constexpr const StringView LINE_SEPARATOR_STRING { line_separator_chars };
+constexpr const u32 LINE_SEPARATOR { 0x2028 };
 
 // U+2029 PARAGRAPH SEPARATOR
 constexpr const char paragraph_separator_chars[] { (char)0xe2, (char)0x80, (char)0xa9, 0 };
-constexpr const StringView PARAGRAPH_SEPARATOR { paragraph_separator_chars };
+constexpr const StringView PARAGRAPH_SEPARATOR_STRING { paragraph_separator_chars };
+constexpr const u32 PARAGRAPH_SEPARATOR { 0x2029 };
+
+// U+00A0 NO BREAK SPACE
+constexpr const u32 NO_BREAK_SPACE { 0x00A0 };
+
+// U+200C ZERO WIDTH NON-JOINER
+constexpr const u32 ZERO_WIDTH_NON_JOINER { 0x200C };
+
+// U+200D ZERO WIDTH JOINER
+constexpr const u32 ZERO_WIDTH_JOINER { 0x200D };
 
 #define ENUMERATE_JS_TOKENS                                     \
     __ENUMERATE_JS_TOKEN(Ampersand, Operator)                   \

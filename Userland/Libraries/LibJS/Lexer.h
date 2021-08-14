@@ -34,8 +34,13 @@ private:
     bool consume_hexadecimal_number();
     bool consume_binary_number();
     bool consume_decimal_number();
+
+    bool is_unicode_character() const;
+    u32 current_code_point() const;
+
     bool is_eof() const;
     bool is_line_terminator() const;
+    bool is_whitespace() const;
     bool is_identifier_start() const;
     bool is_identifier_middle() const;
     bool is_line_comment_start(bool line_has_token_yet) const;
