@@ -119,6 +119,7 @@ public:
     OwnPtr<OpenFileDescriptionData>& data() { return m_data; }
 
     void set_original_inode(Badge<VirtualFileSystem>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
+    void set_original_custody(Badge<VirtualFileSystem>, Custody& custody);
 
     KResult truncate(u64);
 
