@@ -374,7 +374,8 @@ UNMAP_AFTER_INIT NonnullRefPtr<PCIDeviceSysFSDirectory> PCIDeviceSysFSDirectory:
 }
 
 UNMAP_AFTER_INIT PCIDeviceSysFSDirectory::PCIDeviceSysFSDirectory(const SysFSDirectory& parent_directory, Address address)
-    : SysFSDirectory(String::formatted("{:04x}:{:04x}:{:02x}.{}", address.seg(), address.bus(), address.device(), address.function()), parent_directory)
+    : SysFSDirectory(String::formatted("{:04x}:{:02x}:{:02x}.{}", address.seg(), address.bus(), address.device(), address.function()), parent_directory)
+    , m_address(address)
 {
     m_components.append(PCIDeviceAttributeSysFSComponent::create("vendor", *this, PCI_VENDOR_ID, 2));
     m_components.append(PCIDeviceAttributeSysFSComponent::create("device_id", *this, PCI_DEVICE_ID, 2));
