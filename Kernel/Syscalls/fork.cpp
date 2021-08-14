@@ -21,8 +21,6 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     auto child = Process::create(child_first_thread, m_name, uid(), gid(), pid(), m_is_kernel_process, m_cwd, m_executable, m_tty, this);
     if (!child || !child_first_thread)
         return ENOMEM;
-    child->m_root_directory = m_root_directory;
-    child->m_root_directory_relative_to_global_root = m_root_directory_relative_to_global_root;
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths.deep_copy();
 

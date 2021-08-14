@@ -195,7 +195,6 @@ set(KERNEL_SOURCES
     Syscalls/chdir.cpp
     Syscalls/chmod.cpp
     Syscalls/chown.cpp
-    Syscalls/chroot.cpp
     Syscalls/clock.cpp
     Syscalls/debug.cpp
     Syscalls/disown.cpp

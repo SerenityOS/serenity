@@ -218,12 +218,6 @@ KResult Process::procfs_get_fds_stats(KBufferBuilder& builder) const
     return KSuccess;
 }
 
-KResult Process::procfs_get_root_link(KBufferBuilder& builder) const
-{
-    builder.append_bytes(const_cast<Process&>(*this).root_directory_relative_to_global_root().absolute_path().to_byte_buffer());
-    return KSuccess;
-}
-
 KResult Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) const
 {
     JsonArraySerializer array { builder };

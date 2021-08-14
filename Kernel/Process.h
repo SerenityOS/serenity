@@ -57,7 +57,6 @@ Time kgettimeofday();
     __ENUMERATE_PLEDGE_PROMISE(fattr)     \
     __ENUMERATE_PLEDGE_PROMISE(tty)       \
     __ENUMERATE_PLEDGE_PROMISE(chown)     \
-    __ENUMERATE_PLEDGE_PROMISE(chroot)    \
     __ENUMERATE_PLEDGE_PROMISE(thread)    \
     __ENUMERATE_PLEDGE_PROMISE(video)     \
     __ENUMERATE_PLEDGE_PROMISE(accept)    \
@@ -392,7 +391,6 @@ public:
     KResultOr<FlatPtr> sys$profiling_disable(pid_t);
     KResultOr<FlatPtr> sys$profiling_free_buffer(pid_t);
     KResultOr<FlatPtr> sys$futex(Userspace<const Syscall::SC_futex_params*>);
-    KResultOr<FlatPtr> sys$chroot(Userspace<const char*> path, size_t path_length, int mount_flags);
     KResultOr<FlatPtr> sys$pledge(Userspace<const Syscall::SC_pledge_params*>);
     KResultOr<FlatPtr> sys$unveil(Userspace<const Syscall::SC_unveil_params*>);
     KResultOr<FlatPtr> sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
@@ -453,10 +451,6 @@ public:
 
     Mutex& big_lock() { return m_big_lock; }
     Mutex& ptrace_lock() { return m_ptrace_lock; }
-
-    Custody& root_directory();
-    Custody& root_directory_relative_to_global_root();
-    void set_root_directory(const Custody&);
 
     bool has_promises() const { return m_protected_values.has_promises; }
     bool has_promised(Pledge pledge) const { return m_protected_values.promises & (1u << (u32)pledge); }
@@ -559,7 +553,6 @@ public:
     KResult procfs_get_pledge_stats(KBufferBuilder& builder) const;
     KResult procfs_get_virtual_memory_stats(KBufferBuilder& builder) const;
     KResult procfs_get_binary_link(KBufferBuilder& builder) const;
-    KResult procfs_get_root_link(KBufferBuilder& builder) const;
     KResult procfs_get_current_work_directory_link(KBufferBuilder& builder) const;
     mode_t binary_link_required_mode() const;
     KResultOr<size_t> procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const;
@@ -760,8 +753,6 @@ private:
 
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;
-    RefPtr<Custody> m_root_directory;
-    RefPtr<Custody> m_root_directory_relative_to_global_root;
 
     Vector<String> m_arguments;
     Vector<String> m_environment;

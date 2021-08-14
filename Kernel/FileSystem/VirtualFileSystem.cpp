@@ -934,9 +934,8 @@ KResultOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(S
 
     GenericLexer path_lexer(path);
     auto current_process = Process::current();
-    auto& current_root = current_process->root_directory();
 
-    NonnullRefPtr<Custody> custody = path[0] == '/' ? current_root : base;
+    NonnullRefPtr<Custody> custody = path[0] == '/' ? root_custody() : base;
     bool extra_iteration = path[path.length() - 1] == '/';
 
     while (!path_lexer.is_eof() || extra_iteration) {

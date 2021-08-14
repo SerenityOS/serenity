@@ -92,7 +92,7 @@ KResultOr<FlatPtr> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params
     // If this case is encountered, the parent node of the path is returned and the custody of that inode is used instead.
     RefPtr<Custody> parent_custody; // Parent inode in case of ENOENT
     OwnPtr<KString> new_unveiled_path;
-    auto custody_or_error = VirtualFileSystem::the().resolve_path_without_veil(path.view(), root_directory(), &parent_custody);
+    auto custody_or_error = VirtualFileSystem::the().resolve_path_without_veil(path.view(), VirtualFileSystem::the().root_custody(), &parent_custody);
     if (!custody_or_error.is_error()) {
         new_unveiled_path = custody_or_error.value()->try_create_absolute_path();
         if (!new_unveiled_path)

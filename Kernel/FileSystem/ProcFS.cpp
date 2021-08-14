@@ -360,12 +360,6 @@ KResultOr<NonnullRefPtr<Inode>> ProcFSProcessDirectoryInode::lookup(StringView n
             return maybe_inode.error();
         return maybe_inode.release_value();
     }
-    if (name == "root") {
-        auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_pid_property(procfs(), SegmentedProcFSIndex::MainProcessProperty::RootLink, associated_pid());
-        if (maybe_inode.is_error())
-            return maybe_inode.error();
-        return maybe_inode.release_value();
-    }
 
     return ENOENT;
 }
@@ -515,8 +509,6 @@ static mode_t determine_procfs_process_inode_mode(SegmentedProcFSIndex::ProcessS
         return S_IFLNK | 0777;
     if (main_property == SegmentedProcFSIndex::MainProcessProperty::CurrentWorkDirectoryLink)
         return S_IFLNK | 0777;
-    if (main_property == SegmentedProcFSIndex::MainProcessProperty::RootLink)
-        return S_IFLNK | 0777;
     return S_IFREG | 0400;
 }
 
@@ -625,8 +617,6 @@ KResult ProcFSProcessPropertyInode::try_to_acquire_data(Process& process, KBuffe
         return process.procfs_get_perf_events(builder);
     case SegmentedProcFSIndex::MainProcessProperty::VirtualMemoryStats:
         return process.procfs_get_virtual_memory_stats(builder);
-    case SegmentedProcFSIndex::MainProcessProperty::RootLink:
-        return process.procfs_get_root_link(builder);
     default:
         VERIFY_NOT_REACHED();
     }

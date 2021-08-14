@@ -609,8 +609,6 @@ void Process::finalize()
     m_tty = nullptr;
     m_executable = nullptr;
     m_cwd = nullptr;
-    m_root_directory = nullptr;
-    m_root_directory_relative_to_global_root = nullptr;
     m_arguments.clear();
     m_environment.clear();
 
@@ -773,25 +771,6 @@ void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& desc
     // FIXME: Verify Process::m_fds_lock is locked!
     m_description = move(description);
     m_flags = flags;
-}
-
-Custody& Process::root_directory()
-{
-    if (!m_root_directory)
-        m_root_directory = VirtualFileSystem::the().root_custody();
-    return *m_root_directory;
-}
-
-Custody& Process::root_directory_relative_to_global_root()
-{
-    if (!m_root_directory_relative_to_global_root)
-        m_root_directory_relative_to_global_root = root_directory();
-    return *m_root_directory_relative_to_global_root;
-}
-
-void Process::set_root_directory(const Custody& root)
-{
-    m_root_directory = root;
 }
 
 void Process::set_tty(TTY* tty)
