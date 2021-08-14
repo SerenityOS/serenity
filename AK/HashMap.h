@@ -57,6 +57,9 @@ public:
 
     HashSetResult set(const K& key, const V& value) { return m_table.set({ key, value }); }
     HashSetResult set(const K& key, V&& value) { return m_table.set({ key, move(value) }); }
+    HashSetResult try_set(const K& key, const V& value) { return m_table.try_set({ key, value }); }
+    HashSetResult try_set(const K& key, V&& value) { return m_table.try_set({ key, move(value) }); }
+
     bool remove(const K& key)
     {
         auto it = find(key);
@@ -96,6 +99,7 @@ public:
     }
 
     void ensure_capacity(size_t capacity) { m_table.ensure_capacity(capacity); }
+    bool try_ensure_capacity(size_t capacity) { return m_table.try_ensure_capacity(capacity); }
 
     Optional<typename Traits<V>::PeekType> get(const K& key) const requires(!IsPointer<typename Traits<V>::PeekType>)
     {
