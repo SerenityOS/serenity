@@ -31,6 +31,7 @@ exec $SERENITY_KERNEL_DEBUGGER \
     -ex "add-symbol-file $(dirname "$0")/../Build/${SERENITY_ARCH:-i686}/Kernel/Kernel -o $kernel_base" \
     -ex "set confirm on" \
     -ex "set arch $gdb_arch" \
+    -ex "set print frame-arguments none" \
     -ex "target remote ${gdb_host}:1234" \
     -ex "source $(dirname "$0")/serenity_gdb.py" \
     -ex "layout asm" \
