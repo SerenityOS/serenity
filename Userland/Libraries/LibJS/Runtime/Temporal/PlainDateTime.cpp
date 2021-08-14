@@ -32,6 +32,7 @@ PlainDateTime::PlainDateTime(i32 iso_year, u8 iso_month, u8 iso_day, u8 iso_hour
 
 void PlainDateTime::visit_edges(Visitor& visitor)
 {
+    Base::visit_edges(visitor);
     visitor.visit(&m_calendar);
 }
 

@@ -24,6 +24,7 @@ PlainYearMonth::PlainYearMonth(i32 iso_year, u8 iso_month, u8 iso_day, Object& c
 
 void PlainYearMonth::visit_edges(Visitor& visitor)
 {
+    Base::visit_edges(visitor);
     visitor.visit(&m_calendar);
 }
 
