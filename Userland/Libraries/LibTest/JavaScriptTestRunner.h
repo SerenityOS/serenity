@@ -194,7 +194,7 @@ inline void TestRunnerGlobalObject::initialize_global_object()
     }
 }
 
-inline AK::Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path)
+inline AK::Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path, JS::Program::Type program_type = JS::Program::Type::Script)
 {
     auto file = Core::File::construct(file_path);
     auto result = file->open(Core::OpenMode::ReadOnly);
@@ -207,7 +207,7 @@ inline AK::Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const Stri
     String test_file_string(reinterpret_cast<const char*>(contents.data()), contents.size());
     file->close();
 
-    auto parser = JS::Parser(JS::Lexer(test_file_string));
+    auto parser = JS::Parser(JS::Lexer(test_file_string), program_type);
     auto program = parser.parse_program();
 
     if (parser.has_errors()) {

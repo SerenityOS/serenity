@@ -168,8 +168,14 @@ private:
 
 class Program final : public ScopeNode {
 public:
-    explicit Program(SourceRange source_range)
+    enum class Type {
+        Script,
+        Module
+    };
+
+    explicit Program(SourceRange source_range, Type program_type)
         : ScopeNode(source_range)
+        , m_type(program_type)
     {
     }
 
@@ -178,10 +184,13 @@ public:
     bool is_strict_mode() const { return m_is_strict_mode; }
     void set_strict_mode() { m_is_strict_mode = true; }
 
+    Type type() const { return m_type; }
+
 private:
     virtual bool is_program() const override { return true; }
 
     bool m_is_strict_mode { false };
+    Type m_type { Type::Script };
 };
 
 class BlockStatement final : public ScopeNode {

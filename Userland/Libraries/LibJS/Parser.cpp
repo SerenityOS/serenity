@@ -208,10 +208,13 @@ private:
 
 constexpr OperatorPrecedenceTable g_operator_precedence;
 
-Parser::ParserState::ParserState(Lexer l)
+Parser::ParserState::ParserState(Lexer l, Program::Type program_type)
     : lexer(move(l))
-    , current_token(lexer.next())
+    , current_token(TokenType::Invalid, {}, {}, {}, {}, 0, 0, 0)
 {
+    if (program_type == Program::Type::Module)
+        lexer.disallow_html_comments();
+    current_token = lexer.next();
 }
 
 Parser::Scope::Scope(Parser::Scope::Type type, RefPtr<Parser::Scope> parent_scope)
@@ -232,8 +235,9 @@ RefPtr<Parser::Scope> Parser::Scope::get_current_function_scope()
     return result;
 }
 
-Parser::Parser(Lexer lexer)
-    : m_state(move(lexer))
+Parser::Parser(Lexer lexer, Program::Type program_type)
+    : m_state(move(lexer), program_type)
+    , m_program_type(program_type)
 {
 }
 
@@ -282,8 +286,8 @@ NonnullRefPtr<Program> Parser::parse_program(bool starts_in_strict_mode)
 {
     auto rule_start = push_start();
     ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Let, Scope::Function);
-    auto program = adopt_ref(*new Program({ m_filename, rule_start.position(), position() }));
-    if (starts_in_strict_mode) {
+    auto program = adopt_ref(*new Program({ m_filename, rule_start.position(), position() }, m_program_type));
+    if (starts_in_strict_mode || m_program_type == Program::Type::Module) {
         program->set_strict_mode();
         m_state.strict_mode = true;
     }

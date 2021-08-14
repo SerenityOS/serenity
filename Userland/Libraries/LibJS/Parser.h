@@ -35,7 +35,7 @@ struct FunctionNodeParseOptions {
 
 class Parser {
 public:
-    explicit Parser(Lexer lexer);
+    explicit Parser(Lexer lexer, Program::Type program_type = Program::Type::Script);
 
     NonnullRefPtr<Program> parse_program(bool starts_in_strict_mode = false);
 
@@ -246,7 +246,7 @@ private:
         bool in_continue_context { false };
         bool string_legacy_octal_escape_sequence_in_scope { false };
 
-        explicit ParserState(Lexer);
+        ParserState(Lexer, Program::Type);
     };
 
     class PositionKeyTraits {
@@ -267,5 +267,6 @@ private:
     FlyString m_filename;
     Vector<ParserState> m_saved_state;
     HashMap<Position, TokenMemoization, PositionKeyTraits> m_token_memoizations;
+    Program::Type m_program_type;
 };
 }

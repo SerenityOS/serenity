@@ -91,6 +91,7 @@ static bool s_dump_ast = false;
 static bool s_dump_bytecode = false;
 static bool s_run_bytecode = false;
 static bool s_opt_bytecode = false;
+static bool s_as_module = false;
 static bool s_print_last_result = false;
 static RefPtr<Line::Editor> s_editor;
 static String s_history_path = String::formatted("{}/.js-history", Core::StandardPaths::home_directory());
@@ -633,7 +634,8 @@ static bool write_to_file(String const& path)
 
 static bool parse_and_run(JS::Interpreter& interpreter, StringView const& source)
 {
-    auto parser = JS::Parser(JS::Lexer(source));
+    auto program_type = s_as_module ? JS::Program::Type::Module : JS::Program::Type::Script;
+    auto parser = JS::Parser(JS::Lexer(source), program_type);
     auto program = parser.parse_program();
 
     if (s_dump_ast)
@@ -922,6 +924,7 @@ int main(int argc, char** argv)
     args_parser.add_option(s_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
     args_parser.add_option(s_run_bytecode, "Run the bytecode", "run-bytecode", 'b');
     args_parser.add_option(s_opt_bytecode, "Optimize the bytecode", "optimize-bytecode", 'p');
+    args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
