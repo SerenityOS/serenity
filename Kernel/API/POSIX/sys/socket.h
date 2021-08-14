@@ -31,6 +31,8 @@ extern "C" {
 #define SOCK_STREAM 1
 #define SOCK_DGRAM 2
 #define SOCK_RAW 3
+#define SOCK_RDM 4
+#define SOCK_SEQPACKET 5
 #define SOCK_NONBLOCK 04000
 #define SOCK_CLOEXEC 02000000
 
