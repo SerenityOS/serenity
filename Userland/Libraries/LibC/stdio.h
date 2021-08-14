@@ -8,6 +8,7 @@
 
 #define _STDIO_H // Make GMP believe we exist.
 
+#include <Kernel/API/POSIX/stdio.h>
 #include <bits/FILE.h>
 #include <limits.h>
 #include <stdarg.h>
