@@ -145,8 +145,6 @@ include_directories(Userland/Libraries)
 include_directories(.)
 include_directories(${CMAKE_BINARY_DIR})
 
-set(write_if_different ${CMAKE_SOURCE_DIR}/Meta/write-only-on-difference.sh)
-
 add_subdirectory(Meta/Lagom)
 
 find_program(CCACHE_PROGRAM ccache)
