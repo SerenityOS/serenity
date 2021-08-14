@@ -260,6 +260,11 @@ Process::Process(const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool 
     m_protected_values.suid = uid;
     m_protected_values.sgid = gid;
 
+    auto maybe_procfs_traits = ProcessProcFSTraits::try_create({}, make_weak_ptr());
+    // NOTE: This can fail, but it should be very, *very* rare.
+    VERIFY(!maybe_procfs_traits.is_error());
+    m_procfs_traits = maybe_procfs_traits.release_value();
+
     dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, this->pid().value());
 }
 
