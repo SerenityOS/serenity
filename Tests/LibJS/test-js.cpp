@@ -85,7 +85,9 @@ TESTJS_RUN_FILE_FUNCTION(const String& test_file, JS::Interpreter&)
     else
         return Test::JS::RunFileHookResult::SkipFile;
 
-    auto parse_result = Test::JS::parse_file(test_file);
+    auto program_type = path.basename().ends_with(".module.js") ? JS::Program::Type::Module : JS::Program::Type::Script;
+
+    auto parse_result = Test::JS::parse_file(test_file, program_type);
     bool test_passed = true;
     String message;
     String expectation_string;

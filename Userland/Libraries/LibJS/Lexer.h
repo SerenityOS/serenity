@@ -23,6 +23,8 @@ public:
     const StringView& source() const { return m_source; };
     const StringView& filename() const { return m_filename; };
 
+    void disallow_html_comments() { m_allow_html_comments = false; };
+
 private:
     void consume();
     bool consume_exponent();
@@ -62,6 +64,8 @@ private:
         u8 open_bracket_count;
     };
     Vector<TemplateState> m_template_states;
+
+    bool m_allow_html_comments { true };
 
     static HashMap<String, TokenType> s_keywords;
     static HashMap<String, TokenType> s_three_char_tokens;
