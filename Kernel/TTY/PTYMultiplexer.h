@@ -35,10 +35,6 @@ public:
 
     void notify_master_destroyed(Badge<MasterPTY>, unsigned index);
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0666; }
-    virtual String device_name() const override { return "ptmx"; }
-
 private:
     // ^CharacterDevice
     virtual StringView class_name() const override { return "PTYMultiplexer"; }

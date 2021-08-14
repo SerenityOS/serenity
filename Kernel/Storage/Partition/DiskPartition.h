@@ -25,10 +25,6 @@ public:
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0600; }
-    virtual String device_name() const override;
-
     const DiskPartitionMetadata& metadata() const;
 
 private:

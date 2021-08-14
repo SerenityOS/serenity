@@ -21,10 +21,6 @@ public:
 
     virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0660; }
-    virtual String device_name() const override { return "mem"; };
-
 private:
     MemoryDevice();
     virtual StringView class_name() const override { return "MemoryDevice"; }

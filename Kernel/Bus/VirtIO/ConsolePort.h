@@ -40,10 +40,6 @@ private:
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
 
-    mode_t required_mode() const override { return 0666; }
-
-    String device_name() const override;
-
     void init_receive_buffer();
 
     static unsigned next_device_id;

@@ -141,9 +141,4 @@ KResultOr<Memory::Region*> KCOVDevice::mmap(Process& process, OpenFileDescriptio
         range, *kcov_instance->vmobject(), offset, {}, prot, shared);
 }
 
-String KCOVDevice::device_name() const
-{
-    return "kcov"sv;
-}
-
 }

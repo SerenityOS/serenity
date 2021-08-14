@@ -84,11 +84,6 @@ void FramebufferDevice::activate_writes()
     m_graphical_writes_enabled = true;
 }
 
-String FramebufferDevice::device_name() const
-{
-    return String::formatted("fb{}", minor());
-}
-
 UNMAP_AFTER_INIT KResult FramebufferDevice::initialize()
 {
     // FIXME: Would be nice to be able to unify this with mmap above, but this

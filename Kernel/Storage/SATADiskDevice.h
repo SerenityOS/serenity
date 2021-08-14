@@ -30,7 +30,7 @@ public:
     // ^StorageDevice
     // ^BlockDevice
     virtual void start_request(AsyncBlockDeviceRequest&) override;
-    virtual String device_name() const override;
+    virtual String storage_name() const override;
 
 private:
     SATADiskDevice(const AHCIController&, const AHCIPort&, size_t sector_size, u64 max_addressable_block);

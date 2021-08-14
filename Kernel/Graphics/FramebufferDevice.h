@@ -25,10 +25,6 @@ public:
     virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual KResultOr<Memory::Region*> mmap(Process&, OpenFileDescription&, Memory::VirtualRange const&, u64 offset, int prot, bool shared) override;
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0660; }
-    virtual String device_name() const override;
-
     virtual void deactivate_writes();
     virtual void activate_writes();
     size_t framebuffer_size_in_bytes() const;

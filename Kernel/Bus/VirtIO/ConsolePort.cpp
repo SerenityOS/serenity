@@ -158,11 +158,6 @@ KResultOr<size_t> ConsolePort::write(OpenFileDescription& desc, u64, const UserO
     return total_bytes_copied;
 }
 
-String ConsolePort::device_name() const
-{
-    return String::formatted("hvc{}p{}", m_console.device_id(), m_port);
-}
-
 KResultOr<NonnullRefPtr<OpenFileDescription>> ConsolePort::open(int options)
 {
     if (!m_open)

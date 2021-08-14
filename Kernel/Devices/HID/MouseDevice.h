@@ -31,11 +31,6 @@ public:
     // ^HIDDevice
     virtual Type instrument_type() const override { return Type::Mouse; }
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0440; }
-
-    virtual String device_name() const override { return String::formatted("mouse{}", minor()); }
-
 protected:
     MouseDevice();
     // ^CharacterDevice

@@ -41,7 +41,7 @@ void PATADiskDevice::start_request(AsyncBlockDeviceRequest& request)
     m_channel->start_request(request, is_slave(), m_capabilities);
 }
 
-String PATADiskDevice::device_name() const
+String PATADiskDevice::storage_name() const
 {
     return String::formatted("hd{:c}", 'a' + minor());
 }

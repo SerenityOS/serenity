@@ -29,8 +29,8 @@ public:
     virtual KResultOr<size_t> write(OpenFileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual bool can_write(const OpenFileDescription&, size_t) const override;
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0600; }
+    // FIXME: This is being used only during early boot, find a better way to find devices...
+    virtual String storage_name() const = 0;
 
 protected:
     StorageDevice(const StorageController&, size_t, u64);

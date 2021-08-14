@@ -19,10 +19,6 @@ public:
     static void initialize();
     static NullDevice& the();
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0666; }
-    virtual String device_name() const override { return "null"; }
-
 private:
     // ^CharacterDevice
     virtual KResultOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) override;

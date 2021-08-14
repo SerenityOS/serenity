@@ -37,9 +37,6 @@ public:
     UserID uid() const { return m_uid; }
     GroupID gid() const { return m_gid; }
 
-    virtual mode_t required_mode() const = 0;
-    virtual String device_name() const = 0;
-
     virtual bool is_device() const override { return true; }
 
     static void for_each(Function<void(Device&)>);

@@ -28,10 +28,6 @@ public:
 
     virtual String absolute_path(const OpenFileDescription&) const override;
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0640; }
-    virtual String device_name() const override;
-
 private:
     explicit MasterPTY(unsigned index, NonnullOwnPtr<DoubleBuffer> buffer);
     // ^CharacterDevice

@@ -33,13 +33,8 @@ public:
     // ^HIDDevice
     virtual Type instrument_type() const override { return Type::Keyboard; }
 
-    // ^Device
-    virtual mode_t required_mode() const override { return 0440; }
-
     // ^File
     virtual KResult ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
-
-    virtual String device_name() const override { return String::formatted("keyboard{}", minor()); }
 
     void update_modifier(u8 modifier, bool state)
     {
