@@ -164,6 +164,7 @@ public:
     [[nodiscard]] timeval to_timeval() const;
 
     [[nodiscard]] bool is_zero() const { return !m_seconds && !m_nanoseconds; }
+    [[nodiscard]] bool is_negative() const { return m_seconds < 0; }
 
     bool operator==(const Time& other) const { return this->m_seconds == other.m_seconds && this->m_nanoseconds == other.m_nanoseconds; }
     bool operator!=(const Time& other) const { return !(*this == other); }
