@@ -121,11 +121,10 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
 
     MatchInput input;
     MatchState state;
-    MatchOutput output;
+    size_t operations = 0;
 
     input.regex_options = m_regex_options | regex_options.value_or({}).value();
     input.start_offset = m_pattern->start_offset;
-    output.operations = 0;
     size_t lines_to_skip = 0;
 
     bool unicode = input.regex_options.has_flag_set(AllFlags::Unicode);
@@ -199,7 +198,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
             // Run the code until it tries to consume something.
             // This allows non-consuming code to run on empty strings, for instance
             // e.g. "Exit"
-            MatchOutput temp_output { output };
+            size_t temp_operations = operations;
 
             input.column = match_count;
             input.match_index = match_count;
@@ -208,11 +207,11 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
             state.string_position_in_code_units = view_index;
             state.instruction_position = 0;
 
-            auto success = execute(input, state, temp_output);
+            auto success = execute(input, state, temp_operations);
             // This success is acceptable only if it doesn't read anything from the input (input length is 0).
             if (state.string_position <= view_index) {
                 if (success.has_value() && success.value()) {
-                    output = move(temp_output);
+                    operations = temp_operations;
                     if (!match_count) {
                         // Nothing was *actually* matched, so append an empty match.
                         append_match(input, state, view_index);
@@ -240,9 +239,9 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
             state.string_position_in_code_units = view_index;
             state.instruction_position = 0;
 
-            auto success = execute(input, state, output);
+            auto success = execute(input, state, operations);
             if (!success.has_value())
-                return { false, 0, {}, {}, {}, output.operations };
+                return { false, 0, {}, {}, {}, operations };
 
             if (success.value()) {
                 succeeded = true;
@@ -275,7 +274,7 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
                     break;
 
                 } else if (state.string_position < view_length) {
-                    return { false, 0, {}, {}, {}, output.operations };
+                    return { false, 0, {}, {}, {}, operations };
                 }
 
                 append_match(input, state, view_index);
@@ -296,33 +295,31 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
             break;
     }
 
-    MatchOutput output_copy;
-    if (match_count) {
-        output_copy.capture_group_matches = state.capture_group_matches;
-        // Make sure there are as many capture matches as there are actual matches.
-        if (output_copy.capture_group_matches.size() < match_count)
-            output_copy.capture_group_matches.resize(match_count);
-        for (auto& matches : output_copy.capture_group_matches)
-            matches.resize(m_pattern->parser_result.capture_groups_count + 1);
-        if (!input.regex_options.has_flag_set(AllFlags::SkipTrimEmptyMatches)) {
-            for (auto& matches : output_copy.capture_group_matches)
-                matches.template remove_all_matching([](auto& match) { return match.view.is_null(); });
-        }
-
-        output_copy.matches = state.matches;
-    } else {
-        output_copy.capture_group_matches.clear_with_capacity();
-    }
-
-    return {
+    RegexResult result {
         match_count != 0,
         match_count,
-        move(output_copy.matches),
-        move(output_copy.capture_group_matches),
-        output.operations,
+        move(state.matches),
+        move(state.capture_group_matches),
+        operations,
         m_pattern->parser_result.capture_groups_count,
         m_pattern->parser_result.named_capture_groups_count,
     };
+
+    if (match_count) {
+        // Make sure there are as many capture matches as there are actual matches.
+        if (result.capture_group_matches.size() < match_count)
+            result.capture_group_matches.resize(match_count);
+        for (auto& matches : result.capture_group_matches)
+            matches.resize(m_pattern->parser_result.capture_groups_count + 1);
+        if (!input.regex_options.has_flag_set(AllFlags::SkipTrimEmptyMatches)) {
+            for (auto& matches : result.capture_group_matches)
+                matches.template remove_all_matching([](auto& match) { return match.view.is_null(); });
+        }
+    } else {
+        result.capture_group_matches.clear_with_capacity();
+    }
+
+    return result;
 }
 
 template<typename T>
@@ -384,7 +381,7 @@ private:
 };
 
 template<class Parser>
-Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& state, MatchOutput& output) const
+Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& state, size_t& operations) const
 {
     BumpAllocatedLinkedList<MatchState> states_to_try_next;
     size_t recursion_level = 0;
@@ -392,8 +389,8 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
     auto& bytecode = m_pattern->parser_result.bytecode;
 
     for (;;) {
-        ++output.operations;
         auto& opcode = bytecode.get_opcode(state);
+        ++operations;
 
 #if REGEX_DEBUG
         s_regex_dbg.print_opcode("VM", opcode, state, recursion_level, false);
@@ -404,7 +401,7 @@ Optional<bool> Matcher<Parser>::execute(MatchInput const& input, MatchState& sta
             --input.fail_counter;
             result = ExecutionResult::Failed_ExecuteLowPrioForks;
         } else {
-            result = opcode.execute(input, state, output);
+            result = opcode.execute(input, state);
         }
 
 #if REGEX_DEBUG

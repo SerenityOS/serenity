@@ -471,7 +471,7 @@ public:
 
     virtual OpCodeId opcode_id() const = 0;
     virtual size_t size() const = 0;
-    virtual ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const = 0;
+    virtual ExecutionResult execute(MatchInput const& input, MatchState& state) const = 0;
 
     ALWAYS_INLINE ByteCodeValueType argument(size_t offset) const
     {
@@ -508,7 +508,7 @@ protected:
 
 class OpCode_Exit final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Exit; }
     ALWAYS_INLINE size_t size() const override { return 1; }
     String const arguments_string() const override { return ""; }
@@ -516,7 +516,7 @@ public:
 
 class OpCode_FailForks final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::FailForks; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t count() const { return argument(0); }
@@ -525,7 +525,7 @@ public:
 
 class OpCode_Save final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Save; }
     ALWAYS_INLINE size_t size() const override { return 1; }
     String const arguments_string() const override { return ""; }
@@ -533,7 +533,7 @@ public:
 
 class OpCode_Restore final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Restore; }
     ALWAYS_INLINE size_t size() const override { return 1; }
     String const arguments_string() const override { return ""; }
@@ -541,7 +541,7 @@ public:
 
 class OpCode_GoBack final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::GoBack; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t count() const { return argument(0); }
@@ -550,7 +550,7 @@ public:
 
 class OpCode_Jump final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Jump; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
@@ -562,7 +562,7 @@ public:
 
 class OpCode_ForkJump final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkJump; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
@@ -574,7 +574,7 @@ public:
 
 class OpCode_ForkStay final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ForkStay; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
@@ -586,7 +586,7 @@ public:
 
 class OpCode_CheckBegin final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckBegin; }
     ALWAYS_INLINE size_t size() const override { return 1; }
     String const arguments_string() const override { return ""; }
@@ -594,7 +594,7 @@ public:
 
 class OpCode_CheckEnd final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckEnd; }
     ALWAYS_INLINE size_t size() const override { return 1; }
     String const arguments_string() const override { return ""; }
@@ -602,7 +602,7 @@ public:
 
 class OpCode_CheckBoundary final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::CheckBoundary; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t arguments_count() const { return 1; }
@@ -612,7 +612,7 @@ public:
 
 class OpCode_ClearCaptureGroup final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::ClearCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
@@ -621,7 +621,7 @@ public:
 
 class OpCode_SaveLeftCaptureGroup final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveLeftCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
@@ -630,7 +630,7 @@ public:
 
 class OpCode_SaveRightCaptureGroup final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveRightCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
@@ -639,7 +639,7 @@ public:
 
 class OpCode_SaveRightNamedCaptureGroup final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveRightNamedCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 4; }
     ALWAYS_INLINE StringView name() const { return { reinterpret_cast<char*>(argument(0)), length() }; }
@@ -653,7 +653,7 @@ public:
 
 class OpCode_Compare final : public OpCode {
 public:
-    ExecutionResult execute(MatchInput const& input, MatchState& state, MatchOutput& output) const override;
+    ExecutionResult execute(MatchInput const& input, MatchState& state) const override;
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::Compare; }
     ALWAYS_INLINE size_t size() const override { return arguments_size() + 3; }
     ALWAYS_INLINE size_t arguments_count() const { return argument(0); }
