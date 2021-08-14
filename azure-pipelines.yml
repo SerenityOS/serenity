@@ -4,4 +4,6 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-stages: []
+steps:
+  - script: echo Hello, world!
+    displayName: 'Hello world'
