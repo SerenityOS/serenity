@@ -9,9 +9,11 @@
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/SysFSComponent.h>
+#include <Kernel/Locking/MutexProtected.h>
 
 namespace Kernel {
 
+class SysFSDevicesDirectory;
 class SysFSRootDirectory final : public SysFSDirectory {
     friend class SysFSComponentRegistry;
 
@@ -22,6 +24,50 @@ public:
 private:
     SysFSRootDirectory();
     RefPtr<SysFSBusDirectory> m_buses_directory;
+};
+
+class SysFSDeviceComponent final
+    : public SysFSComponent
+    , public Weakable<SysFSDeviceComponent> {
+    friend class SysFSComponentRegistry;
+
+public:
+    static NonnullRefPtr<SysFSDeviceComponent> must_create(Device const&);
+
+    Device const& device() const { return *m_associated_device; }
+
+private:
+    explicit SysFSDeviceComponent(Device const&);
+    IntrusiveListNode<SysFSDeviceComponent, NonnullRefPtr<SysFSDeviceComponent>> m_list_node;
+    RefPtr<Device> m_associated_device;
+};
+
+class SysFSDevicesDirectory final : public SysFSDirectory {
+public:
+    static NonnullRefPtr<SysFSDevicesDirectory> must_create(SysFSRootDirectory const&);
+
+private:
+    explicit SysFSDevicesDirectory(SysFSRootDirectory const&);
+};
+
+class SysFSBlockDevicesDirectory final : public SysFSDirectory {
+public:
+    static NonnullRefPtr<SysFSBlockDevicesDirectory> must_create(SysFSDevicesDirectory const&);
+    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual RefPtr<SysFSComponent> lookup(StringView name) override;
+
+private:
+    explicit SysFSBlockDevicesDirectory(SysFSDevicesDirectory const&);
+};
+
+class SysFSCharacterDevicesDirectory final : public SysFSDirectory {
+public:
+    static NonnullRefPtr<SysFSCharacterDevicesDirectory> must_create(SysFSDevicesDirectory const&);
+    virtual KResult traverse_as_directory(unsigned, Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
+    virtual RefPtr<SysFSComponent> lookup(StringView name) override;
+
+private:
+    explicit SysFSCharacterDevicesDirectory(SysFSDevicesDirectory const&);
 };
 
 class SysFSBusDirectory : public SysFSDirectory {
@@ -35,6 +81,8 @@ private:
 };
 
 class SysFSComponentRegistry {
+    using DevicesList = MutexProtected<IntrusiveList<SysFSDeviceComponent, NonnullRefPtr<SysFSDeviceComponent>, &SysFSDeviceComponent::m_list_node>>;
+
 public:
     static SysFSComponentRegistry& the();
 
@@ -49,9 +97,12 @@ public:
     void register_new_bus_directory(SysFSDirectory&);
     SysFSBusDirectory& buses_directory();
 
+    DevicesList& devices_list();
+
 private:
     Mutex m_lock;
     NonnullRefPtr<SysFSRootDirectory> m_root_directory;
+    DevicesList m_devices_list;
 };
 
 class SysFS final : public FileSystem {

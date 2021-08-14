@@ -17,15 +17,22 @@
 #include <AK/DoublyLinkedList.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/RefPtr.h>
 #include <Kernel/Devices/AsyncDeviceRequest.h>
 #include <Kernel/FileSystem/File.h>
-#include <Kernel/FileSystem/SysFSComponent.h>
+#include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
 
 class Device : public File {
+protected:
+    enum class State {
+        Normal,
+        BeingRemoved,
+    };
+
 public:
     virtual ~Device() override;
 
@@ -39,6 +46,7 @@ public:
     GroupID gid() const { return m_gid; }
 
     virtual bool is_device() const override { return true; }
+    virtual void before_removing();
 
     static void for_each(Function<void(Device&)>);
     static Device* get_device(unsigned major, unsigned minor);
@@ -70,8 +78,11 @@ private:
     UserID m_uid { 0 };
     GroupID m_gid { 0 };
 
+    State m_state { State::Normal };
+
     Spinlock m_requests_lock;
     DoublyLinkedList<RefPtr<AsyncDeviceRequest>> m_requests;
+    WeakPtr<SysFSDeviceComponent> m_sysfs_component;
 };
 
 }
