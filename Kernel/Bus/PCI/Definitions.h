@@ -52,6 +52,12 @@ namespace Kernel {
 #define PCI_CAPABILITY_VENDOR_SPECIFIC 0x9
 #define PCI_CAPABILITY_MSIX 0x11
 
+// Taken from https://pcisig.com/sites/default/files/files/PCI_Code-ID_r_1_11__v24_Jan_2019.pdf
+#define PCI_MASS_STORAGE_CLASS_ID 0x1
+#define PCI_IDE_CTRL_SUBCLASS_ID 0x1
+#define PCI_SATA_CTRL_SUBCLASS_ID 0x6
+#define PCI_AHCI_IF_PROGIF 0x1
+
 namespace PCI {
 struct ID {
     u16 vendor_id { 0 };

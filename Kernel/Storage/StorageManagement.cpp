@@ -48,13 +48,13 @@ UNMAP_AFTER_INIT NonnullRefPtrVector<StorageController> StorageManagement::enume
     if (!kernel_command_line().disable_physical_storage()) {
         if (kernel_command_line().is_ide_enabled()) {
             PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
-                if (PCI::get_class(address) == 0x1 && PCI::get_subclass(address) == 0x1) {
+                if (PCI::get_class(address) == PCI_MASS_STORAGE_CLASS_ID && PCI::get_subclass(address) == PCI_IDE_CTRL_SUBCLASS_ID) {
                     controllers.append(IDEController::initialize(address, force_pio));
                 }
             });
         }
         PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
-            if (PCI::get_class(address) == 0x1 && PCI::get_subclass(address) == 0x6 && PCI::get_programming_interface(address) == 0x1) {
+            if (PCI::get_class(address) == PCI_MASS_STORAGE_CLASS_ID && PCI::get_subclass(address) == PCI_SATA_CTRL_SUBCLASS_ID && PCI::get_programming_interface(address) == PCI_AHCI_IF_PROGIF) {
                 controllers.append(AHCIController::initialize(address));
             }
         });
