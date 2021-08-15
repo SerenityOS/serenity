@@ -378,7 +378,7 @@ private:
         }
     }
 
-    [[nodiscard]] static size_t size_in_bytes(size_t capacity)
+    [[nodiscard]] static constexpr size_t size_in_bytes(size_t capacity)
     {
         if constexpr (IsOrdered) {
             return sizeof(BucketType) * capacity;
