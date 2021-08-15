@@ -77,6 +77,7 @@ private:
 
     Web::WebViewHooks& hooks();
     void update_actions();
+    void bookmark_current_url();
     void update_bookmark_button(const String& url);
     void start_download(const URL& url);
     void view_source(const URL& url, const String& source);
