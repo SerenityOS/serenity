@@ -29,6 +29,7 @@ void PlainMonthDayPrototype::initialize(GlobalObject& global_object)
 
     define_native_accessor(vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(vm.names.monthCode, month_code_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.names.day, day_getter, {}, Attribute::Configurable);
 }
 
 static PlainMonthDay* typed_this(GlobalObject& global_object)
@@ -71,6 +72,22 @@ JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::month_code_getter)
 
     // 4. Return ? CalendarMonthCode(calendar, monthDay).
     return js_string(vm, calendar_month_code(global_object, calendar, *month_day));
+}
+
+// 10.3.5 get Temporal.PlainMonthDay.prototype.day, https://tc39.es/proposal-temporal/#sec-get-temporal.plainmonthday.prototype.day
+JS_DEFINE_NATIVE_FUNCTION(PlainMonthDayPrototype::day_getter)
+{
+    // 1. Let monthDay be the this value.
+    // 2. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
+    auto* month_day = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be monthDay.[[Calendar]].
+    auto& calendar = month_day->calendar();
+
+    // 4. Return 𝔽(? CalendarDay(calendar, monthDay)).
+    return Value(calendar_day(global_object, calendar, *month_day));
 }
 
 }
