@@ -4,23 +4,59 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Locking/SpinLockProtectedValue.h>
 
 namespace Kernel {
 
+static Singleton<SpinLockProtectedValue<Custody::AllCustodiesList>> s_all_custodies;
+
+static SpinLockProtectedValue<Custody::AllCustodiesList>& all_custodies()
+{
+    return s_all_custodies;
+}
+
 KResultOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringView name, Inode& inode, int mount_flags)
 {
-    auto name_kstring = KString::try_create(name);
-    if (!name_kstring)
-        return ENOMEM;
-    auto custody = adopt_ref_if_nonnull(new (nothrow) Custody(parent, name_kstring.release_nonnull(), inode, mount_flags));
-    if (!custody)
-        return ENOMEM;
-    return custody.release_nonnull();
+    return all_custodies().with([&](auto& all_custodies) -> KResultOr<NonnullRefPtr<Custody>> {
+        for (Custody& custody : all_custodies) {
+            if (custody.parent() == parent
+                && custody.name() == name
+                && &custody.inode() == &inode
+                && custody.mount_flags() == mount_flags) {
+                return custody;
+            }
+        }
+
+        auto name_kstring = KString::try_create(name);
+        if (!name_kstring)
+            return ENOMEM;
+        auto custody = adopt_ref_if_nonnull(new (nothrow) Custody(parent, name_kstring.release_nonnull(), inode, mount_flags));
+        if (!custody)
+            return ENOMEM;
+
+        all_custodies.append(*custody);
+        return custody.release_nonnull();
+    });
+}
+
+bool Custody::unref() const
+{
+    bool should_destroy = all_custodies().with([&](auto&) {
+        if (deref_base())
+            return false;
+        m_all_custodies_list_node.remove();
+        return true;
+    });
+
+    if (should_destroy)
+        delete this;
+    return should_destroy;
 }
 
 Custody::Custody(Custody* parent, NonnullOwnPtr<KString> name, Inode& inode, int mount_flags)
