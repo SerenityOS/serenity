@@ -49,8 +49,8 @@ public:
         Yes,
     };
 
-    static OwnPtr<Region> try_create_user_accessible(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
-    static OwnPtr<Region> try_create_kernel_only(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
+    static KResultOr<NonnullOwnPtr<Region>> try_create_user_accessible(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
+    static KResultOr<NonnullOwnPtr<Region>> try_create_kernel_only(VirtualRange const&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
 
     ~Region();
 
@@ -90,7 +90,7 @@ public:
 
     PageFaultResponse handle_fault(PageFault const&);
 
-    OwnPtr<Region> clone();
+    KResultOr<NonnullOwnPtr<Region>> try_clone();
 
     bool contains(VirtualAddress vaddr) const
     {

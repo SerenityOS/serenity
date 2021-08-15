@@ -743,9 +743,12 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
-    auto region = Region::try_create_kernel_only(range, vmobject, 0, KString::try_create(name), access, cacheable);
-    if (region)
-        region->map(kernel_page_directory());
+    auto maybe_region = Region::try_create_kernel_only(range, vmobject, 0, KString::try_create(name), access, cacheable);
+    if (maybe_region.is_error())
+        return {};
+
+    auto region = maybe_region.release_value();
+    region->map(kernel_page_directory());
     return region;
 }
 
