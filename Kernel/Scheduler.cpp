@@ -605,6 +605,7 @@ void dump_thread_list(bool with_stack_traces)
         }
         if (with_stack_traces)
             dbgln("{}", thread.backtrace());
+        return IterationDecision::Continue;
     });
 }
 
