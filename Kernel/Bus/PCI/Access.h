@@ -39,7 +39,6 @@ public:
 
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const override;
     virtual ~PCIDeviceAttributeSysFSComponent() {};
-    virtual size_t size() const override;
 
 protected:
     virtual OwnPtr<KBuffer> try_to_generate_buffer() const;
