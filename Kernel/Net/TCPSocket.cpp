@@ -512,24 +512,24 @@ KResult TCPSocket::close()
     return result;
 }
 
-static Singleton<ProtectedValue<HashTable<TCPSocket*>>> s_sockets_for_retransmit;
+static Singleton<ProtectedValue<TCPSocket::RetransmitList>> s_sockets_for_retransmit;
 
-ProtectedValue<HashTable<TCPSocket*>>& TCPSocket::sockets_for_retransmit()
+ProtectedValue<TCPSocket::RetransmitList>& TCPSocket::sockets_for_retransmit()
 {
     return *s_sockets_for_retransmit;
 }
 
 void TCPSocket::enqueue_for_retransmit()
 {
-    sockets_for_retransmit().with_exclusive([&](auto& table) {
-        table.set(this);
+    sockets_for_retransmit().with_exclusive([&](auto& list) {
+        list.append(*this);
     });
 }
 
 void TCPSocket::dequeue_for_retransmit()
 {
-    sockets_for_retransmit().with_exclusive([&](auto& table) {
-        table.remove(this);
+    sockets_for_retransmit().with_exclusive([&](auto& list) {
+        list.remove(*this);
     });
 }
 
