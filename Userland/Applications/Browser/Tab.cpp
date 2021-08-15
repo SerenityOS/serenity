@@ -173,14 +173,14 @@ Tab::Tab(BrowserWindow& window, Type type)
     m_bookmark_button->set_fixed_size(22, 22);
 
     m_bookmark_button->on_click = [this](auto) {
-        auto url = this->url().to_string();
-        if (BookmarksBarWidget::the().contains_bookmark(url)) {
-            BookmarksBarWidget::the().remove_bookmark(url);
-        } else {
-            BookmarksBarWidget::the().add_bookmark(url, m_title);
-        }
-        update_bookmark_button(url);
+        bookmark_current_url();
     };
+
+    auto bookmark_action = GUI::Action::create(
+        "Bookmark current URL", { Mod_Ctrl, Key_D }, [this](auto&) {
+            bookmark_current_url();
+        },
+        this);
 
     hooks().on_load_start = [this](auto& url) {
         m_location_box->set_icon(nullptr);
@@ -408,6 +408,17 @@ void Tab::update_actions()
         return;
     window.go_back_action().set_enabled(m_history.can_go_back());
     window.go_forward_action().set_enabled(m_history.can_go_forward());
+}
+
+void Tab::bookmark_current_url()
+{
+    auto url = this->url().to_string();
+    if (BookmarksBarWidget::the().contains_bookmark(url)) {
+        BookmarksBarWidget::the().remove_bookmark(url);
+    } else {
+        BookmarksBarWidget::the().add_bookmark(url, m_title);
+    }
+    update_bookmark_button(url);
 }
 
 void Tab::update_bookmark_button(const String& url)
