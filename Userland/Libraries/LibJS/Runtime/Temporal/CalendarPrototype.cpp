@@ -34,6 +34,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.dateFromFields, date_from_fields, 2, attr);
+    define_native_function(vm.names.yearMonthFromFields, year_month_from_fields, 2, attr);
     define_native_function(vm.names.year, year, 1, attr);
     define_native_function(vm.names.month, month, 1, attr);
     define_native_function(vm.names.monthCode, month_code, 1, attr);
@@ -105,6 +106,40 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
 
     // 7. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
     return create_temporal_date(global_object, result->year, result->month, result->day, *calendar);
+}
+
+// 12.4.5 Temporal.Calendar.prototype.yearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.yearmonthfromfields
+// NOTE: This is the minimum yearMonthFromFields implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
+{
+    // 1. Let calendar be the this value.
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Assert: calendar.[[Identifier]] is "iso8601".
+    VERIFY(calendar->identifier() == "iso8601"sv);
+
+    // 4. If Type(fields) is not Object, throw a TypeError exception.
+    auto fields = vm.argument(0);
+    if (!fields.is_object()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, fields.to_string_without_side_effects());
+        return {};
+    }
+
+    // 5. Set options to ? GetOptionsObject(options).
+    auto* options = get_options_object(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+
+    // 6. Let result be ? ISOYearMonthFromFields(fields, options).
+    auto result = iso_year_month_from_fields(global_object, fields.as_object(), *options);
+    if (vm.exception())
+        return {};
+
+    // 7. Return ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[ReferenceISODay]]).
+    return create_temporal_year_month(global_object, result->year, result->month, *calendar, result->reference_iso_day);
 }
 
 // 12.4.9 Temporal.Calendar.prototype.year ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.year
