@@ -458,14 +458,13 @@ KResultOr<size_t> ISO9660Inode::read_bytes(off_t offset, size_t size, UserOrKern
 {
     MutexLocker inode_locker(m_inode_lock);
 
-    auto& file_system = const_cast<ISO9660FS&>(static_cast<ISO9660FS const&>(fs()));
     u32 data_length = LittleEndian { m_record.data_length.little };
     u32 extent_location = LittleEndian { m_record.extent_location.little };
 
     if (static_cast<u64>(offset) >= data_length)
         return 0;
 
-    auto block = KBuffer::try_create_with_size(file_system.m_logical_block_size);
+    auto block = KBuffer::try_create_with_size(fs().m_logical_block_size);
     if (!block) {
         return ENOMEM;
     }
@@ -473,16 +472,16 @@ KResultOr<size_t> ISO9660Inode::read_bytes(off_t offset, size_t size, UserOrKern
 
     size_t total_bytes = min(size, data_length - offset);
     size_t nread = 0;
-    size_t blocks_already_read = offset / file_system.m_logical_block_size;
-    size_t initial_offset = offset % file_system.m_logical_block_size;
+    size_t blocks_already_read = offset / fs().m_logical_block_size;
+    size_t initial_offset = offset % fs().m_logical_block_size;
 
     auto current_block_index = BlockBasedFileSystem::BlockIndex { extent_location + blocks_already_read };
     while (nread != total_bytes) {
-        size_t bytes_to_read = min(total_bytes - nread, file_system.logical_block_size() - initial_offset);
+        size_t bytes_to_read = min(total_bytes - nread, fs().logical_block_size() - initial_offset);
         auto buffer_offset = buffer.offset(nread);
         dbgln_if(ISO9660_VERY_DEBUG, "ISO9660Inode::read_bytes: Reading {} bytes into buffer offset {}/{}, logical block index: {}", bytes_to_read, nread, total_bytes, current_block_index.value());
 
-        if (bool result = file_system.raw_read(current_block_index, block_buffer); !result) {
+        if (bool result = const_cast<ISO9660FS&>(fs()).raw_read(current_block_index, block_buffer); !result) {
             return EIO;
         }
 
@@ -506,10 +505,9 @@ InodeMetadata ISO9660Inode::metadata() const
 
 KResult ISO9660Inode::traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)> visitor) const
 {
-    auto& file_system = static_cast<ISO9660FS const&>(fs());
     Array<u8, max_file_identifier_length> file_identifier_buffer;
 
-    auto traversal_result = file_system.visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
+    auto traversal_result = fs().visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
         StringView filename = get_normalized_filename(*record, file_identifier_buffer);
         dbgln_if(ISO9660_VERY_DEBUG, "traverse_as_directory(): Found {}", filename);
 
@@ -531,15 +529,14 @@ KResult ISO9660Inode::traverse_as_directory(Function<bool(FileSystem::DirectoryE
 
 KResultOr<NonnullRefPtr<Inode>> ISO9660Inode::lookup(StringView name)
 {
-    auto& file_system = static_cast<ISO9660FS const&>(fs());
     RefPtr<Inode> inode;
     Array<u8, max_file_identifier_length> file_identifier_buffer;
 
-    auto traversal_result = file_system.visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
+    auto traversal_result = fs().visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
         StringView filename = get_normalized_filename(*record, file_identifier_buffer);
 
         if (filename == name) {
-            auto maybe_inode = ISO9660Inode::try_create_from_directory_record(const_cast<ISO9660FS&>(file_system), *record, filename);
+            auto maybe_inode = ISO9660Inode::try_create_from_directory_record(fs(), *record, filename);
             if (maybe_inode.is_error()) {
                 // FIXME: The Inode API does not handle allocation failures very
                 //        well... we can't return a KResultOr from here. It

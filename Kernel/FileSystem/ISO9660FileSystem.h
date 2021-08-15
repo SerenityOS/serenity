@@ -347,6 +347,9 @@ class ISO9660Inode final : public Inode {
 public:
     virtual ~ISO9660Inode() override;
 
+    ISO9660FS& fs() { return static_cast<ISO9660FS&>(Inode::fs()); }
+    ISO9660FS const& fs() const { return static_cast<ISO9660FS const&>(Inode::fs()); }
+
     // ^Inode
     virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
     virtual InodeMetadata metadata() const override;
