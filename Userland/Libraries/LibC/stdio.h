@@ -57,6 +57,7 @@ FILE* fdopen(int fd, const char* mode);
 FILE* fopen(const char* pathname, const char* mode);
 FILE* freopen(const char* pathname, const char* mode, FILE*);
 void flockfile(FILE* filehandle);
+int ftrylockfile(FILE* filehandle);
 void funlockfile(FILE* filehandle);
 int fclose(FILE*);
 void rewind(FILE*);

@@ -31,7 +31,8 @@ public:
         : m_fd(fd)
         , m_mode(mode)
     {
-        __pthread_mutex_init(&m_mutex, nullptr);
+        __pthread_mutexattr_t mutex_attr { __PTHREAD_MUTEX_RECURSIVE };
+        __pthread_mutex_init(&m_mutex, &mutex_attr);
     }
     ~FILE();
 
@@ -123,6 +124,7 @@ private:
     bool write_from_buffer();
 
     void lock();
+    int try_lock();
     void unlock();
 
     int m_fd { -1 };
@@ -135,6 +137,9 @@ private:
     __pthread_mutex_t m_mutex;
 
     friend class ScopedFileLock;
+    friend void flockfile(FILE*);
+    friend int ftrylockfile(FILE*);
+    friend void funlockfile(FILE*);
 };
 
 FILE::~FILE()
@@ -588,6 +593,11 @@ bool FILE::Buffer::enqueue_front(u8 byte)
 void FILE::lock()
 {
     __pthread_mutex_lock(&m_mutex);
+}
+
+int FILE::try_lock()
+{
+    return __pthread_mutex_trylock(&m_mutex);
 }
 
 void FILE::unlock()
@@ -1287,14 +1297,22 @@ int vscanf(const char* fmt, va_list ap)
     return vfscanf(stdin, fmt, ap);
 }
 
-void flockfile([[maybe_unused]] FILE* filehandle)
+void flockfile(FILE* filehandle)
 {
-    dbgln("FIXME: Implement flockfile()");
+    VERIFY(filehandle);
+    filehandle->lock();
 }
 
-void funlockfile([[maybe_unused]] FILE* filehandle)
+int ftrylockfile(FILE* filehandle)
 {
-    dbgln("FIXME: Implement funlockfile()");
+    VERIFY(filehandle);
+    return filehandle->try_lock();
+}
+
+void funlockfile(FILE* filehandle)
+{
+    VERIFY(filehandle);
+    filehandle->unlock();
 }
 
 FILE* tmpfile()
