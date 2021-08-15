@@ -119,13 +119,17 @@ KResult UHCIController::reset()
     }
 
     // Let's allocate the physical page for the Frame List (which is 4KiB aligned)
-    auto framelist_vmobj = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE);
-    m_framelist = MM.allocate_kernel_region_with_vmobject(*framelist_vmobj, PAGE_SIZE, "UHCI Framelist", Memory::Region::Access::Write);
+    auto maybe_framelist_vmobj = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(PAGE_SIZE);
+    if (maybe_framelist_vmobj.is_error())
+        return maybe_framelist_vmobj.error();
+
+    m_framelist = MM.allocate_kernel_region_with_vmobject(maybe_framelist_vmobj.release_value(), PAGE_SIZE, "UHCI Framelist", Memory::Region::Access::Write);
     dbgln("UHCI: Allocated framelist at physical address {}", m_framelist->physical_page(0)->paddr());
     dbgln("UHCI: Framelist is at virtual address {}", m_framelist->vaddr());
     write_sofmod(64); // 1mS frame time
 
-    create_structures();
+    if (auto result = create_structures(); result.is_error())
+        return result;
     setup_schedule();
 
     write_flbaseadd(m_framelist->physical_page(0)->paddr().get()); // Frame list (physical) address
@@ -139,12 +143,15 @@ KResult UHCIController::reset()
     return KSuccess;
 }
 
-UNMAP_AFTER_INIT void UHCIController::create_structures()
+UNMAP_AFTER_INIT KResult UHCIController::create_structures()
 {
     // Let's allocate memory for both the QH and TD pools
     // First the QH pool and all of the Interrupt QH's
-    auto qh_pool_vmobject = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(2 * PAGE_SIZE);
-    m_qh_pool = MM.allocate_kernel_region_with_vmobject(*qh_pool_vmobject, 2 * PAGE_SIZE, "UHCI Queue Head Pool", Memory::Region::Access::Write);
+    auto maybe_qh_pool_vmobject = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(2 * PAGE_SIZE);
+    if (maybe_qh_pool_vmobject.is_error())
+        return maybe_qh_pool_vmobject.error();
+
+    m_qh_pool = MM.allocate_kernel_region_with_vmobject(maybe_qh_pool_vmobject.release_value(), 2 * PAGE_SIZE, "UHCI Queue Head Pool", Memory::Region::Access::Write);
     memset(m_qh_pool->vaddr().as_ptr(), 0, 2 * PAGE_SIZE); // Zero out both pages
 
     // Let's populate our free qh list (so we have some we can allocate later on)
@@ -163,8 +170,10 @@ UNMAP_AFTER_INIT void UHCIController::create_structures()
     m_dummy_qh = allocate_queue_head();
 
     // Now the Transfer Descriptor pool
-    auto td_pool_vmobject = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(2 * PAGE_SIZE);
-    m_td_pool = MM.allocate_kernel_region_with_vmobject(*td_pool_vmobject, 2 * PAGE_SIZE, "UHCI Transfer Descriptor Pool", Memory::Region::Access::Write);
+    auto maybe_td_pool_vmobject = Memory::AnonymousVMObject::try_create_physically_contiguous_with_size(2 * PAGE_SIZE);
+    if (maybe_td_pool_vmobject.is_error())
+        return maybe_td_pool_vmobject.error();
+    m_td_pool = MM.allocate_kernel_region_with_vmobject(maybe_td_pool_vmobject.release_value(), 2 * PAGE_SIZE, "UHCI Transfer Descriptor Pool", Memory::Region::Access::Write);
     memset(m_td_pool->vaddr().as_ptr(), 0, 2 * PAGE_SIZE);
 
     // Set up the Isochronous Transfer Descriptor list
@@ -209,6 +218,8 @@ UNMAP_AFTER_INIT void UHCIController::create_structures()
         dbgln("    qh_pool: {}, length: {}", PhysicalAddress(m_qh_pool->physical_page(0)->paddr()), m_qh_pool->range().size());
         dbgln("    td_pool: {}, length: {}", PhysicalAddress(m_td_pool->physical_page(0)->paddr()), m_td_pool->range().size());
     }
+
+    return KSuccess;
 }
 
 UNMAP_AFTER_INIT void UHCIController::setup_schedule()

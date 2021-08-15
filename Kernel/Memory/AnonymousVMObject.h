@@ -18,12 +18,12 @@ class AnonymousVMObject final : public VMObject {
 public:
     virtual ~AnonymousVMObject() override;
 
-    static RefPtr<AnonymousVMObject> try_create_with_size(size_t, AllocationStrategy);
-    static RefPtr<AnonymousVMObject> try_create_for_physical_range(PhysicalAddress paddr, size_t size);
-    static RefPtr<AnonymousVMObject> try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>>);
-    static RefPtr<AnonymousVMObject> try_create_purgeable_with_size(size_t, AllocationStrategy);
-    static RefPtr<AnonymousVMObject> try_create_physically_contiguous_with_size(size_t);
-    virtual RefPtr<VMObject> try_clone() override;
+    static KResultOr<NonnullRefPtr<AnonymousVMObject>> try_create_with_size(size_t, AllocationStrategy);
+    static KResultOr<NonnullRefPtr<AnonymousVMObject>> try_create_for_physical_range(PhysicalAddress paddr, size_t size);
+    static KResultOr<NonnullRefPtr<AnonymousVMObject>> try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>>);
+    static KResultOr<NonnullRefPtr<AnonymousVMObject>> try_create_purgeable_with_size(size_t, AllocationStrategy);
+    static KResultOr<NonnullRefPtr<AnonymousVMObject>> try_create_physically_contiguous_with_size(size_t);
+    virtual KResultOr<NonnullRefPtr<VMObject>> try_clone() override;
 
     [[nodiscard]] NonnullRefPtr<PhysicalPage> allocate_committed_page(Badge<Region>);
     PageFaultResponse handle_cow_fault(size_t, VirtualAddress);

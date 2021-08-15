@@ -706,38 +706,39 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, Str
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
         return {};
-    auto vmobject = AnonymousVMObject::try_create_physically_contiguous_with_size(size);
-    if (!vmobject) {
+    auto maybe_vmobject = AnonymousVMObject::try_create_physically_contiguous_with_size(size);
+    if (maybe_vmobject.is_error()) {
         kernel_page_directory().range_allocator().deallocate(range.value());
+        // FIXME: Would be nice to be able to return a KResultOr from here.
         return {};
     }
-    return allocate_kernel_region_with_vmobject(range.value(), *vmobject, name, access, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), maybe_vmobject.release_value(), name, access, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
 {
     VERIFY(!(size % PAGE_SIZE));
-    auto vm_object = AnonymousVMObject::try_create_with_size(size, strategy);
-    if (!vm_object)
+    auto maybe_vm_object = AnonymousVMObject::try_create_with_size(size, strategy);
+    if (maybe_vm_object.is_error())
         return {};
     ScopedSpinLock lock(kernel_page_directory().get_lock());
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
         return {};
-    return allocate_kernel_region_with_vmobject(range.value(), vm_object.release_nonnull(), name, access, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), maybe_vm_object.release_value(), name, access, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
 {
-    auto vm_object = AnonymousVMObject::try_create_for_physical_range(paddr, size);
-    if (!vm_object)
+    auto maybe_vm_object = AnonymousVMObject::try_create_for_physical_range(paddr, size);
+    if (maybe_vm_object.is_error())
         return {};
     VERIFY(!(size % PAGE_SIZE));
     ScopedSpinLock lock(kernel_page_directory().get_lock());
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     if (!range.has_value())
         return {};
-    return allocate_kernel_region_with_vmobject(range.value(), *vm_object, name, access, cacheable);
+    return allocate_kernel_region_with_vmobject(range.value(), maybe_vm_object.release_value(), name, access, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VirtualRange const& range, VMObject& vmobject, StringView name, Region::Access access, Region::Cacheable cacheable)

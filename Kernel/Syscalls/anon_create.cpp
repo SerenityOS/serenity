@@ -29,11 +29,11 @@ KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
     if (new_fd_or_error.is_error())
         return new_fd_or_error.error();
     auto new_fd = new_fd_or_error.release_value();
-    auto vmobject = Memory::AnonymousVMObject::try_create_purgeable_with_size(size, AllocationStrategy::Reserve);
-    if (!vmobject)
-        return ENOMEM;
+    auto maybe_vmobject = Memory::AnonymousVMObject::try_create_purgeable_with_size(size, AllocationStrategy::Reserve);
+    if (maybe_vmobject.is_error())
+        return maybe_vmobject.error();
 
-    auto anon_file = AnonymousFile::create(vmobject.release_nonnull());
+    auto anon_file = AnonymousFile::create(maybe_vmobject.release_value());
     if (!anon_file)
         return ENOMEM;
     auto description_or_error = FileDescription::create(*anon_file);
