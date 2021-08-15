@@ -228,7 +228,7 @@ private:
 };
 
 template<>
-struct Traits<StringView> : public GenericTraits<String> {
+struct Traits<StringView> : public GenericTraits<StringView> {
     static unsigned hash(const StringView& s) { return s.hash(); }
 };
 
