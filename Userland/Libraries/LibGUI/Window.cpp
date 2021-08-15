@@ -947,6 +947,8 @@ Vector<Widget&> Window::focusable_widgets(FocusSource source) const
                 return IterationDecision::Continue;
             if (!child.is_enabled())
                 return IterationDecision::Continue;
+            if (!child.is_auto_focusable())
+                return IterationDecision::Continue;
             collect_focusable_widgets(child);
             return IterationDecision::Continue;
         });
