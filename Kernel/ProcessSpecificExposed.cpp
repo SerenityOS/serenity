@@ -106,29 +106,17 @@ KResult Process::traverse_file_descriptions_directory(unsigned fsid, Function<bo
 
 KResultOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(const ProcFS& procfs, StringView name) const
 {
-    KResultOr<NonnullRefPtr<ProcFSProcessPropertyInode>> file_description_link { ENOENT };
-    // FIXME: Try to exit the loop earlier
-    size_t count = 0;
-    fds().enumerate([&](auto& file_description_metadata) {
-        if (!file_description_metadata.is_valid()) {
-            count++;
-            return;
-        }
-        if (name.to_uint() == count) {
-            auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_file_description_link(procfs, static_cast<unsigned>(count), pid());
-            if (maybe_inode.is_error()) {
-                file_description_link = maybe_inode.error();
-                return;
-            }
+    auto maybe_index = name.to_uint();
+    if (!maybe_index.has_value())
+        return ENOENT;
 
-            file_description_link = maybe_inode.release_value();
-        }
-        count++;
-    });
+    if (!fds().get_if_valid(*maybe_index))
+        return ENOENT;
 
-    if (file_description_link.is_error())
-        return file_description_link.error();
-    return file_description_link.release_value();
+    auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_file_description_link(procfs, *maybe_index, pid());
+    if (maybe_inode.is_error())
+        return maybe_inode.error();
+    return maybe_inode.release_value();
 }
 
 KResult Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
