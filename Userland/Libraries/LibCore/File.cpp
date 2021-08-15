@@ -18,6 +18,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <utime.h>
 
 // On Linux distros that use glibc `basename` is defined as a macro that expands to `__xpg_basename`, so we undefine it
 #if defined(__linux__) && defined(basename)
@@ -338,7 +339,7 @@ static String get_duplicate_name(String const& path, int duplicate_count)
     return duplicated_name.build();
 }
 
-Result<void, File::CopyError> File::copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode recursion_mode, LinkMode link_mode, AddDuplicateFileMarker add_duplicate_file_marker)
+Result<void, File::CopyError> File::copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode recursion_mode, LinkMode link_mode, AddDuplicateFileMarker add_duplicate_file_marker, PreserveMode preserve_mode)
 {
     if (add_duplicate_file_marker == AddDuplicateFileMarker::Yes) {
         int duplicate_count = 0;
@@ -346,7 +347,7 @@ Result<void, File::CopyError> File::copy_file_or_directory(String const& dst_pat
             ++duplicate_count;
         }
         if (duplicate_count != 0) {
-            return copy_file_or_directory(get_duplicate_name(dst_path, duplicate_count), src_path);
+            return copy_file_or_directory(get_duplicate_name(dst_path, duplicate_count), src_path, RecursionMode::Allowed, LinkMode::Disallowed, AddDuplicateFileMarker::Yes, preserve_mode);
         }
     }
 
@@ -373,10 +374,10 @@ Result<void, File::CopyError> File::copy_file_or_directory(String const& dst_pat
         return {};
     }
 
-    return copy_file(dst_path, src_stat, source);
+    return copy_file(dst_path, src_stat, source, preserve_mode);
 }
 
-Result<void, File::CopyError> File::copy_file(String const& dst_path, struct stat const& src_stat, File& source)
+Result<void, File::CopyError> File::copy_file(String const& dst_path, struct stat const& src_stat, File& source, PreserveMode preserve_mode)
 {
     int dst_fd = creat(dst_path.characters(), 0666);
     if (dst_fd < 0) {
@@ -417,16 +418,31 @@ Result<void, File::CopyError> File::copy_file(String const& dst_path, struct sta
         }
     }
 
-    // NOTE: We don't copy the set-uid and set-gid bits.
     auto my_umask = umask(0);
     umask(my_umask);
-    if (fchmod(dst_fd, (src_stat.st_mode & ~my_umask) & ~06000) < 0)
+    // NOTE: We don't copy the set-uid and set-gid bits unless requested.
+    if (preserve_mode != PreserveMode::PermissionsOwnershipTimestamps)
+        my_umask |= 06000;
+
+    if (fchmod(dst_fd, src_stat.st_mode & ~my_umask) < 0)
         return CopyError { OSError(errno), false };
+
+    if (preserve_mode == PreserveMode::PermissionsOwnershipTimestamps) {
+        if (fchown(dst_fd, src_stat.st_uid, src_stat.st_gid) < 0)
+            return CopyError { OSError(errno), false };
+
+        // FIXME: Implement utimens() and use it here.
+        struct utimbuf timbuf;
+        timbuf.actime = src_stat.st_atime;
+        timbuf.modtime = src_stat.st_mtime;
+        if (utime(dst_path.characters(), &timbuf) < 0)
+            return CopyError { OSError(errno), false };
+    }
 
     return {};
 }
 
-Result<void, File::CopyError> File::copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode link)
+Result<void, File::CopyError> File::copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode link, PreserveMode preserve_mode)
 {
     if (mkdir(dst_path.characters(), 0755) < 0)
         return CopyError { OSError(errno), false };
@@ -448,15 +464,28 @@ Result<void, File::CopyError> File::copy_directory(String const& dst_path, Strin
         auto result = copy_file_or_directory(
             String::formatted("{}/{}", dst_path, filename),
             String::formatted("{}/{}", src_path, filename),
-            RecursionMode::Allowed, link);
+            RecursionMode::Allowed, link, AddDuplicateFileMarker::Yes, preserve_mode);
         if (result.is_error())
             return result.error();
     }
 
     auto my_umask = umask(0);
     umask(my_umask);
+
     if (chmod(dst_path.characters(), src_stat.st_mode & ~my_umask) < 0)
         return CopyError { OSError(errno), false };
+
+    if (preserve_mode == PreserveMode::PermissionsOwnershipTimestamps) {
+        if (chown(dst_path.characters(), src_stat.st_uid, src_stat.st_gid) < 0)
+            return CopyError { OSError(errno), false };
+
+        // FIXME: Implement utimens() and use it here.
+        struct utimbuf timbuf;
+        timbuf.actime = src_stat.st_atim.tv_sec;
+        timbuf.modtime = src_stat.st_atim.tv_sec;
+        if (utime(dst_path.characters(), &timbuf) < 0)
+            return CopyError { OSError(errno), false };
+    }
 
     return {};
 }
