@@ -98,14 +98,14 @@ KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         ScopedSpinLock lock(address_space().get_lock());
         for (auto& region : address_space().regions()) {
             dbgln_if(FORK_DEBUG, "fork: cloning Region({}) '{}' @ {}", region, region->name(), region->vaddr());
-            auto region_clone = region->clone();
-            if (!region_clone) {
+            auto maybe_region_clone = region->try_clone();
+            if (maybe_region_clone.is_error()) {
                 dbgln("fork: Cannot clone region, insufficient memory");
                 // TODO: tear down new process?
-                return ENOMEM;
+                return maybe_region_clone.error();
             }
 
-            auto* child_region = child->address_space().add_region(region_clone.release_nonnull());
+            auto* child_region = child->address_space().add_region(maybe_region_clone.release_value());
             if (!child_region) {
                 dbgln("fork: Cannot add region, insufficient memory");
                 // TODO: tear down new process?
