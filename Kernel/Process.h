@@ -707,11 +707,7 @@ public:
     public:
         static KResultOr<NonnullRefPtr<ProcessProcFSTraits>> try_create(Badge<Process>, WeakPtr<Process> process)
         {
-            auto result = adopt_ref_if_nonnull(new (nothrow) ProcessProcFSTraits(process));
-            if (!result)
-                return ENOMEM;
-
-            return result.release_nonnull();
+            return adopt_nonnull_ref_or_enomem(new (nothrow) ProcessProcFSTraits(process));
         }
 
         virtual InodeIndex component_index() const override;
