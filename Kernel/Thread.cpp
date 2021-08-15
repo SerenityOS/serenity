@@ -39,13 +39,16 @@ SpinLockProtectedValue<Thread::GlobalList>& Thread::all_threads()
 
 bool Thread::unref() const
 {
-    return all_threads().with([&](auto&) {
+    bool did_hit_zero = all_threads().with([&](auto&) {
         if (deref_base())
             return false;
         m_global_thread_list_node.remove();
-        delete this;
         return true;
     });
+
+    if (did_hit_zero)
+        delete this;
+    return did_hit_zero;
 }
 
 KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process)
