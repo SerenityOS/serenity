@@ -32,18 +32,16 @@ public:
 
 private:
     DevFS();
-    KResultOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier) const;
     size_t allocate_inode_index();
 
     RefPtr<DevFSRootDirectoryInode> m_root_inode;
-    NonnullRefPtrVector<DevFSInode> m_nodes;
-
     InodeIndex m_next_inode_index { 0 };
 };
 
 class DevFSInode : public Inode {
     friend class DevFS;
     friend class DevFSRootDirectoryInode;
+    friend class DevFSDirectoryInode;
 
 public:
     virtual StringView name() const = 0;
@@ -64,6 +62,9 @@ protected:
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(UserID, GroupID) override;
     virtual KResult truncate(u64) override;
+
+private:
+    IntrusiveListNode<DevFSInode, RefPtr<DevFSInode>> m_list_node;
 };
 
 class DevFSDeviceInode : public DevFSInode {
@@ -120,7 +121,7 @@ protected:
     // ^Inode
     virtual InodeMetadata metadata() const override;
 
-    NonnullRefPtrVector<DevFSDeviceInode> m_devices;
+    IntrusiveList<DevFSInode, NonnullRefPtr<DevFSInode>, &DevFSInode::m_list_node> m_nodes;
 };
 
 class DevFSPtsDirectoryInode final : public DevFSDirectoryInode {
@@ -151,9 +152,6 @@ private:
     virtual KResult traverse_as_directory(Function<bool(FileSystem::DirectoryEntryView const&)>) const override;
     virtual KResultOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual InodeMetadata metadata() const override;
-
-    NonnullRefPtrVector<DevFSDirectoryInode> m_subdirectories;
-    NonnullRefPtrVector<DevFSLinkInode> m_links;
 };
 
 }
