@@ -114,6 +114,9 @@ public:
     String tooltip() const { return m_tooltip; }
     void set_tooltip(String);
 
+    bool is_auto_focusable() const { return m_auto_focusable; }
+    void set_auto_focusable(bool auto_focusable) { m_auto_focusable = auto_focusable; }
+
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
 
@@ -357,6 +360,7 @@ private:
     bool m_fill_with_background_color { false };
     bool m_visible { true };
     bool m_greedy_for_hits { false };
+    bool m_auto_focusable { true };
     bool m_enabled { true };
     bool m_updates_enabled { true };
     bool m_accepts_emoji_input { false };
