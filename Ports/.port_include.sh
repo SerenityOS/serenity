@@ -386,7 +386,7 @@ addtodb() {
         touch "$packagesdb"
     fi
     if ! grep -E "^(auto|manual) $port $version" "$packagesdb" > /dev/null; then
-        echo "Adding $port $version to database of installed ports!"
+        echo "Adding $port $version to database of installed ports..."
         if [ "${1:-}" = "--auto" ]; then
             echo "auto $port $version" >> "$packagesdb"
         else
@@ -395,6 +395,7 @@ addtodb() {
                 echo "dependency $port$dependlist" >> "$packagesdb"
             fi
         fi
+        echo "Successfully installed $port $version."
     else
         >&2 echo "Warning: $port $version already installed. Not adding to database of installed ports!"
     fi
@@ -433,22 +434,22 @@ uninstall() {
     fi
 }
 do_installdepends() {
-    echo "Installing dependencies of $port!"
+    echo "Installing dependencies of $port..."
     installdepends
 }
 do_fetch() {
-    echo "Fetching $port!"
+    echo "Fetching $port..."
     fetch
 }
 do_patch() {
-    echo "Patching $port!"
+    echo "Patching $port..."
     pre_patch
     patch_internal
 }
 do_configure() {
     ensure_build
     if [ "$useconfigure" = "true" ]; then
-        echo "Configuring $port!"
+        echo "Configuring $port..."
         pre_configure
         configure
         post_configure
@@ -458,12 +459,12 @@ do_configure() {
 }
 do_build() {
     ensure_build
-    echo "Building $port!"
+    echo "Building $port..."
     build
 }
 do_install() {
     ensure_build
-    echo "Installing $port!"
+    echo "Installing $port..."
     install
     install_main_launcher
     install_main_icon
@@ -471,19 +472,19 @@ do_install() {
     addtodb "${1:-}"
 }
 do_clean() {
-    echo "Cleaning workdir and .out files in $port!"
+    echo "Cleaning workdir and .out files in $port..."
     clean
 }
 do_clean_dist() {
-    echo "Cleaning dist in $port!"
+    echo "Cleaning dist in $port..."
     clean_dist
 }
 do_clean_all() {
-    echo "Cleaning all in $port!"
+    echo "Cleaning all in $port..."
     clean_all
 }
 do_uninstall() {
-    echo "Uninstalling $port!"
+    echo "Uninstalling $port..."
     uninstall
 }
 do_showproperty() {
