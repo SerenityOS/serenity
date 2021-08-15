@@ -21,6 +21,7 @@ public:
 private:
     JS_DECLARE_NATIVE_FUNCTION(calendar_getter);
     JS_DECLARE_NATIVE_FUNCTION(month_code_getter);
+    JS_DECLARE_NATIVE_FUNCTION(day_getter);
 };
 
 }
