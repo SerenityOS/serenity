@@ -337,7 +337,7 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
 
     m_invoke_scheduler_async = false;
     m_scheduler_initialized = false;
-    m_in_scheduler = true;
+    m_in_scheduler = false;
 
     m_message_queue = nullptr;
     m_idle_thread = nullptr;
@@ -544,10 +544,11 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
     // is a chance a context switch may happen while we're trying
     // to get it. It also won't be entirely accurate and merely
     // reflect the status at the last context switch.
-    SpinlockLocker lock(g_scheduler_lock);
+    ScopedCritical critical;
+    SpinlockLocker lock(thread.get_lock());
     if (&thread == Processor::current_thread()) {
         VERIFY(thread.state() == Thread::Running);
-        // Leave the scheduler lock. If we trigger page faults we may
+        // Leave the lock. If we trigger page faults we may
         // need to be preempted. Since this is our own thread it won't
         // cause any problems as the stack won't change below this frame.
         lock.unlock();
@@ -568,12 +569,8 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
                 VERIFY(&Processor::current() != &proc);
                 VERIFY(&thread == Processor::current_thread());
                 // NOTE: Because the other processor is still holding the
-                // scheduler lock while waiting for this callback to finish,
+                // lock while waiting for this callback to finish,
                 // the current thread on the target processor cannot change
-
-                // TODO: What to do about page faults here? We might deadlock
-                //       because the other processor is still holding the
-                //       scheduler lock...
                 capture_current_thread();
             },
             false);
@@ -1261,15 +1258,10 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     VERIFY(!are_interrupts_enabled());
     VERIFY(is_kernel_mode());
 
-    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} (locked: {}) to {} {} (locked: {}) (context_first_init)", VirtualAddress(from_thread), *from_thread, from_thread->get_lock().own_recursions(), VirtualAddress(to_thread), *to_thread, to_thread->get_lock().is_locked_by_current_processor());
 
+    VERIFY(to_thread->get_lock().is_locked_by_current_processor());
     VERIFY(to_thread == Thread::current());
-
-    Scheduler::enter_current(*from_thread, true);
-
-    auto in_critical = to_thread->saved_critical();
-    VERIFY(in_critical > 0);
-    Processor::restore_in_critical(in_critical);
 
     // Since we got here and don't have Scheduler::context_switch in the
     // call stack (because this is the first time we switched into this
@@ -1277,8 +1269,9 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     // the scheduler lock. We don't want to enable interrupts at this point
     // as we're still in the middle of a context switch. Doing so could
     // trigger a context switch within a context switch, leading to a crash.
-    FlatPtr flags = trap->regs->flags();
-    Scheduler::leave_on_first_switch(flags & ~0x200);
+    Scheduler::leave_context_switch(*from_thread, *to_thread, true);
+
+    VERIFY(!to_thread->get_lock().is_locked_by_current_processor());
 }
 
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
@@ -1355,8 +1348,7 @@ void Processor::assume_context(Thread& thread, FlatPtr flags)
 
     VERIFY_INTERRUPTS_DISABLED();
     Scheduler::prepare_after_exec();
-    // in_critical() should be 2 here. The critical section in Process::exec
-    // and then the scheduler lock
+    // in_critical() should be 2 here (the critical section in Process::exec and the thread's lock)
     VERIFY(Processor::in_critical() == 2);
 
     do_assume_context(&thread, flags);

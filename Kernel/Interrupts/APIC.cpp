@@ -520,9 +520,6 @@ UNMAP_AFTER_INIT void APIC::init_finished(u32 cpu)
     // This method is called once the boot stack is no longer needed
     VERIFY(cpu > 0);
     VERIFY(cpu < m_processor_enabled_cnt);
-    // Since we're waiting on other APs here, we shouldn't have the
-    // scheduler lock
-    VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
 
     // Notify the BSP that we are done initializing. It will unmap the startup data at P8000
     m_apic_ap_count.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);

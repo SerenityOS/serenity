@@ -70,6 +70,11 @@ public:
         return false;
     }
 
+    [[nodiscard]] ALWAYS_INLINE u32 own_recursions() const
+    {
+        return 0;
+    }
+
     ALWAYS_INLINE void initialize()
     {
     }

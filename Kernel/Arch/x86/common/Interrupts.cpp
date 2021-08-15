@@ -489,15 +489,6 @@ extern "C" void handle_interrupt(TrapFrame*) __attribute__((used));
 
 extern "C" UNMAP_AFTER_INIT void pre_init_finished(void)
 {
-    VERIFY(g_scheduler_lock.is_locked_by_current_processor());
-
-    // Because init_finished() will wait on the other APs, we need
-    // to release the scheduler lock so that the other APs can also get
-    // to this point
-
-    // The target flags will get restored upon leaving the trap
-    u32 prev_flags = cpu_flags();
-    Scheduler::leave_on_first_switch(prev_flags);
 }
 
 extern "C" UNMAP_AFTER_INIT void post_init_finished(void)

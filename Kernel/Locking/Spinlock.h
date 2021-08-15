@@ -12,7 +12,6 @@
 #include <Kernel/Locking/LockRank.h>
 
 namespace Kernel {
-
 template<typename LockType>
 class [[nodiscard]] SpinlockLocker {
     AK_MAKE_NONCOPYABLE(SpinlockLocker);

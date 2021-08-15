@@ -114,9 +114,11 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     PerformanceManager::add_process_created_event(*child);
 
-    SpinlockLocker lock(g_scheduler_lock);
-    child_first_thread->set_affinity(Thread::current()->affinity());
-    child_first_thread->set_state(Thread::State::Runnable);
+    {
+        SpinlockLocker lock(child_first_thread->get_lock());
+        child_first_thread->set_affinity(Thread::current()->affinity());
+        child_first_thread->set_state(Thread::State::Runnable);
+    }
 
     auto child_pid = child->pid().value();
 

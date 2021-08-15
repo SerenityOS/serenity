@@ -66,7 +66,7 @@ StringView Processor::platform_string()
 FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(is_kernel_mode());
-    VERIFY(g_scheduler_lock.is_locked());
+    VERIFY(thread.get_lock().is_locked_by_current_processor());
     if (leave_crit) {
         // Leave the critical section we set up in in Process::exec,
         // but because we still have the scheduler lock we should end up with 1
@@ -180,13 +180,17 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
 
 void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
-    VERIFY(!m_in_irq);
-    VERIFY(m_in_critical == 1);
+    VERIFY(!current_in_irq());
     VERIFY(is_kernel_mode());
+    VERIFY(from_thread->get_lock().is_locked_by_current_processor());
+    VERIFY(from_thread->get_lock().own_recursions() == 1);
+    VERIFY(to_thread->get_lock().is_locked_by_current_processor());
+    VERIFY(to_thread->get_lock().own_recursions() == 1);
 
-    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
     // m_in_critical is restored in enter_thread_context
+    VERIFY(m_in_critical == 2); // we're holding the lock for from_thread and to_thread
     from_thread->save_critical(m_in_critical);
 
     // clang-format off
@@ -237,6 +241,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
 UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_thread)
 {
     VERIFY(initial_thread.process().is_kernel_process());
+    VERIFY(initial_thread.is_idle_thread());
 
     auto& regs = initial_thread.regs();
     m_tss.iomapbase = sizeof(m_tss);

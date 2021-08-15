@@ -18,7 +18,6 @@ namespace Kernel {
 
 static ErrorOr<FlatPtr> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& params, Process& caller)
 {
-    SpinlockLocker scheduler_lock(g_scheduler_lock);
     if (params.request == PT_TRACE_ME) {
         if (Process::current().tracer())
             return EBUSY;
@@ -70,8 +69,6 @@ static ErrorOr<FlatPtr> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& p
 
     if (peer->state() == Thread::State::Running)
         return EBUSY;
-
-    scheduler_lock.unlock();
 
     switch (params.request) {
     case PT_CONTINUE:

@@ -24,8 +24,6 @@
 
 namespace Kernel {
 
-RecursiveSpinlock g_scheduler_lock;
-
 static u32 time_slice_for(const Thread& thread)
 {
     // One time slice unit == 4ms (assuming 250 ticks/second)
@@ -74,8 +72,9 @@ static inline u32 thread_priority_to_priority_index(u32 thread_priority)
 Thread& Scheduler::pull_next_runnable_thread()
 {
     auto affinity_mask = 1u << Processor::current_id();
+    auto* current_thread = Thread::current();
 
-    return g_ready_queues->with([&](auto& ready_queues) -> Thread& {
+    auto* thread = g_ready_queues->with([&](auto& ready_queues) -> Thread* {
         auto priority_mask = ready_queues.mask;
         while (priority_mask != 0) {
             auto priority = bit_scan_forward(priority_mask);
@@ -102,12 +101,24 @@ Thread& Scheduler::pull_next_runnable_thread()
                 // switching to it.
                 // FIXME: Figure out a better way maybe?
                 thread.set_active(true);
-                return thread;
+                return &thread;
             }
             priority_mask &= ~(1u << priority);
         }
-        return *Processor::idle_thread();
+        return nullptr;
     });
+
+    if (!thread) {
+        thread = Processor::idle_thread();
+        VERIFY(thread);
+    }
+    if (thread != current_thread) {
+        VERIFY(!thread->get_lock().is_locked_by_current_processor());
+        thread->save_flags(thread->get_lock().lock());
+    } else {
+        VERIFY(thread->get_lock().own_recursions() == 1);
+    }
+    return *thread;
 }
 
 Thread* Scheduler::peek_next_runnable_thread()
@@ -165,7 +176,7 @@ bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
 
 void Scheduler::enqueue_runnable_thread(Thread& thread)
 {
-    VERIFY(g_scheduler_lock.is_locked_by_current_processor());
+    VERIFY(thread.get_lock().is_locked_by_current_processor());
     if (thread.is_idle_thread())
         return;
     auto priority = thread_priority_to_priority_index(thread.priority());
@@ -186,17 +197,17 @@ UNMAP_AFTER_INIT void Scheduler::start()
 {
     VERIFY_INTERRUPTS_DISABLED();
 
-    // We need to acquire our scheduler lock, which will be released
-    // by the idle thread once control transferred there
-    g_scheduler_lock.lock();
-
     auto& processor = Processor::current();
     VERIFY(processor.is_initialized());
     auto& idle_thread = *Processor::idle_thread();
     VERIFY(processor.current_thread() == &idle_thread);
+    VERIFY(!idle_thread.get_lock().is_locked_by_current_processor());
+    idle_thread.save_flags(idle_thread.get_lock().lock());
     idle_thread.set_ticks_left(time_slice_for(idle_thread));
     idle_thread.did_schedule();
     idle_thread.set_initialized(true);
+    idle_thread.save_critical(1); // we don't have a previous thread lock on the first context switch
+    dbgln("Starting Scheduler on cpu #{}, thread {} ({:p})", Processor::current_id(), idle_thread, &idle_thread);
     processor.init_context(idle_thread, false);
     idle_thread.set_state(Thread::Running);
     VERIFY(idle_thread.affinity() == (1u << processor.id()));
@@ -213,15 +224,15 @@ bool Scheduler::pick_next()
     // leaving the scheduler lock.
     ScopedCritical critical;
     Processor::set_current_in_scheduler(true);
+    auto* current_thread = Thread::current();
+    current_thread->save_flags(current_thread->get_lock().lock());
+
     ScopeGuard guard(
         []() {
             // We may be on a different processor after we got switched
             // back to this thread!
-            VERIFY(Processor::current_in_scheduler());
             Processor::set_current_in_scheduler(false);
         });
-
-    SpinlockLocker lock(g_scheduler_lock);
 
     if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
         dump_thread_list();
@@ -272,11 +283,16 @@ bool Scheduler::context_switch(Thread* thread)
         PANIC("In context switch while holding Memory::s_mm_lock");
     }
 
+    VERIFY(thread->get_lock().is_locked_by_current_processor());
+
     thread->did_schedule();
 
     auto* from_thread = Thread::current();
-    if (from_thread == thread)
+    if (from_thread == thread) {
+        thread->get_lock().unlock(thread->saved_flags());
+        VERIFY(!thread->get_lock().is_locked_by_current_processor());
         return false;
+    }
 
     if (from_thread) {
         // If the last process hasn't blocked (still marked as running),
@@ -306,7 +322,7 @@ bool Scheduler::context_switch(Thread* thread)
 
     // NOTE: from_thread at this point reflects the thread we were
     // switched from, and thread reflects Thread::current()
-    enter_current(*from_thread, false);
+    enter_current(*from_thread, *thread, false);
     VERIFY(thread == Thread::current());
 
     if (thread->process().is_user_process() && thread->previous_mode() != Thread::PreviousMode::KernelMode && thread->current_trap()) {
@@ -317,18 +333,20 @@ bool Scheduler::context_switch(Thread* thread)
         }
     }
 
+    // NOTE: from_thread at this point reflects the thread we were
+    // switched from, and thread reflects Thread::current()
+    leave_context_switch(*from_thread, *thread, false);
     return true;
 }
 
-void Scheduler::enter_current(Thread& prev_thread, bool is_first)
+void Scheduler::enter_current(Thread& prev_thread, Thread& current_thread, bool is_first)
 {
-    VERIFY(g_scheduler_lock.is_locked_by_current_processor());
+    VERIFY(prev_thread.get_lock().is_locked_by_current_processor());
 
     // We already recorded the scheduled time when entering the trap, so this merely accounts for the kernel time since then
     auto scheduler_time = Scheduler::current_time();
     prev_thread.update_time_scheduled(scheduler_time, true, true);
-    auto* current_thread = Thread::current();
-    current_thread->update_time_scheduled(scheduler_time, true, false);
+    current_thread.update_time_scheduled(scheduler_time, true, false);
 
     prev_thread.set_active(false);
     if (prev_thread.state() == Thread::Dying) {
@@ -339,45 +357,55 @@ void Scheduler::enter_current(Thread& prev_thread, bool is_first)
     } else if (!is_first) {
         // Check if we have any signals we should deliver (even if we don't
         // end up switching to another thread).
-        if (!current_thread->is_in_block() && current_thread->previous_mode() != Thread::PreviousMode::KernelMode && current_thread->current_trap()) {
-            SpinlockLocker lock(current_thread->get_lock());
-            if (current_thread->state() == Thread::Running && current_thread->pending_signals_for_state()) {
-                current_thread->dispatch_one_pending_signal();
+        if (!current_thread.is_in_block() && current_thread.previous_mode() != Thread::PreviousMode::KernelMode && current_thread.current_trap()) {
+            SpinlockLocker lock(current_thread.get_lock());
+            if (current_thread.state() == Thread::Running && current_thread.pending_signals_for_state()) {
+                current_thread.dispatch_one_pending_signal();
             }
         }
     }
 }
 
-void Scheduler::leave_on_first_switch(u32 flags)
+void Scheduler::leave_context_switch(Thread& prev_thread, Thread& current_thread, bool is_first)
 {
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(prev_thread.get_lock().is_locked_by_current_processor());
+    VERIFY(prev_thread.get_lock().own_recursions() == 1);
+    VERIFY(current_thread.get_lock().is_locked_by_current_processor());
+    VERIFY(current_thread.get_lock().own_recursions() == 1);
+
+    enter_current(prev_thread, current_thread, is_first);
+
+    auto in_critical = current_thread.saved_critical();
+    Processor::restore_in_critical(in_critical);
+
+    if (&prev_thread != &current_thread) {
+        prev_thread.get_lock().unlock(prev_thread.saved_flags());
+        VERIFY(!prev_thread.get_lock().is_locked_by_current_processor());
+    }
+
     // This is called when a thread is switched into for the first time.
     // At this point, enter_current has already be called, but because
     // Scheduler::context_switch is not in the call stack we need to
     // clean up and release locks manually here
-    g_scheduler_lock.unlock(flags);
-
     VERIFY(Processor::current_in_scheduler());
     Processor::set_current_in_scheduler(false);
+
+    current_thread.get_lock().unlock(current_thread.saved_flags());
+    VERIFY(!current_thread.get_lock().is_locked_by_current_processor());
 }
 
 void Scheduler::prepare_after_exec()
 {
     // This is called after exec() when doing a context "switch" into
     // the new process. This is called from Processor::assume_context
-    VERIFY(g_scheduler_lock.is_locked_by_current_processor());
-
-    VERIFY(!Processor::current_in_scheduler());
     Processor::set_current_in_scheduler(true);
 }
 
 void Scheduler::prepare_for_idle_loop()
 {
     // This is called when the CPU finished setting up the idle loop
-    // and is about to run it. We need to acquire he scheduler lock
-    VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
-    g_scheduler_lock.lock();
-
-    VERIFY(!Processor::current_in_scheduler());
+    // and is about to run it.
     Processor::set_current_in_scheduler(true);
 }
 
@@ -478,7 +506,7 @@ void Scheduler::timer_tick(const RegisterState& regs)
     }
 
     if (current_thread->previous_mode() == Thread::PreviousMode::UserMode && current_thread->should_die() && !current_thread->is_blocked()) {
-        SpinlockLocker scheduler_lock(g_scheduler_lock);
+        SpinlockLocker thread_lock(current_thread->get_lock());
         dbgln_if(SCHEDULER_DEBUG, "Scheduler[{}]: Terminating user mode thread {}", Processor::current_id(), *current_thread);
         current_thread->set_state(Thread::Dying);
         Processor::current().invoke_scheduler_async();

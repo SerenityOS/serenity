@@ -242,8 +242,6 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     } else {
         VERIFY(!current_thread->is_promise_violation_pending());
     }
-
-    VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
 }
 
 }
