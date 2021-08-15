@@ -293,11 +293,7 @@ public:
 
         static KResultOr<NonnullRefPtr<DirectoryEntry>> try_create(u32 extent, u32 length, OwnPtr<KBuffer> blocks)
         {
-            auto result = adopt_ref_if_nonnull(new (nothrow) DirectoryEntry(extent, length, move(blocks)));
-            if (!result) {
-                return ENOMEM;
-            }
-            return result.release_nonnull();
+            return adopt_nonnull_ref_or_enomem(new (nothrow) DirectoryEntry(extent, length, move(blocks)));
         }
 
     private:

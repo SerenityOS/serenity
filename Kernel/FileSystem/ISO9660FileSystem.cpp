@@ -184,11 +184,7 @@ private:
 
 KResultOr<NonnullRefPtr<ISO9660FS>> ISO9660FS::try_create(FileDescription& description)
 {
-    auto result = adopt_ref_if_nonnull(new (nothrow) ISO9660FS(description));
-    if (!result) {
-        return ENOMEM;
-    }
-    return result.release_nonnull();
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ISO9660FS(description));
 }
 
 ISO9660FS::ISO9660FS(FileDescription& description)
@@ -632,11 +628,7 @@ ISO9660Inode::~ISO9660Inode()
 
 KResultOr<NonnullRefPtr<ISO9660Inode>> ISO9660Inode::try_create_from_directory_record(ISO9660FS& fs, ISO::DirectoryRecordHeader const& record, StringView const& name)
 {
-    auto result = adopt_ref_if_nonnull(new (nothrow) ISO9660Inode(fs, record, name));
-    if (!result) {
-        return ENOMEM;
-    }
-    return result.release_nonnull();
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ISO9660Inode(fs, record, name));
 }
 
 void ISO9660Inode::create_metadata()
