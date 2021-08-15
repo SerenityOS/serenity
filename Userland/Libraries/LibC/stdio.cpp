@@ -1177,10 +1177,19 @@ void dbgputstr(const char* characters, size_t length)
     syscall(SC_dbgputstr, characters, length);
 }
 
-char* tmpnam(char*)
+char* tmpnam(char* s)
 {
-    dbgln("FIXME: Implement tmpnam()");
-    TODO();
+    static Array<char, L_tmpnam> tmpnam_buffer;
+    char tmp_path[] = P_tmpdir "/XXXXXX";
+    mktemp(tmp_path);
+    if (!tmp_path[0])
+        return nullptr;
+    if (s) {
+        memcpy(s, tmp_path, sizeof(tmp_path));
+        return s;
+    }
+    tmpnam_buffer.span().overwrite(0, tmp_path, sizeof(tmp_path));
+    return tmpnam_buffer.data();
 }
 
 FILE* popen(const char* command, const char* type)
@@ -1325,7 +1334,7 @@ void funlockfile(FILE* filehandle)
 
 FILE* tmpfile()
 {
-    char tmp_path[] = "/tmp/XXXXXX";
+    char tmp_path[] = P_tmpdir "/XXXXXX";
     int fd = mkstemp(tmp_path);
     if (fd < 0)
         return nullptr;

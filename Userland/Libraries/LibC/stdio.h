@@ -96,7 +96,7 @@ void setbuf(FILE*, char* buf);
 void setlinebuf(FILE*);
 int rename(const char* oldpath, const char* newpath);
 FILE* tmpfile();
-char* tmpnam(char*);
+char* tmpnam(char* s) __attribute__((deprecated("for security reasons, please use tmpfile, mkstemp or mkdtemp instead")));
 FILE* popen(const char* command, const char* type);
 int pclose(FILE*);
 
