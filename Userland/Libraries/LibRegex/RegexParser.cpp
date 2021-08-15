@@ -1489,12 +1489,14 @@ bool ECMA262Parser::parse_atom_escape(ByteCode& stack, size_t& match_length_mini
 
     if (try_skip("u")) {
         if (match(TokenType::LeftCurly)) {
-            consume();
-
             if (!unicode) {
-                // FIXME: In non-Unicode mode, this should be parsed as a repetition symbol (repeating the 'u').
-                TODO();
+                // In non-Unicode mode, this should be parsed as a repetition symbol (repeating the 'u').
+                match_length_minimum += 1;
+                stack.insert_bytecode_compare_values({ { CharacterCompareType::Char, (ByteCodeValueType)'u' } });
+                return true;
             }
+
+            consume();
 
             auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 6);
             if (code_point.has_value() && is_unicode(*code_point) && match(TokenType::RightCurly)) {
