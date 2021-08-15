@@ -166,6 +166,7 @@
     M(StringNonGlobalRegExp, "RegExp argument is non-global")                                                                           \
     M(StringRawCannotConvert, "Cannot convert property 'raw' to object from {}")                                                        \
     M(StringRepeatCountMustBe, "repeat count must be a {} number")                                                                      \
+    M(TemporalAmbiguousMonthOfPlainMonthDay, "Accessing month of PlainMonthDay is ambiguous, use monthCode instead")                    \
     M(TemporalInvalidCalendar, "Invalid calendar")                                                                                      \
     M(TemporalInvalidCalendarFunctionResult, "Invalid calendar, {}() function returned undefined")                                      \
     M(TemporalInvalidCalendarIdentifier, "Invalid calendar identifier '{}'")                                                            \
