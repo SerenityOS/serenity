@@ -478,71 +478,71 @@ TEST_CASE(simple_period_end_benchmark)
 TEST_CASE(ECMA262_parse)
 {
     struct _test {
-        const char* pattern;
+        StringView pattern;
         regex::Error expected_error { regex::Error::NoError };
         regex::ECMAScriptFlags flags {};
     };
 
     constexpr _test tests[] {
-        { "^hello.$" },
-        { "^(hello.)$" },
-        { "^h{0,1}ello.$" },
-        { "^hello\\W$" },
-        { "^hell\\w.$" },
-        { "^hell\\x6f1$" }, // ^hello1$
-        { "^hel(?:l\\w).$" },
-        { "^hel(?<LO>l\\w).$" },
-        { "^[-a-zA-Z\\w\\s]+$" },
-        { "\\bhello\\B" },
-        { "^[\\w+/_-]+[=]{0,2}$" },                        // #4189
-        { "^(?:[^<]*(<[\\w\\W]+>)[^>]*$|#([\\w\\-]*)$)" }, // #4189
-        { "\\/" },                                         // #4189
-        { ",/=-:" },                                       // #4243
-        { "\\x" },                                         // Even invalid escapes are allowed if ~unicode.
-        { "\\x1" },                                        // Even invalid escapes are allowed if ~unicode.
-        { "\\x1", regex::Error::InvalidPattern, regex::ECMAScriptFlags::Unicode },
-        { "\\x11" },
-        { "\\x11", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
-        { "\\", regex::Error::InvalidTrailingEscape },
-        { "(?", regex::Error::InvalidCaptureGroup },
-        { "\\u1234", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
-        { "[\\u1234]", regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
-        { "\\u1", regex::Error::InvalidPattern, regex::ECMAScriptFlags::Unicode },
-        { "[\\u1]", regex::Error::InvalidPattern, regex::ECMAScriptFlags::Unicode },
-        { ",(?", regex::Error::InvalidCaptureGroup }, // #4583
-        { "{1}", regex::Error::InvalidPattern },
-        { "{1,2}", regex::Error::InvalidPattern },
-        { "\\uxxxx", regex::Error::NoError },
-        { "\\uxxxx", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "\\ud83d", regex::Error::NoError, ECMAScriptFlags::Unicode },
-        { "\\ud83d\\uxxxx", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "\\u{0}", regex::Error::NoError, ECMAScriptFlags::Unicode },
-        { "\\u{10ffff}", regex::Error::NoError, ECMAScriptFlags::Unicode },
-        { "\\u{10ffff", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "\\u{10ffffx", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "\\u{110000}", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "\\p", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "\\p{", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "\\p{}", regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
-        { "\\p{AsCiI}", regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
-        { "\\p{hello friends}", regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
-        { "\\p{Prepended_Concatenation_Mark}", regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
-        { "\\p{ASCII}", regex::Error::NoError, ECMAScriptFlags::Unicode },
-        { "\\\\p{1}", regex::Error::NoError, ECMAScriptFlags::Unicode },
-        { "\\\\p{AsCiI}", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "\\\\p{ASCII}", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "\\c", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
-        { "\\c", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "[\\c]", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
-        { "[\\c]", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "\\c`", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
-        { "\\c`", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "[\\c`]", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
-        { "[\\c`]", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
-        { "\\A", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
-        { "\\A", regex::Error::InvalidCharacterClass, ECMAScriptFlags::Unicode },
-        { "[\\A]", regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
-        { "[\\A]", regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "^hello.$"sv },
+        { "^(hello.)$"sv },
+        { "^h{0,1}ello.$"sv },
+        { "^hello\\W$"sv },
+        { "^hell\\w.$"sv },
+        { "^hell\\x6f1$"sv }, // ^hello1$
+        { "^hel(?:l\\w).$"sv },
+        { "^hel(?<LO>l\\w).$"sv },
+        { "^[-a-zA-Z\\w\\s]+$"sv },
+        { "\\bhello\\B"sv },
+        { "^[\\w+/_-]+[=]{0,2}$"sv },                        // #4189
+        { "^(?:[^<]*(<[\\w\\W]+>)[^>]*$|#([\\w\\-]*)$)"sv }, // #4189
+        { "\\/"sv },                                         // #4189
+        { ",/=-:"sv },                                       // #4243
+        { "\\x"sv },                                         // Even invalid escapes are allowed if ~unicode.
+        { "\\x1"sv },                                        // Even invalid escapes are allowed if ~unicode.
+        { "\\x1"sv, regex::Error::InvalidPattern, regex::ECMAScriptFlags::Unicode },
+        { "\\x11"sv },
+        { "\\x11"sv, regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
+        { "\\"sv, regex::Error::InvalidTrailingEscape },
+        { "(?"sv, regex::Error::InvalidCaptureGroup },
+        { "\\u1234"sv, regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
+        { "[\\u1234]"sv, regex::Error::NoError, regex::ECMAScriptFlags::Unicode },
+        { "\\u1"sv, regex::Error::InvalidPattern, regex::ECMAScriptFlags::Unicode },
+        { "[\\u1]"sv, regex::Error::InvalidPattern, regex::ECMAScriptFlags::Unicode },
+        { ",(?"sv, regex::Error::InvalidCaptureGroup }, // #4583
+        { "{1}"sv, regex::Error::InvalidPattern },
+        { "{1,2}"sv, regex::Error::InvalidPattern },
+        { "\\uxxxx"sv, regex::Error::NoError },
+        { "\\uxxxx"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\ud83d"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "\\ud83d\\uxxxx"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\u{0}"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "\\u{10ffff}"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "\\u{10ffff"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\u{10ffffx"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\u{110000}"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\p"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\p{"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\p{}"sv, regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
+        { "\\p{AsCiI}"sv, regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
+        { "\\p{hello friends}"sv, regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
+        { "\\p{Prepended_Concatenation_Mark}"sv, regex::Error::InvalidNameForProperty, ECMAScriptFlags::Unicode },
+        { "\\p{ASCII}"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "\\\\p{1}"sv, regex::Error::NoError, ECMAScriptFlags::Unicode },
+        { "\\\\p{AsCiI}"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\\\p{ASCII}"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\c"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "\\c"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "[\\c]"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "[\\c]"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\c`"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "\\c`"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "[\\c`]"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "[\\c`]"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
+        { "\\A"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "\\A"sv, regex::Error::InvalidCharacterClass, ECMAScriptFlags::Unicode },
+        { "[\\A]"sv, regex::Error::NoError, ECMAScriptFlags::BrowserExtended },
+        { "[\\A]"sv, regex::Error::InvalidPattern, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
@@ -562,50 +562,50 @@ TEST_CASE(ECMA262_parse)
 TEST_CASE(ECMA262_match)
 {
     struct _test {
-        const char* pattern;
-        const char* subject;
+        StringView pattern;
+        StringView subject;
         bool matches { true };
         ECMAScriptFlags options {};
     };
     // clang-format off
     constexpr _test tests[] {
-        { "^hello.$", "hello1" },
-        { "^(hello.)$", "hello1" },
-        { "^h{0,1}ello.$", "ello1" },
-        { "^hello\\W$", "hello!" },
-        { "^hell\\w.$", "hellx!" },
-        { "^hell\\x6f1$", "hello1" },
-        { "^hel(?<LO>l.)1$", "hello1" },
-        { "^hel(?<LO>l.)1*\\k<LO>.$", "hello1lo1" },
-        { "^[-a-z1-3\\s]+$", "hell2 o1" },
-        { "^[\\0-\\x1f]$", "\n" },
-        { .pattern = "\\bhello\\B", .subject = "hello1", .options = ECMAScriptFlags::Global },
-        { "\\b.*\\b", "hello1" },
-        { "[^\\D\\S]{2}", "1 " },
-        { "bar(?=f.)foo", "barfoo" },
-        { "bar(?=foo)bar", "barbar", false },
-        { "bar(?!foo)bar", "barbar", true },
-        { "bar(?!bar)bar", "barbar", false },
-        { "bar.*(?<=foo)", "barbar", false },
-        { "bar.*(?<!foo)", "barbar", true },
-        { "((...)X)+", "fooXbarXbazX", true },
-        { "(?:)", "", true },
-        { "\\^", "^" },
+        { "^hello.$"sv, "hello1"sv },
+        { "^(hello.)$"sv, "hello1"sv },
+        { "^h{0,1}ello.$"sv, "ello1"sv },
+        { "^hello\\W$"sv, "hello!"sv },
+        { "^hell\\w.$"sv, "hellx!"sv },
+        { "^hell\\x6f1$"sv, "hello1"sv },
+        { "^hel(?<LO>l.)1$"sv, "hello1"sv },
+        { "^hel(?<LO>l.)1*\\k<LO>.$"sv, "hello1lo1"sv },
+        { "^[-a-z1-3\\s]+$"sv, "hell2 o1"sv },
+        { "^[\\0-\\x1f]$"sv, "\n"sv },
+        { .pattern = "\\bhello\\B"sv, .subject = "hello1"sv, .options = ECMAScriptFlags::Global },
+        { "\\b.*\\b"sv, "hello1"sv },
+        { "[^\\D\\S]{2}"sv, "1 "sv },
+        { "bar(?=f.)foo"sv, "barfoo"sv },
+        { "bar(?=foo)bar"sv, "barbar"sv, false },
+        { "bar(?!foo)bar"sv, "barbar"sv, true },
+        { "bar(?!bar)bar"sv, "barbar"sv, false },
+        { "bar.*(?<=foo)"sv, "barbar"sv, false },
+        { "bar.*(?<!foo)"sv, "barbar"sv, true },
+        { "((...)X)+"sv, "fooXbarXbazX"sv, true },
+        { "(?:)"sv, ""sv, true },
+        { "\\^"sv, "^"sv },
         // ECMA262, B.1.4. Regular Expression Pattern extensions for browsers
-        { "{", "{", true, ECMAScriptFlags::BrowserExtended },
-        { "\\5", "\5", true, ECMAScriptFlags::BrowserExtended },
-        { "\\05", "\5", true, ECMAScriptFlags::BrowserExtended },
-        { "\\455", "\45""5", true, ECMAScriptFlags::BrowserExtended },
-        { "\\314", "\314", true, ECMAScriptFlags::BrowserExtended },
-        { "\\c", "\\c", true, ECMAScriptFlags::BrowserExtended },
-        { "\\cf", "\06", true, ECMAScriptFlags::BrowserExtended },
-        { "\\c1", "\\c1", true, ECMAScriptFlags::BrowserExtended },
-        { "[\\c1]", "\x11", true, ECMAScriptFlags::BrowserExtended },
-        { "[\\w-\\d]", "-", true, ECMAScriptFlags::BrowserExtended },
-        { "^(?:^^\\.?|[!+-]|!=|!==|#|%|%=|&|&&|&&=|&=|\\(|\\*|\\*=|\\+=|,|-=|->|\\/|\\/=|:|::|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|[?@[^]|\\^=|\\^\\^|\\^\\^=|{|\\||\\|=|\\|\\||\\|\\|=|~|break|case|continue|delete|do|else|finally|instanceof|return|throw|try|typeof)\\s*(\\/(?=[^*/])(?:[^/[\\\\]|\\\\[\\S\\s]|\\[(?:[^\\\\\\]]|\\\\[\\S\\s])*(?:]|$))+\\/)",
-                 "return /xx/", true, ECMAScriptFlags::BrowserExtended
+        { "{"sv, "{"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "\\5"sv, "\5"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "\\05"sv, "\5"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "\\455"sv, "\45""5"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "\\314"sv, "\314"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "\\c"sv, "\\c"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "\\cf"sv, "\06"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "\\c1"sv, "\\c1"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "[\\c1]"sv, "\x11"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "[\\w-\\d]"sv, "-"sv, true, ECMAScriptFlags::BrowserExtended },
+        { "^(?:^^\\.?|[!+-]|!=|!==|#|%|%=|&|&&|&&=|&=|\\(|\\*|\\*=|\\+=|,|-=|->|\\/|\\/=|:|::|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|[?@[^]|\\^=|\\^\\^|\\^\\^=|{|\\||\\|=|\\|\\||\\|\\|=|~|break|case|continue|delete|do|else|finally|instanceof|return|throw|try|typeof)\\s*(\\/(?=[^*/])(?:[^/[\\\\]|\\\\[\\S\\s]|\\[(?:[^\\\\\\]]|\\\\[\\S\\s])*(?:]|$))+\\/)"sv,
+                 "return /xx/"sv, true, ECMAScriptFlags::BrowserExtended
         }, // #5517, appears to be matching JS expressions that involve regular expressions...
-        { "a{2,}", "aaaa" }, // #5518
+        { "a{2,}"sv, "aaaa"sv }, // #5518
     };
     // clang-format on
 
@@ -627,21 +627,21 @@ TEST_CASE(ECMA262_match)
 TEST_CASE(ECMA262_unicode_match)
 {
     struct _test {
-        char const* pattern;
-        char const* subject;
+        StringView pattern;
+        StringView subject;
         bool matches { true };
         ECMAScriptFlags options {};
     };
     _test tests[] {
-        { "\\ud83d", "😀", true },
-        { "\\ud83d", "😀", false, ECMAScriptFlags::Unicode },
-        { "\\ude00", "😀", true },
-        { "\\ude00", "😀", false, ECMAScriptFlags::Unicode },
-        { "\\ud83d\\ude00", "😀", true },
-        { "\\ud83d\\ude00", "😀", true, ECMAScriptFlags::Unicode },
-        { "\\u{1f600}", "😀", true, ECMAScriptFlags::Unicode },
-        { "\\ud83d\\ud83d", "\xed\xa0\xbd\xed\xa0\xbd", true },
-        { "\\ud83d\\ud83d", "\xed\xa0\xbd\xed\xa0\xbd", true, ECMAScriptFlags::Unicode },
+        { "\\ud83d"sv, "😀"sv, true },
+        { "\\ud83d"sv, "😀"sv, false, ECMAScriptFlags::Unicode },
+        { "\\ude00"sv, "😀"sv, true },
+        { "\\ude00"sv, "😀"sv, false, ECMAScriptFlags::Unicode },
+        { "\\ud83d\\ude00"sv, "😀"sv, true },
+        { "\\ud83d\\ude00"sv, "😀"sv, true, ECMAScriptFlags::Unicode },
+        { "\\u{1f600}"sv, "😀"sv, true, ECMAScriptFlags::Unicode },
+        { "\\ud83d\\ud83d"sv, "\xed\xa0\xbd\xed\xa0\xbd"sv, true },
+        { "\\ud83d\\ud83d"sv, "\xed\xa0\xbd\xed\xa0\xbd"sv, true, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
@@ -667,56 +667,56 @@ TEST_CASE(ECMA262_unicode_match)
 TEST_CASE(ECMA262_property_match)
 {
     struct _test {
-        char const* pattern;
-        char const* subject;
+        StringView pattern;
+        StringView subject;
         bool matches { true };
         ECMAScriptFlags options {};
     };
 
     constexpr _test tests[] {
-        { "\\p{ASCII}", "a", false },
-        { "\\p{ASCII}", "p{ASCII}", true },
-        { "\\p{ASCII}", "a", true, ECMAScriptFlags::Unicode },
-        { "\\p{ASCII}", "😀", false, ECMAScriptFlags::Unicode },
-        { "\\P{ASCII}", "a", false, ECMAScriptFlags::Unicode },
-        { "\\P{ASCII}", "😀", true, ECMAScriptFlags::Unicode },
-        { "\\p{ASCII_Hex_Digit}", "1", true, ECMAScriptFlags::Unicode },
-        { "\\p{ASCII_Hex_Digit}", "a", true, ECMAScriptFlags::Unicode },
-        { "\\p{ASCII_Hex_Digit}", "x", false, ECMAScriptFlags::Unicode },
-        { "\\P{ASCII_Hex_Digit}", "1", false, ECMAScriptFlags::Unicode },
-        { "\\P{ASCII_Hex_Digit}", "a", false, ECMAScriptFlags::Unicode },
-        { "\\P{ASCII_Hex_Digit}", "x", true, ECMAScriptFlags::Unicode },
-        { "\\p{Any}", "\xcd\xb8", true, ECMAScriptFlags::Unicode },       // U+0378, which is an unassigned code point.
-        { "\\P{Any}", "\xcd\xb8", false, ECMAScriptFlags::Unicode },      // U+0378, which is an unassigned code point.
-        { "\\p{Assigned}", "\xcd\xb8", false, ECMAScriptFlags::Unicode }, // U+0378, which is an unassigned code point.
-        { "\\P{Assigned}", "\xcd\xb8", true, ECMAScriptFlags::Unicode },  // U+0378, which is an unassigned code point.
-        { "\\p{Lu}", "a", false, ECMAScriptFlags::Unicode },
-        { "\\p{Lu}", "A", true, ECMAScriptFlags::Unicode },
-        { "\\p{Lu}", "9", false, ECMAScriptFlags::Unicode },
-        { "\\p{Cased_Letter}", "a", true, ECMAScriptFlags::Unicode },
-        { "\\p{Cased_Letter}", "A", true, ECMAScriptFlags::Unicode },
-        { "\\p{Cased_Letter}", "9", false, ECMAScriptFlags::Unicode },
-        { "\\P{Cased_Letter}", "a", false, ECMAScriptFlags::Unicode },
-        { "\\P{Cased_Letter}", "A", false, ECMAScriptFlags::Unicode },
-        { "\\P{Cased_Letter}", "9", true, ECMAScriptFlags::Unicode },
-        { "\\p{General_Category=Cased_Letter}", "a", true, ECMAScriptFlags::Unicode },
-        { "\\p{General_Category=Cased_Letter}", "A", true, ECMAScriptFlags::Unicode },
-        { "\\p{General_Category=Cased_Letter}", "9", false, ECMAScriptFlags::Unicode },
-        { "\\p{gc=Cased_Letter}", "a", true, ECMAScriptFlags::Unicode },
-        { "\\p{gc=Cased_Letter}", "A", true, ECMAScriptFlags::Unicode },
-        { "\\p{gc=Cased_Letter}", "9", false, ECMAScriptFlags::Unicode },
-        { "\\p{Script=Latin}", "a", true, ECMAScriptFlags::Unicode },
-        { "\\p{Script=Latin}", "A", true, ECMAScriptFlags::Unicode },
-        { "\\p{Script=Latin}", "9", false, ECMAScriptFlags::Unicode },
-        { "\\p{sc=Latin}", "a", true, ECMAScriptFlags::Unicode },
-        { "\\p{sc=Latin}", "A", true, ECMAScriptFlags::Unicode },
-        { "\\p{sc=Latin}", "9", false, ECMAScriptFlags::Unicode },
-        { "\\p{Script_Extensions=Deva}", "a", false, ECMAScriptFlags::Unicode },
-        { "\\p{Script_Extensions=Beng}", "\xe1\xb3\x95", true, ECMAScriptFlags::Unicode }, // U+01CD5
-        { "\\p{Script_Extensions=Deva}", "\xe1\xb3\x95", true, ECMAScriptFlags::Unicode }, // U+01CD5
-        { "\\p{scx=Deva}", "a", false, ECMAScriptFlags::Unicode },
-        { "\\p{scx=Beng}", "\xe1\xb3\x95", true, ECMAScriptFlags::Unicode }, // U+01CD5
-        { "\\p{scx=Deva}", "\xe1\xb3\x95", true, ECMAScriptFlags::Unicode }, // U+01CD5
+        { "\\p{ASCII}"sv, "a"sv, false },
+        { "\\p{ASCII}"sv, "p{ASCII}"sv, true },
+        { "\\p{ASCII}"sv, "a"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{ASCII}"sv, "😀"sv, false, ECMAScriptFlags::Unicode },
+        { "\\P{ASCII}"sv, "a"sv, false, ECMAScriptFlags::Unicode },
+        { "\\P{ASCII}"sv, "😀"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{ASCII_Hex_Digit}"sv, "1"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{ASCII_Hex_Digit}"sv, "a"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{ASCII_Hex_Digit}"sv, "x"sv, false, ECMAScriptFlags::Unicode },
+        { "\\P{ASCII_Hex_Digit}"sv, "1"sv, false, ECMAScriptFlags::Unicode },
+        { "\\P{ASCII_Hex_Digit}"sv, "a"sv, false, ECMAScriptFlags::Unicode },
+        { "\\P{ASCII_Hex_Digit}"sv, "x"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{Any}"sv, "\xcd\xb8"sv, true, ECMAScriptFlags::Unicode },       // U+0378, which is an unassigned code point.
+        { "\\P{Any}"sv, "\xcd\xb8"sv, false, ECMAScriptFlags::Unicode },      // U+0378, which is an unassigned code point.
+        { "\\p{Assigned}"sv, "\xcd\xb8"sv, false, ECMAScriptFlags::Unicode }, // U+0378, which is an unassigned code point.
+        { "\\P{Assigned}"sv, "\xcd\xb8"sv, true, ECMAScriptFlags::Unicode },  // U+0378, which is an unassigned code point.
+        { "\\p{Lu}"sv, "a"sv, false, ECMAScriptFlags::Unicode },
+        { "\\p{Lu}"sv, "A"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{Lu}"sv, "9"sv, false, ECMAScriptFlags::Unicode },
+        { "\\p{Cased_Letter}"sv, "a"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{Cased_Letter}"sv, "A"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{Cased_Letter}"sv, "9"sv, false, ECMAScriptFlags::Unicode },
+        { "\\P{Cased_Letter}"sv, "a"sv, false, ECMAScriptFlags::Unicode },
+        { "\\P{Cased_Letter}"sv, "A"sv, false, ECMAScriptFlags::Unicode },
+        { "\\P{Cased_Letter}"sv, "9"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{General_Category=Cased_Letter}"sv, "a"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{General_Category=Cased_Letter}"sv, "A"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{General_Category=Cased_Letter}"sv, "9"sv, false, ECMAScriptFlags::Unicode },
+        { "\\p{gc=Cased_Letter}"sv, "a"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{gc=Cased_Letter}"sv, "A"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{gc=Cased_Letter}"sv, "9"sv, false, ECMAScriptFlags::Unicode },
+        { "\\p{Script=Latin}"sv, "a"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{Script=Latin}"sv, "A"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{Script=Latin}"sv, "9"sv, false, ECMAScriptFlags::Unicode },
+        { "\\p{sc=Latin}"sv, "a"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{sc=Latin}"sv, "A"sv, true, ECMAScriptFlags::Unicode },
+        { "\\p{sc=Latin}"sv, "9"sv, false, ECMAScriptFlags::Unicode },
+        { "\\p{Script_Extensions=Deva}"sv, "a"sv, false, ECMAScriptFlags::Unicode },
+        { "\\p{Script_Extensions=Beng}"sv, "\xe1\xb3\x95"sv, true, ECMAScriptFlags::Unicode }, // U+01CD5
+        { "\\p{Script_Extensions=Deva}"sv, "\xe1\xb3\x95"sv, true, ECMAScriptFlags::Unicode }, // U+01CD5
+        { "\\p{scx=Deva}"sv, "a"sv, false, ECMAScriptFlags::Unicode },
+        { "\\p{scx=Beng}"sv, "\xe1\xb3\x95"sv, true, ECMAScriptFlags::Unicode }, // U+01CD5
+        { "\\p{scx=Deva}"sv, "\xe1\xb3\x95"sv, true, ECMAScriptFlags::Unicode }, // U+01CD5
     };
 
     for (auto& test : tests) {
@@ -742,19 +742,19 @@ TEST_CASE(ECMA262_property_match)
 TEST_CASE(replace)
 {
     struct _test {
-        const char* pattern;
-        const char* replacement;
-        const char* subject;
-        const char* expected;
+        StringView pattern;
+        StringView replacement;
+        StringView subject;
+        StringView expected;
         ECMAScriptFlags options {};
     };
 
     constexpr _test tests[] {
-        { "foo(.+)", "aaa", "test", "test" },
-        { "foo(.+)", "test\\1", "foobar", "testbar" },
-        { "foo(.+)", "\\2\\1", "foobar", "\\2bar" },
-        { "foo(.+)", "\\\\\\1", "foobar", "\\bar" },
-        { "foo(.)", "a\\1", "fooxfooy", "axay", ECMAScriptFlags::Multiline },
+        { "foo(.+)"sv, "aaa"sv, "test"sv, "test"sv },
+        { "foo(.+)"sv, "test\\1"sv, "foobar"sv, "testbar"sv },
+        { "foo(.+)"sv, "\\2\\1"sv, "foobar"sv, "\\2bar"sv },
+        { "foo(.+)"sv, "\\\\\\1"sv, "foobar"sv, "\\bar"sv },
+        { "foo(.)"sv, "a\\1"sv, "fooxfooy"sv, "axay"sv, ECMAScriptFlags::Multiline },
     };
 
     for (auto& test : tests) {
