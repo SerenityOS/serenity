@@ -61,7 +61,7 @@ KResultOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(const ProcFS& p
     for_each_thread([&](const Thread& thread) {
         int tid = thread.tid().value();
         VERIFY(!(tid < 0));
-        if (name == String::number(tid)) {
+        if (name.to_int() == tid) {
             auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_thread_stack(procfs, thread.tid(), pid());
             if (maybe_inode.is_error()) {
                 thread_stack_inode = maybe_inode.error();
@@ -114,7 +114,7 @@ KResultOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(cons
             count++;
             return;
         }
-        if (name == String::number(count)) {
+        if (name.to_uint() == count) {
             auto maybe_inode = ProcFSProcessPropertyInode::try_create_for_file_description_link(procfs, static_cast<unsigned>(count), pid());
             if (maybe_inode.is_error()) {
                 file_description_link = maybe_inode.error();
