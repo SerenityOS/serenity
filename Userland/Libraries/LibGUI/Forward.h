@@ -66,6 +66,7 @@ class Statusbar;
 class TabWidget;
 class TableView;
 class TextBox;
+class UrlBox;
 class TextDocument;
 class TextDocumentLine;
 struct TextDocumentSpan;

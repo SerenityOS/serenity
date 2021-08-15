@@ -256,10 +256,7 @@ void TextEditor::mousedown_event(MouseEvent& event)
 
     if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
         m_triple_click_timer = Core::ElapsedTimer();
-        m_selection = document().range_for_entire_line(m_cursor.line());
-        set_cursor(m_selection.end());
-        update();
-        did_update_selection();
+        select_current_line();
         return;
     }
 
@@ -308,6 +305,14 @@ void TextEditor::mousemove_event(MouseEvent& event)
         update();
         return;
     }
+}
+
+void TextEditor::select_current_line()
+{
+    m_selection = document().range_for_entire_line(m_cursor.line());
+    set_cursor(m_selection.end());
+    update();
+    did_update_selection();
 }
 
 void TextEditor::automatic_selection_scroll_timer_fired()
