@@ -430,14 +430,6 @@ KResultOr<size_t> PCIDeviceAttributeSysFSComponent::read_bytes(off_t offset, siz
     return nread;
 }
 
-size_t PCIDeviceAttributeSysFSComponent::size() const
-{
-    auto buffer = try_to_generate_buffer();
-    if (!buffer)
-        return 0;
-    return buffer->size();
-}
-
 OwnPtr<KBuffer> PCIDeviceAttributeSysFSComponent::try_to_generate_buffer() const
 {
     String value;
