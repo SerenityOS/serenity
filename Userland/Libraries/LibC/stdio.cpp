@@ -1102,9 +1102,17 @@ FILE* fopen(const char* pathname, const char* mode)
 FILE* freopen(const char* pathname, const char* mode, FILE* stream)
 {
     VERIFY(stream);
+
+    char path_buf[MAXPATHLEN];
     if (!pathname) {
-        // FIXME: Someone should probably implement this path.
-        TODO();
+        auto proc_path = String::formatted("/proc/self/fd/{}", stream->fileno());
+        ssize_t buf_length = readlink(proc_path.characters(), path_buf, sizeof(path_buf));
+        if (buf_length < 0) {
+            errno = EBADF;
+            return nullptr;
+        }
+        path_buf[buf_length] = '\0';
+        pathname = path_buf;
     }
 
     int flags = parse_mode(mode);
