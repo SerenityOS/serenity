@@ -108,3 +108,4 @@ public:
 }
 
 using AK::RefCounted;
+using AK::RefCountedBase;
