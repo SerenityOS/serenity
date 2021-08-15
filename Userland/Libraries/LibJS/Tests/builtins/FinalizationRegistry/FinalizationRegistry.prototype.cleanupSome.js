@@ -6,7 +6,8 @@ function registerInDifferentScope(registry) {
     registry.register({}, {});
 }
 
-test("basic functionality", () => {
+// Flaky test, investigate and fix :^)
+test.skip("basic functionality", () => {
     var registry = new FinalizationRegistry(() => {});
 
     var count = 0;
