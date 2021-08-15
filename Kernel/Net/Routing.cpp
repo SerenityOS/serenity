@@ -119,7 +119,7 @@ void update_arp_table(const IPv4Address& ip_addr, const MACAddress& addr, Update
     });
     s_arp_table_block_condition->unblock(ip_addr, addr);
 
-    if constexpr (ROUTING_DEBUG) {
+    if constexpr (ARP_DEBUG) {
         arp_table().with_shared([&](const auto& table) {
             dmesgln("ARP table ({} entries):", table.size());
             for (auto& it : table)
@@ -235,12 +235,12 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
             return table.get(next_hop_ip);
         });
         if (addr.has_value()) {
-            dbgln_if(ROUTING_DEBUG, "Routing: Using cached ARP entry for {} ({})", next_hop_ip, addr.value().to_string());
+            dbgln_if(ARP_DEBUG, "Routing: Using cached ARP entry for {} ({})", next_hop_ip, addr.value().to_string());
             return { adapter, addr.value() };
         }
     }
 
-    dbgln_if(ROUTING_DEBUG, "Routing: Sending ARP request via adapter {} for IPv4 address {}", adapter->name(), next_hop_ip);
+    dbgln_if(ARP_DEBUG, "Routing: Sending ARP request via adapter {} for IPv4 address {}", adapter->name(), next_hop_ip);
 
     ARPPacket request;
     request.set_operation(ARPOperation::Request);
@@ -253,14 +253,14 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     if (NetworkTask::is_current()) {
         // FIXME: Waiting for the ARP response from inside the NetworkTask would
         // deadlock, so let's hope that whoever called route_to() tries again in a bit.
-        dbgln_if(ROUTING_DEBUG, "Routing: Not waiting for ARP response from inside NetworkTask, sent ARP request using adapter {} for {}", adapter->name(), target);
+        dbgln_if(ARP_DEBUG, "Routing: Not waiting for ARP response from inside NetworkTask, sent ARP request using adapter {} for {}", adapter->name(), target);
         return { nullptr, {} };
     }
 
     Optional<MACAddress> addr;
     if (!Thread::current()->block<ARPTableBlocker>({}, next_hop_ip, addr).was_interrupted()) {
         if (addr.has_value()) {
-            dbgln_if(ROUTING_DEBUG, "Routing: Got ARP response using adapter {} for {} ({})",
+            dbgln_if(ARP_DEBUG, "Routing: Got ARP response using adapter {} for {} ({})",
                 adapter->name(),
                 next_hop_ip,
                 addr.value().to_string());
