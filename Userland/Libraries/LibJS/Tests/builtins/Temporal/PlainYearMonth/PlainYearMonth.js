@@ -50,4 +50,10 @@ describe("normal behavior", () => {
         expect(plainYearMonth).toBeInstanceOf(Temporal.PlainYearMonth);
         expect(Object.getPrototypeOf(plainYearMonth)).toBe(Temporal.PlainYearMonth.prototype);
     });
+
+    test("default reference day is 1", () => {
+        const plainYearMonth = new Temporal.PlainYearMonth(2021, 7);
+        const fields = plainYearMonth.getISOFields();
+        expect(fields.isoDay).toBe(1);
+    });
 });
