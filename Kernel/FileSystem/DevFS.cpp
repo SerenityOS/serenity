@@ -25,8 +25,7 @@ void DevFS::notify_new_device(Device& device)
     auto name = KString::try_create(device.device_name()).release_value();
     MutexLocker locker(m_lock);
     auto new_device_inode = adopt_ref(*new DevFSDeviceInode(*this, device, move(name)));
-    m_nodes.append(new_device_inode);
-    m_root_inode->m_devices.append(new_device_inode);
+    m_root_inode->m_nodes.append(new_device_inode);
 }
 
 size_t DevFS::allocate_inode_index()
@@ -61,18 +60,6 @@ KResult DevFS::initialize()
 Inode& DevFS::root_inode()
 {
     return *m_root_inode;
-}
-
-KResultOr<NonnullRefPtr<Inode>> DevFS::get_inode(InodeIdentifier inode_id) const
-{
-    MutexLocker locker(m_lock);
-    if (inode_id.index() == 1)
-        return *m_root_inode;
-    for (auto& node : m_nodes) {
-        if (inode_id.index() == node.index())
-            return node;
-    }
-    return ENOENT;
 }
 
 DevFSInode::DevFSInode(DevFS& fs)
@@ -211,19 +198,9 @@ KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem:
     MutexLocker locker(fs().m_lock);
     callback({ ".", identifier(), 0 });
     callback({ "..", identifier(), 0 });
-
-    for (auto& directory : m_subdirectories) {
-        InodeIdentifier identifier = { fsid(), directory.index() };
-        callback({ directory.name(), identifier, 0 });
-    }
-    for (auto& link : m_links) {
-        InodeIdentifier identifier = { fsid(), link.index() };
-        callback({ link.name(), identifier, 0 });
-    }
-
-    for (auto& device_node : m_devices) {
-        InodeIdentifier identifier = { fsid(), device_node.index() };
-        callback({ device_node.name(), identifier, 0 });
+    for (auto& node : m_nodes) {
+        InodeIdentifier identifier = { fsid(), node.index() };
+        callback({ node.name(), identifier, 0 });
     }
     return KSuccess;
 }
@@ -231,19 +208,9 @@ KResult DevFSRootDirectoryInode::traverse_as_directory(Function<bool(FileSystem:
 KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::lookup(StringView name)
 {
     MutexLocker locker(fs().m_lock);
-    for (auto& subdirectory : m_subdirectories) {
-        if (subdirectory.name() == name)
-            return subdirectory;
-    }
-    for (auto& link : m_links) {
-        if (link.name() == name)
-            return link;
-    }
-
-    for (auto& device_node : m_devices) {
-        if (device_node.name() == name) {
-            return device_node;
-        }
+    for (auto& node : m_nodes) {
+        if (node.name() == name)
+            return node;
     }
     return ENOENT;
 }
@@ -251,37 +218,24 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(StringView
 {
     MutexLocker locker(fs().m_lock);
 
+    for (auto& node : m_nodes) {
+        if (node.name() == name)
+            return KResult(EEXIST);
+    }
+
     InodeMetadata metadata;
     metadata.mode = mode;
     if (metadata.is_directory()) {
-        for (auto& directory : m_subdirectories) {
-            if (directory.name() == name)
-                return EEXIST;
-        }
         if (name != "pts")
             return EROFS;
         auto new_directory_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevFSPtsDirectoryInode(fs())));
-        if (!m_subdirectories.try_ensure_capacity(m_subdirectories.size() + 1))
-            return ENOMEM;
-        if (!fs().m_nodes.try_ensure_capacity(fs().m_nodes.size() + 1))
-            return ENOMEM;
-        m_subdirectories.append(*new_directory_inode);
-        fs().m_nodes.append(*new_directory_inode);
-        return KResult(KSuccess);
+        m_nodes.append(*new_directory_inode);
+        return new_directory_inode;
     }
     if (metadata.is_symlink()) {
-        for (auto& link : m_links) {
-            if (link.name() == name)
-                return EEXIST;
-        }
         auto name_kstring = TRY(KString::try_create(name));
         auto new_link_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevFSLinkInode(fs(), move(name_kstring))));
-        if (!m_links.try_ensure_capacity(m_links.size() + 1))
-            return ENOMEM;
-        if (!fs().m_nodes.try_ensure_capacity(fs().m_nodes.size() + 1))
-            return ENOMEM;
-        m_links.append(*new_link_inode);
-        fs().m_nodes.append(*new_link_inode);
+        m_nodes.append(*new_link_inode);
         return new_link_inode;
     }
     return EROFS;
