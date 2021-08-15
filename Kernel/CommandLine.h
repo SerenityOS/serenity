@@ -55,7 +55,7 @@ public:
     };
 
     [[nodiscard]] const String& string() const { return m_string; }
-    Optional<String> lookup(const StringView& key) const;
+    Optional<StringView> lookup(const StringView& key) const;
     [[nodiscard]] bool contains(const StringView& key) const;
 
     [[nodiscard]] bool is_boot_profiling_enabled() const;
@@ -76,9 +76,9 @@ public:
     [[nodiscard]] bool disable_usb() const;
     [[nodiscard]] bool disable_virtio() const;
     [[nodiscard]] AHCIResetMode ahci_reset_mode() const;
-    [[nodiscard]] String userspace_init() const;
+    [[nodiscard]] StringView userspace_init() const;
     [[nodiscard]] Vector<String> userspace_init_args() const;
-    [[nodiscard]] String root_device() const;
+    [[nodiscard]] StringView root_device() const;
     [[nodiscard]] size_t switch_to_tty() const;
 
 private:

@@ -80,7 +80,7 @@ UNMAP_AFTER_INIT CommandLine::CommandLine(const String& cmdline_from_bootloader)
     add_arguments(args);
 }
 
-Optional<String> CommandLine::lookup(const StringView& key) const
+Optional<StringView> CommandLine::lookup(const StringView& key) const
 {
     return m_params.get(key);
 }
@@ -132,7 +132,7 @@ UNMAP_AFTER_INIT bool CommandLine::is_force_pio() const
     return contains("force_pio"sv);
 }
 
-UNMAP_AFTER_INIT String CommandLine::root_device() const
+UNMAP_AFTER_INIT StringView CommandLine::root_device() const
 {
     return lookup("root"sv).value_or("/dev/hda"sv);
 }
@@ -220,14 +220,14 @@ UNMAP_AFTER_INIT bool CommandLine::is_no_framebuffer_devices_mode() const
     return mode == BootMode::NoFramebufferDevices || mode == BootMode::SelfTest;
 }
 
-String CommandLine::userspace_init() const
+StringView CommandLine::userspace_init() const
 {
     return lookup("init"sv).value_or("/bin/SystemServer"sv);
 }
 
 Vector<String> CommandLine::userspace_init_args() const
 {
-    auto init_args = lookup("init_args"sv).value_or(""sv).split(',');
+    auto init_args = lookup("init_args"sv).value_or(""sv).to_string().split(';');
     if (!init_args.is_empty())
         init_args.prepend(userspace_init());
 
