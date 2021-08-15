@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/IntrusiveList.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
@@ -18,9 +19,11 @@ namespace Kernel {
 
 // FIXME: Custody needs some locking.
 
-class Custody : public RefCounted<Custody> {
+class Custody : public RefCountedBase {
     MAKE_SLAB_ALLOCATED(Custody)
 public:
+    bool unref() const;
+
     static KResultOr<NonnullRefPtr<Custody>> try_create(Custody* parent, StringView name, Inode&, int mount_flags);
 
     ~Custody();
@@ -43,6 +46,11 @@ private:
     NonnullOwnPtr<KString> m_name;
     NonnullRefPtr<Inode> m_inode;
     int m_mount_flags { 0 };
+
+    mutable IntrusiveListNode<Custody> m_all_custodies_list_node;
+
+public:
+    using AllCustodiesList = IntrusiveList<Custody, RawPtr<Custody>, &Custody::m_all_custodies_list_node>;
 };
 
 }
