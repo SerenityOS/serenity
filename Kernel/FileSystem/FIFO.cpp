@@ -5,24 +5,14 @@
  */
 
 #include <AK/Atomic.h>
-#include <AK/HashTable.h>
-#include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/Locking/ProtectedValue.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 
 namespace Kernel {
-
-static Singleton<ProtectedValue<HashTable<FIFO*>>> s_table;
-
-static ProtectedValue<HashTable<FIFO*>>& all_fifos()
-{
-    return *s_table;
-}
 
 static Atomic<int> s_next_fifo_id = 1;
 
@@ -79,9 +69,6 @@ FIFO::FIFO(uid_t uid, NonnullOwnPtr<DoubleBuffer> buffer)
     : m_buffer(move(buffer))
     , m_uid(uid)
 {
-    all_fifos().with_exclusive([&](auto& table) {
-        table.set(this);
-    });
     m_fifo_id = ++s_next_fifo_id;
 
     // Use the same block condition for read and write
@@ -92,9 +79,6 @@ FIFO::FIFO(uid_t uid, NonnullOwnPtr<DoubleBuffer> buffer)
 
 FIFO::~FIFO()
 {
-    all_fifos().with_exclusive([&](auto& table) {
-        table.remove(this);
-    });
 }
 
 void FIFO::attach(Direction direction)
