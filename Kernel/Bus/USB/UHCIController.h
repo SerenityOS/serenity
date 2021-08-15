@@ -69,7 +69,7 @@ private:
 
     virtual bool handle_irq(const RegisterState&) override;
 
-    void create_structures();
+    KResult create_structures();
     void setup_schedule();
     size_t poll_transfer_queue(QueueHead& transfer_queue);
 

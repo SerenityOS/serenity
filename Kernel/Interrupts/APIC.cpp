@@ -277,11 +277,13 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
 
 UNMAP_AFTER_INIT static NonnullOwnPtr<Memory::Region> create_identity_mapped_region(PhysicalAddress paddr, size_t size)
 {
-    auto vmobject = Memory::AnonymousVMObject::try_create_for_physical_range(paddr, size);
-    VERIFY(vmobject);
+    auto maybe_vmobject = Memory::AnonymousVMObject::try_create_for_physical_range(paddr, size);
+    // FIXME: Would be nice to be able to return a KResultOr from here.
+    VERIFY(!maybe_vmobject.is_error());
+
     auto region = MM.allocate_kernel_region_with_vmobject(
         Memory::VirtualRange { VirtualAddress { static_cast<FlatPtr>(paddr.get()) }, size },
-        vmobject.release_nonnull(),
+        maybe_vmobject.release_value(),
         {},
         Memory::Region::Access::ReadWriteExecute);
     VERIFY(region);

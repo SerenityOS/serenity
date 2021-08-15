@@ -13,7 +13,7 @@
 
 namespace Kernel::Memory {
 
-RefPtr<VMObject> AnonymousVMObject::try_clone()
+KResultOr<NonnullRefPtr<VMObject>> AnonymousVMObject::try_clone()
 {
     // We need to acquire our lock so we copy a sane state
     ScopedSpinLock lock(m_lock);
@@ -21,9 +21,11 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
     if (is_purgeable() && is_volatile()) {
         // If this object is purgeable+volatile, create a new zero-filled purgeable+volatile
         // object, effectively "pre-purging" it in the child process.
-        auto clone = try_create_purgeable_with_size(size(), AllocationStrategy::None);
-        if (!clone)
-            return {};
+        auto maybe_clone = try_create_purgeable_with_size(size(), AllocationStrategy::None);
+        if (maybe_clone.is_error())
+            return maybe_clone.error();
+
+        auto clone = maybe_clone.release_value();
         clone->m_volatile = true;
         return clone;
     }
@@ -38,7 +40,7 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
 
     auto committed_pages = MM.commit_user_physical_pages(new_cow_pages_needed);
     if (!committed_pages.has_value())
-        return {};
+        return ENOMEM;
 
     // Create or replace the committed cow pages. When cloning a previously
     // cloned vmobject, we want to essentially "fork", leaving us and the
@@ -49,11 +51,12 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
     auto new_shared_committed_cow_pages = try_create<SharedCommittedCowPages>(committed_pages.release_value());
 
     if (!new_shared_committed_cow_pages)
-        return {};
+        return ENOMEM;
 
-    auto clone = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(*this, *new_shared_committed_cow_pages));
-    if (!clone)
-        return {};
+    auto maybe_clone = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(*this, new_shared_committed_cow_pages.release_nonnull()));
+    if (!maybe_clone)
+        return ENOMEM;
+    auto clone = maybe_clone.release_nonnull();
 
     m_shared_committed_cow_pages = move(new_shared_committed_cow_pages);
 
@@ -76,52 +79,58 @@ RefPtr<VMObject> AnonymousVMObject::try_clone()
     return clone;
 }
 
-RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_with_size(size_t size, AllocationStrategy strategy)
+KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_size(size_t size, AllocationStrategy strategy)
 {
     Optional<CommittedPhysicalPageSet> committed_pages;
     if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
         committed_pages = MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE)));
         if (!committed_pages.has_value())
-            return {};
+            return ENOMEM;
     }
-    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages)));
+
+    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages)));
 }
 
-RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)
+KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)
 {
     auto contiguous_physical_pages = MM.allocate_contiguous_supervisor_physical_pages(size);
     if (contiguous_physical_pages.is_empty())
-        return {};
-    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(contiguous_physical_pages.span()));
+        return ENOMEM;
+
+    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(contiguous_physical_pages.span()));
 }
 
-RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_purgeable_with_size(size_t size, AllocationStrategy strategy)
+KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_purgeable_with_size(size_t size, AllocationStrategy strategy)
 {
     Optional<CommittedPhysicalPageSet> committed_pages;
     if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
         committed_pages = MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE)));
         if (!committed_pages.has_value())
-            return {};
+            return ENOMEM;
     }
+
     auto vmobject = adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, strategy, move(committed_pages)));
     if (!vmobject)
-        return {};
+        return ENOMEM;
+
     vmobject->m_purgeable = true;
-    return vmobject;
+    return vmobject.release_nonnull();
 }
 
-RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>> physical_pages)
+KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalPage>> physical_pages)
 {
-    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(physical_pages));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(physical_pages));
 }
 
-RefPtr<AnonymousVMObject> AnonymousVMObject::try_create_for_physical_range(PhysicalAddress paddr, size_t size)
+KResultOr<NonnullRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_for_physical_range(PhysicalAddress paddr, size_t size)
 {
     if (paddr.offset(size) < paddr) {
         dbgln("Shenanigans! try_create_for_physical_range({}, {}) would wrap around", paddr, size);
-        return nullptr;
+        // Since we can't wrap around yet, let's pretend to OOM.
+        return ENOMEM;
     }
-    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(paddr, size));
+
+    return adopt_nonnull_ref_or_enomem(new (nothrow) AnonymousVMObject(paddr, size));
 }
 
 AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy, Optional<CommittedPhysicalPageSet> committed_pages)

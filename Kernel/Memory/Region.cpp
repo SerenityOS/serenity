@@ -75,14 +75,14 @@ OwnPtr<Region> Region::clone()
     if (vmobject().is_inode())
         VERIFY(vmobject().is_private_inode());
 
-    auto vmobject_clone = vmobject().try_clone();
-    if (!vmobject_clone)
+    auto maybe_vmobject_clone = vmobject().try_clone();
+    if (maybe_vmobject_clone.is_error())
         return {};
 
     // Set up a COW region. The parent (this) region becomes COW as well!
     remap();
     auto clone_region = Region::try_create_user_accessible(
-        m_range, vmobject_clone.release_nonnull(), m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
+        m_range, maybe_vmobject_clone.release_value(), m_offset_in_vmobject, m_name ? m_name->try_clone() : OwnPtr<KString> {}, access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared);
     if (!clone_region) {
         dbgln("Region::clone: Unable to allocate new Region for COW");
         return nullptr;

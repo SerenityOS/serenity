@@ -170,10 +170,10 @@ KResultOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_
 KResultOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, StringView name, int prot, AllocationStrategy strategy)
 {
     VERIFY(range.is_valid());
-    auto vmobject = AnonymousVMObject::try_create_with_size(range.size(), strategy);
-    if (!vmobject)
-        return ENOMEM;
-    auto region = Region::try_create_user_accessible(range, vmobject.release_nonnull(), 0, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false);
+    auto maybe_vmobject = AnonymousVMObject::try_create_with_size(range.size(), strategy);
+    if (maybe_vmobject.is_error())
+        return maybe_vmobject.error();
+    auto region = Region::try_create_user_accessible(range, maybe_vmobject.release_value(), 0, KString::try_create(name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false);
     if (!region)
         return ENOMEM;
     if (!region->map(page_directory()))

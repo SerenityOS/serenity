@@ -219,12 +219,17 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
         RefPtr<Memory::AnonymousVMObject> vmobject;
-        if (flags & MAP_PURGEABLE)
-            vmobject = Memory::AnonymousVMObject::try_create_purgeable_with_size(Memory::page_round_up(size), strategy);
-        else
-            vmobject = Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(size), strategy);
-        if (!vmobject)
-            return ENOMEM;
+        if (flags & MAP_PURGEABLE) {
+            auto maybe_vmobject = Memory::AnonymousVMObject::try_create_purgeable_with_size(Memory::page_round_up(size), strategy);
+            if (maybe_vmobject.is_error())
+                return maybe_vmobject.error();
+            vmobject = maybe_vmobject.release_value();
+        } else {
+            auto maybe_vmobject = Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(size), strategy);
+            if (maybe_vmobject.is_error())
+                return maybe_vmobject.error();
+            vmobject = maybe_vmobject.release_value();
+        }
         auto region_or_error = address_space().allocate_region_with_vmobject(range.value(), vmobject.release_nonnull(), 0, {}, prot, map_shared);
         if (region_or_error.is_error())
             return region_or_error.error().error();

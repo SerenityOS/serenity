@@ -19,7 +19,7 @@ public:
     virtual ~PrivateInodeVMObject() override;
 
     static RefPtr<PrivateInodeVMObject> try_create_with_inode(Inode&);
-    virtual RefPtr<VMObject> try_clone() override;
+    virtual KResultOr<NonnullRefPtr<VMObject>> try_clone() override;
 
 private:
     virtual bool is_private_inode() const override { return true; }

@@ -15,15 +15,18 @@ FrameBufferDevice::FrameBufferDevice(GPU& virtio_gpu, ScanoutID scanout)
     , m_gpu(virtio_gpu)
     , m_scanout(scanout)
 {
-    if (display_info().enabled)
-        create_framebuffer();
+    if (display_info().enabled) {
+        // FIXME: This should be in a place where we can handle allocation failures.
+        auto result = create_framebuffer();
+        VERIFY(!result.is_error());
+    }
 }
 
 FrameBufferDevice::~FrameBufferDevice()
 {
 }
 
-void FrameBufferDevice::create_framebuffer()
+KResult FrameBufferDevice::create_framebuffer()
 {
     // First delete any existing framebuffers to free the memory first
     m_framebuffer = nullptr;
@@ -40,12 +43,17 @@ void FrameBufferDevice::create_framebuffer()
     for (auto i = 0u; i < num_needed_pages; ++i) {
         pages.append(write_sink_page);
     }
-    m_framebuffer_sink_vmobject = Memory::AnonymousVMObject::try_create_with_physical_pages(pages.span());
+    auto maybe_framebuffer_sink_vmobject = Memory::AnonymousVMObject::try_create_with_physical_pages(pages.span());
+    if (maybe_framebuffer_sink_vmobject.is_error())
+        return maybe_framebuffer_sink_vmobject.error();
+    m_framebuffer_sink_vmobject = maybe_framebuffer_sink_vmobject.release_value();
 
     MutexLocker locker(m_gpu.operation_lock());
     m_current_buffer = &buffer_from_index(m_last_set_buffer_index.load());
     create_buffer(m_main_buffer, 0, m_buffer_size);
     create_buffer(m_back_buffer, m_buffer_size, m_buffer_size);
+
+    return KSuccess;
 }
 
 void FrameBufferDevice::create_buffer(Buffer& buffer, size_t framebuffer_offset, size_t framebuffer_size)
@@ -124,7 +132,10 @@ bool FrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
         .width = (u32)width,
         .height = (u32)height,
     };
-    create_framebuffer();
+
+    // FIXME: Would be nice to be able to return KResultOr here.
+    if (auto result = create_framebuffer(); result.is_error())
+        return false;
     return true;
 }
 
@@ -255,9 +266,18 @@ KResultOr<Memory::Region*> FrameBufferDevice::mmap(Process& process, FileDescrip
     if (m_userspace_mmap_region)
         return ENOMEM;
 
-    auto vmobject = m_are_writes_active ? m_framebuffer->vmobject().try_clone() : m_framebuffer_sink_vmobject;
-    if (vmobject.is_null())
-        return ENOMEM;
+    RefPtr<Memory::VMObject> vmobject;
+    if (m_are_writes_active) {
+        auto maybe_vmobject = m_framebuffer->vmobject().try_clone();
+        if (maybe_vmobject.is_error())
+            return maybe_vmobject.error();
+
+        vmobject = maybe_vmobject.release_value();
+    } else {
+        vmobject = m_framebuffer_sink_vmobject;
+        if (vmobject.is_null())
+            return ENOMEM;
+    }
 
     auto result = process.address_space().allocate_region_with_vmobject(
         range,
@@ -277,9 +297,10 @@ void FrameBufferDevice::deactivate_writes()
     m_are_writes_active = false;
     if (m_userspace_mmap_region) {
         auto* region = m_userspace_mmap_region.unsafe_ptr();
-        auto vm_object = m_framebuffer_sink_vmobject->try_clone();
-        VERIFY(vm_object);
-        region->set_vmobject(vm_object.release_nonnull());
+        auto maybe_vm_object = m_framebuffer_sink_vmobject->try_clone();
+        // FIXME: Would be nice to be able to return a KResult here.
+        VERIFY(!maybe_vm_object.is_error());
+        region->set_vmobject(maybe_vm_object.release_value());
         region->remap();
     }
     set_buffer(0);
