@@ -14,7 +14,7 @@ jobs:
           node-version: '14'
       - run: npm i twit
       - run: |
-          node ${{ github.workspace }}/Meta/tweet-commits.js << EOF
+          node ${{ github.workspace }}/Meta/tweet-commits.js << 'EOF'
           ${{ toJSON(github.event) }}
           EOF
         env:
