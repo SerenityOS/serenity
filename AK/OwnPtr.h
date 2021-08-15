@@ -8,6 +8,9 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
+#ifdef KERNEL
+#    include <Kernel/KResult.h>
+#endif
 
 namespace AK {
 
@@ -205,6 +208,17 @@ inline OwnPtr<T> adopt_own_if_nonnull(T* object)
     return {};
 }
 
+#ifdef KERNEL
+template<typename T>
+inline Kernel::KResultOr<NonnullOwnPtr<T>> adopt_nonnull_own_or_enomem(T* object)
+{
+    auto result = adopt_own_if_nonnull(object);
+    if (!result)
+        return ENOMEM;
+    return result.release_nonnull();
+}
+#endif
+
 template<typename T, class... Args>
 requires(IsConstructible<T, Args...>) inline OwnPtr<T> try_make(Args&&... args)
 {
@@ -232,3 +246,7 @@ struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
 using AK::adopt_own_if_nonnull;
 using AK::OwnPtr;
 using AK::try_make;
+
+#ifdef KERNEL
+using AK::adopt_nonnull_own_or_enomem;
+#endif
