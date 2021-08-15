@@ -26,13 +26,13 @@
 
 namespace Kernel {
 
-static Singleton<ProtectedValue<HashTable<IPv4Socket*>>> s_table;
+static Singleton<ProtectedValue<IPv4Socket::List>> s_all_sockets;
 
 using BlockFlags = Thread::FileDescriptionBlocker::BlockFlags;
 
-ProtectedValue<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
+ProtectedValue<IPv4Socket::List>& IPv4Socket::all_sockets()
 {
-    return *s_table;
+    return *s_all_sockets;
 }
 
 OwnPtr<DoubleBuffer> IPv4Socket::create_receive_buffer()
@@ -79,14 +79,14 @@ IPv4Socket::IPv4Socket(int type, int protocol, NonnullOwnPtr<DoubleBuffer> recei
     }
 
     all_sockets().with_exclusive([&](auto& table) {
-        table.set(this);
+        table.append(*this);
     });
 }
 
 IPv4Socket::~IPv4Socket()
 {
     all_sockets().with_exclusive([&](auto& table) {
-        table.remove(this);
+        table.remove(*this);
     });
 }
 

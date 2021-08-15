@@ -31,8 +31,6 @@ public:
     static KResultOr<NonnullRefPtr<Socket>> create(int type, int protocol);
     virtual ~IPv4Socket() override;
 
-    static ProtectedValue<HashTable<IPv4Socket*>>& all_sockets();
-
     virtual KResult close() override;
     virtual KResult bind(Userspace<const sockaddr*>, socklen_t) override;
     virtual KResult connect(FileDescription&, Userspace<const sockaddr*>, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
@@ -131,6 +129,13 @@ private:
     BufferMode m_buffer_mode { BufferMode::Packets };
 
     OwnPtr<KBuffer> m_scratch_buffer;
+
+    IntrusiveListNode<IPv4Socket> m_list_node;
+
+public:
+    using List = IntrusiveList<IPv4Socket, RawPtr<IPv4Socket>, &IPv4Socket::m_list_node>;
+
+    static ProtectedValue<IPv4Socket::List>& all_sockets();
 };
 
 }
