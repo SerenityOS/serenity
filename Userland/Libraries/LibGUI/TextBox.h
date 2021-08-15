@@ -43,4 +43,20 @@ public:
     PasswordBox();
 };
 
+class UrlBox : public TextBox {
+    C_OBJECT(UrlBox)
+public:
+    UrlBox();
+    virtual ~UrlBox() override;
+
+    void set_focus_transition(bool focus_transition) { m_focus_transition = focus_transition; }
+    bool is_focus_transition() const { return m_focus_transition; }
+
+private:
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void focusout_event(GUI::FocusEvent&) override;
+
+    bool m_focus_transition { true };
+};
+
 }

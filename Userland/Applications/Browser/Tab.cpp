@@ -142,7 +142,7 @@ Tab::Tab(BrowserWindow& window, Type type)
     toolbar.add_action(window.go_home_action());
     toolbar.add_action(window.reload_action());
 
-    m_location_box = toolbar.add<GUI::TextBox>();
+    m_location_box = toolbar.add<GUI::UrlBox>();
     m_location_box->set_placeholder("Address");
 
     m_location_box->on_return_pressed = [this] {
@@ -153,7 +153,7 @@ Tab::Tab(BrowserWindow& window, Type type)
 
         auto url = url_from_user_input(m_location_box->text());
         load(url);
-        view().set_focus(true);
+        view();
     };
 
     m_location_box->add_custom_context_menu_action(GUI::Action::create("Paste && Go", [this](auto&) {
@@ -312,8 +312,8 @@ Tab::Tab(BrowserWindow& window, Type type)
 
     auto focus_location_box_action = GUI::Action::create(
         "Focus location box", { Mod_Ctrl, Key_L }, Key_F6, [this](auto&) {
-            m_location_box->select_all();
             m_location_box->set_focus(true);
+            m_location_box->select_current_line();
         },
         this);
 
@@ -371,6 +371,8 @@ void Tab::load(const URL& url, LoadType load_type)
         m_page_view->load(url);
     else
         m_web_content_view->load(url);
+
+    m_location_box->set_focus(false);
 }
 
 URL Tab::url() const

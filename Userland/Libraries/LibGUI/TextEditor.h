@@ -142,6 +142,7 @@ public:
     void delete_previous_char();
     void delete_from_line_start_to_cursor();
     void select_all();
+    void select_current_line();
     virtual void undo();
     virtual void redo();
 
