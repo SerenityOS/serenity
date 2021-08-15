@@ -26,6 +26,7 @@
 #include <Kernel/KString.h>
 #include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/LockMode.h>
+#include <Kernel/Locking/SpinLockProtectedValue.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/TimerQueue.h>
@@ -130,7 +131,7 @@ struct ThreadRegisters {
 };
 
 class Thread
-    : public RefCounted<Thread>
+    : public RefCountedBase
     , public Weakable<Thread> {
     AK_MAKE_NONCOPYABLE(Thread);
     AK_MAKE_NONMOVABLE(Thread);
@@ -141,10 +142,9 @@ class Thread
     friend class Scheduler;
     friend struct ThreadReadyQueue;
 
-    static SpinLock<u8> g_tid_map_lock;
-    static HashMap<ThreadID, Thread*>* g_tid_map;
-
 public:
+    bool unref() const;
+
     inline static Thread* current()
     {
         return Processor::current_thread();
@@ -1372,8 +1372,14 @@ private:
     void yield_without_releasing_big_lock(VerifyLockNotHeld verify_lock_not_held = VerifyLockNotHeld::Yes);
     void drop_thread_count(bool);
 
+    mutable IntrusiveListNode<Thread> m_global_thread_list_node;
+
 public:
     using ListInProcess = IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_process_thread_list_node>;
+    using GlobalList = IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_global_thread_list_node>;
+
+private:
+    static SpinLockProtectedValue<GlobalList>& all_threads();
 };
 
 AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);
@@ -1381,37 +1387,41 @@ AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);
 template<IteratorFunction<Thread&> Callback>
 inline IterationDecision Thread::for_each(Callback callback)
 {
-    ScopedSpinLock lock(g_tid_map_lock);
-    for (auto& it : *g_tid_map) {
-        IterationDecision decision = callback(*it.value);
-        if (decision != IterationDecision::Continue)
-            return decision;
-    }
-    return IterationDecision::Continue;
+    return all_threads().with([&](auto& list) -> IterationDecision {
+        for (auto& thread : list) {
+            IterationDecision decision = callback(thread);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
+        return IterationDecision::Continue;
+    });
 }
 
 template<IteratorFunction<Thread&> Callback>
 inline IterationDecision Thread::for_each_in_state(State state, Callback callback)
 {
-    ScopedSpinLock lock(g_tid_map_lock);
-    for (auto& it : *g_tid_map) {
-        auto& thread = *it.value;
-        if (thread.state() != state)
-            continue;
-        IterationDecision decision = callback(thread);
-        if (decision != IterationDecision::Continue)
-            return decision;
-    }
-    return IterationDecision::Continue;
+    return all_threads().with([&](auto& list) -> IterationDecision {
+        for (auto& thread : list) {
+            if (thread.state() != state)
+                continue;
+            IterationDecision decision = callback(thread);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
+        return IterationDecision::Continue;
+    });
 }
 
 template<VoidFunction<Thread&> Callback>
 inline IterationDecision Thread::for_each(Callback callback)
 {
-    ScopedSpinLock lock(g_tid_map_lock);
-    for (auto& it : *g_tid_map)
-        callback(*it.value);
-    return IterationDecision::Continue;
+    return all_threads().with([&](auto& list) {
+        for (auto& thread : list) {
+            if (callback(thread) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
 }
 
 template<VoidFunction<Thread&> Callback>

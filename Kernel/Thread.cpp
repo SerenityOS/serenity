@@ -5,6 +5,7 @@
  */
 
 #include <AK/ScopeGuard.h>
+#include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
@@ -29,12 +30,22 @@
 
 namespace Kernel {
 
-SpinLock<u8> Thread::g_tid_map_lock;
-READONLY_AFTER_INIT HashMap<ThreadID, Thread*>* Thread::g_tid_map;
+static Singleton<SpinLockProtectedValue<Thread::GlobalList>> s_list;
 
-UNMAP_AFTER_INIT void Thread::initialize()
+SpinLockProtectedValue<Thread::GlobalList>& Thread::all_threads()
 {
-    g_tid_map = new HashMap<ThreadID, Thread*>();
+    return *s_list;
+}
+
+bool Thread::unref() const
+{
+    return all_threads().with([&](auto&) {
+        if (deref_base())
+            return false;
+        m_global_thread_list_node.remove();
+        delete this;
+        return true;
+    });
 }
 
 KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process)
@@ -77,11 +88,10 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> ker
         m_kernel_stack_region->set_name(KString::try_create(string));
     }
 
-    {
-        ScopedSpinLock lock(g_tid_map_lock);
-        auto result = g_tid_map->set(m_tid, this);
-        VERIFY(result == AK::HashSetResult::InsertedNewEntry);
-    }
+    all_threads().with([&](auto& list) {
+        list.append(*this);
+    });
+
     if constexpr (THREAD_DEBUG)
         dbgln("Created new thread {}({}:{})", m_process->name(), m_process->pid().value(), m_tid.value());
 
@@ -161,11 +171,6 @@ Thread::~Thread()
 
         // We shouldn't be queued
         VERIFY(m_runnable_priority < 0);
-    }
-    {
-        ScopedSpinLock lock(g_tid_map_lock);
-        auto result = g_tid_map->remove(m_tid);
-        VERIFY(result);
     }
 }
 
@@ -1250,21 +1255,13 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
 
 RefPtr<Thread> Thread::from_tid(ThreadID tid)
 {
-    RefPtr<Thread> found_thread;
-    {
-        ScopedSpinLock lock(g_tid_map_lock);
-        if (auto it = g_tid_map->find(tid); it != g_tid_map->end()) {
-            // We need to call try_ref() here as there is a window between
-            // dropping the last reference and calling the Thread's destructor!
-            // We shouldn't remove the threads from that list until it is truly
-            // destructed as it may stick around past finalization in order to
-            // be able to wait() on it!
-            if (it->value->try_ref()) {
-                found_thread = adopt_ref(*it->value);
-            }
+    return all_threads().with([&](auto& list) -> RefPtr<Thread> {
+        for (Thread& thread : list) {
+            if (thread.tid() == tid)
+                return thread;
         }
-    }
-    return found_thread;
+        return nullptr;
+    });
 }
 
 void Thread::reset_fpu_state()

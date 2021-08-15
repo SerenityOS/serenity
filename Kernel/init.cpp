@@ -207,7 +207,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     __stack_chk_guard = get_fast_random<size_t>();
 
     ProcFSComponentRegistry::initialize();
-    Thread::initialize();
     Process::initialize();
 
     Scheduler::initialize();
