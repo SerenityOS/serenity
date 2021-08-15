@@ -153,7 +153,6 @@ public:
     void release_to_originator();
     void release_for_accept(RefPtr<TCPSocket>);
 
-    static ProtectedValue<HashTable<TCPSocket*>>& sockets_for_retransmit();
     void retransmit_packets();
 
     virtual KResult close() override;
@@ -222,6 +221,12 @@ private:
 
     // FIXME: Parse window size TCP option from the peer
     u32 m_send_window_size { 64 * KiB };
+
+    IntrusiveListNode<TCPSocket> m_retransmit_list_node;
+
+public:
+    using RetransmitList = IntrusiveList<TCPSocket, RawPtr<TCPSocket>, &TCPSocket::m_retransmit_list_node>;
+    static ProtectedValue<TCPSocket::RetransmitList>& sockets_for_retransmit();
 };
 
 }

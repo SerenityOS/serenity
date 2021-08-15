@@ -642,7 +642,7 @@ void retransmit_tcp_packets()
     // in case retransmit_packets() realizes that it wants to close the socket.
     NonnullRefPtrVector<TCPSocket, 16> sockets;
     TCPSocket::sockets_for_retransmit().for_each_shared([&](const auto& socket) {
-        sockets.append(*socket);
+        sockets.append(socket);
     });
 
     for (auto& socket : sockets) {
