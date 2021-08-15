@@ -28,10 +28,11 @@ KResult KCOVInstance::buffer_allocate(size_t buffer_size_in_entries)
     // - we allocate one kernel region using that vmobject
     // - when an mmap call comes in, we allocate another userspace region,
     //   backed by the same vmobject
-    this->vmobject = Memory::AnonymousVMObject::try_create_with_size(
+    auto maybe_vmobject = Memory::AnonymousVMObject::try_create_with_size(
         this->m_buffer_size_in_bytes, AllocationStrategy::AllocateNow);
-    if (!this->vmobject)
-        return ENOMEM;
+    if (maybe_vmobject.is_error())
+        return maybe_vmobject.error();
+    this->vmobject = maybe_vmobject.release_value();
 
     this->m_kernel_region = MM.allocate_kernel_region_with_vmobject(
         *this->vmobject, this->m_buffer_size_in_bytes, String::formatted("kcov_{}", this->m_pid),

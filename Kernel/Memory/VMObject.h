@@ -33,7 +33,7 @@ class VMObject : public RefCounted<VMObject>
 public:
     virtual ~VMObject();
 
-    virtual RefPtr<VMObject> try_clone() = 0;
+    virtual KResultOr<NonnullRefPtr<VMObject>> try_clone() = 0;
 
     virtual bool is_anonymous() const { return false; }
     virtual bool is_inode() const { return false; }

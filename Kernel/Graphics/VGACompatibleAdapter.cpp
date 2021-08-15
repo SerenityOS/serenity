@@ -33,7 +33,8 @@ UNMAP_AFTER_INIT void VGACompatibleAdapter::initialize_framebuffer_devices()
     VERIFY(m_framebuffer_height != 0);
     VERIFY(m_framebuffer_pitch != 0);
     m_framebuffer_device = FramebufferDevice::create(*this, 0, m_framebuffer_address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch);
-    m_framebuffer_device->initialize();
+    // FIXME: Would be nice to be able to return KResult here.
+    VERIFY(!m_framebuffer_device->initialize().is_error());
 }
 
 UNMAP_AFTER_INIT VGACompatibleAdapter::VGACompatibleAdapter(PCI::Address address)

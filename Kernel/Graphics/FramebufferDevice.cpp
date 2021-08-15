@@ -36,18 +36,20 @@ KResultOr<Memory::Region*> FramebufferDevice::mmap(Process& process, FileDescrip
     if (range.size() != Memory::page_round_up(framebuffer_size_in_bytes()))
         return EOVERFLOW;
 
-    auto vmobject = Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, Memory::page_round_up(framebuffer_size_in_bytes()));
-    if (!vmobject)
-        return ENOMEM;
-    m_userspace_real_framebuffer_vmobject = vmobject;
+    auto maybe_vmobject = Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, Memory::page_round_up(framebuffer_size_in_bytes()));
+    if (maybe_vmobject.is_error())
+        return maybe_vmobject.error();
+    m_userspace_real_framebuffer_vmobject = maybe_vmobject.release_value();
 
-    m_real_framebuffer_vmobject = Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, Memory::page_round_up(framebuffer_size_in_bytes()));
-    if (!m_real_framebuffer_vmobject)
-        return ENOMEM;
+    auto maybe_real_framebuffer_vmobject = Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, Memory::page_round_up(framebuffer_size_in_bytes()));
+    if (maybe_real_framebuffer_vmobject.is_error())
+        return maybe_real_framebuffer_vmobject.error();
+    m_real_framebuffer_vmobject = maybe_real_framebuffer_vmobject.release_value();
 
-    m_swapped_framebuffer_vmobject = Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(framebuffer_size_in_bytes()), AllocationStrategy::AllocateNow);
-    if (!m_swapped_framebuffer_vmobject)
-        return ENOMEM;
+    auto maybe_swapped_framebuffer_vmobject = Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(framebuffer_size_in_bytes()), AllocationStrategy::AllocateNow);
+    if (maybe_swapped_framebuffer_vmobject.is_error())
+        return maybe_swapped_framebuffer_vmobject.error();
+    m_swapped_framebuffer_vmobject = maybe_swapped_framebuffer_vmobject.release_value();
 
     m_real_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, Memory::page_round_up(framebuffer_size_in_bytes()), "Framebuffer", Memory::Region::Access::ReadWrite);
     if (!m_real_framebuffer_region)
@@ -107,16 +109,29 @@ String FramebufferDevice::device_name() const
     return String::formatted("fb{}", minor());
 }
 
-UNMAP_AFTER_INIT void FramebufferDevice::initialize()
+UNMAP_AFTER_INIT KResult FramebufferDevice::initialize()
 {
-    m_real_framebuffer_vmobject = Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, Memory::page_round_up(framebuffer_size_in_bytes()));
-    VERIFY(m_real_framebuffer_vmobject);
+    // FIXME: Would be nice to be able to unify this with mmap above, but this
+    //        function is UNMAP_AFTER_INIT for the time being.
+    auto maybe_real_framebuffer_vmobject = Memory::AnonymousVMObject::try_create_for_physical_range(m_framebuffer_address, Memory::page_round_up(framebuffer_size_in_bytes()));
+    if (maybe_real_framebuffer_vmobject.is_error())
+        return maybe_real_framebuffer_vmobject.error();
+    m_real_framebuffer_vmobject = maybe_real_framebuffer_vmobject.release_value();
+
+    auto maybe_swapped_framebuffer_vmobject = Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(framebuffer_size_in_bytes()), AllocationStrategy::AllocateNow);
+    if (maybe_swapped_framebuffer_vmobject.is_error())
+        return maybe_swapped_framebuffer_vmobject.error();
+    m_swapped_framebuffer_vmobject = maybe_swapped_framebuffer_vmobject.release_value();
+
     m_real_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, Memory::page_round_up(framebuffer_size_in_bytes()), "Framebuffer", Memory::Region::Access::ReadWrite);
-    VERIFY(m_real_framebuffer_region);
-    m_swapped_framebuffer_vmobject = Memory::AnonymousVMObject::try_create_with_size(Memory::page_round_up(framebuffer_size_in_bytes()), AllocationStrategy::AllocateNow);
-    VERIFY(m_swapped_framebuffer_vmobject);
+    if (!m_real_framebuffer_region)
+        return ENOMEM;
+
     m_swapped_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, Memory::page_round_up(framebuffer_size_in_bytes()), "Framebuffer Swap (Blank)", Memory::Region::Access::ReadWrite);
-    VERIFY(m_swapped_framebuffer_region);
+    if (!m_swapped_framebuffer_region)
+        return ENOMEM;
+
+    return KSuccess;
 }
 
 UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(const GraphicsDevice& adapter, size_t output_port_index, PhysicalAddress addr, size_t width, size_t height, size_t pitch)

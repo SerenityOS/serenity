@@ -21,9 +21,9 @@ RefPtr<SharedInodeVMObject> SharedInodeVMObject::try_create_with_inode(Inode& in
     return vmobject;
 }
 
-RefPtr<VMObject> SharedInodeVMObject::try_clone()
+KResultOr<NonnullRefPtr<VMObject>> SharedInodeVMObject::try_clone()
 {
-    return adopt_ref_if_nonnull(new (nothrow) SharedInodeVMObject(*this));
+    return adopt_nonnull_ref_or_enomem<VMObject>(new (nothrow) SharedInodeVMObject(*this));
 }
 
 SharedInodeVMObject::SharedInodeVMObject(Inode& inode, size_t size)

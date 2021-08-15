@@ -56,7 +56,7 @@ private:
     Protocol::DisplayInfoResponse::Display const& display_info() const;
     Protocol::DisplayInfoResponse::Display& display_info();
 
-    void create_framebuffer();
+    KResult create_framebuffer();
     void create_buffer(Buffer&, size_t, size_t);
     void set_buffer(int);
 

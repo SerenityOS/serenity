@@ -34,7 +34,7 @@ public:
     size_t framebuffer_size_in_bytes() const;
 
     virtual ~FramebufferDevice() {};
-    void initialize();
+    KResult initialize();
 
 private:
     // ^File
