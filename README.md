@@ -142,6 +142,7 @@ Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
 * **Sam Atkins** - [AtkinsSJ](http://github.com/AtkinsSJ)
 * **Tobias Christiansen** - [TobyAsE](https://github.com/TobyAsE)
 * **Lenny Maiorani** - [ldm5180](https://github.com/ldm5180)
+* **sin-ack** - [sin-ack](https://github.com/sin-ack)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
