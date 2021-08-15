@@ -224,9 +224,11 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
 
     {
         NonnullRefPtrVector<IPv4Socket> icmp_sockets;
-        IPv4Socket::all_sockets().for_each_shared([&](const auto& socket) {
-            if (socket->protocol() == (unsigned)IPv4Protocol::ICMP)
-                icmp_sockets.append(*socket);
+        IPv4Socket::all_sockets().with_exclusive([&](auto& sockets) {
+            for (auto& socket : sockets) {
+                if (socket.protocol() == (unsigned)IPv4Protocol::ICMP)
+                    icmp_sockets.append(socket);
+            }
         });
         for (auto& socket : icmp_sockets)
             socket.did_receive(ipv4_packet.source(), 0, { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
