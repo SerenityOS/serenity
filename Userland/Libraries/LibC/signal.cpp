@@ -168,7 +168,7 @@ int sigsuspend(const sigset_t* set)
     return pselect(0, nullptr, nullptr, nullptr, nullptr, set);
 }
 
-static const char* signal_names[] = {
+const char* sys_signame[] = {
     "INVAL",
     "HUP",
     "INT",
@@ -203,13 +203,13 @@ static const char* signal_names[] = {
     "SYS",
 };
 
-static_assert(sizeof(signal_names) == sizeof(const char*) * NSIG);
+static_assert(sizeof(sys_signame) == sizeof(const char*) * NSIG);
 
 int getsignalbyname(const char* name)
 {
     VERIFY(name);
     for (size_t i = 0; i < NSIG; ++i) {
-        auto* signal_name = signal_names[i];
+        auto* signal_name = sys_signame[i];
         if (!strcmp(signal_name, name))
             return i;
     }
@@ -223,6 +223,6 @@ const char* getsignalname(int signal)
         errno = EINVAL;
         return nullptr;
     }
-    return signal_names[signal];
+    return sys_signame[signal];
 }
 }
