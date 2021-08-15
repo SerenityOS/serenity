@@ -53,14 +53,19 @@ public:
         No,
     };
 
+    enum class PreserveMode {
+        Nothing,
+        PermissionsOwnershipTimestamps,
+    };
+
     struct CopyError {
         OSError error_code;
         bool tried_recursing;
     };
 
-    static Result<void, CopyError> copy_file(String const& dst_path, struct stat const& src_stat, File& source);
-    static Result<void, CopyError> copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed);
-    static Result<void, CopyError> copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes);
+    static Result<void, CopyError> copy_file(String const& dst_path, struct stat const& src_stat, File& source, PreserveMode = PreserveMode::Nothing);
+    static Result<void, CopyError> copy_directory(String const& dst_path, String const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
+    static Result<void, CopyError> copy_file_or_directory(String const& dst_path, String const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
 
     static String real_path_for(String const& filename);
     static String read_link(String const& link_path);
