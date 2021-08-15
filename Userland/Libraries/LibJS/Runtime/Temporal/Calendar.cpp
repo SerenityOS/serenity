@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -712,6 +713,48 @@ Optional<ISODate> iso_date_from_fields(GlobalObject& global_object, Object& fiel
 
     // 9. Return ? RegulateISODate(year, month, day, overflow).
     return regulate_iso_date(global_object, year.as_double(), month, day.as_double(), *overflow);
+}
+
+// 12.1.39 ISOYearMonthFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isoyearmonthfromfields
+Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, Object& fields, Object& options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(fields) is Object.
+
+    // 2. Let overflow be ? ToTemporalOverflow(options).
+    auto overflow = to_temporal_overflow(global_object, options);
+    if (vm.exception())
+        return {};
+
+    // 3. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », «»).
+    auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "month"sv, "monthCode"sv, "year"sv }, {});
+    if (vm.exception())
+        return {};
+
+    // 4. Let year be ? Get(fields, "year").
+    auto year = prepared_fields->get(vm.names.year);
+    if (vm.exception())
+        return {};
+
+    // 5. If year is undefined, throw a TypeError exception.
+    if (year.is_undefined()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.year.as_string());
+        return {};
+    }
+
+    // 6. Let month be ? ResolveISOMonth(fields).
+    auto month = resolve_iso_month(global_object, *prepared_fields);
+    if (vm.exception())
+        return {};
+
+    // 7. Let result be ? RegulateISOYearMonth(year, month, overflow).
+    auto result = regulate_iso_year_month(global_object, year.as_double(), month, *overflow);
+    if (vm.exception())
+        return {};
+
+    // 8. Return the new Record { [[Year]]: result.[[Year]], [[Month]]: result.[[Month]], [[ReferenceISODay]]: 1 }.
+    return ISOYearMonth { .year = result->year, .month = result->month, .reference_iso_day = 1 };
 }
 
 // 12.1.41 ISOYear ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isoyear

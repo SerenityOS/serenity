@@ -36,10 +36,14 @@ private:
 struct ISOYearMonth {
     i32 year;
     u8 month;
+    u8 reference_iso_day;
 };
 
-ISOYearMonth balance_iso_year_month(i32 year, i32 month);
+Optional<ISOYearMonth> regulate_iso_year_month(GlobalObject&, double year, double month, String const& overflow);
+bool is_valid_iso_month(u8 month);
 bool iso_year_month_within_limits(i32 year, u8 month);
+ISOYearMonth balance_iso_year_month(double year, double month);
+ISOYearMonth constrain_iso_year_month(double year, double month);
 PlainYearMonth* create_temporal_year_month(GlobalObject&, i32 iso_year, u8 iso_month, Object& calendar, u8 reference_iso_day, FunctionObject* new_target = nullptr);
 
 }
