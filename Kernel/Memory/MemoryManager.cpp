@@ -556,7 +556,7 @@ PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         pde.set_global(&page_directory == m_kernel_page_directory.ptr());
         // Use page_directory_table_index and page_directory_index as key
         // This allows us to release the page table entry when no longer needed
-        auto result = page_directory.m_page_tables.set(vaddr.get() & ~(FlatPtr)0x1fffff, move(page_table));
+        auto result = page_directory.m_page_tables.set(vaddr.get() & ~(FlatPtr)0x1fffff, page_table.release_nonnull());
         // If you're hitting this VERIFY on x86_64 chances are a 64-bit pointer was truncated somewhere
         VERIFY(result == AK::HashSetResult::InsertedNewEntry);
     }
