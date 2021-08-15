@@ -420,6 +420,7 @@ namespace JS {
     P(withPlainDate)                         \
     P(writable)                              \
     P(year)                                  \
+    P(yearMonthFromFields)                   \
     P(years)                                 \
     P(zonedDateTime)                         \
     P(zonedDateTimeISO)
