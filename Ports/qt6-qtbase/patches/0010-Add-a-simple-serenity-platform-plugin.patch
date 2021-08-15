@@ -1,0 +1,1274 @@
+From 72e39f24ee9b3f8244a5dca700f4a5832cc655b0 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Fri, 13 Aug 2021 16:49:37 +0200
+Subject: [PATCH 10/10] Add a simple serenity platform plugin
+
+---
+ mkspecs/serenity-g++/qmake.conf               |   1 +
+ src/gui/CMakeLists.txt                        |   2 +-
+ src/gui/configure.cmake                       |   8 +-
+ src/plugins/platforms/CMakeLists.txt          |   3 +
+ src/plugins/platforms/serenity/CMakeLists.txt |  48 +++
+ src/plugins/platforms/serenity/main.cpp       |  64 ++++
+ .../serenity/qserenitybackingstore.cpp        | 103 ++++++
+ .../serenity/qserenitybackingstore.h          |  64 ++++
+ .../serenity/qserenityintegration.cpp         | 167 ++++++++++
+ .../platforms/serenity/qserenityintegration.h |  95 ++++++
+ .../platforms/serenity/qserenityscreen.cpp    |  50 +++
+ .../platforms/serenity/qserenityscreen.h      |  66 ++++
+ .../platforms/serenity/qserenitystring.cpp    |   9 +
+ .../platforms/serenity/qserenitystring.h      |  14 +
+ .../platforms/serenity/qserenitywindow.cpp    | 302 ++++++++++++++++++
+ .../platforms/serenity/qserenitywindow.h      | 101 ++++++
+ src/plugins/platforms/serenity/serenity.json  |   3 +
+ 17 files changed, 1098 insertions(+), 2 deletions(-)
+ create mode 100644 src/plugins/platforms/serenity/CMakeLists.txt
+ create mode 100644 src/plugins/platforms/serenity/main.cpp
+ create mode 100644 src/plugins/platforms/serenity/qserenitybackingstore.cpp
+ create mode 100644 src/plugins/platforms/serenity/qserenitybackingstore.h
+ create mode 100644 src/plugins/platforms/serenity/qserenityintegration.cpp
+ create mode 100644 src/plugins/platforms/serenity/qserenityintegration.h
+ create mode 100644 src/plugins/platforms/serenity/qserenityscreen.cpp
+ create mode 100644 src/plugins/platforms/serenity/qserenityscreen.h
+ create mode 100644 src/plugins/platforms/serenity/qserenitystring.cpp
+ create mode 100644 src/plugins/platforms/serenity/qserenitystring.h
+ create mode 100644 src/plugins/platforms/serenity/qserenitywindow.cpp
+ create mode 100644 src/plugins/platforms/serenity/qserenitywindow.h
+ create mode 100644 src/plugins/platforms/serenity/serenity.json
+
+diff --git a/mkspecs/serenity-g++/qmake.conf b/mkspecs/serenity-g++/qmake.conf
+index 00d5ae2c..5060af6e 100644
+--- a/mkspecs/serenity-g++/qmake.conf
++++ b/mkspecs/serenity-g++/qmake.conf
+@@ -4,6 +4,7 @@
+ 
+ MAKEFILE_GENERATOR      = ninja
+ QMAKE_PLATFORM          = serenity
++QT_QPA_DEFAULT_PLATFORM = serenity
+ 
+ include(../common/unix.conf)
+ 
+diff --git a/src/gui/CMakeLists.txt b/src/gui/CMakeLists.txt
+index 7b02a270..658449cd 100644
+--- a/src/gui/CMakeLists.txt
++++ b/src/gui/CMakeLists.txt
+@@ -29,7 +29,7 @@ if (QT_FEATURE_gui)
+         set(_default_platform "haiku")
+     elseif(WASM)
+         set(_default_platform "wasm")
+-    elseif(SERENITY)
++    elseif(SERENITYOS)
+         set(_default_platform "serenity")
+     else()
+         set(_default_platform "xcb")
+diff --git a/src/gui/configure.cmake b/src/gui/configure.cmake
+index b5c47a0d..c8f73547 100644
+--- a/src/gui/configure.cmake
++++ b/src/gui/configure.cmake
+@@ -1186,6 +1186,11 @@ qt_feature("undogroup" PUBLIC
+     CONDITION QT_FEATURE_undostack
+ )
+ qt_feature_definition("undogroup" "QT_NO_UNDOGROUP" NEGATE VALUE "1")
++qt_feature("serenity" PRIVATE
++    SECTION "Platform plugins"
++    LABEL "SerenityOS"
++    CONDITION SERENITYOS
++)
+ qt_configure_add_summary_section(NAME "Qt Gui")
+ qt_configure_add_summary_entry(ARGS "accessibility")
+ qt_configure_add_summary_entry(ARGS "freetype")
+@@ -1278,6 +1283,7 @@ qt_configure_add_summary_entry(ARGS "direct2d1_1") ### special case
+ qt_configure_add_summary_entry(ARGS "directwrite")
+ qt_configure_add_summary_entry(ARGS "directwrite3")
+ qt_configure_end_summary_section() # end of "Windows" section
++qt_configure_add_summary_entry(ARGS "serenity")
+ qt_configure_end_summary_section() # end of "QPA backends" section
+ qt_configure_add_report_entry(
+     TYPE NOTE
+@@ -1302,7 +1308,7 @@ qt_configure_add_report_entry(
+ qt_configure_add_report_entry(
+     TYPE ERROR
+     MESSAGE "The OpenGL functionality tests failed!  You might need to modify the include and library search paths by editing QMAKE_INCDIR_OPENGL[_ES2], QMAKE_LIBDIR_OPENGL[_ES2] and QMAKE_LIBS_OPENGL[_ES2] in the mkspec for your platform."
+-    CONDITION QT_FEATURE_gui AND NOT WATCHOS AND ( NOT INPUT_opengl STREQUAL 'no' ) AND NOT QT_FEATURE_opengl_desktop AND NOT QT_FEATURE_opengles2 AND NOT QT_FEATURE_opengl_dynamic
++    CONDITION QT_FEATURE_gui AND NOT WATCHOS AND NOT SERENITYOS AND ( NOT INPUT_opengl STREQUAL 'no' ) AND NOT QT_FEATURE_opengl_desktop AND NOT QT_FEATURE_opengles2 AND NOT QT_FEATURE_opengl_dynamic
+ )
+ qt_configure_add_report_entry(
+     TYPE WARNING
+diff --git a/src/plugins/platforms/CMakeLists.txt b/src/plugins/platforms/CMakeLists.txt
+index 7f0ada80..daf0106a 100644
+--- a/src/plugins/platforms/CMakeLists.txt
++++ b/src/plugins/platforms/CMakeLists.txt
+@@ -52,3 +52,6 @@ endif()
+ if(QT_FEATURE_integrityfb)
+     # add_subdirectory(integrity) # special case TODO
+ endif()
++if(SERENITYOS)
++    add_subdirectory(serenity)
++endif()
+diff --git a/src/plugins/platforms/serenity/CMakeLists.txt b/src/plugins/platforms/serenity/CMakeLists.txt
+new file mode 100644
+index 00000000..970c7759
+--- /dev/null
++++ b/src/plugins/platforms/serenity/CMakeLists.txt
+@@ -0,0 +1,48 @@
++# Generated from minimal.pro.
++
++#####################################################################
++## QSerenityIntegrationPlugin Plugin:
++#####################################################################
++
++set(HAVE_VIDEO_SERENITY TRUE)
++set(HAVE_AUDIO_SERENITY TRUE)
++
++set(CXX_STANDARD 20)
++
++qt_internal_add_plugin(QSerenityIntegrationPlugin
++    OUTPUT_NAME qserenity
++    TYPE platforms
++    DEFAULT_IF ${QT_QPA_DEFAULT_PLATFORM} MATCHES serenity # special case
++    SOURCES
++        main.cpp
++        qserenitybackingstore.cpp qserenitybackingstore.h
++        qserenityintegration.cpp qserenityintegration.h
++        qserenityscreen.cpp qserenityscreen.h
++        qserenitywindow.cpp qserenitywindow.h
++        qserenitystring.cpp qserenitystring.h
++    DEFINES
++        QT_NO_FOREACH
++    INCLUDE_DIRECTORIES
++        ${CMAKE_CURRENT_SOURCE_DIR}
++        ${SERENITY_INSTALL_ROOT}/usr/local/include
++        ${SERENITY_INSTALL_ROOT}/usr/include
++    LIBRARIES
++        Qt::Core
++        Qt::CorePrivate
++        Qt::Gui
++        Qt::GuiPrivate
++        ipc 
++        gui
++        gfx
++        core
++)
++
++
++#### Keys ignored in scope 1:.:.:minimal.pro:<TRUE>:
++# OTHER_FILES = "minimal.json"
++
++## Scopes:
++#####################################################################
++
++#### Keys ignored in scope 3:.:.:minimal.pro:NOT TARGET___equals____ss_QT_DEFAULT_QPA_PLUGIN:
++# PLUGIN_EXTENDS = "-"
+diff --git a/src/plugins/platforms/serenity/main.cpp b/src/plugins/platforms/serenity/main.cpp
+new file mode 100644
+index 00000000..8311914d
+--- /dev/null
++++ b/src/plugins/platforms/serenity/main.cpp
+@@ -0,0 +1,64 @@
++/****************************************************************************
++**
++** Copyright (C) 2016 The Qt Company Ltd.
++** Contact: https://www.qt.io/licensing/
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see https://www.qt.io/terms-conditions. For further
++** information use the contact form at https://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 3 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL3 included in the
++** packaging of this file. Please review the following information to
++** ensure the GNU Lesser General Public License version 3 requirements
++** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 2.0 or (at your option) the GNU General
++** Public license version 3 or any later version approved by the KDE Free
++** Qt Foundation. The licenses are as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++** included in the packaging of this file. Please review the following
++** information to ensure the GNU General Public License requirements will
++** be met: https://www.gnu.org/licenses/gpl-2.0.html and
++** https://www.gnu.org/licenses/gpl-3.0.html.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++
++#include <qpa/qplatformintegrationplugin.h>
++#include "qserenityintegration.h"
++
++QT_BEGIN_NAMESPACE
++
++class QSerenityIntegrationPlugin : public QPlatformIntegrationPlugin
++{
++    Q_OBJECT
++    Q_PLUGIN_METADATA(IID QPlatformIntegrationFactoryInterface_iid FILE "serenity.json")
++public:
++    QPlatformIntegration *create(const QString&, const QStringList&) override;
++};
++
++QPlatformIntegration *QSerenityIntegrationPlugin::create(const QString& system, const QStringList& paramList)
++{
++    if (!system.compare(QLatin1String("serenity"), Qt::CaseInsensitive))
++        return new QSerenityIntegration(paramList);
++
++    return 0;
++}
++
++QT_END_NAMESPACE
++
++#include "main.moc"
+diff --git a/src/plugins/platforms/serenity/qserenitybackingstore.cpp b/src/plugins/platforms/serenity/qserenitybackingstore.cpp
+new file mode 100644
+index 00000000..524ba09a
+--- /dev/null
++++ b/src/plugins/platforms/serenity/qserenitybackingstore.cpp
+@@ -0,0 +1,103 @@
++/****************************************************************************
++**
++** Copyright (C) 2016 The Qt Company Ltd.
++** Contact: https://www.qt.io/licensing/
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see https://www.qt.io/terms-conditions. For further
++** information use the contact form at https://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 3 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL3 included in the
++** packaging of this file. Please review the following information to
++** ensure the GNU Lesser General Public License version 3 requirements
++** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 2.0 or (at your option) the GNU General
++** Public license version 3 or any later version approved by the KDE Free
++** Qt Foundation. The licenses are as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++** included in the packaging of this file. Please review the following
++** information to ensure the GNU General Public License requirements will
++** be met: https://www.gnu.org/licenses/gpl-2.0.html and
++** https://www.gnu.org/licenses/gpl-3.0.html.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++
++#include "qserenitybackingstore.h"
++#include "qserenityintegration.h"
++#include "qscreen.h"
++#include <QtCore/qdebug.h>
++#include <qpa/qplatformscreen.h>
++
++#include <iostream>
++#include <cstdlib>
++
++QSerenityBackingStore::QSerenityBackingStore(QWindow *window)
++    : QPlatformBackingStore(window)
++
++{
++}
++
++QSerenityBackingStore::~QSerenityBackingStore()
++{
++}
++
++QPaintDevice *QSerenityBackingStore::paintDevice()
++{
++    return &mImage;
++}
++
++void QSerenityBackingStore::flush(QWindow *window, const QRegion &region, const QPoint &offset)
++{
++    Q_UNUSED(window);
++    Q_UNUSED(region);
++    Q_UNUSED(offset);
++
++    QPlatformWindow *platformWindow = this->window()->handle();
++    QSerenityWindow *qSerenityWindow = dynamic_cast<QSerenityWindow*>(platformWindow);
++
++    auto proxyWidget = qSerenityWindow->proxyWidget();
++
++    for (auto &r : region) {
++        for (int i = offset.x() + r.left(); i < mImage.width() && i < offset.x() + r.right(); i++) {
++            for (int j = offset.y() + r.top(); j < mImage.height() && j < offset.y() + r.bottom(); j++) {
++                auto currentColor = mImage.pixel(i, j);
++                proxyWidget->m_buffer->set_pixel(i, j, Gfx::Color(currentColor >> 16 & 0xFF, currentColor >> 8 & 0xFF, currentColor & 0xFF));
++            }
++        }
++        proxyWidget->update(Gfx::IntRect(r.x() + offset.x(), r.y() + offset.y(), r.width(), r.height()));
++    }
++}
++
++void QSerenityBackingStore::resize(const QSize &size, const QRegion &)
++{
++    QPlatformWindow *platformWindow = window()->handle();
++    QSerenityWindow *qSerenityWindow = dynamic_cast<QSerenityWindow*>(platformWindow);
++
++    auto proxyWidget = qSerenityWindow->proxyWidget();
++
++    QImage::Format format = QGuiApplication::primaryScreen()->handle()->format();
++    if (mImage.size() != size) {
++        mImage = QImage(size, format);
++        proxyWidget->m_buffer = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(window()->width(), window()->height()));
++        proxyWidget->m_buffer->set_volatile();
++        proxyWidget->resize(Gfx::IntSize(size.width(), size.height()));
++        proxyWidget->update();
++    }
++}
++QT_END_NAMESPACE
+diff --git a/src/plugins/platforms/serenity/qserenitybackingstore.h b/src/plugins/platforms/serenity/qserenitybackingstore.h
+new file mode 100644
+index 00000000..5446f78f
+--- /dev/null
++++ b/src/plugins/platforms/serenity/qserenitybackingstore.h
+@@ -0,0 +1,64 @@
++/****************************************************************************
++**
++** Copyright (C) 2016 The Qt Company Ltd.
++** Contact: https://www.qt.io/licensing/
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see https://www.qt.io/terms-conditions. For further
++** information use the contact form at https://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 3 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL3 included in the
++** packaging of this file. Please review the following information to
++** ensure the GNU Lesser General Public License version 3 requirements
++** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 2.0 or (at your option) the GNU General
++** Public license version 3 or any later version approved by the KDE Free
++** Qt Foundation. The licenses are as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++** included in the packaging of this file. Please review the following
++** information to ensure the GNU General Public License requirements will
++** be met: https://www.gnu.org/licenses/gpl-2.0.html and
++** https://www.gnu.org/licenses/gpl-3.0.html.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QBACKINGSTORE_MINIMAL_H
++#define QBACKINGSTORE_MINIMAL_H
++
++#include <qpa/qplatformbackingstore.h>
++#include <qpa/qplatformwindow.h>
++#include <QtGui/QImage>
++
++QT_BEGIN_NAMESPACE
++
++class QSerenityBackingStore : public QPlatformBackingStore
++{
++public:
++    QSerenityBackingStore(QWindow *window);
++    ~QSerenityBackingStore();
++
++    QPaintDevice *paintDevice() override;
++    void flush(QWindow *window, const QRegion &region, const QPoint &offset) override;
++    void resize(const QSize &size, const QRegion &staticContents) override;
++private:
++    QImage mImage;
++};
++
++QT_END_NAMESPACE
++
++#endif
+diff --git a/src/plugins/platforms/serenity/qserenityintegration.cpp b/src/plugins/platforms/serenity/qserenityintegration.cpp
+new file mode 100644
+index 00000000..71687c6d
+--- /dev/null
++++ b/src/plugins/platforms/serenity/qserenityintegration.cpp
+@@ -0,0 +1,167 @@
++/****************************************************************************
++**
++** Copyright (C) 2016 The Qt Company Ltd.
++** Contact: https://www.qt.io/licensing/
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see https://www.qt.io/terms-conditions. For further
++** information use the contact form at https://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 3 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL3 included in the
++** packaging of this file. Please review the following information to
++** ensure the GNU Lesser General Public License version 3 requirements
++** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 2.0 or (at your option) the GNU General
++** Public license version 3 or any later version approved by the KDE Free
++** Qt Foundation. The licenses are as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++** included in the packaging of this file. Please review the following
++** information to ensure the GNU General Public License requirements will
++** be met: https://www.gnu.org/licenses/gpl-2.0.html and
++** https://www.gnu.org/licenses/gpl-3.0.html.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++
++#include "qserenityintegration.h"
++#include "qserenitybackingstore.h"
++
++#include <QtGui/private/qpixmap_raster_p.h>
++#include <QtGui/private/qguiapplication_p.h>
++#include <qpa/qplatformwindow.h>
++#include <qpa/qwindowsysteminterface.h>
++
++#include <QtGui/private/qfreetypefontdatabase_p.h>
++#include <QtGui/private/qgenericunixeventdispatcher_p.h>
++
++#  include <QtGui/private/qgenericunixfontdatabase_p.h>
++#  include <qpa/qplatformfontdatabase.h>
++
++#include <iostream>
++
++#include <stdlib.h>
++
++#include <LibCore/EventLoop.h>
++
++QT_BEGIN_NAMESPACE
++
++class QCoreTextFontEngine;
++
++QSerenityIntegration::QSerenityIntegration(const QStringList &parameters)
++    : m_fontDatabase(0)
++{
++    qputenv("QT_ENABLE_REGEXP_JIT", "0");
++    qputenv("QT_QPA_FONTDIR", "/res/fonts");
++
++    if (pledge("stdio recvfd sendfd rpath wpath cpath unix getkeymap fattr prot_exec", nullptr) < 0) {
++        perror("pledge");
++    }
++    else {
++        perror("pledge");
++    }
++    app = GUI::Application::construct(0, nullptr);
++
++    m_primaryScreen = new QSerenityScreen();
++
++    QWindowSystemInterface::handleScreenAdded(m_primaryScreen);
++}
++
++QSerenityIntegration::~QSerenityIntegration()
++{
++    QWindowSystemInterface::handleScreenRemoved(m_primaryScreen);
++    delete m_fontDatabase;
++}
++
++bool QSerenityIntegration::hasCapability(QPlatformIntegration::Capability cap) const
++{
++    switch (cap) {
++    case ThreadedPixmaps: return true;
++    case MultipleWindows: return true;
++    case NonFullScreenWindows: return true;
++    case RhiBasedRendering: return false;
++    case PaintEvents: return true;
++    case WindowManagement: return true;
++    default: return QPlatformIntegration::hasCapability(cap);
++    }
++}
++
++// Dummy font database that does not scan the fonts directory to be
++// used for command line tools like qmlplugindump that do not create windows
++// unless DebugBackingStore is activated.
++class DummyFontDatabase : public QPlatformFontDatabase
++{
++public:
++    virtual void populateFontDatabase() override {}
++};
++
++QPlatformFontDatabase *QSerenityIntegration::fontDatabase() const
++{
++    m_fontDatabase = new QFreeTypeFontDatabase;
++    //m_fontDatabase->addApplicationFont("", "/res/fonts/SerenitySans-Regular.ttf");
++    return m_fontDatabase;
++}
++
++QPlatformWindow *QSerenityIntegration::createPlatformWindow(QWindow *window) const
++{
++    QPlatformWindow *w = new QSerenityWindow(window);
++    w->requestActivateWindow();
++    return w;
++}
++
++QPlatformBackingStore *QSerenityIntegration::createPlatformBackingStore(QWindow *window) const
++{
++    std::cerr << "Creating a new backing store" << std::endl;
++    return new QSerenityBackingStore(window);
++}
++
++QAbstractEventDispatcher *QSerenityIntegration::createEventDispatcher() const
++{
++    return new QSerenityEventDispatcher();
++}
++
++QSerenityIntegration *QSerenityIntegration::instance()
++{
++    return static_cast<QSerenityIntegration *>(QGuiApplicationPrivate::platformIntegration());
++}
++
++QT_END_NAMESPACE
++
++QSerenityEventDispatcher::QSerenityEventDispatcher(QObject *parent)
++    : QUnixEventDispatcherQPA(parent)
++{
++}
++
++QSerenityEventDispatcher::~QSerenityEventDispatcher() {
++
++}
++
++bool QSerenityEventDispatcher::processEvents(QEventLoop::ProcessEventsFlags flags) {
++    processSerenityEvents();
++    // while this whole class is hacking, this is another layer of hacks: clear the WaitForMoreEvents flag to process everything immediatelly
++    // makes everything run way smoother at the cost of eating all the CPU
++    return QUnixEventDispatcherQPA::processEvents(flags & (~QEventLoop::WaitForMoreEvents));
++}
++
++bool QSerenityEventDispatcher::processSerenityEvents() {
++    auto& loop = Core::EventLoop::current();
++    if (loop.was_exit_requested())
++        exit(0);
++    loop.pump(Core::EventLoop::WaitMode::PollForEvents);
++
++    return true;
++}
+diff --git a/src/plugins/platforms/serenity/qserenityintegration.h b/src/plugins/platforms/serenity/qserenityintegration.h
+new file mode 100644
+index 00000000..8a785ae0
+--- /dev/null
++++ b/src/plugins/platforms/serenity/qserenityintegration.h
+@@ -0,0 +1,95 @@
++/****************************************************************************
++**
++** Copyright (C) 2016 The Qt Company Ltd.
++** Contact: https://www.qt.io/licensing/
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see https://www.qt.io/terms-conditions. For further
++** information use the contact form at https://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 3 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL3 included in the
++** packaging of this file. Please review the following information to
++** ensure the GNU Lesser General Public License version 3 requirements
++** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 2.0 or (at your option) the GNU General
++** Public license version 3 or any later version approved by the KDE Free
++** Qt Foundation. The licenses are as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++** included in the packaging of this file. Please review the following
++** information to ensure the GNU General Public License requirements will
++** be met: https://www.gnu.org/licenses/gpl-2.0.html and
++** https://www.gnu.org/licenses/gpl-3.0.html.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QPLATFORMINTEGRATION_SERENITY_H
++#define QPLATFORMINTEGRATION_SERENITY_H
++
++#include <qpa/qplatformintegration.h>
++#include <qpa/qplatformscreen.h>
++
++#include "qserenityscreen.h"
++#include "qserenitywindow.h"
++
++#include <LibGUI/Application.h>
++
++#include <private/qunixeventdispatcher_qpa_p.h>
++
++#include <QTimer>
++
++QT_BEGIN_NAMESPACE
++
++class QSerenityEventDispatcher : public QUnixEventDispatcherQPA {
++    Q_OBJECT
++public:
++    explicit QSerenityEventDispatcher(QObject *parent = nullptr);
++    ~QSerenityEventDispatcher();
++
++private slots:
++    bool processSerenityEvents();
++
++protected:
++    bool processEvents(QEventLoop::ProcessEventsFlags flags) override;
++
++private:
++};
++
++class QSerenityIntegration : public QPlatformIntegration
++{
++public:
++    explicit QSerenityIntegration(const QStringList &parameters);
++    ~QSerenityIntegration();
++
++    bool hasCapability(QPlatformIntegration::Capability cap) const override;
++    QPlatformFontDatabase *fontDatabase() const override;
++
++    QPlatformWindow *createPlatformWindow(QWindow *window) const override;
++    QPlatformBackingStore *createPlatformBackingStore(QWindow *window) const override;
++    QAbstractEventDispatcher *createEventDispatcher() const override;
++
++    static QSerenityIntegration *instance();
++
++private:
++    mutable QPlatformFontDatabase *m_fontDatabase;
++    QSerenityScreen *m_primaryScreen;
++    RefPtr<GUI::Application> app;
++};
++
++QT_END_NAMESPACE
++
++#endif
+diff --git a/src/plugins/platforms/serenity/qserenityscreen.cpp b/src/plugins/platforms/serenity/qserenityscreen.cpp
+new file mode 100644
+index 00000000..f13f5acb
+--- /dev/null
++++ b/src/plugins/platforms/serenity/qserenityscreen.cpp
+@@ -0,0 +1,50 @@
++/****************************************************************************
++**
++** Copyright (C) 2016 The Qt Company Ltd.
++** Contact: https://www.qt.io/licensing/
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see https://www.qt.io/terms-conditions. For further
++** information use the contact form at https://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 3 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL3 included in the
++** packaging of this file. Please review the following information to
++** ensure the GNU Lesser General Public License version 3 requirements
++** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 2.0 or (at your option) the GNU General
++** Public license version 3 or any later version approved by the KDE Free
++** Qt Foundation. The licenses are as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++** included in the packaging of this file. Please review the following
++** information to ensure the GNU General Public License requirements will
++** be met: https://www.gnu.org/licenses/gpl-2.0.html and
++** https://www.gnu.org/licenses/gpl-3.0.html.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++
++#include "qserenityscreen.h"
++
++QSerenityScreen::QSerenityScreen() 
++        : mDepth(32), mFormat(QImage::Format_ARGB32_Premultiplied)
++{
++    // TODO
++    mGeometry = QRect(0, 0, 1280, 1024);
++    mDepth = 32;
++    mFormat = QImage::Format_ARGB32_Premultiplied;
++}
+diff --git a/src/plugins/platforms/serenity/qserenityscreen.h b/src/plugins/platforms/serenity/qserenityscreen.h
+new file mode 100644
+index 00000000..b0089d9e
+--- /dev/null
++++ b/src/plugins/platforms/serenity/qserenityscreen.h
+@@ -0,0 +1,66 @@
++/****************************************************************************
++**
++** Copyright (C) 2016 The Qt Company Ltd.
++** Contact: https://www.qt.io/licensing/
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see https://www.qt.io/terms-conditions. For further
++** information use the contact form at https://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 3 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL3 included in the
++** packaging of this file. Please review the following information to
++** ensure the GNU Lesser General Public License version 3 requirements
++** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 2.0 or (at your option) the GNU General
++** Public license version 3 or any later version approved by the KDE Free
++** Qt Foundation. The licenses are as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++** included in the packaging of this file. Please review the following
++** information to ensure the GNU General Public License requirements will
++** be met: https://www.gnu.org/licenses/gpl-2.0.html and
++** https://www.gnu.org/licenses/gpl-3.0.html.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QPLATFORMSCREEN_SERENITY_H
++#define QPLATFORMSCREEN_SERENITY_H
++
++#include <qpa/qplatformscreen.h>
++
++QT_BEGIN_NAMESPACE
++
++class QSerenityScreen : public QPlatformScreen
++{
++public:
++    QSerenityScreen();
++
++    QRect geometry() const override { return mGeometry; }
++    int depth() const override { return mDepth; }
++    QImage::Format format() const override { return mFormat; }
++
++public:
++    QRect mGeometry;
++    int mDepth;
++    QImage::Format mFormat;
++    QSize mPhysicalSize;
++};
++
++
++QT_END_NAMESPACE
++
++#endif // QPLATFORMSCREEN_SERENITY_H
+diff --git a/src/plugins/platforms/serenity/qserenitystring.cpp b/src/plugins/platforms/serenity/qserenitystring.cpp
+new file mode 100644
+index 00000000..c055cb3c
+--- /dev/null
++++ b/src/plugins/platforms/serenity/qserenitystring.cpp
+@@ -0,0 +1,9 @@
++#include "qserenitystring.h"
++
++AK::String QSerenityString::fromQString(const QString &str) {
++    return AK::String(str.toStdString().c_str());
++}
++
++QString QSerenityString::toQString(const AK::String &v) {
++    return QString(v.characters());
++}
+diff --git a/src/plugins/platforms/serenity/qserenitystring.h b/src/plugins/platforms/serenity/qserenitystring.h
+new file mode 100644
+index 00000000..b155a523
+--- /dev/null
++++ b/src/plugins/platforms/serenity/qserenitystring.h
+@@ -0,0 +1,14 @@
++#ifndef QSERENITYSTRING_H
++#define QSERENITYSTRING_H
++
++#include <AK/String.h>
++#include <QString>
++
++class QSerenityString
++{
++public:
++    static AK::String fromQString(const QString &str);
++    static QString toQString(const AK::String &v);
++};
++
++#endif // QSERENITYSTRING_H
+diff --git a/src/plugins/platforms/serenity/qserenitywindow.cpp b/src/plugins/platforms/serenity/qserenitywindow.cpp
+new file mode 100644
+index 00000000..f31639b6
+--- /dev/null
++++ b/src/plugins/platforms/serenity/qserenitywindow.cpp
+@@ -0,0 +1,302 @@
++/****************************************************************************
++**
++** Copyright (C) 2016 The Qt Company Ltd.
++** Contact: https://www.qt.io/licensing/
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see https://www.qt.io/terms-conditions. For further
++** information use the contact form at https://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 3 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL3 included in the
++** packaging of this file. Please review the following information to
++** ensure the GNU Lesser General Public License version 3 requirements
++** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 2.0 or (at your option) the GNU General
++** Public license version 3 or any later version approved by the KDE Free
++** Qt Foundation. The licenses are as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++** included in the packaging of this file. Please review the following
++** information to ensure the GNU General Public License requirements will
++** be met: https://www.gnu.org/licenses/gpl-2.0.html and
++** https://www.gnu.org/licenses/gpl-3.0.html.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#include "qserenitywindow.h"
++
++#include <iostream>
++
++#include <private/qguiapplication_p.h>
++
++#include <Kernel/API/KeyCode.h>
++
++static QMap<KeyCode, int> keyMap {
++    { KeyCode::Key_Invalid, 0 },
++    { KeyCode::Key_Escape, Qt::Key_Escape },
++    { KeyCode::Key_Tab, Qt::Key_Tab },
++    { KeyCode::Key_Backspace, Qt::Key_Backspace },
++    { KeyCode::Key_Return, Qt::Key_Return },
++    { KeyCode::Key_Insert, Qt::Key_Insert },
++    { KeyCode::Key_Delete, Qt::Key_Delete },
++    { KeyCode::Key_PrintScreen, Qt::Key_Print },
++    { KeyCode::Key_SysRq, Qt::Key_SysReq },
++    { KeyCode::Key_Home, Qt::Key_Home },
++    { KeyCode::Key_End, Qt::Key_End },
++    { KeyCode::Key_Left, Qt::Key_Left },
++    { KeyCode::Key_Up, Qt::Key_Up },
++    { KeyCode::Key_Right, Qt::Key_Right },
++    { KeyCode::Key_Down, Qt::Key_Down },
++    { KeyCode::Key_PageUp, Qt::Key_PageUp },
++    { KeyCode::Key_PageDown, Qt::Key_PageDown },
++    { KeyCode::Key_LeftShift, Qt::Key_Shift },
++    { KeyCode::Key_RightShift, Qt::Key_Shift },
++    { KeyCode::Key_Control, Qt::Key_Control },
++    { KeyCode::Key_Alt, Qt::Key_Alt },
++    { KeyCode::Key_CapsLock, Qt::Key_CapsLock },
++    { KeyCode::Key_NumLock, Qt::Key_NumLock },
++    { KeyCode::Key_ScrollLock, Qt::Key_ScrollLock },
++    { KeyCode::Key_F1, Qt::Key_F1 },
++    { KeyCode::Key_F2, Qt::Key_F2 },
++    { KeyCode::Key_F3, Qt::Key_F3 },
++    { KeyCode::Key_F4, Qt::Key_F4 },
++    { KeyCode::Key_F5, Qt::Key_F5 },
++    { KeyCode::Key_F6, Qt::Key_F6 },
++    { KeyCode::Key_F7, Qt::Key_F7 },
++    { KeyCode::Key_F8, Qt::Key_F8 },
++    { KeyCode::Key_F9, Qt::Key_F9 },
++    { KeyCode::Key_F10, Qt::Key_F10 },
++    { KeyCode::Key_F11, Qt::Key_F11 },
++    { KeyCode::Key_F12, Qt::Key_F12 },
++    { KeyCode::Key_Space, Qt::Key_Space },
++    { KeyCode::Key_ExclamationPoint, Qt::Key_Exclam },
++    { KeyCode::Key_DoubleQuote, Qt::Key_QuoteDbl },
++    { KeyCode::Key_Hashtag, Qt::Key_NumberSign },
++    { KeyCode::Key_Dollar, Qt::Key_Dollar },
++    { KeyCode::Key_Percent, Qt::Key_Percent },
++    { KeyCode::Key_Ampersand, Qt::Key_Ampersand },
++    { KeyCode::Key_Apostrophe, Qt::Key_Apostrophe },
++    { KeyCode::Key_LeftParen, Qt::Key_ParenLeft },
++    { KeyCode::Key_RightParen, Qt::Key_ParenRight },
++    { KeyCode::Key_Asterisk, Qt::Key_Asterisk },
++    { KeyCode::Key_Plus, Qt::Key_Plus },
++    { KeyCode::Key_Comma, Qt::Key_Comma },
++    { KeyCode::Key_Minus, Qt::Key_Minus },
++    { KeyCode::Key_Period, Qt::Key_Period },
++    { KeyCode::Key_Slash, Qt::Key_Slash },
++    { KeyCode::Key_0, Qt::Key_0 },
++    { KeyCode::Key_1, Qt::Key_1 },
++    { KeyCode::Key_2, Qt::Key_2 },
++    { KeyCode::Key_3, Qt::Key_3 },
++    { KeyCode::Key_4, Qt::Key_4 },
++    { KeyCode::Key_5, Qt::Key_5 },
++    { KeyCode::Key_6, Qt::Key_6 },
++    { KeyCode::Key_7, Qt::Key_7 },
++    { KeyCode::Key_8, Qt::Key_8 },
++    { KeyCode::Key_9, Qt::Key_9 },
++    { KeyCode::Key_Colon, Qt::Key_Colon },
++    { KeyCode::Key_Semicolon, Qt::Key_Semicolon },
++    { KeyCode::Key_LessThan, Qt::Key_Less },
++    { KeyCode::Key_Equal, Qt::Key_Equal },
++    { KeyCode::Key_GreaterThan, Qt::Key_Greater },
++    { KeyCode::Key_QuestionMark, Qt::Key_Question },
++    { KeyCode::Key_AtSign, Qt::Key_At },
++    { KeyCode::Key_A, Qt::Key_A },
++    { KeyCode::Key_B, Qt::Key_B },
++    { KeyCode::Key_C, Qt::Key_C },
++    { KeyCode::Key_D, Qt::Key_D },
++    { KeyCode::Key_E, Qt::Key_E },
++    { KeyCode::Key_F, Qt::Key_F },
++    { KeyCode::Key_G, Qt::Key_G },
++    { KeyCode::Key_H, Qt::Key_H },
++    { KeyCode::Key_I, Qt::Key_I },
++    { KeyCode::Key_J, Qt::Key_J },
++    { KeyCode::Key_K, Qt::Key_K },
++    { KeyCode::Key_L, Qt::Key_L },
++    { KeyCode::Key_M, Qt::Key_M },
++    { KeyCode::Key_N, Qt::Key_N },
++    { KeyCode::Key_O, Qt::Key_O },
++    { KeyCode::Key_P, Qt::Key_P },
++    { KeyCode::Key_Q, Qt::Key_Q },
++    { KeyCode::Key_R, Qt::Key_R },
++    { KeyCode::Key_S, Qt::Key_S },
++    { KeyCode::Key_T, Qt::Key_T },
++    { KeyCode::Key_U, Qt::Key_U },
++    { KeyCode::Key_V, Qt::Key_V },
++    { KeyCode::Key_W, Qt::Key_W },
++    { KeyCode::Key_X, Qt::Key_X },
++    { KeyCode::Key_Y, Qt::Key_Y },
++    { KeyCode::Key_Z, Qt::Key_Z },
++    { KeyCode::Key_LeftBracket, Qt::Key_BracketLeft },
++    { KeyCode::Key_RightBracket, Qt::Key_BracketRight },
++    { KeyCode::Key_Backslash, Qt::Key_Backslash },
++    { KeyCode::Key_Circumflex, Qt::Key_AsciiCircum },
++    { KeyCode::Key_Underscore, Qt::Key_Underscore },
++    { KeyCode::Key_LeftBrace, Qt::Key_BraceLeft },
++    { KeyCode::Key_RightBrace, Qt::Key_BraceRight },
++    { KeyCode::Key_Pipe, Qt::Key_Bar }, // maybe wrong
++    { KeyCode::Key_Tilde, Qt::Key_AsciiTilde },
++    { KeyCode::Key_Backtick, Qt::Key_Agrave }, // maybe wrong
++    { KeyCode::Key_Super, Qt::Key_Meta },
++    { KeyCode::Key_Menu, Qt::Key_Menu }
++};
++
++QSerenityWindow::QSerenityWindow(QWindow *window)
++    : QPlatformWindow(window)
++    , m_window(GUI::Window::construct())
++    , m_proxyWidget(SerenityProxyWidget::construct(this))
++{
++    std::cerr << "Creating a new window" << std::endl;
++
++    if (window->width() > 0 && window->height() > 0)
++        m_window->resize(window->width(), window->height());
++    m_window->set_double_buffering_enabled(false);
++
++    m_window->set_main_widget(m_proxyWidget);
++    m_window->set_title(QSerenityString::fromQString(window->title()));
++    m_window->show();
++
++    std::cerr << "Native window set up\n";
++}
++
++void QSerenityWindow::setWindowTitle(const QString &text)
++{
++    m_window->set_title(QSerenityString::fromQString(text));
++}
++
++QRect QSerenityWindow::geometry() const {
++    return QRect(m_window->rect().x(), m_window->rect().y(), m_window->rect().width(), m_window->rect().height());
++}
++
++SerenityProxyWidget::SerenityProxyWidget(QSerenityWindow *window)
++    : m_qtWindow(window)
++{
++    std::cerr << __FUNCTION__ << std::endl;
++    m_buffer = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(window->window()->width(), window->window()->height()));
++    update();
++}
++
++void SerenityProxyWidget::paint_event(GUI::PaintEvent &event) {
++    // std::cerr << __FUNCTION__ << std::endl;
++
++    GUI::Painter painter(*this);
++    painter.add_clip_rect(event.rect());
++    painter.blit(event.rect().location(), *m_buffer, event.rect());
++}
++
++void SerenityProxyWidget::resize_event(GUI::ResizeEvent &event) {
++    std::cerr << __FUNCTION__ << std::endl;
++
++    //m_qtWindow->window()->resize(event.size().width(), event.size().height());
++    //m_qtBackingStore->resize(QSize(event.size().width(), event.size().height()), QRegion());
++
++    auto qtEvent = new QResizeEvent(QSize(event.size().width(), event.size().height()), m_qtWindow->window()->size());
++    qApp->postEvent(m_qtWindow->window(), qtEvent);
++}
++
++void SerenityProxyWidget::show_event(GUI::ShowEvent &) {
++    std::cerr << __FUNCTION__ << std::endl;
++}
++
++void SerenityProxyWidget::hide_event(GUI::HideEvent &) {
++    std::cerr << __FUNCTION__ << std::endl;
++
++}
++
++void SerenityProxyWidget::mousedown_event(GUI::MouseEvent &event) {
++    std::cerr << __FUNCTION__ << std::endl;
++
++    QWindow *qtWindow = m_qtWindow->window();
++    QPlatformWindow *platformWindow = qtWindow->handle();
++    auto qtEvent = new QMouseEvent(QEvent::MouseButtonPress, QPointF(event.x(), event.y()), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
++    qApp->postEvent(qtWindow, qtEvent);
++}
++
++void SerenityProxyWidget::mousemove_event(GUI::MouseEvent &event) {
++    //std::cerr << __FUNCTION__ << std::endl;
++
++    QWindow *qtWindow = m_qtWindow->window();
++    QPlatformWindow *platformWindow = qtWindow->handle();
++    auto qtEvent = new QMouseEvent(QEvent::MouseMove, QPointF(event.x(), event.y()), Qt::NoButton, Qt::NoButton, Qt::NoModifier);
++    qApp->postEvent(qtWindow, qtEvent);
++}
++
++void SerenityProxyWidget::mouseup_event(GUI::MouseEvent &event) {
++    std::cerr << __FUNCTION__ << std::endl;
++
++    QWindow *qtWindow = m_qtWindow->window();
++    QPlatformWindow *platformWindow = qtWindow->handle();
++    auto qtEvent = new QMouseEvent(QEvent::MouseButtonRelease, QPointF(event.x(), event.y()), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
++    qApp->postEvent(qtWindow, qtEvent);
++}
++
++void SerenityProxyWidget::keydown_event(GUI::KeyEvent &event) {
++    std::cerr << __FUNCTION__ << std::endl;
++
++    Qt::KeyboardModifiers modifiers = Qt::NoModifier;
++    if (event.ctrl())
++        modifiers |= Qt::ControlModifier;
++    if (event.alt())
++        modifiers |= Qt::AltModifier;
++    if (event.shift())
++        modifiers |= Qt::ShiftModifier;
++    if (event.super())
++        modifiers |= Qt::MetaModifier;
++
++    QWindow *qtWindow = m_qtWindow->window();
++    QPlatformWindow *platformWindow = qtWindow->handle();
++    int k = keyMap.value(event.key(), 0);
++    if (k < 0x01000000) {
++        QWindowSystemInterface::handleKeyEvent<QWindowSystemInterface::SynchronousDelivery>(qtWindow, QEvent::KeyPress, k, modifiers, QChar(event.code_point()));
++    }
++    else {
++        QWindowSystemInterface::handleKeyEvent<QWindowSystemInterface::SynchronousDelivery>(qtWindow, QEvent::KeyPress, k, modifiers);
++    }
++}
++
++void SerenityProxyWidget::keyup_event(GUI::KeyEvent &event) {
++    std::cerr << __FUNCTION__ << std::endl;
++
++    Qt::KeyboardModifiers modifiers = Qt::NoModifier;
++    if (event.ctrl())
++        modifiers |= Qt::ControlModifier;
++    if (event.alt())
++        modifiers |= Qt::AltModifier;
++    if (event.shift())
++        modifiers |= Qt::ShiftModifier;
++    if (event.super())
++        modifiers |= Qt::MetaModifier;
++
++    QWindow *qtWindow = m_qtWindow->window();
++    QPlatformWindow *platformWindow = qtWindow->handle();
++    int k = keyMap.value(event.key(), 0);
++    QWindowSystemInterface::handleKeyEvent<QWindowSystemInterface::SynchronousDelivery>(qtWindow, QEvent::KeyRelease, k, modifiers);
++}
++
++void SerenityProxyWidget::enter_event(Core::Event &event) {
++    std::cerr << __FUNCTION__ << std::endl;
++    QWindow *qtWindow = m_qtWindow->window();
++    QWindowSystemInterface::handleEnterEvent<QWindowSystemInterface::SynchronousDelivery>(qtWindow);
++}
++
++void SerenityProxyWidget::leave_event(Core::Event &event) {
++    std::cerr << __FUNCTION__ << std::endl;
++    QWindow *qtWindow = m_qtWindow->window();
++    QWindowSystemInterface::handleLeaveEvent<QWindowSystemInterface::SynchronousDelivery>(qtWindow);
++}
++
++
+diff --git a/src/plugins/platforms/serenity/qserenitywindow.h b/src/plugins/platforms/serenity/qserenitywindow.h
+new file mode 100644
+index 00000000..f4c657ab
+--- /dev/null
++++ b/src/plugins/platforms/serenity/qserenitywindow.h
+@@ -0,0 +1,101 @@
++/****************************************************************************
++**
++** Copyright (C) 2016 The Qt Company Ltd.
++** Contact: https://www.qt.io/licensing/
++**
++** This file is part of the plugins of the Qt Toolkit.
++**
++** $QT_BEGIN_LICENSE:LGPL$
++** Commercial License Usage
++** Licensees holding valid commercial Qt licenses may use this file in
++** accordance with the commercial license agreement provided with the
++** Software or, alternatively, in accordance with the terms contained in
++** a written agreement between you and The Qt Company. For licensing terms
++** and conditions see https://www.qt.io/terms-conditions. For further
++** information use the contact form at https://www.qt.io/contact-us.
++**
++** GNU Lesser General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU Lesser
++** General Public License version 3 as published by the Free Software
++** Foundation and appearing in the file LICENSE.LGPL3 included in the
++** packaging of this file. Please review the following information to
++** ensure the GNU Lesser General Public License version 3 requirements
++** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
++**
++** GNU General Public License Usage
++** Alternatively, this file may be used under the terms of the GNU
++** General Public License version 2.0 or (at your option) the GNU General
++** Public license version 3 or any later version approved by the KDE Free
++** Qt Foundation. The licenses are as published by the Free Software
++** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
++** included in the packaging of this file. Please review the following
++** information to ensure the GNU General Public License requirements will
++** be met: https://www.gnu.org/licenses/gpl-2.0.html and
++** https://www.gnu.org/licenses/gpl-3.0.html.
++**
++** $QT_END_LICENSE$
++**
++****************************************************************************/
++
++#ifndef QPLATFORMWINDOW_SERENITY_H
++#define QPLATFORMWINDOW_SERENITY_H
++
++#include <qpa/qplatformwindow.h>
++
++#include <LibCore/EventLoop.h>
++#include <LibGUI/Application.h>
++#include <LibGUI/Painter.h>
++#include <LibGUI/Widget.h>
++#include <LibGUI/Window.h>
++#include <LibGfx/Bitmap.h>
++
++#include "qserenitystring.h"
++
++namespace GUI {
++    class Window;
++}
++
++class QSerenityWindow;
++
++class SerenityProxyWidget : public GUI::Widget {
++    C_OBJECT(SerenityProxyWidget)
++public:
++    explicit SerenityProxyWidget(QSerenityWindow*);
++    RefPtr<Gfx::Bitmap> m_buffer;
++
++protected:
++    void paint_event(GUI::PaintEvent&) override;
++    void resize_event(GUI::ResizeEvent&) override;
++    void show_event(GUI::ShowEvent&) override;
++    void hide_event(GUI::HideEvent&) override;
++
++    void mousedown_event(GUI::MouseEvent&) override;
++    void mousemove_event(GUI::MouseEvent&) override;
++    void mouseup_event(GUI::MouseEvent&) override;
++
++    void keydown_event(GUI::KeyEvent& event) override;
++    void keyup_event(GUI::KeyEvent& event) override;
++
++    void enter_event(Core::Event&) override;
++    void leave_event(Core::Event&) override;
++
++private:
++    QSerenityWindow* m_qtWindow = nullptr;
++};
++
++class QSerenityWindow : public QPlatformWindow
++{
++public:
++    QSerenityWindow(QWindow *window);
++
++    virtual void setWindowTitle(const QString &text) override;
++    virtual QRect geometry() const;
++
++    SerenityProxyWidget *proxyWidget() { return m_proxyWidget; }
++private:
++    GUI::Window *w;
++    NonnullRefPtr<GUI::Window> m_window;
++    NonnullRefPtr<SerenityProxyWidget> m_proxyWidget;
++};
++
++#endif // QPLATFORMWINDOW_SERENITY_H
+diff --git a/src/plugins/platforms/serenity/serenity.json b/src/plugins/platforms/serenity/serenity.json
+new file mode 100644
+index 00000000..2ee4d065
+--- /dev/null
++++ b/src/plugins/platforms/serenity/serenity.json
+@@ -0,0 +1,3 @@
++{
++    "Keys": [ "serenity" ]
++}
+-- 
+2.31.1
+

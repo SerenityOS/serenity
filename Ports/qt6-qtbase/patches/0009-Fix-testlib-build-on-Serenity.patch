@@ -1,0 +1,25 @@
+From b953eeceecd9fb585a2b0bb0a8be3f9a4b0389ec Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20B=C5=99=C3=ADza?= <m@rtinbriza.cz>
+Date: Sun, 15 Aug 2021 14:38:01 +0200
+Subject: [PATCH 09/10] Fix testlib build on Serenity
+
+---
+ src/testlib/qtestcase.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/testlib/qtestcase.cpp b/src/testlib/qtestcase.cpp
+index 77d0c305..803a5235 100644
+--- a/src/testlib/qtestcase.cpp
++++ b/src/testlib/qtestcase.cpp
+@@ -1652,7 +1652,7 @@ public:
+ 
+     // tvOS/watchOS both define SA_ONSTACK (in sys/signal.h) but mark sigaltstack() as
+     // unavailable (__WATCHOS_PROHIBITED __TVOS_PROHIBITED in signal.h)
+-#  if defined(SA_ONSTACK) && !defined(Q_OS_TVOS) && !defined(Q_OS_WATCHOS)
++#  if defined(SA_ONSTACK) && !defined(Q_OS_TVOS) && !defined(Q_OS_WATCHOS) && !defined(Q_OS_SERENITY)
+         // Let the signal handlers use an alternate stack
+         // This is necessary if SIGSEGV is to catch a stack overflow
+ #    if defined(Q_CC_GNU) && defined(Q_OF_ELF)
+-- 
+2.31.1
+
