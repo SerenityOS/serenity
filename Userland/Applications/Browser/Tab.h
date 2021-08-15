@@ -89,7 +89,7 @@ private:
     RefPtr<Web::InProcessWebView> m_page_view;
     RefPtr<Web::OutOfProcessWebView> m_web_content_view;
 
-    RefPtr<GUI::TextBox> m_location_box;
+    RefPtr<GUI::UrlBox> m_location_box;
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<GUI::Window> m_dom_inspector_window;
     RefPtr<GUI::Window> m_console_window;
