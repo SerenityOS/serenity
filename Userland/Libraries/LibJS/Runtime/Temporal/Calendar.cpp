@@ -417,6 +417,36 @@ PlainDate* date_from_fields(GlobalObject& global_object, Object& calendar, Objec
     return static_cast<PlainDate*>(date_object);
 }
 
+// 12.1.25 YearMonthFromFields ( calendar, fields [ , options ] ),
+PlainYearMonth* year_month_from_fields(GlobalObject& global_object, Object& calendar, Object& fields, Object* options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(calendar) is Object.
+    // 2. Assert: Type(fields) is Object.
+    // 3. If options is not present, then
+    //     a. Set options to undefined.
+    // 4. Else,
+    //     a. Assert: Type(options) is Object.
+
+    // 5. Let yearMonth be ? Invoke(calendar, "yearMonthFromFields", « fields, options »).
+    auto year_month = Value(&calendar).invoke(global_object, vm.names.yearMonthFromFields, &fields, options ?: js_undefined());
+    if (vm.exception())
+        return {};
+
+    // 6. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
+    auto* year_month_object = year_month.to_object(global_object);
+    if (!year_month_object)
+        return {};
+    if (!is<PlainYearMonth>(year_month_object)) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Temporal.PlainYearMonth");
+        return {};
+    }
+
+    // 7. Return yearMonth.
+    return static_cast<PlainYearMonth*>(year_month_object);
+}
+
 // 12.1.28 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals
 bool calendar_equals(GlobalObject& global_object, Object& one, Object& two)
 {

@@ -392,6 +392,7 @@ namespace JS {
     P(toPlainDate)                           \
     P(toPlainDateTime)                       \
     P(toPlainTime)                           \
+    P(toPlainYearMonth)                      \
     P(toString)                              \
     P(toTemporalInstant)                     \
     P(toTimeString)                          \
