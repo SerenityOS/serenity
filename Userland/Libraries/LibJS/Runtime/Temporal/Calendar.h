@@ -49,6 +49,7 @@ Object* to_temporal_calendar(GlobalObject&, Value);
 Object* to_temporal_calendar_with_iso_default(GlobalObject&, Value);
 Object* get_temporal_calendar_with_iso_default(GlobalObject&, Object&);
 PlainDate* date_from_fields(GlobalObject&, Object& calendar, Object& fields, Object& options);
+PlainYearMonth* year_month_from_fields(GlobalObject&, Object& calendar, Object& fields, Object* options = nullptr);
 bool calendar_equals(GlobalObject&, Object& one, Object& two);
 Object* consolidate_calendars(GlobalObject&, Object& one, Object& two);
 bool is_iso_leap_year(i32 year);
