@@ -637,6 +637,8 @@ TEST_CASE(ECMA262_match)
         { "(a{4}){2}"sv, "aaaaaaaa"sv },
         { "(a{4}){2}"sv, "aaaaaabaa"sv, false },
         { "\\u{4}"sv, "uuuu" },
+        { "(?<=.{3})f"sv, "abcdef"sv, true, (ECMAScriptFlags)regex::AllFlags::Global },
+        { "(?<=.{3})f"sv, "abc😀ef"sv, true, (ECMAScriptFlags)regex::AllFlags::Global },
         // ECMA262, B.1.4. Regular Expression Pattern extensions for browsers
         { "{"sv, "{"sv, true, ECMAScriptFlags::BrowserExtended },
         { "\\5"sv, "\5"sv, true, ECMAScriptFlags::BrowserExtended },
@@ -694,6 +696,8 @@ TEST_CASE(ECMA262_unicode_match)
         { "\\u{1f600}"sv, "😀"sv, true, ECMAScriptFlags::Unicode },
         { "\\ud83d\\ud83d"sv, "\xed\xa0\xbd\xed\xa0\xbd"sv, true },
         { "\\ud83d\\ud83d"sv, "\xed\xa0\xbd\xed\xa0\xbd"sv, true, ECMAScriptFlags::Unicode },
+        { "(?<=.{3})f"sv, "abcdef"sv, true, ECMAScriptFlags::Unicode },
+        { "(?<=.{3})f"sv, "abc😀ef"sv, true, ECMAScriptFlags::Unicode },
     };
 
     for (auto& test : tests) {
