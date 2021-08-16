@@ -105,9 +105,16 @@ KeypadValue::KeypadValue(double d)
     while (AK::pow(10.0, (double)current_pow) <= d)
         current_pow += 1;
     current_pow -= 1;
-    while (d != 0) {
+    while (d > 1e-8) {
         m_value *= 10;
-        m_value += (u64)(d / AK::pow(10.0, (double)current_pow)) % 10;
+
+        auto power_of_ten = AK::pow(10.0, (double)current_pow);
+
+        u64 digit = (u64)(d / power_of_ten) % 10;
+
+        m_value += digit;
+        d -= digit * power_of_ten;
+
         if (current_pow < 0)
             m_decimal_places += 1;
         current_pow -= 1;
