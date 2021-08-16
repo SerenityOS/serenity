@@ -7,11 +7,8 @@
 #pragma once
 
 #include <AK/FixedArray.h>
-#include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
-#include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/ListedRefCounted.h>
@@ -19,12 +16,6 @@
 #include <Kernel/Memory/Region.h>
 
 namespace Kernel::Memory {
-
-class VMObjectDeletedHandler {
-public:
-    virtual ~VMObjectDeletedHandler() = default;
-    virtual void vmobject_deleted(VMObject&) = 0;
-};
 
 class VMObject
     : public ListedRefCounted<VMObject>
@@ -63,17 +54,6 @@ public:
         m_regions.remove(region);
     }
 
-    void register_on_deleted_handler(VMObjectDeletedHandler& handler)
-    {
-        ScopedSpinLock locker(m_on_deleted_lock);
-        m_on_deleted.set(&handler);
-    }
-    void unregister_on_deleted_handler(VMObjectDeletedHandler& handler)
-    {
-        ScopedSpinLock locker(m_on_deleted_lock);
-        m_on_deleted.remove(&handler);
-    }
-
 protected:
     explicit VMObject(size_t);
     explicit VMObject(VMObject const&);
@@ -90,9 +70,6 @@ private:
     VMObject& operator=(VMObject const&) = delete;
     VMObject& operator=(VMObject&&) = delete;
     VMObject(VMObject&&) = delete;
-
-    HashTable<VMObjectDeletedHandler*> m_on_deleted;
-    SpinLock<u8> m_on_deleted_lock;
 
     Region::ListInVMObject m_regions;
 

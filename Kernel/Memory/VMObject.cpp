@@ -31,13 +31,6 @@ VMObject::VMObject(size_t size)
 
 VMObject::~VMObject()
 {
-    {
-        ScopedSpinLock lock(m_on_deleted_lock);
-        for (auto& it : m_on_deleted)
-            it->vmobject_deleted(*this);
-        m_on_deleted.clear();
-    }
-
     VERIFY(m_regions.is_empty());
 }
 
