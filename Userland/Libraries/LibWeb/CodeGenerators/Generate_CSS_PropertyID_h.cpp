@@ -47,6 +47,7 @@ int main(int argc, char** argv)
 
 #include <AK/StringView.h>
 #include <AK/Traits.h>
+#include <LibWeb/Forward.h>
 
 namespace Web::CSS {
 
@@ -73,6 +74,7 @@ PropertyID property_id_from_string(const StringView&);
 const char* string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
 bool is_pseudo_property(PropertyID);
+RefPtr<StyleValue> property_initial_value(PropertyID);
 
 } // namespace Web::CSS
 
