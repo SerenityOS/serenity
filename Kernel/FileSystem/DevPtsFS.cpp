@@ -145,11 +145,9 @@ KResultOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
     if (name == "." || name == "..")
         return *this;
 
-    auto& fs = static_cast<DevPtsFS&>(this->fs());
-
     auto pty_index = name.to_uint();
     if (pty_index.has_value() && s_ptys->contains(pty_index.value())) {
-        auto inode = fs.get_inode({ fsid(), pty_index_to_inode_index(pty_index.value()) });
+        auto inode = fs().get_inode({ fsid(), pty_index_to_inode_index(pty_index.value()) });
         if (!inode)
             return ENOENT;
         return inode.release_nonnull();
