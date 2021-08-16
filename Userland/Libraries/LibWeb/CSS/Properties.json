@@ -72,11 +72,11 @@
     "inherited": false
   },
   "border-bottom-left-radius": {
-    "initial": 0,
+    "initial": "0",
     "inherited": false
   },
   "border-bottom-right-radius": {
-    "initial": 0,
+    "initial": "0",
     "inherited": false
   },
   "border-bottom-style": {
@@ -148,11 +148,11 @@
     "inherited": false
   },
   "border-top-left-radius": {
-    "initial": 0,
+    "initial": "0",
     "inherited": false
   },
   "border-top-right-radius": {
-    "initial": 0,
+    "initial": "0",
     "inherited": false
   },
   "border-top-style": {
@@ -230,11 +230,11 @@
   },
   "flex-grow": {
     "inherited": false,
-    "initial": 0
+    "initial": "0"
   },
   "flex-shrink": {
     "inherited": false,
-    "initial": 1
+    "initial": "1"
   },
   "flex-wrap": {
     "inherited": false,
@@ -354,7 +354,7 @@
   },
   "opacity": {
     "inherited": false,
-    "initial": 1
+    "initial": "1"
   },
   "overflow": {
     "longhands": [
