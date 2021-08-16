@@ -50,6 +50,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.monthsInYear, months_in_year, 1, attr);
     define_native_function(vm.names.inLeapYear, in_leap_year, 1, attr);
     define_native_function(vm.names.fields, fields, 1, attr);
+    define_native_function(vm.names.mergeFields, merge_fields, 2, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 }
@@ -505,6 +506,33 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
 
     // 5. Return ! CreateArrayFromList(fieldNames).
     return Array::create_from(global_object, field_names);
+}
+
+// 12.4.22 Temporal.Calendar.prototype.mergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.mergefields
+// NOTE: This is the minimum mergeFields implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
+{
+    // 1. Let calendar be the this value.
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Assert: calendar.[[Identifier]] is "iso8601".
+    VERIFY(calendar->identifier() == "iso8601"sv);
+
+    // 4. Set fields to ? ToObject(fields).
+    auto* fields = vm.argument(0).to_object(global_object);
+    if (vm.exception())
+        return {};
+
+    // 5. Set additionalFields to ? ToObject(additionalFields).
+    auto* additional_fields = vm.argument(1).to_object(global_object);
+    if (vm.exception())
+        return {};
+
+    // 6. Return ? DefaultMergeFields(fields, additionalFields).
+    return default_merge_fields(global_object, *fields, *additional_fields);
 }
 
 // 12.4.23 Temporal.Calendar.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tostring
