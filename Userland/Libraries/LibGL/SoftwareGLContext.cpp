@@ -504,7 +504,7 @@ void SoftwareGLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdoub
 
     FloatVector3 axis = { (float)x, (float)y, (float)z };
     axis.normalize();
-    auto rotation_mat = Gfx::rotation_matrix(axis, static_cast<float>(angle));
+    auto rotation_mat = Gfx::rotation_matrix(axis, static_cast<float>(angle * M_PI * 2 / 360));
 
     if (m_current_matrix_mode == GL_MODELVIEW)
         m_model_view_matrix = m_model_view_matrix * rotation_mat;
