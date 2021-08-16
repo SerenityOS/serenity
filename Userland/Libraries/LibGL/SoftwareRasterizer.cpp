@@ -308,6 +308,10 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     continue;
             }
 
+            // We will not update the color buffer at all
+            if (!options.color_mask)
+                continue;
+
             // Draw the pixels according to the previously generated mask
             auto coords = b0;
             for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++, coords += step_y) {
