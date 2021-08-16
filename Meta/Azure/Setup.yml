@@ -5,6 +5,13 @@ steps:
   - checkout: self
     persistCredentials: true
 
+  - ${{ if eq(parameters.os, 'Serenity') }}:
+    - script: |
+        sudo add-apt-repository ppa:canonical-server/server-backports
+        sudo apt-get update
+        sudo apt-get install libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 ccache
+      displayName: 'Install Dependencies'
+
   - ${{ if eq(parameters.os, 'Linux') }}:
     - script: |
         sudo apt-get purge -y clang-11
