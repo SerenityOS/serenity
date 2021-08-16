@@ -14,6 +14,7 @@
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Library/ListedRefCounted.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/Region.h>
 
@@ -25,7 +26,8 @@ public:
     virtual void vmobject_deleted(VMObject&) = 0;
 };
 
-class VMObject : public RefCounted<VMObject>
+class VMObject
+    : public ListedRefCounted<VMObject>
     , public Weakable<VMObject> {
     friend class MemoryManager;
     friend class Region;
@@ -95,7 +97,8 @@ private:
     Region::ListInVMObject m_regions;
 
 public:
-    using List = IntrusiveList<VMObject, RawPtr<VMObject>, &VMObject::m_list_node>;
+    using AllInstancesList = IntrusiveList<VMObject, RawPtr<VMObject>, &VMObject::m_list_node>;
+    static SpinLockProtectedValue<VMObject::AllInstancesList>& all_instances();
 };
 
 template<typename Callback>
