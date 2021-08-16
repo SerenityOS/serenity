@@ -10,6 +10,14 @@
 
 namespace Kernel {
 
+FutexQueue::FutexQueue()
+{
+}
+
+FutexQueue::~FutexQueue()
+{
+}
+
 bool FutexQueue::should_add_blocker(Thread::Blocker& b, void* data)
 {
     VERIFY(data != nullptr); // Thread that is requesting to be blocked
