@@ -32,7 +32,6 @@ public:
     virtual bool is_inode() const { return false; }
     virtual bool is_shared_inode() const { return false; }
     virtual bool is_private_inode() const { return false; }
-    virtual bool is_contiguous() const { return false; }
 
     size_t page_count() const { return m_physical_pages.size(); }
     Span<RefPtr<PhysicalPage> const> physical_pages() const { return m_physical_pages.span(); }
