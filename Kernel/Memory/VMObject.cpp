@@ -4,21 +4,29 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/VMObject.h>
 
 namespace Kernel::Memory {
 
+static Singleton<SpinLockProtectedValue<VMObject::AllInstancesList>> s_all_instances;
+
+SpinLockProtectedValue<VMObject::AllInstancesList>& VMObject::all_instances()
+{
+    return s_all_instances;
+}
+
 VMObject::VMObject(VMObject const& other)
     : m_physical_pages(other.m_physical_pages)
 {
-    MM.register_vmobject(*this);
+    all_instances().with([&](auto& list) { list.append(*this); });
 }
 
 VMObject::VMObject(size_t size)
     : m_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE)))
 {
-    MM.register_vmobject(*this);
+    all_instances().with([&](auto& list) { list.append(*this); });
 }
 
 VMObject::~VMObject()
@@ -30,7 +38,6 @@ VMObject::~VMObject()
         m_on_deleted.clear();
     }
 
-    MM.unregister_vmobject(*this);
     VERIFY(m_regions.is_empty());
 }
 

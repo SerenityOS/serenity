@@ -204,18 +204,22 @@ public:
     template<IteratorFunction<VMObject&> Callback>
     static void for_each_vmobject(Callback callback)
     {
-        ScopedSpinLock locker(s_mm_lock);
-        for (auto& vmobject : MM.m_vmobjects) {
-            if (callback(vmobject) == IterationDecision::Break)
-                break;
-        }
+        VMObject::all_instances().with([&](auto& list) {
+            for (auto& vmobject : list) {
+                if (callback(vmobject) == IterationDecision::Break)
+                    break;
+            }
+        });
     }
 
     template<VoidFunction<VMObject&> Callback>
     static void for_each_vmobject(Callback callback)
     {
-        for (auto& vmobject : MM.m_vmobjects)
-            callback(vmobject);
+        VMObject::all_instances().with([&](auto& list) {
+            for (auto& vmobject : list) {
+                callback(vmobject);
+            }
+        });
     }
 
     static Region* find_user_region_from_vaddr(AddressSpace&, VirtualAddress);
@@ -242,8 +246,6 @@ private:
     void initialize_physical_pages();
     void register_reserved_ranges();
 
-    void register_vmobject(VMObject&);
-    void unregister_vmobject(VMObject&);
     void register_region(Region&);
     void unregister_region(Region&);
 
@@ -289,8 +291,6 @@ private:
     Vector<UsedMemoryRange> m_used_memory_ranges;
     Vector<PhysicalMemoryRange> m_physical_memory_ranges;
     Vector<ContiguousReservedMemoryRange> m_reserved_memory_ranges;
-
-    VMObject::List m_vmobjects;
 };
 
 inline bool is_user_address(VirtualAddress vaddr)

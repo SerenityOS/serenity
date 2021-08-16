@@ -1053,18 +1053,6 @@ bool MemoryManager::validate_user_stack(AddressSpace& space, VirtualAddress vadd
     return validate_user_stack_no_lock(space, vaddr);
 }
 
-void MemoryManager::register_vmobject(VMObject& vmobject)
-{
-    ScopedSpinLock lock(s_mm_lock);
-    m_vmobjects.append(vmobject);
-}
-
-void MemoryManager::unregister_vmobject(VMObject& vmobject)
-{
-    ScopedSpinLock lock(s_mm_lock);
-    m_vmobjects.remove(vmobject);
-}
-
 void MemoryManager::register_region(Region& region)
 {
     ScopedSpinLock lock(s_mm_lock);
