@@ -172,6 +172,7 @@ void WindowServerConnection::key_down(i32 window_id, u32 code_point, u32 key, u3
     if (auto* action = action_for_key_event(*window, *key_event)) {
         if (action->is_enabled()) {
             action->activate();
+            action->flash_menubar_menu();
             return;
         }
         if (action->swallow_key_event_when_disabled())
