@@ -1,0 +1,15 @@
+--- /home/adam/Documents/jdk/make/autoconf/build-aux/config.sub	2021-08-15 16:43:43.643629178 +0100
++++ jdk-jdk-18-10/make/autoconf/build-aux/config.sub	2021-08-16 15:32:53.250489864 +0100
+@@ -46,6 +46,12 @@
+     exit
+ fi
+ 
++# Allow serenity
++if echo $* | grep serenity >/dev/null ; then
++    echo $*
++    exit
++fi
++
+ # Filter out everything that doesn't begin with "aarch64-"
+ if ! echo $* | grep '^aarch64-' >/dev/null ; then
+     . $DIR/autoconf-config.sub "$@"
