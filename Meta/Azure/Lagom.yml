@@ -6,6 +6,8 @@ jobs:
   - job: 'Lagom_${{ parameters.os }}'
 
     variables:
+    - name: CCACHE_DIR
+      value: $(Build.SourcesDirectory)/.ccache
     - ${{ if eq(parameters.os, 'Linux') }}:
       - name: job_pool
         value: ubuntu-20.04
@@ -21,6 +23,13 @@ jobs:
       parameters:
         os: '${{ parameters.os }}'
 
+    - template: Caches.yml
+      parameters:
+        os: '${{ parameters.os }}'
+        arch: 'Lagom'
+        toolchain: 'gcc'
+        build_directory: 'Meta/Lagom/Build'
+
     - script: |
         mkdir -p Meta/Lagom/Build
       displayName: 'Create Build Directory'
@@ -28,6 +37,7 @@ jobs:
     - script: |
         cmake -GNinja \
           -DBUILD_LAGOM=ON \
+          -DENABLE_LAGOM_CCACHE=ON \
           -DINCLUDE_WASM_SPEC_TESTS=ON \
           -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
           -DENABLE_UNDEFINED_SANITIZER=ON \
@@ -57,3 +67,7 @@ jobs:
         # FIXME: enable detect_stack_use_after_return=1 #7420
         ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1'
         UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
+
+    - script: |
+        ccache -s
+      displayName: 'Cache Stats'
