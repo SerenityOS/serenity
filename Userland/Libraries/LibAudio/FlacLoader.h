@@ -124,7 +124,7 @@ private:
     bool m_valid { false };
     RefPtr<Core::File> m_file;
     String m_error_string;
-    OwnPtr<ResampleHelper<double>> m_resampler;
+    OwnPtr<ResampleHelper<i32>> m_resampler;
 
     // Data obtained directly from the FLAC metadata: many values have specific bit counts
     u32 m_sample_rate { 0 };         // 20 bit
