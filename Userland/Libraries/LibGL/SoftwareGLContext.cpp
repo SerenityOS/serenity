@@ -246,13 +246,17 @@ void SoftwareGLContext::gl_end()
             continue;
 
         if (m_cull_faces) {
-            bool is_front = (m_front_face == GL_CCW ? area > 0 : area < 0);
+            bool is_front = (m_front_face == GL_CCW ? area < 0 : area > 0);
 
             if (is_front && (m_culled_sides == GL_FRONT || m_culled_sides == GL_FRONT_AND_BACK))
                 continue;
 
             if (!is_front && (m_culled_sides == GL_BACK || m_culled_sides == GL_FRONT_AND_BACK))
                 continue;
+        }
+
+        if (area > 0) {
+            swap(triangle.vertices[0], triangle.vertices[1]);
         }
 
         m_rasterizer.submit_triangle(triangle, m_texture_units);
