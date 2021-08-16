@@ -274,6 +274,22 @@ public:
             });
     }
 
+    size_t code_unit_offset_of(size_t code_point_index) const
+    {
+        return m_view.visit(
+            [&](StringView const& view) -> u32 {
+                Utf8View utf8_view { view };
+                return utf8_view.byte_offset_of(code_point_index);
+            },
+            [&](Utf32View const&) -> u32 { return code_point_index; },
+            [&](Utf16View const& view) -> u32 {
+                return view.code_unit_offset_of(code_point_index);
+            },
+            [&](Utf8View const& view) -> u32 {
+                return view.byte_offset_of(code_point_index);
+            });
+    }
+
     bool operator==(char const* cstring) const
     {
         return m_view.visit(

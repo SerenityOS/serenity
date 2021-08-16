@@ -102,6 +102,17 @@ static void advance_string_position(MatchState& state, RegexStringView const& vi
     }
 }
 
+static void reverse_string_position(MatchState& state, RegexStringView const& view, size_t amount)
+{
+    VERIFY(state.string_position >= amount);
+    state.string_position -= amount;
+
+    if (view.unicode())
+        state.string_position_in_code_units = view.code_unit_offset_of(state.string_position);
+    else
+        state.string_position_in_code_units -= amount;
+}
+
 static void save_string_position(MatchInput const& input, MatchState const& state)
 {
     input.saved_positions.append(state.string_position);
@@ -226,12 +237,12 @@ ALWAYS_INLINE ExecutionResult OpCode_Restore::execute(MatchInput const& input, M
     return ExecutionResult::Continue;
 }
 
-ALWAYS_INLINE ExecutionResult OpCode_GoBack::execute(MatchInput const&, MatchState& state) const
+ALWAYS_INLINE ExecutionResult OpCode_GoBack::execute(MatchInput const& input, MatchState& state) const
 {
     if (count() > state.string_position)
         return ExecutionResult::Failed_ExecuteLowPrioForks;
 
-    state.string_position -= count();
+    reverse_string_position(state, input.view, count());
     return ExecutionResult::Continue;
 }
 
