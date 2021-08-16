@@ -5,6 +5,7 @@
  */
 
 #include <AK/TypeCasts.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
@@ -47,6 +48,7 @@ void CalendarPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.daysInYear, days_in_year, 1, attr);
     define_native_function(vm.names.monthsInYear, months_in_year, 1, attr);
     define_native_function(vm.names.inLeapYear, in_leap_year, 1, attr);
+    define_native_function(vm.names.fields, fields, 1, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 0, attr);
 }
@@ -444,6 +446,30 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
 
     // 5. Return ! IsISOLeapYear(temporalDateLike.[[ISOYear]]).
     return Value(is_iso_leap_year(iso_year(temporal_date_like.as_object())));
+}
+
+// 12.4.21 Temporal.Calendar.prototype.fields ( fields ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.fields
+// NOTE: This is the minimum fields implementation for engines without ECMA-402.
+JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
+{
+    auto fields = vm.argument(0);
+
+    // 1. Let calendar be the this value.
+    // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
+    auto* calendar = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Assert: calendar.[[Identifier]] is "iso8601".
+    VERIFY(calendar->identifier() == "iso8601"sv);
+
+    // 4. Let fieldNames be ? IterableToListOfType(fields, « String »).
+    auto field_names = iterable_to_list_of_type(global_object, fields, { OptionType::String });
+    if (vm.exception())
+        return {};
+
+    // 5. Return ! CreateArrayFromList(fieldNames).
+    return Array::create_from(global_object, field_names);
 }
 
 // 12.4.23 Temporal.Calendar.prototype.toString ( ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.tostring
