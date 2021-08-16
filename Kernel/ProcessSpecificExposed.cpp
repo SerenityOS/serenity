@@ -97,8 +97,9 @@ KResult Process::traverse_file_descriptions_directory(unsigned fsid, Function<bo
             count++;
             return;
         }
-        InodeIdentifier identifier = { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) };
-        callback({ String::number(count), identifier, 0 });
+        StringBuilder builder;
+        builder.appendff("{}", count);
+        callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) }, 0 });
         count++;
     });
     return KSuccess;
