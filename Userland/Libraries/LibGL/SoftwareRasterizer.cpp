@@ -260,6 +260,8 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
                         auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
                         float z = interpolate(triangle.vertices[0].z, triangle.vertices[1].z, triangle.vertices[2].z, barycentric);
+                        z = options.depth_min + (options.depth_max - options.depth_min) * (z + 1) / 2;
+                        
                         if (z >= *depth) {
                             pixel_mask[y] ^= 1 << x;
                             continue;

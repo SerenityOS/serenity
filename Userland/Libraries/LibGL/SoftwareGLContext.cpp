@@ -1641,6 +1641,18 @@ void SoftwareGLContext::gl_draw_elements(GLenum mode, GLsizei count, GLenum type
     glEnd();
 }
 
+void SoftwareGLContext::gl_depth_range(GLdouble min, GLdouble max)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_depth_range, min, max);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    auto options = m_rasterizer.options();
+    options.depth_min = clamp(min, 0.f, 1.f);
+    options.depth_max = clamp(max, 0.f, 1.f);
+    m_rasterizer.set_options(options);
+}
+
 // General helper function to read arbitrary vertex attribute data into a float array
 void SoftwareGLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& attrib, int index, float* elements, bool normalize)
 {

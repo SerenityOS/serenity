@@ -29,6 +29,8 @@ struct RasterizerOptions {
     GLenum blend_source_factor { GL_ONE };
     GLenum blend_destination_factor { GL_ONE };
     u32 color_mask { 0xffffffff };
+    float depth_min { 0 };
+    float depth_max { 1 };
 };
 
 class SoftwareRasterizer final {
