@@ -1492,7 +1492,7 @@ void SoftwareGLContext::gl_vertex_pointer(GLint size, GLenum type, GLsizei strid
 {
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
-    RETURN_WITH_ERROR_IF(!(size == 1 || size == 2 || size == 4), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(!(size == 2 || size == 3 || size == 4), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(!(type == GL_SHORT || type == GL_INT || type == GL_FLOAT || type == GL_DOUBLE), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(stride < 0, GL_INVALID_VALUE);
 
