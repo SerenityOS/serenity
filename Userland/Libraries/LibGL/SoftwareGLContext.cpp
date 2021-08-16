@@ -397,7 +397,9 @@ GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
     case GL_RENDERER:
         return reinterpret_cast<GLubyte*>(const_cast<char*>("SerenityOS OpenGL"));
     case GL_VERSION:
-        return reinterpret_cast<GLubyte*>(const_cast<char*>("OpenGL 1.2 SerenityOS"));
+        return reinterpret_cast<GLubyte*>(const_cast<char*>("1.5"));
+    case GL_EXTENSIONS:
+        return reinterpret_cast<GLubyte*>(const_cast<char*>(""));
     default:
         dbgln_if(GL_DEBUG, "glGetString(): Unknown enum name!");
         break;
