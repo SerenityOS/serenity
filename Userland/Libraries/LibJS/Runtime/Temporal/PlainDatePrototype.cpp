@@ -11,6 +11,7 @@
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
 #include <LibJS/Runtime/Temporal/PlainDatePrototype.h>
+#include <LibJS/Runtime/Temporal/PlainMonthDay.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 
 namespace JS::Temporal {
@@ -46,6 +47,7 @@ void PlainDatePrototype::initialize(GlobalObject& global_object)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.toPlainYearMonth, to_plain_year_month, 0, attr);
+    define_native_function(vm.names.toPlainMonthDay, to_plain_month_day, 0, attr);
     define_native_function(vm.names.getISOFields, get_iso_fields, 0, attr);
     define_native_function(vm.names.withCalendar, with_calendar, 1, attr);
     define_native_function(vm.names.equals, equals, 1, attr);
@@ -294,6 +296,32 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_year_month)
 
     // 6. Return ? YearMonthFromFields(calendar, fields).
     return year_month_from_fields(global_object, calendar, *fields);
+}
+
+// 3.3.17 Temporal.PlainDate.prototype.toPlainMonthDay ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.toplainmonthday
+JS_DEFINE_NATIVE_FUNCTION(PlainDatePrototype::to_plain_month_day)
+{
+    // 1. Let temporalDate be the this value.
+    // 2. Perform ? RequireInternalSlot(temporalDate, [[InitializedTemporalDate]]).
+    auto* temporal_date = typed_this(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Let calendar be temporalDate.[[Calendar]].
+    auto& calendar = temporal_date->calendar();
+
+    // 4. Let fieldNames be ? CalendarFields(calendar, « "day", "monthCode" »).
+    auto field_names = calendar_fields(global_object, calendar, { "day"sv, "monthCode"sv });
+    if (vm.exception())
+        return {};
+
+    // 5. Let fields be ? PrepareTemporalFields(temporalDate, fieldNames, «»).
+    auto* fields = prepare_temporal_fields(global_object, *temporal_date, field_names, {});
+    if (vm.exception())
+        return {};
+
+    // 6. Return ? MonthDayFromFields(calendar, fields).
+    return month_day_from_fields(global_object, calendar, *fields);
 }
 
 // 3.3.18 Temporal.PlainDate.prototype.getISOFields ( ), https://tc39.es/proposal-temporal/#sec-temporal.plaindate.prototype.getisofields
