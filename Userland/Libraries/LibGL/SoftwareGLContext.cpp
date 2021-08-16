@@ -1653,6 +1653,27 @@ void SoftwareGLContext::gl_depth_range(GLdouble min, GLdouble max)
     m_rasterizer.set_options(options);
 }
 
+void SoftwareGLContext::gl_depth_func(GLenum func)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_depth_func, func);
+
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    RETURN_WITH_ERROR_IF(!(func == GL_NEVER
+                             || func == GL_LESS
+                             || func == GL_EQUAL
+                             || func == GL_LEQUAL
+                             || func == GL_GREATER
+                             || func == GL_NOTEQUAL
+                             || func == GL_GEQUAL
+                             || func == GL_ALWAYS),
+        GL_INVALID_ENUM);
+
+    auto options = m_rasterizer.options();
+    options.depth_func = func;
+    m_rasterizer.set_options(options);
+}
+
 // General helper function to read arbitrary vertex attribute data into a float array
 void SoftwareGLContext::read_from_vertex_attribute_pointer(VertexAttribPointer const& attrib, int index, float* elements, bool normalize)
 {
