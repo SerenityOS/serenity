@@ -1,0 +1,59 @@
+parameters:
+  os: 'Linux'
+  allow_test_failures: false
+
+jobs:
+  - job: 'Lagom_${{ parameters.os }}'
+
+    variables:
+    - ${{ if eq(parameters.os, 'Linux') }}:
+      - name: job_pool
+        value: ubuntu-20.04
+    - ${{ if eq(parameters.os, 'macOS') }}:
+      - name: job_pool
+        value: macos-10.15
+
+    pool:
+      vmImage: $(job_pool)
+
+    steps:
+    - template: Setup.yml
+      parameters:
+        os: '${{ parameters.os }}'
+
+    - script: |
+        mkdir -p Meta/Lagom/Build
+      displayName: 'Create Build Directory'
+
+    - script: |
+        cmake -GNinja \
+          -DBUILD_LAGOM=ON \
+          -DINCLUDE_WASM_SPEC_TESTS=ON \
+          -DWASM_SPEC_TEST_SKIP_FORMATTING=ON \
+          -DENABLE_UNDEFINED_SANITIZER=ON \
+          -DENABLE_ADDRESS_SANITIZER=ON \
+          -DENABLE_PCI_IDS_DOWNLOAD=OFF \
+          -DENABLE_USB_IDS_DOWNLOAD=OFF \
+          -DCMAKE_C_COMPILER=gcc-10 \
+          -DCMAKE_CXX_COMPILER=g++-10 \
+          ..
+      displayName: 'Create Build Environment'
+      workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+      env:
+        PATH: '$(PATH):$(Build.SourcesDirectory)/wabt-1.0.23/bin'
+
+    - script: |
+        cmake --build .
+      displayName: 'Build'
+      workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+
+    - script: |
+        ninja test || ${{ parameters.allow_test_failures }}
+      displayName: 'Test'
+      workingDirectory: $(Build.SourcesDirectory)/Meta/Lagom/Build
+      env:
+        SERENITY_SOURCE_DIR: '$(Build.SourcesDirectory)'
+        CTEST_OUTPUT_ON_FAILURE: 1
+        # FIXME: enable detect_stack_use_after_return=1 #7420
+        ASAN_OPTIONS: 'strict_string_checks=1:check_initialization_order=1:strict_init_order=1'
+        UBSAN_OPTIONS: 'print_stacktrace=1:print_summary=1:halt_on_error=1'
