@@ -10,6 +10,11 @@
 
 namespace Kernel {
 
+// ListedRefCounted<T> is a slot-in replacement for RefCounted<T> to use in classes
+// that add themselves to a SpinLockProtectedValue<IntrusiveList> when constructed.
+// The custom unref() implementation here ensures that the the list is locked during
+// unref(), and that the T is removed from the list before ~T() is invoked.
+
 template<typename T>
 class ListedRefCounted : public RefCountedBase {
 public:
