@@ -4,8 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "FlameGraphView.h"
 #include "IndividualSampleModel.h"
 #include "Profile.h"
+#include "ProfileModel.h"
 #include "TimelineContainer.h"
 #include "TimelineHeader.h"
 #include "TimelineTrack.h"
@@ -191,6 +193,12 @@ int main(int argc, char** argv)
         individual_signpost_view.set_model(move(model));
     };
 
+    auto& flamegraph_tab = tab_widget.add_tab<GUI::Widget>("Flame Graph");
+    flamegraph_tab.set_layout<GUI::VerticalBoxLayout>();
+    flamegraph_tab.layout()->set_margins({ 4, 4, 4, 4 });
+
+    auto& flamegraph_view = flamegraph_tab.add<FlameGraphView>(profile->model(), ProfileModel::Column::StackFrame, ProfileModel::Column::SampleCount);
+
     const u64 start_of_trace = profile->first_timestamp();
     const u64 end_of_trace = start_of_trace + profile->length_in_ms();
     const auto clamp_timestamp = [start_of_trace, end_of_trace](u64 timestamp) -> u64 {
@@ -198,21 +206,34 @@ int main(int argc, char** argv)
     };
 
     auto& statusbar = main_widget.add<GUI::Statusbar>();
-    timeline_view->on_selection_change = [&] {
+    auto statusbar_update = [&] {
         auto& view = *timeline_view;
         StringBuilder builder;
-        u64 normalized_start_time = clamp_timestamp(min(view.select_start_time(), view.select_end_time()));
-        u64 normalized_end_time = clamp_timestamp(max(view.select_start_time(), view.select_end_time()));
-        u64 normalized_hover_time = clamp_timestamp(view.hover_time());
-        builder.appendff("Time: {} ms", normalized_hover_time - start_of_trace);
-        if (normalized_start_time != normalized_end_time) {
-            auto start = normalized_start_time - start_of_trace;
-            auto end = normalized_end_time - start_of_trace;
-            builder.appendff(", Selection: {} - {} ms", start, end);
-            builder.appendff(", Duration: {} ms", end - start);
+
+        auto flamegraph_hovered_index = flamegraph_view.hovered_index();
+        if (flamegraph_hovered_index.is_valid()) {
+            auto stack = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::StackFrame)).to_string();
+            auto sample_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SampleCount)).to_i32();
+            auto self_count = profile->model().data(flamegraph_hovered_index.sibling_at_column(ProfileModel::Column::SelfCount)).to_i32();
+            builder.appendff("{}, ", stack);
+            builder.appendff("Samples: {}{}, ", sample_count, profile->show_percentages() ? "%" : " Samples");
+            builder.appendff("Self: {}{}", self_count, profile->show_percentages() ? "%" : " Samples");
+        } else {
+            u64 normalized_start_time = clamp_timestamp(min(view.select_start_time(), view.select_end_time()));
+            u64 normalized_end_time = clamp_timestamp(max(view.select_start_time(), view.select_end_time()));
+            u64 normalized_hover_time = clamp_timestamp(view.hover_time());
+            builder.appendff("Time: {} ms", normalized_hover_time - start_of_trace);
+            if (normalized_start_time != normalized_end_time) {
+                auto start = normalized_start_time - start_of_trace;
+                auto end = normalized_end_time - start_of_trace;
+                builder.appendff(", Selection: {} - {} ms", start, end);
+                builder.appendff(", Duration: {} ms", end - start);
+            }
         }
         statusbar.set_text(builder.to_string());
     };
+    timeline_view->on_selection_change = [&] { statusbar_update(); };
+    flamegraph_view.on_hover_change = [&] { statusbar_update(); };
 
     auto& file_menu = window->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
