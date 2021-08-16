@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +15,7 @@ class MasterPTY;
 
 class SlavePTY final : public TTY {
 public:
+    virtual bool unref() const override;
     virtual ~SlavePTY() override;
 
     void on_master_write(const UserOrKernelBuffer&, size_t);
@@ -47,6 +48,12 @@ private:
     time_t m_time_of_last_write { 0 };
     unsigned m_index { 0 };
     String m_tty_name;
+
+    mutable IntrusiveListNode<SlavePTY> m_list_node;
+
+public:
+    using List = IntrusiveList<SlavePTY, RawPtr<SlavePTY>, &SlavePTY::m_list_node>;
+    static SpinLockProtectedValue<SlavePTY::List>& all_instances();
 };
 
 }

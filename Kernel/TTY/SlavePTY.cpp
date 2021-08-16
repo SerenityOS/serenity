@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/Process.h>
@@ -11,6 +12,26 @@
 #include <Kernel/TTY/SlavePTY.h>
 
 namespace Kernel {
+
+static Singleton<SpinLockProtectedValue<SlavePTY::List>> s_all_instances;
+
+SpinLockProtectedValue<SlavePTY::List>& SlavePTY::all_instances()
+{
+    return s_all_instances;
+}
+
+bool SlavePTY::unref() const
+{
+    bool did_hit_zero = SlavePTY::all_instances().with([&](auto&) {
+        if (deref_base())
+            return false;
+        m_list_node.remove();
+        return true;
+    });
+    if (did_hit_zero)
+        delete this;
+    return did_hit_zero;
+}
 
 SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     : TTY(201, index)
@@ -21,14 +42,14 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     auto process = Process::current();
     set_uid(process->uid());
     set_gid(process->gid());
-    DevPtsFS::register_slave_pty(*this);
     set_size(80, 25);
+
+    SlavePTY::all_instances().with([&](auto& list) { list.append(*this); });
 }
 
 SlavePTY::~SlavePTY()
 {
     dbgln_if(SLAVEPTY_DEBUG, "~SlavePTY({})", m_index);
-    DevPtsFS::unregister_slave_pty(*this);
 }
 
 String const& SlavePTY::tty_name() const

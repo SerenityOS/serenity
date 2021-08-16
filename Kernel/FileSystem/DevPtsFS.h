@@ -27,9 +27,6 @@ public:
 
     virtual Inode& root_inode() override;
 
-    static void register_slave_pty(SlavePTY&);
-    static void unregister_slave_pty(SlavePTY&);
-
 private:
     DevPtsFS();
     RefPtr<Inode> get_inode(InodeIdentifier) const;
