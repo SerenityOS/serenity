@@ -27,6 +27,7 @@ class Selector;
 class StyleProperties;
 class StyleResolver;
 class StyleSheet;
+class StyleValue;
 enum class Display;
 }
 
