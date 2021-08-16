@@ -392,6 +392,7 @@ namespace JS {
     P(toLowerCase)                           \
     P(toPlainDate)                           \
     P(toPlainDateTime)                       \
+    P(toPlainMonthDay)                       \
     P(toPlainTime)                           \
     P(toPlainYearMonth)                      \
     P(toString)                              \
