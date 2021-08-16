@@ -968,4 +968,92 @@ u8 iso_day(Object& temporal_object)
     VERIFY_NOT_REACHED();
 }
 
+// 12.1.45 DefaultMergeFields ( fields, additionalFields ), https://tc39.es/proposal-temporal/#sec-temporal-defaultmergefields
+Object* default_merge_fields(GlobalObject& global_object, Object& fields, Object& additional_fields)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Let merged be ! OrdinaryObjectCreate(%Object.prototype%).
+    auto* merged = Object::create(global_object, global_object.object_prototype());
+
+    // 2. Let originalKeys be ? EnumerableOwnPropertyNames(fields, key).
+    auto original_keys = fields.enumerable_own_property_names(Object::PropertyKind::Key);
+    if (vm.exception())
+        return {};
+
+    // 3. For each element nextKey of originalKeys, do
+    for (auto& next_key : original_keys) {
+        // a. If nextKey is not "month" or "monthCode", then
+        if (next_key.as_string().string() != vm.names.month.as_string() && next_key.as_string().string() != vm.names.monthCode.as_string()) {
+            auto property_name = PropertyName::from_value(global_object, next_key);
+
+            // i. Let propValue be ? Get(fields, nextKey).
+            auto prop_value = fields.get(property_name);
+            if (vm.exception())
+                return {};
+
+            // ii. If propValue is not undefined, then
+            if (!prop_value.is_undefined()) {
+                // 1. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
+                merged->create_data_property_or_throw(property_name, prop_value);
+            }
+        }
+    }
+
+    // 4. Let newKeys be ? EnumerableOwnPropertyNames(additionalFields, key).
+    auto new_keys = additional_fields.enumerable_own_property_names(Object::PropertyKind::Key);
+    if (vm.exception())
+        return {};
+
+    // IMPLEMENTATION DEFINED: This is an optimization, so we don't have to iterate new_keys three times (worst case), but only once.
+    bool new_keys_contains_month_or_month_code_property = false;
+
+    // 5. For each element nextKey of newKeys, do
+    for (auto& next_key : new_keys) {
+        auto property_name = PropertyName::from_value(global_object, next_key);
+
+        // a. Let propValue be ? Get(additionalFields, nextKey).
+        auto prop_value = additional_fields.get(property_name);
+        if (vm.exception())
+            return {};
+
+        // b. If propValue is not undefined, then
+        if (!prop_value.is_undefined()) {
+            // i. Perform ! CreateDataPropertyOrThrow(merged, nextKey, propValue).
+            merged->create_data_property_or_throw(property_name, prop_value);
+        }
+
+        // See comment above.
+        new_keys_contains_month_or_month_code_property |= next_key.as_string().string() == vm.names.month.as_string() || next_key.as_string().string() == vm.names.monthCode.as_string();
+    }
+
+    // 6. If newKeys does not contain either "month" or "monthCode", then
+    if (!new_keys_contains_month_or_month_code_property) {
+        // a. Let month be ? Get(fields, "month").
+        auto month = fields.get(vm.names.month);
+        if (vm.exception())
+            return {};
+
+        // b. If month is not undefined, then
+        if (!month.is_undefined()) {
+            // i. Perform ! CreateDataPropertyOrThrow(merged, "month", month).
+            merged->create_data_property_or_throw(vm.names.month, month);
+        }
+
+        // c. Let monthCode be ? Get(fields, "monthCode").
+        auto month_code = fields.get(vm.names.monthCode);
+        if (vm.exception())
+            return {};
+
+        // d. If monthCode is not undefined, then
+        if (!month_code.is_undefined()) {
+            // i. Perform ! CreateDataPropertyOrThrow(merged, "monthCode", monthCode).
+            merged->create_data_property_or_throw(vm.names.monthCode, month_code);
+        }
+    }
+
+    // 7. Return merged.
+    return merged;
+}
+
 }
