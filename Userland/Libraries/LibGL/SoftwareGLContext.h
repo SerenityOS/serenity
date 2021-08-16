@@ -119,6 +119,7 @@ private:
     FloatVector4 m_clear_color = { 0.0f, 0.0f, 0.0f, 0.0f };
     double m_clear_depth = { 1.0 };
     FloatVector4 m_current_vertex_color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    FloatVector4 m_current_vertex_tex_coord = { 0.0f, 0.0f, 0.0f, 0.0f };
 
     Vector<GLVertex, 96> vertex_list;
     Vector<GLTriangle, 32> triangle_list;
