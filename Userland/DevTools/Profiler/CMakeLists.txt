@@ -8,6 +8,7 @@ set(SOURCES
         DisassemblyModel.cpp
         main.cpp
         IndividualSampleModel.cpp
+        FlameGraphView.cpp
         Process.cpp
         Profile.cpp
         ProfileModel.cpp
