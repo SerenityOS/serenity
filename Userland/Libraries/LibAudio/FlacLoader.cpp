@@ -414,8 +414,7 @@ void FlacLoaderPlugin::next_frame()
 
     VERIFY(left.size() == right.size());
 
-    // TODO: find the correct rescale offset
-    double sample_rescale = static_cast<double>(1 << pcm_bits_per_sample(m_current_frame->bit_depth));
+    double sample_rescale = static_cast<double>(1 << (pcm_bits_per_sample(m_current_frame->bit_depth) - 1));
     dbgln_if(AFLACLOADER_DEBUG, "Sample rescaled from {} bits: factor {:.1f}", pcm_bits_per_sample(m_current_frame->bit_depth), sample_rescale);
 
     m_current_frame_data.clear_with_capacity();
