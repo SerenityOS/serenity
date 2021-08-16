@@ -675,9 +675,9 @@ Vector<i32> FlacLoaderPlugin::decode_custom_lpc(FlacSubframeHeader& subframe, In
 
     // approximate the waveform with the predictor
     for (size_t i = subframe.order; i < m_current_frame->sample_count; ++i) {
-        i32 sample = 0;
+        i64 sample = 0;
         for (size_t t = 0; t < subframe.order; ++t) {
-            sample += coefficients[t] * decoded[i - t - 1];
+            sample += static_cast<i64>(coefficients[t]) * static_cast<i64>(decoded[i - t - 1]);
         }
         decoded[i] += sample >> lpc_shift;
     }
