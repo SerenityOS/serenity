@@ -20,6 +20,14 @@ File::~File()
 {
 }
 
+bool File::unref() const
+{
+    if (deref_base())
+        return false;
+    delete this;
+    return true;
+}
+
 KResultOr<NonnullRefPtr<FileDescription>> File::open(int options)
 {
     auto description = FileDescription::create(*this);
