@@ -6,6 +6,20 @@ parameters:
   ccache_version: 1 # Increment this number if CI has trouble with ccache.
 
 steps:
+  - ${{ if ne(parameters.arch, 'Lagom') }}:
+    - ${{ if eq(parameters.toolchain, 'gcc') }}:
+      - task: Cache@2
+        inputs:
+          key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildClang.sh | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
+          path: $(Build.SourcesDirectory)/Toolchain/Cache
+        displayName: 'Toolchain Cache'
+    - ${{ if eq(parameters.toolchain, 'clang') }}:
+      - task: Cache@2
+        inputs:
+          key: '"toolchain" | "${{ parameters.arch }}" | Toolchain/BuildIt.sh | Userland/Libraries/LibC/**/*.h | Userland/Libraries/LibPthread/**/*.h'
+          path: $(Build.SourcesDirectory)/Toolchain/Cache
+        displayName: 'Toolchain Cache'
+
   - task: Cache@2
     inputs:
       key: '"ccache" | "${{ parameters.os }}" | "${{ parameters.arch }}" | "${{ parameters.toolchain }}" | "${{ parameters.ccache_version }}"'
