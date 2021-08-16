@@ -173,6 +173,7 @@ private:
     HashMap<int, NonnullRefPtr<Window>> m_windows;
     HashMap<int, NonnullRefPtr<Menu>> m_menus;
 
+    RefPtr<Core::Timer> m_flashed_menu_timer;
     RefPtr<Core::Timer> m_ping_timer;
 
     bool m_has_display_link { false };
