@@ -82,12 +82,43 @@ const char* string_from_property_id(PropertyID property_id) {
         member_generator.append(R"~~~(
     case PropertyID::@name:titlecase@:
         return "@name@";
-        )~~~");
+)~~~");
     });
 
     generator.append(R"~~~(
     default:
         return "(invalid CSS::PropertyID)";
+    }
+}
+
+bool is_inherited_property(PropertyID property_id)
+{
+    switch (property_id) {
+)~~~");
+
+    json.value().as_object().for_each_member([&](auto& name, auto& value) {
+        VERIFY(value.is_object());
+
+        bool inherited = false;
+        if (value.as_object().has("inherited")) {
+            auto& inherited_value = value.as_object().get("inherited");
+            VERIFY(inherited_value.is_bool());
+            inherited = inherited_value.as_bool();
+        }
+
+        if (inherited) {
+            auto member_generator = generator.fork();
+            member_generator.set("name:titlecase", title_casify(name));
+            member_generator.append(R"~~~(
+    case PropertyID::@name:titlecase@:
+        return true;
+)~~~");
+        }
+    });
+
+    generator.append(R"~~~(
+    default:
+        return false;
     }
 }
 
