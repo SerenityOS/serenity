@@ -276,6 +276,7 @@ namespace JS {
     P(minutes)                               \
     P(month)                                 \
     P(monthCode)                             \
+    P(monthDayFromFields)                    \
     P(months)                                \
     P(monthsInYear)                          \
     P(multiline)                             \

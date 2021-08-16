@@ -787,6 +787,85 @@ Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject& global_object, O
     return ISOYearMonth { .year = result->year, .month = result->month, .reference_iso_day = 1 };
 }
 
+// 12.1.40 ISOMonthDayFromFields ( fields, options ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthdayfromfields
+Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject& global_object, Object& fields, Object& options)
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: Type(fields) is Object.
+
+    // 2. Let overflow be ? ToTemporalOverflow(options).
+    auto overflow = to_temporal_overflow(global_object, options);
+    if (vm.exception())
+        return {};
+
+    // 3. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », «»).
+    auto* prepared_fields = prepare_temporal_fields(global_object, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, {});
+    if (vm.exception())
+        return {};
+
+    // 4. Let month be ? Get(fields, "month").
+    auto month_value = prepared_fields->get(vm.names.month);
+    if (vm.exception())
+        return {};
+
+    // 5. Let monthCode be ? Get(fields, "monthCode").
+    auto month_code = prepared_fields->get(vm.names.monthCode);
+    if (vm.exception())
+        return {};
+
+    // 6. Let year be ? Get(fields, "year").
+    auto year = prepared_fields->get(vm.names.year);
+    if (vm.exception())
+        return {};
+
+    // 7. If month is not undefined, and monthCode and year are both undefined, then
+    if (!month_value.is_undefined() && month_code.is_undefined() && year.is_undefined()) {
+        // a. Throw a TypeError exception.
+        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, "monthCode or year");
+        return {};
+    }
+
+    // 8. Set month to ? ResolveISOMonth(fields).
+    auto month = resolve_iso_month(global_object, *prepared_fields);
+    if (vm.exception())
+        return {};
+
+    // 9. Let day be ? Get(fields, "day").
+    auto day = prepared_fields->get(vm.names.day);
+    if (vm.exception())
+        return {};
+
+    // 10. If day is undefined, throw a TypeError exception.
+    if (day.is_undefined()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::TemporalMissingRequiredProperty, vm.names.day.as_string());
+        return {};
+    }
+
+    // 11. Let referenceISOYear be 1972 (the first leap year after the Unix epoch).
+    i32 reference_iso_year = 1972;
+
+    Optional<ISODate> result;
+
+    // 12. If monthCode is undefined, then
+    if (month_code.is_undefined()) {
+        // a. Let result be ? RegulateISODate(year, month, day, overflow).
+        result = regulate_iso_date(global_object, year.as_double(), month, day.as_double(), *overflow);
+        if (vm.exception())
+            return {};
+    }
+    // 13. Else,
+    else {
+        // a. Let result be ? RegulateISODate(referenceISOYear, month, day, overflow).
+        result = regulate_iso_date(global_object, reference_iso_year, month, day.as_double(), *overflow);
+        if (vm.exception())
+            return {};
+    }
+
+    // 14. Return the new Record { [[Month]]: result.[[Month]], [[Day]]: result.[[Day]], [[ReferenceISOYear]]: referenceISOYear }.
+    return ISOMonthDay { .month = result->month, .day = result->day, .reference_iso_year = reference_iso_year };
+}
+
 // 12.1.41 ISOYear ( temporalObject ), https://tc39.es/proposal-temporal/#sec-temporal-isoyear
 i32 iso_year(Object& temporal_object)
 {

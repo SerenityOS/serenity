@@ -33,6 +33,12 @@ private:
     Object& m_calendar;   // [[Calendar]]
 };
 
+struct ISOMonthDay {
+    u8 month;
+    u8 day;
+    i32 reference_iso_year;
+};
+
 PlainMonthDay* create_temporal_month_day(GlobalObject&, u8 iso_month, u8 iso_day, Object& calendar, i32 reference_iso_year, FunctionObject* new_target = nullptr);
 
 }

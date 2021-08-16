@@ -9,6 +9,7 @@
 
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Temporal/PlainDate.h>
+#include <LibJS/Runtime/Temporal/PlainMonthDay.h>
 #include <LibJS/Runtime/Temporal/PlainYearMonth.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -62,6 +63,7 @@ String build_iso_month_code(u8 month);
 double resolve_iso_month(GlobalObject&, Object& fields);
 Optional<ISODate> iso_date_from_fields(GlobalObject&, Object& fields, Object& options);
 Optional<ISOYearMonth> iso_year_month_from_fields(GlobalObject&, Object& fields, Object& options);
+Optional<ISOMonthDay> iso_month_day_from_fields(GlobalObject&, Object& fields, Object& options);
 i32 iso_year(Object& temporal_object);
 u8 iso_month(Object& temporal_object);
 String iso_month_code(Object& temporal_object);
