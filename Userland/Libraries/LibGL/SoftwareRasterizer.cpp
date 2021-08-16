@@ -77,7 +77,7 @@ static constexpr void setup_blend_factors(GLenum mode, FloatVector4& constant, f
         src_alpha = -1;
         break;
     case GL_DST_ALPHA:
-        dst_alpha = -1;
+        dst_alpha = 1;
         break;
     case GL_ONE_MINUS_DST_ALPHA:
         constant = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -139,7 +139,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
             src_factor_dst_color);
 
         setup_blend_factors(
-            options.blend_source_factor,
+            options.blend_destination_factor,
             dst_constant,
             dst_factor_src_alpha,
             dst_factor_dst_alpha,
