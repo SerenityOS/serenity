@@ -1,9 +1,12 @@
 trigger:
   - master
 
-pool:
-  vmImage: ubuntu-latest
+jobs:
+  - template: Meta/Azure/Lagom.yml
+    parameters:
+      os: 'Linux'
 
-steps:
-  - script: echo Hello, world!
-    displayName: 'Hello world'
+  - template: Meta/Azure/Lagom.yml
+    parameters:
+      os: 'macOS'
+      allow_test_failures: true
