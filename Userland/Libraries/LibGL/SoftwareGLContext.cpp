@@ -555,19 +555,18 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
 
     // FIXME: This is to suppress any -Wunused errors
     vertex.w = 0.0f;
-    vertex.u = 0.0f;
-    vertex.v = 0.0f;
+    vertex.u = m_current_vertex_tex_coord.x();
+    vertex.v = m_current_vertex_tex_coord.y();
 
     vertex_list.append(vertex);
 }
 
 // FIXME: We need to add `r` and `q` to our GLVertex?!
-void SoftwareGLContext::gl_tex_coord(GLfloat s, GLfloat t, GLfloat, GLfloat)
+void SoftwareGLContext::gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
 {
-    auto& vertex = vertex_list.last(); // Get the last created vertex
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_tex_coord, s, t, r, q);
 
-    vertex.u = s;
-    vertex.v = t;
+    m_current_vertex_tex_coord = { s, t, r, q };
 }
 
 void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height)

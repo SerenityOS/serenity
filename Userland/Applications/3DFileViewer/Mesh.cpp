@@ -69,6 +69,9 @@ void Mesh::draw(float uv_scale)
         glBegin(GL_TRIANGLES);
         glColor4f(color.x(), color.y(), color.z(), color.w());
 
+        if (is_textured())
+            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index0).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index0).v) * uv_scale);
+
         // Vertex 1
         glVertex3f(
             m_vertex_list.at(m_triangle_list[i].a).x,
@@ -76,7 +79,7 @@ void Mesh::draw(float uv_scale)
             m_vertex_list.at(m_triangle_list[i].a).z);
 
         if (is_textured())
-            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index0).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index0).v) * uv_scale);
+            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index1).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index1).v) * uv_scale);
 
         // Vertex 2
         glVertex3f(
@@ -85,16 +88,13 @@ void Mesh::draw(float uv_scale)
             m_vertex_list.at(m_triangle_list[i].b).z);
 
         if (is_textured())
-            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index1).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index1).v) * uv_scale);
+            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index2).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index2).v) * uv_scale);
 
         // Vertex 3
         glVertex3f(
             m_vertex_list.at(m_triangle_list[i].c).x,
             m_vertex_list.at(m_triangle_list[i].c).y,
             m_vertex_list.at(m_triangle_list[i].c).z);
-
-        if (is_textured())
-            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index2).u * uv_scale, (1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index2).v) * uv_scale);
 
         glEnd();
     }
