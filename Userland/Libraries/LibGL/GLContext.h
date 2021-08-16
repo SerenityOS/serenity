@@ -75,6 +75,7 @@ public:
     virtual void gl_get_booleanv(GLenum pname, GLboolean* data) = 0;
     virtual void gl_get_integerv(GLenum pname, GLint* data) = 0;
     virtual void gl_depth_range(GLdouble min, GLdouble max) = 0;
+    virtual void gl_depth_func(GLenum func) = 0;
 
     virtual void present() = 0;
 };

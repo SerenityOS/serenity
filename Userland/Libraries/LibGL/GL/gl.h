@@ -370,6 +370,7 @@ GLAPI void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const void
 GLAPI void glDrawArrays(GLenum mode, GLint first, GLsizei count);
 GLAPI void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indices);
 GLAPI void glDepthRange(GLdouble nearVal, GLdouble farVal);
+GLAPI void glDepthFunc(GLenum func);
 
 #ifdef __cplusplus
 }
