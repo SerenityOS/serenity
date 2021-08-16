@@ -9,7 +9,7 @@ steps:
     - script: |
         sudo apt-get purge -y clang-11
         sudo apt-get update
-        sudo apt-get install ninja-build
+        sudo apt-get install ninja-build ccache
 
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
@@ -21,5 +21,5 @@ steps:
 
   - ${{ if eq(parameters.os, 'macOS') }}:
     - script: |
-        brew install ninja wabt
+        brew install ninja wabt ccache
       displayName: 'Install Dependencies'
