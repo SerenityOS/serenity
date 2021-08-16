@@ -126,6 +126,7 @@ private:
     Vector<GLVertex, 96> vertex_list;
     Vector<GLTriangle, 32> triangle_list;
     Vector<GLTriangle, 32> processed_triangles;
+    Vector<GLVertex> m_clipped_vertices;
 
     GLenum m_error = GL_NO_ERROR;
     bool m_in_draw_state = false;
