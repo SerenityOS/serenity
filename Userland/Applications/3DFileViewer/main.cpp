@@ -60,7 +60,7 @@ private:
         start_timer(20);
 
         GL::make_context_current(m_context);
-        glFrontFace(GL_CW);
+        glFrontFace(GL_CCW);
         glEnable(GL_CULL_FACE);
         glEnable(GL_DEPTH_TEST);
 
