@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,7 +9,9 @@
 #include <AK/ScopeGuard.h>
 #include <LibGL/Clipper.h>
 
-bool GL::Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane plane)
+namespace GL {
+
+bool Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane plane)
 {
     switch (plane) {
     case ClipPlane::LEFT:
@@ -28,83 +31,53 @@ bool GL::Clipper::point_within_clip_plane(const FloatVector4& vertex, ClipPlane 
     return false;
 }
 
-// TODO: This needs to interpolate color/UV data as well!
-FloatVector4 GL::Clipper::clip_intersection_point(const FloatVector4& vec, const FloatVector4& prev_vec, ClipPlane plane_index)
+GLVertex Clipper::clip_intersection_point(const GLVertex& p1, const GLVertex& p2, ClipPlane plane_index)
 {
+    // See https://www.microsoft.com/en-us/research/wp-content/uploads/1978/01/p245-blinn.pdf
+    // "Clipping Using Homogenous Coordinates" Blinn/Newell, 1978
 
-    //
-    // This is an implementation of the Cyrus-Beck algorithm to clip lines against a plane
-    // using the triangle's line segment in parametric form.
-    // In this case, we find that n . [P(t) - plane] == 0 if the point lies on
-    // the boundary, which in this case is the clip plane. We then substitute
-    // P(t)= P1 + (P2-P1)*t (where P2 is a point inside the clipping boundary, and P1 is,
-    // in this case, the point that lies outside the boundary due to our implementation of Sutherland-Hogdman)
-    // into P(t) to arrive at the equation:
-    //
-    //  n · [P1 + ((P2 - P1) * t) - plane] = 0.
-    //  Substitude seg_length = P2 - P1 (length of line segment) and dist = P1 - plane (distance from P1 to plane)
-    //
-    //  By rearranging, we now end up with
-    //
-    //  n·[P1 + (seg_length * t) - plane] = 0
-    //  n·(dist) + n·(seg_length * t) = 0
-    //  n·(seg_length*t) = -n·(dist)
-    //  Therefore
-    //  t = (-n·(dist))/(n·seg_length)
-    //
-    // NOTE: n is the normal vector to the plane we are clipping against.
-    //
-    // Proof of algorithm found here
-    // http://studymaterial.unipune.ac.in:8080/jspui/bitstream/123456789/4843/1/Cyrus_Beck_Algo.pdf
-    // And here (slightly more intuitive with a better diagram)
-    // https://www.csee.umbc.edu/~rheingan/435/pages/res/gen-5.Clipping-single-page-0.html
+    float w1 = p1.position.w();
+    float w2 = p2.position.w();
+    float x1 = clip_plane_normals[plane_index].dot(p1.position);
+    float x2 = clip_plane_normals[plane_index].dot(p2.position);
+    float a = (w1 + x1) / ((w1 + x1) - (w2 + x2));
 
-    FloatVector4 seg_length = vec - prev_vec;                // P2 - P1
-    FloatVector4 dist = prev_vec - clip_planes[plane_index]; // Distance from "out of bounds" vector to plane
-
-    float plane_normal_line_segment_dot_product = clip_plane_normals[plane_index].dot(seg_length);
-    float neg_plane_normal_dist_dot_procut = -clip_plane_normals[plane_index].dot(dist);
-    float t = (plane_normal_line_segment_dot_product / neg_plane_normal_dist_dot_procut);
-
-    // P(t) = P1 + (t * (P2 - P1))
-    FloatVector4 lerped_vec = prev_vec + (seg_length * t);
-
-    return lerped_vec;
+    GLVertex out;
+    out.position = p1.position * (1 - a) + p2.position * a;
+    out.color = p1.color * (1 - a) + p2.color * a;
+    out.tex_coord = p1.tex_coord * (1 - a) + p2.tex_coord * a;
+    return out;
 }
 
-// FIXME: Getting too close to zNear causes VERY serious artifacting. Should we cull the whole triangle??
-void GL::Clipper::clip_triangle_against_frustum(Vector<FloatVector4>& input_verts)
+void Clipper::clip_triangle_against_frustum(Vector<GLVertex>& input_verts)
 {
-    Vector<FloatVector4, 6> clipped_polygon;
-    Vector<FloatVector4, 6> input = input_verts;
-    Vector<FloatVector4, 6>* current = &clipped_polygon;
-    Vector<FloatVector4, 6>* output_list = &input;
-    ScopeGuard guard { [&] { input_verts = *output_list; } };
+    list_a = input_verts;
+    list_b.clear_with_capacity();
 
-    for (u8 plane = 0; plane < NUMBER_OF_CLIPPING_PLANES; plane++) {
-        swap(current, output_list);
-        clipped_polygon.clear();
+    auto read_from = &list_a;
+    auto write_to = &list_b;
 
-        if (current->size() == 0) {
-            return;
-        }
-
+    for (size_t plane = 0; plane < NUMBER_OF_CLIPPING_PLANES; plane++) {
+        write_to->clear_with_capacity();
         // Save me, C++23
-        for (size_t i = 0; i < current->size(); i++) {
-            const auto& curr_vec = current->at(i);
-            const auto& prev_vec = current->at((i - 1) % current->size());
+        for (size_t i = 0; i < read_from->size(); i++) {
+            const auto& curr_vec = read_from->at((i + 1) % read_from->size());
+            const auto& prev_vec = read_from->at(i);
 
-            if (point_within_clip_plane(curr_vec, static_cast<ClipPlane>(plane))) {
-                if (!point_within_clip_plane(prev_vec, static_cast<ClipPlane>(plane))) {
-                    FloatVector4 intersect = clip_intersection_point(prev_vec, curr_vec, static_cast<ClipPlane>(plane));
-                    clipped_polygon.append(intersect);
+            if (point_within_clip_plane(curr_vec.position, static_cast<ClipPlane>(plane))) {
+                if (!point_within_clip_plane(prev_vec.position, static_cast<ClipPlane>(plane))) {
+                    auto intersect = clip_intersection_point(prev_vec, curr_vec, static_cast<ClipPlane>(plane));
+                    write_to->append(intersect);
                 }
-
-                clipped_polygon.append(curr_vec);
-            } else if (point_within_clip_plane(prev_vec, static_cast<ClipPlane>(plane))) {
-                FloatVector4 intersect = clip_intersection_point(prev_vec, curr_vec, static_cast<ClipPlane>(plane));
-                clipped_polygon.append(intersect);
+                write_to->append(curr_vec);
+            } else if (point_within_clip_plane(prev_vec.position, static_cast<ClipPlane>(plane))) {
+                auto intersect = clip_intersection_point(prev_vec, curr_vec, static_cast<ClipPlane>(plane));
+                write_to->append(intersect);
             }
         }
+        swap(write_to, read_from);
     }
+
+    input_verts = *read_from;
+}
 }

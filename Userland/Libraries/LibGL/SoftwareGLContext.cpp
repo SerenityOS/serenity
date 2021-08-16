@@ -123,6 +123,9 @@ void SoftwareGLContext::gl_end()
     // Make sure we had a `glBegin` before this call...
     RETURN_WITH_ERROR_IF(!m_in_draw_state, GL_INVALID_OPERATION);
 
+    triangle_list.clear_with_capacity();
+    processed_triangles.clear_with_capacity();
+
     // Let's construct some triangles
     if (m_current_draw_mode == GL_TRIANGLES) {
         GLTriangle triangle;
@@ -169,29 +172,22 @@ void SoftwareGLContext::gl_end()
             triangle_list.append(triangle);
         }
     } else {
+        vertex_list.clear_with_capacity();
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
     }
+
+    vertex_list.clear_with_capacity();
+
+    auto mvp = m_projection_matrix * m_model_view_matrix;
 
     // Now let's transform each triangle and send that to the GPU
     for (size_t i = 0; i < triangle_list.size(); i++) {
         GLTriangle& triangle = triangle_list.at(i);
-        GLVertex& vertexa = triangle.vertices[0];
-        GLVertex& vertexb = triangle.vertices[1];
-        GLVertex& vertexc = triangle.vertices[2];
-
-        FloatVector4 veca({ vertexa.x, vertexa.y, vertexa.z, 1.0f });
-        FloatVector4 vecb({ vertexb.x, vertexb.y, vertexb.z, 1.0f });
-        FloatVector4 vecc({ vertexc.x, vertexc.y, vertexc.z, 1.0f });
 
         // First multiply the vertex by the MODELVIEW matrix and then the PROJECTION matrix
-        veca = m_model_view_matrix * veca;
-        veca = m_projection_matrix * veca;
-
-        vecb = m_model_view_matrix * vecb;
-        vecb = m_projection_matrix * vecb;
-
-        vecc = m_model_view_matrix * vecc;
-        vecc = m_projection_matrix * vecc;
+        triangle.vertices[0].position = mvp * triangle.vertices[0].position;
+        triangle.vertices[1].position = mvp * triangle.vertices[1].position;
+        triangle.vertices[2].position = mvp * triangle.vertices[2].position;
 
         // At this point, we're in clip space
         // Here's where we do the clipping. This is a really crude implementation of the
@@ -203,87 +199,35 @@ void SoftwareGLContext::gl_end()
 
         // Okay, let's do some face culling first
 
-        Vector<FloatVector4> vecs;
-        Vector<GLVertex> verts;
+        m_clipped_vertices.clear_with_capacity();
+        m_clipped_vertices.append(triangle.vertices[0]);
+        m_clipped_vertices.append(triangle.vertices[1]);
+        m_clipped_vertices.append(triangle.vertices[2]);
+        m_clipper.clip_triangle_against_frustum(m_clipped_vertices);
 
-        vecs.append(veca);
-        vecs.append(vecb);
-        vecs.append(vecc);
-        m_clipper.clip_triangle_against_frustum(vecs);
+        if (m_clipped_vertices.size() < 3)
+            continue;
 
-        // TODO: Copy color and UV information too!
-        for (size_t vec_idx = 0; vec_idx < vecs.size(); vec_idx++) {
-            FloatVector4& vec = vecs.at(vec_idx);
-            GLVertex vertex;
+        for (auto& vec : m_clipped_vertices) {
+            // perspective divide
+            float w = vec.position.w();
+            vec.position.set_x(vec.position.x() / w);
+            vec.position.set_y(vec.position.y() / w);
+            vec.position.set_z(vec.position.z() / w);
+            vec.position.set_w(1 / w);
 
-            // Perform the perspective divide
-            if (vec.w() != 0.0f) {
-                vec.set_x(vec.x() / vec.w());
-                vec.set_y(vec.y() / vec.w());
-                vec.set_z(vec.z() / vec.w());
-                vec.set_w(1 / vec.w());
-            }
-
-            vertex.x = vec.x();
-            vertex.y = vec.y();
-            vertex.z = vec.z();
-            vertex.w = vec.w();
-
-            // FIXME: This is to suppress any -Wunused errors
-            vertex.u = 0.0f;
-            vertex.v = 0.0f;
-
-            if (vec_idx == 0) {
-                vertex.r = vertexa.r;
-                vertex.g = vertexa.g;
-                vertex.b = vertexa.b;
-                vertex.a = vertexa.a;
-                vertex.u = vertexa.u;
-                vertex.v = vertexa.v;
-            } else if (vec_idx == 1) {
-                vertex.r = vertexb.r;
-                vertex.g = vertexb.g;
-                vertex.b = vertexb.b;
-                vertex.a = vertexb.a;
-                vertex.u = vertexb.u;
-                vertex.v = vertexb.v;
-            } else {
-                vertex.r = vertexc.r;
-                vertex.g = vertexc.g;
-                vertex.b = vertexc.b;
-                vertex.a = vertexc.a;
-                vertex.u = vertexc.u;
-                vertex.v = vertexc.v;
-            }
-
-            vertex.x = (vec.x() + 1.0f) * (scr_width / 2.0f) + 0.0f; // TODO: 0.0f should be something!?
-            vertex.y = scr_height - ((vec.y() + 1.0f) * (scr_height / 2.0f) + 0.0f);
-            vertex.z = vec.z();
-            verts.append(vertex);
+            // to screen space
+            vec.position.set_x(scr_width / 2 + vec.position.x() * scr_width / 2);
+            vec.position.set_y(scr_height / 2 - vec.position.y() * scr_height / 2);
         }
 
-        if (verts.size() == 0) {
-            continue;
-        } else if (verts.size() == 3) {
-            GLTriangle tri;
+        GLTriangle tri;
+        tri.vertices[0] = m_clipped_vertices[0];
+        for (size_t i = 1; i < m_clipped_vertices.size() - 1; i++) {
 
-            tri.vertices[0] = verts.at(0);
-            tri.vertices[1] = verts.at(1);
-            tri.vertices[2] = verts.at(2);
+            tri.vertices[1] = m_clipped_vertices[i];
+            tri.vertices[2] = m_clipped_vertices[i + 1];
             processed_triangles.append(tri);
-        } else if (verts.size() == 4) {
-            GLTriangle tri1;
-            GLTriangle tri2;
-
-            tri1.vertices[0] = verts.at(0);
-            tri1.vertices[1] = verts.at(1);
-            tri1.vertices[2] = verts.at(2);
-            processed_triangles.append(tri1);
-
-            tri2.vertices[0] = verts.at(0);
-            tri2.vertices[1] = verts.at(2);
-            tri2.vertices[2] = verts.at(3);
-            processed_triangles.append(tri2);
         }
     }
 
@@ -292,10 +236,10 @@ void SoftwareGLContext::gl_end()
 
         // Let's calculate the (signed) area of the triangle
         // https://cp-algorithms.com/geometry/oriented-triangle-area.html
-        float dxAB = triangle.vertices[0].x - triangle.vertices[1].x; // A.x - B.x
-        float dxBC = triangle.vertices[1].x - triangle.vertices[2].x; // B.X - C.x
-        float dyAB = triangle.vertices[0].y - triangle.vertices[1].y;
-        float dyBC = triangle.vertices[1].y - triangle.vertices[2].y;
+        float dxAB = triangle.vertices[0].position.x() - triangle.vertices[1].position.x(); // A.x - B.x
+        float dxBC = triangle.vertices[1].position.x() - triangle.vertices[2].position.x(); // B.X - C.x
+        float dyAB = triangle.vertices[0].position.y() - triangle.vertices[1].position.y();
+        float dyBC = triangle.vertices[1].position.y() - triangle.vertices[2].position.y();
         float area = (dxAB * dyBC) - (dxBC * dyAB);
 
         if (area == 0.0f)
@@ -313,10 +257,6 @@ void SoftwareGLContext::gl_end()
 
         m_rasterizer.submit_triangle(triangle, m_texture_units);
     }
-
-    triangle_list.clear();
-    processed_triangles.clear();
-    vertex_list.clear();
 
     m_in_draw_state = false;
 }
@@ -546,19 +486,9 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
 
     GLVertex vertex;
 
-    vertex.x = x;
-    vertex.y = y;
-    vertex.z = z;
-    vertex.w = w;
-    vertex.r = m_current_vertex_color.x();
-    vertex.g = m_current_vertex_color.y();
-    vertex.b = m_current_vertex_color.z();
-    vertex.a = m_current_vertex_color.w();
-
-    // FIXME: This is to suppress any -Wunused errors
-    vertex.w = 0.0f;
-    vertex.u = m_current_vertex_tex_coord.x();
-    vertex.v = m_current_vertex_tex_coord.y();
+    vertex.position = { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), static_cast<float>(w) };
+    vertex.color = m_current_vertex_color;
+    vertex.tex_coord = { m_current_vertex_tex_coord.x(), m_current_vertex_tex_coord.y() };
 
     vertex_list.append(vertex);
 }
@@ -847,7 +777,7 @@ void SoftwareGLContext::gl_delete_lists(GLuint list, GLsizei range)
         return;
 
     for (auto& entry : m_listings.span().slice(list - 1, range))
-        entry.entries.clear();
+        entry.entries.clear_with_capacity();
 }
 
 void SoftwareGLContext::gl_end_list()

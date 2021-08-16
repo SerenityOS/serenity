@@ -107,9 +107,9 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     VERIFY((render_target.height() % RASTERIZER_BLOCK_SIZE) == 0);
 
     // Calculate area of the triangle for later tests
-    IntVector2 v0 { (int)triangle.vertices[0].x, (int)triangle.vertices[0].y };
-    IntVector2 v1 { (int)triangle.vertices[1].x, (int)triangle.vertices[1].y };
-    IntVector2 v2 { (int)triangle.vertices[2].x, (int)triangle.vertices[2].y };
+    IntVector2 v0 { (int)triangle.vertices[0].position.x(), (int)triangle.vertices[0].position.y() };
+    IntVector2 v1 { (int)triangle.vertices[1].position.x(), (int)triangle.vertices[1].position.y() };
+    IntVector2 v2 { (int)triangle.vertices[2].position.x(), (int)triangle.vertices[2].position.y() };
 
     int area = edge_function(v0, v1, v2);
     if (area == 0)
@@ -259,7 +259,8 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                             continue;
 
                         auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
-                        float z = interpolate(triangle.vertices[0].z, triangle.vertices[1].z, triangle.vertices[2].z, barycentric);
+                        float z = interpolate(triangle.vertices[0].position.z(), triangle.vertices[1].position.z(), triangle.vertices[2].position.z(), barycentric);
+
                         z = options.depth_min + (options.depth_max - options.depth_min) * (z + 1) / 2;
 
                         bool pass = false;
@@ -322,26 +323,26 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
                     // Perspective correct barycentric coordinates
                     auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
-                    float interpolated_reciprocal_w = interpolate(triangle.vertices[0].w, triangle.vertices[1].w, triangle.vertices[2].w, barycentric);
+                    float interpolated_reciprocal_w = interpolate(triangle.vertices[0].position.w(), triangle.vertices[1].position.w(), triangle.vertices[2].position.w(), barycentric);
                     float interpolated_w = 1 / interpolated_reciprocal_w;
-                    barycentric = barycentric * FloatVector3(triangle.vertices[0].w, triangle.vertices[1].w, triangle.vertices[2].w) * interpolated_w;
+                    barycentric = barycentric * FloatVector3(triangle.vertices[0].position.w(), triangle.vertices[1].position.w(), triangle.vertices[2].position.w()) * interpolated_w;
 
                     // FIXME: make this more generic. We want to interpolate more than just color and uv
                     FloatVector4 vertex_color;
                     if (options.shade_smooth) {
                         vertex_color = interpolate(
-                            FloatVector4(triangle.vertices[0].r, triangle.vertices[0].g, triangle.vertices[0].b, triangle.vertices[0].a),
-                            FloatVector4(triangle.vertices[1].r, triangle.vertices[1].g, triangle.vertices[1].b, triangle.vertices[1].a),
-                            FloatVector4(triangle.vertices[2].r, triangle.vertices[2].g, triangle.vertices[2].b, triangle.vertices[2].a),
+                            triangle.vertices[0].color,
+                            triangle.vertices[1].color,
+                            triangle.vertices[2].color,
                             barycentric);
                     } else {
-                        vertex_color = { triangle.vertices[0].r, triangle.vertices[0].g, triangle.vertices[0].b, triangle.vertices[0].a };
+                        vertex_color = triangle.vertices[0].color;
                     }
 
                     auto uv = interpolate(
-                        FloatVector2(triangle.vertices[0].u, triangle.vertices[0].v),
-                        FloatVector2(triangle.vertices[1].u, triangle.vertices[1].v),
-                        FloatVector2(triangle.vertices[2].u, triangle.vertices[2].v),
+                        triangle.vertices[0].tex_coord,
+                        triangle.vertices[1].tex_coord,
+                        triangle.vertices[2].tex_coord,
                         barycentric);
 
                     *pixel = pixel_shader(uv, vertex_color);

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <LibGL/GLStruct.h>
 #include <LibGfx/Vector4.h>
 
 namespace GL {
@@ -34,26 +35,24 @@ class Clipper final {
     };
 
     static constexpr FloatVector4 clip_plane_normals[] = {
-        { 1, 0, 0, 1 },  // Left Plane
-        { -1, 0, 0, 1 }, // Right Plane
-        { 0, -1, 0, 1 }, // Top Plane
-        { 0, 1, 0, 1 },  // Bottom plane
-        { 0, 0, -1, 1 }, // Near Plane
-        { 0, 0, 1, 1 }   // Far Plane
+        { 1, 0, 0, 0 },  // Left Plane
+        { -1, 0, 0, 0 }, // Right Plane
+        { 0, -1, 0, 0 }, // Top Plane
+        { 0, 1, 0, 0 },  // Bottom plane
+        { 0, 0, 1, 0 },  // Near Plane
+        { 0, 0, -1, 0 }  // Far Plane
     };
 
 public:
     Clipper() { }
 
-    void clip_triangle_against_frustum(Vector<FloatVector4>& input_vecs);
-    const Vector<FloatVector4, MAX_CLIPPED_VERTS>& clipped_verts() const;
+    void clip_triangle_against_frustum(Vector<GLVertex>& input_vecs);
 
 private:
     bool point_within_clip_plane(const FloatVector4& vertex, ClipPlane plane);
-    FloatVector4 clip_intersection_point(const FloatVector4& vec, const FloatVector4& prev_vec, ClipPlane plane_index);
-
-private:
-    Vector<FloatVector4, MAX_CLIPPED_VERTS> m_clipped_verts;
+    GLVertex clip_intersection_point(const GLVertex& vec, const GLVertex& prev_vec, ClipPlane plane_index);
+    Vector<GLVertex> list_a;
+    Vector<GLVertex> list_b;
 };
 
 }

@@ -7,6 +7,8 @@
 #pragma once
 
 #include "GL/gl.h"
+#include <LibGfx/Vector2.h>
+#include <LibGfx/Vector4.h>
 
 namespace GL {
 
@@ -15,9 +17,9 @@ struct GLColor {
 };
 
 struct GLVertex {
-    GLfloat x, y, z, w;
-    GLfloat r, g, b, a;
-    GLfloat u, v;
+    FloatVector4 position;
+    FloatVector4 color;
+    FloatVector2 tex_coord;
 };
 
 struct GLTriangle {
