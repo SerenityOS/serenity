@@ -57,6 +57,9 @@ FloatVector4 Sampler2D::sample(FloatVector2 const& uv) const
 
     MipMap const& mip = m_texture.mipmap(lod);
 
+    if (mip.width() < 1 || mip.height() < 1)
+        return { 1, 1, 1, 1 };
+
     float x = wrap(uv.x(), m_wrap_t_mode);
     float y = wrap(uv.y(), m_wrap_s_mode);
 
