@@ -42,8 +42,8 @@ public:
     }
 
 private:
-    GLsizei m_width;
-    GLsizei m_height;
+    GLsizei m_width { 0 };
+    GLsizei m_height { 0 };
     Vector<u32> m_pixel_data;
 };
 }
