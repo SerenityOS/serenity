@@ -643,6 +643,9 @@ public:
         const FileDescriptionAndFlags& at(size_t i) const;
         FileDescriptionAndFlags& at(size_t i);
 
+        FileDescriptionAndFlags const* get_if_valid(size_t i) const;
+        FileDescriptionAndFlags* get_if_valid(size_t i);
+
         void enumerate(Function<void(const FileDescriptionAndFlags&)>) const;
         void change_each(Function<void(FileDescriptionAndFlags&)>);
 
