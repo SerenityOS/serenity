@@ -84,6 +84,7 @@ public:
     virtual void gl_color_mask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) override;
     virtual void gl_get_booleanv(GLenum pname, GLboolean* data) override;
     virtual void gl_get_integerv(GLenum pname, GLint* data) override;
+    virtual void gl_depth_range(GLdouble min, GLdouble max) override;
     virtual void present() override;
 
 private:
@@ -215,7 +216,8 @@ private:
             decltype(&SoftwareGLContext::gl_tex_parameter),
             decltype(&SoftwareGLContext::gl_depth_mask),
             decltype(&SoftwareGLContext::gl_draw_arrays),
-            decltype(&SoftwareGLContext::gl_draw_elements)>;
+            decltype(&SoftwareGLContext::gl_draw_elements),
+            decltype(&SoftwareGLContext::gl_depth_range)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
