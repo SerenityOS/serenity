@@ -194,12 +194,6 @@ jobs:
           - with-fuzzers: FUZZ
             os: ubuntu-20.04
             allow-test-failure: false
-          - with-fuzzers: NO_FUZZ
-            os: ubuntu-20.04
-            allow-test-failure: false
-          - with-fuzzers: NO_FUZZ
-            os: macos-10.15
-            allow-test-failure: true
 
     steps:
     - uses: actions/checkout@v2
