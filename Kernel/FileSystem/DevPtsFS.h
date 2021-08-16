@@ -43,6 +43,9 @@ class DevPtsFSInode final : public Inode {
 public:
     virtual ~DevPtsFSInode() override;
 
+    DevPtsFS& fs() { return static_cast<DevPtsFS&>(Inode::fs()); }
+    DevPtsFS const& fs() const { return static_cast<DevPtsFS const&>(Inode::fs()); }
+
 private:
     DevPtsFSInode(DevPtsFS&, InodeIndex, SlavePTY*);
 
