@@ -24,6 +24,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/KString.h>
+#include <Kernel/Library/ListedRefCounted.h>
 #include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/LockMode.h>
 #include <Kernel/Locking/SpinLockProtectedValue.h>
@@ -131,7 +132,7 @@ struct ThreadRegisters {
 };
 
 class Thread
-    : public RefCountedBase
+    : public ListedRefCounted<Thread>
     , public Weakable<Thread> {
     AK_MAKE_NONCOPYABLE(Thread);
     AK_MAKE_NONMOVABLE(Thread);
@@ -143,8 +144,6 @@ class Thread
     friend struct ThreadReadyQueue;
 
 public:
-    bool unref() const;
-
     inline static Thread* current()
     {
         return Processor::current_thread();
@@ -1378,8 +1377,7 @@ public:
     using ListInProcess = IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_process_thread_list_node>;
     using GlobalList = IntrusiveList<Thread, RawPtr<Thread>, &Thread::m_global_thread_list_node>;
 
-private:
-    static SpinLockProtectedValue<GlobalList>& all_threads();
+    static SpinLockProtectedValue<GlobalList>& all_instances();
 };
 
 AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);
@@ -1387,7 +1385,7 @@ AK_ENUM_BITWISE_OPERATORS(Thread::FileBlocker::BlockFlags);
 template<IteratorFunction<Thread&> Callback>
 inline IterationDecision Thread::for_each(Callback callback)
 {
-    return all_threads().with([&](auto& list) -> IterationDecision {
+    return Thread::all_instances().with([&](auto& list) -> IterationDecision {
         for (auto& thread : list) {
             IterationDecision decision = callback(thread);
             if (decision != IterationDecision::Continue)
@@ -1400,7 +1398,7 @@ inline IterationDecision Thread::for_each(Callback callback)
 template<IteratorFunction<Thread&> Callback>
 inline IterationDecision Thread::for_each_in_state(State state, Callback callback)
 {
-    return all_threads().with([&](auto& list) -> IterationDecision {
+    return Thread::all_instances().with([&](auto& list) -> IterationDecision {
         for (auto& thread : list) {
             if (thread.state() != state)
                 continue;
@@ -1415,7 +1413,7 @@ inline IterationDecision Thread::for_each_in_state(State state, Callback callbac
 template<VoidFunction<Thread&> Callback>
 inline IterationDecision Thread::for_each(Callback callback)
 {
-    return all_threads().with([&](auto& list) {
+    return Thread::all_instances().with([&](auto& list) {
         for (auto& thread : list) {
             if (callback(thread) == IterationDecision::Break)
                 return IterationDecision::Break;
