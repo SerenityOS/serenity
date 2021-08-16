@@ -118,9 +118,9 @@ KResult DevPtsFSInode::traverse_as_directory(Function<bool(FileSystem::Directory
 
     SlavePTY::all_instances().with([&](auto& list) {
         for (SlavePTY& slave_pty : list) {
-            String name = String::number(slave_pty.index());
-            InodeIdentifier identifier = { fsid(), pty_index_to_inode_index(slave_pty.index()) };
-            callback({ name, identifier, 0 });
+            StringBuilder builder;
+            builder.appendff("{}", slave_pty.index());
+            callback({ builder.string_view(), { fsid(), pty_index_to_inode_index(slave_pty.index()) }, 0 });
         }
     });
 
