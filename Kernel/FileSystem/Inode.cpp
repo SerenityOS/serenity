@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -22,26 +22,22 @@
 
 namespace Kernel {
 
-static SpinLock s_all_inodes_lock;
-static Singleton<Inode::List> s_list;
+static Singleton<SpinLockProtectedValue<Inode::AllInstancesList>> s_all_instances;
 
-static Inode::List& all_with_lock()
+SpinLockProtectedValue<Inode::AllInstancesList>& Inode::all_instances()
 {
-    VERIFY(s_all_inodes_lock.is_locked());
-
-    return *s_list;
+    return s_all_instances;
 }
 
 void Inode::sync()
 {
     NonnullRefPtrVector<Inode, 32> inodes;
-    {
-        ScopedSpinLock all_inodes_lock(s_all_inodes_lock);
-        for (auto& inode : all_with_lock()) {
+    Inode::all_instances().with([&](auto& all_inodes) {
+        for (auto& inode : all_inodes) {
             if (inode.is_metadata_dirty())
                 inodes.append(inode);
         }
-    }
+    });
 
     for (auto& inode : inodes) {
         VERIFY(inode.is_metadata_dirty());
@@ -95,15 +91,11 @@ Inode::Inode(FileSystem& fs, InodeIndex index)
     : m_file_system(fs)
     , m_index(index)
 {
-    ScopedSpinLock all_inodes_lock(s_all_inodes_lock);
-    all_with_lock().append(*this);
+    Inode::all_instances().with([&](auto& all_inodes) { all_inodes.append(*this); });
 }
 
 Inode::~Inode()
 {
-    ScopedSpinLock all_inodes_lock(s_all_inodes_lock);
-    all_with_lock().remove(*this);
-
     for (auto& watcher : m_watchers) {
         watcher->unregister_by_inode({}, identifier());
     }
