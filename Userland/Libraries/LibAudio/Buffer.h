@@ -91,7 +91,7 @@ String sample_format_name(PcmSampleFormat format);
 template<typename SampleType>
 class ResampleHelper {
 public:
-    ResampleHelper(double source, double target);
+    ResampleHelper(u32 source, u32 target);
 
     // To be used as follows:
     // while the resampler doesn't need a new sample, read_sample(current) and store the resulting samples.
@@ -103,9 +103,12 @@ public:
     bool read_sample(SampleType& next_l, SampleType& next_r);
     Vector<SampleType> resample(Vector<SampleType> to_resample);
 
+    void reset();
+
 private:
-    const double m_ratio;
-    double m_current_ratio { 0 };
+    const u32 m_source;
+    const u32 m_target;
+    u32 m_current_ratio { 0 };
     SampleType m_last_sample_l;
     SampleType m_last_sample_r;
 };

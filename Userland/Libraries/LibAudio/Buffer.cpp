@@ -8,6 +8,7 @@
 #include "Buffer.h"
 #include <AK/Atomic.h>
 #include <AK/Debug.h>
+#include <AK/StdLibExtras.h>
 #include <AK/String.h>
 
 namespace Audio {
@@ -167,18 +168,19 @@ RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, ResampleHelper
 }
 
 template<typename SampleType>
-ResampleHelper<SampleType>::ResampleHelper(double source, double target)
-    : m_ratio(source / target)
+ResampleHelper<SampleType>::ResampleHelper(u32 source, u32 target)
+    : m_source(source)
+    , m_target(target)
 {
 }
-template ResampleHelper<i32>::ResampleHelper(double, double);
-template ResampleHelper<double>::ResampleHelper(double, double);
+template ResampleHelper<i32>::ResampleHelper(u32, u32);
+template ResampleHelper<double>::ResampleHelper(u32, u32);
 
 template<typename SampleType>
 Vector<SampleType> ResampleHelper<SampleType>::resample(Vector<SampleType> to_resample)
 {
     Vector<SampleType> resampled;
-    resampled.ensure_capacity(to_resample.size() * m_ratio);
+    resampled.ensure_capacity(to_resample.size() * ceil_div(m_source, m_target));
     for (auto sample : to_resample) {
         process_sample(sample, sample);
 
@@ -196,7 +198,7 @@ void ResampleHelper<SampleType>::process_sample(SampleType sample_l, SampleType 
 {
     m_last_sample_l = sample_l;
     m_last_sample_r = sample_r;
-    m_current_ratio += 1;
+    m_current_ratio += m_target;
 }
 template void ResampleHelper<i32>::process_sample(i32, i32);
 template void ResampleHelper<double>::process_sample(double, double);
@@ -204,8 +206,8 @@ template void ResampleHelper<double>::process_sample(double, double);
 template<typename SampleType>
 bool ResampleHelper<SampleType>::read_sample(SampleType& next_l, SampleType& next_r)
 {
-    if (m_current_ratio > 0) {
-        m_current_ratio -= m_ratio;
+    if (m_current_ratio >= m_source) {
+        m_current_ratio -= m_source;
         next_l = m_last_sample_l;
         next_r = m_last_sample_r;
         return true;
@@ -215,5 +217,16 @@ bool ResampleHelper<SampleType>::read_sample(SampleType& next_l, SampleType& nex
 }
 template bool ResampleHelper<i32>::read_sample(i32&, i32&);
 template bool ResampleHelper<double>::read_sample(double&, double&);
+
+template<typename SampleType>
+void ResampleHelper<SampleType>::reset()
+{
+    m_current_ratio = 0;
+    m_last_sample_l = {};
+    m_last_sample_r = {};
+}
+
+template void ResampleHelper<i32>::reset();
+template void ResampleHelper<double>::reset();
 
 }
