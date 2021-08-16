@@ -65,6 +65,21 @@ size_t Utf8View::byte_offset_of(const Utf8CodePointIterator& it) const
     return it.m_ptr - begin_ptr();
 }
 
+size_t Utf8View::byte_offset_of(size_t code_point_offset) const
+{
+    size_t byte_offset = 0;
+
+    for (auto it = begin(); !it.done(); ++it) {
+        if (code_point_offset == 0)
+            return byte_offset;
+
+        byte_offset += it.underlying_code_point_length_in_bytes();
+        --code_point_offset;
+    }
+
+    return byte_offset;
+}
+
 Utf8View Utf8View::substring_view(size_t byte_offset, size_t byte_length) const
 {
     StringView string = m_string.substring_view(byte_offset, byte_length);
